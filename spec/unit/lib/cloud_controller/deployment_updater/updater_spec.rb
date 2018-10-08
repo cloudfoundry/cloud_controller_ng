@@ -6,7 +6,8 @@ module VCAP::CloudController
     subject(:updater) { DeploymentUpdater::Updater.new(deployment, logger) }
     let(:a_day_ago) { Time.now - 1.day }
     let(:an_hour_ago) { Time.now - 1.hour }
-    let!(:web_process) { ProcessModel.make(instances: current_web_instances, created_at: a_day_ago, guid: 'guid-original') }
+    let(:app) { AppModel.make }
+    let!(:web_process) { ProcessModel.make(instances: current_web_instances, created_at: a_day_ago, guid: 'guid-original', app: app) }
     let!(:route_mapping) { RouteMappingModel.make(app: web_process.app, process_type: web_process.type) }
     let!(:deploying_web_process) do
       ProcessModel.make(
@@ -21,7 +22,6 @@ module VCAP::CloudController
     let(:original_web_process_instance_count) { 6 }
     let(:current_web_instances) { 2 }
     let(:current_deploying_instances) { 5 }
-    let(:app) { web_process.app }
 
     let(:deployment) do
       DeploymentModel.make(
@@ -180,27 +180,37 @@ module VCAP::CloudController
       end
 
       context 'when the oldest webish process will be at zero instances and is not web' do
-        let(:oldest_webish_process) do
+        let!(:web_process) do
+          ProcessModel.make(
+            instances: 0,
+            app: app,
+            created_at: a_day_ago - 11,
+            type: 'web'
+          )
+        end
+        let!(:oldest_webish_process_with_instances) do
           ProcessModel.make(
             instances: 1,
-            app: web_process.app,
+            app: app,
             created_at: a_day_ago - 10,
             type: 'web-deployment-middle-train-car'
           )
         end
 
         let!(:oldest_route_mapping) do
-          RouteMappingModel.make(app: oldest_webish_process.app, process_type: oldest_webish_process.type)
+          RouteMappingModel.make(app: oldest_webish_process_with_instances.app, process_type: oldest_webish_process_with_instances.type)
         end
 
-        it 'destroys the oldest webish process' do
-          subject.scale
-          expect(ProcessModel.find(guid: oldest_webish_process.guid)).to be_nil
+        it 'destroys the oldest webish process and ignores the original web process' do
+          expect {
+            subject.scale
+          }.not_to change { ProcessModel.find(guid: web_process.guid) }
+          expect(ProcessModel.find(guid: oldest_webish_process_with_instances.guid)).to be_nil
         end
 
         it 'destroys the old webish route mapping' do
           subject.scale
-          expect(RouteMappingModel.find(app: web_process.app, process_type: oldest_webish_process.type)).to be_nil
+          expect(RouteMappingModel.find(app: web_process.app, process_type: oldest_webish_process_with_instances.type)).to be_nil
         end
       end
 
@@ -305,6 +315,10 @@ module VCAP::CloudController
     end
 
     describe '#cancel' do
+      before do
+        allow_any_instance_of(VCAP::CloudController::Diego::Runner).to receive(:stop)
+      end
+
       it 'deletes the deploying process' do
         subject.cancel
         expect(ProcessModel.find(guid: deploying_web_process.guid)).to be_nil

@@ -30,10 +30,10 @@ module VCAP::CloudController
         error_name = e.is_a?(CloudController::Errors::ApiError) ? e.name : e.class.name
         logger.error(
           error_message,
-            deployment_guid: deployment.guid,
-            error: error_name,
-            error_message: e.message,
-            backtrace: e.backtrace.join("\n")
+          deployment_guid: deployment.guid,
+          error: error_name,
+          error_message: e.message,
+          backtrace: e.backtrace.join("\n")
         )
       end
 
@@ -62,7 +62,7 @@ module VCAP::CloudController
         deployment.db.transaction do
           deployment.lock!
 
-          oldest_web_process.lock!
+          oldest_web_process_with_instances.lock!
           app.lock!
           deploying_web_process.lock!
 
@@ -73,7 +73,7 @@ module VCAP::CloudController
             return
           end
 
-          scale_down_oldest_web_process
+          scale_down_oldest_web_process_with_instances
           deploying_web_process.update(instances: deploying_web_process.instances + 1)
         end
       end
@@ -86,23 +86,38 @@ module VCAP::CloudController
         @deploying_web_process ||= deployment.deploying_web_process
       end
 
-      def oldest_web_process
-        @oldest_web_process ||= web_processes.min_by(&:created_at)
+      def oldest_web_process_with_instances
+        @oldest_web_process_with_instances ||= app.processes.select { |process| process.web? && process.instances > 0 }.min_by(&:created_at)
       end
 
       def web_processes
         app.processes.select(&:web?)
       end
 
-      def scale_down_oldest_web_process
-        if oldest_web_process.instances > 1
-          oldest_web_process.update(instances: oldest_web_process.instances - 1)
+      def is_web_process?(process)
+        process.type == ProcessTypes::WEB
+      end
+
+      def is_intermediary_process?(process)
+        !is_web_process?(process)
+      end
+
+      def scale_down_oldest_web_process_with_instances
+        process = oldest_web_process_with_instances
+
+        if process.instances > 1
+          process.update(instances: process.instances - 1)
+          return
+        end
+
+        # only one instance left...
+
+        if is_web_process?(process)
+          # decrement original web process instances, but do not destroy it yet
+          process.update(instances: 0)
         else
-          if oldest_web_process.type == ProcessTypes::WEB
-            oldest_web_process.update(instances: 0)
-            return
-          end
-          cleanup_webish_process(oldest_web_process)
+          # delete if intermediary process
+          cleanup_webish_process(process)
         end
       end
 
@@ -115,7 +130,7 @@ module VCAP::CloudController
       end
 
       def cleanup_webish_process(process)
-        if process.type != ProcessTypes::WEB
+        if is_intermediary_process?(process)
           RouteMappingModel.
             where(app: app, process_type: process.type).
             map(&:destroy)
@@ -136,7 +151,6 @@ module VCAP::CloudController
         RouteMappingModel.where(app: deploying_web_process.app,
                                 process_type: deploying_web_process.type).map(&:destroy)
         deploying_web_process.update(type: ProcessTypes::WEB)
-        oldest_web_process.destroy
       end
 
       def cleanup_webish_processes_except(protected_process)
