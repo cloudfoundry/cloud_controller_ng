@@ -228,6 +228,28 @@ RSpec.describe 'Spaces' do
     end
   end
 
+  describe 'GET /v2/spaces/:guid/services' do
+    let!(:space) { VCAP::CloudController::Space.make(organization: org) }
+    let!(:service_1) { VCAP::CloudController::Service.make }
+    let!(:service_plan_1) { VCAP::CloudController::ServicePlan.make(service: service_1) }
+    let!(:service_2) { VCAP::CloudController::Service.make }
+    let!(:service_plan_2) { VCAP::CloudController::ServicePlan.make(service: service_2) }
+
+    before do
+      space.organization.add_user(user)
+      space.add_developer(user)
+    end
+
+    it 'lists services with the service broker name' do
+      get "/v2/spaces/#{space.guid}/services", nil, headers_for(user)
+      expect(last_response).to have_status_code(200)
+
+      parsed_response = MultiJson.load(last_response.body)
+      expect(parsed_response['resources'].first['entity']['service_broker_name']).to eq(service_1.service_broker.name)
+      expect(parsed_response['resources'].second['entity']['service_broker_name']).to eq(service_2.service_broker.name)
+    end
+  end
+
   describe 'DELETE /v2/spaces/:guid/unmapped_routes' do
     let(:space) { VCAP::CloudController::Space.make(organization: org) }
     let(:process) { VCAP::CloudController::ProcessModelFactory.make(state: 'STARTED') }

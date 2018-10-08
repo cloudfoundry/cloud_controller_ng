@@ -131,6 +131,34 @@ module VCAP::CloudController
       end
     end
 
+    describe 'GET /v2/services/:guid' do
+      let(:broker_name) { 'broker-1' }
+      let!(:organization) { Organization.make }
+      let!(:space) { Space.make(organization: organization) }
+      let!(:user) { User.make }
+      let!(:broker) { ServiceBroker.make(space: space, name: broker_name) }
+      let!(:service) { Service.make(service_broker: broker) }
+      let!(:service_plan) { ServicePlan.make(service: service, public: false) }
+
+      before do
+        organization.add_user(user)
+        space.add_developer(user)
+        set_current_user(user)
+      end
+
+      it 'returns a service' do
+        get "/v2/services/#{service.guid}"
+        expect(last_response).to have_status_code(200)
+        expect(decoded_response['metadata']['guid']).to eq service.guid
+      end
+
+      it 'returns the service broker name in the response' do
+        get "/v2/services/#{service.guid}"
+        expect(last_response).to have_status_code(200)
+        expect(decoded_response['entity'].fetch('service_broker_name')).to eq broker_name
+      end
+    end
+
     describe 'GET /v2/services' do
       let(:organization) do
         Organization.make.tap do |org|
@@ -142,7 +170,8 @@ module VCAP::CloudController
       end
 
       let(:user) { VCAP::CloudController::User.make }
-      let(:service_broker) { ServiceBroker.make(name: 'FreeWidgets') }
+      let(:broker_name) { 'broker-1' }
+      let(:service_broker) { ServiceBroker.make(name: broker_name) }
       before { set_current_user(user) }
 
       let!(:public_and_active) do
@@ -205,6 +234,12 @@ module VCAP::CloudController
         get '/v2/services'
         expect(last_response).to have_status_code 200
         expect(decoded_guids).to eq(visible_services.map(&:guid))
+      end
+
+      it 'returns the service broker name in the response' do
+        get '/v2/services'
+        expect(last_response.status).to eq 200
+        expect(decoded_response['resources'].first['entity'].fetch('service_broker_name')).to eq broker_name
       end
 
       context 'with private brokers' do
