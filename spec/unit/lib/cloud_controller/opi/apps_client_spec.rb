@@ -109,6 +109,7 @@ RSpec.describe(OPI::Client) do
             health_check_http_endpoint: nil,
             health_check_timeout_ms: 12000,
             last_updated: '2.0',
+            volume_mounts: [],
             ports: [8080],
             routes: {
               'cf-router' => [
@@ -130,6 +131,97 @@ RSpec.describe(OPI::Client) do
 
         expect(response.status_code).to equal(201)
         expect(WebMock).to have_requested(:put, "#{opi_url}/apps/process-guid-#{lrp.version}").with(body: MultiJson.dump(expected_body))
+      end
+
+      context 'when volume mounts are provided' do
+        let(:service_instance) { ::VCAP::CloudController::ManagedServiceInstance.make space: app_model.space }
+        let(:multiple_volume_mounts) do
+          [
+            {
+              container_dir: '/data/images',
+              mode:          'r',
+              device_type:   'shared',
+              driver:        'cephfs',
+              device:        {
+                volume_id:    'abc',
+                mount_config: {
+                  name: 'volume-one',
+                  key: 'value'
+                }
+              }
+            },
+            {
+              container_dir: '/data/pictures',
+              mode:          'r',
+              device_type:   'shared',
+              driver:        'cephfs',
+              device:        {
+                volume_id:    'abc',
+                mount_config: {
+                  key: 'value'
+                }
+              }
+            },
+            {
+              container_dir: '/data/scratch',
+              mode:          'rw',
+              device_type:   'shared',
+              driver:        'local',
+              device:        {
+                volume_id:    'def',
+              }
+            }
+          ]
+        end
+
+        before do
+          expected_body[:environment][:VCAP_SERVICES] = %{{"label-1":[{
+              "label": "label-1",
+              "provider": null,
+              "plan": "name-24",
+              "name": "#{service_instance.name}",
+              "tags": [],
+              "instance_name": "name-23",
+              "binding_name": null,
+              "credentials": {
+                "creds-key-2": "creds-val-2"
+              },
+              "syslog_drain_url": null,
+              "volume_mounts": [
+                {
+                  "container_dir": "/data/images",
+                  "mode": "r",
+                  "device_type": "shared"
+                },
+                {
+                  "container_dir": "/data/pictures",
+                  "mode": "r",
+                  "device_type": "shared"
+                },
+                {
+                  "container_dir": "/data/scratch",
+                  "mode": "rw",
+                  "device_type": "shared"
+                }
+              ]
+            }]}}.delete(' ').delete("\n")
+
+          expected_body[:volume_mounts] = [
+            {
+                  volume_id: 'volume-one',
+                  mount_dir: '/data/images'
+            }
+          ]
+
+          ::VCAP::CloudController::ServiceBinding.make(app: app_model, service_instance: service_instance, volume_mounts: multiple_volume_mounts)
+        end
+
+        it 'sends a PUT request' do
+          response = client.desire_app(lrp)
+
+          expect(response.status_code).to equal(201)
+          expect(WebMock).to have_requested(:put, "#{opi_url}/apps/process-guid-#{lrp.version}").with(body: MultiJson.dump(expected_body))
+        end
       end
     end
   end

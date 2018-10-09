@@ -78,9 +78,9 @@ module OPI
         health_check_http_endpoint: process.health_check_http_endpoint,
         health_check_timeout_ms: timeout_ms,
         last_updated: process.updated_at.to_f.to_s,
+        volume_mounts: generate_volume_mounts(process),
         ports: ports(process),
-        routes: routes(process),
-        volume_mounts: generate_volume_mounts(process)
+        routes: routes(process)
       }
       MultiJson.dump(body)
     end
@@ -148,18 +148,13 @@ module OPI
       proto_volume_mounts = []
 
       app_volume_mounts.each do |volume_mount|
-        proto_volume_mount = ::Diego::Bbs::Models::VolumeMount.new(
-          driver:        volume_mount['driver'],
-          container_dir: volume_mount['container_dir'],
-          mode:          volume_mount['mode']
-        )
-
-        mount_config              = volume_mount['device']['mount_config'].present? ? volume_mount['device']['mount_config'].to_json : ''
-        proto_volume_mount.shared = ::Diego::Bbs::Models::SharedDevice.new(
-          volume_id:    volume_mount['device']['volume_id'],
-          mount_config: mount_config
-        )
-        proto_volume_mounts.append(proto_volume_mount)
+        if volume_mount['device']['mount_config'].present? && volume_mount['device']['mount_config']['name'].present?
+          proto_volume_mount = {
+      volume_id: volume_mount['device']['mount_config']['name'],
+      mount_dir: volume_mount['container_dir'],
+         }
+          proto_volume_mounts.append(proto_volume_mount)
+        end
       end
 
       proto_volume_mounts
