@@ -1,21 +1,21 @@
 require 'spec_helper'
-require 'actions/missing_process_create'
+require 'actions/process_create_from_app_droplet'
 
 module VCAP::CloudController
-  RSpec.describe MissingProcessCreate do
+  RSpec.describe ProcessCreateFromAppDroplet do
     let(:droplet) { nil }
     let(:app) { AppModel.make(droplet: droplet, name: 'my_app') }
     let(:user_audit_info) { instance_double(UserAuditInfo).as_null_object }
-    subject { MissingProcessCreate.new(user_audit_info) }
+    subject { ProcessCreateFromAppDroplet.new(user_audit_info) }
 
-    describe '#create_from_current_droplet' do
+    describe '#create' do
       let(:process_types) { { web: 'thing', other: 'stuff' } }
       let(:droplet) { DropletModel.make(state: DropletModel::STAGED_STATE, process_types: process_types) }
 
       context 'when the app has a droplet that has a process type' do
         it 'creates missing processes without setting their commands' do
           expect(app.processes.count).to eq(0)
-          subject.create_from_current_droplet(app)
+          subject.create(app)
 
           app.reload
           expect(app.processes.count).to eq(2)
@@ -26,7 +26,7 @@ module VCAP::CloudController
         it 'does not delete existing processes' do
           existing_process = ProcessModel.make(type: 'manifest-born-process', app: app)
 
-          subject.create_from_current_droplet(app)
+          subject.create(app)
 
           expect(existing_process.exists?).to be true
         end
@@ -34,7 +34,7 @@ module VCAP::CloudController
         it 'does not update the process’s command' do
           existing_process = ProcessModel.make(type: 'other', command: 'old', app: app, metadata: {})
           expect {
-            subject.create_from_current_droplet(app)
+            subject.create(app)
           }.not_to change { existing_process.refresh.command }
         end
       end
@@ -44,8 +44,8 @@ module VCAP::CloudController
 
         it 'raises a ProcessTypesNotFound error' do
           expect {
-            subject.create_from_current_droplet(app)
-          }.to raise_error(MissingProcessCreate::ProcessTypesNotFound)
+            subject.create(app)
+          }.to raise_error(ProcessCreateFromAppDroplet::ProcessTypesNotFound)
         end
       end
 
@@ -55,8 +55,8 @@ module VCAP::CloudController
 
         it 'raises procfile not found' do
           expect {
-            subject.create_from_current_droplet(app)
-          }.to raise_error(MissingProcessCreate::ProcessTypesNotFound)
+            subject.create(app)
+          }.to raise_error(ProcessCreateFromAppDroplet::ProcessTypesNotFound)
         end
       end
     end

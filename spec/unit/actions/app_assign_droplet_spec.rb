@@ -1,10 +1,10 @@
 require 'spec_helper'
 require 'actions/app_update'
-require 'actions/missing_process_create'
+require 'actions/process_create_from_app_droplet'
 
 module VCAP::CloudController
-  RSpec.describe SetCurrentDroplet do
-    subject(:set_current_droplet) { SetCurrentDroplet.new(user_audit_info) }
+  RSpec.describe AppAssignDroplet do
+    subject(:app_assign_droplet) { AppAssignDroplet.new(user_audit_info) }
 
     let(:app_model) { AppModel.make desired_state: ProcessModel::STOPPED }
     let(:user) { double(:user, guid: '1337') }
@@ -12,7 +12,7 @@ module VCAP::CloudController
     let(:user_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email) }
     let(:current_process_types) { double(:current_process_types) }
 
-    describe '#update_to' do
+    describe '#assign' do
       let(:droplet) do
         DropletModel.make(
           state: DropletModel::STAGED_STATE,
@@ -25,14 +25,14 @@ module VCAP::CloudController
 
       before do
         app_model.add_droplet_by_guid(droplet_guid)
-        allow(MissingProcessCreate).to receive(:new).with(user_audit_info).and_return(current_process_types)
-        allow(current_process_types).to receive(:create_from_current_droplet).with(app_model)
+        allow(ProcessCreateFromAppDroplet).to receive(:new).with(user_audit_info).and_return(current_process_types)
+        allow(current_process_types).to receive(:create).with(app_model)
       end
 
       it 'sets the desired droplet guid' do
-        updated_app = set_current_droplet.update_to(app_model, droplet)
+        updated_app = app_assign_droplet.assign(app_model, droplet)
         expect(updated_app.droplet_guid).to eq(droplet_guid)
-        expect(current_process_types).to have_received(:create_from_current_droplet).once
+        expect(current_process_types).to have_received(:create).once
       end
 
       it 'creates an audit event' do
@@ -43,14 +43,14 @@ module VCAP::CloudController
           { droplet_guid: droplet.guid }
         )
 
-        set_current_droplet.update_to(app_model, droplet)
+        app_assign_droplet.assign(app_model, droplet)
       end
 
       it 're-raises validation errors' do
         allow(app_model).to receive(:save).and_raise(Sequel::ValidationFailed.new('invalid'))
         expect {
-          set_current_droplet.update_to(app_model, droplet)
-        }.to raise_error(SetCurrentDroplet::InvalidApp)
+          app_assign_droplet.assign(app_model, droplet)
+        }.to raise_error(AppAssignDroplet::InvalidApp)
       end
 
       describe 'error cases' do
@@ -58,28 +58,28 @@ module VCAP::CloudController
           it 'raises an error' do
             other_droplet = DropletModel.make
             expect {
-              set_current_droplet.update_to(app_model, other_droplet)
-            }.to raise_error SetCurrentDroplet::InvalidDroplet, 'Unable to assign current droplet. Ensure the droplet exists and belongs to this app.'
+              app_assign_droplet.assign(app_model, other_droplet)
+            }.to raise_error AppAssignDroplet::InvalidDroplet, 'Unable to assign current droplet. Ensure the droplet exists and belongs to this app.'
           end
         end
 
         context 'when the droplet does not exist' do
           it 'raises an error' do
             expect {
-              set_current_droplet.update_to(app_model, nil)
-            }.to raise_error SetCurrentDroplet::InvalidDroplet, 'Unable to assign current droplet. Ensure the droplet exists and belongs to this app.'
+              app_assign_droplet.assign(app_model, nil)
+            }.to raise_error AppAssignDroplet::InvalidDroplet, 'Unable to assign current droplet. Ensure the droplet exists and belongs to this app.'
           end
         end
 
         context 'when we fail to create missing processes' do
           before do
-            allow(current_process_types).to receive(:create_from_current_droplet).and_raise(MissingProcessCreate::ProcessTypesNotFound, 'some message')
+            allow(current_process_types).to receive(:create).and_raise(ProcessCreateFromAppDroplet::ProcessTypesNotFound, 'some message')
           end
 
           it 'raises an error' do
             expect {
-              set_current_droplet.update_to(app_model, droplet)
-            }.to raise_error SetCurrentDroplet::InvalidDroplet, 'some message'
+              app_assign_droplet.assign(app_model, droplet)
+            }.to raise_error AppAssignDroplet::InvalidDroplet, 'some message'
           end
         end
       end

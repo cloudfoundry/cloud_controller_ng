@@ -1,29 +1,31 @@
 require 'actions/process_create'
 
 module VCAP::CloudController
-  class MissingProcessCreate
-    class ProcessTypesNotFound < StandardError; end
+  class ProcessCreateFromAppDroplet
+    class ProcessTypesNotFound < StandardError
+    end
 
     def initialize(user_audit_info)
       @user_audit_info = user_audit_info
       @logger = Steno.logger('cc.action.missing_process_create')
     end
 
-    def create_from_current_droplet(app)
+    def create(app)
       @logger.info('process_current_droplet', guid: app.guid)
 
-      if app.droplet&.process_types
-        @logger.debug('using the droplet process_types', guid: app.guid)
-        evaluate_processes(app, app.droplet.process_types)
-      else
+      unless app.droplet && app.droplet.process_types
         @logger.warn('no process_types found', guid: app.guid)
         raise ProcessTypesNotFound.new("Unable to create process types for this app's droplet. Please provide a droplet with valid process types.")
       end
+
+      create_requested_processes(app, app.droplet.process_types)
     end
 
     private
 
-    def evaluate_processes(app, process_types)
+    def create_requested_processes(app, process_types)
+      @logger.debug('using the droplet process_types', guid: app.guid)
+
       process_types.each_key { |type| create_process(app, type.to_s) }
     end
 

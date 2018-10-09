@@ -11,8 +11,8 @@ module VCAP::CloudController
           reject_invalid_states!(deployment) unless valid_state?(deployment)
 
           begin
-            SetCurrentDroplet.new(user_audit_info).update_to(deployment.app, deployment.previous_droplet)
-          rescue SetCurrentDroplet::Error => e
+            AppAssignDroplet.new(user_audit_info).assign(deployment.app, deployment.previous_droplet)
+          rescue AppAssignDroplet::Error => e
             raise SetCurrentDropletError.new(e)
           end
 

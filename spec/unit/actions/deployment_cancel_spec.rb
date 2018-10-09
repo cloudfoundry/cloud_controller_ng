@@ -44,9 +44,9 @@ module VCAP::CloudController
 
         context 'when setting the current droplet errors' do
           before do
-            set_current_droplet = instance_double(SetCurrentDroplet)
-            allow(set_current_droplet).to receive(:update_to).and_raise(SetCurrentDroplet::Error.new('ahhhh!'))
-            allow(SetCurrentDroplet).to receive(:new).and_return(set_current_droplet)
+            app_assign_droplet = instance_double(AppAssignDroplet)
+            allow(app_assign_droplet).to receive(:assign).and_raise(AppAssignDroplet::Error.new('ahhhh!'))
+            allow(AppAssignDroplet).to receive(:new).and_return(app_assign_droplet)
           end
 
           it 'raises the error' do

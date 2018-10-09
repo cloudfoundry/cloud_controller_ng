@@ -8,8 +8,8 @@ module VCAP::CloudController
       def create(app:, user_audit_info:, droplet:)
         previous_droplet = app.droplet
         begin
-          SetCurrentDroplet.new(user_audit_info).update_to(app, droplet)
-        rescue SetCurrentDroplet::Error => e
+          AppAssignDroplet.new(user_audit_info).assign(app, droplet)
+        rescue AppAssignDroplet::Error => e
           raise SetCurrentDropletError.new(e.message)
         end
 

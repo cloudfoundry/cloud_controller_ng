@@ -1850,8 +1850,8 @@ RSpec.describe AppsV3Controller, type: :controller do
 
     context 'when the app is invalid' do
       before do
-        allow_any_instance_of(VCAP::CloudController::SetCurrentDroplet).to receive(:update_to).
-          and_raise(VCAP::CloudController::SetCurrentDroplet::InvalidApp.new('app is broked'))
+        allow_any_instance_of(VCAP::CloudController::AppAssignDroplet).to receive(:assign).
+          and_raise(VCAP::CloudController::AppAssignDroplet::InvalidApp.new('app is broked'))
       end
 
       it 'returns an UnprocessableEntity error' do

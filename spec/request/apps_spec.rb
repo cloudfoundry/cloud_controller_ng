@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'actions/missing_process_create'
+require 'actions/process_create_from_app_droplet'
 
 RSpec.describe 'Apps' do
   let(:user) { VCAP::CloudController::User.make }

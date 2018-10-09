@@ -151,7 +151,7 @@ module VCAP::CloudController
         context 'when the current droplet assignment fails' do
           let(:unaffiliated_droplet) { VCAP::CloudController::DropletModel.make }
 
-          it 'raises a SetCurrentDroplet error' do
+          it 'raises a AppAssignDroplet error' do
             expect {
               DeploymentCreate.create(app: app, droplet: unaffiliated_droplet, user_audit_info: user_audit_info)
             }.to raise_error DeploymentCreate::SetCurrentDropletError, /Ensure the droplet exists and belongs to this app/

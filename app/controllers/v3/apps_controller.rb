@@ -8,7 +8,7 @@ require 'actions/app_restart'
 require 'actions/app_apply_manifest'
 require 'actions/app_start'
 require 'actions/app_stop'
-require 'actions/set_current_droplet'
+require 'actions/app_assign_droplet'
 require 'decorators/include_app_space_decorator'
 require 'messages/apps_list_message'
 require 'messages/app_show_message'
@@ -241,7 +241,7 @@ class AppsV3Controller < ApplicationController
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
     unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
 
-    SetCurrentDroplet.new(user_audit_info).update_to(app, droplet)
+    AppAssignDroplet.new(user_audit_info).assign(app, droplet)
 
     render status: :ok, json: Presenters::V3::AppDropletRelationshipPresenter.new(
       resource_path:         "apps/#{app_guid}",
@@ -250,7 +250,7 @@ class AppsV3Controller < ApplicationController
       related_resource_name: 'droplets',
       app_model:             app
     )
-  rescue SetCurrentDroplet::Error => e
+  rescue AppAssignDroplet::Error => e
     unprocessable!(e.message)
   end
 
