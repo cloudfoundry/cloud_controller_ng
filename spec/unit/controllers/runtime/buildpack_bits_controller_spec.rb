@@ -208,7 +208,7 @@ module VCAP::CloudController
           put "/v2/buildpacks/#{test_buildpack.guid}/bits", { buildpack: valid_zip }
           put "/v2/buildpacks/#{test_buildpack.guid}/bits", { buildpack: valid_zip_copy }
 
-          expect(last_response.status).to eq(204), last_response.body
+          expect(last_response.status).to eq(204), "status: #{last_response.status}, body: #{last_response.body}"
         end
 
         it 'does not allow uploading a buildpack which will update the stack that already has a buildpack with the same name' do
