@@ -1567,7 +1567,7 @@ module VCAP::CloudController
             end
 
             it 'does not save ports to the database' do
-              expect(process.user_provided_ports).to be_nil
+              expect(process.ports).to be_nil
             end
 
             context 'when the user provided ports' do
@@ -1577,7 +1577,6 @@ module VCAP::CloudController
               end
 
               it 'saves to db and returns the user provided ports' do
-                expect(process.user_provided_ports).to eq([1111])
                 expect(process.ports).to eq([1111])
               end
             end
@@ -1593,7 +1592,6 @@ module VCAP::CloudController
               process.reload
 
               expect(process.ports).to be nil
-              expect(process.user_provided_ports).to be_nil
             end
           end
 
@@ -1605,7 +1603,6 @@ module VCAP::CloudController
               )
               process.reload
 
-              expect(process.user_provided_ports).to eq([1111])
               expect(process.ports).to eq([1111])
             end
           end
@@ -1619,7 +1616,6 @@ module VCAP::CloudController
               process.reload
 
               expect(process.ports).to be nil
-              expect(process.user_provided_ports).to be_nil
             end
           end
         end
@@ -1630,7 +1626,6 @@ module VCAP::CloudController
           it 'returns the ports that were specified during creation' do
             process = ProcessModel.make(diego: true, ports: [1025, 1026, 1027, 1028])
             expect(process.ports).to eq([1025, 1026, 1027, 1028])
-            expect(process.user_provided_ports).to eq([1025, 1026, 1027, 1028])
           end
         end
 
@@ -1639,7 +1634,6 @@ module VCAP::CloudController
             it 'returns the ports that were specified during creation' do
               process = ProcessModelFactory.make(diego: true, ports: [1025, 1026, 1027, 1028], instances: 1)
               expect(process.ports).to eq([1025, 1026, 1027, 1028])
-              expect(process.user_provided_ports).to eq([1025, 1026, 1027, 1028])
             end
           end
 
@@ -1652,7 +1646,6 @@ module VCAP::CloudController
               process.reload
 
               expect(process.ports).to eq([1025, 1026, 1027, 1028])
-              expect(process.user_provided_ports).to eq([1025, 1026, 1027, 1028])
             end
           end
         end

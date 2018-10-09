@@ -145,10 +145,6 @@ module VCAP::CloudController
 
     alias_method :diego?, :diego
 
-    # user_provided_ports method should be called to
-    # get the value of ports stored in the database
-    alias_method(:user_provided_ports, :ports)
-
     def package_hash
       # this caches latest_package for performance reasons
       package = latest_package
