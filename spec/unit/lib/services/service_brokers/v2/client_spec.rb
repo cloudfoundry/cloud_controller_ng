@@ -1272,6 +1272,18 @@ module VCAP::Services::ServiceBrokers::V2
 
               expect(orphan_mitigator).to have_received(:cleanup_failed_bind)
             end
+
+            context 'when the status code was a 200' do
+              let(:response) { HttpResponse.new(code: 200, body: nil, message: nil) }
+
+              it 'does not initiate orphan mitigation' do
+                expect {
+                  client.bind(binding)
+                }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+
+                expect(orphan_mitigator).not_to have_received(:cleanup_failed_bind).with(client_attrs, binding)
+              end
+            end
           end
         end
       end
