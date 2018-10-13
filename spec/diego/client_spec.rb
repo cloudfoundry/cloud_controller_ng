@@ -12,6 +12,14 @@ module Diego
       Client.new(url: bbs_url, ca_cert_file: ca_cert_file, client_cert_file: client_cert_file, client_key_file: client_key_file)
     end
 
+    describe 'configuration' do
+      it "should set ENV['PB_IGNORE_DEPRECATIONS'] to true" do
+        # to supress warnings in stderr when BBS sends deprecated keys in responses
+        ENV.delete('PB_IGNORE_DEPRECATIONS')
+        expect { subject }.to change { ENV['PB_IGNORE_DEPRECATIONS'] }.from(nil).to('true')
+      end
+    end
+
     describe '#ping' do
       let(:response_body) { Bbs::Models::PingResponse.new(available: true).encode.to_s }
       let(:response_status) { 200 }

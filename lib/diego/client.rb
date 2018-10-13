@@ -7,6 +7,7 @@ module Diego
     PROTOBUF_HEADER = { 'Content-Type'.freeze => 'application/x-protobuf'.freeze }.freeze
 
     def initialize(url:, ca_cert_file:, client_cert_file:, client_key_file:)
+      ENV['PB_IGNORE_DEPRECATIONS'] ||= 'true'
       @client = build_client(url, ca_cert_file, client_cert_file, client_key_file)
     end
 
