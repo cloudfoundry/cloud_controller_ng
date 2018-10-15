@@ -3,13 +3,14 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe VCAP::CloudController::BuildpackBitsController do
     let(:user) { make_user }
-    let(:tmpdir) { Dir.mktmpdir }
     let(:filename) { 'file.zip' }
     let(:sha_valid_zip) { Digester.new(algorithm: Digest::SHA256).digest_file(valid_zip) }
     let(:sha_valid_zip2) { Digester.new(algorithm: Digest::SHA256).digest_file(valid_zip2) }
     let(:sha_valid_tar_gz) { Digester.new(algorithm: Digest::SHA256).digest_file(valid_tar_gz) }
+
+    let(:valid_zip_manifest_tmpdir) { Dir.mktmpdir }
     let(:valid_zip_manifest) do
-      zip_name = File.join(tmpdir, filename)
+      zip_name = File.join(valid_zip_manifest_tmpdir, filename)
       TestZip.create(zip_name, 1, 1024) do |zipfile|
         zipfile.get_output_stream('manifest.yml') do |f|
           f.write("---\nstack: stack-from-manifest\n")
@@ -18,8 +19,10 @@ module VCAP::CloudController
       zip_file = File.new(zip_name)
       Rack::Test::UploadedFile.new(zip_file)
     end
+
+    let(:valid_zip_unknown_stack_tmpdir) { Dir.mktmpdir }
     let(:valid_zip_unknown_stack) do
-      zip_name = File.join(tmpdir, filename)
+      zip_name = File.join(valid_zip_unknown_stack_tmpdir, filename)
       TestZip.create(zip_name, 1, 1024) do |zipfile|
         zipfile.get_output_stream('manifest.yml') do |f|
           f.write("---\nstack: unknown-stack\n")
@@ -28,41 +31,51 @@ module VCAP::CloudController
       zip_file = File.new(zip_name)
       Rack::Test::UploadedFile.new(zip_file)
     end
-    let(:valid_zip) do
-      zip_name = File.join(tmpdir, filename)
+
+    let(:valid_zip_tmpdir) { Dir.mktmpdir }
+    let!(:valid_zip) do
+      zip_name = File.join(valid_zip_tmpdir, filename)
       TestZip.create(zip_name, 1, 1024)
       zip_file = File.new(zip_name)
       Rack::Test::UploadedFile.new(zip_file)
     end
-    let(:valid_zip_copy) do
-      zip_name = File.join(tmpdir, filename)
-      TestZip.create(zip_name, 1, 1024)
+
+    let(:valid_zip_copy_tmpdir) { Dir.mktmpdir }
+    let!(:valid_zip_copy) do
+      zip_name = File.join(valid_zip_copy_tmpdir, filename)
+      FileUtils.cp(valid_zip.path, zip_name)
       zip_file = File.new(zip_name)
       Rack::Test::UploadedFile.new(zip_file)
     end
-    let(:valid_zip2) do
-      zip_name = File.join(tmpdir, filename)
+
+    let(:valid_zip2_tmpdir) { Dir.mktmpdir }
+    let!(:valid_zip2) do
+      zip_name = File.join(valid_zip2_tmpdir, filename)
       TestZip.create(zip_name, 3, 1024)
       zip_file = File.new(zip_name)
       Rack::Test::UploadedFile.new(zip_file)
     end
+
+    let(:valid_tar_gz_tmpdir) { Dir.mktmpdir }
     let(:valid_tar_gz) do
-      tar_gz_name = File.join(tmpdir, 'file.tar.gz')
+      tar_gz_name = File.join(valid_tar_gz_tmpdir, 'file.tar.gz')
       TestZip.create(tar_gz_name, 1, 1024)
       tar_gz_name = File.new(tar_gz_name)
       Rack::Test::UploadedFile.new(tar_gz_name)
     end
-    let(:expected_sha_valid_zip) { "#{@buildpack.guid}_#{sha_valid_zip}" }
 
     before do
-      @file = double(:file, {
-        public_url: 'https://some-bucket.example.com/ab/cd/abcdefg',
-        key: '123-456',
-      })
       set_current_user_as_admin
     end
 
-    after { FileUtils.rm_rf(tmpdir) }
+    after do
+      FileUtils.rm_rf(valid_zip_manifest_tmpdir)
+      FileUtils.rm_rf(valid_zip_unknown_stack_tmpdir)
+      FileUtils.rm_rf(valid_zip_tmpdir)
+      FileUtils.rm_rf(valid_zip_copy_tmpdir)
+      FileUtils.rm_rf(valid_zip2_tmpdir)
+      FileUtils.rm_rf(valid_tar_gz_tmpdir)
+    end
 
     context 'Buildpack binaries' do
       let(:test_buildpack) { VCAP::CloudController::Buildpack.create_from_hash({ name: 'upload_binary_buildpack', stack: nil, position: 0 }) }
