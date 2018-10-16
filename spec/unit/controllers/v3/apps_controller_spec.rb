@@ -204,9 +204,9 @@ RSpec.describe AppsV3Controller, type: :controller do
     let(:space) { VCAP::CloudController::Space.make }
     let(:request_body) do
       {
-        name:          'some-name',
+        name: 'some-name',
         relationships: { space: { data: { guid: space.guid } } },
-        lifecycle:     { type: 'buildpack', data: { buildpacks: ['http://some.url'], stack: nil } }
+        lifecycle: { type: 'buildpack', data: { buildpacks: ['http://some.url'], stack: nil } }
       }
     end
 
@@ -254,7 +254,7 @@ RSpec.describe AppsV3Controller, type: :controller do
       context 'when the space developer does not request a lifecycle' do
         let(:request_body) do
           {
-            name:          'some-name',
+            name: 'some-name',
             relationships: { space: { data: { guid: space.guid } } }
           }
         end
@@ -262,7 +262,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         it 'uses the defaults and returns a 201 and the app' do
           post :create, params: request_body, as: :json
 
-          response_body  = parsed_body
+          response_body = parsed_body
           lifecycle_data = response_body['lifecycle']['data']
 
           expect(response.status).to eq 201
@@ -276,16 +276,16 @@ RSpec.describe AppsV3Controller, type: :controller do
           context 'and leaves part of the data blank' do
             let(:request_body) do
               {
-                name:          'some-name',
+                name: 'some-name',
                 relationships: { space: { data: { guid: space.guid } } },
-                lifecycle:     { type: 'buildpack', data: { stack: 'cflinuxfs2' } }
+                lifecycle: { type: 'buildpack', data: { stack: 'cflinuxfs2' } }
               }
             end
 
             it 'creates the app with the lifecycle data, filling in defaults' do
               post :create, params: request_body, as: :json
 
-              response_body  = parsed_body
+              response_body = parsed_body
               lifecycle_data = response_body['lifecycle']['data']
 
               expect(response.status).to eq 201
@@ -297,9 +297,9 @@ RSpec.describe AppsV3Controller, type: :controller do
           context 'when the requested buildpack is not a valid url and is not a known buildpack' do
             let(:request_body) do
               {
-                name:          'some-name',
+                name: 'some-name',
                 relationships: { space: { data: { guid: space.guid } } },
-                lifecycle:     { type: 'buildpack', data: { buildpacks: ['blawgow'], stack: nil } }
+                lifecycle: { type: 'buildpack', data: { buildpacks: ['blawgow'], stack: nil } }
               }
             end
 
@@ -315,9 +315,9 @@ RSpec.describe AppsV3Controller, type: :controller do
           context 'and they do not include the data section' do
             let(:request_body) do
               {
-                name:          'some-name',
+                name: 'some-name',
                 relationships: { space: { data: { guid: space.guid } } },
-                lifecycle:     { type: 'buildpack' }
+                lifecycle: { type: 'buildpack' }
               }
             end
 
@@ -336,9 +336,9 @@ RSpec.describe AppsV3Controller, type: :controller do
         context 'when lifecycle data is not empty' do
           let(:request_body) do
             {
-              name:          'some-name',
+              name: 'some-name',
               relationships: { space: { data: { guid: space.guid } } },
-              lifecycle:     { type: 'docker', data: { foo: 'bar' } }
+              lifecycle: { type: 'docker', data: { foo: 'bar' } }
             }
           end
 
@@ -354,9 +354,9 @@ RSpec.describe AppsV3Controller, type: :controller do
         context 'when lifecycle data is not a hash' do
           let(:request_body) do
             {
-              name:          'some-name',
+              name: 'some-name',
               relationships: { space: { data: { guid: space.guid } } },
-              lifecycle:     { type: 'docker', data: 'yay' }
+              lifecycle: { type: 'docker', data: 'yay' }
             }
           end
 
@@ -388,9 +388,9 @@ RSpec.describe AppsV3Controller, type: :controller do
     context 'when requesting docker lifecycle and diego_docker feature flag is disabled' do
       let(:request_body) do
         {
-          name:          'some-name',
+          name: 'some-name',
           relationships: { space: { data: { guid: space.guid } } },
-          lifecycle:     { type: 'docker', data: {} }
+          lifecycle: { type: 'docker', data: {} }
         }
       end
 
@@ -517,9 +517,9 @@ RSpec.describe AppsV3Controller, type: :controller do
           }
         end
 
-        context 'buildpack app' do
+        context 'for a buildpack app' do
           before do
-            app_model.lifecycle_data.stack      = 'some-stack-name'
+            app_model.lifecycle_data.stack = 'some-stack-name'
             app_model.lifecycle_data.buildpacks = ['some-buildpack-name', 'http://buildpack.com']
             app_model.lifecycle_data.save
           end
@@ -535,9 +535,30 @@ RSpec.describe AppsV3Controller, type: :controller do
             expect(app_model.lifecycle_data.stack).to eq('some-stack-name')
             expect(app_model.lifecycle_data.buildpacks).to eq(['some-buildpack-name', 'http://buildpack.com'])
           end
+
+          context 'the metadata' do
+            let(:request_body) do
+              {
+                metadata: {
+                  labels: {
+                    release: 'stable'
+                  }
+                }
+              }
+            end
+
+            it 'updates the labels' do
+              patch :update, params: { guid: app_model.guid }.merge(request_body), as: :json
+              expect(response.status).to eq 200
+
+              app_model.reload
+
+              expect(app_model.labels.length).to eq(1)
+            end
+          end
         end
 
-        context 'docker app' do
+        context 'for a docker app' do
           let(:app_model) { VCAP::CloudController::AppModel.make(:docker) }
 
           it 'uses the existing lifecycle on app' do
@@ -556,7 +577,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         context 'when the requested buildpack is not a valid url and is not a known buildpack' do
           let(:request_body) do
             {
-              name:      'some-name',
+              name: 'some-name',
               lifecycle: { type: 'buildpack', data: { buildpacks: ['blawgow'] } }
             }
           end
@@ -573,7 +594,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         context 'when the user specifies the buildpack' do
           let(:buildpack_url) { 'http://some.url' }
           let(:request_body) do
-            { name:      new_name,
+            { name: new_name,
               lifecycle: {
                 type: 'buildpack',
                 data: {
@@ -590,7 +611,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
         context 'when the user requests a nil buildpack' do
           let(:request_body) do
-            { name:      new_name,
+            { name: new_name,
               lifecycle: {
                 type: 'buildpack',
                 data: {
@@ -615,7 +636,7 @@ RSpec.describe AppsV3Controller, type: :controller do
           context 'when the requested stack is valid' do
             let(:request_body) do
               {
-                name:      new_name,
+                name: new_name,
                 lifecycle: {
                   type: 'buildpack',
                   data: {
@@ -636,7 +657,7 @@ RSpec.describe AppsV3Controller, type: :controller do
           context 'when the requested stack is invalid' do
             let(:request_body) do
               {
-                name:      new_name,
+                name: new_name,
                 lifecycle: {
                   type: 'buildpack',
                   data: {
@@ -659,7 +680,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         context 'when a user provides empty lifecycle data' do
           let(:request_body) do
             {
-              name:      new_name,
+              name: new_name,
               lifecycle: {
                 type: 'buildpack',
                 data: {}
@@ -682,7 +703,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         context 'when the space developer requests a lifecycle without a data key' do
           let(:request_body) do
             {
-              name:      'some-name',
+              name: 'some-name',
               lifecycle: { type: 'buildpack' }
             }
           end
@@ -699,7 +720,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         context 'when attempting to change to another lifecycle type' do
           let(:request_body) do
             {
-              name:      'some-name',
+              name: 'some-name',
               lifecycle: { type: 'docker', data: {} }
             }
           end
@@ -720,7 +741,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         context 'when attempting to change to another lifecycle type' do
           let(:request_body) do
             {
-              name:      'some-name',
+              name: 'some-name',
               lifecycle: { type: 'buildpack', data: {} }
             }
           end
@@ -737,7 +758,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         context 'when a user provides empty lifecycle data' do
           let(:request_body) do
             {
-              name:      'some-name',
+              name: 'some-name',
               lifecycle: {
                 type: 'docker',
                 data: {}
@@ -754,7 +775,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         context 'when the space developer requests a lifecycle without a data key' do
           let(:request_body) do
             {
-              name:      'some-name',
+              name: 'some-name',
               lifecycle: { type: 'docker' }
             }
           end
@@ -895,7 +916,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         VCAP::CloudController::PollableJobModel.count
       }.by(1)
 
-      job          = VCAP::CloudController::PollableJobModel.last
+      job = VCAP::CloudController::PollableJobModel.last
       enqueued_job = Delayed::Job.last
       expect(job.delayed_job_guid).to eq(enqueued_job.guid)
       expect(job.operation).to eq('app.delete')
@@ -1365,7 +1386,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
     it_behaves_like 'permissions endpoint' do
       let(:roles_to_http_responses) { READ_ONLY_PERMS }
-      let(:api_call) { lambda {       get :builds, params: { guid: app_model.guid } } }
+      let(:api_call) { lambda { get :builds, params: { guid: app_model.guid } } }
     end
   end
 
@@ -1522,7 +1543,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         },
         'links' => {
           'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/environment_variables" },
-          'app'  => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" }
+          'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" }
         }
       }
     end
@@ -1533,15 +1554,15 @@ RSpec.describe AppsV3Controller, type: :controller do
 
     describe 'permissions by role' do
       role_to_expected_http_response = {
-        'space_developer'     => 200,
-        'org_manager'         => 403,
-        'org_user'            => 404,
-        'space_manager'       => 403,
-        'space_auditor'       => 403,
-        'org_auditor'         => 404,
+        'space_developer' => 200,
+        'org_manager' => 403,
+        'org_user' => 404,
+        'space_manager' => 403,
+        'space_auditor' => 403,
+        'org_auditor' => 404,
         'org_billing_manager' => 404,
-        'admin'               => 200,
-        'admin_read_only'     => 200
+        'admin' => 200,
+        'admin_read_only' => 200
       }.freeze
 
       role_to_expected_http_response.each do |role, expected_return_value|
@@ -1631,7 +1652,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         expect(response.status).to eq(200)
         expect(parsed_body).to eq({
           'links' => expected_success_response['links'],
-          'var'   => {},
+          'var' => {},
         })
       end
     end
@@ -1648,11 +1669,11 @@ RSpec.describe AppsV3Controller, type: :controller do
         'var' => {
           'override' => 'new-value',
           'preserve' => 'value-to-keep',
-          'new-key'  => 'another-new-value'
+          'new-key' => 'another-new-value'
         },
         'links' => {
           'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/environment_variables" },
-          'app'  => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" }
+          'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" }
         }
       }
     end
@@ -1661,7 +1682,7 @@ RSpec.describe AppsV3Controller, type: :controller do
       {
         'var' => {
           'override' => 'new-value',
-          'new-key'  => 'another-new-value'
+          'new-key' => 'another-new-value'
         }
       }
     end
@@ -1672,15 +1693,15 @@ RSpec.describe AppsV3Controller, type: :controller do
 
     describe 'permissions by role' do
       role_to_expected_http_response = {
-        'space_developer'     => 200,
-        'org_manager'         => 403,
-        'org_user'            => 404,
-        'space_manager'       => 403,
-        'space_auditor'       => 403,
-        'org_auditor'         => 404,
+        'space_developer' => 200,
+        'org_manager' => 403,
+        'org_user' => 404,
+        'space_manager' => 403,
+        'space_auditor' => 403,
+        'org_auditor' => 404,
         'org_billing_manager' => 404,
-        'admin'               => 200,
-        'admin_read_only'     => 403
+        'admin' => 200,
+        'admin_read_only' => 403
       }.freeze
 
       role_to_expected_http_response.each do |role, expected_return_value|
@@ -1698,7 +1719,7 @@ RSpec.describe AppsV3Controller, type: :controller do
               expect(app_model.environment_variables).to eq({
                 'override' => 'new-value',
                 'preserve' => 'value-to-keep',
-                'new-key'  => 'another-new-value',
+                'new-key' => 'another-new-value',
               })
             end
           end
@@ -1744,9 +1765,9 @@ RSpec.describe AppsV3Controller, type: :controller do
     context 'when given a non-string value' do
       let(:request_body) do
         {
-            'var' => {
-                'hashes_not_allowed' => { 'var' => 'value' }
-            }
+          'var' => {
+            'hashes_not_allowed' => { 'var' => 'value' }
+          }
         }
       end
 

@@ -19,6 +19,7 @@ module VCAP::CloudController
 
         update_app_command(app, message) if message.requested?(:command)
         update_app_env(app, message) if message.requested?(:env)
+        update_app_labels(app, message) if message.requested?(:metadata)
 
         app.save
 
@@ -50,6 +51,14 @@ module VCAP::CloudController
 
     def update_app_env(app, message)
       app.environment_variables = existing_environment_variables_for(app).merge(message.env).compact
+    end
+
+    def update_app_labels(app, message)
+      labels = message.metadata[:labels] || {}
+      labels.each do |key, value|
+        app_label = AppLabel.find_or_create(app_guid: app.guid, label_key: key.to_s)
+        app_label.update(label_value: value.to_s)
+      end
     end
 
     def using_disabled_custom_buildpack?(app)

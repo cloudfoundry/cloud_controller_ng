@@ -22,8 +22,15 @@ module VCAP::CloudController
                 }
               }
             },
-            links: build_links
+            links: build_links,
+            metadata: {
+              labels: {}
+            }
           }
+
+          app.labels.each do |app_label|
+            hash[:metadata][:labels][app_label[:label_key]] = app_label[:label_value]
+          end
 
           @decorators.reduce(hash) { |memo, d| d.decorate(memo, [app]) }
         end

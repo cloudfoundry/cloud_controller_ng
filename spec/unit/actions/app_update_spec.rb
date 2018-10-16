@@ -165,6 +165,61 @@ module VCAP::CloudController
         end
       end
 
+      describe 'updating labels' do
+        let(:message) do
+          AppUpdateMessage.new({
+            metadata: {
+              labels: {
+                release: 'stable',
+                potato: 'mashed'
+              }
+            }
+          })
+        end
+
+        it 'updates the labels' do
+          app_update.update(app_model, message, lifecycle)
+          expect(AppLabel.find(app_guid: app_model.guid, label_key: 'release').label_value).to eq 'stable'
+          expect(AppLabel.find(app_guid: app_model.guid, label_key: 'potato').label_value).to eq 'mashed'
+        end
+
+        context 'when there is metadata but no label' do
+          let(:message) do
+            AppUpdateMessage.new({
+              metadata: {}
+            })
+          end
+
+          it 'does not change any labels' do
+            expect do
+              app_update.update(app_model, message, lifecycle)
+            end.not_to change { AppLabel.count }
+          end
+        end
+
+        context 'when existing labels are being modified' do
+          let(:message) do
+            AppUpdateMessage.new({
+              metadata: {
+                labels: {
+                  release: 'stable'
+                }
+              }
+            })
+          end
+
+          let!(:old_label) do
+            AppLabel.create(app_guid: app_model.guid, label_key: 'release', label_value: 'unstable')
+          end
+
+          it 'updates the old label' do
+            app_update.update(app_model, message, lifecycle)
+            old_label.reload
+            expect(old_label.label_value).to eq 'stable'
+          end
+        end
+      end
+
       context 'when the app is invalid' do
         before do
           allow(app_model).to receive(:save).and_raise(Sequel::ValidationFailed.new('something'))

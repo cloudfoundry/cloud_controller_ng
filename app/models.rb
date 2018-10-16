@@ -60,6 +60,7 @@ require 'models/runtime/system_audit_user'
 require 'models/runtime/deployment_model'
 require 'models/runtime/deployment_process_model'
 require 'models/runtime/encryption_key_sentinel_model'
+require 'models/runtime/app_label'
 
 require 'models/services/service'
 require 'models/services/service_binding'
