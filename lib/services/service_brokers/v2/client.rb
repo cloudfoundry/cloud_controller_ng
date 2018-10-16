@@ -105,7 +105,8 @@ module VCAP::Services::ServiceBrokers::V2
       parsed_response = @response_parser.parse_bind(path, response, service_guid: key.service.guid)
 
       { credentials: parsed_response['credentials'] }
-    rescue Errors::ServiceBrokerBadResponse => e
+    rescue Errors::ServiceBrokerBadResponse,
+           Errors::ServiceBrokerResponseMalformed => e
       @orphan_mitigator.cleanup_failed_key(@attrs, key)
       raise e
     end
@@ -154,8 +155,12 @@ module VCAP::Services::ServiceBrokers::V2
       }
     rescue Errors::ServiceBrokerBadResponse,
            Errors::ServiceBrokerInvalidVolumeMounts,
-           Errors::ServiceBrokerInvalidSyslogDrainUrl => e
-      @orphan_mitigator.cleanup_failed_bind(@attrs, binding)
+           Errors::ServiceBrokerInvalidSyslogDrainUrl,
+           Errors::ServiceBrokerResponseMalformed => e
+      unless e.class == Errors::ServiceBrokerResponseMalformed && e.status == 200
+        @orphan_mitigator.cleanup_failed_bind(@attrs, binding)
+      end
+
       raise e
     end
 

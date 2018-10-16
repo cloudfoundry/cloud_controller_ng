@@ -944,6 +944,18 @@ module VCAP::Services::ServiceBrokers::V2
               expect(orphan_mitigator).not_to have_received(:cleanup_failed_key)
             end
           end
+
+          context 'ServiceBrokerResponseMalformed error' do
+            let(:error) { Errors::ServiceBrokerResponseMalformed.new(uri, :put, response, '') }
+
+            it 'propagates the error and follows up with a deprovision request' do
+              expect {
+                client.create_service_key(key)
+              }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+
+              expect(orphan_mitigator).to have_received(:cleanup_failed_key)
+            end
+          end
         end
       end
     end
@@ -1247,6 +1259,30 @@ module VCAP::Services::ServiceBrokers::V2
               }.to raise_error(Errors::ConcurrencyError)
 
               expect(orphan_mitigator).not_to have_received(:cleanup_failed_bind)
+            end
+          end
+
+          context 'ServiceBrokerResponseMalformed error' do
+            let(:error) { Errors::ServiceBrokerResponseMalformed.new(uri, :put, response, '') }
+
+            it 'propagates the error and follows up with a deprovision request' do
+              expect {
+                client.bind(binding)
+              }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+
+              expect(orphan_mitigator).to have_received(:cleanup_failed_bind)
+            end
+
+            context 'when the status code was a 200' do
+              let(:response) { HttpResponse.new(code: 200, body: nil, message: nil) }
+
+              it 'does not initiate orphan mitigation' do
+                expect {
+                  client.bind(binding)
+                }.to raise_error(Errors::ServiceBrokerResponseMalformed)
+
+                expect(orphan_mitigator).not_to have_received(:cleanup_failed_bind).with(client_attrs, binding)
+              end
             end
           end
         end
