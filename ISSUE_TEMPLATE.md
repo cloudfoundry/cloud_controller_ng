@@ -18,7 +18,7 @@ Thanks for submitting an issue to `cloud_controller_ng`. We are always trying to
 
 ## Current result
 
-[describe what you you currently experience from this process, and thereby explain the bug]
+[describe what you are currently experiencing from this process, and thereby explain the bug]
 
 [include relevant logs]
 
