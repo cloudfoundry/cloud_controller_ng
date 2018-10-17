@@ -254,7 +254,10 @@ module VCAP::CloudController
         end
 
         it 'raises a CopilotUnavailable exception' do
-          expect { adapter.bulk_sync(routes: 'some-route', route_mappings: 'some-route-mapping', capi_diego_process_associations: 'kiwi') }.to raise_error(Copilot::Adapter::CopilotUnavailable, 'uh oh')
+          expect { adapter.bulk_sync(routes: 'some-route',
+                                     route_mappings: 'some-route-mapping',
+                                     capi_diego_process_associations: 'kiwi')
+          }.to raise_error(Copilot::Adapter::CopilotUnavailable, 'uh oh')
         end
       end
     end

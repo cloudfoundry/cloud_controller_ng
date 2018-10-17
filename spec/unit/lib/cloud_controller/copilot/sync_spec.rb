@@ -26,16 +26,16 @@ module VCAP::CloudController
             routes: [{
               guid: route.guid,
               host: route.fqdn,
-              path: route.path,
+              path: route.path
             }],
             route_mappings: [{
               capi_process_guid: web_process_model.guid,
               route_guid: route_mapping.route_guid,
-              route_weight: route_mapping.weight,
+              route_weight: route_mapping.weight
             }],
             capi_diego_process_associations: [{
               capi_process_guid: web_process_model.guid,
-              diego_process_guids: ['some-diego-process-guid'],
+              diego_process_guids: ['some-diego-process-guid']
             }]
           }
         )
@@ -53,16 +53,16 @@ module VCAP::CloudController
                 routes: [{
                   guid: route.guid,
                   host: route.fqdn,
-                  path: route.path,
+                  path: route.path
                 }],
                 route_mappings: [{
                   capi_process_guid: web_process_model.guid,
                   route_guid: route_mapping.route_guid,
-                  route_weight: route_mapping.weight,
+                  route_weight: route_mapping.weight
                 }],
                 capi_diego_process_associations: [{
                   capi_process_guid: web_process_model.guid,
-                  diego_process_guids: ['some-diego-process-guid'],
+                  diego_process_guids: ['some-diego-process-guid']
                 }]
               }
             )
