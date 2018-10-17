@@ -235,33 +235,16 @@ module VCAP::CloudController
     end
 
     describe '#bulk_sync' do
-      let(:route_guid) { 'some-route-guid' }
-      let(:route) { instance_double(Route, guid: route_guid, fqdn: 'host.example.com', path: '/some/path') }
-      let(:capi_process_guid) { 'some-capi-process-guid' }
-      let(:process) { instance_double(ProcessModel, guid: capi_process_guid) }
-      let(:route_mapping) do
-        instance_double(
-          RouteMappingModel,
-          process: process,
-          route: route,
-          weight: 5
-        )
-      end
-      let(:diego_process_guid) { 'some-diego-process-guid' }
-
-      before do
-        allow(Diego::ProcessGuid).to receive(:from_process).with(process).and_return(diego_process_guid)
-      end
-
       it 'calls copilot_client.bulk_sync' do
-        adapter.bulk_sync(routes: [route], route_mappings: [route_mapping], processes: [process])
+        adapter.bulk_sync(routes: 'some-route',
+                          route_mappings: 'some-route-mapping',
+                          capi_diego_process_associations: 'kiwi',
+                         )
+
         expect(copilot_client).to have_received(:bulk_sync).with(
-          routes: [{ guid: 'some-route-guid', host: 'host.example.com', path: '/some/path' }],
-          route_mappings: [{ capi_process_guid: capi_process_guid, route_guid: route_guid, route_weight: 5 }],
-          capi_diego_process_associations: [{
-            capi_process_guid: capi_process_guid,
-            diego_process_guids: [diego_process_guid]
-          }]
+          routes: 'some-route',
+          route_mappings: 'some-route-mapping',
+          capi_diego_process_associations: 'kiwi',
         )
       end
 
@@ -271,7 +254,10 @@ module VCAP::CloudController
         end
 
         it 'raises a CopilotUnavailable exception' do
-          expect { adapter.bulk_sync(routes: [route], route_mappings: [route_mapping], processes: [process]) }.to raise_error(Copilot::Adapter::CopilotUnavailable, 'uh oh')
+          expect { adapter.bulk_sync(routes: 'some-route',
+                                     route_mappings: 'some-route-mapping',
+                                     capi_diego_process_associations: 'kiwi')
+          }.to raise_error(Copilot::Adapter::CopilotUnavailable, 'uh oh')
         end
       end
     end

@@ -52,16 +52,11 @@ module VCAP::CloudController
           end
         end
 
-        def bulk_sync(routes:, route_mappings:, processes:)
+        def bulk_sync(routes:, route_mappings:, capi_diego_process_associations:)
           copilot_client.bulk_sync(
-            routes: routes.map { |r| { guid: r.guid, host: r.fqdn, path: r.path } },
-            route_mappings: route_mappings.map { |rm| { capi_process_guid: rm.process.guid, route_guid: rm.route.guid, route_weight: rm.weight } },
-            capi_diego_process_associations: processes.map do |process|
-              {
-                  capi_process_guid: process.guid,
-                  diego_process_guids: [Diego::ProcessGuid.from_process(process)]
-              }
-            end
+            routes: routes,
+            route_mappings: route_mappings,
+            capi_diego_process_associations: capi_diego_process_associations,
           )
         rescue StandardError => e
           raise CopilotUnavailable.new(e.message)
