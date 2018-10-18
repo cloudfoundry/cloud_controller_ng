@@ -17,17 +17,12 @@ module VCAP::CloudController
       it { is_expected.to validate_presence :service, message: 'is required' }
       it { is_expected.to strip_whitespace :name }
 
-      context 'when the unique_id is not unique' do
+      context 'when the unique_id is not unique across different services' do
         let(:existing_service_plan) { ServicePlan.make }
-        let(:service_plan) { ServicePlan.make_unsaved(unique_id: existing_service_plan.unique_id, service: Service.make) }
+        let(:service_plan) { ServicePlan.make(unique_id: existing_service_plan.unique_id, service: Service.make) }
 
-        it 'is not valid' do
-          expect(service_plan).not_to be_valid
-        end
-
-        it 'raises an error on save' do
-          expect { service_plan.save }.
-            to raise_error(Sequel::ValidationFailed, 'Plan ids must be unique')
+        it 'is valid' do
+          expect(service_plan).to be_valid
         end
       end
 

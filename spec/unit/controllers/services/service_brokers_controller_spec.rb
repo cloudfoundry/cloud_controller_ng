@@ -291,23 +291,6 @@ module VCAP::CloudController
           expect(last_response).to have_status_code(400)
         end
 
-        it 'returns a 400 if a another broker (private or public) exists with that url' do
-          stub_catalog
-
-          public_body = {
-            name:          'other-name',
-            broker_url:    broker_url,
-            auth_username: auth_username,
-            auth_password: auth_password,
-          }.to_json
-
-          post '/v2/service_brokers', public_body
-          expect(last_response).to have_status_code(201)
-
-          post '/v2/service_brokers', body
-          expect(last_response).to have_status_code(400)
-        end
-
         it 'returns a 404 if the space does not exist' do
           space.destroy
           stub_catalog
@@ -352,12 +335,11 @@ module VCAP::CloudController
             ServiceBroker.make(broker_url: body_hash[:broker_url])
           end
 
-          it 'returns an error' do
+          it 'creates the broker' do
             stub_catalog
             post '/v2/service_brokers', body
 
-            expect(last_response).to have_status_code(400)
-            expect(decoded_response.fetch('code')).to eq(270003)
+            expect(last_response).to have_status_code(201)
           end
         end
 
@@ -772,19 +754,6 @@ module VCAP::CloudController
               expect(last_response).to have_status_code(400)
               expect(decoded_response.fetch('code')).to eq(270011)
               expect(decoded_response.fetch('description')).to match(/is not a valid URL/)
-            end
-          end
-
-          context 'when the broker url is taken' do
-            let!(:another_broker) { ServiceBroker.make(broker_url: 'http://example.com') }
-            before { body_hash[:broker_url] = another_broker.broker_url }
-
-            it 'returns an error' do
-              put "/v2/service_brokers/#{broker.guid}", body
-
-              expect(last_response.status).to eq(400)
-              expect(decoded_response.fetch('code')).to eq(270003)
-              expect(decoded_response.fetch('description')).to match(/The service broker url is taken/)
             end
           end
 

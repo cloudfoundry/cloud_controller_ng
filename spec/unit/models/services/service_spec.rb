@@ -13,8 +13,6 @@ module VCAP::CloudController
       it { is_expected.to validate_presence :label, message: 'Service name is required' }
       it { is_expected.to validate_presence :description, message: 'is required' }
       it { is_expected.to validate_presence :bindable, message: 'is required' }
-      it { is_expected.to validate_uniqueness :unique_id, message: 'Service ids must be unique' }
-      it { is_expected.to validate_uniqueness :label, message: 'Service name must be unique' }
       it { is_expected.to strip_whitespace :label }
 
       describe 'urls' do

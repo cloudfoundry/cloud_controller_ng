@@ -80,6 +80,41 @@ module VCAP::Services::ServiceBrokers::V2
         end
       end
 
+      context 'when two services in the catalog have the same name' do
+        let(:catalog_hash) do
+          {
+            'services' => [
+              build_service('id' => '1', 'name' => 'my-service'),
+              build_service('id' => '2', 'name' => 'my-service')
+            ]
+          }
+        end
+
+        it 'gives an error' do
+          catalog = Catalog.new(broker, catalog_hash)
+          expect(catalog.valid?).to eq false
+          expect(catalog.errors.messages).to include('Service names must be unique within a broker')
+        end
+      end
+
+      context 'when a service in the catalog has the same id as a service from a different broker' do
+        let(:catalog_hash) do
+          {
+            'services' => [build_service('id' => '1'), build_service('id' => '2')]
+          }
+        end
+        let(:broker) { VCAP::CloudController::ServiceBroker.make }
+        let(:another_broker) { VCAP::CloudController::ServiceBroker.make }
+
+        it 'is valid' do
+          existing_catalog = Catalog.new(another_broker, catalog_hash)
+          catalog = Catalog.new(broker, catalog_hash)
+
+          expect(catalog.valid?).to eq true
+          expect(existing_catalog.valid?).to eq true
+        end
+      end
+
       context 'when two services in the catalog have the same dashboard_client id' do
         let(:catalog_hash) do
           {

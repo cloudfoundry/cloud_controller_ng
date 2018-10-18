@@ -26,10 +26,6 @@ module VCAP::Services::ServiceBrokers::V2
       end
     end
 
-    def cc_plan
-      cc_service.service_plans_dataset.where(unique_id: broker_provided_id).first
-    end
-
     def valid?
       return @valid if defined? @valid
       validate!

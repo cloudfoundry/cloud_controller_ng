@@ -18,6 +18,7 @@ module VCAP::Services::ServiceBrokers::V2
     def valid?
       validate_services
       validate_all_service_ids_are_unique
+      validate_all_service_names_are_unique
       validate_all_service_dashboard_clients_are_unique
       errors.empty?
     end
@@ -43,6 +44,12 @@ module VCAP::Services::ServiceBrokers::V2
     def validate_all_service_ids_are_unique
       if has_duplicates?(services.map(&:broker_provided_id).compact)
         errors.add('Service ids must be unique')
+      end
+    end
+
+    def validate_all_service_names_are_unique
+      if has_duplicates?(services.map(&:name))
+        errors.add('Service names must be unique within a broker')
       end
     end
 
