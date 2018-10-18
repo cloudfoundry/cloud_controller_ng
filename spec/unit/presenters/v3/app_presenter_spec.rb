@@ -13,7 +13,7 @@ module VCAP::CloudController::Presenters::V3
 
     let!(:potato_label) do
       VCAP::CloudController::AppLabel.make(
-        namespace: 'maine.gov',
+        prefix: 'maine.gov',
         key: 'potato',
         value: 'mashed',
         app_guid: app.guid

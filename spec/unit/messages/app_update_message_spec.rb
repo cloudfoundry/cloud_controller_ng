@@ -290,7 +290,7 @@ module VCAP::CloudController
           end
         end
 
-        describe 'label key namespaces' do
+        describe 'label key prefixs' do
           context 'when the key has a valid prefix' do
             let(:key_with_long_domain) { (('a' * 61) + '.sub-part.' + ('b' * 61) + '.com/release').to_sym }
             let(:params) do
@@ -334,7 +334,7 @@ module VCAP::CloudController
           end
         end
 
-        context 'when the namespace is not a valid domain' do
+        context 'when the prefix is not a valid domain' do
           let(:params) do
             {
               "metadata": {
@@ -350,14 +350,14 @@ module VCAP::CloudController
           it 'is invalid' do
             message = AppUpdateMessage.new(params)
             expect(message).not_to be_valid
-            expect(message.errors_on(:metadata)).to include("label namespace '-a' must be in valid dns format")
-            expect(message.errors_on(:metadata)).to include("label namespace 'a%a.com' must be in valid dns format")
-            expect(message.errors_on(:metadata)).to include("label namespace 'a..com' must be in valid dns format")
-            expect(message.errors_on(:metadata)).to include("label namespace 'onlycom' must be in valid dns format")
+            expect(message.errors_on(:metadata)).to include("label prefix '-a' must be in valid dns format")
+            expect(message.errors_on(:metadata)).to include("label prefix 'a%a.com' must be in valid dns format")
+            expect(message.errors_on(:metadata)).to include("label prefix 'a..com' must be in valid dns format")
+            expect(message.errors_on(:metadata)).to include("label prefix 'onlycom' must be in valid dns format")
           end
         end
 
-        context 'when the namespace is too long' do
+        context 'when the prefix is too long' do
           let(:long_domain) do
             ['a', 'b', 'c', 'd', 'e'].map { |c| c * 61 }.join('.')
           end
@@ -375,7 +375,7 @@ module VCAP::CloudController
           it 'is invalid' do
             message = AppUpdateMessage.new(params)
             expect(message).not_to be_valid
-            expect(message.errors_on(:metadata)).to contain_exactly("label namespace 'aaaaaaaa...' is greater than 253 characters")
+            expect(message.errors_on(:metadata)).to contain_exactly("label prefix 'aaaaaaaa...' is greater than 253 characters")
           end
         end
 

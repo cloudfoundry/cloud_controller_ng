@@ -131,9 +131,9 @@ module VCAP::CloudController::Validators
           record.errors.add(:metadata, "label key has more than one '/'")
           next
         end
-        namespace, key = VCAP::CloudController::LabelHelpers.extract_namespace(full_key)
+        prefix, key = VCAP::CloudController::LabelHelpers.extract_prefix(full_key)
 
-        validate_namespace(namespace, record)
+        validate_prefix(prefix, record)
 
         if key.blank?
           record.errors.add(:metadata, 'label key cannot be empty string')
@@ -150,12 +150,12 @@ module VCAP::CloudController::Validators
     VALID_CHAR_REGEX = /[^\w\-\.\_]/
     ALPHANUMERIC_START_END_REGEX = /\A(?=[a-zA-Z\d]).*[a-zA-Z\d]\z/
 
-    def validate_namespace(namespace, record)
-      return if namespace.nil?
-      if !CloudController::DomainDecorator::DOMAIN_REGEX.match(namespace)
-        record.errors.add(:metadata, "label namespace '#{namespace}' must be in valid dns format")
-      elsif namespace.size > VCAP::CloudController::AppUpdateMessage::MAX_NAMESPACE_SIZE
-        record.errors.add(:metadata, "label namespace '#{namespace[0...8]}...' is greater than #{VCAP::CloudController::AppUpdateMessage::MAX_NAMESPACE_SIZE} characters")
+    def validate_prefix(prefix, record)
+      return if prefix.nil?
+      if !CloudController::DomainDecorator::DOMAIN_REGEX.match(prefix)
+        record.errors.add(:metadata, "label prefix '#{prefix}' must be in valid dns format")
+      elsif prefix.size > VCAP::CloudController::AppUpdateMessage::MAX_PREFIX_SIZE
+        record.errors.add(:metadata, "label prefix '#{prefix[0...8]}...' is greater than #{VCAP::CloudController::AppUpdateMessage::MAX_PREFIX_SIZE} characters")
       end
     end
 

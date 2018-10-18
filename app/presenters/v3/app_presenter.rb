@@ -30,7 +30,7 @@ module VCAP::CloudController
           }
 
           app.labels.each do |app_label|
-            key = [app_label[:namespace], app_label[:key]].compact.join(VCAP::CloudController::LabelHelpers::KEY_SEPARATOR)
+            key = [app_label[:prefix], app_label[:key]].compact.join(VCAP::CloudController::LabelHelpers::KEY_SEPARATOR)
             hash[:metadata][:labels][key] = app_label[:value]
           end
 

@@ -180,7 +180,7 @@ module VCAP::CloudController
         it 'updates the labels' do
           app_update.update(app_model, message, lifecycle)
           expect(AppLabel.find(app_guid: app_model.guid, key: 'release').value).to eq 'stable'
-          expect(AppLabel.find(app_guid: app_model.guid, namespace: 'joyofcooking.com', key: 'potato').value).to eq 'mashed'
+          expect(AppLabel.find(app_guid: app_model.guid, prefix: 'joyofcooking.com', key: 'potato').value).to eq 'mashed'
         end
 
         context 'when there is metadata but no label' do
@@ -212,14 +212,14 @@ module VCAP::CloudController
           let!(:old_label) do
             AppLabel.create(app_guid: app_model.guid, key: 'release', value: 'unstable')
           end
-          let!(:old_label_with_namespace) do
-            AppLabel.create(app_guid: app_model.guid, namespace: 'joyofcooking.com', key: 'potato', value: 'fried')
+          let!(:old_label_with_prefix) do
+            AppLabel.create(app_guid: app_model.guid, prefix: 'joyofcooking.com', key: 'potato', value: 'fried')
           end
 
           it 'updates the old label' do
             app_update.update(app_model, message, lifecycle)
             expect(old_label.reload.value).to eq 'stable'
-            expect(old_label_with_namespace.reload.value).to eq 'mashed'
+            expect(old_label_with_prefix.reload.value).to eq 'mashed'
           end
         end
       end
