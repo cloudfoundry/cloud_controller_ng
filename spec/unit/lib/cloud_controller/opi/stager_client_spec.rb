@@ -16,7 +16,7 @@ RSpec.describe(OPI::StagerClient) do
       allow(VCAP::CloudController::Diego::Protocol).to receive(:new).and_return(protocol)
       allow(config).to receive(:get).
         with(:opi, :cc_uploader_url).
-        and_return("https://cc-uploader.service.cf.internal:9091")
+        and_return('https://cc-uploader.service.cf.internal:9091')
       allow(protocol).to receive(:stage_package_request).
         with(config, staging_details).
         and_return(staging_request)

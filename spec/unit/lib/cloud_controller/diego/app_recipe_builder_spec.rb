@@ -65,6 +65,7 @@ module VCAP::CloudController
           r
         end
 
+        let(:ports) { '' }
         let(:expected_network) do
           ::Diego::Bbs::Models::Network.new(
             properties: [
