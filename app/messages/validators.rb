@@ -1,6 +1,7 @@
 require 'active_model'
 require 'utils/uri_utils'
 require 'models/helpers/health_check_types'
+require 'models/helpers/label_helpers'
 require 'cloud_controller/domain_decorator'
 
 module VCAP::CloudController::Validators
@@ -125,22 +126,16 @@ module VCAP::CloudController::Validators
       end
       labels.each do |full_key, value|
         full_key = full_key.to_s
-        key = full_key
-        if full_key.include?('/')
-          namespace, key = full_key.split('/')
-
-          if full_key.count('/') > 1
-            record.errors.add(:metadata, "label key has more than one '/'")
-          end
-
-          if !CloudController::DomainDecorator::DOMAIN_REGEX.match(namespace)
-            record.errors.add(:metadata, "label namespace '#{namespace}' must be in valid dns format")
-          elsif namespace.size > VCAP::CloudController::AppUpdateMessage::MAX_NAMESPACE_SIZE
-            record.errors.add(:metadata, "label namespace '#{namespace[0...8]}...' is greater than #{VCAP::CloudController::AppUpdateMessage::MAX_NAMESPACE_SIZE} characters")
-          end
+        value = value.to_s
+        if full_key.count(VCAP::CloudController::LabelHelpers::KEY_SEPARATOR) > 1
+          record.errors.add(:metadata, "label key has more than one '/'")
+          next
         end
+        namespace, key = VCAP::CloudController::LabelHelpers.extract_namespace(full_key)
 
-        if key.nil? || key.size == 0
+        validate_namespace(namespace, record)
+
+        if key.blank?
           record.errors.add(:metadata, 'label key cannot be empty string')
         else
           validate_label_key_or_value(key, 'key', record)
@@ -154,6 +149,15 @@ module VCAP::CloudController::Validators
 
     VALID_CHAR_REGEX = /[^\w\-\.\_]/
     ALPHANUMERIC_START_END_REGEX = /\A(?=[a-zA-Z\d]).*[a-zA-Z\d]\z/
+
+    def validate_namespace(namespace, record)
+      return if namespace.nil?
+      if !CloudController::DomainDecorator::DOMAIN_REGEX.match(namespace)
+        record.errors.add(:metadata, "label namespace '#{namespace}' must be in valid dns format")
+      elsif namespace.size > VCAP::CloudController::AppUpdateMessage::MAX_NAMESPACE_SIZE
+        record.errors.add(:metadata, "label namespace '#{namespace[0...8]}...' is greater than #{VCAP::CloudController::AppUpdateMessage::MAX_NAMESPACE_SIZE} characters")
+      end
+    end
 
     def validate_label_key_or_value(key_or_value, type, record)
       if VALID_CHAR_REGEX.match?(key_or_value)

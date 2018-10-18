@@ -1,4 +1,5 @@
 require 'presenters/v3/base_presenter'
+require 'models/helpers/label_helpers'
 
 module VCAP::CloudController
   module Presenters
@@ -29,7 +30,7 @@ module VCAP::CloudController
           }
 
           app.labels.each do |app_label|
-            key = [app_label[:namespace], app_label[:key]].compact.join('/')
+            key = [app_label[:namespace], app_label[:key]].compact.join(VCAP::CloudController::LabelHelpers::KEY_SEPARATOR)
             hash[:metadata][:labels][key] = app_label[:value]
           end
 

@@ -195,7 +195,7 @@ module VCAP::CloudController
 
         describe 'invalid keys' do
           context 'when the key contains one invalid character' do
-            (32.chr..126.chr).to_a.reject { |c| %r([\w\-\.\_\/]).match(c) }.each do |c|
+            (32.chr..126.chr).to_a.reject { |c| %r([\w\-\.\_\/\s]).match(c) }.each do |c|
               it "is invalid for character '#{c}'" do
                 params = {
                   "metadata": {

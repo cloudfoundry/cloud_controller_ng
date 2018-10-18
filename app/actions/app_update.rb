@@ -1,3 +1,5 @@
+require 'models/helpers/label_helpers'
+
 module VCAP::CloudController
   class AppUpdate
     class DropletNotFound < StandardError; end
@@ -57,11 +59,7 @@ module VCAP::CloudController
       labels = message.labels || {}
       labels.each do |full_key, value|
         full_key = full_key.to_s
-        key = full_key
-        namespace = nil
-        if full_key.include?('/')
-          namespace, key = full_key.split('/')
-        end
+        namespace, key = VCAP::CloudController::LabelHelpers.extract_namespace(full_key)
         app_label = AppLabel.find_or_create(app_guid: app.guid, namespace: namespace, key: key)
         app_label.update(value: value.to_s)
       end
