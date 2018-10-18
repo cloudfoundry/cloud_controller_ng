@@ -117,8 +117,7 @@ module VCAP::CloudController::Validators
 
   class MetadataValidator < ActiveModel::Validator
     def validate(record)
-      metadata = record.metadata
-      labels = metadata[:labels]
+      labels = record.labels
       return unless labels
       unless labels.is_a? Hash
         record.errors.add(:metadata, "'labels' is not a hash")

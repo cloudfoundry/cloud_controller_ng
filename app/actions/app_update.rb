@@ -54,9 +54,15 @@ module VCAP::CloudController
     end
 
     def update_app_labels(app, message)
-      labels = message.metadata[:labels] || {}
-      labels.each do |key, value|
-        app_label = AppLabel.find_or_create(app_guid: app.guid, label_key: key.to_s)
+      labels = message.labels || {}
+      labels.each do |full_key, value|
+        full_key = full_key.to_s
+        key = full_key
+        namespace = nil
+        if full_key.include?('/')
+          namespace, key = full_key.split('/')
+        end
+        app_label = AppLabel.find_or_create(app_guid: app.guid, label_namespace: namespace, label_key: key)
         app_label.update(label_value: value.to_s)
       end
     end
