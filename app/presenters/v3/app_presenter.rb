@@ -29,7 +29,8 @@ module VCAP::CloudController
           }
 
           app.labels.each do |app_label|
-            hash[:metadata][:labels][app_label[:key]] = app_label[:value]
+            key = [app_label[:namespace], app_label[:key]].compact.join('/')
+            hash[:metadata][:labels][key] = app_label[:value]
           end
 
           @decorators.reduce(hash) { |memo, d| d.decorate(memo, [app]) }

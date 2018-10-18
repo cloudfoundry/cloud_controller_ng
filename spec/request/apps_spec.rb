@@ -785,7 +785,8 @@ RSpec.describe 'Apps' do
         },
         metadata: {
           labels: {
-            'release' => 'stable'
+            'release' => 'stable',
+            'code.cloudfoundry.org/cloud_controller_ng' => 'awesome'
           }
         }
 
@@ -818,7 +819,10 @@ RSpec.describe 'Apps' do
           },
           'created_at' => iso8601,
           'updated_at' => iso8601,
-          'metadata' => { 'labels' => { 'release' => 'stable' } },
+          'metadata' => { 'labels' => {
+              'release' => 'stable',
+              'code.cloudfoundry.org/cloud_controller_ng' => 'awesome'
+          } },
           'links' => {
             'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
             'processes' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/processes" },
@@ -851,7 +855,7 @@ RSpec.describe 'Apps' do
 
       metadata_request = { 'name' => 'new-name',
                            'lifecycle' => { 'type' => 'buildpack', 'data' => { 'buildpacks' => ['http://gitwheel.org/my-app'], 'stack' => stack.name } },
-                           'metadata' => { 'labels' => { 'release' => 'stable' } }
+                           'metadata' => { 'labels' => { 'release' => 'stable', 'code.cloudfoundry.org/cloud_controller_ng' => 'awesome' } }
       }
       expect(event.metadata['request']).to eq(metadata_request)
     end
