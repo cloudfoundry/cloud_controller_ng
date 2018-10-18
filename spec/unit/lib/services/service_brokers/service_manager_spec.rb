@@ -618,10 +618,22 @@ module VCAP::Services::ServiceBrokers
               )
             end
 
-            it 'raises a database error' do
+            it 'creates a new plan associated with the service and keeps the old unchanged ' do
               expect {
                 service_manager.sync_services_and_plans(catalog)
-              }.to raise_error Sequel::ValidationFailed
+              }.to change(VCAP::CloudController::ServicePlan, :count).by(1)
+
+              new_plan = VCAP::CloudController::ServicePlan.last
+              service.reload
+              expect(new_plan.service).to eq(service)
+              expect(new_plan.name).to eq(plan_name)
+              expect(new_plan.description).to eq(plan_description)
+
+              expect(new_plan.free).to be false
+              expect(new_plan.bindable).to be true
+
+              expect(plan.service).to eq(different_service)
+              expect(plan.name).not_to eq(new_plan)
             end
           end
 
