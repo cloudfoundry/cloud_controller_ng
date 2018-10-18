@@ -62,8 +62,8 @@ module VCAP::CloudController
         if full_key.include?('/')
           namespace, key = full_key.split('/')
         end
-        app_label = AppLabel.find_or_create(app_guid: app.guid, label_namespace: namespace, label_key: key)
-        app_label.update(label_value: value.to_s)
+        app_label = AppLabel.find_or_create(app_guid: app.guid, namespace: namespace, key: key)
+        app_label.update(value: value.to_s)
       end
     end
 
