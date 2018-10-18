@@ -6,13 +6,19 @@ RSpec.describe(OPI::Client) do
     subject(:client) { described_class.new(opi_url) }
     let(:opi_url) { 'http://opi.service.cf.internal:8077' }
     let(:img_url) { 'http://example.org/image1234' }
+    let(:droplet) { instance_double(VCAP::CloudController::DropletModel,
+      docker_receipt_image: 'http://example.org/image1234',
+      droplet_hash: 'd_haash',
+      guid: 'some-droplet-guid',
+    )
+    }
 
     let(:lrp) {
       double(
         guid: 'guid_1234',
         name: 'dora',
         version: '0.1.0',
-        current_droplet: double(docker_receipt_image: img_url, droplet_hash: 'd_haash'),
+        current_droplet: droplet,
         specified_or_detected_command: 'ls -la',
         environment_json: { 'PORT': 8080, 'FOO': 'BAR' },
         desired_instances: 4,
@@ -56,6 +62,7 @@ RSpec.describe(OPI::Client) do
             },
             instances: 4,
             droplet_hash: 'd_haash',
+            droplet_guid: 'some-droplet-guid',
             health_check_type: 'http',
             health_check_http_endpoint: '/health',
             health_check_timeout_ms: 1000,

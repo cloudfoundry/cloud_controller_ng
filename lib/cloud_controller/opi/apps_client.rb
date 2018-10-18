@@ -67,6 +67,7 @@ module OPI
         environment: hash_values_to_s(vcap_application(process)),
         instances: process.desired_instances,
         droplet_hash: process.current_droplet.droplet_hash,
+        droplet_guid: process.current_droplet.guid,
         health_check_type: process.health_check_type,
         health_check_http_endpoint: process.health_check_http_endpoint,
         health_check_timeout_ms: timeout_ms,
