@@ -93,11 +93,11 @@ module VCAP::CloudController
         end
 
         it 'deletes associated labels' do
-          label = AppLabel.make(app: app)
+          label = AppLabelModel.make(app: app)
 
           expect {
             app_delete.delete(app_dataset)
-          }.to change { AppLabel.count }.by(-1)
+          }.to change { AppLabelModel.count }.by(-1)
           expect(label.exists?).to be_falsey
           expect(app.exists?).to be_falsey
         end

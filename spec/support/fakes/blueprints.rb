@@ -51,7 +51,7 @@ module VCAP::CloudController
   AppModel.blueprint(:buildpack) do
   end
 
-  AppLabel.blueprint do
+  AppLabelModel.blueprint do
   end
 
   BuildModel.blueprint do

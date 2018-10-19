@@ -6,8 +6,8 @@ module VCAP::CloudController
     subject(:label_delete) { LabelDelete.new }
 
     describe '#delete' do
-      let!(:label) { AppLabel.make }
-      let!(:label2) { AppLabel.make }
+      let!(:label) { AppLabelModel.make }
+      let!(:label2) { AppLabelModel.make }
 
       it 'deletes and cancels the label' do
         label_delete.delete([label, label2])
@@ -18,4 +18,3 @@ module VCAP::CloudController
     end
   end
 end
-

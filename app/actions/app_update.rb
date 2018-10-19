@@ -60,7 +60,7 @@ module VCAP::CloudController
       labels.each do |full_key, value|
         full_key = full_key.to_s
         prefix, key = VCAP::CloudController::LabelHelpers.extract_prefix(full_key)
-        app_label = AppLabel.find_or_create(app_guid: app.guid, prefix: prefix, key: key)
+        app_label = AppLabelModel.find_or_create(app_guid: app.guid, prefix: prefix, key: key)
         app_label.update(value: value.to_s)
       end
     end

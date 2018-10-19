@@ -18,7 +18,7 @@ module VCAP::CloudController
     one_to_many :droplets, class: 'VCAP::CloudController::DropletModel', key: :app_guid, primary_key: :guid
     one_to_many :builds, class: 'VCAP::CloudController::BuildModel', key: :app_guid, primary_key: :guid
     one_to_many :deployments, class: 'VCAP::CloudController::DeploymentModel', key: :app_guid, primary_key: :guid
-    one_to_many :labels, class: 'VCAP::CloudController::AppLabel', key: :app_guid, primary_key: :guid
+    one_to_many :labels, class: 'VCAP::CloudController::AppLabelModel', key: :app_guid, primary_key: :guid
 
     many_to_one :droplet, class: 'VCAP::CloudController::DropletModel', key: :droplet_guid, primary_key: :guid, without_guid_generation: true
     one_to_one :web_process, class: 'VCAP::CloudController::ProcessModel', key: :app_guid, primary_key: :guid, conditions: { type: ProcessTypes::WEB }
