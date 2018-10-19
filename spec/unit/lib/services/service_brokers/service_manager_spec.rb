@@ -453,25 +453,50 @@ module VCAP::Services::ServiceBrokers
 
         context 'when the broker is different' do
           let(:different_broker) { VCAP::CloudController::ServiceBroker.make }
-          let!(:service) do
-            VCAP::CloudController::Service.make(
-              service_broker: different_broker,
-              unique_id: service_id
-            )
+
+          context 'and when there is a single service exposed from a different broker' do
+            let!(:service) do
+              VCAP::CloudController::Service.make(
+                service_broker: different_broker,
+                unique_id: service_id
+              )
+            end
+
+            it 'creates the new plan' do
+              expect {
+                service_manager.sync_services_and_plans(catalog)
+              }.to change(VCAP::CloudController::ServicePlan, :count).by(1)
+
+              plan = VCAP::CloudController::ServicePlan.last
+              expect(plan.service).to eq(VCAP::CloudController::Service.last)
+              expect(plan.name).to eq(plan_name)
+              expect(plan.description).to eq(plan_description)
+
+              expect(plan.free).to be false
+              expect(plan.bindable).to be true
+            end
           end
 
-          it 'creates the new plan' do
-            expect {
-              service_manager.sync_services_and_plans(catalog)
-            }.to change(VCAP::CloudController::ServicePlan, :count).by(1)
+          context 'and when there are two service with identical ids exposed from different brokers' do
+            let!(:service_2) do
+              VCAP::CloudController::Service.make(
+                service_broker: different_broker,
+                unique_id: service_id
+              )
+            end
 
-            plan = VCAP::CloudController::ServicePlan.last
-            expect(plan.service).to eq(VCAP::CloudController::Service.last)
-            expect(plan.name).to eq(plan_name)
-            expect(plan.description).to eq(plan_description)
+            it 'updates the service for the correct broker' do
+              expect {
+                service_manager.sync_services_and_plans(catalog)
+              }.to_not change(VCAP::CloudController::Service, :count)
 
-            expect(plan.free).to be false
-            expect(plan.bindable).to be true
+              [service, service_2].map(&:reload)
+
+              expect(service.label).to eq(service_name)
+              expect(service.description).to eq(service_description)
+              expect(service_2.label).not_to eq(service_name)
+              expect(service_2.description).not_to eq(service_name)
+            end
           end
         end
 
@@ -611,29 +636,54 @@ module VCAP::Services::ServiceBrokers
 
           context 'when the plan belongs to a different service' do
             let(:different_service) { VCAP::CloudController::Service.make }
-            let!(:plan) do
-              VCAP::CloudController::ServicePlan.make(
-                service: different_service,
-                unique_id: plan_id
-              )
+
+            context 'and when there is only one plan exposed from that service' do
+              let!(:plan) do
+                VCAP::CloudController::ServicePlan.make(
+                  service: different_service,
+                  unique_id: plan_id
+                )
+              end
+
+              it 'creates a new plan associated with the service and keeps the old unchanged ' do
+                expect {
+                  service_manager.sync_services_and_plans(catalog)
+                }.to change(VCAP::CloudController::ServicePlan, :count).by(1)
+
+                new_plan = VCAP::CloudController::ServicePlan.last
+                service.reload
+                expect(new_plan.service).to eq(service)
+                expect(new_plan.name).to eq(plan_name)
+                expect(new_plan.description).to eq(plan_description)
+
+                expect(new_plan.free).to be false
+                expect(new_plan.bindable).to be true
+
+                expect(plan.service).to eq(different_service)
+                expect(plan.name).not_to eq(new_plan)
+              end
             end
 
-            it 'creates a new plan associated with the service and keeps the old unchanged ' do
-              expect {
-                service_manager.sync_services_and_plans(catalog)
-              }.to change(VCAP::CloudController::ServicePlan, :count).by(1)
+            context 'when there are two plans with the same id that belong to different services' do
+              let!(:plan_2) do
+                VCAP::CloudController::ServicePlan.make(
+                  service: different_service,
+                  unique_id: plan_id
+                )
+              end
 
-              new_plan = VCAP::CloudController::ServicePlan.last
-              service.reload
-              expect(new_plan.service).to eq(service)
-              expect(new_plan.name).to eq(plan_name)
-              expect(new_plan.description).to eq(plan_description)
+              it 'updates the plan that belongs to the corresponding service and keeps the other unchanged' do
+                expect {
+                  service_manager.sync_services_and_plans(catalog)
+                }.not_to change(VCAP::CloudController::ServicePlan, :count)
 
-              expect(new_plan.free).to be false
-              expect(new_plan.bindable).to be true
+                [plan, plan_2].map(&:reload)
+                expect(plan.name).to eq(plan_name)
+                expect(plan.description).to eq(plan_description)
 
-              expect(plan.service).to eq(different_service)
-              expect(plan.name).not_to eq(new_plan)
+                expect(plan_2.name).not_to eq(plan_name)
+                expect(plan_2.description).not_to eq(plan_description)
+              end
             end
           end
 
