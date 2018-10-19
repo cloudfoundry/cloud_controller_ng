@@ -14,11 +14,11 @@ module VCAP::CloudController
         expect(service_instance).not_to exist
       end
 
-      it 'records a service instance delete event' do
+      it 'records a service instance purge event' do
         purger.purge(service_instance)
 
         event = Event.last
-        expect(event.type).to eq('audit.service_instance.delete')
+        expect(event.type).to eq('audit.service_instance.purge')
         expect(event.actee).to eq(service_instance.guid)
       end
 

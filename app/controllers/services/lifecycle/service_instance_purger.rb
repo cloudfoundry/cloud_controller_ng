@@ -29,7 +29,7 @@ module VCAP::CloudController
         end
 
         service_instance.destroy
-        @event_repository.record_service_instance_event('delete', service_instance, nil)
+        @event_repository.record_service_instance_event('purge', service_instance, nil)
       end
 
       logger.info("successfully purged service instance #{service_instance.guid}")
