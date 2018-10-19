@@ -12,7 +12,8 @@ module VCAP::CloudController
           'space_guids'        => 'spaceguid',
           'page'               => 1,
           'per_page'           => 5,
-          'order_by'           => 'created_at'
+          'order_by'           => 'created_at',
+          'include'            => 'space',
         }
       end
 
@@ -27,6 +28,7 @@ module VCAP::CloudController
         expect(message.page).to eq(1)
         expect(message.per_page).to eq(5)
         expect(message.order_by).to eq('created_at')
+        expect(message.include).to eq('space')
       end
 
       it 'converts requested keys to symbols' do
@@ -39,6 +41,7 @@ module VCAP::CloudController
         expect(message.requested?(:page)).to be_truthy
         expect(message.requested?(:per_page)).to be_truthy
         expect(message.requested?(:order_by)).to be_truthy
+        expect(message.requested?(:include)).to be_truthy
       end
     end
 
@@ -52,11 +55,12 @@ module VCAP::CloudController
             page:               1,
             per_page:           5,
             order_by:           'created_at',
+            include:            'space',
         }
       end
 
       it 'excludes the pagination keys' do
-        expected_params = [:names, :guids, :organization_guids, :space_guids]
+        expected_params = [:names, :guids, :organization_guids, :space_guids, :include]
         expect(AppsListMessage.new(opts).to_param_hash.keys).to match_array(expected_params)
       end
     end
@@ -72,6 +76,7 @@ module VCAP::CloudController
               page:               1,
               per_page:           5,
               order_by:           'created_at',
+              include:            'space',
             })
         }.not_to raise_error
       end
