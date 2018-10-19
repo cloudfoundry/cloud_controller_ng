@@ -92,6 +92,16 @@ module VCAP::CloudController
           expect(app.exists?).to be_falsey
         end
 
+        it 'deletes associated labels' do
+          label = AppLabel.make(app: app)
+
+          expect {
+            app_delete.delete(app_dataset)
+          }.to change { AppLabel.count }.by(-1)
+          expect(label.exists?).to be_falsey
+          expect(app.exists?).to be_falsey
+        end
+
         describe 'deleting associated routes' do
           let(:process_type) { 'web' }
           let(:process) { ProcessModel.make(app: app, type: process_type) }
