@@ -24,11 +24,14 @@ module VCAP::CloudController
         if service_instance.type == 'managed_service_instance'
           service_plan = service_instance.service_plan
           service      = service_plan.service
+          broker       = service_instance.service_broker
           values       = values.merge({
-            service_plan_guid: service_plan.guid,
-            service_plan_name: service_plan.name,
-            service_guid:      service.guid,
-            service_label:     service.label
+            service_plan_guid:   service_plan.guid,
+            service_plan_name:   service_plan.name,
+            service_guid:        service.guid,
+            service_label:       service.label,
+            service_broker_name: broker.name,
+            service_broker_guid: broker.guid
           })
         end
 
@@ -67,6 +70,8 @@ module VCAP::CloudController
           service_plan_name:     :service_plans__name,
           service_guid:          :services__guid,
           service_label:         :services__label,
+          service_broker_name:   :service_brokers__name,
+          service_broker_guid:   :service_brokers__guid,
           created_at:            Sequel.datetime_class.now,
         }
 
@@ -76,6 +81,7 @@ module VCAP::CloudController
                       join(:organizations, id: :spaces__organization_id).
                       left_outer_join(:service_plans, id: :service_instances__service_plan_id).
                       left_outer_join(:services, id: :service_plans__service_id).
+                      left_outer_join(:service_brokers, id: :services__service_broker_id).
                       select(*column_map.values).
                       order(:service_instances__id)
 

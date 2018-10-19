@@ -27,6 +27,7 @@ RSpec::Matchers.define :match_service_instance do |expected_service_instance|
   if expected_service_instance.type == 'managed_service_instance'
     service_plan = expected_service_instance.service_plan
     service = service_plan.service
+    broker = service.service_broker
     match do |actual_event|
       unless actual_event.service_plan_guid == service_plan.guid
         problems << "event.service_plan_guid: #{actual_event.service_plan_guid}, service_instance.service_plan.guid: #{service_plan.guid}"
@@ -39,6 +40,12 @@ RSpec::Matchers.define :match_service_instance do |expected_service_instance|
       end
       unless actual_event.service_label == service.label
         problems << "event.service_label: #{actual_event.service_label}, service_instance.service.label: #{service.label}"
+      end
+      unless actual_event.service_broker_name == broker.name
+        problems << "event.service_broker_name: #{actual_event.service_broker_name}, service_instance.service_broker.name: #{broker.name}"
+      end
+      unless actual_event.service_broker_guid == broker.guid
+        problems << "event.service_broker_guid: #{actual_event.service_broker_guid}, service_instance.service_broker.guid: #{broker.guid}"
       end
       problems.empty?
     end
