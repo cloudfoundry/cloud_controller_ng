@@ -5,9 +5,6 @@ module VCAP::CloudController
   class AppUpdateMessage < BaseMessage
     register_allowed_keys [:name, :lifecycle, :metadata]
 
-    MAX_LABEL_SIZE = 63
-    MAX_PREFIX_SIZE = 253
-
     attr_reader :app
 
     def self.lifecycle_requested?

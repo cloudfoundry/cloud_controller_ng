@@ -57,11 +57,11 @@ module VCAP::CloudController
 
     def update_app_labels(app, message)
       labels = message.labels || {}
-      labels.each do |full_key, value|
-        full_key = full_key.to_s
-        prefix, key = VCAP::CloudController::LabelHelpers.extract_prefix(full_key)
-        app_label = AppLabelModel.find_or_create(app_guid: app.guid, prefix: prefix, key: key)
-        app_label.update(value: value.to_s)
+      labels.each do |label_key, label_value|
+        label_key = label_key.to_s
+        prefix, name = VCAP::CloudController::LabelHelpers.extract_prefix(label_key)
+        app_label = AppLabelModel.find_or_create(app_guid: app.guid, key_prefix: prefix, key_name: name)
+        app_label.update(value: label_value.to_s)
       end
     end
 

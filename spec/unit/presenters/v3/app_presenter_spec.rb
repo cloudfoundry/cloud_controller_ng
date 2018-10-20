@@ -5,7 +5,7 @@ module VCAP::CloudController::Presenters::V3
   RSpec.describe AppPresenter do
     let!(:release_label) do
       VCAP::CloudController::AppLabelModel.make(
-        key: 'release',
+        key_name: 'release',
         value: 'stable',
         app_guid: app.guid
       )
@@ -13,8 +13,8 @@ module VCAP::CloudController::Presenters::V3
 
     let!(:potato_label) do
       VCAP::CloudController::AppLabelModel.make(
-        prefix: 'maine.gov',
-        key: 'potato',
+        key_prefix: 'maine.gov',
+        key_name: 'potato',
         value: 'mashed',
         app_guid: app.guid
       )

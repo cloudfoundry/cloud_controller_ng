@@ -436,6 +436,19 @@ RSpec.describe 'Apps' do
         expect(parsed_response['pagination']['first']['href']).to include('order_by=-name')
       end
     end
+
+    context 'labels' do
+      let(:admin_header) { headers_for(user, scopes: %w(cloud_controller.admin)) }
+
+      it 'returns a 400 when the label_selector is invalid' do
+        get '/v3/apps?label_selector=buncha nonsense', nil, admin_header
+
+        parsed_response = MultiJson.load(last_response.body)
+
+        expect(last_response.status).to eq(400)
+        expect(parsed_response['errors'].first['detail']).to match(/label_selector/)
+      end
+    end
   end
 
   describe 'GET /v3/apps/:guid' do

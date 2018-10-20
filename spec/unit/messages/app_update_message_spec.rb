@@ -243,7 +243,7 @@ module VCAP::CloudController
               {
                 "metadata": {
                   "labels": {
-                    'a' * AppUpdateMessage::MAX_LABEL_SIZE => 'value2',
+                    'a' * VCAP::CloudController::Validators::LabelValidatorHelper::MAX_LABEL_SIZE => 'value2',
                   }
                 }
               }
@@ -259,7 +259,7 @@ module VCAP::CloudController
               {
                 "metadata": {
                   "labels": {
-                    'b' * (AppUpdateMessage::MAX_LABEL_SIZE + 1) => 'value3',
+                    'b' * (VCAP::CloudController::Validators::LabelValidatorHelper::MAX_LABEL_SIZE + 1) => 'value3',
                   }
                 }
               }
@@ -267,7 +267,8 @@ module VCAP::CloudController
             it 'is invalid' do
               message = AppUpdateMessage.new(params)
               expect(message).not_to be_valid
-              expect(message.errors_on(:metadata)).to include("label key '#{'b' * 8}...' is greater than #{AppUpdateMessage::MAX_LABEL_SIZE} characters")
+              expect(message.errors_on(:metadata)).
+                to include("label key '#{'b' * 8}...' is greater than #{VCAP::CloudController::Validators::LabelValidatorHelper::MAX_LABEL_SIZE} characters")
             end
           end
 
@@ -430,7 +431,7 @@ module VCAP::CloudController
             {
               "metadata": {
                 "labels": {
-                  'key' => 'a' * AppUpdateMessage::MAX_LABEL_SIZE,
+                  'key' => 'a' * VCAP::CloudController::Validators::LabelValidatorHelper::MAX_LABEL_SIZE,
                 }
               }
             }
@@ -446,7 +447,7 @@ module VCAP::CloudController
             {
               "metadata": {
                 "labels": {
-                  'key' => 'b' * (AppUpdateMessage::MAX_LABEL_SIZE + 1),
+                  'key' => 'b' * (VCAP::CloudController::Validators::LabelValidatorHelper::MAX_LABEL_SIZE + 1),
                 }
               }
             }
@@ -454,7 +455,8 @@ module VCAP::CloudController
           it 'is invalid' do
             message = AppUpdateMessage.new(params)
             expect(message).not_to be_valid
-            expect(message.errors_on(:metadata)).to include("label value '#{'b' * 8}...' is greater than #{AppUpdateMessage::MAX_LABEL_SIZE} characters")
+            expect(message.errors_on(:metadata)).
+              to include("label value '#{'b' * 8}...' is greater than #{VCAP::CloudController::Validators::LabelValidatorHelper::MAX_LABEL_SIZE} characters")
           end
         end
       end

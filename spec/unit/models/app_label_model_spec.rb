@@ -6,8 +6,8 @@ module VCAP::CloudController
 
     it 'can be created' do
       app = AppModel.make(name: 'dora')
-      AppLabelModel.create(app_guid: app.guid, key: 'release', value: 'stable')
-      expect(AppLabelModel.find(key: 'release').value).to eq 'stable'
+      AppLabelModel.create(app_guid: app.guid, key_name: 'release', value: 'stable')
+      expect(AppLabelModel.find(key_name: 'release').value).to eq 'stable'
     end
   end
 end

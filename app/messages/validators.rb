@@ -3,6 +3,7 @@ require 'utils/uri_utils'
 require 'models/helpers/health_check_types'
 require 'models/helpers/label_helpers'
 require 'cloud_controller/domain_decorator'
+require 'messages/label_validator_helper'
 
 module VCAP::CloudController::Validators
   module StandaloneValidator
@@ -116,58 +117,108 @@ module VCAP::CloudController::Validators
     end
   end
 
-  class MetadataValidator < ActiveModel::Validator
+  class LabelSelectorValidator < ActiveModel::Validator
     def validate(record)
-      labels = record.labels
-      return unless labels
-      unless labels.is_a? Hash
-        record.errors.add(:metadata, "'labels' is not a hash")
-        return
-      end
-      labels.each do |full_key, value|
-        full_key = full_key.to_s
-        value = value.to_s
-        if full_key.count(VCAP::CloudController::LabelHelpers::KEY_SEPARATOR) > 1
-          record.errors.add(:metadata, "label key has more than one '/'")
-          next
-        end
-        prefix, key = VCAP::CloudController::LabelHelpers.extract_prefix(full_key)
+      requirements = record.label_selector.scan(/(?:\(.*?\)|[^,])+/)
 
-        validate_prefix(prefix, record)
+      return record.errors.add(:label_selector, 'Invalid label_selector value') if requirements.empty?
+      return record.errors.add(:label_selector, 'Invalid label_selector value') if requirements.any?(&:blank?)
 
-        if key.blank?
-          record.errors.add(:metadata, 'label key cannot be empty string')
-        else
-          validate_label_key_or_value(key, 'key', record)
-        end
-
-        validate_label_key_or_value(value, 'value', record)
+      unless requirements.map { |r| valid_requirement?(r) }.all?
+        record.errors.add(:label_selector, 'Invalid label_selector value')
       end
     end
 
     private
 
-    VALID_CHAR_REGEX = /[^\w\-\.\_]/
-    ALPHANUMERIC_START_END_REGEX = /\A(?=[a-zA-Z\d]).*[a-zA-Z\d]\z/
+    def valid_requirement?(requirement)
+      requirement_regexes = [
+        /(?<key>.*) in \((?<values>.*)\)$/, # foo in (bar,baz)
+        /(?<key>.*) notin \((?<values>.*)\)$/ # funky notin (uptown,downtown)
+      ]
 
-    def validate_prefix(prefix, record)
-      return if prefix.nil?
-      if !CloudController::DomainDecorator::DOMAIN_REGEX.match(prefix)
-        record.errors.add(:metadata, "label prefix '#{prefix}' must be in valid dns format")
-      elsif prefix.size > VCAP::CloudController::AppUpdateMessage::MAX_PREFIX_SIZE
-        record.errors.add(:metadata, "label prefix '#{prefix[0...8]}...' is greater than #{VCAP::CloudController::AppUpdateMessage::MAX_PREFIX_SIZE} characters")
+      matches = requirement_regexes.
+                map { |re| re.match(requirement) }.
+                compact
+
+      return false if matches.empty?
+
+      LabelValidatorHelper.valid_key?(matches.first[:key]) &&
+        matches.first[:values].
+          split(',').
+          map { |v| LabelValidatorHelper.valid_value?(v) }.
+          all?
+    end
+  end
+
+  class MetadataValidator < ActiveModel::Validator
+    def validate(record)
+      labels = record.labels
+      return unless labels
+
+      unless labels.is_a? Hash
+        record.errors.add(:metadata, "'labels' is not a hash")
+        return
+      end
+
+      labels.each do |label_key, label_value|
+        validate_label_key(label_key, record)
+        validate_label_value(label_value, record)
       end
     end
 
-    def validate_label_key_or_value(key_or_value, type, record)
-      if VALID_CHAR_REGEX.match?(key_or_value)
+    private
+
+    def validate_label_key(label_key, record)
+      label_key = label_key.to_s
+
+      unless LabelValidatorHelper.valid_key_presence?(label_key)
+        record.errors.add(:metadata, 'label key cannot be empty string')
+        return
+      end
+
+      unless LabelValidatorHelper.valid_key_format?(label_key)
+        record.errors.add(:metadata, "label key has more than one '/'")
+      end
+
+      prefix, name = VCAP::CloudController::LabelHelpers.extract_prefix(label_key)
+      validate_prefix(prefix, record)
+
+      unless LabelValidatorHelper.valid_key_presence?(name)
+        record.errors.add(:metadata, 'label key cannot be empty string')
+        return
+      end
+
+      validate_common_label_syntax(name, 'key', record)
+    end
+
+    def validate_prefix(prefix, record)
+      return if prefix.nil?
+
+      unless LabelValidatorHelper.valid_prefix_format?(prefix)
+        record.errors.add(:metadata, "label prefix '#{prefix}' must be in valid dns format")
+      end
+
+      unless LabelValidatorHelper.valid_prefix_size?(prefix)
+        record.errors.add(:metadata, "label prefix '#{prefix[0...8]}...' is greater than #{LabelValidatorHelper::MAX_PREFIX_SIZE} characters")
+      end
+    end
+
+    def validate_label_value(label_value, record)
+      validate_common_label_syntax(label_value, 'value', record)
+    end
+
+    def validate_common_label_syntax(key_or_value, type, record)
+      unless LabelValidatorHelper.valid_characters?(key_or_value)
         record.errors.add(:metadata, "label #{type} '#{key_or_value}' contains invalid characters")
-      elsif !ALPHANUMERIC_START_END_REGEX.match?(key_or_value)
+      end
+
+      unless LabelValidatorHelper.start_end_alphanumeric?(key_or_value)
         record.errors.add(:metadata, "label #{type} '#{key_or_value}' starts or ends with invalid characters")
       end
 
-      if key_or_value.size > VCAP::CloudController::AppUpdateMessage::MAX_LABEL_SIZE
-        record.errors.add(:metadata, "label #{type} '#{key_or_value[0...8]}...' is greater than #{VCAP::CloudController::AppUpdateMessage::MAX_LABEL_SIZE} characters")
+      unless LabelValidatorHelper.valid_size?(key_or_value)
+        record.errors.add(:metadata, "label #{type} '#{key_or_value[0...8]}...' is greater than #{LabelValidatorHelper::MAX_LABEL_SIZE} characters")
       end
     end
   end
