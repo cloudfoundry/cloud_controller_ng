@@ -251,60 +251,36 @@ module VCAP::CloudController
       end
     end
 
-    describe 'before_save' do
-      describe 'default enable_ssh' do
-        context 'when enable_ssh is set explicitly' do
-          it 'does not overwrite it with the default' do
-            app1 = AppModel.make(enable_ssh: true)
-            expect(app1.enable_ssh).to eq(true)
+    describe 'default enable_ssh' do
+      context 'when enable_ssh is set explicitly' do
+        it 'does not overwrite it with the default' do
+          app1 = AppModel.make(enable_ssh: true)
+          expect(app1.enable_ssh).to eq(true)
 
-            app2 = AppModel.make(enable_ssh: false)
-            expect(app2.enable_ssh).to eq(false)
-          end
-        end
-
-        context 'when default_app_ssh_access is true' do
-          before do
-            TestConfig.override({ default_app_ssh_access: true })
-          end
-
-          it 'sets enable_ssh to true' do
-            app = AppModel.make
-            expect(app.enable_ssh).to eq(true)
-          end
-        end
-
-        context 'when default_app_ssh_access is false' do
-          before do
-            TestConfig.override({ default_app_ssh_access: false })
-          end
-
-          it 'sets enable_ssh to false' do
-            app = AppModel.make
-            expect(app.enable_ssh).to eq(false)
-          end
+          app2 = AppModel.make(enable_ssh: false)
+          expect(app2.enable_ssh).to eq(false)
         end
       end
 
-      describe 'updating process version' do
-        let(:parent_app) { AppModel.make(enable_ssh: false) }
-        let!(:process1) { ProcessModelFactory.make(app: parent_app) }
-        let!(:process2) { ProcessModelFactory.make(app: parent_app, type: 'astroboy') }
-
-        context 'when enable_ssh has changed' do
-          it 'sets a new version for all processes' do
-            expect {
-              parent_app.update(enable_ssh: true)
-            }.to change { [process1.reload.version, process2.reload.version] }
-          end
+      context 'when default_app_ssh_access is true' do
+        before do
+          TestConfig.override({ default_app_ssh_access: true })
         end
 
-        context 'when enable_ssh has NOT changed' do
-          it 'does not update the process versions' do
-            expect {
-              parent_app.update(enable_ssh: false)
-            }.not_to change { [process1.reload.version, process2.reload.version] }
-          end
+        it 'sets enable_ssh to true' do
+          app = AppModel.make
+          expect(app.enable_ssh).to eq(true)
+        end
+      end
+
+      context 'when default_app_ssh_access is false' do
+        before do
+          TestConfig.override({ default_app_ssh_access: false })
+        end
+
+        it 'sets enable_ssh to false' do
+          app = AppModel.make
+          expect(app.enable_ssh).to eq(false)
         end
       end
     end

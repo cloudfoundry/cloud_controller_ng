@@ -34,9 +34,10 @@ module VCAP::CloudController
 
     strip_attributes :name
 
-    def before_save
-      update_enable_ssh
-      super
+    plugin :after_initialize
+
+    def after_initialize
+      self.enable_ssh = Config.config.get(:default_app_ssh_access) if self.enable_ssh.nil?
     end
 
     def validate
@@ -100,17 +101,6 @@ module VCAP::CloudController
     end
 
     private
-
-    def update_enable_ssh
-      self.enable_ssh = Config.config.get(:default_app_ssh_access) if self.enable_ssh.nil?
-
-      if column_changed?(:enable_ssh)
-        processes.each do |process|
-          process.set_new_version
-          process.save
-        end
-      end
-    end
 
     def validate_environment_variables
       return unless environment_variables
