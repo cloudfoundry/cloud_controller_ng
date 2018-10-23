@@ -42,6 +42,20 @@ module VCAP::CloudController
             }.to raise_error(SpaceCreate::Error, 'Name must be unique per organization')
           end
         end
+
+        context 'when it is a db uniqueness error' do
+          let(:name) { 'mySpace' }
+          it 'translates database uniqueness errors into Sequel Validation Errors' do
+            Space.make(organization_guid: org.guid, name: name)
+
+            allow_any_instance_of(Space).to receive(:validate).and_return true
+
+            message = VCAP::CloudController::SpaceCreateMessage.new(name: name)
+            expect {
+              SpaceCreate.new(perm_client: perm_client).create(org, message)
+            }.to raise_error(SpaceCreate::Error, 'Name must be unique per organization')
+          end
+        end
       end
     end
   end

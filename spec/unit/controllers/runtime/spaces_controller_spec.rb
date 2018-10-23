@@ -1500,6 +1500,22 @@ module VCAP::CloudController
             expect(event).not_to be_nil
           end
         end
+
+        context 'with duplicate spaces due to race conditions' do
+          let!(:dupe_space) { Space.make(organization_guid: org.guid, name: name) }
+
+          before do
+            allow_any_instance_of(Space).to receive(:validate).and_return(true)
+          end
+
+          it 'returns a useful error message' do
+            request_body = { name: name, organization_guid: org.guid, manager_guids: [other_user.guid] }.to_json
+            post '/v2/spaces', request_body
+
+            expect(last_response).to have_status_code(400)
+            expect(last_response).to match(/name is taken/)
+          end
+        end
       end
     end
 

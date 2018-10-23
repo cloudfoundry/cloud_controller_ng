@@ -38,6 +38,10 @@ module VCAP::CloudController
     deprecated_endpoint "#{path_guid}/domains"
 
     def self.translate_validation_exception(e, attributes)
+      if e.is_a?(Space::DBNameUniqueRaceError)
+        return CloudController::Errors::ApiError.new_from_details('SpaceNameTaken', attributes['name'])
+      end
+
       name_errors = e.errors.on([:organization_id, :name])
       if name_errors && name_errors.include?(:unique)
         CloudController::Errors::ApiError.new_from_details('SpaceNameTaken', attributes['name'])

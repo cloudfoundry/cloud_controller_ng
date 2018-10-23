@@ -7,6 +7,7 @@ module VCAP::CloudController
     class InvalidManagerRelation < CloudController::Errors::InvalidRelation; end
     class InvalidSpaceQuotaRelation < CloudController::Errors::InvalidRelation; end
     class UnauthorizedAccessToPrivateDomain < RuntimeError; end
+    class DBNameUniqueRaceError < Sequel::ValidationFailed; end
 
     SPACE_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/
 
@@ -151,6 +152,13 @@ module VCAP::CloudController
 
     def in_organization?(user)
       organization && organization.has_user?(user)
+    end
+
+    def around_save
+      yield
+    rescue Sequel::UniqueConstraintViolation => e
+      raise DBNameUniqueRaceError.new(e) if e.message.try(:include?, 'spaces_org_id_name_index')
+      raise
     end
 
     def validate

@@ -20,6 +20,22 @@ module VCAP::CloudController
           }.to_not raise_error
         end
 
+        describe 'database errors' do
+          it 'translates database uniqueness errors into Sequel Validation Errors' do
+            dup_space = Space.new(organization_guid: space.organization.guid, name: space.name)
+            expect {
+              dup_space.save(validate: false)
+            }.to raise_error(Space::DBNameUniqueRaceError)
+          end
+
+          it 'does not translate db errors not about name uniqueness' do
+            invalid_space = Space.new
+            expect {
+              invalid_space.save(validate: false)
+            }.to raise_error(Sequel::NotNullConstraintViolation)
+          end
+        end
+
         it 'should allow backslash character' do
           space.name = 'a\\word'
           expect {

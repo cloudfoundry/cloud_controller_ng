@@ -22,7 +22,7 @@ module VCAP::CloudController
     attr_reader :perm_client
 
     def validation_error!(error)
-      if error.errors.on([:organization_id, :name])&.include?(:unique)
+      if error.is_a?(Space::DBNameUniqueRaceError) || error.errors.on([:organization_id, :name])&.include?(:unique)
         error!('Name must be unique per organization')
       end
       error!(error.message)
