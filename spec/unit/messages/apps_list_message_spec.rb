@@ -6,15 +6,15 @@ module VCAP::CloudController
     describe '.from_params' do
       let(:params) do
         {
-          'names'              => 'name1,name2',
-          'guids'              => 'guid1,guid2',
+          'names' => 'name1,name2',
+          'guids' => 'guid1,guid2',
           'organization_guids' => 'orgguid',
-          'space_guids'        => 'spaceguid',
-          'page'               => 1,
-          'per_page'           => 5,
-          'order_by'           => 'created_at',
-          'include'            => 'space',
-          'label_selector'     => 'foo in (stuff,things)',
+          'space_guids' => 'spaceguid',
+          'page' => 1,
+          'per_page' => 5,
+          'order_by' => 'created_at',
+          'include' => 'space',
+          'label_selector' => 'foo in (stuff,things)',
         }
       end
 
@@ -51,15 +51,15 @@ module VCAP::CloudController
     describe '#to_param_hash' do
       let(:opts) do
         {
-            names:              ['name1', 'name2'],
-            guids:              ['guid1', 'guid2'],
-            organization_guids: ['orgguid1', 'orgguid2'],
-            space_guids:        ['spaceguid1', 'spaceguid2'],
-            page:               1,
-            per_page:           5,
-            order_by:           'created_at',
-            include:            'space',
-            label_selector:     'foo in (stuff,things)'
+          names: ['name1', 'name2'],
+          guids: ['guid1', 'guid2'],
+          organization_guids: ['orgguid1', 'orgguid2'],
+          space_guids: ['spaceguid1', 'spaceguid2'],
+          page: 1,
+          per_page: 5,
+          order_by: 'created_at',
+          include: 'space',
+          label_selector: 'foo in (stuff,things)'
         }
       end
 
@@ -73,16 +73,16 @@ module VCAP::CloudController
       it 'accepts a set of fields' do
         expect {
           AppsListMessage.new({
-              names:              [],
-              guids:              [],
-              organization_guids: [],
-              space_guids:        [],
-              page:               1,
-              per_page:           5,
-              order_by:           'created_at',
-              include:            'space',
-              label_selector:     'foo in (stuff,things)'
-            })
+                                names: [],
+                                guids: [],
+                                organization_guids: [],
+                                space_guids: [],
+                                page: 1,
+                                per_page: 5,
+                                order_by: 'created_at',
+                                include: 'space',
+                                label_selector: 'foo in (stuff,things)'
+                              })
         }.not_to raise_error
       end
 
@@ -142,14 +142,16 @@ module VCAP::CloudController
             message = AppsListMessage.new label_selector: ''
 
             expect(message).to be_invalid
-            expect(message.errors[:label_selector].length).to eq 1
+            expect(message.errors[:base].length).to eq 1
+            expect(message.errors[:base].first).to match /label_selector/
           end
 
           it 'validates that no label_selector query is blank' do
             message = AppsListMessage.new label_selector: 'foo=bar, '
 
             expect(message).to be_invalid
-            expect(message.errors[:label_selector].length).to eq 1
+            expect(message.errors[:base].length).to eq 1
+            expect(message.errors[:base].first).to match /label_selector/
           end
 
           context 'set operations' do
@@ -170,21 +172,21 @@ module VCAP::CloudController
                 message = AppsListMessage.new label_selector: 'foo inn (bar,baz)'
 
                 expect(message).to be_invalid
-                expect(message.errors[:label_selector].length).to eq 1
+                expect(message.errors[:base].first).to match /label_selector/
               end
 
               it 'validates incorrect "notin" operations' do
                 message = AppsListMessage.new label_selector: 'foo notinn (bar,baz)'
 
                 expect(message).to be_invalid
-                expect(message.errors[:label_selector].length).to eq 1
+                expect(message.errors[:base].first).to match /label_selector/
               end
 
               it 'validates incorrect set operations' do
                 message = AppsListMessage.new label_selector: 'foo == (bar,baz)'
 
                 expect(message).to be_invalid
-                expect(message.errors[:label_selector].length).to eq 1
+                expect(message.errors[:base].first).to match /label_selector/
               end
             end
 
@@ -194,42 +196,42 @@ module VCAP::CloudController
                 message = AppsListMessage.new label_selector: "#{value} in (bar,baz)"
 
                 expect(message).to be_invalid
-                expect(message.errors[:label_selector].length).to eq 1
+                expect(message.errors[:base].first).to match /label_selector/
               end
 
               it 'marks as invalid keys that start with non-alpha characters' do
                 message = AppsListMessage.new label_selector: '-foo in (bar,baz)'
 
                 expect(message).to be_invalid
-                expect(message.errors[:label_selector].length).to eq 1
+                expect(message.errors[:base].first).to match /label_selector/
               end
 
               it 'marks as invalid keys that contain forbidden characters' do
                 message = AppsListMessage.new label_selector: 'f~oo in (bar,baz)'
 
                 expect(message).to be_invalid
-                expect(message.errors[:label_selector].length).to eq 1
+                expect(message.errors[:base].first).to match /label_selector/
               end
 
               it 'marks as invalid keys that contain forbidden characters' do
                 message = AppsListMessage.new label_selector: 'f~oo in (bar,baz)'
 
                 expect(message).to be_invalid
-                expect(message.errors[:label_selector].length).to eq 1
+                expect(message.errors[:base].first).to match /label_selector/
               end
 
               it 'marks as invalid keys that contain multiple "/"s' do
                 message = AppsListMessage.new label_selector: 'example.com/foo/bar in (bar,baz)'
 
                 expect(message).to be_invalid
-                expect(message.errors[:label_selector].length).to eq 1
+                expect(message.errors[:base].first).to match /label_selector/
               end
 
               it 'marks as invalid keys with non-dns prefixes' do
                 message = AppsListMessage.new label_selector: 'example...com/bar in (bar,baz)'
 
                 expect(message).to be_invalid
-                expect(message.errors[:label_selector].length).to eq 1
+                expect(message.errors[:base].first).to match /label_selector/
               end
 
               it 'marks as invalid keys that with prefixes that exceed the max length' do
@@ -237,14 +239,14 @@ module VCAP::CloudController
                 message = AppsListMessage.new label_selector: "#{prefix}com/bar in (bar,baz)"
 
                 expect(message).to be_invalid
-                expect(message.errors[:label_selector].length).to eq 1
+                expect(message.errors[:base].first).to match /label_selector/
               end
 
               it 'marks as invalid keys that with prefixes but no name' do
                 message = AppsListMessage.new label_selector: 'example.com/ in (bar,baz)'
 
                 expect(message).to be_invalid
-                expect(message.errors[:label_selector].length).to eq 1
+                expect(message.errors[:base].first).to match /label_selector/
               end
             end
 
@@ -254,21 +256,21 @@ module VCAP::CloudController
                 message = AppsListMessage.new label_selector: "foo in (bar,#{value})"
 
                 expect(message).to be_invalid
-                expect(message.errors[:label_selector].length).to eq 1
+                expect(message.errors[:base].first).to match /label_selector/
               end
 
               it 'marks as invalid values that start with non-alpha characters' do
                 message = AppsListMessage.new label_selector: 'foo in (bar,-baz )'
 
                 expect(message).to be_invalid
-                expect(message.errors[:label_selector].length).to eq 1
+                expect(message.errors[:base].first).to match /label_selector/
               end
 
               it 'marks as invalid values that contain forbidden characters' do
                 message = AppsListMessage.new label_selector: 'foo in (bar,b~az )'
 
                 expect(message).to be_invalid
-                expect(message.errors[:label_selector].length).to eq 1
+                expect(message.errors[:base].first).to match /label_selector/
               end
             end
           end

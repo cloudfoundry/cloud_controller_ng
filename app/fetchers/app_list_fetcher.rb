@@ -1,5 +1,6 @@
 require 'cloud_controller/paging/sequel_paginator'
 require 'cloud_controller/paging/paginated_result'
+require 'fetchers/label_selector_parser'
 
 module VCAP::CloudController
   class AppListFetcher
@@ -27,6 +28,9 @@ module VCAP::CloudController
       end
       if message.requested?(:guids)
         dataset = dataset.where(guid: message.guids)
+      end
+      if message.requested?(:label_selector)
+        dataset = LabelSelectorParser.add_selector_queries(AppLabelModel, dataset, message.label_selector)
       end
 
       dataset.eager(:processes)

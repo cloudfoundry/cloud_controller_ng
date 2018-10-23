@@ -11,8 +11,8 @@ module VCAP::CloudController
       let(:fetcher) { AppListFetcher.new }
       let(:space_guids) { [space.guid] }
       let(:pagination_options) { PaginationOptions.new({}) }
-      let(:message) { AppsListMessage.new(filters) }
       let(:filters) { {} }
+      let(:message) { AppsListMessage.new(filters) }
 
       apps = nil
 
@@ -71,6 +71,21 @@ module VCAP::CloudController
 
       context 'when the app guids are provided' do
         let(:filters) { { guids: [app.guid] } }
+
+        it 'returns all of the desired apps' do
+          expect(apps.all).to include(app)
+          expect(apps.all).to_not include(sad_app)
+        end
+      end
+
+      context 'when a label_selector is provided' do
+        let(:filters) { { label_selector: 'dog in (chihuahua,scooby-doo)' } }
+        let!(:app_label) do
+          VCAP::CloudController::AppLabelModel.make(app_guid: app.guid, key_name: 'dog', value: 'scooby-doo')
+        end
+        let!(:sad_app_label) do
+          VCAP::CloudController::AppLabelModel.make(app_guid: sad_app.guid, key_name: 'dog', value: 'poodle')
+        end
 
         it 'returns all of the desired apps' do
           expect(apps.all).to include(app)

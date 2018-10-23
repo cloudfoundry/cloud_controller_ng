@@ -119,26 +119,22 @@ module VCAP::CloudController::Validators
 
   class LabelSelectorValidator < ActiveModel::Validator
     def validate(record)
-      requirements = record.label_selector.scan(/(?:\(.*?\)|[^,])+/)
+      requirements = record.label_selector.scan(VCAP::CloudController::LabelHelpers::REQUIREMENT_SPLITTER)
 
-      return record.errors.add(:label_selector, 'Invalid label_selector value') if requirements.empty?
-      return record.errors.add(:label_selector, 'Invalid label_selector value') if requirements.any?(&:blank?)
+      return record.errors[:base] << INVALID_VALUE_ERROR if requirements.empty? || requirements.any?(&:blank?)
 
       unless requirements.map { |r| valid_requirement?(r) }.all?
-        record.errors.add(:label_selector, 'Invalid label_selector value')
+        record.errors[:base] << INVALID_VALUE_ERROR
       end
     end
 
     private
 
-    def valid_requirement?(requirement)
-      requirement_regexes = [
-        /(?<key>.*) in \((?<values>.*)\)$/, # foo in (bar,baz)
-        /(?<key>.*) notin \((?<values>.*)\)$/ # funky notin (uptown,downtown)
-      ]
+    INVALID_VALUE_ERROR = 'Invalid label_selector value'.freeze
 
-      matches = requirement_regexes.
-                map { |re| re.match(requirement) }.
+    def valid_requirement?(requirement)
+      matches = VCAP::CloudController::LabelHelpers::REQUIREMENT_OPERATOR_PAIRS.
+                map { |rop| rop[:pattern].match(requirement) }.
                 compact
 
       return false if matches.empty?

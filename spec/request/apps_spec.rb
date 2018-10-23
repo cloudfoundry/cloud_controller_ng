@@ -438,6 +438,11 @@ RSpec.describe 'Apps' do
     end
 
     context 'labels' do
+      let!(:app1) { VCAP::CloudController::AppModel.make(name: 'name1') }
+      let!(:app2) { VCAP::CloudController::AppModel.make(name: 'name2') }
+      let!(:app1_label) { VCAP::CloudController::AppLabelModel.make(app_guid: app1.guid, key_name: 'foo', value: 'bar') }
+      let!(:app2_label) { VCAP::CloudController::AppLabelModel.make(app_guid: app2.guid, key_name: 'foo', value: 'funky') }
+
       let(:admin_header) { headers_for(user, scopes: %w(cloud_controller.admin)) }
 
       it 'returns a 400 when the label_selector is invalid' do
@@ -447,6 +452,25 @@ RSpec.describe 'Apps' do
 
         expect(last_response.status).to eq(400)
         expect(parsed_response['errors'].first['detail']).to match(/label_selector/)
+      end
+
+      it 'returns a 200 and the filtered apps when the label selector is valid' do
+        get '/v3/apps?label_selector=foo in (bar)', nil, admin_header
+
+        parsed_response = MultiJson.load(last_response.body)
+
+        expected_pagination = {
+          'total_results' => 1,
+          'total_pages' => 1,
+          'first' => { 'href' => "#{link_prefix}/v3/apps?label_selector=foo+in+%28bar%29&page=1&per_page=50" },
+          'last' => { 'href' => "#{link_prefix}/v3/apps?label_selector=foo+in+%28bar%29&page=1&per_page=50" },
+          'next' => nil,
+          'previous' => nil
+        }
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['resources'].map { |r| r['name'] }).to contain_exactly('name1')
+        expect(parsed_response['pagination']).to eq(expected_pagination)
       end
     end
   end
