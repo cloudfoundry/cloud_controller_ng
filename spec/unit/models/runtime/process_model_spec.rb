@@ -143,7 +143,6 @@ module VCAP::CloudController
         expect_validator(InstancesPolicy)
         expect_validator(MaxDiskQuotaPolicy)
         expect_validator(MinDiskQuotaPolicy)
-        expect_validator(MetadataPolicy)
         expect_validator(MinMemoryPolicy)
         expect_validator(AppMaxInstanceMemoryPolicy)
         expect_validator(InstancesPolicy)

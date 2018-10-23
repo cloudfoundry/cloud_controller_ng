@@ -4,7 +4,7 @@ RSpec.describe PortsPolicy do
   let!(:process) { VCAP::CloudController::ProcessModelFactory.make }
   let(:validator) { PortsPolicy.new(process) }
 
-  context 'invalid apps request' do
+  context 'invalid processes request' do
     it 'registers error a provided port is not an integer' do
       process.diego = true
       process.ports = [1, 2, 'foo']
@@ -33,7 +33,7 @@ RSpec.describe PortsPolicy do
     end
   end
 
-  context 'valid apps' do
+  context 'valid processes' do
     it 'does not require ports' do
       expect(process.valid?).to eq(true)
     end

@@ -20,7 +20,7 @@ RSpec.describe DockerPolicy do
       VCAP::CloudController::FeatureFlag.create(name: 'diego_docker', enabled: false)
     end
 
-    context 'when app is being started' do
+    context 'when process is being started' do
       before do
         allow(process).to receive(:being_started?).and_return(true)
       end
@@ -30,7 +30,7 @@ RSpec.describe DockerPolicy do
       end
     end
 
-    context 'when app is being stopped' do
+    context 'when process is being stopped' do
       before do
         allow(process).to receive(:being_started?).and_return(false)
       end

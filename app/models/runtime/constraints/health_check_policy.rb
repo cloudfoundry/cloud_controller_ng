@@ -1,7 +1,7 @@
 class HealthCheckPolicy
-  def initialize(app, health_check_timeout, health_check_invocation_timeout)
-    @app = app
-    @errors = app.errors
+  def initialize(process, health_check_timeout, health_check_invocation_timeout)
+    @process = process
+    @errors = process.errors
     @health_check_timeout = health_check_timeout
     @health_check_invocation_timeout = health_check_invocation_timeout
   end

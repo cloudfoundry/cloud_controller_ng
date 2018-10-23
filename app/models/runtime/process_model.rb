@@ -205,7 +205,6 @@ module VCAP::CloudController
       [
         MaxDiskQuotaPolicy.new(self, max_app_disk_in_mb),
         MinDiskQuotaPolicy.new(self),
-        MetadataPolicy.new(self, metadata_deserialized),
         MinMemoryPolicy.new(self),
         AppMaxMemoryPolicy.new(self, space, :space_quota_exceeded),
         AppMaxMemoryPolicy.new(self, organization, :quota_exceeded),
