@@ -32,7 +32,7 @@ module VCAP::CloudController
             invalid_space = Space.new
             expect {
               invalid_space.save(validate: false)
-            }.to raise_error(Sequel::NotNullConstraintViolation)
+            }.to raise_error(Sequel::DatabaseError)
           end
         end
 
