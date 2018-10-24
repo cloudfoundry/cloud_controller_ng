@@ -25,11 +25,10 @@ module Diego
       class StartTaskRequest < ::Protobuf::Message; end
       class StartTaskResponse < ::Protobuf::Message; end
       class FailTaskRequest < ::Protobuf::Message; end
+      class RejectTaskRequest < ::Protobuf::Message; end
       class TaskGuidRequest < ::Protobuf::Message; end
       class CompleteTaskRequest < ::Protobuf::Message; end
       class TaskCallbackResponse < ::Protobuf::Message; end
-      class ConvergeTasksRequest < ::Protobuf::Message; end
-      class ConvergeTasksResponse < ::Protobuf::Message; end
       class TasksRequest < ::Protobuf::Message; end
       class TasksResponse < ::Protobuf::Message; end
       class TaskByGuidRequest < ::Protobuf::Message; end
@@ -64,6 +63,11 @@ module Diego
         optional :string, :failure_reason, 2
       end
 
+      class RejectTaskRequest
+        optional :string, :task_guid, 1
+        optional :string, :rejection_reason, 2
+      end
+
       class TaskGuidRequest
         optional :string, :task_guid, 1
       end
@@ -83,16 +87,6 @@ module Diego
         optional :string, :result, 4
         optional :string, :annotation, 5
         optional :int64, :created_at, 6
-      end
-
-      class ConvergeTasksRequest
-        optional :int64, :kick_task_duration, 1
-        optional :int64, :expire_pending_task_duration, 2
-        optional :int64, :expire_completed_task_duration, 3
-      end
-
-      class ConvergeTasksResponse
-        optional ::Diego::Bbs::Models::Error, :error, 1
       end
 
       class TasksRequest

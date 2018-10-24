@@ -46,7 +46,6 @@ module Diego
         optional ::Diego::Bbs::Models::ActualLRPKey, :actual_lrp_key, 1
         optional ::Diego::Bbs::Models::ActualLRPInstanceKey, :actual_lrp_instance_key, 2
         optional ::Diego::Bbs::Models::ActualLRPNetInfo, :actual_lrp_net_info, 3
-        optional :uint64, :ttl, 4
       end
 
       class EvacuateStoppedActualLRPRequest

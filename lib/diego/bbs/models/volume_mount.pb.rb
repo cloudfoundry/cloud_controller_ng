@@ -16,15 +16,6 @@ module Diego
     module Models
 
       ##
-      # Enum Classes
-      #
-      class DeprecatedBindMountMode < ::Protobuf::Enum
-        define :RO, 0
-        define :RW, 1
-      end
-
-
-      ##
       # Message Classes
       #
       class SharedDevice < ::Protobuf::Message; end
@@ -41,9 +32,6 @@ module Diego
       end
 
       class VolumeMount
-        optional :string, :deprecated_volume_id, 2, :deprecated => true
-        optional ::Diego::Bbs::Models::DeprecatedBindMountMode, :deprecated_mode, 4, :deprecated => true
-        optional :bytes, :deprecated_config, 5, :deprecated => true
         optional :string, :driver, 1
         optional :string, :container_dir, 3
         optional :string, :mode, 6

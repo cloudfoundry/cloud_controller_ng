@@ -24,7 +24,15 @@ module Diego
       class ActualLRPKey < ::Protobuf::Message; end
       class ActualLRPInstanceKey < ::Protobuf::Message; end
       class ActualLRPNetInfo < ::Protobuf::Message; end
-      class ActualLRP < ::Protobuf::Message; end
+      class ActualLRP < ::Protobuf::Message
+        class Presence < ::Protobuf::Enum
+          define :ORDINARY, 0
+          define :EVACUATING, 1
+          define :SUSPECT, 2
+        end
+
+      end
+
 
 
       ##
@@ -38,6 +46,8 @@ module Diego
       class PortMapping
         optional :uint32, :container_port, 1
         optional :uint32, :host_port, 2
+        optional :uint32, :container_tls_proxy_port, 3
+        optional :uint32, :host_tls_proxy_port, 4
       end
 
       class ActualLRPKey
@@ -67,6 +77,7 @@ module Diego
         optional :string, :placement_error, 7
         optional :int64, :since, 8
         optional ::Diego::Bbs::Models::ModificationTag, :modification_tag, 9
+        optional ::Diego::Bbs::Models::ActualLRP::Presence, :presence, 10
       end
 
     end

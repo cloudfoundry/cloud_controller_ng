@@ -19,6 +19,7 @@ require 'network.pb'
 require 'security_group.pb'
 require 'volume_mount.pb'
 require 'check_definition.pb'
+require 'image_layer.pb'
 
 module Diego
   module Bbs
@@ -69,6 +70,7 @@ module Diego
         optional :string, :metrics_guid, 12
         optional :int64, :created_at, 13
         repeated ::Diego::Bbs::Models::CachedDependency, :cached_dependencies, 14
+        optional :string, :legacy_download_user, 15, :deprecated => true
         optional :string, :trusted_system_certificates_path, 16
         repeated ::Diego::Bbs::Models::VolumeMount, :volume_mounts, 17
         optional ::Diego::Bbs::Models::Network, :network, 18
@@ -77,6 +79,7 @@ module Diego
         optional :string, :image_username, 21
         optional :string, :image_password, 22
         optional ::Diego::Bbs::Models::CheckDefinition, :check_definition, 23
+        repeated ::Diego::Bbs::Models::ImageLayer, :image_layers, 24
       end
 
       class ProtoRoutes
@@ -131,7 +134,7 @@ module Diego
         repeated ::Diego::Bbs::Models::SecurityGroupRule, :egress_rules, 20
         optional ::Diego::Bbs::Models::ModificationTag, :modification_tag, 21
         repeated ::Diego::Bbs::Models::CachedDependency, :cached_dependencies, 22
-        optional :string, :legacy_download_user, 23
+        optional :string, :legacy_download_user, 23, :deprecated => true
         optional :string, :trusted_system_certificates_path, 24
         repeated ::Diego::Bbs::Models::VolumeMount, :volume_mounts, 25
         optional ::Diego::Bbs::Models::Network, :network, 26
@@ -141,6 +144,7 @@ module Diego
         optional :string, :image_username, 31
         optional :string, :image_password, 32
         optional ::Diego::Bbs::Models::CheckDefinition, :check_definition, 33
+        repeated ::Diego::Bbs::Models::ImageLayer, :image_layers, 34
       end
 
     end

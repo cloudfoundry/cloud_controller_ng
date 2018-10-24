@@ -17,6 +17,7 @@ require 'cached_dependency.pb'
 require 'volume_mount.pb'
 require 'network.pb'
 require 'certificate_properties.pb'
+require 'image_layer.pb'
 
 module Diego
   module Bbs
@@ -58,7 +59,7 @@ module Diego
         optional :string, :annotation, 13
         repeated ::Diego::Bbs::Models::SecurityGroupRule, :egress_rules, 14
         repeated ::Diego::Bbs::Models::CachedDependency, :cached_dependencies, 15
-        optional :string, :legacy_download_user, 16
+        optional :string, :legacy_download_user, 16, :deprecated => true
         optional :string, :trusted_system_certificates_path, 17
         repeated ::Diego::Bbs::Models::VolumeMount, :volume_mounts, 18
         optional ::Diego::Bbs::Models::Network, :network, 19
@@ -67,6 +68,7 @@ module Diego
         optional ::Diego::Bbs::Models::CertificateProperties, :certificate_properties, 22
         optional :string, :image_username, 23
         optional :string, :image_password, 24
+        repeated ::Diego::Bbs::Models::ImageLayer, :image_layers, 25
       end
 
       class Task
@@ -81,6 +83,8 @@ module Diego
         optional :string, :result, 9
         optional :bool, :failed, 10
         optional :string, :failure_reason, 11
+        optional :int32, :rejection_count, 12
+        optional :string, :rejection_reason, 13
       end
 
     end

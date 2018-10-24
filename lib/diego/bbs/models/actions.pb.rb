@@ -114,7 +114,7 @@ module Diego
 
       class ResourceLimits
         optional :uint64, :nofile, 1
-        optional :uint64, :nproc, 2
+        optional :uint64, :nproc, 2, :deprecated => true
       end
 
     end
