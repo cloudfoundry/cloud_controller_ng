@@ -28,8 +28,6 @@ pushd "${GOPATH}/${bbs_models_path}"
   # the ruby modules are created based on the package name
   sed -i'' -e 's/package models/package diego.bbs.models/' ./*.proto
 
-  # this is a hack to allow protoc to use a plugin that supports proto2 generation since protoc only supports proto3 by default
-  # see: https://github.com/ruby-protobuf/protobuf/issues/341
-  protoc --proto_path="${GOPATH}/src":. --plugin="protoc-gen-bob=$(which protoc-gen-ruby)" --bob_out="${GOPATH}/${ruby_generated_files_path}" ./*.proto
+  protoc --proto_path="${GOPATH}/src":. --ruby2_out="${GOPATH}/${ruby_generated_files_path}" ./*.proto
   git checkout .
 popd
