@@ -46,6 +46,14 @@ module VCAP::CloudController
           end
         end
       end
+
+      context 'with multiple queries' do
+        it 'returns the models that satisfy the requirements' do
+          dataset = subject.add_selector_queries(AppLabelModel, AppModel.dataset, 'foo in (funky,town),foo notin (bar)')
+
+          expect(dataset.map(&:guid)).to contain_exactly(app2.guid, app3.guid)
+        end
+      end
     end
   end
 end

@@ -91,6 +91,18 @@ module VCAP::CloudController
           expect(apps.all).to include(app)
           expect(apps.all).to_not include(sad_app)
         end
+
+        context 'and other filters are present' do
+          let!(:happiest_app) { AppModel.make(space_guid: space.guid, name: 'bob') }
+          let!(:happiest_app_label) do
+            VCAP::CloudController::AppLabelModel.make(app_guid: happiest_app.guid, key_name: 'dog', value: 'scooby-doo')
+          end
+          let(:filters) { { names: ['bob'], label_selector: 'dog in (chihuahua,scooby-doo)' } }
+
+          it 'returns the desired app' do
+            expect(apps.all).to contain_exactly(happiest_app)
+          end
+        end
       end
     end
   end

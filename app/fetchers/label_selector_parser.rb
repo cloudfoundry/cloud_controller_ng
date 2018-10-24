@@ -2,19 +2,15 @@ module VCAP::CloudController
   class LabelSelectorParser
     class << self
       def add_selector_queries(label_klass, resource_dataset, label_selector)
-        parse_requirements(label_selector).reduce(nil) do |dataset, req|
-          case req.operator
+        parse_requirements(label_selector).reduce(nil) do |accumulated_dataset, requirement|
+          case requirement.operator
           when :in
-            ds = evaluate_in(label_klass, resource_dataset, req)
+            dataset_for_requirement = evaluate_in(label_klass, resource_dataset, requirement)
           when :notin
-            ds = evaluate_notin(label_klass, resource_dataset, req)
+            dataset_for_requirement = evaluate_notin(label_klass, resource_dataset, requirement)
           end
 
-          if dataset.nil?
-            ds
-          else
-            dataset.natural_join(ds)
-          end
+          accumulated_dataset.nil? ? dataset_for_requirement : accumulated_dataset.join(dataset_for_requirement, [:guid])
         end
       end
 
@@ -24,11 +20,14 @@ module VCAP::CloudController
         requirements = []
 
         split_selector(label_selector).each do |requirement|
-          VCAP::CloudController::LabelHelpers::REQUIREMENT_OPERATOR_PAIRS.each do |rop|
-            match = rop[:pattern].match(requirement)
-            next if match.nil?
+          VCAP::CloudController::LabelHelpers::REQUIREMENT_OPERATOR_PAIRS.each do |requirement_operator_pair|
+            operator_pattern = requirement_operator_pair[:pattern]
+            operator_type = requirement_operator_pair[:operator]
 
-            requirements << LabelSelectorRequirement.new(key: match[:key], operator: rop[:operator], values: match[:values])
+            match_data = operator_pattern.match(requirement)
+            next if match_data.nil?
+
+            requirements << LabelSelectorRequirement.new(key: match_data[:key], operator: operator_type, values: match_data[:values])
           end
         end
 
@@ -40,14 +39,14 @@ module VCAP::CloudController
       end
 
       def evaluate_in(label_klass, resource_dataset, requirement)
-        resource_dataset.where(guid: set_inclusion_guids(label_klass, requirement))
+        resource_dataset.where(guid: guids_for_set_inclusion(label_klass, requirement))
       end
 
       def evaluate_notin(label_klass, resource_dataset, requirement)
-        resource_dataset.exclude(guid: set_inclusion_guids(label_klass, requirement))
+        resource_dataset.exclude(guid: guids_for_set_inclusion(label_klass, requirement))
       end
 
-      def set_inclusion_guids(label_klass, requirement)
+      def guids_for_set_inclusion(label_klass, requirement)
         prefix, name = VCAP::CloudController::LabelHelpers.extract_prefix(requirement.key)
         label_klass.
           select(label_klass::RESOURCE_GUID_COLUMN).
