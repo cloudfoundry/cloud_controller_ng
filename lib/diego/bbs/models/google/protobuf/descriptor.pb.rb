@@ -3,11 +3,10 @@
 ##
 # This file is auto-generated. DO NOT EDIT!
 #
-require 'protobuf'
+require 'protobuf/message'
 
 module Google
   module Protobuf
-    ::Protobuf::Optionable.inject(self) { ::Google::Protobuf::FileOptions }
 
     ##
     # Message Classes
@@ -20,7 +19,6 @@ module Google
 
     end
 
-    class ExtensionRangeOptions < ::Protobuf::Message; end
     class FieldDescriptorProto < ::Protobuf::Message
       class Type < ::Protobuf::Enum
         define :TYPE_DOUBLE, 1
@@ -52,11 +50,7 @@ module Google
     end
 
     class OneofDescriptorProto < ::Protobuf::Message; end
-    class EnumDescriptorProto < ::Protobuf::Message
-      class EnumReservedRange < ::Protobuf::Message; end
-
-    end
-
+    class EnumDescriptorProto < ::Protobuf::Message; end
     class EnumValueDescriptorProto < ::Protobuf::Message; end
     class ServiceDescriptorProto < ::Protobuf::Message; end
     class MethodDescriptorProto < ::Protobuf::Message; end
@@ -116,18 +110,6 @@ module Google
 
 
     ##
-    # File Options
-    #
-    set_option :java_package, "com.google.protobuf"
-    set_option :java_outer_classname, "DescriptorProtos"
-    set_option :optimize_for, ::Google::Protobuf::FileOptions::OptimizeMode::SPEED
-    set_option :go_package, "github.com/golang/protobuf/protoc-gen-go/descriptor;descriptor"
-    set_option :cc_enable_arenas, true
-    set_option :objc_class_prefix, "GPB"
-    set_option :csharp_namespace, "Google.Protobuf.Reflection"
-
-
-    ##
     # Message Fields
     #
     class FileDescriptorSet
@@ -153,7 +135,6 @@ module Google
       class ExtensionRange
         optional :int32, :start, 1
         optional :int32, :end, 2
-        optional ::Google::Protobuf::ExtensionRangeOptions, :options, 3
       end
 
       class ReservedRange
@@ -171,12 +152,6 @@ module Google
       optional ::Google::Protobuf::MessageOptions, :options, 7
       repeated ::Google::Protobuf::DescriptorProto::ReservedRange, :reserved_range, 9
       repeated :string, :reserved_name, 10
-    end
-
-    class ExtensionRangeOptions
-      repeated ::Google::Protobuf::UninterpretedOption, :uninterpreted_option, 999
-      # Extension Fields
-      extensions 1000...536870912
     end
 
     class FieldDescriptorProto
@@ -198,16 +173,9 @@ module Google
     end
 
     class EnumDescriptorProto
-      class EnumReservedRange
-        optional :int32, :start, 1
-        optional :int32, :end, 2
-      end
-
       optional :string, :name, 1
       repeated ::Google::Protobuf::EnumValueDescriptorProto, :value, 2
       optional ::Google::Protobuf::EnumOptions, :options, 3
-      repeated ::Google::Protobuf::EnumDescriptorProto::EnumReservedRange, :reserved_range, 4
-      repeated :string, :reserved_name, 5
     end
 
     class EnumValueDescriptorProto
@@ -242,16 +210,12 @@ module Google
       optional :bool, :cc_generic_services, 16, :default => false
       optional :bool, :java_generic_services, 17, :default => false
       optional :bool, :py_generic_services, 18, :default => false
-      optional :bool, :php_generic_services, 42, :default => false
       optional :bool, :deprecated, 23, :default => false
       optional :bool, :cc_enable_arenas, 31, :default => false
       optional :string, :objc_class_prefix, 36
       optional :string, :csharp_namespace, 37
       optional :string, :swift_prefix, 39
       optional :string, :php_class_prefix, 40
-      optional :string, :php_namespace, 41
-      optional :string, :php_metadata_namespace, 44
-      optional :string, :ruby_package, 45
       repeated ::Google::Protobuf::UninterpretedOption, :uninterpreted_option, 999
       # Extension Fields
       extensions 1000...536870912

@@ -3,7 +3,7 @@
 ##
 # This file is auto-generated. DO NOT EDIT!
 #
-require 'protobuf'
+require 'protobuf/message'
 
 
 ##
@@ -14,7 +14,15 @@ require 'github.com/gogo/protobuf/gogoproto/gogo.pb'
 module Diego
   module Bbs
     module Models
-      ::Protobuf::Optionable.inject(self) { ::Google::Protobuf::FileOptions }
+
+      ##
+      # Enum Classes
+      #
+      class DeprecatedBindMountMode < ::Protobuf::Enum
+        define :RO, 0
+        define :RW, 1
+      end
+
 
       ##
       # Message Classes
@@ -25,28 +33,25 @@ module Diego
 
 
       ##
-      # File Options
-      #
-      set_option :".gogoproto.goproto_enum_prefix_all", true
-
-
-      ##
       # Message Fields
       #
       class SharedDevice
-        optional :string, :volume_id, 1, :".gogoproto.jsontag" => "volume_id"
-        optional :string, :mount_config, 2, :".gogoproto.jsontag" => "mount_config"
+        optional :string, :volume_id, 1
+        optional :string, :mount_config, 2
       end
 
       class VolumeMount
-        optional :string, :driver, 1, :".gogoproto.jsontag" => "driver"
-        optional :string, :container_dir, 3, :".gogoproto.jsontag" => "container_dir"
-        optional :string, :mode, 6, :".gogoproto.jsontag" => "mode"
-        optional ::Diego::Bbs::Models::SharedDevice, :shared, 7, :".gogoproto.jsontag" => "shared"
+        optional :string, :deprecated_volume_id, 2, :deprecated => true
+        optional ::Diego::Bbs::Models::DeprecatedBindMountMode, :deprecated_mode, 4, :deprecated => true
+        optional :bytes, :deprecated_config, 5, :deprecated => true
+        optional :string, :driver, 1
+        optional :string, :container_dir, 3
+        optional :string, :mode, 6
+        optional ::Diego::Bbs::Models::SharedDevice, :shared, 7
       end
 
       class VolumePlacement
-        repeated :string, :driver_names, 1, :".gogoproto.jsontag" => "driver_names"
+        repeated :string, :driver_names, 1
       end
 
     end

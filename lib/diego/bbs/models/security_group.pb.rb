@@ -3,7 +3,7 @@
 ##
 # This file is auto-generated. DO NOT EDIT!
 #
-require 'protobuf'
+require 'protobuf/message'
 
 
 ##
@@ -14,7 +14,6 @@ require 'github.com/gogo/protobuf/gogoproto/gogo.pb'
 module Diego
   module Bbs
     module Models
-      ::Protobuf::Optionable.inject(self) { ::Google::Protobuf::FileOptions }
 
       ##
       # Message Classes
@@ -38,13 +37,13 @@ module Diego
       end
 
       class SecurityGroupRule
-        optional :string, :protocol, 1, :".gogoproto.jsontag" => "protocol,omitempty"
+        optional :string, :protocol, 1
         repeated :string, :destinations, 2
         repeated :uint32, :ports, 3
         optional ::Diego::Bbs::Models::PortRange, :port_range, 4
         optional ::Diego::Bbs::Models::ICMPInfo, :icmp_info, 5
         optional :bool, :log, 6
-        repeated :string, :annotations, 7, :".gogoproto.jsontag" => "annotations,omitempty"
+        repeated :string, :annotations, 7
       end
 
     end

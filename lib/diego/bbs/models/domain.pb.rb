@@ -3,7 +3,7 @@
 ##
 # This file is auto-generated. DO NOT EDIT!
 #
-require 'protobuf'
+require 'protobuf/message'
 
 
 ##
@@ -15,7 +15,6 @@ require 'error.pb'
 module Diego
   module Bbs
     module Models
-      ::Protobuf::Optionable.inject(self) { ::Google::Protobuf::FileOptions }
 
       ##
       # Message Classes
@@ -23,12 +22,6 @@ module Diego
       class DomainsResponse < ::Protobuf::Message; end
       class UpsertDomainResponse < ::Protobuf::Message; end
       class UpsertDomainRequest < ::Protobuf::Message; end
-
-
-      ##
-      # File Options
-      #
-      set_option :".gogoproto.equal_all", false
 
 
       ##

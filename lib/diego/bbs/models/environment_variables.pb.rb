@@ -3,7 +3,7 @@
 ##
 # This file is auto-generated. DO NOT EDIT!
 #
-require 'protobuf'
+require 'protobuf/message'
 
 
 ##
@@ -14,7 +14,6 @@ require 'github.com/gogo/protobuf/gogoproto/gogo.pb'
 module Diego
   module Bbs
     module Models
-      ::Protobuf::Optionable.inject(self) { ::Google::Protobuf::FileOptions }
 
       ##
       # Message Classes

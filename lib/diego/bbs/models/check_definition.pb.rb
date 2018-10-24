@@ -3,7 +3,7 @@
 ##
 # This file is auto-generated. DO NOT EDIT!
 #
-require 'protobuf'
+require 'protobuf/message'
 
 
 ##
@@ -14,7 +14,6 @@ require 'github.com/gogo/protobuf/gogoproto/gogo.pb'
 module Diego
   module Bbs
     module Models
-      ::Protobuf::Optionable.inject(self) { ::Google::Protobuf::FileOptions }
 
       ##
       # Message Classes
@@ -34,18 +33,18 @@ module Diego
       end
 
       class Check
-        optional ::Diego::Bbs::Models::TCPCheck, :tcp_check, 1, :".gogoproto.jsontag" => "tcp_check,omitempty"
-        optional ::Diego::Bbs::Models::HTTPCheck, :http_check, 2, :".gogoproto.jsontag" => "http_check,omitempty"
+        optional ::Diego::Bbs::Models::TCPCheck, :tcp_check, 1
+        optional ::Diego::Bbs::Models::HTTPCheck, :http_check, 2
       end
 
       class TCPCheck
         optional :uint32, :port, 1
-        optional :uint64, :connect_timeout_ms, 2, :".gogoproto.jsontag" => "connect_timeout_ms,omitempty"
+        optional :uint64, :connect_timeout_ms, 2
       end
 
       class HTTPCheck
         optional :uint32, :port, 1
-        optional :uint64, :request_timeout_ms, 2, :".gogoproto.jsontag" => "request_timeout_ms,omitempty"
+        optional :uint64, :request_timeout_ms, 2
         optional :string, :path, 3
       end
 

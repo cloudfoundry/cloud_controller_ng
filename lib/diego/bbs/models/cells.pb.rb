@@ -3,7 +3,7 @@
 ##
 # This file is auto-generated. DO NOT EDIT!
 #
-require 'protobuf'
+require 'protobuf/message'
 
 
 ##
@@ -15,7 +15,6 @@ require 'error.pb'
 module Diego
   module Bbs
     module Models
-      ::Protobuf::Optionable.inject(self) { ::Google::Protobuf::FileOptions }
 
       ##
       # Message Classes
@@ -40,15 +39,15 @@ module Diego
         optional :string, :rep_address, 2
         optional :string, :zone, 3
         optional ::Diego::Bbs::Models::CellCapacity, :capacity, 4
-        repeated ::Diego::Bbs::Models::Provider, :rootfs_providers, 5, :".gogoproto.jsontag" => "rootfs_provider_list,omitempty"
-        repeated :string, :placement_tags, 6, :".gogoproto.jsontag" => "placement_tags,omitempty"
-        repeated :string, :optional_placement_tags, 7, :".gogoproto.jsontag" => "optional_placement_tags,omitempty"
+        repeated ::Diego::Bbs::Models::Provider, :rootfs_providers, 5
+        repeated :string, :placement_tags, 6
+        repeated :string, :optional_placement_tags, 7
         optional :string, :rep_url, 8
       end
 
       class Provider
         optional :string, :name, 1
-        repeated :string, :properties, 2, :".gogoproto.jsontag" => "properties,omitempty"
+        repeated :string, :properties, 2
       end
 
       class CellsResponse

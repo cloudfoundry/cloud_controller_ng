@@ -3,7 +3,7 @@
 ##
 # This file is auto-generated. DO NOT EDIT!
 #
-require 'protobuf'
+require 'protobuf/message'
 
 
 ##
@@ -14,7 +14,6 @@ require 'github.com/gogo/protobuf/gogoproto/gogo.pb'
 module Diego
   module Bbs
     module Models
-      ::Protobuf::Optionable.inject(self) { ::Google::Protobuf::FileOptions }
 
       ##
       # Message Classes
@@ -22,6 +21,8 @@ module Diego
       class Error < ::Protobuf::Message
         class Type < ::Protobuf::Enum
           define :UnknownError, 0
+          define :InvalidDomain, 1
+          define :UnkownVersion, 2
           define :InvalidRecord, 3
           define :InvalidRequest, 4
           define :InvalidResponse, 5
@@ -29,6 +30,7 @@ module Diego
           define :InvalidJSON, 7
           define :FailedToOpenEnvelope, 8
           define :InvalidStateTransition, 9
+          define :Unauthorized, 10
           define :ResourceConflict, 11
           define :ResourceExists, 12
           define :ResourceNotFound, 13
@@ -38,15 +40,17 @@ module Diego
           define :ActualLRPCannotBeCrashed, 17
           define :ActualLRPCannotBeFailed, 18
           define :ActualLRPCannotBeRemoved, 19
+          define :ActualLRPCannotBeStopped, 20
           define :ActualLRPCannotBeUnclaimed, 21
           define :ActualLRPCannotBeEvacuated, 22
+          define :DesiredLRPCannotBeUpdated, 23
           define :RunningOnDifferentCell, 24
+          define :DesiredLRPSchedulingInfoCannotBeUpdated, 25
           define :GUIDGeneration, 26
           define :Deserialize, 27
           define :Deadlock, 28
           define :Unrecoverable, 29
           define :LockCollision, 30
-          define :Timeout, 31
         end
 
       end
@@ -54,18 +58,11 @@ module Diego
 
 
       ##
-      # File Options
-      #
-      set_option :".gogoproto.goproto_enum_prefix_all", true
-      set_option :".gogoproto.equal_all", false
-
-
-      ##
       # Message Fields
       #
       class Error
-        optional ::Diego::Bbs::Models::Error::Type, :type, 1, :".gogoproto.nullable" => false
-        optional :string, :message, 2, :".gogoproto.nullable" => false
+        optional ::Diego::Bbs::Models::Error::Type, :type, 1
+        optional :string, :message, 2
       end
 
     end
