@@ -3,7 +3,7 @@
 ##
 # This file is auto-generated. DO NOT EDIT!
 #
-require 'protobuf/message'
+require 'protobuf'
 
 
 ##
@@ -16,6 +16,7 @@ require 'error.pb'
 module Diego
   module Bbs
     module Models
+      ::Protobuf::Optionable.inject(self) { ::Google::Protobuf::FileOptions }
 
       ##
       # Message Classes

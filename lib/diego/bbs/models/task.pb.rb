@@ -3,7 +3,7 @@
 ##
 # This file is auto-generated. DO NOT EDIT!
 #
-require 'protobuf/message'
+require 'protobuf'
 
 
 ##
@@ -17,10 +17,12 @@ require 'cached_dependency.pb'
 require 'volume_mount.pb'
 require 'network.pb'
 require 'certificate_properties.pb'
+require 'image_layer.pb'
 
 module Diego
   module Bbs
     module Models
+      ::Protobuf::Optionable.inject(self) { ::Google::Protobuf::FileOptions }
 
       ##
       # Message Classes
@@ -40,11 +42,17 @@ module Diego
 
 
       ##
+      # File Options
+      #
+      set_option :".gogoproto.goproto_enum_prefix_all", true
+
+
+      ##
       # Message Fields
       #
       class TaskDefinition
-        optional :string, :root_fs, 1
-        repeated ::Diego::Bbs::Models::EnvironmentVariable, :environment_variables, 2
+        optional :string, :root_fs, 1, :".gogoproto.jsontag" => "rootfs"
+        repeated ::Diego::Bbs::Models::EnvironmentVariable, :environment_variables, 2, :".gogoproto.jsontag" => "env,omitempty"
         optional ::Diego::Bbs::Models::Action, :action, 3
         optional :int32, :disk_mb, 4
         optional :int32, :memory_mb, 5
@@ -54,23 +62,24 @@ module Diego
         optional :string, :log_guid, 9
         optional :string, :metrics_guid, 10
         optional :string, :result_file, 11
-        optional :string, :completion_callback_url, 12
-        optional :string, :annotation, 13
-        repeated ::Diego::Bbs::Models::SecurityGroupRule, :egress_rules, 14
-        repeated ::Diego::Bbs::Models::CachedDependency, :cached_dependencies, 15
-        optional :string, :legacy_download_user, 16
-        optional :string, :trusted_system_certificates_path, 17
-        repeated ::Diego::Bbs::Models::VolumeMount, :volume_mounts, 18
-        optional ::Diego::Bbs::Models::Network, :network, 19
-        repeated :string, :PlacementTags, 20
+        optional :string, :completion_callback_url, 12, :".gogoproto.jsontag" => "completion_callback_url,omitempty"
+        optional :string, :annotation, 13, :".gogoproto.jsontag" => "annotation,omitempty"
+        repeated ::Diego::Bbs::Models::SecurityGroupRule, :egress_rules, 14, :".gogoproto.jsontag" => "egress_rules,omitempty"
+        repeated ::Diego::Bbs::Models::CachedDependency, :cached_dependencies, 15, :".gogoproto.jsontag" => "cached_dependencies,omitempty"
+        optional :string, :legacy_download_user, 16, :deprecated => true, :".gogoproto.jsontag" => "legacy_download_user,omitempty"
+        optional :string, :trusted_system_certificates_path, 17, :".gogoproto.jsontag" => "trusted_system_certificates_path,omitempty"
+        repeated ::Diego::Bbs::Models::VolumeMount, :volume_mounts, 18, :".gogoproto.jsontag" => "volume_mounts,omitempty"
+        optional ::Diego::Bbs::Models::Network, :network, 19, :".gogoproto.jsontag" => "network,omitempty"
+        repeated :string, :PlacementTags, 20, :".gogoproto.jsontag" => "placement_tags,omitempty"
         optional :int32, :max_pids, 21
-        optional ::Diego::Bbs::Models::CertificateProperties, :certificate_properties, 22
+        optional ::Diego::Bbs::Models::CertificateProperties, :certificate_properties, 22, :".gogoproto.nullable" => true, :".gogoproto.jsontag" => "certificate_properties,omitempty"
         optional :string, :image_username, 23
         optional :string, :image_password, 24
+        repeated ::Diego::Bbs::Models::ImageLayer, :image_layers, 25
       end
 
       class Task
-        optional ::Diego::Bbs::Models::TaskDefinition, :task_definition, 1
+        optional ::Diego::Bbs::Models::TaskDefinition, :task_definition, 1, :".gogoproto.embed" => true, :".gogoproto.jsontag" => ""
         optional :string, :task_guid, 2
         optional :string, :domain, 3
         optional :int64, :created_at, 4
@@ -81,6 +90,8 @@ module Diego
         optional :string, :result, 9
         optional :bool, :failed, 10
         optional :string, :failure_reason, 11
+        optional :int32, :rejection_count, 12
+        optional :string, :rejection_reason, 13
       end
 
     end

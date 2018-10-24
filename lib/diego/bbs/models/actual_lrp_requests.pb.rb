@@ -3,7 +3,7 @@
 ##
 # This file is auto-generated. DO NOT EDIT!
 #
-require 'protobuf/message'
+require 'protobuf'
 
 
 ##
@@ -16,6 +16,7 @@ require 'error.pb'
 module Diego
   module Bbs
     module Models
+      ::Protobuf::Optionable.inject(self) { ::Google::Protobuf::FileOptions }
 
       ##
       # Message Classes
@@ -32,6 +33,8 @@ module Diego
       class FailActualLRPRequest < ::Protobuf::Message; end
       class RetireActualLRPRequest < ::Protobuf::Message; end
       class RemoveActualLRPRequest < ::Protobuf::Message; end
+      class ActualLRPsResponse < ::Protobuf::Message; end
+      class ActualLRPsRequest < ::Protobuf::Message; end
 
 
       ##
@@ -96,6 +99,18 @@ module Diego
         optional :string, :process_guid, 1
         optional :int32, :index, 2
         optional ::Diego::Bbs::Models::ActualLRPInstanceKey, :actual_lrp_instance_key, 3
+      end
+
+      class ActualLRPsResponse
+        optional ::Diego::Bbs::Models::Error, :error, 1
+        repeated ::Diego::Bbs::Models::ActualLRP, :actual_lrps, 2
+      end
+
+      class ActualLRPsRequest
+        optional :string, :domain, 1
+        optional :string, :cell_id, 2
+        optional :string, :process_guid, 3
+        optional :int32, :index, 4, :".gogoproto.nullable" => true
       end
 
     end

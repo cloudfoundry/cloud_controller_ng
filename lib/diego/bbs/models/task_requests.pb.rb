@@ -3,7 +3,7 @@
 ##
 # This file is auto-generated. DO NOT EDIT!
 #
-require 'protobuf/message'
+require 'protobuf'
 
 
 ##
@@ -16,6 +16,7 @@ require 'error.pb'
 module Diego
   module Bbs
     module Models
+      ::Protobuf::Optionable.inject(self) { ::Google::Protobuf::FileOptions }
 
       ##
       # Message Classes
@@ -25,11 +26,10 @@ module Diego
       class StartTaskRequest < ::Protobuf::Message; end
       class StartTaskResponse < ::Protobuf::Message; end
       class FailTaskRequest < ::Protobuf::Message; end
+      class RejectTaskRequest < ::Protobuf::Message; end
       class TaskGuidRequest < ::Protobuf::Message; end
       class CompleteTaskRequest < ::Protobuf::Message; end
       class TaskCallbackResponse < ::Protobuf::Message; end
-      class ConvergeTasksRequest < ::Protobuf::Message; end
-      class ConvergeTasksResponse < ::Protobuf::Message; end
       class TasksRequest < ::Protobuf::Message; end
       class TasksResponse < ::Protobuf::Message; end
       class TaskByGuidRequest < ::Protobuf::Message; end
@@ -44,7 +44,7 @@ module Diego
       end
 
       class DesireTaskRequest
-        optional ::Diego::Bbs::Models::TaskDefinition, :task_definition, 1
+        optional ::Diego::Bbs::Models::TaskDefinition, :task_definition, 1, :".gogoproto.jsontag" => "task_definition"
         optional :string, :task_guid, 2
         optional :string, :domain, 3
       end
@@ -64,6 +64,11 @@ module Diego
         optional :string, :failure_reason, 2
       end
 
+      class RejectTaskRequest
+        optional :string, :task_guid, 1
+        optional :string, :rejection_reason, 2
+      end
+
       class TaskGuidRequest
         optional :string, :task_guid, 1
       end
@@ -81,18 +86,8 @@ module Diego
         optional :bool, :failed, 2
         optional :string, :failure_reason, 3
         optional :string, :result, 4
-        optional :string, :annotation, 5
+        optional :string, :annotation, 5, :".gogoproto.jsontag" => "annotation,omitempty"
         optional :int64, :created_at, 6
-      end
-
-      class ConvergeTasksRequest
-        optional :int64, :kick_task_duration, 1
-        optional :int64, :expire_pending_task_duration, 2
-        optional :int64, :expire_completed_task_duration, 3
-      end
-
-      class ConvergeTasksResponse
-        optional ::Diego::Bbs::Models::Error, :error, 1
       end
 
       class TasksRequest

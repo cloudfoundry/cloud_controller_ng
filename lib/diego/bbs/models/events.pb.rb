@@ -3,7 +3,7 @@
 ##
 # This file is auto-generated. DO NOT EDIT!
 #
-require 'protobuf/message'
+require 'protobuf'
 
 
 ##
@@ -17,6 +17,7 @@ require 'task.pb'
 module Diego
   module Bbs
     module Models
+      ::Protobuf::Optionable.inject(self) { ::Google::Protobuf::FileOptions }
 
       ##
       # Message Classes
@@ -24,6 +25,9 @@ module Diego
       class ActualLRPCreatedEvent < ::Protobuf::Message; end
       class ActualLRPChangedEvent < ::Protobuf::Message; end
       class ActualLRPRemovedEvent < ::Protobuf::Message; end
+      class ActualLRPInstanceCreatedEvent < ::Protobuf::Message; end
+      class ActualLRPInstanceChangedEvent < ::Protobuf::Message; end
+      class ActualLRPInstanceRemovedEvent < ::Protobuf::Message; end
       class DesiredLRPCreatedEvent < ::Protobuf::Message; end
       class DesiredLRPChangedEvent < ::Protobuf::Message; end
       class DesiredLRPRemovedEvent < ::Protobuf::Message; end
@@ -50,6 +54,19 @@ module Diego
         optional ::Diego::Bbs::Models::ActualLRPGroup, :actual_lrp_group, 1
       end
 
+      class ActualLRPInstanceCreatedEvent
+        optional ::Diego::Bbs::Models::ActualLRP, :actual_lrp, 1
+      end
+
+      class ActualLRPInstanceChangedEvent
+        optional ::Diego::Bbs::Models::ActualLRP, :before, 1
+        optional ::Diego::Bbs::Models::ActualLRP, :after, 2
+      end
+
+      class ActualLRPInstanceRemovedEvent
+        optional ::Diego::Bbs::Models::ActualLRP, :actual_lrp, 1
+      end
+
       class DesiredLRPCreatedEvent
         optional ::Diego::Bbs::Models::DesiredLRP, :desired_lrp, 1
       end
@@ -64,10 +81,10 @@ module Diego
       end
 
       class ActualLRPCrashedEvent
-        optional ::Diego::Bbs::Models::ActualLRPKey, :actual_lrp_key, 1
-        optional ::Diego::Bbs::Models::ActualLRPInstanceKey, :actual_lrp_instance_key, 2
+        optional ::Diego::Bbs::Models::ActualLRPKey, :actual_lrp_key, 1, :".gogoproto.nullable" => false, :".gogoproto.embed" => true, :".gogoproto.jsontag" => ""
+        optional ::Diego::Bbs::Models::ActualLRPInstanceKey, :actual_lrp_instance_key, 2, :".gogoproto.nullable" => false, :".gogoproto.embed" => true, :".gogoproto.jsontag" => ""
         optional :int32, :crash_count, 3
-        optional :string, :crash_reason, 4
+        optional :string, :crash_reason, 4, :".gogoproto.jsontag" => "crash_reason,omitempty"
         optional :int64, :since, 5
       end
 
