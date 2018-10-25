@@ -454,7 +454,7 @@ RSpec.describe 'Apps' do
         expect(parsed_response['errors'].first['detail']).to match(/label_selector/)
       end
 
-      it 'returns a 200 and the filtered apps when the label selector is valid' do
+      it 'returns a 200 and the filtered apps for "in" label selector' do
         get '/v3/apps?label_selector=foo in (bar)', nil, admin_header
 
         parsed_response = MultiJson.load(last_response.body)
@@ -470,6 +470,25 @@ RSpec.describe 'Apps' do
 
         expect(last_response.status).to eq(200)
         expect(parsed_response['resources'].map { |r| r['name'] }).to contain_exactly('name1')
+        expect(parsed_response['pagination']).to eq(expected_pagination)
+      end
+
+      it 'returns a 200 and the filtered apps for "notin" label selector' do
+        get '/v3/apps?label_selector=foo notin (bar)', nil, admin_header
+
+        parsed_response = MultiJson.load(last_response.body)
+
+        expected_pagination = {
+          'total_results' => 1,
+          'total_pages' => 1,
+          'first' => { 'href' => "#{link_prefix}/v3/apps?label_selector=foo+notin+%28bar%29&page=1&per_page=50" },
+          'last' => { 'href' => "#{link_prefix}/v3/apps?label_selector=foo+notin+%28bar%29&page=1&per_page=50" },
+          'next' => nil,
+          'previous' => nil
+        }
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['resources'].map { |r| r['name'] }).to contain_exactly('name2')
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
     end
