@@ -60,6 +60,11 @@ module VCAP::CloudController
             optional(:temporary_oci_buildpack_mode) => enum('oci-phase-1', NilClass),
           },
 
+          opi: {
+            enabled: bool,
+            url: String,
+          },
+
           default_app_memory: Integer,
           default_app_disk_in_mb: Integer,
           maximum_app_disk_in_mb: Integer,

@@ -26,6 +26,8 @@ require 'cloud_controller/bits_service_resource_pool_wrapper'
 require 'cloud_controller/packager/local_bits_packer'
 require 'cloud_controller/packager/bits_service_packer'
 require 'credhub/client'
+require 'cloud_controller/opi/apps_client'
+require 'cloud_controller/opi/instances_client'
 
 require 'bits_service_client'
 
@@ -73,7 +75,7 @@ module CloudController
     end
 
     def bbs_apps_client
-      @dependencies[:bbs_apps_client] || register(:bbs_apps_client, build_bbs_apps_client)
+      @dependencies[:bbs_apps_client] || register(:bbs_apps_client, build_apps_client)
     end
 
     def bbs_stager_client
@@ -85,7 +87,7 @@ module CloudController
     end
 
     def bbs_instances_client
-      @dependencies[:bbs_instances_client] || register(:bbs_instances_client, build_bbs_instances_client)
+      @dependencies[:bbs_instances_client] || register(:bbs_instances_client, build_instances_client)
     end
 
     def traffic_controller_client
@@ -385,15 +387,27 @@ module CloudController
       )
     end
 
+    def build_apps_client
+      if config.get(:opi, :enabled)
+        build_opi_apps_client
+      else
+        build_bbs_apps_client
+      end
+    end
+
+    def build_opi_apps_client
+      ::OPI::Client.new(config.get(:opi, :url))
+    end
+
     def build_bbs_apps_client
       bbs_client = ::Diego::Client.new(
         url: config.get(:diego, :bbs, :url),
         ca_cert_file: config.get(:diego, :bbs, :ca_file),
         client_cert_file: config.get(:diego, :bbs, :cert_file),
         client_key_file: config.get(:diego, :bbs, :key_file),
-      )
+    )
 
-      VCAP::CloudController::Diego::BbsAppsClient.new(bbs_client)
+      VCAP::CloudController::Diego::BbsAppsClient.new(bbs_client, config)
     end
 
     def build_bbs_task_client
@@ -405,6 +419,18 @@ module CloudController
       )
 
       VCAP::CloudController::Diego::BbsTaskClient.new(bbs_client)
+    end
+
+    def build_instances_client
+      if config.get(:opi, :enabled)
+        build_opi_instances_client
+      else
+        build_bbs_instances_client
+      end
+    end
+
+    def build_opi_instances_client
+      ::OPI::InstancesClient.new(config.get(:opi, :url))
     end
 
     def build_bbs_instances_client

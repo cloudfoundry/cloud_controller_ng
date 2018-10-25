@@ -196,7 +196,6 @@ module VCAP::CloudController
               manager.create_route_service_instance_binding(route.guid, service_instance.guid, arbitrary_parameters, route_services_enabled)
               expect(messenger).to have_received(:send_desire_request) do |*args|
                 expect(args[0]).to eq(process)
-                expect(args[1]).to be_a(Config)
               end
             end
           end

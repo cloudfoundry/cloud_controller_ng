@@ -92,6 +92,7 @@ each_run_block = proc do
       mocks.verify_partial_doubles = true
     end
     rspec_config.exclusion_filter = :perm
+    rspec_config.filter_run_excluding opi: true
     rspec_config.expose_dsl_globally = false
     rspec_config.backtrace_exclusion_patterns = [%r{/gems/}, %r{/bin/rspec}]
 

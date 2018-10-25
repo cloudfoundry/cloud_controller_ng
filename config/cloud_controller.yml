@@ -250,6 +250,10 @@ diego:
     ca_file: /var/vcap/jobs/cloud_controller_ng/config/certs/bbs_ca.crt
   pid_limit: 2048
 
+opi:
+  enabled: false
+  url: http://opi.service.cf.internal
+
 directories:
   tmpdir: /tmp
   diagnostics: /tmp

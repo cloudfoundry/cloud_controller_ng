@@ -75,16 +75,10 @@ module VCAP::CloudController
           end
           let!(:stale_process) { ProcessModel.make(:diego_runnable) }
 
-          before do
-            stale_lrp_recipe_builder = instance_double(AppRecipeBuilder)
-            allow(AppRecipeBuilder).to receive(:new).with(config: config, process: stale_process).and_return(stale_lrp_recipe_builder)
-            allow(stale_lrp_recipe_builder).to receive(:build_app_lrp_update).with(stale_lrp_scheduling_info).and_return(stale_lrp_update)
-          end
-
           it 'updates stale lrps' do
             allow(bbs_apps_client).to receive(:update_app)
             subject.sync
-            expect(bbs_apps_client).to have_received(:update_app).with(ProcessGuid.from_process(stale_process), stale_lrp_update)
+            expect(bbs_apps_client).to have_received(:update_app).with(stale_process, stale_lrp_scheduling_info)
             expect(bbs_apps_client).to have_received(:bump_freshness).once
           end
 
@@ -140,18 +134,11 @@ module VCAP::CloudController
         context 'when diego does not contain the LRP' do
           let(:scheduling_infos) { [] }
           let!(:missing_process) { ProcessModel.make(:diego_runnable) }
-          let(:missing_lrp) { ::Diego::Bbs::Models::DesiredLRP.new(process_guid: 'missing-lrp') }
-
-          before do
-            missing_lrp_recipe_builder = instance_double(AppRecipeBuilder)
-            allow(AppRecipeBuilder).to receive(:new).with(config: config, process: missing_process).and_return(missing_lrp_recipe_builder)
-            allow(missing_lrp_recipe_builder).to receive(:build_app_lrp).and_return(missing_lrp)
-          end
 
           it 'creates missing lrps' do
-            allow(bbs_apps_client).to receive(:desire_app).with(missing_lrp)
+            allow(bbs_apps_client).to receive(:desire_app).with(missing_process)
             subject.sync
-            expect(bbs_apps_client).to have_received(:desire_app).with(missing_lrp)
+            expect(bbs_apps_client).to have_received(:desire_app).with(missing_process)
             expect(bbs_apps_client).to have_received(:bump_freshness).once
           end
 
@@ -386,15 +373,9 @@ module VCAP::CloudController
           let(:other_error) { CloudController::Errors::ApiError.new_from_details('RunnerError', 'bad error!') }
 
           before do
-            missing_lrp_recipe_builder  = instance_double(AppRecipeBuilder)
-            missing_lrp_recipe_builder2 = instance_double(AppRecipeBuilder)
-            missing_lrp_recipe_builder3 = instance_double(AppRecipeBuilder)
-            allow(AppRecipeBuilder).to receive(:new).with(config: config, process: missing_process).and_return(missing_lrp_recipe_builder)
-            allow(AppRecipeBuilder).to receive(:new).with(config: config, process: missing_process2).and_return(missing_lrp_recipe_builder2)
-            allow(AppRecipeBuilder).to receive(:new).with(config: config, process: missing_process3).and_return(missing_lrp_recipe_builder3)
-            allow(missing_lrp_recipe_builder).to receive(:build_app_lrp).and_raise(invalid_request_error)
-            allow(missing_lrp_recipe_builder2).to receive(:build_app_lrp).and_raise(invalid_request_error)
-            allow(missing_lrp_recipe_builder3).to receive(:build_app_lrp).and_raise(other_error)
+            allow(bbs_apps_client).to receive(:desire_app).with(missing_process).and_raise(invalid_request_error)
+            allow(bbs_apps_client).to receive(:desire_app).with(missing_process2).and_raise(invalid_request_error)
+            allow(bbs_apps_client).to receive(:desire_app).with(missing_process3).and_raise(other_error)
           end
 
           it 'updates invalid-request count even if another error is thrown' do

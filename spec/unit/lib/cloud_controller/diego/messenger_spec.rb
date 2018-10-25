@@ -53,21 +53,13 @@ module VCAP::CloudController
       describe '#send_desire_request' do
         let(:process) { ProcessModel.new }
         let(:default_health_check_timeout) { 99 }
-        let(:process_guid) { ProcessGuid.from_process(process) }
-        let(:message) { { desire: 'message' } }
         let(:config) { Config.new({ default_health_check_timeout: default_health_check_timeout }) }
-        let(:app_recipe_builder) { instance_double(Diego::AppRecipeBuilder, build_app_lrp: build_lrp) }
-        let(:build_lrp) { instance_double(::Diego::Bbs::Models::DesiredLRP) }
-
-        before do
-          allow(Diego::AppRecipeBuilder).to receive(:new).with(config: config, process: process).and_return(app_recipe_builder)
-        end
 
         it 'attempts to create or update the app by delegating to the desire app handler' do
           allow(DesireAppHandler).to receive(:create_or_update_app)
-          messenger.send_desire_request(process, config)
+          messenger.send_desire_request(process)
 
-          expect(DesireAppHandler).to have_received(:create_or_update_app).with(process_guid, app_recipe_builder, bbs_apps_client)
+          expect(DesireAppHandler).to have_received(:create_or_update_app).with(process, bbs_apps_client)
         end
       end
 
