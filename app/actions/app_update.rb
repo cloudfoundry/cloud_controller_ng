@@ -1,4 +1,5 @@
 require 'models/helpers/label_helpers'
+require 'actions/app_labels_update'
 
 module VCAP::CloudController
   class AppUpdate
@@ -21,7 +22,7 @@ module VCAP::CloudController
 
         update_app_command(app, message) if message.requested?(:command)
         update_app_env(app, message) if message.requested?(:env)
-        update_app_labels(app, message) if message.requested?(:metadata)
+        AppLabelsUpdate.update(app, message.labels) if message.requested?(:metadata)
 
         app.save
 
@@ -53,16 +54,6 @@ module VCAP::CloudController
 
     def update_app_env(app, message)
       app.environment_variables = existing_environment_variables_for(app).merge(message.env).compact
-    end
-
-    def update_app_labels(app, message)
-      labels = message.labels || {}
-      labels.each do |label_key, label_value|
-        label_key = label_key.to_s
-        prefix, name = VCAP::CloudController::LabelHelpers.extract_prefix(label_key)
-        app_label = AppLabelModel.find_or_create(app_guid: app.guid, key_prefix: prefix, key_name: name)
-        app_label.update(value: label_value.to_s)
-      end
     end
 
     def using_disabled_custom_buildpack?(app)

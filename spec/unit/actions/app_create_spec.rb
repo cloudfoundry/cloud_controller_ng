@@ -23,7 +23,13 @@ module VCAP::CloudController
             name:                  'my-app',
             relationships:         relationships,
             environment_variables: environment_variables,
-            lifecycle:             lifecycle_request
+            lifecycle:             lifecycle_request,
+            metadata: {
+                labels: {
+                    release: 'stable',
+                    'seriouseats.com/potato': 'mashed'
+                }
+            }
           })
       end
 
@@ -39,6 +45,7 @@ module VCAP::CloudController
           expect(app.name).to eq('my-app')
           expect(app.space).to eq(space)
           expect(app.environment_variables).to eq(environment_variables.stringify_keys)
+          expect(app.labels.map(&:value)).to contain_exactly('stable', 'mashed')
 
           expect(lifecycle).to have_received(:create_lifecycle_data_model).with(app)
         end

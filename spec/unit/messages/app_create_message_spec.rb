@@ -3,18 +3,33 @@ require 'messages/app_create_message'
 
 module VCAP::CloudController
   RSpec.describe AppCreateMessage do
+    it 'works for the happy path' do
+      params =
+        {
+            name: 'name',
+            relationships: { space: { data: { guid: 'space-guid-1' } } },
+            metadata: {
+                labels: {
+                    potato: 'mashed'
+                }
+            }
+        }
+      message = AppCreateMessage.new(params)
+      expect(message).to be_valid
+    end
+
     describe 'validations' do
       context 'when unexpected keys are requested' do
         let(:params) do
           {
-            unexpected: 'foo',
-            lifecycle: {
-              type: 'buildpack',
-              data: {
-                buildpack: 'nil',
-                stack: Stack.default.name
+              unexpected: 'foo',
+              lifecycle: {
+                  type: 'buildpack',
+                  data: {
+                      buildpack: 'nil',
+                      stack: Stack.default.name
+                  }
               }
-            }
           }
         end
         it 'is not valid' do
@@ -28,14 +43,14 @@ module VCAP::CloudController
       context 'when name is not a string' do
         let(:params) do
           {
-            name: 32.77,
-            lifecycle: {
-              type: 'buildpack',
-              data: {
-                buildpack: 'nil',
-                stack: Stack.default.name
+              name: 32.77,
+              lifecycle: {
+                  type: 'buildpack',
+                  data: {
+                      buildpack: 'nil',
+                      stack: Stack.default.name
+                  }
               }
-            }
           }
         end
 
@@ -50,16 +65,16 @@ module VCAP::CloudController
       context 'when environment_variables is not a hash' do
         let(:params) do
           {
-            name: 'name',
-            environment_variables: 'potato',
-            relationships: { space: { data: { guid: 'guid' } } },
-            lifecycle: {
-              type: 'buildpack',
-              data: {
-                buildpack: 'nil',
-                stack: Stack.default.name
+              name: 'name',
+              environment_variables: 'potato',
+              relationships: { space: { data: { guid: 'guid' } } },
+              lifecycle: {
+                  type: 'buildpack',
+                  data: {
+                      buildpack: 'nil',
+                      stack: Stack.default.name
+                  }
               }
-            }
           }
         end
 
@@ -75,15 +90,15 @@ module VCAP::CloudController
         context 'when relationships is malformed' do
           let(:params) do
             {
-              name: 'name',
-              relationships: 'malformed shizzle',
-              lifecycle: {
-                type: 'buildpack',
-                data: {
-                  buildpack: 'nil',
-                  stack: Stack.default.name
+                name: 'name',
+                relationships: 'malformed shizzle',
+                lifecycle: {
+                    type: 'buildpack',
+                    data: {
+                        buildpack: 'nil',
+                        stack: Stack.default.name
+                    }
                 }
-              }
             }
           end
 
@@ -98,14 +113,14 @@ module VCAP::CloudController
         context 'when relationships is missing' do
           let(:params) do
             {
-              name: 'name',
-              lifecycle: {
-                type: 'buildpack',
-                data: {
-                  buildpack: 'nil',
-                  stack: Stack.default.name
+                name: 'name',
+                lifecycle: {
+                    type: 'buildpack',
+                    data: {
+                        buildpack: 'nil',
+                        stack: Stack.default.name
+                    }
                 }
-              }
             }
           end
 
@@ -120,15 +135,15 @@ module VCAP::CloudController
         context 'when relationships is not a hash' do
           let(:params) do
             {
-              name: 'name',
-              relationships: 'barney',
-              lifecycle: {
-                type: 'buildpack',
-                data: {
-                  buildpack: 'nil',
-                  stack: Stack.default.name
+                name: 'name',
+                relationships: 'barney',
+                lifecycle: {
+                    type: 'buildpack',
+                    data: {
+                        buildpack: 'nil',
+                        stack: Stack.default.name
+                    }
                 }
-              }
             }
           end
 
@@ -143,15 +158,15 @@ module VCAP::CloudController
         context 'when space is missing' do
           let(:params) do
             {
-              name: 'name',
-              relationships: {},
-              lifecycle: {
-                type: 'buildpack',
-                data: {
-                  buildpack: 'nil',
-                  stack: Stack.default.name
+                name: 'name',
+                relationships: {},
+                lifecycle: {
+                    type: 'buildpack',
+                    data: {
+                        buildpack: 'nil',
+                        stack: Stack.default.name
+                    }
                 }
-              }
             }
           end
 
@@ -166,15 +181,15 @@ module VCAP::CloudController
         context 'when space has an invalid guid' do
           let(:params) do
             {
-              name:          'name',
-              relationships: { space: { data: { guid: 32 } } },
-              lifecycle: {
-                type: 'buildpack',
-                data: {
-                  buildpack: nil,
-                  stack: Stack.default.name
+                name: 'name',
+                relationships: { space: { data: { guid: 32 } } },
+                lifecycle: {
+                    type: 'buildpack',
+                    data: {
+                        buildpack: nil,
+                        stack: Stack.default.name
+                    }
                 }
-              }
             }
           end
 
@@ -189,15 +204,15 @@ module VCAP::CloudController
         context 'when space is malformed' do
           let(:params) do
             {
-              name:          'name',
-              relationships: { space: 'asdf' },
-              lifecycle: {
-                type: 'buildpack',
-                data: {
-                  buildpack: nil,
-                  stack: Stack.default.name
+                name: 'name',
+                relationships: { space: 'asdf' },
+                lifecycle: {
+                    type: 'buildpack',
+                    data: {
+                        buildpack: nil,
+                        stack: Stack.default.name
+                    }
                 }
-              }
             }
           end
 
@@ -212,18 +227,18 @@ module VCAP::CloudController
         context 'when additional keys are present' do
           let(:params) do
             {
-              name:          'name',
-              relationships: {
-                space: { data: { guid: 'guid' } },
-                other: 'stuff'
-              },
-              lifecycle: {
-                type: 'buildpack',
-                data: {
-                  buildpack: nil,
-                  stack: Stack.default.name
+                name: 'name',
+                relationships: {
+                    space: { data: { guid: 'guid' } },
+                    other: 'stuff'
+                },
+                lifecycle: {
+                    type: 'buildpack',
+                    data: {
+                        buildpack: nil,
+                        stack: Stack.default.name
+                    }
                 }
-              }
             }
           end
 
@@ -304,6 +319,37 @@ module VCAP::CloudController
               expect(message.errors_on(:lifecycle_type)).to include('must be a string')
             end
           end
+        end
+      end
+
+      describe 'labels' do
+        it 'exposes labels' do
+          params =
+            {
+                name: 'name',
+                relationships: { space: { data: { guid: 'space-guid-1' } } },
+                metadata: {
+                    labels: {
+                        potato: 'mashed'
+                    }
+                }
+            }
+          message = AppCreateMessage.new(params)
+          expect(message).to be_valid
+          expect(message.labels).to include("potato": 'mashed')
+        end
+
+        it 'validates labels' do
+          params = {
+              name: 'name',
+              relationships: { space: { data: { guid: 'space-guid-1' } } },
+              metadata: {
+                  labels: 'potato',
+              }
+          }
+          message = AppCreateMessage.new(params)
+          expect(message).not_to be_valid
+          expect(message.errors_on(:metadata)).to include("'labels' is not a hash")
         end
       end
     end

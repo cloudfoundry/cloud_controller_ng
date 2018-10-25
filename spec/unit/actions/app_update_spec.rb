@@ -182,46 +182,6 @@ module VCAP::CloudController
           expect(AppLabelModel.find(app_guid: app_model.guid, key_name: 'release').value).to eq 'stable'
           expect(AppLabelModel.find(app_guid: app_model.guid, key_prefix: 'joyofcooking.com', key_name: 'potato').value).to eq 'mashed'
         end
-
-        context 'when there is metadata but no label' do
-          let(:message) do
-            AppUpdateMessage.new({
-              metadata: {}
-            })
-          end
-
-          it 'does not change any labels' do
-            expect do
-              app_update.update(app_model, message, lifecycle)
-            end.not_to change { AppLabelModel.count }
-          end
-        end
-
-        context 'when existing labels are being modified' do
-          let(:message) do
-            AppUpdateMessage.new({
-              metadata: {
-                labels: {
-                  release: 'stable',
-                  'joyofcooking.com/potato': 'mashed'
-                }
-              }
-            })
-          end
-
-          let!(:old_label) do
-            AppLabelModel.create(app_guid: app_model.guid, key_name: 'release', value: 'unstable')
-          end
-          let!(:old_label_with_prefix) do
-            AppLabelModel.create(app_guid: app_model.guid, key_prefix: 'joyofcooking.com', key_name: 'potato', value: 'fried')
-          end
-
-          it 'updates the old label' do
-            app_update.update(app_model, message, lifecycle)
-            expect(old_label.reload.value).to eq 'stable'
-            expect(old_label_with_prefix.reload.value).to eq 'mashed'
-          end
-        end
       end
 
       context 'when the app is invalid' do

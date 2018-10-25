@@ -33,6 +33,12 @@ RSpec.describe 'Apps' do
               guid: space.guid
             }
           }
+        },
+        metadata: {
+            labels: {
+                'release' => 'stable',
+                'code.cloudfoundry.org/cloud_controller_ng' => 'awesome'
+            }
         }
       }
     end
@@ -66,7 +72,10 @@ RSpec.describe 'Apps' do
           },
           'created_at' => iso8601,
           'updated_at' => iso8601,
-          'metadata' => { 'labels' => {} },
+          'metadata' => { 'labels' => {
+              'release' => 'stable',
+              'code.cloudfoundry.org/cloud_controller_ng' => 'awesome'
+          } },
           'links' => {
             'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}" },
             'processes' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/processes" },
