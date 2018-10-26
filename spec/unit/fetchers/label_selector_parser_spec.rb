@@ -47,6 +47,14 @@ module VCAP::CloudController
         end
       end
 
+      describe 'equality requirements' do
+        it 'returns the model that satisfies the requirements' do
+          dataset = subject.add_selector_queries(AppLabelModel, AppModel.dataset, 'foo=funky')
+
+          expect(dataset.map(&:guid)).to contain_exactly(app2.guid)
+        end
+      end
+
       context 'with multiple queries' do
         it 'returns the models that satisfy the requirements' do
           dataset = subject.add_selector_queries(AppLabelModel, AppModel.dataset, 'foo in (funky,town),foo notin (bar)')

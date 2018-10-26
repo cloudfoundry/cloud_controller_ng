@@ -8,6 +8,10 @@ module VCAP::CloudController
             dataset_for_requirement = evaluate_in(label_klass, resource_dataset, requirement)
           when :notin
             dataset_for_requirement = evaluate_notin(label_klass, resource_dataset, requirement)
+          when :equal
+            dataset_for_requirement = evaluate_equal(label_klass, resource_dataset, requirement)
+          when :not_equal
+            dataset_for_requirement = evaluate_not_equal(label_klass, resource_dataset, requirement)
           end
 
           accumulated_dataset.nil? ? dataset_for_requirement : accumulated_dataset.join(dataset_for_requirement, [:guid])
@@ -44,6 +48,14 @@ module VCAP::CloudController
 
       def evaluate_notin(label_klass, resource_dataset, requirement)
         resource_dataset.exclude(guid: guids_for_set_inclusion(label_klass, requirement))
+      end
+
+      def evaluate_equal(label_klass, resource_dataset, requirement)
+        evaluate_in(label_klass, resource_dataset, requirement)
+      end
+
+      def evaluate_not_equal(label_klass, resource_dataset, requirement)
+        evaluate_notin(label_klass, resource_dataset, requirement)
       end
 
       def guids_for_set_inclusion(label_klass, requirement)

@@ -2,9 +2,15 @@ module VCAP::CloudController
   class LabelHelpers
     KEY_SEPARATOR = '/'.freeze
     REQUIREMENT_SPLITTER = /(?:\(.*?\)|[^,])+/
+    IN_PATTERN = /(?<key>.*) in \((?<values>.*)\)$/
+    NOT_IN_PATTERN = /(?<key>.*) notin \((?<values>.*)\)$/
+    EQUALS_PATTERN = %r{^(?!=)(?<key>[\w\-\.\_\/]*)(=|==)(?<values>[\w\-\.\_]*)$}
+    NOT_EQUALS_PATTERN = %r{(?<key>[\w\-\.\_\/]*)(!=)(?<values>[\w\-\.\_]*)$}
     REQUIREMENT_OPERATOR_PAIRS = [
-      { pattern: /(?<key>.*) in \((?<values>.*)\)$/, operator: :in }, # foo in (bar,baz)
-      { pattern: /(?<key>.*) notin \((?<values>.*)\)$/, operator: :notin }, # funky notin (uptown,downtown)
+      { pattern: IN_PATTERN, operator: :in }, # foo in (bar,baz)
+      { pattern: NOT_IN_PATTERN, operator: :notin }, # funky notin (uptown,downtown)
+      { pattern: EQUALS_PATTERN, operator: :equal }, # foo==bar
+      { pattern: NOT_EQUALS_PATTERN, operator: :not_equal }, # foo!=bar
     ].freeze
 
     class << self

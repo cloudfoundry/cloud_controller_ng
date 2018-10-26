@@ -274,6 +274,26 @@ module VCAP::CloudController
               end
             end
           end
+
+          context 'equality operation' do
+            it 'validates correct = operation' do
+              message = AppsListMessage.new label_selector: 'example.com/foo=bar'
+
+              expect(message).to be_valid
+            end
+
+            it 'validates correct == operation' do
+              message = AppsListMessage.new label_selector: 'example.com/foo==bar'
+
+              expect(message).to be_valid
+            end
+
+            it 'validates correct != operation' do
+              message = AppsListMessage.new label_selector: 'example.com/foo!=bar'
+
+              expect(message).to be_valid
+            end
+          end
         end
       end
     end
