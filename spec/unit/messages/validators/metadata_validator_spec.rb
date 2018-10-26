@@ -30,6 +30,7 @@ module VCAP::CloudController::Validators
             p_otato: 'mashed',
             'p.otato': 'mashed',
             'p-otato': 'mashed',
+            yams: nil
         }
       end
 

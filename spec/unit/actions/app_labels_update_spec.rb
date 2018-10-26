@@ -50,5 +50,28 @@ module VCAP::CloudController
         expect(old_label_with_prefix.reload.value).to eq 'mashed'
       end
     end
+
+    context 'deleting labels' do
+      let(:labels) do
+        {
+            release: nil,
+            nonexistent: nil,
+            'joyofcooking.com/potato': 'mashed'
+        }
+      end
+
+      let!(:delete_me_label) do
+        AppLabelModel.create(app_guid: app.guid, key_name: 'release', value: 'unstable')
+      end
+      let!(:keep_me_label) do
+        AppLabelModel.create(app_guid: app.guid, key_name: 'potato', value: 'mashed')
+      end
+
+      it 'deletes labels that are nil' do
+        subject
+        expect(AppLabelModel.find(app_guid: app.guid, key_name: delete_me_label.key_name)).to be_nil
+        expect(keep_me_label.reload.value).to eq 'mashed'
+      end
+    end
   end
 end

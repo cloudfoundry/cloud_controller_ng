@@ -837,6 +837,13 @@ RSpec.describe 'Apps' do
         environment_variables: { 'ORIGINAL' => 'ENVAR' },
         desired_state: 'STOPPED'
       )
+
+      VCAP::CloudController::AppLabelModel.make(
+        app_guid: app_model.guid,
+        key_name: 'delete-me',
+        value: 'yes'
+      )
+
       stack = VCAP::CloudController::Stack.make(name: 'redhat')
 
       update_request = {
@@ -851,7 +858,8 @@ RSpec.describe 'Apps' do
         metadata: {
           labels: {
             'release' => 'stable',
-            'code.cloudfoundry.org/cloud_controller_ng' => 'awesome'
+            'code.cloudfoundry.org/cloud_controller_ng' => 'awesome',
+            'delete-me' => nil
           }
         }
 
@@ -920,7 +928,7 @@ RSpec.describe 'Apps' do
 
       metadata_request = { 'name' => 'new-name',
                            'lifecycle' => { 'type' => 'buildpack', 'data' => { 'buildpacks' => ['http://gitwheel.org/my-app'], 'stack' => stack.name } },
-                           'metadata' => { 'labels' => { 'release' => 'stable', 'code.cloudfoundry.org/cloud_controller_ng' => 'awesome' } }
+                           'metadata' => { 'labels' => { 'release' => 'stable', 'code.cloudfoundry.org/cloud_controller_ng' => 'awesome', 'delete-me' => nil } }
       }
       expect(event.metadata['request']).to eq(metadata_request)
     end

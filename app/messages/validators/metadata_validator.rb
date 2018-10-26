@@ -58,6 +58,7 @@ module VCAP::CloudController::Validators
     end
 
     def validate_label_value(label_value, record)
+      return true if label_value.nil?
       validate_common_label_syntax(label_value, 'value', record)
     end
 
