@@ -6,6 +6,16 @@ require 'messages/label_validator_helper'
 module VCAP::CloudController::Validators
   class MetadataValidator < ActiveModel::Validator
     def validate(record)
+      unless record.metadata.is_a? Hash
+        record.errors.add(:metadata, 'must be a hash')
+        return
+      end
+
+      non_label_keys = record.metadata.except(:labels).keys
+      unless non_label_keys.empty?
+        record.errors.add(:metadata, "unexpected keys #{non_label_keys}")
+      end
+
       labels = record.labels
       return unless labels
 
@@ -58,7 +68,7 @@ module VCAP::CloudController::Validators
     end
 
     def validate_label_value(label_value, record)
-      return true if label_value.nil?
+      return true if label_value.nil? || label_value == ''
       validate_common_label_syntax(label_value, 'value', record)
     end
 

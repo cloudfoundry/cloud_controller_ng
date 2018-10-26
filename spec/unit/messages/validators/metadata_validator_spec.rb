@@ -30,6 +30,7 @@ module VCAP::CloudController::Validators
             p_otato: 'mashed',
             'p.otato': 'mashed',
             'p-otato': 'mashed',
+            empty: '',
             yams: nil
         }
       end
@@ -257,6 +258,29 @@ module VCAP::CloudController::Validators
           expect(subject.errors_on(:metadata)).
             to include("label value '#{'b' * 8}...' is greater than #{VCAP::CloudController::Validators::LabelValidatorHelper::MAX_LABEL_SIZE} characters")
         end
+      end
+    end
+
+    context 'when there is non-label metadata' do
+      let(:metadata) do
+        {
+            other: 'stuff',
+            extra: 'fields'
+        }
+      end
+
+      it 'is invalid' do
+        expect(subject).not_to be_valid
+        expect(subject.errors_on(:metadata)).to contain_exactly('unexpected keys [:other, :extra]')
+      end
+    end
+
+    context 'when metadata is not a hash' do
+      let(:metadata) { 'notahash' }
+
+      it 'is invalid' do
+        expect(subject).not_to be_valid
+        expect(subject.errors_on(:metadata)).to contain_exactly('must be a hash')
       end
     end
   end
