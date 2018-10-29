@@ -234,6 +234,13 @@ module VCAP::CloudController
                 expect(message.errors[:base].first).to match /label_selector/
               end
 
+              it 'rejects reserved domains' do
+                message = AppsListMessage.new label_selector: 'cloudfoundry.org/bar in (bar,baz)'
+
+                expect(message).to be_invalid
+                expect(message.errors[:base].first).to match /label_selector/
+              end
+
               it 'marks as invalid keys that with prefixes that exceed the max length' do
                 prefix = 'la.' * 100
                 message = AppsListMessage.new label_selector: "#{prefix}com/bar in (bar,baz)"

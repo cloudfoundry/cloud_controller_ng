@@ -250,6 +250,52 @@ RSpec.describe AppsV3Controller, type: :controller do
       end
     end
 
+    context 'metadata' do
+      context 'when the metadata is invalid' do
+        let(:request_body) do
+          {
+              metadata: {
+                  labels: {
+                      'cloudfoundry.org/release' => 'stable'
+                  }
+              }
+          }
+        end
+
+        it 'returns an UnprocessableEntity error' do
+          post :create, params: request_body, as: :json
+
+          expect(response.status).to eq 422
+          expect(response.body).to include 'UnprocessableEntity'
+          expect(response.body).to include 'Cloudfoundry.org is a reserved domain'
+        end
+      end
+
+      context 'when the metadata is valid' do
+        let(:request_body) do
+          {
+              name: 'some-name',
+              relationships: { space: { data: { guid: space.guid } } },
+              metadata: {
+                  labels: {
+                      release: 'stable'
+                  }
+              }
+          }
+        end
+
+        it 'uses the defaults and returns a 201 and the app' do
+          post :create, params: request_body, as: :json
+
+          response_body = parsed_body
+          response_metadata = response_body['metadata']['labels']
+
+          expect(response.status).to eq 201
+          expect(response_metadata['release']).to eq 'stable'
+        end
+      end
+    end
+
     context 'lifecycle data' do
       context 'when the space developer does not request a lifecycle' do
         let(:request_body) do
@@ -536,24 +582,45 @@ RSpec.describe AppsV3Controller, type: :controller do
             expect(app_model.lifecycle_data.buildpacks).to eq(['some-buildpack-name', 'http://buildpack.com'])
           end
 
-          context 'the metadata' do
-            let(:request_body) do
-              {
-                metadata: {
-                  labels: {
-                    release: 'stable'
-                  }
+          context 'when updating metadata' do
+            context 'when the metadata is valid' do
+              let(:request_body) do
+                {
+                    metadata: {
+                        labels: {
+                            release: 'stable'
+                        }
+                    }
                 }
-              }
+              end
+
+              it 'updates the labels' do
+                patch :update, params: { guid: app_model.guid }.merge(request_body), as: :json
+                expect(response.status).to eq 200
+
+                app_model.reload
+
+                expect(app_model.labels.length).to eq(1)
+              end
             end
 
-            it 'updates the labels' do
-              patch :update, params: { guid: app_model.guid }.merge(request_body), as: :json
-              expect(response.status).to eq 200
+            context 'when the metadata is invalid' do
+              let(:request_body) do
+                {
+                    metadata: {
+                        labels: {
+                            'cloudfoundry.org/release' => 'stable'
+                        }
+                    }
+                }
+              end
 
-              app_model.reload
-
-              expect(app_model.labels.length).to eq(1)
+              it 'returns a 422' do
+                patch :update, params: { guid: app_model.guid }.merge(request_body), as: :json
+                expect(response.status).to eq 422
+                expect(response.body).to include 'UnprocessableEntity'
+                expect(response.body).to include 'Cloudfoundry.org is a reserved domain'
+              end
             end
           end
         end

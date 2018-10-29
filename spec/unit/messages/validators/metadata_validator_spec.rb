@@ -180,6 +180,20 @@ module VCAP::CloudController::Validators
         end
       end
 
+      context 'when the prefix includes some variation of cloudfoundry.org, a reserved domain' do
+        let(:labels) do
+          {
+              'cloudfoundry.org/key' => 'value',
+              'CloudFoundry.org/key' => 'value',
+          }
+        end
+
+        it 'is invalid' do
+          expect(subject).not_to be_valid
+          expect(subject.errors_on(:metadata)).to contain_exactly('Cloudfoundry.org is a reserved domain', 'Cloudfoundry.org is a reserved domain')
+        end
+      end
+
       context 'when the prefix is too long' do
         let(:long_domain) do
           ['a', 'b', 'c', 'd', 'e'].map { |c| c * 61 }.join('.')

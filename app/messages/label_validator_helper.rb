@@ -9,6 +9,8 @@ module VCAP::CloudController::Validators
     INVALID_CHAR_REGEX = /[^\w\-\.\_]/
     ALPHANUMERIC_START_END_REGEX = /\A(?=[a-zA-Z\d]).*[a-zA-Z\d]\z/
 
+    RESERVED_DOMAIN = 'cloudfoundry.org'.freeze
+
     class << self
       def valid_key?(label_key)
         valid_key_presence?(label_key) &&
@@ -39,6 +41,7 @@ module VCAP::CloudController::Validators
 
         valid_prefix_format?(prefix) &&
           valid_prefix_size?(prefix) &&
+          is_not_reserved(prefix) &&
           valid_key_presence?(name) &&
           valid_characters?(name) &&
           start_end_alphanumeric?(name) &&
@@ -49,6 +52,12 @@ module VCAP::CloudController::Validators
         return true if label_key_prefix.nil?
 
         CloudController::DomainDecorator::DOMAIN_REGEX.match(label_key_prefix)
+      end
+
+      def is_not_reserved(label_key_prefix)
+        return true if label_key_prefix.nil?
+
+        label_key_prefix.downcase != RESERVED_DOMAIN
       end
 
       def valid_prefix_size?(label_key_prefix)

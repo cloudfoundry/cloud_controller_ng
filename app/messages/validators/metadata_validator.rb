@@ -65,6 +65,10 @@ module VCAP::CloudController::Validators
       unless LabelValidatorHelper.valid_prefix_size?(prefix)
         record.errors.add(:metadata, "label prefix '#{prefix[0...8]}...' is greater than #{LabelValidatorHelper::MAX_PREFIX_SIZE} characters")
       end
+
+      unless LabelValidatorHelper.is_not_reserved(prefix)
+        record.errors.add(:metadata, 'Cloudfoundry.org is a reserved domain')
+      end
     end
 
     def validate_label_value(label_value, record)
