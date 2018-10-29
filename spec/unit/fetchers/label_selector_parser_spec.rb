@@ -53,6 +53,18 @@ module VCAP::CloudController
 
           expect(dataset.map(&:guid)).to contain_exactly(app2.guid)
         end
+
+        it 'returns the model that satisfies the requirements' do
+          dataset = subject.add_selector_queries(AppLabelModel, AppModel.dataset, 'foo==funky')
+
+          expect(dataset.map(&:guid)).to contain_exactly(app2.guid)
+        end
+
+        it 'returns the model that satisfies the requirements' do
+          dataset = subject.add_selector_queries(AppLabelModel, AppModel.dataset, 'foo!=funky')
+
+          expect(dataset.map(&:guid)).to contain_exactly(app1.guid, app3.guid)
+        end
       end
 
       context 'with multiple queries' do
@@ -60,6 +72,18 @@ module VCAP::CloudController
           dataset = subject.add_selector_queries(AppLabelModel, AppModel.dataset, 'foo in (funky,town),foo notin (bar)')
 
           expect(dataset.map(&:guid)).to contain_exactly(app2.guid, app3.guid)
+        end
+
+        it 'returns the models that satisfy the requirements' do
+          dataset = subject.add_selector_queries(AppLabelModel, AppModel.dataset, 'foo!=bar,foo!=town')
+
+          expect(dataset.map(&:guid)).to contain_exactly(app2.guid)
+        end
+
+        it 'returns an empty list' do
+          dataset = subject.add_selector_queries(AppLabelModel, AppModel.dataset, 'foo==bar,foo=town')
+
+          expect(dataset.map(&:guid)).not_to include(app1.guid, app2.guid, app3.guid)
         end
       end
     end
