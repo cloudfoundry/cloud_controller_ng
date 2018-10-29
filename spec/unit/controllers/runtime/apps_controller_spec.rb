@@ -2519,6 +2519,34 @@ module VCAP::CloudController
         end
       end
 
+      context 'when the user is a read-only admin' do
+        before do
+          set_current_user_as_admin_read_only
+        end
+
+        it 'returns 200' do
+          get "/v2/apps/#{process.app.guid}/permissions"
+
+          expect(last_response.status).to eq(200)
+          expect(parsed_response['read_sensitive_data']).to eq(true)
+          expect(parsed_response['read_basic_data']).to eq(true)
+        end
+      end
+
+      context 'when the user is a global auditor' do
+        before do
+          set_current_user_as_global_auditor
+        end
+
+        it 'returns 200 but false for sensitive data' do
+          get "/v2/apps/#{process.app.guid}/permissions"
+
+          expect(last_response.status).to eq(200)
+          expect(parsed_response['read_sensitive_data']).to eq(false)
+          expect(parsed_response['read_basic_data']).to eq(true)
+        end
+      end
+
       context 'when missing cloud_controller.user scope' do
         let(:user) { make_developer_for_space(space) }
 
