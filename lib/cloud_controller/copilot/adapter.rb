@@ -13,6 +13,7 @@ module VCAP::CloudController
               guid: route.guid,
               host: route.fqdn,
               path: route.path,
+              internal: route.internal?
             )
           end
         end

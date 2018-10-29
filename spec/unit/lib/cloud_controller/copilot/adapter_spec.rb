@@ -16,7 +16,7 @@ module VCAP::CloudController
     end
 
     describe '#create_route' do
-      let(:route) { instance_double(Route, guid: 'some-route-guid', fqdn: 'some-fqdn', path: '') }
+      let(:route) { instance_double(Route, guid: 'some-route-guid', fqdn: 'some-fqdn', internal?: false, path: '') }
 
       it 'calls copilot_client.upsert_route' do
         adapter.create_route(route)
@@ -24,11 +24,12 @@ module VCAP::CloudController
           guid: 'some-route-guid',
           host: 'some-fqdn',
           path: '',
+          internal: false,
         )
       end
 
       context 'when the route has a path' do
-        let(:route) { instance_double(Route, guid: 'some-route-guid', fqdn: 'some-fqdn', path: '/some/path') }
+        let(:route) { instance_double(Route, guid: 'some-route-guid', fqdn: 'some-fqdn', internal?: false, path: '/some/path') }
 
         it 'includes path in upsert call' do
           adapter.create_route(route)
@@ -36,6 +37,22 @@ module VCAP::CloudController
             guid: 'some-route-guid',
             host: 'some-fqdn',
             path: '/some/path',
+            internal: false,
+          )
+        end
+      end
+
+      context 'when the route is internal' do
+        let(:route) { instance_double(Route, guid: 'some-route-guid', fqdn: 'some-fqdn', internal?: true, path: '/some/path') }
+
+        it 'includes path in upsert call' do
+          adapter.create_route(route)
+          expect(route).to have_received(:internal?)
+          expect(copilot_client).to have_received(:upsert_route).with(
+            guid: 'some-route-guid',
+            host: 'some-fqdn',
+            path: '/some/path',
+            internal: true,
           )
         end
       end
