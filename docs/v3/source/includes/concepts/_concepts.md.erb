@@ -1,62 +1,5 @@
 # Concepts
 
-## Authentication
-The Cloud Foundry V3 API is secured using OAuth 2. Clients are expected to present a valid bearer token via HTTP header: `Authorization: bearer <token>`
-
-Tokens can be obtained from the Cloud Foundry UAA server. For more information, see the [UAA API Documentation](http://docs.cloudfoundry.org/api/uaa/index.html)
-
-<aside class="notice">
-Use the cf cli to obtain a bearer token: cf oauth-token
-</aside>
-
-## Authorization
-
-Access to resources is determined by combining scopes in the OAuth2 Token with User Roles that are managed by the API. User Roles are currently managed by the [V2 API](http://apidocs.cloudfoundry.org/).
-
-#### OAuth2 Scopes
-
-Scope | Description
----------- | -------
-cloud_controller.admin | This scope provides read and write access to all resources
-cloud_controller.admin_read_only | This scope provides read only access to all resources
-cloud_controller.global_auditor | This scope provides read only access to all resources except secrets (such as environment variables)
-cloud_controller.read | This scope provides read access to resources based on user roles
-cloud_controller.write | This scope provides write access to resources based on user roles
-
-#### Cloud Foundry User Roles
-
-Role | Description
----------------------------------------------------- | -------
-Admin               | Allows a user to manage the platform. OAuth token must contain `cloud_controller.admin` scope.
-Admin Read-Only     | Allows a user to read all resources on the platform. OAuth token must contain `cloud_controller.admin_read_only` scope.
-Global Auditor      | Allows a user to read all resources on the platform, excluding sensitive data such as environment variables and service bindings. OAuth token must contain `cloud_controller.global_auditor` scope.
-Org Member          | Allows a user to be assigned other roles within an Organization and its Spaces
-Org Manager         | Provides Organization management access
-Org Auditor         | Provides read-only access to a Organization for auditing purposes
-Org Billing Manager | Allows a user to create and manage billing account and payment information
-Space Developer     | Allows developers to create and manage apps and services in a Space
-Space Manager       | Provides Space management access
-Space Auditor       | Provides read-only access to a Space for auditing purposes
-
-## Status Codes
-
-Cloud Foundry V3 API uses a subset of HTTP response codes to indicate the success or failure of an API request.
-In general, codes in the 2xx range indicate success, codes in the 4xx range indicate an error that can potentially be fixed by correcting the request, and codes in the 5xx range indicate an error on the server side.
-
-HTTP Status Code | Description
----------- | -------
-200 OK | The request completed successfully.
-201 Created | The request completed successfully and created a new resource.
-202 Accepted | The request will be completed asynchronously.
-204 No Content | The request completed successfully and did not return a body.
-400 Bad Request | The request has malformed or invalid data.
-401 Unauthenticated | The request requires an authenticated user.
-403 Forbidden | The request cannot be performed by the user.
-404 Not Found | The requested resource does not exist.
-422 Unprocessable Entity | The request cannot be performed.
-500 Internal Server Error	| An unexpected error occurred.
-502 Bad Gateway |	An upstream service caused the request to fail.
-
 ## API Resource
 
 A resource represents an individual object within the system, such as an app or a service. It is represented as a JSON object.
@@ -115,6 +58,222 @@ Name | Type | Description
 ---- | ---- | -----------
 **href** | _string_ | The absolute URL.
 **method** | _string_ | An optional field containing the HTTP method to be used when following the URL.
+
+## Authentication
+The Cloud Foundry V3 API is secured using OAuth 2. Clients are expected to present a valid bearer token via HTTP header: `Authorization: bearer <token>`
+
+Tokens can be obtained from the Cloud Foundry UAA server. For more information, see the [UAA API Documentation](http://docs.cloudfoundry.org/api/uaa/index.html)
+
+<aside class="notice">
+Use the cf cli to obtain a bearer token: cf oauth-token
+</aside>
+
+## Authorization
+
+Access to resources is determined by combining scopes in the OAuth2 Token with User Roles that are managed by the API. User Roles are currently managed by the [V2 API](http://apidocs.cloudfoundry.org/).
+
+#### OAuth2 Scopes
+
+Scope | Description
+---------- | -------
+cloud_controller.admin | This scope provides read and write access to all resources
+cloud_controller.admin_read_only | This scope provides read only access to all resources
+cloud_controller.global_auditor | This scope provides read only access to all resources except secrets (such as environment variables)
+cloud_controller.read | This scope provides read access to resources based on user roles
+cloud_controller.write | This scope provides write access to resources based on user roles
+
+#### Cloud Foundry User Roles
+
+Role | Description
+---------------------------------------------------- | -------
+Admin               | Allows a user to manage the platform. OAuth token must contain `cloud_controller.admin` scope.
+Admin Read-Only     | Allows a user to read all resources on the platform. OAuth token must contain `cloud_controller.admin_read_only` scope.
+Global Auditor      | Allows a user to read all resources on the platform, excluding sensitive data such as environment variables and service bindings. OAuth token must contain `cloud_controller.global_auditor` scope.
+Org Member          | Allows a user to be assigned other roles within an Organization and its Spaces
+Org Manager         | Provides Organization management access
+Org Auditor         | Provides read-only access to a Organization for auditing purposes
+Org Billing Manager | Allows a user to create and manage billing account and payment information
+Space Developer     | Allows developers to create and manage apps and services in a Space
+Space Manager       | Provides Space management access
+Space Auditor       | Provides read-only access to a Space for auditing purposes
+
+## Errors
+
+```
+Example Error
+```
+```json
+{
+  "errors": [
+    {
+      "code": 10008,
+      "title": "CF-UnprocessableEntity",
+      "detail": "something went wrong"
+    }
+  ]
+}
+```
+
+An error response will always return a list of error objects in the `errors` field.
+
+#### The error object
+
+Name | Type | Description
+---- | ---- | -----------
+**code** | _integer_ | A numeric code for this error.
+**title** | _string_ | Short description of the error.
+**detail** | _string_ | Detailed description of the error.
+
+## Lifecycles
+
+Lifecycles inform the platform of how to build droplets and run apps. For example the
+`buildpack` lifecycle will use a droplet and a rootfs to run the app, while a `docker` lifecycle will
+pull a docker image from a registry to run an app.
+
+#### The lifecycle object
+
+Name | Type | Description
+---- | ---- | -----------
+**type** | _string_ | Type of the lifecycle. Valid values are `buildpack`, `docker`.
+**data** | _object_ | Data that is used during staging and running for a lifecycle.
+
+### Buildpack lifecycle
+
+```
+Example Buildpack Lifecycle
+```
+
+```json
+{
+  "type": "buildpack",
+  "data": {
+    "buildpacks": ["java_buildpack"],
+    "stack": "cflinuxfs2"
+  }
+}
+```
+
+This is the default lifecycle for Cloud Foundry. When staging an app with this lifecycle, the app source code will be
+compiled using a buildpack, resulting in a droplet.  When running an app with this lifecycle, a container running a rootfs
+will be created and the droplet will be expanded inside that container to be executed.
+
+#### Buildpack lifecycle object
+
+Name | Type | Description
+---- | ---- | -----------
+**type** | _string_ | `buildpack`
+**data.buildpacks** | _array of strings_ | A list of the names of buildpacks, URLs from which they may be downloaded, or null to auto-detect a suitable buildpack.
+**data.stack** | _string_ | The root filesystem to use with the buildpack, for example `cflinuxfs2`
+
+### Docker lifecycle
+
+This allows Cloud Foundry to run docker images. When staging an app with this lifecycle, the docker registry is queried for
+metadata about the image, such as ports and start command.  When running an app with this lifecycle, a container is created
+and the docker image is executed inside of it.
+
+#### Docker lifecycle object
+
+```
+Example Docker Lifecycle
+```
+
+```json
+{
+  "type": "docker",
+  "data": {}
+}
+```
+
+Name | Type | Description
+---- | ---- | -----------
+**type** | _string_ | `docker`
+**data** | _object_ | Data is not used by the docker lifecycle. Valid value is `{}`.
+
+## Pagination
+
+Any request that can return multiple resources will be paginated and contain a `pagination` object and list of `resources`.
+Requests for multiple resources can use `page`, `per_page`, and `order_by` in addition to filters specific to the endpoint.
+
+#### The pagination object
+```
+Example Paginated Response
+```
+
+```json
+{
+  "pagination": {
+    "total_results": 3,
+    "total_pages": 3,
+    "first": {
+      "href": "https://api.example.org/v3/people?page=1&per_page=1"
+    },
+    "last": {
+      "href": "https://api.example.org/v3/people?page=3&per_page=1"
+    },
+    "next": {
+      "href": "https://api.example.org/v3/people?page=2&per_page=1"
+    },
+    "previous": null
+  },
+  "resources": [
+    {
+      "guid": "fd35633f-5c5c-4e4e-a5a9-0722c970a9d2",
+      "created_at": "2016-03-18T23:26:46Z",
+      "updated_at": "2016-10-17T20:00:42Z",
+
+      "name": "Bob",
+
+      "links": {
+        "self": {
+          "href": "https://api.example.org/v3/people/fd35633f-5c5c-4e4e-a5a9-0722c970a9d2"
+        }
+      }
+    }
+  ]
+}
+```
+
+Name | Type | Description
+---- | ---- | -----------
+**total_results** | _integer_ | Total number of resources for all pages.
+**total_pages** | _integer_ | Total number of pages.
+**first** | [_link object_](#the-link-object) | Link to the first page.
+**last** | [_link object_](#the-link-object) | Link to the last page.
+**next** | [_link object_](#the-link-object) | Link to the next page.
+**previous** | [_link object_](#the-link-object) | Link to the previous page.
+
+## Procfiles
+
+```
+Example Ruby Procfile
+```
+
+```yaml
+web: bundle exec rackup config.ru -p $PORT
+rake: bundle exec rake
+worker: bundle exec rake workers:start
+```
+
+A Procfile enables you to declare required runtime processes, called process types, for your app.
+Procfiles must be named `Procfile` exactly, and placed in the root directory of your application.
+
+In a Procfile, you declare one process type per line and use the syntax `PROCESS_TYPE: COMMAND`.
+
+- `PROCESS_TYPE` defines the type of the process.
+- `COMMAND` is the command line to launch the process.
+
+#### Procfile use cases
+Many buildpacks provide their own process types and commands by default; however, there are special cases where specifying a custom `COMMAND` is necessary.
+Commands can be overwritten by providing a Procfile with the same process type.
+
+For example, a buildpack may provide a `worker` process type that runs the `rake default:start` command.
+If a Procfile is provided that also contains a `worker` process type, but a different command such as `rake custom:start`, the `rake custom:start` command will be used.
+
+Some buildpacks, such as Python, that work on a variety of frameworks, do not attempt to provide a default start command. For these cases, a Procfile should be used to specify any necessary commands for the app.
+
+#### Web process
+`web` is a [special process type](#web-process-type) that is required for all applications.
+The `web` `PROCESS_TYPE` must be specified by either the buildpack or the Procfile.
 
 ## Relationships
 
@@ -289,180 +448,21 @@ curl "https://api.example.org/v3/books/[guid]/relationships/authors" \
   -H "Authorization: bearer [token]"
 ```
 
-## Errors
+## Status Codes
 
-```
-Example Error
-```
-```json
-{
-  "errors": [
-    {
-      "code": 10008,
-      "title": "CF-UnprocessableEntity",
-      "detail": "something went wrong"
-    }
-  ]
-}
-```
+Cloud Foundry V3 API uses a subset of HTTP response codes to indicate the success or failure of an API request.
+In general, codes in the 2xx range indicate success, codes in the 4xx range indicate an error that can potentially be fixed by correcting the request, and codes in the 5xx range indicate an error on the server side.
 
-An error response will always return a list of error objects in the `errors` field.
-
-#### The error object
-
-Name | Type | Description
----- | ---- | -----------
-**code** | _integer_ | A numeric code for this error.
-**title** | _string_ | Short description of the error.
-**detail** | _string_ | Detailed description of the error.
-
-## Pagination
-
-Any request that can return multiple resources will be paginated and contain a `pagination` object and list of `resources`.
-Requests for multiple resources can use `page`, `per_page`, and `order_by` in addition to filters specific to the endpoint.
-
-#### The pagination object
-```
-Example Paginated Response
-```
-
-```json
-{
-  "pagination": {
-    "total_results": 3,
-    "total_pages": 3,
-    "first": {
-      "href": "https://api.example.org/v3/people?page=1&per_page=1"
-    },
-    "last": {
-      "href": "https://api.example.org/v3/people?page=3&per_page=1"
-    },
-    "next": {
-      "href": "https://api.example.org/v3/people?page=2&per_page=1"
-    },
-    "previous": null
-  },
-  "resources": [
-    {
-      "guid": "fd35633f-5c5c-4e4e-a5a9-0722c970a9d2",
-      "created_at": "2016-03-18T23:26:46Z",
-      "updated_at": "2016-10-17T20:00:42Z",
-
-      "name": "Bob",
-
-      "links": {
-        "self": {
-          "href": "https://api.example.org/v3/people/fd35633f-5c5c-4e4e-a5a9-0722c970a9d2"
-        }
-      }
-    }
-  ]
-}
-```
-
-Name | Type | Description
----- | ---- | -----------
-**total_results** | _integer_ | Total number of resources for all pages.
-**total_pages** | _integer_ | Total number of pages.
-**first** | [_link object_](#the-link-object) | Link to the first page.
-**last** | [_link object_](#the-link-object) | Link to the last page.
-**next** | [_link object_](#the-link-object) | Link to the next page.
-**previous** | [_link object_](#the-link-object) | Link to the previous page.
-
-## Lifecycles
-
-Lifecycles inform the platform of how to build droplets and run apps. For example the
-`buildpack` lifecycle will use a droplet and a rootfs to run the app, while a `docker` lifecycle will
-pull a docker image from a registry to run an app.
-
-#### The lifecycle object
-
-Name | Type | Description
----- | ---- | -----------
-**type** | _string_ | Type of the lifecycle. Valid values are `buildpack`, `docker`.
-**data** | _object_ | Data that is used during staging and running for a lifecycle.
-
-### Buildpack lifecycle
-
-```
-Example Buildpack Lifecycle
-```
-
-```json
-{
-  "type": "buildpack",
-  "data": {
-    "buildpacks": ["java_buildpack"],
-    "stack": "cflinuxfs2"
-  }
-}
-```
-
-This is the default lifecycle for Cloud Foundry. When staging an app with this lifecycle, the app source code will be
-compiled using a buildpack, resulting in a droplet.  When running an app with this lifecycle, a container running a rootfs
-will be created and the droplet will be expanded inside that container to be executed.
-
-#### Buildpack lifecycle object
-
-Name | Type | Description
----- | ---- | -----------
-**type** | _string_ | `buildpack`
-**data.buildpacks** | _array of strings_ | A list of the names of buildpacks, URLs from which they may be downloaded, or null to auto-detect a suitable buildpack.
-**data.stack** | _string_ | The root filesystem to use with the buildpack, for example `cflinuxfs2`
-
-### Docker lifecycle
-
-This allows Cloud Foundry to run docker images. When staging an app with this lifecycle, the docker registry is queried for
-metadata about the image, such as ports and start command.  When running an app with this lifecycle, a container is created
-and the docker image is executed inside of it.
-
-#### Docker lifecycle object
-
-```
-Example Docker Lifecycle
-```
-
-```json
-{
-  "type": "docker",
-  "data": {}
-}
-```
-
-Name | Type | Description
----- | ---- | -----------
-**type** | _string_ | `docker`
-**data** | _object_ | Data is not used by the docker lifecycle. Valid value is `{}`.
-
-## Procfiles
-
-```
-Example Ruby Procfile
-```
-
-```yaml
-web: bundle exec rackup config.ru -p $PORT
-rake: bundle exec rake
-worker: bundle exec rake workers:start
-```
-
-A Procfile enables you to declare required runtime processes, called process types, for your app.
-Procfiles must be named `Procfile` exactly, and placed in the root directory of your application.
-
-In a Procfile, you declare one process type per line and use the syntax `PROCESS_TYPE: COMMAND`.
-
-- `PROCESS_TYPE` defines the type of the process.
-- `COMMAND` is the command line to launch the process.
-
-#### Procfile use cases
-Many buildpacks provide their own process types and commands by default; however, there are special cases where specifying a custom `COMMAND` is necessary.
-Commands can be overwritten by providing a Procfile with the same process type.
-
-For example, a buildpack may provide a `worker` process type that runs the `rake default:start` command.
-If a Procfile is provided that also contains a `worker` process type, but a different command such as `rake custom:start`, the `rake custom:start` command will be used.
-
-Some buildpacks, such as Python, that work on a variety of frameworks, do not attempt to provide a default start command. For these cases, a Procfile should be used to specify any necessary commands for the app.
-
-#### Web process
-`web` is a [special process type](#web-process-type) that is required for all applications.
-The `web` `PROCESS_TYPE` must be specified by either the buildpack or the Procfile.
+HTTP Status Code | Description
+---------- | -------
+200 OK | The request completed successfully.
+201 Created | The request completed successfully and created a new resource.
+202 Accepted | The request will be completed asynchronously.
+204 No Content | The request completed successfully and did not return a body.
+400 Bad Request | The request has malformed or invalid data.
+401 Unauthenticated | The request requires an authenticated user.
+403 Forbidden | The request cannot be performed by the user.
+404 Not Found | The requested resource does not exist.
+422 Unprocessable Entity | The request cannot be performed.
+500 Internal Server Error	| An unexpected error occurred.
+502 Bad Gateway |	An upstream service caused the request to fail.
