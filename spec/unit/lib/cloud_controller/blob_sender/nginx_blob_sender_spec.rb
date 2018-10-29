@@ -30,7 +30,7 @@ module CloudController
 
             expect(controller.response_body).to eq([''])
             expect(controller.status).to eq(200)
-            expect(controller.response.headers).to include('X-Accel-Redirect' => 'http://url/to/blob')
+            expect(controller.response.headers.to_hash).to include('X-Accel-Redirect' => 'http://url/to/blob')
           end
         end
       end
