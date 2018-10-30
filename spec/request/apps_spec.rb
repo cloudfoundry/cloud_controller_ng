@@ -600,8 +600,8 @@ RSpec.describe 'Apps' do
     end
 
     context 'labels and existing filters' do
-      let!(:space1) {VCAP::CloudController::Space.make}
-      let!(:space2) {VCAP::CloudController::Space.make}
+      let!(:space1) { VCAP::CloudController::Space.make }
+      let!(:space2) { VCAP::CloudController::Space.make }
       let!(:app1) { VCAP::CloudController::AppModel.make(name: 'name1', space: space1) }
       let!(:app2) { VCAP::CloudController::AppModel.make(name: 'name2', space: space2) }
       let!(:app3) { VCAP::CloudController::AppModel.make(name: 'name3', space: space2) }
@@ -613,7 +613,6 @@ RSpec.describe 'Apps' do
       let(:admin_header) { headers_for(user, scopes: %w(cloud_controller.admin)) }
 
       it 'returns a 200 and the correct app when querying with space guid' do
-
         get "/v3/apps?space_guids=#{space2.guid}&label_selector=foo==funky", nil, admin_header
 
         parsed_response = MultiJson.load(last_response.body)
@@ -633,7 +632,6 @@ RSpec.describe 'Apps' do
       end
 
       it 'returns a 200 and the correct app when querying with space guid' do
-
         get "/v3/apps?space_guids=#{space2.guid}&label_selector=fruit==strawberry&names=name2", nil, admin_header
 
         parsed_response = MultiJson.load(last_response.body)
