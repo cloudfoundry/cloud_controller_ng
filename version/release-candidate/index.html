@@ -162,6 +162,95 @@ issue on our API repo <a href="https://github.com/cloudfoundry/cloud_controller_
 
           <h1 id="concepts">Concepts</h1>
 
+<h2 id="api-resource">API Resource</h2>
+
+<p>A resource represents an individual object within the system, such as an app or a service. It is represented as a JSON object.</p>
+
+<p>A resource consists of several required resource fields and other attributes specific to the resource.</p>
+
+<p>See <a href="#resources">Resources</a> and <a href="#experimental-resources">Experimental Resources</a> for specific resources.</p>
+
+<h3 id="required-fields">Required fields</h3>
+<pre class="highlight plaintext"><code>Example Person Resource
+</code></pre>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"fd35633f-5c5c-4e4e-a5a9-0722c970a9d2"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-18T23:26:46Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-10-17T20:00:42Z"</span><span class="p">,</span><span class="w">
+
+  </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Bob"</span><span class="p">,</span><span class="w">
+
+  </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/people/fd35633f-5c5c-4e4e-a5a9-0722c970a9d2"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>guid</strong></td>
+<td><em>uuid</em></td>
+<td>The unique identifier for the resource.</td>
+</tr>
+<tr>
+<td><strong>created_at</strong></td>
+<td><em>datetime</em></td>
+<td>The ISO8601 compatible date and time when resource was created.</td>
+</tr>
+<tr>
+<td><strong>updated_at</strong></td>
+<td><em>datetime</em></td>
+<td>The ISO8601 compatible date and time when resource was last updated.</td>
+</tr>
+<tr>
+<td><strong>links</strong></td>
+<td><a href="#links"><em>links object</em></a></td>
+<td>Provide URLs to related resources and actions for the current resource.</td>
+</tr>
+</tbody></table>
+
+<h3 id="links">Links</h3>
+
+<p>Links provide URLs to <a href="#relationships">relationships</a> and actions for a resource. Links are represented as a JSON object and will always contain at least a <code class="prettyprint">self</code> link.</p>
+
+<p>Each link is keyed by its type and will include a <code class="prettyprint">href</code> for the URL and an optional <code class="prettyprint">method</code> for links that cannot be followed using <code class="prettyprint">GET</code>.</p>
+
+<h4 id="the-link-object">The link object</h4>
+<pre class="highlight plaintext"><code>Example Link object
+</code></pre>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://example.com/some/endpoint"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"GET"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>href</strong></td>
+<td><em>string</em></td>
+<td>The absolute URL.</td>
+</tr>
+<tr>
+<td><strong>method</strong></td>
+<td><em>string</em></td>
+<td>An optional field containing the HTTP method to be used when following the URL.</td>
+</tr>
+</tbody></table>
+
 <h2 id="authentication">Authentication</h2>
 
 <p>The Cloud Foundry V3 API is secured using OAuth 2. Clients are expected to present a valid bearer token via HTTP header: <code class="prettyprint">Authorization: bearer &lt;token&gt;</code></p>
@@ -256,89 +345,165 @@ Use the cf cli to obtain a bearer token: cf oauth-token
 </tr>
 </tbody></table>
 
-<h2 id="status-codes">Status Codes</h2>
+<h2 id="errors">Errors</h2>
+<pre class="highlight plaintext"><code>Example Error
+</code></pre>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"errors"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"code"</span><span class="p">:</span><span class="w"> </span><span class="mi">10008</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"title"</span><span class="p">:</span><span class="w"> </span><span class="s2">"CF-UnprocessableEntity"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"detail"</span><span class="p">:</span><span class="w"> </span><span class="s2">"something went wrong"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
 
-<p>Cloud Foundry V3 API uses a subset of HTTP response codes to indicate the success or failure of an API request.
-In general, codes in the 2xx range indicate success, codes in the 4xx range indicate an error that can potentially be fixed by correcting the request, and codes in the 5xx range indicate an error on the server side.</p>
+<p>An error response will always return a list of error objects in the <code class="prettyprint">errors</code> field.</p>
+
+<h4 id="the-error-object">The error object</h4>
 
 <table><thead>
 <tr>
-<th>HTTP Status Code</th>
+<th>Name</th>
+<th>Type</th>
 <th>Description</th>
 </tr>
 </thead><tbody>
 <tr>
-<td>200 OK</td>
-<td>The request completed successfully.</td>
+<td><strong>code</strong></td>
+<td><em>integer</em></td>
+<td>A numeric code for this error.</td>
 </tr>
 <tr>
-<td>201 Created</td>
-<td>The request completed successfully and created a new resource.</td>
+<td><strong>title</strong></td>
+<td><em>string</em></td>
+<td>Short description of the error.</td>
 </tr>
 <tr>
-<td>202 Accepted</td>
-<td>The request will be completed asynchronously.</td>
-</tr>
-<tr>
-<td>204 No Content</td>
-<td>The request completed successfully and did not return a body.</td>
-</tr>
-<tr>
-<td>400 Bad Request</td>
-<td>The request has malformed or invalid data.</td>
-</tr>
-<tr>
-<td>401 Unauthenticated</td>
-<td>The request requires an authenticated user.</td>
-</tr>
-<tr>
-<td>403 Forbidden</td>
-<td>The request cannot be performed by the user.</td>
-</tr>
-<tr>
-<td>404 Not Found</td>
-<td>The requested resource does not exist.</td>
-</tr>
-<tr>
-<td>422 Unprocessable Entity</td>
-<td>The request cannot be performed.</td>
-</tr>
-<tr>
-<td>500 Internal Server Error</td>
-<td>An unexpected error occurred.</td>
-</tr>
-<tr>
-<td>502 Bad Gateway</td>
-<td>An upstream service caused the request to fail.</td>
+<td><strong>detail</strong></td>
+<td><em>string</em></td>
+<td>Detailed description of the error.</td>
 </tr>
 </tbody></table>
 
-<h2 id="api-resource">API Resource</h2>
+<h2 id="labels-and-selectors">Labels and Selectors</h2>
 
-<p>A resource represents an individual object within the system, such as an app or a service. It is represented as a JSON object.</p>
+<p>Labels are user-specified key/value pairs that are attached to <a href="#api-resource">API Resources</a>.
+They are queryable identifying attributes of a resource, but they do not affect the operation of CloudFoundry.</p>
 
-<p>A resource consists of several required resource fields and other attributes specific to the resource.</p>
+<h3 id="labels">Labels</h3>
 
-<p>See <a href="#resources">Resources</a> and <a href="#experimental-resources">Experimental Resources</a> for specific resources.</p>
+<p>Labels allow users to categorize resources in ways that are helpful to them.
+For example, an app may be assigned a label with key <code class="prettyprint">sensitive</code> and possible values <code class="prettyprint">true</code> or <code class="prettyprint">false</code>.
+Users could then easily find all sensitive apps with a query for <code class="prettyprint">sensitive=true</code>;
+any apps that do not have a label with the <code class="prettyprint">sensitive</code> key or with their <code class="prettyprint">sensitive</code> value set to <code class="prettyprint">false</code> would not be returned.</p>
 
-<h3 id="required-fields">Required fields</h3>
-<pre class="highlight plaintext"><code>Example Person Resource
+<h4 id="label-keys">Label Keys</h4>
+
+<p>Label keys are made up of an (optional) <code class="prettyprint">prefix</code>, and <code class="prettyprint">name</code>. If a <code class="prettyprint">prefix</code> is present, it is separated from the <code class="prettyprint">name</code> by a <code class="prettyprint">/</code>.</p>
+
+<p>Label key <code class="prettyprint">prefixe</code>s must adhere to the following restrictions:</p>
+
+<ul>
+<li>Length: 0-253 characters</li>
+<li>Allowed characters: alphanumeric, <code class="prettyprint">-</code>, and <code class="prettyprint">.</code></li>
+<li>DNS subdomain format (series of subdomain labels separated by <code class="prettyprint">.</code>)</li>
+</ul>
+
+<p>Label key <code class="prettyprint">name</code>s must adhere to the following restrictions:</p>
+
+<ul>
+<li>Length: 1-63 characters</li>
+<li>Allowed characters: alphanumeric , <code class="prettyprint">-</code>, <code class="prettyprint">_</code>, and <code class="prettyprint">.</code></li>
+<li>Must begin and end with an alphanumeric character</li>
+</ul>
+
+<h4 id="label-values">Label Values</h4>
+
+<p>Label values must adhere to the following restrictions:</p>
+
+<ul>
+<li>Length: 0-63 characters</li>
+<li>Allowed characters: alphanumeric , <code class="prettyprint">-</code>, <code class="prettyprint">_</code>, and <code class="prettyprint">.</code></li>
+<li>Must begin and end with an alphanumeric character</li>
+<li>Empty values are allowed</li>
+</ul>
+
+<h3 id="selectors">Selectors</h3>
+
+<p>API resources can be filtered via their list endpoints with the query parameter <code class="prettyprint">label_selector</code>.
+A <code class="prettyprint">label_selector</code> consists of one or more <code class="prettyprint">requirement</code>s in a comma-delimited list.
+A <code class="prettyprint">requirement</code> consists of an <em>key</em>, an <code class="prettyprint">operator</code>, and optional <em>value</em>(s).</p>
+
+<p>The following different types of <code class="prettyprint">requirement</code>s are supported:</p>
+
+<ol>
+<li><p><em>key</em></p>
+
+<p>Returns all resources that have been assigned a label with the given <em>key</em> (with any <em>value</em>)</p></li>
+<li><p><code class="prettyprint">!</code><em>key</em></p>
+
+<p>Returns all resources that have <strong>not</strong> been assigned a label with the given <em>key</em> (with any <em>value</em>)</p></li>
+<li><p><em>key</em><code class="prettyprint">=</code><em>value</em> or <em>key</em><code class="prettyprint">==</code><em>value</em></p>
+
+<p>Returns all resources that have been assigned a label with the given <em>key</em> and <em>value</em></p></li>
+<li><p><em>key</em><code class="prettyprint">!=</code><em>value</em></p>
+
+<p>Returns all resources that either have <strong>not</strong> been assigned a label with the given <em>key</em> or have a label with the given <em>key</em> but a different <em>value</em></p></li>
+<li><p><em>key</em> <code class="prettyprint">in</code> (<em>value1</em>,<em>value2</em>&hellip;)</p>
+
+<p>Returns all resources that have been assigned a label with the given <em>key</em> with one of the specified <em>value</em>(s)</p></li>
+<li><p><em>key</em> <code class="prettyprint">notin</code> (<em>value1</em>,<em>value2</em>&hellip;)</p>
+
+<p>Returns all resources that either have <strong>not</strong> been assigned a label with the given <em>key</em> or have a label with the given <em>key</em> but none of the specified <em>value</em>(s)</p></li>
+</ol>
+
+<h2 id="lifecycles">Lifecycles</h2>
+
+<p>Lifecycles inform the platform of how to build droplets and run apps. For example the
+<code class="prettyprint">buildpack</code> lifecycle will use a droplet and a rootfs to run the app, while a <code class="prettyprint">docker</code> lifecycle will
+pull a docker image from a registry to run an app.</p>
+
+<h4 id="the-lifecycle-object">The lifecycle object</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>type</strong></td>
+<td><em>string</em></td>
+<td>Type of the lifecycle. Valid values are <code class="prettyprint">buildpack</code>, <code class="prettyprint">docker</code>.</td>
+</tr>
+<tr>
+<td><strong>data</strong></td>
+<td><em>object</em></td>
+<td>Data that is used during staging and running for a lifecycle.</td>
+</tr>
+</tbody></table>
+
+<h3 id="buildpack-lifecycle">Buildpack lifecycle</h3>
+<pre class="highlight plaintext"><code>Example Buildpack Lifecycle
 </code></pre>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
-  </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"fd35633f-5c5c-4e4e-a5a9-0722c970a9d2"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-18T23:26:46Z"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-10-17T20:00:42Z"</span><span class="p">,</span><span class="w">
-
-  </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Bob"</span><span class="p">,</span><span class="w">
-
-  </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/people/fd35633f-5c5c-4e4e-a5a9-0722c970a9d2"</span><span class="w">
-    </span><span class="p">}</span><span class="w">
+  </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"buildpack"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"buildpacks"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"java_buildpack"</span><span class="p">],</span><span class="w">
+    </span><span class="nt">"stack"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cflinuxfs2"</span><span class="w">
   </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
 </span></code></pre>
 
+<p>This is the default lifecycle for Cloud Foundry. When staging an app with this lifecycle, the app source code will be
+compiled using a buildpack, resulting in a droplet.  When running an app with this lifecycle, a container running a rootfs
+will be created and the droplet will be expanded inside that container to be executed.</p>
+
+<h4 id="buildpack-lifecycle-object">Buildpack lifecycle object</h4>
+
 <table><thead>
 <tr>
 <th>Name</th>
@@ -347,39 +512,34 @@ In general, codes in the 2xx range indicate success, codes in the 4xx range indi
 </tr>
 </thead><tbody>
 <tr>
-<td><strong>guid</strong></td>
-<td><em>uuid</em></td>
-<td>The unique identifier for the resource.</td>
+<td><strong>type</strong></td>
+<td><em>string</em></td>
+<td><code class="prettyprint">buildpack</code></td>
 </tr>
 <tr>
-<td><strong>created_at</strong></td>
-<td><em>datetime</em></td>
-<td>The ISO8601 compatible date and time when resource was created.</td>
+<td><strong>data.buildpacks</strong></td>
+<td><em>array of strings</em></td>
+<td>A list of the names of buildpacks, URLs from which they may be downloaded, or null to auto-detect a suitable buildpack.</td>
 </tr>
 <tr>
-<td><strong>updated_at</strong></td>
-<td><em>datetime</em></td>
-<td>The ISO8601 compatible date and time when resource was last updated.</td>
-</tr>
-<tr>
-<td><strong>links</strong></td>
-<td><a href="#links"><em>links object</em></a></td>
-<td>Provide URLs to related resources and actions for the current resource.</td>
+<td><strong>data.stack</strong></td>
+<td><em>string</em></td>
+<td>The root filesystem to use with the buildpack, for example <code class="prettyprint">cflinuxfs2</code></td>
 </tr>
 </tbody></table>
 
-<h3 id="links">Links</h3>
+<h3 id="docker-lifecycle">Docker lifecycle</h3>
 
-<p>Links provide URLs to <a href="#relationships">relationships</a> and actions for a resource. Links are represented as a JSON object and will always contain at least a <code class="prettyprint">self</code> link.</p>
+<p>This allows Cloud Foundry to run docker images. When staging an app with this lifecycle, the docker registry is queried for
+metadata about the image, such as ports and start command.  When running an app with this lifecycle, a container is created
+and the docker image is executed inside of it.</p>
 
-<p>Each link is keyed by its type and will include a <code class="prettyprint">href</code> for the URL and an optional <code class="prettyprint">method</code> for links that cannot be followed using <code class="prettyprint">GET</code>.</p>
-
-<h4 id="the-link-object">The link object</h4>
-<pre class="highlight plaintext"><code>Example Link object
+<h4 id="docker-lifecycle-object">Docker lifecycle object</h4>
+<pre class="highlight plaintext"><code>Example Docker Lifecycle
 </code></pre>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
-  </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://example.com/some/endpoint"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"GET"</span><span class="w">
+  </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"docker"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
 </span><span class="p">}</span><span class="w">
 </span></code></pre>
 
@@ -391,16 +551,129 @@ In general, codes in the 2xx range indicate success, codes in the 4xx range indi
 </tr>
 </thead><tbody>
 <tr>
-<td><strong>href</strong></td>
+<td><strong>type</strong></td>
 <td><em>string</em></td>
-<td>The absolute URL.</td>
+<td><code class="prettyprint">docker</code></td>
 </tr>
 <tr>
-<td><strong>method</strong></td>
-<td><em>string</em></td>
-<td>An optional field containing the HTTP method to be used when following the URL.</td>
+<td><strong>data</strong></td>
+<td><em>object</em></td>
+<td>Data is not used by the docker lifecycle. Valid value is <code class="prettyprint">{}</code>.</td>
 </tr>
 </tbody></table>
+
+<h2 id="pagination">Pagination</h2>
+
+<p>Any request that can return multiple resources will be paginated and contain a <code class="prettyprint">pagination</code> object and list of <code class="prettyprint">resources</code>.
+Requests for multiple resources can use <code class="prettyprint">page</code>, <code class="prettyprint">per_page</code>, and <code class="prettyprint">order_by</code> in addition to filters specific to the endpoint.</p>
+
+<h4 id="the-pagination-object">The pagination object</h4>
+<pre class="highlight plaintext"><code>Example Paginated Response
+</code></pre>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"pagination"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"total_results"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"total_pages"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"first"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/people?page=1&amp;per_page=1"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"last"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/people?page=3&amp;per_page=1"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"next"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/people?page=2&amp;per_page=1"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"previous"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"resources"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"fd35633f-5c5c-4e4e-a5a9-0722c970a9d2"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-18T23:26:46Z"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-10-17T20:00:42Z"</span><span class="p">,</span><span class="w">
+
+      </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Bob"</span><span class="p">,</span><span class="w">
+
+      </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/people/fd35633f-5c5c-4e4e-a5a9-0722c970a9d2"</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>total_results</strong></td>
+<td><em>integer</em></td>
+<td>Total number of resources for all pages.</td>
+</tr>
+<tr>
+<td><strong>total_pages</strong></td>
+<td><em>integer</em></td>
+<td>Total number of pages.</td>
+</tr>
+<tr>
+<td><strong>first</strong></td>
+<td><a href="#the-link-object"><em>link object</em></a></td>
+<td>Link to the first page.</td>
+</tr>
+<tr>
+<td><strong>last</strong></td>
+<td><a href="#the-link-object"><em>link object</em></a></td>
+<td>Link to the last page.</td>
+</tr>
+<tr>
+<td><strong>next</strong></td>
+<td><a href="#the-link-object"><em>link object</em></a></td>
+<td>Link to the next page.</td>
+</tr>
+<tr>
+<td><strong>previous</strong></td>
+<td><a href="#the-link-object"><em>link object</em></a></td>
+<td>Link to the previous page.</td>
+</tr>
+</tbody></table>
+
+<h2 id="procfiles">Procfiles</h2>
+<pre class="highlight plaintext"><code>Example Ruby Procfile
+</code></pre>
+<pre class="highlight yaml"><code><span class="s">web</span><span class="pi">:</span> <span class="s">bundle exec rackup config.ru -p $PORT</span>
+<span class="s">rake</span><span class="pi">:</span> <span class="s">bundle exec rake</span>
+<span class="s">worker</span><span class="pi">:</span> <span class="s">bundle exec rake workers:start</span>
+</code></pre>
+
+<p>A Procfile enables you to declare required runtime processes, called process types, for your app.
+Procfiles must be named <code class="prettyprint">Procfile</code> exactly, and placed in the root directory of your application.</p>
+
+<p>In a Procfile, you declare one process type per line and use the syntax <code class="prettyprint">PROCESS_TYPE: COMMAND</code>.</p>
+
+<ul>
+<li><code class="prettyprint">PROCESS_TYPE</code> defines the type of the process.</li>
+<li><code class="prettyprint">COMMAND</code> is the command line to launch the process.</li>
+</ul>
+
+<h4 id="procfile-use-cases">Procfile use cases</h4>
+
+<p>Many buildpacks provide their own process types and commands by default; however, there are special cases where specifying a custom <code class="prettyprint">COMMAND</code> is necessary.
+Commands can be overwritten by providing a Procfile with the same process type.</p>
+
+<p>For example, a buildpack may provide a <code class="prettyprint">worker</code> process type that runs the <code class="prettyprint">rake default:start</code> command.
+If a Procfile is provided that also contains a <code class="prettyprint">worker</code> process type, but a different command such as <code class="prettyprint">rake custom:start</code>, the <code class="prettyprint">rake custom:start</code> command will be used.</p>
+
+<p>Some buildpacks, such as Python, that work on a variety of frameworks, do not attempt to provide a default start command. For these cases, a Procfile should be used to specify any necessary commands for the app.</p>
+
+<h4 id="web-process">Web process</h4>
+
+<p><code class="prettyprint">web</code> is a <a href="#web-process-type">special process type</a> that is required for all applications.
+The <code class="prettyprint">web</code> <code class="prettyprint">PROCESS_TYPE</code> must be specified by either the buildpack or the Procfile.</p>
 
 <h2 id="relationships">Relationships</h2>
 
@@ -572,263 +845,62 @@ In general, codes in the 2xx range indicate success, codes in the 4xx range indi
   -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
 
-<h2 id="errors">Errors</h2>
-<pre class="highlight plaintext"><code>Example Error
-</code></pre>
-<pre class="highlight json"><code><span class="p">{</span><span class="w">
-  </span><span class="nt">"errors"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-    </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"code"</span><span class="p">:</span><span class="w"> </span><span class="mi">10008</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"title"</span><span class="p">:</span><span class="w"> </span><span class="s2">"CF-UnprocessableEntity"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"detail"</span><span class="p">:</span><span class="w"> </span><span class="s2">"something went wrong"</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-  </span><span class="p">]</span><span class="w">
-</span><span class="p">}</span><span class="w">
-</span></code></pre>
+<h2 id="status-codes">Status Codes</h2>
 
-<p>An error response will always return a list of error objects in the <code class="prettyprint">errors</code> field.</p>
-
-<h4 id="the-error-object">The error object</h4>
+<p>Cloud Foundry V3 API uses a subset of HTTP response codes to indicate the success or failure of an API request.
+In general, codes in the 2xx range indicate success, codes in the 4xx range indicate an error that can potentially be fixed by correcting the request, and codes in the 5xx range indicate an error on the server side.</p>
 
 <table><thead>
 <tr>
-<th>Name</th>
-<th>Type</th>
+<th>HTTP Status Code</th>
 <th>Description</th>
 </tr>
 </thead><tbody>
 <tr>
-<td><strong>code</strong></td>
-<td><em>integer</em></td>
-<td>A numeric code for this error.</td>
+<td>200 OK</td>
+<td>The request completed successfully.</td>
 </tr>
 <tr>
-<td><strong>title</strong></td>
-<td><em>string</em></td>
-<td>Short description of the error.</td>
+<td>201 Created</td>
+<td>The request completed successfully and created a new resource.</td>
 </tr>
 <tr>
-<td><strong>detail</strong></td>
-<td><em>string</em></td>
-<td>Detailed description of the error.</td>
+<td>202 Accepted</td>
+<td>The request will be completed asynchronously.</td>
+</tr>
+<tr>
+<td>204 No Content</td>
+<td>The request completed successfully and did not return a body.</td>
+</tr>
+<tr>
+<td>400 Bad Request</td>
+<td>The request has malformed or invalid data.</td>
+</tr>
+<tr>
+<td>401 Unauthenticated</td>
+<td>The request requires an authenticated user.</td>
+</tr>
+<tr>
+<td>403 Forbidden</td>
+<td>The request cannot be performed by the user.</td>
+</tr>
+<tr>
+<td>404 Not Found</td>
+<td>The requested resource does not exist.</td>
+</tr>
+<tr>
+<td>422 Unprocessable Entity</td>
+<td>The request cannot be performed.</td>
+</tr>
+<tr>
+<td>500 Internal Server Error</td>
+<td>An unexpected error occurred.</td>
+</tr>
+<tr>
+<td>502 Bad Gateway</td>
+<td>An upstream service caused the request to fail.</td>
 </tr>
 </tbody></table>
-
-<h2 id="pagination">Pagination</h2>
-
-<p>Any request that can return multiple resources will be paginated and contain a <code class="prettyprint">pagination</code> object and list of <code class="prettyprint">resources</code>.
-Requests for multiple resources can use <code class="prettyprint">page</code>, <code class="prettyprint">per_page</code>, and <code class="prettyprint">order_by</code> in addition to filters specific to the endpoint.</p>
-
-<h4 id="the-pagination-object">The pagination object</h4>
-<pre class="highlight plaintext"><code>Example Paginated Response
-</code></pre>
-<pre class="highlight json"><code><span class="p">{</span><span class="w">
-  </span><span class="nt">"pagination"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"total_results"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"total_pages"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"first"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/people?page=1&amp;per_page=1"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"last"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/people?page=3&amp;per_page=1"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"next"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/people?page=2&amp;per_page=1"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"previous"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"resources"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-    </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"fd35633f-5c5c-4e4e-a5a9-0722c970a9d2"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-18T23:26:46Z"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-10-17T20:00:42Z"</span><span class="p">,</span><span class="w">
-
-      </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Bob"</span><span class="p">,</span><span class="w">
-
-      </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/people/fd35633f-5c5c-4e4e-a5a9-0722c970a9d2"</span><span class="w">
-        </span><span class="p">}</span><span class="w">
-      </span><span class="p">}</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-  </span><span class="p">]</span><span class="w">
-</span><span class="p">}</span><span class="w">
-</span></code></pre>
-
-<table><thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead><tbody>
-<tr>
-<td><strong>total_results</strong></td>
-<td><em>integer</em></td>
-<td>Total number of resources for all pages.</td>
-</tr>
-<tr>
-<td><strong>total_pages</strong></td>
-<td><em>integer</em></td>
-<td>Total number of pages.</td>
-</tr>
-<tr>
-<td><strong>first</strong></td>
-<td><a href="#the-link-object"><em>link object</em></a></td>
-<td>Link to the first page.</td>
-</tr>
-<tr>
-<td><strong>last</strong></td>
-<td><a href="#the-link-object"><em>link object</em></a></td>
-<td>Link to the last page.</td>
-</tr>
-<tr>
-<td><strong>next</strong></td>
-<td><a href="#the-link-object"><em>link object</em></a></td>
-<td>Link to the next page.</td>
-</tr>
-<tr>
-<td><strong>previous</strong></td>
-<td><a href="#the-link-object"><em>link object</em></a></td>
-<td>Link to the previous page.</td>
-</tr>
-</tbody></table>
-
-<h2 id="lifecycles">Lifecycles</h2>
-
-<p>Lifecycles inform the platform of how to build droplets and run apps. For example the
-<code class="prettyprint">buildpack</code> lifecycle will use a droplet and a rootfs to run the app, while a <code class="prettyprint">docker</code> lifecycle will
-pull a docker image from a registry to run an app.</p>
-
-<h4 id="the-lifecycle-object">The lifecycle object</h4>
-
-<table><thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead><tbody>
-<tr>
-<td><strong>type</strong></td>
-<td><em>string</em></td>
-<td>Type of the lifecycle. Valid values are <code class="prettyprint">buildpack</code>, <code class="prettyprint">docker</code>.</td>
-</tr>
-<tr>
-<td><strong>data</strong></td>
-<td><em>object</em></td>
-<td>Data that is used during staging and running for a lifecycle.</td>
-</tr>
-</tbody></table>
-
-<h3 id="buildpack-lifecycle">Buildpack lifecycle</h3>
-<pre class="highlight plaintext"><code>Example Buildpack Lifecycle
-</code></pre>
-<pre class="highlight json"><code><span class="p">{</span><span class="w">
-  </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"buildpack"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"buildpacks"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"java_buildpack"</span><span class="p">],</span><span class="w">
-    </span><span class="nt">"stack"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cflinuxfs2"</span><span class="w">
-  </span><span class="p">}</span><span class="w">
-</span><span class="p">}</span><span class="w">
-</span></code></pre>
-
-<p>This is the default lifecycle for Cloud Foundry. When staging an app with this lifecycle, the app source code will be
-compiled using a buildpack, resulting in a droplet.  When running an app with this lifecycle, a container running a rootfs
-will be created and the droplet will be expanded inside that container to be executed.</p>
-
-<h4 id="buildpack-lifecycle-object">Buildpack lifecycle object</h4>
-
-<table><thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead><tbody>
-<tr>
-<td><strong>type</strong></td>
-<td><em>string</em></td>
-<td><code class="prettyprint">buildpack</code></td>
-</tr>
-<tr>
-<td><strong>data.buildpacks</strong></td>
-<td><em>array of strings</em></td>
-<td>A list of the names of buildpacks, URLs from which they may be downloaded, or null to auto-detect a suitable buildpack.</td>
-</tr>
-<tr>
-<td><strong>data.stack</strong></td>
-<td><em>string</em></td>
-<td>The root filesystem to use with the buildpack, for example <code class="prettyprint">cflinuxfs2</code></td>
-</tr>
-</tbody></table>
-
-<h3 id="docker-lifecycle">Docker lifecycle</h3>
-
-<p>This allows Cloud Foundry to run docker images. When staging an app with this lifecycle, the docker registry is queried for
-metadata about the image, such as ports and start command.  When running an app with this lifecycle, a container is created
-and the docker image is executed inside of it.</p>
-
-<h4 id="docker-lifecycle-object">Docker lifecycle object</h4>
-<pre class="highlight plaintext"><code>Example Docker Lifecycle
-</code></pre>
-<pre class="highlight json"><code><span class="p">{</span><span class="w">
-  </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"docker"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
-</span><span class="p">}</span><span class="w">
-</span></code></pre>
-
-<table><thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead><tbody>
-<tr>
-<td><strong>type</strong></td>
-<td><em>string</em></td>
-<td><code class="prettyprint">docker</code></td>
-</tr>
-<tr>
-<td><strong>data</strong></td>
-<td><em>object</em></td>
-<td>Data is not used by the docker lifecycle. Valid value is <code class="prettyprint">{}</code>.</td>
-</tr>
-</tbody></table>
-
-<h2 id="procfiles">Procfiles</h2>
-<pre class="highlight plaintext"><code>Example Ruby Procfile
-</code></pre>
-<pre class="highlight yaml"><code><span class="s">web</span><span class="pi">:</span> <span class="s">bundle exec rackup config.ru -p $PORT</span>
-<span class="s">rake</span><span class="pi">:</span> <span class="s">bundle exec rake</span>
-<span class="s">worker</span><span class="pi">:</span> <span class="s">bundle exec rake workers:start</span>
-</code></pre>
-
-<p>A Procfile enables you to declare required runtime processes, called process types, for your app.
-Procfiles must be named <code class="prettyprint">Procfile</code> exactly, and placed in the root directory of your application.</p>
-
-<p>In a Procfile, you declare one process type per line and use the syntax <code class="prettyprint">PROCESS_TYPE: COMMAND</code>.</p>
-
-<ul>
-<li><code class="prettyprint">PROCESS_TYPE</code> defines the type of the process.</li>
-<li><code class="prettyprint">COMMAND</code> is the command line to launch the process.</li>
-</ul>
-
-<h4 id="procfile-use-cases">Procfile use cases</h4>
-
-<p>Many buildpacks provide their own process types and commands by default; however, there are special cases where specifying a custom <code class="prettyprint">COMMAND</code> is necessary.
-Commands can be overwritten by providing a Procfile with the same process type.</p>
-
-<p>For example, a buildpack may provide a <code class="prettyprint">worker</code> process type that runs the <code class="prettyprint">rake default:start</code> command.
-If a Procfile is provided that also contains a <code class="prettyprint">worker</code> process type, but a different command such as <code class="prettyprint">rake custom:start</code>, the <code class="prettyprint">rake custom:start</code> command will be used.</p>
-
-<p>Some buildpacks, such as Python, that work on a variety of frameworks, do not attempt to provide a default start command. For these cases, a Procfile should be used to specify any necessary commands for the app.</p>
-
-<h4 id="web-process">Web process</h4>
-
-<p><code class="prettyprint">web</code> is a <a href="#web-process-type">special process type</a> that is required for all applications.
-The <code class="prettyprint">web</code> <code class="prettyprint">PROCESS_TYPE</code> must be specified by either the buildpack or the Procfile.</p>
 
           <h1 id="workflows">Workflows</h1>
 
@@ -2227,7 +2299,7 @@ Environment variable names may not start with VCAP_. PORT is not a valid environ
 <tr>
 <td><strong>label_selector</strong></td>
 <td><em>string</em></td>
-<td><strong>Experimental</strong> - A query string containing a list of label selector requirements.</td>
+<td><strong>Experimental</strong> - A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements.</td>
 </tr>
 </tbody></table>
 
