@@ -118,6 +118,67 @@ RSpec.describe AppsV3Controller, type: :controller do
     end
   end
 
+  describe '#index' do
+    let(:user) { VCAP::CloudController::User.make }
+    context 'sorting' do
+      before do
+        set_current_user_as_admin(user: user)
+        VCAP::CloudController::AppModel.make(name: 'clem')
+        VCAP::CloudController::AppModel.make(name: 'abel')
+        VCAP::CloudController::AppModel.make(name: 'quartz')
+        VCAP::CloudController::AppModel.make(name: 'beale')
+        VCAP::CloudController::AppModel.make(name: 'rocky')
+      end
+
+      it 'sorts and paginates the apps by name' do
+        get :index, params: { order_by: 'name', order_direction: 'asc', per_page: 2 }, as: :json
+
+        expect(response.status).to eq(200), response.body
+        response_names = parsed_body['resources'].map { |r| r['name'] }
+        expect(response_names).to match_array(%w/abel beale/)
+        expect(parsed_body['pagination']['next']['href']).to match(/order_by=%2Bname/)
+        expect(parsed_body['pagination']['next']['href']).to match(/order_direction=asc/)
+        expect(parsed_body['pagination']['next']['href']).to match(/per_page=2/)
+        expect(parsed_body['pagination']['next']['href']).to match(/page=2/)
+      end
+
+      it 'can get the first page descending' do
+        get :index, params: { order_by: '-name', per_page: 2, page: 1 }, as: :json
+        expect(response.status).to eq(200), response.body
+        response_names = parsed_body['resources'].map { |r| r['name'] }
+        expect(response_names).to match_array(%w/rocky quartz/)
+        expect(parsed_body['pagination']['next']['href']).to match(/order_by=-name/)
+        expect(parsed_body['pagination']['next']['href']).to match(/per_page=2/)
+        expect(parsed_body['pagination']['next']['href']).to match(/page=2/)
+        expect(parsed_body['pagination']['previous']).to be_nil
+      end
+
+      it 'can get the second page descending' do
+        get :index, params: { order_by: '-name', per_page: 2, page: 2 }, as: :json
+        expect(response.status).to eq(200), response.body
+        response_names = parsed_body['resources'].map { |r| r['name'] }
+        expect(response_names).to match_array(%w/clem beale/)
+        expect(parsed_body['pagination']['next']['href']).to match(/order_by=-name/)
+        expect(parsed_body['pagination']['next']['href']).to match(/per_page=2/)
+        expect(parsed_body['pagination']['next']['href']).to match(/page=3/)
+        expect(parsed_body['pagination']['previous']['href']).to match(/order_by=-name/)
+        expect(parsed_body['pagination']['previous']['href']).to match(/per_page=2/)
+        expect(parsed_body['pagination']['previous']['href']).to match(/page=1/)
+      end
+
+      it 'can get the final page' do
+        get :index, params: { order_by: '-name', per_page: 2, page: 3 }, as: :json
+        expect(response.status).to eq(200), response.body
+        response_names = parsed_body['resources'].map { |r| r['name'] }
+        expect(response_names).to match_array(%w/abel/)
+        expect(parsed_body['pagination']['next']).to be_nil
+        expect(parsed_body['pagination']['previous']['href']).to match(/order_by=-name/)
+        expect(parsed_body['pagination']['previous']['href']).to match(/per_page=2/)
+        expect(parsed_body['pagination']['previous']['href']).to match(/page=2/)
+      end
+    end
+  end
+
   describe '#show' do
     let!(:app_model) { VCAP::CloudController::AppModel.make }
     let(:space) { app_model.space }
