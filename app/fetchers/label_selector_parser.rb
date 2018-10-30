@@ -12,6 +12,10 @@ module VCAP::CloudController
             dataset_for_requirement = evaluate_equal(label_klass, resource_dataset, requirement)
           when :not_equal
             dataset_for_requirement = evaluate_not_equal(label_klass, resource_dataset, requirement)
+          when :exists
+            dataset_for_requirement = evaluate_exists(label_klass, resource_dataset, requirement)
+          when :not_exists
+            dataset_for_requirement = evaluate_not_exists(label_klass, resource_dataset, requirement)
           end
 
           accumulated_dataset.nil? ? dataset_for_requirement : accumulated_dataset.join(dataset_for_requirement, [:guid])
@@ -32,6 +36,7 @@ module VCAP::CloudController
             next if match_data.nil?
 
             requirements << LabelSelectorRequirement.new(key: match_data[:key], operator: operator_type, values: match_data[:values])
+            break
           end
         end
 
@@ -58,20 +63,33 @@ module VCAP::CloudController
         evaluate_notin(label_klass, resource_dataset, requirement)
       end
 
+      def evaluate_exists(label_klass, resource_dataset, requirement)
+        resource_dataset.where(guid: guids_for_existence(label_klass, requirement))
+      end
+
+      def evaluate_not_exists(label_klass, resource_dataset, requirement)
+        resource_dataset.exclude(guid: guids_for_existence(label_klass, requirement))
+      end
+
       def guids_for_set_inclusion(label_klass, requirement)
-        prefix, name = VCAP::CloudController::LabelHelpers.extract_prefix(requirement.key)
         label_klass.
           select(label_klass::RESOURCE_GUID_COLUMN).
-          where(key_prefix: prefix, key_name: name, value: requirement.values)
+          where(key_prefix: requirement.key_prefix, key_name: requirement.key_name, value: requirement.values)
+      end
+
+      def guids_for_existence(label_klass, requirement)
+        label_klass.
+          select(label_klass::RESOURCE_GUID_COLUMN).
+          where(key_prefix: requirement.key_prefix, key_name: requirement.key_name)
       end
     end
   end
 
   class LabelSelectorRequirement
-    attr_accessor :key, :operator, :values
+    attr_accessor :key_name, :key_prefix, :operator, :values
 
     def initialize(key:, operator:, values:)
-      @key = key
+      @key_prefix, @key_name = VCAP::CloudController::LabelHelpers.extract_prefix(key)
       @operator = operator
       @values = values.split(',')
     end

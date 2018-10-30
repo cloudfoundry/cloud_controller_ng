@@ -448,9 +448,11 @@ RSpec.describe 'Apps' do
 
     context 'labels' do
       let!(:app1) { VCAP::CloudController::AppModel.make(name: 'name1') }
-      let!(:app2) { VCAP::CloudController::AppModel.make(name: 'name2') }
       let!(:app1_label) { VCAP::CloudController::AppLabelModel.make(app_guid: app1.guid, key_name: 'foo', value: 'bar') }
+
+      let!(:app2) { VCAP::CloudController::AppModel.make(name: 'name2') }
       let!(:app2_label) { VCAP::CloudController::AppLabelModel.make(app_guid: app2.guid, key_name: 'foo', value: 'funky') }
+      let!(:app2__exclusive_label) { VCAP::CloudController::AppLabelModel.make(app_guid: app2.guid, key_name: 'santa', value: 'claus') }
 
       let(:admin_header) { headers_for(user, scopes: %w(cloud_controller.admin)) }
 
@@ -555,6 +557,44 @@ RSpec.describe 'Apps' do
 
         expect(last_response.status).to eq(200)
         expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(app2.guid)
+        expect(parsed_response['pagination']).to eq(expected_pagination)
+      end
+
+      it 'returns a 200 and the filtered apps for existence label selector' do
+        get '/v3/apps?label_selector=santa', nil, admin_header
+
+        parsed_response = MultiJson.load(last_response.body)
+
+        expected_pagination = {
+          'total_results' => 1,
+          'total_pages' => 1,
+          'first' => { 'href' => "#{link_prefix}/v3/apps?label_selector=santa&page=1&per_page=50" },
+          'last' => { 'href' => "#{link_prefix}/v3/apps?label_selector=santa&page=1&per_page=50" },
+          'next' => nil,
+          'previous' => nil
+        }
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(app2.guid)
+        expect(parsed_response['pagination']).to eq(expected_pagination)
+      end
+
+      it 'returns a 200 and the filtered apps for non-existence label selector' do
+        get '/v3/apps?label_selector=!santa', nil, admin_header
+
+        parsed_response = MultiJson.load(last_response.body)
+
+        expected_pagination = {
+          'total_results' => 1,
+          'total_pages' => 1,
+          'first' => { 'href' => "#{link_prefix}/v3/apps?label_selector=%21santa&page=1&per_page=50" },
+          'last' => { 'href' => "#{link_prefix}/v3/apps?label_selector=%21santa&page=1&per_page=50" },
+          'next' => nil,
+          'previous' => nil
+        }
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(app1.guid)
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
     end

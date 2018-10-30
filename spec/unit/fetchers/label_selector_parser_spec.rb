@@ -6,11 +6,15 @@ module VCAP::CloudController
 
     describe '.add_selector_queries' do
       let!(:app1) { AppModel.make }
-      let!(:app2) { AppModel.make }
-      let!(:app3) { AppModel.make }
       let!(:app1_label) { AppLabelModel.make(app_guid: app1.guid, key_name: 'foo', value: 'bar') }
+
+      let!(:app2) { AppModel.make }
       let!(:app2_label) { AppLabelModel.make(app_guid: app2.guid, key_name: 'foo', value: 'funky') }
+
+      let!(:app3) { AppModel.make }
       let!(:app3_label) { AppLabelModel.make(app_guid: app3.guid, key_name: 'foo', value: 'town') }
+      let!(:app3_exclusive_label) { AppLabelModel.make(app_guid: app3.guid, key_name: 'easter', value: 'bunny') }
+
       describe 'in set requirements' do
         context 'with a single value' do
           it 'returns the models that satisfy the requirements' do
@@ -48,22 +52,36 @@ module VCAP::CloudController
       end
 
       describe 'equality requirements' do
-        it 'returns the model that satisfies the requirements' do
+        it 'returns the models that satisfy the "=" requirements' do
           dataset = subject.add_selector_queries(AppLabelModel, AppModel.dataset, 'foo=funky')
 
           expect(dataset.map(&:guid)).to contain_exactly(app2.guid)
         end
 
-        it 'returns the model that satisfies the requirements' do
+        it 'returns the models that satisfy the "==" requirements' do
           dataset = subject.add_selector_queries(AppLabelModel, AppModel.dataset, 'foo==funky')
 
           expect(dataset.map(&:guid)).to contain_exactly(app2.guid)
         end
 
-        it 'returns the model that satisfies the requirements' do
+        it 'returns the models that satisfy the "!=" requirements' do
           dataset = subject.add_selector_queries(AppLabelModel, AppModel.dataset, 'foo!=funky')
 
           expect(dataset.map(&:guid)).to contain_exactly(app1.guid, app3.guid)
+        end
+      end
+
+      describe 'existence requirements' do
+        it 'returns the models that satisfy the existence requirements' do
+          dataset = subject.add_selector_queries(AppLabelModel, AppModel.dataset, 'easter')
+
+          expect(dataset.map(&:guid)).to contain_exactly(app3.guid)
+        end
+
+        it 'returns the models that satisfy the non-existence requirements' do
+          dataset = subject.add_selector_queries(AppLabelModel, AppModel.dataset, '!easter')
+
+          expect(dataset.map(&:guid)).to contain_exactly(app1.guid, app2.guid)
         end
       end
 
@@ -80,10 +98,10 @@ module VCAP::CloudController
           expect(dataset.map(&:guid)).to contain_exactly(app2.guid)
         end
 
-        it 'returns an empty list' do
+        it 'returns an empty list if the combined requirements do not match any labels' do
           dataset = subject.add_selector_queries(AppLabelModel, AppModel.dataset, 'foo==bar,foo=town')
 
-          expect(dataset.map(&:guid)).not_to include(app1.guid, app2.guid, app3.guid)
+          expect(dataset.count).to eq(0)
         end
       end
     end

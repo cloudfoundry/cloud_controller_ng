@@ -154,42 +154,7 @@ module VCAP::CloudController
             expect(message.errors[:base].first).to match /label_selector/
           end
 
-          context 'set operations' do
-            it 'validates correct in operation' do
-              message = AppsListMessage.new label_selector: 'example.com/foo in (bar,baz)'
-
-              expect(message).to be_valid
-            end
-
-            it 'validates correct notin operation' do
-              message = AppsListMessage.new label_selector: 'foo notin (bar,baz)'
-
-              expect(message).to be_valid
-            end
-
-            context 'invalid operators' do
-              it 'validates incorrect "in" operations' do
-                message = AppsListMessage.new label_selector: 'foo inn (bar,baz)'
-
-                expect(message).to be_invalid
-                expect(message.errors[:base].first).to match /label_selector/
-              end
-
-              it 'validates incorrect "notin" operations' do
-                message = AppsListMessage.new label_selector: 'foo notinn (bar,baz)'
-
-                expect(message).to be_invalid
-                expect(message.errors[:base].first).to match /label_selector/
-              end
-
-              it 'validates incorrect set operations' do
-                message = AppsListMessage.new label_selector: 'foo == (bar,baz)'
-
-                expect(message).to be_invalid
-                expect(message.errors[:base].first).to match /label_selector/
-              end
-            end
-
+          context 'invalid selector fields' do
             context 'invalid keys' do
               it 'marks as invalid keys that exceed the max length' do
                 value = 'la' * 100
@@ -257,6 +222,29 @@ module VCAP::CloudController
               end
             end
 
+            context 'invalid operators' do
+              it 'validates incorrect "in" operations' do
+                message = AppsListMessage.new label_selector: 'foo inn (bar,baz)'
+
+                expect(message).to be_invalid
+                expect(message.errors[:base].first).to match /label_selector/
+              end
+
+              it 'validates incorrect "notin" operations' do
+                message = AppsListMessage.new label_selector: 'foo notinn (bar,baz)'
+
+                expect(message).to be_invalid
+                expect(message.errors[:base].first).to match /label_selector/
+              end
+
+              it 'validates incorrect set operations' do
+                message = AppsListMessage.new label_selector: 'foo == (bar,baz)'
+
+                expect(message).to be_invalid
+                expect(message.errors[:base].first).to match /label_selector/
+              end
+            end
+
             context 'invalid values' do
               it 'marks as invalid values that exceed the max length' do
                 value = 'la' * 100
@@ -282,6 +270,20 @@ module VCAP::CloudController
             end
           end
 
+          context 'set operations' do
+            it 'validates correct in operation' do
+              message = AppsListMessage.new label_selector: 'example.com/foo in (bar,baz)'
+
+              expect(message).to be_valid
+            end
+
+            it 'validates correct notin operation' do
+              message = AppsListMessage.new label_selector: 'foo notin (bar,baz)'
+
+              expect(message).to be_valid
+            end
+          end
+
           context 'equality operation' do
             it 'validates correct = operation' do
               message = AppsListMessage.new label_selector: 'example.com/foo=bar'
@@ -297,6 +299,20 @@ module VCAP::CloudController
 
             it 'validates correct != operation' do
               message = AppsListMessage.new label_selector: 'example.com/foo!=bar'
+
+              expect(message).to be_valid
+            end
+          end
+
+          context 'existence operations' do
+            it 'validates correct existence operation' do
+              message = AppsListMessage.new label_selector: 'example.com/foo'
+
+              expect(message).to be_valid
+            end
+
+            it 'validates correct non-existence operation' do
+              message = AppsListMessage.new label_selector: '!example.com/foo'
 
               expect(message).to be_valid
             end
