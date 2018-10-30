@@ -598,6 +598,60 @@ RSpec.describe 'Apps' do
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
     end
+
+    context 'labels and existing filters' do
+      let!(:space1) {VCAP::CloudController::Space.make}
+      let!(:space2) {VCAP::CloudController::Space.make}
+      let!(:app1) { VCAP::CloudController::AppModel.make(name: 'name1', space: space1) }
+      let!(:app2) { VCAP::CloudController::AppModel.make(name: 'name2', space: space2) }
+      let!(:app3) { VCAP::CloudController::AppModel.make(name: 'name3', space: space2) }
+      let!(:app1_label1) { VCAP::CloudController::AppLabelModel.make(app_guid: app1.guid, key_name: 'foo', value: 'funky') }
+      let!(:app2_label1) { VCAP::CloudController::AppLabelModel.make(app_guid: app2.guid, key_name: 'foo', value: 'funky') }
+      let!(:app2_label2) { VCAP::CloudController::AppLabelModel.make(app_guid: app2.guid, key_name: 'fruit', value: 'strawberry') }
+      let!(:app3_label1) { VCAP::CloudController::AppLabelModel.make(app_guid: app3.guid, key_name: 'fruit', value: 'strawberry') }
+
+      let(:admin_header) { headers_for(user, scopes: %w(cloud_controller.admin)) }
+
+      it 'returns a 200 and the correct app when querying with space guid' do
+
+        get "/v3/apps?space_guids=#{space2.guid}&label_selector=foo==funky", nil, admin_header
+
+        parsed_response = MultiJson.load(last_response.body)
+
+        expected_pagination = {
+            'total_results' => 1,
+            'total_pages' => 1,
+            'first' => { 'href' => "#{link_prefix}/v3/apps?label_selector=foo%3D%3Dfunky&page=1&per_page=50&space_guids=#{space2.guid}" },
+            'last' => { 'href' => "#{link_prefix}/v3/apps?label_selector=foo%3D%3Dfunky&page=1&per_page=50&space_guids=#{space2.guid}" },
+            'next' => nil,
+            'previous' => nil
+        }
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(app2.guid)
+        expect(parsed_response['pagination']).to eq(expected_pagination)
+      end
+
+      it 'returns a 200 and the correct app when querying with space guid' do
+
+        get "/v3/apps?space_guids=#{space2.guid}&label_selector=fruit==strawberry&names=name2", nil, admin_header
+
+        parsed_response = MultiJson.load(last_response.body)
+
+        expected_pagination = {
+            'total_results' => 1,
+            'total_pages' => 1,
+            'first' => { 'href' => "#{link_prefix}/v3/apps?label_selector=fruit%3D%3Dstrawberry&names=name2&page=1&per_page=50&space_guids=#{space2.guid}" },
+            'last' => { 'href' => "#{link_prefix}/v3/apps?label_selector=fruit%3D%3Dstrawberry&names=name2&page=1&per_page=50&space_guids=#{space2.guid}" },
+            'next' => nil,
+            'previous' => nil
+        }
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(app2.guid)
+        expect(parsed_response['pagination']).to eq(expected_pagination)
+      end
+    end
   end
 
   describe 'GET /v3/apps/:guid' do
