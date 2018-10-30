@@ -30,7 +30,11 @@ module VCAP::CloudController
         dataset = dataset.where(guid: message.guids)
       end
       if message.requested?(:label_selector)
-        dataset = LabelSelectorParser.add_selector_queries(AppLabelModel, dataset, message.label_selector)
+        dataset = LabelSelectorParser.add_selector_queries(
+          label_klass: AppLabelModel,
+          resource_dataset: dataset,
+          label_selector: message.label_selector
+        )
       end
 
       dataset.eager(:processes)

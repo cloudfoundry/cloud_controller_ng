@@ -1,7 +1,7 @@
 module VCAP::CloudController
   class LabelSelectorParser
     class << self
-      def add_selector_queries(label_klass, resource_dataset, label_selector)
+      def add_selector_queries(label_klass:, resource_dataset:, label_selector:)
         parse_requirements(label_selector).reduce(nil) do |accumulated_dataset, requirement|
           case requirement.operator
           when :in
