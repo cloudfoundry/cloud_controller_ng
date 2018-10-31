@@ -12,8 +12,9 @@ module VCAP::CloudController::Validators
       end
 
       non_label_keys = record.metadata.except(:labels).keys
+      unexpected_keys = non_label_keys.map { |val| "'" << val.to_s << "'" }.join(' ')
       unless non_label_keys.empty?
-        record.errors.add(:metadata, "unexpected keys #{non_label_keys}")
+        record.errors.add(:metadata, "has unexpected field(s): #{unexpected_keys}")
       end
 
       labels = record.labels

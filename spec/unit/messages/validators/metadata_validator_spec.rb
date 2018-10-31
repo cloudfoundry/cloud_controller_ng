@@ -285,7 +285,7 @@ module VCAP::CloudController::Validators
 
       it 'is invalid' do
         expect(subject).not_to be_valid
-        expect(subject.errors_on(:metadata)).to contain_exactly('unexpected keys [:other, :extra]')
+        expect(subject.errors_on(:metadata)).to contain_exactly("has unexpected field(s): 'other' 'extra'")
       end
     end
 
