@@ -13,17 +13,29 @@ RSpec.describe Logcache::TrafficControllerDecorator do
   let(:envelopes) { Loggregator::V2::EnvelopeBatch.new }
 
   def generate_batch(size, offset: 0, last_timestamp: TimeUtils.to_nanoseconds(Time.now), cpu_percentage: 100)
-    batch = (1..size).to_a.map do |i|
-      Loggregator::V2::Envelope.new(
-        timestamp: last_timestamp,
-        source_id: process_guid,
-        gauge: Loggregator::V2::Gauge.new(metrics: {
-          'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: cpu_percentage),
-          'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 100 * i + 2),
-          'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 100 * i + 3),
-        }),
-        instance_id: (offset + i).to_s
-      )
+    batch = (1..size).to_a.flat_map do |i|
+      [
+        Loggregator::V2::Envelope.new(
+          timestamp: last_timestamp,
+          source_id: process_guid,
+          gauge: Loggregator::V2::Gauge.new(metrics: {
+                'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: cpu_percentage),
+                'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 100 * i + 2),
+                'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 100 * i + 3),
+            }),
+          instance_id: (offset + i).to_s
+        ),
+        Loggregator::V2::Envelope.new(
+          timestamp: last_timestamp,
+          source_id: process_guid,
+          gauge: Loggregator::V2::Gauge.new(metrics: {
+              'absolute_usage' => Loggregator::V2::GaugeValue.new(unit: 'nanoseconds', value: 100 * i + 1),
+              'absolute_entitlement' => Loggregator::V2::GaugeValue.new(unit: 'nanoseconds', value: 100 * i + 2),
+              'container_age' => Loggregator::V2::GaugeValue.new(unit: 'nanoseconds', value: 100 * i + 3),
+          }),
+          instance_id: (offset + i).to_s
+        )
+      ]
     end
     Loggregator::V2::EnvelopeBatch.new(batch: batch)
   end
@@ -46,6 +58,91 @@ RSpec.describe Logcache::TrafficControllerDecorator do
 
       it 'returns an empty array' do
         expect(subject).to eq([])
+      end
+    end
+
+    context 'when given a mixture of expected metrics envelopes and others' do
+      let(:envelopes) {
+        Loggregator::V2::EnvelopeBatch.new(
+          batch: [
+            Loggregator::V2::Envelope.new(
+              source_id: process_guid,
+              gauge: Loggregator::V2::Gauge.new(metrics: {
+                  'absolute_usage' => Loggregator::V2::GaugeValue.new(unit: 'nanoseconds', value: 300),
+                  'absolute_entitlement' => Loggregator::V2::GaugeValue.new(unit: 'nanoseconds', value: 400),
+                  'container_age' => Loggregator::V2::GaugeValue.new(unit: 'nanoseconds', value: 500),
+              }),
+              instance_id: '1'
+              ),
+            Loggregator::V2::Envelope.new(
+              source_id: process_guid,
+              gauge: Loggregator::V2::Gauge.new(metrics: {
+                    'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 10),
+                    'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 11),
+                    'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 12),
+                }),
+              instance_id: '1'
+            ),
+            Loggregator::V2::Envelope.new(
+              source_id: process_guid,
+              gauge: Loggregator::V2::Gauge.new(metrics: {
+                  'absolute_usage' => Loggregator::V2::GaugeValue.new(unit: 'nanoseconds', value: 600),
+                  'absolute_entitlement' => Loggregator::V2::GaugeValue.new(unit: 'nanoseconds', value: 700),
+                  'container_age' => Loggregator::V2::GaugeValue.new(unit: 'nanoseconds', value: 800),
+              }),
+              instance_id: '2'
+            ),
+            Loggregator::V2::Envelope.new(
+              source_id: process_guid,
+              gauge: Loggregator::V2::Gauge.new(metrics: {
+                    'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 20),
+                    'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 21),
+                    'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 22),
+                }),
+              instance_id: '2'
+            ),
+            Loggregator::V2::Envelope.new(
+              source_id: process_guid,
+              gauge: Loggregator::V2::Gauge.new(metrics: {
+                  'absolute_usage' => Loggregator::V2::GaugeValue.new(unit: 'nanoseconds', value: 900),
+                  'absolute_entitlement' => Loggregator::V2::GaugeValue.new(unit: 'nanoseconds', value: 1000),
+                  'container_age' => Loggregator::V2::GaugeValue.new(unit: 'nanoseconds', value: 1100),
+              }),
+              instance_id: '3'
+            ),
+            Loggregator::V2::Envelope.new(
+              source_id: process_guid,
+              gauge: Loggregator::V2::Gauge.new(metrics: {
+                    'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 30),
+                    'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 31),
+                    'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 32),
+                }),
+              instance_id: '3'
+            )
+          ]
+        )
+      }
+      let(:num_instances) { 3 }
+
+      it 'returns an array of envelopes, formatted as Traffic Controller would' do
+        expect(subject.first.containerMetric.applicationId).to eq(process_guid)
+        expect(subject.first.containerMetric.instanceIndex).to eq(1)
+        expect(subject.first.containerMetric.cpuPercentage).to eq(10)
+        expect(subject.first.containerMetric.memoryBytes).to eq(11)
+        expect(subject.first.containerMetric.diskBytes).to eq(12)
+
+        expect(subject.second.containerMetric.applicationId).to eq(process_guid)
+        expect(subject.second.containerMetric.instanceIndex).to eq(2)
+        expect(subject.second.containerMetric.cpuPercentage).to eq(20)
+        expect(subject.second.containerMetric.memoryBytes).to eq(21)
+        expect(subject.second.containerMetric.diskBytes).to eq(22)
+
+        cm = subject[2].containerMetric
+        expect(cm.applicationId).to eq(process_guid)
+        expect(cm.instanceIndex).to eq(3)
+        expect(cm.cpuPercentage).to eq(30)
+        expect(cm.memoryBytes).to eq(31)
+        expect(cm.diskBytes).to eq(32)
       end
     end
 

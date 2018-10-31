@@ -34,9 +34,10 @@ module Logcache
         end
       end
 
-      final_envelopes.uniq(&:instance_id).map do |envelope|
-        convert_to_traffic_controller_envelope(source_guid, envelope)
-      end
+      final_envelopes.
+        select { |e| has_container_metrics_fields?(e) }.
+        uniq(&:instance_id).
+        map { |e| convert_to_traffic_controller_envelope(source_guid, e) }
     end
 
     private
@@ -54,17 +55,27 @@ module Logcache
       envelopes.size < Logcache::Client::MAX_LIMIT
     end
 
+    def has_container_metrics_fields?(envelope)
+      # rubocop seems to think that there is a 'key?' method
+      # on envelope.gauge.metrics - but it does not
+      # rubocop:disable Style/PreferredHashMethods
+      envelope.gauge.metrics.has_key?('cpu') &&
+      envelope.gauge.metrics.has_key?('memory') &&
+      envelope.gauge.metrics.has_key?('disk')
+      # rubocop:enable Style/PreferredHashMethods
+    end
+
     def convert_to_traffic_controller_envelope(source_guid, logcache_envelope)
       new_envelope = {
-        applicationId: source_guid,
-        instanceIndex: logcache_envelope.instance_id,
+          applicationId: source_guid,
+          instanceIndex: logcache_envelope.instance_id,
       }
 
-      if (metrics = logcache_envelope.gauge&.metrics)
+      if (metrics = logcache_envelope.gauge.metrics)
         gauge_values = {
-          cpuPercentage: metrics['cpu']&.value,
-          memoryBytes: metrics['memory']&.value,
-          diskBytes: metrics['disk']&.value
+            cpuPercentage: metrics['cpu'].value,
+            memoryBytes: metrics['memory'].value,
+            diskBytes: metrics['disk'].value
         }
         new_envelope.merge!(gauge_values)
       end
