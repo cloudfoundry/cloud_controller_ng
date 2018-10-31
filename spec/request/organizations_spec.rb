@@ -39,6 +39,9 @@ RSpec.describe 'Organizations' do
           'name'       => 'org1',
           'links'      => {
             'self' => { 'href' => "#{link_prefix}/v3/organizations/#{created_org.guid}" }
+          },
+          'metadata' => {
+              'labels' => {}
           }
         }
       )
@@ -77,6 +80,9 @@ RSpec.describe 'Organizations' do
                 'self' => {
                   'href' => "#{link_prefix}/v3/organizations/#{organization1.guid}"
                 }
+              },
+              'metadata' => {
+                  'labels' => {}
               }
             },
             {
@@ -89,6 +95,9 @@ RSpec.describe 'Organizations' do
                   'href' => "#{link_prefix}/v3/organizations/#{organization2.guid}"
                 }
               },
+              'metadata' => {
+                  'labels' => {}
+              }
             }
           ]
         }
@@ -134,6 +143,9 @@ RSpec.describe 'Organizations' do
                   'href' => "#{link_prefix}/v3/organizations/#{organization2.guid}"
                 }
               },
+              'metadata' => {
+                  'labels' => {}
+              }
             },
             {
               'guid'       => organization3.guid,
@@ -145,6 +157,9 @@ RSpec.describe 'Organizations' do
                   'href' => "#{link_prefix}/v3/organizations/#{organization3.guid}"
                 }
               },
+              'metadata' => {
+                  'labels' => {}
+              }
             }
           ]
         }

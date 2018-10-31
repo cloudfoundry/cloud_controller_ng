@@ -12,6 +12,9 @@ module VCAP::CloudController
       VCAP::CloudController::Roles::ORG_ROLE_NAMES.each do |role|
         perm_client.create_org_role(role: role, org_id: org.guid)
       end
+
+      LabelsUpdate.update(org, message.labels, OrgLabelModel) if message.requested?(:metadata)
+
       org
     rescue Sequel::ValidationFailed => e
       validation_error!(e)

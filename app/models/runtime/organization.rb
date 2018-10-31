@@ -97,6 +97,8 @@ module VCAP::CloudController
     one_to_many :space_quota_definitions,
       before_add: proc { |org, quota| org.cancel_action if quota.organization.id != org.id }
 
+    one_to_many :labels, class: 'VCAP::CloudController::OrgLabelModel', key: :org_guid, primary_key: :guid
+
     add_association_dependencies(
       owned_private_domains:     :destroy,
       private_domains:           :nullify,

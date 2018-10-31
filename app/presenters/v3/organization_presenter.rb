@@ -3,13 +3,23 @@ require 'presenters/v3/base_presenter'
 module VCAP::CloudController::Presenters::V3
   class OrganizationPresenter < BasePresenter
     def to_hash
-      {
-        guid: organization.guid,
-        created_at: organization.created_at,
-        updated_at: organization.updated_at,
-        name: organization.name,
-        links: build_links,
+      hash = {
+          guid: organization.guid,
+          created_at: organization.created_at,
+          updated_at: organization.updated_at,
+          name: organization.name,
+          links: build_links,
+          metadata: {
+              labels: {}
+          }
       }
+
+      organization.labels.each do |org_label|
+        key = [org_label[:key_prefix], org_label[:key_name]].compact.join(VCAP::CloudController::LabelHelpers::KEY_SEPARATOR)
+        hash[:metadata][:labels][key] = org_label[:value]
+      end
+
+      hash
     end
 
     private

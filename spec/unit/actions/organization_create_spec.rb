@@ -7,10 +7,19 @@ module VCAP::CloudController
       let(:perm_client) { instance_spy(VCAP::CloudController::Perm::Client) }
 
       it 'creates a organization' do
-        message = VCAP::CloudController::OrganizationCreateMessage.new(name: 'my-organization')
+        message = VCAP::CloudController::OrganizationCreateMessage.new({
+          name: 'my-organization',
+          metadata: {
+              labels: {
+                  release: 'stable',
+                  'seriouseats.com/potato': 'mashed'
+              }
+          }
+        })
         organization = OrganizationCreate.new(perm_client: perm_client).create(message)
 
         expect(organization.name).to eq('my-organization')
+        expect(organization.labels.map(&:value)).to contain_exactly('stable', 'mashed')
       end
 
       context 'when a model validation fails' do
