@@ -1,9 +1,9 @@
 require 'spec_helper'
-require 'actions/app_labels_update'
+require 'actions/labels_update'
 
 module VCAP::CloudController
-  RSpec.describe AppLabelsUpdate do
-    subject(:result) { AppLabelsUpdate.update(app, labels) }
+  RSpec.describe LabelsUpdate do
+    subject(:result) { LabelsUpdate.update(app, labels, AppLabelModel) }
 
     let(:app) { AppModel.make }
     let(:labels) do

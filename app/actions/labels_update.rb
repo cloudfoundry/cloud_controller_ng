@@ -1,19 +1,19 @@
 require 'models/helpers/label_helpers'
 
 module VCAP::CloudController
-  class AppLabelsUpdate
+  module LabelsUpdate
     class << self
-      def update(app, labels)
+      def update(resource, labels, label_klass)
         labels ||= {}
         labels.each do |label_key, label_value|
           label_key = label_key.to_s
           prefix, name = VCAP::CloudController::LabelHelpers.extract_prefix(label_key)
           if label_value.nil?
-            AppLabelModel.find(app_guid: app.guid, key_prefix: prefix, key_name: name).try(:destroy)
+            label_klass.find(label_klass::RESOURCE_GUID_COLUMN => resource.guid, key_prefix: prefix, key_name: name).try(:destroy)
             next
           end
-          app_label = AppLabelModel.find_or_create(app_guid: app.guid, key_prefix: prefix, key_name: name)
-          app_label.update(value: label_value.to_s)
+          label = label_klass.find_or_create(label_klass::RESOURCE_GUID_COLUMN => resource.guid, key_prefix: prefix, key_name: name)
+          label.update(value: label_value.to_s)
         end
       end
     end

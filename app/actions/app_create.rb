@@ -1,5 +1,6 @@
 require 'process_create'
 require 'models/helpers/process_types'
+require 'actions/labels_update'
 
 module VCAP::CloudController
   class AppCreate
@@ -21,7 +22,7 @@ module VCAP::CloudController
 
         lifecycle.create_lifecycle_data_model(app)
 
-        AppLabelsUpdate.update(app, message.labels) if message.requested?(:metadata)
+        LabelsUpdate.update(app, message.labels, AppLabelModel) if message.requested?(:metadata)
 
         raise CloudController::Errors::ApiError.new_from_details('CustomBuildpacksDisabled') if using_disabled_custom_buildpack?(app)
 
