@@ -13,14 +13,14 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
       end
 
       role_to_expected_http_response = {
-        'admin'               => 200,
-        'space_developer'     => 200,
-        'admin_read_only'     => 200,
-        'global_auditor'      => 200,
-        'space_manager'       => 200,
-        'space_auditor'       => 200,
-        'org_manager'         => 200,
-        'org_auditor'         => 200,
+        'admin' => 200,
+        'space_developer' => 200,
+        'admin_read_only' => 200,
+        'global_auditor' => 200,
+        'space_manager' => 200,
+        'space_auditor' => 200,
+        'org_manager' => 200,
+        'org_auditor' => 200,
         'org_billing_manager' => 200,
       }.freeze
 
@@ -66,9 +66,9 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
 
     describe 'permissions by role' do
       role_to_expected_http_response = {
-        'admin'           => 201,
+        'admin' => 201,
         'admin_read_only' => 403,
-        'global_auditor'  => 403,
+        'global_auditor' => 403,
       }.freeze
 
       role_to_expected_http_response.each do |role, expected_return_value|
@@ -301,7 +301,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
           get :index, params: params, as: :json
 
           parsed_response = parsed_body
-          response_guids  = parsed_response['resources'].map { |r| r['guid'] }
+          response_guids = parsed_response['resources'].map { |r| r['guid'] }
           expect(parsed_response['pagination']['total_results']).to eq(2)
           expect(response_guids.length).to eq(per_page)
         end
@@ -583,6 +583,106 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
           expect(response.status).to eq(403)
           expect(response.body).to include 'NotAuthorized'
         end
+      end
+    end
+  end
+
+  describe '#patch organization name' do
+    let(:org) { VCAP::CloudController::Organization.make(name: 'Water') }
+    let(:user) { VCAP::CloudController::User.make }
+    let(:request_body) do
+      {
+        name: 'Fire'
+      }
+    end
+
+    context 'when the user is an admin' do
+      before do
+        set_current_user(user, { admin: true })
+        allow_user_read_access_for(user, orgs: [org])
+      end
+
+      it 'updates the organization' do
+        patch :update, params: { guid: org.guid }.merge(request_body), as: :json
+
+        org.reload
+        expect(response.status).to eq(200)
+        expect(org.name).to eq('Fire')
+        expect(parsed_body['name']).to eq('Fire')
+        expect(parsed_body['guid']).to eq(org.guid)
+      end
+
+      context 'when there is a message validation failure' do
+        let(:request_body) do
+          {
+            name: ''
+          }
+        end
+
+        it 'displays an informative error' do
+          patch :update, params: { guid: org.guid }.merge(request_body), as: :json
+          expect(response.status).to eq(422)
+          expect(response).to have_error_message("Name can't be blank")
+        end
+      end
+    end
+
+    context 'when the user is read-only admin' do
+      before do
+        set_current_user_as_admin_read_only
+      end
+
+      it 'throws Forbidden error' do
+        patch :update, params: { guid: org.guid }.merge(request_body), as: :json
+
+        expect(response.status).to eq(403)
+        expect(response.body).to include 'NotAuthorized'
+      end
+    end
+
+    context 'when the user is an org manager' do
+      before do
+        set_current_user_as_role(role: :org_manager, org: org)
+      end
+
+      it 'updates the organization' do
+        patch :update, params: { guid: org.guid }.merge(request_body), as: :json
+
+        org.reload
+        expect(response.status).to eq(200)
+        expect(org.name).to eq('Fire')
+        expect(parsed_body['name']).to eq('Fire')
+        expect(parsed_body['guid']).to eq(org.guid)
+      end
+    end
+
+    context 'when the user does not have permissions to read from organization' do
+      before do
+        set_current_user(user, { admin: true })
+        allow_user_read_access_for(user, orgs: [])
+      end
+
+      it 'throws ResourceNotFound error' do
+        patch :update, params: { guid: org.guid }.merge(request_body), as: :json
+
+        expect(response.status).to eq(404)
+        expect(response.body).to include 'ResourceNotFound'
+        expect(response.body).to include 'Organization not found'
+      end
+    end
+
+    context 'when the org does not exist' do
+      before do
+        set_current_user(user, { admin: true })
+        allow_user_read_access_for(user, orgs: [org])
+      end
+
+      it 'throws ResourceNotFound error' do
+        patch :update, params: { guid: 'not-a-real-guid' }.merge(request_body), as: :json
+
+        expect(response.status).to eq(404)
+        expect(response.body).to include 'ResourceNotFound'
+        expect(response.body).to include 'Organization not found'
       end
     end
   end

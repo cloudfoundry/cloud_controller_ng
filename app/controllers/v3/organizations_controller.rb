@@ -1,4 +1,5 @@
 require 'actions/organization_create'
+require 'actions/organization_update'
 require 'actions/set_default_isolation_segment'
 require 'controllers/v3/mixins/sub_resource'
 require 'fetchers/org_list_fetcher'
@@ -48,6 +49,19 @@ class OrganizationsV3Controller < ApplicationController
     render json: Presenters::V3::OrganizationPresenter.new(org), status: :created
   rescue OrganizationCreate::Error => e
     unprocessable!(e.message)
+  end
+
+  def update
+    org = fetch_org(hashed_params[:guid])
+    org_not_found! unless org && permission_queryer.can_read_from_org?(org.guid)
+    unauthorized! unless roles.admin? || org.managers.include?(current_user)
+
+    message = VCAP::CloudController::OrganizationCreateMessage.new(hashed_params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    org = OrganizationUpdate.new.update(org, message)
+
+    render json: Presenters::V3::OrganizationPresenter.new(org), status: :ok
   end
 
   def show_default_isolation_segment
