@@ -8,12 +8,15 @@ module VCAP::CloudController
     end
 
     def create(message)
-      org = VCAP::CloudController::Organization.create(name: message.name)
+      org = nil
+      Organization.db.transaction do
+        org = VCAP::CloudController::Organization.create(name: message.name)
+        LabelsUpdate.update(org, message.labels, OrgLabelModel) if message.requested?(:metadata)
+      end
+
       VCAP::CloudController::Roles::ORG_ROLE_NAMES.each do |role|
         perm_client.create_org_role(role: role, org_id: org.guid)
       end
-
-      LabelsUpdate.update(org, message.labels, OrgLabelModel) if message.requested?(:metadata)
 
       org
     rescue Sequel::ValidationFailed => e

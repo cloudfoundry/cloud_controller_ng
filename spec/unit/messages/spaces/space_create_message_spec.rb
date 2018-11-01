@@ -147,5 +147,38 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe 'metadata' do
+      let(:relationships) { { organization: { data: { guid: 'im-a-org-guid' } } } }
+
+      it 'can parse labels' do
+        params =
+          {
+              "name": 'kyle',
+              "relationships": relationships,
+              "metadata": {
+                  "labels": {
+                      "ham": 'caffeinated'
+                  }
+              }
+          }
+        message = SpaceCreateMessage.new(params)
+        expect(message).to be_valid
+        expect(message.labels).to include("ham": 'caffeinated')
+      end
+
+      it 'validates labels' do
+        params = {
+            "name": 'monster-energy',
+            "relationships": relationships,
+            "metadata": {
+                "labels": 'ham',
+            }
+        }
+        message = SpaceCreateMessage.new(params)
+        expect(message).not_to be_valid
+        expect(message.errors_on(:metadata)).to include("'labels' is not a hash")
+      end
+    end
   end
 end

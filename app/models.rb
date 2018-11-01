@@ -62,6 +62,7 @@ require 'models/runtime/deployment_process_model'
 require 'models/runtime/encryption_key_sentinel_model'
 require 'models/runtime/app_label_model'
 require 'models/runtime/org_label_model'
+require 'models/runtime/space_label_model'
 
 require 'models/services/service'
 require 'models/services/service_binding'

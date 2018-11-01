@@ -8,10 +8,16 @@ module VCAP::CloudController
     end
 
     def create(org, message)
-      space = VCAP::CloudController::Space.create(name: message.name, organization: org)
+      space = nil
+      Space.db.transaction do
+        space = VCAP::CloudController::Space.create(name: message.name, organization: org)
+        LabelsUpdate.update(space, message.labels, SpaceLabelModel) if message.requested?(:metadata)
+      end
+
       VCAP::CloudController::Roles::SPACE_ROLE_NAMES.each do |role|
         perm_client.create_space_role(role: role, space_id: space.guid)
       end
+
       space
     rescue Sequel::ValidationFailed => e
       validation_error!(e)

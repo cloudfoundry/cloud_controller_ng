@@ -6,13 +6,24 @@ module VCAP::CloudController
     describe 'create' do
       let(:org) { VCAP::CloudController::Organization.make }
       let(:perm_client) { instance_spy(VCAP::CloudController::Perm::Client) }
+      let(:relationships) { { organization: { data: { guid: org.guid } } } }
 
       it 'creates a space' do
-        message = VCAP::CloudController::SpaceCreateMessage.new(name: 'my-space')
+        message = VCAP::CloudController::SpaceCreateMessage.new(
+          name: 'my-space',
+          relationships: relationships,
+          metadata: {
+              labels: {
+                  release: 'stable',
+                  'seriouseats.com/potato': 'mashed'
+              }
+          }
+        )
         space = SpaceCreate.new(perm_client: perm_client).create(org, message)
 
         expect(space.organization).to eq(org)
         expect(space.name).to eq('my-space')
+        expect(space.labels.map(&:value)).to contain_exactly('stable', 'mashed')
       end
 
       context 'when a model validation fails' do

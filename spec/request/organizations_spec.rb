@@ -18,7 +18,12 @@ RSpec.describe 'Organizations' do
   describe 'POST /v3/organizations' do
     it 'creates a new organization with the given name' do
       request_body = {
-        name: 'org1'
+        name: 'org1',
+        metadata: {
+            labels: {
+                freaky: 'friday'
+            }
+        }
       }.to_json
 
       expect {
@@ -41,7 +46,7 @@ RSpec.describe 'Organizations' do
             'self' => { 'href' => "#{link_prefix}/v3/organizations/#{created_org.guid}" }
           },
           'metadata' => {
-              'labels' => {}
+              'labels' => { 'freaky' => 'friday' }
           }
         }
       )

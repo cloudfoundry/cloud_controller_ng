@@ -27,6 +27,8 @@ module VCAP::CloudController
 
     one_to_many :processes, class: 'VCAP::CloudController::ProcessModel', dataset: -> { ProcessModel.filter(app: app_models) }
 
+    one_to_many :labels, class: 'VCAP::CloudController::SpaceLabelModel', key: :space_guid, primary_key: :guid
+
     many_through_many :apps, [
       [:spaces, :id, :guid],
       [:apps, :space_guid, :guid]

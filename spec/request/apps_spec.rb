@@ -307,6 +307,9 @@ RSpec.describe 'Apps' do
                                              'guid' => space.organization.guid }
                                      }
                                  },
+                                 'metadata' => {
+                                     'labels' => {}
+                                 },
                                  'links' => {
                                      'self' => {
                                          'href' => "#{link_prefix}/v3/spaces/#{space.guid}",
@@ -739,6 +742,9 @@ RSpec.describe 'Apps' do
                                          'data' => {
                                              'guid' => space.organization.guid }
                                      }
+                                 },
+                                 'metadata' => {
+                                     'labels' => {}
                                  },
                                  'links' => {
                                      'self' => {

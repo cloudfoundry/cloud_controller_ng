@@ -57,6 +57,9 @@ module VCAP::CloudController
   OrgLabelModel.blueprint do
   end
 
+  SpaceLabelModel.blueprint do
+  end
+
   BuildModel.blueprint do
     guid     { Sham.guid }
     app      { AppModel.make }

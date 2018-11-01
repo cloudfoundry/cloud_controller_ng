@@ -25,6 +25,11 @@ RSpec.describe 'Spaces' do
           organization: {
             data: { guid: organization.guid }
           }
+        },
+        metadata: {
+            labels: {
+                hocus: 'pocus'
+            }
         }
       }.to_json
 
@@ -52,6 +57,9 @@ RSpec.describe 'Spaces' do
           'links' => {
             'self'         => { 'href' => "#{link_prefix}/v3/spaces/#{created_space.guid}" },
             'organization' => { 'href' => "#{link_prefix}/v3/organizations/#{created_space.organization_guid}" },
+          },
+          'metadata' => {
+              'labels' => { 'hocus' => 'pocus' }
           }
         }
       )
@@ -74,6 +82,9 @@ RSpec.describe 'Spaces' do
               'organization' => {
                 'data' => { 'guid' => space1.organization_guid }
               }
+            },
+            'metadata' => {
+                'labels' => {}
             },
             'links' => {
               'self' => {
@@ -121,6 +132,9 @@ RSpec.describe 'Spaces' do
                   'data' => { 'guid' => space1.organization_guid }
                 }
               },
+              'metadata' => {
+                  'labels' => {}
+              },
               'links' => {
                 'self' => {
                   'href' => "#{link_prefix}/v3/spaces/#{space1.guid}"
@@ -139,6 +153,9 @@ RSpec.describe 'Spaces' do
                 'organization' => {
                   'data' => { 'guid' => space2.organization_guid }
                 }
+              },
+              'metadata' => {
+                  'labels' => {}
               },
               'links' => {
                 'self' => {
