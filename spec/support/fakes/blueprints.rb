@@ -54,7 +54,7 @@ module VCAP::CloudController
   AppLabelModel.blueprint do
   end
 
-  OrgLabelModel.blueprint do
+  OrganizationLabelModel.blueprint do
   end
 
   SpaceLabelModel.blueprint do

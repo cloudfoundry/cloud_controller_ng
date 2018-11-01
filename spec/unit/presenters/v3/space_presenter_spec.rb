@@ -8,7 +8,7 @@ module VCAP::CloudController::Presenters::V3
       VCAP::CloudController::SpaceLabelModel.make(
         key_name: 'release',
         value: 'stable',
-        space_guid: space.guid
+        resource_guid: space.guid
       )
     end
 
@@ -17,7 +17,7 @@ module VCAP::CloudController::Presenters::V3
         key_prefix: 'maine.gov',
         key_name: 'potato',
         value: 'mashed',
-        space_guid: space.guid
+        resource_guid: space.guid
       )
     end
 

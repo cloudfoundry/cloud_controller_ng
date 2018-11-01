@@ -6,7 +6,7 @@ module VCAP::CloudController
 
     it 'can be created' do
       space = Space.make(name: 'dora_space')
-      SpaceLabelModel.create(space_guid: space.guid, key_name: 'release', value: 'stable')
+      SpaceLabelModel.create(resource_guid: space.guid, key_name: 'release', value: 'stable')
       expect(SpaceLabelModel.find(key_name: 'release').value).to eq 'stable'
     end
   end

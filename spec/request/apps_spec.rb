@@ -451,11 +451,11 @@ RSpec.describe 'Apps' do
 
     context 'labels' do
       let!(:app1) { VCAP::CloudController::AppModel.make(name: 'name1') }
-      let!(:app1_label) { VCAP::CloudController::AppLabelModel.make(app_guid: app1.guid, key_name: 'foo', value: 'bar') }
+      let!(:app1_label) { VCAP::CloudController::AppLabelModel.make(resource_guid: app1.guid, key_name: 'foo', value: 'bar') }
 
       let!(:app2) { VCAP::CloudController::AppModel.make(name: 'name2') }
-      let!(:app2_label) { VCAP::CloudController::AppLabelModel.make(app_guid: app2.guid, key_name: 'foo', value: 'funky') }
-      let!(:app2__exclusive_label) { VCAP::CloudController::AppLabelModel.make(app_guid: app2.guid, key_name: 'santa', value: 'claus') }
+      let!(:app2_label) { VCAP::CloudController::AppLabelModel.make(resource_guid: app2.guid, key_name: 'foo', value: 'funky') }
+      let!(:app2__exclusive_label) { VCAP::CloudController::AppLabelModel.make(resource_guid: app2.guid, key_name: 'santa', value: 'claus') }
 
       let(:admin_header) { headers_for(user, scopes: %w(cloud_controller.admin)) }
 
@@ -627,10 +627,10 @@ RSpec.describe 'Apps' do
       let!(:app1) { VCAP::CloudController::AppModel.make(name: 'name1', space: space1) }
       let!(:app2) { VCAP::CloudController::AppModel.make(name: 'name2', space: space2) }
       let!(:app3) { VCAP::CloudController::AppModel.make(name: 'name3', space: space2) }
-      let!(:app1_label1) { VCAP::CloudController::AppLabelModel.make(app_guid: app1.guid, key_name: 'foo', value: 'funky') }
-      let!(:app2_label1) { VCAP::CloudController::AppLabelModel.make(app_guid: app2.guid, key_name: 'foo', value: 'funky') }
-      let!(:app2_label2) { VCAP::CloudController::AppLabelModel.make(app_guid: app2.guid, key_name: 'fruit', value: 'strawberry') }
-      let!(:app3_label1) { VCAP::CloudController::AppLabelModel.make(app_guid: app3.guid, key_name: 'fruit', value: 'strawberry') }
+      let!(:app1_label1) { VCAP::CloudController::AppLabelModel.make(resource_guid: app1.guid, key_name: 'foo', value: 'funky') }
+      let!(:app2_label1) { VCAP::CloudController::AppLabelModel.make(resource_guid: app2.guid, key_name: 'foo', value: 'funky') }
+      let!(:app2_label2) { VCAP::CloudController::AppLabelModel.make(resource_guid: app2.guid, key_name: 'fruit', value: 'strawberry') }
+      let!(:app3_label1) { VCAP::CloudController::AppLabelModel.make(resource_guid: app3.guid, key_name: 'fruit', value: 'strawberry') }
 
       let(:admin_header) { headers_for(user, scopes: %w(cloud_controller.admin)) }
 
@@ -1013,7 +1013,7 @@ RSpec.describe 'Apps' do
       )
 
       VCAP::CloudController::AppLabelModel.make(
-        app_guid: app_model.guid,
+        resource_guid: app_model.guid,
         key_name: 'delete-me',
         value: 'yes'
       )

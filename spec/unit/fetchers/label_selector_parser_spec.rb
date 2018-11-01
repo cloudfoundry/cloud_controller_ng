@@ -6,14 +6,14 @@ module VCAP::CloudController
 
     describe '.add_selector_queries' do
       let!(:app1) { AppModel.make }
-      let!(:app1_label) { AppLabelModel.make(app_guid: app1.guid, key_name: 'foo', value: 'bar') }
+      let!(:app1_label) { AppLabelModel.make(resource_guid: app1.guid, key_name: 'foo', value: 'bar') }
 
       let!(:app2) { AppModel.make }
-      let!(:app2_label) { AppLabelModel.make(app_guid: app2.guid, key_name: 'foo', value: 'funky') }
+      let!(:app2_label) { AppLabelModel.make(resource_guid: app2.guid, key_name: 'foo', value: 'funky') }
 
       let!(:app3) { AppModel.make }
-      let!(:app3_label) { AppLabelModel.make(app_guid: app3.guid, key_name: 'foo', value: 'town') }
-      let!(:app3_exclusive_label) { AppLabelModel.make(app_guid: app3.guid, key_name: 'easter', value: 'bunny') }
+      let!(:app3_label) { AppLabelModel.make(resource_guid: app3.guid, key_name: 'foo', value: 'town') }
+      let!(:app3_exclusive_label) { AppLabelModel.make(resource_guid: app3.guid, key_name: 'easter', value: 'bunny') }
 
       describe 'in set requirements' do
         context 'with a single value' do

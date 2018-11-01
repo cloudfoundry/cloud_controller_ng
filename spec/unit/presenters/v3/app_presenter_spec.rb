@@ -7,7 +7,7 @@ module VCAP::CloudController::Presenters::V3
       VCAP::CloudController::AppLabelModel.make(
         key_name: 'release',
         value: 'stable',
-        app_guid: app.guid
+        resource_guid: app.guid
       )
     end
 
@@ -16,7 +16,7 @@ module VCAP::CloudController::Presenters::V3
         key_prefix: 'maine.gov',
         key_name: 'potato',
         value: 'mashed',
-        app_guid: app.guid
+        resource_guid: app.guid
       )
     end
 

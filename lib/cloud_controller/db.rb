@@ -108,6 +108,17 @@ module VCAP
       timestamps(migration, table_key)
     end
 
+    def self.labels_common(migration, table_key, foreign_resource_table_key)
+      migration.String :resource_guid, size: 255
+      migration.String :key_prefix, size: 253
+      migration.String :key_name, size: 63
+      migration.String :value, size: 63
+
+      migration.foreign_key [:resource_guid], foreign_resource_table_key, key: :guid, name: "fk_#{table_key}_resource_guid".to_sym
+      migration.index [:resource_guid], name: "fk_#{table_key}_resource_guid_index".to_sym
+      migration.index [:key_prefix, :key_name, :value], name: "#{table_key}_compound_index".to_sym
+    end
+
     def self.create_permission_table(migration, name, name_short, permission)
       name = name.to_s
       join_table = "#{name.pluralize}_#{permission}".to_sym

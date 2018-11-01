@@ -179,8 +179,8 @@ module VCAP::CloudController
 
         it 'updates the labels' do
           app_update.update(app_model, message, lifecycle)
-          expect(AppLabelModel.find(app_guid: app_model.guid, key_name: 'release').value).to eq 'stable'
-          expect(AppLabelModel.find(app_guid: app_model.guid, key_prefix: 'joyofcooking.com', key_name: 'potato').value).to eq 'mashed'
+          expect(AppLabelModel.find(resource_guid: app_model.guid, key_name: 'release').value).to eq 'stable'
+          expect(AppLabelModel.find(resource_guid: app_model.guid, key_prefix: 'joyofcooking.com', key_name: 'potato').value).to eq 'mashed'
         end
       end
 

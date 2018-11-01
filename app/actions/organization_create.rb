@@ -11,7 +11,7 @@ module VCAP::CloudController
       org = nil
       Organization.db.transaction do
         org = VCAP::CloudController::Organization.create(name: message.name)
-        LabelsUpdate.update(org, message.labels, OrgLabelModel) if message.requested?(:metadata)
+        LabelsUpdate.update(org, message.labels, OrganizationLabelModel) if message.requested?(:metadata)
       end
 
       VCAP::CloudController::Roles::ORG_ROLE_NAMES.each do |role|

@@ -81,10 +81,10 @@ module VCAP::CloudController
       context 'when a label_selector is provided' do
         let(:filters) { { label_selector: 'dog in (chihuahua,scooby-doo)' } }
         let!(:app_label) do
-          VCAP::CloudController::AppLabelModel.make(app_guid: app.guid, key_name: 'dog', value: 'scooby-doo')
+          VCAP::CloudController::AppLabelModel.make(resource_guid: app.guid, key_name: 'dog', value: 'scooby-doo')
         end
         let!(:sad_app_label) do
-          VCAP::CloudController::AppLabelModel.make(app_guid: sad_app.guid, key_name: 'dog', value: 'poodle')
+          VCAP::CloudController::AppLabelModel.make(resource_guid: sad_app.guid, key_name: 'dog', value: 'poodle')
         end
 
         it 'returns all of the desired apps' do
@@ -95,7 +95,7 @@ module VCAP::CloudController
         context 'and other filters are present' do
           let!(:happiest_app) { AppModel.make(space_guid: space.guid, name: 'bob') }
           let!(:happiest_app_label) do
-            VCAP::CloudController::AppLabelModel.make(app_guid: happiest_app.guid, key_name: 'dog', value: 'scooby-doo')
+            VCAP::CloudController::AppLabelModel.make(resource_guid: happiest_app.guid, key_name: 'dog', value: 'scooby-doo')
           end
           let(:filters) { { names: ['bob'], label_selector: 'dog in (chihuahua,scooby-doo)' } }
 
