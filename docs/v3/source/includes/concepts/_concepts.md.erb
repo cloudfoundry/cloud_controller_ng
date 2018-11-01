@@ -128,6 +128,11 @@ Name | Type | Description
 
 Labels are user-specified key/value pairs that are attached to [API Resources](#api-resource).
 They are queryable identifying attributes of a resource, but they do not affect the operation of CloudFoundry.
+Examples may include (but are not limited to):
+
+- `production: true` or `production: false`
+- `env: dev` or `env: test` or `env: prod`
+- `chargeback-code: abc123`
 
 ### Labels
 
@@ -141,7 +146,7 @@ any apps that do not have a label with the `sensitive` key or with their `sensit
 Label keys are made up of an (optional) `prefix`, and `name`. If a `prefix` is present, it is separated from the `name` by a `/`.
 
 
-Label key `prefixe`s must adhere to the following restrictions:
+Label key `prefix`s must adhere to the following restrictions:
 
 * Length: 0-253 characters
 * Allowed characters: alphanumeric, `-`, and `.`
@@ -166,6 +171,9 @@ Label values must adhere to the following restrictions:
 
 API resources can be filtered via their list endpoints with the query parameter `label_selector`.
 A `label_selector` consists of one or more `requirement`s in a comma-delimited list.
+
+_eg:_ `label_selector=env=dev,!chargeback-code,tier in (backend,worker)`
+
 A `requirement` consists of an _key_, an `operator`, and optional _value_(s).
 
 The following different types of `requirement`s are supported:
@@ -174,25 +182,37 @@ The following different types of `requirement`s are supported:
 
     Returns all resources that have been assigned a label with the given _key_ (with any _value_)
 
+    _eg:_ `chargeback-code`
+
 1. `!`_key_
 
     Returns all resources that have **not** been assigned a label with the given _key_ (with any _value_)
+
+    _eg:_ `!chargeback-code`
 
 1. _key_`=`_value_ or _key_`==`_value_
 
     Returns all resources that have been assigned a label with the given _key_ and _value_
 
+    _eg:_ `env=dev` or `env==dev`
+
 1. _key_`!=`_value_
 
     Returns all resources that either have **not** been assigned a label with the given _key_ or have a label with the given _key_ but a different _value_
+
+    _eg:_ `env!=dev`
 
 1. _key_ `in` (_value1_,_value2_...)
 
     Returns all resources that have been assigned a label with the given _key_ with one of the specified _value_(s)
 
+    _eg:_ `env in (dev,test)`
+
 1. _key_ `notin` (_value1_,_value2_...)
 
     Returns all resources that either have **not** been assigned a label with the given _key_ or have a label with the given _key_ but none of the specified _value_(s)
+
+    _eg:_ `env notin (prod,qa)`
 
 
 ## Lifecycles
