@@ -28,6 +28,8 @@ module VCAP::CloudController
           index: Integer, # Component index (cc-0, cc-1, etc)
           name: String, # Component name (api_z1, api_z2)
 
+          default_app_ssh_access: bool,
+
           db_encryption_key: enum(String, NilClass),
 
           optional(:database_encryption) => {
