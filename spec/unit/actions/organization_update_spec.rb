@@ -6,7 +6,7 @@ module VCAP::CloudController
     describe 'update' do
       let(:org) { VCAP::CloudController::Organization.make(name: 'old-org-name') }
       let(:message) do
-        VCAP::CloudController::OrganizationCreateMessage.new({
+        VCAP::CloudController::OrganizationUpdateMessage.new({
           name: 'new-org-name'
         })
       end

@@ -2,7 +2,7 @@ require 'messages/base_message'
 require 'messages/validators/metadata_validator'
 
 module VCAP::CloudController
-  class OrganizationCreateMessage < BaseMessage
+  class OrganizationUpdateMessage < BaseMessage
     register_allowed_keys [:name, :metadata]
 
     def self.metadata_requested?

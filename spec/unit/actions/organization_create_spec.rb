@@ -7,7 +7,7 @@ module VCAP::CloudController
       let(:perm_client) { instance_spy(VCAP::CloudController::Perm::Client) }
 
       it 'creates a organization' do
-        message = VCAP::CloudController::OrganizationCreateMessage.new({
+        message = VCAP::CloudController::OrganizationUpdateMessage.new({
           name: 'my-organization',
           metadata: {
               labels: {
@@ -29,7 +29,7 @@ module VCAP::CloudController
           expect(VCAP::CloudController::Organization).to receive(:create).
             and_raise(Sequel::ValidationFailed.new(errors))
 
-          message = VCAP::CloudController::OrganizationCreateMessage.new(name: 'foobar')
+          message = VCAP::CloudController::OrganizationUpdateMessage.new(name: 'foobar')
           expect {
             OrganizationCreate.new(perm_client: perm_client).create(message)
           }.to raise_error(OrganizationCreate::Error, 'blork is busted')
@@ -43,7 +43,7 @@ module VCAP::CloudController
           end
 
           it 'raises a human-friendly error' do
-            message = VCAP::CloudController::OrganizationCreateMessage.new(name: name)
+            message = VCAP::CloudController::OrganizationUpdateMessage.new(name: name)
             expect {
               OrganizationCreate.new(perm_client: perm_client).create(message)
             }.to raise_error(OrganizationCreate::Error, 'Name must be unique')

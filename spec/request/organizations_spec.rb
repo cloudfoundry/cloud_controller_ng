@@ -38,15 +38,15 @@ RSpec.describe 'Organizations' do
 
       expect(parsed_response).to be_a_response_like(
         {
-          'guid'       => created_org.guid,
+          'guid' => created_org.guid,
           'created_at' => iso8601,
           'updated_at' => iso8601,
-          'name'       => 'org1',
-          'links'      => {
+          'name' => 'org1',
+          'links' => {
             'self' => { 'href' => "#{link_prefix}/v3/organizations/#{created_org.guid}" }
           },
           'metadata' => {
-              'labels' => { 'freaky' => 'friday' }
+            'labels' => { 'freaky' => 'friday' }
           }
         }
       )
@@ -63,8 +63,8 @@ RSpec.describe 'Organizations' do
         {
           'pagination' => {
             'total_results' => 3,
-            'total_pages'   => 2,
-            'first'         => {
+            'total_pages' => 2,
+            'first' => {
               'href' => "#{link_prefix}/v3/organizations?page=1&per_page=2"
             },
             'last' => {
@@ -77,31 +77,31 @@ RSpec.describe 'Organizations' do
           },
           'resources' => [
             {
-              'guid'       => organization1.guid,
-              'name'       => 'Apocalypse World',
+              'guid' => organization1.guid,
+              'name' => 'Apocalypse World',
               'created_at' => iso8601,
               'updated_at' => iso8601,
-              'links'      => {
+              'links' => {
                 'self' => {
                   'href' => "#{link_prefix}/v3/organizations/#{organization1.guid}"
                 }
               },
               'metadata' => {
-                  'labels' => {}
+                'labels' => {}
               }
             },
             {
-              'guid'       => organization2.guid,
-              'name'       => 'Dungeon World',
+              'guid' => organization2.guid,
+              'name' => 'Dungeon World',
               'created_at' => iso8601,
               'updated_at' => iso8601,
-              'links'      => {
+              'links' => {
                 'self' => {
                   'href' => "#{link_prefix}/v3/organizations/#{organization2.guid}"
                 }
               },
               'metadata' => {
-                  'labels' => {}
+                'labels' => {}
               }
             }
           ]
@@ -127,43 +127,43 @@ RSpec.describe 'Organizations' do
         {
           'pagination' => {
             'total_results' => 2,
-            'total_pages'   => 1,
-            'first'         => {
+            'total_pages' => 1,
+            'first' => {
               'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment1.guid}/organizations?page=1&per_page=2"
             },
             'last' => {
               'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment1.guid}/organizations?page=1&per_page=2"
             },
-            'next'          => nil,
-            'previous'      => nil
+            'next' => nil,
+            'previous' => nil
           },
           'resources' => [
             {
-              'guid'       => organization2.guid,
-              'name'       => 'Dungeon World',
+              'guid' => organization2.guid,
+              'name' => 'Dungeon World',
               'created_at' => iso8601,
               'updated_at' => iso8601,
-              'links'      => {
+              'links' => {
                 'self' => {
                   'href' => "#{link_prefix}/v3/organizations/#{organization2.guid}"
                 }
               },
               'metadata' => {
-                  'labels' => {}
+                'labels' => {}
               }
             },
             {
-              'guid'       => organization3.guid,
-              'name'       => 'The Sprawl',
+              'guid' => organization3.guid,
+              'name' => 'The Sprawl',
               'created_at' => iso8601,
               'updated_at' => iso8601,
-              'links'      => {
+              'links' => {
                 'self' => {
                   'href' => "#{link_prefix}/v3/organizations/#{organization3.guid}"
                 }
               },
               'metadata' => {
-                  'labels' => {}
+                'labels' => {}
               }
             }
           ]
@@ -191,7 +191,7 @@ RSpec.describe 'Organizations' do
           'guid' => isolation_segment.guid
         },
         'links' => {
-          'self'    => { 'href' => "#{link_prefix}/v3/organizations/#{organization1.guid}/relationships/default_isolation_segment" },
+          'self' => { 'href' => "#{link_prefix}/v3/organizations/#{organization1.guid}/relationships/default_isolation_segment" },
           'related' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}" },
         }
       }
@@ -228,7 +228,7 @@ RSpec.describe 'Organizations' do
           'guid' => isolation_segment.guid
         },
         'links' => {
-          'self'    => { 'href' => "#{link_prefix}/v3/organizations/#{organization1.guid}/relationships/default_isolation_segment" },
+          'self' => { 'href' => "#{link_prefix}/v3/organizations/#{organization1.guid}/relationships/default_isolation_segment" },
           'related' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment.guid}" },
         }
       }
@@ -240,6 +240,40 @@ RSpec.describe 'Organizations' do
 
       organization1.reload
       expect(organization1.default_isolation_segment_guid).to eq(isolation_segment.guid)
+    end
+  end
+
+  describe 'PATCH /v3/organizations/:guid' do
+    let(:update_request) do
+      {
+        name: 'New Name World'
+      }.to_json
+    end
+
+    before do
+      set_current_user(user, { admin: true })
+      allow_user_read_access_for(user, orgs: [organization1])
+    end
+
+    it 'updates the name for the organization' do
+      patch "/v3/organizations/#{organization1.guid}", update_request, admin_headers_for(user).merge('CONTENT_TYPE' => 'application/json')
+
+      expected_response = {
+        'name' => 'New Name World',
+        'guid' => organization1.guid,
+        'metadata' => { 'labels' => {} },
+        'links' => { 'self' => { 'href' => "http://api2.vcap.me/v3/organizations/#{organization1.guid}" } },
+        'created_at' => iso8601,
+        'updated_at' => iso8601,
+      }
+
+      parsed_response = MultiJson.load(last_response.body)
+
+      expect(last_response.status).to eq(200)
+      expect(parsed_response).to be_a_response_like(expected_response)
+
+      organization1.reload
+      expect(organization1.name).to eq('New Name World')
     end
   end
 end

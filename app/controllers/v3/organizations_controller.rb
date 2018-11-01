@@ -3,7 +3,7 @@ require 'actions/organization_update'
 require 'actions/set_default_isolation_segment'
 require 'controllers/v3/mixins/sub_resource'
 require 'fetchers/org_list_fetcher'
-require 'messages/organization_create_message'
+require 'messages/organization_update_message'
 require 'messages/orgs_default_iso_seg_update_message'
 require 'messages/orgs_list_message'
 require 'presenters/v3/paginated_list_presenter'
@@ -41,7 +41,7 @@ class OrganizationsV3Controller < ApplicationController
   def create
     unauthorized! unless permission_queryer.can_write_globally? || user_org_creation_enabled?
 
-    message = VCAP::CloudController::OrganizationCreateMessage.new(hashed_params[:body])
+    message = VCAP::CloudController::OrganizationUpdateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     org = OrganizationCreate.new(perm_client: perm_client).create(message)
@@ -52,11 +52,9 @@ class OrganizationsV3Controller < ApplicationController
   end
 
   def update
-    org = fetch_org(hashed_params[:guid])
-    org_not_found! unless org && permission_queryer.can_read_from_org?(org.guid)
-    unauthorized! unless roles.admin? || org.managers.include?(current_user)
+    org = fetch_editable_org(hashed_params[:guid])
 
-    message = VCAP::CloudController::OrganizationCreateMessage.new(hashed_params[:body])
+    message = VCAP::CloudController::OrganizationUpdateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     org = OrganizationUpdate.new.update(org, message)
@@ -82,9 +80,7 @@ class OrganizationsV3Controller < ApplicationController
     message = OrgDefaultIsoSegUpdateMessage.new(unmunged_body)
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    org = fetch_org(hashed_params[:guid])
-    org_not_found! unless org && permission_queryer.can_read_from_org?(org.guid)
-    unauthorized! unless roles.admin? || org.managers.include?(current_user)
+    org = fetch_editable_org(hashed_params[:guid])
     iso_seg_guid = message.default_isolation_segment_guid
     isolation_segment = fetch_isolation_segment(iso_seg_guid)
 
@@ -101,6 +97,13 @@ class OrganizationsV3Controller < ApplicationController
   end
 
   private
+
+  def fetch_editable_org(guid)
+    org = fetch_org(guid)
+    org_not_found! unless org && permission_queryer.can_read_from_org?(org.guid)
+    unauthorized! unless roles.admin? || org.managers.include?(current_user)
+    org
+  end
 
   def user_org_creation_enabled?
     VCAP::CloudController::FeatureFlag.enabled?(:user_org_creation)
