@@ -1,4 +1,5 @@
 require 'messages/base_message'
+require 'messages/validators/metadata_validator'
 
 module VCAP::CloudController
   class SpaceCreateMessage < BaseMessage
