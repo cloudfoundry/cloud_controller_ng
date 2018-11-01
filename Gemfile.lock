@@ -239,7 +239,7 @@ GEM
       multi_json (~> 1.10)
     loggregator_emitter (5.2.0)
       beefcake (~> 1.0.0)
-    loofah (2.2.2)
+    loofah (2.2.3)
       crass (~> 1.0.2)
       nokogiri (>= 1.5.9)
     machinist (1.0.6)
