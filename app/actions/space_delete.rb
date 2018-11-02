@@ -9,7 +9,7 @@ module VCAP::CloudController
     end
 
     def delete(dataset)
-      dataset.inject([]) do |errors, space_model|
+      dataset.each_with_object([]) do |space_model, errors|
         instance_delete_errors = delete_service_instances(space_model)
         err = accumulate_space_deletion_error(instance_delete_errors, space_model.name)
         errors << err unless err.nil?
@@ -31,8 +31,6 @@ module VCAP::CloudController
         role_delete_errors = delete_roles(space_model)
         err = accumulate_space_deletion_error(role_delete_errors, space_model.name)
         errors << err unless err.nil?
-
-        errors
       end
     end
 

@@ -38,14 +38,13 @@ module VCAP::CloudController
     end
 
     def self.underscore_keys(hash)
-      hash.inject({}) do |memo, (key, val)|
+      hash.each_with_object({}) do |(key, val), memo|
         new_key = key.to_s.underscore.to_sym
         memo[new_key] = if key == :processes && val.is_a?(Array)
                           val.map { |process| underscore_keys(process) }
                         else
                           val
                         end
-        memo
       end
     end
 

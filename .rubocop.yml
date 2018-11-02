@@ -198,9 +198,6 @@ Style/Documentation:
 Style/DoubleNegation:
   Enabled: false
 
-Style/EachWithObject:
-  Enabled: false
-
 Style/Encoding:
   Exclude:
     - '**/*.pb.rb'

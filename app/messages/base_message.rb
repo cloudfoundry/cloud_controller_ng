@@ -28,9 +28,8 @@ module VCAP::CloudController
     def audit_hash(exclude: [])
       request = {}
 
-      requested_keys.reduce(request) do |memo, key|
+      requested_keys.each_with_object(request) do |key, memo|
         memo[key] = self.try(key) unless exclude.include?(key)
-        memo
       end
 
       request.deep_stringify_keys
