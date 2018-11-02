@@ -103,7 +103,8 @@ module VCAP::CloudController
       owned_private_domains:     :destroy,
       private_domains:           :nullify,
       service_plan_visibilities: :destroy,
-      space_quota_definitions:   :destroy
+      space_quota_definitions:   :destroy,
+      labels:   :destroy,
     )
 
     define_user_group :users

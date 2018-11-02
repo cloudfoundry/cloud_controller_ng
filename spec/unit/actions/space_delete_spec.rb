@@ -280,6 +280,30 @@ module VCAP::CloudController
             }.to change { Route.count }.by(-1)
           end
         end
+
+        describe 'label deletion' do
+          let!(:space_label) do
+            VCAP::CloudController::SpaceLabelModel.make(
+              key_name: 'release',
+              value: 'stable',
+              resource_guid: space.guid
+            )
+          end
+          let!(:space2_label) do
+            VCAP::CloudController::SpaceLabelModel.make(
+              key_name: 'release',
+              value: 'stable',
+              resource_guid: space_2.guid
+            )
+          end
+
+          it 'deletes associated space labels' do
+            expect {
+              space_delete.delete(space_dataset)
+            }.to change { SpaceLabelModel.count }.by(-2)
+            expect { space.refresh }.to raise_error Sequel::Error, 'Record not found'
+          end
+        end
       end
     end
   end

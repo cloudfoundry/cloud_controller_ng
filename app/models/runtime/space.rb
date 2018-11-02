@@ -125,6 +125,7 @@ module VCAP::CloudController
     add_association_dependencies(
       default_users: :nullify,
       processes: :destroy,
+      labels: :destroy,
       routes: :destroy,
       security_groups: :nullify,
       staging_security_groups: :nullify,
