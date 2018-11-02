@@ -1,0 +1,40 @@
+### Update an organization
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/organizations/[guid]" \
+  -X PATCH \
+  -H "Authorization: bearer [token]" \
+  -H "Content-Type: application/json" \
+  -d '{ "name": "my-organization" }'
+
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :organization %>
+```
+
+#### Definition
+`PATCH /v3/organizations/:guid`
+
+#### Optional Parameters
+
+Name | Type | Description
+---- | ---- | -----------
+**name** | _string_ | Organization name |
+
+#### Permitted Roles
+ |
+--- | ---
+Admin |
+OrgManager |

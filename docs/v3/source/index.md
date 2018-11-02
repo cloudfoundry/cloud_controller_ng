@@ -74,6 +74,7 @@ includes:
   - resources/organizations/header
   - resources/organizations/object
   - resources/organizations/create
+  - resources/organizations/update
   - resources/organizations/list
   - resources/organizations/get_an_organization
   - resources/organizations/list_for_isolation_segment
