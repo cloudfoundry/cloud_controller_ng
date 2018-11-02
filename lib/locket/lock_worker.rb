@@ -4,10 +4,14 @@ module Locket
       @lock_runner = lock_runner
     end
 
-    def acquire_lock_and(&block)
+    def acquire_lock_and_repeatedly_call(&block)
       @lock_runner.start
       loop do
-        yield block if @lock_runner.lock_acquired?
+        if @lock_runner.lock_acquired?
+          yield block
+        else
+          sleep 1
+        end
       end
     end
   end

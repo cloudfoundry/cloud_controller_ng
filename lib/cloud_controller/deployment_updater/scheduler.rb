@@ -21,7 +21,7 @@ module VCAP::CloudController
 
           lock_worker = Locket::LockWorker.new(lock_runner)
 
-          lock_worker.acquire_lock_and do
+          lock_worker.acquire_lock_and_repeatedly_call do
             update(
               update_frequency: config.get(:deployment_updater, :update_frequency_in_seconds),
               statsd_client: statsd_client

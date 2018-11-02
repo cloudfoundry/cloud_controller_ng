@@ -24,7 +24,7 @@ module VCAP::CloudController
         allow(Locket::LockWorker).to receive(:new).and_return(lock_worker)
         allow(Steno).to receive(:logger).and_return(logger)
 
-        allow(lock_worker).to receive(:acquire_lock_and).and_yield
+        allow(lock_worker).to receive(:acquire_lock_and_repeatedly_call).and_yield
         allow(DeploymentUpdater::Scheduler).to receive(:sleep)
         allow(DeploymentUpdater::Dispatcher).to receive(:dispatch)
         allow(CloudController::DependencyLocator.instance).to receive(:statsd_client).and_return(statsd_client)
