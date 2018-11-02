@@ -4,6 +4,7 @@ require 'actions/set_default_isolation_segment'
 require 'controllers/v3/mixins/sub_resource'
 require 'fetchers/org_list_fetcher'
 require 'messages/organization_update_message'
+require 'messages/organization_create_message'
 require 'messages/orgs_default_iso_seg_update_message'
 require 'messages/orgs_list_message'
 require 'presenters/v3/paginated_list_presenter'
@@ -41,7 +42,7 @@ class OrganizationsV3Controller < ApplicationController
   def create
     unauthorized! unless permission_queryer.can_write_globally? || user_org_creation_enabled?
 
-    message = VCAP::CloudController::OrganizationUpdateMessage.new(hashed_params[:body])
+    message = VCAP::CloudController::OrganizationCreateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     org = OrganizationCreate.new(perm_client: perm_client).create(message)

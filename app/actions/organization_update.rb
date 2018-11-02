@@ -6,7 +6,7 @@ module VCAP::CloudController
     def update(org, message)
       org.db.transaction do
         org.lock!
-        org.name = message.name
+        org.name = message.name if message.requested?(:name)
         org.save
       end
 

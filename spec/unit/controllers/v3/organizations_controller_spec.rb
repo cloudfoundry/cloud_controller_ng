@@ -1,4 +1,5 @@
 require 'rails_helper'
+require 'permissions_spec_helper'
 
 RSpec.describe OrganizationsV3Controller, type: :controller do
   describe '#show' do
@@ -589,6 +590,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
 
   describe '#patch organization name' do
     let(:org) { VCAP::CloudController::Organization.make(name: 'Water') }
+    let(:space) { VCAP::CloudController::Space.make(organization: org) }
     let(:user) { VCAP::CloudController::User.make }
     let(:request_body) do
       {
@@ -612,6 +614,21 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
         expect(parsed_body['guid']).to eq(org.guid)
       end
 
+      context 'when an empty request is sent' do
+        let(:request_body) do
+          {}
+        end
+
+        it 'succeeds' do
+          patch :update, params: { guid: org.guid }.merge(request_body), as: :json
+          expect(response.status).to eq(200)
+          org.reload
+          expect(org.name).to eq('Water')
+          expect(parsed_body['name']).to eq('Water')
+          expect(parsed_body['guid']).to eq(org.guid)
+        end
+      end
+
       context 'when there is a message validation failure' do
         let(:request_body) do
           {
@@ -622,52 +639,27 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
         it 'displays an informative error' do
           patch :update, params: { guid: org.guid }.merge(request_body), as: :json
           expect(response.status).to eq(422)
-          expect(response).to have_error_message("Name can't be blank")
+          expect(response).to have_error_message('Name is too short (minimum is 1 character)')
         end
       end
     end
 
-    context 'when the user is read-only admin' do
-      before do
-        set_current_user_as_admin_read_only
-      end
-
-      it 'throws Forbidden error' do
-        patch :update, params: { guid: org.guid }.merge(request_body), as: :json
-
-        expect(response.status).to eq(403)
-        expect(response.body).to include 'NotAuthorized'
-      end
-    end
-
-    context 'when the user is an org manager' do
-      before do
-        set_current_user_as_role(role: :org_manager, org: org)
-      end
-
-      it 'updates the organization' do
-        patch :update, params: { guid: org.guid }.merge(request_body), as: :json
-
-        org.reload
-        expect(response.status).to eq(200)
-        expect(org.name).to eq('Fire')
-        expect(parsed_body['name']).to eq('Fire')
-        expect(parsed_body['guid']).to eq(org.guid)
-      end
-    end
-
-    context 'when the user does not have permissions to read from organization' do
-      before do
-        set_current_user(user, { admin: true })
-        allow_user_read_access_for(user, orgs: [])
-      end
-
-      it 'throws ResourceNotFound error' do
-        patch :update, params: { guid: org.guid }.merge(request_body), as: :json
-
-        expect(response.status).to eq(404)
-        expect(response.body).to include 'ResourceNotFound'
-        expect(response.body).to include 'Organization not found'
+    describe 'authorization' do
+      it_behaves_like 'permissions endpoint' do
+        let(:roles_to_http_responses) do
+          {
+            'admin' => 200,
+            'admin_read_only' => 403,
+            'global_auditor' => 403,
+            'space_developer' => 403,
+            'space_manager' => 403,
+            'space_auditor' => 403,
+            'org_manager' => 200,
+            'org_auditor' => 403,
+            'org_billing_manager' => 403,
+          }
+        end
+        let(:api_call) { lambda { patch :update, params: { guid: org.guid }.merge(request_body), as: :json } }
       end
     end
 

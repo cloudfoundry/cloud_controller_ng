@@ -61,11 +61,15 @@ module VCAP::CloudController
           end
         end
 
-        it 'must be present' do
-          body = {}
+        it 'must be >= 1 characters long' do
+          body = { name: '' }
           message = OrganizationUpdateMessage.new(body)
           expect(message).to_not be_valid
-          expect(message.errors.full_messages).to include("Name can't be blank")
+          expect(message.errors.full_messages).to include('Name is too short (minimum is 1 character)')
+
+          body = { name: 'a' * 255 }
+          message = OrganizationUpdateMessage.new(body)
+          expect(message).to be_valid
         end
 
         it 'must be <= 255 characters long' do
