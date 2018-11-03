@@ -390,7 +390,14 @@ Use the cf cli to obtain a bearer token: cf oauth-token
 <h2 id="labels-and-selectors">Labels and Selectors</h2>
 
 <p>Labels are user-specified key/value pairs that are attached to <a href="#api-resource">API Resources</a>.
-They are queryable identifying attributes of a resource, but they do not affect the operation of CloudFoundry.</p>
+They are queryable identifying attributes of a resource, but they do not affect the operation of CloudFoundry.
+Examples may include (but are not limited to):</p>
+
+<ul>
+<li><code class="prettyprint">production: true</code> or <code class="prettyprint">production: false</code></li>
+<li><code class="prettyprint">env: dev</code> or <code class="prettyprint">env: test</code> or <code class="prettyprint">env: prod</code></li>
+<li><code class="prettyprint">chargeback-code: abc123</code></li>
+</ul>
 
 <h3 id="labels">Labels</h3>
 
@@ -403,7 +410,7 @@ any apps that do not have a label with the <code class="prettyprint">sensitive</
 
 <p>Label keys are made up of an (optional) <code class="prettyprint">prefix</code>, and <code class="prettyprint">name</code>. If a <code class="prettyprint">prefix</code> is present, it is separated from the <code class="prettyprint">name</code> by a <code class="prettyprint">/</code>.</p>
 
-<p>Label key <code class="prettyprint">prefixe</code>s must adhere to the following restrictions:</p>
+<p>Label key <code class="prettyprint">prefix</code>s must adhere to the following restrictions:</p>
 
 <ul>
 <li>Length: 0-253 characters</li>
@@ -433,30 +440,45 @@ any apps that do not have a label with the <code class="prettyprint">sensitive</
 <h3 id="selectors">Selectors</h3>
 
 <p>API resources can be filtered via their list endpoints with the query parameter <code class="prettyprint">label_selector</code>.
-A <code class="prettyprint">label_selector</code> consists of one or more <code class="prettyprint">requirement</code>s in a comma-delimited list.
-A <code class="prettyprint">requirement</code> consists of an <em>key</em>, an <code class="prettyprint">operator</code>, and optional <em>value</em>(s).</p>
+A <code class="prettyprint">label_selector</code> consists of one or more <code class="prettyprint">requirement</code>s in a comma-delimited list.</p>
+
+<p><em>eg:</em> <code class="prettyprint">label_selector=env=dev,!chargeback-code,tier in (backend,worker)</code></p>
+
+<p>A <code class="prettyprint">requirement</code> consists of an <em>key</em>, an <code class="prettyprint">operator</code>, and optional <em>value</em>(s).</p>
 
 <p>The following different types of <code class="prettyprint">requirement</code>s are supported:</p>
 
 <ol>
 <li><p><em>key</em></p>
 
-<p>Returns all resources that have been assigned a label with the given <em>key</em> (with any <em>value</em>)</p></li>
+<p>Returns all resources that have been assigned a label with the given <em>key</em> (with any <em>value</em>)</p>
+
+<p><em>eg:</em> <code class="prettyprint">chargeback-code</code></p></li>
 <li><p><code class="prettyprint">!</code><em>key</em></p>
 
-<p>Returns all resources that have <strong>not</strong> been assigned a label with the given <em>key</em> (with any <em>value</em>)</p></li>
+<p>Returns all resources that have <strong>not</strong> been assigned a label with the given <em>key</em> (with any <em>value</em>)</p>
+
+<p><em>eg:</em> <code class="prettyprint">!chargeback-code</code></p></li>
 <li><p><em>key</em><code class="prettyprint">=</code><em>value</em> or <em>key</em><code class="prettyprint">==</code><em>value</em></p>
 
-<p>Returns all resources that have been assigned a label with the given <em>key</em> and <em>value</em></p></li>
+<p>Returns all resources that have been assigned a label with the given <em>key</em> and <em>value</em></p>
+
+<p><em>eg:</em> <code class="prettyprint">env=dev</code> or <code class="prettyprint">env==dev</code></p></li>
 <li><p><em>key</em><code class="prettyprint">!=</code><em>value</em></p>
 
-<p>Returns all resources that either have <strong>not</strong> been assigned a label with the given <em>key</em> or have a label with the given <em>key</em> but a different <em>value</em></p></li>
+<p>Returns all resources that either have <strong>not</strong> been assigned a label with the given <em>key</em> or have a label with the given <em>key</em> but a different <em>value</em></p>
+
+<p><em>eg:</em> <code class="prettyprint">env!=dev</code></p></li>
 <li><p><em>key</em> <code class="prettyprint">in</code> (<em>value1</em>,<em>value2</em>&hellip;)</p>
 
-<p>Returns all resources that have been assigned a label with the given <em>key</em> with one of the specified <em>value</em>(s)</p></li>
+<p>Returns all resources that have been assigned a label with the given <em>key</em> with one of the specified <em>value</em>(s)</p>
+
+<p><em>eg:</em> <code class="prettyprint">env in (dev,test)</code></p></li>
 <li><p><em>key</em> <code class="prettyprint">notin</code> (<em>value1</em>,<em>value2</em>&hellip;)</p>
 
-<p>Returns all resources that either have <strong>not</strong> been assigned a label with the given <em>key</em> or have a label with the given <em>key</em> but none of the specified <em>value</em>(s)</p></li>
+<p>Returns all resources that either have <strong>not</strong> been assigned a label with the given <em>key</em> or have a label with the given <em>key</em> but none of the specified <em>value</em>(s)</p>
+
+<p><em>eg:</em> <code class="prettyprint">env notin (prod,qa)</code></p></li>
 </ol>
 
 <h2 id="lifecycles">Lifecycles</h2>
@@ -4666,6 +4688,73 @@ In the case where the specified isolation segment is the system-wide shared segm
 
 <p>If the <code class="prettyprint">user_org_creation</code> feature flag is enabled, any user with the <code class="prettyprint">cloud_controller.write</code> scope will be able to create organizations.</p>
 
+          <h3 id="update-an-organization">Update an organization</h3>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/organizations/[guid]"</span> <span class="se">\</span>
+  -X PATCH <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+  -H <span class="s2">"Content-Type: application/json"</span> <span class="se">\</span>
+  -d <span class="s1">'{ "name": "my-organization" }'</span>
+
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
+
+<span class="p">{</span><span class="w">
+  </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"24637893-3b77-489d-bb79-8466f0d88b52"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-02-01T01:33:58Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-02-01T01:33:58Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-organization"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/organizations/24637893-3b77-489d-bb79-8466f0d88b52"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+
+</span></code></pre>
+
+<h4 id="definition">Definition</h4>
+
+<p><code class="prettyprint">PATCH /v3/organizations/:guid</code></p>
+
+<h4 id="optional-parameters">Optional Parameters</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>name</strong></td>
+<td><em>string</em></td>
+<td>Organization name</td>
+</tr>
+</tbody></table>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Admin</td>
+</tr>
+<tr>
+<td>OrgManager</td>
+</tr>
+</tbody></table>
+
           <h3 id="list-organizations">List organizations</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
@@ -4697,7 +4786,11 @@ In the case where the specified isolation segment is the system-wide shared segm
       </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-02-01T01:33:58Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-02-01T01:33:58Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"org1"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+      </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/organizations/885735b5-aea4-4cf5-8e44-961af0e41920"</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+      </span><span class="err">}</span><span class="p">,</span><span class="w">
       </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
       </span><span class="p">}</span><span class="w">
@@ -4707,7 +4800,11 @@ In the case where the specified isolation segment is the system-wide shared segm
       </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-02-02T00:14:30Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-02-02T00:14:30Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"org2"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+      </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/organizations/d4c91047-7b29-4fda-b7f9-04033e5c9c9f"</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+      </span><span class="err">}</span><span class="p">,</span><span class="w">
       </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
       </span><span class="p">}</span><span class="w">
@@ -7340,6 +7437,11 @@ In order to share into a space the requesting user must be a space developer in 
     </span><span class="nt">"organization"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/organizations/e00705b9-7b42-4561-ae97-2520399d2133"</span><span class="w">
     </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"label-key"</span><span class="p">:</span><span class="w"> </span><span class="s2">"label-value"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
   </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
 
@@ -7382,6 +7484,11 @@ In order to share into a space the requesting user must be a space developer in 
 <td><a href="#links"><em>links object</em></a></td>
 <td>Links to related resources.</td>
 </tr>
+<tr>
+<td><strong>metadata.labels</strong> <em>(experimental)</em></td>
+<td><a href="#labels"><em>label object</em></a></td>
+<td>Labels applied to the space.</td>
+</tr>
 </tbody></table>
 
           <h3 id="create-a-space">Create a space</h3>
@@ -7399,8 +7506,13 @@ In order to share into a space the requesting user must be a space developer in 
           "guid": "[org-guid]"
         }
       }
-    }
-  }'</span>
+    },
+    "metadata": {
+        "labels": {
+            "label-key": "label-value"
+         }
+      }
+    }'</span>
 
 </code></pre>
 <pre class="highlight plaintext"><code>Example Response
@@ -7426,6 +7538,11 @@ In order to share into a space the requesting user must be a space developer in 
     </span><span class="p">},</span><span class="w">
     </span><span class="nt">"organization"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/organizations/e00705b9-7b42-4561-ae97-2520399d2133"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"label-key"</span><span class="p">:</span><span class="w"> </span><span class="s2">"label-value"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
@@ -7517,6 +7634,11 @@ In order to share into a space the requesting user must be a space developer in 
         </span><span class="nt">"organization"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
           </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/organizations/e00705b9-7b42-4561-ae97-2520399d2133"</span><span class="w">
         </span><span class="p">}</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"label-key"</span><span class="p">:</span><span class="w"> </span><span class="s2">"label-value"</span><span class="w">
+        </span><span class="p">}</span><span class="w">
       </span><span class="p">}</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="p">{</span><span class="w">
@@ -7538,6 +7660,9 @@ In order to share into a space the requesting user must be a space developer in 
         </span><span class="nt">"organization"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
           </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/organizations/b4ce91bd-31df-4b7d-8fd4-21a6b533276b"</span><span class="w">
         </span><span class="p">}</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
       </span><span class="p">}</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">]</span><span class="w">
@@ -7622,6 +7747,11 @@ In order to share into a space the requesting user must be a space developer in 
     </span><span class="p">},</span><span class="w">
     </span><span class="nt">"organization"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/organizations/e00705b9-7b42-4561-ae97-2520399d2133"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"label-key"</span><span class="p">:</span><span class="w"> </span><span class="s2">"label-value"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
