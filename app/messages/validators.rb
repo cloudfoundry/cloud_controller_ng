@@ -1,6 +1,7 @@
 require 'active_model'
 require 'utils/uri_utils'
 require 'models/helpers/health_check_types'
+require 'models/helpers/label_error'
 require 'models/helpers/label_helpers'
 require 'cloud_controller/domain_decorator'
 require 'messages/label_validator_helper'
@@ -118,32 +119,37 @@ module VCAP::CloudController::Validators
   end
 
   class LabelSelectorValidator < ActiveModel::Validator
+    MISSING_LABEL_SELECTOR_ERROR = 'Missing label_selector value'.freeze
+
     def validate(record)
       requirements = record.label_selector.scan(VCAP::CloudController::LabelHelpers::REQUIREMENT_SPLITTER)
+      if requirements.empty? || requirements.any?(&:blank?)
+        record.errors[:base] << MISSING_LABEL_SELECTOR_ERROR
+        return
+      end
 
-      return record.errors[:base] << INVALID_VALUE_ERROR if requirements.empty? || requirements.any?(&:blank?)
-
-      unless requirements.map { |r| valid_requirement?(r) }.all?
-        record.errors[:base] << INVALID_VALUE_ERROR
+      requirements.each do |r|
+        res = valid_requirement?(r)
+        record.errors[:base] << res.message if !res.is_valid?
       end
     end
 
     private
 
-    INVALID_VALUE_ERROR = 'Invalid label_selector value'.freeze
-
     def valid_requirement?(requirement)
       matches = VCAP::CloudController::LabelHelpers::REQUIREMENT_OPERATOR_PAIRS.
                 map { |rop| rop[:pattern].match(requirement) }.
                 compact
+      return VCAP::CloudController::LabelError.error('no selectors specified') if matches.empty?
 
-      return false if matches.empty?
-
-      LabelValidatorHelper.valid_key?(matches.first[:key]) &&
-        matches.first[:values].
-          split(',').
-          map { |v| LabelValidatorHelper.valid_value?(v) }.
-          all?
+      match = matches.first
+      res = LabelValidatorHelper.valid_key?(match[:key])
+      return res unless res.is_valid?
+      match[:values].split(',').each do |v|
+        res = LabelValidatorHelper.valid_value?(v)
+        return res if !res.is_valid?
+      end
+      VCAP::CloudController::LabelError.none
     end
   end
 

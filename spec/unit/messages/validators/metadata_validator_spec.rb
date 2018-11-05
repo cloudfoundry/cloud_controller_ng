@@ -63,8 +63,8 @@ module VCAP::CloudController::Validators
             }
             message = class_with_metadata.new(metadata: metadata)
             expect(message).not_to be_valid
-            expect(message.errors_on(:metadata)).to include("label key 'potato#{c}' contains invalid characters")
-            expect(message.errors_on(:metadata)).to include("label key '#{c}' contains invalid characters")
+            expect(message.errors_on(:metadata)).to include("key error: label 'potato#{c}' contains invalid characters")
+            expect(message.errors_on(:metadata)).to include("key error: label '#{c}' contains invalid characters")
           end
         end
       end
@@ -82,11 +82,11 @@ module VCAP::CloudController::Validators
       end
       it 'is invalid' do
         expect(subject).not_to be_valid
-        expect(subject.errors_on(:metadata)).to include("label key '-a' starts or ends with invalid characters")
-        expect(subject.errors_on(:metadata)).to include("label key 'a-' starts or ends with invalid characters")
-        expect(subject.errors_on(:metadata)).to include("label key '-' starts or ends with invalid characters")
-        expect(subject.errors_on(:metadata)).to include("label key '.a' starts or ends with invalid characters")
-        expect(subject.errors_on(:metadata)).to include("label key '_a' starts or ends with invalid characters")
+        expect(subject.errors_on(:metadata)).to include("key error: label '-a' starts or ends with invalid characters")
+        expect(subject.errors_on(:metadata)).to include("key error: label 'a-' starts or ends with invalid characters")
+        expect(subject.errors_on(:metadata)).to include("key error: label '-' starts or ends with invalid characters")
+        expect(subject.errors_on(:metadata)).to include("key error: label '.a' starts or ends with invalid characters")
+        expect(subject.errors_on(:metadata)).to include("key error: label '_a' starts or ends with invalid characters")
       end
     end
 
@@ -110,7 +110,7 @@ module VCAP::CloudController::Validators
       it 'is invalid' do
         expect(subject).not_to be_valid
         expect(subject.errors_on(:metadata)).
-          to include("label key '#{'b' * 8}...' is greater than #{VCAP::CloudController::Validators::LabelValidatorHelper::MAX_LABEL_SIZE} characters")
+          to include("key error: label '#{'b' * 8}...' is greater than #{VCAP::CloudController::Validators::LabelValidatorHelper::MAX_LABEL_SIZE} characters")
       end
     end
 
@@ -212,7 +212,7 @@ module VCAP::CloudController::Validators
       end
     end
 
-    describe 'invalid label values' do
+    describe 'invalid value error: labels' do
       context 'when the values contains one invalid character' do
         (32.chr..126.chr).to_a.reject { |c| /[\w\-\.\_]/.match(c) }.each do |c|
           it "is invalid for character '#{c}'" do
@@ -224,8 +224,8 @@ module VCAP::CloudController::Validators
             }
             message = class_with_metadata.new(metadata: metadata)
             expect(message).not_to be_valid
-            expect(message.errors_on(:metadata)).to include("label value 'mashed#{c}' contains invalid characters")
-            expect(message.errors_on(:metadata)).to include("label value '#{c}' contains invalid characters")
+            expect(message.errors_on(:metadata)).to include("value error: label 'mashed#{c}' contains invalid characters")
+            expect(message.errors_on(:metadata)).to include("value error: label '#{c}' contains invalid characters")
           end
         end
       end
@@ -242,11 +242,11 @@ module VCAP::CloudController::Validators
         end
         it 'is invalid' do
           expect(subject).not_to be_valid
-          expect(subject.errors_on(:metadata)).to include("label value '-a' starts or ends with invalid characters")
-          expect(subject.errors_on(:metadata)).to include("label value 'a-' starts or ends with invalid characters")
-          expect(subject.errors_on(:metadata)).to include("label value '-' starts or ends with invalid characters")
-          expect(subject.errors_on(:metadata)).to include("label value '.a' starts or ends with invalid characters")
-          expect(subject.errors_on(:metadata)).to include("label value '_a' starts or ends with invalid characters")
+          expect(subject.errors_on(:metadata)).to include("value error: label '-a' starts or ends with invalid characters")
+          expect(subject.errors_on(:metadata)).to include("value error: label 'a-' starts or ends with invalid characters")
+          expect(subject.errors_on(:metadata)).to include("value error: label '-' starts or ends with invalid characters")
+          expect(subject.errors_on(:metadata)).to include("value error: label '.a' starts or ends with invalid characters")
+          expect(subject.errors_on(:metadata)).to include("value error: label '_a' starts or ends with invalid characters")
         end
       end
 
@@ -267,10 +267,10 @@ module VCAP::CloudController::Validators
               'key' => 'b' * (VCAP::CloudController::Validators::LabelValidatorHelper::MAX_LABEL_SIZE + 1),
           }
         end
-        it 'is invalid' do
+        it 'is invalivalue error: labeld' do
           expect(subject).not_to be_valid
           expect(subject.errors_on(:metadata)).
-            to include("label value '#{'b' * 8}...' is greater than #{VCAP::CloudController::Validators::LabelValidatorHelper::MAX_LABEL_SIZE} characters")
+            to include("value error: label '#{'b' * 8}...' is greater than #{VCAP::CloudController::Validators::LabelValidatorHelper::MAX_LABEL_SIZE} characters")
         end
       end
     end

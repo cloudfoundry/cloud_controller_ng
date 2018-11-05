@@ -143,7 +143,7 @@ module VCAP::CloudController
 
             expect(message).to be_invalid
             expect(message.errors[:base].length).to eq 1
-            expect(message.errors[:base].first).to match /label_selector/
+            expect(message.errors[:base].first).to match /Missing label_selector value/
           end
 
           it 'validates that no label_selector query is blank' do
@@ -151,7 +151,7 @@ module VCAP::CloudController
 
             expect(message).to be_invalid
             expect(message.errors[:base].length).to eq 1
-            expect(message.errors[:base].first).to match /label_selector/
+            expect(message.errors[:base].first).to match /Missing label_selector value/
           end
 
           context 'invalid selector fields' do
@@ -161,49 +161,49 @@ module VCAP::CloudController
                 message = AppsListMessage.new label_selector: "#{value} in (bar,baz)"
 
                 expect(message).to be_invalid
-                expect(message.errors[:base].first).to match /label_selector/
+                expect(message.errors[:base].first).to match /is greater than 63 characters/
               end
 
               it 'marks as invalid keys that start with non-alpha characters' do
                 message = AppsListMessage.new label_selector: '-foo in (bar,baz)'
 
                 expect(message).to be_invalid
-                expect(message.errors[:base].first).to match /label_selector/
+                expect(message.errors[:base].first).to match /starts or ends with invalid characters/
               end
 
               it 'marks as invalid keys that contain forbidden characters' do
                 message = AppsListMessage.new label_selector: 'f~oo in (bar,baz)'
 
                 expect(message).to be_invalid
-                expect(message.errors[:base].first).to match /label_selector/
+                expect(message.errors[:base].first).to match /contains invalid characters/
               end
 
               it 'marks as invalid keys that contain forbidden characters' do
                 message = AppsListMessage.new label_selector: 'f~oo in (bar,baz)'
 
                 expect(message).to be_invalid
-                expect(message.errors[:base].first).to match /label_selector/
+                expect(message.errors[:base].first).to match /contains invalid characters/
               end
 
               it 'marks as invalid keys that contain multiple "/"s' do
                 message = AppsListMessage.new label_selector: 'example.com/foo/bar in (bar,baz)'
 
                 expect(message).to be_invalid
-                expect(message.errors[:base].first).to match /label_selector/
+                expect(message.errors[:base].first).to match /label key has more than one/
               end
 
               it 'marks as invalid keys with non-dns prefixes' do
                 message = AppsListMessage.new label_selector: 'example...com/bar in (bar,baz)'
 
                 expect(message).to be_invalid
-                expect(message.errors[:base].first).to match /label_selector/
+                expect(message.errors[:base].first).to match /must be in valid dns format/
               end
 
               it 'rejects reserved domains' do
                 message = AppsListMessage.new label_selector: 'cloudfoundry.org/bar in (bar,baz)'
 
                 expect(message).to be_invalid
-                expect(message.errors[:base].first).to match /label_selector/
+                expect(message.errors[:base].first).to match /is a reserved domain/
               end
 
               it 'marks as invalid keys that with prefixes that exceed the max length' do
@@ -211,14 +211,14 @@ module VCAP::CloudController
                 message = AppsListMessage.new label_selector: "#{prefix}com/bar in (bar,baz)"
 
                 expect(message).to be_invalid
-                expect(message.errors[:base].first).to match /label_selector/
+                expect(message.errors[:base].first).to match /is greater than 253 characters/
               end
 
-              it 'marks as invalid keys that with prefixes but no name' do
+              it 'marks as invalid keys with prefixes but no name' do
                 message = AppsListMessage.new label_selector: 'example.com/ in (bar,baz)'
 
                 expect(message).to be_invalid
-                expect(message.errors[:base].first).to match /label_selector/
+                expect(message.errors[:base].first).to match /label key cannot be empty string/
               end
             end
 
@@ -227,21 +227,21 @@ module VCAP::CloudController
                 message = AppsListMessage.new label_selector: 'foo inn (bar,baz)'
 
                 expect(message).to be_invalid
-                expect(message.errors[:base].first).to match /label_selector/
+                expect(message.errors[:base].first).to match /contains invalid characters/
               end
 
               it 'validates incorrect "notin" operations' do
                 message = AppsListMessage.new label_selector: 'foo notinn (bar,baz)'
 
                 expect(message).to be_invalid
-                expect(message.errors[:base].first).to match /label_selector/
+                expect(message.errors[:base].first).to match /contains invalid characters/
               end
 
               it 'validates incorrect set operations' do
                 message = AppsListMessage.new label_selector: 'foo == (bar,baz)'
 
                 expect(message).to be_invalid
-                expect(message.errors[:base].first).to match /label_selector/
+                expect(message.errors[:base].first).to match /contains invalid characters/
               end
             end
 
@@ -251,21 +251,21 @@ module VCAP::CloudController
                 message = AppsListMessage.new label_selector: "foo in (bar,#{value})"
 
                 expect(message).to be_invalid
-                expect(message.errors[:base].first).to match /label_selector/
+                expect(message.errors[:base].first).to match /is greater than 63 characters/
               end
 
               it 'marks as invalid values that start with non-alpha characters' do
-                message = AppsListMessage.new label_selector: 'foo in (bar,-baz )'
+                message = AppsListMessage.new label_selector: 'foo in (bar,-baz)'
 
                 expect(message).to be_invalid
-                expect(message.errors[:base].first).to match /label_selector/
+                expect(message.errors[:base].first).to match /starts or ends with invalid characters/
               end
 
               it 'marks as invalid values that contain forbidden characters' do
                 message = AppsListMessage.new label_selector: 'foo in (bar,b~az )'
 
                 expect(message).to be_invalid
-                expect(message.errors[:base].first).to match /label_selector/
+                expect(message.errors[:base].first).to match /contains invalid characters/
               end
             end
           end

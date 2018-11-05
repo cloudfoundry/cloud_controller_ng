@@ -36,20 +36,21 @@ module VCAP::CloudController::Validators
     def validate_label_key(label_key, record)
       label_key = label_key.to_s
 
-      unless LabelValidatorHelper.valid_key_presence?(label_key)
-        record.errors.add(:metadata, 'label key cannot be empty string')
+      label_result = LabelValidatorHelper.valid_key_presence?(label_key)
+      unless label_result.is_valid?
+        record.errors.add(:metadata, label_result.message)
         return
       end
 
-      unless LabelValidatorHelper.valid_key_format?(label_key)
-        record.errors.add(:metadata, "label key has more than one '/'")
-      end
+      label_result = LabelValidatorHelper.valid_key_format?(label_key)
+      record.errors.add(:metadata, label_result.message) unless label_result.is_valid?
 
       prefix, name = VCAP::CloudController::LabelHelpers.extract_prefix(label_key)
       validate_prefix(prefix, record)
 
-      unless LabelValidatorHelper.valid_key_presence?(name)
-        record.errors.add(:metadata, 'label key cannot be empty string')
+      label_result = LabelValidatorHelper.valid_key_presence?(name)
+      unless label_result.is_valid?
+        record.errors.add(:metadata, label_result.message)
         return
       end
 
@@ -58,17 +59,9 @@ module VCAP::CloudController::Validators
 
     def validate_prefix(prefix, record)
       return if prefix.nil?
-
-      unless LabelValidatorHelper.valid_prefix_format?(prefix)
-        record.errors.add(:metadata, "label prefix '#{prefix}' must be in valid dns format")
-      end
-
-      unless LabelValidatorHelper.valid_prefix_size?(prefix)
-        record.errors.add(:metadata, "label prefix '#{prefix[0...8]}...' is greater than #{LabelValidatorHelper::MAX_PREFIX_SIZE} characters")
-      end
-
-      unless LabelValidatorHelper.is_not_reserved(prefix)
-        record.errors.add(:metadata, 'Cloudfoundry.org is a reserved domain')
+      [:valid_prefix_format?, :valid_prefix_size?, :is_not_reserved].each do |method|
+        label_result = LabelValidatorHelper.send(method, prefix)
+        record.errors.add(:metadata, label_result.message) unless label_result.is_valid?
       end
     end
 
@@ -78,16 +71,11 @@ module VCAP::CloudController::Validators
     end
 
     def validate_common_label_syntax(key_or_value, type, record)
-      unless LabelValidatorHelper.valid_characters?(key_or_value)
-        record.errors.add(:metadata, "label #{type} '#{key_or_value}' contains invalid characters")
-      end
-
-      unless LabelValidatorHelper.start_end_alphanumeric?(key_or_value)
-        record.errors.add(:metadata, "label #{type} '#{key_or_value}' starts or ends with invalid characters")
-      end
-
-      unless LabelValidatorHelper.valid_size?(key_or_value)
-        record.errors.add(:metadata, "label #{type} '#{key_or_value[0...8]}...' is greater than #{LabelValidatorHelper::MAX_LABEL_SIZE} characters")
+      [:valid_characters?, :start_end_alphanumeric?, :valid_size?].each do |method|
+        label_result = LabelValidatorHelper.send(method, key_or_value)
+        unless label_result.is_valid?
+          record.errors.add(:metadata, "#{type} error: #{label_result.message}")
+        end
       end
     end
   end

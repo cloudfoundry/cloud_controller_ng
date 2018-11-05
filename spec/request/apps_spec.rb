@@ -459,15 +459,6 @@ RSpec.describe 'Apps' do
 
       let(:admin_header) { headers_for(user, scopes: %w(cloud_controller.admin)) }
 
-      it 'returns a 400 when the label_selector is invalid' do
-        get '/v3/apps?label_selector=buncha nonsense', nil, admin_header
-
-        parsed_response = MultiJson.load(last_response.body)
-
-        expect(last_response.status).to eq(400)
-        expect(parsed_response['errors'].first['detail']).to match(/label_selector/)
-      end
-
       it 'returns a 200 and the filtered apps for "in" label selector' do
         get '/v3/apps?label_selector=foo in (bar)', nil, admin_header
 

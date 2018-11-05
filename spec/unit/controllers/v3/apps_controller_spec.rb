@@ -201,6 +201,20 @@ RSpec.describe AppsV3Controller, type: :controller do
         expect(parsed_body['pagination']['previous']['href']).to match(/page=2/)
       end
     end
+
+    context 'label_selection' do
+      before do
+        set_current_user_as_admin(user: user)
+      end
+
+      it 'returns a 400 when the label_selector is invalid' do
+        get :index, params: { label_selector: 'buncha nonsense' }
+
+        expect(response.status).to eq(400)
+
+        expect(parsed_body['errors'].first['detail']).to match(/contains invalid characters/)
+      end
+    end
   end
 
   describe '#show' do
