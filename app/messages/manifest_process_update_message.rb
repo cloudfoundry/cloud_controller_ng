@@ -24,6 +24,8 @@ module VCAP::CloudController
       },
       if: proc { |a| a.requested?(:health_check_type) }
 
+    # This code implicitly depends on class UriPathValidator
+    # See gem active_model/validations/validates.rb: validates(*attributes) for details
     validates :health_check_http_endpoint,
       allow_nil: true,
       uri_path: true,
