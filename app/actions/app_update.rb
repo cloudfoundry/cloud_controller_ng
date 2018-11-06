@@ -22,7 +22,7 @@ module VCAP::CloudController
 
         update_app_command(app, message) if message.requested?(:command)
         update_app_env(app, message) if message.requested?(:env)
-        LabelsUpdate.update(app, message.labels, AppLabelModel) if message.requested?(:metadata)
+        LabelsUpdate.update(app, message.labels, AppLabelModel)
 
         app.save
 

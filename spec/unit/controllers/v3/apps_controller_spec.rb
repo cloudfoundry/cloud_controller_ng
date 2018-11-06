@@ -366,7 +366,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
           expect(response.status).to eq 422
           expect(response.body).to include 'UnprocessableEntity'
-          expect(response.body).to include 'Cloudfoundry.org is a reserved domain'
+          expect(response.body).to include 'cloudfoundry.org is a reserved domain'
         end
       end
 
@@ -718,7 +718,7 @@ RSpec.describe AppsV3Controller, type: :controller do
                 patch :update, params: { guid: app_model.guid }.merge(request_body), as: :json
                 expect(response.status).to eq 422
                 expect(response.body).to include 'UnprocessableEntity'
-                expect(response.body).to include 'Cloudfoundry.org is a reserved domain'
+                expect(response.body).to include 'cloudfoundry.org is a reserved domain'
               end
             end
           end

@@ -190,7 +190,7 @@ module VCAP::CloudController::Validators
 
         it 'is invalid' do
           expect(subject).not_to be_valid
-          expect(subject.errors_on(:metadata)).to contain_exactly('Cloudfoundry.org is a reserved domain', 'Cloudfoundry.org is a reserved domain')
+          expect(subject.errors_on(:metadata)).to contain_exactly('cloudfoundry.org is a reserved domain', 'cloudfoundry.org is a reserved domain')
         end
       end
 

@@ -20,9 +20,9 @@ RSpec.describe 'Organizations' do
       request_body = {
         name: 'org1',
         metadata: {
-            labels: {
-                freaky: 'friday'
-            }
+          labels: {
+            freaky: 'friday'
+          }
         }
       }.to_json
 
@@ -246,7 +246,12 @@ RSpec.describe 'Organizations' do
   describe 'PATCH /v3/organizations/:guid' do
     let(:update_request) do
       {
-        name: 'New Name World'
+        name: 'New Name World',
+        metadata: {
+          labels: {
+            freaky: 'thursday'
+          }
+        },
       }.to_json
     end
 
@@ -261,10 +266,12 @@ RSpec.describe 'Organizations' do
       expected_response = {
         'name' => 'New Name World',
         'guid' => organization1.guid,
-        'metadata' => { 'labels' => {} },
         'links' => { 'self' => { 'href' => "http://api2.vcap.me/v3/organizations/#{organization1.guid}" } },
         'created_at' => iso8601,
         'updated_at' => iso8601,
+        'metadata' => {
+          'labels' => { 'freaky' => 'thursday' }
+        }
       }
 
       parsed_response = MultiJson.load(last_response.body)

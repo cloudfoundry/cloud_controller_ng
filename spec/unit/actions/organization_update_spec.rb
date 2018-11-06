@@ -6,16 +6,27 @@ module VCAP::CloudController
     describe 'update' do
       let(:org) { VCAP::CloudController::Organization.make(name: 'old-org-name') }
 
-      context 'when a name is requested' do
+      context 'when a name and label are requested' do
         let(:message) do
           VCAP::CloudController::OrganizationUpdateMessage.new({
-            name: 'new-org-name'
+            name: 'new-org-name',
+            metadata: {
+              labels: {
+                freaky: 'wednesday',
+              },
+            },
           })
         end
 
         it 'updates a organization' do
           updated_org = OrganizationUpdate.new.update(org, message)
           expect(updated_org.reload.name).to eq 'new-org-name'
+        end
+
+        it 'updates metadata' do
+          updated_org = OrganizationUpdate.new.update(org, message)
+          expect(updated_org.reload.labels.first.key_name).to eq 'freaky'
+          expect(updated_org.reload.labels.first.value).to eq 'wednesday'
         end
 
         context 'when model validation fails' do
@@ -42,7 +53,7 @@ module VCAP::CloudController
         end
       end
 
-      context 'when a name is not requested' do
+      context 'when nothing is requested' do
         let(:message) do
           VCAP::CloudController::OrganizationUpdateMessage.new({})
         end
@@ -50,6 +61,11 @@ module VCAP::CloudController
         it 'does not change the organization name' do
           updated_org = OrganizationUpdate.new.update(org, message)
           expect(updated_org.reload.name).to eq 'old-org-name'
+        end
+
+        it 'does not change labels' do
+          updated_org = OrganizationUpdate.new.update(org, message)
+          expect(updated_org.reload.labels).to be_empty
         end
       end
     end

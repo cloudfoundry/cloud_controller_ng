@@ -7,6 +7,8 @@ module VCAP::CloudController
       org.db.transaction do
         org.lock!
         org.name = message.name if message.requested?(:name)
+        LabelsUpdate.update(org, message.labels, OrganizationLabelModel)
+
         org.save
       end
 

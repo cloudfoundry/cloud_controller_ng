@@ -72,7 +72,7 @@ module VCAP::CloudController::Validators
 
       def is_not_reserved(label_key_prefix)
         return LabelError.none if label_key_prefix.nil? || label_key_prefix.downcase != RESERVED_DOMAIN
-        LabelError.error('Cloudfoundry.org is a reserved domain')
+        LabelError.error('cloudfoundry.org is a reserved domain')
       end
 
       def valid_prefix_size?(label_key_prefix)
