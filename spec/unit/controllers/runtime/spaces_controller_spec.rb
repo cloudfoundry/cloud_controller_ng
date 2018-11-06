@@ -834,6 +834,15 @@ module VCAP::CloudController
           expect(Space.find(guid: space.guid)).not_to be_nil
         end
 
+        it 'deletes the associated labels' do
+          space_label = SpaceLabelModel.make(key_name: 'some_key', value: 'some_value', resource_guid: space.guid)
+          delete "/v2/spaces/#{space.guid}"
+
+          expect(last_response).to have_status_code(204)
+          expect(Space.find(guid: space.guid)).to be_nil
+          expect(SpaceLabelModel.find(guid: space_label.guid))
+        end
+
         it 'fails to delete spaces with service_instances associated to it' do
           ServiceInstance.make(space: space)
           delete "/v2/spaces/#{space.guid}"

@@ -21,13 +21,22 @@ module VCAP::CloudController
           return [CloudController::Errors::ApiError.new_from_details('OrganizationDeletionFailed', org.name, error_message)]
         end
 
-        org.destroy
+        Organization.db.transaction do
+          delete_labels(org)
+          org.destroy
+        end
       end
     end
 
     def timeout_error(dataset)
       org_name = dataset.first.name
       CloudController::Errors::ApiError.new_from_details('OrganizationDeleteTimeout', org_name)
+    end
+
+    private
+
+    def delete_labels(org_model)
+      LabelDelete.new.delete(org_model.labels)
     end
   end
 end

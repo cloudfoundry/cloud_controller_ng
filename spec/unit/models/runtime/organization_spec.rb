@@ -125,12 +125,6 @@ module VCAP::CloudController
             resource_guid: other_org.guid
           )
         end
-
-        it 'removes the related organization labels' do
-          expect {
-            org.destroy
-          }.to change { OrganizationLabelModel.count }.by(-2)
-        end
       end
     end
 

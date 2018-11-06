@@ -23,9 +23,11 @@ module VCAP::CloudController
         errors << err unless err.nil?
 
         if instance_delete_errors.empty? && instance_unshare_errors.empty?
-          delete_apps(space_model)
-          delete_labels(space_model)
-          space_model.destroy
+          Space.db.transaction do
+            delete_apps(space_model)
+            delete_labels(space_model)
+            space_model.destroy
+          end
         end
 
         role_delete_errors = delete_roles(space_model)

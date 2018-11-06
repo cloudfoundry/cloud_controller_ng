@@ -1290,14 +1290,20 @@ module VCAP::CloudController
       end
 
       context 'with recursive=false' do
-        before do
+        it 'raises an error when the org has anything but labels it' do
           Space.make(organization: org)
-        end
-
-        it 'raises an error when the org has anything in it' do
           delete "/v2/organizations/#{org.guid}"
           expect(last_response).to have_status_code 400
           expect(decoded_response['error_code']).to eq 'CF-AssociationNotEmpty'
+        end
+
+        it 'deletes the associated labels' do
+          label = OrganizationLabelModel.make(key_name: 'some_key', value: 'some_value', resource_guid: org.guid)
+          delete "/v2/organizations/#{org.guid}"
+
+          expect(last_response).to have_status_code(204)
+          expect(Organization.find(guid: org.guid)).to be_nil
+          expect(OrganizationLabelModel.find(guid: label.guid))
         end
       end
 
