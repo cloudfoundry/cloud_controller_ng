@@ -65,25 +65,6 @@ module VCAP::Services::ServiceBrokers::V2
       raise e
     end
 
-    def fetch_service_instance_last_operation(instance)
-      path                = service_instance_last_operation_path(instance)
-      response            = @http_client.get(path)
-      parsed_response     = @response_parser.parse_fetch_state(path, response)
-      last_operation_hash = parsed_response.delete('last_operation') || {}
-
-      state = extract_state(instance, last_operation_hash)
-
-      result = {
-        last_operation:
-          {
-            state: state
-          }
-      }
-
-      result[:last_operation][:description] = last_operation_hash['description'] if last_operation_hash['description']
-      result.merge(parsed_response.symbolize_keys)
-    end
-
     def create_service_key(key, arbitrary_parameters: {})
       path              = service_binding_resource_path(key.guid, key.service_instance.guid)
       body              = {
@@ -182,47 +163,6 @@ module VCAP::Services::ServiceBrokers::V2
       }
     end
 
-    def fetch_service_binding_last_operation(service_binding)
-      path = service_binding_last_operation_path(service_binding)
-      response = @http_client.get(path)
-      parsed_response = @response_parser.parse_fetch_service_binding_last_operation(path, response)
-      last_operation_hash = parsed_response['last_operation'] || {}
-
-      {}.tap do |result|
-        result[:last_operation] = {}
-        result[:last_operation][:state] = extract_state(service_binding, last_operation_hash)
-        result[:last_operation][:description] = last_operation_hash['description'] if last_operation_hash['description']
-      end
-    end
-
-    def deprovision(instance, accepts_incomplete: false)
-      path = service_instance_resource_path(instance)
-
-      body = {
-        service_id: instance.service.broker_provided_id,
-        plan_id:    instance.service_plan.broker_provided_id,
-      }
-      body[:accepts_incomplete] = true if accepts_incomplete
-      response                  = @http_client.delete(path, body)
-
-      parsed_response     = @response_parser.parse_deprovision(path, response) || {}
-      last_operation_hash = parsed_response['last_operation'] || {}
-      state               = last_operation_hash['state']
-
-      {
-        last_operation: {
-                          type:                      'delete',
-                          description:               last_operation_hash['description'] || '',
-                          state:                     state || 'succeeded',
-                          broker_provided_operation: async_response?(response) ? parsed_response['operation'] : nil
-                        }.compact
-      }
-    rescue VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerConflict => e
-      raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceDeprovisionFailed', e.message)
-    rescue => e
-      raise e.exception("Service instance #{instance.name}: #{e.message}")
-    end
-
     def update(instance, plan, accepts_incomplete: false, arbitrary_parameters: nil, previous_values: {})
       path = service_instance_resource_path(instance, accepts_incomplete: accepts_incomplete)
 
@@ -272,6 +212,66 @@ module VCAP::Services::ServiceBrokers::V2
         }
       }
       [attributes, e]
+    end
+
+    def deprovision(instance, accepts_incomplete: false)
+      path = service_instance_resource_path(instance)
+
+      body = {
+        service_id: instance.service.broker_provided_id,
+        plan_id:    instance.service_plan.broker_provided_id,
+      }
+      body[:accepts_incomplete] = true if accepts_incomplete
+      response                  = @http_client.delete(path, body)
+
+      parsed_response     = @response_parser.parse_deprovision(path, response) || {}
+      last_operation_hash = parsed_response['last_operation'] || {}
+      state               = last_operation_hash['state']
+
+      {
+        last_operation: {
+                          type:                      'delete',
+                          description:               last_operation_hash['description'] || '',
+                          state:                     state || 'succeeded',
+                          broker_provided_operation: async_response?(response) ? parsed_response['operation'] : nil
+                        }.compact
+      }
+    rescue VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerConflict => e
+      raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceDeprovisionFailed', e.message)
+    rescue => e
+      raise e.exception("Service instance #{instance.name}: #{e.message}")
+    end
+
+    def fetch_service_instance_last_operation(instance)
+      path                = service_instance_last_operation_path(instance)
+      response            = @http_client.get(path)
+      parsed_response     = @response_parser.parse_fetch_state(path, response)
+      last_operation_hash = parsed_response.delete('last_operation') || {}
+
+      state = extract_state(instance, last_operation_hash)
+
+      result = {
+        last_operation:
+          {
+            state: state
+          }
+      }
+
+      result[:last_operation][:description] = last_operation_hash['description'] if last_operation_hash['description']
+      result.merge(parsed_response.symbolize_keys)
+    end
+
+    def fetch_service_binding_last_operation(service_binding)
+      path = service_binding_last_operation_path(service_binding)
+      response = @http_client.get(path)
+      parsed_response = @response_parser.parse_fetch_service_binding_last_operation(path, response)
+      last_operation_hash = parsed_response['last_operation'] || {}
+
+      {}.tap do |result|
+        result[:last_operation] = {}
+        result[:last_operation][:state] = extract_state(service_binding, last_operation_hash)
+        result[:last_operation][:description] = last_operation_hash['description'] if last_operation_hash['description']
+      end
     end
 
     def fetch_service_instance(instance)
