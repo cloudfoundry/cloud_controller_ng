@@ -2,13 +2,17 @@
 
 ## External to the Cloud Controller
 
-### [CF Acceptance Tests](https://github.com/cloudfoundry/cf-acceptance-tests/)
+### [CF Acceptance Tests (CATS)](https://github.com/cloudfoundry/cf-acceptance-tests/)
 
-These tests run against a full Cloud Foundry deployment. They should be used to test integrations between CC and other Cloud Foundry components. Because they are comparatively more expensive to run than other types of testing, they are typically not used for behavior that is only relevant to the CC.
+These tests run against a full Cloud Foundry deployment. They should be used to test integrations between CC and other Cloud Foundry components. Because they are run by many teams and are comparatively more expensive to run than other types of testing, CATS are typically restricted to testing happy-path scenarios that require a fully integrated CF.
 
-### [Sync Integration Tests](https://github.com/cloudfoundry/sync-integration-tests)
+### [Sync Integration Tests (SITS)](https://github.com/cloudfoundry/sync-integration-tests)
 
 These test desired and actual app state syncing between Cloud Controller and Diego. It forces Cloud Controller's and Diego's knowledge of app states to diverge so that Cloud Controller's sync process has to reconcile them.
+
+### [Banausic Acceptance & Regression Avoidance Suite (BARAS)](https://github.com/cloudfoundry/capi-bara-tests)
+
+These tests run against a full Cloud Foundry deployment. These are similar in structure, format, and cost to CATS but are only run and maintained by the CAPI team. This is where we will test non-happy-path integrations between the Cloud Controller and other components that do not otherwise belong in CATS. If a test requires a fully integrated CF environment, but is likely only to be of interest to the CAPI team, the BARAS are a good place to put it.
 
 ## Within the Cloud Controller Code Base
 
