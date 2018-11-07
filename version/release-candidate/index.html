@@ -390,27 +390,54 @@ Use the cf cli to obtain a bearer token: cf oauth-token
 <h2 id="labels-and-selectors">Labels and Selectors</h2>
 
 <p>Labels are user-specified key/value pairs that are attached to <a href="#api-resource">API Resources</a>.
-They are queryable identifying attributes of a resource, but they do not affect the operation of CloudFoundry.
-Examples may include (but are not limited to):</p>
+They are queryable, identifying attributes of a resource, but they do not affect the operation of CloudFoundry.</p>
 
-<ul>
-<li><code class="prettyprint">production: true</code> or <code class="prettyprint">production: false</code></li>
-<li><code class="prettyprint">env: dev</code> or <code class="prettyprint">env: test</code> or <code class="prettyprint">env: prod</code></li>
-<li><code class="prettyprint">chargeback-code: abc123</code></li>
-</ul>
+<p>For example, an app may be assigned a label with key <code class="prettyprint">sensitive</code> and possible values <code class="prettyprint">true</code> or <code class="prettyprint">false</code>.</p>
+
+<p>Users could then find all sensitive apps with a selector for <code class="prettyprint">sensitive=true</code>, resulting in a response containing
+only apps having the label key <code class="prettyprint">sensitive</code> with a label value of <code class="prettyprint">false</code>.</p>
 
 <h3 id="labels">Labels</h3>
+<pre class="highlight plaintext"><code>Example Resource with Labels
+</code></pre>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"fd35633f-5c5c-4e4e-a5a9-0722c970a9d2"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-18T23:26:46Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-10-17T20:00:42Z"</span><span class="p">,</span><span class="w">
 
-<p>Labels allow users to categorize resources in ways that are helpful to them.
-For example, an app may be assigned a label with key <code class="prettyprint">sensitive</code> and possible values <code class="prettyprint">true</code> or <code class="prettyprint">false</code>.
-Users could then easily find all sensitive apps with a query for <code class="prettyprint">sensitive=true</code>;
-any apps that do not have a label with the <code class="prettyprint">sensitive</code> key or with their <code class="prettyprint">sensitive</code> value set to <code class="prettyprint">false</code> would not be returned.</p>
+  </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"api-server"</span><span class="p">,</span><span class="w">
+
+  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"environment"</span><span class="p">:</span><span class="w"> </span><span class="s2">"production"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"internet-facing"</span><span class="p">:</span><span class="w"> </span><span class="s2">"false"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+
+  </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/fd35633f-5c5c-4e4e-a5a9-0722c970a9d2"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<p>Labels allow users to apply identifying attributes to resources that are meaningful to the user, but not the CloudFoundry system.</p>
+
+<p>Examples may include (but are not limited to):</p>
+
+<ul>
+<li><code class="prettyprint">&quot;production&quot; : &quot;true&quot;</code> or <code class="prettyprint">&quot;production&quot; : &quot;false&quot;</code></li>
+<li><code class="prettyprint">&quot;env&quot; : &quot;dev&quot;</code> or <code class="prettyprint">&quot;env&quot; : &quot;test&quot;</code> or <code class="prettyprint">&quot;env&quot; : &quot;prod&quot;</code></li>
+<li><code class="prettyprint">&quot;chargeback-code&quot; : &quot;abc123&quot;</code></li>
+</ul>
 
 <h4 id="label-keys">Label Keys</h4>
 
-<p>Label keys are made up of an (optional) <code class="prettyprint">prefix</code>, and <code class="prettyprint">name</code>. If a <code class="prettyprint">prefix</code> is present, it is separated from the <code class="prettyprint">name</code> by a <code class="prettyprint">/</code>.</p>
+<p>Label keys are made up of an (optional) prefix, and name. If a prefix is present, it is separated from the name by a <code class="prettyprint">/</code>.
+Prefixes are dns names intended to enable namespacing of label keys.</p>
 
-<p>Label key <code class="prettyprint">prefix</code>s must adhere to the following restrictions:</p>
+<p>A label key <code class="prettyprint">prefix</code> must adhere to the following restrictions:</p>
 
 <ul>
 <li>Length: 0-253 characters</li>
@@ -418,7 +445,7 @@ any apps that do not have a label with the <code class="prettyprint">sensitive</
 <li>DNS subdomain format (series of subdomain labels separated by <code class="prettyprint">.</code>)</li>
 </ul>
 
-<p>Label key <code class="prettyprint">name</code>s must adhere to the following restrictions:</p>
+<p>A label key <code class="prettyprint">name</code> must adhere to the following restrictions:</p>
 
 <ul>
 <li>Length: 1-63 characters</li>
@@ -439,47 +466,57 @@ any apps that do not have a label with the <code class="prettyprint">sensitive</
 
 <h3 id="selectors">Selectors</h3>
 
-<p>API resources can be filtered via their list endpoints with the query parameter <code class="prettyprint">label_selector</code>.
-A <code class="prettyprint">label_selector</code> consists of one or more <code class="prettyprint">requirement</code>s in a comma-delimited list.</p>
+<p>Selectors allow users to filter and group API resources by the labels applied to them. A selector consists of one or
+more <code class="prettyprint">requirements</code> in a comma-delimited list.</p>
 
-<p><em>eg:</em> <code class="prettyprint">label_selector=env=dev,!chargeback-code,tier in (backend,worker)</code></p>
+<p><em>eg:</em> <code class="prettyprint">env=dev,!chargeback-code,tier in (backend,worker)</code></p>
 
-<p>A <code class="prettyprint">requirement</code> consists of an <em>key</em>, an <code class="prettyprint">operator</code>, and optional <em>value</em>(s).</p>
+<p>Selectors can be used to filter and group resources using the query parameter <code class="prettyprint">label_selector</code> on list endpoints.</p>
 
-<p>The following different types of <code class="prettyprint">requirement</code>s are supported:</p>
+<aside class="notice">
+When included in a url, the selector must be appropriately escaped.
+</aside>
 
-<ol>
-<li><p><em>key</em></p>
+<p>A requirement consists of a <em>key</em>, an <code class="prettyprint">operator</code>, and optional <em>value(s)</em>.</p>
 
-<p>Returns all resources that have been assigned a label with the given <em>key</em> (with any <em>value</em>)</p>
-
-<p><em>eg:</em> <code class="prettyprint">chargeback-code</code></p></li>
-<li><p><code class="prettyprint">!</code><em>key</em></p>
-
-<p>Returns all resources that have <strong>not</strong> been assigned a label with the given <em>key</em> (with any <em>value</em>)</p>
-
-<p><em>eg:</em> <code class="prettyprint">!chargeback-code</code></p></li>
-<li><p><em>key</em><code class="prettyprint">=</code><em>value</em> or <em>key</em><code class="prettyprint">==</code><em>value</em></p>
-
-<p>Returns all resources that have been assigned a label with the given <em>key</em> and <em>value</em></p>
-
-<p><em>eg:</em> <code class="prettyprint">env=dev</code> or <code class="prettyprint">env==dev</code></p></li>
-<li><p><em>key</em><code class="prettyprint">!=</code><em>value</em></p>
-
-<p>Returns all resources that either have <strong>not</strong> been assigned a label with the given <em>key</em> or have a label with the given <em>key</em> but a different <em>value</em></p>
-
-<p><em>eg:</em> <code class="prettyprint">env!=dev</code></p></li>
-<li><p><em>key</em> <code class="prettyprint">in</code> (<em>value1</em>,<em>value2</em>&hellip;)</p>
-
-<p>Returns all resources that have been assigned a label with the given <em>key</em> with one of the specified <em>value</em>(s)</p>
-
-<p><em>eg:</em> <code class="prettyprint">env in (dev,test)</code></p></li>
-<li><p><em>key</em> <code class="prettyprint">notin</code> (<em>value1</em>,<em>value2</em>&hellip;)</p>
-
-<p>Returns all resources that either have <strong>not</strong> been assigned a label with the given <em>key</em> or have a label with the given <em>key</em> but none of the specified <em>value</em>(s)</p>
-
-<p><em>eg:</em> <code class="prettyprint">env notin (prod,qa)</code></p></li>
-</ol>
+<table><thead>
+<tr>
+<th>Requirement</th>
+<th>Format</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>existence</td>
+<td><em>key</em></td>
+<td>Returns all resources that have been assigned a label with the given <em>key</em> (with any <em>value</em>)</td>
+</tr>
+<tr>
+<td>non-existence</td>
+<td><code class="prettyprint">!</code><em>key</em></td>
+<td>Returns all resources that have not been assigned a label with the given <em>key</em> (with any <em>value</em>)</td>
+</tr>
+<tr>
+<td>equality</td>
+<td><em>key</em><code class="prettyprint">=</code><em>value</em> or <em>key</em><code class="prettyprint">==</code><em>value</em></td>
+<td>Returns all resources that have been assigned a label with the given <em>key</em> and <em>value</em></td>
+</tr>
+<tr>
+<td>inequality</td>
+<td><em>key</em><code class="prettyprint">!=</code><em>value</em></td>
+<td>Returns all resources that either have not been assigned a label with the given <em>key</em> or have a label with the given <em>key</em> but a different <em>value</em></td>
+</tr>
+<tr>
+<td>set inclusion</td>
+<td><em>key</em> <code class="prettyprint">in</code> (<em>value1</em>,<em>value2</em>&hellip;)</td>
+<td>Returns all resources that have been assigned a label with the given <em>key</em> with one of the specified <em>value(s)</em></td>
+</tr>
+<tr>
+<td>set exclusion</td>
+<td><em>key</em> <code class="prettyprint">notin</code> (<em>value1</em>,<em>value2</em>&hellip;)</td>
+<td>Returns all resources that either have not been assigned a label with the given <em>key</em> or have a label with the given <em>key</em> but none of the specified <em>value(s)</em></td>
+</tr>
+</tbody></table>
 
 <h2 id="lifecycles">Lifecycles</h2>
 
