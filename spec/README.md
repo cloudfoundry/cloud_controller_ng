@@ -6,6 +6,12 @@
 
 These tests run against a full Cloud Foundry deployment. They should be used to test integrations between CC and other Cloud Foundry components. Because they are run by many teams and are comparatively more expensive to run than other types of testing, CATS are typically restricted to testing happy-path scenarios that require a fully integrated CF.
 
+### [Banausic Acceptance & Regression Avoidance Suite (BARAS)](https://github.com/cloudfoundry/capi-bara-tests)
+
+Similar to CATS, this suite exercises a Cloud Foundry deployment using the cf CLI and curl. It is scoped to testing user-facing, end-to-end features, focusing on failure paths and edge-cases in the Cloud Controller.
+
+Any tests with a Cloud Controller focus that are being removed from the cf-acceptance-tests repo are good candidates for being moved here.
+
 ### [Sync Integration Tests (SITS)](https://github.com/cloudfoundry/sync-integration-tests)
 
 These test desired and actual app state syncing between Cloud Controller and Diego. It forces Cloud Controller's and Diego's knowledge of app states to diverge so that Cloud Controller's sync process has to reconcile them.
