@@ -31,6 +31,9 @@ module VCAP::CloudController
         expect(message.order_by).to eq('created_at')
         expect(message.include).to eq('space')
         expect(message.label_selector).to eq('foo in (stuff,things)')
+        expect(message.requirements.first.key).to eq('foo')
+        expect(message.requirements.first.operator).to eq(:in)
+        expect(message.requirements.first.values).to contain_exactly('stuff', 'things')
       end
 
       it 'converts requested keys to symbols' do
@@ -45,6 +48,190 @@ module VCAP::CloudController
         expect(message.requested?(:order_by)).to be_truthy
         expect(message.requested?(:include)).to be_truthy
         expect(message.requested?(:label_selector)).to be_truthy
+      end
+
+      context 'validations' do
+        context 'label_selector' do
+          it 'validates that label_selector is not empty' do
+            message = AppsListMessage.from_params('label_selector' => '')
+
+            expect(message).to be_invalid
+            expect(message.errors[:base].length).to eq 1
+            expect(message.errors[:base].first).to match /Missing label_selector value/
+          end
+
+          it 'validates that no label_selector query is blank' do
+            message = AppsListMessage.from_params('label_selector' => 'foo=bar, ')
+
+            expect(message).to be_invalid
+            expect(message.errors[:base].length).to eq 1
+            expect(message.errors[:base].first).to match /Invalid label_selector value/
+          end
+
+          context 'invalid selector fields' do
+            context 'invalid keys' do
+              it 'marks as invalid keys that exceed the max length' do
+                value = 'la' * 100
+                message = AppsListMessage.from_params('label_selector' => "#{value} in (bar,baz)")
+
+                expect(message).to be_invalid
+                expect(message.errors[:base].first).to match /is greater than 63 characters/
+              end
+
+              it 'marks as invalid keys that start with non-alpha characters' do
+                message = AppsListMessage.from_params('label_selector' => '-foo in (bar,baz)')
+
+                expect(message).to be_invalid
+                expect(message.errors[:base].first).to match /starts or ends with invalid characters/
+              end
+
+              it 'marks as invalid keys that contain forbidden characters' do
+                message = AppsListMessage.from_params('label_selector' => 'f~oo in (bar,baz)')
+
+                expect(message).to be_invalid
+                expect(message.errors[:base].first).to match /contains invalid characters/
+              end
+
+              it 'marks as invalid keys that contain forbidden characters' do
+                message = AppsListMessage.from_params('label_selector' => 'f~oo in (bar,baz)')
+
+                expect(message).to be_invalid
+                expect(message.errors[:base].first).to match /contains invalid characters/
+              end
+
+              it 'marks as invalid keys that contain multiple "/"s' do
+                message = AppsListMessage.from_params('label_selector' => 'example.com/foo/bar in (bar,baz)')
+
+                expect(message).to be_invalid
+                expect(message.errors[:base].first).to match /label key has more than one/
+              end
+
+              it 'marks as invalid keys with non-dns prefixes' do
+                message = AppsListMessage.from_params('label_selector' => 'example...com/bar in (bar,baz)')
+
+                expect(message).to be_invalid
+                expect(message.errors[:base].first).to match /must be in valid dns format/
+              end
+
+              it 'rejects reserved domains' do
+                message = AppsListMessage.from_params('label_selector' => 'cloudfoundry.org/bar in (bar,baz)')
+
+                expect(message).to be_invalid
+                expect(message.errors[:base].first).to match /is a reserved domain/
+              end
+
+              it 'marks as invalid keys that with prefixes that exceed the max length' do
+                prefix = 'la.' * 100
+                message = AppsListMessage.from_params('label_selector' => "#{prefix}com/bar in (bar,baz)")
+
+                expect(message).to be_invalid
+                expect(message.errors[:base].first).to match /is greater than 253 characters/
+              end
+
+              it 'marks as invalid keys with prefixes but no name' do
+                message = AppsListMessage.from_params('label_selector' => 'example.com/ in (bar,baz)')
+
+                expect(message).to be_invalid
+                expect(message.errors[:base].first).to match /label key cannot be empty string/
+              end
+            end
+
+            context 'invalid operators' do
+              it 'validates incorrect "in" operations' do
+                message = AppsListMessage.from_params('label_selector' => 'foo inn (bar,baz)')
+
+                expect(message).to be_invalid
+                expect(message.errors[:base].first).to match /Invalid label_selector value/
+              end
+
+              it 'validates incorrect "notin" operations' do
+                message = AppsListMessage.from_params('label_selector' => 'foo notinn (bar,baz)')
+
+                expect(message).to be_invalid
+                expect(message.errors[:base].first).to match /Invalid label_selector value/
+              end
+
+              it 'validates incorrect set operations' do
+                message = AppsListMessage.from_params('label_selector' => 'foo == (bar,baz)')
+
+                expect(message).to be_invalid
+                expect(message.errors[:base].first).to match /Invalid label_selector value/
+              end
+            end
+
+            context 'invalid values' do
+              it 'marks as invalid values that exceed the max length' do
+                value = 'la' * 100
+                message = AppsListMessage.from_params('label_selector' => "foo in (bar,#{value})")
+
+                expect(message).to be_invalid
+                expect(message.errors[:base].first).to match /is greater than 63 characters/
+              end
+
+              it 'marks as invalid values that start with non-alpha characters' do
+                message = AppsListMessage.from_params('label_selector' => 'foo in (bar,-baz)')
+
+                expect(message).to be_invalid
+                expect(message.errors[:base].first).to match /starts or ends with invalid characters/
+              end
+
+              it 'marks as invalid values that contain forbidden characters' do
+                message = AppsListMessage.from_params('label_selector' => 'foo in (bar,b~az )')
+
+                expect(message).to be_invalid
+                expect(message.errors[:base].first).to match /contains invalid characters/
+              end
+            end
+          end
+
+          context 'set operations' do
+            it 'validates correct in operation' do
+              message = AppsListMessage.from_params('label_selector' => 'example.com/foo in (bar,baz)')
+
+              expect(message).to be_valid
+            end
+
+            it 'validates correct notin operation' do
+              message = AppsListMessage.from_params('label_selector' => 'foo notin (bar,baz)')
+
+              expect(message).to be_valid
+            end
+          end
+
+          context 'equality operation' do
+            it 'validates correct = operation' do
+              message = AppsListMessage.from_params('label_selector' => 'example.com/foo=bar')
+
+              expect(message).to be_valid
+            end
+
+            it 'validates correct == operation' do
+              message = AppsListMessage.from_params('label_selector' => 'example.com/foo==bar')
+
+              expect(message).to be_valid
+            end
+
+            it 'validates correct != operation' do
+              message = AppsListMessage.from_params('label_selector' => 'example.com/foo!=bar')
+
+              expect(message).to be_valid
+            end
+          end
+
+          context 'existence operations' do
+            it 'validates correct existence operation' do
+              message = AppsListMessage.from_params('label_selector' => 'example.com/foo')
+
+              expect(message).to be_valid
+            end
+
+            it 'validates correct non-existence operation' do
+              message = AppsListMessage.from_params('label_selector' => '!example.com/foo')
+
+              expect(message).to be_valid
+            end
+          end
+        end
       end
     end
 
@@ -135,188 +322,6 @@ module VCAP::CloudController
           message = AppsListMessage.new space_guids: 'not array'
           expect(message).to be_invalid
           expect(message.errors[:space_guids].length).to eq 1
-        end
-
-        context 'label_selector' do
-          it 'validates that label_selector is not empty' do
-            message = AppsListMessage.new label_selector: ''
-
-            expect(message).to be_invalid
-            expect(message.errors[:base].length).to eq 1
-            expect(message.errors[:base].first).to match /Missing label_selector value/
-          end
-
-          it 'validates that no label_selector query is blank' do
-            message = AppsListMessage.new label_selector: 'foo=bar, '
-
-            expect(message).to be_invalid
-            expect(message.errors[:base].length).to eq 1
-            expect(message.errors[:base].first).to match /Missing label_selector value/
-          end
-
-          context 'invalid selector fields' do
-            context 'invalid keys' do
-              it 'marks as invalid keys that exceed the max length' do
-                value = 'la' * 100
-                message = AppsListMessage.new label_selector: "#{value} in (bar,baz)"
-
-                expect(message).to be_invalid
-                expect(message.errors[:base].first).to match /is greater than 63 characters/
-              end
-
-              it 'marks as invalid keys that start with non-alpha characters' do
-                message = AppsListMessage.new label_selector: '-foo in (bar,baz)'
-
-                expect(message).to be_invalid
-                expect(message.errors[:base].first).to match /starts or ends with invalid characters/
-              end
-
-              it 'marks as invalid keys that contain forbidden characters' do
-                message = AppsListMessage.new label_selector: 'f~oo in (bar,baz)'
-
-                expect(message).to be_invalid
-                expect(message.errors[:base].first).to match /contains invalid characters/
-              end
-
-              it 'marks as invalid keys that contain forbidden characters' do
-                message = AppsListMessage.new label_selector: 'f~oo in (bar,baz)'
-
-                expect(message).to be_invalid
-                expect(message.errors[:base].first).to match /contains invalid characters/
-              end
-
-              it 'marks as invalid keys that contain multiple "/"s' do
-                message = AppsListMessage.new label_selector: 'example.com/foo/bar in (bar,baz)'
-
-                expect(message).to be_invalid
-                expect(message.errors[:base].first).to match /label key has more than one/
-              end
-
-              it 'marks as invalid keys with non-dns prefixes' do
-                message = AppsListMessage.new label_selector: 'example...com/bar in (bar,baz)'
-
-                expect(message).to be_invalid
-                expect(message.errors[:base].first).to match /must be in valid dns format/
-              end
-
-              it 'rejects reserved domains' do
-                message = AppsListMessage.new label_selector: 'cloudfoundry.org/bar in (bar,baz)'
-
-                expect(message).to be_invalid
-                expect(message.errors[:base].first).to match /is a reserved domain/
-              end
-
-              it 'marks as invalid keys that with prefixes that exceed the max length' do
-                prefix = 'la.' * 100
-                message = AppsListMessage.new label_selector: "#{prefix}com/bar in (bar,baz)"
-
-                expect(message).to be_invalid
-                expect(message.errors[:base].first).to match /is greater than 253 characters/
-              end
-
-              it 'marks as invalid keys with prefixes but no name' do
-                message = AppsListMessage.new label_selector: 'example.com/ in (bar,baz)'
-
-                expect(message).to be_invalid
-                expect(message.errors[:base].first).to match /label key cannot be empty string/
-              end
-            end
-
-            context 'invalid operators' do
-              it 'validates incorrect "in" operations' do
-                message = AppsListMessage.new label_selector: 'foo inn (bar,baz)'
-
-                expect(message).to be_invalid
-                expect(message.errors[:base].first).to match /contains invalid characters/
-              end
-
-              it 'validates incorrect "notin" operations' do
-                message = AppsListMessage.new label_selector: 'foo notinn (bar,baz)'
-
-                expect(message).to be_invalid
-                expect(message.errors[:base].first).to match /contains invalid characters/
-              end
-
-              it 'validates incorrect set operations' do
-                message = AppsListMessage.new label_selector: 'foo == (bar,baz)'
-
-                expect(message).to be_invalid
-                expect(message.errors[:base].first).to match /contains invalid characters/
-              end
-            end
-
-            context 'invalid values' do
-              it 'marks as invalid values that exceed the max length' do
-                value = 'la' * 100
-                message = AppsListMessage.new label_selector: "foo in (bar,#{value})"
-
-                expect(message).to be_invalid
-                expect(message.errors[:base].first).to match /is greater than 63 characters/
-              end
-
-              it 'marks as invalid values that start with non-alpha characters' do
-                message = AppsListMessage.new label_selector: 'foo in (bar,-baz)'
-
-                expect(message).to be_invalid
-                expect(message.errors[:base].first).to match /starts or ends with invalid characters/
-              end
-
-              it 'marks as invalid values that contain forbidden characters' do
-                message = AppsListMessage.new label_selector: 'foo in (bar,b~az )'
-
-                expect(message).to be_invalid
-                expect(message.errors[:base].first).to match /contains invalid characters/
-              end
-            end
-          end
-
-          context 'set operations' do
-            it 'validates correct in operation' do
-              message = AppsListMessage.new label_selector: 'example.com/foo in (bar,baz)'
-
-              expect(message).to be_valid
-            end
-
-            it 'validates correct notin operation' do
-              message = AppsListMessage.new label_selector: 'foo notin (bar,baz)'
-
-              expect(message).to be_valid
-            end
-          end
-
-          context 'equality operation' do
-            it 'validates correct = operation' do
-              message = AppsListMessage.new label_selector: 'example.com/foo=bar'
-
-              expect(message).to be_valid
-            end
-
-            it 'validates correct == operation' do
-              message = AppsListMessage.new label_selector: 'example.com/foo==bar'
-
-              expect(message).to be_valid
-            end
-
-            it 'validates correct != operation' do
-              message = AppsListMessage.new label_selector: 'example.com/foo!=bar'
-
-              expect(message).to be_valid
-            end
-          end
-
-          context 'existence operations' do
-            it 'validates correct existence operation' do
-              message = AppsListMessage.new label_selector: 'example.com/foo'
-
-              expect(message).to be_valid
-            end
-
-            it 'validates correct non-existence operation' do
-              message = AppsListMessage.new label_selector: '!example.com/foo'
-
-              expect(message).to be_valid
-            end
-          end
         end
       end
     end

@@ -2,21 +2,22 @@ module VCAP::CloudController
   class LabelHelpers
     KEY_SEPARATOR = '/'.freeze
     REQUIREMENT_SPLITTER = /(?:\(.*?\)|[^,])+/
+    KEY_CHARACTERS = %r{[\w\-\.\_\/]+}
 
-    IN_PATTERN = /(?<key>.*) in \((?<values>.*)\)$/                                 # foo in (bar,baz)
-    NOT_IN_PATTERN = /(?<key>.*) notin \((?<values>.*)\)$/                          # funky notin (uptown,downtown)
-    EQUALS_PATTERN = %r{^(?!=)(?<key>[\w\-\.\_\/]*)(=|==)(?<values>[\w\-\.\_]*)$}   # foo=bar or foo==bar
-    NOT_EQUALS_PATTERN = %r{(?<key>[\w\-\.\_\/]*)(!=)(?<values>[\w\-\.\_]*)$}       # foo!=bar
-    EXISTENCE_PATTERN = /^(?!!)(?<key>.*)$(?<values>)/                              # foo
-    NON_EXISTENCE_PATTERN = /!(?<key>.*)$(?<values>)/                               # !foo
+    IN_PATTERN = /\A(?<key>.*?) in \((?<values>.*)\)\z/                     # foo in (bar,baz)
+    NOT_IN_PATTERN = /\A(?<key>.*?) notin \((?<values>.*)\)\z/              # funky notin (uptown,downtown)
+    EQUAL_PATTERN = /\A(?<key>#{KEY_CHARACTERS})(==?)(?<values>.*)\z/       # foo=bar or foo==bar
+    NOT_EQUAL_PATTERN = /\A(?<key>#{KEY_CHARACTERS})(!=)(?<values>.*)\z/    # foo!=bar
+    EXISTS_PATTERN = /^\A(?<key>#{KEY_CHARACTERS})(?<values>)\z/            # foo
+    NOT_EXISTS_PATTERN = /\A!(?<key>#{KEY_CHARACTERS})(?<values>)\z/        # !foo
 
     REQUIREMENT_OPERATOR_PAIRS = [
       { pattern: IN_PATTERN, operator: :in },
       { pattern: NOT_IN_PATTERN, operator: :notin },
-      { pattern: EQUALS_PATTERN, operator: :equal },
-      { pattern: NOT_EQUALS_PATTERN, operator: :not_equal },
-      { pattern: EXISTENCE_PATTERN, operator: :exists }, # foo
-      { pattern: NON_EXISTENCE_PATTERN, operator: :not_exists },
+      { pattern: EQUAL_PATTERN, operator: :equal },
+      { pattern: NOT_EQUAL_PATTERN, operator: :not_equal },
+      { pattern: EXISTS_PATTERN, operator: :exists }, # foo
+      { pattern: NOT_EXISTS_PATTERN, operator: :not_exists },
     ].freeze
 
     class << self

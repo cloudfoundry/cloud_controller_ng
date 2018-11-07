@@ -1,8 +1,8 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  RSpec.describe LabelSelectorParser do
-    subject(:label_selector_parser) { LabelSelectorParser }
+  RSpec.describe LabelSelectorQueryGenerator do
+    subject(:label_selector_parser) { LabelSelectorQueryGenerator }
 
     describe '.add_selector_queries' do
       let!(:app1) { AppModel.make }
@@ -15,13 +15,21 @@ module VCAP::CloudController
       let!(:app3_label) { AppLabelModel.make(resource_guid: app3.guid, key_name: 'foo', value: 'town') }
       let!(:app3_exclusive_label) { AppLabelModel.make(resource_guid: app3.guid, key_name: 'easter', value: 'bunny') }
 
+      let(:requirements) do
+        [VCAP::CloudController::LabelSelectorRequirement.new(key: 'foo', operator: operator, values: values)]
+      end
+
       describe 'in set requirements' do
+        let(:operator) { :in }
+
         context 'with a single value' do
+          let(:values) { 'funky' }
+
           it 'returns the models that satisfy the requirements' do
             dataset = subject.add_selector_queries(
               label_klass: AppLabelModel,
               resource_dataset: AppModel.dataset,
-              label_selector: 'foo in (funky)'
+              requirements: requirements
             )
 
             expect(dataset.map(&:guid)).to contain_exactly(app2.guid)
@@ -29,11 +37,13 @@ module VCAP::CloudController
         end
 
         context 'with multiple values' do
+          let(:values) { 'funky,town' }
+
           it 'returns the models that satisfy the requirements' do
             dataset = subject.add_selector_queries(
               label_klass: AppLabelModel,
               resource_dataset: AppModel.dataset,
-              label_selector: 'foo in (funky,town)'
+              requirements: requirements
             )
 
             expect(dataset.map(&:guid)).to contain_exactly(app2.guid, app3.guid)
@@ -42,12 +52,16 @@ module VCAP::CloudController
       end
 
       describe 'notin set requirements' do
+        let(:operator) { :notin }
+
         context 'with a single value' do
+          let(:values) { 'funky' }
+
           it 'returns the models that satisfy the requirements' do
             dataset = subject.add_selector_queries(
               label_klass: AppLabelModel,
               resource_dataset: AppModel.dataset,
-              label_selector: 'foo notin (funky)'
+              requirements: requirements
             )
 
             expect(dataset.map(&:guid)).to contain_exactly(app1.guid, app3.guid)
@@ -55,11 +69,13 @@ module VCAP::CloudController
         end
 
         context 'with multiple values' do
+          let(:values) { 'funky,town' }
+
           it 'returns the models that satisfy the requirements' do
             dataset = subject.add_selector_queries(
               label_klass: AppLabelModel,
               resource_dataset: AppModel.dataset,
-              label_selector: 'foo notin (funky,town)'
+              requirements: requirements
             )
 
             expect(dataset.map(&:guid)).to contain_exactly(app1.guid)
@@ -68,34 +84,30 @@ module VCAP::CloudController
       end
 
       describe 'equality requirements' do
+        let(:operator) { :equal }
+        let(:values) { 'funky' }
+
         it 'returns the models that satisfy the "=" requirements' do
           dataset = subject.add_selector_queries(
             label_klass: AppLabelModel,
             resource_dataset: AppModel.dataset,
-            label_selector: 'foo=funky'
+            requirements: requirements
           )
 
           expect(dataset.map(&:guid)).to contain_exactly(app2.guid)
         end
 
-        it 'returns the models that satisfy the "==" requirements' do
-          dataset = subject.add_selector_queries(
-            label_klass: AppLabelModel,
-            resource_dataset: AppModel.dataset,
-            label_selector: 'foo==funky'
-          )
+        context 'when it is not_equal' do
+          let(:operator) { :not_equal }
+          it 'returns the models that satisfy the "!=" requirements' do
+            dataset = subject.add_selector_queries(
+              label_klass: AppLabelModel,
+              resource_dataset: AppModel.dataset,
+              requirements: requirements
+            )
 
-          expect(dataset.map(&:guid)).to contain_exactly(app2.guid)
-        end
-
-        it 'returns the models that satisfy the "!=" requirements' do
-          dataset = subject.add_selector_queries(
-            label_klass: AppLabelModel,
-            resource_dataset: AppModel.dataset,
-            label_selector: 'foo!=funky'
-          )
-
-          expect(dataset.map(&:guid)).to contain_exactly(app1.guid, app3.guid)
+            expect(dataset.map(&:guid)).to contain_exactly(app1.guid, app3.guid)
+          end
         end
       end
 
@@ -104,7 +116,7 @@ module VCAP::CloudController
           dataset = subject.add_selector_queries(
             label_klass: AppLabelModel,
             resource_dataset: AppModel.dataset,
-            label_selector: 'easter'
+            requirements: [VCAP::CloudController::LabelSelectorRequirement.new(key: 'easter', operator: :exists, values: '')]
           )
 
           expect(dataset.map(&:guid)).to contain_exactly(app3.guid)
@@ -114,7 +126,7 @@ module VCAP::CloudController
           dataset = subject.add_selector_queries(
             label_klass: AppLabelModel,
             resource_dataset: AppModel.dataset,
-            label_selector: '!easter'
+            requirements: [VCAP::CloudController::LabelSelectorRequirement.new(key: 'easter', operator: :not_exists, values: '')]
           )
 
           expect(dataset.map(&:guid)).to contain_exactly(app1.guid, app2.guid)
@@ -126,7 +138,10 @@ module VCAP::CloudController
           dataset = subject.add_selector_queries(
             label_klass: AppLabelModel,
             resource_dataset: AppModel.dataset,
-            label_selector: 'foo in (funky,town),foo notin (bar)'
+            requirements: [
+              VCAP::CloudController::LabelSelectorRequirement.new(key: 'foo', operator: :in, values: 'funky,town'),
+              VCAP::CloudController::LabelSelectorRequirement.new(key: 'foo', operator: :notin, values: 'bar')
+            ]
           )
 
           expect(dataset.map(&:guid)).to contain_exactly(app2.guid, app3.guid)
@@ -136,7 +151,10 @@ module VCAP::CloudController
           dataset = subject.add_selector_queries(
             label_klass: AppLabelModel,
             resource_dataset: AppModel.dataset,
-            label_selector: 'foo!=bar,foo!=town'
+            requirements: [
+              VCAP::CloudController::LabelSelectorRequirement.new(key: 'foo', operator: :not_equal, values: 'bar'),
+              VCAP::CloudController::LabelSelectorRequirement.new(key: 'foo', operator: :not_equal, values: 'town')
+            ]
           )
 
           expect(dataset.map(&:guid)).to contain_exactly(app2.guid)
@@ -146,7 +164,10 @@ module VCAP::CloudController
           dataset = subject.add_selector_queries(
             label_klass: AppLabelModel,
             resource_dataset: AppModel.dataset,
-            label_selector: 'foo==bar,foo=town'
+            requirements: [
+              VCAP::CloudController::LabelSelectorRequirement.new(key: 'foo', operator: :equal, values: 'bar'),
+              VCAP::CloudController::LabelSelectorRequirement.new(key: 'foo', operator: :equal, values: 'town')
+            ]
           )
 
           expect(dataset.count).to eq(0)

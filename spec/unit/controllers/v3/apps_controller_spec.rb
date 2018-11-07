@@ -212,7 +212,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
         expect(response.status).to eq(400)
 
-        expect(parsed_body['errors'].first['detail']).to match(/contains invalid characters/)
+        expect(parsed_body['errors'].first['detail']).to match(/Invalid label_selector value/)
       end
     end
   end

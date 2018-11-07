@@ -3,6 +3,7 @@ require 'utils/uri_utils'
 require 'models/helpers/health_check_types'
 require 'models/helpers/label_error'
 require 'models/helpers/label_helpers'
+require 'models/helpers/label_selector_requirement'
 require 'cloud_controller/domain_decorator'
 require 'messages/label_validator_helper'
 
@@ -118,37 +119,35 @@ module VCAP::CloudController::Validators
     end
   end
 
-  class LabelSelectorValidator < ActiveModel::Validator
+  class LabelSelectorRequirementValidator < ActiveModel::Validator
     MISSING_LABEL_SELECTOR_ERROR = 'Missing label_selector value'.freeze
+    INVALID_LABEL_SELECTOR_ERROR = 'Invalid label_selector value'.freeze
 
     def validate(record)
-      requirements = record.label_selector.scan(VCAP::CloudController::LabelHelpers::REQUIREMENT_SPLITTER)
-      if requirements.empty? || requirements.any?(&:blank?)
+      if record.requirements.empty?
         record.errors[:base] << MISSING_LABEL_SELECTOR_ERROR
         return
       end
 
-      requirements.each do |r|
+      record.requirements.each do |r|
         res = valid_requirement?(r)
-        record.errors[:base] << res.message if !res.is_valid?
+        record.errors[:base] << res.message unless res.is_valid?
       end
     end
 
     private
 
     def valid_requirement?(requirement)
-      matches = VCAP::CloudController::LabelHelpers::REQUIREMENT_OPERATOR_PAIRS.
-                map { |rop| rop[:pattern].match(requirement) }.
-                compact
-      return VCAP::CloudController::LabelError.error('no selectors specified') if matches.empty?
+      return VCAP::CloudController::LabelError.error(INVALID_LABEL_SELECTOR_ERROR) if requirement.nil?
 
-      match = matches.first
-      res = LabelValidatorHelper.valid_key?(match[:key])
+      res = LabelValidatorHelper.valid_key?(requirement.key)
       return res unless res.is_valid?
-      match[:values].split(',').each do |v|
+
+      requirement.values.each do |v|
         res = LabelValidatorHelper.valid_value?(v)
-        return res if !res.is_valid?
+        return res unless res.is_valid?
       end
+
       VCAP::CloudController::LabelError.none
     end
   end
