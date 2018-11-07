@@ -38,6 +38,10 @@ class RootController < ActionController::Base
           spaces: {
             href: build_api_uri(path: '/spaces')
           },
+          stacks: {
+            href: build_api_uri(path: '/stacks'),
+            experimental: true,
+          },
           tasks: {
             href: build_api_uri(path: '/tasks')
           },
