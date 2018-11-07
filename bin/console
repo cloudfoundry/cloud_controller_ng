@@ -2,5 +2,6 @@
 
 require File.expand_path('../config/boot', __dir__)
 ENV['RAILS_ENV'] ||= 'production'
+ENV['DB_CONNECTION_STRING'] ||= 'mysql2://root:password@localhost:3306/cc_test_'
 
 require 'cloud_controller/console'
