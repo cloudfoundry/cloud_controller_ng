@@ -588,14 +588,28 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
     end
   end
 
-  describe '#patch organization name' do
+  describe '#patch' do
     let(:org) { VCAP::CloudController::Organization.make(name: 'Water') }
+    let(:labels) do
+      {
+        fruit: 'pineapple',
+        truck: 'mazda5'
+      }
+    end
     let(:space) { VCAP::CloudController::Space.make(organization: org) }
     let(:user) { VCAP::CloudController::User.make }
     let(:request_body) do
       {
-        name: 'Fire'
+        name: 'Fire',
+        metadata: {
+          labels: {
+            fruit: 'passionfruit'
+          }
+        }
       }
+    end
+    before do
+      VCAP::CloudController::LabelsUpdate.update(org, labels, VCAP::CloudController::OrganizationLabelModel)
     end
 
     context 'when the user is an admin' do
@@ -607,11 +621,14 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
       it 'updates the organization' do
         patch :update, params: { guid: org.guid }.merge(request_body), as: :json
 
-        org.reload
         expect(response.status).to eq(200)
-        expect(org.name).to eq('Fire')
         expect(parsed_body['name']).to eq('Fire')
         expect(parsed_body['guid']).to eq(org.guid)
+        expect(parsed_body['metadata']['labels']).to eq({ 'fruit' => 'passionfruit', 'truck' => 'mazda5' })
+
+        org.reload
+        expect(org.name).to eq('Fire')
+        expect(org.labels.map { |label| { key: label.key_name, value: label.value } }).to match_array([{ key: 'fruit', value: 'passionfruit' }, { key: 'truck', value: 'mazda5' }])
       end
 
       context 'when an empty request is sent' do
