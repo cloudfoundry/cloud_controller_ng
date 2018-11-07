@@ -631,6 +631,28 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
         expect(org.labels.map { |label| { key: label.key_name, value: label.value } }).to match_array([{ key: 'fruit', value: 'passionfruit' }, { key: 'truck', value: 'mazda5' }])
       end
 
+      context 'when a label is deleted' do
+        let(:request_body) do
+          {
+            metadata: {
+              labels: {
+                fruit: nil
+              }
+            }
+          }
+        end
+
+        it 'succeeds' do
+          patch :update, params: { guid: org.guid }.merge(request_body), as: :json
+
+          expect(response.status).to eq(200)
+          expect(parsed_body['metadata']['labels']).to eq({ 'truck' => 'mazda5' })
+
+          org.reload
+          expect(org.labels.map { |label| { key: label.key_name, value: label.value } }).to match_array([{ key: 'truck', value: 'mazda5' }])
+        end
+      end
+
       context 'when an empty request is sent' do
         let(:request_body) do
           {}
