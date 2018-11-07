@@ -49,6 +49,8 @@ module VCAP::CloudController
       def create_deployment_process(app, deployment_guid, web_process)
         process_type = "web-deployment-#{deployment_guid}"
 
+        revision = Revision.create(app: app)
+
         process = ProcessModel.create(
           app: app,
           type: process_type,
@@ -65,6 +67,7 @@ module VCAP::CloudController
           health_check_invocation_timeout: web_process.health_check_invocation_timeout,
           enable_ssh: web_process.enable_ssh,
           ports: web_process.ports,
+          revision: revision,
         )
 
         DeploymentProcessModel.create(

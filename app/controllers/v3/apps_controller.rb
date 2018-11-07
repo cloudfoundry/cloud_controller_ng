@@ -22,6 +22,7 @@ require 'presenters/v3/app_env_presenter'
 require 'presenters/v3/app_environment_variables_presenter'
 require 'presenters/v3/paginated_list_presenter'
 require 'presenters/v3/app_droplet_relationship_presenter'
+require 'presenters/v3/revision_presenter'
 require 'presenters/v3/build_presenter'
 require 'fetchers/app_list_fetcher'
 require 'fetchers/app_builds_list_fetcher'
@@ -276,6 +277,16 @@ class AppsV3Controller < ApplicationController
 
     droplet_not_found! unless droplet
     render status: :ok, json: Presenters::V3::DropletPresenter.new(droplet)
+  end
+
+  def revision
+    app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
+    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
+
+    revision = Revision.find(guid: hashed_params[:revision_guid])
+    resource_not_found!(:revision) unless revision && revision.app_guid == app.guid
+
+    render status: :ok, json: Presenters::V3::RevisionPresenter.new(revision)
   end
 
   class DeleteAppErrorTranslatorJob < VCAP::CloudController::Jobs::ErrorTranslatorJob

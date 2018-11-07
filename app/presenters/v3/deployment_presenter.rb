@@ -13,6 +13,7 @@ module VCAP::CloudController::Presenters::V3
           guid: deployment.previous_droplet_guid
         },
         new_processes: new_processes,
+        revision: revision,
         created_at: deployment.created_at,
         updated_at: deployment.updated_at,
         relationships: {
@@ -30,6 +31,12 @@ module VCAP::CloudController::Presenters::V3
 
     def deployment
       @resource
+    end
+
+    def revision
+      deployment.deploying_web_process&.revision && {
+          guid: deployment.deploying_web_process.revision.guid
+        }
     end
 
     def new_processes

@@ -1590,4 +1590,28 @@ RSpec.describe 'Apps' do
                                  )
     end
   end
+
+  describe 'GET /v3/apps/:guid/revisions/:revguid' do
+    it 'gets a specific revision' do
+      app = VCAP::CloudController::AppModel.make(name: 'app_name', space: space)
+      revision = VCAP::CloudController::Revision.make(app: app)
+
+      get "/v3/apps/#{app.guid}/revisions/#{revision.guid}", nil, user_header
+      expect(last_response.status).to eq(200)
+
+      parsed_response = MultiJson.load(last_response.body)
+      expect(parsed_response).to be_a_response_like(
+        {
+          'guid' => revision.guid,
+          'created_at' => iso8601,
+          'updated_at' => iso8601,
+          'links' => {
+            'self' => {
+              'href' => "#{link_prefix}/v3/apps/#{app.guid}/revisions/#{revision.guid}"
+            }
+          }
+        }
+      )
+    end
+  end
 end

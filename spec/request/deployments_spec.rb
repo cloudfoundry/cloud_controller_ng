@@ -48,6 +48,9 @@ RSpec.describe 'Deployments' do
             'guid' => deployment.deploying_web_process.guid,
             'type' => deployment.deploying_web_process.type
           }],
+          'revision' => {
+            'guid' => deployment.deploying_web_process.revision_guid
+          },
           'created_at' => iso8601,
           'updated_at' => iso8601,
           'relationships' => {
@@ -106,6 +109,9 @@ RSpec.describe 'Deployments' do
             'guid' => deployment.deploying_web_process.guid,
             'type' => deployment.deploying_web_process.type
           }],
+          'revision' => {
+            'guid' => deployment.deploying_web_process.revision_guid
+          },
           'created_at' => iso8601,
           'updated_at' => iso8601,
           'relationships' => {
@@ -156,6 +162,7 @@ RSpec.describe 'Deployments' do
           'guid' => deployment.deploying_web_process.guid,
           'type' => deployment.deploying_web_process.type
         }],
+        'revision' => nil,
         'created_at' => iso8601,
         'updated_at' => iso8601,
         'relationships' => {
@@ -242,6 +249,7 @@ RSpec.describe 'Deployments' do
                 'guid' => deployment.deploying_web_process.guid,
                 'type' => deployment.deploying_web_process.type
               }],
+              'revision' => nil,
               'created_at' => iso8601,
               'updated_at' => iso8601,
               'relationships' => {
@@ -273,6 +281,7 @@ RSpec.describe 'Deployments' do
                 'guid' => deployment2.deploying_web_process.guid,
                 'type' => deployment2.deploying_web_process.type
               }],
+              'revision' => nil,
               'created_at' => iso8601,
               'updated_at' => iso8601,
               'relationships' => {
@@ -336,6 +345,7 @@ RSpec.describe 'Deployments' do
                 'guid' => deployment.deploying_web_process.guid,
                 'type' => deployment.deploying_web_process.type
               }],
+              'revision' => nil,
               'created_at' => iso8601,
               'updated_at' => iso8601,
               'relationships' => {

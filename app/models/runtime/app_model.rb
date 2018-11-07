@@ -19,6 +19,7 @@ module VCAP::CloudController
     one_to_many :builds, class: 'VCAP::CloudController::BuildModel', key: :app_guid, primary_key: :guid
     one_to_many :deployments, class: 'VCAP::CloudController::DeploymentModel', key: :app_guid, primary_key: :guid
     one_to_many :labels, class: 'VCAP::CloudController::AppLabelModel', key: :resource_guid, primary_key: :guid
+    one_to_many :revisions, class: 'VCAP::CloudController::Revision', key: :app_guid, primary_key: :guid
 
     many_to_one :droplet, class: 'VCAP::CloudController::DropletModel', key: :droplet_guid, primary_key: :guid, without_guid_generation: true
     one_to_one :web_process, class: 'VCAP::CloudController::ProcessModel', key: :app_guid, primary_key: :guid, conditions: { type: ProcessTypes::WEB }
@@ -31,7 +32,7 @@ module VCAP::CloudController
     set_field_as_encrypted :environment_variables, column: :encrypted_environment_variables
     serializes_via_json :environment_variables
 
-    add_association_dependencies buildpack_lifecycle_data: :destroy
+    add_association_dependencies buildpack_lifecycle_data: :destroy, revisions: :destroy
 
     strip_attributes :name
 

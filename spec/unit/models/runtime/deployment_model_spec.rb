@@ -5,6 +5,7 @@ module VCAP::CloudController
     let(:app) { AppModel.make(name: 'rolling-app') }
     let(:droplet) { DropletModel.make(app: app) }
     let(:deploying_web_process) { ProcessModel.make }
+
     let(:deployment) { DeploymentModel.make(app: app, droplet: droplet, deploying_web_process: deploying_web_process) }
 
     it 'has an app' do
