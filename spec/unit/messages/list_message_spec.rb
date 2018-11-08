@@ -104,5 +104,123 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe 'label_selector parsing' do
+      let(:list_message_klass) do
+        Class.new(VCAP::CloudController::ListMessage) do
+          register_allowed_keys [:label_selector]
+
+          def self.from_params(params)
+            super(params, [])
+          end
+        end
+      end
+
+      context 'invalid operators' do
+        it 'parses incorrect "in" operations as nil requirement' do
+          message = list_message_klass.from_params('label_selector' => 'foo inn (bar,baz)')
+
+          expect(message.requirements).to contain_exactly(nil)
+        end
+
+        it 'parses incorrect "notin" operations as nil requirement' do
+          message = list_message_klass.from_params('label_selector' => 'foo notinn (bar,baz)')
+
+          expect(message.requirements).to contain_exactly(nil)
+        end
+
+        it 'parses incorrect set operations as nil requirement' do
+          message = list_message_klass.from_params('label_selector' => 'foo == (bar,baz)')
+
+          expect(message.requirements).to contain_exactly(nil)
+        end
+
+        it 'parses multiple incorrect operations as nil requirements' do
+          message = list_message_klass.from_params('label_selector' => 'foo == (bar,baz),foo narp doggie,bar inn (bat)')
+
+          expect(message.requirements).to contain_exactly(nil, nil, nil)
+        end
+      end
+
+      context 'set operations' do
+        it 'parses correct in operation' do
+          message = list_message_klass.from_params('label_selector' => 'example.com/foo in (bar,baz)')
+
+          expect(message.requirements.first.key).to eq('example.com/foo')
+          expect(message.requirements.first.operator).to eq(:in)
+          expect(message.requirements.first.values).to contain_exactly('bar', 'baz')
+        end
+
+        it 'parses correct notin operation' do
+          message = list_message_klass.from_params('label_selector' => 'example.com/foo notin (bar,baz)')
+
+          expect(message.requirements.first.key).to eq('example.com/foo')
+          expect(message.requirements.first.operator).to eq(:notin)
+          expect(message.requirements.first.values).to contain_exactly('bar', 'baz')
+        end
+      end
+
+      context 'equality operation' do
+        it 'parses correct = operation' do
+          message = list_message_klass.from_params('label_selector' => 'example.com/foo=bar')
+
+          expect(message.requirements.first.key).to eq('example.com/foo')
+          expect(message.requirements.first.operator).to eq(:equal)
+          expect(message.requirements.first.values).to contain_exactly('bar')
+        end
+
+        it 'parses correct == operation' do
+          message = list_message_klass.from_params('label_selector' => 'example.com/foo==bar')
+
+          expect(message.requirements.first.key).to eq('example.com/foo')
+          expect(message.requirements.first.operator).to eq(:equal)
+          expect(message.requirements.first.values).to contain_exactly('bar')
+        end
+
+        it 'parses correct != operation' do
+          message = list_message_klass.from_params('label_selector' => 'example.com/foo!=bar')
+
+          expect(message.requirements.first.key).to eq('example.com/foo')
+          expect(message.requirements.first.operator).to eq(:not_equal)
+          expect(message.requirements.first.values).to contain_exactly('bar')
+        end
+      end
+
+      context 'existence operations' do
+        it 'parses correct existence operation' do
+          message = list_message_klass.from_params('label_selector' => 'example.com/foo')
+
+          expect(message.requirements.first.key).to eq('example.com/foo')
+          expect(message.requirements.first.operator).to eq(:exists)
+          expect(message.requirements.first.values).to be_empty
+        end
+
+        it 'parses correct non-existence operation' do
+          message = list_message_klass.from_params('label_selector' => '!example.com/foo')
+
+          expect(message.requirements.first.key).to eq('example.com/foo')
+          expect(message.requirements.first.operator).to eq(:not_exists)
+          expect(message.requirements.first.values).to be_empty
+        end
+      end
+
+      context 'multiple operations' do
+        it 'parses multiple operations' do
+          message = list_message_klass.from_params('label_selector' => 'example.com/foo,bar!=baz,spork in (fork,spoon)')
+
+          expect(message.requirements.first.key).to eq('example.com/foo')
+          expect(message.requirements.first.operator).to eq(:exists)
+          expect(message.requirements.first.values).to be_empty
+
+          expect(message.requirements.second.key).to eq('bar')
+          expect(message.requirements.second.operator).to eq(:not_equal)
+          expect(message.requirements.second.values).to contain_exactly('baz')
+
+          expect(message.requirements.third.key).to eq('spork')
+          expect(message.requirements.third.operator).to eq(:in)
+          expect(message.requirements.third.values).to contain_exactly('fork', 'spoon')
+        end
+      end
+    end
   end
 end

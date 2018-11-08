@@ -1,4 +1,5 @@
 require 'messages/list_message'
+require 'messages/validators/label_selector_requirement_validator'
 
 module VCAP::CloudController
   class AppsListMessage < ListMessage

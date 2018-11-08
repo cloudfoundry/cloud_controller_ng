@@ -95,6 +95,16 @@ module VCAP::CloudController
           expect(message).to be_invalid
           expect(message.errors[:order_by].length).to eq 1
         end
+
+        it 'validates requirements' do
+          message = OrgsListMessage.from_params('label_selector' => '')
+
+          expect_any_instance_of(Validators::LabelSelectorRequirementValidator).
+            to receive(:validate).
+            with(message).
+            and_call_original
+          message.valid?
+        end
       end
     end
   end

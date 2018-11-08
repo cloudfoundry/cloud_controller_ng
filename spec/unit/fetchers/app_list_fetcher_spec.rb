@@ -80,7 +80,7 @@ module VCAP::CloudController
       end
 
       context 'when a label_selector is provided' do
-        let(:filters) { { label_selector: 'dog in (chihuahua,scooby-doo)' } }
+        let(:filters) { { 'label_selector' => 'dog in (chihuahua,scooby-doo)' } }
         let!(:app_label) do
           VCAP::CloudController::AppLabelModel.make(resource_guid: app.guid, key_name: 'dog', value: 'scooby-doo')
         end
@@ -98,7 +98,7 @@ module VCAP::CloudController
           let!(:happiest_app_label) do
             VCAP::CloudController::AppLabelModel.make(resource_guid: happiest_app.guid, key_name: 'dog', value: 'scooby-doo')
           end
-          let(:filters) { { names: ['bob'], label_selector: 'dog in (chihuahua,scooby-doo)' } }
+          let(:filters) { { 'names' => 'bob', 'label_selector' => 'dog in (chihuahua,scooby-doo)' } }
 
           it 'returns the desired app' do
             expect(apps.all).to contain_exactly(happiest_app)

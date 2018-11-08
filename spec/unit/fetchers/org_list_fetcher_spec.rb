@@ -92,6 +92,18 @@ module VCAP::CloudController
             expect(results).to match_array([org1, org3, org4])
           end
         end
+
+        context 'when a label_selector is provided' do
+          let(:message) do OrgsListMessage.from_params({ 'label_selector' => 'key=value' })
+          end
+          let!(:org1label) { OrganizationLabelModel.make(key_name: 'key', value: 'value', organization: org1) }
+          let!(:org2label) { OrganizationLabelModel.make(key_name: 'key2', value: 'value2', organization: org2) }
+
+          it 'returns the correct set of orgs' do
+            results = fetcher.fetch_all(message: message).all
+            expect(results).to contain_exactly(org1)
+          end
+        end
       end
     end
 
