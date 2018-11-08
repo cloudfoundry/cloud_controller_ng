@@ -1,0 +1,41 @@
+### Update a space
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.space/v3/spaces/[guid]" \
+  -X PATCH \
+  -H "Authorization: bearer [token]" \
+  -H "Content-Type: application/json" \
+  -d '{ "name": "new-space-name" }'
+
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :space %>
+```
+
+#### Definition
+`PATCH /v3/spaces/:guid`
+
+#### Optional Parameters
+
+Name | Type | Description
+---- | ---- | -----------
+**name** | _string_ | New space name |
+
+#### Permitted Roles
+ |
+--- | ---
+Admin |
+SpaceManager |
+OrgManager |

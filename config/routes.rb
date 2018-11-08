@@ -120,6 +120,7 @@ Rails.application.routes.draw do
   post '/spaces', to: 'spaces_v3#create'
   get '/spaces', to: 'spaces_v3#index'
   get '/spaces/:guid', to: 'spaces_v3#show'
+  patch '/spaces/:guid', to: 'spaces_v3#update'
   get '/spaces/:guid/relationships/isolation_segment', to: 'spaces_v3#show_isolation_segment'
   patch '/spaces/:guid/relationships/isolation_segment', to: 'spaces_v3#update_isolation_segment'
 

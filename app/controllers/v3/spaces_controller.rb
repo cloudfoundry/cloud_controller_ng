@@ -1,10 +1,12 @@
 require 'presenters/v3/paginated_list_presenter'
 require 'presenters/v3/space_presenter'
 require 'messages/space_create_message'
+require 'messages/space_update_message'
 require 'messages/space_update_isolation_segment_message'
 require 'messages/spaces_list_message'
 require 'actions/space_update_isolation_segment'
 require 'actions/space_create'
+require 'actions/space_update'
 require 'fetchers/space_list_fetcher'
 require 'fetchers/space_fetcher'
 
@@ -44,6 +46,20 @@ class SpacesV3Controller < ApplicationController
       path: '/v3/spaces',
       message: message
     )
+  end
+
+  def update
+    space = fetch_space(hashed_params[:guid])
+    space_not_found! unless space
+    org = space.organization
+
+    message = VCAP::CloudController::SpaceUpdateMessage.new(hashed_params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
+    unauthorized! unless roles.admin? || org.managers.include?(current_user) || space.managers.include?(current_user)
+
+    space = SpaceUpdate.new.update(space, message)
+
+    render :ok, json: Presenters::V3::SpacePresenter.new(space), status: :ok
   end
 
   def update_isolation_segment

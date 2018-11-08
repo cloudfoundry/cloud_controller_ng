@@ -499,6 +499,80 @@ RSpec.describe SpacesV3Controller, type: :controller do
     end
   end
 
+  describe '#update_name' do
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let!(:org1) { VCAP::CloudController::Organization.make(name: 'Lyle\'s Farm') }
+    let!(:space1) { VCAP::CloudController::Space.make(name: 'Lamb', organization: org1) }
+    let!(:update_message) { { name: 'Sheep' } }
+
+    context 'when the user is an admin' do
+      before do
+        set_current_user_as_admin
+      end
+
+      it 'can change the name' do
+        patch :update, params: { guid: space1.guid }.merge(update_message), as: :json
+
+        expect(response.status).to eq(200)
+        space1.reload
+        expect(space1.name).to eq('Sheep')
+        expect(parsed_body['name']).to eq('Sheep')
+      end
+    end
+
+    context 'when the message is invalid' do
+      before do
+        set_current_user_as_admin
+      end
+      let!(:update_message) { { name: 'Sheep', animals: 'Cows' } }
+
+      it 'fails' do
+        patch :update, params: { guid: space1.guid }.merge(update_message), as: :json
+        expect(response.status).to eq(422)
+      end
+    end
+
+    context 'when there is no such space' do
+      before do
+        set_current_user_as_admin
+      end
+
+      it 'fails' do
+        patch :update, params: { guid: "Greg's missing space" }.merge(update_message), as: :json
+
+        expect(response.status).to eq(404)
+      end
+    end
+
+    context 'permissions by role' do
+      role_to_expected_http_response = {
+          'admin'               => 200,
+          'space_developer'     => 403,
+          'admin_read_only'     => 403,
+          'global_auditor'      => 403,
+          'space_manager'       => 200,
+          'space_auditor'       => 403,
+          'org_manager'         => 200,
+          'org_auditor'         => 403,
+          'org_billing_manager' => 403,
+      }.freeze
+
+      role_to_expected_http_response.each do |role, expected_return_value|
+        context "and #{role} in the target space" do
+          it "returns #{expected_return_value}" do
+            set_current_user_as_role(role: role, org: org1, space: space1, user: user)
+            patch :update, params: { guid: space1.guid }.merge(update_message), as: :json
+            expect(response.status).to eq(expected_return_value),
+                                       "Expected role #{role} to get #{expected_return_value}, but got #{response.status}. Response: #{response.body}"
+            if expected_return_value == 200
+              expect(parsed_body['name']).to eq('Sheep')
+            end
+          end
+        end
+      end
+    end
+  end
+
   describe '#update_isolation_segment' do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
 

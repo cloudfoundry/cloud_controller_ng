@@ -171,4 +171,37 @@ RSpec.describe 'Spaces' do
       )
     end
   end
+
+  describe 'PATCH /v3/spaces/:guid' do
+    it 'updates the requested space' do
+      patch "/v3/spaces/#{space1.guid}", { name: 'codenames' }.to_json, admin_header
+      expect(last_response.status).to eq(200)
+
+      parsed_response = MultiJson.load(last_response.body)
+      expect(parsed_response).to be_a_response_like(
+        {
+            'guid' => space1.guid,
+            'name' => 'codenames',
+            'created_at' => iso8601,
+            'updated_at' => iso8601,
+            'relationships' => {
+                'organization' => {
+                    'data' => { 'guid' => space1.organization_guid }
+                }
+            },
+            'metadata' => {
+                'labels' => {}
+            },
+            'links' => {
+                'self' => {
+                    'href' => "#{link_prefix}/v3/spaces/#{space1.guid}"
+                },
+                'organization' => {
+                    'href' => "#{link_prefix}/v3/organizations/#{space1.organization_guid}"
+                }
+            },
+        }
+                                 )
+    end
+  end
 end
