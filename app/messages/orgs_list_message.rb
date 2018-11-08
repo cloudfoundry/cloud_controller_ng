@@ -14,10 +14,7 @@ module VCAP::CloudController
     end
 
     def self.from_params(params)
-      opts = params.dup
-      to_array! opts, 'names'
-      to_array! opts, 'guids'
-      new(opts.symbolize_keys)
+      super(params, %w(names guids))
     end
 
     def valid_order_by_values

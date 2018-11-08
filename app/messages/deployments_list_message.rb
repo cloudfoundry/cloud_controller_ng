@@ -16,10 +16,7 @@ module VCAP::CloudController
     validates :states, array: true, allow_nil: true
 
     def self.from_params(params)
-      opts = params.dup.symbolize_keys
-      to_array! opts, :app_guids
-      to_array! opts, :states
-      new(opts)
+      super(params, %w(app_guids states))
     end
   end
 end

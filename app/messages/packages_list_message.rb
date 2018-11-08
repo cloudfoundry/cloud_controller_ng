@@ -15,11 +15,7 @@ module VCAP::CloudController
     validate :app_nested_request, if: -> { app_guid.present? }
 
     def self.from_params(params)
-      opts = params.dup
-      %w(types states guids app_guids space_guids organization_guids).each do |attribute|
-        to_array! opts, attribute
-      end
-      new(opts.symbolize_keys)
+      super(params, %w(types states guids app_guids space_guids organization_guids))
     end
 
     def to_param_hash

@@ -11,13 +11,7 @@ module VCAP::CloudController
     end
 
     def self.from_params(params)
-      opts = params.dup
-
-      ['app_guids', 'route_guids'].each do |key|
-        to_array!(opts, key)
-      end
-
-      new(opts.symbolize_keys)
+      super(params, %w(app_guids route_guids))
     end
   end
 end

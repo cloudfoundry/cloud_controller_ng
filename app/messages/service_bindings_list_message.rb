@@ -7,13 +7,7 @@ module VCAP::CloudController
     validates_with NoAdditionalParamsValidator
 
     def self.from_params(params)
-      opts = params.dup
-
-      %w(app_guids service_instance_guids).each do |key|
-        to_array!(opts, key)
-      end
-
-      new(opts.symbolize_keys)
+      super(params, %w(app_guids service_instance_guids))
     end
   end
 end

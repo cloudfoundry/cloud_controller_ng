@@ -9,10 +9,7 @@ module VCAP::CloudController
     validates :space_guids, array: true, allow_nil: true
 
     def self.from_params(params)
-      opts = params.dup
-      to_array! opts, 'names'
-      to_array! opts, 'space_guids'
-      new(opts.symbolize_keys)
+      super(params, %w(names space_guids))
     end
 
     def valid_order_by_values
