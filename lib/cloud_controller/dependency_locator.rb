@@ -367,14 +367,7 @@ module CloudController
     private
 
     def build_bbs_stager_client
-      bbs_client = ::Diego::Client.new(
-        url: config.get(:diego, :bbs, :url),
-        ca_cert_file: config.get(:diego, :bbs, :ca_file),
-        client_cert_file: config.get(:diego, :bbs, :cert_file),
-        client_key_file: config.get(:diego, :bbs, :key_file),
-      )
-
-      VCAP::CloudController::Diego::BbsStagerClient.new(bbs_client)
+      VCAP::CloudController::Diego::BbsStagerClient.new(build_bbs_client)
     end
 
     def build_copilot_client
@@ -400,25 +393,11 @@ module CloudController
     end
 
     def build_bbs_apps_client
-      bbs_client = ::Diego::Client.new(
-        url: config.get(:diego, :bbs, :url),
-        ca_cert_file: config.get(:diego, :bbs, :ca_file),
-        client_cert_file: config.get(:diego, :bbs, :cert_file),
-        client_key_file: config.get(:diego, :bbs, :key_file),
-    )
-
-      VCAP::CloudController::Diego::BbsAppsClient.new(bbs_client, config)
+      VCAP::CloudController::Diego::BbsAppsClient.new(build_bbs_client, config)
     end
 
     def build_bbs_task_client
-      bbs_client = ::Diego::Client.new(
-        url: config.get(:diego, :bbs, :url),
-        ca_cert_file: config.get(:diego, :bbs, :ca_file),
-        client_cert_file: config.get(:diego, :bbs, :cert_file),
-        client_key_file: config.get(:diego, :bbs, :key_file)
-      )
-
-      VCAP::CloudController::Diego::BbsTaskClient.new(bbs_client)
+      VCAP::CloudController::Diego::BbsTaskClient.new(build_bbs_client)
     end
 
     def build_instances_client
@@ -434,14 +413,23 @@ module CloudController
     end
 
     def build_bbs_instances_client
-      bbs_client = ::Diego::Client.new(
+      VCAP::CloudController::Diego::BbsInstancesClient.new(build_bbs_client)
+    end
+
+    def build_bbs_client
+      connect_timeout = config.get(:diego, :bbs, :connect_timeout)
+      send_timeout = config.get(:diego, :bbs, :send_timeout)
+      receive_timeout = config.get(:diego, :bbs, :receive_timeout)
+
+      ::Diego::Client.new(
         url: config.get(:diego, :bbs, :url),
         ca_cert_file: config.get(:diego, :bbs, :ca_file),
         client_cert_file: config.get(:diego, :bbs, :cert_file),
         client_key_file: config.get(:diego, :bbs, :key_file),
+        connect_timeout: connect_timeout.nil? ? 10 : connect_timeout,
+        send_timeout: send_timeout.nil? ? 10 : send_timeout,
+        receive_timeout: receive_timeout.nil? ? 10 : receive_timeout,
       )
-
-      VCAP::CloudController::Diego::BbsInstancesClient.new(bbs_client)
     end
 
     def build_traffic_controller_client

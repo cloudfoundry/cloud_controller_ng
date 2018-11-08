@@ -9,7 +9,8 @@ module Diego
     let(:client_key_file) { File.join(Paths::FIXTURES, 'certs/bbs_client.key') }
 
     subject(:client) do
-      Client.new(url: bbs_url, ca_cert_file: ca_cert_file, client_cert_file: client_cert_file, client_key_file: client_key_file)
+      Client.new(url: bbs_url, ca_cert_file: ca_cert_file, client_cert_file: client_cert_file, client_key_file: client_key_file,
+                 connect_timeout: 10, send_timeout: 10, receive_timeout: 10)
     end
 
     describe 'configuration' do
