@@ -41,6 +41,7 @@ class DeploymentsController < ApplicationController
 
     begin
       deployment = DeploymentCreate.create(app: app, droplet: droplet, user_audit_info: user_audit_info)
+      logger.info("Created deployment #{deployment.guid} for app #{app.guid}")
     rescue DeploymentCreate::SetCurrentDropletError => e
       unprocessable!(e.message)
     end
@@ -64,6 +65,7 @@ class DeploymentsController < ApplicationController
 
     begin
       DeploymentCancel.cancel(deployment: deployment, user_audit_info: user_audit_info)
+      logger.info("Canceled deployment #{deployment.guid} for app #{deployment.app_guid}")
     rescue DeploymentCancel::Error => e
       unprocessable!(e.message)
     end
