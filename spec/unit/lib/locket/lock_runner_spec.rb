@@ -61,6 +61,8 @@ RSpec.describe Locket::LockRunner do
     end
 
     it 'raises an error when restarted after it has already been started' do
+      allow(locket_service).to receive(:lock)
+
       client.start
 
       expect {
