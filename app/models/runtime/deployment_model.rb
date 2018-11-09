@@ -37,6 +37,8 @@ module VCAP::CloudController
       primary_key: :guid,
       without_guid_generation: true
 
+    many_to_one :revision, class: 'VCAP::CloudController::RevisionModel', key: :revision_guid, primary_key: :guid, without_guid_generation: true
+
     add_association_dependencies historical_related_processes: :delete
 
     dataset_module do

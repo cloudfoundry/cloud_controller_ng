@@ -7,9 +7,9 @@ module VCAP::CloudController::Presenters::V3
     let(:previous_droplet) { VCAP::CloudController::DropletModel.make }
     let(:app) { VCAP::CloudController::AppModel.make }
     let(:revision) { VCAP::CloudController::RevisionModel.make(app: app) }
-    let(:process) { VCAP::CloudController::ProcessModel.make(guid: 'deploying-process-guid', type: 'web-deployment-guid-type', revision: revision) }
+    let(:process) { VCAP::CloudController::ProcessModel.make(guid: 'deploying-process-guid', type: 'web-deployment-guid-type') }
     let!(:deployment) do
-      VCAP::CloudController::DeploymentModelTestFactory.make(app: app, droplet: droplet, previous_droplet: previous_droplet, deploying_web_process: process)
+      VCAP::CloudController::DeploymentModelTestFactory.make(app: app, droplet: droplet, previous_droplet: previous_droplet, deploying_web_process: process, revision: revision)
     end
 
     describe '#to_hash' do
@@ -33,7 +33,7 @@ module VCAP::CloudController::Presenters::V3
       end
 
       it 'presents nil revision when there is none' do
-        process.update(revision_guid: nil)
+        deployment.update(revision_guid: nil)
         result = DeploymentPresenter.new(deployment.reload).to_hash
         expect(result[:revision]).to be_nil
       end

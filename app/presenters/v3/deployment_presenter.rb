@@ -34,8 +34,8 @@ module VCAP::CloudController::Presenters::V3
     end
 
     def revision
-      deployment.deploying_web_process&.revision && {
-          guid: deployment.deploying_web_process.revision.guid
+      deployment&.revision && {
+          guid: deployment.revision.guid
         }
     end
 
