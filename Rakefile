@@ -39,7 +39,12 @@ task :check_doc_links do
   puts Rainbow('Checking links in all docs...').green
   Bundler.with_clean_env do
     Dir.chdir('docs/v3') do
-      status = system('bundle install && npm install && npm run checkdocs')
+      cmd = 'bundle install && npm install && npm run checkdocs'
+      py2_path = '/usr/bin/python2.7'
+      if File.exist?(py2_path)
+        cmd = "npm config set python #{py2_path} #{cmd}"
+      end
+      status = system(cmd)
       exit $CHILD_STATUS.exitstatus if !status
       puts Rainbow('check_doc_links OK').green
     end
