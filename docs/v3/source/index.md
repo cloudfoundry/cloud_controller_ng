@@ -24,6 +24,7 @@ includes:
   - api_resources/service_bindings
   - api_resources/service_instances
   - api_resources/spaces
+  - api_resources/stacks
   - api_resources/tasks
   - introduction/introduction
   - concepts/concepts
@@ -162,5 +163,9 @@ includes:
   - experimental_resources/service_bindings/get
   - experimental_resources/service_bindings/delete
   - experimental_resources/service_bindings/list
+  - experimental_resources/stacks/header
+  - experimental_resources/stacks/object
+  - experimental_resources/stacks/create
+
 search: true
 ---

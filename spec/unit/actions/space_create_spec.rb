@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'actions/space_create'
+require 'models/runtime/space'
 
 module VCAP::CloudController
   RSpec.describe SpaceCreate do
@@ -56,10 +57,8 @@ module VCAP::CloudController
 
         context 'when it is a db uniqueness error' do
           let(:name) { 'mySpace' }
-          it 'translates database uniqueness errors into Sequel Validation Errors' do
-            Space.make(organization_guid: org.guid, name: name)
-
-            allow_any_instance_of(Space).to receive(:validate).and_return true
+          it 'handles Space::DBNameUniqueRaceErrors' do
+            allow(Space).to receive(:create).and_raise(Space::DBNameUniqueRaceError)
 
             message = VCAP::CloudController::SpaceCreateMessage.new(name: name)
             expect {
