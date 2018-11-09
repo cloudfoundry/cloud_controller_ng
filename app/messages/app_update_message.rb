@@ -1,10 +1,9 @@
-require 'messages/base_message'
+require 'messages/metadata_base_message'
 require 'messages/buildpack_lifecycle_data_message'
-require 'messages/validators/metadata_validator'
 
 module VCAP::CloudController
-  class AppUpdateMessage < BaseMessage
-    register_allowed_keys [:name, :lifecycle, :metadata]
+  class AppUpdateMessage < MetadataBaseMessage
+    register_allowed_keys [:name, :lifecycle]
 
     attr_reader :app
 
@@ -12,13 +11,8 @@ module VCAP::CloudController
       @lifecycle_requested ||= proc { |a| a.requested?(:lifecycle) }
     end
 
-    def self.metadata_requested?
-      @metadata_requested ||= proc { |a| a.requested?(:metadata) }
-    end
-
     validates_with NoAdditionalKeysValidator
     validates_with LifecycleValidator, if: lifecycle_requested?
-    validates_with MetadataValidator, if: metadata_requested?
 
     validates :name, string: true, allow_nil: true
 
@@ -31,10 +25,6 @@ module VCAP::CloudController
       hash: true,
       allow_nil: false,
       if: lifecycle_requested?
-
-    def labels
-      HashUtils.dig(metadata, :labels)
-    end
 
     def lifecycle_data
       HashUtils.dig(lifecycle, :data)

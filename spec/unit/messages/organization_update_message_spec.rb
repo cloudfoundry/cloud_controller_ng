@@ -6,6 +6,11 @@ module VCAP::CloudController
     let(:body) do
       {
         'name' => 'my-org',
+        'metadata' => {
+          'labels' => {
+            'potatoes' => 'taterTots'
+          }
+        }
       }
     end
 
@@ -81,35 +86,6 @@ module VCAP::CloudController
           body = { name: 'a' * 255 }
           message = OrganizationUpdateMessage.new(body)
           expect(message).to be_valid
-        end
-      end
-
-      describe 'metadata' do
-        it 'can parse labels' do
-          params =
-            {
-                "name": 'brad',
-                "metadata": {
-                    "labels": {
-                        "potato": 'mashed'
-                    }
-                }
-            }
-          message = OrganizationUpdateMessage.new(params)
-          expect(message).to be_valid
-          expect(message.labels).to include("potato": 'mashed')
-        end
-
-        it 'validates labels' do
-          params = {
-              "name": 'chuck',
-              "metadata": {
-                  "labels": 'potato',
-              }
-          }
-          message = OrganizationUpdateMessage.new(params)
-          expect(message).not_to be_valid
-          expect(message.errors_on(:metadata)).to include("'labels' is not a hash")
         end
       end
     end

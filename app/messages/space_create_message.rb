@@ -1,17 +1,11 @@
-require 'messages/base_message'
-require 'messages/validators/metadata_validator'
+require 'messages/metadata_base_message'
 
 module VCAP::CloudController
-  class SpaceCreateMessage < BaseMessage
-    register_allowed_keys [:name, :relationships, :metadata]
-
-    def self.metadata_requested?
-      @metadata_requested ||= proc { |a| a.requested?(:metadata) }
-    end
+  class SpaceCreateMessage < MetadataBaseMessage
+    register_allowed_keys [:name, :relationships]
 
     validates_with NoAdditionalKeysValidator,
       RelationshipValidator
-    validates_with MetadataValidator, if: metadata_requested?
 
     validates :name, presence: true
     validates :name,
@@ -24,10 +18,6 @@ module VCAP::CloudController
 
     def relationships_message
       @relationships_message ||= Relationships.new(relationships.deep_symbolize_keys)
-    end
-
-    def labels
-      HashUtils.dig(metadata, :labels)
     end
 
     class Relationships < BaseMessage

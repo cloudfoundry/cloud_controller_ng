@@ -321,37 +321,6 @@ module VCAP::CloudController
           end
         end
       end
-
-      describe 'labels' do
-        it 'exposes labels' do
-          params =
-            {
-                name: 'name',
-                relationships: { space: { data: { guid: 'space-guid-1' } } },
-                metadata: {
-                    labels: {
-                        potato: 'mashed'
-                    }
-                }
-            }
-          message = AppCreateMessage.new(params)
-          expect(message).to be_valid
-          expect(message.labels).to include("potato": 'mashed')
-        end
-
-        it 'validates labels' do
-          params = {
-              name: 'name',
-              relationships: { space: { data: { guid: 'space-guid-1' } } },
-              metadata: {
-                  labels: 'potato',
-              }
-          }
-          message = AppCreateMessage.new(params)
-          expect(message).not_to be_valid
-          expect(message.errors_on(:metadata)).to include("'labels' is not a hash")
-        end
-      end
     end
   end
 end

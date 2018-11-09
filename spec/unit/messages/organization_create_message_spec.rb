@@ -6,6 +6,11 @@ module VCAP::CloudController
     let(:body) do
       {
         'name' => 'my-org',
+        'metadata' => {
+          'labels' => {
+            'potatoes' => 'orgTots'
+          }
+        }
       }
     end
 
