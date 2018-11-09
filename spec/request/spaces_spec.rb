@@ -205,7 +205,7 @@ RSpec.describe 'Spaces' do
 
   describe 'PATCH /v3/spaces/:guid' do
     it 'updates the requested space' do
-      patch "/v3/spaces/#{space1.guid}", { name: 'codenames' }.to_json, admin_header
+      patch "/v3/spaces/#{space1.guid}", { name: 'codenames', metadata: { labels: { label: 'value' } } }.to_json, admin_header
       expect(last_response.status).to eq(200)
 
       parsed_response = MultiJson.load(last_response.body)
@@ -221,7 +221,9 @@ RSpec.describe 'Spaces' do
                 }
             },
             'metadata' => {
-                'labels' => {}
+                'labels' => {
+                  'label' => 'value'
+                }
             },
             'links' => {
                 'self' => {

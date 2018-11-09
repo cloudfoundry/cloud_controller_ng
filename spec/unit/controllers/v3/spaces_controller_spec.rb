@@ -1,4 +1,5 @@
 require 'rails_helper'
+require 'permissions_spec_helper'
 
 RSpec.describe SpacesV3Controller, type: :controller do
   describe '#show' do
@@ -499,76 +500,160 @@ RSpec.describe SpacesV3Controller, type: :controller do
     end
   end
 
-  describe '#update_name' do
+  describe '#patch' do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
-    let!(:org1) { VCAP::CloudController::Organization.make(name: 'Lyle\'s Farm') }
-    let!(:space1) { VCAP::CloudController::Space.make(name: 'Lamb', organization: org1) }
-    let!(:update_message) { { name: 'Sheep' } }
+    let!(:org) { VCAP::CloudController::Organization.make(name: 'Lyle\'s Farm') }
+    let!(:space) { VCAP::CloudController::Space.make(name: 'Lamb', organization: org) }
+    let(:labels) do
+      {
+        fruit: 'pineapple',
+        truck: 'mazda5'
+      }
+    end
+    let!(:update_message) do
+      { name: 'Sheep',
+        metadata: {
+          labels: {
+            fruit: 'passionfruit'
+          }
+        }
+      }
+    end
+    before do
+      VCAP::CloudController::LabelsUpdate.update(space, labels, VCAP::CloudController::SpaceLabelModel)
+    end
 
     context 'when the user is an admin' do
       before do
         set_current_user_as_admin
       end
 
-      it 'can change the name' do
-        patch :update, params: { guid: space1.guid }.merge(update_message), as: :json
+      it 'updates the space' do
+        patch :update, params: { guid: space.guid }.merge(update_message), as: :json
 
         expect(response.status).to eq(200)
-        space1.reload
-        expect(space1.name).to eq('Sheep')
         expect(parsed_body['name']).to eq('Sheep')
-      end
-    end
+        expect(parsed_body['metadata']['labels']).to eq({ 'fruit' => 'passionfruit', 'truck' => 'mazda5' })
 
-    context 'when the message is invalid' do
-      before do
-        set_current_user_as_admin
-      end
-      let!(:update_message) { { name: 'Sheep', animals: 'Cows' } }
-
-      it 'fails' do
-        patch :update, params: { guid: space1.guid }.merge(update_message), as: :json
-        expect(response.status).to eq(422)
-      end
-    end
-
-    context 'when there is no such space' do
-      before do
-        set_current_user_as_admin
+        space.reload
+        expect(space.name).to eq('Sheep')
+        expect(space.labels.map { |label| { key: label.key_name, value: label.value } }).
+          to match_array([{ key: 'fruit', value: 'passionfruit' }, { key: 'truck', value: 'mazda5' }])
       end
 
-      it 'fails' do
-        patch :update, params: { guid: "Greg's missing space" }.merge(update_message), as: :json
-
-        expect(response.status).to eq(404)
-      end
-    end
-
-    context 'permissions by role' do
-      role_to_expected_http_response = {
-          'admin'               => 200,
-          'space_developer'     => 403,
-          'admin_read_only'     => 403,
-          'global_auditor'      => 403,
-          'space_manager'       => 200,
-          'space_auditor'       => 403,
-          'org_manager'         => 200,
-          'org_auditor'         => 403,
-          'org_billing_manager' => 403,
-      }.freeze
-
-      role_to_expected_http_response.each do |role, expected_return_value|
-        context "and #{role} in the target space" do
-          it "returns #{expected_return_value}" do
-            set_current_user_as_role(role: role, org: org1, space: space1, user: user)
-            patch :update, params: { guid: space1.guid }.merge(update_message), as: :json
-            expect(response.status).to eq(expected_return_value),
-                                       "Expected role #{role} to get #{expected_return_value}, but got #{response.status}. Response: #{response.body}"
-            if expected_return_value == 200
-              expect(parsed_body['name']).to eq('Sheep')
-            end
-          end
+      context 'when a label is deleted' do
+        let(:request_body) do
+          {
+            metadata: {
+              labels: {
+                fruit: nil
+              }
+            }
+          }
         end
+
+        it 'succeeds' do
+          patch :update, params: { guid: space.guid }.merge(request_body), as: :json
+
+          expect(response.status).to eq(200)
+          expect(parsed_body['metadata']['labels']).to eq({ 'truck' => 'mazda5' })
+
+          space.reload
+          expect(space.labels.map { |label| { key: label.key_name, value: label.value } }).to match_array([{ key: 'truck', value: 'mazda5' }])
+        end
+      end
+      context 'when an empty request is sent' do
+        let(:request_body) do
+          {}
+        end
+
+        it 'succeeds' do
+          patch :update, params: { guid: space.guid }.merge(request_body), as: :json
+          expect(response.status).to eq(200)
+          space.reload
+          expect(space.name).to eq('Lamb')
+          expect(parsed_body['name']).to eq('Lamb')
+          expect(parsed_body['guid']).to eq(space.guid)
+        end
+      end
+
+      context 'when the message is invalid' do
+        before do
+          set_current_user_as_admin
+        end
+        let!(:update_message) { { name: 'Sheep', animals: 'Cows' } }
+
+        it 'fails' do
+          patch :update, params: { guid: space.guid }.merge(update_message), as: :json
+          expect(response.status).to eq(422)
+        end
+      end
+
+      context 'when there is no such space' do
+        before do
+          set_current_user_as_admin
+        end
+
+        it 'fails' do
+          patch :update, params: { guid: "Greg's missing space" }.merge(update_message), as: :json
+
+          expect(response.status).to eq(404)
+        end
+      end
+
+      context 'when there is a valid label (but no name)' do
+        let(:request_body) do
+          {
+            metadata: {
+              labels: {
+                'key': 'value'
+              }
+            }
+          }
+        end
+
+        it 'updates the metadata' do
+          patch :update, params: { guid: space.guid }.merge(request_body), as: :json
+          expect(response.status).to eq(200)
+          expect(parsed_body['metadata']['labels']['key']).to eq 'value'
+        end
+      end
+
+      context 'when there is an invalid label' do
+        let(:request_body) do
+          {
+            metadata: {
+              labels: {
+                'cloudfoundry.org/label': 'value'
+              }
+            }
+          }
+        end
+
+        it 'displays an informative error' do
+          patch :update, params: { guid: space.guid }.merge(request_body), as: :json
+          expect(response.status).to eq(422)
+          expect(response).to have_error_message('Metadata cloudfoundry.org is a reserved domain')
+        end
+      end
+    end
+
+    describe 'authorization' do
+      it_behaves_like 'permissions endpoint' do
+        let(:roles_to_http_responses) do
+          {
+            'admin' => 200,
+            'admin_read_only' => 403,
+            'global_auditor' => 403,
+            'space_developer' => 403,
+            'space_manager' => 200,
+            'space_auditor' => 403,
+            'org_manager' => 200,
+            'org_auditor' => 403,
+            'org_billing_manager' => 403,
+          }
+        end
+        let(:api_call) { lambda { patch :update, params: { guid: space.guid }.merge(update_message), as: :json } }
       end
     end
   end

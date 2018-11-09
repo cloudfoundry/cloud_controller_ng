@@ -10,13 +10,25 @@ module VCAP::CloudController
       context 'when a name and label are requested' do
         let(:message) do
           VCAP::CloudController::SpaceUpdateMessage.new({
-                                                                   name: 'new-space-name',
-                                                               })
+           name: 'new-space-name',
+           metadata: {
+              labels: {
+                freaky: 'wednesday',
+              },
+            },
+                                                               }
+          )
         end
 
         it 'updates a space' do
           updated_space = SpaceUpdate.new.update(space, message)
           expect(updated_space.reload.name).to eq 'new-space-name'
+        end
+
+        it 'updates metadata' do
+          updated_space = SpaceUpdate.new.update(space, message)
+          expect(updated_space.reload.labels.first.key_name).to eq 'freaky'
+          expect(updated_space.reload.labels.first.value).to eq 'wednesday'
         end
 
         context 'when model validation fails' do

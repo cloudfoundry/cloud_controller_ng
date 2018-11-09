@@ -83,6 +83,35 @@ module VCAP::CloudController
           expect(message).to be_valid
         end
       end
+
+      describe 'metadata' do
+        it 'can parse labels' do
+          params =
+            {
+              "name": 'brad',
+              "metadata": {
+                "labels": {
+                  "potato": 'mashed'
+                }
+              }
+            }
+          message = SpaceUpdateMessage.new(params)
+          expect(message).to be_valid
+          expect(message.labels).to include("potato": 'mashed')
+        end
+
+        it 'validates labels' do
+          params = {
+            "name": 'chuck',
+            "metadata": {
+              "labels": 'potato',
+            }
+          }
+          message = SpaceUpdateMessage.new(params)
+          expect(message).not_to be_valid
+          expect(message.errors_on(:metadata)).to include("'labels' is not a hash")
+        end
+      end
     end
   end
 end

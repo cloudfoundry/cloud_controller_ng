@@ -615,7 +615,6 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
     context 'when the user is an admin' do
       before do
         set_current_user(user, { admin: true })
-        allow_user_read_access_for(user, orgs: [org])
       end
 
       it 'updates the organization' do
@@ -693,7 +692,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
           }
         end
 
-        it 'displays an informative error' do
+        it 'updates the metadata' do
           patch :update, params: { guid: org.guid }.merge(request_body), as: :json
           expect(response.status).to eq(200)
           expect(parsed_body['metadata']['labels']['key']).to eq 'value'
