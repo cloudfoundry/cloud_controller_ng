@@ -85,7 +85,7 @@ module VCAP::CloudController
     def create_service_bindings(services, app)
       action = ServiceBindingCreate.new(@user_audit_info, manifest_triggered: true)
       services.each do |name|
-        service_instance = ServiceInstance.find(name: name)
+        service_instance = app.space.find_visible_service_instance_by_name(name)
         service_instance_not_found!(name) unless service_instance
         next if binding_exists?(service_instance, app)
 

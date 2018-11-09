@@ -198,6 +198,13 @@ module VCAP::CloudController
       raise CloudController::Errors::ApiError.new_from_details('OrganizationAlreadySet') unless organization.nil? || organization.guid == new_org.guid
     end
 
+    def find_visible_service_instance_by_name(name)
+      shared = self.service_instances_shared_from_other_spaces_dataset.where(name: name).all
+      source = self.service_instances_dataset.where(name: name).all
+
+      (shared | source).first
+    end
+
     def self.user_visibility_filter(user)
       {
         spaces__id: dataset.join_table(:inner, :spaces_developers, space_id: :id, user_id: user.id).select(:spaces__id).

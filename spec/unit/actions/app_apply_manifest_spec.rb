@@ -605,6 +605,37 @@ module VCAP::CloudController
               end
             end
 
+            context 'when theres a service instance in another space' do
+              let(:new_space) { Space.make }
+              let(:new_app) { AppModel.make(space: new_space) }
+              let!(:service_instance_with_same_name_the_first_one) { ManagedServiceInstance.make(name: 'si-name', space: new_space) }
+              let(:message) { AppManifestMessage.create_from_yml({ services: ['si-name'] }) }
+
+              it 'creates the binding in the correct space' do
+                expect(ServiceInstance.where(name: 'si-name').count).to eq(2)
+                expect(service_instance.space_guid).to_not eq(service_instance_with_same_name_the_first_one.space_guid)
+                app_apply_manifest.apply(app.guid, message)
+                expect(ServiceBindingCreate).to have_received(:new).with(user_audit_info, manifest_triggered: true)
+                expect(service_binding_create).to have_received(:create).
+                  with(app, service_instance, instance_of(ServiceBindingCreateMessage), false, false)
+              end
+            end
+
+            context 'when theres a service instance shared from another space' do
+              let(:new_space) { Space.make }
+              let!(:shared_si) { ManagedServiceInstance.make(name: 'shared-si', space: new_space) }
+              let(:message) { AppManifestMessage.create_from_yml({ services: ['shared-si'] }) }
+
+              it 'creates the binding in the correct space' do
+                shared_si.add_shared_space(space)
+
+                app_apply_manifest.apply(app.guid, message)
+                expect(ServiceBindingCreate).to have_received(:new).with(user_audit_info, manifest_triggered: true)
+                expect(service_binding_create).to have_received(:create).
+                  with(app, shared_si, instance_of(ServiceBindingCreateMessage), false, false)
+              end
+            end
+
             context 'volume_services_enabled' do
               let(:message) { AppManifestMessage.create_from_yml({ services: ['si-name'] }) }
               before do
