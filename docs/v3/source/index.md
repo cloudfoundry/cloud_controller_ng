@@ -19,6 +19,7 @@ includes:
   - api_resources/organizations
   - api_resources/packages
   - api_resources/processes
+  - api_resources/revisions
   - api_resources/route_mappings
   - api_resources/service_bindings
   - api_resources/service_instances
@@ -144,6 +145,9 @@ includes:
   - experimental_resources/deployments/get
   - experimental_resources/deployments/list
   - experimental_resources/deployments/cancel
+  - experimental_resources/revisions/header
+  - experimental_resources/revisions/object
+  - experimental_resources/revisions/get
   - experimental_resources/route_mappings/header
   - experimental_resources/route_mappings/object
   - experimental_resources/route_mappings/create

@@ -1,0 +1,36 @@
+### Get a revision
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/apps/[app_guid]/revisions/[revision_guid]" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :revision %>
+```
+
+#### Definition
+`GET /v3/apps/:appguid/revisions/:revguid`
+
+#### Permitted Roles
+ |
+--- | ---
+Space Developer |
+Space Manager |
+Space Auditor |
+Org Manager |
+Admin |
+Admin Read-Only |
+Global Auditor |
