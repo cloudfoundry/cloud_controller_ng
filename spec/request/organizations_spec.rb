@@ -312,6 +312,40 @@ module VCAP::CloudController
         organization1.reload
         expect(organization1.name).to eq('New Name World')
       end
+
+      context 'deleting labels' do
+        let!(:org1Fruit) { OrganizationLabelModel.make(key_name: 'fruit', value: 'strawberry', organization: organization1) }
+        let!(:org1Animal) { OrganizationLabelModel.make(key_name: 'animal', value: 'horse', organization: organization1) }
+        let(:update_request) do
+          {
+            metadata: {
+              labels: {
+                fruit: nil
+              }
+            },
+          }.to_json
+        end
+
+        it 'updates the name for the organization' do
+          patch "/v3/organizations/#{organization1.guid}", update_request, admin_headers_for(user).merge('CONTENT_TYPE' => 'application/json')
+
+          expected_response = {
+            'name' => organization1.name,
+            'guid' => organization1.guid,
+            'links' => { 'self' => { 'href' => "http://api2.vcap.me/v3/organizations/#{organization1.guid}" } },
+            'created_at' => iso8601,
+            'updated_at' => iso8601,
+            'metadata' => {
+              'labels' => { 'animal' => 'horse' }
+            }
+          }
+
+          parsed_response = MultiJson.load(last_response.body)
+
+          expect(last_response.status).to eq(200)
+          expect(parsed_response).to be_a_response_like(expected_response)
+        end
+      end
     end
   end
 end

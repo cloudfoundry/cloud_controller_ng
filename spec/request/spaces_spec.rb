@@ -234,7 +234,45 @@ RSpec.describe 'Spaces' do
                 }
             },
         }
-                                 )
+      )
+    end
+
+    context 'removing labels' do
+      let!(:space1Label) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'fruit', value: 'mango', space: space1) }
+      let!(:space1Label) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'animal', value: 'monkey', space: space1) }
+
+      it 'removes a label from a space when the value is set to null' do
+        patch "/v3/spaces/#{space1.guid}", { metadata: { labels: { fruit: nil } } }.to_json, admin_header
+        expect(last_response.status).to eq(200)
+
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response).to be_a_response_like(
+          {
+            'guid' => space1.guid,
+            'name' => space1.name,
+            'created_at' => iso8601,
+            'updated_at' => iso8601,
+            'relationships' => {
+              'organization' => {
+                'data' => { 'guid' => space1.organization_guid }
+              }
+            },
+            'metadata' => {
+              'labels' => {
+                'animal' => 'monkey'
+              }
+            },
+            'links' => {
+              'self' => {
+                'href' => "#{link_prefix}/v3/spaces/#{space1.guid}"
+              },
+              'organization' => {
+                'href' => "#{link_prefix}/v3/organizations/#{space1.organization_guid}"
+              }
+            },
+          }
+        )
+      end
     end
   end
 end
