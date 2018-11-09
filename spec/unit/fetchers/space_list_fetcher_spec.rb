@@ -69,6 +69,18 @@ module VCAP::CloudController
           expect(results).to match_array([space2, space4])
         end
       end
+
+      context 'when a label_selector is provided' do
+        let(:message) do SpacesListMessage.from_params({ 'label_selector' => 'key=value' })
+        end
+        let!(:space1label) { SpaceLabelModel.make(key_name: 'key', value: 'value', space: space1) }
+        let!(:space2label) { SpaceLabelModel.make(key_name: 'key2', value: 'value2', space: space2) }
+
+        it 'returns the correct set of spaces' do
+          results = fetcher.fetch_all(message: message).all
+          expect(results).to contain_exactly(space1)
+        end
+      end
     end
   end
 end

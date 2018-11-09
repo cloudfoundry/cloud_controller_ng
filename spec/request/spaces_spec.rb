@@ -100,13 +100,14 @@ RSpec.describe 'Spaces' do
   end
 
   describe 'GET /v3/spaces' do
-    it 'returns a paginated list of spaces the user has access to' do
-      get '/v3/spaces?per_page=2', nil, user_header
-      expect(last_response.status).to eq(200)
+    context 'when a label_selector is not provided' do
+      it 'returns a paginated list of spaces the user has access to' do
+        get '/v3/spaces?per_page=2', nil, user_header
+        expect(last_response.status).to eq(200)
 
-      parsed_response = MultiJson.load(last_response.body)
-      expect(parsed_response).to be_a_response_like(
-        {
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response).to be_a_response_like(
+          {
           'pagination' => {
             'total_results' => 3,
             'total_pages' => 2,
@@ -168,7 +169,37 @@ RSpec.describe 'Spaces' do
             }
           ]
         }
-      )
+        )
+      end
+    end
+
+    context 'when a label_selector is provided' do
+      let!(:spaceA) { VCAP::CloudController::Space.make(organization: organization) }
+      let!(:spaceAFruit) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'fruit', value: 'strawberry', space: spaceA) }
+      let!(:spaceAAnimal) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'animal', value: 'horse', space: spaceA) }
+
+      let!(:spaceB) { VCAP::CloudController::Space.make(organization: organization) }
+      let!(:spaceBEnv) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'env', value: 'prod', space: spaceB) }
+      let!(:spaceBAnimal) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'animal', value: 'dog', space: spaceB) }
+
+      let!(:spaceC) { VCAP::CloudController::Space.make(organization: organization) }
+      let!(:spaceCEnv) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'env', value: 'prod', space: spaceC) }
+      let!(:spaceCAnimal) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'animal', value: 'horse', space: spaceC) }
+
+      let!(:spaceD) { VCAP::CloudController::Space.make(organization: organization) }
+      let!(:spaceDEnv) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'env', value: 'prod', space: spaceD) }
+
+      let!(:spaceE) { VCAP::CloudController::Space.make(organization: organization) }
+      let!(:spaceEEnv) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'env', value: 'staging', space: spaceE) }
+      let!(:spaceEAnimal) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'animal', value: 'dog', space: spaceE) }
+
+      it 'returns the correct spaces' do
+        get '/v3/spaces?label_selector=!fruit,env=prod,animal in (dog,horse)', nil, admin_header
+        expect(last_response.status).to eq(200)
+
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response['resources'].map { |space| space['guid'] }).to contain_exactly(spaceB.guid, spaceC.guid)
+      end
     end
   end
 

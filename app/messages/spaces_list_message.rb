@@ -2,9 +2,18 @@ require 'messages/list_message'
 
 module VCAP::CloudController
   class SpacesListMessage < ListMessage
-    register_allowed_keys [:page, :per_page, :order_by, :names, :organization_guids, :guids]
+    register_allowed_keys [
+      :page,
+      :per_page,
+      :order_by,
+      :names,
+      :organization_guids,
+      :guids,
+      :label_selector,
+    ]
 
     validates_with NoAdditionalParamsValidator
+    validates_with LabelSelectorRequirementValidator, if: label_selector_requested?
 
     validates :names, array: true, allow_nil: true
     validates :organization_guids, array: true, allow_nil: true
