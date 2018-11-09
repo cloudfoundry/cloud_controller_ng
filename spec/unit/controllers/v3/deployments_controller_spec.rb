@@ -107,12 +107,12 @@ RSpec.describe DeploymentsController, type: :controller do
         it 'creates a new revision' do
           expect {
             post :create, params: request_body, as: :json
-          }.to change { VCAP::CloudController::Revision.count }.by(1)
+          }.to change { VCAP::CloudController::RevisionModel.count }.by(1)
 
           revision_guid = parsed_body['revision']['guid']
 
-          expect(VCAP::CloudController::Revision.find(guid: revision_guid)).not_to be_nil
-          expect(VCAP::CloudController::Revision.last.guid).to eq(revision_guid)
+          expect(VCAP::CloudController::RevisionModel.find(guid: revision_guid)).not_to be_nil
+          expect(VCAP::CloudController::RevisionModel.last.guid).to eq(revision_guid)
         end
 
         it 'sets the app droplet to the provided droplet' do

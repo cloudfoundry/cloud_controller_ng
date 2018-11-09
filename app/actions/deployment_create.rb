@@ -49,7 +49,7 @@ module VCAP::CloudController
       def create_deployment_process(app, deployment_guid, web_process)
         process_type = "web-deployment-#{deployment_guid}"
 
-        revision = Revision.create(app: app)
+        revision = RevisionModel.create(app: app)
 
         process = ProcessModel.create(
           app: app,

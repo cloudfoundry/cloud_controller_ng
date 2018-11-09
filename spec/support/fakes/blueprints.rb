@@ -537,7 +537,7 @@ module VCAP::CloudController
     valid_until { Time.now.utc }
   end
 
-  Revision.blueprint do
+  RevisionModel.blueprint do
   end
 
   TestModel.blueprint do

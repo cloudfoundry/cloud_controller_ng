@@ -6,7 +6,7 @@ module VCAP::CloudController::Presenters::V3
     let(:droplet) { VCAP::CloudController::DropletModel.make }
     let(:previous_droplet) { VCAP::CloudController::DropletModel.make }
     let(:app) { VCAP::CloudController::AppModel.make }
-    let(:revision) { VCAP::CloudController::Revision.make(app: app) }
+    let(:revision) { VCAP::CloudController::RevisionModel.make(app: app) }
     let(:process) { VCAP::CloudController::ProcessModel.make(guid: 'deploying-process-guid', type: 'web-deployment-guid-type', revision: revision) }
     let!(:deployment) do
       VCAP::CloudController::DeploymentModelTestFactory.make(app: app, droplet: droplet, previous_droplet: previous_droplet, deploying_web_process: process)

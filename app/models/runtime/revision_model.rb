@@ -1,5 +1,5 @@
 module VCAP::CloudController
-  class Revision < Sequel::Model
+  class RevisionModel < Sequel::Model(:revisions)
     many_to_one :app,
       class: '::VCAP::CloudController::AppModel',
       key: :app_guid,

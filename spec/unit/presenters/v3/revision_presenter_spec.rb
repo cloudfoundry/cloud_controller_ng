@@ -4,7 +4,7 @@ require 'presenters/v3/revision_presenter'
 module VCAP::CloudController::Presenters::V3
   RSpec.describe RevisionPresenter do
     let(:app) { VCAP::CloudController::AppModel.make }
-    let(:revision) { VCAP::CloudController::Revision.make(app: app) }
+    let(:revision) { VCAP::CloudController::RevisionModel.make(app: app) }
 
     describe '#to_hash' do
       it 'presents the revision as json' do

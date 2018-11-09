@@ -2274,7 +2274,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     let!(:app_model) { VCAP::CloudController::AppModel.make }
     let!(:space) { app_model.space }
     let(:user) { VCAP::CloudController::User.make }
-    let(:revision) { VCAP::CloudController::Revision.make(app: app_model) }
+    let(:revision) { VCAP::CloudController::RevisionModel.make(app: app_model) }
 
     before do
       set_current_user(user)

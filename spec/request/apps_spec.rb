@@ -1594,7 +1594,7 @@ RSpec.describe 'Apps' do
   describe 'GET /v3/apps/:guid/revisions/:revguid' do
     it 'gets a specific revision' do
       app = VCAP::CloudController::AppModel.make(name: 'app_name', space: space)
-      revision = VCAP::CloudController::Revision.make(app: app)
+      revision = VCAP::CloudController::RevisionModel.make(app: app)
 
       get "/v3/apps/#{app.guid}/revisions/#{revision.guid}", nil, user_header
       expect(last_response.status).to eq(200)

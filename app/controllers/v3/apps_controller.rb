@@ -283,7 +283,7 @@ class AppsV3Controller < ApplicationController
     app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
 
-    revision = Revision.find(guid: hashed_params[:revision_guid])
+    revision = RevisionModel.find(guid: hashed_params[:revision_guid])
     resource_not_found!(:revision) unless revision && revision.app_guid == app.guid
 
     render status: :ok, json: Presenters::V3::RevisionPresenter.new(revision)

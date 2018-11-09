@@ -48,13 +48,13 @@ module VCAP::CloudController
 
       context 'when the app has revisions' do
         let!(:revision) do
-          Revision.make(app: app_model)
+          RevisionModel.make(app: app_model)
         end
 
         it 'destroys the revisions' do
           expect {
             app_model.destroy
-          }.to change { Revision.count }.by(-1)
+          }.to change { RevisionModel.count }.by(-1)
         end
       end
     end

@@ -43,8 +43,8 @@ module VCAP::CloudController
           deployment = nil
           expect {
             deployment = DeploymentCreate.create(app: app, droplet: next_droplet, user_audit_info: user_audit_info)
-          }.to change { Revision.count }.by(1)
-          expect(deployment.deploying_web_process.revision).to eq(Revision.last)
+          }.to change { RevisionModel.count }.by(1)
+          expect(deployment.deploying_web_process.revision).to eq(RevisionModel.last)
         end
 
         it 'creates a process of web-deployment-guid type with the same characteristics as the existing web process' do
