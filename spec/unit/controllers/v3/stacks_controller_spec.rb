@@ -37,6 +37,17 @@ RSpec.describe StacksController, type: :controller do
       end
     end
 
+    context 'when the message is not valid' do
+      let(:req_body) { { name: '' } }
+
+      it 'returns a 422 with the error message' do
+        post :create, params: req_body, as: :json
+
+        expect(response.status).to eq 422
+        expect(parsed_body['errors'].first['detail']).to eq 'Name can\'t be blank'
+      end
+    end
+
     context 'when creating the stack fails' do
       before do
         mock_stack_create = instance_double(VCAP::CloudController::StackCreate)
