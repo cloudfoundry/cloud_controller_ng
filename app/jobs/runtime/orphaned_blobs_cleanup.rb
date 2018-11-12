@@ -6,8 +6,8 @@ module VCAP::CloudController
   module Jobs
     module Runtime
       class OrphanedBlobsCleanup < VCAP::CloudController::Jobs::CCJob
-        DIRTY_THRESHOLD            = 3
-        NUMBER_OF_BLOBS_TO_MARK  = 10000
+        DIRTY_THRESHOLD = 3
+        NUMBER_OF_BLOBS_TO_MARK = 10000
         IGNORED_DIRECTORY_PREFIXES = [
           CloudController::DependencyLocator::BUILDPACK_CACHE_DIR,
           CloudController::DependencyLocator::RESOURCE_POOL_DIR,
