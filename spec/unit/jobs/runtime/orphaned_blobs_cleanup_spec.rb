@@ -15,7 +15,7 @@ module VCAP::CloudController
 
       before do
         TestConfig.override(perform_blob_cleanup: perform_blob_cleanup)
-        stub_const('VCAP::CloudController::Jobs::Runtime::OrphanedBlobsCleanup::NUMBER_OF_BLOBS_TO_DELETE', 20)
+        stub_const('VCAP::CloudController::Jobs::Runtime::OrphanedBlobsCleanup::NUMBER_OF_BLOBS_TO_MARK', 20)
       end
 
       describe '#perform' do
@@ -88,15 +88,15 @@ module VCAP::CloudController
               expect(OrphanedBlob.find(blob_key: '25/ff/25ffnew-file-found').dirty_count).to eq(1)
             end
 
-            context 'when there are more than "NUMBER_OF_BLOBS_TO_DELETE" blobs to update' do
+            context 'when there are more than "NUMBER_OF_BLOBS_TO_MARK" blobs to update' do
               before do
-                OrphanedBlobsCleanup::NUMBER_OF_BLOBS_TO_DELETE.times do |i|
+                OrphanedBlobsCleanup::NUMBER_OF_BLOBS_TO_MARK.times do |i|
                   OrphanedBlob.create(blob_key: "so/me/older-blobstore-file-#{i}", dirty_count: 2, blobstore_type: 'package_blobstore')
                 end
               end
 
-              it 'only updates the oldest "NUMBER_OF_BLOBS_TO_DELETE" number of blobs' do
-                expect(OrphanedBlob.count).to eq(OrphanedBlobsCleanup::NUMBER_OF_BLOBS_TO_DELETE + 1)
+              it 'only updates the oldest "NUMBER_OF_BLOBS_TO_MARK" number of blobs' do
+                expect(OrphanedBlob.count).to eq(OrphanedBlobsCleanup::NUMBER_OF_BLOBS_TO_MARK + 1)
                 job.perform
                 expect(OrphanedBlob.count).to eq(1)
                 expect(existing_orphaned_blob.reload.dirty_count).to eq(1)
@@ -412,19 +412,19 @@ module VCAP::CloudController
             end
           end
 
-          context 'when there are more than NUMBER_OF_BLOBS_TO_DELETE blobs to mark as dirty' do
+          context 'when there are more than NUMBER_OF_BLOBS_TO_MARK blobs to mark as dirty' do
             let(:some_files) do
               result = []
-              (OrphanedBlobsCleanup::NUMBER_OF_BLOBS_TO_DELETE + 1).times do |i|
+              (OrphanedBlobsCleanup::NUMBER_OF_BLOBS_TO_MARK + 1).times do |i|
                 result << double(:blob, key: "so/me/blobstore-file-#{i}")
               end
               result
             end
 
-            it 'stops after marking NUMBER_OF_BLOBS_TO_DELETE of blobs as dirty' do
+            it 'stops after marking NUMBER_OF_BLOBS_TO_MARK of blobs as dirty' do
               expect {
                 job.perform
-              }.to change { OrphanedBlob.count }.from(0).to(OrphanedBlobsCleanup::NUMBER_OF_BLOBS_TO_DELETE)
+              }.to change { OrphanedBlob.count }.from(0).to(OrphanedBlobsCleanup::NUMBER_OF_BLOBS_TO_MARK)
             end
           end
         end
@@ -491,20 +491,20 @@ module VCAP::CloudController
               expect(event.actee_type).to eq('blob')
             end
 
-            context 'when the number of orphaned blobs exceeds NUMBER_OF_BLOBS_TO_DELETE' do
+            context 'when the number of orphaned blobs exceeds NUMBER_OF_BLOBS_TO_MARK' do
               let!(:orphaned_blob) do
                 OrphanedBlob.create(blob_key: 'so/me/file-to-be-deleted', dirty_count: OrphanedBlobsCleanup::DIRTY_THRESHOLD, blobstore_type: 'package_blobstore')
               end
               before do
-                OrphanedBlobsCleanup::NUMBER_OF_BLOBS_TO_DELETE.times do |i|
+                OrphanedBlobsCleanup::NUMBER_OF_BLOBS_TO_MARK.times do |i|
                   OrphanedBlob.create(blob_key: "so/me/blobstore-file-#{i}", dirty_count: OrphanedBlobsCleanup::DIRTY_THRESHOLD + 5, blobstore_type: 'package_blobstore')
                 end
               end
 
-              it 'only enqueues deletion jobs for NUMBER_OF_BLOBS_TO_DELETE number of blobs' do
+              it 'only enqueues deletion jobs for NUMBER_OF_BLOBS_TO_MARK number of blobs' do
                 job.perform
 
-                expect(BlobstoreDelete).to have_received(:new).exactly(OrphanedBlobsCleanup::NUMBER_OF_BLOBS_TO_DELETE).times
+                expect(BlobstoreDelete).to have_received(:new).exactly(OrphanedBlobsCleanup::NUMBER_OF_BLOBS_TO_MARK).times
               end
 
               it 'deletes by searching for the oldest orphaned blobs' do

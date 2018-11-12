@@ -7,7 +7,7 @@ module VCAP::CloudController
     module Runtime
       class OrphanedBlobsCleanup < VCAP::CloudController::Jobs::CCJob
         DIRTY_THRESHOLD            = 3
-        NUMBER_OF_BLOBS_TO_DELETE  = 10000
+        NUMBER_OF_BLOBS_TO_MARK  = 10000
         IGNORED_DIRECTORY_PREFIXES = [
           CloudController::DependencyLocator::BUILDPACK_CACHE_DIR,
           CloudController::DependencyLocator::RESOURCE_POOL_DIR,
@@ -43,7 +43,7 @@ module VCAP::CloudController
                 OrphanedBlob.create(blob_key: blob.key, dirty_count: 1, blobstore_type: blobstore_type)
                 number_of_marked_blobs += 1
 
-                if number_of_marked_blobs >= NUMBER_OF_BLOBS_TO_DELETE
+                if number_of_marked_blobs >= NUMBER_OF_BLOBS_TO_MARK
                   logger.info("Finished orphaned blobs cleanup job early after marking #{number_of_marked_blobs} blobs")
                   return 'finished-early'
                 end
@@ -105,7 +105,7 @@ module VCAP::CloudController
         end
 
         def update_existing_orphaned_blobs
-          dataset = OrphanedBlob.order(Sequel.desc(:dirty_count)).limit(NUMBER_OF_BLOBS_TO_DELETE)
+          dataset = OrphanedBlob.order(Sequel.desc(:dirty_count)).limit(NUMBER_OF_BLOBS_TO_MARK)
 
           dataset.each do |orphaned_blob|
             if blob_in_use?(orphaned_blob.blob_key)
@@ -147,7 +147,7 @@ module VCAP::CloudController
 
           dataset = OrphanedBlob.where { dirty_count >= DIRTY_THRESHOLD }.
                     order(Sequel.desc(:dirty_count)).
-                    limit(NUMBER_OF_BLOBS_TO_DELETE)
+                    limit(NUMBER_OF_BLOBS_TO_MARK)
 
           dataset.each do |orphaned_blob|
             unpartitioned_blob_key = CloudController::Blobstore::BlobKeyGenerator.key_from_full_path(orphaned_blob.blob_key)
