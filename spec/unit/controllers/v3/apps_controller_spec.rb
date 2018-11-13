@@ -984,6 +984,88 @@ RSpec.describe AppsV3Controller, type: :controller do
       end
     end
 
+    context 'metadata' do
+      let!(:app_annotation) { VCAP::CloudController::AppAnnotationModel.make(
+        app: app_model,
+        key: 'existing_anno',
+        value: 'original-value'
+        )
+      }
+
+      context 'when the label is invalid' do
+        let(:request_body) do
+          {
+            metadata: {
+              labels: {
+                'cloudfoundry.org/release' => 'stable'
+              }
+            }
+          }
+        end
+
+        it 'returns an UnprocessableEntity error' do
+          post :create, params: request_body, as: :json
+
+          expect(response.status).to eq 422
+          expect(response.body).to include 'UnprocessableEntity'
+          expect(response.body).to include 'cloudfoundry.org is a reserved domain'
+        end
+      end
+
+      context 'when the annotation is invalid' do
+        let(:request_body) do
+          {
+            metadata: {
+              labels: {
+                'release' => 'stable'
+              },
+              annotations: {
+                '' => 'uhoh'
+              },
+            }
+          }
+        end
+
+        it 'returns an UnprocessableEntity error' do
+          post :create, params: request_body, as: :json
+
+          expect(response.status).to eq 422
+          expect(response.body).to include 'UnprocessableEntity'
+          expect(response.body).to include 'Metadata annotations key cannot be empty string'
+        end
+      end
+
+      context 'when the metadata is valid' do
+        let(:request_body) do
+          {
+            name: 'some-name',
+            relationships: { space: { data: { guid: space.guid } } },
+            metadata: {
+              labels: {
+                release: 'stable'
+              },
+              annotations: {
+                new_anno: 'value',
+                existing_anno: 'is valid'
+              },
+            }
+          }
+        end
+
+        it 'Returns a 201 and the app with metadata' do
+          post :create, params: request_body, as: :json
+
+          response_body = parsed_body
+          response_metadata = response_body['metadata']
+
+          expect(response.status).to eq 201
+          expect(response_metadata['labels']['release']).to eq 'stable'
+          expect(response_metadata['annotations']['new_anno']).to eq 'value'
+          expect(response_metadata['annotations']['existing_anno']).to eq 'is valid'
+        end
+      end
+    end
+
     context 'permissions' do
       let(:app_model) { VCAP::CloudController::AppModel.make }
       let(:space) { app_model.space }

@@ -166,6 +166,8 @@ module VCAP::CloudController
       end
 
       describe 'updating metadata' do
+        let!(:app_annotation) { AppAnnotationModel.make(app: app_model, key: 'existing_anno', value: 'original-value') }
+
         let(:message) do
           AppUpdateMessage.new({
             metadata: {
@@ -174,7 +176,8 @@ module VCAP::CloudController
                 'joyofcooking.com/potato': 'mashed'
               },
               annotations: {
-                'contacts': 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)'
+                contacts: 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)',
+                existing_anno: 'new-value',
               }
             }
           })
@@ -184,8 +187,13 @@ module VCAP::CloudController
           app_update.update(app_model, message, lifecycle)
           expect(AppLabelModel.find(resource_guid: app_model.guid, key_name: 'release').value).to eq 'stable'
           expect(AppLabelModel.find(resource_guid: app_model.guid, key_prefix: 'joyofcooking.com', key_name: 'potato').value).to eq 'mashed'
-          expect(AppAnnotationModel.find(resource_guid: app_model.guid, key: 'contacts').value).to eq(
-            'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)'
+        end
+
+        it 'updates the annotations' do
+          app_update.update(app_model, message, lifecycle)
+          expect(app_model.annotations.map(&:value)).to contain_exactly(
+            'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)',
+            'new-value'
           )
         end
       end

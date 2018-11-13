@@ -1017,6 +1017,12 @@ RSpec.describe 'Apps' do
         value: 'yes'
       )
 
+      VCAP::CloudController::AppAnnotationModel.make(
+        resource_guid: app_model.guid,
+        key: 'anno1',
+        value: 'original-value',
+      )
+
       stack = VCAP::CloudController::Stack.make(name: 'redhat')
 
       update_request = {
@@ -1032,10 +1038,11 @@ RSpec.describe 'Apps' do
               labels: {
                   'release' => 'stable',
                   'code.cloudfoundry.org/cloud_controller_ng' => 'awesome',
-                  'delete-me' => nil
+                  'delete-me' => nil,
               },
               annotations: {
-                  'contacts': 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)'
+                  'contacts' => 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)',
+                  'anno1' => 'new-value',
               }
           }
 
@@ -1068,13 +1075,15 @@ RSpec.describe 'Apps' do
             },
             'created_at' => iso8601,
             'updated_at' => iso8601,
-            'metadata' => { 'labels' => {
+            'metadata' => {
+              'labels' => {
                   'release' => 'stable',
                   'code.cloudfoundry.org/cloud_controller_ng' => 'awesome'
                 },
-                            'annotations' => {
-                  'contacts' => 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)'
-                }
+              'annotations' => {
+                  'contacts' => 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)',
+                  'anno1' => 'new-value'
+              }
             },
             'links' => {
                 'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
@@ -1105,10 +1114,26 @@ RSpec.describe 'Apps' do
                                           space_guid: space.guid,
                                           organization_guid: space.organization.guid
                                       })
-      metadata_request = { 'name' => 'new-name',
-                           'lifecycle' => { 'type' => 'buildpack', 'data' => { 'buildpacks' => ['http://gitwheel.org/my-app'], 'stack' => stack.name } },
-                           'metadata' => { 'labels' => { 'release' => 'stable', 'code.cloudfoundry.org/cloud_controller_ng' => 'awesome', 'delete-me' => nil }, 'annotations' => {
-                             'contacts' => 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)' } }
+      metadata_request = {
+        'name' => 'new-name',
+        'lifecycle' => {
+          'type' => 'buildpack',
+          'data' => {
+            'buildpacks' => ['http://gitwheel.org/my-app'],
+            'stack' => stack.name
+          }
+        },
+        'metadata' => {
+          'labels' => {
+            'release' => 'stable',
+            'code.cloudfoundry.org/cloud_controller_ng' => 'awesome',
+            'delete-me' => nil
+          },
+          'annotations' => {
+            'contacts' => 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)',
+            'anno1' => 'new-value',
+          }
+        }
       }
       expect(event.metadata['request']).to eq(metadata_request)
     end
