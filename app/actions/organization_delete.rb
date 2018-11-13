@@ -36,7 +36,7 @@ module VCAP::CloudController
     private
 
     def delete_labels(org_model)
-      LabelDelete.new.delete(org_model.labels)
+      LabelDelete.delete(org_model.labels)
     end
   end
 end

@@ -1,6 +1,6 @@
 module VCAP::CloudController
   class LabelDelete
-    def delete(labels)
+    def self.delete(labels)
       labels.each(&:destroy)
     end
   end

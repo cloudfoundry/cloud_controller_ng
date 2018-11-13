@@ -91,7 +91,7 @@ module VCAP::CloudController
     end
 
     def delete_labels(space_model)
-      LabelDelete.new.delete(space_model.labels)
+      LabelDelete.delete(space_model.labels)
     end
 
     def delete_service_brokers(space_model)

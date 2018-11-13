@@ -3,7 +3,7 @@ require 'actions/label_delete'
 
 module VCAP::CloudController
   RSpec.describe LabelDelete do
-    subject(:label_delete) { LabelDelete.new }
+    subject(:label_delete) { LabelDelete }
 
     describe '#delete' do
       let!(:label) { AppLabelModel.make }
