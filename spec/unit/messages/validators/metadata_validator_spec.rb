@@ -154,7 +154,7 @@ module VCAP::CloudController::Validators
 
         it 'is invalid' do
           expect(subject).not_to be_valid
-          expect(subject.errors_on(:metadata)).to contain_exactly('label key cannot be empty string', 'label key cannot be empty string')
+          expect(subject.errors_on(:metadata)).to contain_exactly('key error: label key cannot be empty string', 'key error: label key cannot be empty string')
         end
       end
 
@@ -187,7 +187,7 @@ module VCAP::CloudController::Validators
 
           it 'is invalid' do
             expect(subject).not_to be_valid
-            expect(subject.errors_on(:metadata)).to contain_exactly("label key has more than one '/'")
+            expect(subject.errors_on(:metadata)).to contain_exactly("key error: label key has more than one '/'")
           end
         end
 
@@ -203,10 +203,10 @@ module VCAP::CloudController::Validators
 
           it 'is invalid' do
             expect(subject).not_to be_valid
-            expect(subject.errors_on(:metadata)).to include("label prefix '-a' must be in valid dns format")
-            expect(subject.errors_on(:metadata)).to include("label prefix 'a%a.com' must be in valid dns format")
-            expect(subject.errors_on(:metadata)).to include("label prefix 'a..com' must be in valid dns format")
-            expect(subject.errors_on(:metadata)).to include("label prefix 'onlycom' must be in valid dns format")
+            expect(subject.errors_on(:metadata)).to include("key error: label prefix '-a' must be in valid dns format")
+            expect(subject.errors_on(:metadata)).to include("key error: label prefix 'a%a.com' must be in valid dns format")
+            expect(subject.errors_on(:metadata)).to include("key error: label prefix 'a..com' must be in valid dns format")
+            expect(subject.errors_on(:metadata)).to include("key error: label prefix 'onlycom' must be in valid dns format")
           end
         end
 
@@ -220,7 +220,7 @@ module VCAP::CloudController::Validators
 
           it 'is invalid' do
             expect(subject).not_to be_valid
-            expect(subject.errors_on(:metadata)).to contain_exactly('cloudfoundry.org is a reserved domain', 'cloudfoundry.org is a reserved domain')
+            expect(subject.errors_on(:metadata)).to contain_exactly('key error: cloudfoundry.org is a reserved domain', 'key error: cloudfoundry.org is a reserved domain')
           end
         end
 
@@ -237,7 +237,7 @@ module VCAP::CloudController::Validators
 
           it 'is invalid' do
             expect(subject).not_to be_valid
-            expect(subject.errors_on(:metadata)).to contain_exactly("label prefix 'aaaaaaaa...' is greater than 253 characters")
+            expect(subject.errors_on(:metadata)).to contain_exactly("key error: label prefix 'aaaaaaaa...' is greater than 253 characters")
           end
         end
       end

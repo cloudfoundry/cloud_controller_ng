@@ -28,6 +28,7 @@ module VCAP::CloudController::Validators
       end
 
       def valid_value?(label_value)
+        return LabelError.none if label_value.nil? || label_value == ''
         res = valid_characters?(label_value)
         return res unless res.is_valid?
         res = start_end_alphanumeric?(label_value)
