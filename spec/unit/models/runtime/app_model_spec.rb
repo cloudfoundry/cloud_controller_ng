@@ -45,18 +45,6 @@ module VCAP::CloudController
             and change { BuildpackLifecycleBuildpackModel.count }.by(-2)
         end
       end
-
-      context 'when the app has revisions' do
-        let!(:revision) do
-          RevisionModel.make(app: app_model)
-        end
-
-        it 'destroys the revisions' do
-          expect {
-            app_model.destroy
-          }.to change { RevisionModel.count }.by(-1)
-        end
-      end
     end
 
     describe 'validations' do

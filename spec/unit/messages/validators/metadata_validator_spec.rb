@@ -123,7 +123,7 @@ module VCAP::CloudController::Validators
       context 'when the label key is exactly 63 characters' do
         let(:labels) do
           {
-              'a' * VCAP::CloudController::Validators::LabelValidatorHelper::MAX_LABEL_SIZE => 'value2',
+              'a' * LabelValidatorHelper::MAX_LABEL_SIZE => 'value2',
           }
         end
         it 'is valid' do
@@ -134,13 +134,13 @@ module VCAP::CloudController::Validators
       context 'when the label key is greater than 63 characters' do
         let(:labels) do
           {
-              'b' * (VCAP::CloudController::Validators::LabelValidatorHelper::MAX_LABEL_SIZE + 1) => 'value3',
+              'b' * (LabelValidatorHelper::MAX_LABEL_SIZE + 1) => 'value3',
           }
         end
         it 'is invalid' do
           expect(subject).not_to be_valid
           expect(subject.errors_on(:metadata)).
-            to include("key error: label '#{'b' * 8}...' is greater than #{VCAP::CloudController::Validators::LabelValidatorHelper::MAX_LABEL_SIZE} characters")
+            to include("key error: label '#{'b' * 8}...' is greater than #{LabelValidatorHelper::MAX_LABEL_SIZE} characters")
         end
       end
 
@@ -283,7 +283,7 @@ module VCAP::CloudController::Validators
         context 'when the label value is exactly 63 characters' do
           let(:labels) do
             {
-                'key' => 'a' * VCAP::CloudController::Validators::LabelValidatorHelper::MAX_LABEL_SIZE,
+                'key' => 'a' * LabelValidatorHelper::MAX_LABEL_SIZE,
             }
           end
           it 'is valid' do
@@ -294,13 +294,13 @@ module VCAP::CloudController::Validators
         context 'when the label value is greater than 63 characters' do
           let(:labels) do
             {
-                'key' => 'b' * (VCAP::CloudController::Validators::LabelValidatorHelper::MAX_LABEL_SIZE + 1),
+                'key' => 'b' * (LabelValidatorHelper::MAX_LABEL_SIZE + 1),
             }
           end
           it 'is invalivalue error: labeld' do
             expect(subject).not_to be_valid
             expect(subject.errors_on(:metadata)).
-              to include("value error: label '#{'b' * 8}...' is greater than #{VCAP::CloudController::Validators::LabelValidatorHelper::MAX_LABEL_SIZE} characters")
+              to include("value error: label '#{'b' * 8}...' is greater than #{LabelValidatorHelper::MAX_LABEL_SIZE} characters")
           end
         end
       end
@@ -314,7 +314,7 @@ module VCAP::CloudController::Validators
           {
             "contacts": 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)',
             "Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)": 'contacts',
-            ('a' * VCAP::CloudController::Validators::MetadataValidator::MAX_ANNOTATION_KEY_SIZE) => ('b' * VCAP::CloudController::Validators::MetadataValidator::MAX_ANNOTATION_VALUE_SIZE)
+            ('a' * MetadataValidator::MAX_ANNOTATION_KEY_SIZE) => ('b' * MetadataValidator::MAX_ANNOTATION_VALUE_SIZE)
           }
         end
 
@@ -335,13 +335,13 @@ module VCAP::CloudController::Validators
       context 'when the annotation key is greater than 1000 characters' do
         let(:annotations) do
           {
-            'a' * (VCAP::CloudController::Validators::MetadataValidator::MAX_ANNOTATION_KEY_SIZE + 1) => 'value1',
+            'a' * (MetadataValidator::MAX_ANNOTATION_KEY_SIZE + 1) => 'value1',
           }
         end
         it 'is invalid' do
           expect(subject).not_to be_valid
           expect(subject.errors_on(:metadata)).
-            to include("key error: annotation '#{'a' * 8}...' is greater than #{VCAP::CloudController::Validators::MetadataValidator::MAX_ANNOTATION_KEY_SIZE} characters")
+            to include("key error: annotation '#{'a' * 8}...' is greater than #{MetadataValidator::MAX_ANNOTATION_KEY_SIZE} characters")
         end
       end
 
@@ -361,13 +361,13 @@ module VCAP::CloudController::Validators
       context 'when the annotation value is greater than 5000 characters' do
         let(:annotations) do
           {
-            'key' => ('a' * (VCAP::CloudController::Validators::MetadataValidator::MAX_ANNOTATION_VALUE_SIZE + 1)),
+            'key' => ('a' * (MetadataValidator::MAX_ANNOTATION_VALUE_SIZE + 1)),
           }
         end
         it 'is invalid' do
           expect(subject).not_to be_valid
           expect(subject.errors_on(:metadata)).
-            to include("value error: annotation '#{'a' * 8}...' is greater than #{VCAP::CloudController::Validators::MetadataValidator::MAX_ANNOTATION_VALUE_SIZE} characters")
+            to include("value error: annotation '#{'a' * 8}...' is greater than #{MetadataValidator::MAX_ANNOTATION_VALUE_SIZE} characters")
         end
       end
     end

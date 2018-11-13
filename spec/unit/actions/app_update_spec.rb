@@ -184,7 +184,9 @@ module VCAP::CloudController
           app_update.update(app_model, message, lifecycle)
           expect(AppLabelModel.find(resource_guid: app_model.guid, key_name: 'release').value).to eq 'stable'
           expect(AppLabelModel.find(resource_guid: app_model.guid, key_prefix: 'joyofcooking.com', key_name: 'potato').value).to eq 'mashed'
-          expect(AppAnnotationModel.find(resource_guid: app_model.guid, key: 'contacts').value).to eq 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)'
+          expect(AppAnnotationModel.find(resource_guid: app_model.guid, key: 'contacts').value).to eq(
+            'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)'
+          )
         end
       end
 
