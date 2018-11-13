@@ -3,7 +3,7 @@ require 'actions/deployment_delete'
 
 module VCAP::CloudController
   RSpec.describe DeploymentDelete do
-    subject(:deployment_delete) { DeploymentDelete.new }
+    subject(:deployment_delete) { DeploymentDelete }
 
     describe '#delete' do
       let!(:deployment) { DeploymentModel.make }

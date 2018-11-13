@@ -71,7 +71,7 @@ module VCAP::CloudController
       TaskDelete.new(@user_audit_info).delete(app.tasks)
       BuildDelete.new(StagingCancel.new(stagers)).delete(app.builds)
       DropletDelete.new(@user_audit_info).delete(app.droplets)
-      DeploymentDelete.new.delete(app.deployments)
+      DeploymentDelete.delete(app.deployments)
       LabelDelete.delete(app.labels)
       AnnotationDelete.delete(app.annotations)
       RevisionDelete.delete(app.revisions)
