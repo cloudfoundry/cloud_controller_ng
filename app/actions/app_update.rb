@@ -1,5 +1,6 @@
 require 'models/helpers/label_helpers'
 require 'actions/labels_update'
+require 'actions/annotations_update'
 
 module VCAP::CloudController
   class AppUpdate
@@ -23,6 +24,7 @@ module VCAP::CloudController
         update_app_command(app, message) if message.requested?(:command)
         update_app_env(app, message) if message.requested?(:env)
         LabelsUpdate.update(app, message.labels, AppLabelModel)
+        AnnotationsUpdate.update(app, message.annotations, AppAnnotationModel)
 
         app.save
 

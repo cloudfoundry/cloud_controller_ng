@@ -25,13 +25,18 @@ module VCAP::CloudController
             },
             links: build_links,
             metadata: {
-              labels: {}
+              labels: {},
+              annotations: {}
             }
           }
 
           app.labels.each do |app_label|
             key = [app_label[:key_prefix], app_label[:key_name]].compact.join(VCAP::CloudController::LabelHelpers::KEY_SEPARATOR)
             hash[:metadata][:labels][key] = app_label[:value]
+          end
+
+          app.annotations.each do |app_annotation|
+            hash[:metadata][:annotations][app_annotation[:key]] = app_annotation[:value]
           end
 
           @decorators.reduce(hash) { |memo, d| d.decorate(memo, [app]) }

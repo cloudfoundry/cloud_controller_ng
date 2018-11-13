@@ -16,5 +16,9 @@ module VCAP::CloudController
     def labels
       HashUtils.dig(metadata, :labels)
     end
+
+    def annotations
+      HashUtils.dig(metadata, :annotations)
+    end
   end
 end

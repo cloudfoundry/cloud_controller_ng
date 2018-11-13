@@ -173,6 +173,30 @@ module VCAP::CloudController
           expect(message).not_to be_valid
           expect(message.errors_on(:metadata)).to include("'labels' is not a hash")
         end
+        it 'can parse annotations' do
+          params =
+            {
+              "metadata": {
+                "annotations": {
+                  "potato": 'mashed'
+                }
+              }
+            }
+          message = AppUpdateMessage.new(params)
+          expect(message).to be_valid
+          expect(message.annotations).to include("potato": 'mashed')
+        end
+
+        it 'validates annotations' do
+          params = {
+            "metadata": {
+              "annotations": 'potato',
+            }
+          }
+          message = AppUpdateMessage.new(params)
+          expect(message).not_to be_valid
+          expect(message.errors_on(:metadata)).to include("'annotations' is not a hash")
+        end
       end
     end
   end

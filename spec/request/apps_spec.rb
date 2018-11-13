@@ -75,7 +75,9 @@ RSpec.describe 'Apps' do
             'metadata' => { 'labels' => {
                 'release' => 'stable',
                 'code.cloudfoundry.org/cloud_controller_ng' => 'awesome'
-            } },
+                },
+                            'annotations' => {}
+            },
             'links' => {
                 'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}" },
                 'processes' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/processes" },
@@ -155,7 +157,7 @@ RSpec.describe 'Apps' do
             },
             'created_at' => iso8601,
             'updated_at' => iso8601,
-            'metadata' => { 'labels' => {} },
+            'metadata' => { 'labels' => {}, 'annotations' => {} },
             'links' => {
                 'self' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}" },
                 'processes' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/processes" },
@@ -247,7 +249,7 @@ RSpec.describe 'Apps' do
                     },
                     'created_at' => iso8601,
                     'updated_at' => iso8601,
-                    'metadata' => { 'labels' => {} },
+                    'metadata' => { 'labels' => {}, 'annotations' => {} },
                     'links' => {
                         'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}" },
                         'processes' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/processes" },
@@ -279,7 +281,7 @@ RSpec.describe 'Apps' do
                   },
                   'created_at' => iso8601,
                   'updated_at' => iso8601,
-                  'metadata' => { 'labels' => {} },
+                  'metadata' => { 'labels' => {}, 'annotations' => {} },
                   'links' => {
                       'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}" },
                       'processes' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/processes" },
@@ -694,7 +696,7 @@ RSpec.describe 'Apps' do
             'state' => 'STARTED',
             'created_at' => iso8601,
             'updated_at' => iso8601,
-            'metadata' => { 'labels' => {} },
+            'metadata' => { 'labels' => {}, 'annotations' => {} },
             'lifecycle' => {
                 'type' => 'buildpack',
                 'data' => {
@@ -1025,6 +1027,9 @@ RSpec.describe 'Apps' do
                   'release' => 'stable',
                   'code.cloudfoundry.org/cloud_controller_ng' => 'awesome',
                   'delete-me' => nil
+              },
+              annotations: {
+                  'contacts': 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)'
               }
           }
 
@@ -1058,9 +1063,13 @@ RSpec.describe 'Apps' do
             'created_at' => iso8601,
             'updated_at' => iso8601,
             'metadata' => { 'labels' => {
-                'release' => 'stable',
-                'code.cloudfoundry.org/cloud_controller_ng' => 'awesome'
-            } },
+                  'release' => 'stable',
+                  'code.cloudfoundry.org/cloud_controller_ng' => 'awesome'
+                },
+                            'annotations' => {
+                  'contacts' => 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)'
+                }
+            },
             'links' => {
                 'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
                 'processes' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/processes" },
@@ -1090,10 +1099,10 @@ RSpec.describe 'Apps' do
                                           space_guid: space.guid,
                                           organization_guid: space.organization.guid
                                       })
-
       metadata_request = { 'name' => 'new-name',
                            'lifecycle' => { 'type' => 'buildpack', 'data' => { 'buildpacks' => ['http://gitwheel.org/my-app'], 'stack' => stack.name } },
-                           'metadata' => { 'labels' => { 'release' => 'stable', 'code.cloudfoundry.org/cloud_controller_ng' => 'awesome', 'delete-me' => nil } }
+                           'metadata' => { 'labels' => { 'release' => 'stable', 'code.cloudfoundry.org/cloud_controller_ng' => 'awesome', 'delete-me' => nil }, 'annotations' => {
+                             'contacts' => 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)' } }
       }
       expect(event.metadata['request']).to eq(metadata_request)
     end
@@ -1127,7 +1136,7 @@ RSpec.describe 'Apps' do
                                                         'state' => 'STARTED',
                                                         'created_at' => iso8601,
                                                         'updated_at' => iso8601,
-                                                        'metadata' => { 'labels' => {} },
+                                                        'metadata' => { 'labels' => {}, 'annotations' => {} },
                                                         'lifecycle' => {
                                                             'type' => 'buildpack',
                                                             'data' => {
@@ -1202,7 +1211,7 @@ RSpec.describe 'Apps' do
             'state' => 'STOPPED',
             'created_at' => iso8601,
             'updated_at' => iso8601,
-            'metadata' => { 'labels' => {} },
+            'metadata' => { 'labels' => {}, 'annotations' => {} },
             'lifecycle' => {
                 'type' => 'buildpack',
                 'data' => {
@@ -1278,7 +1287,7 @@ RSpec.describe 'Apps' do
             'state' => 'STARTED',
             'created_at' => iso8601,
             'updated_at' => iso8601,
-            'metadata' => { 'labels' => {} },
+            'metadata' => { 'labels' => {}, 'annotations' => {} },
             'lifecycle' => {
                 'type' => 'buildpack',
                 'data' => {

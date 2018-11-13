@@ -20,6 +20,14 @@ module VCAP::CloudController::Presenters::V3
       )
     end
 
+    let!(:annotation) do
+      VCAP::CloudController::AppAnnotationModel.make(
+        resource_guid: app.guid,
+        key: 'contacts',
+        value: 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)',
+      )
+    end
+
     let(:app) do
       VCAP::CloudController::AppModel.make(
         name: 'Davis',
@@ -68,6 +76,7 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:lifecycle][:data][:buildpacks]).to eq(['git://***:***@github.com/repo', 'limabean'])
         expect(result[:relationships][:space][:data][:guid]).to eq(app.space.guid)
         expect(result[:metadata][:labels]).to eq('release' => 'stable', 'maine.gov/potato' => 'mashed')
+        expect(result[:metadata][:annotations]).to eq('contacts' => 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)')
       end
 
       context 'when there are decorators' do
