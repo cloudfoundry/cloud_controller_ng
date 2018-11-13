@@ -28,6 +28,10 @@ module VCAP::CloudController
                 labels: {
                     release: 'stable',
                     'seriouseats.com/potato': 'mashed'
+                },
+                annotations: {
+                  superhero: 'Bummer-boy',
+                  superpower: 'Bums you out',
                 }
             }
           })
@@ -46,6 +50,7 @@ module VCAP::CloudController
           expect(app.space).to eq(space)
           expect(app.environment_variables).to eq(environment_variables.stringify_keys)
           expect(app.labels.map(&:value)).to contain_exactly('stable', 'mashed')
+          expect(app.annotations.map(&:value)).to contain_exactly('Bummer-boy', 'Bums you out')
 
           expect(lifecycle).to have_received(:create_lifecycle_data_model).with(app)
         end

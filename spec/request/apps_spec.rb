@@ -38,6 +38,9 @@ RSpec.describe 'Apps' do
               labels: {
                   'release' => 'stable',
                   'code.cloudfoundry.org/cloud_controller_ng' => 'awesome'
+              },
+              annotations: {
+                  'description' => 'gud app'
               }
           }
       }
@@ -72,11 +75,14 @@ RSpec.describe 'Apps' do
             },
             'created_at' => iso8601,
             'updated_at' => iso8601,
-            'metadata' => { 'labels' => {
+            'metadata' => {
+              'labels' => {
                 'release' => 'stable',
                 'code.cloudfoundry.org/cloud_controller_ng' => 'awesome'
-                },
-                            'annotations' => {}
+              },
+              'annotations' => {
+                'description' => 'gud app',
+              },
             },
             'links' => {
                 'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}" },

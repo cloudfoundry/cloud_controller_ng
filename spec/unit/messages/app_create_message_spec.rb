@@ -11,7 +11,10 @@ module VCAP::CloudController
             metadata: {
                 labels: {
                     potato: 'mashed'
-                }
+                },
+                annotations: {
+                  happy: 'annotation',
+                },
             }
         }
       message = AppCreateMessage.new(params)

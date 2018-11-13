@@ -350,7 +350,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     end
 
     context 'metadata' do
-      context 'when the metadata is invalid' do
+      context 'when the label is invalid' do
         let(:request_body) do
           {
               metadata: {
@@ -370,6 +370,29 @@ RSpec.describe AppsV3Controller, type: :controller do
         end
       end
 
+      context 'when the annotation is invalid' do
+        let(:request_body) do
+          {
+            metadata: {
+              labels: {
+                'release' => 'stable'
+              },
+              annotations: {
+                '' => 'uhoh'
+              },
+            }
+          }
+        end
+
+        it 'returns an UnprocessableEntity error' do
+          post :create, params: request_body, as: :json
+
+          expect(response.status).to eq 422
+          expect(response.body).to include 'UnprocessableEntity'
+          expect(response.body).to include 'Metadata annotations key cannot be empty string'
+        end
+      end
+
       context 'when the metadata is valid' do
         let(:request_body) do
           {
@@ -378,19 +401,23 @@ RSpec.describe AppsV3Controller, type: :controller do
               metadata: {
                   labels: {
                       release: 'stable'
-                  }
+                  },
+                  annotations: {
+                    this: 'is valid'
+                  },
               }
           }
         end
 
-        it 'uses the defaults and returns a 201 and the app' do
+        it 'Returns a 201 and the app with metadata' do
           post :create, params: request_body, as: :json
 
           response_body = parsed_body
-          response_metadata = response_body['metadata']['labels']
+          response_metadata = response_body['metadata']
 
           expect(response.status).to eq 201
-          expect(response_metadata['release']).to eq 'stable'
+          expect(response_metadata['labels']['release']).to eq 'stable'
+          expect(response_metadata['annotations']['this']).to eq 'is valid'
         end
       end
     end
