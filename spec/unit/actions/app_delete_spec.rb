@@ -147,6 +147,16 @@ module VCAP::CloudController
           expect(app.exists?).to be_falsey
         end
 
+        it 'deletes associated revisions' do
+          revision = RevisionModel.make(app: app)
+
+          expect {
+            app_delete.delete(app_dataset)
+          }.to change { RevisionModel.count }.by(-1)
+          expect(revision.exists?).to be_falsey
+          expect(app.exists?).to be_falsey
+        end
+
         it 'deletes the buildpack caches' do
           delete_buildpack_cache_jobs = Delayed::Job.where(Sequel.lit("handler like '%BuildpackCacheDelete%'"))
           expect { app_delete.delete(app_dataset) }.to change { delete_buildpack_cache_jobs.count }.by(1)

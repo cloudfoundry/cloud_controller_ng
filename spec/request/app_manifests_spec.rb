@@ -92,6 +92,35 @@ RSpec.describe 'App Manifests' do
       expect(app_model.service_bindings.first.service_instance).to eq service_instance
     end
 
+    context 'yaml anchors' do
+      let(:yml_manifest) do
+        <<~YML
+          ---
+          applications:
+          - name: blah
+            processes:
+            - type: web
+              memory: &default_value 321M
+              disk_quota: *default_value
+        YML
+      end
+
+      it 'accepts yaml with anchors' do
+        post "/v3/apps/#{app_model.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
+
+        expect(last_response.status).to eq(202)
+        job_guid = VCAP::CloudController::PollableJobModel.last.guid
+        expect(last_response.headers['Location']).to match(%r(/v3/jobs/#{job_guid}))
+
+        Delayed::Worker.new.work_off
+        expect(VCAP::CloudController::PollableJobModel.find(guid: job_guid)).to be_complete
+
+        web_process = app_model.web_process
+        expect(web_process.memory).to eq(321)
+        expect(web_process.disk_quota).to eq(321)
+      end
+    end
+
     describe 'audit events' do
       let!(:process) { nil }
 
