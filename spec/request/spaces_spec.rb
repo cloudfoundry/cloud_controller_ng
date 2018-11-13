@@ -274,5 +274,42 @@ RSpec.describe 'Spaces' do
         )
       end
     end
+
+    context 'updating labels' do
+      let!(:space1_label) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'fruit', value: 'mango', space: space1) }
+
+      it 'Updates the spaces label' do
+        patch "/v3/spaces/#{space1.guid}", { metadata: { labels: { fruit: 'strawberry' } } }.to_json, admin_header
+        expect(last_response.status).to eq(200)
+
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response).to be_a_response_like(
+          {
+            'guid' => space1.guid,
+            'name' => space1.name,
+            'created_at' => iso8601,
+            'updated_at' => iso8601,
+            'relationships' => {
+              'organization' => {
+                'data' => { 'guid' => space1.organization_guid }
+              }
+            },
+            'metadata' => {
+              'labels' => {
+                'fruit' => 'strawberry'
+              }
+            },
+            'links' => {
+              'self' => {
+                'href' => "#{link_prefix}/v3/spaces/#{space1.guid}"
+              },
+              'organization' => {
+                'href' => "#{link_prefix}/v3/organizations/#{space1.organization_guid}"
+              }
+            },
+          }
+        )
+      end
+    end
   end
 end
