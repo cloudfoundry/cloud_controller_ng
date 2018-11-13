@@ -167,6 +167,7 @@ module VCAP::CloudController
 
       describe 'updating metadata' do
         let!(:app_annotation) { AppAnnotationModel.make(app: app_model, key: 'existing_anno', value: 'original-value') }
+        let!(:delete_annotation) { AppAnnotationModel.make(app: app_model, key: 'please', value: 'delete this') }
 
         let(:message) do
           AppUpdateMessage.new({
@@ -178,6 +179,7 @@ module VCAP::CloudController
               annotations: {
                 contacts: 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)',
                 existing_anno: 'new-value',
+                please: nil,
               }
             }
           })
@@ -195,6 +197,7 @@ module VCAP::CloudController
             'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)',
             'new-value'
           )
+          expect(AppAnnotationModel.find(resource_guid: app_model.guid, key: 'please')).to be_nil
         end
       end
 

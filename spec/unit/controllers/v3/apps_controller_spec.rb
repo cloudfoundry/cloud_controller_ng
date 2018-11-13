@@ -985,13 +985,6 @@ RSpec.describe AppsV3Controller, type: :controller do
     end
 
     context 'metadata' do
-      let!(:app_annotation) { VCAP::CloudController::AppAnnotationModel.make(
-        app: app_model,
-        key: 'existing_anno',
-        value: 'original-value'
-        )
-      }
-
       context 'when the label is invalid' do
         let(:request_body) do
           {
@@ -1036,6 +1029,14 @@ RSpec.describe AppsV3Controller, type: :controller do
       end
 
       context 'when the metadata is valid' do
+        let!(:app_annotation) do
+          VCAP::CloudController::AppAnnotationModel.make(app: app_model, key: 'existing_anno', value: 'original-value')
+        end
+
+        let!(:delete_annotation) do
+          VCAP::CloudController::AppAnnotationModel.make(app: app_model, key: 'please', value: 'delete me')
+        end
+
         let(:request_body) do
           {
             name: 'some-name',
@@ -1046,7 +1047,8 @@ RSpec.describe AppsV3Controller, type: :controller do
               },
               annotations: {
                 new_anno: 'value',
-                existing_anno: 'is valid'
+                existing_anno: 'is valid',
+                please: nil,
               },
             }
           }
@@ -1062,6 +1064,7 @@ RSpec.describe AppsV3Controller, type: :controller do
           expect(response_metadata['labels']['release']).to eq 'stable'
           expect(response_metadata['annotations']['new_anno']).to eq 'value'
           expect(response_metadata['annotations']['existing_anno']).to eq 'is valid'
+          expect(response_metadata['annotations']['please']).to be_nil
         end
       end
     end

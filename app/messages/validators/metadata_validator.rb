@@ -72,7 +72,7 @@ module VCAP::CloudController::Validators
     end
 
     def validate_annotation_value(annotation_value, record)
-      if annotation_value.size > MAX_ANNOTATION_VALUE_SIZE
+      if !annotation_value.nil? && annotation_value.size > MAX_ANNOTATION_VALUE_SIZE
         record.errors.add(:metadata, "value error: annotation '#{annotation_value[0...8]}...' is greater than 5000 characters")
       end
     end

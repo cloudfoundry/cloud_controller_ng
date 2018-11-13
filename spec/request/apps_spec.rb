@@ -1023,6 +1023,11 @@ RSpec.describe 'Apps' do
         value: 'original-value',
       )
 
+      VCAP::CloudController::AppAnnotationModel.make(
+        resource_guid: app_model.guid,
+        key: 'please',
+        value: 'delete this',
+      )
       stack = VCAP::CloudController::Stack.make(name: 'redhat')
 
       update_request = {
@@ -1043,6 +1048,7 @@ RSpec.describe 'Apps' do
               annotations: {
                   'contacts' => 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)',
                   'anno1' => 'new-value',
+                  'please' => nil,
               }
           }
 
@@ -1132,6 +1138,7 @@ RSpec.describe 'Apps' do
           'annotations' => {
             'contacts' => 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)',
             'anno1' => 'new-value',
+            'please' => nil,
           }
         }
       }
