@@ -2386,7 +2386,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     let!(:app_model) { VCAP::CloudController::AppModel.make }
     let!(:space) { app_model.space }
     let(:user) { VCAP::CloudController::User.make }
-    let(:revision) { VCAP::CloudController::RevisionModel.make(app: app_model) }
+    let(:revision) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 808) }
 
     before do
       set_current_user(user)
@@ -2401,6 +2401,7 @@ RSpec.describe AppsV3Controller, type: :controller do
       expect(parsed_body).to be_a_response_like(
         {
           'guid' => revision.guid,
+          'version' => revision.version,
           'created_at' => iso8601,
           'updated_at' => iso8601,
           'links' => {

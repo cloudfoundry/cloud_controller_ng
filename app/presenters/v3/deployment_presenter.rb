@@ -34,9 +34,12 @@ module VCAP::CloudController::Presenters::V3
     end
 
     def revision
-      deployment&.revision && {
-          guid: deployment.revision.guid
-        }
+      return nil if deployment.revision_guid.nil?
+
+      {
+          guid: deployment.revision_guid,
+          version: deployment.revision_version,
+      }
     end
 
     def new_processes

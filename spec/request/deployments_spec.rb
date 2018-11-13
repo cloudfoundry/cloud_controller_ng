@@ -49,7 +49,8 @@ RSpec.describe 'Deployments' do
             'type' => deployment.deploying_web_process.type
           }],
           'revision' => {
-            'guid' => deployment.deploying_web_process.revision_guid
+            'guid' => deployment.deploying_web_process.revision_guid,
+            'version' => 1,
           },
           'created_at' => iso8601,
           'updated_at' => iso8601,
@@ -110,7 +111,8 @@ RSpec.describe 'Deployments' do
             'type' => deployment.deploying_web_process.type
           }],
           'revision' => {
-            'guid' => deployment.deploying_web_process.revision_guid
+            'guid' => deployment.deploying_web_process.revision_guid,
+            'version' => 1,
           },
           'created_at' => iso8601,
           'updated_at' => iso8601,
@@ -181,6 +183,81 @@ RSpec.describe 'Deployments' do
           }
         }
       })
+    end
+
+    context 'revisions' do
+      let(:create_request) do
+        {
+          relationships: {
+            app: {
+              data: {
+                guid: app_model.guid
+              }
+            },
+          }
+        }
+      end
+
+      it 'should continue to display the revision associated with the deployment even after the revision is deleted' do
+        revision = VCAP::CloudController::RevisionModel.make(app: app_model, version: 300)
+        deployment = VCAP::CloudController::DeploymentModel.make(
+          app: app_model,
+          droplet: droplet,
+          previous_droplet: old_droplet,
+          revision_guid: revision.guid,
+          revision_version: revision.version,
+        )
+        revision.delete
+
+        get "/v3/deployments/#{deployment.guid}", nil, user_header
+        expect(last_response.status).to eq(200), last_response.body
+
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response).to be_a_response_like({
+          'guid' => deployment.guid,
+          'state' => 'DEPLOYING',
+          'droplet' => {
+            'guid' => droplet.guid
+          },
+          'previous_droplet' => {
+            'guid' => old_droplet.guid
+          },
+          'new_processes' => [],
+          'revision' => {
+            'guid' => revision.guid,
+            'version' => revision.version
+          },
+          'created_at' => iso8601,
+          'updated_at' => iso8601,
+          'relationships' => {
+            'app' => {
+              'data' => {
+                'guid' => app_model.guid
+              }
+            }
+          },
+          'links' => {
+            'self' => {
+              'href' => "#{link_prefix}/v3/deployments/#{deployment.guid}"
+            },
+            'app' => {
+              'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
+            }
+          }
+        })
+      end
+
+      it 'should increment the revision version after each deployment' do
+        post '/v3/deployments', create_request.to_json, user_header
+        parsed_response = MultiJson.load(last_response.body)
+        revision_version = parsed_response['revision']['version']
+
+        post '/v3/deployments', create_request.to_json, user_header
+        parsed_response = MultiJson.load(last_response.body)
+        new_revision_version = parsed_response['revision']['version']
+
+        expect(new_revision_version).to eq(revision_version + 1)
+      end
     end
   end
 

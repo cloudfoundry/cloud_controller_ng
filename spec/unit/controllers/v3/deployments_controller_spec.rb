@@ -110,9 +110,11 @@ RSpec.describe DeploymentsController, type: :controller do
           }.to change { VCAP::CloudController::RevisionModel.count }.by(1)
 
           revision_guid = parsed_body['revision']['guid']
+          revision_version = parsed_body['revision']['version']
 
           expect(VCAP::CloudController::RevisionModel.find(guid: revision_guid)).not_to be_nil
           expect(VCAP::CloudController::RevisionModel.last.guid).to eq(revision_guid)
+          expect(VCAP::CloudController::RevisionModel.last.version).to eq(revision_version)
         end
 
         it 'sets the app droplet to the provided droplet' do
