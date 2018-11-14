@@ -141,6 +141,8 @@ module VCAP::CloudController
           },
 
           buildpacks: {
+            max_retries: Integer,
+            max_retry_wait: Integer,
             buildpack_directory_key: String,
             fog_connection: Hash,
             fog_aws_storage_options: Hash,
