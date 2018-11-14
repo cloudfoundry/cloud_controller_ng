@@ -107,6 +107,7 @@ module VCAP::CloudController
 
     def validate_ports
       return unless port
+
       errors.add(:port, :invalid_port) if port < 0 || port > 65535
     end
 
@@ -136,6 +137,7 @@ module VCAP::CloudController
 
     def domains_match?
       return false if domain.nil? || host.nil? || host.empty?
+
       !Domain.find(name: fqdn).nil?
     end
 
@@ -211,6 +213,7 @@ module VCAP::CloudController
 
     def validate_fqdn
       return unless host
+
       length_with_period_separator = host.length + 1
       host_label_length = host.length > 0 ? length_with_period_separator : 0
       total_domain_too_long = host_label_length + domain.name.length > Domain::MAXIMUM_FQDN_DOMAIN_LENGTH
@@ -250,6 +253,7 @@ module VCAP::CloudController
 
     def validate_total_reserved_route_ports
       return unless new? && space
+
       org_route_port_counter = OrganizationReservedRoutePorts.new(space.organization)
       org_quota_definition = space.organization.quota_definition
       org_reserved_route_ports_policy = MaxReservedRoutePortsPolicy.new(org_quota_definition, org_route_port_counter)

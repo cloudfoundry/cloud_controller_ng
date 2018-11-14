@@ -8,6 +8,7 @@ class BaseMaxInstanceMemoryPolicy
   def validate
     return unless policy_target
     return unless additional_checks
+
     if instance_memory_limit != VCAP::CloudController::QuotaDefinition::UNLIMITED && resource_memory > instance_memory_limit
       resource.errors.add(field, error_name)
     end

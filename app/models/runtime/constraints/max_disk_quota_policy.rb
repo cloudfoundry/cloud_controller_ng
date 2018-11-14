@@ -9,6 +9,7 @@ class MaxDiskQuotaPolicy
 
   def validate
     return unless @process.disk_quota
+
     if @process.disk_quota > @max_mb
       @errors.add(:disk_quota, sprintf(ERROR_MSG, desired: @process.disk_quota, max: @max_mb))
     end

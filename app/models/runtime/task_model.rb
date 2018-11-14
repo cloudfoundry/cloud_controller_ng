@@ -1,7 +1,7 @@
 module VCAP::CloudController
   class TaskModel < Sequel::Model(:tasks)
     include Serializer
-    TASK_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/
+    TASK_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/.freeze
     TASK_STATES = [
       SUCCEEDED_STATE = 'SUCCEEDED'.freeze,
       FAILED_STATE = 'FAILED'.freeze,
@@ -74,6 +74,7 @@ module VCAP::CloudController
 
     def validate_environment_variables
       return unless environment_variables
+
       if environment_variables.to_json.length > ENV_VAR_MAX_LENGTH
         errors.add(:environment_variables, "exceeded the maximum length allowed of #{ENV_VAR_MAX_LENGTH} characters as json")
       end

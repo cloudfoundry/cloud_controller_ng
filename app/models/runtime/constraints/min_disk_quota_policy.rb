@@ -8,6 +8,7 @@ class MinDiskQuotaPolicy
 
   def validate
     return unless @process.disk_quota
+
     if @process.disk_quota < 1
       @errors.add(:disk_quota, ERROR_MSG)
     end

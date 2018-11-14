@@ -9,7 +9,7 @@ module VCAP::CloudController
     class UnauthorizedAccessToPrivateDomain < RuntimeError; end
     class DBNameUniqueRaceError < Sequel::ValidationFailed; end
 
-    SPACE_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/
+    SPACE_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/.freeze
 
     plugin :many_through_many
 
@@ -160,6 +160,7 @@ module VCAP::CloudController
       yield
     rescue Sequel::UniqueConstraintViolation => e
       raise DBNameUniqueRaceError.new(e) if e.message.try(:include?, 'spaces_org_id_name_index')
+
       raise
     end
 
@@ -217,6 +218,7 @@ module VCAP::CloudController
 
     def has_remaining_memory(mem)
       return true unless space_quota_definition
+
       memory_remaining >= mem
     end
 

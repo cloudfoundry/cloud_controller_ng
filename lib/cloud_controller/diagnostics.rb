@@ -37,6 +37,7 @@ module VCAP::CloudController
 
     def request_uri(request)
       return request.path if request.query_string.empty?
+
       "#{request.path}?#{request.query_string}"
     end
 

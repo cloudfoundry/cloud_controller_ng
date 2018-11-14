@@ -520,17 +520,19 @@ RSpec.describe AppManifestsController, type: :controller do
 
     describe 'authorization' do
       it_behaves_like 'permissions endpoint' do
-        let(:roles_to_http_responses) { {
-          'admin' => 200,
-          'admin_read_only' => 200,
-          'global_auditor' => 403,
-          'space_developer' => 200,
-          'space_manager' => 403,
-          'space_auditor' => 403,
-          'org_manager' => 403,
-          'org_auditor' => 404,
-          'org_billing_manager' => 404,
-        } }
+        let(:roles_to_http_responses) do
+          {
+            'admin' => 200,
+            'admin_read_only' => 200,
+            'global_auditor' => 403,
+            'space_developer' => 200,
+            'space_manager' => 403,
+            'space_auditor' => 403,
+            'org_manager' => 403,
+            'org_auditor' => 404,
+            'org_billing_manager' => 404,
+          }
+        end
         let(:api_call) { lambda { get :show, params: { guid: app_model.guid } } }
       end
     end

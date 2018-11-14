@@ -26,6 +26,7 @@ module VCAP::CloudController
       raise ServiceInstanceNotBindable unless service_instance.bindable?
       raise VolumeMountServiceDisabled if service_instance.volume_service? && !volume_mount_services_enabled
       raise SpaceMismatch unless bindable_in_space?(service_instance, app.space)
+
       raise_if_instance_locked(service_instance)
 
       binding = ServiceBinding.new(

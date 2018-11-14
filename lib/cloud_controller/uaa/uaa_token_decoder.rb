@@ -95,6 +95,7 @@ module VCAP::CloudController
       @uaa_issuer ||= with_request_error_handling do
         response = http_client.get('.well-known/openid-configuration')
         raise "Could not retrieve issuer information from UAA: #{response.status}" unless response.status == 200
+
         JSON.parse(response.body).fetch('issuer')
       end
     end

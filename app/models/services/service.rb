@@ -128,6 +128,7 @@ module VCAP::CloudController
 
     def shareable?
       return false if extra.nil?
+
       metadata = JSON.parse(extra)
       metadata && metadata['shareable']
     rescue JSON::ParserError

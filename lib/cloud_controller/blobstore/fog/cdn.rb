@@ -3,6 +3,7 @@ module CloudController
     class Cdn
       def self.make(host)
         return nil if host.nil? || host == ''
+
         new(host)
       end
 
@@ -22,6 +23,7 @@ module CloudController
           end
         rescue
           raise if retries > 1
+
           retries += 1
           retry
         end

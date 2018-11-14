@@ -6,6 +6,7 @@ module VCAP::CloudController
           def to_hash(app:, **_)
             return {} unless app.docker?
             return {} unless app.current_package
+
             {
               docker: {
                 image: app.current_package.image,

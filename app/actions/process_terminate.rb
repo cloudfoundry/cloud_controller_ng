@@ -10,6 +10,7 @@ module VCAP::CloudController
 
     def terminate
       raise InstanceNotFound unless @index < @process.instances && @index >= 0
+
       index_stopper.stop_index(@process, @index)
       record_audit_events
     end

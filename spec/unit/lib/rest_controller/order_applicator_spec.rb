@@ -8,6 +8,7 @@ module VCAP::CloudController::RestController
 
     def normalize_quotes(string)
       return string unless dataset.db.database_type == :postgres
+
       string.tr('`', '"')
     end
 

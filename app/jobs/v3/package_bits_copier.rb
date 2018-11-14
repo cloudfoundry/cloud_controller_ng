@@ -13,6 +13,7 @@ module VCAP::CloudController
 
           dest_package = VCAP::CloudController::PackageModel.find(guid: @dest_package_guid)
           raise 'destination package does not exist' unless dest_package
+
           src_package = VCAP::CloudController::PackageModel.find(guid: @src_package_guid)
           raise 'source package does not exist' unless src_package
 

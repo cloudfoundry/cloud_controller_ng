@@ -38,6 +38,7 @@ module VCAP::Services::Api
         req.errback  { f.resume(req) }
         http = Fiber.yield
         raise UnexpectedResponse.new("Error sending request #{msg.extract.to_json} to gateway #{@url}: #{http.error}") unless http.error.empty?
+
         code = http.response_header.status.to_i
         body = http.response
         [code, body]

@@ -30,6 +30,7 @@ module CloudController
         }
 
         return @attributes if keys.empty?
+
         @attributes.select { |key, _| keys.include? key }
       end
     end

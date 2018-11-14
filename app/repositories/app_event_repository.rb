@@ -90,6 +90,7 @@ module VCAP::CloudController
 
       def actor_or_system_hash(user_audit_info)
         return SYSTEM_ACTOR_HASH if user_audit_info.user_guid.nil?
+
         { guid: user_audit_info.user_guid, name: user_audit_info.user_email, user_name: user_audit_info.user_name, type: 'user' }
       end
 

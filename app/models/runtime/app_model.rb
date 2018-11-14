@@ -4,7 +4,7 @@ require 'models/helpers/process_types'
 module VCAP::CloudController
   class AppModel < Sequel::Model(:apps)
     include Serializer
-    APP_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/
+    APP_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/.freeze
 
     many_to_many :routes, join_table: :route_mappings, left_key: :app_guid, left_primary_key: :guid, right_primary_key: :guid, right_key: :route_guid
     one_to_many :service_bindings, key: :app_guid, primary_key: :guid
@@ -54,11 +54,13 @@ module VCAP::CloudController
 
     def lifecycle_type
       return BuildpackLifecycleDataModel::LIFECYCLE_TYPE if self.buildpack_lifecycle_data
+
       DockerLifecycleDataModel::LIFECYCLE_TYPE
     end
 
     def lifecycle_data
       return buildpack_lifecycle_data if self.buildpack_lifecycle_data
+
       DockerLifecycleDataModel.new
     end
 
@@ -107,6 +109,7 @@ module VCAP::CloudController
 
     def validate_environment_variables
       return unless environment_variables
+
       VCAP::CloudController::Validators::EnvironmentVariablesValidator.
         validate_each(self, :environment_variables, environment_variables)
     end

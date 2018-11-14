@@ -40,11 +40,13 @@ module VCAP::CloudController
 
     def lifecycle_type
       return BuildpackLifecycleDataModel::LIFECYCLE_TYPE if buildpack_lifecycle_data
+
       DockerLifecycleDataModel::LIFECYCLE_TYPE
     end
 
     def lifecycle_data
       return buildpack_lifecycle_data if buildpack_lifecycle_data
+
       DockerLifecycleDataModel.new
     end
 
@@ -86,6 +88,7 @@ module VCAP::CloudController
 
     def record_staging_stopped
       return unless need_to_create_stop_event?
+
       app_usage_event_repository.create_from_build(self, 'STAGING_STOPPED')
     end
 

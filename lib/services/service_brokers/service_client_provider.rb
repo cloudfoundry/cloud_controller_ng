@@ -2,6 +2,7 @@ module VCAP::Services
   class ServiceClientProvider
     def self.provide(opts={})
       return provide_client_for_broker(opts[:broker]) if opts[:broker]
+
       provide_client_for_instance(opts[:instance]) if opts[:instance]
     end
 

@@ -37,6 +37,7 @@ module VCAP::CloudController
 
     def usernames_for_ids(user_ids)
       return {} unless user_ids.present?
+
       filter_string = user_ids.map { |user_id| %(id eq "#{user_id}") }.join(' or ')
       results       = scim.query(:user_id, filter: filter_string)
 

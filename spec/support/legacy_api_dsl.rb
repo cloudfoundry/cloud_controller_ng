@@ -44,6 +44,7 @@ module LegacyApiDsl
 
   def expected_attributes_for_model(model)
     return model.fields.keys if model.respond_to? :fields
+
     model_class_from_name(model).export_attrs
   end
 

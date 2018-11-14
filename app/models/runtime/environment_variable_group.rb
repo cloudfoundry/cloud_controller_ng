@@ -15,6 +15,7 @@ module VCAP::CloudController
 
     def validate
       return unless environment_json
+
       VCAP::CloudController::Validators::EnvironmentVariablesValidator.
         validate_each(self, :environment_json, environment_json)
     end
@@ -28,6 +29,7 @@ module VCAP::CloudController
     def environment_json_with_serialization
       string = environment_json_without_serialization
       return {} if string.blank?
+
       MultiJson.load string
     end
     alias_method 'environment_json_without_serialization', 'environment_json'

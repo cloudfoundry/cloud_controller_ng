@@ -445,6 +445,7 @@ module VCAP::Services
             if !parsed_response['syslog_drain_url'].nil? && !service.requires.include?('syslog_drain')
               raise Errors::ServiceBrokerInvalidSyslogDrainUrl.new(uri, method, response)
             end
+
             @validator.validate(method: method, uri: uri, code: code, response: response)
           end
         end

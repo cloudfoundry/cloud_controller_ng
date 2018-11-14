@@ -322,6 +322,7 @@ module VCAP::CloudController
     def remove_role(space, role, user_id, username)
       user = User.first(guid: user_id)
       raise CloudController::Errors::ApiError.new_from_details('InvalidRelation', "User with guid #{user_id} not found") unless user
+
       user.username = username
 
       @perm_client.unassign_space_role(role: role, space_id: space.guid, user_id: user_id, issuer: SecurityContext.token['iss'])

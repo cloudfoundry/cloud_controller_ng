@@ -18,6 +18,7 @@ module VCAP::CloudController
       @record = record
       return unless should_validate?
       return if self.valid?
+
       record.errors[error_key].concat self.errors.full_messages
     end
 

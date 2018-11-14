@@ -1,6 +1,6 @@
 module CloudController
   class DomainDecorator
-    DOMAIN_REGEX = /\A(([a-z0-9]|[a-z0-9][a-z0-9\-]{0,61}[a-z0-9])\.)+([a-z0-9]|[a-z0-9][a-z0-9\-]{0,61}[a-z0-9])\Z/ix
+    DOMAIN_REGEX = /\A(([a-z0-9]|[a-z0-9][a-z0-9\-]{0,61}[a-z0-9])\.)+([a-z0-9]|[a-z0-9][a-z0-9\-]{0,61}[a-z0-9])\Z/ix.freeze
     DOMAIN_DELIMITER = '.'.freeze
 
     attr_reader :name
@@ -19,6 +19,7 @@ module CloudController
 
     def has_sub_domain?(test_domains:)
       return true if test_domains == [name]
+
       test_domains.any? do |test_domain|
         DomainDecorator.new(test_domain).is_sub_domain_of?(parent_domain_name: name)
       end

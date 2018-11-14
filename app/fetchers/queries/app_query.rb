@@ -46,6 +46,7 @@ module VCAP::RestAPI
 
     def column_type(query_key)
       return 'text' if query_key == :name
+
       column = model.db_schema[query_key.to_sym]
       raise_if_column_is_missing(query_key, column)
       column[:type]

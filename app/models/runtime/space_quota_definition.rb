@@ -52,6 +52,7 @@ module VCAP::CloudController
 
     def validate_total_reserved_ports
       return unless total_reserved_route_ports
+
       if reserved_ports_outside_of_valid_range? ||
           total_reserved_route_ports_greater_than_orgs_ports? ||
           total_reserved_route_ports_greater_than_total_routes?

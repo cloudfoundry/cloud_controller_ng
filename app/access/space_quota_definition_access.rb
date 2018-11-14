@@ -51,6 +51,7 @@ module VCAP::CloudController
     def create?(space_quota_definition, params=nil)
       return true if admin_user?
       return false if space_quota_definition.organization.suspended?
+
       space_quota_definition.organization.managers.include?(context.user)
     end
 

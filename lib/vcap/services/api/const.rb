@@ -3,7 +3,7 @@ module VCAP
   module Services
     module Api
       GATEWAY_TOKEN_HEADER = 'X-VCAP-Service-Token'.freeze
-      SERVICE_LABEL_REGEX  = /^\S+-\S+$/
+      SERVICE_LABEL_REGEX  = /^\S+-\S+$/.freeze
     end
   end
 end

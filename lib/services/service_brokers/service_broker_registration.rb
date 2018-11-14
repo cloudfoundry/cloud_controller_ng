@@ -13,6 +13,7 @@ module VCAP::Services::ServiceBrokers
 
     def create
       return unless broker.valid?
+
       validate_catalog!
       route_service_warning unless @route_services_enabled
       volume_mount_service_warning unless @volume_services_enabled

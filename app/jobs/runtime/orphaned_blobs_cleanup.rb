@@ -167,6 +167,7 @@ module VCAP::CloudController
           if blobstore_config.nil?
             raise "Could not find blobstore config matching blobstore type '#{type}': #{unique_blobstores.inspect}"
           end
+
           blobstore_config[:directory_key]
         end
 

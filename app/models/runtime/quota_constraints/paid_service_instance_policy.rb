@@ -10,6 +10,7 @@ class PaidServiceInstancePolicy
 
   def validate
     return unless @quota_definition
+
     unless paid_services_allowed? || @service_instance.service_plan.free
       @errors.add(:service_plan, @error_name)
     end

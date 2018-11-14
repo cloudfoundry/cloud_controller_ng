@@ -21,6 +21,7 @@ module VCAP::CloudController
         end
 
         raise errors.first unless errors.empty?
+
         warnings
       end
 

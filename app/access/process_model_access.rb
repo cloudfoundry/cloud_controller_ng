@@ -2,6 +2,7 @@ module VCAP::CloudController
   class ProcessModelAccess < BaseAccess
     def read?(object)
       return @ok_read if instance_variable_defined?(:@ok_read)
+
       @ok_read = (admin_user? || admin_read_only_user? || global_auditor? || object_is_visible_to_user?(object, context.user))
     end
 
@@ -56,6 +57,7 @@ module VCAP::CloudController
     def create?(app, params=nil)
       return true if admin_user?
       return false if app.in_suspended_org?
+
       app.space&.has_developer?(context.user)
     end
 
@@ -81,6 +83,7 @@ module VCAP::CloudController
 
     def read_env?(app)
       return true if admin_user? || admin_read_only_user?
+
       app.space&.has_developer?(context.user)
     end
 
@@ -90,6 +93,7 @@ module VCAP::CloudController
 
     def read_permissions?(app)
       return true if admin_user? || admin_read_only_user?
+
       app.space&.has_developer?(context.user)
     end
 

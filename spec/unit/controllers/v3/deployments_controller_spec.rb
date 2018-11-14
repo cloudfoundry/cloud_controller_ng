@@ -200,17 +200,19 @@ RSpec.describe DeploymentsController, type: :controller do
     end
 
     it_behaves_like 'permissions endpoint' do
-      let(:roles_to_http_responses) { {
-        'admin' => 201,
-        'admin_read_only' => 422,
-        'global_auditor' => 422,
-        'space_developer' => 201,
-        'space_manager' => 422,
-        'space_auditor' => 422,
-        'org_manager' => 422,
-        'org_auditor' => 422,
-        'org_billing_manager' => 422,
-      }}
+      let(:roles_to_http_responses) do
+        {
+          'admin' => 201,
+          'admin_read_only' => 422,
+          'global_auditor' => 422,
+          'space_developer' => 201,
+          'space_manager' => 422,
+          'space_auditor' => 422,
+          'org_manager' => 422,
+          'org_auditor' => 422,
+          'org_billing_manager' => 422,
+        }
+      end
       let(:api_call) { lambda { post :create, params: request_body, as: :json } }
     end
 
@@ -291,17 +293,19 @@ RSpec.describe DeploymentsController, type: :controller do
     end
 
     it_behaves_like 'permissions endpoint' do
-      let(:roles_to_http_responses) { {
-        'admin' => 200,
-        'admin_read_only' => 200,
-        'global_auditor' => 200,
-        'space_developer' => 200,
-        'space_manager' => 200,
-        'space_auditor' => 200,
-        'org_manager' => 200,
-        'org_auditor' => 404,
-        'org_billing_manager' => 404,
-      }}
+      let(:roles_to_http_responses) do
+        {
+          'admin' => 200,
+          'admin_read_only' => 200,
+          'global_auditor' => 200,
+          'space_developer' => 200,
+          'space_manager' => 200,
+          'space_auditor' => 200,
+          'org_manager' => 200,
+          'org_auditor' => 404,
+          'org_billing_manager' => 404,
+        }
+      end
       let(:api_call) { lambda { get :show, params: { guid: deployment.guid }, as: :json } }
     end
 

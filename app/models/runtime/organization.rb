@@ -2,7 +2,7 @@ require 'models/helpers/process_types'
 
 module VCAP::CloudController
   class Organization < Sequel::Model
-    ORG_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/
+    ORG_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/.freeze
     ACTIVE = 'active'.freeze
     SUSPENDED = 'suspended'.freeze
     ORG_STATUS_VALUES = [ACTIVE, SUSPENDED].freeze
@@ -122,6 +122,7 @@ module VCAP::CloudController
     def remove_user(user)
       can_remove = ([user.spaces, user.audited_spaces, user.managed_spaces].flatten & spaces).empty?
       raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', 'user', 'spaces in the org') unless can_remove
+
       super(user)
     end
 

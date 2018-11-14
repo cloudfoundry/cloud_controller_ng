@@ -82,12 +82,14 @@ module CloudFoundry
 
       def escape_extension(text)
         return '' if text.nil?
+
         # https://www.ruby-forum.com/topic/143645
         text.gsub('\\', '\\\\\\\\').gsub('=', '\=')
       end
 
       def escape_prefix(text)
         return '' if text.nil?
+
         # https://www.ruby-forum.com/topic/143645
         text.gsub('\\', '\\\\\\\\').gsub('|', '\|')
       end

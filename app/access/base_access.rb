@@ -4,6 +4,7 @@ module VCAP::CloudController
 
     def read?(object)
       return @ok_read if instance_variable_defined?(:@ok_read)
+
       @ok_read = (admin_user? || admin_read_only_user? || global_auditor? || object_is_visible_to_user?(object, context.user))
     end
 
@@ -27,16 +28,19 @@ module VCAP::CloudController
 
     def admin_user?
       return @admin_user if instance_variable_defined?(:@admin_user)
+
       @admin_user = context.roles.admin?
     end
 
     def admin_read_only_user?
       return @admin_read_only_user if instance_variable_defined?(:@admin_read_only_user)
+
       @admin_read_only_user = context.roles.admin_read_only?
     end
 
     def global_auditor?
       return @global_auditor_user if instance_variable_defined?(:@global_auditor_user)
+
       @global_auditor_user = context.roles.global_auditor?
     end
   end

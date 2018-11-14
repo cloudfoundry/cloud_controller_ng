@@ -36,6 +36,7 @@ module VCAP::CloudController
           if build.droplet&.in_final_state?
             return { guid: build.droplet.guid, href: url_builder.build_url(path: "/v3/droplets/#{build.droplet.guid}") }
           end
+
           nil
         end
 

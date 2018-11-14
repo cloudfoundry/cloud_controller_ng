@@ -8,6 +8,7 @@ def has_primary_key(db, table, key)
 
   pk_column_info = db.schema(table).find { |column_info| column_info[0] == key }
   return false if pk_column_info.nil?
+
   pk_column_info[1][:primary_key] == true
 end
 

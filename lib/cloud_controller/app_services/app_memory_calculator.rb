@@ -8,6 +8,7 @@ module VCAP::CloudController
 
     def additional_memory_requested
       return 0 if app.stopped?
+
       total_requested_memory - currently_used_memory
     end
 
@@ -17,8 +18,10 @@ module VCAP::CloudController
 
     def currently_used_memory
       return 0 if app.new?
+
       db_app = app_from_db
       return 0 if db_app.stopped?
+
       db_app[:memory] * db_app[:instances]
     end
 

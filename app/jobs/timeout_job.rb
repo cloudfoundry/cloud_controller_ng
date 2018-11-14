@@ -14,6 +14,7 @@ module VCAP::CloudController
         end
       rescue Timeout::Error
         raise @handler.timeout_error if @handler.respond_to?(:timeout_error)
+
         raise CloudController::Errors::ApiError.new_from_details('JobTimeout')
       end
 

@@ -20,6 +20,7 @@ module VCAP::CloudController
 
     def filter_if_user_guid(dataset)
       return dataset unless user_guid
+
       dataset.filter(guid: user_guid)
     end
   end

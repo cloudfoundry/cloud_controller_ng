@@ -71,6 +71,7 @@ module VCAP::CloudController
       return true if never_run?(job)
       return false if !interval_elapsed?(job, interval, fudge)
       return true if !job_in_progress?(job)
+
       if timeout.nil?
         timeout = Config.config.get(:jobs, :global, :timeout_in_seconds)
         if timeout.nil?

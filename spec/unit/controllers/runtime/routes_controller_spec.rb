@@ -507,11 +507,13 @@ module VCAP::CloudController
 
         context 'when the routing api has experienced data loss' do
           let(:orphaned_shared_domain) { SharedDomain.make(router_group_guid: 'abc') }
-          let(:req) { {
-            domain_guid: orphaned_shared_domain.guid,
-            space_guid:  space.guid,
-            port:        1234,
-          } }
+          let(:req) do
+            {
+              domain_guid: orphaned_shared_domain.guid,
+              space_guid: space.guid,
+              port: 1234,
+            }
+          end
 
           before do
             allow(routing_api_client).to receive(:router_group).and_return(nil)
@@ -573,6 +575,7 @@ module VCAP::CloudController
                 allow_any_instance_of(V2::RouteCreate).to receive(:create_route) do |_, args|
                   call_count += 1
                   raise Sequel::UniqueConstraintViolation.new('port already taken') if call_count == 1
+
                   Route.make(port: args[:route_hash]['port'])
                 end
               end
@@ -762,9 +765,12 @@ module VCAP::CloudController
 
     describe 'PUT /v2/routes/:guid' do
       let(:space_quota_definition) { SpaceQuotaDefinition.make }
-      let(:space) { Space.make(space_quota_definition: space_quota_definition,
-                               organization:                                  space_quota_definition.organization)
-      }
+      let(:space) do
+        Space.make(
+          space_quota_definition: space_quota_definition,
+                   organization: space_quota_definition.organization
+        )
+      end
       let(:user) { User.make }
       let(:domain) { SharedDomain.make }
       let(:domain_guid) { domain.guid }
@@ -780,9 +786,9 @@ module VCAP::CloudController
         let(:new_port) { 514 }
         let(:tcp_domain) { SharedDomain.make(router_group_guid: tcp_group_1) }
         let(:route) { Route.make(space: space, domain: tcp_domain, port: port, host: '') }
-        let(:req) { {
-          port: new_port,
-        } }
+        let(:req) do
+          { port: new_port }
+        end
 
         context 'when port is not in reservable port range' do
           it 'returns an error' do
@@ -796,9 +802,9 @@ module VCAP::CloudController
 
         context 'when updating a route with a new port value that is not null' do
           let(:new_port) { 20000 }
-          let(:req) { {
-            port: new_port,
-          } }
+          let(:req) do
+            { port: new_port }
+          end
 
           context 'with a domain with a router_group_guid and type tcp' do
             let(:domain) { SharedDomain.make(router_group_guid: tcp_group_1) }

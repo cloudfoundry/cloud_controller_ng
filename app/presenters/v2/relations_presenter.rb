@@ -39,11 +39,14 @@ module CloudController
           (relationships || {}).each do |relationship_name, association|
             associated_model = get_associated_model_class_for(obj, association.association_name)
             next unless associated_model
+
             associated_controller = VCAP::CloudController.controller_from_relationship(association)
             associated_controller ||= VCAP::CloudController.controller_from_model_name(associated_model.name)
             next unless associated_controller
+
             add_relationship_url_to_response(response, controller, associated_controller, relationship_name, association, obj)
             next if relationship_link_only?(association, associated_controller, relationship_name, opts, depth, parents)
+
             associated_model_instance = get_preloaded_association_contents!(obj, association)
 
             if association.is_a?(VCAP::CloudController::RestController::ControllerDSL::ToOneAttribute)
@@ -99,6 +102,7 @@ module CloudController
           return true if association.link_only?
           return true if opts[:exclude_relations] && opts[:exclude_relations].include?(relationship_name.to_s)
           return true if opts[:include_relations] && !opts[:include_relations].include?(relationship_name.to_s)
+
           depth >= opts[:inline_relations_depth] || parents.include?(associated_controller)
         end
 
@@ -106,6 +110,7 @@ module CloudController
           unless obj.associations.key?(association.association_name.to_sym)
             raise CloudController::Errors::NotLoadedAssociationError.new("Association #{association.association_name} on #{obj.inspect} must be preloaded")
           end
+
           obj.associations[association.association_name]
         end
 

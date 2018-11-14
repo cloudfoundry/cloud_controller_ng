@@ -136,6 +136,7 @@ module VCAP::CloudController
       if last_operation && last_operation.state == IN_PROGRESS_STRING
         return true
       end
+
       false
     end
 

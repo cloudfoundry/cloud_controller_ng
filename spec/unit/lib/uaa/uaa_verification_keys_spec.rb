@@ -88,6 +88,7 @@ module VCAP::CloudController
             allow(uaa_info).to receive(:validation_keys_hash) {
               call_count += 1
               raise '404' unless call_count == 1
+
               key_hash
             }
           end

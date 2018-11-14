@@ -61,6 +61,7 @@ module VCAP::CloudController
 
     def buildpack_zip(package, zipfile)
       return zipfile if zipfile
+
       job_dir = File.join('/var/vcap/packages', package, '*.zip')
       Dir[job_dir].first
     end

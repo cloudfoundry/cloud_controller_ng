@@ -16,6 +16,7 @@ module VCAP::CloudController
         def perform
           service_instance = ManagedServiceInstance.first(guid: service_instance_guid)
           return if service_instance.nil?
+
           client = VCAP::Services::ServiceClientProvider.provide(instance: service_instance)
 
           attrs_to_update = client.fetch_service_instance_last_operation(service_instance)

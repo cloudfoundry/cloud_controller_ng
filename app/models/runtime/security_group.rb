@@ -2,7 +2,7 @@ require 'netaddr'
 
 module VCAP::CloudController
   class SecurityGroup < Sequel::Model
-    SECURITY_GROUP_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/
+    SECURITY_GROUP_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/.freeze
     MAX_RULES_CHAR_LENGTH = 2**24 - 1
 
     plugin :serialization

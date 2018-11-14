@@ -39,6 +39,7 @@ module VCAP::CloudController
 
       manifest_routes.each do |manifest_route|
         next if manifest_route.valid?
+
         errors.add(:base, "The route '#{manifest_route}' is not a properly formed URL")
       end
     end

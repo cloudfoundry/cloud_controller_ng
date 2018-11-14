@@ -15,6 +15,7 @@ class HealthCheckPolicy
 
   def validate_timeout
     return unless @health_check_timeout
+
     @errors.add(:health_check_timeout, :less_than_one) if @health_check_timeout < 1
     max_timeout = VCAP::CloudController::Config.config.get(:maximum_health_check_timeout)
     if @health_check_timeout > max_timeout
@@ -24,6 +25,7 @@ class HealthCheckPolicy
 
   def validate_invocation_timeout
     return unless @health_check_invocation_timeout
+
     @errors.add(:health_check_invocation_timeout, :less_than_one) if @health_check_invocation_timeout < 1
   end
 end

@@ -26,6 +26,7 @@ module VCAP::Services::ServiceBrokers::V2
 
     def valid?
       return @valid if defined? @valid
+
       if @create_data
         validate_hash!(:create, @create_data)
         errors.add_nested(create, create.errors) if create && !create.valid?

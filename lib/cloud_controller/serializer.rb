@@ -6,6 +6,7 @@ module VCAP::CloudController::Serializer
       define_method "#{accessor_method_name}_with_serialization" do
         string = self.send("#{accessor_method_name}_without_serialization")
         return if string.blank?
+
         MultiJson.load string
       end
       alias_method "#{accessor_method_name}_without_serialization", accessor_method_name

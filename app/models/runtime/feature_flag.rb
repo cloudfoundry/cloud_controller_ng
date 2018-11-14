@@ -1,6 +1,6 @@
 module VCAP::CloudController
   class FeatureFlag < Sequel::Model
-    FF_ERROR_MESSAGE_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/
+    FF_ERROR_MESSAGE_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/.freeze
 
     class UndefinedFeatureFlagError < StandardError
     end
@@ -49,8 +49,10 @@ module VCAP::CloudController
     def self.enabled?(feature_flag_name)
       return true if ADMIN_SKIPPABLE.include?(feature_flag_name) && admin?
       return true if ADMIN_READ_ONLY_SKIPPABLE.include?(feature_flag_name) && admin_read_only?
+
       feature_flag = FeatureFlag.find(name: feature_flag_name.to_s)
       return feature_flag.enabled if feature_flag
+
       DEFAULT_FLAGS.fetch(feature_flag_name)
     rescue KeyError
       raise UndefinedFeatureFlagError.new "invalid key: #{feature_flag_name}"

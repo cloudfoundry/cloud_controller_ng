@@ -29,6 +29,7 @@ module VCAP::CloudController
         app.save
 
         raise InvalidApp.new(lifecycle.errors.full_messages.join(', ')) unless lifecycle.valid?
+
         lifecycle.update_lifecycle_data_model(app)
 
         raise CloudController::Errors::ApiError.new_from_details('CustomBuildpacksDisabled') if using_disabled_custom_buildpack?(app)
@@ -68,6 +69,7 @@ module VCAP::CloudController
 
     def validate_not_changing_lifecycle_type!(app, lifecycle)
       return if app.lifecycle_type == lifecycle.type
+
       raise InvalidApp.new('Lifecycle type cannot be changed')
     end
 

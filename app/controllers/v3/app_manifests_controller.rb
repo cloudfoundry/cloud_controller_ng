@@ -78,6 +78,7 @@ class AppManifestsController < ApplicationController
     parsed_application = params[:body]['applications'] && params[:body]['applications'].first
 
     raise invalid_request!('Invalid app manifest') unless parsed_application.present?
+
     parsed_application.to_unsafe_h
   end
 end

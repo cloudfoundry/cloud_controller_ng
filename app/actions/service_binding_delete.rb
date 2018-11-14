@@ -12,6 +12,7 @@ module VCAP::CloudController
     def foreground_delete_request(service_binding)
       errors, warnings = delete(service_binding)
       raise errors.first unless errors.empty?
+
       warnings
     end
 

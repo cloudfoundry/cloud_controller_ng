@@ -22,6 +22,7 @@ class ErrorPresenter
   def to_hash
     if @test_mode
       raise @error if !api_error? && errors_to_raise.include?(@error.class)
+
       @error_hasher.unsanitized_hash
     else
       @error_hasher.sanitized_hash

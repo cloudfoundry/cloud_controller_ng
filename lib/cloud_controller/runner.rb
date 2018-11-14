@@ -137,6 +137,7 @@ module VCAP::CloudController
 
     def setup_logging
       return if @setup_logging
+
       @setup_logging = true
 
       StenoConfigurer.new(@config.get(:logging)).configure do |steno_config_hash|

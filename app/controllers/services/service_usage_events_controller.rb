@@ -32,6 +32,7 @@ module VCAP::CloudController
         repository = Repositories::ServiceUsageEventRepository.new
         previous_event = repository.find(after_guid)
         raise CloudController::Errors::ApiError.new_from_details('BadQueryParameter', after_guid) unless previous_event
+
         dataset = dataset.filter { id > previous_event.id }
       end
       super(model, dataset, query_params, opts)

@@ -13,6 +13,7 @@ module VCAP::CloudController
       end
 
       return nil if app.nil?
+
       [app, app.space, app.space.organization, droplet]
     end
   end

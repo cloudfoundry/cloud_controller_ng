@@ -566,11 +566,13 @@ module VCAP::CloudController
 
     def create_app_usage_buildpack_event
       return unless staged? && started?
+
       app_usage_event_repository.create_from_process(self, 'BUILDPACK_SET')
     end
 
     def create_app_usage_event
       return unless app_usage_changed?
+
       app_usage_event_repository.create_from_process(self)
     end
 
@@ -578,6 +580,7 @@ module VCAP::CloudController
       previously_started = initial_value(:state) == STARTED
       return true if previously_started != started?
       return true if started? && footprint_changed?
+
       false
     end
 

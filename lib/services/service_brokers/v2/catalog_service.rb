@@ -30,6 +30,7 @@ module VCAP::Services::ServiceBrokers::V2
 
     def valid?
       return @valid if defined? @valid
+
       validate_service
       validate_plans
       @valid = errors.empty?
@@ -98,6 +99,7 @@ module VCAP::Services::ServiceBrokers::V2
 
     def validate_requires
       return unless requires.is_a? Enumerable
+
       requires.
         reject { |v| SUPPORTED_REQUIRES_VALUES.include? v }.
         each { |v| errors.add(%(Service "requires" field contains unsupported value "#{v}")) }
@@ -143,6 +145,7 @@ module VCAP::Services::ServiceBrokers::V2
 
     def validate_dashboard_client!
       return unless dashboard_client
+
       validate_dependently_in_order([
         :validate_dashboard_client_is_a_hash!,
         :validate_dashboard_client_attributes!

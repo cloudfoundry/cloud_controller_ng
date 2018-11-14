@@ -93,6 +93,7 @@ module VCAP::CloudController
 
           yield tasks
           return if tasks.count < BATCH_SIZE
+
           last_id = tasks.last.id
         end
       end

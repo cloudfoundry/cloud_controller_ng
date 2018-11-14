@@ -99,6 +99,7 @@ module VCAP::CloudController
           processes = processes(last_id).all
           yield processes
           return if processes.count < BATCH_SIZE
+
           last_id = processes.last.id
         end
       end

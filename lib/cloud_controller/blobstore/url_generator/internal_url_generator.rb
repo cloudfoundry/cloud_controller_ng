@@ -24,6 +24,7 @@ module CloudController
 
       def droplet_download_url(droplet)
         return nil unless droplet
+
         blob = @droplet_blobstore.blob(droplet.blobstore_key)
         return nil unless blob
 

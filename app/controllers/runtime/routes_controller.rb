@@ -305,6 +305,7 @@ module VCAP::CloudController
     def attrs_with_generated_port
       generated_port = PortGenerator.generate_port(@request_attrs['domain_guid'], validated_router_group.reservable_ports)
       raise CloudController::Errors::ApiError.new_from_details('OutOfRouterGroupPorts', validated_router_group.name) if generated_port < 0
+
       attrs = @request_attrs.deep_dup
       attrs['port'] = generated_port
       attrs

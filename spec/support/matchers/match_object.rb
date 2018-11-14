@@ -5,6 +5,7 @@ RSpec::Matchers.define :match_object do |expected|
 
   failure_message do |actual|
     break if actual == expected
+
     object_eq(actual, expected)
     @error_message.join("\n")
   end

@@ -23,6 +23,7 @@ module Diego
 
       def action(action)
         return action if action_already_wrapped?(action)
+
         Bbs::Models::Action.new(action_type(action) => action)
       end
 

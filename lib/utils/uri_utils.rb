@@ -1,6 +1,6 @@
 module UriUtils
-  SSH_REGEX = %r{ \A (?:ssh://)? git@ .+? : .+? \.git \z }x
-  GIT_REGEX = %r{ \A git:// .+? : .+? \.git \z }x
+  SSH_REGEX = %r{ \A (?:ssh://)? git@ .+? : .+? \.git \z }x.freeze
+  GIT_REGEX = %r{ \A git:// .+? : .+? \.git \z }x.freeze
 
   def self.is_uri?(candidate)
     !!(candidate.is_a?(String) && /\A#{URI::DEFAULT_PARSER.make_regexp}\Z/ =~ candidate && URI(candidate))
@@ -23,6 +23,7 @@ module UriUtils
   def self.uri_escape(uri)
     parts = uri.split('?', 2)
     return uri if parts.size == 1
+
     query = parts[1].split('&').map { |subquery|
       subparts = subquery.split('=', 2)
       if subparts.size == 1

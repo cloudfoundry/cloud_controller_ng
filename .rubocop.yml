@@ -13,6 +13,9 @@ AllCops:
 Bundler/DuplicatedGem:
   Enabled: false
 
+Layout/AlignHash:
+  Enabled: false
+
 Layout/AlignParameters:
   Enabled: false
 

@@ -42,6 +42,7 @@ class WorkPool
             job.call(*args)
           rescue => e
             next unless @store_exceptions
+
             @lock.synchronize do
               @exceptions << e
             end

@@ -31,6 +31,7 @@ module VCAP::CloudController
       def user_from_token(token)
         user_guid = token && token['user_id']
         return unless user_guid
+
         User.find(guid: user_guid.to_s) || User.create(guid: user_guid, active: true)
       rescue Sequel::ValidationFailed
         User.find(guid: user_guid.to_s)

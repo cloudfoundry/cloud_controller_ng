@@ -70,11 +70,13 @@ module VCAP::CloudController
 
     def credhub_link
       return unless config.get(:credhub_api, :external_url).present?
+
       { href: config.get(:credhub_api, :external_url) }
     end
 
     def routing_link
       return unless config.get(:routing_api).present?
+
       { href: config.get(:routing_api, :url) }
     end
   end

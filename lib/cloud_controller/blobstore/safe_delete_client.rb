@@ -12,11 +12,13 @@ module CloudController
 
       def delete_all(*args)
         raise UnsafeDelete.new('it is only safe to call delete_all on blobstores with a root directory') if @root_dir.blank?
+
         @wrapped_client.delete_all(*args)
       end
 
       def delete_all_in_path(*args)
         raise UnsafeDelete.new('it is only safe to call delete_all on blobstores with a root directory') if @root_dir.blank?
+
         @wrapped_client.delete_all_in_path(*args)
       end
 

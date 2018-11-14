@@ -302,6 +302,7 @@ module VCAP::CloudController
               begin
                 raise ignorable_error if calls == 0
                 raise non_ignorable_error if calls == 1
+
                 raise non_api_error
               ensure
                 calls += 1
