@@ -622,6 +622,7 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
         public:                 true,
         active:                 true,
         bindable:               true,
+        plan_updateable:        true,
         create_instance_schema: '{}',
         update_instance_schema: '{}',
         create_binding_schema:  '{}'
@@ -650,6 +651,7 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
           'public'                 => new_plan.public,
           'active'                 => new_plan.active,
           'bindable'               => new_plan.bindable,
+          'plan_updateable'        => new_plan.plan_updateable,
           'create_instance_schema' => new_plan.create_instance_schema,
           'update_instance_schema' => new_plan.update_instance_schema,
           'create_binding_schema'  => new_plan.create_binding_schema

@@ -35,6 +35,7 @@ module CloudController::Presenters::V2
           {
            'active' => true,
            'bindable' => true,
+           'plan_updateable' => nil,
            'description' => service_plan.description,
            'extra' => nil,
            'free' => false,
