@@ -96,6 +96,7 @@ RSpec.describe 'Deployments' do
         parsed_response = MultiJson.load(last_response.body)
 
         deployment = VCAP::CloudController::DeploymentModel.last
+        process = deployment.deploying_web_process
 
         expect(parsed_response).to be_a_response_like({
           'guid' => deployment.guid,
@@ -132,6 +133,13 @@ RSpec.describe 'Deployments' do
             }
           }
         })
+
+        get "/v3/processes/#{process.guid}", {}, user_header
+        expect(last_response.status).to eq(200)
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response['relationships']).to be_a_response_like(
+          'revision' => { 'data' => { 'guid' => process.revision.guid } },
+        )
       end
     end
   end

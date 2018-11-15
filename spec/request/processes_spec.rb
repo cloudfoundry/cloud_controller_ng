@@ -14,10 +14,13 @@ RSpec.describe 'Processes' do
   end
 
   describe 'GET /v3/processes' do
+    let!(:web_revision) { VCAP::CloudController::RevisionModel.make }
+
     let!(:web_process) {
       VCAP::CloudController::ProcessModel.make(
         :process,
         app:        app_model,
+        revision:   web_revision,
         type:       'web',
         instances:  2,
         memory:     1024,
@@ -53,7 +56,14 @@ RSpec.describe 'Processes' do
         },
         'resources' => [
           {
-            'guid'         => web_process.guid,
+            'guid' => web_process.guid,
+            'relationships' => {
+              'revision' => {
+                'data' => {
+                  'guid' => web_revision.guid
+                }
+              },
+            },
             'type'         => 'web',
             'command'      => '[PRIVATE DATA HIDDEN IN LISTS]',
             'instances'    => 2,
@@ -77,7 +87,10 @@ RSpec.describe 'Processes' do
             },
           },
           {
-            'guid'         => worker_process.guid,
+            'guid' => worker_process.guid,
+            'relationships' => {
+              'revision' => nil,
+            },
             'type'         => 'worker',
             'command'      => '[PRIVATE DATA HIDDEN IN LISTS]',
             'instances'    => 1,
@@ -275,9 +288,11 @@ RSpec.describe 'Processes' do
 
   describe 'GET /v3/processes/:guid' do
     it 'retrieves the process' do
+      revision = VCAP::CloudController::RevisionModel.make
       process = VCAP::CloudController::ProcessModel.make(
         :process,
         app:        app_model,
+        revision:   revision,
         type:       'web',
         instances:  2,
         memory:     1024,
@@ -290,6 +305,9 @@ RSpec.describe 'Processes' do
       expected_response = {
         'guid'         => process.guid,
         'type'         => 'web',
+        'relationships' => {
+          'revision' => { 'data' => { 'guid' => revision.guid } },
+        },
         'command'      => 'rackup',
         'instances'    => 2,
         'memory_in_mb' => 1024,
@@ -443,9 +461,11 @@ RSpec.describe 'Processes' do
 
   describe 'PATCH /v3/processes/:guid' do
     it 'updates the process' do
+      revision = VCAP::CloudController::RevisionModel.make
       process = VCAP::CloudController::ProcessModel.make(
         :process,
         app:                  app_model,
+        revision:             revision,
         type:                 'web',
         instances:            2,
         memory:               1024,
@@ -469,7 +489,10 @@ RSpec.describe 'Processes' do
       patch "/v3/processes/#{process.guid}", update_request, developer_headers.merge('CONTENT_TYPE' => 'application/json')
 
       expected_response = {
-        'guid'         => process.guid,
+        'guid' => process.guid,
+        'relationships' => {
+          'revision' => { 'data' => { 'guid' => revision.guid } },
+        },
         'type'         => 'web',
         'command'      => 'new command',
         'instances'    => 2,
@@ -554,6 +577,9 @@ RSpec.describe 'Processes' do
       expected_response = {
         'guid'         => process.guid,
         'type'         => 'web',
+        'relationships' => {
+          'revision' => nil,
+        },
         'command'      => 'rackup',
         'instances'    => 5,
         'memory_in_mb' => 10,
@@ -661,6 +687,7 @@ RSpec.describe 'Processes' do
       VCAP::CloudController::ProcessModel.make(
         :process,
         app:        app_model,
+        revision:   revision2,
         type:       'worker',
         instances:  1,
         memory:     100,
@@ -670,12 +697,15 @@ RSpec.describe 'Processes' do
     }
 
     let!(:process3) {
-      VCAP::CloudController::ProcessModel.make(:process, app: app_model)
+      VCAP::CloudController::ProcessModel.make(:process, app: app_model, revision: revision3)
     }
 
     let!(:deployment_process) {
-      VCAP::CloudController::ProcessModel.make(:process, app: app_model, type: 'web-deployment')
+      VCAP::CloudController::ProcessModel.make(:process, app: app_model, type: 'web-deployment', revision: deployment_revision)
     }
+    let!(:revision3) { VCAP::CloudController::RevisionModel.make }
+    let!(:revision2) { VCAP::CloudController::RevisionModel.make }
+    let!(:deployment_revision) { VCAP::CloudController::RevisionModel.make }
 
     it 'returns a paginated list of processes for an app' do
       get "/v3/apps/#{app_model.guid}/processes?per_page=2", nil, developer_headers
@@ -691,7 +721,10 @@ RSpec.describe 'Processes' do
         },
         'resources' => [
           {
-            'guid'         => process1.guid,
+            'guid' => process1.guid,
+            'relationships' => {
+              'revision' => nil,
+            },
             'type'         => 'web',
             'command'      => '[PRIVATE DATA HIDDEN IN LISTS]',
             'instances'    => 2,
@@ -715,7 +748,14 @@ RSpec.describe 'Processes' do
             },
           },
           {
-            'guid'         => process2.guid,
+            'guid' => process2.guid,
+            'relationships' => {
+              'revision' => {
+                'data' => {
+                  'guid' => revision2.guid
+                }
+              },
+            },
             'type'         => 'worker',
             'command'      => '[PRIVATE DATA HIDDEN IN LISTS]',
             'instances'    => 1,
@@ -798,9 +838,11 @@ RSpec.describe 'Processes' do
 
   describe 'GET /v3/apps/:guid/processes/:type' do
     it 'retrieves the process for an app with the requested type' do
+      revision = VCAP::CloudController::RevisionModel.make
       process = VCAP::CloudController::ProcessModel.make(
         :process,
         app:        app_model,
+        revision:   revision,
         type:       'web',
         instances:  2,
         memory:     1024,
@@ -811,7 +853,10 @@ RSpec.describe 'Processes' do
       get "/v3/apps/#{app_model.guid}/processes/web", nil, developer_headers
 
       expected_response = {
-        'guid'         => process.guid,
+        'guid' => process.guid,
+        'relationships' => {
+          'revision' => { 'data' => { 'guid' => revision.guid } },
+        },
         'type'         => 'web',
         'command'      => 'rackup',
         'instances'    => 2,
@@ -886,7 +931,10 @@ RSpec.describe 'Processes' do
       patch "/v3/apps/#{app_model.guid}/processes/web", update_request, developer_headers.merge('CONTENT_TYPE' => 'application/json')
 
       expected_response = {
-        'guid'         => process.guid,
+        'guid' => process.guid,
+        'relationships' => {
+          'revision' => nil,
+        },
         'type'         => 'web',
         'command'      => 'new command',
         'instances'    => 2,
@@ -974,6 +1022,10 @@ RSpec.describe 'Processes' do
       expected_response = {
         'guid'         => process.guid,
         'type'         => 'web',
+
+        'relationships' => {
+          'revision' => nil,
+        },
         'command'      => 'rackup',
         'instances'    => 5,
         'memory_in_mb' => 10,

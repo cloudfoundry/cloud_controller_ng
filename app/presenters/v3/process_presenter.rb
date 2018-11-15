@@ -20,6 +20,9 @@ module VCAP::CloudController
               type: process.health_check_type,
               data: health_check_data
             },
+            relationships: {
+              revision:     revision,
+            },
             created_at:   process.created_at,
             updated_at:   process.updated_at,
             links:        build_links
@@ -27,6 +30,14 @@ module VCAP::CloudController
         end
 
         private
+
+        def revision
+          process.revision && {
+            data: {
+              guid: process.revision.guid
+            }
+          }
+        end
 
         def process
           @resource
