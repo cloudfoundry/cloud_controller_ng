@@ -22,6 +22,7 @@ includes:
   - api_resources/revisions
   - api_resources/route_mappings
   - api_resources/service_bindings
+  - api_resources/service_brokers
   - api_resources/service_instances
   - api_resources/spaces
   - api_resources/stacks
@@ -168,6 +169,9 @@ includes:
   - experimental_resources/stacks/object
   - experimental_resources/stacks/create
   - experimental_resources/stacks/list
+  - experimental_resources/service_brokers/header
+  - experimental_resources/service_brokers/object
+  - experimental_resources/service_brokers/list
 
 search: true
 ---
