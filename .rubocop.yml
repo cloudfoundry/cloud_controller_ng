@@ -264,9 +264,6 @@ Style/SafeNavigation:
 Style/SignalException:
   Enabled: false
 
-Style/SingleLineBlockParams:
-  Enabled: false
-
 Style/StructInheritance:
   Enabled: false
 
