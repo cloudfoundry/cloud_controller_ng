@@ -166,6 +166,7 @@ includes:
   - experimental_resources/service_bindings/list
   - experimental_resources/stacks/header
   - experimental_resources/stacks/object
+  - experimental_resources/stacks/list
   - experimental_resources/stacks/create
 
 search: true

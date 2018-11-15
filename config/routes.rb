@@ -142,5 +142,6 @@ Rails.application.routes.draw do
   delete '/service_instances/:service_instance_guid/relationships/shared_spaces/:space_guid', to: 'service_instances_v3#unshare_service_instance'
 
   # stacks
+  get '/stacks', to: 'stacks#index'
   post '/stacks', to: 'stacks#create'
 end

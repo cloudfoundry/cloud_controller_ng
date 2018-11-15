@@ -1,0 +1,34 @@
+### List stacks
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/stacks" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :paginated_list_of_stacks, '/v3/stacks' %>
+```
+
+Retrieve all stacks.
+
+#### Definition
+`GET /v3/stacks`
+
+#### Query Parameters
+
+Name | Type | Description
+---- | ---- | ------------
+**page** | _integer_ | Page to display. Valid values are integers >= 1.
+**per_page** | _integer_ | Number of results per page. <br>Valid values are 1 through 5000.
