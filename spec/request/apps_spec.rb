@@ -1715,5 +1715,4 @@ RSpec.describe 'Apps' do
       )
     end
   end
-
 end
