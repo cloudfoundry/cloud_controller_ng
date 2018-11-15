@@ -93,7 +93,7 @@ module VCAP::CloudController::Validators
       end
 
       def valid_key_presence?(label_key)
-        if !label_key.nil? && label_key.size > 0
+        if !label_key.nil? && !label_key.empty?
           return LabelError.none
         end
 

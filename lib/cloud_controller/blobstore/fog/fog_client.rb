@@ -167,7 +167,7 @@ module CloudController
           end
         end
 
-        if batch.length > 0
+        if !batch.empty?
           yield(batch)
         end
       end

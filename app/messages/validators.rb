@@ -75,7 +75,7 @@ module VCAP::CloudController::Validators
         value.each_key do |key|
           if ![String, Symbol].include?(key.class)
             record.errors.add(attribute, 'key must be a string')
-          elsif key.length < 1
+          elsif key.empty?
             record.errors.add(attribute, 'key must be a minimum length of 1')
           elsif key.match?(/\AVCAP_/i)
             record.errors.add(attribute, 'cannot start with VCAP_')

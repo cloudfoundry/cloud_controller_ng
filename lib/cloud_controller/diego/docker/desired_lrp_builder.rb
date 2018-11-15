@@ -34,7 +34,7 @@ module VCAP::CloudController
         end
 
         def ports
-          if @ports.length > 0
+          if !@ports.empty?
             return @ports
           end
 

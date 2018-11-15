@@ -90,7 +90,7 @@ module VCAP::CloudController
         end
 
         def find_buildpack_to_update(found_buildpacks, detected_stack, planned_jobs)
-          return if found_buildpacks.size == 0
+          return if found_buildpacks.empty?
 
           ensure_no_buildpack_downgraded_to_nil_stack!(found_buildpacks)
 

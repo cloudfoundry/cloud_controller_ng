@@ -18,7 +18,7 @@ module VCAP::Services::ServiceBrokers
     end
 
     def has_warnings?
-      warnings.length > 0
+      !warnings.empty?
     end
 
     private
@@ -179,7 +179,7 @@ module VCAP::Services::ServiceBrokers
       end
 
       def message
-        return nil if @nested_warnings.length == 0
+        return nil if @nested_warnings.empty?
 
         sprintf(WARNING, broker_url: @broker_url) + format_message
       end

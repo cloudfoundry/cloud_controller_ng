@@ -28,7 +28,7 @@ module CloudController
       end
 
       port_list = port.split(',')
-      if port_list.length > 0
+      if !port_list.empty?
         return false unless port_list.all? { |p| /\A\s*\d+\s*\z/.match(p) }
         return false unless port_list.all? { |p| port_in_valid_range?(p.to_i) }
 

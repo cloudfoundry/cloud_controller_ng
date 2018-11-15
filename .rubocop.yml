@@ -290,6 +290,3 @@ Style/TrivialAccessors:
 
 Style/WordArray:
   Enabled: false
-
-Style/ZeroLengthPredicate:
-  Enabled: false

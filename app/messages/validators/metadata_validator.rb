@@ -66,7 +66,7 @@ module VCAP::CloudController::Validators
       if annotation_key.size > MAX_ANNOTATION_KEY_SIZE
         record.errors.add(:metadata, "key error: annotation '#{annotation_key[0...8]}...' is greater than 1000 characters")
       end
-      if annotation_key.size == 0
+      if annotation_key.empty?
         record.errors.add(:metadata, 'annotations key cannot be empty string')
       end
     end

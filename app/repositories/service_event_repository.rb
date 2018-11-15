@@ -177,7 +177,7 @@ module VCAP::CloudController
         request_hash[:auth_password] = Presenters::Censorship::REDACTED if params.key? :auth_password
 
         metadata = { request: {} }
-        if request_hash.length > 0
+        if !request_hash.empty?
           metadata[:request] = request_hash
         end
         metadata

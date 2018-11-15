@@ -5,7 +5,7 @@ begin
   # uncomment the following line to use spork with the debugger
   # require 'spork/ext/ruby-debug'
 
-  run_spork = `ps | grep spork | grep -v grep`.size > 0
+  run_spork = !`ps | grep spork | grep -v grep`.empty?
 rescue LoadError
   run_spork = false
 end

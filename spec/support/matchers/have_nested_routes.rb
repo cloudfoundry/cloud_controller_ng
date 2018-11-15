@@ -28,7 +28,7 @@ RSpec::Matchers.define :have_nested_routes do |association_routes, options={}|
       end
     end
 
-    errors.length == 0
+    errors.empty?
   end
 
   failure_message do |_|
