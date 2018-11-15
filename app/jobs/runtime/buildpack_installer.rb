@@ -13,7 +13,7 @@ module VCAP::CloudController
         end
 
         def max_attempts
-          1
+          3
         end
 
         def job_name_in_configuration
