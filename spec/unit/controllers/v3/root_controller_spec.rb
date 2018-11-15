@@ -71,7 +71,6 @@ RSpec.describe RootController, type: :controller do
       hash = MultiJson.load(response.body)
       expected_uri = "#{TestConfig.config[:external_protocol]}://#{TestConfig.config[:external_domain]}/v3/service_instances"
       expect(hash['links']['service_instances']['href']).to eq(expected_uri)
-      expect(hash['links']['service_instances']['experimental']).to eq(true)
     end
 
     it 'returns a link to spaces' do

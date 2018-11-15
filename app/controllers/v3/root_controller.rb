@@ -32,8 +32,7 @@ class RootController < ActionController::Base
             href: build_api_uri(path: '/processes')
           },
           service_instances: {
-            href: build_api_uri(path: '/service_instances'),
-            experimental: true,
+            href: build_api_uri(path: '/service_instances')
           },
           spaces: {
             href: build_api_uri(path: '/spaces')
