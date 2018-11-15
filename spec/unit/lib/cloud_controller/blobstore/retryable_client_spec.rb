@@ -11,8 +11,7 @@ module CloudController
           client: wrapped_client,
           errors: [RetryableError],
           logger: logger,
-          num_retries: num_retries,
-          maximum_sleep_pause: maximum_sleep_pause
+          num_retries: num_retries
         )
       end
 
@@ -20,8 +19,7 @@ module CloudController
       let(:logger) { instance_double(Steno::Logger, debug: nil) }
       let(:log_prefix) { 'cc.retryable' }
       let(:log_data) { { some: 'error' } }
-      let(:num_retries) { VCAP::CloudController::Config.config.get(:buildpacks, :max_retries) }
-      let(:maximum_sleep_pause) { VCAP::CloudController::Config.config.get(:buildpacks, :max_retry_wait) }
+      let(:num_retries) { 4 }
 
       class RetryableError < StandardError
       end
@@ -261,45 +259,6 @@ module CloudController
           }.to raise_error RetryableError
 
           expect(logger).to have_received(:debug).exactly(num_retries).times
-        end
-
-        context 'when the wait time exceeds maximum waiting time' do
-          let(:num_retries) { 7 }
-          let(:maximum_sleep_pause) { 10 }
-
-          it 'exponentially backs off until it hits maxiumum wait time' do
-            operation = double(:operation)
-            called    = 0
-            allow(client).to receive(:sleep)
-            allow(operation).to receive(:call) do |_|
-              called += 1
-              raise RetryableError.new if called < num_retries
-              true
-            end
-
-            client.send(:with_retries, log_prefix, log_data) { operation.call }
-            expect(client).to have_received(:sleep).with(1)
-            expect(client).to have_received(:sleep).with(2)
-            expect(client).to have_received(:sleep).with(4)
-            expect(client).to have_received(:sleep).with(8)
-            expect(client).to have_received(:sleep).with(10).exactly(2).times
-          end
-
-          it 'exponentially backs off' do
-            operation = double(:operation)
-            called    = 0
-            allow(client).to receive(:sleep)
-            allow(operation).to receive(:call) do |_|
-              called += 1
-              raise RetryableError.new if called <= 3
-              true
-            end
-
-            client.send(:with_retries, log_prefix, log_data) { operation.call }
-            expect(client).to have_received(:sleep).with(1)
-            expect(client).to have_received(:sleep).with(2)
-            expect(client).to have_received(:sleep).with(4)
-          end
         end
       end
     end

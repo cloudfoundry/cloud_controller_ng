@@ -163,12 +163,8 @@ droplets:
     aws_access_key_id: "fake_aws_key_id"
     aws_secret_access_key: "fake_secret_access_key"
 
-
 buildpacks:
-  max_retries: 3
-  max_retry_wait: -1
   buildpack_directory_key: cc-buildpacks
-  fog_aws_storage_options: {}
   fog_connection:
     blobstore_timeout: 5
     provider: "AWS"
@@ -284,6 +280,9 @@ resource_pool:
   minimum_size: 1
   fog_aws_storage_options: {}
 
+buildpacks:
+  fog_aws_storage_options: {}
+
 packages:
   max_package_size: 42
   max_valid_packages_stored: 42
@@ -314,6 +313,11 @@ resource_pool:
   resource_directory_key: ''
   maximum_size: 42
   minimum_size: 1
+  fog_connection: {}
+  fog_aws_storage_options: {}
+
+buildpacks:
+  buildpack_directory_key: ''
   fog_connection: {}
   fog_aws_storage_options: {}
 

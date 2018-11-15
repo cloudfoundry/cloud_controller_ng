@@ -5,13 +5,11 @@ module CloudController
     class RetryableClient
       extend Forwardable
 
-      def initialize(client:, errors:, logger:, num_retries: VCAP::CloudController::Config.config.get(:buildpacks, :max_retries),
-        maximum_sleep_pause: VCAP::CloudController::Config.config.get(:buildpacks, :max_retry_wait))
+      def initialize(client:, errors:, logger:, num_retries: 3)
         @wrapped_client   = client
         @retryable_errors = errors
         @logger = logger
         @num_retries = num_retries
-        @maximum_sleep_pause = maximum_sleep_pause
       end
 
       def_delegators :@wrapped_client,
@@ -137,28 +135,19 @@ module CloudController
       private
 
       def with_retries(log_prefix, log_data)
-        current_sleep_exponent = 0
-        begin
-          retries ||= @num_retries
-          yield
-        rescue *@retryable_errors => e
-          retries -= 1
+        retries ||= @num_retries
+        yield
+      rescue *@retryable_errors => e
+        retries -= 1
 
-          @logger.debug("#{log_prefix}-retry",
-            {
-              error:             e.message,
-              remaining_retries: retries
-            }.merge(log_data)
-          )
-          if retries > 0
-            sleep_time = 2**current_sleep_exponent
-            sleep_time = @maximum_sleep_pause if @maximum_sleep_pause >= 0 && sleep_time > @maximum_sleep_pause
-            sleep sleep_time
-            current_sleep_exponent += 1
-            retry
-          end
-          raise e
-        end
+        @logger.debug("#{log_prefix}-retry",
+          {
+            error:             e.message,
+            remaining_retries: retries
+          }.merge(log_data)
+        )
+        retry unless retries == 0
+        raise e
       end
     end
   end

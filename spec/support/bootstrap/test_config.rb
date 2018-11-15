@@ -62,8 +62,6 @@ module TestConfig
           max_valid_packages_stored: 42,
         },
         buildpacks: {
-          max_retries: 3,
-          max_retry_wait: -1,
           buildpack_directory_key: 'cc-buildpacks',
           fog_connection: fog_connection,
         },
