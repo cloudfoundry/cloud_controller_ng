@@ -29,11 +29,13 @@ module VCAP::CloudController
 
             if diego_lrp.nil?
               workpool.submit(process) do |p|
+                logger.info('desiring-lrp', process_guid: p.guid, app_guid: p.app_guid)
                 bbs_apps_client.desire_app(p)
                 logger.info('desire-lrp', process_guid: p.guid)
               end
             elsif process.updated_at.to_f.to_s != diego_lrp.annotation
               workpool.submit(process, diego_lrp) do |p, l|
+                logger.info('updating-lrp', process_guid: p.guid, app_guid: p.app_guid)
                 bbs_apps_client.update_app(p, l)
                 logger.info('update-lrp', process_guid: p.guid)
               end
@@ -43,6 +45,7 @@ module VCAP::CloudController
 
         diego_lrps.each_key do |process_guid_to_delete|
           workpool.submit(process_guid_to_delete) do |guid|
+            logger.info('deleting-lrp', process_guid: guid)
             bbs_apps_client.stop_app(guid)
             logger.info('delete-lrp', process_guid: guid)
           end
