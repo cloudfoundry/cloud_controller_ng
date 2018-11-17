@@ -95,7 +95,7 @@ GEM
       steno
     builder (3.2.3)
     byebug (10.0.2)
-    cf-copilot (0.0.8)
+    cf-copilot (0.0.10)
       grpc (~> 1.0)
     cf-perm (0.0.10)
       grpc (~> 1.0)
@@ -454,7 +454,7 @@ DEPENDENCIES
   azure-storage (= 0.14.0.preview)
   bits_service_client (~> 3.0)
   byebug
-  cf-copilot (~> 0.0.8)
+  cf-copilot (~> 0.0.10)
   cf-perm (~> 0.0.10)
   cf-perm-test-helpers (~> 0.0.6)
   cf-uaa-lib (~> 3.14.0)
