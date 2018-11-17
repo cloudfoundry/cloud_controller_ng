@@ -4,6 +4,7 @@ module VCAP::CloudController
       class DesiredLrpBuilder
         include ::Credhub::ConfigHelpers
         include ::Diego::ActionBuilder
+        class InvalidStack < StandardError; end
 
         attr_reader :start_command
 
@@ -21,9 +22,13 @@ module VCAP::CloudController
 
         def cached_dependencies
           lifecycle_bundle_key = "buildpack/#{@stack}".to_sym
+          lifecycle_bundle = @config.get(:diego, :lifecycle_bundles)[lifecycle_bundle_key]
+          unless lifecycle_bundle
+            raise InvalidStack.new("no compiler defined for requested stack '#{@stack}'")
+          end
           [
             ::Diego::Bbs::Models::CachedDependency.new(
-              from: LifecycleBundleUriGenerator.uri(@config.get(:diego, :lifecycle_bundles)[lifecycle_bundle_key]),
+              from: LifecycleBundleUriGenerator.uri(lifecycle_bundle),
               to: '/tmp/lifecycle',
               cache_key: "buildpack-#{@stack}-lifecycle"
             )

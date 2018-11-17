@@ -8,7 +8,7 @@ module VCAP::CloudController::Diego
     describe '#desire_app' do
       let(:bbs_client) { instance_double(::Diego::Client, desire_lrp: lrp_response) }
       let(:lrp) { ::Diego::Bbs::Models::DesiredLRP.new }
-      let(:process) { VCAP::CloudController::ProcessModel.new }
+      let(:process) { VCAP::CloudController::ProcessModel.make }
       let(:lrp_response) { ::Diego::Bbs::Models::DesiredLRPLifecycleResponse.new(error: lifecycle_error) }
       let(:lifecycle_error) { nil }
 
@@ -83,6 +83,18 @@ module VCAP::CloudController::Diego
 
         it 'passes the error' do
           expect { client.desire_app(process) }.to raise_error(CloudController::Errors::ApiError)
+        end
+      end
+
+      context 'the client fails for its own reasons' do
+        let(:error) { VCAP::CloudController::Diego::Buildpack::DesiredLrpBuilder::InvalidStack.new("lolololol") }
+
+        before do
+          allow(app_recipe_builder).to receive(:build_app_lrp).and_raise(error)
+        end
+
+        it 'annotates the error with process guid' do
+          expect { client.desire_app(process) }.to raise_error("Process Guid: #{process.guid}: lolololol")
         end
       end
     end

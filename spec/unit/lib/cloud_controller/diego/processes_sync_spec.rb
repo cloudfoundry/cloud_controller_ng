@@ -287,6 +287,7 @@ module VCAP::CloudController
           let!(:missing_process1) { ProcessModel.make(:diego_runnable) }
           let!(:missing_process2) { ProcessModel.make(:diego_runnable) }
           let!(:missing_process3) { ProcessModel.make(:diego_runnable) }
+          let!(:missing_process4) { ProcessModel.make(:diego_runnable) }
           let(:ignorable_error) { CloudController::Errors::ApiError.new_from_details('RunnerInvalidRequest', 'invalid thing') }
           let(:non_ignorable_error) { CloudController::Errors::ApiError.new_from_details('RunnerError', 'some error') }
           let(:non_api_error) { StandardError.new('something went wrong') }
@@ -303,7 +304,7 @@ module VCAP::CloudController
                 raise ignorable_error if calls == 0
                 raise non_ignorable_error if calls == 1
 
-                raise non_api_error
+                raise non_api_error if calls == 2
               ensure
                 calls += 1
               end
@@ -332,6 +333,11 @@ module VCAP::CloudController
               error: non_api_error.class.name,
               error_message: non_api_error.message
             )
+          end
+
+          it 'continues to attempt to update all necessary lrps' do
+            subject.sync rescue nil
+            expect(bbs_apps_client).to have_received(:desire_app).with(missing_process4)
           end
         end
 
