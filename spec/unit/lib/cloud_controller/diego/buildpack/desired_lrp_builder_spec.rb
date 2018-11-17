@@ -4,8 +4,8 @@ module VCAP::CloudController
   module Diego
     module Buildpack
       RSpec.describe DesiredLrpBuilder do
-        subject(:builder) {DesiredLrpBuilder.new(config, opts)}
-        let(:stack) {'potato-stack'}
+        subject(:builder) { DesiredLrpBuilder.new(config, opts) }
+        let(:stack) { 'potato-stack' }
         let(:opts) do
           {
             stack: stack,
@@ -18,7 +18,7 @@ module VCAP::CloudController
             start_command: 'dd if=/dev/random of=/dev/null',
           }
         end
-        let(:ports) {[1111, 2222, 3333]}
+        let(:ports) { [1111, 2222, 3333] }
         let(:config) do
           Config.new({
             diego: {
@@ -31,8 +31,8 @@ module VCAP::CloudController
             }
           })
         end
-        let(:use_privileged_containers_for_running) {false}
-        let(:temporary_oci_buildpack_mode) {''}
+        let(:use_privileged_containers_for_running) { false }
+        let(:temporary_oci_buildpack_mode) { '' }
 
         describe '#start_command' do
           it 'returns the passed in start command' do
@@ -46,7 +46,7 @@ module VCAP::CloudController
           end
 
           context 'when temporary_oci_buildpack_mode is set to oci-phase-1' do
-            let(:temporary_oci_buildpack_mode) {'oci-phase-1'}
+            let(:temporary_oci_buildpack_mode) { 'oci-phase-1' }
 
             it 'returns a constructed root_fs + layer URI' do
               expect(builder.root_fs).to eq('preloaded+layer:potato-stack?layer=http://droplet-uri.com:1234?token=&%40home---%3E&layer_path=/home/vcap&layer_digest=checksum-value')
@@ -71,9 +71,9 @@ module VCAP::CloudController
           end
 
           context 'when searching for a nonexistant stack' do
-            let(:stack) {'stack-thats-not-in-config'}
+            let(:stack) { 'stack-thats-not-in-config' }
             it 'errors nicely' do
-              expect {builder.cached_dependencies}.to raise_error("no compiler defined for requested stack 'stack-thats-not-in-config'")
+              expect { builder.cached_dependencies }.to raise_error("no compiler defined for requested stack 'stack-thats-not-in-config'")
             end
           end
         end
@@ -101,7 +101,7 @@ module VCAP::CloudController
           end
 
           context 'when temporary_oci_buildpack_mode is set to oci-phase-1' do
-            let(:temporary_oci_buildpack_mode) {'oci-phase-1'}
+            let(:temporary_oci_buildpack_mode) { 'oci-phase-1' }
 
             it 'returns nil' do
               expect(builder.setup).to be_nil
@@ -145,7 +145,7 @@ module VCAP::CloudController
           end
 
           context 'when the ports array is nil' do
-            let(:ports) {nil}
+            let(:ports) { nil }
 
             it 'returns an array of the default' do
               expect(builder.ports).to eq([DEFAULT_APP_PORT])
@@ -156,7 +156,7 @@ module VCAP::CloudController
         end
 
         describe '#port_environment_variables' do
-          let(:ports) {[11, 22, 33]}
+          let(:ports) { [11, 22, 33] }
 
           it 'returns the array of environment variables' do
             expect(builder.port_environment_variables).to match_array([
@@ -174,12 +174,12 @@ module VCAP::CloudController
             end
 
             before do
-              TestConfig.override(credhub_api: {internal_url: 'http:credhub.capi.land:8844'})
+              TestConfig.override(credhub_api: { internal_url: 'http:credhub.capi.land:8844' })
             end
 
             context 'when the interpolation of service bindings is enabled' do
               before do
-                TestConfig.override(credential_references: {interpolate_service_bindings: true})
+                TestConfig.override(credential_references: { interpolate_service_bindings: true })
               end
 
               it 'includes the credhub uri as part of the VCAP_PLATFORM_OPTIONS variable' do
@@ -191,7 +191,7 @@ module VCAP::CloudController
 
             context 'when the interpolation of service bindings is disabled' do
               before do
-                TestConfig.override(credential_references: {interpolate_service_bindings: false})
+                TestConfig.override(credential_references: { interpolate_service_bindings: false })
               end
 
               it 'does not include the VCAP_PLATFORM_OPTIONS' do

@@ -26,6 +26,7 @@ module VCAP::CloudController
           unless lifecycle_bundle
             raise InvalidStack.new("no compiler defined for requested stack '#{@stack}'")
           end
+
           [
             ::Diego::Bbs::Models::CachedDependency.new(
               from: LifecycleBundleUriGenerator.uri(lifecycle_bundle),

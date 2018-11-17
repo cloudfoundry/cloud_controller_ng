@@ -87,7 +87,7 @@ module VCAP::CloudController::Diego
       end
 
       context 'the client fails for its own reasons' do
-        let(:error) { VCAP::CloudController::Diego::Buildpack::DesiredLrpBuilder::InvalidStack.new("lolololol") }
+        let(:error) { VCAP::CloudController::Diego::Buildpack::DesiredLrpBuilder::InvalidStack.new('lolololol') }
 
         before do
           allow(app_recipe_builder).to receive(:build_app_lrp).and_raise(error)

@@ -118,6 +118,7 @@ module VCAP::CloudController
           raise
         rescue StandardError => e
           raise e unless process_guid
+
           raise e.class.new("Process Guid: #{process_guid}: #{e}")
         end
 
