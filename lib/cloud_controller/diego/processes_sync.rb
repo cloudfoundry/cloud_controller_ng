@@ -18,8 +18,8 @@ module VCAP::CloudController
 
       def sync
         logger.info('run-process-sync')
-        bump_freshness = true
-        diego_lrps     = bbs_apps_client.fetch_scheduling_infos.index_by { |d| d.desired_lrp_key.process_guid }
+        @bump_freshness = true
+        diego_lrps = bbs_apps_client.fetch_scheduling_infos.index_by { |d| d.desired_lrp_key.process_guid }
         logger.info('fetched-scheduling-infos')
 
         batched_processes do |processes|
@@ -56,17 +56,19 @@ module VCAP::CloudController
         process_workpool_exceptions(@workpool.exceptions)
       rescue CloudController::Errors::ApiError => e
         logger.info('sync-failed', error: e.name, error_message: e.message)
-        bump_freshness = false
+        @bump_freshness = false
         raise BBSFetchError.new(e.message)
       rescue => e
         logger.info('sync-failed', error: e.class.name, error_message: e.message)
-        bump_freshness = false
+        @bump_freshness = false
         raise
       ensure
         workpool.drain
-        if bump_freshness
+        if @bump_freshness
           bbs_apps_client.bump_freshness
           logger.info('finished-process-sync')
+        else
+          logger.info('sync-failed')
         end
       end
 
@@ -75,7 +77,6 @@ module VCAP::CloudController
       attr_reader :config, :workpool
 
       def process_workpool_exceptions(exceptions)
-        first_exception = nil
         invalid_lrps = 0
         exceptions.each do |e|
           error_name = e.is_a?(CloudController::Errors::ApiError) ? e.name : e.class.name
@@ -87,12 +88,15 @@ module VCAP::CloudController
           elsif error_name == 'RunnerError' && e.message['the requested resource could not be found']
             logger.info('ignore-deleted-resource', error: error_name, error_message: e.message)
           else
-            logger.error('error-updating-lrp-state', error: error_name, error_message: e.message)
-            first_exception ||= e
+            logger.error('error-updating-lrp-state', error: error_name, error_message: e.message, error_backtrace: truncated_backtrace_from_error(e))
+            @bump_freshness = false
           end
         end
         @statsd_updater.update_synced_invalid_lrps(invalid_lrps)
-        raise first_exception if first_exception
+      end
+
+      def truncated_backtrace_from_error(error)
+        error.backtrace.present? ? error.backtrace[0..9].join("\n") + "\n..." : ''
       end
 
       def batched_processes
