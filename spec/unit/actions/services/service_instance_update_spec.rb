@@ -325,5 +325,26 @@ module VCAP::CloudController
         end
       end
     end
+
+    context 'when accepts_incomplete is true' do
+      let(:service_instance_update) do
+        ServiceInstanceUpdate.new(
+          accepts_incomplete: true,
+          services_event_repository: services_event_repo
+        )
+      end
+
+      context 'when the broker responds asynchronously' do
+        before do
+          stub_update(service_instance, accepts_incomplete: true, status: 202)
+        end
+
+        it 'creates audit log event start_update' do
+          expect(services_event_repo).to receive(:record_service_instance_event).with(:start_update, service_instance, request_attrs).once
+
+          service_instance_update.update_service_instance(service_instance, request_attrs)
+        end
+      end
+    end
   end
 end

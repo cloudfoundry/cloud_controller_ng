@@ -88,6 +88,7 @@ module VCAP::CloudController
           log_audit_event(service_instance)
         else
           lock.enqueue_unlock!(attributes_to_update, build_fetch_job(service_instance))
+          @event_repository.record_service_instance_event(:start_delete, service_instance, {})
         end
       rescue => e
         errors << e

@@ -38,9 +38,10 @@ module VCAP::CloudController
           job = VCAP::CloudController::Jobs::Services::ServiceBindingStateFetch.new(service_binding.guid, @user_audit_info, {})
           enqueuer = Jobs::Enqueuer.new(job, queue: 'cc-generic')
           enqueuer.enqueue
+          Repositories::ServiceBindingEventRepository.record_start_delete(service_binding, @user_audit_info)
         else
-          Repositories::ServiceBindingEventRepository.record_delete(service_binding, @user_audit_info)
           service_binding.destroy
+          Repositories::ServiceBindingEventRepository.record_delete(service_binding, @user_audit_info)
         end
 
         if broker_responded_async_for_accepts_incomplete_false?(broker_response)

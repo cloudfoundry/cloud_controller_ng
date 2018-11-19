@@ -571,11 +571,11 @@ module VCAP::CloudController
             expect(a_request(:delete, service_broker_url)).to have_been_made.times(0)
           end
 
-          it 'does not create an audit event' do
+          it 'creates an audit event' do
             create_managed_service_instance
 
-            event = VCAP::CloudController::Event.first(type: 'audit.service_instance.create')
-            expect(event).to be_nil
+            event = VCAP::CloudController::Event.first
+            expect(event.type).to eq('audit.service_instance.start_create')
           end
 
           it 'returns a 202 with the last operation state as in progress' do
@@ -2123,11 +2123,11 @@ module VCAP::CloudController
             expect(service_instance.service_plan.guid).not_to eq(new_service_plan.guid)
           end
 
-          it 'does not create an audit event' do
+          it 'creates an audit event' do
             put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body
 
-            event = VCAP::CloudController::Event.first(type: 'audit.service_instance.update')
-            expect(event).to be_nil
+            event = VCAP::CloudController::Event.last
+            expect(event.type).to eq('audit.service_instance.start_update')
           end
 
           it 'returns a 202' do
@@ -2875,10 +2875,11 @@ module VCAP::CloudController
               {}.to_json
             end
 
-            it 'should not create a delete event' do
+            it 'creates a delete event' do
               delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true"
 
-              expect(Event.find(type: 'audit.service_instance.delete')).to be_nil
+              event = VCAP::CloudController::Event.first
+              expect(event.type).to eq('audit.service_instance.start_delete')
             end
 
             it 'should create a delete event after the polling finishes' do

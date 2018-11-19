@@ -48,6 +48,7 @@ module VCAP::CloudController
       )
       enqueuer = Jobs::Enqueuer.new(job, queue: 'cc-generic')
       enqueuer.enqueue
+      @services_event_repository.record_service_instance_event(:start_create, service_instance, request_attrs)
     end
 
     def cleanup_instance_without_db(e, service_instance, message: 'Failed to save while creating service instance')

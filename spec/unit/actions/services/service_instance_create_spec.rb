@@ -84,9 +84,9 @@ module VCAP::CloudController
           expect(Delayed::Job.first).to be_a_fully_wrapped_job_of Jobs::Services::ServiceInstanceStateFetch
         end
 
-        it 'does not log an audit event' do
+        it 'logs an audit event' do
           create_action.create(request_attrs, true)
-          expect(event_repository).not_to have_received(:record_service_instance_event)
+          expect(event_repository).to have_received(:record_service_instance_event).with(:start_create, an_instance_of(ManagedServiceInstance), request_attrs)
         end
       end
 

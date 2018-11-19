@@ -139,10 +139,13 @@ module VCAP::CloudController
             expect(service_binding.exists?).to be_truthy
           end
 
-          it 'should NOT create an audit event' do
+          it 'should create an audit event' do
             service_binding_delete.foreground_delete_request(service_binding)
 
-            expect(Event.last).to be_nil
+            event = Event.last
+            expect(event.type).to eq('audit.service_binding.start_delete')
+            expect(event.actee).to eq(service_binding.guid)
+            expect(event.actee_type).to eq('service_binding')
           end
 
           context 'when the binding already has an operation' do
