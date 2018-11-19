@@ -7,13 +7,16 @@ module VCAP::CloudController
 
     def send_or_redirect(guid:)
       raise CloudController::Errors::BlobNotFound unless guid
+
       blob = @blobstore.blob(guid)
       raise CloudController::Errors::BlobNotFound unless blob
+
       send_or_redirect_blob(blob)
     end
 
     def send_or_redirect_blob(blob)
       raise CloudController::Errors::BlobNotFound unless blob
+
       if @blobstore.local?
         blob_sender.send_blob(blob, @controller)
       else

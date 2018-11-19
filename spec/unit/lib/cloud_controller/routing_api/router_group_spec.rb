@@ -9,7 +9,8 @@ module VCAP::CloudController::RoutingApi
                                               'name' => 'default-tcp',
                                               'type' => 'tcp',
                                               'reservable_ports' => '1,2,3,25-26,5,8,13'
-                                          })}
+                                          })
+      }
       let(:expected_ports) { [1, 2, 3, 5, 8, 13] + Array(25..26) }
 
       it 'returns an array of reservable ports' do
@@ -23,7 +24,8 @@ module VCAP::CloudController::RoutingApi
                                                  'name' => 'default-tcp',
                                                  'type' => 'tcp',
                                                  'reservable_ports' => '5-15,10-15,3,25-26,5,8,13'
-                                             })}
+                                             })
+        }
 
         it 'does not return duplicates' do
           expect(router_group.reservable_ports).to eq(expected_ports)
@@ -37,7 +39,8 @@ module VCAP::CloudController::RoutingApi
                                                  'name' => 'default-tcp',
                                                  'type' => 'tcp',
                                                  'reservable_ports' => '3,5,6,7,8,9,10'
-                                             })}
+                                             })
+        }
 
         it 'returns the port array' do
           expect(router_group.reservable_ports).to eq(expected_ports)

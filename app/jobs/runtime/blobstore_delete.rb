@@ -34,6 +34,7 @@ module VCAP::CloudController
 
         def same_blob(blob)
           return true if attributes.nil?
+
           blob.attributes(*attributes.keys) == attributes
         end
       end

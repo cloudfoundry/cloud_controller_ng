@@ -178,13 +178,15 @@ module VCAP::CloudController
             {
               "metadata": {
                 "annotations": {
-                  "potato": 'mashed'
+                  "potato": 'mashed',
+                  "delete": nil,
                 }
               }
             }
           message = AppUpdateMessage.new(params)
           expect(message).to be_valid
           expect(message.annotations).to include("potato": 'mashed')
+          expect(message.annotations).to include("delete": nil)
         end
 
         it 'validates annotations' do

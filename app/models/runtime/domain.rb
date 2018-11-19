@@ -14,6 +14,7 @@ module VCAP::CloudController
 
     def self.call(row)
       return super unless equal?(Domain)
+
       if row[:owning_organization_id]
         PrivateDomain.call(row)
       else
@@ -124,6 +125,7 @@ module VCAP::CloudController
 
     def in_suspended_org?
       return owning_organization.suspended? if owning_organization
+
       false
     end
 
@@ -131,6 +133,7 @@ module VCAP::CloudController
 
     def validate_change_owning_organization(organization)
       return if self.new? || owning_organization == organization
+
       raise CloudController::Errors::ApiError.new_from_details('DomainInvalid', 'the owning organization cannot be changed')
     end
 

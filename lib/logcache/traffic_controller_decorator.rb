@@ -25,6 +25,7 @@ module Logcache
 
         final_envelopes += new_envelopes
         break if all_metrics_retrieved?(new_envelopes)
+
         end_time = new_envelopes.last.timestamp - 1
 
         request_count += 1

@@ -120,6 +120,7 @@ module VCAP::CloudController
 
     def bindable?
       return bindable unless bindable.nil?
+
       service.bindable?
     end
 

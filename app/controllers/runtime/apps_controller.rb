@@ -189,6 +189,7 @@ module VCAP::CloudController
     def read(guid)
       process = find_guid(guid)
       raise CloudController::Errors::ApiError.new_from_details('AppNotFound', guid) unless process.web?
+
       validate_access(:read, process)
       object_renderer.render_json(self.class, process, @opts)
     end

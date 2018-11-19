@@ -83,6 +83,7 @@ module VCAP::CloudController
     def delete_non_transactional_subresources(app)
       errors, _ = ServiceBindingDelete.new(@user_audit_info, true).delete(app.service_bindings)
       raise errors.first unless errors.empty?
+
       async_unbinds = app.service_bindings_dataset.all.select(&:operation_in_progress?)
 
       if async_unbinds.any?

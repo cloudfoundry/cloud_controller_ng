@@ -205,9 +205,9 @@ RSpec.describe(OPI::Client) do
     end
 
     context 'when the response has an error' do
-      let(:expected_body) { {
-        error: { message: 'reasons for failure' }
-      }.to_json}
+      let(:expected_body) do
+        { error: { message: 'reasons for failure' } }.to_json
+      end
 
       before do
         stub_request(:post, "#{opi_url}/apps/guid-1234").

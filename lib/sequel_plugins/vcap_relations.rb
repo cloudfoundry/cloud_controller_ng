@@ -151,6 +151,7 @@ module Sequel::Plugins::VcapRelations
         ar = self.class.association_reflection(name)
         other = ar.associated_class[guid: guid]
         raise CloudController::Errors::ApiError.new_from_details('InvalidRelation', "Could not find #{ar.associated_class.name} with guid: #{guid}") if other.nil?
+
         if pk
           send("add_#{singular_name}", other)
         else
@@ -160,6 +161,7 @@ module Sequel::Plugins::VcapRelations
 
       define_method("#{ids_attr}=") do |ids|
         return unless ids
+
         ds = send(name)
         ds.each { |r| send("remove_#{singular_name}", r) unless ids.include?(r.id) }
         ids.each { |i| send("add_#{singular_name}", i) }
@@ -171,6 +173,7 @@ module Sequel::Plugins::VcapRelations
 
       define_method("#{guids_attr}=") do |guids|
         return unless guids
+
         current_guids = send(name).map(&:guid)
         (added, removed) = diff_collections.call(current_guids, guids)
         added.each { |g| send("add_#{singular_name}_by_guid", g) }
@@ -181,6 +184,7 @@ module Sequel::Plugins::VcapRelations
         ar = self.class.association_reflection(name)
         other = ar.associated_class[guid: guid]
         raise CloudController::Errors::ApiError.new_from_details('InvalidRelation', "Could not find #{ar.associated_class.name} with guid: #{guid}") if other.nil?
+
         send("remove_#{singular_name}", other)
       end
 

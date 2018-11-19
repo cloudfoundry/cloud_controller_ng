@@ -44,6 +44,7 @@ module LegacyApiDsl
 
   def expected_attributes_for_model(model)
     return model.fields.keys if model.respond_to? :fields
+
     model_class_from_name(model).export_attrs
   end
 
@@ -209,7 +210,7 @@ module LegacyApiDsl
 
     def standard_list_parameters(controller, outer_model: nil, exclude_parameters: [], &block)
       query_parameters = controller.query_parameters - exclude_parameters
-      if query_parameters.size > 0
+      if !query_parameters.empty?
         query_parameter_description = 'Parameters used to filter the result set.<br/>'
         query_parameter_description += 'Format queries as &lt;filter&gt;&lt;op&gt;&lt;value&gt;<br/>'
         query_parameter_description += ' Valid ops: : &gt;= &lt;= &lt; &gt; IN<br/>'

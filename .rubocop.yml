@@ -13,6 +13,9 @@ AllCops:
 Bundler/DuplicatedGem:
   Enabled: false
 
+Layout/AlignHash:
+  Enabled: false
+
 Layout/AlignParameters:
   Enabled: false
 
@@ -261,9 +264,6 @@ Style/SafeNavigation:
 Style/SignalException:
   Enabled: false
 
-Style/SingleLineBlockParams:
-  Enabled: false
-
 Style/StructInheritance:
   Enabled: false
 
@@ -289,7 +289,4 @@ Style/TrivialAccessors:
   Enabled: false
 
 Style/WordArray:
-  Enabled: false
-
-Style/ZeroLengthPredicate:
   Enabled: false

@@ -34,13 +34,15 @@ module VCAP::CloudController
         end
 
         def ports
-          if @ports.length > 0
+          if !@ports.empty?
             return @ports
           end
+
           execution_metadata = MultiJson.load(@execution_metadata)
           if execution_metadata['ports'].blank?
             return [DEFAULT_APP_PORT]
           end
+
           tcp_ports = execution_metadata['ports'].select { |port| port['protocol'] == 'tcp' }
           raise CloudController::Errors::ApiError.new_from_details('RunnerError', 'No tcp ports found in image metadata') if tcp_ports.empty?
 

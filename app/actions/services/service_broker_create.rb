@@ -51,6 +51,7 @@ module VCAP::CloudController
     def get_space_id_from_guid(params)
       space = Space.first(guid: params[:space_guid])
       raise ServiceBrokerCreate::SpaceNotFound unless space
+
       space.id
     end
   end

@@ -31,6 +31,7 @@ module VCAP::CloudController
     def routing_api_client
       routing_api_client = CloudController::DependencyLocator.instance.routing_api_client
       raise RoutingApi::RoutingApiDisabled unless routing_api_client.enabled?
+
       routing_api_client
     end
 

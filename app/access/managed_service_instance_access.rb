@@ -2,6 +2,7 @@ module VCAP::CloudController
   class ManagedServiceInstanceAccess < ServiceInstanceAccess
     def read?(object)
       return @ok_read if instance_variable_defined?(:@ok_read)
+
       @ok_read = (admin_user? || admin_read_only_user? || global_auditor? || object_is_visible_to_user?(object, context.user))
     end
 
@@ -55,6 +56,7 @@ module VCAP::CloudController
 
     def allowed?(service_instance)
       return true if admin_user?
+
       ServicePlan.user_visible(context.user, admin_user?).filter(guid: service_instance.service_plan.guid).count > 0
     end
   end

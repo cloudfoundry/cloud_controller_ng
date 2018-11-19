@@ -8,6 +8,7 @@ module VCAP::CloudController
     def get_limit(requested_limit, space, org)
       requested_limit = requested_limit.to_i
       return minimum_limit if requested_limit < minimum_limit
+
       space_quota_exceeded!(requested_limit) unless space.has_remaining_memory(requested_limit)
       org_quota_exceeded!(requested_limit) unless org.has_remaining_memory(requested_limit)
       requested_limit

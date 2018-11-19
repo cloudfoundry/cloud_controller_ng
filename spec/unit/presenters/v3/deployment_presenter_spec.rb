@@ -6,10 +6,17 @@ module VCAP::CloudController::Presenters::V3
     let(:droplet) { VCAP::CloudController::DropletModel.make }
     let(:previous_droplet) { VCAP::CloudController::DropletModel.make }
     let(:app) { VCAP::CloudController::AppModel.make }
-    let(:revision) { VCAP::CloudController::RevisionModel.make(app: app) }
+    let(:revision) { VCAP::CloudController::RevisionModel.make(app: app, version: 300) }
     let(:process) { VCAP::CloudController::ProcessModel.make(guid: 'deploying-process-guid', type: 'web-deployment-guid-type') }
     let!(:deployment) do
-      VCAP::CloudController::DeploymentModelTestFactory.make(app: app, droplet: droplet, previous_droplet: previous_droplet, deploying_web_process: process, revision: revision)
+      VCAP::CloudController::DeploymentModelTestFactory.make(
+        app: app,
+        droplet: droplet,
+        previous_droplet: previous_droplet,
+        deploying_web_process: process,
+        revision_guid: revision.guid,
+        revision_version: revision.version,
+      )
     end
 
     describe '#to_hash' do
@@ -19,6 +26,7 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:state]).to eq(VCAP::CloudController::DeploymentModel::DEPLOYING_STATE)
         expect(result[:droplet][:guid]).to eq(droplet.guid)
         expect(result[:revision][:guid]).to eq(revision.guid)
+        expect(result[:revision][:version]).to eq(revision.version)
         expect(result[:previous_droplet][:guid]).to eq(previous_droplet.guid)
 
         expect(result[:relationships][:app][:data][:guid]).to eq(deployment.app.guid)

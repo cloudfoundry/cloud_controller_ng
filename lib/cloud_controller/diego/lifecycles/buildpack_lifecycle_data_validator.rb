@@ -14,6 +14,7 @@ module VCAP::CloudController
         next if buildpack_info.buildpack_record.present?
         next if buildpack_info.buildpack.nil?
         next if buildpack_info.buildpack_url
+
         errors.add(:buildpack, %("#{buildpack_info.buildpack}" must be an existing admin buildpack or a valid git URI))
       end
     end

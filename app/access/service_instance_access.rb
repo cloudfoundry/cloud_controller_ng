@@ -2,6 +2,7 @@ module VCAP::CloudController
   class ServiceInstanceAccess < BaseAccess
     def read?(object)
       return @ok_read if instance_variable_defined?(:@ok_read)
+
       @ok_read = (admin_user? || admin_read_only_user? || global_auditor? || object_is_visible_to_user?(object, context.user))
     end
 
@@ -55,14 +56,17 @@ module VCAP::CloudController
 
     def create?(service_instance, params=nil)
       return true if admin_user?
+
       FeatureFlag.raise_unless_enabled!(:service_instance_creation)
       return false if service_instance.in_suspended_org?
+
       service_instance.space&.has_developer?(context.user) && allowed?(service_instance)
     end
 
     def read_for_update?(service_instance, params=nil)
       return true if admin_user?
       return false if service_instance.in_suspended_org?
+
       service_instance.space&.has_developer?(context.user)
     end
 
@@ -73,11 +77,13 @@ module VCAP::CloudController
     def delete?(service_instance)
       return true if admin_user?
       return false if service_instance.in_suspended_org?
+
       service_instance.space&.has_developer?(context.user)
     end
 
     def manage_permissions?(service_instance)
       return true if admin_user?
+
       service_instance.space&.has_developer?(context.user)
     end
 
@@ -95,6 +101,7 @@ module VCAP::CloudController
 
     def read_env?(service_instance)
       return true if admin_user? || admin_read_only_user?
+
       service_instance.space&.has_developer?(context.user)
     end
 

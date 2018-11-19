@@ -61,6 +61,7 @@ module RuboCop
 
           opts.each_node(:pair) do |pair|
             next unless hash_key_type(pair) == :sym
+
             case hash_key_name(pair)
             when :index then needs_named_index = true
             when :primary_key then needs_named_primary_key = true

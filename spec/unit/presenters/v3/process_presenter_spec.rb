@@ -83,6 +83,24 @@ module VCAP::CloudController::Presenters::V3
         end
       end
 
+      describe '#revisions' do
+        context('when the process has a revision') do
+          let(:revision) { VCAP::CloudController::RevisionModel.make }
+          before do
+            process.revision = revision
+          end
+          it 'shows the revision in a data/guid block' do
+            expect(result[:relationships][:revision]).to be_a_response_like({ data: { guid: revision.guid } })
+          end
+        end
+
+        context('when the process does not have a revision') do
+          it 'presents the revision as nil' do
+            expect(result[:relationships].fetch(:revision)).to be_nil
+          end
+        end
+      end
+
       context 'when show_secrets is false' do
         let(:result) { ProcessPresenter.new(process, show_secrets: false).to_hash }
 

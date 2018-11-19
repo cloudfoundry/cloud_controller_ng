@@ -32,6 +32,7 @@ module VCAP::CloudController
       @request_attrs = self.class::CreateMessage.decode(body).extract(stringify_keys: true)
       logger.debug 'cc.create', model: self.class.model_class_name, attributes: request_attrs
       raise InvalidRequest unless request_attrs
+
       service_key_manager = ServiceKeyManager.new(@services_event_repository, self, logger)
       service_key = service_key_manager.create_service_key(@request_attrs)
 

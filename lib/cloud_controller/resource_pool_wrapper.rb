@@ -19,6 +19,7 @@ module VCAP::CloudController
       unless fingerprints_all_clientside_bits.is_a?(Array)
         raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', 'must be an array.')
       end
+
       fingerprints_all_clientside_bits
     rescue MultiJson::ParseError => e
       raise CloudController::Errors::ApiError.new_from_details('MessageParseError', e.message)

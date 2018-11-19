@@ -11,6 +11,7 @@ module VCAP
 
         def calculate
           return 100 if memory_in_mb > MAX_CPU_PROXY
+
           numerator = [MIN_CPU_PROXY, memory_in_mb].max
           100 * numerator / MAX_CPU_PROXY
         end

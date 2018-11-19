@@ -126,6 +126,7 @@ module VCAP::CloudController
 
           define_method "generate_#{salt_name}" do
             return if send(salt_name).present?
+
             send("#{salt_name}=", Encryptor.generate_salt)
           end
 

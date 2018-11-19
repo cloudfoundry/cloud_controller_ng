@@ -20,6 +20,7 @@ module VCAP::CloudController::RoutingApi
 
     def router_groups
       raise RoutingApiUnavailable if @routing_api_uri.nil?
+
       client = HTTPClient.new
       client.ssl_config.set_default_paths
       use_ssl = routing_api_uri.scheme.to_s.downcase == 'https'

@@ -124,6 +124,7 @@ module VCAP::CloudController
       if service_binding_operation && service_binding_operation.state == 'in progress'
         return true
       end
+
       false
     end
 

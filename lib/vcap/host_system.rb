@@ -4,8 +4,10 @@ module VCAP
   class HostSystem
     def process_running?(pid)
       return false unless pid && (pid > 0)
+
       output = `ps -o rss= -p #{pid}`
       return true if $CHILD_STATUS == 0 && !output.empty?
+
       # fail otherwise..
       false
     end

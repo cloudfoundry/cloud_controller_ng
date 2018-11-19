@@ -5,9 +5,10 @@ module VCAP::CloudController
     module Buildpack
       RSpec.describe DesiredLrpBuilder do
         subject(:builder) { DesiredLrpBuilder.new(config, opts) }
+        let(:stack) { 'potato-stack' }
         let(:opts) do
           {
-            stack: 'potato-stack',
+            stack: stack,
             droplet_uri: 'http://droplet-uri.com:1234?token=&@home--->',
             droplet_hash: 'droplet-hash',
             process_guid: 'p-guid',
@@ -67,6 +68,13 @@ module VCAP::CloudController
               )
             ])
             expect(LifecycleBundleUriGenerator).to have_received(:uri).with('/path/to/lifecycle.tgz')
+          end
+
+          context 'when searching for a nonexistant stack' do
+            let(:stack) { 'stack-thats-not-in-config' }
+            it 'errors nicely' do
+              expect { builder.cached_dependencies }.to raise_error("no compiler defined for requested stack 'stack-thats-not-in-config'")
+            end
           end
         end
 

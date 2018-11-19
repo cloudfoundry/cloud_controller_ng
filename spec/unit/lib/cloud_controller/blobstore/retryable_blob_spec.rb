@@ -86,6 +86,7 @@ module CloudController
           allow(operation).to receive(:call) do |_|
             called += 1
             raise RetryableError.new if called == 1
+
             true
           end
 
@@ -100,6 +101,7 @@ module CloudController
           allow(operation).to receive(:call) do |_|
             called += 1
             raise RetryableError.new if called == 1
+
             'potato'
           end
 

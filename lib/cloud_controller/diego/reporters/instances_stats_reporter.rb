@@ -15,7 +15,7 @@ module VCAP::CloudController
       def stats_for_app(process)
         result       = {}
         current_time = Time.now.to_f
-        formatted_current_time = Time.now.to_datetime.rfc3339
+        formatted_current_time = Time.now.to_datetime.rfc3339 # rubocop:disable Style/DateTime
 
         logger.debug('stats_for_app.fetching_container_metrics', process_guid: process.guid)
         envelopes = @logstats_client.container_metrics(
@@ -35,6 +35,7 @@ module VCAP::CloudController
 
         actual_lrps.each do |actual_lrp|
           next unless actual_lrp.actual_lrp_key.index < process.instances
+
           info = {
             state: LrpStateTranslator.translate_lrp_state(actual_lrp),
             isolation_segment: desired_lrp.PlacementTags.first,

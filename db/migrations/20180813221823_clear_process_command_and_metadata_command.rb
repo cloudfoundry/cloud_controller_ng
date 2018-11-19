@@ -32,6 +32,7 @@ Sequel.migration do
       self[:processes].where(guid: process_record[:guid]).for_update.first
 
       next unless droplet_record
+
       begin
         droplet_commands_by_type = JSON.parse(droplet_record[:process_types])
       rescue JSON::ParserError

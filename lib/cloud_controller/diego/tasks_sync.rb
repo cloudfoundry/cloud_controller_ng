@@ -15,6 +15,8 @@ module VCAP::CloudController
 
       def sync
         logger.info('run-task-sync')
+        @bump_freshness = true
+
         diego_tasks = bbs_task_client.fetch_tasks.index_by(&:task_guid)
 
         batched_cc_tasks do |cc_tasks|
@@ -50,16 +52,22 @@ module VCAP::CloudController
         workpool.drain
 
         process_workpool_exceptions(workpool.exceptions)
-        bbs_task_client.bump_freshness
-        logger.info('finished-task-sync')
       rescue CloudController::Errors::ApiError => e
         logger.info('sync-failed', error: e.name, error_message: e.message)
+        @bump_freshness = false
         raise BBSFetchError.new(e.message)
       rescue => e
         logger.info('sync-failed', error: e.class.name, error_message: e.message)
+        @bump_freshness = false
         raise
       ensure
         workpool.drain
+        if @bump_freshness
+          bbs_task_client.bump_freshness
+          logger.info('finished-task-sync')
+        else
+          logger.info('sync-failed')
+        end
       end
 
       private
@@ -67,12 +75,14 @@ module VCAP::CloudController
       attr_reader :workpool
 
       def process_workpool_exceptions(exceptions)
-        first_exception = nil
         exceptions.each do |e|
-          logger.error('error-cancelling-task', error: e.class.name, error_message: e.message)
-          first_exception ||= e
+          logger.error('error-cancelling-task', error: e.class.name, error_message: e.message, error_backtrace: truncated_backtrace_from_error(e))
+          @bump_freshness = false
         end
-        raise first_exception if first_exception
+      end
+
+      def truncated_backtrace_from_error(error)
+        error.backtrace.present? ? error.backtrace[0..9].join("\n") + "\n..." : ''
       end
 
       def diego_task_missing?(task_guid)
@@ -93,6 +103,7 @@ module VCAP::CloudController
 
           yield tasks
           return if tasks.count < BATCH_SIZE
+
           last_id = tasks.last.id
         end
       end

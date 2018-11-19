@@ -6,6 +6,7 @@ module VCAP::CloudController
     put '/v2/resource_match', :match
     def match
       return ApiError.new_from_details('NotAuthorized') unless user
+
       FeatureFlag.raise_unless_enabled!(:app_bits_upload)
 
       CloudController::DependencyLocator.instance.resource_pool_wrapper.new(body).call

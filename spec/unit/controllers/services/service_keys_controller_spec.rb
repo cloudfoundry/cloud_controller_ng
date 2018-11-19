@@ -4,11 +4,13 @@ module VCAP::CloudController
   RSpec.describe ServiceKeysController do
     describe 'Attributes' do
       it do
-        expect(ServiceKeysController).to have_creatable_attributes({
-           name: { type: 'string', required: true },
-           service_instance_guid: { type: 'string', required: true },
-           parameters: { type: 'hash', required: false }
-         })
+        expect(ServiceKeysController).to have_creatable_attributes(
+          {
+            name: { type: 'string', required: true },
+            service_instance_guid: { type: 'string', required: true },
+            parameters: { type: 'hash', required: false }
+          }
+        )
       end
     end
 
@@ -45,12 +47,14 @@ module VCAP::CloudController
     describe 'Dependencies' do
       let(:object_renderer) { double :object_renderer }
       let(:collection_renderer) { double :collection_renderer }
-      let(:dependencies) { {
+      let(:dependencies) do
+        {
           object_renderer: object_renderer,
           collection_renderer: collection_renderer,
           statsd_client: double(Statsd),
           perm_client: double(Perm::Client)
-      }}
+        }
+      end
       let(:config) { double(Config, get: nil) }
       let(:logger) { Steno.logger('vcap_spec') }
 
@@ -204,8 +208,8 @@ module VCAP::CloudController
 
         it 'creates an audit event after a service key created' do
           req = {
-              name: 'fake-service-key',
-              service_instance_guid: instance.guid
+            name: 'fake-service-key',
+            service_instance_guid: instance.guid
           }
 
           post '/v2/service_keys', req.to_json
@@ -223,12 +227,14 @@ module VCAP::CloudController
           expect(event.space_guid).to eq(space.guid)
           expect(event.organization_guid).to eq(space.organization.guid)
 
-          expect(event.metadata).to include({
-                                                'request' => {
-                                                    'service_instance_guid' => req[:service_instance_guid],
-                                                    'name' => req[:name]
-                                                }
-                                            })
+          expect(event.metadata).to include(
+            {
+              'request' => {
+                'service_instance_guid' => req[:service_instance_guid],
+                'name' => req[:name]
+              }
+            }
+                                    )
         end
 
         context 'when attempting to create service key for an unbindable service' do
@@ -237,8 +243,8 @@ module VCAP::CloudController
             service.save
 
             req = {
-                name: name,
-                service_instance_guid: instance.guid }.to_json
+              name: name,
+              service_instance_guid: instance.guid }.to_json
 
             post '/v2/service_keys', req
           end
@@ -428,10 +434,10 @@ module VCAP::CloudController
     end
 
     describe 'GET', '/v2/service_keys' do
-      let(:space)   { Space.make }
+      let(:space) { Space.make }
       let(:developer) { make_developer_for_space(space) }
-      let(:instance_a)  { ManagedServiceInstance.make(space: space) }
-      let(:instance_b)  { ManagedServiceInstance.make(space: space) }
+      let(:instance_a) { ManagedServiceInstance.make(space: space) }
+      let(:instance_b) { ManagedServiceInstance.make(space: space) }
       let(:service_key_a) { ServiceKey.make(name: 'fake-key-a', service_instance: instance_a) }
       let(:service_key_b) { ServiceKey.make(name: 'fake-key-b', service_instance: instance_a) }
       let(:service_key_c) { ServiceKey.make(name: 'fake-key-c', service_instance: instance_b) }
@@ -469,9 +475,9 @@ module VCAP::CloudController
     end
 
     describe 'GET', '/v2/service_keys/:service_key_guid' do
-      let(:space)   { Space.make }
+      let(:space) { Space.make }
       let(:developer) { make_developer_for_space(space) }
-      let(:instance)  { ManagedServiceInstance.make(space: space) }
+      let(:instance) { ManagedServiceInstance.make(space: space) }
       let(:service_key) { ServiceKey.make(name: 'fake-key', service_instance: instance) }
 
       before { set_current_user(developer) }
@@ -783,24 +789,24 @@ module VCAP::CloudController
             let(:body) { {}.to_json }
 
             {
-              'admin'               => 200,
-              'space_developer'     => 200,
-              'admin_read_only'     => 200,
-              'global_auditor'      => 404,
-              'space_manager'       => 404,
-              'space_auditor'       => 404,
-              'org_manager'         => 404,
-              'org_auditor'         => 404,
+              'admin' => 200,
+              'space_developer' => 200,
+              'admin_read_only' => 200,
+              'global_auditor' => 404,
+              'space_manager' => 404,
+              'space_auditor' => 404,
+              'org_manager' => 404,
+              'org_auditor' => 404,
               'org_billing_manager' => 404,
-              'org_user'            => 404,
+              'org_user' => 404,
             }.each do |role, expected_status|
               context "as a(n) #{role} in the binding space" do
                 before do
                   set_current_user_as_role(
-                    role:   role,
-                    org:    space.organization,
-                    space:  space,
-                    user:   user
+                    role: role,
+                    org: space.organization,
+                    space: space,
+                    user: user
                   )
                 end
 

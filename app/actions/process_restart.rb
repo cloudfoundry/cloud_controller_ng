@@ -1,8 +1,9 @@
 module VCAP::CloudController
   class ProcessRestart
     class << self
-      def restart(process:, config:, stop_in_runtime:)
+      def restart(process:, config:, stop_in_runtime:, revision: nil)
         need_to_stop_in_runtime = stop_in_runtime
+        revision_to_set = revision || process.revision
 
         process.db.transaction do
           process.lock!
@@ -18,7 +19,7 @@ module VCAP::CloudController
             runners(config).runner_for_process(process).stop
           end
 
-          process.update(state: ProcessModel::STARTED)
+          process.update(state: ProcessModel::STARTED, revision: revision_to_set)
           runners(config).runner_for_process(process).start
         end
       end

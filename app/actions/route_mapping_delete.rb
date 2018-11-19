@@ -24,6 +24,7 @@ module VCAP::CloudController
           )
 
           next if RouteMappingModel.find(guid: route_mapping.guid).nil?
+
           route_mapping.destroy
 
           route_handler.update_route_information(perform_validation: false)

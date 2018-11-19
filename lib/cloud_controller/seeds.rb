@@ -110,6 +110,7 @@ module VCAP::CloudController
           router_group_name = domain['router_group_name']
           router_group_guid = routing_api_client.router_group_guid(router_group_name)
           raise "Unknown router_group_name specified: #{router_group_name}" if router_group_guid.nil?
+
           router_group_guid
         end
       end

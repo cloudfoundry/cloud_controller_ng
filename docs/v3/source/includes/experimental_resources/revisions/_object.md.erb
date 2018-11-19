@@ -10,6 +10,7 @@ Example Revision object
 Name | Type | Description
 ---- | ---- | -----------
 **guid** | _uuid_ | Unique identifier for the revision.
+**version** | _integer_ | Human-readable identifier for the revision. Starts at 1, increments by 1 for each new revision of the app, and rolls back over to 1 at 9999.
 **created_at** | _datetime_ | The time with zone when the object was created.
 **updated_at** | _datetime_ | The time with zone when the object was last updated.
 **links** | [_links object_](#links) | Links to related resources.

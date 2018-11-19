@@ -15,6 +15,7 @@ module VCAP::CloudController
 
     def cancel_running_task(task)
       return unless task.state == TaskModel::RUNNING_STATE
+
       Repositories::TaskEventRepository.new.record_task_cancel(task, @user_audit_info)
 
       begin

@@ -65,6 +65,7 @@ module VCAP::CloudController
 
     def validate_maximum_disk!(message)
       return unless message.requested?(:disk_in_mb)
+
       if message.disk_in_mb.to_i > config.get(:maximum_app_disk_in_mb)
         raise MaximumDiskExceeded.new(
           "Cannot request disk_in_mb greater than #{config.get(:maximum_app_disk_in_mb)}"

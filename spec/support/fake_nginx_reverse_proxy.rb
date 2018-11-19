@@ -15,6 +15,7 @@ class FakeNginxReverseProxy
       offload_staging!(form_hash, tmpdir)
       data = Rack::Multipart::Generator.new(form_hash).dump
       raise ArgumentError unless data
+
       env['rack.input'] = StringIO.new(data)
       env['CONTENT_LENGTH'] = data.size.to_s
       env['CONTENT_TYPE'] = "multipart/form-data; boundary=#{Rack::Multipart::MULTIPART_BOUNDARY}"
@@ -28,6 +29,7 @@ class FakeNginxReverseProxy
 
   def multipart?(env)
     return false unless ['PUT', 'POST'].include?(env['REQUEST_METHOD'])
+
     env['CONTENT_TYPE'].downcase.start_with?('multipart/form-data; boundary')
   end
 
@@ -36,6 +38,7 @@ class FakeNginxReverseProxy
   def offload_files!(form_hash, tmpdir)
     file_keys = form_hash.keys.select do |k|
       next unless k.is_a?(String)
+
       form_hash[k].is_a?(Hash) && form_hash[k][:tempfile]
     end
     file_keys.each do |k|

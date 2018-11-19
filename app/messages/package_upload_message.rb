@@ -35,6 +35,7 @@ module VCAP::CloudController
 
     def bits_path_in_tmpdir
       return unless bits_path
+
       unless FilePathChecker.safe_path?(bits_path, tmpdir)
         errors.add(:bits_path, 'is invalid')
       end

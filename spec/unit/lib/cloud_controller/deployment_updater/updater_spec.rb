@@ -7,16 +7,25 @@ module VCAP::CloudController
     let(:a_day_ago) { Time.now - 1.day }
     let(:an_hour_ago) { Time.now - 1.hour }
     let(:app) { AppModel.make }
-    let!(:web_process) { ProcessModel.make(instances: current_web_instances, created_at: a_day_ago, guid: 'guid-original', app: app) }
+    let!(:web_process) do
+      ProcessModel.make(
+        instances: current_web_instances,
+        created_at: a_day_ago,
+        guid: 'guid-original',
+        app: app,
+      )
+    end
     let!(:route_mapping) { RouteMappingModel.make(app: web_process.app, process_type: web_process.type) }
     let!(:deploying_web_process) do
       ProcessModel.make(
         app: web_process.app,
         type: 'web-deployment-guid-final',
         instances: current_deploying_instances,
-        guid: 'guid-final'
+        guid: 'guid-final',
+        revision: revision,
       )
     end
+    let(:revision) { RevisionModel.make(app: app, version: 300) }
     let!(:deploying_route_mapping) { RouteMappingModel.make(app: web_process.app, process_type: deploying_web_process.type) }
     let(:space) { web_process.space }
     let(:original_web_process_instance_count) { 6 }
@@ -139,16 +148,16 @@ module VCAP::CloudController
           expect(deployment.state).to eq(DeploymentModel::DEPLOYED_STATE)
         end
 
-        it 'restarts the non-web processes, but not the web process' do
+        it 'restarts the non-web processes with the deploying process revision, but not the web process' do
           subject.scale
 
           expect(ProcessRestart).
             to have_received(:restart).
-            with(process: non_web_process1, config: TestConfig.config_instance, stop_in_runtime: true)
+            with(process: non_web_process1, config: TestConfig.config_instance, stop_in_runtime: true, revision: revision)
 
           expect(ProcessRestart).
             to have_received(:restart).
-            with(process: non_web_process2, config: TestConfig.config_instance, stop_in_runtime: true)
+            with(process: non_web_process2, config: TestConfig.config_instance, stop_in_runtime: true, revision: revision)
 
           expect(ProcessRestart).
             not_to have_received(:restart).

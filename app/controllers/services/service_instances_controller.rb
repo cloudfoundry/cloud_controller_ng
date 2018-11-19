@@ -236,6 +236,7 @@ module VCAP::CloudController
       [HTTP::OK, JSON.generate(CloudController::Presenters::V2::ServiceInstanceSharedFromPresenter.new.to_hash(service_instance.space))]
     rescue CloudController::Errors::ApiError => e
       return HTTP::NOT_FOUND if e.name == 'NotAuthorized'
+
       raise
     end
 
@@ -382,6 +383,7 @@ module VCAP::CloudController
 
     def remove_related(guid, name, other_guid, find_model=model)
       return super(guid, name, other_guid, find_model) if name != :routes
+
       unbind_route(other_guid, guid)
     end
 

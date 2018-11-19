@@ -2,6 +2,73 @@ require 'rails_helper'
 require 'actions/stack_create'
 
 RSpec.describe StacksController, type: :controller do
+  describe '#index' do
+    before { VCAP::CloudController::Stack.dataset.destroy }
+    let(:user) { VCAP::CloudController::User.make }
+
+    describe 'permissions by role' do
+      role_to_expected_http_response = {
+        'admin' => 200,
+        'space_developer' => 200,
+        'space_manager' => 200,
+        'space_auditor' => 200,
+        'org_manager' => 200,
+        'admin_read_only' => 200,
+        'global_auditor' => 200,
+        'org_auditor' => 200,
+        'org_billing_manager' => 200,
+        'org_user' => 200,
+      }.freeze
+
+      role_to_expected_http_response.each do |role, expected_return_value|
+        context "as an #{role}" do
+          let(:org) { VCAP::CloudController::Organization.make }
+          let(:space) { VCAP::CloudController::Space.make(organization: org) }
+
+          it "returns #{expected_return_value}" do
+            set_current_user_as_role(role: role, org: org, space: space, user: user)
+
+            get :index
+
+            expect(response.status).to eq expected_return_value
+          end
+        end
+      end
+
+      it 'returns 401 when logged out' do
+        get :index
+
+        expect(response.status).to eq 401
+      end
+    end
+
+    context 'when the user is logged in' do
+      let!(:stack1) { VCAP::CloudController::Stack.make }
+      let!(:stack2) { VCAP::CloudController::Stack.make }
+
+      it 'renders a paginated list of stacks' do
+        set_current_user(user)
+
+        get :index
+
+        expect(parsed_body['resources'].first['guid']).to eq(stack1.guid)
+        expect(parsed_body['resources'].second['guid']).to eq(stack2.guid)
+      end
+
+      context 'when the query params are invalid' do
+        it 'returns an error' do
+          set_current_user(user)
+
+          get :index, params: { per_page: 'whoops' }
+
+          expect(response.status).to eq 400
+          expect(response.body).to include('Per page must be a positive integer')
+          expect(response.body).to include('BadQueryParameter')
+        end
+      end
+    end
+  end
+
   describe '#create' do
     let(:user) { VCAP::CloudController::User.make }
     let(:req_body) do

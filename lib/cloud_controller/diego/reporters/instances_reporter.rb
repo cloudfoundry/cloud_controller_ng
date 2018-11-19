@@ -37,6 +37,7 @@ module VCAP::CloudController
         fill_unreported_instances_with_down_instances(instances, process)
       rescue => e
         raise e if e.is_a? CloudController::Errors::InstancesUnavailable
+
         logger.error('all_instances_for_app.error', error: e.to_s)
         raise CloudController::Errors::InstancesUnavailable.new(e)
       end
@@ -96,6 +97,7 @@ module VCAP::CloudController
         crashed_instances
       rescue => e
         raise e if e.is_a? CloudController::Errors::InstancesUnavailable
+
         logger.error('crashed_instances_for_app.error', error: e.to_s)
         raise CloudController::Errors::InstancesUnavailable.new(e)
       end
@@ -112,6 +114,7 @@ module VCAP::CloudController
         translated_state = LrpStateTranslator.translate_lrp_state(lrp)
         return true if VCAP::CloudController::Diego::LRP_RUNNING == translated_state
         return true if VCAP::CloudController::Diego::LRP_STARTING == translated_state
+
         false
       end
     end

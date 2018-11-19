@@ -70,6 +70,7 @@ module VCAP::CloudController
 
       raise CloudController::Errors::ApiError.new_from_details('ResourceNotFound', 'App not found') if app_model.nil?
       raise ApiError.new_from_details('StagingError', "malformed buildpack cache upload request for #{guid}") unless upload_path
+
       check_file_md5
 
       upload_job = Jobs::V3::BuildpackCacheUpload.new(local_path: upload_path, app_guid: guid, stack_name: stack_name)
@@ -111,6 +112,7 @@ module VCAP::CloudController
       droplet = droplet_from_build(build, guid)
 
       raise ApiError.new_from_details('StagingError', "malformed droplet upload request for #{droplet.guid}") unless upload_path
+
       check_file_md5
 
       logger.info 'v3-droplet.begin-upload', droplet_guid: droplet.guid
@@ -124,6 +126,7 @@ module VCAP::CloudController
       if build.nil?
         droplet = DropletModel.find(guid: guid)
         raise ApiError.new_from_details('NotFound', guid) if droplet.nil?
+
         droplet
       else
         create_droplet_from_build(build)

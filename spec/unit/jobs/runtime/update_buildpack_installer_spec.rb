@@ -10,13 +10,15 @@ module VCAP::CloudController
       let(:stack_name) { 'mystack' }
       let(:existing_stack) { Stack.make(name: 'existing-stack') }
       let!(:existing_buildpack) { Buildpack.make(name: 'mybuildpack', stack: nil, filename: nil, enabled: false) }
-      let(:job_options) { {
-        name: 'mybuildpack',
-        stack: stack_name,
-        file: zipfile,
-        options: new_buildpack_options,
-        upgrade_buildpack_guid: existing_buildpack.guid
-      }}
+      let(:job_options) do
+        {
+          name: 'mybuildpack',
+          stack: stack_name,
+          file: zipfile,
+          options: new_buildpack_options,
+          upgrade_buildpack_guid: existing_buildpack.guid
+        }
+      end
       let(:job) { UpdateBuildpackInstaller.new(job_options) }
 
       it 'is a valid job' do
@@ -31,13 +33,15 @@ module VCAP::CloudController
         context 'when a buildpack should be updated' do
           let(:new_buildpack_options) { { locked: true } }
 
-          let(:job_options) { {
-            name: 'mybuildpack',
-            stack: existing_stack.name,
-            file: zipfile2,
-            options: new_buildpack_options,
-            upgrade_buildpack_guid: existing_buildpack.guid
-          }}
+          let(:job_options) do
+            {
+              name: 'mybuildpack',
+              stack: existing_stack.name,
+              file: zipfile2,
+              options: new_buildpack_options,
+              upgrade_buildpack_guid: existing_buildpack.guid
+            }
+          end
 
           it 'updates an existing buildpack' do
             buildpack = Buildpack.find(name: 'mybuildpack')

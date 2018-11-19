@@ -137,6 +137,7 @@ module VCAP::CloudController
 
     def legacy_buildpack
       return self.legacy_admin_buildpack_name if self.legacy_admin_buildpack_name.present?
+
       self.buildpack_url
     end
 

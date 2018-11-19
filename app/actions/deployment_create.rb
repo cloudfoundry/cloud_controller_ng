@@ -1,4 +1,5 @@
 require 'repositories/deployment_event_repository'
+require 'actions/revision_create'
 
 module VCAP::CloudController
   class DeploymentCreate
@@ -36,9 +37,10 @@ module VCAP::CloudController
           end
           deployment.save
 
-          revision = RevisionModel.create(app: app)
+          # This revision should be assigned to the app's non-web processes when restarted in the deployment updater
+          revision = RevisionCreate.create(app)
           process = create_deployment_process(app, deployment.guid, web_process, revision)
-          deployment.update(deploying_web_process: process, revision: revision)
+          deployment.update(deploying_web_process: process, revision_guid: revision.guid, revision_version: revision.version)
           web_process.routes.each { |r| RouteMappingCreate.add(user_audit_info, r, process) }
         end
         record_audit_event(deployment, droplet, user_audit_info)

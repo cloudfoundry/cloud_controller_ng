@@ -54,6 +54,7 @@ module VCAP::CloudController
 
         def droplet_buildpack_info
           return nil unless droplet.buildpack_lifecycle_data&.buildpack_lifecycle_buildpacks
+
           droplet.buildpack_lifecycle_data.buildpack_lifecycle_buildpacks.map do |buildpack|
             if buildpack.admin_buildpack_name
               name_to_lookup = name_to_print = buildpack.admin_buildpack_name

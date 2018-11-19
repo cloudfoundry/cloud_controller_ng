@@ -10,6 +10,7 @@ module VCAP::CloudController
       if !human_readable_byte_value.to_s.match?(/\A-?\d+(?:\.\d+)?/)
         raise NonNumericError
       end
+
       PalmCivet.to_megabytes(human_readable_byte_value.to_s)
     rescue PalmCivet::InvalidByteQuantityError
       raise InvalidUnitsError

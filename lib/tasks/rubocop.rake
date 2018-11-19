@@ -11,7 +11,7 @@ begin
       changelist = `git diff --name-only`.chomp.split("\n")
       changelist += `git diff --cached --name-only`.chomp.split("\n")
       changelist -= `git diff --cached --name-only --diff-filter=D`.chomp.split("\n")
-      if changelist.size == 0
+      if changelist.empty?
         abort 'No files have changed; consider running rake rubocop:local instead'
       end
       cli = RuboCop::CLI.new
@@ -24,11 +24,11 @@ begin
       require 'rubocop'
       current_branch = `git rev-parse --abbrev-ref HEAD`.chomp
       remote = `git remote -v | awk 'NR == 1 {print $1}'`.chomp
-      remote = 'origin' if !remote || remote.size == 0
+      remote = 'origin' if !remote || remote.empty?
       # git branches shouldn't have shell-hostile characters in them so don't quote
       changelist = `git diff --name-only #{current_branch} #{remote}/#{current_branch}`.chomp.split("\n")
       changelist -= `git diff --cached --name-only --diff-filter=D`.chomp.split("\n")
-      if changelist.size == 0
+      if changelist.empty?
         abort 'No local files; consider running rake rubocop:changed instead'
       end
       cli = RuboCop::CLI.new

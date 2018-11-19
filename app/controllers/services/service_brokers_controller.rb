@@ -64,6 +64,7 @@ module VCAP::CloudController
       params = UpdateMessage.decode(body).extract
       broker = update_action.update(guid, params)
       return HTTP::NOT_FOUND unless broker
+
       body = ServiceBrokerPresenter.new(broker).to_json
       [HTTP::OK, body]
     end

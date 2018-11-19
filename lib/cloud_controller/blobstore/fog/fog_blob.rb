@@ -22,6 +22,7 @@ module CloudController
 
       def attributes(*keys)
         return file.attributes if keys.empty?
+
         file.attributes.select { |key, _| keys.include? key }
       end
 
@@ -35,6 +36,7 @@ module CloudController
         if file.respond_to?(:url)
           return file.url(Time.now.utc + 3600)
         end
+
         file.public_url
       end
     end

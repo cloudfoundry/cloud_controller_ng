@@ -59,6 +59,7 @@ module VCAP::CloudController
             if host == '*' && existing_domain.shared?
               raise CloudController::Errors::ApiError.new_from_details('NotAuthorized')
             end
+
             route = V3::RouteCreate.create_route(route_hash: route_hash, user_audit_info: user_audit_info, logger: logger, manifest_triggered: true)
           end
           return route

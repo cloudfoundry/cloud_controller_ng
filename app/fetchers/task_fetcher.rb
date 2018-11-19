@@ -20,6 +20,7 @@ module VCAP::CloudController
       ).all.first
 
       return nil unless task
+
       [task, task.space, task.space.organization]
     end
   end

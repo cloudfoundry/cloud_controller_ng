@@ -11,6 +11,7 @@ class MaxServiceInstancePolicy
 
   def validate
     return unless @quota_definition
+
     @errors.add(:quota, @error_name) unless service_instance_quota_remaining?
   end
 

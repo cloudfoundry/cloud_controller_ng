@@ -166,6 +166,7 @@ module VCAP::CloudController::RestController
 
     def convert_flag_to_bool(flag)
       raise CloudController::Errors::ApiError.new_from_details('InvalidRequest') unless ['true', 'false', nil].include? flag
+
       flag == 'true'
     end
 
@@ -183,6 +184,7 @@ module VCAP::CloudController::RestController
 
     def check_write_permissions!
       return if SecurityContext.roles.admin? || SecurityContext.scopes.include?('cloud_controller.write')
+
       raise CloudController::Errors::ApiError.new_from_details('NotAuthorized')
     end
 
@@ -191,6 +193,7 @@ module VCAP::CloudController::RestController
         SecurityContext.roles.admin_read_only? ||
         SecurityContext.roles.global_auditor? ||
         SecurityContext.scopes.include?('cloud_controller.read')
+
       raise CloudController::Errors::ApiError.new_from_details('NotAuthorized')
     end
 
@@ -205,6 +208,7 @@ module VCAP::CloudController::RestController
     def parse_and_validate_json(body)
       parsed = body && MultiJson.load(body)
       raise MultiJson::ParseError.new('invalid request body') unless parsed.is_a?(Hash)
+
       parsed
     rescue MultiJson::ParseError => e
       bad_request!(e.message)

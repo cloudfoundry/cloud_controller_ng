@@ -47,17 +47,20 @@ module VCAP::CloudController
     def create?(space, params=nil)
       return true if context.queryer.can_write_globally?
       return false if space.in_suspended_org?
+
       context.queryer.can_write_to_org?(space.organization.guid)
     end
 
     def can_remove_related_object?(space, params)
       return true if admin_user?
+
       user_acting_on_themselves?(params) || read_for_update?(space, params)
     end
 
     def read_for_update?(space, params=nil)
       return true if context.queryer.can_write_globally?
       return false if space.in_suspended_org?
+
       context.queryer.can_write_to_org?(space.organization.guid) || context.queryer.can_update_space?(space.guid)
     end
 

@@ -1,15 +1,15 @@
 module VCAP::CloudController
   class LabelHelpers
     KEY_SEPARATOR = '/'.freeze
-    REQUIREMENT_SPLITTER = /(?:\(.*?\)|[^,])+/
-    KEY_CHARACTERS = %r{[\w\-\.\_\/]+}
+    REQUIREMENT_SPLITTER = /(?:\(.*?\)|[^,])+/.freeze
+    KEY_CHARACTERS = %r{[\w\-\.\_\/]+}.freeze
 
-    IN_PATTERN = /\A(?<key>.*?) in \((?<values>.*)\)\z/                     # foo in (bar,baz)
-    NOT_IN_PATTERN = /\A(?<key>.*?) notin \((?<values>.*)\)\z/              # funky notin (uptown,downtown)
-    EQUAL_PATTERN = /\A(?<key>#{KEY_CHARACTERS})(==?)(?<values>.*)\z/       # foo=bar or foo==bar
-    NOT_EQUAL_PATTERN = /\A(?<key>#{KEY_CHARACTERS})(!=)(?<values>.*)\z/    # foo!=bar
-    EXISTS_PATTERN = /^\A(?<key>#{KEY_CHARACTERS})(?<values>)\z/            # foo
-    NOT_EXISTS_PATTERN = /\A!(?<key>#{KEY_CHARACTERS})(?<values>)\z/        # !foo
+    IN_PATTERN = /\A(?<key>.*?) in \((?<values>.*)\)\z/.freeze                     # foo in (bar,baz)
+    NOT_IN_PATTERN = /\A(?<key>.*?) notin \((?<values>.*)\)\z/.freeze              # funky notin (uptown,downtown)
+    EQUAL_PATTERN = /\A(?<key>#{KEY_CHARACTERS})(==?)(?<values>.*)\z/.freeze       # foo=bar or foo==bar
+    NOT_EQUAL_PATTERN = /\A(?<key>#{KEY_CHARACTERS})(!=)(?<values>.*)\z/.freeze    # foo!=bar
+    EXISTS_PATTERN = /^\A(?<key>#{KEY_CHARACTERS})(?<values>)\z/.freeze            # foo
+    NOT_EXISTS_PATTERN = /\A!(?<key>#{KEY_CHARACTERS})(?<values>)\z/.freeze        # !foo
 
     REQUIREMENT_OPERATOR_PAIRS = [
       { pattern: IN_PATTERN, operator: :in },

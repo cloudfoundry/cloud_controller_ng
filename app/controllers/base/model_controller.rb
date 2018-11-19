@@ -207,6 +207,7 @@ module VCAP::CloudController::RestController
       after_update(obj)
 
       return [HTTP::NO_CONTENT] if verb == 'remove'
+
       [HTTP::CREATED, object_renderer.render_json(self.class, obj, @opts)]
     end
 
@@ -311,6 +312,7 @@ module VCAP::CloudController::RestController
     def find_guid(guid, find_model=model)
       obj = find_model.find(guid: guid)
       raise self.class.not_found_exception(guid, find_model) if obj.nil?
+
       obj
     end
 

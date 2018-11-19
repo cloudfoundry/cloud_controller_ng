@@ -10,6 +10,7 @@ module VCAP::CloudController
         def perform
           logger.info("Copying the droplet bits from droplet '#{@src_droplet_guid}' to droplet '#{@dest_droplet_guid}'")
           raise 'destination droplet does not exist' unless destination_droplet
+
           copy_bits
         end
 

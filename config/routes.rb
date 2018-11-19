@@ -16,6 +16,7 @@ Rails.application.routes.draw do
   get '/apps/:guid/relationships/current_droplet', to: 'apps_v3#current_droplet_relationship'
   get '/apps/:guid/droplets/current', to: 'apps_v3#current_droplet'
   get '/apps/:guid/revisions/:revision_guid', to: 'apps_v3#revision'
+  get '/apps/:guid/revisions', to: 'apps_v3#revisions'
 
   # app features
   get '/apps/:app_guid/features', to: 'app_features#index'
@@ -141,5 +142,6 @@ Rails.application.routes.draw do
   delete '/service_instances/:service_instance_guid/relationships/shared_spaces/:space_guid', to: 'service_instances_v3#unshare_service_instance'
 
   # stacks
+  get '/stacks', to: 'stacks#index'
   post '/stacks', to: 'stacks#create'
 end

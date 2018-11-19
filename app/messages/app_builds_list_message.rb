@@ -14,11 +14,7 @@ module VCAP::CloudController
     validates :states, array: true, allow_nil: true
 
     def self.from_params(params)
-      opts = params.dup
-      %w(states).each do |attribute|
-        to_array! opts, attribute
-      end
-      new(opts.symbolize_keys)
+      super(params, %w(states))
     end
   end
 end

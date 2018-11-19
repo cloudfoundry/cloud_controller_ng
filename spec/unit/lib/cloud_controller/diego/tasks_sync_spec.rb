@@ -11,11 +11,13 @@ module VCAP::CloudController
       let(:fake_workpool) do
         instance_double(WorkPool, drain: nil, submit: nil, exceptions: [])
       end
+      let(:logger) { double(:logger, info: nil, error: nil) }
 
       before do
         CloudController::DependencyLocator.instance.register(:bbs_task_client, bbs_task_client)
         allow(bbs_task_client).to receive(:fetch_task).and_return(nil)
         allow(bbs_task_client).to receive(:fetch_tasks).and_return(bbs_tasks)
+        allow(Steno).to receive(:logger).and_return(logger)
         allow(bbs_task_client).to receive(:bump_freshness)
       end
 
@@ -122,7 +124,13 @@ module VCAP::CloudController
             end
 
             it 'does not bump freshness' do
-              expect { subject.sync }.to raise_error(TasksSync::BBSFetchError, error.message)
+              expect { subject.sync }.not_to raise_error
+              expect(logger).to have_received(:error).with(
+                'error-cancelling-task',
+                error: error.class.name,
+                error_message: error.message,
+                error_backtrace: anything
+              )
               expect(bbs_task_client).not_to receive(:bump_freshness)
             end
           end
@@ -158,8 +166,14 @@ module VCAP::CloudController
             end
 
             it 'does not bump freshness' do
-              expect { subject.sync }.to raise_error(TasksSync::BBSFetchError, error.message)
-              expect(bbs_task_client).not_to receive(:bump_freshness)
+              expect { subject.sync }.not_to raise_error
+              expect(logger).to have_received(:error).with(
+                'error-cancelling-task',
+                error: error.class.name,
+                error_message: error.message,
+                error_backtrace: anything
+              )
+              expect(bbs_task_client).not_to have_received(:bump_freshness)
             end
           end
         end
@@ -175,7 +189,7 @@ module VCAP::CloudController
 
           it 'does not bump freshness' do
             expect { subject.sync }.to raise_error(TasksSync::BBSFetchError, error.message)
-            expect(bbs_task_client).not_to receive(:bump_freshness)
+            expect(bbs_task_client).not_to have_received(:bump_freshness)
           end
         end
 
@@ -188,7 +202,7 @@ module VCAP::CloudController
 
           it 'does not bump freshness' do
             expect { subject.sync }.to raise_error(error)
-            expect(bbs_task_client).not_to receive(:bump_freshness)
+            expect(bbs_task_client).not_to have_received(:bump_freshness)
           end
 
           it 'drains the workpool to prevent thread leakage' do
@@ -208,27 +222,26 @@ module VCAP::CloudController
           end
 
           let(:error) { CloudController::Errors::ApiError.new_from_details('RunnerInvalidRequest', 'invalid thing') }
-          let(:logger) { double(:logger, info: nil, error: nil) }
 
           before do
             allow(bbs_task_client).to receive(:cancel_task).and_raise(error)
-            allow(Steno).to receive(:logger).and_return(logger)
           end
 
           it 'does not update freshness' do
-            expect { subject.sync }.to raise_error(TasksSync::BBSFetchError, error.message)
+            expect { subject.sync }.not_to raise_error
             expect(bbs_task_client).not_to have_received(:bump_freshness)
           end
 
           it 'logs all of the exceptions' do
-            subject.sync rescue nil
+            expect { subject.sync }.not_to raise_error
             expect(logger).to have_received(:error).with(
               'error-cancelling-task',
               error: error.class.name,
               error_message: error.message,
+              error_backtrace: anything
             ).twice
             expect(logger).to have_received(:info).with('run-task-sync')
-            expect(logger).to have_received(:info).with('sync-failed', error: error.name, error_message: error.message)
+            expect(logger).to have_received(:info).with('sync-failed')
           end
         end
 

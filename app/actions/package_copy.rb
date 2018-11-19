@@ -8,6 +8,7 @@ module VCAP::CloudController
 
     def copy(destination_app_guid:, source_package:, user_audit_info:, record_event: true)
       raise InvalidPackage.new('Source and destination app cannot be the same') if destination_app_guid == source_package.app_guid
+
       logger.info("copying package #{source_package.guid} to app #{destination_app_guid}")
 
       package              = PackageModel.new

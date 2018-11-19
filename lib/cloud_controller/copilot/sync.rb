@@ -41,6 +41,7 @@ module VCAP::CloudController
           resources.concat(batch)
 
           return resources if batch.count < BATCH_SIZE
+
           last_id = resources.last.id
         end
       end

@@ -5,7 +5,7 @@ begin
   # uncomment the following line to use spork with the debugger
   # require 'spork/ext/ruby-debug'
 
-  run_spork = `ps | grep spork | grep -v grep`.size > 0
+  run_spork = !`ps | grep spork | grep -v grep`.empty?
 rescue LoadError
   run_spork = false
 end
@@ -163,6 +163,7 @@ each_run_block = proc do
       unless Sequel::Deprecation.output.string == ''
         raise "Sequel Deprecation String found: #{Sequel::Deprecation.output.string}"
       end
+
       Sequel::Deprecation.output.close unless Sequel::Deprecation.output.closed?
     end
 

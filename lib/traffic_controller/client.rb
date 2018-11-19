@@ -4,7 +4,7 @@ require 'utils/multipart_parser_wrapper'
 
 module TrafficController
   class Client
-    BOUNDARY_REGEXP = /boundary=(.+)/
+    BOUNDARY_REGEXP = /boundary=(.+)/.freeze
 
     def initialize(url:)
       @url = url

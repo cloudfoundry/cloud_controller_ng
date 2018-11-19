@@ -9,9 +9,9 @@ module VCAP::CloudController
       def desire_app(process)
         logger.info('desire.app.request', process_guid: process.guid)
 
-        lrp = AppRecipeBuilder.new(config: @config, process: process).build_app_lrp
+        handle_diego_errors(process.guid) do
+          lrp = AppRecipeBuilder.new(config: @config, process: process).build_app_lrp
 
-        handle_diego_errors(lrp.process_guid) do
           response = @client.desire_lrp(lrp)
           logger.info('desire.app.response', process_guid: lrp.process_guid, error: response.error)
 
@@ -114,6 +114,12 @@ module VCAP::CloudController
         rescue ::Diego::Error => e
           error_message = process_guid.nil? ? e : "Process Guid: #{process_guid}: #{e}"
           raise CloudController::Errors::ApiError.new_from_details('RunnerUnavailable', error_message)
+        rescue CloudController::Errors::ApiError
+          raise
+        rescue StandardError => e
+          raise e unless process_guid
+
+          raise e.class.new("Process Guid: #{process_guid}: #{e}")
         end
 
         if response.error

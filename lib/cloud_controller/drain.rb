@@ -58,6 +58,7 @@ module VCAP
 
       def logger
         return @logger if @logger
+
         log_dir = File.join(@log_path, 'drain')
         FileUtils.mkdir_p(log_dir)
         @logger = Logger.new(File.join(log_dir, 'drain.log'))

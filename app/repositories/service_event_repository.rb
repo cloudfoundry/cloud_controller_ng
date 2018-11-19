@@ -157,6 +157,7 @@ module VCAP::CloudController
 
       def with_parameters_redacted(params)
         return params unless params.respond_to? :[]=
+
         params.dup.tap { |p| p['parameters'] = Presenters::Censorship::PRIVATE_DATA_HIDDEN }
       end
 
@@ -176,7 +177,7 @@ module VCAP::CloudController
         request_hash[:auth_password] = Presenters::Censorship::REDACTED if params.key? :auth_password
 
         metadata = { request: {} }
-        if request_hash.length > 0
+        if !request_hash.empty?
           metadata[:request] = request_hash
         end
         metadata

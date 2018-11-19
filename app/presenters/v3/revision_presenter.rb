@@ -5,6 +5,7 @@ module VCAP::CloudController
         def to_hash
           {
             guid: revision.guid,
+            version: revision.version,
             created_at: revision.created_at,
             updated_at: revision.updated_at,
             links: build_links

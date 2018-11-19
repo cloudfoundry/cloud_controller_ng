@@ -25,6 +25,7 @@ module VCAP::CloudController
 
       def update_routes
         raise CloudController::Errors::ApiError.new_from_details('RunnerError', 'App not started') unless @process.started?
+
         with_logging('update_route') { messenger.send_desire_request(@process) unless @process.staging? }
       end
 
@@ -44,6 +45,7 @@ module VCAP::CloudController
         yield
       rescue StandardError => e
         return raise e unless diego_not_responding_error?(e)
+
         logger.error "Cannot communicate with diego - tried to send #{action}"
         raise CannotCommunicateWithDiegoError.new(e.message)
       end

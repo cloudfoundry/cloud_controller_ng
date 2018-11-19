@@ -60,6 +60,7 @@ module VCAP::CloudController
     def credentials_with_serialization
       string = credentials_without_serialization
       return if string.blank?
+
       MultiJson.load string
     end
     alias_method 'credentials_without_serialization', 'credentials'

@@ -11,6 +11,7 @@ class MaxServiceKeysPolicy
 
   def validate
     return unless @quota_definition
+
     @errors.add(:quota, @error_name) unless service_keys_quota_remaining?
   end
 

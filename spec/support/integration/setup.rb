@@ -11,6 +11,7 @@ module IntegrationSetup
       return VCAP::CloudController::DatabasePartsParser.connection_from_database_parts(database_config)
     end
     raise Exception.new('No database config') if !TestConfig.config[:db][:database]
+
     warn('Time to move to db.database_parts')
     TestConfig.config[:db][:database] + suffix
   end

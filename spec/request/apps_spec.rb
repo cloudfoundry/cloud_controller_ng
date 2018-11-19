@@ -1023,6 +1023,11 @@ RSpec.describe 'Apps' do
         value: 'original-value',
       )
 
+      VCAP::CloudController::AppAnnotationModel.make(
+        resource_guid: app_model.guid,
+        key: 'please',
+        value: 'delete this',
+      )
       stack = VCAP::CloudController::Stack.make(name: 'redhat')
 
       update_request = {
@@ -1043,6 +1048,7 @@ RSpec.describe 'Apps' do
               annotations: {
                   'contacts' => 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)',
                   'anno1' => 'new-value',
+                  'please' => nil,
               }
           }
 
@@ -1132,6 +1138,7 @@ RSpec.describe 'Apps' do
           'annotations' => {
             'contacts' => 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)',
             'anno1' => 'new-value',
+            'please' => nil,
           }
         }
       }
@@ -1634,7 +1641,7 @@ RSpec.describe 'Apps' do
   describe 'GET /v3/apps/:guid/revisions/:revguid' do
     it 'gets a specific revision' do
       app = VCAP::CloudController::AppModel.make(name: 'app_name', space: space)
-      revision = VCAP::CloudController::RevisionModel.make(app: app)
+      revision = VCAP::CloudController::RevisionModel.make(app: app, version: 42)
 
       get "/v3/apps/#{app.guid}/revisions/#{revision.guid}", nil, user_header
       expect(last_response.status).to eq(200)
@@ -1643,6 +1650,7 @@ RSpec.describe 'Apps' do
       expect(parsed_response).to be_a_response_like(
         {
           'guid' => revision.guid,
+          'version' => revision.version,
           'created_at' => iso8601,
           'updated_at' => iso8601,
           'links' => {
@@ -1650,6 +1658,59 @@ RSpec.describe 'Apps' do
               'href' => "#{link_prefix}/v3/apps/#{app.guid}/revisions/#{revision.guid}"
             }
           }
+        }
+      )
+    end
+  end
+
+  describe 'GET /v3/apps/:guid/revisions' do
+    it 'gets a list of revisions for the app' do
+      app = VCAP::CloudController::AppModel.make(name: 'app_name', space: space)
+      revision1 = VCAP::CloudController::RevisionModel.make(app: app, version: 42)
+      revision2 = VCAP::CloudController::RevisionModel.make(app: app, version: 43)
+
+      get "/v3/apps/#{app.guid}/revisions?per_page=2", nil, user_header
+      expect(last_response.status).to eq(200)
+
+      parsed_response = MultiJson.load(last_response.body)
+      expect(parsed_response).to be_a_response_like(
+        {
+          'pagination' => {
+            'total_results' => 2,
+            'total_pages' => 1,
+            'first' => {
+              'href' => "#{link_prefix}/v3/apps/#{app.guid}/revisions?page=1&per_page=2"
+            },
+            'last' => {
+              'href' => "#{link_prefix}/v3/apps/#{app.guid}/revisions?page=1&per_page=2"
+            },
+            'next' => nil,
+            'previous' => nil
+          },
+          'resources' => [
+            {
+              'guid' => revision1.guid,
+              'version' =>  revision1.version,
+              'created_at' => iso8601,
+              'updated_at' => iso8601,
+              'links' => {
+                'self' => {
+                  'href' => "#{link_prefix}/v3/apps/#{app.guid}/revisions/#{revision1.guid}"
+                }
+              }
+            },
+            {
+              'guid' => revision2.guid,
+              'version' =>  revision2.version,
+              'created_at' => iso8601,
+              'updated_at' => iso8601,
+              'links' => {
+                'self' => {
+                  'href' => "#{link_prefix}/v3/apps/#{app.guid}/revisions/#{revision2.guid}"
+                }
+              }
+            }
+          ]
         }
       )
     end

@@ -74,6 +74,7 @@ module VCAP::CloudController
 
     def self.issuer
       return token['iss'] if valid_token?
+
       ''
     end
   end

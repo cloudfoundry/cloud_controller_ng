@@ -2,6 +2,7 @@ module VCAP::CloudController
   class OrganizationAccess < BaseAccess
     def create?(org, params=nil)
       return true if context.queryer.can_write_globally?
+
       FeatureFlag.enabled?(:user_org_creation)
     end
 
@@ -23,6 +24,7 @@ module VCAP::CloudController
       user_acting_on_themselves = user_acting_on_themselves?(params)
       return false unless context.queryer.can_write_to_org?(org.guid) || user_acting_on_themselves
       return false unless org.active?
+
       validate!(org, params)
 
       user_acting_on_themselves || read_for_update?(org, params)
@@ -31,6 +33,7 @@ module VCAP::CloudController
     def update?(org, params=nil)
       return true if context.queryer.can_write_globally?
       return false unless org.active?
+
       context.queryer.can_write_to_org?(org.guid)
     end
 
@@ -89,11 +92,13 @@ module VCAP::CloudController
 
     def validate_remove_billing_manager_by_guid!(org)
       return if org.billing_managers.count > 1
+
       raise CloudController::Errors::ApiError.new_from_details('LastBillingManagerInOrg')
     end
 
     def validate_remove_manager_by_guid!(org)
       return if org.managers.count > 1
+
       raise CloudController::Errors::ApiError.new_from_details('LastManagerInOrg')
     end
 

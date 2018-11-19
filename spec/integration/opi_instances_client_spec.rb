@@ -25,9 +25,11 @@ RSpec.describe(OPI::InstancesClient, opi: skip_opi_tests) do
   before do
     @pid = Process.spawn('opi simulator')
 
-    raise 'Boom' unless 5.times.any? { up?(opi_url) {
-      sleep 0.1
-    }}
+    raise 'Boom' unless 5.times.any? do
+      up?(opi_url) {
+        sleep 0.1
+      }
+    end
   end
 
   after do

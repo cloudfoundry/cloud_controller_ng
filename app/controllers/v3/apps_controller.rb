@@ -17,6 +17,7 @@ require 'messages/app_create_message'
 require 'messages/app_update_environment_variables_message'
 require 'messages/app_manifest_message'
 require 'messages/app_builds_list_message'
+require 'messages/app_revisions_list_message'
 require 'presenters/v3/app_presenter'
 require 'presenters/v3/app_env_presenter'
 require 'presenters/v3/app_environment_variables_presenter'
@@ -182,8 +183,10 @@ class AppsV3Controller < ApplicationController
   def builds
     message = AppBuildsListMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
+
     app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
+
     dataset = AppBuildsListFetcher.new(app.guid, message).fetch_all
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::BuildPresenter,
@@ -287,6 +290,21 @@ class AppsV3Controller < ApplicationController
     resource_not_found!(:revision) unless revision && revision.app_guid == app.guid
 
     render status: :ok, json: Presenters::V3::RevisionPresenter.new(revision)
+  end
+
+  def revisions
+    message = AppRevisionsListMessage.from_params(query_params)
+    invalid_param!(message.errors.full_messages) unless message.valid?
+
+    app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
+    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
+
+    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
+      presenter: Presenters::V3::RevisionPresenter,
+      paginated_result: SequelPaginator.new.get_page(RevisionModel.where(app: app), message.try(:pagination_options)),
+      path: "/v3/apps/#{app.guid}/revisions",
+      message: message
+    )
   end
 
   class DeleteAppErrorTranslatorJob < VCAP::CloudController::Jobs::ErrorTranslatorJob

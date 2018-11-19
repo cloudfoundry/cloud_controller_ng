@@ -19,6 +19,7 @@ module VCAP::Services::ServiceBrokers::V2
 
     def build_schemas(schemas)
       return if schemas.nil?
+
       @schemas_data = schemas
 
       if @schemas_data.is_a? Hash
@@ -28,6 +29,7 @@ module VCAP::Services::ServiceBrokers::V2
 
     def valid?
       return @valid if defined? @valid
+
       validate!
       validate_schemas!
       @valid = errors.empty?

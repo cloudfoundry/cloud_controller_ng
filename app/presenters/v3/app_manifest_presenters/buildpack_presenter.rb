@@ -5,6 +5,7 @@ module VCAP::CloudController
         class BuildpackPresenter
           def to_hash(app:, **_)
             return {} if app.docker?
+
             {
               buildpacks: app.lifecycle_data.buildpacks.presence,
               stack: app.lifecycle_data.stack,

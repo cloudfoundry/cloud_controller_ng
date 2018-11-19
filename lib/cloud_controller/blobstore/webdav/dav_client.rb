@@ -121,6 +121,7 @@ module CloudController
 
         response = with_error_handling { @client.request(:copy, url(source_key), header: @headers.merge(destination_header)) }
         raise FileNotFound.new("Could not find object '#{source_key}', #{response.status}/#{response.content}") if response.status == 404
+
         raise_blobstore_error("Could not copy object, #{response.status}/#{response.content}") if response.status != 201 && response.status != 204
       end
 
@@ -130,6 +131,7 @@ module CloudController
 
         raise FileNotFound.new("Could not find object '#{key}', #{response.status}/#{response.content}") if response.status == 404
         raise ConflictError.new("Conflict deleting object '#{key}', #{response.status}/#{response.content}") if response.status == 409
+
         raise_blobstore_error("Could not delete object, #{response.status}/#{response.content}")
       end
 
@@ -153,6 +155,7 @@ module CloudController
         return if response.status == 204
 
         raise FileNotFound.new("Could not find object '#{URI(url).path}', #{response.status}/#{response.content}") if response.status == 404
+
         raise_blobstore_error("Could not delete all, #{response.status}/#{response.content}")
       end
 

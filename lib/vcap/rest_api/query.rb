@@ -140,6 +140,7 @@ module VCAP::RestAPI
       if values.empty?
         return { key => nil }
       end
+
       value = values.first
       if ['<', '>='].include?(comparison)
         Sequel.lit("#{key} #{comparison} ?", value)
