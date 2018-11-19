@@ -161,7 +161,12 @@ module VCAP::CloudController
 
       def restart_non_web_processes
         app.processes.reject(&:web?).each do |process|
-          VCAP::CloudController::ProcessRestart.restart(process: process, config: Config.config, stop_in_runtime: true)
+          VCAP::CloudController::ProcessRestart.restart(
+            process: process,
+            config: Config.config,
+            stop_in_runtime: true,
+            revision: deploying_web_process.revision,
+          )
         end
       end
 

@@ -159,6 +159,24 @@ module VCAP::CloudController
           end
         end
       end
+
+      context 'revision to set' do
+        let(:revision) { RevisionModel.make }
+
+        it 'sets the revision of the process if passed in' do
+          ProcessRestart.restart(process: process, config: config, stop_in_runtime: false, revision: revision)
+
+          expect(process.reload.revision).to eq(revision)
+        end
+
+        it 'leaves the old revision if not passed in' do
+          process.update(revision: revision)
+
+          ProcessRestart.restart(process: process, config: config, stop_in_runtime: false)
+
+          expect(process.reload.revision).to eq(revision)
+        end
+      end
     end
   end
 end

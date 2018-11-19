@@ -37,6 +37,7 @@ module VCAP::CloudController
           end
           deployment.save
 
+          # This revision should be assigned to the app's non-web processes when restarted in the deployment updater
           revision = RevisionCreate.create(app)
           process = create_deployment_process(app, deployment.guid, web_process, revision)
           deployment.update(deploying_web_process: process, revision_guid: revision.guid, revision_version: revision.version)
