@@ -7,11 +7,8 @@ module VCAP::CloudController
       :app_guids,
       :current,
       :guids,
-      :order_by,
       :organization_guids,
       :package_guid,
-      :page,
-      :per_page,
       :space_guids,
       :states
     ]

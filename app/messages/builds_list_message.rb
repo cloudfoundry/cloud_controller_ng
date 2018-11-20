@@ -4,9 +4,6 @@ module VCAP::CloudController
   class BuildsListMessage < ListMessage
     register_allowed_keys [
       :app_guids,
-      :order_by,
-      :page,
-      :per_page,
       :states
     ]
 

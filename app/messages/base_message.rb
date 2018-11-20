@@ -9,7 +9,10 @@ module VCAP::CloudController
     attr_accessor :requested_keys, :extra_keys
 
     def self.register_allowed_keys(allowed_keys)
-      self.const_set(:ALLOWED_KEYS, allowed_keys.freeze)
+      current_keys = const_defined?(:ALLOWED_KEYS) ? self.const_get(:ALLOWED_KEYS) : []
+
+      keys = current_keys + allowed_keys
+      self.const_set(:ALLOWED_KEYS, keys.freeze)
       attr_accessor(*allowed_keys)
     end
 

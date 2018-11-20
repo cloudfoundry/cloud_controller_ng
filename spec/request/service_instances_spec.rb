@@ -28,13 +28,13 @@ RSpec.describe 'Service Instances' do
             'total_results' => 3,
             'total_pages' => 2,
             'first' => {
-              'href' => "#{link_prefix}/v3/service_instances?order_by=name&page=1&per_page=2"
+              'href' => "#{link_prefix}/v3/service_instances?order_by=%2Bname&page=1&per_page=2"
             },
             'last' => {
-              'href' => "#{link_prefix}/v3/service_instances?order_by=name&page=2&per_page=2"
+              'href' => "#{link_prefix}/v3/service_instances?order_by=%2Bname&page=2&per_page=2"
             },
             'next' => {
-              'href' => "#{link_prefix}/v3/service_instances?order_by=name&page=2&per_page=2"
+              'href' => "#{link_prefix}/v3/service_instances?order_by=%2Bname&page=2&per_page=2"
             },
             'previous' => nil
           },
@@ -203,10 +203,10 @@ RSpec.describe 'Service Instances' do
               'total_results' => 1,
               'total_pages' => 1,
               'first' => {
-                'href' => "#{link_prefix}/v3/service_instances?order_by=name&page=1&per_page=2"
+                'href' => "#{link_prefix}/v3/service_instances?order_by=%2Bname&page=1&per_page=2"
               },
               'last' => {
-                'href' => "#{link_prefix}/v3/service_instances?order_by=name&page=1&per_page=2"
+                'href' => "#{link_prefix}/v3/service_instances?order_by=%2Bname&page=1&per_page=2"
               },
               'next' => nil,
               'previous' => nil

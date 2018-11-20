@@ -4,11 +4,8 @@ require 'messages/validators/label_selector_requirement_validator'
 module VCAP::CloudController
   class OrgsListMessage < ListMessage
     register_allowed_keys [
-      :page,
-      :per_page,
       :names,
       :guids,
-      :order_by,
       :isolation_segment_guid,
       :label_selector,
     ]
@@ -20,7 +17,7 @@ module VCAP::CloudController
     validates :guids, array: true, allow_nil: true
 
     def to_param_hash
-      super(exclude: [:page, :per_page, :order_by, :isolation_segment_guid])
+      super(exclude: [:isolation_segment_guid])
     end
 
     def self.from_params(params)

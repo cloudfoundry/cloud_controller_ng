@@ -2,7 +2,15 @@ require 'messages/list_message'
 
 module VCAP::CloudController
   class PackagesListMessage < ListMessage
-    register_allowed_keys [:page, :per_page, :order_by, :states, :types, :guids, :app_guids, :app_guid, :space_guids, :organization_guids]
+    register_allowed_keys [
+      :states,
+      :types,
+      :guids,
+      :app_guids,
+      :app_guid,
+      :space_guids,
+      :organization_guids
+    ]
 
     validates_with NoAdditionalParamsValidator
 
@@ -19,7 +27,7 @@ module VCAP::CloudController
     end
 
     def to_param_hash
-      super(exclude: [:page, :per_page, :order_by, :app_guid])
+      super(exclude: [:app_guid])
     end
 
     private
