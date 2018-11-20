@@ -166,6 +166,57 @@ issue on our API repo <a href="https://github.com/cloudfoundry/cloud_controller_
 
           <h1 id="concepts">Concepts</h1>
 
+<h2 id="annotations">Annotations</h2>
+<pre class="highlight plaintext"><code>Example Resource with Annotations
+</code></pre>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"fd35633f-5c5c-4e4e-a5a9-0722c970a9d2"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-18T23:26:46Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-10-17T20:00:42Z"</span><span class="p">,</span><span class="w">
+
+  </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"api-server"</span><span class="p">,</span><span class="w">
+
+  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"contacts"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+
+  </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/fd35633f-5c5c-4e4e-a5a9-0722c970a9d2"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<p>Annotations are user-specified key/value pairs that are attached to <a href="#api-resource">API Resources</a>. Annotations are not queryable, non-identifying attributes of a resource, and they do not affect the operation of CloudFoundry.</p>
+
+<p>Examples may include (but are not limited to):</p>
+
+<ul>
+<li><code class="prettyprint">&quot;contact info&quot;: &quot;bob@example.com jane@example.com&quot;</code></li>
+<li><code class="prettyprint">&quot;library versions&quot;: &quot;Spring: 5.1, Redis Client: a184098. yaml parser: 38&quot;</code></li>
+<li><code class="prettyprint">&quot;git-sha&quot;: &quot;d56fe0367554ae5e878e37ed6c5b9a82f5995512&quot;</code></li>
+</ul>
+
+<h4 id="annotations-key">Annotations Key</h4>
+
+<p>Annotation keys must adhere to the following restrictions:</p>
+
+<ul>
+<li>Length: 1-1000 characters</li>
+</ul>
+
+<h4 id="annotation-value">Annotation Value</h4>
+
+<p>Annotation values must adhere to the following restrictions:</p>
+
+<ul>
+<li>Length: 0-5000 characters</li>
+</ul>
+
 <h2 id="api-resource">API Resource</h2>
 
 <p>A resource represents an individual object within the system, such as an app or a service. It is represented as a JSON object.</p>
@@ -522,49 +573,6 @@ When included in a url, the selector must be appropriately escaped.
 <td>Returns all resources that either have not been assigned a label with the given <em>key</em> or have a label with the given <em>key</em> but none of the specified <em>value(s)</em></td>
 </tr>
 </tbody></table>
-
-<h2 id="annotations">Annotations</h2>
-<pre class="highlight plaintext"><code>Example Resource with Annotations
-</code></pre>
-<pre class="highlight json"><code><span class="p">{</span><span class="w">
-  </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"fd35633f-5c5c-4e4e-a5a9-0722c970a9d2"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-18T23:26:46Z"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-10-17T20:00:42Z"</span><span class="p">,</span><span class="w">
-
-  </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"api-server"</span><span class="p">,</span><span class="w">
-
-  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
-    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"contacts"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)"</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-
-  </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/fd35633f-5c5c-4e4e-a5a9-0722c970a9d2"</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-  </span><span class="p">}</span><span class="w">
-</span><span class="p">}</span><span class="w">
-</span></code></pre>
-
-<p>Annotations are user-specified key/value pairs that are attached to <a href="#api-resource">API Resources</a>. Annotations are not queryable, non-identifying attributes of a resource, and they do not affect the operation of CloudFoundry.</p>
-
-<h4 id="annotations-key">Annotations Key</h4>
-
-<p>Annotation keys must adhere to the following restrictions:</p>
-
-<ul>
-<li>Length: 1-1000 characters</li>
-</ul>
-
-<h4 id="annotation-value">Annotation Value</h4>
-
-<p>Annotation values must adhere to the following restrictions:</p>
-
-<ul>
-<li>Length: 0-5000 characters</li>
-</ul>
 
 <h2 id="lifecycles">Lifecycles</h2>
 
