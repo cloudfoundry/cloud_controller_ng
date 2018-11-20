@@ -166,57 +166,6 @@ issue on our API repo <a href="https://github.com/cloudfoundry/cloud_controller_
 
           <h1 id="concepts">Concepts</h1>
 
-<h2 id="annotations">Annotations</h2>
-<pre class="highlight plaintext"><code>Example Resource with Annotations
-</code></pre>
-<pre class="highlight json"><code><span class="p">{</span><span class="w">
-  </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"fd35633f-5c5c-4e4e-a5a9-0722c970a9d2"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-18T23:26:46Z"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-10-17T20:00:42Z"</span><span class="p">,</span><span class="w">
-
-  </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"api-server"</span><span class="p">,</span><span class="w">
-
-  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
-    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"contacts"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)"</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-
-  </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/fd35633f-5c5c-4e4e-a5a9-0722c970a9d2"</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-  </span><span class="p">}</span><span class="w">
-</span><span class="p">}</span><span class="w">
-</span></code></pre>
-
-<p>Annotations are user-specified key/value pairs that are attached to <a href="#api-resource">API Resources</a>. Annotations are not queryable, non-identifying attributes of a resource, and they do not affect the operation of CloudFoundry.</p>
-
-<p>Examples may include (but are not limited to):</p>
-
-<ul>
-<li><code class="prettyprint">&quot;contact info&quot;: &quot;bob@example.com jane@example.com&quot;</code></li>
-<li><code class="prettyprint">&quot;library versions&quot;: &quot;Spring: 5.1, Redis Client: a184098. yaml parser: 38&quot;</code></li>
-<li><code class="prettyprint">&quot;git-sha&quot;: &quot;d56fe0367554ae5e878e37ed6c5b9a82f5995512&quot;</code></li>
-</ul>
-
-<h4 id="annotations-key">Annotations Key</h4>
-
-<p>Annotation keys must adhere to the following restrictions:</p>
-
-<ul>
-<li>Length: 1-1000 characters</li>
-</ul>
-
-<h4 id="annotation-value">Annotation Value</h4>
-
-<p>Annotation values must adhere to the following restrictions:</p>
-
-<ul>
-<li>Length: 0-5000 characters</li>
-</ul>
-
 <h2 id="api-resource">API Resource</h2>
 
 <p>A resource represents an individual object within the system, such as an app or a service. It is represented as a JSON object.</p>
@@ -442,138 +391,6 @@ Use the cf cli to obtain a bearer token: cf oauth-token
 </tr>
 </tbody></table>
 
-<h2 id="labels-and-selectors">Labels and Selectors</h2>
-
-<p>Labels are user-specified key/value pairs that are attached to <a href="#api-resource">API Resources</a>.
-They are queryable, identifying attributes of a resource, but they do not affect the operation of CloudFoundry.</p>
-
-<p>For example, an app may be assigned a label with key <code class="prettyprint">sensitive</code> and possible values <code class="prettyprint">true</code> or <code class="prettyprint">false</code>.</p>
-
-<p>Users could then find all sensitive apps with a selector for <code class="prettyprint">sensitive=true</code>, resulting in a response containing
-only apps having the label key <code class="prettyprint">sensitive</code> with a label value of <code class="prettyprint">false</code>.</p>
-
-<h3 id="labels">Labels</h3>
-<pre class="highlight plaintext"><code>Example Resource with Labels
-</code></pre>
-<pre class="highlight json"><code><span class="p">{</span><span class="w">
-  </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"fd35633f-5c5c-4e4e-a5a9-0722c970a9d2"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-18T23:26:46Z"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-10-17T20:00:42Z"</span><span class="p">,</span><span class="w">
-
-  </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"api-server"</span><span class="p">,</span><span class="w">
-
-  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"environment"</span><span class="p">:</span><span class="w"> </span><span class="s2">"production"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"internet-facing"</span><span class="p">:</span><span class="w"> </span><span class="s2">"false"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-
-  </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/fd35633f-5c5c-4e4e-a5a9-0722c970a9d2"</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-  </span><span class="p">}</span><span class="w">
-</span><span class="p">}</span><span class="w">
-</span></code></pre>
-
-<p>Labels allow users to apply identifying attributes to resources that are meaningful to the user, but not the CloudFoundry system.</p>
-
-<p>Examples may include (but are not limited to):</p>
-
-<ul>
-<li><code class="prettyprint">&quot;production&quot; : &quot;true&quot;</code> or <code class="prettyprint">&quot;production&quot; : &quot;false&quot;</code></li>
-<li><code class="prettyprint">&quot;env&quot; : &quot;dev&quot;</code> or <code class="prettyprint">&quot;env&quot; : &quot;test&quot;</code> or <code class="prettyprint">&quot;env&quot; : &quot;prod&quot;</code></li>
-<li><code class="prettyprint">&quot;chargeback-code&quot; : &quot;abc123&quot;</code></li>
-</ul>
-
-<h4 id="label-keys">Label Keys</h4>
-
-<p>Label keys are made up of an (optional) prefix, and name. If a prefix is present, it is separated from the name by a <code class="prettyprint">/</code>.
-Prefixes are dns names intended to enable namespacing of label keys.</p>
-
-<p>A label key <code class="prettyprint">prefix</code> must adhere to the following restrictions:</p>
-
-<ul>
-<li>Length: 0-253 characters</li>
-<li>Allowed characters: alphanumeric, <code class="prettyprint">-</code>, and <code class="prettyprint">.</code></li>
-<li>DNS subdomain format (series of subdomain labels separated by <code class="prettyprint">.</code>)</li>
-</ul>
-
-<p>A label key <code class="prettyprint">name</code> must adhere to the following restrictions:</p>
-
-<ul>
-<li>Length: 1-63 characters</li>
-<li>Allowed characters: alphanumeric , <code class="prettyprint">-</code>, <code class="prettyprint">_</code>, and <code class="prettyprint">.</code></li>
-<li>Must begin and end with an alphanumeric character</li>
-</ul>
-
-<h4 id="label-values">Label Values</h4>
-
-<p>Label values must adhere to the following restrictions:</p>
-
-<ul>
-<li>Length: 0-63 characters</li>
-<li>Allowed characters: alphanumeric , <code class="prettyprint">-</code>, <code class="prettyprint">_</code>, and <code class="prettyprint">.</code></li>
-<li>Must begin and end with an alphanumeric character</li>
-<li>Empty values are allowed</li>
-</ul>
-
-<h3 id="selectors">Selectors</h3>
-
-<p>Selectors allow users to filter and group API resources by the labels applied to them. A selector consists of one or
-more <code class="prettyprint">requirements</code> in a comma-delimited list.</p>
-
-<p><em>eg:</em> <code class="prettyprint">env=dev,!chargeback-code,tier in (backend,worker)</code></p>
-
-<p>Selectors can be used to filter and group resources using the query parameter <code class="prettyprint">label_selector</code> on list endpoints.</p>
-
-<aside class="notice">
-When included in a url, the selector must be appropriately escaped.
-</aside>
-
-<p>A requirement consists of a <em>key</em>, an <code class="prettyprint">operator</code>, and optional <em>value(s)</em>.</p>
-
-<table><thead>
-<tr>
-<th>Requirement</th>
-<th>Format</th>
-<th>Description</th>
-</tr>
-</thead><tbody>
-<tr>
-<td>existence</td>
-<td><em>key</em></td>
-<td>Returns all resources that have been assigned a label with the given <em>key</em> (with any <em>value</em>)</td>
-</tr>
-<tr>
-<td>non-existence</td>
-<td><code class="prettyprint">!</code><em>key</em></td>
-<td>Returns all resources that have not been assigned a label with the given <em>key</em> (with any <em>value</em>)</td>
-</tr>
-<tr>
-<td>equality</td>
-<td><em>key</em><code class="prettyprint">=</code><em>value</em> or <em>key</em><code class="prettyprint">==</code><em>value</em></td>
-<td>Returns all resources that have been assigned a label with the given <em>key</em> and <em>value</em></td>
-</tr>
-<tr>
-<td>inequality</td>
-<td><em>key</em><code class="prettyprint">!=</code><em>value</em></td>
-<td>Returns all resources that either have not been assigned a label with the given <em>key</em> or have a label with the given <em>key</em> but a different <em>value</em></td>
-</tr>
-<tr>
-<td>set inclusion</td>
-<td><em>key</em> <code class="prettyprint">in</code> (<em>value1</em>,<em>value2</em>&hellip;)</td>
-<td>Returns all resources that have been assigned a label with the given <em>key</em> with one of the specified <em>value(s)</em></td>
-</tr>
-<tr>
-<td>set exclusion</td>
-<td><em>key</em> <code class="prettyprint">notin</code> (<em>value1</em>,<em>value2</em>&hellip;)</td>
-<td>Returns all resources that either have not been assigned a label with the given <em>key</em> or have a label with the given <em>key</em> but none of the specified <em>value(s)</em></td>
-</tr>
-</tbody></table>
-
 <h2 id="lifecycles">Lifecycles</h2>
 
 <p>Lifecycles inform the platform of how to build droplets and run apps. For example the
@@ -674,6 +491,193 @@ and the docker image is executed inside of it.</p>
 <td><strong>data</strong></td>
 <td><em>object</em></td>
 <td>Data is not used by the docker lifecycle. Valid value is <code class="prettyprint">{}</code>.</td>
+</tr>
+</tbody></table>
+
+<h2 id="metadata">Metadata</h2>
+
+<p>Metadata allows you to tag <a href="#api-resource">API Resources</a> with information that does not directly affect its functionality.</p>
+
+<h3 id="annotations">Annotations</h3>
+<pre class="highlight plaintext"><code>Example Resource with Annotations
+</code></pre>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"fd35633f-5c5c-4e4e-a5a9-0722c970a9d2"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-18T23:26:46Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-10-17T20:00:42Z"</span><span class="p">,</span><span class="w">
+
+  </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"api-server"</span><span class="p">,</span><span class="w">
+
+  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"contacts"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+
+  </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/fd35633f-5c5c-4e4e-a5a9-0722c970a9d2"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<p>Annotations are user-specified key/value pairs that are attached to <a href="#api-resource">API Resources</a>. Annotations are not queryable, non-identifying attributes of a resource, and they do not affect the operation of CloudFoundry.</p>
+
+<p>Examples may include (but are not limited to):</p>
+
+<ul>
+<li><code class="prettyprint">&quot;contact info&quot;: &quot;bob@example.com jane@example.com&quot;</code></li>
+<li><code class="prettyprint">&quot;library versions&quot;: &quot;Spring: 5.1, Redis Client: a184098. yaml parser: 38&quot;</code></li>
+<li><code class="prettyprint">&quot;git-sha&quot;: &quot;d56fe0367554ae5e878e37ed6c5b9a82f5995512&quot;</code></li>
+</ul>
+
+<h4 id="annotations-key">Annotations Key</h4>
+
+<p>Annotation keys must adhere to the following restrictions:</p>
+
+<ul>
+<li>Length: 1-1000 characters</li>
+</ul>
+
+<h4 id="annotation-value">Annotation Value</h4>
+
+<p>Annotation values must adhere to the following restrictions:</p>
+
+<ul>
+<li>Length: 0-5000 characters</li>
+</ul>
+
+<h3 id="labels-and-selectors">Labels and Selectors</h3>
+
+<p>Labels are user-specified key/value pairs that are attached to <a href="#api-resource">API Resources</a>.
+They are queryable, identifying attributes of a resource, but they do not affect the operation of CloudFoundry.</p>
+
+<p>For example, an app may be assigned a label with key <code class="prettyprint">sensitive</code> and possible values <code class="prettyprint">true</code> or <code class="prettyprint">false</code>.</p>
+
+<p>Users could then find all sensitive apps with a selector for <code class="prettyprint">sensitive=true</code>, resulting in a response containing
+only apps having the label key <code class="prettyprint">sensitive</code> with a label value of <code class="prettyprint">false</code>.</p>
+
+<h4 id="labels">Labels</h4>
+<pre class="highlight plaintext"><code>Example Resource with Labels
+</code></pre>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"fd35633f-5c5c-4e4e-a5a9-0722c970a9d2"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-18T23:26:46Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-10-17T20:00:42Z"</span><span class="p">,</span><span class="w">
+
+  </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"api-server"</span><span class="p">,</span><span class="w">
+
+  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"environment"</span><span class="p">:</span><span class="w"> </span><span class="s2">"production"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"internet-facing"</span><span class="p">:</span><span class="w"> </span><span class="s2">"false"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+
+  </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/fd35633f-5c5c-4e4e-a5a9-0722c970a9d2"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<p>Labels allow users to apply identifying attributes to resources that are meaningful to the user, but not the CloudFoundry system.</p>
+
+<p>Examples may include (but are not limited to):</p>
+
+<ul>
+<li><code class="prettyprint">&quot;production&quot; : &quot;true&quot;</code> or <code class="prettyprint">&quot;production&quot; : &quot;false&quot;</code></li>
+<li><code class="prettyprint">&quot;env&quot; : &quot;dev&quot;</code> or <code class="prettyprint">&quot;env&quot; : &quot;test&quot;</code> or <code class="prettyprint">&quot;env&quot; : &quot;prod&quot;</code></li>
+<li><code class="prettyprint">&quot;chargeback-code&quot; : &quot;abc123&quot;</code></li>
+</ul>
+
+<p><strong>Label Keys</strong></p>
+
+<p>Label keys are made up of an (optional) prefix, and name. If a prefix is present, it is separated from the name by a <code class="prettyprint">/</code>.
+Prefixes are dns names intended to enable namespacing of label keys.</p>
+
+<p>A label key <code class="prettyprint">prefix</code> must adhere to the following restrictions:</p>
+
+<ul>
+<li>Length: 0-253 characters</li>
+<li>Allowed characters: alphanumeric, <code class="prettyprint">-</code>, and <code class="prettyprint">.</code></li>
+<li>DNS subdomain format (series of subdomain labels separated by <code class="prettyprint">.</code>)</li>
+</ul>
+
+<p>A label key <code class="prettyprint">name</code> must adhere to the following restrictions:</p>
+
+<ul>
+<li>Length: 1-63 characters</li>
+<li>Allowed characters: alphanumeric , <code class="prettyprint">-</code>, <code class="prettyprint">_</code>, and <code class="prettyprint">.</code></li>
+<li>Must begin and end with an alphanumeric character</li>
+</ul>
+
+<p><strong>Label Values</strong></p>
+
+<p>Label values must adhere to the following restrictions:</p>
+
+<ul>
+<li>Length: 0-63 characters</li>
+<li>Allowed characters: alphanumeric , <code class="prettyprint">-</code>, <code class="prettyprint">_</code>, and <code class="prettyprint">.</code></li>
+<li>Must begin and end with an alphanumeric character</li>
+<li>Empty values are allowed</li>
+</ul>
+
+<h4 id="selectors">Selectors</h4>
+
+<p>Selectors allow users to filter and group API resources by the labels applied to them. A selector consists of one or
+more <code class="prettyprint">requirements</code> in a comma-delimited list.</p>
+
+<p><em>eg:</em> <code class="prettyprint">env=dev,!chargeback-code,tier in (backend,worker)</code></p>
+
+<p>Selectors can be used to filter and group resources using the query parameter <code class="prettyprint">label_selector</code> on list endpoints.</p>
+
+<aside class="notice">
+When included in a url, the selector must be appropriately escaped.
+</aside>
+
+<p>A requirement consists of a <em>key</em>, an <code class="prettyprint">operator</code>, and optional <em>value(s)</em>.</p>
+
+<table><thead>
+<tr>
+<th>Requirement</th>
+<th>Format</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>existence</td>
+<td><em>key</em></td>
+<td>Returns all resources that have been assigned a label with the given <em>key</em> (with any <em>value</em>)</td>
+</tr>
+<tr>
+<td>non-existence</td>
+<td><code class="prettyprint">!</code><em>key</em></td>
+<td>Returns all resources that have not been assigned a label with the given <em>key</em> (with any <em>value</em>)</td>
+</tr>
+<tr>
+<td>equality</td>
+<td><em>key</em><code class="prettyprint">=</code><em>value</em> or <em>key</em><code class="prettyprint">==</code><em>value</em></td>
+<td>Returns all resources that have been assigned a label with the given <em>key</em> and <em>value</em></td>
+</tr>
+<tr>
+<td>inequality</td>
+<td><em>key</em><code class="prettyprint">!=</code><em>value</em></td>
+<td>Returns all resources that either have not been assigned a label with the given <em>key</em> or have a label with the given <em>key</em> but a different <em>value</em></td>
+</tr>
+<tr>
+<td>set inclusion</td>
+<td><em>key</em> <code class="prettyprint">in</code> (<em>value1</em>,<em>value2</em>&hellip;)</td>
+<td>Returns all resources that have been assigned a label with the given <em>key</em> with one of the specified <em>value(s)</em></td>
+</tr>
+<tr>
+<td>set exclusion</td>
+<td><em>key</em> <code class="prettyprint">notin</code> (<em>value1</em>,<em>value2</em>&hellip;)</td>
+<td>Returns all resources that either have not been assigned a label with the given <em>key</em> or have a label with the given <em>key</em> but none of the specified <em>value(s)</em></td>
 </tr>
 </tbody></table>
 
