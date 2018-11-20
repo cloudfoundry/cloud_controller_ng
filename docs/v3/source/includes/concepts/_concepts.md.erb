@@ -1,5 +1,54 @@
 # Concepts
 
+## Annotations
+
+```
+Example Resource with Annotations
+```
+
+```json
+{
+  "guid": "fd35633f-5c5c-4e4e-a5a9-0722c970a9d2",
+  "created_at": "2016-03-18T23:26:46Z",
+  "updated_at": "2016-10-17T20:00:42Z",
+
+  "name": "api-server",
+
+  "metadata": {
+    "labels": {},
+    "annotations": {
+      "contacts": "Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)"
+    }
+  },
+
+  "links": {
+    "self": {
+      "href": "https://api.example.org/v3/apps/fd35633f-5c5c-4e4e-a5a9-0722c970a9d2"
+    }
+  }
+}
+```
+
+Annotations are user-specified key/value pairs that are attached to [API Resources](#api-resource). Annotations are not queryable, non-identifying attributes of a resource, and they do not affect the operation of CloudFoundry.
+
+Examples may include (but are not limited to):
+
+- `"contact info": "bob@example.com jane@example.com"`
+- `"library versions": "Spring: 5.1, Redis Client: a184098. yaml parser: 38"`
+- `"git-sha": "d56fe0367554ae5e878e37ed6c5b9a82f5995512"`
+
+#### Annotations Key
+
+Annotation keys must adhere to the following restrictions:
+
+* Length: 1-1000 characters
+
+#### Annotation Value
+
+Annotation values must adhere to the following restrictions:
+
+* Length: 0-5000 characters
+
 ## API Resource
 
 A resource represents an individual object within the system, such as an app or a service. It is represented as a JSON object.
@@ -125,7 +174,6 @@ Name | Type | Description
 **title** | _string_ | Short description of the error.
 **detail** | _string_ | Detailed description of the error.
 
-
 ## Labels and Selectors
 
 Labels are user-specified key/value pairs that are attached to [API Resources](#api-resource).
@@ -223,49 +271,6 @@ equality      | _key_`=`_value_ or _key_`==`_value_  | Returns all resources tha
 inequality    | _key_`!=`_value_                     | Returns all resources that either have not been assigned a label with the given _key_ or have a label with the given _key_ but a different _value_
 set inclusion | _key_ `in` (_value1_,_value2_...)    | Returns all resources that have been assigned a label with the given _key_ with one of the specified _value(s)_
 set exclusion | _key_ `notin` (_value1_,_value2_...) | Returns all resources that either have not been assigned a label with the given _key_ or have a label with the given _key_ but none of the specified _value(s)_
-
-## Annotations
-
-```
-Example Resource with Annotations
-```
-
-```json
-{
-  "guid": "fd35633f-5c5c-4e4e-a5a9-0722c970a9d2",
-  "created_at": "2016-03-18T23:26:46Z",
-  "updated_at": "2016-10-17T20:00:42Z",
-
-  "name": "api-server",
-
-  "metadata": {
-    "labels": {},
-    "annotations": {
-      "contacts": "Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)"
-    }
-  },
-
-  "links": {
-    "self": {
-      "href": "https://api.example.org/v3/apps/fd35633f-5c5c-4e4e-a5a9-0722c970a9d2"
-    }
-  }
-}
-```
-
-Annotations are user-specified key/value pairs that are attached to [API Resources](#api-resource). Annotations are not queryable, non-identifying attributes of a resource, and they do not affect the operation of CloudFoundry.
-
-#### Annotations Key
-
-Annotation keys must adhere to the following restrictions:
-
-* Length: 1-1000 characters
-
-#### Annotation Value
-
-Annotation values must adhere to the following restrictions:
-
-* Length: 0-5000 characters
 
 ## Lifecycles
 
