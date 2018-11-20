@@ -3,7 +3,7 @@ module VCAP::Services::ServiceBrokers::V2
     include CatalogValidationHelper
 
     attr_reader :broker_provided_id, :name, :description, :metadata
-    attr_reader :catalog_service, :errors, :free, :bindable, :schemas
+    attr_reader :catalog_service, :errors, :free, :bindable, :schemas, :plan_updateable
 
     def initialize(catalog_service, attrs)
       @catalog_service    = catalog_service
@@ -14,6 +14,7 @@ module VCAP::Services::ServiceBrokers::V2
       @errors             = VCAP::Services::ValidationErrors.new
       @free               = attrs['free'].nil? ? true : attrs['free']
       @bindable           = attrs['bindable']
+      @plan_updateable    = attrs['plan_updateable']
       build_schemas(attrs['schemas'])
     end
 
@@ -46,6 +47,7 @@ module VCAP::Services::ServiceBrokers::V2
       validate_hash!(:metadata, metadata) if metadata
       validate_bool!(:free, free) if free
       validate_bool!(:bindable, bindable) if bindable
+      validate_bool!(:plan_updateable, plan_updateable) if plan_updateable
       validate_hash!(:schemas, @schemas_data) if @schemas_data
     end
 
@@ -63,6 +65,7 @@ module VCAP::Services::ServiceBrokers::V2
         metadata:           'Plan metadata',
         free:               'Plan free',
         bindable:           'Plan bindable',
+        plan_updateable:    'Plan updateable',
         schemas:            'Plan schemas',
       }.fetch(name) { raise NotImplementedError }
     end

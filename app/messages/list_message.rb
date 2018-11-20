@@ -9,6 +9,8 @@ module VCAP::CloudController
 
     ALLOWED_PAGINATION_KEYS = [:page, :per_page, :order_by].freeze
 
+    register_allowed_keys ALLOWED_PAGINATION_KEYS
+
     attr_accessor(*ALLOWED_PAGINATION_KEYS, :pagination_params)
     attr_reader :pagination_options
 
@@ -17,6 +19,10 @@ module VCAP::CloudController
       @pagination_params = params.slice(*ALLOWED_PAGINATION_KEYS)
       @pagination_options = PaginationOptions.from_params(params)
       super(params)
+    end
+
+    def to_param_hash(exclude: [])
+      super(exclude: ALLOWED_PAGINATION_KEYS + exclude)
     end
 
     class PaginationOrderValidator < ActiveModel::Validator

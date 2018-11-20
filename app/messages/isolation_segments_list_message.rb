@@ -2,17 +2,18 @@ require 'messages/list_message'
 
 module VCAP::CloudController
   class IsolationSegmentsListMessage < ListMessage
-    register_allowed_keys [:names, :guids, :page, :per_page, :order_by, :order_direction, :organization_guids]
+    register_allowed_keys [
+      :names,
+      :guids,
+      :order_direction,
+      :organization_guids,
+    ]
 
     validates_with NoAdditionalParamsValidator
 
     validates :names, array: true, allow_nil: true
     validates :guids, array: true, allow_nil: true
     validates :organization_guids, array: true, allow_nil: true
-
-    def to_param_hash
-      super(exclude: [:page, :per_page, :order_by])
-    end
 
     def self.from_params(params)
       opts = params.dup

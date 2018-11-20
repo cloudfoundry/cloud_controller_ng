@@ -286,11 +286,11 @@ RSpec.describe SpacesV3Controller, type: :controller do
         it 'includes the name parameter in pagination links' do
           get :index, params: { order_by: 'name', per_page: 1, page: 2 }
 
-          expect(parsed_body['pagination']['first']['href']).to eq("#{link_prefix}/v3/spaces?order_by=name&page=1&per_page=1")
-          expect(parsed_body['pagination']['last']['href']).to eq("#{link_prefix}/v3/spaces?order_by=name&page=4&per_page=1")
+          expect(parsed_body['pagination']['first']['href']).to eq("#{link_prefix}/v3/spaces?order_by=%2Bname&page=1&per_page=1")
+          expect(parsed_body['pagination']['last']['href']).to eq("#{link_prefix}/v3/spaces?order_by=%2Bname&page=4&per_page=1")
 
-          expect(parsed_body['pagination']['previous']['href']).to eq("#{link_prefix}/v3/spaces?order_by=name&page=1&per_page=1")
-          expect(parsed_body['pagination']['next']['href']).to eq("#{link_prefix}/v3/spaces?order_by=name&page=3&per_page=1")
+          expect(parsed_body['pagination']['previous']['href']).to eq("#{link_prefix}/v3/spaces?order_by=%2Bname&page=1&per_page=1")
+          expect(parsed_body['pagination']['next']['href']).to eq("#{link_prefix}/v3/spaces?order_by=%2Bname&page=3&per_page=1")
         end
       end
 
@@ -329,10 +329,10 @@ RSpec.describe SpacesV3Controller, type: :controller do
         it 'includes the created_at parameter in pagination links' do
           get :index, params: { order_by: 'created_at', per_page: 1, page: 2 }
 
-          expect(parsed_body['pagination']['first']['href']).to eq("#{link_prefix}/v3/spaces?order_by=created_at&page=1&per_page=1")
-          expect(parsed_body['pagination']['last']['href']).to eq("#{link_prefix}/v3/spaces?order_by=created_at&page=4&per_page=1")
-          expect(parsed_body['pagination']['previous']['href']).to eq("#{link_prefix}/v3/spaces?order_by=created_at&page=1&per_page=1")
-          expect(parsed_body['pagination']['next']['href']).to eq("#{link_prefix}/v3/spaces?order_by=created_at&page=3&per_page=1")
+          expect(parsed_body['pagination']['first']['href']).to eq("#{link_prefix}/v3/spaces?order_by=%2Bcreated_at&page=1&per_page=1")
+          expect(parsed_body['pagination']['last']['href']).to eq("#{link_prefix}/v3/spaces?order_by=%2Bcreated_at&page=4&per_page=1")
+          expect(parsed_body['pagination']['previous']['href']).to eq("#{link_prefix}/v3/spaces?order_by=%2Bcreated_at&page=1&per_page=1")
+          expect(parsed_body['pagination']['next']['href']).to eq("#{link_prefix}/v3/spaces?order_by=%2Bcreated_at&page=3&per_page=1")
         end
       end
 
@@ -361,10 +361,10 @@ RSpec.describe SpacesV3Controller, type: :controller do
         it 'includes the updated_at parameter in pagination links' do
           get :index, params: { order_by: 'updated_at', per_page: 1, page: 2 }
 
-          expect(parsed_body['pagination']['first']['href']).to eq("#{link_prefix}/v3/spaces?order_by=updated_at&page=1&per_page=1")
-          expect(parsed_body['pagination']['last']['href']).to eq("#{link_prefix}/v3/spaces?order_by=updated_at&page=4&per_page=1")
-          expect(parsed_body['pagination']['previous']['href']).to eq("#{link_prefix}/v3/spaces?order_by=updated_at&page=1&per_page=1")
-          expect(parsed_body['pagination']['next']['href']).to eq("#{link_prefix}/v3/spaces?order_by=updated_at&page=3&per_page=1")
+          expect(parsed_body['pagination']['first']['href']).to eq("#{link_prefix}/v3/spaces?order_by=%2Bupdated_at&page=1&per_page=1")
+          expect(parsed_body['pagination']['last']['href']).to eq("#{link_prefix}/v3/spaces?order_by=%2Bupdated_at&page=4&per_page=1")
+          expect(parsed_body['pagination']['previous']['href']).to eq("#{link_prefix}/v3/spaces?order_by=%2Bupdated_at&page=1&per_page=1")
+          expect(parsed_body['pagination']['next']['href']).to eq("#{link_prefix}/v3/spaces?order_by=%2Bupdated_at&page=3&per_page=1")
         end
       end
 

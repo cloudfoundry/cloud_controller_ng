@@ -12,14 +12,15 @@ module VCAP::Services::ServiceBrokers::V2
         'description' => opts[:description] || 'The description of the service plan',
         'free'        => opts.fetch(:free, true),
         'bindable'    => opts[:bindable],
-        'schemas'     => opts[:schemas] || {}
+        'schemas'     => opts[:schemas] || {},
+        'plan_updateable' => opts[:plan_updateable]
       }
     end
     let(:catalog_service) { instance_double(VCAP::Services::ServiceBrokers::V2::CatalogService) }
     let(:opts) { {} }
 
     describe 'initializing' do
-      let(:opts) { { free: false, bindable: true } }
+      let(:opts) { { free: false, bindable: true, plan_updateable: true } }
 
       it 'should assign attributes' do
         expect(plan.broker_provided_id).to eq 'broker-provided-plan-id'
@@ -29,6 +30,7 @@ module VCAP::Services::ServiceBrokers::V2
         expect(plan.catalog_service).to eq catalog_service
         expect(plan.free).to be false
         expect(plan.bindable).to be true
+        expect(plan.plan_updateable).to be true
         expect(plan.errors).to be_empty
       end
 
@@ -119,6 +121,13 @@ module VCAP::Services::ServiceBrokers::V2
 
         expect(plan).to_not be_valid
         expect(plan.errors.messages).to include 'Plan bindable must be a boolean, but has value "true"'
+      end
+
+      it 'validates that @plan_updateable is a boolean' do
+        plan_attrs['plan_updateable'] = 'true'
+
+        expect(plan).to_not be_valid
+        expect(plan.errors.messages).to include 'Plan updateable must be a boolean, but has value "true"'
       end
 
       it 'validates that @schemas is a hash' do

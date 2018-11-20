@@ -4,9 +4,6 @@ require 'messages/validators/label_selector_requirement_validator'
 module VCAP::CloudController
   class SpacesListMessage < ListMessage
     register_allowed_keys [
-      :page,
-      :per_page,
-      :order_by,
       :names,
       :organization_guids,
       :guids,

@@ -2,7 +2,10 @@ require 'messages/list_message'
 
 module VCAP::CloudController
   class ServiceInstancesListMessage < ListMessage
-    register_allowed_keys [:page, :per_page, :order_by, :names, :space_guids]
+    register_allowed_keys [
+      :names,
+      :space_guids,
+    ]
 
     validates_with NoAdditionalParamsValidator
     validates :names, array: true, allow_nil: true

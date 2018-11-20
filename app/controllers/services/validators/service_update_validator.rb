@@ -45,7 +45,7 @@ module VCAP::CloudController
 
       def validate_changing_plan(current_plan, service, service_instance, requested_plan_guid)
         if plan_update_requested?(requested_plan_guid, current_plan)
-          plan_not_updateable! if service_disallows_plan_update?(service)
+          plan_not_updateable! unless service_allows_plan_update?(service, current_plan)
 
           requested_plan = ServicePlan.find(guid: requested_plan_guid)
           invalid_relation!('Plan') if invalid_plan?(requested_plan, service)
@@ -66,8 +66,8 @@ module VCAP::CloudController
         requested_plan_guid && requested_plan_guid != old_plan.guid
       end
 
-      def service_disallows_plan_update?(service)
-        !service.plan_updateable
+      def service_allows_plan_update?(service, current_plan)
+        current_plan.plan_updateable.nil? ? service.plan_updateable : current_plan.plan_updateable
       end
 
       def invalid_relation!(message)

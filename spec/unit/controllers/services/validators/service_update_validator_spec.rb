@@ -25,6 +25,14 @@ module VCAP::CloudController
         it 'returns true' do
           expect(ServiceUpdateValidator.validate!(service_instance, args)).to eq(true)
         end
+
+        context 'and when plan update requested on a service that allows update' do
+          let(:update_attrs) { { 'service_plan_guid' => new_service_plan.guid } }
+
+          it 'returns true' do
+            expect(ServiceUpdateValidator.validate!(service_instance, args)).to eq(true)
+          end
+        end
       end
 
       context 'when the update to the service instance is invalid' do
@@ -65,11 +73,11 @@ module VCAP::CloudController
         end
 
         context 'when the service does not allow plan updates' do
+          let(:update_attrs) { { 'service_plan_guid' => new_service_plan.guid } }
+
           before do
             service.plan_updateable = false
           end
-
-          let(:update_attrs) { { 'service_plan_guid' => new_service_plan.guid } }
 
           it 'raises a validation error if the plan changes' do
             expect {
@@ -83,6 +91,42 @@ module VCAP::CloudController
             it 'returns true' do
               expect(ServiceUpdateValidator.validate!(service_instance, args)).to eq(true)
             end
+          end
+
+          context 'when the plan has plan_updateable set to true' do
+            before do
+              old_service_plan.plan_updateable = true
+            end
+
+            it 'returns true' do
+              expect(ServiceUpdateValidator.validate!(service_instance, args)).to eq(true)
+            end
+          end
+
+          context 'when the plan has plan_updateable set to false' do
+            before do
+              old_service_plan.plan_updateable = false
+            end
+
+            it 'raises a validation error' do
+              expect {
+                ServiceUpdateValidator.validate!(service_instance, args)
+              }.to raise_error(CloudController::Errors::ApiError, /service does not support changing plans/)
+            end
+          end
+        end
+
+        context 'when the service allows updates but plan does not' do
+          let(:update_attrs) { { 'service_plan_guid' => new_service_plan.guid } }
+
+          before do
+            old_service_plan.plan_updateable = false
+          end
+
+          it 'raises a validation error' do
+            expect {
+              ServiceUpdateValidator.validate!(service_instance, args)
+            }.to raise_error(CloudController::Errors::ApiError, /service does not support changing plans/)
           end
         end
 
