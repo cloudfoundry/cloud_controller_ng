@@ -76,6 +76,7 @@ module VCAP::Services::ServiceBrokers
                 'id'          => plan_id,
                 'name'        => plan_name,
                 'description' => plan_description,
+                'plan_updateable' => true,
                 'free'        => false,
                 'bindable'    => true,
               }.merge(plan_metadata_hash).merge(plan_schemas_hash)
@@ -181,6 +182,7 @@ module VCAP::Services::ServiceBrokers
           'name' => service_plan.name,
           'free' => service_plan.free,
           'description' => service_plan.description,
+          'plan_updateable' => service_plan.plan_updateable,
           'service_guid' => service_plan.service.guid,
           'extra' => '{"cost":"0.0"}',
           'unique_id' => service_plan.unique_id,
@@ -223,6 +225,7 @@ module VCAP::Services::ServiceBrokers
           expect(plan.service).to eq(VCAP::CloudController::Service.last)
           expect(plan.name).to eq(plan_name)
           expect(plan.description).to eq(plan_description)
+          expect(plan.plan_updateable).to eq(true)
           expect(JSON.parse(plan.extra)).to eq({ 'cost' => '0.0' })
           expect(plan.create_instance_schema).to eq('{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}')
           expect(plan.update_instance_schema).to eq('{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}')
@@ -588,6 +591,7 @@ module VCAP::Services::ServiceBrokers
             expect(plan.description).to_not eq(plan_description)
             expect(plan.free).to be true
             expect(plan.bindable).to be false
+            expect(plan.plan_updateable).to be_nil
             expect(plan.create_instance_schema).to be_nil
             expect(plan.update_instance_schema).to be_nil
             expect(plan.create_binding_schema).to be_nil
@@ -601,6 +605,7 @@ module VCAP::Services::ServiceBrokers
             expect(plan.description).to eq(plan_description)
             expect(plan.free).to be false
             expect(plan.bindable).to be true
+            expect(plan.plan_updateable).to be true
             expect(plan.create_instance_schema).to eq('{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}')
             expect(plan.update_instance_schema).to eq('{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}')
             expect(plan.create_binding_schema).to eq('{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}')

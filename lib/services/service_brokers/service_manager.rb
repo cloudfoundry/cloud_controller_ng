@@ -110,6 +110,7 @@ module VCAP::Services::ServiceBrokers
         bindable:    catalog_plan.bindable,
         active:      true,
         extra:       catalog_plan.metadata.try(:to_json),
+        plan_updateable: catalog_plan.plan_updateable,
         create_instance_schema: create_instance,
         update_instance_schema: update_instance,
         create_binding_schema: create_binding,

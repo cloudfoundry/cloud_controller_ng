@@ -14,6 +14,7 @@ module VCAP::CloudController
                       :unique_id,
                       :public,
                       :bindable,
+                      :plan_updateable,
                       :active,
                       :create_instance_schema,
                       :update_instance_schema,
@@ -29,6 +30,7 @@ module VCAP::CloudController
                       :unique_id,
                       :public,
                       :bindable,
+                      :plan_updateable,
                       :create_instance_schema,
                       :update_instance_schema,
                       :create_binding_schema

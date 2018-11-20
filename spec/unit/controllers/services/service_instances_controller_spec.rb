@@ -1861,6 +1861,18 @@ module VCAP::CloudController
           end
         end
 
+        context 'when the broker does not support service level plan updates but supports plan level updates' do
+          let(:old_service_plan) { ServicePlan.make(:v2, plan_updateable: true, service: service) }
+
+          before { service.update(plan_updateable: false) }
+
+          it 'returns 201 and updates to the new plan' do
+            put "/v2/service_instances/#{service_instance.guid}", body
+            expect(last_response).to have_status_code 201
+            expect(service_instance.reload.service_plan.guid).to eq(new_service_plan.guid)
+          end
+        end
+
         describe 'error cases' do
           context 'when the service instance does not exist' do
             it 'returns a ServiceInstanceNotFound error' do
@@ -1899,24 +1911,47 @@ module VCAP::CloudController
             end
           end
 
-          context 'when the broker did not declare support for plan upgrades' do
-            let(:old_service_plan) { ServicePlan.make(:v2) }
-
+          context 'when the broker does not support plan upgrades on service level' do
             before { service.update(plan_updateable: false) }
 
-            it 'does not update the service plan in the database' do
-              put "/v2/service_instances/#{service_instance.guid}", body
-              expect(service_instance.reload.service_plan).to eq(old_service_plan)
+            context 'and the broker does not declare plan_updateable on plan level' do
+              let(:old_service_plan) { ServicePlan.make(:v2, plan_updateable: nil) }
+
+              it 'returns an error response with a useful error to the user' do
+                put "/v2/service_instances/#{service_instance.guid}", body
+
+                expect(last_response.status).to eq(400)
+                expect(last_response.body).to match /The service does not support changing plans/
+              end
+
+              it 'does not update the service plan in the database' do
+                put "/v2/service_instances/#{service_instance.guid}", body
+                expect(service_instance.reload.service_plan).to eq(old_service_plan)
+              end
+
+              it 'does not make an api call when the plan does not support upgrades' do
+                put "/v2/service_instances/#{service_instance.guid}", body
+                expect(a_request(:patch, service_broker_url)).to have_been_made.times(0)
+              end
             end
 
-            it 'does not make an api call when the plan does not support upgrades' do
-              put "/v2/service_instances/#{service_instance.guid}", body
-              expect(a_request(:patch, service_broker_url)).to have_been_made.times(0)
-            end
+            context 'and the broker does not support plan_updateable on plan level' do
+              let(:old_service_plan) { ServicePlan.make(:v2, plan_updateable: false) }
 
-            it 'returns a useful error to the user' do
-              put "/v2/service_instances/#{service_instance.guid}", body
-              expect(last_response.body).to match /The service does not support changing plans/
+              it 'does not update the service plan in the database' do
+                put "/v2/service_instances/#{service_instance.guid}", body
+                expect(service_instance.reload.service_plan).to eq(old_service_plan)
+              end
+
+              it 'does not make an api call when the plan does not support upgrades' do
+                put "/v2/service_instances/#{service_instance.guid}", body
+                expect(a_request(:patch, service_broker_url)).to have_been_made.times(0)
+              end
+
+              it 'returns a useful error to the user' do
+                put "/v2/service_instances/#{service_instance.guid}", body
+                expect(last_response.body).to match /The service does not support changing plans/
+              end
             end
           end
 

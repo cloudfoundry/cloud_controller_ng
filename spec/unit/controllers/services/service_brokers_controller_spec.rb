@@ -27,6 +27,7 @@ module VCAP::CloudController
                 'name' => 'fake-plan',
                 'id' => 'f52eabf8-e38d-422f-8ef9-9dc83b75cc05',
                 'description' => 'Shared fake Server, 5tb persistent disk, 40 max concurrent connections',
+                'plan_updateable' => true,
                 'max_storage_tb' => 5,
                 'metadata' => {
                   'cost' => 0.0,
