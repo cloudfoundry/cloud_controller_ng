@@ -1,30 +1,22 @@
 require 'presenters/v3/base_presenter'
+require 'presenters/mixins/metadata_presentation_helpers'
 
 module VCAP::CloudController::Presenters::V3
   class OrganizationPresenter < BasePresenter
+    include VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers
+
     def to_hash
-      hash = {
-          guid: organization.guid,
-          created_at: organization.created_at,
-          updated_at: organization.updated_at,
-          name: organization.name,
-          links: build_links,
-          metadata: {
-              labels: {},
-              annotations: {}
-          }
+      {
+        guid: organization.guid,
+        created_at: organization.created_at,
+        updated_at: organization.updated_at,
+        name: organization.name,
+        links: build_links,
+        metadata: {
+          labels: hashified_labels(organization.labels),
+          annotations: hashified_annotations(organization.annotations)
+        }
       }
-
-      organization.labels.each do |org_label|
-        key = [org_label[:key_prefix], org_label[:key_name]].compact.join(VCAP::CloudController::LabelHelpers::KEY_SEPARATOR)
-        hash[:metadata][:labels][key] = org_label[:value]
-      end
-
-      organization.annotations.each do |org_annotation|
-        hash[:metadata][:annotations][org_annotation.key] = org_annotation.value
-      end
-
-      hash
     end
 
     private

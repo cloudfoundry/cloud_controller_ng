@@ -3,31 +3,6 @@ require 'presenters/v3/app_presenter'
 
 module VCAP::CloudController::Presenters::V3
   RSpec.describe AppPresenter do
-    let!(:release_label) do
-      VCAP::CloudController::AppLabelModel.make(
-        key_name: 'release',
-        value: 'stable',
-        resource_guid: app.guid
-      )
-    end
-
-    let!(:potato_label) do
-      VCAP::CloudController::AppLabelModel.make(
-        key_prefix: 'maine.gov',
-        key_name: 'potato',
-        value: 'mashed',
-        resource_guid: app.guid
-      )
-    end
-
-    let!(:annotation) do
-      VCAP::CloudController::AppAnnotationModel.make(
-        resource_guid: app.guid,
-        key: 'contacts',
-        value: 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)',
-      )
-    end
-
     let(:app) do
       VCAP::CloudController::AppModel.make(
         name: 'Davis',
@@ -75,8 +50,42 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:lifecycle][:data][:stack]).to eq('the-happiest-stack')
         expect(result[:lifecycle][:data][:buildpacks]).to eq(['git://***:***@github.com/repo', 'limabean'])
         expect(result[:relationships][:space][:data][:guid]).to eq(app.space.guid)
-        expect(result[:metadata][:labels]).to eq('release' => 'stable', 'maine.gov/potato' => 'mashed')
-        expect(result[:metadata][:annotations]).to eq('contacts' => 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)')
+        expect(result[:metadata][:labels]).to eq({})
+        expect(result[:metadata][:annotations]).to eq({})
+      end
+
+      context 'when there are labels and annotations for the app' do
+        let!(:release_label) do
+          VCAP::CloudController::AppLabelModel.make(
+            key_name: 'release',
+            value: 'stable',
+            resource_guid: app.guid
+          )
+        end
+
+        let!(:potato_label) do
+          VCAP::CloudController::AppLabelModel.make(
+            key_prefix: 'maine.gov',
+            key_name: 'potato',
+            value: 'mashed',
+            resource_guid: app.guid
+          )
+        end
+
+        let!(:annotation) do
+          VCAP::CloudController::AppAnnotationModel.make(
+            resource_guid: app.guid,
+            key: 'contacts',
+            value: 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)',
+          )
+        end
+
+        it 'includes the metadata on the presented app' do
+          expect(result[:guid]).to eq(app.guid)
+          expect(result[:name]).to eq(app.name)
+          expect(result[:metadata][:labels]).to eq('release' => 'stable', 'maine.gov/potato' => 'mashed')
+          expect(result[:metadata][:annotations]).to eq('contacts' => 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)')
+        end
       end
 
       context 'when there are decorators' do

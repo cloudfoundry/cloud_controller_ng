@@ -1,10 +1,13 @@
 require 'presenters/v3/base_presenter'
 require 'models/helpers/label_helpers'
+require 'presenters/mixins/metadata_presentation_helpers'
 
 module VCAP::CloudController
   module Presenters
     module V3
       class AppPresenter < BasePresenter
+        include VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers
+
         def to_hash
           hash = {
             guid: app.guid,
@@ -25,19 +28,10 @@ module VCAP::CloudController
             },
             links: build_links,
             metadata: {
-              labels: {},
-              annotations: {}
+              labels: hashified_labels(app.labels),
+              annotations: hashified_annotations(app.annotations)
             }
           }
-
-          app.labels.each do |app_label|
-            key = [app_label[:key_prefix], app_label[:key_name]].compact.join(VCAP::CloudController::LabelHelpers::KEY_SEPARATOR)
-            hash[:metadata][:labels][key] = app_label[:value]
-          end
-
-          app.annotations.each do |app_annotation|
-            hash[:metadata][:annotations][app_annotation[:key]] = app_annotation[:value]
-          end
 
           @decorators.reduce(hash) { |memo, d| d.decorate(memo, [app]) }
         end
