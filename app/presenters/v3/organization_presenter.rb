@@ -10,13 +10,18 @@ module VCAP::CloudController::Presenters::V3
           name: organization.name,
           links: build_links,
           metadata: {
-              labels: {}
+              labels: {},
+              annotations: {}
           }
       }
 
       organization.labels.each do |org_label|
         key = [org_label[:key_prefix], org_label[:key_name]].compact.join(VCAP::CloudController::LabelHelpers::KEY_SEPARATOR)
         hash[:metadata][:labels][key] = org_label[:value]
+      end
+
+      organization.annotations.each do |org_annotation|
+        hash[:metadata][:annotations][org_annotation.key] = org_annotation.value
       end
 
       hash

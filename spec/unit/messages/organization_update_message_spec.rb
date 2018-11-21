@@ -34,7 +34,7 @@ module VCAP::CloudController
 
         describe 'allowed special characters' do
           it 'allows standard ascii characters' do
-            body = { name: "A -_- word 2!?()\'\"&+." }
+            body = { name: 'A -_- word 2!?()\'"&+.' }
             message = OrganizationUpdateMessage.new(body)
             expect(message).to be_valid
           end
@@ -86,6 +86,42 @@ module VCAP::CloudController
           body = { name: 'a' * 255 }
           message = OrganizationUpdateMessage.new(body)
           expect(message).to be_valid
+        end
+      end
+
+      describe 'metadata' do
+        context 'when the annotations params are valid' do
+          let(:params) do
+            {
+              'metadata': {
+                'annotations': {
+                  'potato': 'mashed'
+                }
+              }
+            }
+          end
+
+          it 'is valid and correctly parses the annotations' do
+            message = OrganizationUpdateMessage.new(params)
+            expect(message).to be_valid
+            expect(message.annotations).to include('potato': 'mashed')
+          end
+        end
+
+        context 'when the annotations params are not valid' do
+          let(:params) do
+            {
+              'metadata': {
+                'annotations': 'timmyd'
+              }
+            }
+          end
+
+          it 'is invalid' do
+            message = OrganizationUpdateMessage.new(params)
+            expect(message).not_to be_valid
+            expect(message.errors_on(:metadata)).to include('\'annotations\' is not a hash')
+          end
         end
       end
     end

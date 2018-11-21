@@ -8,6 +8,7 @@ module VCAP::CloudController
         org.lock!
         org.name = message.name if message.requested?(:name)
         LabelsUpdate.update(org, message.labels, OrganizationLabelModel)
+        AnnotationsUpdate.update(org, message.annotations, OrganizationAnnotationModel)
 
         org.save
       end

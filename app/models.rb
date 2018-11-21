@@ -65,6 +65,7 @@ require 'models/runtime/app_label_model'
 require 'models/runtime/organization_label_model'
 require 'models/runtime/space_label_model'
 require 'models/runtime/app_annotation_model'
+require 'models/runtime/organization_annotation_model'
 
 require 'models/services/service'
 require 'models/services/service_binding'

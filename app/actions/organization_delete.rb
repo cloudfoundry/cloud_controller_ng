@@ -1,4 +1,6 @@
 require 'actions/space_delete'
+require 'actions/label_delete'
+require 'actions/annotation_delete'
 
 module VCAP::CloudController
   class OrganizationDelete
@@ -22,7 +24,7 @@ module VCAP::CloudController
         end
 
         Organization.db.transaction do
-          delete_labels(org)
+          delete_metadata(org)
           org.destroy
         end
       end
@@ -35,8 +37,9 @@ module VCAP::CloudController
 
     private
 
-    def delete_labels(org_model)
+    def delete_metadata(org_model)
       LabelDelete.delete(org_model.labels)
+      AnnotationDelete.delete(org_model.annotations)
     end
   end
 end

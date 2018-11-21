@@ -20,6 +20,22 @@ module VCAP::CloudController
       let!(:service_instance) { ManagedServiceInstance.make(space: space) }
       let!(:service_instance_2) { ManagedServiceInstance.make(space: space_2) }
 
+      let!(:org1_label) do
+        VCAP::CloudController::OrganizationLabelModel.make(
+          key_prefix: 'indiana.edu',
+          key_name: 'state',
+          value: 'Indiana',
+          resource_guid: org_1.guid
+        )
+      end
+      let!(:org1_annotation) do
+        VCAP::CloudController::OrganizationAnnotationModel.make(
+          key: 'city',
+          value: 'Monticello',
+          resource_guid: org_1.guid
+        )
+      end
+
       let!(:org_dataset) { Organization.where(guid: [org_1.guid, org_2.guid]) }
       let(:user) { User.make }
       let(:user_email) { 'user@example.com' }
@@ -36,6 +52,12 @@ module VCAP::CloudController
           }.to change { Organization.count }.by(-2)
           expect { org_1.refresh }.to raise_error Sequel::Error, 'Record not found'
           expect { org_2.refresh }.to raise_error Sequel::Error, 'Record not found'
+        end
+
+        it 'deletes associated metadata' do
+          org_delete.delete(org_dataset)
+          expect { org1_label.refresh }.to raise_error Sequel::Error, 'Record not found'
+          expect { org1_annotation.refresh }.to raise_error Sequel::Error, 'Record not found'
         end
       end
 

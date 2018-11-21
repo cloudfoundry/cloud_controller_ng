@@ -21,6 +21,21 @@ module VCAP::CloudController::Presenters::V3
       )
     end
 
+    let!(:organization_annotation_the_first) do
+      VCAP::CloudController::OrganizationAnnotationModel.make(
+        key: 'city',
+        value: 'Monticello',
+        resource_guid: organization.guid
+      )
+    end
+    let!(:organization_annotation_the_second) do
+      VCAP::CloudController::OrganizationAnnotationModel.make(
+        key: 'state',
+        value: 'Indiana',
+        resource_guid: organization.guid
+      )
+    end
+
     describe '#to_hash' do
       let(:result) { OrganizationPresenter.new(organization).to_hash }
 
@@ -31,6 +46,7 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:name]).to eq(organization.name)
         expect(result[:links][:self][:href]).to match(%r{/v3/organizations/#{organization.guid}$})
         expect(result[:metadata][:labels]).to eq('release' => 'stable', 'maine.gov/potato' => 'mashed')
+        expect(result[:metadata][:annotations]).to eq('city' => 'Monticello', 'state' => 'Indiana')
       end
     end
   end

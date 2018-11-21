@@ -14,6 +14,9 @@ module VCAP::CloudController
               labels: {
                 freaky: 'wednesday',
               },
+              annotations: {
+                hello: 'there'
+              }
             },
           })
         end
@@ -25,8 +28,11 @@ module VCAP::CloudController
 
         it 'updates metadata' do
           updated_org = OrganizationUpdate.new.update(org, message)
-          expect(updated_org.reload.labels.first.key_name).to eq 'freaky'
-          expect(updated_org.reload.labels.first.value).to eq 'wednesday'
+          updated_org.reload
+          expect(updated_org.labels.first.key_name).to eq 'freaky'
+          expect(updated_org.labels.first.value).to eq 'wednesday'
+          expect(updated_org.annotations.first.key).to eq 'hello'
+          expect(updated_org.annotations.first.value).to eq 'there'
         end
 
         context 'when model validation fails' do

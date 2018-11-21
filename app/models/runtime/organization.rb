@@ -98,6 +98,7 @@ module VCAP::CloudController
       before_add: proc { |org, quota| org.cancel_action if quota.organization.id != org.id }
 
     one_to_many :labels, class: 'VCAP::CloudController::OrganizationLabelModel', key: :resource_guid, primary_key: :guid
+    one_to_many :annotations, class: 'VCAP::CloudController::OrganizationAnnotationModel', key: :resource_guid, primary_key: :guid
 
     add_association_dependencies(
       owned_private_domains:     :destroy,

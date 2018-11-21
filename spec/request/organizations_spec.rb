@@ -47,7 +47,8 @@ module VCAP::CloudController
               'self' => { 'href' => "#{link_prefix}/v3/organizations/#{created_org.guid}" }
             },
             'metadata' => {
-              'labels' => { 'freaky' => 'friday' }
+              'labels' => { 'freaky' => 'friday' },
+              'annotations' => {}
             }
           }
         )
@@ -88,7 +89,8 @@ module VCAP::CloudController
                   }
                 },
                 'metadata' => {
-                  'labels' => {}
+                  'labels' => {},
+                  'annotations' => {}
                 }
               },
               {
@@ -102,7 +104,8 @@ module VCAP::CloudController
                   }
                 },
                 'metadata' => {
-                  'labels' => {}
+                  'labels' => {},
+                  'annotations' => {}
                 }
               }
             ]
@@ -179,7 +182,8 @@ module VCAP::CloudController
                   }
                 },
                 'metadata' => {
-                  'labels' => {}
+                  'labels' => {},
+                  'annotations' => {}
                 }
               },
               {
@@ -193,7 +197,8 @@ module VCAP::CloudController
                   }
                 },
                 'metadata' => {
-                  'labels' => {}
+                  'labels' => {},
+                  'annotations' => {}
                 }
               }
             ]
@@ -280,6 +285,9 @@ module VCAP::CloudController
           metadata: {
             labels: {
               freaky: 'thursday'
+            },
+            annotations: {
+              quality: 'p sus'
             }
           },
         }.to_json
@@ -300,7 +308,8 @@ module VCAP::CloudController
           'created_at' => iso8601,
           'updated_at' => iso8601,
           'metadata' => {
-            'labels' => { 'freaky' => 'thursday' }
+            'labels' => { 'freaky' => 'thursday' },
+            'annotations' => { 'quality' => 'p sus' }
           }
         }
 
@@ -336,7 +345,8 @@ module VCAP::CloudController
             'created_at' => iso8601,
             'updated_at' => iso8601,
             'metadata' => {
-              'labels' => { 'animal' => 'horse' }
+              'labels' => { 'animal' => 'horse' },
+              'annotations' => {}
             }
           }
 
