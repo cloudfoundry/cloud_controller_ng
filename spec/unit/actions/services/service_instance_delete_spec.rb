@@ -271,6 +271,11 @@ module VCAP::CloudController
             expect(job.run_at).to be < Time.now.utc + poll_interval
           end
         end
+
+        it 'logs audit event start_delete' do
+          expect(event_repository).to receive(:record_service_instance_event).with(:start_delete, service_instance, {}).once
+          service_instance_delete.delete([service_instance])
+        end
       end
 
       context 'when unbinding a service instance fails' do

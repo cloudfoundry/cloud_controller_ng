@@ -313,9 +313,13 @@ module VCAP::CloudController
             expect(service_binding.last_operation.state).to eq('in progress')
           end
 
-          it 'does not audit a create binding event' do
-            service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
-            expect(Event.count).to eq(0)
+          it 'creates an audit.service_binding.start_create event' do
+            service_binding = service_binding_create.create(app, service_instance, message, volume_mount_services_enabled, accepts_incomplete)
+
+            event = Event.last
+            expect(event.type).to eq('audit.service_binding.start_create')
+            expect(event.actee).to eq(service_binding.guid)
+            expect(event.actee_type).to eq('service_binding')
           end
 
           it 'enqueues a fetch job' do

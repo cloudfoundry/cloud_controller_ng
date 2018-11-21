@@ -53,6 +53,7 @@ module VCAP::CloudController
       if service_instance.operation_in_progress?
         job = build_fetch_job(service_instance, request_attrs)
         lock.enqueue_unlock!(job)
+        @services_event_repository.record_service_instance_event(:start_update, service_instance, request_attrs)
       else
         lock.synchronous_unlock!
       end

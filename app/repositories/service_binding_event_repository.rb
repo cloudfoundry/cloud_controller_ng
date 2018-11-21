@@ -6,15 +6,39 @@ module VCAP::CloudController
       extend AppManifestEventMixins
 
       class << self
+        def record_start_create(service_binding, user_audit_info, request, manifest_triggered: false)
+          attrs = censor_request_attributes(request)
+
+          record_event(
+            type:            'audit.service_binding.start_create',
+            service_binding: service_binding,
+            user_audit_info: user_audit_info,
+            metadata:        add_manifest_triggered(manifest_triggered, { request: attrs })
+          )
+        end
+
         def record_create(service_binding, user_audit_info, request, manifest_triggered: false)
-          attrs         = request.dup.stringify_keys
-          attrs['data'] = Presenters::Censorship::PRIVATE_DATA_HIDDEN if attrs.key?('data')
+          attrs = censor_request_attributes(request)
 
           record_event(
             type:            'audit.service_binding.create',
             service_binding: service_binding,
             user_audit_info: user_audit_info,
             metadata:        add_manifest_triggered(manifest_triggered, { request: attrs })
+          )
+        end
+
+        def record_start_delete(service_binding, user_audit_info)
+          record_event(
+            type: 'audit.service_binding.start_delete',
+            service_binding: service_binding,
+            user_audit_info: user_audit_info,
+            metadata: {
+              request: {
+                app_guid: service_binding.app_guid,
+                service_instance_guid: service_binding.service_instance_guid,
+              }
+            }
           )
         end
 
@@ -33,6 +57,12 @@ module VCAP::CloudController
         end
 
         private
+
+        def censor_request_attributes(request)
+          attrs         = request.dup.stringify_keys
+          attrs['data'] = Presenters::Censorship::PRIVATE_DATA_HIDDEN if attrs.key?('data')
+          attrs
+        end
 
         def record_event(type:, service_binding:, user_audit_info:, metadata: {})
           Event.create(
