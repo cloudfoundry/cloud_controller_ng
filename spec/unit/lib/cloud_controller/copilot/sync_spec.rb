@@ -10,10 +10,16 @@ module VCAP::CloudController
       end
 
       context 'syncing' do
-        let(:domain) { SharedDomain.make(name: 'example.org') }
-        let(:route) { Route.make(domain: domain, host: 'some-host', path: '/some/path') }
         let(:app) { VCAP::CloudController::AppModel.make }
+        let(:domain) { SharedDomain.make(name: 'example.org') }
+        let(:internal_domain) { SharedDomain.make(name: 'example.internal', internal: true) }
+
+        let(:route) { Route.make(domain: domain, host: 'some-host', path: '/some/path') }
+        let(:internal_route) { Route.make(domain: internal_domain, host: 'internal-host') }
+
         let!(:route_mapping) { RouteMappingModel.make(route: route, app: app, process_type: 'web') }
+        let!(:internal_route_mapping) { RouteMappingModel.make(route: internal_route, app: app, process_type: 'web') }
+
         let!(:web_process_model) { VCAP::CloudController::ProcessModel.make(type: 'web', app: app) }
         let!(:worker_process_model) { VCAP::CloudController::ProcessModel.make(type: 'worker', app: app) }
 
@@ -29,12 +35,22 @@ module VCAP::CloudController
               routes: [{
                 guid: route.guid,
                 host: route.fqdn,
-                path: route.path
+                path: route.path,
+                internal: false
+              }, {
+                guid: internal_route.guid,
+                host: internal_route.fqdn,
+                path: '',
+                internal: true
               }],
               route_mappings: [{
                 capi_process_guid: web_process_model.guid,
                 route_guid: route_mapping.route_guid,
                 route_weight: route_mapping.weight
+              }, {
+                capi_process_guid: web_process_model.guid,
+                route_guid: internal_route_mapping.route_guid,
+                route_weight: internal_route_mapping.weight
               }],
               capi_diego_process_associations: [{
                 capi_process_guid: web_process_model.guid,
@@ -56,12 +72,22 @@ module VCAP::CloudController
                   routes: [{
                     guid: route.guid,
                     host: route.fqdn,
-                    path: route.path
+                    path: route.path,
+                    internal: false
+                  }, {
+                    guid: internal_route.guid,
+                    host: internal_route.fqdn,
+                    path: '',
+                    internal: true
                   }],
                   route_mappings: [{
                     capi_process_guid: web_process_model.guid,
                     route_guid: route_mapping.route_guid,
                     route_weight: route_mapping.weight
+                  }, {
+                    capi_process_guid: web_process_model.guid,
+                    route_guid: internal_route_mapping.route_guid,
+                    route_weight: internal_route_mapping.weight
                   }],
                   capi_diego_process_associations: [{
                     capi_process_guid: web_process_model.guid,
@@ -96,8 +122,8 @@ module VCAP::CloudController
 
           expect(Copilot::Adapter).to have_received(:bulk_sync) do |args|
             expect(args[:routes]).to match_array([
-              { guid: route_1.guid, host: route_1.fqdn, path: route_1.path },
-              { guid: route_2.guid, host: route_2.fqdn, path: route_2.path }
+              { guid: route_1.guid, host: route_1.fqdn, path: route_1.path, internal: false },
+              { guid: route_2.guid, host: route_2.fqdn, path: route_2.path, internal: false }
             ])
             expect(args[:route_mappings]).to match_array([
               {
