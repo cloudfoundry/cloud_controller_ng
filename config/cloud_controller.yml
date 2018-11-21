@@ -49,6 +49,7 @@ completed_tasks:
 default_app_memory: 1024 #mb
 default_app_disk_in_mb: 1024
 maximum_app_disk_in_mb: 2048
+max_retained_deployments_per_app: 100
 
 broker_client_default_async_poll_interval_seconds: 60
 broker_client_max_async_poll_duration_minutes: 10080

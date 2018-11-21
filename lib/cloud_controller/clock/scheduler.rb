@@ -5,17 +5,18 @@ require 'cloud_controller/clock/job_timeout_calculator'
 module VCAP::CloudController
   class Scheduler
     CLEANUPS = [
-      { name: 'app_usage_events', class: Jobs::Runtime::AppUsageEventsCleanup, time: '18:00', cutoff: true },
-      { name: 'audit_events', class: Jobs::Runtime::EventsCleanup, time: '20:00', cutoff: true },
-      { name: 'failed_jobs', class: Jobs::Runtime::FailedJobsCleanup, time: '21:00', cutoff: true },
-      { name: 'service_usage_events', class: Jobs::Services::ServiceUsageEventsCleanup, time: '22:00', cutoff: true },
-      { name: 'completed_tasks', class: Jobs::Runtime::PruneCompletedTasks, time: '23:00', cutoff: true },
-      { name: 'expired_blob_cleanup', class: Jobs::Runtime::ExpiredBlobCleanup, time: '00:00', cutoff: false },
-      { name: 'expired_resource_cleanup', class: Jobs::Runtime::ExpiredResourceCleanup, time: '00:30', cutoff: false },
-      { name: 'expired_orphaned_blob_cleanup', class: Jobs::Runtime::ExpiredOrphanedBlobCleanup, time: '01:00', cutoff: false },
-      { name: 'orphaned_blobs_cleanup', class: Jobs::Runtime::OrphanedBlobsCleanup, time: '01:30', priority: Clock::MEDIUM_PRIORITY, cutoff: false },
-      { name: 'pollable_job_cleanup', class: Jobs::Runtime::PollableJobCleanup, time: '02:00', cutoff: false },
-      { name: 'request_counts_cleanup', class: Jobs::Runtime::RequestCountsCleanup, time: '02:30', cutoff: false },
+      { name: 'app_usage_events', class: Jobs::Runtime::AppUsageEventsCleanup, time: '18:00', arg_from_config: [:app_usage_events, :cutoff_age_in_days] },
+      { name: 'audit_events', class: Jobs::Runtime::EventsCleanup, time: '20:00', arg_from_config: [:audit_events, :cutoff_age_in_days] },
+      { name: 'failed_jobs', class: Jobs::Runtime::FailedJobsCleanup, time: '21:00', arg_from_config: [:failed_jobs, :cutoff_age_in_days] },
+      { name: 'service_usage_events', class: Jobs::Services::ServiceUsageEventsCleanup, time: '22:00', arg_from_config: [:service_usage_events, :cutoff_age_in_days] },
+      { name: 'completed_tasks', class: Jobs::Runtime::PruneCompletedTasks, time: '23:00', arg_from_config: [:completed_tasks, :cutoff_age_in_days] },
+      { name: 'expired_blob_cleanup', class: Jobs::Runtime::ExpiredBlobCleanup, time: '00:00' },
+      { name: 'expired_resource_cleanup', class: Jobs::Runtime::ExpiredResourceCleanup, time: '00:30' },
+      { name: 'expired_orphaned_blob_cleanup', class: Jobs::Runtime::ExpiredOrphanedBlobCleanup, time: '01:00' },
+      { name: 'orphaned_blobs_cleanup', class: Jobs::Runtime::OrphanedBlobsCleanup, time: '01:30', priority: Clock::MEDIUM_PRIORITY },
+      { name: 'pollable_job_cleanup', class: Jobs::Runtime::PollableJobCleanup, time: '02:00' },
+      { name: 'request_counts_cleanup', class: Jobs::Runtime::RequestCountsCleanup, time: '02:30' },
+      { name: 'prune_completed_deployments', class: Jobs::Runtime::PruneCompletedDeployments, time: '03:00', arg_from_config: [:max_retained_deployments_per_app] },
     ].freeze
 
     FREQUENTS = [
@@ -80,9 +81,9 @@ module VCAP::CloudController
 
         @clock.schedule_daily_job(clock_opts) do
           klass = cleanup_config[:class]
-          if cleanup_config[:cutoff]
-            cutoff_age_in_days = @config.get(cleanup_config[:name].to_sym, :cutoff_age_in_days)
-            klass.new(cutoff_age_in_days)
+
+          if cleanup_config[:arg_from_config]
+            klass.new(@config.get(*cleanup_config[:arg_from_config]))
           else
             klass.new
           end
