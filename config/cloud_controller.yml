@@ -248,6 +248,9 @@ diego:
     key_file: /var/vcap/jobs/cloud_controller_ng/config/certs/bbs_client.key
     cert_file: /var/vcap/jobs/cloud_controller_ng/config/certs/bbs_client.crt
     ca_file: /var/vcap/jobs/cloud_controller_ng/config/certs/bbs_ca.crt
+    connect_timeout: 10
+    send_timeout: 10
+    receive_timeout: 10
   pid_limit: 2048
 
 opi:
