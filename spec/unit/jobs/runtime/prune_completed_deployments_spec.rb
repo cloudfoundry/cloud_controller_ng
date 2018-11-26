@@ -26,7 +26,7 @@ module VCAP::CloudController
           job.perform
 
           expect(DeploymentModel.count).to eq(15)
-          expect(DeploymentModel.map(&:id)).to eq((36..50).to_a)
+          expect(DeploymentModel.map(&:id)).to match_array((36..50).to_a)
         end
 
         it 'deletes all canceled deployments over the limit' do
@@ -40,7 +40,7 @@ module VCAP::CloudController
           job.perform
 
           expect(DeploymentModel.count).to eq(15)
-          expect(DeploymentModel.map(&:id)).to eq((36..50).to_a)
+          expect(DeploymentModel.map(&:id)).to match_array((36..50).to_a)
         end
 
         it 'does NOT delete any deploying deployments over the limit' do
@@ -54,7 +54,7 @@ module VCAP::CloudController
           job.perform
 
           expect(DeploymentModel.count).to eq(50)
-          expect(DeploymentModel.map(&:id)).to eq((1..50).to_a)
+          expect(DeploymentModel.map(&:id)).to match_array((1..50).to_a)
         end
 
         it 'does NOT delete any canceling deployments over the limit' do
@@ -68,7 +68,7 @@ module VCAP::CloudController
           job.perform
 
           expect(DeploymentModel.count).to eq(50)
-          expect(DeploymentModel.map(&:id)).to eq((1..50).to_a)
+          expect(DeploymentModel.order(Sequel.asc(:created_at)).map(&:id)).to eq((1..50).to_a)
         end
 
         it 'does not delete in-flight deployments over the limit' do
@@ -86,7 +86,7 @@ module VCAP::CloudController
           job.perform
 
           expect(DeploymentModel.count).to be(35)
-          expect(DeploymentModel.map(&:id)).to eq((21..40).to_a + (46..60).to_a)
+          expect(DeploymentModel.order(Sequel.asc(:created_at)).map(&:id)).to eq((21..40).to_a + (46..60).to_a)
         end
 
         it 'calls destroy on the Deployment so association dependencies are respected' do
