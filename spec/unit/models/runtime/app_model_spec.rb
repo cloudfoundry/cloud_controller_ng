@@ -5,6 +5,84 @@ module VCAP::CloudController
     let(:app_model) { AppModel.create(space: space, name: 'some-name') }
     let(:space) { Space.make }
 
+    describe '#oldest_web_process' do
+      context 'when there are no web processes' do
+        it 'returns nil' do
+          expect(app_model.oldest_web_process).to be_nil
+        end
+      end
+
+      context 'when there are multiple web processes' do
+        let!(:web_process) do
+          VCAP::CloudController::ProcessModel.make(
+            app: app_model,
+            command: 'old command!',
+            instances: 3,
+            type: VCAP::CloudController::ProcessTypes::WEB,
+            created_at: Time.now - 24.hours
+          )
+        end
+        let!(:newer_web_process) do
+          VCAP::CloudController::ProcessModel.make(
+            app: app_model,
+            command: 'new command!',
+            instances: 4,
+            type: VCAP::CloudController::ProcessTypes::WEB,
+            created_at: Time.now - 23.hours
+          )
+        end
+
+        it 'returns the oldest one' do
+          expect(app_model.oldest_web_process).to eq(web_process)
+        end
+      end
+    end
+
+    describe '#newest_web_process' do
+      context 'when there are no web processes' do
+        it 'returns nil' do
+          expect(app_model.oldest_web_process).to be_nil
+        end
+      end
+
+      context 'when there are multiple web processes' do
+        let(:created_at_for_new_processes) { Time.now - 23.hours }
+
+        let!(:web_process) do
+          VCAP::CloudController::ProcessModel.make(
+            app: app_model,
+            command: 'old command!',
+            instances: 3,
+            type: VCAP::CloudController::ProcessTypes::WEB,
+            created_at: Time.now - 24.hours
+          )
+        end
+        let!(:newer_web_process) do
+          VCAP::CloudController::ProcessModel.make(
+            app: app_model,
+            command: 'new command!',
+            instances: 4,
+            type: VCAP::CloudController::ProcessTypes::WEB,
+            created_at: created_at_for_new_processes
+          )
+        end
+        let!(:most_newest_web_process) do
+          VCAP::CloudController::ProcessModel.make(
+            app: app_model,
+            command: 'new command!',
+            instances: 4,
+            type: VCAP::CloudController::ProcessTypes::WEB,
+            created_at: created_at_for_new_processes
+          )
+        end
+
+        it 'returns the newest one' do
+          expect(app_model.newest_web_process).to eq(most_newest_web_process)
+          expect(newer_web_process.id).to be < most_newest_web_process.id
+        end
+      end
+    end
+
     describe '#staging_in_progress' do
       context 'when a build is in staging state' do
         let!(:build) { BuildModel.make(app_guid: app_model.guid, state: BuildModel::STAGING_STATE) }

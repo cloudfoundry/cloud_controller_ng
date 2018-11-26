@@ -9,13 +9,17 @@ module VCAP::CloudController
     let(:user_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email) }
     let(:space) { Space.make }
     let(:app) { AppModel.make(space: space) }
+    let(:process1) { ProcessModel.make(app: app, type: 'other') }
+    let(:process2) { ProcessModel.make(app: app, type: 'other') }
     let(:route) { Route.make(space: space) }
     let!(:route_mapping) { RouteMappingModel.make(app: app, route: route, process_type: 'other', guid: 'go wild') }
-    let(:route_handler) { instance_double(ProcessRouteHandler, update_route_information: nil) }
+    let(:process1_route_handler) { instance_double(ProcessRouteHandler, update_route_information: nil) }
+    let(:process2_route_handler) { instance_double(ProcessRouteHandler, update_route_information: nil) }
     let(:event_repository) { instance_double(Repositories::AppEventRepository) }
 
     before do
-      allow(ProcessRouteHandler).to receive(:new).and_return(route_handler)
+      allow(ProcessRouteHandler).to receive(:new).with(process1).and_return(process1_route_handler)
+      allow(ProcessRouteHandler).to receive(:new).with(process2).and_return(process2_route_handler)
       allow(Repositories::AppEventRepository).to receive(:new).and_return(event_repository)
       allow(event_repository).to receive(:record_unmap_route)
     end
@@ -40,9 +44,10 @@ module VCAP::CloudController
           expect(route_mapping_2.exists?).to be_falsey
         end
 
-        it 'delegates to the route handler to update route information without process validation' do
+        it 'updates all processes mapped to the route via the route handler' do
           route_mapping_delete.delete(route_mapping)
-          expect(route_handler).to have_received(:update_route_information).with(perform_validation: false)
+          expect(process1_route_handler).to have_received(:update_route_information).with(perform_validation: false)
+          expect(process2_route_handler).to have_received(:update_route_information).with(perform_validation: false)
         end
 
         describe 'audit events' do
@@ -94,7 +99,8 @@ module VCAP::CloudController
 
         it 'does not delegate to the route handler to update route information' do
           route_mapping_delete.delete(route_mapping)
-          expect(route_handler).not_to have_received(:update_route_information)
+          expect(process1_route_handler).not_to have_received(:update_route_information)
+          expect(process2_route_handler).not_to have_received(:update_route_information)
         end
 
         it 'still records an event for un mapping a route to an app' do

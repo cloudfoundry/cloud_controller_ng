@@ -20,21 +20,25 @@ module VCAP::CloudController
 
         def map_route(route_mapping)
           with_guardrails do
-            copilot_client.map_route(
-              capi_process_guid: route_mapping.process.guid,
-              route_guid: route_mapping.route.guid,
-              route_weight: route_mapping.weight
-            )
+            route_mapping.processes.each do |process|
+              copilot_client.map_route(
+                capi_process_guid: process.guid,
+                route_guid: route_mapping.route_guid,
+                route_weight: route_mapping.weight
+              )
+            end
           end
         end
 
         def unmap_route(route_mapping)
           with_guardrails do
-            copilot_client.unmap_route(
-              capi_process_guid: route_mapping.process.guid,
-              route_guid: route_mapping.route.guid,
-              route_weight: route_mapping.weight
-            )
+            route_mapping.processes.each do |process|
+              copilot_client.unmap_route(
+                capi_process_guid: process.guid,
+                route_guid: route_mapping.route_guid,
+                route_weight: route_mapping.weight
+              )
+            end
           end
         end
 

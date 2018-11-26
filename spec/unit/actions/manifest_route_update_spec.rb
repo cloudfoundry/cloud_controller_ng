@@ -16,6 +16,7 @@ module VCAP::CloudController
     describe '#update' do
       let!(:app) { AppModel.make }
       let!(:process) { ProcessModel.make(app: app) }
+      let!(:another_process) { ProcessModel.make(app: app) }
 
       context 'when the route already exists' do
         let(:domain) { VCAP::CloudController::SharedDomain.make(name: 'tomato.avocado-toast.com') }

@@ -24,7 +24,7 @@ RSpec.describe 'Route Mappings' do
 
       post '/v3/route_mappings', body.to_json, developer_headers
 
-      expect(last_response.status).to eq(201), last_response.body
+      expect(last_response.status).to eq(201)
       route_mapping = VCAP::CloudController::RouteMappingModel.last
 
       expected_response = {
@@ -89,7 +89,7 @@ RSpec.describe 'Route Mappings' do
 
       patch "/v3/route_mappings/#{route_mapping.guid}", body.to_json, developer_headers
 
-      expect(last_response.status).to eq(201), last_response.body
+      expect(last_response.status).to eq(201)
 
       expected_response = {
           'guid'       => route_mapping.guid,

@@ -2,6 +2,35 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe RouteMappingModel do
+    describe '#process' do
+      let(:space) { VCAP::CloudController::Space.make }
+      let(:route) { VCAP::CloudController::Route.make(space: space) }
+      let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
+      let!(:web_process) do
+        VCAP::CloudController::ProcessModel.make(
+          app: app_model,
+          command: 'old command!',
+          instances: 3,
+          type: VCAP::CloudController::ProcessTypes::WEB,
+          created_at: Time.now - 24.hours
+        )
+      end
+      let!(:newer_web_process) do
+        VCAP::CloudController::ProcessModel.make(
+          app: app_model,
+          command: 'new command!',
+          instances: 4,
+          type: VCAP::CloudController::ProcessTypes::WEB,
+          created_at: Time.now - 23.hours
+        )
+      end
+
+      it 'returns the newest process for the given type to maintain backwards compatibility with v2' do
+        route_mapping = RouteMappingModel.make(app: app_model, route: route, process_type: web_process.type)
+        expect(route_mapping.process.guid).to eq(newer_web_process.guid)
+      end
+    end
+
     describe 'validations' do
       let(:space) { VCAP::CloudController::Space.make }
       let(:route) { VCAP::CloudController::Route.make(space: space) }

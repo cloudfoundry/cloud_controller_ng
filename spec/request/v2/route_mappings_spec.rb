@@ -16,7 +16,7 @@ RSpec.describe 'RouteMappings' do
 
     it 'displays the route mapping' do
       get "/v2/route_mappings/#{route_mapping.guid}", nil, headers_for(user)
-      expect(last_response.status).to eq(200)
+      expect(last_response.status).to eq(200), last_response.body
 
       parsed_response = MultiJson.load(last_response.body)
       expect(parsed_response).to be_a_response_like({
@@ -183,7 +183,7 @@ RSpec.describe 'RouteMappings' do
 
     it 'deletes a route mapping' do
       delete "/v2/route_mappings/#{route_mapping.guid}", nil, headers_for(user)
-      expect(last_response.status).to eq(204)
+      expect(last_response.status).to eq(204), last_response.body
 
       expect(route_mapping.exists?).to be_falsey
 

@@ -10,7 +10,12 @@ module VCAP::CloudController
                             left_primary_key: :app_guid, right_primary_key: :guid, right_key: :space_guid
 
     many_to_one :process, class: 'VCAP::CloudController::ProcessModel',
-                          key: [:app_guid, :process_type], primary_key: [:app_guid, :type]
+      key: [:app_guid, :process_type], primary_key: [:app_guid, :type] do |dataset|
+        dataset.order(Sequel.desc(:created_at), Sequel.desc(:id))
+      end
+
+    one_to_many :processes, class: 'VCAP::CloudController::ProcessModel',
+      primary_key: [:app_guid, :process_type], key: [:app_guid, :type]
 
     def validate
       validates_presence [:app_port]

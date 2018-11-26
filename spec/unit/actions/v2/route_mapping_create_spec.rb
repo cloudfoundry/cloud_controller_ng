@@ -12,6 +12,7 @@ module VCAP::CloudController
       let(:user_email) { '1@2.3' }
       let(:user_audit_info) { UserAuditInfo.new(user_email: user_email, user_guid: user_guid) }
       let(:process) { ProcessModel.make(:process, app: app, type: process_type, ports: ports, health_check_type: 'none') }
+      let!(:process2) { ProcessModel.make(:process, app: app, type: process_type, ports: ports, health_check_type: 'none') }
       let(:process_type) { 'web' }
       let(:ports) { [8888] }
       let(:requested_port) { 8888 }
@@ -29,7 +30,7 @@ module VCAP::CloudController
           expect {
             route_mapping = route_mapping_create.add
             expect(route_mapping.route.guid).to eq(route.guid)
-            expect(route_mapping.process.guid).to eq(process.guid)
+            expect(route_mapping.processes.map(&:guid)).to contain_exactly(process.guid, process2.guid)
           }.to change { RouteMappingModel.count }.by(1)
         end
 
@@ -272,7 +273,7 @@ module VCAP::CloudController
             expect {
               route_mapping = route_mapping_create.add
               expect(route_mapping.route.guid).to eq(route.guid)
-              expect(route_mapping.process.guid).to eq(process.guid)
+              expect(route_mapping.processes.map(&:guid)).to contain_exactly(process.guid)
               expect(route_mapping.app_port).to eq(8888)
             }.to change { RouteMappingModel.count }.by(1)
           end
@@ -295,7 +296,7 @@ module VCAP::CloudController
             expect {
               route_mapping = route_mapping_create.add
               expect(route_mapping.route.guid).to eq(route.guid)
-              expect(route_mapping.process.guid).to eq(process.guid)
+              expect(route_mapping.processes.map(&:guid)).to contain_exactly(process.guid, process2.guid)
             }.to change { RouteMappingModel.count }.by(1)
           end
 

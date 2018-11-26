@@ -116,7 +116,7 @@ module VCAP::CloudController
           deployment.reload
           deployment.app.reload
 
-          after_web_process = deployment.app.web_process
+          after_web_process = deployment.app.web_processes.first
           expect(after_web_process.guid).to eq(deploying_web_process_guid)
           expect(after_web_process.instances).to eq(original_web_process_instance_count)
 
@@ -377,7 +377,7 @@ module VCAP::CloudController
         it 'it scales up the most recent interim web process' do
           subject.cancel
           expect(interim_deploying_web_process.reload.instances).to eq(original_web_process_instance_count)
-          expect(app.reload.web_process.guid).to eq(interim_deploying_web_process.guid)
+          expect(app.reload.web_processes.first.guid).to eq(interim_deploying_web_process.guid)
         end
 
         it 'sets the most recent interim web process as the only web process' do

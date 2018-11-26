@@ -222,7 +222,6 @@ module VCAP::CloudController
 
     def validate
       validates_presence :app
-      validate_uniqueness_of_type_for_same_app_model
 
       copy_buildpack_errors
 
@@ -237,13 +236,6 @@ module VCAP::CloudController
     def validate_health_check_http_endpoint
       if health_check_type == HealthCheckTypes::HTTP && !UriUtils.is_uri_path?(health_check_http_endpoint)
         errors.add(:health_check_http_endpoint, "HTTP health check endpoint is not a valid URI path: #{health_check_http_endpoint}")
-      end
-    end
-
-    def validate_uniqueness_of_type_for_same_app_model
-      if non_unique_process_types.present? && new?
-        non_unique_process_types_message = non_unique_process_types.push(type).sort.join(', ')
-        errors.add(:type, Sequel.lit("application process types must be unique (case-insensitive), received: [#{non_unique_process_types_message}]"))
       end
     end
 

@@ -56,7 +56,7 @@ RSpec.describe 'App Manifests' do
     end
 
     it 'applies the manifest' do
-      web_process = app_model.web_process
+      web_process = app_model.web_processes.first
       expect(web_process.instances).to eq(1)
 
       post "/v3/apps/#{app_model.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
@@ -115,7 +115,7 @@ RSpec.describe 'App Manifests' do
         Delayed::Worker.new.work_off
         expect(VCAP::CloudController::PollableJobModel.find(guid: job_guid)).to be_complete
 
-        web_process = app_model.web_process
+        web_process = app_model.web_processes.first
         expect(web_process.memory).to eq(321)
         expect(web_process.disk_quota).to eq(321)
       end
@@ -287,7 +287,7 @@ RSpec.describe 'App Manifests' do
         let!(:process2) { VCAP::CloudController::ProcessModel.make(app: app_model, type: 'worker') }
 
         it 'applies the manifest' do
-          web_process = app_model.web_process
+          web_process = app_model.web_processes.first
           expect(web_process.instances).to eq(1)
 
           post "/v3/apps/#{app_model.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
@@ -321,7 +321,7 @@ RSpec.describe 'App Manifests' do
 
       context 'when some of the process types do NOT exist for the app yet' do
         it 'creates the processes and applies the manifest' do
-          web_process = app_model.web_process
+          web_process = app_model.web_processes.first
           expect(web_process.instances).to eq(1)
 
           post "/v3/apps/#{app_model.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)

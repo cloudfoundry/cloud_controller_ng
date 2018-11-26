@@ -14,7 +14,7 @@ module VCAP::CloudController
           raise SetCurrentDropletError.new(e.message)
         end
 
-        web_process = app.web_process
+        web_process = app.oldest_web_process
         previous_deployment = DeploymentModel.find(app: app, state: DeploymentModel::DEPLOYING_STATE)
 
         desired_instances = web_process.instances
@@ -41,7 +41,7 @@ module VCAP::CloudController
           revision = RevisionCreate.create(app)
           process = create_deployment_process(app, deployment.guid, web_process, revision)
           deployment.update(deploying_web_process: process, revision_guid: revision.guid, revision_version: revision.version)
-          web_process.routes.each { |r| RouteMappingCreate.add(user_audit_info, r, process) }
+          web_process.routes.each { |r| RouteMappingCreate.add(user_audit_info: user_audit_info, route: r, process_type: process.type, app: app) }
         end
         record_audit_event(deployment, droplet, user_audit_info)
         deployment

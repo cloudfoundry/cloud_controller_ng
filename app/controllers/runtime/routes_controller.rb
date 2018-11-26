@@ -255,7 +255,7 @@ module VCAP::CloudController
 
       before_update(route)
 
-      process = AppModel.find(guid: request_attrs['app']).try(:web_process)
+      process = AppModel.find(guid: request_attrs['app']).try(:newest_web_process)
       raise CloudController::Errors::ApiError.new_from_details('AppNotFound', app_guid) unless process
 
       begin
@@ -284,7 +284,7 @@ module VCAP::CloudController
 
       before_update(route)
 
-      process = AppModel.find(guid: request_attrs['app']).try(:web_process)
+      process = AppModel.find(guid: request_attrs['app']).try(:newest_web_process)
       raise CloudController::Errors::ApiError.new_from_details('AppNotFound', app_guid) unless process
 
       route_mapping = RouteMappingModel.find(app: process.app, route: route, process: process)

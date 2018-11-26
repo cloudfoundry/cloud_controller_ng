@@ -12,28 +12,30 @@ module VCAP::CloudController
     DUPLICATE_MESSAGE = 'Duplicate Route Mapping - Only one route mapping may exist for an application, route, and port'.freeze
 
     class << self
-      def add(user_audit_info, route, process, manifest_triggered: false, weight: nil)
-        validate!(process.app, route)
+      def add(user_audit_info:, route:, process_type:, app:, manifest_triggered: false, weight: nil)
+        validate!(app, route)
 
         route_mapping_attrs = {
-          app: process.app,
+          app: app,
           route: route,
-          process_type: process.type,
+          process_type: process_type,
           app_port: VCAP::CloudController::ProcessModel::DEFAULT_HTTP_PORT,
           weight: weight
         }.compact
 
         route_mapping = RouteMappingModel.new(route_mapping_attrs)
 
-        route_handler = ProcessRouteHandler.new(process)
-
         RouteMappingModel.db.transaction do
           route_mapping.save
-          route_handler.update_route_information
+
+          app.processes_dataset.where(type: process_type).each do |process|
+            ProcessRouteHandler.new(process).update_route_information
+          end
+
           Copilot::Adapter.map_route(route_mapping)
 
           Repositories::AppEventRepository.new.record_map_route(
-            process.app,
+            app,
             route,
             user_audit_info,
             route_mapping: route_mapping,

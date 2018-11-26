@@ -11,7 +11,9 @@ module VCAP::CloudController
       route_mappings.each do |route_mapping|
         logger.debug("removing route mapping: #{route_mapping.inspect}")
 
-        route_handler = ProcessRouteHandler.new(route_mapping.process)
+        route_handlers = route_mapping.processes.map do |process|
+          ProcessRouteHandler.new(process)
+        end
 
         RouteMappingModel.db.transaction do
           event_repository.record_unmap_route(
@@ -27,7 +29,7 @@ module VCAP::CloudController
 
           route_mapping.destroy
 
-          route_handler.update_route_information(perform_validation: false)
+          route_handlers.each { |handler| handler.update_route_information(perform_validation: false) }
         end
       end
     end

@@ -15,7 +15,7 @@ module VCAP::CloudController
     query_parameters :app_guid, :route_guid
 
     def read(guid)
-      route_mapping = RouteMappingModel.where(guid: guid).eager(:route, :process, app: :space).all.first
+      route_mapping = RouteMappingModel.where(guid: guid).eager(:route, app: :space).all.first
       raise CloudController::Errors::ApiError.new_from_details('RouteMappingNotFound', guid) unless route_mapping && route_mapping.process_type == ProcessTypes::WEB
 
       validate_access(:read, route_mapping)
@@ -28,7 +28,7 @@ module VCAP::CloudController
       logger.debug 'cc.create', model: self.class.model_class_name, attributes: redact_attributes(:create, request_attrs)
 
       route   = Route.where(guid: request_attrs['route_guid']).eager(:space).all.first
-      process = ProcessModel.where(guid: request_attrs['app_guid']).eager(app: :space).all.first
+      process = AppModel.find(guid: request_attrs['app_guid']).try(:newest_web_process)
 
       raise CloudController::Errors::ApiError.new_from_details('RouteNotFound', request_attrs['route_guid']) unless route
       raise CloudController::Errors::ApiError.new_from_details('AppNotFound', request_attrs['app_guid']) unless process
@@ -56,7 +56,7 @@ module VCAP::CloudController
     end
 
     def delete(guid)
-      route_mapping = RouteMappingModel.where(guid: guid).eager(:route, :process, app: :space).all.first
+      route_mapping = RouteMappingModel.where(guid: guid).eager(:route, :processes, app: :space).all.first
 
       raise CloudController::Errors::ApiError.new_from_details('RouteMappingNotFound', guid) unless route_mapping
       raise CloudController::Errors::ApiError.new_from_details('NotAuthorized') unless Permissions.new(SecurityContext.current_user).can_write_to_space?(route_mapping.space.guid)

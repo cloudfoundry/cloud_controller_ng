@@ -494,22 +494,6 @@ module VCAP::CloudController
           end
         end
       end
-
-      describe 'uniqueness of types for v3 app processes' do
-        subject(:process) { ProcessModelFactory.make }
-        let(:app_model) { AppModel.make }
-
-        before do
-          ProcessModel.make(app: app_model, type: 'web')
-        end
-
-        it 'validates uniqueness of process types for the belonging app' do
-          msg = 'application process types must be unique (case-insensitive), received: [Web, web]'
-          expect {
-            ProcessModel.make(app: app_model, type: 'Web')
-          }.to raise_error(Sequel::ValidationFailed).with_message(msg)
-        end
-      end
     end
 
     describe 'Serialization' do

@@ -21,8 +21,6 @@ module VCAP::CloudController
 
         app.name = message.name if message.requested?(:name)
 
-        update_app_command(app, message) if message.requested?(:command)
-        update_app_env(app, message) if message.requested?(:env)
         LabelsUpdate.update(app, message.labels, AppLabelModel)
         AnnotationsUpdate.update(app, message.annotations, AppAnnotationModel)
 
@@ -49,15 +47,6 @@ module VCAP::CloudController
     end
 
     private
-
-    def update_app_command(app, message)
-      app.web_process.command = message.command
-      app.web_process.save
-    end
-
-    def update_app_env(app, message)
-      app.environment_variables = existing_environment_variables_for(app).merge(message.env).compact
-    end
 
     def using_disabled_custom_buildpack?(app)
       app.lifecycle_data.using_custom_buildpack? && custom_buildpacks_disabled?

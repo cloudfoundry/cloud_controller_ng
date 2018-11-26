@@ -68,6 +68,46 @@ module VCAP::CloudController
           expect(deploying_web_process.ports).to eq(web_process.ports)
         end
 
+        context 'when there are multiple web processes' do
+          let!(:web_process) do
+            VCAP::CloudController::ProcessModel.make(
+              app: app,
+              command: 'old command!',
+              instances: 3,
+              type: VCAP::CloudController::ProcessTypes::WEB,
+              created_at: Time.now - 24.hours
+            )
+          end
+          let!(:newer_web_process) do
+            VCAP::CloudController::ProcessModel.make(
+              app: app,
+              command: 'new command!',
+              instances: 4,
+              type: VCAP::CloudController::ProcessTypes::WEB,
+              created_at: Time.now - 23.hours
+            )
+          end
+
+          it 'creates a process of web-deployment-guid type with the same characteristics as the oldest web process' do
+            deployment = DeploymentCreate.create(app: app, droplet: app.droplet, user_audit_info: user_audit_info)
+
+            deploying_web_process = app.processes.select { |p| p.type == "web-deployment-#{deployment.guid}" }.first
+            expect(deploying_web_process.state).to eq ProcessModel::STARTED
+            expect(deploying_web_process.command).to eq(web_process.command)
+            expect(deploying_web_process.memory).to eq(web_process.memory)
+            expect(deploying_web_process.file_descriptors).to eq(web_process.file_descriptors)
+            expect(deploying_web_process.disk_quota).to eq(web_process.disk_quota)
+            expect(deploying_web_process.metadata).to eq(web_process.metadata)
+            expect(deploying_web_process.detected_buildpack).to eq(web_process.detected_buildpack)
+            expect(deploying_web_process.health_check_timeout).to eq(web_process.health_check_timeout)
+            expect(deploying_web_process.health_check_type).to eq(web_process.health_check_type)
+            expect(deploying_web_process.health_check_http_endpoint).to eq(web_process.health_check_http_endpoint)
+            expect(deploying_web_process.health_check_invocation_timeout).to eq(web_process.health_check_invocation_timeout)
+            expect(deploying_web_process.enable_ssh).to eq(web_process.enable_ssh)
+            expect(deploying_web_process.ports).to eq(web_process.ports)
+          end
+        end
+
         it 'saves the webish process on the deployment' do
           deployment = DeploymentCreate.create(app: app, droplet: app.droplet, user_audit_info: user_audit_info)
 

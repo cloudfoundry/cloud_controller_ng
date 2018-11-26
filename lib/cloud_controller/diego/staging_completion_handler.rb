@@ -127,7 +127,7 @@ module VCAP::CloudController
 
       def start_process
         app         = droplet.app
-        web_process = app.web_process
+        web_process = app.newest_web_process
 
         return if web_process.latest_droplet.guid != droplet.guid
 

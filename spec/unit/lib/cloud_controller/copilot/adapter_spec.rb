@@ -81,29 +81,29 @@ module VCAP::CloudController
     end
 
     describe '#map_route' do
-      let(:capi_process_guid) { 'some-capi-process-guid' }
-      let(:diego_process_guid) { 'some-diego-process-guid' }
-      let(:route_guid) { 'some-route-guid' }
-      let(:route) { instance_double(Route, guid: route_guid) }
-      let(:process) { instance_double(ProcessModel, guid: capi_process_guid) }
+      let(:route) { Route.make }
+      let(:app) { AppModel.make }
+      let!(:process1) { ProcessModel.make(app: app) }
+      let!(:process2) { ProcessModel.make(app: app) }
       let(:route_mapping) do
-        instance_double(
-          RouteMappingModel,
-          process: process,
+        RouteMappingModel.make(
+          app: app,
           route: route,
+          process_type: 'web',
           weight: 5
         )
       end
 
-      before do
-        allow(Diego::ProcessGuid).to receive(:from_process).with(process).and_return(diego_process_guid)
-      end
-
-      it 'calls copilot_client.map_route' do
+      it 'calls copilot_client.map_route for each process associated with the route mapping' do
         adapter.map_route(route_mapping)
         expect(copilot_client).to have_received(:map_route).with(
-          capi_process_guid: capi_process_guid,
-          route_guid: route_guid,
+          capi_process_guid: process1.guid,
+          route_guid: route.guid,
+          route_weight: 5
+        )
+        expect(copilot_client).to have_received(:map_route).with(
+          capi_process_guid: process2.guid,
+          route_guid: route.guid,
           route_weight: 5
         )
       end
@@ -132,24 +132,29 @@ module VCAP::CloudController
     end
 
     describe '#unmap_route' do
-      let(:capi_process_guid) { 'some-capi-process-guid' }
-      let(:route_guid) { 'some-route-guid' }
-      let(:route) { instance_double(Route, guid: route_guid) }
-      let(:process) { instance_double(ProcessModel, guid: capi_process_guid) }
+      let(:route) { Route.make }
+      let(:app) { AppModel.make }
+      let!(:process1) { ProcessModel.make(app: app) }
+      let!(:process2) { ProcessModel.make(app: app) }
       let(:route_mapping) do
-        instance_double(
-          RouteMappingModel,
-          process: process,
+        RouteMappingModel.make(
+          app: app,
           route: route,
+          process_type: 'web',
           weight: 5
         )
       end
 
-      it 'calls copilot_client.map_route' do
+      it 'calls copilot_client.unmap_route' do
         adapter.unmap_route(route_mapping)
         expect(copilot_client).to have_received(:unmap_route).with(
-          capi_process_guid: capi_process_guid,
-          route_guid: route_guid,
+          capi_process_guid: process1.guid,
+          route_guid: route.guid,
+          route_weight: 5
+        )
+        expect(copilot_client).to have_received(:unmap_route).with(
+          capi_process_guid: process2.guid,
+          route_guid: route.guid,
           route_weight: 5
         )
       end

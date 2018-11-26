@@ -2,10 +2,10 @@ module VCAP::CloudController
   module FindProcessThroughApp
     def find_guid(guid, model=ProcessModel)
       if model == ProcessModel
-        obj = AppModel.find(guid: guid).try(:web_process)
-        raise self.class.not_found_exception(guid, AppModel) if obj.nil?
+        web_process = AppModel.find(guid: guid).try(:newest_web_process)
+        raise self.class.not_found_exception(guid, AppModel) if web_process.nil?
 
-        obj
+        web_process
       else
         super
       end
