@@ -51,7 +51,7 @@ RSpec.describe 'Service Broker API integration' do
 
         it 'marks the service instance as failed if the initial request succeeds, but the async provision fails' do
           async_update_service
-          stub_async_last_operation(state: 'failed')
+          stub_async_last_operation(body: { state: 'failed' })
 
           expect(
             a_request(:patch, update_url_for_broker(@broker, accepts_incomplete: true))
@@ -103,7 +103,8 @@ RSpec.describe 'Service Broker API integration' do
 
         it 'marks the service instance as failed if the initial request succeeds, but the async provision fails' do
           async_delete_service
-          stub_async_last_operation(state: 'failed')
+
+          stub_async_last_operation(body: { state: 'failed' })
 
           expect(
             a_request(:delete, deprovision_url(service_instance, accepts_incomplete: true))
@@ -152,7 +153,7 @@ RSpec.describe 'Service Broker API integration' do
 
         it 'marks the service instance as failed if the initial request succeeds, but the async provision fails' do
           async_provision_service
-          stub_async_last_operation(state: 'failed')
+          stub_async_last_operation(body: { state: 'failed' })
 
           expect(
             a_request(:put, provision_url_for_broker(@broker, accepts_incomplete: true))

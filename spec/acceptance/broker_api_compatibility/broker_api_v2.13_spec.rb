@@ -491,7 +491,7 @@ RSpec.describe 'Service Broker API integration' do
         it 'receives a context object' do
           expected_body = hash_including(:context)
           expect(
-            a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/#{@binding_id}}).with(body: expected_body)
+            a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/#{@binding_guid}}).with(body: expected_body)
           ).to have_been_made
         end
 
@@ -503,7 +503,7 @@ RSpec.describe 'Service Broker API integration' do
           })
 
           expect(
-            a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/#{@binding_id}}).with(body: expected_body)
+            a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/#{@binding_guid}}).with(body: expected_body)
           ).to have_been_made
         end
       end
@@ -517,7 +517,7 @@ RSpec.describe 'Service Broker API integration' do
         it 'receives a context object' do
           expected_body = hash_including(:context)
           expect(
-            a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/#{@binding_id}}).with(body: expected_body)
+            a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/#{@binding_guid}}).with(body: expected_body)
           ).to have_been_made
         end
 
@@ -529,7 +529,7 @@ RSpec.describe 'Service Broker API integration' do
           })
 
           expect(
-            a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/#{@binding_id}}).with(body: expected_body)
+            a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/#{@binding_guid}}).with(body: expected_body)
           ).to have_been_made
         end
       end
@@ -545,7 +545,7 @@ RSpec.describe 'Service Broker API integration' do
         it 'receives a context object' do
           expected_body = hash_including(:context)
           expect(
-            a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/#{@binding_id}}).with(body: expected_body)
+            a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/#{@binding_guid}}).with(body: expected_body)
           ).to have_been_made
         end
 
@@ -557,7 +557,7 @@ RSpec.describe 'Service Broker API integration' do
           })
 
           expect(
-            a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/#{@binding_id}}).with(body: expected_body)
+            a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/#{@binding_guid}}).with(body: expected_body)
           ).to have_been_made
         end
       end

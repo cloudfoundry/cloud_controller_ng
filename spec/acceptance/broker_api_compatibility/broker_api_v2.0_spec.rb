@@ -313,7 +313,6 @@ RSpec.describe 'Service Broker API integration' do
       let(:broker_response_body) { '{}' }
       let(:app_guid) { @app_guid }
       let(:service_instance_guid) { @service_instance_guid }
-      let(:binding_id) { @binding_id }
 
       before do
         setup_broker
@@ -328,10 +327,10 @@ RSpec.describe 'Service Broker API integration' do
 
       describe 'service unbinding request' do
         before do
-          stub_request(:delete, %r{/v2/service_instances/#{service_instance_guid}/service_bindings/#{binding_id}}).
+          stub_request(:delete, %r{/v2/service_instances/#{service_instance_guid}/service_bindings/#{@binding_guid}}).
             to_return(status: broker_response_status, body: '{}')
 
-          delete("v2/service_bindings/#{binding_id}",
+          delete("v2/service_bindings/#{@binding_guid}",
             '{}',
             admin_headers
           )

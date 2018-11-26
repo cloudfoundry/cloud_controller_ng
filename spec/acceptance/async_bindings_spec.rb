@@ -305,13 +305,15 @@ module VCAP::CloudController
     end
 
     context 'when the broker returns 410 on last_operation during binding creation' do
+      let(:url) { "http://#{stubbed_broker_host}/v2/service_instances/#{@service_instance_guid}/service_bindings/[[:alnum:]-]+/last_operation" }
+
       before do
         setup_cc
         setup_broker(default_catalog(bindings_retrievable: true))
         provision_service
         create_app
 
-        stub_async_binding_last_operation(body: {}, return_code: 410)
+        stub_async_last_operation(body: {}, return_code: 410, url: url)
       end
 
       it 'should continue polling in a new background job' do
@@ -323,7 +325,7 @@ module VCAP::CloudController
 
         Delayed::Worker.new.work_off
 
-        service_binding = VCAP::CloudController::ServiceBinding.find(guid: @binding_id)
+        service_binding = VCAP::CloudController::ServiceBinding.find(guid: @binding_guid)
         expect(a_request(:get,
                          "#{service_binding_url(service_binding)}/last_operation?plan_id=plan1-guid-here&service_id=service-guid-here"
                         )).to have_been_made
