@@ -87,6 +87,7 @@ RSpec.describe(OPI::Client) do
             health_check_http_endpoint: nil,
             health_check_timeout_ms: 12000,
             last_updated: '2.0',
+            ports: [8080]
         }
       }
 

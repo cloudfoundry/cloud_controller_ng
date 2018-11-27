@@ -72,7 +72,8 @@ module OPI
         health_check_type: process.health_check_type,
         health_check_http_endpoint: process.health_check_http_endpoint,
         health_check_timeout_ms: timeout_ms,
-        last_updated: process.updated_at.to_f.to_s
+        last_updated: process.updated_at.to_f.to_s,
+        ports: ports(process)
       }
       MultiJson.dump(body)
     end
@@ -108,13 +109,14 @@ module OPI
                 merge(SystemEnvPresenter.new(process.service_bindings).system_env)
 
       opi_env = opi_env.merge(DATABASE_URL: process.database_uri) if process.database_uri
-      opi_env.merge(port_environment_variables)
+      opi_env.merge(port_environment_variables(process))
     end
 
-    def port_environment_variables
+    def port_environment_variables(process)
+      port = ports(process).first
       {
-        PORT: '8080',
-        VCAP_APP_PORT: '8080',
+        PORT: port.to_s,
+        VCAP_APP_PORT: port.to_s,
         VCAP_APP_HOST: '0.0.0.0',
       }
     end
@@ -127,6 +129,10 @@ module OPI
 
     def process_guid(process)
       "#{process.guid}-#{process.version}"
+    end
+
+    def ports(process)
+      ::VCAP::CloudController::Diego::Protocol::OpenProcessPorts.new(process).to_a
     end
 
     def logger
