@@ -4,7 +4,11 @@ require 'actions/labels_update'
 module VCAP::CloudController
   RSpec.describe LabelsUpdate do
     describe 'apps labels' do
-      subject(:result) { LabelsUpdate.update(app, labels, AppLabelModel) }
+      subject(:result) do
+        app.db.transaction do
+          LabelsUpdate.update(app, labels, AppLabelModel)
+        end
+      end
 
       let(:app) { AppModel.make }
       let(:labels) do
@@ -18,6 +22,93 @@ module VCAP::CloudController
         subject
         expect(AppLabelModel.find(resource_guid: app.guid, key_name: 'release').value).to eq 'stable'
         expect(AppLabelModel.find(resource_guid: app.guid, key_prefix: 'joyofcooking.com', key_name: 'potato').value).to eq 'mashed'
+      end
+
+      context 'too many labels' do
+        context 'labels added exceeds max labels' do
+          let(:labels) do
+            {
+              release: 'stable',
+              asdf: 'mashed',
+              bbq: 'hello',
+              def: 'fdsa'
+            }
+          end
+
+          it 'does not make any changes' do
+            TestConfig.override(max_labels_per_resource: 2)
+
+            expect do
+              expect do
+                subject
+              end.to raise_error(LabelsUpdate::TooManyLabels, 'Failed to add 4 labels because it would exceed maximum of 2')
+            end.not_to change { AppLabelModel.count }
+          end
+        end
+
+        context 'app already has max labels' do
+          context 'labels added exceeds max labels' do
+            let!(:app_with_labels) do
+              AppLabelModel.create(resource_guid: app.guid, key_name: 'release1', value: 'veryunstable')
+              AppLabelModel.create(resource_guid: app.guid, key_name: 'release2', value: 'stillunstable')
+            end
+
+            let(:labels) do
+              {
+                release: 'stable',
+              }
+            end
+
+            it 'does not make any changes' do
+              TestConfig.override(max_labels_per_resource: 2)
+
+              expect do
+                expect do
+                  subject
+                end.to raise_error(LabelsUpdate::TooManyLabels, 'Failed to add 1 labels because it would exceed maximum of 2')
+              end.not_to change { AppLabelModel.count }
+            end
+          end
+        end
+
+        context 'labels exceed max labels' do
+          let!(:app_with_labels) do
+            AppLabelModel.create(resource_guid: app.guid, key_name: 'release', value: 'unstable')
+            AppLabelModel.create(resource_guid: app.guid, key_name: 'release1', value: 'veryunstable')
+            AppLabelModel.create(resource_guid: app.guid, key_name: 'release2', value: 'stillunstable')
+            AppLabelModel.create(resource_guid: app.guid, key_name: 'release3', value: 'help')
+          end
+
+          context 'deleting old label' do
+            let(:labels) do
+              {
+                release1: nil,
+              }
+            end
+
+            it 'allows it' do
+              TestConfig.override(max_labels_per_resource: 2)
+              subject
+
+              expect(AppLabelModel.find(resource_guid: app.guid, key_name: 'release1')).to be_nil
+            end
+          end
+
+          context 'editing old label' do
+            let(:labels) do
+              {
+                release: 'stable',
+              }
+            end
+
+            it 'allows it' do
+              TestConfig.override(max_labels_per_resource: 2)
+              subject
+
+              expect(AppLabelModel.find(resource_guid: app.guid, key_name: 'release').value).to eq 'stable'
+            end
+          end
+        end
       end
 
       context 'no labels' do

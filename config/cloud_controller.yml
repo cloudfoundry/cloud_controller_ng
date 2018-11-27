@@ -265,6 +265,8 @@ directories:
 stacks_file: config/stacks.yml
 newrelic_enabled: false
 
+max_labels_per_resource: 50
+
 db:
   log_level: 'debug'
   ssl_verify_hostname: false
