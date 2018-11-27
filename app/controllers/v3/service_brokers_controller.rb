@@ -8,9 +8,9 @@ class ServiceBrokersController < ApplicationController
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     dataset = if permission_queryer.can_read_globally?
-                ServiceBrokerListFetcher.new.fetch(message)
+                ServiceBrokerListFetcher.new.fetch(message: message)
               else
-                ServiceBrokerListFetcher.new.fetch(message, permission_queryer.space_developer_space_guids)
+                ServiceBrokerListFetcher.new.fetch(message: message, permitted_space_guids: permission_queryer.space_developer_space_guids)
               end
 
     render status: :ok,
