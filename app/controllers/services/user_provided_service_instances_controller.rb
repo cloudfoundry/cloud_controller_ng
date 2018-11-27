@@ -107,7 +107,7 @@ module VCAP::CloudController
         {}
       )
 
-      enqueue_deletion_job(delete_and_audit_job)
+      run_or_enqueue_deletion_job(delete_and_audit_job)
     end
 
     def get_filtered_dataset_for_enumeration(model, dataset, query_params, opts)

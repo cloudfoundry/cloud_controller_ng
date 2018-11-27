@@ -74,7 +74,7 @@ module VCAP::CloudController
       find_guid_and_validate_access(:delete, guid)
 
       job = Jobs::Runtime::BuildpackDelete.new(guid: guid, timeout: @config.get(:staging, :timeout_in_seconds))
-      enqueue_deletion_job(job)
+      run_or_enqueue_deletion_job(job)
     end
 
     def self.not_found_exception_name(_model_class)
