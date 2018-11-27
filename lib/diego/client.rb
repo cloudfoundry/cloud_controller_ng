@@ -6,9 +6,17 @@ module Diego
   class Client
     PROTOBUF_HEADER = { 'Content-Type'.freeze => 'application/x-protobuf'.freeze }.freeze
 
-    def initialize(url:, ca_cert_file:, client_cert_file:, client_key_file:)
+    def initialize(url:, ca_cert_file:, client_cert_file:, client_key_file:,
+      connect_timeout:, send_timeout:, receive_timeout:)
       ENV['PB_IGNORE_DEPRECATIONS'] ||= 'true'
-      @client = build_client(url, ca_cert_file, client_cert_file, client_key_file)
+      @client = build_client(
+        url,
+        ca_cert_file,
+        client_cert_file,
+        client_key_file,
+        connect_timeout,
+        send_timeout,
+        receive_timeout)
     end
 
     def ping
@@ -180,11 +188,12 @@ module Diego
       raise DecodeError.new(e.message)
     end
 
-    def build_client(url, ca_cert_file, client_cert_file, client_key_file)
+    def build_client(url, ca_cert_file, client_cert_file, client_key_file,
+      connect_timeout, send_timeout, receive_timeout)
       client                 = HTTPClient.new(base_url: url)
-      client.connect_timeout = 10
-      client.send_timeout    = 10
-      client.receive_timeout = 10
+      client.connect_timeout = connect_timeout
+      client.send_timeout    = send_timeout
+      client.receive_timeout = receive_timeout
       client.ssl_config.set_client_cert_file(client_cert_file, client_key_file)
       client.ssl_config.set_trust_ca(ca_cert_file)
       client
