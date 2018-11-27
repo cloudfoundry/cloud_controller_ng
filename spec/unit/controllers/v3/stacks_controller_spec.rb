@@ -46,19 +46,26 @@ RSpec.describe StacksController, type: :controller do
       let!(:stack1) { VCAP::CloudController::Stack.make }
       let!(:stack2) { VCAP::CloudController::Stack.make }
 
-      it 'renders a paginated list of stacks' do
+      before do
         set_current_user(user)
+      end
 
+      it 'renders a paginated list of stacks' do
         get :index
 
         expect(parsed_body['resources'].first['guid']).to eq(stack1.guid)
         expect(parsed_body['resources'].second['guid']).to eq(stack2.guid)
       end
 
+      it 'renders a name filtered list of stacks' do
+        get :index, params: { names: stack2.name }
+
+        expect(parsed_body['resources']).to have(1).stack
+        expect(parsed_body['resources'].first['guid']).to eq(stack2.guid)
+      end
+
       context 'when the query params are invalid' do
         it 'returns an error' do
-          set_current_user(user)
-
           get :index, params: { per_page: 'whoops' }
 
           expect(response.status).to eq 400

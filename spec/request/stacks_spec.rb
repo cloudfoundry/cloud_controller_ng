@@ -65,6 +65,53 @@ RSpec.describe 'Stacks Request' do
           }
         )
       end
+
+      it 'returns a list of name filtered stacks' do
+        get "/v3/stacks?names=#{stack1.name},#{stack3.name}", nil, headers
+
+        expect(parsed_response).to be_a_response_like(
+          {
+            'pagination' => {
+              'total_results' => 2,
+              'total_pages' => 1,
+              'first' => {
+                'href' => "#{link_prefix}/v3/stacks?names=#{stack1.name}%2C#{stack3.name}&page=1&per_page=50"
+              },
+              'last' => {
+                'href' => "#{link_prefix}/v3/stacks?names=#{stack1.name}%2C#{stack3.name}&page=1&per_page=50"
+              },
+              'next' => nil,
+              'previous' => nil
+            },
+            'resources' => [
+              {
+                'name' => stack1.name,
+                'description' => stack1.description,
+                'guid' => stack1.guid,
+                'created_at' => iso8601,
+                'updated_at' => iso8601,
+                'links' => {
+                  'self' => {
+                    'href' => "#{link_prefix}/v3/stacks/#{stack1.guid}"
+                  }
+                }
+              },
+              {
+                'name' => stack3.name,
+                'description' => stack3.description,
+                'guid' => stack3.guid,
+                'created_at' => iso8601,
+                'updated_at' => iso8601,
+                'links' => {
+                  'self' => {
+                    'href' => "#{link_prefix}/v3/stacks/#{stack3.guid}"
+                  }
+                }
+              }
+            ]
+          }
+        )
+      end
     end
   end
 

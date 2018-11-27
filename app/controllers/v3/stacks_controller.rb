@@ -9,7 +9,7 @@ class StacksController < ApplicationController
     message = StacksListMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
 
-    dataset = StackListFetcher.new.fetch_all
+    dataset = StackListFetcher.new.fetch_all(message)
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::StackPresenter,
