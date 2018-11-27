@@ -10,6 +10,14 @@ module VCAP::CloudController
     class DBNameUniqueRaceError < Sequel::ValidationFailed; end
 
     SPACE_NAME_REGEX = /\A[[:alnum:][:punct:][:print:]]+\Z/.freeze
+    SELECT_NEWEST_PROCESS = lambda { |_, processes|
+      newest_processes = {}
+      processes.group_by(&:app_guid).each do |_, processes_for_app|
+        newest_process = processes_for_app.max_by { |p| [p.created_at, p.id] }
+        newest_processes[newest_process.guid] = newest_process
+      end
+      processes.keep_if { |p| newest_processes[p.guid] }
+    }
 
     plugin :many_through_many
 
@@ -32,7 +40,8 @@ module VCAP::CloudController
     many_through_many :apps, [
       [:spaces, :id, :guid],
       [:apps, :space_guid, :guid]
-    ], class: 'VCAP::CloudController::ProcessModel', right_primary_key: :app_guid, conditions: { type: ProcessTypes::WEB }
+    ], class: 'VCAP::CloudController::ProcessModel', right_primary_key: :app_guid, conditions: { type: ProcessTypes::WEB },
+      after_load: SELECT_NEWEST_PROCESS
 
     one_to_many :events, primary_key: :guid, key: :space_guid
     one_to_many :service_instances

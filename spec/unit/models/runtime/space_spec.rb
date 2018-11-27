@@ -405,6 +405,52 @@ module VCAP::CloudController
           expect(space.apps).to match_array([process1])
         end
 
+        context 'when there are multiple web processes for an app' do
+          let(:space) { Space.make }
+          let(:app_one) { AppModel.make(space: space) }
+          let(:app_two) { AppModel.make(space: space) }
+          let!(:web_process_app_one) do
+            VCAP::CloudController::ProcessModel.make(
+              app: app_one,
+              command: 'old command!',
+              instances: 3,
+              type: VCAP::CloudController::ProcessTypes::WEB,
+              created_at: Time.now - 24.hours
+            )
+          end
+          let!(:newer_web_process_app_one) do
+            VCAP::CloudController::ProcessModel.make(
+              app: app_one,
+              command: 'new command!',
+              instances: 4,
+              type: VCAP::CloudController::ProcessTypes::WEB,
+              created_at: Time.now - 23.hours
+            )
+          end
+          let!(:web_process_app_two) do
+            VCAP::CloudController::ProcessModel.make(
+              app: app_two,
+              command: 'old command!',
+              instances: 3,
+              type: VCAP::CloudController::ProcessTypes::WEB,
+              created_at: Time.now - 24.hours
+            )
+          end
+          let!(:newer_web_process_app_two) do
+            VCAP::CloudController::ProcessModel.make(
+              app: app_two,
+              command: 'new command!',
+              instances: 4,
+              type: VCAP::CloudController::ProcessTypes::WEB,
+              created_at: Time.now - 23.hours
+            )
+          end
+
+          it 'returns the newest web processes for each app' do
+            expect(space.apps).to match_array([newer_web_process_app_one, newer_web_process_app_two])
+          end
+        end
+
         describe 'eager loading' do
           it 'loads only web processes' do
             # rubocop:disable UselessAssignment
