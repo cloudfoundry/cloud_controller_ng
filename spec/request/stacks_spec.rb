@@ -151,5 +151,19 @@ RSpec.describe 'Stacks Request' do
         }
       )
     end
+
+    context 'when there is a model validation failure' do
+      let(:name) { 'the-name' }
+
+      before do
+        VCAP::CloudController::Stack.make name: name
+      end
+
+      it 'responds with 422' do
+        post '/v3/stacks', request_body, headers
+        expect(last_response.status).to eq(422)
+        expect(last_response).to have_error_message('Name must be unique')
+      end
+    end
   end
 end

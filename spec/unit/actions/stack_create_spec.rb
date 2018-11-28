@@ -29,6 +29,21 @@ module VCAP::CloudController
           }.to raise_error(StackCreate::Error, 'blork is busted')
         end
       end
+
+      context 'when it is a uniqueness error' do
+        let(:name) { 'Olsen' }
+
+        before do
+          VCAP::CloudController::Stack.create(name: name)
+        end
+
+        it 'raises a human-friendly error' do
+          message = VCAP::CloudController::StackCreateMessage.new(name: name)
+          expect {
+            StackCreate.new.create(message)
+          }.to raise_error(StackCreate::Error, 'Name must be unique')
+        end
+      end
     end
   end
 end

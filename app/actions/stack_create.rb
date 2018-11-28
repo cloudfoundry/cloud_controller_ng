@@ -9,7 +9,14 @@ module VCAP::CloudController
         description: message.description
       )
     rescue Sequel::ValidationFailed => e
-      error!(e)
+      validation_error!(e)
+    end
+
+    def validation_error!(error)
+      if error.errors.on(:name)&.include?(:unique)
+        error!('Name must be unique')
+      end
+      error!(error.message)
     end
 
     def error!(message)
