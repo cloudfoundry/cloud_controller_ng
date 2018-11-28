@@ -50,9 +50,9 @@ module VCAP::CloudController
         end
 
         it 'creates a process of web-deployment-guid type with the same characteristics as the existing web process' do
-          deployment = DeploymentCreate.create(app: app, droplet: app.droplet, user_audit_info: user_audit_info)
+          DeploymentCreate.create(app: app, droplet: app.droplet, user_audit_info: user_audit_info)
 
-          deploying_web_process = app.processes.select { |p| p.type == "web-deployment-#{deployment.guid}" }.first
+          deploying_web_process = app.reload.newest_web_process
           expect(deploying_web_process.state).to eq ProcessModel::STARTED
           expect(deploying_web_process.command).to eq(web_process.command)
           expect(deploying_web_process.memory).to eq(web_process.memory)
@@ -89,9 +89,9 @@ module VCAP::CloudController
           end
 
           it 'creates a process of web-deployment-guid type with the same characteristics as the oldest web process' do
-            deployment = DeploymentCreate.create(app: app, droplet: app.droplet, user_audit_info: user_audit_info)
+            DeploymentCreate.create(app: app, droplet: app.droplet, user_audit_info: user_audit_info)
 
-            deploying_web_process = app.processes.select { |p| p.type == "web-deployment-#{deployment.guid}" }.first
+            deploying_web_process = app.reload.newest_web_process
             expect(deploying_web_process.state).to eq ProcessModel::STARTED
             expect(deploying_web_process.command).to eq(web_process.command)
             expect(deploying_web_process.memory).to eq(web_process.memory)
@@ -108,17 +108,18 @@ module VCAP::CloudController
           end
         end
 
-        it 'saves the webish process on the deployment' do
+        it 'saves the new web process on the deployment' do
           deployment = DeploymentCreate.create(app: app, droplet: app.droplet, user_audit_info: user_audit_info)
 
-          deploying_web_process = app.processes.select { |p| p.type == "web-deployment-#{deployment.guid}" }.first
+          deploying_web_process = app.reload.newest_web_process
+          expect(app.web_processes.count).to eq(2)
           expect(deployment.deploying_web_process_guid).to eq(deploying_web_process.guid)
         end
 
         it 'creates route mappings for each route mapped to the existing web process' do
-          deployment = DeploymentCreate.create(app: app, droplet: app.droplet, user_audit_info: user_audit_info)
-          deploying_web_process = app.processes.select { |p| p.type == "web-deployment-#{deployment.guid}" }.first
+          DeploymentCreate.create(app: app, droplet: app.droplet, user_audit_info: user_audit_info)
 
+          deploying_web_process = app.reload.newest_web_process
           expect(deploying_web_process.routes).to contain_exactly(route1, route2)
         end
 

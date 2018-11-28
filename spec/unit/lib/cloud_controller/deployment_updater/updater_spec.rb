@@ -19,7 +19,7 @@ module VCAP::CloudController
     let!(:deploying_web_process) do
       ProcessModel.make(
         app: web_process.app,
-        type: 'web-deployment-guid-final',
+        type: ProcessTypes::WEB,
         instances: current_deploying_instances,
         guid: 'guid-final',
         revision: revision,
@@ -87,9 +87,9 @@ module VCAP::CloudController
           ProcessModel.make(
             app: web_process.app,
             created_at: an_hour_ago,
-            type: 'web-deployment-guid-interim',
+            type: ProcessTypes::WEB,
             instances: 1,
-            guid: 'interim-guid'
+            guid: 'guid-interim'
           )
         }
 
@@ -109,7 +109,7 @@ module VCAP::CloudController
 
         it 'replaces the existing web process with the deploying_web_process' do
           deploying_web_process_guid = deploying_web_process.guid
-          expect(ProcessModel.map(&:type)).to match_array(['web', 'web-deployment-guid-interim', 'web-deployment-guid-final', 'worker', 'clock'])
+          expect(ProcessModel.map(&:type)).to match_array(['web', 'web', 'web', 'worker', 'clock'])
 
           subject.scale
 
@@ -126,20 +126,9 @@ module VCAP::CloudController
           expect(ProcessModel.map(&:type)).to match_array(['web', 'worker', 'clock'])
         end
 
-        it 'deletes all route mappings affiliated with the deploying process' do
-          expect(RouteMappingModel.where(app: deploying_web_process.app,
-                                         process_type: deploying_web_process.type)).to have(2).items
-
-          subject.scale
-
-          expect(RouteMappingModel.where(app: deploying_web_process.app,
-                                         process_type: deploying_web_process.type)).to have(0).items
-        end
-
-        it 'cleans up any extra processes and route mappings from the deployment train' do
+        it 'cleans up any extra processes from the deployment train' do
           subject.scale
           expect(ProcessModel.find(guid: interim_deploying_web_process.guid)).to be_nil
-          expect(RouteMappingModel.find(process_type: interim_deploying_web_process.type)).to be_nil
         end
 
         it 'puts the deployment into its finished DEPLOYED_STATE' do
@@ -202,7 +191,7 @@ module VCAP::CloudController
             instances: 1,
             app: app,
             created_at: a_day_ago - 10,
-            type: 'web-deployment-middle-train-car'
+            type: ProcessTypes::WEB,
           )
         end
 
@@ -215,11 +204,6 @@ module VCAP::CloudController
             subject.scale
           }.not_to change { ProcessModel.find(guid: web_process.guid) }
           expect(ProcessModel.find(guid: oldest_webish_process_with_instances.guid)).to be_nil
-        end
-
-        it 'destroys the old webish route mapping' do
-          subject.scale
-          expect(RouteMappingModel.find(app: web_process.app, process_type: oldest_webish_process_with_instances.type)).to be_nil
         end
       end
 
@@ -333,18 +317,6 @@ module VCAP::CloudController
         expect(ProcessModel.find(guid: deploying_web_process.guid)).to be_nil
       end
 
-      it 'deletes the route mappings for the deploying web process' do
-        subject.cancel
-        expect(RouteMappingModel.find(process_type: deploying_web_process.type)).to be_nil
-      end
-
-      it 'tells co-pilot the routes are unmapped', isolation: :truncation do
-        TestConfig.override(copilot: { enabled: true })
-        allow(Copilot::Adapter).to receive(:unmap_route)
-        subject.cancel
-        expect(Copilot::Adapter).to have_received(:unmap_route).once
-      end
-
       it 'rolls back to the correct number of instances' do
         subject.cancel
         expect(web_process.reload.instances).to eq(original_web_process_instance_count)
@@ -361,7 +333,7 @@ module VCAP::CloudController
           ProcessModel.make(
             app: app,
             created_at: an_hour_ago,
-            type: 'web-deployment-guid-interim',
+            type: ProcessTypes::WEB,
             instances: 1,
             guid: 'guid-interim'
           )
@@ -383,11 +355,6 @@ module VCAP::CloudController
         it 'sets the most recent interim web process as the only web process' do
           subject.cancel
           expect(app.reload.processes.map(&:guid)).to eq([interim_deploying_web_process.guid])
-        end
-
-        it 'removes all previous webish route mappings' do
-          subject.cancel
-          expect(RouteMappingModel.map(&:process_type)).to contain_exactly(ProcessTypes::WEB)
         end
       end
     end

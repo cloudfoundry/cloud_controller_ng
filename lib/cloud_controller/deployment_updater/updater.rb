@@ -51,8 +51,7 @@ module VCAP::CloudController
 
           prior_webish_process.update(instances: deployment.original_web_process_instance_count, type: ProcessTypes::WEB)
 
-          cleanup_webish_route_mappings
-          cleanup_webish_processes_except(prior_webish_process)
+          cleanup_web_processes_except(prior_webish_process)
 
           deployment.update(state: DeploymentModel::CANCELED_STATE)
         end
@@ -94,69 +93,42 @@ module VCAP::CloudController
         app.processes.select(&:web?)
       end
 
-      def is_web_process?(process)
-        process.type == ProcessTypes::WEB
+      def is_original_web_process?(process)
+        process == app.oldest_web_process
       end
 
-      def is_intermediary_process?(process)
-        !is_web_process?(process)
+      def is_interim_process?(process)
+        !is_original_web_process?(process)
       end
 
       def scale_down_oldest_web_process_with_instances
         process = oldest_web_process_with_instances
 
-        if process.instances > 1
-          process.update(instances: process.instances - 1)
+        if process.instances == 1 && is_interim_process?(process)
+          process.destroy
           return
         end
 
-        # only one instance left...
-
-        if is_web_process?(process)
-          # decrement original web process instances, but do not destroy it yet
-          process.update(instances: 0)
-        else
-          # delete if intermediary process
-          cleanup_webish_process(process)
-        end
-      end
-
-      def cleanup_webish_route_mappings
-        RouteMappingModel.
-          where(app: app).
-          reject { |r| r.process_type == ProcessTypes::WEB }.
-          select { |r| ProcessTypes.webish?(r.process_type) }.
-          map(&:destroy)
-      end
-
-      def cleanup_webish_process(process)
-        if is_intermediary_process?(process)
-          RouteMappingModel.
-            where(app: app, process_type: process.type).
-            map(&:destroy)
-        end
-        process.destroy
+        process.update(instances: process.instances - 1)
       end
 
       def finalize_deployment
         promote_deploying_web_process
 
-        cleanup_webish_processes_except(deploying_web_process)
+        cleanup_web_processes_except(deploying_web_process)
 
         restart_non_web_processes
         deployment.update(state: DeploymentModel::DEPLOYED_STATE)
       end
 
       def promote_deploying_web_process
-        RouteMappingModel.where(app: deploying_web_process.app,
-                                process_type: deploying_web_process.type).map(&:destroy)
         deploying_web_process.update(type: ProcessTypes::WEB)
       end
 
-      def cleanup_webish_processes_except(protected_process)
+      def cleanup_web_processes_except(protected_process)
         web_processes.
           reject { |p| p.guid == protected_process.guid }.
-          each { |p| cleanup_webish_process(p) }
+          map(&:destroy)
       end
 
       def restart_non_web_processes

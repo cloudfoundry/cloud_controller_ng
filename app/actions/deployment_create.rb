@@ -41,7 +41,6 @@ module VCAP::CloudController
           revision = RevisionCreate.create(app)
           process = create_deployment_process(app, deployment.guid, web_process, revision)
           deployment.update(deploying_web_process: process, revision_guid: revision.guid, revision_version: revision.version)
-          web_process.routes.each { |r| RouteMappingCreate.add(user_audit_info: user_audit_info, route: r, process_type: process.type, app: app) }
         end
         record_audit_event(deployment, droplet, user_audit_info)
         deployment
@@ -50,11 +49,9 @@ module VCAP::CloudController
       private
 
       def create_deployment_process(app, deployment_guid, web_process, revision)
-        process_type = "web-deployment-#{deployment_guid}"
-
         process = ProcessModel.create(
           app: app,
-          type: process_type,
+          type: ProcessTypes::WEB,
           state: ProcessModel::STARTED,
           command: web_process.command,
           memory: web_process.memory,
