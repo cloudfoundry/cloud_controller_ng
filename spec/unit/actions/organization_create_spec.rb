@@ -10,16 +10,26 @@ module VCAP::CloudController
         message = VCAP::CloudController::OrganizationUpdateMessage.new({
           name: 'my-organization',
           metadata: {
-              labels: {
-                  release: 'stable',
-                  'seriouseats.com/potato': 'mashed'
-              }
+            labels: {
+              release: 'stable',
+              'seriouseats.com/potato' => 'mashed'
+            },
+            annotations: {
+              tomorrow: 'land',
+              backstreet: 'boys'
+            }
           }
         })
         organization = OrganizationCreate.new(perm_client: perm_client).create(message)
 
         expect(organization.name).to eq('my-organization')
+
+        expect(organization.labels.map(&:key_name)).to contain_exactly('potato', 'release')
+        expect(organization.labels.map(&:key_prefix)).to contain_exactly('seriouseats.com', nil)
         expect(organization.labels.map(&:value)).to contain_exactly('stable', 'mashed')
+
+        expect(organization.annotations.map(&:key)).to contain_exactly('tomorrow', 'backstreet')
+        expect(organization.annotations.map(&:value)).to contain_exactly('land', 'boys')
       end
 
       context 'when a model validation fails' do

@@ -23,6 +23,11 @@ module VCAP::CloudController
           metadata: {
             labels: {
               freaky: 'friday'
+            },
+            annotations: {
+              make: 'subaru',
+              model: 'xv crosstrek',
+              color: 'orange'
             }
           }
         }.to_json
@@ -48,7 +53,7 @@ module VCAP::CloudController
             },
             'metadata' => {
               'labels' => { 'freaky' => 'friday' },
-              'annotations' => {}
+              'annotations' => { 'make' => 'subaru', 'model' => 'xv crosstrek', 'color' => 'orange' }
             }
           }
         )
