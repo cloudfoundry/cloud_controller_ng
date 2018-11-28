@@ -181,8 +181,6 @@ module VCAP::CloudController
 
           cc_service_key_client_name: String,
           cc_service_key_client_secret: String,
-          max_labels_per_resource: Integer,
-          max_annotations_per_resource: Integer,
 
           optional(:credhub_api) => {
             optional(:external_url) => String,
@@ -328,7 +326,10 @@ module VCAP::CloudController
             optional(:client_ca_file) => String,
             optional(:client_key_file) => String,
             optional(:client_chain_file) => String,
-          }
+          },
+
+          max_labels_per_resource: Integer,
+          max_annotations_per_resource: Integer,
         }
       end
       # rubocop:enable Metrics/BlockLength

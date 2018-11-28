@@ -160,6 +160,9 @@ module VCAP::CloudController
 
           statsd_host: String,
           statsd_port: Integer,
+
+          max_labels_per_resource: Integer,
+          max_annotations_per_resource: Integer,
         }
       end
       # rubocop:enable Metrics/BlockLength
