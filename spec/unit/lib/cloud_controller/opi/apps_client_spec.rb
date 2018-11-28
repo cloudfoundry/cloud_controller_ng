@@ -12,6 +12,9 @@ RSpec.describe(OPI::Client) do
       guid: 'some-droplet-guid',
     )
     }
+    let(:routing_info) {
+      instance_double(VCAP::CloudController::Diego::Protocol::RoutingInfo)
+    }
 
     let(:cfg) { ::VCAP::CloudController::Config.new({ default_health_check_timeout: 99 }) }
     let(:lifecycle_type) { nil }
@@ -45,6 +48,22 @@ RSpec.describe(OPI::Client) do
 
     context 'when request executes successfully' do
       before do
+        routes = {
+              'http_routes' => [
+                {
+                  'hostname'          => 'numero-uno.example.com',
+                  'port'              => 8080
+                },
+                {
+                  'hostname'          => 'numero-dos.example.com',
+                  'port'              => 7777
+                }
+              ]
+        }
+
+        allow(routing_info).to receive(:routing_info).and_return(routes)
+        allow(VCAP::CloudController::Diego::Protocol::RoutingInfo).to receive(:new).with(lrp).and_return(routing_info)
+
         stub_request(:put, "#{opi_url}/apps/process-guid-#{lrp.version}").to_return(status: 201)
       end
 
@@ -87,7 +106,19 @@ RSpec.describe(OPI::Client) do
             health_check_http_endpoint: nil,
             health_check_timeout_ms: 12000,
             last_updated: '2.0',
-            ports: [8080]
+            ports: [8080],
+            routes: {
+              'cf-router' => [
+                {
+                  'hostname' => 'numero-uno.example.com',
+                  'port' => 8080
+                },
+                {
+                  'hostname' => 'numero-dos.example.com',
+                  'port' => 7777
+                }
+              ]
+            },
         }
       }
 
@@ -173,12 +204,12 @@ RSpec.describe(OPI::Client) do
               routes: {
                 'cf-router' => [
                   {
-                    'hostnames'         => ['numero-uno.example.com'],
-                    'port'              => 8080
+                    'hostname' => 'numero-uno.example.com',
+                    'port' => 8080
                   },
                   {
-                    'hostnames'         => ['numero-dos.example.com'],
-                    'port'              => 8080
+                    'hostname' => 'numero-dos.example.com',
+                    'port' => 8080
                   }
                 ]
               },
