@@ -43,6 +43,7 @@ module VCAP::CloudController
             client_ca_file: String,
             client_key_file: String,
             client_chain_file: String,
+            optional(:temporary_istio_domains) => Array,
           }
         }
       end

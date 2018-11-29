@@ -326,6 +326,7 @@ module VCAP::CloudController
             optional(:client_ca_file) => String,
             optional(:client_key_file) => String,
             optional(:client_chain_file) => String,
+            optional(:temporary_istio_domains) => Array,
           },
 
           max_labels_per_resource: Integer,
