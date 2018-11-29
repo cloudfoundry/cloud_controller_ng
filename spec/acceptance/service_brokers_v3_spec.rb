@@ -132,6 +132,40 @@ RSpec.describe 'V3 service brokers' do
         end
       end
 
+      context 'when requesting with a specific order by name' do
+        context 'in ascending order' do
+          before(:each) do
+            get('/v3/service_brokers?order_by=name', {}, admin_headers)
+          end
+
+          it 'returns 200 OK and a body containg the brokers ordered by created at time' do
+            expect(last_response).to have_status_code(200)
+
+            parsed_body = JSON.parse(last_response.body)
+
+            expect(parsed_body.fetch('resources').length).to eq(2)
+            expect(parsed_body.fetch('resources').first.fetch('name')).to eq('test-broker-1')
+            expect(parsed_body.fetch('resources').last.fetch('name')).to eq('test-broker-2')
+          end
+        end
+
+        context 'descending order' do
+          before(:each) do
+            get('/v3/service_brokers?order_by=-name', {}, admin_headers)
+          end
+
+          it 'returns 200 OK and a body containg the brokers ordered by created at time' do
+            expect(last_response).to have_status_code(200)
+
+            parsed_body = JSON.parse(last_response.body)
+
+            expect(parsed_body.fetch('resources').length).to eq(2)
+            expect(parsed_body.fetch('resources').first.fetch('name')).to eq('test-broker-2')
+            expect(parsed_body.fetch('resources').last.fetch('name')).to eq('test-broker-1')
+          end
+        end
+      end
+
       context 'when requesting with a space guid filter' do
         before(:each) do
           get("/v3/service_brokers?space_guids=#{space.guid}", {}, admin_headers)

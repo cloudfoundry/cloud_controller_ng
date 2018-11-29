@@ -34,6 +34,13 @@ module VCAP::CloudController
       end
     end
 
+    describe 'order_by' do
+      it 'allows name' do
+        message = ServiceBrokersListMessage.new(order_by: 'name')
+        expect(message).to be_valid
+      end
+    end
+
     describe 'validation' do
       it 'accepts an empty set' do
         message = ServiceBrokersListMessage.new

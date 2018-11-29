@@ -16,7 +16,7 @@ RSpec.describe ServiceBrokersController, type: :controller do
         get :index
 
         response_guids = parsed_body['resources'].map { |r| r['guid'] }
-        expect(response.status).to eq(200)
+        expect(response.status).to eq 200
         expect(response_guids).to match_array([service_broker_1].map(&:guid))
       end
     end

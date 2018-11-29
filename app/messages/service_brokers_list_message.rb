@@ -13,6 +13,10 @@ module VCAP::CloudController
     validates :space_guids, array: true, allow_nil: true
     validates :names, array: true, allow_nil: true
 
+    def valid_order_by_values
+      super << :name
+    end
+
     def self.from_params(params)
       super(params, %w(names space_guids))
     end
