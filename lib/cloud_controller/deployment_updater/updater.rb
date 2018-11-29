@@ -40,18 +40,19 @@ module VCAP::CloudController
       def cancel_deployment
         deployment.db.transaction do
           deployment.lock!
+          coerce_legacy_webish_process_types_to_web
 
           app.lock!
           deploying_web_process.lock!
 
-          prior_webish_process = web_processes.
+          prior_web_process = web_processes.
                                  reject { |p| p.guid == deploying_web_process.guid }.
                                  max_by(&:created_at)
-          prior_webish_process.lock!
+          prior_web_process.lock!
 
-          prior_webish_process.update(instances: deployment.original_web_process_instance_count, type: ProcessTypes::WEB)
+          prior_web_process.update(instances: deployment.original_web_process_instance_count, type: ProcessTypes::WEB)
 
-          cleanup_web_processes_except(prior_webish_process)
+          cleanup_web_processes_except(prior_web_process)
 
           deployment.update(state: DeploymentModel::CANCELED_STATE)
         end
@@ -60,6 +61,7 @@ module VCAP::CloudController
       def scale_deployment
         deployment.db.transaction do
           deployment.lock!
+          coerce_legacy_webish_process_types_to_web
 
           oldest_web_process_with_instances.lock!
           app.lock!
@@ -75,6 +77,16 @@ module VCAP::CloudController
           scale_down_oldest_web_process_with_instances
           deploying_web_process.update(instances: deploying_web_process.instances + 1)
         end
+      end
+
+      def coerce_legacy_webish_process_types_to_web
+        legacy_webish_processes.each do |process|
+          process.update(type: ProcessTypes::WEB)
+        end
+      end
+
+      def legacy_webish_processes
+        app.processes.select { |process| process.legacy_webish? }
       end
 
       def app

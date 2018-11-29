@@ -520,7 +520,11 @@ module VCAP::CloudController
     end
 
     def web?
-      ProcessTypes.webish?(type)
+      type == ProcessTypes::WEB
+    end
+
+    def legacy_webish?
+      ProcessTypes.legacy_webish?(type)
     end
 
     private

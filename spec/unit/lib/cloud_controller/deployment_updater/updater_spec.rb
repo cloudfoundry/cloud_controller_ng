@@ -177,16 +177,16 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the oldest webish process will be at zero instances and is not web' do
+      context 'when the oldest web process will be at zero instances and is not web' do
         let!(:web_process) do
           ProcessModel.make(
             instances: 0,
             app: app,
             created_at: a_day_ago - 11,
-            type: 'web'
+            type: ProcessTypes::WEB,
           )
         end
-        let!(:oldest_webish_process_with_instances) do
+        let!(:oldest_web_process_with_instances) do
           ProcessModel.make(
             instances: 1,
             app: app,
@@ -196,14 +196,14 @@ module VCAP::CloudController
         end
 
         let!(:oldest_route_mapping) do
-          RouteMappingModel.make(app: oldest_webish_process_with_instances.app, process_type: oldest_webish_process_with_instances.type)
+          RouteMappingModel.make(app: oldest_web_process_with_instances.app, process_type: oldest_web_process_with_instances.type)
         end
 
-        it 'destroys the oldest webish process and ignores the original web process' do
+        it 'destroys the oldest web process and ignores the original web process' do
           expect {
             subject.scale
           }.not_to change { ProcessModel.find(guid: web_process.guid) }
-          expect(ProcessModel.find(guid: oldest_webish_process_with_instances.guid)).to be_nil
+          expect(ProcessModel.find(guid: oldest_web_process_with_instances.guid)).to be_nil
         end
       end
 
@@ -305,6 +305,31 @@ module VCAP::CloudController
           }.not_to raise_error
         end
       end
+
+      describe 'during an upgrade with leftover legacy webbish processes' do
+        let!(:deploying_web_process) do
+          ProcessModel.make(
+            app: web_process.app,
+            type: 'web-deployment-guid-legacy',
+            instances: current_deploying_instances,
+            guid: 'guid-legacy',
+            revision: revision,
+          )
+        end
+
+        it 'coerces the webish process to web' do
+          subject.scale
+          expect(deploying_web_process.reload.type).to eq ProcessTypes::WEB
+        end
+
+        it 'scales up the coerced web process by one' do
+          expect {
+            subject.scale
+          }.to change {
+            deploying_web_process.reload.instances
+          }.by(1)
+        end
+      end
     end
 
     describe '#cancel' do
@@ -355,6 +380,29 @@ module VCAP::CloudController
         it 'sets the most recent interim web process as the only web process' do
           subject.cancel
           expect(app.reload.processes.map(&:guid)).to eq([interim_deploying_web_process.guid])
+        end
+      end
+
+      describe 'during an upgrade with leftover legacy webbish processes' do
+        let!(:deploying_web_process) do
+          ProcessModel.make(
+            app: web_process.app,
+            type: 'web-deployment-guid-legacy',
+            instances: current_deploying_instances,
+            guid: 'guid-legacy',
+            revision: revision,
+          )
+        end
+
+        it 'deletes the legacy webish process' do
+          subject.cancel
+          expect(ProcessModel.find(guid: deploying_web_process.guid)).to be_nil
+        end
+
+        it 'rolls back to the correct number of instances' do
+          subject.cancel
+          expect(web_process.reload.instances).to eq(original_web_process_instance_count)
+          expect(ProcessModel.find(guid: deploying_web_process.guid)).to be_nil
         end
       end
     end
