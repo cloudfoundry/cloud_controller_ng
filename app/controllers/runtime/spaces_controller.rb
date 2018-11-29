@@ -175,7 +175,7 @@ module VCAP::CloudController
       delete_action = SpaceDelete.new(UserAuditInfo.from_context(SecurityContext), @services_event_repository, role_delete_action)
 
       deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(Space, guid, delete_action)
-      enqueue_deletion_job(deletion_job)
+      run_or_enqueue_deletion_job(deletion_job)
     end
 
     VCAP::CloudController::Roles::SPACE_ROLE_NAMES.each do |role|

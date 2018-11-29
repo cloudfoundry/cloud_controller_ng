@@ -272,7 +272,7 @@ module VCAP::CloudController
       delete_action = OrganizationDelete.new(org_roles_delete_action, space_delete_action)
 
       deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(Organization, guid, delete_action)
-      response = enqueue_deletion_job(deletion_job)
+      response = run_or_enqueue_deletion_job(deletion_job)
 
       @organization_event_repository.record_organization_delete_request(org, UserAuditInfo.from_context(SecurityContext), request_attrs)
 
