@@ -14,6 +14,8 @@ module VCAP::CloudController
         end
 
         def cached_dependencies
+          return nil if @config.get(:diego, :temporary_oci_buildpack_mode) == 'oci-phase-1'
+
           [::Diego::Bbs::Models::CachedDependency.new(
             from: LifecycleBundleUriGenerator.uri(@config.get(:diego, :lifecycle_bundles)[:docker]),
             to: '/tmp/lifecycle',
@@ -27,6 +29,18 @@ module VCAP::CloudController
 
         def setup
           nil
+        end
+
+        def image_layers
+          return nil if @config.get(:diego, :temporary_oci_buildpack_mode) != 'oci-phase-1'
+
+          [::Diego::Bbs::Models::ImageLayer.new(
+            name: 'docker-lifecycle',
+            url: LifecycleBundleUriGenerator.uri(@config.get(:diego, :lifecycle_bundles)[:docker]),
+            destination_path: '/tmp/lifecycle',
+            layer_type: ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
+            media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ,
+          )]
         end
 
         def global_environment_variables

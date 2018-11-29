@@ -31,17 +31,46 @@ module VCAP::CloudController
 
           launcher_args = ['app', task.command, '']
 
-          serial([
-            download_droplet_action,
-            ::Diego::Bbs::Models::RunAction.new(
-              user: 'vcap',
-              path: '/tmp/lifecycle/launcher',
-              args: launcher_args,
-              log_source: "APP/TASK/#{task.name}",
-              resource_limits: ::Diego::Bbs::Models::ResourceLimits.new,
-              env: task_environment_variables
+          run_action = ::Diego::Bbs::Models::RunAction.new(
+            user: 'vcap',
+            path: '/tmp/lifecycle/launcher',
+            args: launcher_args,
+            log_source: "APP/TASK/#{task.name}",
+            resource_limits: ::Diego::Bbs::Models::ResourceLimits.new,
+            env: task_environment_variables
+          )
+
+          if @config.get(:diego, :temporary_oci_buildpack_mode) == 'oci-phase-1' && task.droplet.sha256_checksum
+            ::Diego::ActionBuilder.action(run_action)
+          else
+            serial([
+              download_droplet_action,
+              run_action,
+            ])
+          end
+        end
+
+        def image_layers
+          return nil if @config.get(:diego, :temporary_oci_buildpack_mode) != 'oci-phase-1' || !task.droplet.sha256_checksum
+
+          [
+            ::Diego::Bbs::Models::ImageLayer.new(
+              name: 'droplet',
+              url: lifecycle_data[:droplet_uri],
+              destination_path: '/home/vcap',
+              layer_type: ::Diego::Bbs::Models::ImageLayer::Type::EXCLUSIVE,
+              media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ,
+              digest_value: task.droplet.sha256_checksum,
+              digest_algorithm: ::Diego::Bbs::Models::ImageLayer::DigestAlgorithm::SHA256,
             ),
-          ])
+            ::Diego::Bbs::Models::ImageLayer.new(
+              name: "buildpack-#{lifecycle_stack}-lifecycle",
+              url: LifecycleBundleUriGenerator.uri(config.get(:diego, :lifecycle_bundles)[lifecycle_bundle_key]),
+              destination_path: '/tmp/lifecycle',
+              layer_type: ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
+              media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ,
+            )
+          ]
         end
 
         def task_environment_variables
@@ -53,6 +82,8 @@ module VCAP::CloudController
         end
 
         def cached_dependencies
+          return nil if @config.get(:diego, :temporary_oci_buildpack_mode) == 'oci-phase-1' && task.droplet.sha256_checksum
+
           [::Diego::Bbs::Models::CachedDependency.new(
             from: LifecycleBundleUriGenerator.uri(config.get(:diego, :lifecycle_bundles)[lifecycle_bundle_key]),
             to: '/tmp/lifecycle',

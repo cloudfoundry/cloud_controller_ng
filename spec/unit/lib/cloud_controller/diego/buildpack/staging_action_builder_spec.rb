@@ -7,6 +7,7 @@ module VCAP::CloudController
         subject(:builder) { StagingActionBuilder.new(config, staging_details, lifecycle_data) }
 
         let(:droplet) { DropletModel.make(:buildpack) }
+        let(:temporary_oci_buildpack_mode) { '' }
         let(:config) do
           Config.new({
             skip_cert_verify: false,
@@ -16,6 +17,7 @@ module VCAP::CloudController
               lifecycle_bundles: {
                 'buildpack/buildpack-stack': 'the-buildpack-bundle'
               },
+              temporary_oci_buildpack_mode: temporary_oci_buildpack_mode,
             },
             staging:          {
               minimum_staging_file_descriptor_limit: 4,
@@ -269,6 +271,14 @@ module VCAP::CloudController
             )
           end
 
+          context 'when temporary_oci_buildpack_mode is set to oci-phase-1' do
+            let(:temporary_oci_buildpack_mode) { 'oci-phase-1' }
+
+            it 'returns no cached dependencies' do
+              expect(builder.cached_dependencies).to be_nil
+            end
+          end
+
           context 'when there are buildpacks' do
             let(:buildpacks) do
               [
@@ -299,6 +309,14 @@ module VCAP::CloudController
               expect(result).to include(buildpack_entry_1, buildpack_entry_2)
             end
 
+            context 'when temporary_oci_buildpack_mode is set to oci-phase-1' do
+              let(:temporary_oci_buildpack_mode) { 'oci-phase-1' }
+
+              it 'returns no cached dependencies' do
+                expect(builder.cached_dependencies).to be_nil
+              end
+            end
+
             context 'and some do not include checksums' do
               let(:buildpacks) do
                 [
@@ -325,6 +343,14 @@ module VCAP::CloudController
 
                 result = builder.cached_dependencies
                 expect(result).to include(buildpack_entry_1, buildpack_entry_2)
+              end
+
+              context 'when temporary_oci_buildpack_mode is set to oci-phase-1' do
+                let(:temporary_oci_buildpack_mode) { 'oci-phase-1' }
+
+                it 'returns no cached dependencies' do
+                  expect(builder.cached_dependencies).to be_nil
+                end
               end
             end
           end
@@ -356,6 +382,104 @@ module VCAP::CloudController
               result = builder.cached_dependencies
               expect(result).to include(buildpack_entry_1)
               expect(result).not_to include(buildpack_entry_2)
+            end
+          end
+        end
+
+        describe '#image_layers' do
+          it 'returns no image layers' do
+            expect(builder.image_layers).to be_nil
+          end
+
+          context 'when temporary_oci_buildpack_mode is set to oci-phase-1' do
+            let(:temporary_oci_buildpack_mode) { 'oci-phase-1' }
+
+            it 'returns the lifecycle as an image layer' do
+              expect(builder.image_layers).to include(
+                ::Diego::Bbs::Models::ImageLayer.new(
+                  name:              'buildpack-buildpack-stack-lifecycle',
+                  url:               'generated-uri',
+                  destination_path:  '/tmp/lifecycle',
+                  layer_type:        ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
+                  media_type:        ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ,
+                )
+              )
+            end
+
+            context 'when there are buildpacks' do
+              let(:buildpacks) do
+                [
+                  { name: 'buildpack-1', key: 'buildpack-1-key', url: 'buildpack-1-url', sha256: 'checksum' },
+                  { name: 'buildpack-2', key: 'buildpack-2-key', url: 'buildpack-2-url', sha256: 'checksum' },
+                ]
+              end
+
+              it 'returns the buildpacks as an image layer' do
+                expect(builder.image_layers).to include(
+                  ::Diego::Bbs::Models::ImageLayer.new(
+                    name:              'buildpack-1',
+                    url:               'buildpack-1-url',
+                    destination_path:  "/tmp/buildpacks/#{Digest::MD5.hexdigest('buildpack-1-key')}",
+                    digest_algorithm:  ::Diego::Bbs::Models::ImageLayer::DigestAlgorithm::SHA256,
+                    digest_value:      'checksum',
+                    layer_type:        ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
+                    media_type:        ::Diego::Bbs::Models::ImageLayer::MediaType::ZIP,
+                  )
+                )
+                expect(builder.image_layers).to include(
+                  ::Diego::Bbs::Models::ImageLayer.new(
+                    name:              'buildpack-2',
+                    url:               'buildpack-2-url',
+                    destination_path:  "/tmp/buildpacks/#{Digest::MD5.hexdigest('buildpack-2-key')}",
+                    digest_algorithm:  ::Diego::Bbs::Models::ImageLayer::DigestAlgorithm::SHA256,
+                    digest_value:      'checksum',
+                    layer_type:        ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
+                    media_type:        ::Diego::Bbs::Models::ImageLayer::MediaType::ZIP,
+                  )
+                )
+              end
+
+              context 'and some do not include checksums' do
+                let(:buildpacks) do
+                  [
+                    { name: 'buildpack-1', key: 'buildpack-1-key', url: 'buildpack-1-url', sha256: 'checksum' },
+                    { name: 'buildpack-2', key: 'buildpack-2-key', url: 'buildpack-2-url', sha256: nil },
+                  ]
+                end
+
+                it 'returns the buildpacks without checksum information' do
+                  expect(builder.image_layers).to include(
+                    ::Diego::Bbs::Models::ImageLayer.new(
+                      name:              'buildpack-2',
+                      url:               'buildpack-2-url',
+                      destination_path:  "/tmp/buildpacks/#{Digest::MD5.hexdigest('buildpack-2-key')}",
+                      layer_type:        ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
+                      media_type:        ::Diego::Bbs::Models::ImageLayer::MediaType::ZIP,
+                    )
+                  )
+                end
+              end
+            end
+
+            context 'when there are custom buildpacks' do
+              let(:buildpacks) do
+                [
+                  { name: 'buildpack-1', key: 'buildpack-1-key', url: 'buildpack-1-url', sha256: 'checksum' },
+                  { name: 'custom', key: 'custom-key', url: 'custom-url' },
+                ]
+              end
+
+              it 'does not returns the custom buildpack as an image layer' do
+                expect(builder.image_layers).not_to include(
+                  ::Diego::Bbs::Models::ImageLayer.new(
+                    name:              'custom',
+                    url:               'custom-url',
+                    destination_path:  "/tmp/buildpacks/#{Digest::MD5.hexdigest('custom-key')}",
+                    layer_type:        ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
+                    media_type:        ::Diego::Bbs::Models::ImageLayer::MediaType::ZIP,
+                  )
+                )
+              end
             end
           end
         end

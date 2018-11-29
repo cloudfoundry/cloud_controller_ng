@@ -28,7 +28,43 @@ module VCAP::CloudController
           ])
         end
 
+        def image_layers
+          return nil if @config.get(:diego, :temporary_oci_buildpack_mode) != 'oci-phase-1'
+
+          layers = [
+            ::Diego::Bbs::Models::ImageLayer.new(
+              name:              "buildpack-#{stack}-lifecycle",
+              url:               LifecycleBundleUriGenerator.uri(config.get(:diego, :lifecycle_bundles)[lifecycle_bundle_key]),
+              destination_path:  '/tmp/lifecycle',
+              layer_type:        ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
+              media_type:        ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ,
+            )
+          ]
+
+          buildpack_layers = lifecycle_data[:buildpacks].map do |buildpack|
+            next if buildpack[:name] == 'custom'
+
+            layer = {
+              name:              buildpack[:name],
+              url:               buildpack[:url],
+              destination_path:  "/tmp/buildpacks/#{Digest::MD5.hexdigest(buildpack[:key])}",
+              layer_type:        ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
+              media_type:        ::Diego::Bbs::Models::ImageLayer::MediaType::ZIP,
+            }
+            if buildpack[:sha256]
+              layer[:digest_algorithm] = ::Diego::Bbs::Models::ImageLayer::DigestAlgorithm::SHA256
+              layer[:digest_value] = buildpack[:sha256]
+            end
+
+            ::Diego::Bbs::Models::ImageLayer.new(layer)
+          end.compact
+
+          layers.concat(buildpack_layers)
+        end
+
         def cached_dependencies
+          return nil if @config.get(:diego, :temporary_oci_buildpack_mode) == 'oci-phase-1'
+
           dependencies = [
             ::Diego::Bbs::Models::CachedDependency.new(
               from:      LifecycleBundleUriGenerator.uri(config.get(:diego, :lifecycle_bundles)[lifecycle_bundle_key]),

@@ -13,6 +13,7 @@ module VCAP::CloudController
               lifecycle_bundles:             {
                 docker: 'the-docker-bundle'
               },
+              temporary_oci_buildpack_mode: temporary_oci_buildpack_mode,
               insecure_docker_registry_list: []
             },
             staging: {
@@ -28,6 +29,7 @@ module VCAP::CloudController
         end
         let(:env) { double(:env) }
         let(:generated_environment) { [::Diego::Bbs::Models::EnvironmentVariable.new(name: 'generated-environment', value: 'generated-value')] }
+        let(:temporary_oci_buildpack_mode) { '' }
 
         before do
           allow(LifecycleBundleUriGenerator).to receive(:uri).with('the-docker-bundle').and_return('generated-uri')
@@ -44,7 +46,7 @@ module VCAP::CloudController
             expect(emit_progress.failure_message_prefix).to eq('Staging Failed')
 
             run_action = emit_progress.action.run_action
-            expect(run_action.path).to eq('/tmp/docker_app_lifecycle/builder')
+            expect(run_action.path).to eq('/tmp/lifecycle/builder')
             expect(run_action.user).to eq('vcap')
             expect(run_action.env).to eq(generated_environment)
             expect(run_action.args).to match_array(['-outputMetadataJSONFilename=/tmp/result.json', '-dockerRef=the-docker-image'])
@@ -93,9 +95,39 @@ module VCAP::CloudController
             expect(result.count).to eq(1)
             lifecycle_dependency = result.first
 
-            expect(lifecycle_dependency.to).to eq('/tmp/docker_app_lifecycle')
+            expect(lifecycle_dependency.to).to eq('/tmp/lifecycle')
             expect(lifecycle_dependency.cache_key).to eq('docker-lifecycle')
             expect(lifecycle_dependency.from).to eq('generated-uri')
+          end
+
+          context 'when temporary_oci_buildpack_mode is set to oci-phase-1' do
+            let(:temporary_oci_buildpack_mode) { 'oci-phase-1' }
+
+            it 'returns nil' do
+              expect(builder.cached_dependencies).to be_nil
+            end
+          end
+        end
+
+        describe '#image_layers' do
+          it 'returns nil' do
+            expect(builder.image_layers).to be_nil
+          end
+
+          context 'when temporary_oci_buildpack_mode is set to oci-phase-1' do
+            let(:temporary_oci_buildpack_mode) { 'oci-phase-1' }
+
+            it 'creates a image layer for each cached dependency' do
+              expect(builder.image_layers).to include(
+                ::Diego::Bbs::Models::ImageLayer.new(
+                  name: 'docker-lifecycle',
+                  url: 'generated-uri',
+                  destination_path: '/tmp/lifecycle',
+                  layer_type: ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
+                  media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ,
+                )
+              )
+            end
           end
         end
 

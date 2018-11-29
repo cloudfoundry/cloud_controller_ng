@@ -21,6 +21,8 @@ module VCAP::CloudController
         end
 
         def cached_dependencies
+          return nil if @config.get(:diego, :temporary_oci_buildpack_mode) == 'oci-phase-1' && @checksum_algorithm == 'sha256'
+
           lifecycle_bundle_key = "buildpack/#{@stack}".to_sym
           lifecycle_bundle = @config.get(:diego, :lifecycle_bundles)[lifecycle_bundle_key]
           unless lifecycle_bundle
@@ -37,15 +39,11 @@ module VCAP::CloudController
         end
 
         def root_fs
-          if @config.get(:diego, :temporary_oci_buildpack_mode) == 'oci-phase-1'
-            "preloaded+layer:#{@stack}?layer=#{UriUtils.uri_escape(@droplet_uri)}&layer_path=#{action_user_home}&layer_digest=#{@checksum_value}"
-          else
-            "preloaded:#{@stack}"
-          end
+          "preloaded:#{@stack}"
         end
 
         def setup
-          return nil if @config.get(:diego, :temporary_oci_buildpack_mode) == 'oci-phase-1'
+          return nil if @config.get(:diego, :temporary_oci_buildpack_mode) == 'oci-phase-1' && @checksum_algorithm == 'sha256'
 
           serial([
             ::Diego::Bbs::Models::DownloadAction.new(
@@ -57,6 +55,35 @@ module VCAP::CloudController
               checksum_value: @checksum_value,
             )
           ])
+        end
+
+        def image_layers
+          return nil if @config.get(:diego, :temporary_oci_buildpack_mode) != 'oci-phase-1' || @checksum_algorithm != 'sha256'
+
+          lifecycle_bundle_key = "buildpack/#{@stack}".to_sym
+          lifecycle_bundle = @config.get(:diego, :lifecycle_bundles)[lifecycle_bundle_key]
+          unless lifecycle_bundle
+            raise InvalidStack.new("no compiler defined for requested stack '#{@stack}'")
+          end
+
+          [
+            ::Diego::Bbs::Models::ImageLayer.new(
+              name: 'droplet',
+              url: UriUtils.uri_escape(@droplet_uri),
+              destination_path: action_user_home,
+              layer_type: ::Diego::Bbs::Models::ImageLayer::Type::EXCLUSIVE,
+              media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ,
+              digest_value: @checksum_value,
+              digest_algorithm: ::Diego::Bbs::Models::ImageLayer::DigestAlgorithm::SHA256,
+            ),
+            ::Diego::Bbs::Models::ImageLayer.new(
+              name: "buildpack-#{@stack}-lifecycle",
+              url: LifecycleBundleUriGenerator.uri(lifecycle_bundle),
+              destination_path: '/tmp/lifecycle',
+              layer_type: ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
+              media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ,
+            )
+          ]
         end
 
         def global_environment_variables
