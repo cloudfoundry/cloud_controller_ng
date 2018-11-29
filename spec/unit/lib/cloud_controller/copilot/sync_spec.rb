@@ -5,20 +5,30 @@ require 'cloud_controller/copilot/sync'
 module VCAP::CloudController
   RSpec.describe Copilot::Sync do
     describe '#sync' do
+      let(:istio_domain) { SharedDomain.make(name: 'istio.example.org') }
+      let(:internal_istio_domain) { SharedDomain.make(name: 'istio.example.internal', internal: true) }
+
       before do
         allow(Copilot::Adapter).to receive(:bulk_sync)
+        TestConfig.override(copilot: { enabled: true, temporary_istio_domains: [istio_domain.name, internal_istio_domain.name] })
       end
 
       context 'syncing' do
         let(:app) { VCAP::CloudController::AppModel.make }
-        let(:domain) { SharedDomain.make(name: 'example.org') }
-        let(:internal_domain) { SharedDomain.make(name: 'example.internal', internal: true) }
 
-        let(:route) { Route.make(domain: domain, host: 'some-host', path: '/some/path') }
-        let(:internal_route) { Route.make(domain: internal_domain, host: 'internal-host') }
-
+        let(:route) { Route.make(domain: istio_domain, host: 'some-host', path: '/some/path') }
         let!(:route_mapping) { RouteMappingModel.make(route: route, app: app, process_type: 'web') }
+
+        let(:internal_route) { Route.make(domain: internal_istio_domain, host: 'internal-host') }
         let!(:internal_route_mapping) { RouteMappingModel.make(route: internal_route, app: app, process_type: 'web') }
+
+        let(:legacy_domain) { SharedDomain.make }
+        let(:legacy_route) { Route.make(domain: legacy_domain, host: 'some-host', path: '/some/path') }
+        let!(:legacy_route_mapping) { RouteMappingModel.make(route: legacy_route, app: app, process_type: 'web') }
+
+        let(:internal_legacy_domain) { SharedDomain.make(name: 'example.internal', internal: true) }
+        let(:internal_legacy_route) { Route.make(domain: internal_legacy_domain, host: 'internal-host') }
+        let!(:internal_legacy_route_mapping) { RouteMappingModel.make(route: internal_legacy_route, app: app, process_type: 'web') }
 
         let!(:web_process_model) { VCAP::CloudController::ProcessModel.make(type: 'web', app: app) }
         let!(:worker_process_model) { VCAP::CloudController::ProcessModel.make(type: 'worker', app: app) }
@@ -27,7 +37,7 @@ module VCAP::CloudController
           allow(Diego::ProcessGuid).to receive(:from_process).with(web_process_model).and_return('some-diego-process-guid')
         end
 
-        it 'sends routes, route_mappings and CDPAs over to the adapter' do
+        it 'sends istio routes, route_mappings and CDPAs over to the adapter' do
           Copilot::Sync.sync
 
           expect(Copilot::Adapter).to have_received(:bulk_sync).with(
@@ -107,9 +117,8 @@ module VCAP::CloudController
           allow(Diego::ProcessGuid).to receive(:from_process).with(web_process_model_2).and_return('some-diego-process-guid-2')
         end
 
-        let(:domain) { SharedDomain.make(name: 'example.org') }
-        let(:route_1) { Route.make(domain: domain, host: 'some-host', path: '/some/path') }
-        let(:route_2) { Route.make(domain: domain, host: 'some-other-host', path: '/some/other/path') }
+        let(:route_1) { Route.make(domain: istio_domain, host: 'some-host', path: '/some/path') }
+        let(:route_2) { Route.make(domain: istio_domain, host: 'some-other-host', path: '/some/other/path') }
         let(:app_1) { VCAP::CloudController::AppModel.make }
         let(:app_2) { VCAP::CloudController::AppModel.make }
         let!(:route_mapping_1) { RouteMappingModel.make(route: route_1, app: app_1, process_type: 'web') }
