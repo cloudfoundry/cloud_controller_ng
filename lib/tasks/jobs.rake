@@ -33,6 +33,7 @@ namespace :jobs do
       'pollable_job_cleanup',
       'pending_droplets',
       'pending_builds',
+      'prune_completed_deployments',
       'request_counts_cleanup',
     ]
 
