@@ -1223,3 +1223,8 @@
   name: ProcessUpdateDisabledDuringDeployment
   http_code: 422
   message: "Cannot update this process while a deployment is in flight."
+
+390020:
+  name: LabelLimitExceeded
+  http_code: 422
+  message: "Failed to add %d labels because it would exceed maximum of %d"
