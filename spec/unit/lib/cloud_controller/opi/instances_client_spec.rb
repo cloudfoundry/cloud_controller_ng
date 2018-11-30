@@ -13,7 +13,7 @@ RSpec.describe(OPI::InstancesClient) do
       {
         process_guid: 'my-guid-0',
         instances: [
-          { index: 42, state: 'RUNNING', since: 999 }
+          { index: 42, state: 'RUNNING', since: 999, placement_error: '' }
         ]
       }.to_json
     end
@@ -69,9 +69,9 @@ RSpec.describe(OPI::InstancesClient) do
         {
           process_guid: 'my-guid-0',
           instances: [
-            { index: 11, state: 'RUNNING' },
-            { index: 23, state: 'CLAIMED' },
-            { index: 42, state: 'CLAIMED' }
+            { index: 11, state: 'RUNNING', placement_error: '' },
+            { index: 23, state: 'CLAIMED', placement_error: '' },
+            { index: 42, state: 'UNCLAIMED', placement_error: 'this aint the place' }
           ]
         }.to_json
       end
@@ -89,13 +89,19 @@ RSpec.describe(OPI::InstancesClient) do
       it 'provides the states' do
         expect(actual_lrps[0].state).to eq('RUNNING')
         expect(actual_lrps[1].state).to eq('CLAIMED')
-        expect(actual_lrps[2].state).to eq('CLAIMED')
+        expect(actual_lrps[2].state).to eq('UNCLAIMED')
       end
 
       it 'provides the single guid of the process' do
         expect(actual_lrps[0].actual_lrp_key.process_guid).to eq('my-guid-0')
         expect(actual_lrps[1].actual_lrp_key.process_guid).to eq('my-guid-0')
         expect(actual_lrps[2].actual_lrp_key.process_guid).to eq('my-guid-0')
+      end
+
+      it 'provides an empty placement error for the instances' do
+        expect(actual_lrps[0].placement_error).to eq('')
+        expect(actual_lrps[1].placement_error).to eq('')
+        expect(actual_lrps[2].placement_error).to eq('this aint the place')
       end
     end
 

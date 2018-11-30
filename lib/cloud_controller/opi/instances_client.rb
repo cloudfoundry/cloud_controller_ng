@@ -23,11 +23,11 @@ module OPI
       attr_reader :placement_error
       attr_reader :actual_lrp_net_info
 
-      def initialize(actual_lrp_key, state, since)
-        @actual_lrp_key = actual_lrp_key
-        @state = state
-        @since = since
-        @placement_error = ''
+      def initialize(instance, process_guid)
+        @actual_lrp_key = ActualLRPKey.new(instance['index'], process_guid)
+        @state = instance['state']
+        @since = instance['since']
+        @placement_error = instance['placement_error']
         @actual_lrp_net_info = ActualLRPNetInfo.new('127.0.0.1', Array[PortMapping.new(8080, 80)])
       end
 
@@ -54,7 +54,7 @@ module OPI
       end
       process_guid = resp_json['process_guid']
       resp_json['instances'].map do |instance|
-        ActualLRP.new(ActualLRPKey.new(instance['index'], process_guid), instance['state'], instance['since'])
+        ActualLRP.new(instance, process_guid)
       end
     end
 
