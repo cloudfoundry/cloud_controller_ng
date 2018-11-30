@@ -41,7 +41,7 @@ module OPI
     end
 
     def lrp_instances(process)
-      path = "/apps/#{process.guid}/instances"
+      path = "/apps/#{process.guid}/#{process.version}/instances"
       begin
         retries ||= 0
         resp = @client.get(path)

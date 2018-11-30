@@ -4,7 +4,7 @@ require 'cloud_controller/opi/instances_client'
 RSpec.describe(OPI::InstancesClient) do
   subject(:client) { described_class.new(opi_url) }
   let(:opi_url) { 'http://opi.service.cf.internal:8077' }
-  let(:process) { double(guid: 'my-process-guid') }
+  let(:process) { double(guid: 'my-process-guid', version: 'my-version-guid') }
 
   context 'when request executes successfully' do
     subject(:actual_lrps) { client.lrp_instances(process) }
@@ -19,13 +19,13 @@ RSpec.describe(OPI::InstancesClient) do
     end
 
     before do
-      stub_request(:get, "#{opi_url}/apps/#{process.guid}/instances").
+      stub_request(:get, "#{opi_url}/apps/#{process.guid}/#{process.version}/instances").
         to_return(status: 200, body: response_body)
     end
 
     it 'executes expected http request' do
       client.lrp_instances(process)
-      expect(WebMock).to have_requested(:get, "#{opi_url}/apps/#{process.guid}/instances")
+      expect(WebMock).to have_requested(:get, "#{opi_url}/apps/#{process.guid}/#{process.version}/instances")
     end
 
     it 'returns the expected amount of actual lrps' do
@@ -106,7 +106,7 @@ RSpec.describe(OPI::InstancesClient) do
 
       it 'raises NoRunningInstances error' do
         expect { client.lrp_instances(process) }.to raise_error(CloudController::Errors::NoRunningInstances)
-        expect(a_request(:get, "#{opi_url}/apps/#{process.guid}/instances")).to have_been_made.times(5)
+        expect(a_request(:get, "#{opi_url}/apps/#{process.guid}/#{process.version}/instances")).to have_been_made.times(5)
       end
     end
 
@@ -116,7 +116,7 @@ RSpec.describe(OPI::InstancesClient) do
       end
 
       before do
-        stub_request(:get, "#{opi_url}/apps/#{process.guid}/instances").
+        stub_request(:get, "#{opi_url}/apps/#{process.guid}/#{process.version}/instances").
           to_return(status: 200, body: error_response_body).
           then.to_return(status: 200, body: error_response_body).
           then.to_return(status: 200, body: error_response_body).
@@ -125,7 +125,7 @@ RSpec.describe(OPI::InstancesClient) do
 
       it 'should succeed after several retries' do
         client.lrp_instances(process)
-        expect(a_request(:get, "#{opi_url}/apps/#{process.guid}/instances")).to have_been_made.times(4)
+        expect(a_request(:get, "#{opi_url}/apps/#{process.guid}/#{process.version}/instances")).to have_been_made.times(4)
       end
     end
   end
