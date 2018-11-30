@@ -672,32 +672,6 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the app has a current droplet with a webish process' do
-        let(:type) { 'web-deployment-11d44a0f-0535-449b-a265-4c01705d85a0' }
-
-        before do
-          process.current_droplet.update(process_types: { web: 'run-my-app' })
-          process.reload
-        end
-
-        it 'returns the web process type command from the droplet' do
-          expect(process.detected_start_command).to eq('run-my-app')
-        end
-      end
-
-      context 'when the app has a current droplet with a non-webish process' do
-        let(:type) { 'worker' }
-
-        before do
-          process.current_droplet.update(process_types: { worker: 'do-my-work' })
-          process.reload
-        end
-
-        it 'returns the worker process type command from the droplet' do
-          expect(process.detected_start_command).to eq('do-my-work')
-        end
-      end
-
       context 'when the app does not have a current droplet' do
         before do
           process.current_droplet.destroy

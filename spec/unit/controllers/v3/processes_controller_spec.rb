@@ -373,8 +373,8 @@ RSpec.describe ProcessesController, type: :controller do
         VCAP::CloudController::DeploymentModel.make(state: 'DEPLOYING', app: app)
       end
 
-      it 'succeeds if the process is not a webish process' do
-        process = VCAP::CloudController::ProcessModel.make(:process, app: app, type: 'this-is-not-webish')
+      it 'succeeds if the process is not a web process' do
+        process = VCAP::CloudController::ProcessModel.make(:process, app: app, type: 'worker')
 
         patch :update, params: { process_guid: process.guid }.merge(request_body), as: :json
 
@@ -383,15 +383,6 @@ RSpec.describe ProcessesController, type: :controller do
 
       it 'raises 422 if the process is a web process' do
         process = VCAP::CloudController::ProcessModel.make(:process, app: app, type: 'web')
-
-        patch :update, params: { process_guid: process.guid }.merge(request_body), as: :json
-
-        expect(response.status).to eq(422)
-        expect(response.body).to include('ProcessUpdateDisabledDuringDeployment')
-      end
-
-      it 'raises 422 if the process is a webish process' do
-        process = VCAP::CloudController::ProcessModel.make(:process, app: app, type: 'web-deployment-test')
 
         patch :update, params: { process_guid: process.guid }.merge(request_body), as: :json
 
@@ -729,8 +720,8 @@ RSpec.describe ProcessesController, type: :controller do
         VCAP::CloudController::DeploymentModel.make(state: 'DEPLOYING', app: app)
       end
 
-      it 'succeeds if the process is not a webish process' do
-        process = VCAP::CloudController::ProcessModel.make(:process, app: app, type: 'this-is-not-webish')
+      it 'succeeds if the process is not a web process' do
+        process = VCAP::CloudController::ProcessModel.make(:process, app: app, type: 'worker')
 
         put :scale, params: { process_guid: process.guid }.merge(request_body), as: :json
 
@@ -739,15 +730,6 @@ RSpec.describe ProcessesController, type: :controller do
 
       it 'raises 422 if the process is a web process' do
         process = VCAP::CloudController::ProcessModel.make(:process, app: app, type: 'web')
-
-        put :scale, params: { process_guid: process.guid }.merge(request_body), as: :json
-
-        expect(response.status).to eq(422)
-        expect(response.body).to include('ScaleDisabledDuringDeployment')
-      end
-
-      it 'raises 422 if the process is a webish process' do
-        process = VCAP::CloudController::ProcessModel.make(:process, app: app, type: 'web-deployment-test')
 
         put :scale, params: { process_guid: process.guid }.merge(request_body), as: :json
 

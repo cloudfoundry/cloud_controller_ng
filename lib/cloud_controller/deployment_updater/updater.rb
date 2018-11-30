@@ -46,8 +46,8 @@ module VCAP::CloudController
           deploying_web_process.lock!
 
           prior_web_process = web_processes.
-                                 reject { |p| p.guid == deploying_web_process.guid }.
-                                 max_by(&:created_at)
+                              reject { |p| p.guid == deploying_web_process.guid }.
+                              max_by(&:created_at)
           prior_web_process.lock!
 
           prior_web_process.update(instances: deployment.original_web_process_instance_count, type: ProcessTypes::WEB)
@@ -86,7 +86,7 @@ module VCAP::CloudController
       end
 
       def legacy_webish_processes
-        app.processes.select { |process| process.legacy_webish? }
+        app.processes.select(&:legacy_webish?)
       end
 
       def app

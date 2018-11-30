@@ -306,7 +306,7 @@ module VCAP::CloudController
         end
       end
 
-      describe 'during an upgrade with leftover legacy webbish processes' do
+      describe 'during an upgrade with leftover legacy webish processes' do
         let!(:deploying_web_process) do
           ProcessModel.make(
             app: web_process.app,
