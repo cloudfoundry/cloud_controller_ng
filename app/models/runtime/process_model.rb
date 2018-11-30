@@ -284,7 +284,6 @@ module VCAP::CloudController
       # * memory is changed
       # * health check type is changed
       # * health check http endpoint is changed
-      # * enable_ssh is changed
       # * ports were changed by the user
       #
       # this is to indicate that the running state of an application has changed,
@@ -296,7 +295,6 @@ module VCAP::CloudController
         column_changed?(:memory) ||
         column_changed?(:health_check_type) ||
         column_changed?(:health_check_http_endpoint) ||
-        column_changed?(:enable_ssh) ||
         @ports_changed_by_user
       )
     end
