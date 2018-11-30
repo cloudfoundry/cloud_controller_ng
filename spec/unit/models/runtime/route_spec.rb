@@ -172,13 +172,13 @@ module VCAP::CloudController
         context 'when shared' do
           it "succeeds if it's the same domain" do
             domain = SharedDomain.make
-            route        = Route.make(domain: domain)
+            route = Route.make(domain: domain)
             route.domain = route.domain = domain
             expect { route.save }.not_to raise_error
           end
 
           it "fails if it's different" do
-            route        = Route.make(domain: SharedDomain.make)
+            route = Route.make(domain: SharedDomain.make)
             route.domain = SharedDomain.make
             expect(route.valid?).to be_falsey
           end
@@ -194,7 +194,7 @@ module VCAP::CloudController
           end
 
           it 'fails if its a different domain' do
-            route        = Route.make(space: space, domain: domain)
+            route = Route.make(space: space, domain: domain)
             route.domain = PrivateDomain.make(owning_organization: space.organization)
             expect(route.valid?).to be_falsey
           end
@@ -743,13 +743,13 @@ module VCAP::CloudController
         let(:validator) { double }
 
         let(:http_route) { Route.new(space: space,
-                                     domain: http_domain,
-                                     host: 'bar')
+          domain: http_domain,
+          host: 'bar')
         }
         subject(:tcp_route) { Route.new(space: space,
-                                        domain: tcp_domain,
-                                        host: '',
-                                        port: 6000)
+          domain: tcp_domain,
+          host: '',
+          port: 6000)
         }
         before do
           router_group = double('router_group', type: 'tcp', reservable_ports: [4444, 6000])
@@ -1005,7 +1005,7 @@ module VCAP::CloudController
                 guid: r.domain.guid,
                 name: r.domain.name
               }
-          })
+            })
         end
       end
 
@@ -1042,8 +1042,8 @@ module VCAP::CloudController
 
         expect {
           Route.make(
-            host:   '',
-            space:  space_a,
+            host: '',
+            space: space_a,
             domain: shared_domain
           )
         }.to raise_error Sequel::ValidationFailed
@@ -1056,16 +1056,16 @@ module VCAP::CloudController
         fake_route_handler_app2 = instance_double(ProcessRouteHandler)
 
         space = Space.make
-        process1   = ProcessModelFactory.make(space: space, state: 'STARTED', diego: false)
-        process2   = ProcessModelFactory.make(space: space, state: 'STARTED', diego: false)
+        process1 = ProcessModelFactory.make(space: space, state: 'STARTED', diego: false)
+        process2 = ProcessModelFactory.make(space: space, state: 'STARTED', diego: false)
 
         route = Route.make(space: space)
         RouteMappingModel.make(app: process1.app, route: route, process_type: process1.type)
         RouteMappingModel.make(app: process2.app, route: route, process_type: process2.type)
         route.reload
 
-        process1   = route.apps[0]
-        process2   = route.apps[1]
+        process1 = route.apps[0]
+        process2 = route.apps[1]
 
         allow(ProcessRouteHandler).to receive(:new).with(process1).and_return(fake_route_handler_app1)
         allow(ProcessRouteHandler).to receive(:new).with(process2).and_return(fake_route_handler_app2)
@@ -1205,6 +1205,143 @@ module VCAP::CloudController
         it 'is false' do
           expect(external_private_route.internal?).to eq(false)
         end
+      end
+    end
+
+    describe 'vip_offset' do
+      before do
+        TestConfig.override(internal_route_vip_range: '127.128.99.0/29') # 8 theoretical available ips, 6 actual
+      end
+
+      context 'auto-assign vip_offset' do
+        let(:internal_domain) { SharedDomain.make(name: 'apps.internal', internal: true) }
+        let!(:internal_route_1) { Route.make(host: 'meow', domain: internal_domain) }
+        let!(:internal_route_2) { Route.make(host: 'woof', domain: internal_domain) }
+        let!(:internal_route_3) { Route.make(host: 'quack', domain: internal_domain) }
+        let(:external_private_route) { Route.make }
+
+        it 'auto-assigns vip_offset to internal routes only' do
+          expect(internal_route_1.vip_offset).not_to be_nil
+          expect(external_private_route.vip_offset).to be_nil
+        end
+
+        it 'assigns multiple vips in ascending order without duplicates' do
+          expect(internal_route_1.vip_offset).to eq(1)
+          expect(internal_route_2.vip_offset).to eq(2)
+        end
+
+        it 'never assigns the same vip_offset to multiple internal routes' do
+          expect {
+            Route.make(host: 'ants', vip_offset: 1)
+          }.to raise_error(Sequel::UniqueConstraintViolation, /duplicate.*routes_vip_offset_index/i)
+        end
+
+        it 'finds an available offset' do
+          Route.make(host: 'gulp', domain: internal_domain)
+          expect(Route.all.map(&:vip_offset)).to match_array((1..4).to_a)
+        end
+
+        context 'when the taken offset is not the first' do
+          it 'finds the first offset' do
+            internal_route_1.destroy
+            expect(Route.make(host: 'gulp', domain: internal_domain).vip_offset).to eq(1)
+          end
+        end
+
+        context 'when the taken offsets include first and not second' do
+          it 'finds an available offset' do
+            internal_route_2.destroy
+            expect(Route.make(host: 'gulp', domain: internal_domain).vip_offset).to eq(2)
+          end
+        end
+
+        context 'when filling the vip range' do
+          it 'can make 3 more new routes only' do
+            expect { Route.make(host: 'route4', domain: internal_domain) }.not_to raise_error
+            expect { Route.make(host: 'route5', domain: internal_domain) }.not_to raise_error
+            expect { Route.make(host: 'route6', domain: internal_domain) }.not_to raise_error
+            expect { Route.make(host: 'route7', domain: internal_domain) }.to raise_error(Route::OutOfVIPException)
+          end
+
+          it 'can reclaim lost vips' do
+            expect { Route.make(host: 'route4', domain: internal_domain) }.not_to raise_error
+            expect { Route.make(host: 'route5', domain: internal_domain) }.not_to raise_error
+            expect { Route.make(host: 'route6', domain: internal_domain) }.not_to raise_error
+            Route.last.destroy
+            internal_route_2.destroy
+            expect(Route.make(host: 'new2', domain: internal_domain).vip_offset).to eq(2)
+            expect(Route.make(host: 'new6', domain: internal_domain).vip_offset).to eq(6)
+          end
+        end
+      end
+
+      context 'when we assign vip_offsets explicitly' do
+        let(:internal_domain) { SharedDomain.make(name: 'apps.internal', internal: true) }
+
+        it 'does not assign vip_offsets that exceed the CIDR range' do
+          expect {
+            Route.make(host: 'ants0', domain: internal_domain, vip_offset: 0)
+          }.to raise_error(Sequel::ValidationFailed, 'name vip_offset')
+          expect {
+            Route.make(host: 'ants1', domain: internal_domain, vip_offset: 1)
+          }.not_to raise_error
+          expect {
+            Route.make(host: 'ants6', domain: internal_domain, vip_offset: 6)
+          }.not_to raise_error
+          expect {
+            Route.make(host: 'ants7', domain: internal_domain, vip_offset: 7)
+          }.to raise_error(Sequel::ValidationFailed, 'name vip_offset')
+          expect {
+            Route.make(host: 'ants8', domain: internal_domain, vip_offset: 8)
+          }.to raise_error(Sequel::ValidationFailed, 'name vip_offset')
+        end
+      end
+
+      context 'when there are routes on internal domains' do
+        let(:internal_domain) { SharedDomain.make(name: 'apps.internal', internal: true) }
+        let!(:internal_route_1) { Route.make(host: 'meow', domain: internal_domain, vip_offset: nil) }
+        let!(:internal_route_2) { Route.make(host: 'woof', domain: internal_domain, vip_offset: 2) }
+        let!(:internal_route_3) { Route.make(host: 'quack', domain: internal_domain, vip_offset: 4) }
+        let(:external_private_route) { Route.make }
+
+        it 'can have different vip_offsets in range' do
+          expect(internal_route_1).to be_valid
+          expect(internal_route_1.vip_offset).to eq(1)
+          expect(internal_route_2).to be_valid
+          expect(internal_route_3).to be_valid
+        end
+
+        it 'assigns lowest-possible vip_offsets' do
+          internal_route_4 = Route.make(host: 'bray', domain: internal_domain)
+          expect(internal_route_4.vip_offset).to eq(3)
+          internal_route_5 = Route.make(host: 'lemons', domain: internal_domain)
+          expect(internal_route_5.vip_offset).to eq(5)
+        end
+
+        it 'reuses vip_offsets' do
+          expected_vip_offset = internal_route_2.vip_offset
+          internal_route_2.delete
+          internal_route_6 = Route.make(host: 'route6', domain: internal_domain)
+          expect(internal_route_6.vip_offset).to eq(expected_vip_offset)
+        end
+      end
+    end
+
+    describe 'vip' do
+      let(:internal_domain) { SharedDomain.make(name: 'apps.internal', internal: true) }
+      let!(:internal_route_1) { Route.make(host: 'meow', domain: internal_domain, vip_offset: 1) }
+      let!(:internal_route_2) { Route.make(host: 'woof', domain: internal_domain, vip_offset: 2) }
+      let!(:internal_route_3) { Route.make(host: 'quack', domain: internal_domain, vip_offset: 4) }
+      let(:external_private_route) { Route.make }
+
+      it 'returns a ipv4 ip address offset from the beginning of the internal route vip range' do
+        expect(internal_route_1.vip).to eq('127.128.0.1')
+        internal_route_2.vip_offset = 16
+        expect(internal_route_2.vip).to eq('127.128.0.16')
+      end
+
+      it 'returns nil when asked for the ip addr for a nil offset' do
+        expect(external_private_route.vip).to be_nil
       end
     end
 

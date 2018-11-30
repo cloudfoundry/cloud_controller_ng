@@ -383,6 +383,8 @@ copilot:
   client_chain_file: 'spec/fixtures/certs/copilot.crt'
   sync_frequency_in_seconds: 30
 
+internal_route_vip_range: '127.128.0.0/9'
+
 locket:
   host: 'locket.service.cf.internal'
   port: 8891
