@@ -1023,7 +1023,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         end
 
         it 'returns an UnprocessableEntity error' do
-          post :create, params: request_body, as: :json
+          patch :update, params: { guid: app_model.guid }.merge(request_body), as: :json
 
           expect(response.status).to eq 422
           expect(response.body).to include 'UnprocessableEntity'
@@ -1046,7 +1046,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         end
 
         it 'returns an UnprocessableEntity error' do
-          post :create, params: request_body, as: :json
+          patch :update, params: { guid: app_model.guid }.merge(request_body), as: :json
 
           expect(response.status).to eq 422
           expect(response.body).to include 'UnprocessableEntity'
@@ -1066,7 +1066,6 @@ RSpec.describe AppsV3Controller, type: :controller do
         let(:request_body) do
           {
             name: 'some-name',
-            relationships: { space: { data: { guid: space.guid } } },
             metadata: {
               labels: {
                 release: 'stable'
@@ -1081,12 +1080,12 @@ RSpec.describe AppsV3Controller, type: :controller do
         end
 
         it 'Returns a 201 and the app with metadata' do
-          post :create, params: request_body, as: :json
+          patch :update, params: { guid: app_model.guid }.merge(request_body), as: :json
 
           response_body = parsed_body
           response_metadata = response_body['metadata']
 
-          expect(response.status).to eq 201
+          expect(response.status).to eq(200)
           expect(response_metadata['labels']['release']).to eq 'stable'
           expect(response_metadata['annotations']['new_anno']).to eq 'value'
           expect(response_metadata['annotations']['existing_anno']).to eq 'is valid'
