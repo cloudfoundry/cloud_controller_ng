@@ -403,7 +403,18 @@ module VCAP::CloudController
     end
 
     def filter_dataset(dataset)
-      dataset.where(type: ProcessTypes::WEB)
+      dataset.where(type: ProcessTypes::WEB).exclude(guid: duplicated_older_process_guids(dataset))
+    end
+
+    def duplicated_older_process_guids(dataset)
+      # Details at https://groups.google.com/d/msg/sequel-talk/wVuTgcCk2gw/VlPVVI2SBgAJ
+      ProcessModel.db.from(dataset.as(:p1), dataset.as(:p2)).
+        where {
+          (p1[:app_guid] =~ p2[:app_guid]) &
+            ((p1[:created_at] < p2[:created_at]) |
+              ((p1[:created_at] =~ p2[:created_at]) & (p1[:id] < p2[:id])))
+        }.
+        distinct.select { p1[:guid] }
     end
 
     def unprocessable!(message)
