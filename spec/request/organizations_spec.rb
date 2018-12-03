@@ -361,6 +361,25 @@ module VCAP::CloudController
           expect(parsed_response).to be_a_response_like(expected_response)
         end
       end
+
+      context 'max annotations' do
+        it 'errors when giving more than max annotations' do
+          VCAP::CloudController::Config.config.set(:max_annotations_per_resource, 1)
+
+          update_request = {
+            metadata: {
+              annotations: {
+                radish: 'daikon',
+                potato: 'idaho'
+              }
+            }
+          }.to_json
+
+          patch "/v3/organizations/#{organization1.guid}", update_request, admin_headers_for(user).merge('CONTENT_TYPE' => 'application/json')
+          expect(last_response.status).to eq(422)
+          expect(last_response.body).to include('maximum of 1')
+        end
+      end
     end
   end
 end

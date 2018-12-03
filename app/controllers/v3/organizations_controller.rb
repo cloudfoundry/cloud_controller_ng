@@ -61,6 +61,8 @@ class OrganizationsV3Controller < ApplicationController
     org = OrganizationUpdate.new.update(org, message)
 
     render json: Presenters::V3::OrganizationPresenter.new(org), status: :ok
+  rescue AnnotationsUpdate::TooManyAnnotations => e
+    unprocessable!(e.message)
   end
 
   def show_default_isolation_segment
