@@ -343,6 +343,15 @@ module VCAP::CloudController
     metadata { {} }
   end
 
+  ProcessModel.blueprint(:nonmatching_guid) do
+    instances { 1 }
+    type { 'web' }
+    diego { true }
+    app { AppModel.make }
+    metadata { {} }
+    guid { Sham.guid }
+  end
+
   RouteBinding.blueprint do
     service_instance { ManagedServiceInstance.make(:routing) }
     route { Route.make space: service_instance.space }
