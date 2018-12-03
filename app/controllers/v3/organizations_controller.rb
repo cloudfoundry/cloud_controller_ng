@@ -50,6 +50,8 @@ class OrganizationsV3Controller < ApplicationController
     render json: Presenters::V3::OrganizationPresenter.new(org), status: :created
   rescue OrganizationCreate::Error => e
     unprocessable!(e.message)
+  rescue AnnotationsUpdate::TooManyAnnotations => e
+    unprocessable!(e.message)
   end
 
   def update

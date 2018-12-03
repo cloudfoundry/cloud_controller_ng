@@ -137,6 +137,27 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
           expect(response).to have_error_message('Name must be unique')
         end
       end
+
+      context 'when there are too many annotations' do
+        before do
+          VCAP::CloudController::Config.config.set(:max_annotations_per_resource, 1)
+        end
+
+        it 'responds with 422' do
+          post :create, params: {
+            name: 'new-org',
+            metadata: {
+              annotations: {
+                radish: 'daikon',
+                potato: 'idaho'
+              }
+            }
+          }, as: :json
+
+          expect(response.status).to eq(422)
+          expect(response).to have_error_message(/exceed maximum of 1/)
+        end
+      end
     end
   end
 
@@ -747,6 +768,29 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
           patch :update, params: { guid: org.guid }.merge(request_body), as: :json
           expect(response.status).to eq(422)
           expect(response).to have_error_message('Metadata key error: cloudfoundry.org is a reserved domain')
+        end
+      end
+
+      context 'when there are too many annotations' do
+        let(:request_body) do
+          {
+            metadata: {
+              annotations: {
+                radish: 'daikon',
+                potato: 'idaho'
+              }
+            }
+          }
+        end
+
+        before do
+          VCAP::CloudController::Config.config.set(:max_annotations_per_resource, 2)
+        end
+
+        it 'fails with a 422' do
+          patch :update, params: { guid: org.guid }.merge(request_body), as: :json
+          expect(response.status).to eq(422)
+          expect(response).to have_error_message(/exceed maximum of 2/)
         end
       end
     end
