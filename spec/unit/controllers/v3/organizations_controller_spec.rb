@@ -596,6 +596,12 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
         truck: 'mazda5'
       }
     end
+    let(:annotations) do
+      {
+        potato: 'yellow',
+        beet: 'golden',
+      }
+    end
     let(:space) { VCAP::CloudController::Space.make(organization: org) }
     let(:user) { VCAP::CloudController::User.make }
     let(:request_body) do
@@ -613,6 +619,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
     end
     before do
       VCAP::CloudController::LabelsUpdate.update(org, labels, VCAP::CloudController::OrganizationLabelModel)
+      VCAP::CloudController::AnnotationsUpdate.update(org, annotations, VCAP::CloudController::OrganizationAnnotationModel)
     end
 
     context 'when the user is an admin' do
@@ -627,12 +634,33 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
         expect(parsed_body['name']).to eq('Fire')
         expect(parsed_body['guid']).to eq(org.guid)
         expect(parsed_body['metadata']['labels']).to eq({ 'fruit' => 'passionfruit', 'truck' => 'mazda5' })
-        expect(parsed_body['metadata']['annotations']).to eq({ 'potato' => 'idaho' })
+        expect(parsed_body['metadata']['annotations']).to eq({ 'potato' => 'idaho', 'beet' => 'golden' })
 
         org.reload
         expect(org.name).to eq('Fire')
-        expect(org.labels.map { |label| { key: label.key_name, value: label.value } }).to match_array([{ key: 'fruit', value: 'passionfruit' }, { key: 'truck', value: 'mazda5' }])
-        expect(org.annotations.map { |a| { key: a.key, value: a.value } }).to match_array([{ key: 'potato', value: 'idaho' }])
+        expect(org.labels.map { |label| { key: label.key_name, value: label.value } }).
+          to match_array([{ key: 'fruit', value: 'passionfruit' }, { key: 'truck', value: 'mazda5' }])
+        expect(org.annotations.map { |a| { key: a.key, value: a.value } }).
+          to match_array([{ key: 'potato', value: 'idaho' }, { key: 'beet', value: 'golden' }])
+      end
+
+      it 'deletes annotations' do
+        request_body = {
+          metadata: {
+            annotations: {
+              potato: nil
+            }
+          }
+        }
+
+        patch :update, params: { guid: org.guid }.merge(request_body), as: :json
+
+        expect(response.status).to eq(200)
+        expect(parsed_body['metadata']['annotations']).to eq({ 'beet' => 'golden' })
+
+        org.reload
+        expect(org.annotations.map { |a| { key: a.key, value: a.value } }).
+          to match_array([{ key: 'beet', value: 'golden' }])
       end
 
       context 'when a label is deleted' do
