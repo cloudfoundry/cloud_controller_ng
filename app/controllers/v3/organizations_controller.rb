@@ -48,9 +48,7 @@ class OrganizationsV3Controller < ApplicationController
     org = OrganizationCreate.new(perm_client: perm_client).create(message)
 
     render json: Presenters::V3::OrganizationPresenter.new(org), status: :created
-  rescue OrganizationCreate::Error => e
-    unprocessable!(e.message)
-  rescue AnnotationsUpdate::TooManyAnnotations => e
+  rescue OrganizationCreate::Error, AnnotationsUpdate::TooManyAnnotations => e
     unprocessable!(e.message)
   end
 

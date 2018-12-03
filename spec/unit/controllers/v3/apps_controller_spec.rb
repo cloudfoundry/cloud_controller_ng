@@ -420,6 +420,32 @@ RSpec.describe AppsV3Controller, type: :controller do
           expect(response_metadata['annotations']['this']).to eq 'is valid'
         end
       end
+
+      context 'when there are too many annotations' do
+        let(:request_body) do
+          {
+            name: 'some-name',
+            relationships: { space: { data: { guid: space.guid } } },
+            metadata: {
+              annotations: {
+                radish: 'daikon',
+                potato: 'idaho'
+              }
+            }
+          }
+        end
+
+        before do
+          VCAP::CloudController::Config.config.set(:max_annotations_per_resource, 1)
+        end
+
+        it 'responds with 422' do
+          post :create, params: request_body, as: :json
+
+          expect(response.status).to eq(422)
+          expect(response).to have_error_message(/exceed maximum of 1/)
+        end
+      end
     end
 
     context 'lifecycle data' do
@@ -1065,6 +1091,30 @@ RSpec.describe AppsV3Controller, type: :controller do
           expect(response_metadata['annotations']['new_anno']).to eq 'value'
           expect(response_metadata['annotations']['existing_anno']).to eq 'is valid'
           expect(response_metadata['annotations']['please']).to be_nil
+        end
+      end
+
+      context 'when there are too many annotations' do
+        let(:request_body) do
+          {
+            metadata: {
+              annotations: {
+                radish: 'daikon',
+                potato: 'idaho'
+              }
+            }
+          }
+        end
+
+        before do
+          VCAP::CloudController::Config.config.set(:max_annotations_per_resource, 1)
+        end
+
+        it 'responds with 422' do
+          patch :update, params: { guid: app_model.guid }.merge(request_body), as: :json
+
+          expect(response.status).to eq(422)
+          expect(response).to have_error_message(/exceed maximum of 1/)
         end
       end
     end
