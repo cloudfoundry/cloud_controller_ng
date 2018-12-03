@@ -71,6 +71,7 @@ module OPI
         start_command: process.specified_or_detected_command,
         environment: hash_values_to_s(vcap_application(process)),
         instances: process.desired_instances,
+        memory_mb: process.memory,
         droplet_hash: process.desired_droplet.droplet_hash,
         droplet_guid: process.desired_droplet.guid,
         health_check_type: process.health_check_type,

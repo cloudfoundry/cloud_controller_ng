@@ -102,6 +102,7 @@ RSpec.describe(OPI::Client) do
               'VCAP_APP_HOST': '0.0.0.0'
             },
             instances: 21,
+            memory_mb: 128,
             droplet_hash: lrp.droplet_hash,
             droplet_guid: 'some-droplet-guid',
             health_check_type: 'port',
