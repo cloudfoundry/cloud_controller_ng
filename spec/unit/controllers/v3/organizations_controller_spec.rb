@@ -604,6 +604,9 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
         metadata: {
           labels: {
             fruit: 'passionfruit'
+          },
+          annotations: {
+            potato: 'idaho'
           }
         }
       }
@@ -624,10 +627,12 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
         expect(parsed_body['name']).to eq('Fire')
         expect(parsed_body['guid']).to eq(org.guid)
         expect(parsed_body['metadata']['labels']).to eq({ 'fruit' => 'passionfruit', 'truck' => 'mazda5' })
+        expect(parsed_body['metadata']['annotations']).to eq({ 'potato' => 'idaho' })
 
         org.reload
         expect(org.name).to eq('Fire')
         expect(org.labels.map { |label| { key: label.key_name, value: label.value } }).to match_array([{ key: 'fruit', value: 'passionfruit' }, { key: 'truck', value: 'mazda5' }])
+        expect(org.annotations.map { |a| { key: a.key, value: a.value } }).to match_array([{ key: 'potato', value: 'idaho' }])
       end
 
       context 'when a label is deleted' do
