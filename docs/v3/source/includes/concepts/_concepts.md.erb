@@ -341,6 +341,72 @@ inequality    | _key_`!=`_value_                     | Returns all resources tha
 set inclusion | _key_ `in` (_value1_,_value2_...)    | Returns all resources that have been assigned a label with the given _key_ with one of the specified _value(s)_
 set exclusion | _key_ `notin` (_value1_,_value2_...) | Returns all resources that either have not been assigned a label with the given _key_ or have a label with the given _key_ but none of the specified _value(s)_
 
+### Patching
+
+Labels and annotations follow the same rules for patching and must be wrapped in the metadata object inside the request body
+
+* To create, include the new key with a value
+* To change, include the existing key with a new value
+* To delete, include the existing key with a `null` value
+* To remain unchanged, do not include the existing key.
+
+```
+Example Initial Metadata
+```
+
+```json
+{
+  "metadata": {
+    "labels": {
+      "environment": "staging",
+      "ready-to-deploy": "true"
+    },
+    "annotations": {
+       "spring-version": "5.1",
+       "app-version": "0.1-alpha"
+     }
+  }
+}
+```
+
+```
+Example Patch Request Body
+```
+
+```json
+{
+  "metadata": {
+    "labels": {
+      "environment": "production",
+      "ready-to-deploy": null
+    },
+    "annotations": {
+       "app-version": "0.1",
+       "deployed-month": "november"
+     }
+  }
+}
+```
+
+```
+Example Final Metadata
+```
+
+```json
+{
+  "metadata": {
+    "labels": {
+      "environment": "production"
+    },
+    "annotations": {
+       "spring-version": "5.1",
+       "app-version": "0.1",
+       "deployed-month": "november"
+     }
+  }
+}
+```
+
 ## Pagination
 
 Any request that can return multiple resources will be paginated and contain a `pagination` object and list of `resources`.
