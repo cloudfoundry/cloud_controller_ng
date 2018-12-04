@@ -574,6 +574,9 @@ RSpec.describe SpacesV3Controller, type: :controller do
         metadata: {
           labels: {
             fruit: 'passionfruit'
+          },
+          annotations: {
+            potato: 'purple'
           }
         }
       }
@@ -594,11 +597,14 @@ RSpec.describe SpacesV3Controller, type: :controller do
         expect(response.status).to eq(200)
         expect(parsed_body['name']).to eq('Sheep')
         expect(parsed_body['metadata']['labels']).to eq({ 'fruit' => 'passionfruit', 'truck' => 'mazda5' })
+        expect(parsed_body['metadata']['annotations']).to eq({ 'potato' => 'purple', 'beet' => 'golden' })
 
         space.reload
         expect(space.name).to eq('Sheep')
         expect(space.labels.map { |label| { key: label.key_name, value: label.value } }).
           to match_array([{ key: 'fruit', value: 'passionfruit' }, { key: 'truck', value: 'mazda5' }])
+        expect(space.annotations.map { |a| { key: a.key, value: a.value } }).
+          to match_array([{ key: 'potato', value: 'purple' }, { key: 'beet', value: 'golden' }])
       end
 
       context 'when a label is deleted' do
