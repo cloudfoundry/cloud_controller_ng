@@ -316,7 +316,8 @@ RSpec.describe 'Apps' do
                                      }
                                  },
                                  'metadata' => {
-                                     'labels' => {}
+                                     'labels' => {},
+                                     'annotations' => {},
                                  },
                                  'links' => {
                                      'self' => {
@@ -743,7 +744,8 @@ RSpec.describe 'Apps' do
                                      }
                                  },
                                  'metadata' => {
-                                     'labels' => {}
+                                     'labels' => {},
+                                     'annotations' => {},
                                  },
                                  'links' => {
                                      'self' => {

@@ -21,6 +21,22 @@ module VCAP::CloudController::Presenters::V3
       )
     end
 
+    let!(:mountain_annotation) do
+      VCAP::CloudController::SpaceAnnotationModel.make(
+        key: 'altitude',
+        value: '14,411',
+        resource_guid: space.guid,
+      )
+    end
+
+    let!(:plain_annotation) do
+      VCAP::CloudController::SpaceAnnotationModel.make(
+        key: 'grass',
+        value: 'yes',
+        resource_guid: space.guid,
+      )
+    end
+
     describe '#to_hash' do
       let(:result) { SpacePresenter.new(space).to_hash }
 
@@ -34,6 +50,7 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:links][:organization][:href]).to eq("#{link_prefix}/v3/organizations/#{space.organization_guid}")
         expect(result[:relationships][:organization][:data][:guid]).to eq(space.organization_guid)
         expect(result[:metadata][:labels]).to eq('release' => 'stable', 'maine.gov/potato' => 'mashed')
+        expect(result[:metadata][:annotations]).to eq('altitude' => '14,411', 'grass' => 'yes')
       end
     end
   end

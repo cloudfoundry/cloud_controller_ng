@@ -20,7 +20,8 @@ module VCAP::CloudController::Presenters::V3
         },
         links: build_links,
         metadata: {
-          labels: hashified_labels(space.labels)
+          labels: hashified_labels(space.labels),
+          annotations: hashified_annotations(space.annotations),
         }
       }
     end

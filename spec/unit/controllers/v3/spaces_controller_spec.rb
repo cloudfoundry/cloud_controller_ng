@@ -510,6 +510,12 @@ RSpec.describe SpacesV3Controller, type: :controller do
         truck: 'mazda5'
       }
     end
+    let(:annotations) do
+      {
+        potato: 'yellow',
+        beet: 'golden',
+      }
+    end
     let!(:update_message) do
       { name: 'Sheep',
         metadata: {
@@ -521,6 +527,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
     end
     before do
       VCAP::CloudController::LabelsUpdate.update(space, labels, VCAP::CloudController::SpaceLabelModel)
+      VCAP::CloudController::AnnotationsUpdate.update(space, annotations, VCAP::CloudController::SpaceAnnotationModel)
     end
 
     context 'when the user is an admin' do
@@ -634,6 +641,47 @@ RSpec.describe SpacesV3Controller, type: :controller do
           patch :update, params: { guid: space.guid }.merge(request_body), as: :json
           expect(response.status).to eq(422)
           expect(response).to have_error_message('Metadata key error: cloudfoundry.org is a reserved domain')
+        end
+      end
+
+      context 'when there is an invalid annotation' do
+        let(:request_body) do
+          {
+            metadata: {
+              annotations: {
+                key: 'big' * 5000
+              }
+            }
+          }
+        end
+
+        it 'displays an informative error' do
+          patch :update, params: { guid: space.guid }.merge(request_body), as: :json
+          expect(response.status).to eq(422)
+          expect(response).to have_error_message(/is greater than 5000 characters/)
+        end
+      end
+
+      context 'when there are too many annotations' do
+        let(:request_body) do
+          {
+            metadata: {
+              annotations: {
+                radish: 'daikon',
+                potato: 'idaho'
+              }
+            }
+          }
+        end
+
+        before do
+          VCAP::CloudController::Config.config.set(:max_annotations_per_resource, 2)
+        end
+
+        it 'fails with a 422' do
+          patch :update, params: { guid: space.guid }.merge(request_body), as: :json
+          expect(response.status).to eq(422)
+          expect(response).to have_error_message(/exceed maximum of 2/)
         end
       end
     end
