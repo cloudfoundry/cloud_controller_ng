@@ -743,6 +743,28 @@ RSpec.describe SpacesV3Controller, type: :controller do
           expect(response).to have_error_message(/exceed maximum of 2/)
         end
       end
+
+      context 'when an annotation is deleted' do
+        let(:request_body) do
+          {
+            metadata: {
+              annotations: {
+                potato: nil
+              }
+            }
+          }
+        end
+
+        it 'succeeds' do
+          patch :update, params: { guid: space.guid }.merge(request_body), as: :json
+
+          expect(response.status).to eq(200)
+          expect(parsed_body['metadata']['annotations']).to eq({ 'beet' => 'golden' })
+
+          space.reload
+          expect(space.annotations.map { |a| { key: a.key, value: a.value } }).to match_array([{ key: 'beet', value: 'golden' }])
+        end
+      end
     end
 
     describe 'authorization' do
