@@ -681,6 +681,62 @@ When included in a url, the selector must be appropriately escaped.
 </tr>
 </tbody></table>
 
+<h3 id="patching">Patching</h3>
+
+<p>Labels and annotations follow the same rules for patching and must be wrapped in the metadata object inside the request body</p>
+
+<ul>
+<li>To create, include the new key with a value</li>
+<li>To change, include the existing key with a new value</li>
+<li>To delete, include the existing key with a <code class="prettyprint">null</code> value</li>
+<li>To remain unchanged, do not include the existing key.</li>
+</ul>
+<pre class="highlight plaintext"><code>Example Initial Metadata
+</code></pre>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"environment"</span><span class="p">:</span><span class="w"> </span><span class="s2">"staging"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"ready-to-deploy"</span><span class="p">:</span><span class="w"> </span><span class="s2">"true"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+       </span><span class="nt">"spring-version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"5.1"</span><span class="p">,</span><span class="w">
+       </span><span class="nt">"app-version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"0.1-alpha"</span><span class="w">
+     </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+<pre class="highlight plaintext"><code>Example Patch Request Body
+</code></pre>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"environment"</span><span class="p">:</span><span class="w"> </span><span class="s2">"production"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"ready-to-deploy"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+       </span><span class="nt">"app-version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"0.1"</span><span class="p">,</span><span class="w">
+       </span><span class="nt">"deployed-month"</span><span class="p">:</span><span class="w"> </span><span class="s2">"november"</span><span class="w">
+     </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+<pre class="highlight plaintext"><code>Example Final Metadata
+</code></pre>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"environment"</span><span class="p">:</span><span class="w"> </span><span class="s2">"production"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+       </span><span class="nt">"spring-version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"5.1"</span><span class="p">,</span><span class="w">
+       </span><span class="nt">"app-version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"0.1"</span><span class="p">,</span><span class="w">
+       </span><span class="nt">"deployed-month"</span><span class="p">:</span><span class="w"> </span><span class="s2">"november"</span><span class="w">
+     </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
 <h2 id="pagination">Pagination</h2>
 
 <p>Any request that can return multiple resources will be paginated and contain a <code class="prettyprint">pagination</code> object and list of <code class="prettyprint">resources</code>.
@@ -1309,6 +1365,18 @@ information for your packages, droplets, processes, tasks, and more.</p>
 <td>Provides the lifecycle object for the application.</td>
 <td><a href="#buildpack-lifecycle-object">buildpack lifecycle</a></td>
 </tr>
+<tr>
+<td><strong>metadata.labels</strong> <em>(experimental)</em></td>
+<td><a href="#labels"><em>label object</em></a></td>
+<td>Labels applied to the app.</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>metadata.annotations</strong> <em>(experimental)</em></td>
+<td><a href="#annotations"><em>annotation object</em></a></td>
+<td>Annotations added to the app.</td>
+<td></td>
+</tr>
 </tbody></table>
 
 <h4 id="permitted-roles">Permitted Roles</h4>
@@ -1562,6 +1630,16 @@ information for your packages, droplets, processes, tasks, and more.</p>
 <td><strong>lifecycle</strong></td>
 <td><a href="#the-lifecycle-object"><em>lifecycle object</em></a></td>
 <td>Lifecycle to be used when updating the app. Note: <code class="prettyprint">data</code> is a required field in lifecycle if lifecycle is updated.</td>
+</tr>
+<tr>
+<td><strong>metadata.labels</strong> <em>(experimental)</em></td>
+<td><a href="#labels"><em>label object</em></a></td>
+<td>Labels applied to the app.</td>
+</tr>
+<tr>
+<td><strong>metadata.annotations</strong> <em>(experimental)</em></td>
+<td><a href="#annotations"><em>annotation object</em></a></td>
+<td>Annotations added to the app.</td>
 </tr>
 </tbody></table>
 
@@ -4791,6 +4869,27 @@ In the case where the specified isolation segment is the system-wide shared segm
 </tr>
 </tbody></table>
 
+<h4 id="optional-parameters">Optional Parameters</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>metadata.labels</strong> <em>(experimental)</em></td>
+<td><a href="#labels"><em>label object</em></a></td>
+<td>Labels applied to the organization.</td>
+</tr>
+<tr>
+<td><strong>metadata.annotations</strong> <em>(experimental)</em></td>
+<td><a href="#annotations"><em>annotation object</em></a></td>
+<td>Annotations added to the organization.</td>
+</tr>
+</tbody></table>
+
 <h4 id="permitted-roles">Permitted Roles</h4>
 
 <table><thead>
@@ -4855,6 +4954,16 @@ In the case where the specified isolation segment is the system-wide shared segm
 <td><strong>name</strong></td>
 <td><em>string</em></td>
 <td>Organization name</td>
+</tr>
+<tr>
+<td><strong>metadata.labels</strong> <em>(experimental)</em></td>
+<td><a href="#labels"><em>label object</em></a></td>
+<td>Labels applied to the organization.</td>
+</tr>
+<tr>
+<td><strong>metadata.annotations</strong> <em>(experimental)</em></td>
+<td><a href="#annotations"><em>annotation object</em></a></td>
+<td>Annotations added to the organization.</td>
 </tr>
 </tbody></table>
 
@@ -7745,6 +7854,22 @@ In order to share into a space the requesting user must be a space developer in 
 </tr>
 </tbody></table>
 
+<h4 id="optional-parameters">Optional Parameters</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>metadata.labels</strong> <em>(experimental)</em></td>
+<td><a href="#labels"><em>label object</em></a></td>
+<td>Labels applied to the space.</td>
+</tr>
+</tbody></table>
+
 <h4 id="permitted-roles">Permitted Roles</h4>
 
 <table><thead>
@@ -8025,6 +8150,11 @@ In order to share into a space the requesting user must be a space developer in 
 <td><strong>name</strong></td>
 <td><em>string</em></td>
 <td>New space name</td>
+</tr>
+<tr>
+<td><strong>metadata.labels</strong> <em>(experimental)</em></td>
+<td><a href="#labels"><em>label object</em></a></td>
+<td>Labels applied to the space.</td>
 </tr>
 </tbody></table>
 
