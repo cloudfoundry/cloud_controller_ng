@@ -128,9 +128,11 @@ module VCAP::CloudController
 
           context 'when copilot is enabled', isolation: :truncation do
             let(:copilot_client) { instance_double(Cloudfoundry::Copilot::Client, unmap_route: nil, delete_capi_diego_process_association: nil) }
+            let(:route) { Route.make(domain: istio_domain) }
+            let(:istio_domain) { SharedDomain.make(name: 'istio.example.com') }
 
             before do
-              TestConfig.override(copilot: { enabled: true })
+              TestConfig.override(copilot: { enabled: true, temporary_istio_domains: ['istio.example.com'] })
               allow_any_instance_of(Diego::Messenger).to receive(:send_stop_app_request)
               allow(CloudController::DependencyLocator.instance).to receive(:copilot_client).and_return(copilot_client)
             end
