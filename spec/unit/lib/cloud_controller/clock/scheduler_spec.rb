@@ -25,6 +25,7 @@ module VCAP::CloudController
           pending_builds: { frequency_in_seconds: 400, expiration_in_seconds: 700 },
           diego_sync: { frequency_in_seconds: 30 },
           max_retained_deployments_per_app: 15,
+          max_retained_builds_per_app: 15,
         })
       end
 
@@ -125,6 +126,12 @@ module VCAP::CloudController
           expect(args).to eql(name: 'prune_completed_deployments', at: '03:00', priority: 0)
           expect(Jobs::Runtime::PruneCompletedDeployments).to receive(:new).with(15).and_call_original
           expect(block.call).to be_instance_of(Jobs::Runtime::PruneCompletedDeployments)
+        end
+
+        expect(clock).to receive(:schedule_daily_job) do |args, &block|
+          expect(args).to eql(name: 'prune_completed_builds', at: '03:30', priority: 0)
+          expect(Jobs::Runtime::PruneCompletedBuilds).to receive(:new).with(15).and_call_original
+          expect(block.call).to be_instance_of(Jobs::Runtime::PruneCompletedBuilds)
         end
 
         schedule.start

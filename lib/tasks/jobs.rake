@@ -34,6 +34,7 @@ namespace :jobs do
       'pending_droplets',
       'pending_builds',
       'prune_completed_deployments',
+      'prune_completed_builds',
       'request_counts_cleanup',
     ]
 
