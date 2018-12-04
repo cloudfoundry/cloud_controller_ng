@@ -38,7 +38,6 @@ module Diego
           define :ActualLRPCannotBeFailed, 18
           define :ActualLRPCannotBeRemoved, 19
           define :ActualLRPCannotBeUnclaimed, 21
-          define :ActualLRPCannotBeEvacuated, 22
           define :RunningOnDifferentCell, 24
           define :GUIDGeneration, 26
           define :Deserialize, 27
