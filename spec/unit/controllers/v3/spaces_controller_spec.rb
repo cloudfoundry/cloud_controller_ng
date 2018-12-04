@@ -498,6 +498,59 @@ RSpec.describe SpacesV3Controller, type: :controller do
         expect(response.body).to include 'Name must be unique'
       end
     end
+
+    context 'when there is an invalid annotation' do
+      let(:request_body) do
+        {
+          'name':          name,
+          'relationships': {
+            'organization': {
+              'data': { 'guid': org_guid }
+            }
+          },
+          metadata: {
+            annotations: {
+              key: 'big' * 5000
+            }
+          }
+        }
+      end
+
+      it 'displays an informative error' do
+        post :create, params: request_body, as: :json
+        expect(response.status).to eq(422)
+        expect(response).to have_error_message(/is greater than 5000 characters/)
+      end
+    end
+
+    context 'when there are too many annotations' do
+      let(:request_body) do
+        {
+          'name':          name,
+          'relationships': {
+            'organization': {
+              'data': { 'guid': org_guid }
+            }
+          },
+          metadata: {
+            annotations: {
+              radish: 'daikon',
+              potato: 'idaho'
+            }
+          }
+        }
+      end
+
+      before do
+        VCAP::CloudController::Config.config.set(:max_annotations_per_resource, 1)
+      end
+
+      it 'fails with a 422' do
+        post :create, params: request_body, as: :json
+        expect(response.status).to eq(422)
+        expect(response).to have_error_message(/exceed maximum of 1/)
+      end
+    end
   end
 
   describe '#patch' do

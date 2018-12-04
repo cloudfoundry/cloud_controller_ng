@@ -29,6 +29,9 @@ RSpec.describe 'Spaces' do
         metadata: {
             labels: {
                 hocus: 'pocus'
+            },
+            annotations: {
+                boo: 'urns'
             }
         }
       }.to_json
@@ -60,7 +63,7 @@ RSpec.describe 'Spaces' do
           },
           'metadata' => {
               'labels' => { 'hocus' => 'pocus' },
-              'annotations' => {},
+              'annotations' => { 'boo' => 'urns' },
           }
         }
       )

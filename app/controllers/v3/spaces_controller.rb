@@ -32,7 +32,7 @@ class SpacesV3Controller < ApplicationController
     space = SpaceCreate.new(perm_client: perm_client).create(org, message)
 
     render status: 201, json: Presenters::V3::SpacePresenter.new(space)
-  rescue SpaceCreate::Error => e
+  rescue SpaceCreate::Error, AnnotationsUpdate::TooManyAnnotations => e
     unprocessable!(e.message)
   end
 
