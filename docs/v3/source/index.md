@@ -168,6 +168,7 @@ includes:
   - experimental_resources/stacks/object
   - experimental_resources/stacks/create
   - experimental_resources/stacks/list
+  - experimental_resources/stacks/get
 
 search: true
 ---

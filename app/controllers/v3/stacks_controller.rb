@@ -31,4 +31,16 @@ class StacksController < ApplicationController
   rescue StackCreate::Error => e
     unprocessable! e
   end
+
+  def show
+    stack = Stack.find(guid: hashed_params[:guid])
+
+    stack_not_found! unless stack
+
+    render status: :ok, json: Presenters::V3::StackPresenter.new(stack)
+  end
+
+  def stack_not_found!
+    resource_not_found!(:stack)
+  end
 end

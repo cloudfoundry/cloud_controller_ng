@@ -1,0 +1,38 @@
+### Get a stack
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/stacks/[guid]" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :single_stack %>
+```
+
+#### Definition
+`GET /v3/stacks/:guid`
+
+#### Permitted Roles
+ |
+--- | ---
+Space Developer |
+Space Manager |
+Space Auditor |
+Org Auditor |
+Org Manager |
+Admin |
+Admin Read-Only |
+Org Billing Manager |
+Global Auditor |

@@ -2,8 +2,7 @@ require 'spec_helper'
 
 RSpec.describe 'Stacks Request' do
   describe 'GET /v3/stacks' do
-    before { VCAP::CloudController::Stack.dataset.destroy
-    }
+    before { VCAP::CloudController::Stack.dataset.destroy }
     let(:user) { make_user }
     let(:headers) { headers_for(user) }
 
@@ -113,6 +112,33 @@ RSpec.describe 'Stacks Request' do
         )
       end
     end
+  end
+
+  describe 'GET /v3/stacks/:guid' do
+    let(:user) { make_user() }
+    let(:headers) { headers_for(user) }
+
+    let!(:stack) { VCAP::CloudController::Stack.make }
+
+    it 'returns details of the requested stack' do
+      get "/v3/stacks/#{stack.guid}", nil, headers
+      expect(last_response.status).to eq 200
+      expect(parsed_response).to be_a_response_like(
+        {
+          'name'=> stack.name,
+          'description'=> stack.description,
+          'guid' => stack.guid,
+          'created_at'=> iso8601,
+          'updated_at'=> iso8601,
+          'links'=> {
+            'self'=> {
+              'href'=> "#{link_prefix}/v3/stacks/#{stack.guid}"
+            }
+          }
+        }
+      )
+    end
+
   end
 
   describe 'POST /v3/stacks' do
