@@ -37,6 +37,7 @@ module VCAP::CloudController
               ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'space_id', value: app.space.guid),
               ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'org_id', value: app.organization.guid),
               ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'ports', value: ''),
+              ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'container_workload', value: Protocol::ContainerNetworkInfo::STAGING),
             ]
           )
         end
@@ -344,6 +345,7 @@ module VCAP::CloudController
               ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'space_id', value: app.space.guid),
               ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'org_id', value: app.organization.guid),
               ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'ports', value: ''),
+              ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'container_workload', value: Protocol::ContainerNetworkInfo::TASK),
             ]
           )
         end

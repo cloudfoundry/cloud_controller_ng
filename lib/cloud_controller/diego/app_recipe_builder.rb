@@ -290,7 +290,7 @@ module VCAP::CloudController
       end
 
       def generate_network
-        Protocol::ContainerNetworkInfo.new(process.app).to_bbs_network
+        Protocol::ContainerNetworkInfo.new(process.app, Protocol::ContainerNetworkInfo::APP).to_bbs_network
       end
 
       def file_descriptor_limit
