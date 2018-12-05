@@ -100,8 +100,8 @@ module VCAP::CloudController
         TaskCpuWeightCalculator.new(memory_in_mb: task.memory_in_mb).calculate
       end
 
-      def generate_network(task, container_purpose)
-        Protocol::ContainerNetworkInfo.new(task.app, container_purpose).to_bbs_network
+      def generate_network(task, container_workload)
+        Protocol::ContainerNetworkInfo.new(task.app, container_workload).to_bbs_network
       end
 
       def find_staging_isolation_segment(staging_details)

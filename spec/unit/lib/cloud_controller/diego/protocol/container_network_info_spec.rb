@@ -10,9 +10,9 @@ module VCAP::CloudController
         let!(:no_exposed_port_process) { ProcessModel.make(app: app, type: 'woof') }
         let!(:docker_process) { ProcessModelFactory.make(app: app, type: 'docker', ports: [1111, 2222]) }
         let(:ports_str) { '1111,2222,8080,8765' }
-        let(:container_purpose) { 'im-an-app!' }
+        let(:container_workload) { 'im-an-app!' }
 
-        subject(:container_info) { ContainerNetworkInfo.new(app, container_purpose) }
+        subject(:container_info) { ContainerNetworkInfo.new(app, container_workload) }
 
         describe '#to_h' do
           it 'returns the container network information hash' do
@@ -23,7 +23,7 @@ module VCAP::CloudController
                 'space_id' => app.space.guid,
                 'org_id' => app.organization.guid,
                 'ports' => ports_str,
-                'container_purpose' => container_purpose
+                'container_workload' => container_workload
               },
             })
           end
@@ -39,7 +39,7 @@ module VCAP::CloudController
                   ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'space_id', value: app.space.guid),
                   ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'org_id', value: app.organization.guid),
                   ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'ports', value: ports_str),
-                  ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'container_purpose', value: container_purpose),
+                  ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'container_workload', value: container_workload),
                 ]
               )
             )

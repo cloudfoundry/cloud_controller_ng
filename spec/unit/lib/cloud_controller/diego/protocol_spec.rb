@@ -195,7 +195,7 @@ module VCAP::CloudController
                 'space_id' => process.space.guid,
                 'org_id' => process.organization.guid,
                 'ports' => '2222,3333',
-                'container_purpose' => 'desired app message',
+                'container_workload' => 'desired app message',
               }
             },
             'volume_mounts' => an_instance_of(Array),

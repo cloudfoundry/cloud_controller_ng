@@ -74,7 +74,7 @@ module VCAP::CloudController
               ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'space_id', value: app_model.space.guid),
               ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'org_id', value: app_model.organization.guid),
               ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'ports', value: ports),
-              ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'container_purpose', value: Protocol::ContainerNetworkInfo::APP),
+              ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'container_workload', value: Protocol::ContainerNetworkInfo::APP),
             ]
           )
         end
