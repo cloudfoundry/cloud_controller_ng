@@ -2,10 +2,15 @@ module VCAP::CloudController
   module Diego
     class Protocol
       class ContainerNetworkInfo
-        attr_reader :app
+        attr_reader :app, :container_purpose
 
-        def initialize(app)
+        APP = 'app'.freeze
+        STAGING = 'staging'.freeze
+        TASK = 'task'.freeze
+
+        def initialize(app, container_purpose)
           @app = app
+          @container_purpose = container_purpose
         end
 
         def to_h
@@ -16,6 +21,7 @@ module VCAP::CloudController
               'space_id' => app.space.guid,
               'org_id' => app.organization.guid,
               'ports' => app.processes.map { |p| Protocol::OpenProcessPorts.new(p).to_a }.flatten.sort.join(','),
+              'container_purpose' => container_purpose,
             },
           }
         end
