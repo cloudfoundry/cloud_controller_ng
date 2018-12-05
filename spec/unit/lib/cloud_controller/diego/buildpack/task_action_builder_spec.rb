@@ -112,7 +112,8 @@ module VCAP::CloudController
               expect(result.run_action).to eq(run_task_action)
             end
 
-            context 'and the droplet does not have a sha256 checksum' do
+            context 'and the droplet does not have a sha256 checksum (it is a legacy droplet with a sha1 checksum)' do
+              # this test can be removed once legacy sha1 checksummed droplets are obsolete
               let(:download_app_droplet_action) do
                 ::Diego::Bbs::Models::DownloadAction.new(
                   from: download_uri,
@@ -151,7 +152,8 @@ module VCAP::CloudController
           context 'when enable_declarative_asset_downloads is true' do
             let(:enable_declarative_asset_downloads) { true }
 
-            context 'and the droplet does not have a sha256 checksum' do
+            context 'and the droplet does not have a sha256 checksum (it is a legacy droplet with a sha1 checksum)' do
+              # this test can be removed once legacy sha1 checksummed droplets are obsolete
               before do
                 task.droplet.sha256_checksum = nil
                 task.droplet.save
@@ -227,7 +229,8 @@ module VCAP::CloudController
           context 'when enable_declarative_asset_downloads is true' do
             let(:enable_declarative_asset_downloads) { true }
 
-            context 'and the droplet does not have a sha256 checksum' do
+            context 'and the droplet does not have a sha256 checksum (it is a legacy droplet with a sha1 checksum)' do
+              # this test can be removed once legacy sha1 checksummed droplets are obsolete
               let(:opts) { super().merge(checksum_algorithm: 'sha1') }
 
               before do

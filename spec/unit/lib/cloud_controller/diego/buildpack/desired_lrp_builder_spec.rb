@@ -80,7 +80,8 @@ module VCAP::CloudController
           context 'when enable_declarative_asset_downloads is true' do
             let(:enable_declarative_asset_downloads) { true }
 
-            context 'and the droplet does not have a sha256 checksum' do
+            context 'and the droplet does not have a sha256 checksum (it is a legacy droplet with a sha1 checksum)' do
+              # this test can be removed once legacy sha1 checksummed droplets are obsolete
               let(:opts) { super().merge(checksum_algorithm: 'sha1') }
 
               it 'returns an array of CachedDependency objects' do
@@ -130,7 +131,8 @@ module VCAP::CloudController
           context 'when enable_declarative_asset_downloads is true' do
             let(:enable_declarative_asset_downloads) { true }
 
-            context 'and the droplet does not have a sha256 checksum' do
+            context 'and the droplet does not have a sha256 checksum (it is a legacy droplet with a sha1 checksum)' do
+              # this test can be removed once legacy sha1 checksummed droplets are obsolete
               let(:opts) { super().merge(checksum_algorithm: 'sha1') }
 
               it 'creates a setup action to download the droplet' do
@@ -177,7 +179,8 @@ module VCAP::CloudController
           context 'when enable_declarative_asset_downloads is true' do
             let(:enable_declarative_asset_downloads) { true }
 
-            context 'and the droplet does not have a sha256 checksum' do
+            context 'and the droplet does not have a sha256 checksum (it is a legacy droplet with a sha1 checksum)' do
+              # this test can be removed once legacy sha1 checksummed droplets are obsolete
               let(:opts) { super().merge(checksum_algorithm: 'sha1') }
 
               it 'returns nil' do
