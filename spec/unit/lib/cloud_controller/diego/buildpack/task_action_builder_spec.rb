@@ -6,11 +6,11 @@ module VCAP::CloudController
       RSpec.describe TaskActionBuilder do
         subject(:builder) { TaskActionBuilder.new(config, task, lifecycle_data) }
 
-        let(:temporary_oci_buildpack_mode) { '' }
+        let(:enable_declarative_asset_downloads) { false }
         let(:config) do
           Config.new({
             diego: {
-              temporary_oci_buildpack_mode: temporary_oci_buildpack_mode,
+              enable_declarative_asset_downloads: enable_declarative_asset_downloads,
               lifecycle_bundles: {
                 'buildpack/potato-stack': 'http://file-server.service.cf.internal:8080/v1/static/potato_lifecycle_bundle_url'
               }
@@ -104,8 +104,8 @@ module VCAP::CloudController
             end
           end
 
-          context 'when temporary_oci_buildpack_mode is set to oci-phase-1' do
-            let(:temporary_oci_buildpack_mode) { 'oci-phase-1' }
+          context 'when enable_declarative_asset_downloads is true' do
+            let(:enable_declarative_asset_downloads) { true }
 
             it 'does not include the download step in the action' do
               result = builder.action
@@ -148,8 +148,8 @@ module VCAP::CloudController
             expect(builder.image_layers).to be_nil
           end
 
-          context 'when temporary_oci_buildpack_mode is set to oci-phase-1' do
-            let(:temporary_oci_buildpack_mode) { 'oci-phase-1' }
+          context 'when enable_declarative_asset_downloads is true' do
+            let(:enable_declarative_asset_downloads) { true }
 
             context 'and the droplet does not have a sha256 checksum' do
               before do
@@ -224,8 +224,8 @@ module VCAP::CloudController
             ])
           end
 
-          context 'when temporary_oci_buildpack_mode is set to oci-phase-1' do
-            let(:temporary_oci_buildpack_mode) { 'oci-phase-1' }
+          context 'when enable_declarative_asset_downloads is true' do
+            let(:enable_declarative_asset_downloads) { true }
 
             context 'and the droplet does not have a sha256 checksum' do
               let(:opts) { super().merge(checksum_algorithm: 'sha1') }

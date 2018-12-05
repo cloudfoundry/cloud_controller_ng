@@ -27,12 +27,12 @@ module VCAP::CloudController
                 'buildpack/potato-stack': '/path/to/lifecycle.tgz',
               },
               use_privileged_containers_for_running: use_privileged_containers_for_running,
-              temporary_oci_buildpack_mode: temporary_oci_buildpack_mode,
+              enable_declarative_asset_downloads: enable_declarative_asset_downloads,
             }
           })
         end
         let(:use_privileged_containers_for_running) { false }
-        let(:temporary_oci_buildpack_mode) { '' }
+        let(:enable_declarative_asset_downloads) { false }
 
         describe '#start_command' do
           it 'returns the passed in start command' do
@@ -45,8 +45,8 @@ module VCAP::CloudController
             expect(builder.root_fs).to eq('preloaded:potato-stack')
           end
 
-          context 'when temporary_oci_buildpack_mode is set to oci-phase-1' do
-            let(:temporary_oci_buildpack_mode) { 'oci-phase-1' }
+          context 'when enable_declarative_asset_downloads is true' do
+            let(:enable_declarative_asset_downloads) { true }
 
             it 'returns a constructed root_fs' do
               expect(builder.root_fs).to eq('preloaded:potato-stack')
@@ -77,8 +77,8 @@ module VCAP::CloudController
             end
           end
 
-          context 'when temporary_oci_buildpack_mode is set to oci-phase-1' do
-            let(:temporary_oci_buildpack_mode) { 'oci-phase-1' }
+          context 'when enable_declarative_asset_downloads is true' do
+            let(:enable_declarative_asset_downloads) { true }
 
             context 'and the droplet does not have a sha256 checksum' do
               let(:opts) { super().merge(checksum_algorithm: 'sha1') }
@@ -127,8 +127,8 @@ module VCAP::CloudController
             )
           end
 
-          context 'when temporary_oci_buildpack_mode is set to oci-phase-1' do
-            let(:temporary_oci_buildpack_mode) { 'oci-phase-1' }
+          context 'when enable_declarative_asset_downloads is true' do
+            let(:enable_declarative_asset_downloads) { true }
 
             context 'and the droplet does not have a sha256 checksum' do
               let(:opts) { super().merge(checksum_algorithm: 'sha1') }
@@ -174,8 +174,8 @@ module VCAP::CloudController
             expect(builder.image_layers).to be_nil
           end
 
-          context 'when temporary_oci_buildpack_mode is set to oci-phase-1' do
-            let(:temporary_oci_buildpack_mode) { 'oci-phase-1' }
+          context 'when enable_declarative_asset_downloads is true' do
+            let(:enable_declarative_asset_downloads) { true }
 
             context 'and the droplet does not have a sha256 checksum' do
               let(:opts) { super().merge(checksum_algorithm: 'sha1') }

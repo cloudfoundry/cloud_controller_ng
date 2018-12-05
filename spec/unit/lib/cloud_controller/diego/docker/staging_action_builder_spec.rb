@@ -13,7 +13,7 @@ module VCAP::CloudController
               lifecycle_bundles:             {
                 docker: 'the-docker-bundle'
               },
-              temporary_oci_buildpack_mode: temporary_oci_buildpack_mode,
+              enable_declarative_asset_downloads: enable_declarative_asset_downloads,
               insecure_docker_registry_list: []
             },
             staging: {
@@ -29,7 +29,7 @@ module VCAP::CloudController
         end
         let(:env) { double(:env) }
         let(:generated_environment) { [::Diego::Bbs::Models::EnvironmentVariable.new(name: 'generated-environment', value: 'generated-value')] }
-        let(:temporary_oci_buildpack_mode) { '' }
+        let(:enable_declarative_asset_downloads) { false }
 
         before do
           allow(LifecycleBundleUriGenerator).to receive(:uri).with('the-docker-bundle').and_return('generated-uri')
@@ -100,8 +100,8 @@ module VCAP::CloudController
             expect(lifecycle_dependency.from).to eq('generated-uri')
           end
 
-          context 'when temporary_oci_buildpack_mode is set to oci-phase-1' do
-            let(:temporary_oci_buildpack_mode) { 'oci-phase-1' }
+          context 'when enable_declarative_asset_downloads is true' do
+            let(:enable_declarative_asset_downloads) { true }
 
             it 'returns nil' do
               expect(builder.cached_dependencies).to be_nil
@@ -114,8 +114,8 @@ module VCAP::CloudController
             expect(builder.image_layers).to be_nil
           end
 
-          context 'when temporary_oci_buildpack_mode is set to oci-phase-1' do
-            let(:temporary_oci_buildpack_mode) { 'oci-phase-1' }
+          context 'when enable_declarative_asset_downloads is true' do
+            let(:enable_declarative_asset_downloads) { true }
 
             it 'creates a image layer for each cached dependency' do
               expect(builder.image_layers).to include(

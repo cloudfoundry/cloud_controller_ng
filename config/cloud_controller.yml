@@ -237,6 +237,7 @@ diego:
   cc_uploader_url: http://cc-uploader.service.cf.internal:9090
   use_privileged_containers_for_running: false
   use_privileged_containers_for_staging: false
+  enable_declarative_asset_downloads: false
   lifecycle_bundles:
     "buildpack/cflinuxfs2": "buildpack_app_lifecycle/buildpack_app_lifecycle.tgz"
     "buildpack/windows2012R2": "windows_app_lifecycle/windows_app_lifecycle.tgz"

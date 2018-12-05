@@ -40,7 +40,7 @@ module VCAP::CloudController
             env: task_environment_variables
           )
 
-          if @config.get(:diego, :temporary_oci_buildpack_mode) == 'oci-phase-1' && task.droplet.sha256_checksum
+          if @config.get(:diego, :enable_declarative_asset_downloads) && task.droplet.sha256_checksum
             ::Diego::ActionBuilder.action(run_action)
           else
             serial([
@@ -51,7 +51,7 @@ module VCAP::CloudController
         end
 
         def image_layers
-          return nil if @config.get(:diego, :temporary_oci_buildpack_mode) != 'oci-phase-1' || !task.droplet.sha256_checksum
+          return nil unless @config.get(:diego, :enable_declarative_asset_downloads) && task.droplet.sha256_checksum
 
           [
             ::Diego::Bbs::Models::ImageLayer.new(
@@ -82,7 +82,7 @@ module VCAP::CloudController
         end
 
         def cached_dependencies
-          return nil if @config.get(:diego, :temporary_oci_buildpack_mode) == 'oci-phase-1' && task.droplet.sha256_checksum
+          return nil if @config.get(:diego, :enable_declarative_asset_downloads) && task.droplet.sha256_checksum
 
           [::Diego::Bbs::Models::CachedDependency.new(
             from: LifecycleBundleUriGenerator.uri(config.get(:diego, :lifecycle_bundles)[lifecycle_bundle_key]),

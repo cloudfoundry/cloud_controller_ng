@@ -7,7 +7,7 @@ module VCAP::CloudController
         subject(:builder) { StagingActionBuilder.new(config, staging_details, lifecycle_data) }
 
         let(:droplet) { DropletModel.make(:buildpack) }
-        let(:temporary_oci_buildpack_mode) { '' }
+        let(:enable_declarative_asset_downloads) { false }
         let(:config) do
           Config.new({
             skip_cert_verify: false,
@@ -17,7 +17,7 @@ module VCAP::CloudController
               lifecycle_bundles: {
                 'buildpack/buildpack-stack': 'the-buildpack-bundle'
               },
-              temporary_oci_buildpack_mode: temporary_oci_buildpack_mode,
+              enable_declarative_asset_downloads: enable_declarative_asset_downloads,
             },
             staging:          {
               minimum_staging_file_descriptor_limit: 4,
@@ -271,8 +271,8 @@ module VCAP::CloudController
             )
           end
 
-          context 'when temporary_oci_buildpack_mode is set to oci-phase-1' do
-            let(:temporary_oci_buildpack_mode) { 'oci-phase-1' }
+          context 'when enable_declarative_asset_downloads is true' do
+            let(:enable_declarative_asset_downloads) { true }
 
             it 'returns no cached dependencies' do
               expect(builder.cached_dependencies).to be_nil
@@ -309,8 +309,8 @@ module VCAP::CloudController
               expect(result).to include(buildpack_entry_1, buildpack_entry_2)
             end
 
-            context 'when temporary_oci_buildpack_mode is set to oci-phase-1' do
-              let(:temporary_oci_buildpack_mode) { 'oci-phase-1' }
+            context 'when enable_declarative_asset_downloads is true' do
+              let(:enable_declarative_asset_downloads) { true }
 
               it 'returns no cached dependencies' do
                 expect(builder.cached_dependencies).to be_nil
@@ -345,8 +345,8 @@ module VCAP::CloudController
                 expect(result).to include(buildpack_entry_1, buildpack_entry_2)
               end
 
-              context 'when temporary_oci_buildpack_mode is set to oci-phase-1' do
-                let(:temporary_oci_buildpack_mode) { 'oci-phase-1' }
+              context 'when enable_declarative_asset_downloads is true' do
+                let(:enable_declarative_asset_downloads) { true }
 
                 it 'returns no cached dependencies' do
                   expect(builder.cached_dependencies).to be_nil
@@ -391,8 +391,8 @@ module VCAP::CloudController
             expect(builder.image_layers).to be_nil
           end
 
-          context 'when temporary_oci_buildpack_mode is set to oci-phase-1' do
-            let(:temporary_oci_buildpack_mode) { 'oci-phase-1' }
+          context 'when enable_declarative_asset_downloads is true' do
+            let(:enable_declarative_asset_downloads) { true }
 
             it 'returns the lifecycle as an image layer' do
               expect(builder.image_layers).to include(

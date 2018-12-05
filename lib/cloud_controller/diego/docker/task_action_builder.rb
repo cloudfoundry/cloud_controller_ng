@@ -29,7 +29,7 @@ module VCAP::CloudController
         end
 
         def image_layers
-          return nil if @config.get(:diego, :temporary_oci_buildpack_mode) != 'oci-phase-1'
+          return nil unless @config.get(:diego, :enable_declarative_asset_downloads)
 
           [::Diego::Bbs::Models::ImageLayer.new(
             name: 'docker-lifecycle',
@@ -53,7 +53,7 @@ module VCAP::CloudController
         end
 
         def cached_dependencies
-          return nil if @config.get(:diego, :temporary_oci_buildpack_mode) == 'oci-phase-1'
+          return nil if @config.get(:diego, :enable_declarative_asset_downloads)
 
           bundle = config.get(:diego, :lifecycle_bundles)[lifecycle_bundle_key]
           [::Diego::Bbs::Models::CachedDependency.new(

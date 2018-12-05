@@ -29,7 +29,7 @@ module VCAP::CloudController
         end
 
         def image_layers
-          return nil if @config.get(:diego, :temporary_oci_buildpack_mode) != 'oci-phase-1'
+          return nil unless @config.get(:diego, :enable_declarative_asset_downloads)
 
           layers = [
             ::Diego::Bbs::Models::ImageLayer.new(
@@ -41,9 +41,9 @@ module VCAP::CloudController
             )
           ]
 
-          buildpack_layers = lifecycle_data[:buildpacks].map do |buildpack|
-            next if buildpack[:name] == 'custom'
-
+          buildpack_layers = lifecycle_data[:buildpacks].
+                             reject { |buildpack| buildpack[:name] == 'custom' }.
+                             map do |buildpack|
             layer = {
               name:              buildpack[:name],
               url:               buildpack[:url],
@@ -57,13 +57,13 @@ module VCAP::CloudController
             end
 
             ::Diego::Bbs::Models::ImageLayer.new(layer)
-          end.compact
+          end
 
           layers.concat(buildpack_layers)
         end
 
         def cached_dependencies
-          return nil if @config.get(:diego, :temporary_oci_buildpack_mode) == 'oci-phase-1'
+          return nil if @config.get(:diego, :enable_declarative_asset_downloads)
 
           dependencies = [
             ::Diego::Bbs::Models::CachedDependency.new(

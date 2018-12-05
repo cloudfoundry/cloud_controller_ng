@@ -287,6 +287,7 @@ module VCAP::CloudController
             insecure_docker_registry_list: [String],
             docker_staging_stack: String,
             optional(:temporary_oci_buildpack_mode) => enum('oci-phase-1', NilClass),
+            enable_declarative_asset_downloads: bool,
           },
 
           opi: {

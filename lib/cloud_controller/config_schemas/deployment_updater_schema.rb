@@ -61,6 +61,7 @@ module VCAP::CloudController
             use_privileged_containers_for_running: bool,
             use_privileged_containers_for_staging: bool,
             optional(:temporary_oci_buildpack_mode) => enum('oci-phase-1', NilClass),
+            enable_declarative_asset_downloads: bool,
           },
 
           opi: {

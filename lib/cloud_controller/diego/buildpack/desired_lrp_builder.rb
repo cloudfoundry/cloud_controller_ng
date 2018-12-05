@@ -21,7 +21,7 @@ module VCAP::CloudController
         end
 
         def cached_dependencies
-          return nil if @config.get(:diego, :temporary_oci_buildpack_mode) == 'oci-phase-1' && @checksum_algorithm == 'sha256'
+          return nil if @config.get(:diego, :enable_declarative_asset_downloads) && @checksum_algorithm == 'sha256'
 
           lifecycle_bundle_key = "buildpack/#{@stack}".to_sym
           lifecycle_bundle = @config.get(:diego, :lifecycle_bundles)[lifecycle_bundle_key]
@@ -43,7 +43,7 @@ module VCAP::CloudController
         end
 
         def setup
-          return nil if @config.get(:diego, :temporary_oci_buildpack_mode) == 'oci-phase-1' && @checksum_algorithm == 'sha256'
+          return nil if @config.get(:diego, :enable_declarative_asset_downloads) && @checksum_algorithm == 'sha256'
 
           serial([
             ::Diego::Bbs::Models::DownloadAction.new(
@@ -58,13 +58,11 @@ module VCAP::CloudController
         end
 
         def image_layers
-          return nil if @config.get(:diego, :temporary_oci_buildpack_mode) != 'oci-phase-1' || @checksum_algorithm != 'sha256'
+          return nil unless @config.get(:diego, :enable_declarative_asset_downloads) && @checksum_algorithm == 'sha256'
 
           lifecycle_bundle_key = "buildpack/#{@stack}".to_sym
           lifecycle_bundle = @config.get(:diego, :lifecycle_bundles)[lifecycle_bundle_key]
-          unless lifecycle_bundle
-            raise InvalidStack.new("no compiler defined for requested stack '#{@stack}'")
-          end
+          raise InvalidStack.new("no compiler defined for requested stack '#{@stack}'") unless lifecycle_bundle
 
           [
             ::Diego::Bbs::Models::ImageLayer.new(
