@@ -143,6 +143,7 @@ Rails.application.routes.draw do
 
   # stacks
   get '/stacks', to: 'stacks#index'
-  post '/stacks', to: 'stacks#create'
   get '/stacks/:guid', to: 'stacks#show'
+  post '/stacks', to: 'stacks#create'
+  delete '/stacks/:guid', to: 'stacks#destroy'
 end

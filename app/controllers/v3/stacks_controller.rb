@@ -34,13 +34,35 @@ class StacksController < ApplicationController
 
   def show
     stack = Stack.find(guid: hashed_params[:guid])
-
     stack_not_found! unless stack
 
     render status: :ok, json: Presenters::V3::StackPresenter.new(stack)
   end
 
+  def destroy
+    unauthorized! unless permission_queryer.can_write_globally?
+
+    stack = Stack.find(guid: hashed_params[:guid])
+    stack_not_found! unless stack
+
+    begin
+      stack.destroy
+    rescue CloudController::Errors::ApiError => e
+      convert_association_not_empty_to_unprocessable(e, stack)
+      raise
+    end
+    head :no_content
+  end
+
+  private
+
   def stack_not_found!
     resource_not_found!(:stack)
+  end
+
+  def convert_association_not_empty_to_unprocessable(e, stack)
+    if e.code == 10006
+      unprocessable! "Cannot delete stack '#{stack.name}' because apps are currently using the stack."
+    end
   end
 end

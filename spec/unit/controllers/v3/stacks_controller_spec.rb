@@ -201,4 +201,91 @@ RSpec.describe StacksController, type: :controller do
       end
     end
   end
+
+  describe '#destroy' do
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:stack) { VCAP::CloudController::Stack.make }
+
+    describe 'permissions by role' do
+      role_to_expected_http_response = {
+        'admin' => 204,
+        'space_developer' => 403,
+        'space_manager' => 403,
+        'space_auditor' => 403,
+        'org_manager' => 403,
+        'admin_read_only' => 403,
+        'global_auditor' => 403,
+        'org_auditor' => 403,
+        'org_billing_manager' => 403,
+        'org_user' => 403,
+      }.freeze
+
+      role_to_expected_http_response.each do |role, expected_return_value|
+        context "as an #{role}" do
+          let(:org) { VCAP::CloudController::Organization.make }
+          let(:space) { VCAP::CloudController::Space.make(organization: org) }
+
+          it "returns #{expected_return_value}" do
+            set_current_user_as_role(role: role, org: org, space: space, user: user)
+
+            delete :destroy, params: { guid: stack.guid }
+
+            expect(response.status).to eq expected_return_value
+          end
+        end
+      end
+
+      it 'returns 401 when logged out' do
+        delete :destroy, params: { guid: stack.guid }
+
+        expect(response.status).to eq 401
+      end
+    end
+
+    context 'when the user is logged in with sufficient permissions' do
+      before do
+        set_current_user_as_admin(user: user)
+      end
+
+      context 'when droplet is not found' do
+        it 'returns a 404' do
+          delete :destroy, params: { guid: 'not-a-real-guid' }
+
+          expect(response.status).to eq 404
+        end
+      end
+
+      context 'when stack has apps created with it' do
+        before do
+          VCAP::CloudController::ProcessModelFactory.make(stack: stack)
+        end
+
+        it 'does not delete the stack' do
+          delete :destroy, params: { guid: stack.guid }
+
+          expect(stack).to exist
+        end
+
+        it 'returns 422' do
+          delete :destroy, params: { guid: stack.guid }
+
+          expect(response.status).to eq 422
+        end
+
+        it 'returns 10008 UnprocessableEntity' do
+          delete :destroy, params: { guid: stack.guid }
+
+          expect(parsed_body['errors'].first['code']).to eq 10008
+        end
+      end
+    end
+
+    context 'when user is logged in with insufficient permissions' do
+      it 'does not delete the stack' do
+        delete :destroy, params: { guid: stack.guid }
+
+        expect(stack).to exist
+      end
+    end
+  end
 end

@@ -191,4 +191,17 @@ RSpec.describe 'Stacks Request' do
       end
     end
   end
+
+  describe 'DELETE /v3/stacks/:guid' do
+    let(:user) { make_user(admin: true) }
+    let(:headers) { admin_headers_for(user) }
+    let(:stack) { VCAP::CloudController::Stack.make }
+
+    it 'destroys the stack' do
+      delete "/v3/stacks/#{stack.guid}", {}, headers
+
+      expect(last_response.status).to eq(204)
+      expect(stack).to_not exist
+    end
+  end
 end
