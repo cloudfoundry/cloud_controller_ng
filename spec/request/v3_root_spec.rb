@@ -42,8 +42,7 @@ RSpec.describe 'App Features' do
             'href' => "#{link_prefix}/v3/spaces"
           },
           'stacks' => {
-            'href' => "#{link_prefix}/v3/stacks",
-            'experimental' => true
+            'href' => "#{link_prefix}/v3/stacks"
           },
           'tasks' => {
             'href' => "#{link_prefix}/v3/tasks"

@@ -118,6 +118,11 @@ includes:
   - resources/spaces/update
   - resources/spaces/manage_isolation_segment
   - resources/spaces/get_assigned_isolation_segment
+  - resources/stacks/header
+  - resources/stacks/object
+  - resources/stacks/create
+  - resources/stacks/list
+  - resources/stacks/get
   - resources/tasks/header
   - resources/tasks/object
   - resources/tasks/create
@@ -164,11 +169,6 @@ includes:
   - experimental_resources/service_bindings/get
   - experimental_resources/service_bindings/delete
   - experimental_resources/service_bindings/list
-  - experimental_resources/stacks/header
-  - experimental_resources/stacks/object
-  - experimental_resources/stacks/create
-  - experimental_resources/stacks/list
-  - experimental_resources/stacks/get
 
 search: true
 ---
