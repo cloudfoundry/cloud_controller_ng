@@ -343,6 +343,10 @@ set exclusion | _key_ `notin` (_value1_,_value2_...) | Returns all resources tha
 
 ### Patching
 
+Labels and annotations can be updated by using the PATCH endpoint for their resource.
+For example, to update labels or annotations on an app, use the [update an app](#update-an-app) endpoint.
+When patching metadata, CAPI endpoints do a deep merge, only updating labels or annotations that are specified in the request.
+
 Labels and annotations follow the same rules for patching and must be wrapped in the metadata object inside the request body
 
 * To create, include the new key with a value
