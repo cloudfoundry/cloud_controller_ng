@@ -21,7 +21,7 @@ module VCAP::CloudController
         end
 
         def cached_dependencies
-          return nil if @config.get(:diego, :enable_declarative_asset_downloads) && @checksum_algorithm == 'sha256'
+          return nil if @config.get(:diego, :enable_declarative_asset_downloads)
 
           lifecycle_bundle_key = "buildpack/#{@stack}".to_sym
           lifecycle_bundle = @config.get(:diego, :lifecycle_bundles)[lifecycle_bundle_key]
@@ -58,22 +58,13 @@ module VCAP::CloudController
         end
 
         def image_layers
-          return nil unless @config.get(:diego, :enable_declarative_asset_downloads) && @checksum_algorithm == 'sha256'
+          return nil unless @config.get(:diego, :enable_declarative_asset_downloads)
 
           lifecycle_bundle_key = "buildpack/#{@stack}".to_sym
           lifecycle_bundle = @config.get(:diego, :lifecycle_bundles)[lifecycle_bundle_key]
           raise InvalidStack.new("no compiler defined for requested stack '#{@stack}'") unless lifecycle_bundle
 
-          [
-            ::Diego::Bbs::Models::ImageLayer.new(
-              name: 'droplet',
-              url: UriUtils.uri_escape(@droplet_uri),
-              destination_path: action_user_home,
-              layer_type: ::Diego::Bbs::Models::ImageLayer::Type::EXCLUSIVE,
-              media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ,
-              digest_value: @checksum_value,
-              digest_algorithm: ::Diego::Bbs::Models::ImageLayer::DigestAlgorithm::SHA256,
-            ),
+          layers = [
             ::Diego::Bbs::Models::ImageLayer.new(
               name: "buildpack-#{@stack}-lifecycle",
               url: LifecycleBundleUriGenerator.uri(lifecycle_bundle),
@@ -82,6 +73,20 @@ module VCAP::CloudController
               media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ,
             )
           ]
+
+          if @checksum_algorithm == 'sha256'
+            layers << ::Diego::Bbs::Models::ImageLayer.new(
+              name: 'droplet',
+              url: UriUtils.uri_escape(@droplet_uri),
+              destination_path: action_user_home,
+              layer_type: ::Diego::Bbs::Models::ImageLayer::Type::EXCLUSIVE,
+              media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ,
+              digest_value: @checksum_value,
+              digest_algorithm: ::Diego::Bbs::Models::ImageLayer::DigestAlgorithm::SHA256,
+            )
+          end
+
+          layers
         end
 
         def global_environment_variables

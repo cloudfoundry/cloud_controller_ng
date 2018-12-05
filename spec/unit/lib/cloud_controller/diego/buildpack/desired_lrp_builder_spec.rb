@@ -80,28 +80,8 @@ module VCAP::CloudController
           context 'when enable_declarative_asset_downloads is true' do
             let(:enable_declarative_asset_downloads) { true }
 
-            context 'and the droplet does not have a sha256 checksum (it is a legacy droplet with a sha1 checksum)' do
-              # this test can be removed once legacy sha1 checksummed droplets are obsolete
-              let(:opts) { super().merge(checksum_algorithm: 'sha1') }
-
-              it 'returns an array of CachedDependency objects' do
-                expect(builder.cached_dependencies).to eq([
-                  ::Diego::Bbs::Models::CachedDependency.new(
-                    from: 'foo://bar.baz',
-                    to: '/tmp/lifecycle',
-                    cache_key: 'buildpack-potato-stack-lifecycle',
-                  )
-                ])
-                expect(LifecycleBundleUriGenerator).to have_received(:uri).with('/path/to/lifecycle.tgz')
-              end
-            end
-
-            context 'when checksum is sha256' do
-              let(:opts) { super().merge(checksum_algorithm: 'sha256') }
-
-              it 'returns nil' do
-                expect(builder.cached_dependencies).to be_nil
-              end
+            it 'returns nil' do
+              expect(builder.cached_dependencies).to be_nil
             end
           end
         end
@@ -183,8 +163,16 @@ module VCAP::CloudController
               # this test can be removed once legacy sha1 checksummed droplets are obsolete
               let(:opts) { super().merge(checksum_algorithm: 'sha1') }
 
-              it 'returns nil' do
-                expect(builder.image_layers).to be_nil
+              it 'creates a image layer for each cached dependency' do
+                expect(builder.image_layers).to eq([
+                  ::Diego::Bbs::Models::ImageLayer.new(
+                    name: 'buildpack-potato-stack-lifecycle',
+                    url: 'foo://bar.baz',
+                    destination_path: '/tmp/lifecycle',
+                    layer_type: ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
+                    media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ,
+                  )
+                ])
               end
             end
 

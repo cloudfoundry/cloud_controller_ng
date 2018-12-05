@@ -51,18 +51,9 @@ module VCAP::CloudController
         end
 
         def image_layers
-          return nil unless @config.get(:diego, :enable_declarative_asset_downloads) && task.droplet.sha256_checksum
+          return nil unless @config.get(:diego, :enable_declarative_asset_downloads)
 
-          [
-            ::Diego::Bbs::Models::ImageLayer.new(
-              name: 'droplet',
-              url: lifecycle_data[:droplet_uri],
-              destination_path: '/home/vcap',
-              layer_type: ::Diego::Bbs::Models::ImageLayer::Type::EXCLUSIVE,
-              media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ,
-              digest_value: task.droplet.sha256_checksum,
-              digest_algorithm: ::Diego::Bbs::Models::ImageLayer::DigestAlgorithm::SHA256,
-            ),
+          layers = [
             ::Diego::Bbs::Models::ImageLayer.new(
               name: "buildpack-#{lifecycle_stack}-lifecycle",
               url: LifecycleBundleUriGenerator.uri(config.get(:diego, :lifecycle_bundles)[lifecycle_bundle_key]),
@@ -71,6 +62,20 @@ module VCAP::CloudController
               media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ,
             )
           ]
+
+          if task.droplet.sha256_checksum
+            layers << ::Diego::Bbs::Models::ImageLayer.new(
+              name: 'droplet',
+              url: lifecycle_data[:droplet_uri],
+              destination_path: '/home/vcap',
+              layer_type: ::Diego::Bbs::Models::ImageLayer::Type::EXCLUSIVE,
+              media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ,
+              digest_value: task.droplet.sha256_checksum,
+              digest_algorithm: ::Diego::Bbs::Models::ImageLayer::DigestAlgorithm::SHA256,
+            )
+          end
+
+          layers
         end
 
         def task_environment_variables
@@ -82,7 +87,7 @@ module VCAP::CloudController
         end
 
         def cached_dependencies
-          return nil if @config.get(:diego, :enable_declarative_asset_downloads) && task.droplet.sha256_checksum
+          return nil if @config.get(:diego, :enable_declarative_asset_downloads)
 
           [::Diego::Bbs::Models::CachedDependency.new(
             from: LifecycleBundleUriGenerator.uri(config.get(:diego, :lifecycle_bundles)[lifecycle_bundle_key]),
