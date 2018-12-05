@@ -47,10 +47,10 @@ class StacksController < ApplicationController
 
     begin
       stack.destroy
-    rescue CloudController::Errors::ApiError => e
-      convert_association_not_empty_to_unprocessable(e, stack)
-      raise
+    rescue Stack::AppsStillPresentError
+      unprocessable! "Cannot delete stack '#{stack.name}' because apps are currently using the stack."
     end
+
     head :no_content
   end
 
@@ -58,11 +58,5 @@ class StacksController < ApplicationController
 
   def stack_not_found!
     resource_not_found!(:stack)
-  end
-
-  def convert_association_not_empty_to_unprocessable(e, stack)
-    if e.code == 10006
-      unprocessable! "Cannot delete stack '#{stack.name}' because apps are currently using the stack."
-    end
   end
 end

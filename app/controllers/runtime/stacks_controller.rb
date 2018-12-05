@@ -24,6 +24,8 @@ module VCAP::CloudController
     def delete(guid)
       obj = find_guid_and_validate_access(:delete, guid)
       do_delete(obj)
+    rescue Stack::AppsStillPresentError
+      raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', 'app', 'stack')
     end
 
     define_messages

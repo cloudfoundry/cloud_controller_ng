@@ -247,7 +247,7 @@ RSpec.describe StacksController, type: :controller do
         set_current_user_as_admin(user: user)
       end
 
-      context 'when droplet is not found' do
+      context 'when stack is not found' do
         it 'returns a 404' do
           delete :destroy, params: { guid: 'not-a-real-guid' }
 
@@ -255,7 +255,7 @@ RSpec.describe StacksController, type: :controller do
         end
       end
 
-      context 'when stack has apps created with it' do
+      context 'when stack has apps associated with it' do
         before do
           VCAP::CloudController::ProcessModelFactory.make(stack: stack)
         end

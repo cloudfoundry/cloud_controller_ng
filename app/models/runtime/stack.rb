@@ -6,6 +6,8 @@ module VCAP::CloudController
     end
     class MissingDefaultStackError < StandardError
     end
+    class AppsStillPresentError < StandardError
+    end
 
     many_to_many :apps,
       class:             'VCAP::CloudController::ProcessModel',
@@ -27,9 +29,7 @@ module VCAP::CloudController
     end
 
     def before_destroy
-      if apps.present?
-        raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', 'app', 'stack')
-      end
+      raise AppsStillPresentError.new if apps.present?
     end
 
     def self.configure(file_path)
