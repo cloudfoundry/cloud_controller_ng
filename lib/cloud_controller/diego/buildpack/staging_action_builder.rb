@@ -16,8 +16,7 @@ module VCAP::CloudController
         end
 
         def action
-          serial([
-            parallel(download_actions),
+          actions = [
             stage_action,
             emit_progress(
               parallel(upload_actions),
@@ -25,7 +24,11 @@ module VCAP::CloudController
               success_message:        'Uploading complete',
               failure_message_prefix: 'Uploading failed'
             )
-          ])
+          ]
+
+          actions.prepend(parallel(download_actions)) unless download_actions.empty?
+
+          serial(actions)
         end
 
         def image_layers
@@ -40,6 +43,30 @@ module VCAP::CloudController
               media_type:        ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ,
             )
           ]
+
+          if lifecycle_data[:app_bits_checksum][:type] == 'sha256'
+            layers << ::Diego::Bbs::Models::ImageLayer.new(
+              name:              'app package',
+              url:               lifecycle_data[:app_bits_download_uri],
+              destination_path:  '/tmp/app',
+              layer_type:        ::Diego::Bbs::Models::ImageLayer::Type::EXCLUSIVE,
+              media_type:        ::Diego::Bbs::Models::ImageLayer::MediaType::ZIP,
+              digest_algorithm:  ::Diego::Bbs::Models::ImageLayer::DigestAlgorithm::SHA256,
+              digest_value:      lifecycle_data[:app_bits_checksum][:value],
+            )
+          end
+
+          if lifecycle_data[:build_artifacts_cache_download_uri] && lifecycle_data[:buildpack_cache_checksum].present?
+            layers << ::Diego::Bbs::Models::ImageLayer.new(
+              name:              'build artifacts cache',
+              url:               lifecycle_data[:build_artifacts_cache_download_uri],
+              destination_path:  '/tmp/cache',
+              layer_type:        ::Diego::Bbs::Models::ImageLayer::Type::EXCLUSIVE,
+              media_type:        ::Diego::Bbs::Models::ImageLayer::MediaType::ZIP,
+              digest_algorithm:  ::Diego::Bbs::Models::ImageLayer::DigestAlgorithm::SHA256,
+              digest_value:      lifecycle_data[:buildpack_cache_checksum],
+            )
+          end
 
           buildpack_layers = lifecycle_data[:buildpacks].
                              reject { |buildpack| buildpack[:name] == 'custom' }.
@@ -104,8 +131,10 @@ module VCAP::CloudController
         private
 
         def download_actions
-          result = [
-            ::Diego::Bbs::Models::DownloadAction.new(
+          result = []
+
+          unless @config.get(:diego, :enable_declarative_asset_downloads) && lifecycle_data[:app_bits_checksum][:type] == 'sha256'
+            result << ::Diego::Bbs::Models::DownloadAction.new(
               artifact:           'app package',
               from:               lifecycle_data[:app_bits_download_uri],
               to:                 '/tmp/app',
@@ -113,16 +142,19 @@ module VCAP::CloudController
               checksum_algorithm: lifecycle_data[:app_bits_checksum][:type],
               checksum_value:     lifecycle_data[:app_bits_checksum][:value],
             )
-          ]
-          if lifecycle_data[:build_artifacts_cache_download_uri] && lifecycle_data[:buildpack_cache_checksum].present?
-            result << try_action(::Diego::Bbs::Models::DownloadAction.new({
-              artifact:           'build artifacts cache',
-              from:               lifecycle_data[:build_artifacts_cache_download_uri],
-              to:                 '/tmp/cache',
-              user:               'vcap',
-              checksum_algorithm: 'sha256',
-              checksum_value:     lifecycle_data[:buildpack_cache_checksum],
-            }))
+          end
+
+          unless @config.get(:diego, :enable_declarative_asset_downloads)
+            if lifecycle_data[:build_artifacts_cache_download_uri] && lifecycle_data[:buildpack_cache_checksum].present?
+              result << try_action(::Diego::Bbs::Models::DownloadAction.new({
+                artifact:           'build artifacts cache',
+                from:               lifecycle_data[:build_artifacts_cache_download_uri],
+                to:                 '/tmp/cache',
+                user:               'vcap',
+                checksum_algorithm: 'sha256',
+                checksum_value:     lifecycle_data[:buildpack_cache_checksum],
+              }))
+            end
           end
 
           result

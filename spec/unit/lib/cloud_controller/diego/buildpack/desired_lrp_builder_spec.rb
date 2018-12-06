@@ -208,7 +208,7 @@ module VCAP::CloudController
               context 'when searching for a nonexistant stack' do
                 let(:stack) { 'stack-thats-not-in-config' }
                 it 'errors nicely' do
-                  expect { builder.image_layers}.to raise_error("no compiler defined for requested stack 'stack-thats-not-in-config'")
+                  expect { builder.image_layers }.to raise_error("no compiler defined for requested stack 'stack-thats-not-in-config'")
                 end
               end
             end
