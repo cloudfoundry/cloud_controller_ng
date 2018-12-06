@@ -403,7 +403,8 @@ module VCAP::CloudController
     end
 
     def filter_dataset(dataset)
-      dataset.where(type: ProcessTypes::WEB).exclude(guid: duplicated_older_process_guids(dataset))
+      dataset_by_web = dataset.where(type: ProcessTypes::WEB)
+      dataset_by_web.exclude(guid: duplicated_older_process_guids(dataset_by_web))
     end
 
     def duplicated_older_process_guids(dataset)

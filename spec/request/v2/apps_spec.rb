@@ -142,7 +142,8 @@ RSpec.describe 'Apps' do
         get '/v2/apps', nil, headers_for(user)
         expect(last_response.status).to eq(200), last_response.body
 
-        expect(parsed_response['resources'].map { |r| r['metadata']['guid'] }).to contain_exactly(newer_web_process_same_time.app_guid, web_process_for_different_app.app_guid)
+        expect(parsed_response['resources'].map { |r| r['metadata']['guid'] }).
+          to contain_exactly(newer_web_process_same_time.app_guid, web_process_for_different_app.app_guid)
       end
 
       context 'pagination' do
@@ -171,6 +172,22 @@ RSpec.describe 'Apps' do
           expect(last_response.status).to eq(200), last_response.body
           expect(parsed_response['resources'].map { |r| r['metadata']['guid'] }).to contain_exactly(newer_web_process.app_guid)
         end
+      end
+    end
+
+    context 'when there is one web and a non-web process' do
+      let!(:worker_process) do
+        VCAP::CloudController::ProcessModel.make(
+          app: shared_app_model,
+          created_at: 2.days.ago,
+          type: 'worker'
+        )
+      end
+
+      it 'does not filter out the web process even if it is older than the worker process' do
+        get '/v2/apps', nil, headers_for(user)
+        expect(parsed_response['resources'].map { |r| r['metadata']['guid'] }).
+          to contain_exactly(process.app_guid)
       end
     end
 

@@ -16,8 +16,8 @@ module VCAP::CloudController
       RouteMappingsCreateMessage.new(
         {
           relationships: {
-            app:     { guid: app.guid },
-            route:   { guid: route.guid },
+            app: { guid: app.guid },
+            route: { guid: route.guid },
             process: { type: process.type }
           }
         }
@@ -53,8 +53,8 @@ module VCAP::CloudController
         RouteMappingsCreateMessage.new(
           {
             relationships: {
-              app:     { guid: 'made-up' },
-              route:   { guid: route.guid },
+              app: { guid: 'made-up' },
+              route: { guid: route.guid },
               process: { type: process.type }
             }
           }
