@@ -683,6 +683,10 @@ When included in a url, the selector must be appropriately escaped.
 
 <h3 id="patching">Patching</h3>
 
+<p>Labels and annotations can be updated by using the PATCH endpoint for their resource.
+For example, to update labels or annotations on an app, use the <a href="#update-an-app">update an app</a> endpoint.
+When patching metadata, CAPI endpoints do a deep merge, only updating labels or annotations that are specified in the request.</p>
+
 <p>Labels and annotations follow the same rules for patching and must be wrapped in the metadata object inside the request body</p>
 
 <ul>
@@ -1374,7 +1378,7 @@ information for your packages, droplets, processes, tasks, and more.</p>
 <tr>
 <td><strong>metadata.annotations</strong> <em>(experimental)</em></td>
 <td><a href="#annotations"><em>annotation object</em></a></td>
-<td>Annotations added to the app.</td>
+<td>Annotations applied to the app.</td>
 <td></td>
 </tr>
 </tbody></table>
@@ -1639,7 +1643,7 @@ information for your packages, droplets, processes, tasks, and more.</p>
 <tr>
 <td><strong>metadata.annotations</strong> <em>(experimental)</em></td>
 <td><a href="#annotations"><em>annotation object</em></a></td>
-<td>Annotations added to the app.</td>
+<td>Annotations applied to the app.</td>
 </tr>
 </tbody></table>
 
@@ -4886,7 +4890,7 @@ In the case where the specified isolation segment is the system-wide shared segm
 <tr>
 <td><strong>metadata.annotations</strong> <em>(experimental)</em></td>
 <td><a href="#annotations"><em>annotation object</em></a></td>
-<td>Annotations added to the organization.</td>
+<td>Annotations applied to the organization.</td>
 </tr>
 </tbody></table>
 
@@ -4963,7 +4967,7 @@ In the case where the specified isolation segment is the system-wide shared segm
 <tr>
 <td><strong>metadata.annotations</strong> <em>(experimental)</em></td>
 <td><a href="#annotations"><em>annotation object</em></a></td>
-<td>Annotations added to the organization.</td>
+<td>Annotations applied to the organization.</td>
 </tr>
 </tbody></table>
 
@@ -7729,7 +7733,8 @@ In order to share into a space the requesting user must be a space developer in 
     </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
   </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
 
@@ -7777,6 +7782,11 @@ In order to share into a space the requesting user must be a space developer in 
 <td><a href="#labels"><em>label object</em></a></td>
 <td>Labels applied to the space.</td>
 </tr>
+<tr>
+<td><strong>metadata.annotations</strong> <em>(experimental)</em></td>
+<td><a href="#annotations"><em>annotation object</em></a></td>
+<td>Annotations applied to the space.</td>
+</tr>
 </tbody></table>
 
           <h3 id="create-a-space">Create a space</h3>
@@ -7823,7 +7833,8 @@ In order to share into a space the requesting user must be a space developer in 
     </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
   </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
 
@@ -7867,6 +7878,11 @@ In order to share into a space the requesting user must be a space developer in 
 <td><strong>metadata.labels</strong> <em>(experimental)</em></td>
 <td><a href="#labels"><em>label object</em></a></td>
 <td>Labels applied to the space.</td>
+</tr>
+<tr>
+<td><strong>metadata.annotations</strong> <em>(experimental)</em></td>
+<td><a href="#annotations"><em>annotation object</em></a></td>
+<td>Annotations applied to the space.</td>
 </tr>
 </tbody></table>
 
@@ -7932,7 +7948,8 @@ In order to share into a space the requesting user must be a space developer in 
         </span><span class="p">}</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+        </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+        </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
       </span><span class="p">}</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="p">{</span><span class="w">
@@ -7956,7 +7973,8 @@ In order to share into a space the requesting user must be a space developer in 
         </span><span class="p">}</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+        </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+        </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
       </span><span class="p">}</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">]</span><span class="w">
@@ -8049,7 +8067,8 @@ In order to share into a space the requesting user must be a space developer in 
     </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
   </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
 
@@ -8127,7 +8146,8 @@ In order to share into a space the requesting user must be a space developer in 
     </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
   </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
 
@@ -8306,6 +8326,316 @@ The isolation segment must be <a href="#entitle-organizations-for-an-isolation-s
 </tr>
 <tr>
 <td>Admin Read-Only</td>
+</tr>
+<tr>
+<td>Global Auditor</td>
+</tr>
+</tbody></table>
+
+          <h2 id="stacks">Stacks</h2>
+
+<p>Stacks are the base operating system and file system that your application will execute in.
+A stack is how you configure applications to run against different operating systems
+(like Windows or Linux)
+and different versions of those operating systems
+(like Windows 2012 or Windows 2016).</p>
+
+<p>An application&rsquo;s <a href="#lifecycles">lifecycle</a> will specify which stack to execute the application in.
+Buildpacks can also be associated with a particular stack if they contain stack-specific logic.
+An application will automatically use buildpacks associated with the application&rsquo;s configured stack.</p>
+
+<p>Stacks are not used for apps with a <a href="#docker-lifecycle">Docker lifecycle</a>.</p>
+
+          <h3 id="the-stack-object">The stack object</h3>
+<pre class="highlight plaintext"><code>Example Stack object
+</code></pre>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+   </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"11c916c9-c2f9-440e-8e73-102e79c4704d"</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-11-09T22:43:28Z"</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-11-09T22:43:28Z"</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack"</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Here is my stack!"</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+         </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.com/v3/stacks/11c916c9-c2f9-440e-8e73-102e79c4704d"</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+   </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+
+</span></code></pre>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>name</strong></td>
+<td><em>string</em></td>
+<td>The name of the stack</td>
+</tr>
+<tr>
+<td><strong>description</strong></td>
+<td><em>string</em></td>
+<td>The description of the stack</td>
+</tr>
+<tr>
+<td><strong>guid</strong></td>
+<td><em>uuid</em></td>
+<td>Unique identifier for the stack.</td>
+</tr>
+<tr>
+<td><strong>created_at</strong></td>
+<td><em>datetime</em></td>
+<td>The time with zone when the object was created.</td>
+</tr>
+<tr>
+<td><strong>updated_at</strong></td>
+<td><em>datetime</em></td>
+<td>The time with zone when the object was last updated.</td>
+</tr>
+<tr>
+<td><strong>links</strong></td>
+<td><a href="#links"><em>links object</em></a></td>
+<td>Links to related resources.</td>
+</tr>
+</tbody></table>
+
+          <h3 id="create-a-stack">Create a stack</h3>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/stacks"</span> <span class="se">\</span>
+  -X POST <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+  -H <span class="s2">"Content-type: application/json"</span> <span class="se">\</span>
+  -d <span class="s1">'{
+    "name": "my-stack",
+    "description": "Here is my stack!",
+  }'</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">201</span> <span class="ne">Created</span>
+<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
+
+<span class="p">{</span><span class="w">
+   </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"11c916c9-c2f9-440e-8e73-102e79c4704d"</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-11-09T22:43:28Z"</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-11-09T22:43:28Z"</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack"</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Here is my stack!"</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+         </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.com/v3/stacks/11c916c9-c2f9-440e-8e73-102e79c4704d"</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+   </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+
+</span></code></pre>
+
+<h4 id="definition">Definition</h4>
+
+<p><code class="prettyprint">POST /v3/stacks</code></p>
+
+<h4 id="required-parameters">Required Parameters</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>name</strong></td>
+<td><em>string</em></td>
+<td>Name of the stack. Must be unique and no longer than 250 characters.</td>
+</tr>
+</tbody></table>
+
+<h4 id="optional-parameters">Optional Parameters</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>description</strong></td>
+<td><em>string</em></td>
+<td>Description of the stack. Must no longer than 250 characters.</td>
+<td><code class="prettyprint">null</code></td>
+</tr>
+</tbody></table>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Admin</td>
+</tr>
+</tbody></table>
+
+          <h3 id="list-stacks">List stacks</h3>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/stacks"</span> <span class="se">\</span>
+  -X GET <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
+
+<span class="p">{</span><span class="w">
+  </span><span class="nt">"pagination"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"total_results"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"total_pages"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"first"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/stacks?page=1&amp;per_page=2"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"last"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/stacks?page=2&amp;per_page=2"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"next"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/stacks?page=2&amp;per_page=2"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"previous"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"resources"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"11c916c9-c2f9-440e-8e73-102e79c4704d"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-11-09T22:43:28Z"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-11-09T22:43:28Z"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack-1"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"This is my first stack!"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/stacks/11c916c9-c2f9-440e-8e73-102e79c4704d"</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"81c916c9-c2f9-440e-8e73-102e79c4704h"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-11-09T22:43:29Z"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-11-09T22:43:29Z"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack-2"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"This is my second stack!"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/stacks/81c916c9-c2f9-440e-8e73-102e79c4704h"</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+
+
+</span></code></pre>
+
+<p>Retrieve all stacks.</p>
+
+<h4 id="definition">Definition</h4>
+
+<p><code class="prettyprint">GET /v3/stacks</code></p>
+
+<h4 id="query-parameters">Query Parameters</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>page</strong></td>
+<td><em>integer</em></td>
+<td>Page to display. Valid values are integers &gt;= 1.</td>
+</tr>
+<tr>
+<td><strong>per_page</strong></td>
+<td><em>integer</em></td>
+<td>Number of results per page. <br>Valid values are 1 through 5000.</td>
+</tr>
+<tr>
+<td><strong>names</strong></td>
+<td><em>list of strings</em></td>
+<td>Comma-delimited list of app names to filter by.</td>
+</tr>
+</tbody></table>
+
+          <h3 id="get-a-stack">Get a stack</h3>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/stacks/[guid]"</span> <span class="se">\</span>
+  -X GET <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
+
+<span class="p">{</span><span class="w">
+   </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"11c916c9-c2f9-440e-8e73-102e79c4704d"</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-11-09T22:43:28Z"</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-11-09T22:43:28Z"</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack"</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Here is my stack!"</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+         </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.com/v3/stacks/11c916c9-c2f9-440e-8e73-102e79c4704d"</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+   </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+
+</span></code></pre>
+
+<h4 id="definition">Definition</h4>
+
+<p><code class="prettyprint">GET /v3/stacks/:guid</code></p>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Space Manager</td>
+</tr>
+<tr>
+<td>Space Auditor</td>
+</tr>
+<tr>
+<td>Org Auditor</td>
+</tr>
+<tr>
+<td>Org Manager</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+<tr>
+<td>Admin Read-Only</td>
+</tr>
+<tr>
+<td>Org Billing Manager</td>
 </tr>
 <tr>
 <td>Global Auditor</td>
@@ -11225,249 +11555,6 @@ represents code currently running in Cloud Foundry.</p>
 <td><strong>order_by</strong></td>
 <td><em>string</em></td>
 <td>Value to sort by. Defaults to ascending. Prepend with <code class="prettyprint">-</code> to sort descending. <br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code>.</td>
-</tr>
-</tbody></table>
-
-          <h2 id="stacks">Stacks</h2>
-
-<p>Stacks are the base operating system and file system that your application will execute in.
-A stack is how you configure applications to run against different operating systems
-(like Windows or Linux)
-and different versions of those operating systems
-(like Windows 2012 or Windows 2016).</p>
-
-<p>An application&rsquo;s <a href="#lifecycles">lifecycle</a> will specify which stack to execute the application in.
-Buildpacks can also be associated with a particular stack if they contain stack-specific logic.
-An application will automatically use buildpacks associated with the application&rsquo;s configured stack.</p>
-
-<p>Stacks are not used for apps with a <a href="#docker-lifecycle">Docker lifecycle</a>.</p>
-
-          <h3 id="the-stack-object">The stack object</h3>
-<pre class="highlight plaintext"><code>Example Stack object
-</code></pre>
-<pre class="highlight json"><code><span class="p">{</span><span class="w">
-   </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"11c916c9-c2f9-440e-8e73-102e79c4704d"</span><span class="p">,</span><span class="w">
-   </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-11-09T22:43:28Z"</span><span class="p">,</span><span class="w">
-   </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-11-09T22:43:28Z"</span><span class="p">,</span><span class="w">
-   </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack"</span><span class="p">,</span><span class="w">
-   </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Here is my stack!"</span><span class="p">,</span><span class="w">
-   </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-         </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.com/v3/stacks/11c916c9-c2f9-440e-8e73-102e79c4704d"</span><span class="w">
-      </span><span class="p">}</span><span class="w">
-   </span><span class="p">}</span><span class="w">
-</span><span class="p">}</span><span class="w">
-
-</span></code></pre>
-
-<table><thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead><tbody>
-<tr>
-<td><strong>name</strong></td>
-<td><em>string</em></td>
-<td>The name of the stack</td>
-</tr>
-<tr>
-<td><strong>description</strong></td>
-<td><em>string</em></td>
-<td>The description of the stack</td>
-</tr>
-<tr>
-<td><strong>guid</strong></td>
-<td><em>uuid</em></td>
-<td>Unique identifier for the stack.</td>
-</tr>
-<tr>
-<td><strong>created_at</strong></td>
-<td><em>datetime</em></td>
-<td>The time with zone when the object was created.</td>
-</tr>
-<tr>
-<td><strong>updated_at</strong></td>
-<td><em>datetime</em></td>
-<td>The time with zone when the object was last updated.</td>
-</tr>
-<tr>
-<td><strong>links</strong></td>
-<td><a href="#links"><em>links object</em></a></td>
-<td>Links to related resources.</td>
-</tr>
-</tbody></table>
-
-          <h3 id="create-a-stack">Create a stack</h3>
-<pre class="highlight plaintext"><code>Example Request
-</code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/stacks"</span> <span class="se">\</span>
-  -X POST <span class="se">\</span>
-  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
-  -H <span class="s2">"Content-type: application/json"</span> <span class="se">\</span>
-  -d <span class="s1">'{
-    "name": "my-stack",
-    "description": "Here is my stack!",
-  }'</span>
-</code></pre>
-<pre class="highlight plaintext"><code>Example Response
-</code></pre>
-<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">201</span> <span class="ne">Created</span>
-<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
-
-<span class="p">{</span><span class="w">
-   </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"11c916c9-c2f9-440e-8e73-102e79c4704d"</span><span class="p">,</span><span class="w">
-   </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-11-09T22:43:28Z"</span><span class="p">,</span><span class="w">
-   </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-11-09T22:43:28Z"</span><span class="p">,</span><span class="w">
-   </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack"</span><span class="p">,</span><span class="w">
-   </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Here is my stack!"</span><span class="p">,</span><span class="w">
-   </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-         </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.com/v3/stacks/11c916c9-c2f9-440e-8e73-102e79c4704d"</span><span class="w">
-      </span><span class="p">}</span><span class="w">
-   </span><span class="p">}</span><span class="w">
-</span><span class="p">}</span><span class="w">
-
-</span></code></pre>
-
-<h4 id="definition">Definition</h4>
-
-<p><code class="prettyprint">POST /v3/stacks</code></p>
-
-<h4 id="required-parameters">Required Parameters</h4>
-
-<table><thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead><tbody>
-<tr>
-<td><strong>name</strong></td>
-<td><em>string</em></td>
-<td>Name of the stack. Must be unique and no longer than 250 characters.</td>
-</tr>
-</tbody></table>
-
-<h4 id="optional-parameters">Optional Parameters</h4>
-
-<table><thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-<th>Default</th>
-</tr>
-</thead><tbody>
-<tr>
-<td><strong>description</strong></td>
-<td><em>string</em></td>
-<td>Description of the stack. Must no longer than 250 characters.</td>
-<td><code class="prettyprint">null</code></td>
-</tr>
-</tbody></table>
-
-<h4 id="permitted-roles">Permitted Roles</h4>
-
-<table><thead>
-<tr>
-<th></th>
-</tr>
-</thead><tbody>
-<tr>
-<td>Admin</td>
-</tr>
-</tbody></table>
-
-          <h3 id="list-stacks">List stacks</h3>
-<pre class="highlight plaintext"><code>Example Request
-</code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/stacks"</span> <span class="se">\</span>
-  -X GET <span class="se">\</span>
-  -H <span class="s2">"Authorization: bearer [token]"</span>
-</code></pre>
-<pre class="highlight plaintext"><code>Example Response
-</code></pre>
-<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
-<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
-
-<span class="p">{</span><span class="w">
-  </span><span class="nt">"pagination"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"total_results"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"total_pages"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"first"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/stacks?page=1&amp;per_page=2"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"last"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/stacks?page=2&amp;per_page=2"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"next"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/stacks?page=2&amp;per_page=2"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"previous"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"resources"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-    </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"11c916c9-c2f9-440e-8e73-102e79c4704d"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-11-09T22:43:28Z"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-11-09T22:43:28Z"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack-1"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"This is my first stack!"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/stacks/11c916c9-c2f9-440e-8e73-102e79c4704d"</span><span class="w">
-        </span><span class="p">}</span><span class="w">
-      </span><span class="p">}</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"81c916c9-c2f9-440e-8e73-102e79c4704h"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-11-09T22:43:29Z"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-11-09T22:43:29Z"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack-2"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"This is my second stack!"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/stacks/81c916c9-c2f9-440e-8e73-102e79c4704h"</span><span class="w">
-        </span><span class="p">}</span><span class="w">
-      </span><span class="p">}</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-  </span><span class="p">]</span><span class="w">
-</span><span class="p">}</span><span class="w">
-
-
-</span></code></pre>
-
-<p>Retrieve all stacks.</p>
-
-<h4 id="definition">Definition</h4>
-
-<p><code class="prettyprint">GET /v3/stacks</code></p>
-
-<h4 id="query-parameters">Query Parameters</h4>
-
-<table><thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead><tbody>
-<tr>
-<td><strong>page</strong></td>
-<td><em>integer</em></td>
-<td>Page to display. Valid values are integers &gt;= 1.</td>
-</tr>
-<tr>
-<td><strong>per_page</strong></td>
-<td><em>integer</em></td>
-<td>Number of results per page. <br>Valid values are 1 through 5000.</td>
-</tr>
-<tr>
-<td><strong>names</strong></td>
-<td><em>list of strings</em></td>
-<td>Comma-delimited list of app names to filter by.</td>
 </tr>
 </tbody></table>
 
