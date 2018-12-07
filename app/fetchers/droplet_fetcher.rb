@@ -1,5 +1,5 @@
 module VCAP::CloudController
-  class DropletDeleteFetcher
+  class DropletFetcher
     def fetch(droplet_guid)
       droplet = DropletModel.where(guid: droplet_guid).eager(:space, space: :organization).all.first
       return nil if droplet.nil?

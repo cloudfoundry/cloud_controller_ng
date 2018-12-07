@@ -61,7 +61,10 @@ RSpec.describe 'Droplets' do
             'package'                => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
             'app'                    => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}" },
             'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/relationships/current_droplet", 'method' => 'PATCH' },
-          }
+          },
+          'metadata' => {
+            'labels' => {},
+          },
         })
       end
 
@@ -121,7 +124,10 @@ RSpec.describe 'Droplets' do
             'package'                => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
             'app'                    => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}" },
             'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/relationships/current_droplet", 'method' => 'PATCH' },
-          }
+          },
+          'metadata' => {
+            'labels' => {},
+          },
         })
       end
     end
@@ -209,7 +215,10 @@ RSpec.describe 'Droplets' do
               'package'                => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
               'app'                    => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
               'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/relationships/current_droplet", 'method' => 'PATCH' },
-            }
+            },
+            'metadata' => {
+              'labels' => {},
+            },
           },
           {
             'guid'               => droplet1.guid,
@@ -232,7 +241,10 @@ RSpec.describe 'Droplets' do
               'package'                => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
               'app'                    => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
               'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/relationships/current_droplet", 'method' => 'PATCH' },
-            }
+            },
+            'metadata' => {
+              'labels' => {},
+            },
           }
         ]
       })
@@ -352,10 +364,6 @@ RSpec.describe 'Droplets' do
 
   describe 'DELETE /v3/droplets/:guid' do
     let!(:droplet) { VCAP::CloudController::DropletModel.make(:buildpack, app_guid: app_model.guid) }
-
-    before do
-      stub_request(:delete, /#{TestConfig.config[:diego][:stager_url]}/).to_return(status: 202)
-    end
 
     it 'deletes a droplet asynchronously' do
       delete "/v3/droplets/#{droplet.guid}", nil, developer_headers
@@ -519,7 +527,10 @@ RSpec.describe 'Droplets' do
               'package'                => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
               'app'                    => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
               'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/relationships/current_droplet", 'method' => 'PATCH' },
-            }
+            },
+            'metadata' => {
+              'labels' => {},
+            },
           },
           {
             'guid'               => droplet1.guid,
@@ -542,7 +553,10 @@ RSpec.describe 'Droplets' do
               'package'                => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
               'app'                    => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
               'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/relationships/current_droplet", 'method' => 'PATCH' },
-            }
+            },
+            'metadata' => {
+              'labels' => {},
+            },
           }
         ]
       })
@@ -650,7 +664,10 @@ RSpec.describe 'Droplets' do
               'package'                => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
               'app'                    => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
               'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/relationships/current_droplet", 'method' => 'PATCH' },
-            }
+            },
+            'metadata' => {
+              'labels' => {},
+            },
           },
           {
             'guid'               => droplet1.guid,
@@ -673,7 +690,10 @@ RSpec.describe 'Droplets' do
               'package'                => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
               'app'                    => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
               'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/relationships/current_droplet", 'method' => 'PATCH' },
-            }
+            },
+            'metadata' => {
+              'labels' => {},
+            },
           }
         ]
       })
@@ -736,8 +756,57 @@ RSpec.describe 'Droplets' do
           'package'                => nil,
           'app'                    => { 'href' => "#{link_prefix}/v3/apps/#{new_app.guid}" },
           'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{new_app.guid}/relationships/current_droplet", 'method' => 'PATCH' },
-        }
+        },
+        'metadata' => {
+          'labels' => {},
+        },
       })
+    end
+  end
+
+  describe 'PATCH v3/droplets/:guid' do
+    let(:package_model) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
+    let!(:og_droplet) do
+      VCAP::CloudController::DropletModel.make(
+        state:                        VCAP::CloudController::DropletModel::STAGED_STATE,
+        app_guid:                     app_model.guid,
+        package_guid:                 package_model.guid,
+        buildpack_receipt_buildpack:  'http://buildpack.git.url.com',
+        error_description:            nil,
+        execution_metadata:           'some-data',
+        droplet_hash:                 'shalalala',
+        sha256_checksum:              'droplet-checksum-sha256',
+        process_types:                { 'web' => 'start-command' },
+      )
+    end
+    let(:update_request) do
+      {
+        metadata: {
+          labels: {
+                  'release' => 'stable',
+                  'code.cloudfoundry.org/cloud_controller_ng' => 'awesome',
+                  'delete-me' => nil,
+          },
+        }
+      }
+    end
+
+    before do
+      og_droplet.buildpack_lifecycle_data.update(buildpacks: ['http://buildpack.git.url.com'], stack: 'stack-name')
+    end
+
+    it 'updates the metadata on a droplet' do
+      patch "/v3/droplets/#{og_droplet.guid}", update_request.to_json, developer_headers
+      expect(last_response.status).to eq(200), last_response.body
+
+      og_droplet.reload
+      parsed_response = MultiJson.load(last_response.body)
+      expect(parsed_response['metadata']).to eq(
+        'labels' => {
+          'release' => 'stable',
+          'code.cloudfoundry.org/cloud_controller_ng' => 'awesome'
+        }
+      )
     end
   end
 end

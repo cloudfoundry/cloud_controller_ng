@@ -74,6 +74,7 @@ Rails.application.routes.draw do
   delete '/droplets/:guid', to: 'droplets#destroy'
   get '/apps/:app_guid/droplets', to: 'droplets#index'
   get '/packages/:package_guid/droplets', to: 'droplets#index'
+  patch '/droplets/:guid', to: 'droplets#update'
 
   # errors
   match '404', to: 'errors#not_found', via: :all

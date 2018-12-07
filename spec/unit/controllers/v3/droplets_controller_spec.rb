@@ -6,8 +6,8 @@ RSpec.describe DropletsController, type: :controller do
     let(:stagers) { instance_double(VCAP::CloudController::Stagers) }
     let(:package) do
       VCAP::CloudController::PackageModel.make(app_guid: app_model.guid,
-                                               type:  VCAP::CloudController::PackageModel::BITS_TYPE,
-                                               state: VCAP::CloudController::PackageModel::READY_STATE)
+        type: VCAP::CloudController::PackageModel::BITS_TYPE,
+        state: VCAP::CloudController::PackageModel::READY_STATE)
     end
     let(:user) { set_current_user(user: VCAP::CloudController::User.make(guid: '1234'), email: 'dr@otter.com', user_name: 'dropper') }
     let(:space) { app_model.space }
@@ -346,7 +346,7 @@ RSpec.describe DropletsController, type: :controller do
         get :index, params: params
 
         parsed_response = parsed_body
-        response_guids  = parsed_response['resources'].map { |r| r['guid'] }
+        response_guids = parsed_response['resources'].map { |r| r['guid'] }
         expect(parsed_response['pagination']['total_results']).to eq(2)
         expect(response_guids.length).to eq(per_page)
       end
@@ -354,7 +354,7 @@ RSpec.describe DropletsController, type: :controller do
 
     context 'accessed as an app subresource' do
       it 'returns droplets for the app' do
-        app       = VCAP::CloudController::AppModel.make(space: space)
+        app = VCAP::CloudController::AppModel.make(space: space)
         droplet_1 = VCAP::CloudController::DropletModel.make(app_guid: app.guid, state: VCAP::CloudController::DropletModel::STAGED_STATE)
         droplet_2 = VCAP::CloudController::DropletModel.make(app_guid: app.guid, state: VCAP::CloudController::DropletModel::STAGED_STATE)
         VCAP::CloudController::DropletModel.make
@@ -513,6 +513,93 @@ RSpec.describe DropletsController, type: :controller do
         it 'returns 200' do
           get :index
           expect(response.status).to eq(200)
+        end
+      end
+    end
+  end
+
+  describe '#update' do
+    let(:droplet) { VCAP::CloudController::DropletModel.make }
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:space) { droplet.space }
+    let(:stagers) { instance_double(VCAP::CloudController::Stagers, stager_for_app: stager) }
+    let(:stager) { instance_double(VCAP::CloudController::Diego::Stager, stop_stage: nil) }
+    let(:request_body) do
+      {
+        metadata: {
+          labels: {
+            "key": 'value'
+          }
+        }
+      }
+    end
+
+    before do
+      allow_user_read_access_for(user, spaces: [space])
+      allow_user_write_access(user, space: space)
+      CloudController::DependencyLocator.instance.register(:stagers, stagers)
+    end
+
+    it 'updates' do
+      patch :update, params: { guid: droplet.guid }.merge(request_body), as: :json
+      expect(response.status).to eq(200)
+      expect(parsed_body['guid']).to eq(droplet.guid)
+      expect(parsed_body['metadata']['labels']['key']).to eq('value')
+    end
+
+    context 'when there is an invalid message validation failure' do
+      let(:request_body) do
+        {
+          metadata: {
+            labels: 'value'
+          }
+        }
+      end
+      it 'displays an informative error' do
+        patch :update, params: { guid: droplet.guid }.merge(request_body), as: :json
+        expect(response.status).to eq(422)
+        expect(response).to have_error_message("labels' is not a hash")
+      end
+    end
+
+    context 'permissions' do
+      context 'when the user does not have write scope' do
+        before do
+          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
+        end
+
+        it 'returns 403' do
+          patch :update, params: { guid: droplet.guid }
+
+          expect(response.status).to eq(403)
+          expect(response.body).to include('NotAuthorized')
+        end
+      end
+
+      context 'when the user cannot read the droplet due to roles' do
+        before do
+          disallow_user_read_access(user, space: space)
+          disallow_user_write_access(user, space: space)
+        end
+
+        it 'returns a 404 ResourceNotFound error' do
+          patch :update, params: { guid: droplet.guid }
+
+          expect(response.status).to eq(404)
+          expect(response.body).to include('ResourceNotFound')
+        end
+      end
+
+      context 'when the user can read but cannot write to the space' do
+        before do
+          disallow_user_write_access(user, space: space)
+        end
+
+        it 'returns 403 NotAuthorized' do
+          patch :update, params: { guid: droplet.guid }
+
+          expect(response.status).to eq(403)
+          expect(response.body).to include('NotAuthorized')
         end
       end
     end

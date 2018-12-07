@@ -1,27 +1,33 @@
 require 'presenters/v3/base_presenter'
+require 'presenters/mixins/metadata_presentation_helpers'
 
 module VCAP::CloudController
   module Presenters
     module V3
       class DropletPresenter < BasePresenter
+        include VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers
+
         def to_hash
           {
-            guid:               droplet.guid,
-            state:              droplet.state,
-            error:              droplet.error,
-            lifecycle:          {
+            guid: droplet.guid,
+            state: droplet.state,
+            error: droplet.error,
+            lifecycle: {
               type: droplet.lifecycle_type,
               data: {},
             },
-            checksum:           droplet_checksum_info,
-            buildpacks:         droplet_buildpack_info,
-            stack:              droplet.lifecycle_data.try(:stack),
-            image:              droplet.docker_receipt_image,
+            checksum: droplet_checksum_info,
+            buildpacks: droplet_buildpack_info,
+            stack: droplet.lifecycle_data.try(:stack),
+            image: droplet.docker_receipt_image,
             execution_metadata: redact(droplet.execution_metadata),
-            process_types:      redact_hash(droplet.process_types),
-            created_at:         droplet.created_at,
-            updated_at:         droplet.updated_at,
-            links:              build_links,
+            process_types: redact_hash(droplet.process_types),
+            created_at: droplet.created_at,
+            updated_at: droplet.updated_at,
+            links: build_links,
+            metadata: {
+              labels: hashified_labels(droplet.labels),
+            }
           }
         end
 
@@ -35,9 +41,9 @@ module VCAP::CloudController
           url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
 
           {
-            self:                   { href: url_builder.build_url(path: "/v3/droplets/#{droplet.guid}") },
-            package:                nil,
-            app:                    { href: url_builder.build_url(path: "/v3/apps/#{droplet.app_guid}") },
+            self: { href: url_builder.build_url(path: "/v3/droplets/#{droplet.guid}") },
+            package: nil,
+            app: { href: url_builder.build_url(path: "/v3/apps/#{droplet.app_guid}") },
             assign_current_droplet: { href: url_builder.build_url(path: "/v3/apps/#{droplet.app_guid}/relationships/current_droplet"), method: 'PATCH' },
           }.tap do |links|
             links[:package] = { href: url_builder.build_url(path: "/v3/packages/#{droplet.package_guid}") } if droplet.package_guid.present?

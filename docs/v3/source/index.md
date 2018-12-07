@@ -55,6 +55,7 @@ includes:
   - resources/droplets/object
   - resources/droplets/copy
   - resources/droplets/get
+  - resources/droplets/update
   - resources/droplets/delete
   - resources/droplets/list
   - resources/droplets/app/list

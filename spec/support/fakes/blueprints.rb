@@ -60,6 +60,9 @@ module VCAP::CloudController
   SpaceLabelModel.blueprint do
   end
 
+  DropletLabelModel.blueprint do
+  end
+
   AppAnnotationModel.blueprint do
   end
 

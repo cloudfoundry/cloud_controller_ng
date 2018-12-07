@@ -30,6 +30,7 @@ module VCAP::CloudController
       class:       'VCAP::CloudController::BuildpackLifecycleDataModel',
       key:         :droplet_guid,
       primary_key: :guid
+    one_to_many :labels, class: 'VCAP::CloudController::DropletLabelModel', key: :resource_guid, primary_key: :guid
 
     add_association_dependencies buildpack_lifecycle_data: :destroy
 

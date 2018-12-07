@@ -1,0 +1,41 @@
+### Update a droplet
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.space/v3/droplets/[guid]" \
+  -X PATCH \
+  -H "Authorization: bearer [token]" \
+  -H "Content-Type: application/json" \
+  -d '{ "metadata": { "labels": { "key": "value" }}}'
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :staged_droplet_with_labels %>
+```
+
+#### Definition
+`PATCH /v3/droplets/:guid`
+
+#### Optional Parameters
+
+Name | Type | Description
+---- | ---- | -----------
+**metadata.labels** _(experimental)_| [_label object_](#labels) | Labels applied to the droplet.
+
+#### Permitted Roles
+ |
+--- | ---
+Admin |
+SpaceManager |
+OrgManager |
+SpaceDeveloper |
