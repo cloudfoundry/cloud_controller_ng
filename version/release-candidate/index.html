@@ -8791,6 +8791,34 @@ An application will automatically use buildpacks associated with the application
 </tr>
 </tbody></table>
 
+          <h3 id="delete-a-stack">Delete a Stack</h3>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/stacks/[guid]"</span> <span class="se">\</span>
+  -X DELETE <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">204</span> <span class="ne">No Content</span>
+</code></pre>
+
+<h4 id="definition">Definition</h4>
+
+<p><code class="prettyprint">DELETE /v3/stacks/:guid</code></p>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Admin</td>
+</tr>
+</tbody></table>
+
           <h2 id="tasks">Tasks</h2>
 
 <p>Tasks are one-off jobs that are intended to perform a task, stop, and be cleaned up, freeing up resources.</p>
