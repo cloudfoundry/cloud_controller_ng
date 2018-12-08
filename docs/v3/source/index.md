@@ -124,6 +124,7 @@ includes:
   - resources/stacks/create
   - resources/stacks/list
   - resources/stacks/get
+  - resources/stacks/delete
   - resources/tasks/header
   - resources/tasks/object
   - resources/tasks/create
