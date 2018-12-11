@@ -3,6 +3,7 @@ require 'spec_helper'
 RSpec.describe 'Droplets' do
   let(:space) { VCAP::CloudController::Space.make }
   let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid, name: 'my-app') }
+  let(:other_app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid, name: 'my-app-3') }
   let(:developer) { make_developer_for_space(space) }
   let(:developer_headers) { headers_for(developer, user_name: user_name) }
   let(:user_name) { 'sundance kid' }
@@ -429,6 +430,7 @@ RSpec.describe 'Droplets' do
         state:                            VCAP::CloudController::DropletModel::FAILED_STATE,
       )
     end
+    let!(:droplet1Label) { VCAP::CloudController::DropletLabelModel.make(key_name: 'fruit', value: 'strawberry', droplet: droplet1) }
     let!(:droplet2) do
       VCAP::CloudController::DropletModel.make(
         app_guid:                     app_model.guid,
@@ -440,7 +442,29 @@ RSpec.describe 'Droplets' do
         state:                        VCAP::CloudController::DropletModel::STAGED_STATE,
         process_types:                { 'web' => 'started' },
         execution_metadata:           'black-box-secrets',
-        error_description:            'example-error'
+        error_description:            'example-error',
+      )
+    end
+    let!(:droplet2Label) { VCAP::CloudController::DropletLabelModel.make(key_name: 'seed', value: 'strawberry', droplet: droplet2) }
+    let!(:droplet3) do
+      VCAP::CloudController::DropletModel.make(
+        app_guid:                     other_app_model.guid,
+        created_at:                   Time.at(2),
+        package_guid:                 other_package_model.guid,
+        droplet_hash:                 'my-hash-3',
+        sha256_checksum:              'droplet-checksum-sha256-3',
+        buildpack_receipt_buildpack:  'http://buildpack.git.url.com',
+        state:                        VCAP::CloudController::DropletModel::STAGED_STATE,
+        process_types:                { 'web' => 'started' },
+        execution_metadata:           'black-box-secrets-3',
+        error_description:            'example-error',
+      )
+    end
+    let!(:droplet3Label) { VCAP::CloudController::DropletLabelModel.make(key_name: 'fruit', value: 'mango', droplet: droplet3) }
+    let(:other_package_model) do
+      VCAP::CloudController::PackageModel.make(
+        app_guid: other_app_model.guid,
+        type:     VCAP::CloudController::PackageModel::BITS_TYPE
       )
     end
 
@@ -450,12 +474,31 @@ RSpec.describe 'Droplets' do
     before do
       droplet1.buildpack_lifecycle_data.update(buildpacks: [buildpack.name], stack: 'stack-1')
       droplet2.buildpack_lifecycle_data.update(buildpacks: ['http://buildpack.git.url.com'], stack: 'stack-2')
+      droplet3.buildpack_lifecycle_data.update(buildpacks: ['http://buildpack.git.url.com'], stack: 'stack-3')
     end
 
     describe 'current query parameter' do
       context 'when there is a current droplet' do
         before do
           app_model.update(droplet: droplet2)
+        end
+
+        it 'returns only the droplets for the app' do
+          get "/v3/apps/#{app_model.guid}/droplets", nil, developer_headers
+
+          expect(last_response.status).to eq(200)
+
+          returned_guids = parsed_response['resources'].map { |i| i['guid'] }
+          expect(returned_guids).to match_array([droplet1.guid, droplet2.guid])
+        end
+
+        it 'returns only the droplets for the app with specified labels' do
+          get "/v3/apps/#{app_model.guid}/droplets?label_selector=fruit", nil, developer_headers
+
+          expect(last_response.status).to eq(200)
+
+          returned_guids = parsed_response['resources'].map { |i| i['guid'] }
+          expect(returned_guids).to match_array([droplet1.guid])
         end
 
         it 'returns only the current droplet' do
@@ -558,7 +601,9 @@ RSpec.describe 'Droplets' do
               'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/relationships/current_droplet", 'method' => 'PATCH' },
             },
             'metadata' => {
-              'labels' => {},
+              'labels' => {
+                'seed' => 'strawberry'
+              },
             },
           },
           {
@@ -584,7 +629,9 @@ RSpec.describe 'Droplets' do
               'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/relationships/current_droplet", 'method' => 'PATCH' },
             },
             'metadata' => {
-              'labels' => {},
+              'labels' => {
+                'fruit' => 'strawberry'
+              },
             },
           }
         ]
@@ -597,6 +644,12 @@ RSpec.describe 'Droplets' do
     let(:package_model) do
       VCAP::CloudController::PackageModel.make(
         app_guid: app_model.guid,
+        type:     VCAP::CloudController::PackageModel::BITS_TYPE
+      )
+    end
+    let(:other_package_model) do
+      VCAP::CloudController::PackageModel.make(
+        app_guid: other_app_model.guid,
         type:     VCAP::CloudController::PackageModel::BITS_TYPE
       )
     end
@@ -630,12 +683,48 @@ RSpec.describe 'Droplets' do
       )
     end
 
+    let!(:droplet3) do
+      VCAP::CloudController::DropletModel.make(
+        app_guid:                     other_app_model.guid,
+        created_at:                   Time.at(2),
+        package_guid:                 other_package_model.guid,
+        droplet_hash:                 'my-hash-3',
+        sha256_checksum:              'droplet-checksum-sha256-3',
+        buildpack_receipt_buildpack:  'http://buildpack.git.url.com',
+        state:                        VCAP::CloudController::DropletModel::STAGED_STATE,
+        process_types:                { 'web' => 'started' },
+        execution_metadata:           'black-box-secrets-3',
+        error_description:            'example-error',
+      )
+    end
+    let!(:droplet1Label) { VCAP::CloudController::DropletLabelModel.make(key_name: 'fruit', value: 'strawberry', droplet: droplet1) }
+    let!(:droplet2Label) { VCAP::CloudController::DropletLabelModel.make(key_name: 'limes', value: 'horse', droplet: droplet2) }
+    let!(:droplet3Label) { VCAP::CloudController::DropletLabelModel.make(key_name: 'fruit', value: 'strawberry', droplet: droplet3) }
+
     let(:per_page) { 2 }
     let(:order_by) { '-created_at' }
 
     before do
       droplet1.buildpack_lifecycle_data.update(buildpacks: [buildpack.name], stack: 'stack-1')
       droplet2.buildpack_lifecycle_data.update(buildpacks: ['http://buildpack.git.url.com'], stack: 'stack-2')
+    end
+
+    it 'returns only the droplets for the package' do
+      get "/v3/packages/#{package_model.guid}/droplets", nil, developer_headers
+
+      expect(last_response.status).to eq(200)
+
+      returned_guids = parsed_response['resources'].map { |i| i['guid'] }
+      expect(returned_guids).to match_array([droplet1.guid, droplet2.guid])
+    end
+
+    it 'returns only the packages for the app with specified labels' do
+      get "/v3/packages/#{package_model.guid}/droplets?label_selector=fruit", nil, developer_headers
+
+      expect(last_response.status).to eq(200)
+
+      returned_guids = parsed_response['resources'].map { |i| i['guid'] }
+      expect(returned_guids).to match_array([droplet1.guid])
     end
 
     it 'filters by states' do
@@ -695,7 +784,9 @@ RSpec.describe 'Droplets' do
               'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/relationships/current_droplet", 'method' => 'PATCH' },
             },
             'metadata' => {
-              'labels' => {},
+              'labels' => {
+                'limes' => 'horse'
+              },
             },
           },
           {
@@ -721,7 +812,9 @@ RSpec.describe 'Droplets' do
               'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/relationships/current_droplet", 'method' => 'PATCH' },
             },
             'metadata' => {
-              'labels' => {},
+              'labels' => {
+                'fruit' => 'strawberry'
+              },
             },
           }
         ]
