@@ -44,7 +44,8 @@ module VCAP::CloudController
         dataset = LabelSelectorQueryGenerator.add_selector_queries(
           label_klass: OrganizationLabelModel,
           resource_dataset: dataset,
-          requirements: message.requirements
+          requirements: message.requirements,
+          resource_klass: Organization,
         )
       end
 

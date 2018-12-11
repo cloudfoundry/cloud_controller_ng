@@ -337,6 +337,19 @@ RSpec.describe DropletsController, type: :controller do
       expect(parsed_body['pagination']['first']['href']).to start_with("#{link_prefix}/v3/droplets")
     end
 
+    context 'label_selector' do
+      let!(:label) { VCAP::CloudController::DropletLabelModel.make(key_name: 'fruit', value: 'passionfruit', droplet: user_droplet_with_labels) }
+      let(:user_droplet_with_labels) { VCAP::CloudController::DropletModel.make(app_guid: app.guid) }
+
+      it 'returns only the droplets with those labels' do
+        get :index, params: { label_selector: 'fruit' }
+
+        expect(response.status).to eq(200)
+        response_guids = parsed_body['resources'].map { |r| r['guid'] }
+        expect(response_guids).to match_array([user_droplet_with_labels.guid])
+      end
+    end
+
     context 'when pagination options are specified' do
       let(:page) { 1 }
       let(:per_page) { 1 }

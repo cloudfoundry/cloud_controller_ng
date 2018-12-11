@@ -168,5 +168,14 @@ module VCAP::CloudController
         expect(DropletsListMessage.new({ package_guid: '24234' }).to_param_hash.keys).to match_array([])
       end
     end
+
+    describe 'validations' do
+      it 'validates label_selector' do
+        message = SpacesListMessage.from_params('label_selector' => '')
+
+        expect_any_instance_of(Validators::LabelSelectorRequirementValidator).to receive(:validate).with(message).and_call_original
+        message.valid?
+      end
+    end
   end
 end

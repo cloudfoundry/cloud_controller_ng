@@ -360,6 +360,35 @@ RSpec.describe 'Droplets' do
         expect(returned_guids).to match_array([droplet1.guid, droplet2.guid, droplet3.guid])
       end
     end
+
+    context 'label_selector' do
+      let!(:dropletA) { VCAP::CloudController::DropletModel.make(app_guid: app_model.guid) }
+      let!(:dropletAFruit) { VCAP::CloudController::DropletLabelModel.make(key_name: 'fruit', value: 'strawberry', droplet: dropletA) }
+      let!(:dropletAAnimal) { VCAP::CloudController::DropletLabelModel.make(key_name: 'animal', value: 'horse', droplet: dropletA) }
+
+      let!(:dropletB) { VCAP::CloudController::DropletModel.make(app_guid: app_model.guid) }
+      let!(:dropletBEnv) { VCAP::CloudController::DropletLabelModel.make(key_name: 'env', value: 'prod', droplet: dropletB) }
+      let!(:dropletBAnimal) { VCAP::CloudController::DropletLabelModel.make(key_name: 'animal', value: 'dog', droplet: dropletB) }
+
+      let!(:dropletC) { VCAP::CloudController::DropletModel.make(app_guid: app_model.guid) }
+      let!(:dropletCEnv) { VCAP::CloudController::DropletLabelModel.make(key_name: 'env', value: 'prod', droplet: dropletC) }
+      let!(:dropletCAnimal) { VCAP::CloudController::DropletLabelModel.make(key_name: 'animal', value: 'horse', droplet: dropletC) }
+
+      let!(:dropletD) { VCAP::CloudController::DropletModel.make(app_guid: app_model.guid) }
+      let!(:dropletDEnv) { VCAP::CloudController::DropletLabelModel.make(key_name: 'env', value: 'prod', droplet: dropletD) }
+
+      let!(:dropletE) { VCAP::CloudController::DropletModel.make(app_guid: app_model.guid) }
+      let!(:dropletEEnv) { VCAP::CloudController::DropletLabelModel.make(key_name: 'env', value: 'staging', droplet: dropletE) }
+      let!(:dropletEAnimal) { VCAP::CloudController::DropletLabelModel.make(key_name: 'animal', value: 'dog', droplet: dropletE) }
+
+      it 'returns the matching droplets' do
+        get '/v3/droplets?label_selector=!fruit,animal in (dog,horse),env=prod', nil, developer_headers
+        expect(last_response.status).to eq(200), last_response.body
+
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(dropletB.guid, dropletC.guid)
+      end
+    end
   end
 
   describe 'DELETE /v3/droplets/:guid' do
