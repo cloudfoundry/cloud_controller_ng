@@ -72,6 +72,9 @@ module VCAP::CloudController
   SpaceAnnotationModel.blueprint do
   end
 
+  DropletAnnotationModel.blueprint do
+  end
+
   BuildModel.blueprint do
     guid     { Sham.guid }
     app      { AppModel.make }

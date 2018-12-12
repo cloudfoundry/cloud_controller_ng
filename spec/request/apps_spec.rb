@@ -1460,6 +1460,7 @@ RSpec.describe 'Apps' do
         },
         'metadata' => {
           'labels' => {},
+          'annotations' => {}
         },
       })
     end

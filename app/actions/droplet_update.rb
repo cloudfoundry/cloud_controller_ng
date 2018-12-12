@@ -7,6 +7,7 @@ module VCAP::CloudController
       droplet.db.transaction do
         droplet.lock!
         LabelsUpdate.update(droplet, message.labels, DropletLabelModel)
+        AnnotationsUpdate.update(droplet, message.annotations, DropletAnnotationModel)
         droplet.save
       end
 

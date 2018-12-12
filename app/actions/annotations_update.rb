@@ -1,7 +1,5 @@
 module VCAP::CloudController
   module AnnotationsUpdate
-    class TooManyAnnotations < StandardError; end
-
     class << self
       def update(resource, annotations, annotation_klass)
         starting_annotation_count_for_resource = annotation_klass.where(resource_guid: resource.guid).count
@@ -26,9 +24,7 @@ module VCAP::CloudController
 
       def validate_max_annotations_limit!(annotations, start_annotations_count, ending_annotations_count)
         if start_annotations_count < ending_annotations_count && ending_annotations_count > max_annotations_per_resource
-          raise TooManyAnnotations.new(
-            "Failed to add #{annotations.size} annotations because it would exceed maximum of #{max_annotations_per_resource}"
-          )
+          raise CloudController::Errors::ApiError.new_from_details('AnnotationLimitExceeded', annotations.size, max_annotations_per_resource)
         end
       end
 

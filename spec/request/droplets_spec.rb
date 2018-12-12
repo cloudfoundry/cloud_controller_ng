@@ -65,6 +65,7 @@ RSpec.describe 'Droplets' do
           },
           'metadata' => {
             'labels' => {},
+            'annotations' => {},
           },
         })
       end
@@ -128,6 +129,7 @@ RSpec.describe 'Droplets' do
           },
           'metadata' => {
             'labels' => {},
+            'annotations' => {}
           },
         })
       end
@@ -219,6 +221,7 @@ RSpec.describe 'Droplets' do
             },
             'metadata' => {
               'labels' => {},
+              'annotations' => {}
             },
           },
           {
@@ -245,6 +248,7 @@ RSpec.describe 'Droplets' do
             },
             'metadata' => {
               'labels' => {},
+              'annotations' => {}
             },
           }
         ]
@@ -604,6 +608,7 @@ RSpec.describe 'Droplets' do
               'labels' => {
                 'seed' => 'strawberry'
               },
+              'annotations' => {}
             },
           },
           {
@@ -630,8 +635,9 @@ RSpec.describe 'Droplets' do
             },
             'metadata' => {
               'labels' => {
-                'fruit' => 'strawberry'
+                'fruit' => 'strawberry',
               },
+              'annotations' => {}
             },
           }
         ]
@@ -787,6 +793,7 @@ RSpec.describe 'Droplets' do
               'labels' => {
                 'limes' => 'horse'
               },
+              'annotations' => {}
             },
           },
           {
@@ -815,6 +822,7 @@ RSpec.describe 'Droplets' do
               'labels' => {
                 'fruit' => 'strawberry'
               },
+              'annotations' => {}
             },
           }
         ]
@@ -881,6 +889,7 @@ RSpec.describe 'Droplets' do
         },
         'metadata' => {
           'labels' => {},
+          'annotations' => {}
         },
       })
     end
@@ -909,6 +918,10 @@ RSpec.describe 'Droplets' do
                   'code.cloudfoundry.org/cloud_controller_ng' => 'awesome',
                   'delete-me' => nil,
           },
+          annotations: {
+            'potato' => 'sieglinde',
+            'key' =>  ''
+          }
         }
       }
     end
@@ -927,6 +940,10 @@ RSpec.describe 'Droplets' do
         'labels' => {
           'release' => 'stable',
           'code.cloudfoundry.org/cloud_controller_ng' => 'awesome'
+        },
+        'annotations' => {
+          'potato' => 'sieglinde',
+          'key' =>  ''
         }
       )
     end

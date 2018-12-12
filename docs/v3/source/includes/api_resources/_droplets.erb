@@ -30,7 +30,8 @@
       "method": "PATCH"
     },
     "metadata": {
-      "labels": {}
+      "labels": {},
+      "annotations": {}
     }
   }
 }
@@ -81,13 +82,14 @@
       "method": "PATCH"
     },
     "metadata": {
-      "labels": {}
+      "labels": {},
+      "annotations": {}
     }
   }
 }
 <% end %>
 
-<% content_for :staged_droplet_with_labels do %>
+<% content_for :staged_droplet_with_metadata do %>
   {
     "guid": "585bc3c1-3743-497d-88b0-403ad6b56d16",
     "state": "STAGED",
@@ -133,7 +135,10 @@
       },
       "metadata": {
         "labels": {
-          "key": "value"
+          "release": "stable"
+        },
+        "annotations": {
+          "note": "detailed information"
         }
       }
     }
@@ -198,7 +203,8 @@
           "method": "PATCH"
         },
         "metadata": {
-          "labels": {}
+          "labels": {},
+          "annotations": {}
         }
       }
     },
@@ -235,7 +241,8 @@
           "method": "PATCH"
         },
         "metadata": {
-          "labels": {}
+          "labels": {},
+          "annotations": {}
         } 
       }
     }

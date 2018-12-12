@@ -220,6 +220,39 @@ module VCAP::CloudController::Presenters::V3
           end
         end
       end
+
+      context 'when there are labels and annotations for the droplet' do
+        let!(:release_label) do
+          VCAP::CloudController::DropletLabelModel.make(
+            key_name: 'release',
+            value: 'stable',
+            resource_guid: droplet.guid
+          )
+        end
+
+        let!(:potato_label) do
+          VCAP::CloudController::DropletLabelModel.make(
+            key_prefix: 'maine.gov',
+            key_name: 'potato',
+            value: 'mashed',
+            resource_guid: droplet.guid
+          )
+        end
+
+        let!(:annotation) do
+          VCAP::CloudController::DropletAnnotationModel.make(
+            resource_guid: droplet.guid,
+            key: 'contacts',
+            value: 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)',
+          )
+        end
+
+        it 'includes the metadata on the presented droplet' do
+          expect(result[:guid]).to eq(droplet.guid)
+          expect(result[:metadata][:labels]).to eq('release' => 'stable', 'maine.gov/potato' => 'mashed')
+          expect(result[:metadata][:annotations]).to eq('contacts' => 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)')
+        end
+      end
     end
   end
 end

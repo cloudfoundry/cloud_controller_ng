@@ -9,7 +9,7 @@ curl "https://api.example.space/v3/droplets/[guid]" \
   -X PATCH \
   -H "Authorization: bearer [token]" \
   -H "Content-Type: application/json" \
-  -d '{ "metadata": { "labels": { "key": "value" }}}'
+  -d '{ "metadata": { "labels": { "key": "value" }, "annotations": {"note": "detailed information"}}}'
 ```
 
 ```
@@ -20,7 +20,7 @@ Example Response
 HTTP/1.1 200 OK
 Content-Type: application/json
 
-<%= yield_content :staged_droplet_with_labels %>
+<%= yield_content :staged_droplet_with_metadata %>
 ```
 
 #### Definition
@@ -31,6 +31,7 @@ Content-Type: application/json
 Name | Type | Description
 ---- | ---- | -----------
 **metadata.labels** _(experimental)_| [_label object_](#labels) | Labels applied to the droplet.
+**metadata.annotations** _(experimental)_| [_annotation object_](#annotation) | Annotations applied to the droplet.
 
 #### Permitted Roles
  |

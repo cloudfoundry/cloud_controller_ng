@@ -66,6 +66,7 @@ require 'models/runtime/organization_label_model'
 require 'models/runtime/space_label_model'
 require 'models/runtime/droplet_label_model'
 require 'models/runtime/app_annotation_model'
+require 'models/runtime/droplet_annotation_model'
 require 'models/runtime/organization_annotation_model'
 require 'models/runtime/space_annotation_model'
 

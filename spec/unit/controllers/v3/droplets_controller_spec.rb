@@ -537,27 +537,10 @@ RSpec.describe DropletsController, type: :controller do
     let(:space) { droplet.space }
     let(:stagers) { instance_double(VCAP::CloudController::Stagers, stager_for_app: stager) }
     let(:stager) { instance_double(VCAP::CloudController::Diego::Stager, stop_stage: nil) }
-    let(:request_body) do
-      {
-        metadata: {
-          labels: {
-            "key": 'value'
-          }
-        }
-      }
-    end
-
     before do
       allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space: space)
       CloudController::DependencyLocator.instance.register(:stagers, stagers)
-    end
-
-    it 'updates' do
-      patch :update, params: { guid: droplet.guid }.merge(request_body), as: :json
-      expect(response.status).to eq(200)
-      expect(parsed_body['guid']).to eq(droplet.guid)
-      expect(parsed_body['metadata']['labels']['key']).to eq('value')
     end
 
     context 'when there is an invalid message validation failure' do
@@ -613,6 +596,141 @@ RSpec.describe DropletsController, type: :controller do
 
           expect(response.status).to eq(403)
           expect(response.body).to include('NotAuthorized')
+        end
+      end
+    end
+
+    context 'metadata' do
+      context 'with labels' do
+        let(:request_body) do
+          {
+            metadata: {
+              labels: {
+                "key": 'value'
+              }
+            }
+          }
+        end
+
+        it 'updates' do
+          patch :update, params: { guid: droplet.guid }.merge(request_body), as: :json
+          expect(response.status).to eq(200)
+          expect(parsed_body['guid']).to eq(droplet.guid)
+          expect(parsed_body['metadata']['labels']['key']).to eq('value')
+        end
+      end
+      context 'when the label is invalid' do
+        let(:request_body) do
+          {
+            metadata: {
+              labels: {
+                'cloudfoundry.org/release' => 'stable'
+              }
+            }
+          }
+        end
+
+        it 'returns an UnprocessableEntity error' do
+          patch :update, params: { guid: droplet.guid }.merge(request_body), as: :json
+
+          expect(response.status).to eq 422
+          expect(response.body).to include 'UnprocessableEntity'
+          expect(response.body).to include 'cloudfoundry.org is a reserved domain'
+        end
+      end
+
+      context 'when the annotation is invalid' do
+        let(:request_body) do
+          {
+            metadata: {
+              labels: {
+                'release' => 'stable'
+              },
+              annotations: {
+                '' => 'uhoh'
+              },
+            }
+          }
+        end
+
+        it 'returns an UnprocessableEntity error' do
+          patch :update, params: { guid: droplet.guid }.merge(request_body), as: :json
+
+          expect(response.status).to eq 422
+          expect(response.body).to include 'UnprocessableEntity'
+          expect(response.body).to include 'Metadata annotations key cannot be empty string'
+        end
+      end
+
+      context 'when the metadata is valid' do
+        let(:request_body) do
+          {
+            metadata: {
+              labels: {
+                release: 'stable'
+              },
+              annotations: {
+                this: 'is valid'
+              },
+            }
+          }
+        end
+
+        it 'Returns a 200 and the droplet with metadata' do
+          patch :update, params: { guid: droplet.guid }.merge(request_body), as: :json
+
+          response_body = parsed_body
+          response_metadata = response_body['metadata']
+
+          expect(response.status).to eq 200
+          expect(response_metadata['labels']['release']).to eq 'stable'
+          expect(response_metadata['annotations']['this']).to eq 'is valid'
+        end
+      end
+
+      context 'when there are too many annotations' do
+        let(:request_body) do
+          {
+            metadata: {
+              annotations: {
+                radish: 'daikon',
+                potato: 'idaho'
+              }
+            }
+          }
+        end
+
+        before do
+          VCAP::CloudController::Config.config.set(:max_annotations_per_resource, 1)
+        end
+
+        it 'responds with 422' do
+          patch :update, params: { guid: droplet.guid }.merge(request_body), as: :json
+          expect(response.status).to eq(422)
+          expect(response.body).to include 'Failed to add 2 annotations because it would exceed maximum of 1'
+        end
+      end
+
+      context 'when there are too many labels' do
+        let(:request_body) do
+          {
+            metadata: {
+              labels: {
+                radish: 'daikon',
+                potato: 'idaho'
+              }
+            }
+          }
+        end
+
+        before do
+          VCAP::CloudController::Config.config.set(:max_labels_per_resource, 1)
+        end
+
+        it 'responds with 422' do
+          patch :update, params: { guid: droplet.guid }.merge(request_body), as: :json
+          expect(response.status).to eq(422)
+          expect(response.body).to include 'Failed to add 2 labels because it would exceed maximum of 1'
         end
       end
     end

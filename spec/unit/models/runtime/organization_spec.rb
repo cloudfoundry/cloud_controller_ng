@@ -103,7 +103,6 @@ module VCAP::CloudController
       end
 
       context 'when there are organization labels' do
-        let(:other_org) { Organization.make }
         let!(:organization_label_one) do
           VCAP::CloudController::OrganizationLabelModel.make(
             key_name: 'release',
@@ -111,19 +110,11 @@ module VCAP::CloudController
             resource_guid: org.guid
           )
         end
-        let!(:organization_label_two) do
-          VCAP::CloudController::OrganizationLabelModel.make(
-            key_name: 'release',
-            value: 'stable',
-            resource_guid: org.guid
-          )
-        end
-        let!(:other_organization_label) do
-          VCAP::CloudController::OrganizationLabelModel.make(
-            key_name: 'release',
-            value: 'stable',
-            resource_guid: other_org.guid
-          )
+
+        it 'can find the associated labels' do
+          expect(org.labels.first.key_prefix).to be_nil
+          expect(org.labels.first.key_name).to eq('release')
+          expect(org.labels.first.value).to eq('stable')
         end
       end
     end

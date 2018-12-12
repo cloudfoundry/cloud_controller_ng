@@ -27,6 +27,7 @@ module VCAP::CloudController
             links: build_links,
             metadata: {
               labels: hashified_labels(droplet.labels),
+              annotations: hashified_annotations(droplet.annotations),
             }
           }
         end
