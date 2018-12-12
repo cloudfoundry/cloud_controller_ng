@@ -193,6 +193,20 @@ module VCAP::CloudController
           expect(entity).to_not have_key('events')
         end
       end
+
+      describe 'apps assocations' do
+        let(:space) { Space.make }
+        let(:app_model) { AppModel.make(space: space) }
+        let!(:web_process_0) { ProcessModel.make(app: app_model, created_at: 2.days.ago) }
+        let!(:web_process_1) { ProcessModel.make(app: app_model, created_at: 1.day.ago) }
+
+        it 'returns only the newest process per app' do
+          get "/v2/spaces/#{space.guid}/apps"
+
+          expect(last_response.status).to eq(200), last_response.body
+          expect(parsed_response['resources'].map { |r| r['metadata']['guid'] }).to contain_exactly(app_model.guid)
+        end
+      end
     end
 
     it 'can order by name and id when listing' do

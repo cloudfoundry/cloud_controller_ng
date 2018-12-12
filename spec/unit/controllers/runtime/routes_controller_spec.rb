@@ -1421,6 +1421,19 @@ module VCAP::CloudController
             expect(decoded_response['resources'].map { |r| r['metadata']['guid'] }).to contain_exactly(process1.app_guid, process2.app_guid)
           end
         end
+
+        context 'when the app has more than one web process on it' do
+          let(:developer) { make_developer_for_space(route_space) }
+          let!(:app_model) { process1.app }
+          let!(:process3) { ProcessModel.make(app: app_model, type: process1.type) }
+
+          it 'returns only one app guid' do
+            get "v2/routes/#{route.guid}/apps"
+
+            expect(last_response.status).to eq(200), last_response.body
+            expect(parsed_response['resources'].map { |r| r['metadata']['guid'] }).to match_array([app_model.guid, process2.app.guid])
+          end
+        end
       end
 
       context 'route mappings' do

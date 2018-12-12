@@ -194,7 +194,27 @@ module VCAP::CloudController
       object_renderer.render_json(self.class, process, @opts)
     end
 
+    def self.filter_dataset(dataset)
+      dataset_by_web = dataset.where(type: ProcessTypes::WEB)
+      dataset_by_web.exclude(guid: duplicated_older_process_guids(dataset_by_web)).qualify(ProcessModel.table_name)
+    end
+
+    def self.duplicated_older_process_guids(dataset)
+      # Details at https://groups.google.com/d/msg/sequel-talk/wVuTgcCk2gw/VlPVVI2SBgAJ
+      ProcessModel.db.from(dataset.as(:p1), dataset.as(:p2)).
+        where {
+          (p1[:app_guid] =~ p2[:app_guid]) &
+            ((p1[:created_at] < p2[:created_at]) |
+              ((p1[:created_at] =~ p2[:created_at]) & (p1[:id] < p2[:id])))
+        }.
+        distinct.select { p1[:guid] }
+    end
+
     private
+
+    def filter_dataset(dataset)
+      self.class.filter_dataset(dataset)
+    end
 
     def user_audit_info
       @user_audit_info ||= UserAuditInfo.from_context(SecurityContext)
@@ -400,22 +420,6 @@ module VCAP::CloudController
 
     def get_filtered_dataset_for_enumeration(model, dataset, query_params, opts)
       AppQuery.filtered_dataset_from_query_params(model, dataset, query_params, opts)
-    end
-
-    def filter_dataset(dataset)
-      dataset_by_web = dataset.where(type: ProcessTypes::WEB)
-      dataset_by_web.exclude(guid: duplicated_older_process_guids(dataset_by_web))
-    end
-
-    def duplicated_older_process_guids(dataset)
-      # Details at https://groups.google.com/d/msg/sequel-talk/wVuTgcCk2gw/VlPVVI2SBgAJ
-      ProcessModel.db.from(dataset.as(:p1), dataset.as(:p2)).
-        where {
-          (p1[:app_guid] =~ p2[:app_guid]) &
-            ((p1[:created_at] < p2[:created_at]) |
-              ((p1[:created_at] =~ p2[:created_at]) & (p1[:id] < p2[:id])))
-        }.
-        distinct.select { p1[:guid] }
     end
 
     def unprocessable!(message)
