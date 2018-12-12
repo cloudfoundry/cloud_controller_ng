@@ -341,7 +341,7 @@ inequality    | _key_`!=`_value_                     | Returns all resources tha
 set inclusion | _key_ `in` (_value1_,_value2_...)    | Returns all resources that have been assigned a label with the given _key_ with one of the specified _value(s)_
 set exclusion | _key_ `notin` (_value1_,_value2_...) | Returns all resources that either have not been assigned a label with the given _key_ or have a label with the given _key_ but none of the specified _value(s)_
 
-### Patching
+### Updating Labels and Annotations
 
 Labels and annotations can be updated by using the PATCH endpoint for their resource.
 For example, to update labels or annotations on an app, use the [update an app](#update-an-app) endpoint.
