@@ -377,32 +377,6 @@ module VCAP::CloudController
       end
     end
 
-    def visible_dataset
-      if queryer.can_read_globally?
-        Route.dataset
-      else
-        Route.dataset.filter({ "#{Route.table_name}__guid".to_sym => queryer.readable_route_guids })
-      end
-    end
-
-    def visible_relationship_dataset(relationship_name, route)
-      if relationship_name.to_s == 'apps'
-        if queryer.can_read_globally?
-          route.apps_dataset
-        else
-          route.apps_dataset.filter({ "#{ProcessModel.table_name}__app_guid".to_sym => queryer.readable_app_guids })
-        end
-      elsif relationship_name.to_s == 'route_mappings'
-        if queryer.can_read_globally?
-          route.route_mappings_dataset
-        else
-          route.route_mappings_dataset.filter({ "#{RouteMappingModel.table_name}__guid".to_sym => queryer.readable_route_mapping_guids })
-        end
-      else
-        super
-      end
-    end
-
     private_class_method :path_errors
   end
 end
