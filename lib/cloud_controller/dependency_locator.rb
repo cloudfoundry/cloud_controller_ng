@@ -385,6 +385,9 @@ module CloudController
         ca_cert_file: config.get(:diego, :bbs, :ca_file),
         client_cert_file: config.get(:diego, :bbs, :cert_file),
         client_key_file: config.get(:diego, :bbs, :key_file),
+        connect_timeout: config.get(:diego, :bbs, :connect_timeout),
+        send_timeout: config.get(:diego, :bbs, :send_timeout),
+        receive_timeout: config.get(:diego, :bbs, :receive_timeout),
     )
 
       VCAP::CloudController::Diego::BbsStagerClient.new(bbs_client, @config)
