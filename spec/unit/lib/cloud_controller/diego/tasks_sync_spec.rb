@@ -131,7 +131,7 @@ module VCAP::CloudController
                 error_message: error.message,
                 error_backtrace: anything
               )
-              expect(bbs_task_client).not_to receive(:bump_freshness)
+              expect(bbs_task_client).not_to have_received(:bump_freshness)
             end
           end
         end
