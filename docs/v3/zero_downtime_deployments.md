@@ -15,8 +15,13 @@ See this [temporary ops file](https://github.com/cloudfoundry/cf-deployment/blob
 ## Deploying an App with Zero Downtime
 
 To deploy an app without incurring downtime simply use the `cf v3-zdt-push` command.
+Note that the default command will exit successfully after the first new instance is running, but before the deployment is completed.
 
  Example: `cf v3-zdt-push APP_NAME`
+
+To make the cli wait for all instances to become healthy before exiting, use the `--wait-for-deploy-complete` flag.
+
+ Example: `cf v3-zdt-push APP_NAME --wait-for-deploy-complete`
 
 ## Under the Hood
 
