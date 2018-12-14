@@ -34,7 +34,7 @@ module VCAP::CloudController
       Rack::Test::UploadedFile.new(zip_file)
     end
 
-    let(:staging_timeout) { TestConfig.config[:staging][:timeout_in_seconds] }
+    let(:staging_timeout) { TestConfig.config_instance.get(:staging, :timeout_in_seconds) }
 
     let(:expected_sha_valid_zip) { "#{buildpack.guid}_#{sha_valid_zip}" }
 
