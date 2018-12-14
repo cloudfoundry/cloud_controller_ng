@@ -13,6 +13,10 @@ RSpec.describe 'App Features' do
           'apps' => {
             'href' => "#{link_prefix}/v3/apps"
           },
+          'buildpacks' => {
+            'href' => "#{link_prefix}/v3/buildpacks",
+            'experimental' => true,
+          },
           'builds' => {
             'href' => "#{link_prefix}/v3/builds"
           },
