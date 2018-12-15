@@ -147,4 +147,7 @@ Rails.application.routes.draw do
   get '/stacks/:guid', to: 'stacks#show'
   post '/stacks', to: 'stacks#create'
   delete '/stacks/:guid', to: 'stacks#destroy'
+
+  # buildpacks
+  post '/buildpacks', to: 'buildpacks#create'
 end

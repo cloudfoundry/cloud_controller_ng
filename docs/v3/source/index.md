@@ -12,6 +12,7 @@ includes:
   - api_resources/app_ssh_enabled
   - api_resources/apps
   - api_resources/builds
+  - api_resources/buildpacks
   - api_resources/deployments
   - api_resources/droplets
   - api_resources/isolation_segments
@@ -147,6 +148,9 @@ includes:
   - experimental_resources/app_restart/create
   - experimental_resources/app_ssh_enabled/header
   - experimental_resources/app_ssh_enabled/get
+  - experimental_resources/buildpacks/header
+  - experimental_resources/buildpacks/object
+  - experimental_resources/buildpacks/create
   - experimental_resources/deployments/header
   - experimental_resources/deployments/object
   - experimental_resources/deployments/create
