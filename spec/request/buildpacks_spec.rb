@@ -73,4 +73,59 @@ RSpec.describe 'buildpacks' do
       end
     end
   end
+
+  describe 'GET /v3/buildpacks/:guid' do
+    let(:params) { {} }
+    let(:buildpack) { VCAP::CloudController::Buildpack.make }
+
+    context 'when not authenticated' do
+      it 'returns 401' do
+        headers = {}
+
+        get "/v3/buildpacks/#{buildpack.guid}", params, headers
+
+        expect(last_response.status).to eq(401)
+      end
+    end
+
+    context 'when authenticated' do
+      let(:user) { VCAP::CloudController::User.make }
+      let(:headers) { headers_for(user) }
+
+      context 'the buildpack does not exist' do
+        it 'returns 404' do
+          get '/v3/buildpacks/does-not-exist', params, headers
+          expect(last_response.status).to eq(404)
+        end
+
+        context 'the buildpack exists' do
+          it 'returns 200' do
+            get "/v3/buildpacks/#{buildpack.guid}", params, headers
+            expect(last_response.status).to eq(200)
+          end
+
+          it 'returns the newly-created buildpack resource' do
+            get "/v3/buildpacks/#{buildpack.guid}", params, headers
+
+            expected_response = {
+              'name' => buildpack.name,
+              'stack' => buildpack.stack,
+              'position' => buildpack.position,
+              'enabled' => buildpack.enabled,
+              'locked' => buildpack.locked,
+              'guid' => buildpack.guid,
+              'created_at' => iso8601,
+              'updated_at' => iso8601,
+              'links' => {
+                'self' => {
+                  'href' => "#{link_prefix}/v3/buildpacks/#{buildpack.guid}"
+                }
+              }
+            }
+            expect(parsed_response).to be_a_response_like(expected_response)
+          end
+        end
+      end
+    end
+  end
 end

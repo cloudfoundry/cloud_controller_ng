@@ -150,7 +150,8 @@ includes:
   - experimental_resources/app_ssh_enabled/get
   - experimental_resources/buildpacks/header
   - experimental_resources/buildpacks/object
-  - experimental_resources/buildpacks/create
+  - experimental_resources/buildpacks/create  
+  - experimental_resources/buildpacks/get
   - experimental_resources/deployments/header
   - experimental_resources/deployments/object
   - experimental_resources/deployments/create

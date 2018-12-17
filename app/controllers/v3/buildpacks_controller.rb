@@ -15,4 +15,17 @@ class BuildpacksController < ApplicationController
   rescue BuildpackCreate::Error => e
     unprocessable!(e)
   end
+
+  def show
+    buildpack = Buildpack.find(guid: hashed_params[:guid])
+    buildpack_not_found! unless buildpack
+
+    render status: :ok, json: Presenters::V3::BuildpackPresenter.new(buildpack)
+  end
+
+  private
+
+  def buildpack_not_found!
+    resource_not_found!(:buildpack)
+  end
 end

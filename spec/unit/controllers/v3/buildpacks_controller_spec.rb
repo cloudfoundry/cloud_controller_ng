@@ -79,4 +79,29 @@ RSpec.describe BuildpacksController, type: :controller do
       end
     end
   end
+
+  describe '#show' do
+    let(:user) { VCAP::CloudController::User.make }
+
+    before do
+      set_current_user(user)
+    end
+
+    context 'when the buildpack exists' do
+      let(:buildpack) { VCAP::CloudController::Buildpack.make }
+      it 'renders a single buildpack details' do
+        get :show, params: { guid: buildpack.guid }
+        expect(response.status).to eq 200
+        expect(parsed_body['guid']).to eq(buildpack.guid)
+      end
+    end
+
+    context 'when the buildpack does not exist' do
+      it 'errors' do
+        get :show, params: { guid: 'psych!' }
+        expect(response.status).to eq 404
+        expect(response.body).to include('ResourceNotFound')
+      end
+    end
+  end
 end
