@@ -95,6 +95,7 @@
 
 
           
+          
 
           
 
@@ -10126,6 +10127,191 @@ applications:
 </tr>
 <tr>
 <td>Global Auditor</td>
+</tr>
+</tbody></table>
+
+          <h2 id="buildpacks">Buildpacks</h2>
+
+<p>A buildpack takes your source code and turns it into a running application.</p>
+
+          <h3 id="the-buildpack-object">The buildpack object</h3>
+<pre class="highlight plaintext"><code>Example Buildpack object
+</code></pre>
+<pre class="highlight json"><code><span class="w">  </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"fd35633f-5c5c-4e4e-a5a9-0722c970a9d2"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-18T23:26:46Z"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-10-17T20:00:42Z"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ruby_buildpack"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"stack"</span><span class="p">:</span><span class="w"> </span><span class="s2">"windows64"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"position"</span><span class="p">:</span><span class="w"> </span><span class="mi">42</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"enabled"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"locked"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/buildpacks/fd35633f-5c5c-4e4e-a5a9-0722c970a9d2"</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+
+</span></code></pre>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>guid</strong></td>
+<td><em>uuid</em></td>
+<td>Unique identifier for the app.</td>
+</tr>
+<tr>
+<td><strong>created_at</strong></td>
+<td><em>datetime</em></td>
+<td>The time with zone when the object was created.</td>
+</tr>
+<tr>
+<td><strong>updated_at</strong></td>
+<td><em>datetime</em></td>
+<td>The time with zone when the object was last updated.</td>
+</tr>
+<tr>
+<td><strong>name</strong></td>
+<td><em>string</em></td>
+<td>The name of the buildpack. To be used by app buildpack field. (only alphanumeric characters)</td>
+</tr>
+<tr>
+<td><strong>stack</strong></td>
+<td><em>string</em></td>
+<td>The name of the stack that the buildpack will use.</td>
+</tr>
+<tr>
+<td><strong>position</strong></td>
+<td><em>integer</em></td>
+<td>The order in which the buildpacks are checked during buildpack auto-detection.</td>
+</tr>
+<tr>
+<td><strong>enabled</strong></td>
+<td><em>boolean</em></td>
+<td>Whether or not the buildpack will be used for staging</td>
+</tr>
+<tr>
+<td><strong>locked</strong></td>
+<td><em>boolean</em></td>
+<td>Whether or not the buildpack is locked to prevent updates</td>
+</tr>
+<tr>
+<td><strong>links</strong></td>
+<td><a href="#links"><em>links object</em></a></td>
+<td>Links to related resources.</td>
+</tr>
+</tbody></table>
+
+          <h3 id="create-a-buildpack">Create a buildpack</h3>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/buildpacks"</span> <span class="se">\</span>
+  -X POST <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+  -H <span class="s2">"Content-type: application/json"</span> <span class="se">\</span>
+  -d <span class="s1">'{
+    "name": "ruby_buildpack",
+    "position": 42,
+    "enabled": true,
+    "locked": false,
+    "stack": "windows64"
+  }'</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">201</span> <span class="ne">Created</span>
+<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
+
+<span class="w">  </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"fd35633f-5c5c-4e4e-a5a9-0722c970a9d2"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-18T23:26:46Z"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-10-17T20:00:42Z"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ruby_buildpack"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"stack"</span><span class="p">:</span><span class="w"> </span><span class="s2">"windows64"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"position"</span><span class="p">:</span><span class="w"> </span><span class="mi">42</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"enabled"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"locked"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/buildpacks/fd35633f-5c5c-4e4e-a5a9-0722c970a9d2"</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+
+</span></code></pre>
+
+<h4 id="definition">Definition</h4>
+
+<p><code class="prettyprint">POST /v3/buildpacks</code></p>
+
+<h4 id="required-parameters">Required Parameters</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>name</strong></td>
+<td><em>string</em></td>
+<td>Name of the buildpack.</td>
+</tr>
+</tbody></table>
+
+<h4 id="optional-parameters">Optional Parameters</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>stack</strong></td>
+<td><em>string</em></td>
+<td>The name of the stack that the buildpack will use.</td>
+<td>null</td>
+</tr>
+<tr>
+<td><strong>position</strong></td>
+<td><em>integer</em></td>
+<td>The order in which the buildpacks are checked during buildpack auto-detection.</td>
+<td>1</td>
+</tr>
+<tr>
+<td><strong>enabled</strong></td>
+<td><em>boolean</em></td>
+<td>Whether or not the buildpack will be used for staging</td>
+<td>true</td>
+</tr>
+<tr>
+<td><strong>locked</strong></td>
+<td><em>boolean</em></td>
+<td>Whether or not the buildpack is locked to prevent updates</td>
+<td>false</td>
+</tr>
+</tbody></table>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Admin</td>
 </tr>
 </tbody></table>
 
