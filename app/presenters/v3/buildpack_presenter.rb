@@ -9,6 +9,7 @@ module VCAP::CloudController::Presenters::V3
         updated_at: buildpack.updated_at,
         name: buildpack.name,
         stack: buildpack.stack,
+        state: 'AWAITING_UPLOAD',
         position: buildpack.position,
         enabled: buildpack.enabled,
         locked: buildpack.locked,
