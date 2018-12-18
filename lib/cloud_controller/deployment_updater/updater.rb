@@ -67,6 +67,12 @@ module VCAP::CloudController
           app.lock!
           deploying_web_process.lock!
 
+          # We create the deploying_web_process in DeploymentCreate with 0 instances
+          if deploying_web_process.instances == 0
+            deploying_web_process.update(state: ProcessModel::STARTED, instances: 1)
+            return
+          end
+
           return unless ready_to_scale?
 
           if deploying_web_process.instances >= deployment.original_web_process_instance_count

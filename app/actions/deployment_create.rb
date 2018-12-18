@@ -52,7 +52,8 @@ module VCAP::CloudController
         process = ProcessModel.create(
           app: app,
           type: ProcessTypes::WEB,
-          state: ProcessModel::STARTED,
+          state: ProcessModel::STOPPED,
+          instances: 0,
           command: web_process.command,
           memory: web_process.memory,
           file_descriptors: web_process.file_descriptors,

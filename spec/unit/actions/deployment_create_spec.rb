@@ -49,11 +49,14 @@ module VCAP::CloudController
           expect(deployment.deploying_web_process.revision).to eq(RevisionModel.last)
         end
 
-        it 'creates a process of web-deployment-guid type with the same characteristics as the existing web process' do
+        it 'creates a process of web type with the same characteristics as the existing web process' do
           DeploymentCreate.create(app: app, droplet: app.droplet, user_audit_info: user_audit_info)
 
           deploying_web_process = app.reload.newest_web_process
-          expect(deploying_web_process.state).to eq ProcessModel::STARTED
+
+          expect(deploying_web_process.type).to eq(VCAP::CloudController::ProcessTypes::WEB)
+          expect(deploying_web_process.state).to eq(ProcessModel::STOPPED)
+          expect(deploying_web_process.instances).to eq(0)
           expect(deploying_web_process.command).to eq(web_process.command)
           expect(deploying_web_process.memory).to eq(web_process.memory)
           expect(deploying_web_process.file_descriptors).to eq(web_process.file_descriptors)
@@ -92,7 +95,10 @@ module VCAP::CloudController
             DeploymentCreate.create(app: app, droplet: app.droplet, user_audit_info: user_audit_info)
 
             deploying_web_process = app.reload.newest_web_process
-            expect(deploying_web_process.state).to eq ProcessModel::STARTED
+
+            expect(deploying_web_process.type).to eq(VCAP::CloudController::ProcessTypes::WEB)
+            expect(deploying_web_process.state).to eq(ProcessModel::STOPPED)
+            expect(deploying_web_process.instances).to eq(0)
             expect(deploying_web_process.command).to eq(web_process.command)
             expect(deploying_web_process.memory).to eq(web_process.memory)
             expect(deploying_web_process.file_descriptors).to eq(web_process.file_descriptors)
