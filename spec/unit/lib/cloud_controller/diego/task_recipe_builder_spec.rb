@@ -125,6 +125,7 @@ module VCAP::CloudController
           let(:buildpack_staging_action) { ::Diego::Bbs::Models::RunAction.new }
           let(:lifecycle_environment_variables) { [::Diego::Bbs::Models::EnvironmentVariable.new(name: 'the-buildpack-env-var', value: 'the-buildpack-value')] }
           let(:lifecycle_cached_dependencies) { [::Diego::Bbs::Models::CachedDependency.new(name: 'buildpack_cached_deps')] }
+          let(:lifecycle_image_layers) { [::Diego::Bbs::Models::ImageLayer.new(name: 'some-cache-key')] }
           let(:lifecycle_action_builder) do
             instance_double(
               Buildpack::StagingActionBuilder,
@@ -132,6 +133,7 @@ module VCAP::CloudController
               action: buildpack_staging_action,
               task_environment_variables: lifecycle_environment_variables,
               cached_dependencies: lifecycle_cached_dependencies,
+              image_layers: lifecycle_image_layers,
             )
           end
 
@@ -146,9 +148,11 @@ module VCAP::CloudController
             expect(result.log_source).to eq('STG')
             expect(result.result_file).to eq('/tmp/result.json')
             expect(result.privileged).to be(false)
+            expect(result.legacy_download_user).to eq('vcap')
 
             expect(result.memory_mb).to eq(42)
             expect(result.disk_mb).to eq(51)
+            expect(result.image_layers).to eq(lifecycle_image_layers)
             expect(result.cpu_weight).to eq(50)
 
             expect(result.completion_callback_url).to eq("https://#{user}:#{CGI.escape(password)}@#{internal_service_hostname}:#{tls_port}" \
@@ -166,6 +170,7 @@ module VCAP::CloudController
               rule_staging_specific,
             ])
 
+            expect(result.image_layers).to eq(lifecycle_image_layers)
             expect(result.cached_dependencies).to eq(lifecycle_cached_dependencies)
             expect(result.PlacementTags).to eq(['potato-segment'])
             expect(result.max_pids).to eq(100)
@@ -214,6 +219,7 @@ module VCAP::CloudController
               action: docker_staging_action,
               task_environment_variables: lifecycle_environment_variables,
               cached_dependencies: lifecycle_cached_dependencies,
+              image_layers: nil,
             )
           end
 
@@ -229,6 +235,11 @@ module VCAP::CloudController
           it 'sets the log source' do
             result = task_recipe_builder.build_staging_task(config, staging_details)
             expect(result.log_source).to eq('STG')
+          end
+
+          it 'does not set the image layers' do
+            result = task_recipe_builder.build_staging_task(config, staging_details)
+            expect(result.image_layers).to be_empty
           end
 
           it 'sets the result file' do
@@ -414,6 +425,8 @@ module VCAP::CloudController
         )]
         }
 
+        let(:lifecycle_image_layers) { [::Diego::Bbs::Models::ImageLayer.new(name: 'some-layer')] }
+
         let(:certificate_properties) do
           ::Diego::Bbs::Models::CertificateProperties.new(
             organizational_unit: [
@@ -434,6 +447,7 @@ module VCAP::CloudController
               task_environment_variables: lifecycle_environment_variables,
               stack: 'preloaded:potato-stack',
               cached_dependencies: lifecycle_cached_dependencies,
+              image_layers: lifecycle_image_layers,
             )
           end
 
@@ -457,6 +471,7 @@ module VCAP::CloudController
             expect(result.memory_mb).to eq(2048)
             expect(result.disk_mb).to eq(1024)
             expect(result.environment_variables).to eq(lifecycle_environment_variables)
+            expect(result.legacy_download_user).to eq('vcap')
             expect(result.root_fs).to eq('preloaded:potato-stack')
             expect(result.completion_callback_url).to eq(expected_callback_url)
             expect(result.network). to eq(expected_network)
@@ -470,6 +485,7 @@ module VCAP::CloudController
             expect(result.log_source).to eq(TASK_LOG_SOURCE)
 
             expect(result.action).to eq(task_action)
+            expect(result.image_layers).to eq(lifecycle_image_layers)
             expect(result.cached_dependencies).to eq(lifecycle_cached_dependencies)
 
             expect(result.metrics_guid).to eq('')
@@ -573,6 +589,7 @@ module VCAP::CloudController
               action: task_action,
               task_environment_variables: lifecycle_environment_variables,
               cached_dependencies: lifecycle_cached_dependencies,
+              image_layers: nil,
               stack: 'docker://potato-stack',
             )
           end
@@ -610,6 +627,7 @@ module VCAP::CloudController
 
             expect(result.root_fs).to eq('docker://potato-stack')
             expect(result.cached_dependencies).to eq(lifecycle_cached_dependencies)
+            expect(result.image_layers).to be_empty
             expect(result.action).to eq(task_action)
 
             expect(result.metrics_guid).to eq('')

@@ -11,7 +11,8 @@ module VCAP::CloudController
             diego: {
               lifecycle_bundles: {
                 docker: 'http://file-server.com/v1/static/the/docker/lifecycle/path.tgz'
-              }
+              },
+              enable_declarative_asset_downloads: enable_declarative_asset_downloads,
             }
           })
         end
@@ -31,6 +32,7 @@ module VCAP::CloudController
             ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'VCAP_SERVICES', value: '{}'),
           ]
         end
+        let(:enable_declarative_asset_downloads) { false }
 
         before do
           allow(VCAP::CloudController::Diego::TaskEnvironmentVariableCollector).to receive(:for_task).and_return(generated_environment)
@@ -89,6 +91,14 @@ module VCAP::CloudController
             ])
           end
 
+          context 'when enable_declarative_asset_downloads is true' do
+            let(:enable_declarative_asset_downloads) { true }
+
+            it 'returns nil' do
+              expect(task_action_builder.cached_dependencies).to be_nil
+            end
+          end
+
           context 'when the requested stack is not in the configured lifecycle bundles' do
             let(:config) { Config.new({ diego: { lifecycle_bundles: {} } }) }
 
@@ -96,6 +106,38 @@ module VCAP::CloudController
               expect {
                 task_action_builder.cached_dependencies
               }.to raise_error VCAP::CloudController::Diego::LifecycleBundleUriGenerator::InvalidStack
+            end
+          end
+        end
+
+        describe '#image_layers' do
+          it 'returns nil' do
+            expect(task_action_builder.image_layers).to be_nil
+          end
+
+          context 'when enable_declarative_asset_downloads is true' do
+            let(:enable_declarative_asset_downloads) { true }
+
+            it 'creates a image layer for each cached dependency' do
+              expect(task_action_builder.image_layers).to include(
+                ::Diego::Bbs::Models::ImageLayer.new(
+                  name: 'docker-lifecycle',
+                  url: 'http://file-server.com/v1/static/the/docker/lifecycle/path.tgz',
+                  destination_path: '/tmp/lifecycle',
+                  layer_type: ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
+                  media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ,
+                )
+              )
+            end
+
+            context 'when the requested stack is not in the configured lifecycle bundles' do
+              let(:config) { Config.new({ diego: { lifecycle_bundles: {}, enable_declarative_asset_downloads: true } }) }
+
+              it 'returns an error' do
+                expect {
+                  task_action_builder.image_layers
+                }.to raise_error VCAP::CloudController::Diego::LifecycleBundleUriGenerator::InvalidStack
+              end
             end
           end
         end

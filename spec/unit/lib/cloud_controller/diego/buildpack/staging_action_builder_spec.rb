@@ -7,6 +7,7 @@ module VCAP::CloudController
         subject(:builder) { StagingActionBuilder.new(config, staging_details, lifecycle_data) }
 
         let(:droplet) { DropletModel.make(:buildpack) }
+        let(:enable_declarative_asset_downloads) { false }
         let(:config) do
           Config.new({
             skip_cert_verify: false,
@@ -16,6 +17,7 @@ module VCAP::CloudController
               lifecycle_bundles: {
                 'buildpack/buildpack-stack': 'the-buildpack-bundle'
               },
+              enable_declarative_asset_downloads: enable_declarative_asset_downloads,
             },
             staging:          {
               minimum_staging_file_descriptor_limit: 4,
@@ -255,6 +257,38 @@ module VCAP::CloudController
               expect(actions[1].run_action.args).to include('-skipDetect=true')
             end
           end
+
+          context 'when enable_declarative_asset_downloads is true' do
+            let(:enable_declarative_asset_downloads) { true }
+
+            it 'returns the buildpack staging action without download actions' do
+              result = builder.action
+
+              serial_action = result.serial_action
+              actions       = serial_action.actions
+
+              expect(actions[0].parallel_action).to be_nil
+            end
+
+            context 'when the app package does not have a sha256 checksum' do
+              # this test can be removed once all app packages have sha256 checksums
+              before do
+                lifecycle_data[:app_bits_checksum][:type] = 'sha1'
+                download_app_package_action[:checksum_algorithm] = 'sha1'
+              end
+
+              it 'includes the app package download in the staging action' do
+                result = builder.action
+
+                serial_action = result.serial_action
+                actions       = serial_action.actions
+
+                parallel_download_action = actions[0].parallel_action
+                expect(parallel_download_action.actions.count).to eq(1)
+                expect(parallel_download_action.actions[0].download_action).to eq(download_app_package_action)
+              end
+            end
+          end
         end
 
         describe '#cached_dependencies' do
@@ -267,6 +301,14 @@ module VCAP::CloudController
                 cache_key: 'buildpack-buildpack-stack-lifecycle',
               )
             )
+          end
+
+          context 'when enable_declarative_asset_downloads is true' do
+            let(:enable_declarative_asset_downloads) { true }
+
+            it 'returns no cached dependencies' do
+              expect(builder.cached_dependencies).to be_nil
+            end
           end
 
           context 'when there are buildpacks' do
@@ -299,6 +341,14 @@ module VCAP::CloudController
               expect(result).to include(buildpack_entry_1, buildpack_entry_2)
             end
 
+            context 'when enable_declarative_asset_downloads is true' do
+              let(:enable_declarative_asset_downloads) { true }
+
+              it 'returns no cached dependencies' do
+                expect(builder.cached_dependencies).to be_nil
+              end
+            end
+
             context 'and some do not include checksums' do
               let(:buildpacks) do
                 [
@@ -325,6 +375,14 @@ module VCAP::CloudController
 
                 result = builder.cached_dependencies
                 expect(result).to include(buildpack_entry_1, buildpack_entry_2)
+              end
+
+              context 'when enable_declarative_asset_downloads is true' do
+                let(:enable_declarative_asset_downloads) { true }
+
+                it 'returns no cached dependencies' do
+                  expect(builder.cached_dependencies).to be_nil
+                end
               end
             end
           end
@@ -356,6 +414,163 @@ module VCAP::CloudController
               result = builder.cached_dependencies
               expect(result).to include(buildpack_entry_1)
               expect(result).not_to include(buildpack_entry_2)
+            end
+          end
+        end
+
+        describe '#image_layers' do
+          it 'returns no image layers' do
+            expect(builder.image_layers).to be_nil
+          end
+
+          context 'when enable_declarative_asset_downloads is true' do
+            let(:enable_declarative_asset_downloads) { true }
+
+            it 'returns the lifecycle as an image layer' do
+              expect(builder.image_layers).to include(
+                ::Diego::Bbs::Models::ImageLayer.new(
+                  name:              'buildpack-buildpack-stack-lifecycle',
+                  url:               'generated-uri',
+                  destination_path:  '/tmp/lifecycle',
+                  layer_type:        ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
+                  media_type:        ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ,
+                )
+              )
+            end
+
+            it 'returns the app package as an image layer' do
+              expect(builder.image_layers).to include(
+                ::Diego::Bbs::Models::ImageLayer.new(
+                  name:              'app package',
+                  url:               'http://app_bits_download_uri.example.com/path/to/bits',
+                  destination_path:  '/tmp/app',
+                  layer_type:        ::Diego::Bbs::Models::ImageLayer::Type::EXCLUSIVE,
+                  media_type:        ::Diego::Bbs::Models::ImageLayer::MediaType::ZIP,
+                  digest_algorithm:  ::Diego::Bbs::Models::ImageLayer::DigestAlgorithm::SHA256,
+                  digest_value:      'package-checksum',
+                )
+              )
+            end
+
+            context 'when the app package does not have sha256 checksum' do
+              # this test can be removed once all app packages have sha256 checksums
+              before do
+                lifecycle_data[:app_bits_checksum][:type] = 'sha1'
+              end
+
+              it 'does not include the app package as an image layer' do
+                expect(builder.image_layers.any? { |l| l[:name] == 'app package' }).to be false
+              end
+            end
+
+            it 'returns the buildpack cache as an image layer' do
+              expect(builder.image_layers).to include(
+                ::Diego::Bbs::Models::ImageLayer.new(
+                  name:              'build artifacts cache',
+                  url:               'http://build_artifacts_cache_download_uri.example.com/path/to/bits',
+                  destination_path:  '/tmp/cache',
+                  layer_type:        ::Diego::Bbs::Models::ImageLayer::Type::EXCLUSIVE,
+                  media_type:        ::Diego::Bbs::Models::ImageLayer::MediaType::ZIP,
+                  digest_algorithm:  ::Diego::Bbs::Models::ImageLayer::DigestAlgorithm::SHA256,
+                  digest_value:      'bp-cache-checksum',
+                )
+              )
+            end
+
+            context 'when there is no buildpack cache' do
+              before do
+                lifecycle_data[:build_artifacts_cache_download_uri] = nil
+              end
+
+              it 'does not include the buildpack cache as an image layer' do
+                expect(builder.image_layers.any? { |l| l[:name] == 'build artifacts cache' }).to be false
+              end
+            end
+
+            context 'when there is no buildpack cache checksum' do
+              before do
+                lifecycle_data[:buildpack_cache_checksum] = ''
+              end
+
+              it 'does not include the buildpack cache as an image layer' do
+                expect(builder.image_layers.any? { |l| l[:name] == 'build artifacts cache' }).to be false
+              end
+            end
+
+            context 'when there are buildpacks' do
+              let(:buildpacks) do
+                [
+                  { name: 'buildpack-1', key: 'buildpack-1-key', url: 'buildpack-1-url', sha256: 'checksum' },
+                  { name: 'buildpack-2', key: 'buildpack-2-key', url: 'buildpack-2-url', sha256: 'checksum' },
+                ]
+              end
+
+              it 'returns the buildpacks as an image layer' do
+                expect(builder.image_layers).to include(
+                  ::Diego::Bbs::Models::ImageLayer.new(
+                    name:              'buildpack-1',
+                    url:               'buildpack-1-url',
+                    destination_path:  "/tmp/buildpacks/#{Digest::MD5.hexdigest('buildpack-1-key')}",
+                    digest_algorithm:  ::Diego::Bbs::Models::ImageLayer::DigestAlgorithm::SHA256,
+                    digest_value:      'checksum',
+                    layer_type:        ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
+                    media_type:        ::Diego::Bbs::Models::ImageLayer::MediaType::ZIP,
+                  )
+                )
+                expect(builder.image_layers).to include(
+                  ::Diego::Bbs::Models::ImageLayer.new(
+                    name:              'buildpack-2',
+                    url:               'buildpack-2-url',
+                    destination_path:  "/tmp/buildpacks/#{Digest::MD5.hexdigest('buildpack-2-key')}",
+                    digest_algorithm:  ::Diego::Bbs::Models::ImageLayer::DigestAlgorithm::SHA256,
+                    digest_value:      'checksum',
+                    layer_type:        ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
+                    media_type:        ::Diego::Bbs::Models::ImageLayer::MediaType::ZIP,
+                  )
+                )
+              end
+
+              context 'and some do not include checksums' do
+                let(:buildpacks) do
+                  [
+                    { name: 'buildpack-1', key: 'buildpack-1-key', url: 'buildpack-1-url', sha256: 'checksum' },
+                    { name: 'buildpack-2', key: 'buildpack-2-key', url: 'buildpack-2-url', sha256: nil },
+                  ]
+                end
+
+                it 'returns the buildpacks without checksum information' do
+                  expect(builder.image_layers).to include(
+                    ::Diego::Bbs::Models::ImageLayer.new(
+                      name:              'buildpack-2',
+                      url:               'buildpack-2-url',
+                      destination_path:  "/tmp/buildpacks/#{Digest::MD5.hexdigest('buildpack-2-key')}",
+                      layer_type:        ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
+                      media_type:        ::Diego::Bbs::Models::ImageLayer::MediaType::ZIP,
+                    )
+                  )
+                end
+              end
+            end
+
+            context 'when there are custom buildpacks' do
+              let(:buildpacks) do
+                [
+                  { name: 'buildpack-1', key: 'buildpack-1-key', url: 'buildpack-1-url', sha256: 'checksum' },
+                  { name: 'custom', key: 'custom-key', url: 'custom-url' },
+                ]
+              end
+
+              it 'does not returns the custom buildpack as an image layer' do
+                expect(builder.image_layers).not_to include(
+                  ::Diego::Bbs::Models::ImageLayer.new(
+                    name:              'custom',
+                    url:               'custom-url',
+                    destination_path:  "/tmp/buildpacks/#{Digest::MD5.hexdigest('custom-key')}",
+                    layer_type:        ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
+                    media_type:        ::Diego::Bbs::Models::ImageLayer::MediaType::ZIP,
+                  )
+                )
+              end
             end
           end
         end

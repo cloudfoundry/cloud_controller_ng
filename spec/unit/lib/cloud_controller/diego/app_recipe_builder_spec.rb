@@ -234,6 +234,7 @@ module VCAP::CloudController
             ]
           end
           let(:expected_setup_action) { ::Diego::Bbs::Models::Action.new }
+          let(:expected_image_layers) { [::Diego::Bbs::Models::ImageLayer.new] }
           let(:env_vars) { [::Diego::Bbs::Models::EnvironmentVariable.new(name: 'foo', value: 'bar')] }
 
           let(:desired_lrp_builder) do
@@ -247,6 +248,7 @@ module VCAP::CloudController
               port_environment_variables:   port_environment_variables,
               platform_options:             platform_options,
               action_user:                  'lrp-action-user',
+              image_layers:                 expected_image_layers,
               start_command:                command,
             )
           end
@@ -278,6 +280,7 @@ module VCAP::CloudController
             expect(lrp.environment_variables).to match_array(
               [::Diego::Bbs::Models::EnvironmentVariable.new(name: 'foo', value: 'bar')]
             )
+            expect(lrp.legacy_download_user).to eq('lrp-action-user')
             expect(lrp.instances).to eq(21)
             expect(lrp.log_guid).to eq(process.app.guid)
             expect(lrp.log_source).to eq(LRP_LOG_SOURCE)
@@ -290,6 +293,7 @@ module VCAP::CloudController
             expect(lrp.process_guid).to eq(ProcessGuid.from_process(process))
             expect(lrp.root_fs).to eq('buildpack_root_fs')
             expect(lrp.setup).to eq(expected_setup_action)
+            expect(lrp.image_layers).to eq(expected_image_layers)
             expect(lrp.start_timeout_ms).to eq(12 * 1000)
             expect(lrp.trusted_system_certificates_path).to eq(RUNNING_TRUSTED_SYSTEM_CERT_PATH)
             expect(lrp.PlacementTags).to eq(['placement-tag'])
@@ -905,6 +909,7 @@ module VCAP::CloudController
               setup:                        nil,
               global_environment_variables: [],
               privileged?:                  false,
+              image_layers:                 nil,
               ports:                        lrp_builder_ports,
               port_environment_variables:   port_environment_variables,
               platform_options:             platform_options,

@@ -6,9 +6,11 @@ module VCAP::CloudController
       RSpec.describe TaskActionBuilder do
         subject(:builder) { TaskActionBuilder.new(config, task, lifecycle_data) }
 
+        let(:enable_declarative_asset_downloads) { false }
         let(:config) do
           Config.new({
             diego: {
+              enable_declarative_asset_downloads: enable_declarative_asset_downloads,
               lifecycle_bundles: {
                 'buildpack/potato-stack': 'http://file-server.service.cf.internal:8080/v1/static/potato_lifecycle_bundle_url'
               }
@@ -101,6 +103,111 @@ module VCAP::CloudController
               expect(actions[0].download_action).to eq(download_app_droplet_action)
             end
           end
+
+          context 'when enable_declarative_asset_downloads is true' do
+            let(:enable_declarative_asset_downloads) { true }
+
+            it 'does not include the download step in the action' do
+              result = builder.action
+              expect(result.run_action).to eq(run_task_action)
+            end
+
+            context 'and the droplet does not have a sha256 checksum (it is a legacy droplet with a sha1 checksum)' do
+              # this test can be removed once legacy sha1 checksummed droplets are obsolete
+              let(:download_app_droplet_action) do
+                ::Diego::Bbs::Models::DownloadAction.new(
+                  from: download_uri,
+                  to: '.',
+                  cache_key: '',
+                  user: 'vcap',
+                  checksum_algorithm: 'sha1',
+                  checksum_value: task.droplet.droplet_hash,
+                )
+              end
+
+              before do
+                task.droplet.sha256_checksum = nil
+                task.droplet.save
+              end
+
+              it 'creates a action to download the droplet' do
+                result = builder.action
+
+                serial_action = result.serial_action
+                actions       = serial_action.actions
+
+                expect(actions.length).to eq(2)
+                expect(actions[0].download_action).to eq(download_app_droplet_action)
+                expect(actions[1].run_action).to eq(run_task_action)
+              end
+            end
+          end
+        end
+
+        describe '#image_layers' do
+          it 'returns nil' do
+            expect(builder.image_layers).to be_nil
+          end
+
+          context 'when enable_declarative_asset_downloads is true' do
+            let(:enable_declarative_asset_downloads) { true }
+
+            context 'and the droplet does not have a sha256 checksum (it is a legacy droplet with a sha1 checksum)' do
+              # this test can be removed once legacy sha1 checksummed droplets are obsolete
+              before do
+                task.droplet.sha256_checksum = nil
+                task.droplet.save
+              end
+
+              it 'creates a image layer for each cached dependency' do
+                expect(builder.image_layers).to eq([
+                  ::Diego::Bbs::Models::ImageLayer.new(
+                    name: 'buildpack-potato-stack-lifecycle',
+                    url: 'http://file-server.service.cf.internal:8080/v1/static/potato_lifecycle_bundle_url',
+                    destination_path: '/tmp/lifecycle',
+                    layer_type: ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
+                    media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ,
+                  )
+                ])
+              end
+            end
+
+            it 'creates a image layer for each cached dependency' do
+              expect(builder.image_layers).to include(
+                ::Diego::Bbs::Models::ImageLayer.new(
+                  name: 'buildpack-potato-stack-lifecycle',
+                  url: 'http://file-server.service.cf.internal:8080/v1/static/potato_lifecycle_bundle_url',
+                  destination_path: '/tmp/lifecycle',
+                  layer_type: ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
+                  media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ,
+                )
+              )
+            end
+
+            it 'creates a image layer for the droplet' do
+              expect(builder.image_layers).to include(
+                ::Diego::Bbs::Models::ImageLayer.new(
+                  name: 'droplet',
+                  url: lifecycle_data[:droplet_uri],
+                  destination_path: '/home/vcap',
+                  layer_type: ::Diego::Bbs::Models::ImageLayer::Type::EXCLUSIVE,
+                  media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ,
+                  digest_value: task.droplet.sha256_checksum,
+                  digest_algorithm: ::Diego::Bbs::Models::ImageLayer::DigestAlgorithm::SHA256,
+                )
+              )
+            end
+
+            context 'when the requested stack is not in the configured lifecycle bundles' do
+              let(:stack) { 'leek-stack' }
+
+              it 'returns an error' do
+                expect {
+                  builder.image_layers
+                }.to raise_error VCAP::CloudController::Diego::LifecycleBundleUriGenerator::InvalidStack
+              end
+            end
+          end
         end
 
         describe '#task_environment_variables' do
@@ -125,6 +232,14 @@ module VCAP::CloudController
                 cache_key: 'buildpack-potato-stack-lifecycle',
               )
             ])
+          end
+
+          context 'when enable_declarative_asset_downloads is true' do
+            let(:enable_declarative_asset_downloads) { true }
+
+            it 'returns nil' do
+              expect(builder.cached_dependencies).to be_nil
+            end
           end
 
           context 'when the requested stack is not in the configured lifecycle bundles' do

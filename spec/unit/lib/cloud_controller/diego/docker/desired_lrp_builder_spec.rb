@@ -18,12 +18,14 @@ module VCAP::CloudController
             diego: {
               lifecycle_bundles: {
                 docker: 'http://docker.example.com/path/to/lifecycle.tgz'
-              }
+              },
+              enable_declarative_asset_downloads: enable_declarative_asset_downloads,
             }
           })
         end
         let(:ports) { [] }
         let(:execution_metadata) { '{}' }
+        let(:enable_declarative_asset_downloads) { false }
 
         describe '#root_fs' do
           it 'uses the DockerURIConverter' do
@@ -49,6 +51,40 @@ module VCAP::CloudController
               )
             ])
             expect(LifecycleBundleUriGenerator).to have_received(:uri).with('http://docker.example.com/path/to/lifecycle.tgz')
+          end
+
+          context 'when enable_declarative_asset_downloads is true' do
+            let(:enable_declarative_asset_downloads) { true }
+
+            it 'returns nil' do
+              expect(builder.cached_dependencies).to be_nil
+            end
+          end
+        end
+
+        describe '#image_layers' do
+          before do
+            allow(LifecycleBundleUriGenerator).to receive(:uri).and_return('foo://bar.baz')
+          end
+
+          it 'returns nil' do
+            expect(builder.image_layers).to be_nil
+          end
+
+          context 'when enable_declarative_asset_downloads is true' do
+            let(:enable_declarative_asset_downloads) { true }
+
+            it 'creates a image layer for each cached dependency' do
+              expect(builder.image_layers).to include(
+                ::Diego::Bbs::Models::ImageLayer.new(
+                  name: 'docker-lifecycle',
+                  url: 'foo://bar.baz',
+                  destination_path: '/tmp/lifecycle',
+                  layer_type: ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
+                  media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ,
+                )
+              )
+            end
           end
         end
 

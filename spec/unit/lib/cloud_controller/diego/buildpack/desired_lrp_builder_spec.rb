@@ -27,12 +27,12 @@ module VCAP::CloudController
                 'buildpack/potato-stack': '/path/to/lifecycle.tgz',
               },
               use_privileged_containers_for_running: use_privileged_containers_for_running,
-              temporary_oci_buildpack_mode: temporary_oci_buildpack_mode,
+              enable_declarative_asset_downloads: enable_declarative_asset_downloads,
             }
           })
         end
         let(:use_privileged_containers_for_running) { false }
-        let(:temporary_oci_buildpack_mode) { '' }
+        let(:enable_declarative_asset_downloads) { false }
 
         describe '#start_command' do
           it 'returns the passed in start command' do
@@ -45,11 +45,11 @@ module VCAP::CloudController
             expect(builder.root_fs).to eq('preloaded:potato-stack')
           end
 
-          context 'when temporary_oci_buildpack_mode is set to oci-phase-1' do
-            let(:temporary_oci_buildpack_mode) { 'oci-phase-1' }
+          context 'when enable_declarative_asset_downloads is true' do
+            let(:enable_declarative_asset_downloads) { true }
 
-            it 'returns a constructed root_fs + layer URI' do
-              expect(builder.root_fs).to eq('preloaded+layer:potato-stack?layer=http://droplet-uri.com:1234?token=&%40home---%3E&layer_path=/home/vcap&layer_digest=checksum-value')
+            it 'returns a constructed root_fs' do
+              expect(builder.root_fs).to eq('preloaded:potato-stack')
             end
           end
         end
@@ -76,6 +76,14 @@ module VCAP::CloudController
               expect { builder.cached_dependencies }.to raise_error("no compiler defined for requested stack 'stack-thats-not-in-config'")
             end
           end
+
+          context 'when enable_declarative_asset_downloads is true' do
+            let(:enable_declarative_asset_downloads) { true }
+
+            it 'returns nil' do
+              expect(builder.cached_dependencies).to be_nil
+            end
+          end
         end
 
         describe '#setup' do
@@ -100,11 +108,109 @@ module VCAP::CloudController
             )
           end
 
-          context 'when temporary_oci_buildpack_mode is set to oci-phase-1' do
-            let(:temporary_oci_buildpack_mode) { 'oci-phase-1' }
+          context 'when enable_declarative_asset_downloads is true' do
+            let(:enable_declarative_asset_downloads) { true }
 
-            it 'returns nil' do
-              expect(builder.setup).to be_nil
+            context 'and the droplet does not have a sha256 checksum (it is a legacy droplet with a sha1 checksum)' do
+              # this test can be removed once legacy sha1 checksummed droplets are obsolete
+              let(:opts) { super().merge(checksum_algorithm: 'sha1') }
+
+              it 'creates a setup action to download the droplet' do
+                expect(builder.setup).to eq(
+                  ::Diego::Bbs::Models::Action.new(
+                    serial_action: ::Diego::Bbs::Models::SerialAction.new(
+                      actions: [
+                        ::Diego::Bbs::Models::Action.new(
+                          download_action: ::Diego::Bbs::Models::DownloadAction.new(
+                            to: '.',
+                            user: 'vcap',
+                            from: 'http://droplet-uri.com:1234?token=&@home--->',
+                            cache_key: 'droplets-p-guid',
+                            checksum_algorithm: 'sha1',
+                            checksum_value: 'checksum-value',
+                          )
+                        )
+                      ],
+                    )
+                  )
+                )
+              end
+            end
+
+            context 'when checksum is sha256' do
+              let(:opts) { super().merge(checksum_algorithm: 'sha256') }
+
+              it 'returns nil' do
+                expect(builder.setup).to be_nil
+              end
+            end
+          end
+        end
+
+        describe '#image_layers' do
+          before do
+            allow(LifecycleBundleUriGenerator).to receive(:uri).and_return('foo://bar.baz')
+          end
+
+          it 'returns nil' do
+            expect(builder.image_layers).to be_nil
+          end
+
+          context 'when enable_declarative_asset_downloads is true' do
+            let(:enable_declarative_asset_downloads) { true }
+
+            context 'and the droplet does not have a sha256 checksum (it is a legacy droplet with a sha1 checksum)' do
+              # this test can be removed once legacy sha1 checksummed droplets are obsolete
+              let(:opts) { super().merge(checksum_algorithm: 'sha1') }
+
+              it 'creates a image layer for each cached dependency' do
+                expect(builder.image_layers).to eq([
+                  ::Diego::Bbs::Models::ImageLayer.new(
+                    name: 'buildpack-potato-stack-lifecycle',
+                    url: 'foo://bar.baz',
+                    destination_path: '/tmp/lifecycle',
+                    layer_type: ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
+                    media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ,
+                  )
+                ])
+              end
+            end
+
+            context 'and the droplet has a sha256 checksum' do
+              let(:opts) { super().merge(checksum_algorithm: 'sha256') }
+
+              it 'creates a image layer for each cached dependency' do
+                expect(builder.image_layers).to include(
+                  ::Diego::Bbs::Models::ImageLayer.new(
+                    name: 'buildpack-potato-stack-lifecycle',
+                    url: 'foo://bar.baz',
+                    destination_path: '/tmp/lifecycle',
+                    layer_type: ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
+                    media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ,
+                  )
+                )
+              end
+
+              it 'creates a image layer for the droplet' do
+                expect(builder.image_layers).to include(
+                  ::Diego::Bbs::Models::ImageLayer.new(
+                    name: 'droplet',
+                    url: 'http://droplet-uri.com:1234?token=&%40home---%3E',
+                    destination_path: '/home/vcap',
+                    layer_type: ::Diego::Bbs::Models::ImageLayer::Type::EXCLUSIVE,
+                    media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ,
+                    digest_value: 'checksum-value',
+                    digest_algorithm: ::Diego::Bbs::Models::ImageLayer::DigestAlgorithm::SHA256,
+                  )
+                )
+              end
+
+              context 'when searching for a nonexistant stack' do
+                let(:stack) { 'stack-thats-not-in-config' }
+                it 'errors nicely' do
+                  expect { builder.image_layers }.to raise_error("no compiler defined for requested stack 'stack-thats-not-in-config'")
+                end
+              end
             end
           end
         end

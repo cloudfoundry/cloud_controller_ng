@@ -28,6 +28,18 @@ module VCAP::CloudController
           )
         end
 
+        def image_layers
+          return nil unless @config.get(:diego, :enable_declarative_asset_downloads)
+
+          [::Diego::Bbs::Models::ImageLayer.new(
+            name: 'docker-lifecycle',
+            url:      LifecycleBundleUriGenerator.uri(config.get(:diego, :lifecycle_bundles)[:docker]),
+            destination_path: '/tmp/lifecycle',
+            layer_type: ::Diego::Bbs::Models::ImageLayer::Type::SHARED,
+            media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ,
+          )]
+        end
+
         def task_environment_variables
           TaskEnvironmentVariableCollector.for_task task
         end
@@ -41,6 +53,8 @@ module VCAP::CloudController
         end
 
         def cached_dependencies
+          return nil if @config.get(:diego, :enable_declarative_asset_downloads)
+
           bundle = config.get(:diego, :lifecycle_bundles)[lifecycle_bundle_key]
           [::Diego::Bbs::Models::CachedDependency.new(
             from: LifecycleBundleUriGenerator.uri(bundle),
