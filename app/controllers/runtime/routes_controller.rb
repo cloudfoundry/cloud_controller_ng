@@ -295,6 +295,15 @@ module VCAP::CloudController
       [HTTP::NO_CONTENT]
     end
 
+    def visible_relationship_dataset(name, obj)
+      if name != :apps
+        return super
+      end
+
+      dataset = obj.user_visible_relationship_dataset(name, @access_context.user, @access_context.admin_override)
+      AppsController.filter_dataset(dataset)
+    end
+
     define_messages
     define_routes
 
@@ -374,32 +383,6 @@ module VCAP::CloudController
         CloudController::Errors::ApiError.new_from_details('PathInvalid', 'the path exceeds 128 characters')
       elsif path_error.include?(:invalid_path)
         CloudController::Errors::ApiError.new_from_details('PathInvalid', attributes['path'])
-      end
-    end
-
-    def visible_dataset
-      if queryer.can_read_globally?
-        Route.dataset
-      else
-        Route.dataset.filter({ "#{Route.table_name}__guid".to_sym => queryer.readable_route_guids })
-      end
-    end
-
-    def visible_relationship_dataset(relationship_name, route)
-      if relationship_name.to_s == 'apps'
-        if queryer.can_read_globally?
-          route.apps_dataset
-        else
-          route.apps_dataset.filter({ "#{ProcessModel.table_name}__app_guid".to_sym => queryer.readable_app_guids })
-        end
-      elsif relationship_name.to_s == 'route_mappings'
-        if queryer.can_read_globally?
-          route.route_mappings_dataset
-        else
-          route.route_mappings_dataset.filter({ "#{RouteMappingModel.table_name}__guid".to_sym => queryer.readable_route_mapping_guids })
-        end
-      else
-        super
       end
     end
 

@@ -31,4 +31,32 @@ class StacksController < ApplicationController
   rescue StackCreate::Error => e
     unprocessable! e
   end
+
+  def show
+    stack = Stack.find(guid: hashed_params[:guid])
+    stack_not_found! unless stack
+
+    render status: :ok, json: Presenters::V3::StackPresenter.new(stack)
+  end
+
+  def destroy
+    unauthorized! unless permission_queryer.can_write_globally?
+
+    stack = Stack.find(guid: hashed_params[:guid])
+    stack_not_found! unless stack
+
+    begin
+      stack.destroy
+    rescue Stack::AppsStillPresentError
+      unprocessable! "Cannot delete stack '#{stack.name}' because apps are currently using the stack."
+    end
+
+    head :no_content
+  end
+
+  private
+
+  def stack_not_found!
+    resource_not_found!(:stack)
+  end
 end

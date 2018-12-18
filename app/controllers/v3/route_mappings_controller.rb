@@ -42,7 +42,7 @@ class RouteMappingsController < ApplicationController
     message = RouteMappingsCreateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    app, route, process, space, org = AddRouteFetcher.fetch(message)
+    app, route, process, space, org = AddRouteFetcher.fetch(app_guid: message.app_guid, process_type: message.process_type, route_guid: message.route_guid)
 
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
     unauthorized! unless permission_queryer.can_write_to_space?(space.guid)

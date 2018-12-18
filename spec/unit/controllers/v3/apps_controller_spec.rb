@@ -420,6 +420,32 @@ RSpec.describe AppsV3Controller, type: :controller do
           expect(response_metadata['annotations']['this']).to eq 'is valid'
         end
       end
+
+      context 'when there are too many annotations' do
+        let(:request_body) do
+          {
+            name: 'some-name',
+            relationships: { space: { data: { guid: space.guid } } },
+            metadata: {
+              annotations: {
+                radish: 'daikon',
+                potato: 'idaho'
+              }
+            }
+          }
+        end
+
+        before do
+          VCAP::CloudController::Config.config.set(:max_annotations_per_resource, 1)
+        end
+
+        it 'responds with 422' do
+          post :create, params: request_body, as: :json
+
+          expect(response.status).to eq(422)
+          expect(response).to have_error_message(/exceed maximum of 1/)
+        end
+      end
     end
 
     context 'lifecycle data' do
@@ -997,7 +1023,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         end
 
         it 'returns an UnprocessableEntity error' do
-          post :create, params: request_body, as: :json
+          patch :update, params: { guid: app_model.guid }.merge(request_body), as: :json
 
           expect(response.status).to eq 422
           expect(response.body).to include 'UnprocessableEntity'
@@ -1020,7 +1046,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         end
 
         it 'returns an UnprocessableEntity error' do
-          post :create, params: request_body, as: :json
+          patch :update, params: { guid: app_model.guid }.merge(request_body), as: :json
 
           expect(response.status).to eq 422
           expect(response.body).to include 'UnprocessableEntity'
@@ -1040,7 +1066,6 @@ RSpec.describe AppsV3Controller, type: :controller do
         let(:request_body) do
           {
             name: 'some-name',
-            relationships: { space: { data: { guid: space.guid } } },
             metadata: {
               labels: {
                 release: 'stable'
@@ -1055,16 +1080,40 @@ RSpec.describe AppsV3Controller, type: :controller do
         end
 
         it 'Returns a 201 and the app with metadata' do
-          post :create, params: request_body, as: :json
+          patch :update, params: { guid: app_model.guid }.merge(request_body), as: :json
 
           response_body = parsed_body
           response_metadata = response_body['metadata']
 
-          expect(response.status).to eq 201
+          expect(response.status).to eq(200)
           expect(response_metadata['labels']['release']).to eq 'stable'
           expect(response_metadata['annotations']['new_anno']).to eq 'value'
           expect(response_metadata['annotations']['existing_anno']).to eq 'is valid'
           expect(response_metadata['annotations']['please']).to be_nil
+        end
+      end
+
+      context 'when there are too many annotations' do
+        let(:request_body) do
+          {
+            metadata: {
+              annotations: {
+                radish: 'daikon',
+                potato: 'idaho'
+              }
+            }
+          }
+        end
+
+        before do
+          VCAP::CloudController::Config.config.set(:max_annotations_per_resource, 1)
+        end
+
+        it 'responds with 422' do
+          patch :update, params: { guid: app_model.guid }.merge(request_body), as: :json
+
+          expect(response.status).to eq(422)
+          expect(response).to have_error_message(/exceed maximum of 1/)
         end
       end
     end

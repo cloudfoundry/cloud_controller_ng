@@ -74,6 +74,7 @@ Rails.application.routes.draw do
   delete '/droplets/:guid', to: 'droplets#destroy'
   get '/apps/:app_guid/droplets', to: 'droplets#index'
   get '/packages/:package_guid/droplets', to: 'droplets#index'
+  patch '/droplets/:guid', to: 'droplets#update'
 
   # errors
   match '404', to: 'errors#not_found', via: :all
@@ -143,5 +144,11 @@ Rails.application.routes.draw do
 
   # stacks
   get '/stacks', to: 'stacks#index'
+  get '/stacks/:guid', to: 'stacks#show'
   post '/stacks', to: 'stacks#create'
+  delete '/stacks/:guid', to: 'stacks#destroy'
+
+  # buildpacks
+  get '/buildpacks/:guid', to: 'buildpacks#show'
+  post '/buildpacks', to: 'buildpacks#create'
 end

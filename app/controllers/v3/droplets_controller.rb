@@ -1,11 +1,13 @@
 require 'presenters/v3/droplet_presenter'
 require 'presenters/v3/paginated_list_presenter'
-require 'fetchers/droplet_delete_fetcher'
+require 'fetchers/droplet_fetcher'
 require 'fetchers/droplet_list_fetcher'
 require 'actions/droplet_delete'
 require 'actions/droplet_copy'
+require 'actions/droplet_update'
 require 'messages/droplets_list_message'
 require 'messages/droplet_copy_message'
+require 'messages/droplet_update_message'
 require 'cloud_controller/membership'
 require 'controllers/v3/mixins/app_sub_resource'
 
@@ -46,7 +48,7 @@ class DropletsController < ApplicationController
   end
 
   def destroy
-    droplet, space, org = DropletDeleteFetcher.new.fetch(hashed_params[:guid])
+    droplet, space, org = DropletFetcher.new.fetch(hashed_params[:guid])
     droplet_not_found! unless droplet && permission_queryer.can_read_from_space?(space.guid, org.guid)
 
     unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
@@ -57,6 +59,19 @@ class DropletsController < ApplicationController
 
     url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
     head HTTP::ACCEPTED, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job.guid}")
+  end
+
+  def update
+    droplet, space, org = DropletFetcher.new.fetch(hashed_params[:guid])
+    droplet_not_found! unless droplet && permission_queryer.can_read_from_space?(space.guid, org.guid)
+    unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
+
+    message = VCAP::CloudController::DropletUpdateMessage.new(hashed_params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    droplet = VCAP::CloudController::DropletUpdate.new.update(droplet, message)
+
+    render status: :ok, json: Presenters::V3::DropletPresenter.new(droplet)
   end
 
   def copy

@@ -39,7 +39,7 @@ RSpec.describe 'Service Broker API integration' do
           end
 
           it 'should be retrievable' do
-            get("/v2/service_bindings/#{@binding_id}/parameters",
+            get("/v2/service_bindings/#{@binding_guid}/parameters",
               {}.to_json,
               json_headers(admin_headers))
             parsed_body = MultiJson.load(last_response.body)
@@ -50,7 +50,7 @@ RSpec.describe 'Service Broker API integration' do
             user = VCAP::CloudController::User.make
             base64_encoded_user_id = Base64.strict_encode64("{\"user_id\":\"#{user.guid}\"}")
 
-            get("/v2/service_bindings/#{@binding_id}/parameters",
+            get("/v2/service_bindings/#{@binding_guid}/parameters",
               {}.to_json,
               headers_for(user, scopes: %w(cloud_controller.admin)))
 
@@ -146,6 +146,8 @@ RSpec.describe 'Service Broker API integration' do
       end
 
       context 'when the broker returns asynchronously' do
+        let(:url) { "http://#{stubbed_broker_host}/v2/service_instances/#{@service_instance_guid}/service_bindings/[[:alnum:]-]+/last_operation" }
+
         context 'when bindings_retrievable is true' do
           let(:catalog) do
             catalog = default_catalog
@@ -156,10 +158,10 @@ RSpec.describe 'Service Broker API integration' do
           it 'performs the flow asynchronously and fetches the last operation from the broker' do
             operation_data = 'some_operation_data'
 
-            stub_async_binding_last_operation(operation_data: operation_data)
+            stub_async_last_operation(operation_data: operation_data, url: url)
             async_bind_service(status: 202, response_body: { operation: operation_data })
 
-            service_binding = VCAP::CloudController::ServiceBinding.find(guid: @binding_id)
+            service_binding = VCAP::CloudController::ServiceBinding.find(guid: @binding_guid)
             expect(a_request(:put, service_binding_url(service_binding, 'accepts_incomplete=true'))).to have_been_made
 
             Delayed::Worker.new.work_off
@@ -171,15 +173,15 @@ RSpec.describe 'Service Broker API integration' do
 
           context 'when the last operation is successful' do
             it 'fetches the service binding details' do
-              stub_async_binding_last_operation
+              stub_async_last_operation
               async_bind_service(status: 202)
 
-              service_binding = VCAP::CloudController::ServiceBinding.find(guid: @binding_id)
+              service_binding = VCAP::CloudController::ServiceBinding.find(guid: @binding_guid)
               stub_request(:get, service_binding_url(service_binding)).to_return(status: 200, body: '{"credentials": {"foo": true}')
 
               Delayed::Worker.new.work_off
 
-              get("/v2/service_bindings/#{@binding_id}", '', admin_headers)
+              get("/v2/service_bindings/#{@binding_guid}", '', admin_headers)
               response = JSON.parse(last_response.body)
 
               expect(response['entity']['last_operation']['state']).to eql('succeeded')
@@ -187,10 +189,10 @@ RSpec.describe 'Service Broker API integration' do
             end
 
             context 'when the get binding response' do
-              let(:service_binding) { VCAP::CloudController::ServiceBinding.find(guid: @binding_id) }
+              let(:service_binding) { VCAP::CloudController::ServiceBinding.find(guid: @binding_guid) }
 
               before do
-                stub_async_binding_last_operation
+                stub_async_last_operation
                 async_bind_service(status: 202, response_body: { operation: 'some-operation' })
               end
 
@@ -239,7 +241,7 @@ RSpec.describe 'Service Broker API integration' do
             a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/[[:alnum:]-]+\?accepts_incomplete=true})
           ).to have_been_made
 
-          service_binding = VCAP::CloudController::ServiceBinding.find(guid: @binding_id)
+          service_binding = VCAP::CloudController::ServiceBinding.find(guid: @binding_guid)
           expect(service_binding).not_to be_nil
         end
       end
@@ -296,10 +298,10 @@ RSpec.describe 'Service Broker API integration' do
         it 'performs the flow asynchronously and fetches the last operation from the broker' do
           operation_data = 'some_operation_data'
 
-          stub_async_binding_last_operation(operation_data: operation_data)
+          stub_async_last_operation(operation_data: operation_data)
           async_unbind_service(status: 202, response_body: { operation: operation_data })
 
-          service_binding = VCAP::CloudController::ServiceBinding.find(guid: @binding_id)
+          service_binding = VCAP::CloudController::ServiceBinding.find(guid: @binding_guid)
           expect(a_request(:delete, unbind_url(service_binding, accepts_incomplete: true))).to have_been_made
 
           Delayed::Worker.new.work_off
@@ -313,12 +315,12 @@ RSpec.describe 'Service Broker API integration' do
           it 'deletes the binding' do
             operation_data = 'some_operation_data'
 
-            stub_async_binding_last_operation(operation_data: operation_data)
+            stub_async_last_operation(operation_data: operation_data)
             async_unbind_service(status: 202, response_body: { operation: operation_data })
 
             Delayed::Worker.new.work_off
 
-            get("/v2/service_bindings/#{@binding_id}", '', admin_headers)
+            get("/v2/service_bindings/#{@binding_guid}", '', admin_headers)
 
             expect(last_response.status).to eq(404)
           end
@@ -328,12 +330,12 @@ RSpec.describe 'Service Broker API integration' do
           it 'deletes the binding' do
             operation_data = 'some_operation_data'
 
-            stub_async_binding_last_operation(operation_data: operation_data, return_code: 410)
+            stub_async_last_operation(operation_data: operation_data, return_code: 410)
             async_unbind_service(status: 202, response_body: { operation: operation_data })
 
             Delayed::Worker.new.work_off
 
-            get("/v2/service_bindings/#{@binding_id}", '', admin_headers)
+            get("/v2/service_bindings/#{@binding_guid}", '', admin_headers)
 
             expect(last_response.status).to eq(404)
           end
@@ -348,7 +350,7 @@ RSpec.describe 'Service Broker API integration' do
             a_request(:delete, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/[[:alnum:]-]+})
           ).to have_been_made
 
-          service_binding = VCAP::CloudController::ServiceBinding.find(guid: @binding_id)
+          service_binding = VCAP::CloudController::ServiceBinding.find(guid: @binding_guid)
           expect(service_binding).to be_nil
         end
       end

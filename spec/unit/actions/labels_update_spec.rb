@@ -41,7 +41,7 @@ module VCAP::CloudController
             expect do
               expect do
                 subject
-              end.to raise_error(LabelsUpdate::TooManyLabels, 'Failed to add 4 labels because it would exceed maximum of 2')
+              end.to raise_error(CloudController::Errors::ApiError, /Failed to add 4 labels because it would exceed maximum of 2/)
             end.not_to change { AppLabelModel.count }
           end
         end
@@ -65,7 +65,7 @@ module VCAP::CloudController
               expect do
                 expect do
                   subject
-                end.to raise_error(LabelsUpdate::TooManyLabels, 'Failed to add 1 labels because it would exceed maximum of 2')
+                end.to raise_error(CloudController::Errors::ApiError, 'Failed to add 1 labels because it would exceed maximum of 2')
               end.not_to change { AppLabelModel.count }
             end
           end

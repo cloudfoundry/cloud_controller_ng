@@ -68,6 +68,7 @@ module VCAP::CloudController
 
         it 'fails even when recursive' do
           delete "/v2/stacks/#{stack.guid}?recursive=true"
+          expect(parsed_response['code']).to eq 10006
           expect(last_response.status).to eq(400)
         end
       end

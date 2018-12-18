@@ -1,0 +1,22 @@
+
+### The buildpack object
+
+```
+Example Buildpack object
+```
+```json
+<%= yield_content :single_buildpack %>
+```
+
+Name           | Type                     | Description
+-------------- | ------------------------ | ------------------------------------------------------
+**guid**       | _uuid_                   | Unique identifier for the app.
+**created_at** | _datetime_               | The time with zone when the object was created.
+**updated_at** | _datetime_               | The time with zone when the object was last updated.
+**name**       | _string_                 | The name of the buildpack. To be used by app buildpack field. (only alphanumeric characters)
+**state**      | _string_                 | The state of the buildpack. Valid value is: `AWAITING_UPLOAD`
+**stack**      | _string_                 | The name of the stack that the buildpack will use.
+**position**   | _integer_                | The order in which the buildpacks are checked during buildpack auto-detection.
+**enabled**    | _boolean_                | Whether or not the buildpack will be used for staging
+**locked**     | _boolean_                | Whether or not the buildpack is locked to prevent updates
+**links**      | [_links object_](#links) | Links to related resources.

@@ -32,6 +32,7 @@ task :rubocop_autocorrect do
   exit(exit_code) if exit_code != 0
 end
 
+desc 'Check docs for broken links'
 task :check_doc_links do
   require 'English'
   require 'rainbow'

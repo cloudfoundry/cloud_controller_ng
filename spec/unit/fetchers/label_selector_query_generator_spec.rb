@@ -29,7 +29,8 @@ module VCAP::CloudController
             dataset = subject.add_selector_queries(
               label_klass: AppLabelModel,
               resource_dataset: AppModel.dataset,
-              requirements: requirements
+              requirements: requirements,
+              resource_klass: AppModel,
             )
 
             expect(dataset.map(&:guid)).to contain_exactly(app2.guid)
@@ -43,7 +44,8 @@ module VCAP::CloudController
             dataset = subject.add_selector_queries(
               label_klass: AppLabelModel,
               resource_dataset: AppModel.dataset,
-              requirements: requirements
+              requirements: requirements,
+              resource_klass: AppModel,
             )
 
             expect(dataset.map(&:guid)).to contain_exactly(app2.guid, app3.guid)
@@ -61,7 +63,8 @@ module VCAP::CloudController
             dataset = subject.add_selector_queries(
               label_klass: AppLabelModel,
               resource_dataset: AppModel.dataset,
-              requirements: requirements
+              requirements: requirements,
+              resource_klass: AppModel,
             )
 
             expect(dataset.map(&:guid)).to contain_exactly(app1.guid, app3.guid)
@@ -75,7 +78,8 @@ module VCAP::CloudController
             dataset = subject.add_selector_queries(
               label_klass: AppLabelModel,
               resource_dataset: AppModel.dataset,
-              requirements: requirements
+              requirements: requirements,
+              resource_klass: AppModel,
             )
 
             expect(dataset.map(&:guid)).to contain_exactly(app1.guid)
@@ -91,7 +95,8 @@ module VCAP::CloudController
           dataset = subject.add_selector_queries(
             label_klass: AppLabelModel,
             resource_dataset: AppModel.dataset,
-            requirements: requirements
+            requirements: requirements,
+            resource_klass: AppModel,
           )
 
           expect(dataset.map(&:guid)).to contain_exactly(app2.guid)
@@ -103,7 +108,8 @@ module VCAP::CloudController
             dataset = subject.add_selector_queries(
               label_klass: AppLabelModel,
               resource_dataset: AppModel.dataset,
-              requirements: requirements
+              requirements: requirements,
+              resource_klass: AppModel,
             )
 
             expect(dataset.map(&:guid)).to contain_exactly(app1.guid, app3.guid)
@@ -116,7 +122,8 @@ module VCAP::CloudController
           dataset = subject.add_selector_queries(
             label_klass: AppLabelModel,
             resource_dataset: AppModel.dataset,
-            requirements: [VCAP::CloudController::LabelSelectorRequirement.new(key: 'easter', operator: :exists, values: '')]
+            requirements: [VCAP::CloudController::LabelSelectorRequirement.new(key: 'easter', operator: :exists, values: '')],
+            resource_klass: AppModel,
           )
 
           expect(dataset.map(&:guid)).to contain_exactly(app3.guid)
@@ -126,7 +133,8 @@ module VCAP::CloudController
           dataset = subject.add_selector_queries(
             label_klass: AppLabelModel,
             resource_dataset: AppModel.dataset,
-            requirements: [VCAP::CloudController::LabelSelectorRequirement.new(key: 'easter', operator: :not_exists, values: '')]
+            requirements: [VCAP::CloudController::LabelSelectorRequirement.new(key: 'easter', operator: :not_exists, values: '')],
+            resource_klass: AppModel,
           )
 
           expect(dataset.map(&:guid)).to contain_exactly(app1.guid, app2.guid)
@@ -141,7 +149,8 @@ module VCAP::CloudController
             requirements: [
               VCAP::CloudController::LabelSelectorRequirement.new(key: 'foo', operator: :in, values: 'funky,town'),
               VCAP::CloudController::LabelSelectorRequirement.new(key: 'foo', operator: :notin, values: 'bar')
-            ]
+            ],
+            resource_klass: AppModel,
           )
 
           expect(dataset.map(&:guid)).to contain_exactly(app2.guid, app3.guid)
@@ -154,7 +163,8 @@ module VCAP::CloudController
             requirements: [
               VCAP::CloudController::LabelSelectorRequirement.new(key: 'foo', operator: :not_equal, values: 'bar'),
               VCAP::CloudController::LabelSelectorRequirement.new(key: 'foo', operator: :not_equal, values: 'town')
-            ]
+            ],
+            resource_klass: AppModel,
           )
 
           expect(dataset.map(&:guid)).to contain_exactly(app2.guid)
@@ -167,7 +177,8 @@ module VCAP::CloudController
             requirements: [
               VCAP::CloudController::LabelSelectorRequirement.new(key: 'foo', operator: :equal, values: 'bar'),
               VCAP::CloudController::LabelSelectorRequirement.new(key: 'foo', operator: :equal, values: 'town')
-            ]
+            ],
+            resource_klass: AppModel,
           )
 
           expect(dataset.count).to eq(0)

@@ -33,7 +33,8 @@ module VCAP::CloudController
         dataset = LabelSelectorQueryGenerator.add_selector_queries(
           label_klass: AppLabelModel,
           resource_dataset: dataset,
-          requirements: message.requirements
+          requirements: message.requirements,
+          resource_klass: AppModel,
         )
       end
 

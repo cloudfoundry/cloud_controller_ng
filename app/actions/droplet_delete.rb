@@ -23,7 +23,10 @@ module VCAP::CloudController
           droplet.app.space.organization_guid
         )
 
-        droplet.destroy
+        DropletModel.db.transaction do
+          LabelDelete.delete(droplet.labels)
+          droplet.destroy
+        end
       end
 
       []

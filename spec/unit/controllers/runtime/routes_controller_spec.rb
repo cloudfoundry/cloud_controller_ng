@@ -58,6 +58,78 @@ module VCAP::CloudController
       end
     end
 
+    describe 'Permissions' do
+      context 'with a custom domain' do
+        include_context 'permissions'
+        before do
+          @domain_a = PrivateDomain.make(owning_organization: @org_a)
+          @obj_a    = Route.make(domain: @domain_a, space: @space_a)
+          @domain_b = PrivateDomain.make(owning_organization: @org_b)
+          @obj_b    = Route.make(domain: @domain_b, space: @space_b)
+        end
+        describe 'Org Level Permissions' do
+          describe 'OrgManager' do
+            let(:member_a) { @org_a_manager }
+            let(:member_b) { @org_b_manager }
+            include_examples 'permission enumeration', 'OrgManager',
+                             name:      'route',
+                             path:      '/v2/routes',
+                             enumerate: 1
+          end
+          describe 'OrgUser' do
+            let(:member_a) { @org_a_member }
+            let(:member_b) { @org_b_member }
+            include_examples 'permission enumeration', 'OrgUser',
+                             name:      'route',
+                             path:      '/v2/routes',
+                             enumerate: 0
+          end
+          describe 'BillingManager' do
+            let(:member_a) { @org_a_billing_manager }
+            let(:member_b) { @org_b_billing_manager }
+            include_examples 'permission enumeration', 'BillingManager',
+                             name:      'route',
+                             path:      '/v2/routes',
+                             enumerate: 0
+          end
+          describe 'Auditor' do
+            let(:member_a) { @org_a_auditor }
+            let(:member_b) { @org_b_auditor }
+            include_examples 'permission enumeration', 'Auditor',
+                             name:      'route',
+                             path:      '/v2/routes',
+                             enumerate: 1
+          end
+        end
+        describe 'App Space Level Permissions' do
+          describe 'SpaceManager' do
+            let(:member_a) { @space_a_manager }
+            let(:member_b) { @space_b_manager }
+            include_examples 'permission enumeration', 'SpaceManager',
+                             name:      'route',
+                             path:      '/v2/routes',
+                             enumerate: 1
+          end
+          describe 'Developer' do
+            let(:member_a) { @space_a_developer }
+            let(:member_b) { @space_b_developer }
+            include_examples 'permission enumeration', 'Developer',
+                             name:      'route',
+                             path:      '/v2/routes',
+                             enumerate: 1
+          end
+          describe 'SpaceAuditor' do
+            let(:member_a) { @space_a_auditor }
+            let(:member_b) { @space_b_auditor }
+            include_examples 'permission enumeration', 'SpaceAuditor',
+                             name:      'route',
+                             path:      '/v2/routes',
+                             enumerate: 1
+          end
+        end
+      end
+    end
+
     describe 'Associations' do
       it do
         expect(VCAP::CloudController::RoutesController).to have_nested_routes({ apps: [:get], route_mappings: [:get] })
@@ -77,9 +149,10 @@ module VCAP::CloudController
         end
 
         context 'and Docker disabled' do
+          let(:developer) { make_developer_for_space(space) }
+
           before do
-            FeatureFlag.find(name: 'diego_docker').update(enabled: false)
-            set_current_user_as_admin
+            set_current_user(developer)
           end
 
           it 'associates the route with the app' do
@@ -904,33 +977,42 @@ module VCAP::CloudController
       let(:space) { Space.make(organization: organization) }
       let!(:first_route) { Route.make(domain: domain, space: space) }
       let!(:second_route) { Route.make(domain: domain, space: space) }
-      let(:queryer) { instance_double(Permissions::Queryer) }
+
+      let(:other_org) { Organization.make }
+      let(:other_domain) { PrivateDomain.make(owning_organization: other_org) }
+      let(:other_space) { Space.make(organization: other_org) }
+      let!(:third_route_for_other_org) { Route.make(domain: other_domain, space: other_space) }
 
       before do
-        allow(VCAP::CloudController::Permissions::Queryer).to receive(:build).and_return(queryer)
-        allow(queryer).to receive(:can_read_globally?).and_return(false)
         set_current_user_as_admin
       end
 
       context 'related resources' do
         it 'should contain links to the apps and route_mappings resources' do
-          allow(queryer).to receive(:readable_route_guids).and_return([first_route.guid])
-
           get 'v2/routes'
           expect(last_response.status).to eq(200), last_response.body
 
-          expect(decoded_response['resources'].length).to eq(1)
+          expect(decoded_response['resources'].length).to eq(3)
           expect(decoded_response['resources'][0]['entity']['route_mappings_url']).
             to eq("/v2/routes/#{first_route.guid}/route_mappings")
           expect(decoded_response['resources'][0]['entity']['apps_url']).
             to eq("/v2/routes/#{first_route.guid}/apps")
+
+          expect(decoded_response['resources'][1]['entity']['route_mappings_url']).
+            to eq("/v2/routes/#{second_route.guid}/route_mappings")
+          expect(decoded_response['resources'][1]['entity']['apps_url']).
+            to eq("/v2/routes/#{second_route.guid}/apps")
+
+          expect(decoded_response['resources'][2]['entity']['route_mappings_url']).
+            to eq("/v2/routes/#{third_route_for_other_org.guid}/route_mappings")
+          expect(decoded_response['resources'][2]['entity']['apps_url']).
+            to eq("/v2/routes/#{third_route_for_other_org.guid}/apps")
         end
       end
 
       describe 'Filtering with Organization Guid' do
         context 'When Organization Guid Not Present' do
           it 'Return Resource length zero' do
-            allow(queryer).to receive(:readable_route_guids).and_return([first_route.guid])
             get 'v2/routes?q=organization_guid:notpresent'
             expect(last_response.status).to eq(200), last_response.body
             expect(decoded_response['resources'].length).to eq(0)
@@ -942,33 +1024,30 @@ module VCAP::CloudController
           let(:second_route_info) { decoded_response.fetch('resources')[1] }
           let(:third_route_info) { decoded_response.fetch('resources')[2] }
           let(:space1) { Space.make(organization: organization) }
-          let(:route1) { Route.make(domain: domain, space: space1) }
 
           let(:organization2) { Organization.make }
           let(:domain2) { PrivateDomain.make(owning_organization: organization2) }
           let(:space2) { Space.make(organization: organization2) }
-          let(:route2) { Route.make(domain: domain2, space: space2) }
+          let!(:route_for_organization2) { Route.make(domain: domain2, space: space2) }
 
           it 'Allows organization_guid query at any place in query with preceding domain query' do
             org_guid    = organization.guid
-            route_guid  = first_route.guid
             domain_guid = domain.guid
-            allow(queryer).to receive(:readable_route_guids).and_return([first_route.guid])
 
             get "v2/routes?q=domain_guid:#{domain_guid}&q=organization_guid:#{org_guid}"
 
             expect(last_response.status).to eq(200)
-            expect(decoded_response['resources'].length).to eq(1)
-            expect(first_route_info.fetch('metadata').fetch('guid')).to eq(route_guid)
+            expect(decoded_response['resources'].length).to eq(2)
+            expect(first_route_info.fetch('metadata').fetch('guid')).to eq(first_route.guid)
+            expect(second_route_info.fetch('metadata').fetch('guid')).to eq(second_route.guid)
           end
 
-          it 'Allows organization_guid query at any place in query with all querables' do
+          it 'Allows organization_guid query at any place in query with all queryable filters' do
             org_guid    = organization.guid
             taken_host  = 'someroute'
             route_temp  = Route.make(host: taken_host, domain: domain, space: space)
             route_guid  = route_temp.guid
             domain_guid = domain.guid
-            allow(queryer).to receive(:readable_route_guids).and_return([route_guid])
 
             get "v2/routes?q=host:#{taken_host}&q=organization_guid:#{org_guid}&q=domain_guid:#{domain_guid}"
 
@@ -978,69 +1057,45 @@ module VCAP::CloudController
           end
 
           it 'Allows filtering at organization level with a single guid' do
-            org_guid    = organization.guid
-            route_guid  = first_route.guid
-            route1_guid = route1.guid
-            allow(queryer).to receive(:readable_route_guids).and_return([first_route.guid, route1.guid])
-
-            get "v2/routes?q=organization_guid:#{org_guid}"
+            get "v2/routes?q=organization_guid:#{organization.guid}"
 
             expect(last_response.status).to eq(200)
             expect(decoded_response['resources'].length).to eq(2)
-            expect(first_route_info.fetch('metadata').fetch('guid')).to eq(route_guid)
-            expect(second_route_info.fetch('metadata').fetch('guid')).to eq(route1_guid)
+            expect(first_route_info.fetch('metadata').fetch('guid')).to eq(first_route.guid)
+            expect(second_route_info.fetch('metadata').fetch('guid')).to eq(second_route.guid)
           end
 
           it 'Allows filtering at organization level with multiple guids' do
             org_guid    = organization.guid
-            route_guid  = first_route.guid
-            route1_guid = route1.guid
-
             org2_guid   = organization2.guid
-            route2_guid = route2.guid
-
-            allow(queryer).to receive(:readable_route_guids).and_return([first_route.guid, route1.guid, route2.guid])
+            route_for_organization2_guid = route_for_organization2.guid
 
             get "v2/routes?q=organization_guid%20IN%20#{org_guid},#{org2_guid}"
 
             expect(last_response.status).to eq(200)
             expect(decoded_response['resources'].length).to eq(3)
-            expect(first_route_info.fetch('metadata').fetch('guid')).to eq(route_guid)
-            expect(second_route_info.fetch('metadata').fetch('guid')).to eq(route1_guid)
-            expect(third_route_info.fetch('metadata').fetch('guid')).to eq(route2_guid)
+            expect(first_route_info.fetch('metadata').fetch('guid')).to eq(first_route.guid)
+            expect(second_route_info.fetch('metadata').fetch('guid')).to eq(second_route.guid)
+            expect(third_route_info.fetch('metadata').fetch('guid')).to eq(route_for_organization2_guid)
           end
 
           context 'when the details fit on the first page' do
-            before do
-              allow(queryer).to receive(:readable_route_guids).and_return([first_route.guid])
-            end
-
             it 'Allows filtering by organization_guid' do
-              org_guid   = organization.guid
-              route_guid = first_route.guid
-
-              get "v2/routes?q=organization_guid:#{org_guid}"
+              get "v2/routes?q=organization_guid:#{organization.guid}"
 
               expect(last_response.status).to eq(200)
-              expect(decoded_response['resources'].length).to eq(1)
-              expect(first_route_info.fetch('metadata').fetch('guid')).to eq(route_guid)
+              expect(decoded_response['resources'].length).to eq(2)
+              expect(first_route_info.fetch('metadata').fetch('guid')).to eq(first_route.guid)
+              expect(second_route_info.fetch('metadata').fetch('guid')).to eq(second_route.guid)
             end
           end
 
           context 'with pagination' do
             let(:results_per_page) { 1 }
-            let(:route2) { Route.make(domain: domain1, space: space1) }
-            let(:route3) { Route.make(domain: domain2, space: space2) }
-            let!(:instances) do
-              [route1, route2, route3]
-            end
+            let(:route_for_organization2) { Route.make(domain: domain2, space: space2) }
             let(:domain1) { domain }
             let(:org1) { organization }
             let(:org2) { organization2 }
-
-            before do
-              allow(queryer).to receive(:readable_route_guids).and_return(instances.map(&:guid))
-            end
 
             context 'at page 1' do
               let(:page) { 1 }
@@ -1049,7 +1104,7 @@ module VCAP::CloudController
                 expect(last_response.status).to eq(200), last_response.body
                 routes = decoded_response['resources'].map { |resource| resource.fetch('metadata').fetch('guid') }
                 expect(routes.length).to eq(1)
-                expect(routes).to include(instances[0].guid)
+                expect(routes).to include(first_route.guid)
                 result = JSON.parse(last_response.body)
                 expect(result['next_url']).to include("q=organization_guid:#{org1.guid}"), result['next_url']
                 expect(result['prev_url']).to be_nil
@@ -1063,7 +1118,7 @@ module VCAP::CloudController
                 expect(last_response.status).to eq(200), last_response.body
                 routes = decoded_response['resources'].map { |resource| resource.fetch('metadata').fetch('guid') }
                 expect(routes.length).to eq(1)
-                expect(routes).to include(instances[1].guid)
+                expect(routes).to include(second_route.guid)
                 result = JSON.parse(last_response.body)
                 expect(result['next_url']).to be_nil
                 expect(result['prev_url']).to include("q=organization_guid:#{org1.guid}"), result['prev_url']
@@ -1087,30 +1142,32 @@ module VCAP::CloudController
       end
 
       context 'when user can read globally' do
-        before do
-          allow(queryer).to receive(:can_read_globally?).and_return(true)
-        end
-
         it 'should return all the routes' do
           get 'v2/routes'
+          expect(last_response.status).to eq(200), last_response.body
+
+          expect(decoded_response['resources'].length).to eq(3)
+          expect(decoded_response['resources'][0]['metadata']['guid']).to eq(first_route.guid)
+          expect(decoded_response['resources'][1]['metadata']['guid']).to eq(second_route.guid)
+          expect(decoded_response['resources'][2]['metadata']['guid']).to eq(third_route_for_other_org.guid)
+        end
+      end
+
+      context 'when user cannot read globally' do
+        let(:developer) { make_developer_for_space(space) }
+
+        before do
+          set_current_user(developer)
+        end
+
+        it 'should return just the routes the user can access' do
+          get 'v2/routes'
+
           expect(last_response.status).to eq(200), last_response.body
 
           expect(decoded_response['resources'].length).to eq(2)
           expect(decoded_response['resources'][0]['metadata']['guid']).to eq(first_route.guid)
           expect(decoded_response['resources'][1]['metadata']['guid']).to eq(second_route.guid)
-        end
-      end
-
-      context 'when user cannot read globally' do
-        it 'should return just the routes the user can access' do
-          allow(queryer).to receive(:readable_route_guids).and_return([second_route.guid])
-
-          get 'v2/routes'
-
-          expect(last_response.status).to eq(200), last_response.body
-
-          expect(decoded_response['resources'].length).to eq(1)
-          expect(decoded_response['resources'][0]['metadata']['guid']).to eq(second_route.guid)
         end
       end
     end
@@ -1299,26 +1356,33 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/routes/:guid/<related resource>' do
-      let(:route) { Route.make }
-      let(:process1) { ProcessModelFactory.make(space: route.space) }
-      let(:process2) { ProcessModelFactory.make(space: route.space) }
-      let(:developer) { make_developer_for_space(route.space) }
+      let(:route_space) { Space.make }
+      let!(:route) { Route.make(space: route_space) }
+
+      let(:other_route_space) { Space.make }
+      let!(:other_route) { Route.make(space: other_route_space) }
+
+      let(:no_route_space) { Space.make }
+
+      let(:process1) { ProcessModelFactory.make(space: route_space) }
+      let(:process2) { ProcessModelFactory.make(space: route_space) }
       let!(:route_mapping1) { RouteMappingModel.make(app: process1.app, route: route, process_type: process1.type) }
       let!(:route_mapping2) { RouteMappingModel.make(app: process2.app, route: route, process_type: process2.type) }
-      let(:queryer) { instance_double(Permissions::Queryer) }
+
+      let(:other_process) { ProcessModelFactory.make(space: other_route_space) }
+      let!(:other_route_mapping) { RouteMappingModel.make(app: other_process.app, route: other_route, process_type: other_process.type) }
+
+      let(:developer) { make_developer_for_space(no_route_space) }
 
       before do
         set_current_user(developer)
-        allow(VCAP::CloudController::Permissions::Queryer).to receive(:build).and_return(queryer)
-        allow(queryer).to receive(:can_read_globally?).and_return(false)
-        allow(queryer).to receive(:can_read_route?).and_return(true)
       end
 
       context 'apps' do
         context 'when user has no access to the route' do
-          it 'returns forbidden error' do
-            allow(queryer).to receive(:can_read_route?).and_return(false)
+          let(:developer) { make_developer_for_space(no_route_space) }
 
+          it 'returns a forbidden error' do
             get "v2/routes/#{route.guid}/apps"
             expect(last_response).to have_status_code(403)
           end
@@ -1331,34 +1395,52 @@ module VCAP::CloudController
           end
         end
 
-        it 'returns all apps mapped to the route if the user can read globally' do
-          allow(queryer).to receive(:can_read_globally?).and_return(true)
+        context 'when the user can read globally' do
+          before do
+            set_current_user_as_admin
+          end
 
-          get "/v2/routes/#{route.guid}/apps"
+          it 'returns all apps mapped to the route' do
+            get "/v2/routes/#{route.guid}/apps"
 
-          expect(queryer).to have_received(:can_read_globally?)
-          expect(last_response.status).to eq(200)
-          expect(decoded_response['resources'].length).to eq(2)
-          expect(decoded_response['resources'][0]['metadata']['guid']).to eq process1.app.guid
-          expect(decoded_response['resources'][1]['metadata']['guid']).to eq process2.app.guid
+            expect(last_response.status).to eq(200)
+            expect(decoded_response['resources'].length).to eq(2)
+            expect(decoded_response['resources'][0]['metadata']['guid']).to eq process1.app.guid
+            expect(decoded_response['resources'][1]['metadata']['guid']).to eq process2.app.guid
+          end
         end
 
-        it 'returns the apps mapped to the route that the user has access to' do
-          allow(queryer).to receive(:readable_app_guids).and_return([process2.app.guid])
+        context 'when the user has access to the space that the route is in' do
+          let(:developer) { make_developer_for_space(route_space) }
 
-          get "/v2/routes/#{route.guid}/apps"
+          it 'returns the apps mapped to the route that the user has access to' do
+            get "/v2/routes/#{route.guid}/apps"
 
-          expect(last_response.status).to eq(200)
-          expect(decoded_response['resources'].length).to eq(1)
-          expect(decoded_response['resources'][0]['metadata']['guid']).to eq process2.app.guid
+            expect(last_response.status).to eq(200)
+            expect(decoded_response['resources'].length).to eq(2)
+            expect(decoded_response['resources'].map { |r| r['metadata']['guid'] }).to contain_exactly(process1.app_guid, process2.app_guid)
+          end
+        end
+
+        context 'when the app has more than one web process on it' do
+          let(:developer) { make_developer_for_space(route_space) }
+          let!(:app_model) { process1.app }
+          let!(:process3) { ProcessModel.make(app: app_model, type: process1.type) }
+
+          it 'returns only one app guid' do
+            get "v2/routes/#{route.guid}/apps"
+
+            expect(last_response.status).to eq(200), last_response.body
+            expect(parsed_response['resources'].map { |r| r['metadata']['guid'] }).to match_array([app_model.guid, process2.app.guid])
+          end
         end
       end
 
       context 'route mappings' do
         context 'when user has no access to the route' do
-          it 'returns forbidden error' do
-            allow(queryer).to receive(:can_read_route?).and_return(false)
+          let(:developer) { make_developer_for_space(no_route_space) }
 
+          it 'returns forbidden error' do
             get "v2/routes/#{route.guid}/route_mappings"
             expect(last_response).to have_status_code(403)
           end
@@ -1371,26 +1453,31 @@ module VCAP::CloudController
           end
         end
 
-        it 'returns all route_mappings of the route if the user can read globally' do
-          allow(queryer).to receive(:can_read_globally?).and_return(true)
+        context 'when the user can read globally' do
+          before do
+            set_current_user_as_admin
+          end
+          it 'returns all route_mappings of the route' do
+            get "/v2/routes/#{route.guid}/route_mappings"
 
-          get "/v2/routes/#{route.guid}/route_mappings"
-
-          expect(queryer).to have_received(:can_read_globally?)
-          expect(last_response.status).to eq(200)
-          expect(decoded_response['resources'].length).to eq(2)
-          expect(decoded_response['resources'][0]['metadata']['guid']).to eq route_mapping1.guid
-          expect(decoded_response['resources'][1]['metadata']['guid']).to eq route_mapping2.guid
+            expect(last_response.status).to eq(200)
+            expect(decoded_response['resources'].length).to eq(2)
+            expect(decoded_response['resources'][0]['metadata']['guid']).to eq route_mapping1.guid
+            expect(decoded_response['resources'][1]['metadata']['guid']).to eq route_mapping2.guid
+          end
         end
 
-        it 'returns the route_mappings of the route that the user has access to' do
-          allow(queryer).to receive(:readable_route_mapping_guids).and_return([route_mapping2.guid])
+        context 'when the user has access to the space that the route is in' do
+          let(:developer) { make_developer_for_space(route_space) }
 
-          get "/v2/routes/#{route.guid}/route_mappings"
+          it 'returns the route_mappings of the route that the user has access to' do
+            get "/v2/routes/#{route.guid}/route_mappings"
 
-          expect(last_response.status).to eq(200)
-          expect(decoded_response['resources'].length).to eq(1)
-          expect(decoded_response['resources'][0]['metadata']['guid']).to eq route_mapping2.guid
+            expect(last_response.status).to eq(200)
+            expect(decoded_response['resources'].length).to eq(2)
+            expect(decoded_response['resources'][0]['metadata']['guid']).to eq route_mapping1.guid
+            expect(decoded_response['resources'][1]['metadata']['guid']).to eq route_mapping2.guid
+          end
         end
       end
     end

@@ -26,19 +26,21 @@ module VCAP::CloudController
       domain = nil
 
       Domain.db.transaction do
-        domain = SharedDomain[name: name]
+        domain = SharedDomain.find(name: name)
 
         if domain
           logger.info "reusing default serving domain: #{name}"
-          if !domain.internal? && internal
-            logger.warn("Domain '#{name}' was marked internal, but a non-internal domain of that name already exists. Skipping.")
+          if domain.internal? != !!internal
+            logger.warn("Domain '#{name}' already exists. Skipping updates of internal status")
+          end
+
+          if domain.router_group_guid != router_group_guid
+            logger.warn("Domain '#{name}' already exists. Skipping updates of router_group_guid")
           end
         else
-          domain = SharedDomain.new(name: name, router_group_guid: router_group_guid, internal: internal)
+          logger.info "creating shared serving domain: #{name}"
+          domain = SharedDomain.create(name: name, router_group_guid: router_group_guid, internal: internal)
         end
-
-        logger.info "creating shared serving domain: #{name}"
-        domain.save
       end
 
       domain

@@ -18,6 +18,8 @@ Name | Type | Description
 **links** | [_links object_](#links) | Links to related resources.
 **execution_metadata** | _string_ | Serialized JSON data resulting from staging for use when executing a droplet.
 **process_types** | _object_ | The process types (keys) and associated start commands (values) that will be created when the droplet is executed.
+**metadata.labels**_(experimental)_| [_labels object_](#labels) | Labels on the droplet
+**metadata.annotations**_(experimental)_| [_annotations object_](#annotations) | Annotations on the droplet
 
 In addition to these fields, a droplet object will contain the following fields from both lifecycles.
 Their values will be `null` by default and will contain values when the droplet is of a specific **lifecycle.type**.

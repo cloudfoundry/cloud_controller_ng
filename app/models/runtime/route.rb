@@ -5,6 +5,8 @@ module VCAP::CloudController
   class Route < Sequel::Model
     class InvalidOrganizationRelation < CloudController::Errors::InvalidRelation; end
 
+    class OutOfVIPException < CloudController::Errors::InvalidRelation; end
+
     many_to_one :domain
     many_to_one :space, after_set: :validate_changed_space
 
@@ -85,7 +87,7 @@ module VCAP::CloudController
       validate_total_routes
       validate_ports
       validate_total_reserved_route_ports if port && port > 0
-      errors.add(:host, :domain_conflict) if domains_match?
+      errors.add(:name, :vip_offset) if vip_offset_exceeds_range?
 
       RouteValidator.new(self).validate
     rescue RoutingApi::UaaUnavailable
@@ -103,6 +105,7 @@ module VCAP::CloudController
       host_is_system_hostname = Config.config.get(:system_hostnames).include? host
 
       errors.add(:host, :system_hostname_conflict) if domain_is_system_domain && host_is_system_hostname
+      errors.add(:host, :domain_conflict) if domains_match?
     end
 
     def validate_ports
@@ -172,15 +175,57 @@ module VCAP::CloudController
       domain.internal
     end
 
+    def vip
+      vip_offset && internal_route_vip_range.nth(vip_offset).to_s
+    end
+
     def wildcard_host?
       host == '*'
     end
 
     private
 
+    def vip_offset_exceeds_range?
+      return false if vip_offset.nil?
+      return true if vip_offset <= 0
+
+      vip_offset > internal_route_vip_range_len
+    end
+
     def before_destroy
       destroy_route_bindings
       super
+    end
+
+    def find_next_vip_offset
+      # This code courtesy of Jeremy Evans as part of discussion on
+      # https://groups.google.com/d/msg/sequel-talk/3GJ8_mOgJ9U/roWJ2sWHAwAJ
+      # See SQL self-joins for the reasoning behind this
+
+      n = Route.exclude(vip_offset: 1).
+          exclude { vip_offset - 1 =~ Route.select(:vip_offset) }.order(:vip_offset).get { vip_offset - 1 } ||
+              (return (Route.max(:vip_offset) || 0) + 1)
+      Route.where { vip_offset < n }.reverse(:vip_offset).get { vip_offset + 1 } || 1
+    end
+
+    def before_save
+      if internal? && vip_offset.nil?
+        len = internal_route_vip_range_len
+        raise OutOfVIPException.new('out of vip_offset slots') if self.class.exclude(vip_offset: nil).count >= len
+
+        self.vip_offset = find_next_vip_offset
+      end
+    end
+
+    def internal_route_vip_range_len
+      internal_route_vip_range.len - 2
+    end
+
+    def internal_route_vip_range
+      @internal_route_vip_range ||= begin
+        internal_route_vip_range = Config.config.get(:internal_route_vip_range)
+        NetAddr::IPv4Net.parse(internal_route_vip_range)
+      end
     end
 
     def destroy_route_bindings

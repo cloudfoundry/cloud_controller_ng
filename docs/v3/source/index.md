@@ -12,6 +12,7 @@ includes:
   - api_resources/app_ssh_enabled
   - api_resources/apps
   - api_resources/builds
+  - api_resources/buildpacks
   - api_resources/deployments
   - api_resources/droplets
   - api_resources/isolation_segments
@@ -55,6 +56,7 @@ includes:
   - resources/droplets/object
   - resources/droplets/copy
   - resources/droplets/get
+  - resources/droplets/update
   - resources/droplets/delete
   - resources/droplets/list
   - resources/droplets/app/list
@@ -118,6 +120,12 @@ includes:
   - resources/spaces/update
   - resources/spaces/manage_isolation_segment
   - resources/spaces/get_assigned_isolation_segment
+  - resources/stacks/header
+  - resources/stacks/object
+  - resources/stacks/create
+  - resources/stacks/list
+  - resources/stacks/get
+  - resources/stacks/delete
   - resources/tasks/header
   - resources/tasks/object
   - resources/tasks/create
@@ -140,6 +148,10 @@ includes:
   - experimental_resources/app_restart/create
   - experimental_resources/app_ssh_enabled/header
   - experimental_resources/app_ssh_enabled/get
+  - experimental_resources/buildpacks/header
+  - experimental_resources/buildpacks/object
+  - experimental_resources/buildpacks/create  
+  - experimental_resources/buildpacks/get
   - experimental_resources/deployments/header
   - experimental_resources/deployments/object
   - experimental_resources/deployments/create
@@ -164,10 +176,6 @@ includes:
   - experimental_resources/service_bindings/get
   - experimental_resources/service_bindings/delete
   - experimental_resources/service_bindings/list
-  - experimental_resources/stacks/header
-  - experimental_resources/stacks/object
-  - experimental_resources/stacks/create
-  - experimental_resources/stacks/list
 
 search: true
 ---

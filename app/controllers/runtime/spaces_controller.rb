@@ -302,6 +302,15 @@ module VCAP::CloudController
       super(space)
     end
 
+    def visible_relationship_dataset(name, obj)
+      if name != :apps
+        return super
+      end
+
+      dataset = obj.user_visible_relationship_dataset(name, @access_context.user, @access_context.admin_override)
+      AppsController.filter_dataset(dataset)
+    end
+
     private
 
     def add_role(guid, role, user_id, username)

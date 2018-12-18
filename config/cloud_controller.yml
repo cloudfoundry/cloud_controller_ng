@@ -50,6 +50,7 @@ default_app_memory: 1024 #mb
 default_app_disk_in_mb: 1024
 maximum_app_disk_in_mb: 2048
 max_retained_deployments_per_app: 100
+max_retained_builds_per_app: 100
 
 broker_client_default_async_poll_interval_seconds: 60
 broker_client_max_async_poll_duration_minutes: 10080
@@ -383,6 +384,8 @@ copilot:
   client_key_file: 'spec/fixtures/certs/copilot.key'
   client_chain_file: 'spec/fixtures/certs/copilot.crt'
   sync_frequency_in_seconds: 30
+
+internal_route_vip_range: '127.128.0.0/9'
 
 locket:
   host: 'locket.service.cf.internal'

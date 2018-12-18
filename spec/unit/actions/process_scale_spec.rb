@@ -103,7 +103,7 @@ module VCAP::CloudController
           VCAP::CloudController::DeploymentModel.make(app: app, state: 'DEPLOYING')
         end
 
-        it 'succeeds if the process is not webish' do
+        it 'succeeds if the process is not web' do
           process.type = 'not-webish'
 
           expect(process.instances).to eq(1)
@@ -117,7 +117,7 @@ module VCAP::CloudController
           expect(process.reload.disk_quota).to eq(200)
         end
 
-        it 'fails if the process is webish' do
+        it 'fails if the process is web' do
           process.type = 'web'
 
           expect(process.instances).to eq(1)

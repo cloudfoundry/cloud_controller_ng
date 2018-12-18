@@ -16,6 +16,14 @@ RSpec.describe RootController, type: :controller do
       expect(hash['links']['apps']['href']).to eq(expected_uri)
     end
 
+    it 'returns a link to buildpacks' do
+      get :v3_root
+      hash = MultiJson.load(response.body)
+      expected_uri = "#{TestConfig.config[:external_protocol]}://#{TestConfig.config[:external_domain]}/v3/buildpacks"
+      expect(hash['links']['buildpacks']['href']).to eq(expected_uri)
+      expect(hash['links']['buildpacks']['experimental']).to eq(true)
+    end
+
     it 'returns a link to builds' do
       get :v3_root
       hash = MultiJson.load(response.body)
@@ -85,7 +93,6 @@ RSpec.describe RootController, type: :controller do
       hash = MultiJson.load(response.body)
       expected_uri = "#{TestConfig.config[:external_protocol]}://#{TestConfig.config[:external_domain]}/v3/stacks"
       expect(hash['links']['stacks']['href']).to eq(expected_uri)
-      expect(hash['links']['stacks']['experimental']).to eq(true)
     end
 
     it 'returns a link to tasks' do

@@ -8,7 +8,7 @@ module VCAP::CloudController
 
       class << self
         def create_route(route)
-          with_guardrails do
+          with_guardrails(route: route) do
             copilot_client.upsert_route(
               guid: route.guid,
               host: route.fqdn,
@@ -19,7 +19,7 @@ module VCAP::CloudController
         end
 
         def map_route(route_mapping)
-          with_guardrails do
+          with_guardrails(route: route_mapping.route) do
             route_mapping.processes.each do |process|
               copilot_client.map_route(
                 capi_process_guid: process.guid,
@@ -31,7 +31,7 @@ module VCAP::CloudController
         end
 
         def unmap_route(route_mapping)
-          with_guardrails do
+          with_guardrails(route: route_mapping.route) do
             route_mapping.processes.each do |process|
               copilot_client.unmap_route(
                 capi_process_guid: process.guid,
@@ -73,8 +73,12 @@ module VCAP::CloudController
           CloudController::DependencyLocator.instance.copilot_client
         end
 
-        def with_guardrails
+        def with_guardrails(route: nil)
           return unless Config.config.get(:copilot, :enabled)
+
+          if route
+            return unless Config.config.get(:copilot, :temporary_istio_domains).include?(route.domain.name)
+          end
 
           yield
         rescue StandardError => e

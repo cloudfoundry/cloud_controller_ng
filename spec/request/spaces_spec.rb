@@ -29,6 +29,9 @@ RSpec.describe 'Spaces' do
         metadata: {
             labels: {
                 hocus: 'pocus'
+            },
+            annotations: {
+                boo: 'urns'
             }
         }
       }.to_json
@@ -59,7 +62,8 @@ RSpec.describe 'Spaces' do
             'organization' => { 'href' => "#{link_prefix}/v3/organizations/#{created_space.organization_guid}" },
           },
           'metadata' => {
-              'labels' => { 'hocus' => 'pocus' }
+              'labels' => { 'hocus' => 'pocus' },
+              'annotations' => { 'boo' => 'urns' },
           }
         }
       )
@@ -84,7 +88,8 @@ RSpec.describe 'Spaces' do
               }
             },
             'metadata' => {
-                'labels' => {}
+                'labels' => {},
+                'annotations' => {},
             },
             'links' => {
               'self' => {
@@ -134,7 +139,8 @@ RSpec.describe 'Spaces' do
                 }
               },
               'metadata' => {
-                  'labels' => {}
+                  'labels' => {},
+                  'annotations' => {},
               },
               'links' => {
                 'self' => {
@@ -156,7 +162,8 @@ RSpec.describe 'Spaces' do
                 }
               },
               'metadata' => {
-                  'labels' => {}
+                  'labels' => {},
+                  'annotations' => {},
               },
               'links' => {
                 'self' => {
@@ -205,7 +212,18 @@ RSpec.describe 'Spaces' do
 
   describe 'PATCH /v3/spaces/:guid' do
     it 'updates the requested space' do
-      patch "/v3/spaces/#{space1.guid}", { name: 'codenames', metadata: { labels: { label: 'value' } } }.to_json, admin_header
+      request_body = {
+        name: 'codenames',
+        metadata: {
+          labels: {
+            label: 'value'
+          },
+          annotations: {
+            potato: 'yellow'
+          }
+        }
+      }.to_json
+      patch "/v3/spaces/#{space1.guid}", request_body, admin_header
       expect(last_response.status).to eq(200)
 
       parsed_response = MultiJson.load(last_response.body)
@@ -223,6 +241,9 @@ RSpec.describe 'Spaces' do
             'metadata' => {
                 'labels' => {
                   'label' => 'value'
+                },
+                'annotations' => {
+                  'potato' => 'yellow'
                 }
             },
             'links' => {
@@ -260,7 +281,8 @@ RSpec.describe 'Spaces' do
             'metadata' => {
               'labels' => {
                 'animal' => 'monkey'
-              }
+              },
+              'annotations' => {},
             },
             'links' => {
               'self' => {
@@ -297,7 +319,8 @@ RSpec.describe 'Spaces' do
             'metadata' => {
               'labels' => {
                 'fruit' => 'strawberry'
-              }
+              },
+              'annotations' => {},
             },
             'links' => {
               'self' => {

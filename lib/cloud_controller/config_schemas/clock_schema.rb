@@ -173,6 +173,7 @@ module VCAP::CloudController
           instance_file_descriptor_limit: Integer,
           maximum_app_disk_in_mb: Integer,
           max_retained_deployments_per_app: Integer,
+          max_retained_builds_per_app: Integer,
 
           diego_sync: { frequency_in_seconds: Integer },
 

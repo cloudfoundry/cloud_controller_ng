@@ -340,7 +340,7 @@ module VCAP::CloudController
           }.to_json
         end
 
-        it 'updates the name for the organization' do
+        it 'updates the label metadata' do
           patch "/v3/organizations/#{organization1.guid}", update_request, admin_headers_for(user).merge('CONTENT_TYPE' => 'application/json')
 
           expected_response = {

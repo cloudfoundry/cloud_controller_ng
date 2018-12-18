@@ -23,25 +23,24 @@ module VCAP::CloudController::Validators
       annotations = record.annotations
 
       if labels
-        unless labels.is_a? Hash
+        if labels.is_a? Hash
+          labels.each do |label_key, label_value|
+            validate_label_key(label_key, record)
+            validate_label_value(label_value, record)
+          end
+        else
           record.errors.add(:metadata, "'labels' is not a hash")
-          return
-        end
-
-        labels.each do |label_key, label_value|
-          validate_label_key(label_key, record)
-          validate_label_value(label_value, record)
         end
       end
 
       if annotations
-        unless annotations.is_a? Hash
+        if annotations.is_a? Hash
+          annotations.each do |annotation_key, annotation_value|
+            validate_annotation_key(annotation_key, record)
+            validate_annotation_value(annotation_value, record)
+          end
+        else
           record.errors.add(:metadata, "'annotations' is not a hash")
-          return
-        end
-        annotations.each do |annotation_key, annotation_value|
-          validate_annotation_key(annotation_key, record)
-          validate_annotation_value(annotation_value, record)
         end
       end
     end

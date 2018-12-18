@@ -9,6 +9,10 @@ class RootController < ActionController::Base
           apps: {
             href: build_api_uri(path: '/apps')
           },
+          buildpacks: {
+            href: build_api_uri(path: '/buildpacks'),
+            experimental: true,
+          },
           builds: {
             href: build_api_uri(path: '/builds')
           },
@@ -38,8 +42,7 @@ class RootController < ActionController::Base
             href: build_api_uri(path: '/spaces')
           },
           stacks: {
-            href: build_api_uri(path: '/stacks'),
-            experimental: true,
+            href: build_api_uri(path: '/stacks')
           },
           tasks: {
             href: build_api_uri(path: '/tasks')

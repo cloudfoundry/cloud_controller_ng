@@ -176,26 +176,7 @@ module VCAP::CloudController::BrokerApiHelper
     @service_instance_guid = response['metadata']['guid']
   end
 
-  def stub_async_last_operation(state: 'succeeded', operation_data: nil)
-    fetch_body = {
-      state: state
-    }
-
-    url = "http://#{stubbed_broker_host}/v2/service_instances/#{@service_instance_guid}/last_operation"
-    if !operation_data.nil?
-      url += "\\?operation=#{operation_data}"
-    end
-
-    stub_request(:get,
-      Regexp.new(url)).
-      with(basic_auth: [stubbed_broker_username, stubbed_broker_password]).
-      to_return(
-        status: 200,
-        body: fetch_body.to_json)
-  end
-
-  def stub_async_binding_last_operation(body: { state: 'succeeded' }, operation_data: nil, return_code: 200)
-    url = "http://#{stubbed_broker_host}/v2/service_instances/#{@service_instance_guid}/service_bindings/[[:alnum:]-]+/last_operation"
+  def stub_async_last_operation(body: { state: 'succeeded' }, operation_data: nil, return_code: 200, url: '')
     if !operation_data.nil?
       url += "\\?operation=#{operation_data}"
     end
@@ -304,7 +285,7 @@ module VCAP::CloudController::BrokerApiHelper
     )
 
     metadata = JSON.parse(last_response.body).fetch('metadata', {})
-    @binding_id = metadata.fetch('guid', nil)
+    @binding_guid = metadata.fetch('guid', nil)
   end
 
   def async_bind_service(opts={})
@@ -326,7 +307,7 @@ module VCAP::CloudController::BrokerApiHelper
     headers = opts[:user] ? admin_headers_for(opts[:user]) : admin_headers
     params = opts[:async] ? { async: true } : '{}'
     params = opts[:accepts_incomplete] ? { accepts_incomplete: true } : params
-    delete("/v2/service_bindings/#{@binding_id}", params, headers)
+    delete("/v2/service_bindings/#{@binding_guid}", params, headers)
   end
 
   def create_service_key(opts={})

@@ -12,11 +12,27 @@ module VCAP::CloudController
     describe '#delete' do
       let!(:droplet) { DropletModel.make }
 
+      let!(:label) do
+        VCAP::CloudController::DropletLabelModel.make(
+          key_prefix: 'indiana.edu',
+          key_name: 'state',
+          value: 'Indiana',
+          resource_guid: droplet.guid
+        )
+      end
+
       it 'deletes the droplet record' do
         expect {
           droplet_delete.delete([droplet])
         }.to change { DropletModel.count }.by(-1)
         expect { droplet.refresh }.to raise_error Sequel::Error, 'Record not found'
+      end
+
+      it 'deletes associated metadata' do
+        expect {
+          droplet_delete.delete([droplet])
+        }.to change { DropletLabelModel.count }.by(-1)
+        expect { label.refresh }.to raise_error Sequel::Error, 'Record not found'
       end
 
       it 'creates an audit event' do

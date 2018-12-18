@@ -2,8 +2,7 @@ require 'spec_helper'
 
 RSpec.describe 'Stacks Request' do
   describe 'GET /v3/stacks' do
-    before { VCAP::CloudController::Stack.dataset.destroy
-    }
+    before { VCAP::CloudController::Stack.dataset.destroy }
     let(:user) { make_user }
     let(:headers) { headers_for(user) }
 
@@ -115,6 +114,32 @@ RSpec.describe 'Stacks Request' do
     end
   end
 
+  describe 'GET /v3/stacks/:guid' do
+    let(:user) { make_user }
+    let(:headers) { headers_for(user) }
+
+    let!(:stack) { VCAP::CloudController::Stack.make }
+
+    it 'returns details of the requested stack' do
+      get "/v3/stacks/#{stack.guid}", nil, headers
+      expect(last_response.status).to eq 200
+      expect(parsed_response).to be_a_response_like(
+        {
+          'name' => stack.name,
+          'description' => stack.description,
+          'guid' => stack.guid,
+          'created_at' => iso8601,
+          'updated_at' => iso8601,
+          'links' => {
+            'self' => {
+              'href' => "#{link_prefix}/v3/stacks/#{stack.guid}"
+            }
+          }
+        }
+      )
+    end
+  end
+
   describe 'POST /v3/stacks' do
     let(:user) { make_user(admin: true) }
     let(:request_body) do
@@ -164,6 +189,19 @@ RSpec.describe 'Stacks Request' do
         expect(last_response.status).to eq(422)
         expect(last_response).to have_error_message('Name must be unique')
       end
+    end
+  end
+
+  describe 'DELETE /v3/stacks/:guid' do
+    let(:user) { make_user(admin: true) }
+    let(:headers) { admin_headers_for(user) }
+    let(:stack) { VCAP::CloudController::Stack.make }
+
+    it 'destroys the stack' do
+      delete "/v3/stacks/#{stack.guid}", {}, headers
+
+      expect(last_response.status).to eq(204)
+      expect(stack).to_not exist
     end
   end
 end

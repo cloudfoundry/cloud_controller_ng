@@ -95,6 +95,7 @@ module VCAP::CloudController
             optional(:client_ca_file) => String,
             optional(:client_key_file) => String,
             optional(:client_chain_file) => String,
+            optional(:temporary_istio_domains) => Array,
           },
 
           staging: {

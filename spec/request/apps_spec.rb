@@ -316,7 +316,8 @@ RSpec.describe 'Apps' do
                                      }
                                  },
                                  'metadata' => {
-                                     'labels' => {}
+                                     'labels' => {},
+                                     'annotations' => {},
                                  },
                                  'links' => {
                                      'self' => {
@@ -743,7 +744,8 @@ RSpec.describe 'Apps' do
                                      }
                                  },
                                  'metadata' => {
-                                     'labels' => {}
+                                     'labels' => {},
+                                     'annotations' => {},
                                  },
                                  'links' => {
                                      'self' => {
@@ -1433,30 +1435,34 @@ RSpec.describe 'Apps' do
 
       expect(last_response.status).to eq(200)
       expect(parsed_response).to be_a_response_like({
-                                                        'guid' => droplet_model.guid,
-                                                        'state' => VCAP::CloudController::DropletModel::STAGED_STATE,
-                                                        'error' => 'example error',
-                                                        'lifecycle' => {
-                                                            'type' => 'buildpack',
-                                                            'data' => {}
-                                                        },
-                                                        'checksum' => { 'type' => 'sha256', 'value' => 'droplet-sha256-checksum' },
-                                                        'buildpacks' => [{ 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil, 'buildpack_name' => nil,
-                                                                           'version' => nil }],
-                                                        'stack' => 'stack-name',
-                                                        'execution_metadata' => 'some-data',
-                                                        'process_types' => { 'web' => 'start-command' },
-                                                        'image' => nil,
-                                                        'created_at' => iso8601,
-                                                        'updated_at' => iso8601,
-                                                        'links' => {
-                                                            'self' => { 'href' => "#{link_prefix}/v3/droplets/#{guid}" },
-                                                            'package' => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
-                                                            'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}" },
-                                                            'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/relationships/current_droplet",
-                                                                                          'method' => 'PATCH' },
-                                                        }
-                                                    })
+        'guid' => droplet_model.guid,
+        'state' => VCAP::CloudController::DropletModel::STAGED_STATE,
+        'error' => 'example error',
+        'lifecycle' => {
+            'type' => 'buildpack',
+            'data' => {}
+        },
+        'checksum' => { 'type' => 'sha256', 'value' => 'droplet-sha256-checksum' },
+        'buildpacks' => [{ 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil, 'buildpack_name' => nil,
+                           'version' => nil }],
+        'stack' => 'stack-name',
+        'execution_metadata' => 'some-data',
+        'process_types' => { 'web' => 'start-command' },
+        'image' => nil,
+        'created_at' => iso8601,
+        'updated_at' => iso8601,
+        'links' => {
+            'self' => { 'href' => "#{link_prefix}/v3/droplets/#{guid}" },
+            'package' => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
+            'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}" },
+            'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/relationships/current_droplet",
+                                          'method' => 'PATCH' },
+        },
+        'metadata' => {
+          'labels' => {},
+          'annotations' => {}
+        },
+      })
     end
   end
 

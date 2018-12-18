@@ -48,7 +48,7 @@ module VCAP::CloudController
     private
 
     def find_process(app, process_type)
-      ProcessModel.find(app: app, type: process_type)
+      ProcessModel.where(app: app, type: process_type).order(Sequel.asc(:created_at), Sequel.asc(:id)).last
     end
 
     def create_process(app, manifest_process_update_msg, process_type)

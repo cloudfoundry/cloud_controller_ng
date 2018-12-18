@@ -48,7 +48,7 @@ class OrganizationsV3Controller < ApplicationController
     org = OrganizationCreate.new(perm_client: perm_client).create(message)
 
     render json: Presenters::V3::OrganizationPresenter.new(org), status: :created
-  rescue OrganizationCreate::Error => e
+  rescue OrganizationCreate::Error, AnnotationsUpdate::TooManyAnnotations => e
     unprocessable!(e.message)
   end
 
@@ -61,6 +61,8 @@ class OrganizationsV3Controller < ApplicationController
     org = OrganizationUpdate.new.update(org, message)
 
     render json: Presenters::V3::OrganizationPresenter.new(org), status: :ok
+  rescue AnnotationsUpdate::TooManyAnnotations => e
+    unprocessable!(e.message)
   end
 
   def show_default_isolation_segment

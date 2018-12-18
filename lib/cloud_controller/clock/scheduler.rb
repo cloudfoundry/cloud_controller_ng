@@ -17,6 +17,7 @@ module VCAP::CloudController
       { name: 'pollable_job_cleanup', class: Jobs::Runtime::PollableJobCleanup, time: '02:00' },
       { name: 'request_counts_cleanup', class: Jobs::Runtime::RequestCountsCleanup, time: '02:30' },
       { name: 'prune_completed_deployments', class: Jobs::Runtime::PruneCompletedDeployments, time: '03:00', arg_from_config: [:max_retained_deployments_per_app] },
+      { name: 'prune_completed_builds', class: Jobs::Runtime::PruneCompletedBuilds, time: '03:30', arg_from_config: [:max_retained_builds_per_app] },
     ].freeze
 
     FREQUENTS = [

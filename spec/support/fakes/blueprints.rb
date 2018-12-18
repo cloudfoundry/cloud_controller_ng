@@ -60,10 +60,19 @@ module VCAP::CloudController
   SpaceLabelModel.blueprint do
   end
 
+  DropletLabelModel.blueprint do
+  end
+
   AppAnnotationModel.blueprint do
   end
 
   OrganizationAnnotationModel.blueprint do
+  end
+
+  SpaceAnnotationModel.blueprint do
+  end
+
+  DropletAnnotationModel.blueprint do
   end
 
   BuildModel.blueprint do
@@ -341,6 +350,15 @@ module VCAP::CloudController
     instances { 1 }
     type { Sham.name }
     metadata { {} }
+  end
+
+  ProcessModel.blueprint(:nonmatching_guid) do
+    instances { 1 }
+    type { 'web' }
+    diego { true }
+    app { AppModel.make }
+    metadata { {} }
+    guid { Sham.guid }
   end
 
   RouteBinding.blueprint do

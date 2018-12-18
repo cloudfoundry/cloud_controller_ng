@@ -47,22 +47,32 @@ module VCAP::CloudController
         dataset = dataset.where(state: @message.states)
       end
 
+      droplet_table_name = DropletModel.table_name
       if @message.requested?(:guids)
-        dataset = dataset.where("#{DropletModel.table_name}__guid".to_sym => @message.guids)
+        dataset = dataset.where("#{droplet_table_name}__guid".to_sym => @message.guids)
+      end
+
+      if @message.requested? :label_selector
+        dataset = LabelSelectorQueryGenerator.add_selector_queries(
+          label_klass: DropletLabelModel,
+          resource_dataset: dataset,
+          requirements: @message.requirements,
+          resource_klass: DropletModel,
+        )
       end
 
       if @message.requested?(:organization_guids)
         space_guids_from_orgs = Organization.where(guid: @message.organization_guids).map(&:spaces).flatten.map(&:guid)
-        dataset = dataset.select_all(DropletModel.table_name).
-                  join_table(:inner, AppModel.table_name, { guid: "#{DropletModel.table_name}__app_guid".to_sym, space_guid: space_guids_from_orgs }, { table_alias: :apps_orgs })
+        dataset = dataset.select_all(droplet_table_name).
+                  join_table(:inner, AppModel.table_name, { guid: Sequel[:droplets][:app_guid], space_guid: space_guids_from_orgs }, { table_alias: :apps_orgs })
       end
 
       if scoped_space_guids.present?
-        dataset = dataset.select_all(DropletModel.table_name).
-                  join_table(:inner, AppModel.table_name, { guid: "#{DropletModel.table_name}__app_guid".to_sym, space_guid: scoped_space_guids }, { table_alias: :apps_spaces })
+        dataset = dataset.select_all(droplet_table_name).
+                  join_table(:inner, AppModel.table_name, { guid: Sequel[:droplets][:app_guid], space_guid: scoped_space_guids }, { table_alias: :apps_spaces })
       end
 
-      dataset.exclude(state: DropletModel::STAGING_STATE)
+      dataset.exclude(state: DropletModel::STAGING_STATE).qualify(DropletModel.table_name)
     end
 
     def scoped_space_guids(permitted_space_guids: @space_guids, filtered_space_guids: @message.space_guids)

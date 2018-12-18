@@ -669,14 +669,31 @@ module VCAP::CloudController
       describe '#apply' do
         context 'when changing memory' do
           let(:message) { AppManifestMessage.create_from_yml({ name: 'blah', memory: '256MB' }) }
-          let(:process) { ProcessModel.make(memory: 512, state: ProcessModel::STARTED) }
+          let(:process) { ProcessModel.make(memory: 512, state: ProcessModel::STARTED, type: 'web') }
           let(:app) { process.app }
-
           it "doesn't change the process's version" do
             app.update(name: 'blah')
             version = process.version
             app_apply_manifest.apply(app.guid, message)
             expect(process.reload.version).to eq(version)
+            expect(process.memory).to eq(256)
+          end
+
+          context 'when there are additional app web processes' do
+            let(:process2) { ProcessModel.make(memory: 513, state: ProcessModel::STARTED, type: 'web', app: app, created_at: process.created_at + 1) }
+
+            it 'operates on the most recent process for a given app' do
+              app.update(name: 'blah')
+              version = process.version
+              version2 = process2.version
+              app_apply_manifest.apply(app.guid, message)
+              process.reload
+              process2.reload
+              expect(process.version).to eq(version)
+              expect(process.memory).to eq(512)
+              expect(process2.version).to eq(version2)
+              expect(process2.memory).to eq(256)
+            end
           end
         end
       end

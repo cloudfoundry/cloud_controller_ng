@@ -284,7 +284,6 @@ module VCAP::CloudController
       # * memory is changed
       # * health check type is changed
       # * health check http endpoint is changed
-      # * enable_ssh is changed
       # * ports were changed by the user
       #
       # this is to indicate that the running state of an application has changed,
@@ -296,7 +295,6 @@ module VCAP::CloudController
         column_changed?(:memory) ||
         column_changed?(:health_check_type) ||
         column_changed?(:health_check_http_endpoint) ||
-        column_changed?(:enable_ssh) ||
         @ports_changed_by_user
       )
     end
@@ -354,8 +352,7 @@ module VCAP::CloudController
     end
 
     def detected_start_command
-      type_for_detected_command = ProcessTypes.webish?(self.type) ? ProcessTypes::WEB : self.type
-      current_droplet.try(:process_types).try(:[], type_for_detected_command) || ''
+      current_droplet.try(:process_types).try(:[], self.type) || ''
     end
 
     def detected_buildpack_guid
@@ -520,7 +517,11 @@ module VCAP::CloudController
     end
 
     def web?
-      ProcessTypes.webish?(type)
+      type == ProcessTypes::WEB
+    end
+
+    def legacy_webish?
+      ProcessTypes.legacy_webish?(type)
     end
 
     private

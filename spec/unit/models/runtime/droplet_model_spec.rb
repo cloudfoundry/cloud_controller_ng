@@ -240,5 +240,31 @@ module VCAP::CloudController
         expect(droplet_model_with_only_sha1.checksum).to eq('baz')
       end
     end
+
+    describe '#labels' do
+      let!(:droplet) { DropletModel.make }
+      let!(:label) do
+        VCAP::CloudController::DropletLabelModel.make(
+          key_name: 'potato',
+          value: 'spielgasse',
+          resource_guid: droplet.guid
+        )
+      end
+      let!(:annotation) do
+        VCAP::CloudController::DropletAnnotationModel.make(
+          key: 'vegetable',
+          value: 'asparagus',
+          resource_guid: droplet.guid
+        )
+      end
+
+      it 'can find the associated labels' do
+        expect(droplet.labels.first.key_prefix).to be_nil
+        expect(droplet.labels.first.key_name).to eq('potato')
+        expect(droplet.labels.first.value).to eq('spielgasse')
+        expect(droplet.annotations.first.key).to eq('vegetable')
+        expect(droplet.annotations.first.value).to eq('asparagus')
+      end
+    end
   end
 end

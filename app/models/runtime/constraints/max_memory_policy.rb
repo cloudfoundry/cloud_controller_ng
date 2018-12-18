@@ -1,4 +1,4 @@
-require 'cloud_controller/app_services/app_memory_calculator'
+require 'cloud_controller/app_services/process_memory_calculator'
 
 class BaseMaxMemoryPolicy
   def initialize(resource, policy_target, error_name)
@@ -41,7 +41,7 @@ class AppMaxMemoryPolicy < BaseMaxMemoryPolicy
   end
 
   def requested_memory
-    calculator = VCAP::CloudController::AppMemoryCalculator.new(resource)
+    calculator = VCAP::CloudController::ProcessMemoryCalculator.new(resource)
     calculator.additional_memory_requested
   end
 end

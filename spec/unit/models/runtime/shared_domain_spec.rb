@@ -216,23 +216,79 @@ module VCAP::CloudController
         end
       end
 
-      context 'internal domains' do
-        context 'when a non-internal domain already exists' do
-          let!(:existing_domain) { SharedDomain.make(name: 'existing.example.com') }
-          let(:fake_logger) { instance_double(Steno::Logger, info: nil, warn: nil) }
+      context 'when the domain already exists' do
+        let(:is_internal) { false }
+        let(:domain_name) { 'existing.example.com' }
+        let!(:existing_domain) { SharedDomain.make(name: domain_name, internal: is_internal) }
+        let(:attrs) { { name: domain_name } }
+        let(:fake_logger) { instance_double(Steno::Logger, info: nil, warn: nil) }
 
-          before do
-            allow(Steno).to receive(:logger).and_return(fake_logger)
+        before do
+          allow(Steno).to receive(:logger).and_return(fake_logger)
+          expect_any_instance_of(SharedDomain).not_to receive(:save)
+        end
+
+        context 'when the domain is internal' do
+          let(:is_internal) { true }
+
+          it 'ignores trying to make the domain external' do
+            before_updated_at = existing_domain.updated_at
+
+            expect {
+              SharedDomain.find_or_create(attrs.merge(internal: false))
+            }.not_to change { existing_domain.reload }
+            expect(fake_logger).to have_received(:warn).
+              with("Domain '#{domain_name}' already exists. Skipping updates of internal status")
+            expect(existing_domain.updated_at).to eq(before_updated_at)
+
+            existing_domain.reload
+            expect(existing_domain).to be_internal
           end
+        end
 
-          it 'logs a warning message and does not change the existing domain' do
-            attrs = { name: 'existing.example.com', internal: true }
-            SharedDomain.find_or_create(attrs)
+        context 'when the domain is external' do
+          let(:is_internal) { false }
+
+          it 'ignores trying to make the domain internal' do
+            before_updated_at = existing_domain.updated_at
+
+            expect {
+              SharedDomain.find_or_create(attrs.merge(internal: true))
+            }.not_to change { existing_domain.reload }
+            expect(fake_logger).to have_received(:warn).
+              with("Domain '#{domain_name}' already exists. Skipping updates of internal status")
+            expect(existing_domain.updated_at).to eq(before_updated_at)
+            expect(fake_logger).not_to have_received(:info).with("creating shared serving domain: #{domain_name}")
+
             existing_domain.reload
             expect(existing_domain).not_to be_internal
-            expect(fake_logger).to have_received(:warn).
-              with("Domain 'existing.example.com' was marked internal, but a non-internal domain of that name already exists. Skipping.")
           end
+        end
+
+        it 'ignores trying to change the router group guid' do
+          before_updated_at = existing_domain.updated_at
+
+          expect {
+            SharedDomain.find_or_create(attrs.merge(router_group_guid: 'new rgg'))
+          }.not_to change { existing_domain.reload }
+          expect(fake_logger).to have_received(:warn).
+            with("Domain '#{domain_name}' already exists. Skipping updates of router_group_guid")
+          expect(existing_domain.updated_at).to eq(before_updated_at)
+          expect(fake_logger).not_to have_received(:info).with("creating shared serving domain: #{domain_name}")
+
+          existing_domain.reload
+          expect(existing_domain.router_group_guid).to be_nil
+        end
+
+        it 'ignores trying to update the existing domain' do
+          before_updated_at = existing_domain.updated_at
+
+          expect {
+            SharedDomain.find_or_create(attrs)
+          }.not_to change { existing_domain.reload }
+          expect(existing_domain.updated_at).to eq(before_updated_at)
+          expect(fake_logger).to have_received(:info).with("reusing default serving domain: #{domain_name}")
+          expect(fake_logger).not_to have_received(:info).with("creating shared serving domain: #{domain_name}")
         end
       end
     end

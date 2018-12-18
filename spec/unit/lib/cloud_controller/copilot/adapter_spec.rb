@@ -8,34 +8,36 @@ module VCAP::CloudController
       instance_spy(::Cloudfoundry::Copilot::Client)
     end
     let(:fake_logger) { instance_double(Steno::Logger, error: nil) }
+    let(:istio_domain) { SharedDomain.make(name: 'istio-domain.example.com') }
+    let(:internal_istio_domain) { SharedDomain.make(name: 'istio.internal', internal: true) }
 
     before do
       allow(CloudController::DependencyLocator.instance).to receive(:copilot_client).and_return(copilot_client)
       allow(Steno).to receive(:logger).and_return(fake_logger)
-      TestConfig.override(copilot: { enabled: true })
+      TestConfig.override(copilot: { enabled: true, temporary_istio_domains: [istio_domain.name, internal_istio_domain.name] })
     end
 
     describe '#create_route' do
-      let(:route) { instance_double(Route, guid: 'some-route-guid', fqdn: 'some-fqdn', internal?: false, path: '') }
+      let(:route) { Route.make(domain: istio_domain) }
 
       it 'calls copilot_client.upsert_route' do
         adapter.create_route(route)
         expect(copilot_client).to have_received(:upsert_route).with(
-          guid: 'some-route-guid',
-          host: 'some-fqdn',
+          guid: route.guid,
+          host: route.fqdn,
           path: '',
           internal: false,
         )
       end
 
       context 'when the route has a path' do
-        let(:route) { instance_double(Route, guid: 'some-route-guid', fqdn: 'some-fqdn', internal?: false, path: '/some/path') }
+        let(:route) { Route.make(path: '/some/path', domain: istio_domain) }
 
         it 'includes path in upsert call' do
           adapter.create_route(route)
           expect(copilot_client).to have_received(:upsert_route).with(
-            guid: 'some-route-guid',
-            host: 'some-fqdn',
+            guid: route.guid,
+            host: route.fqdn,
             path: '/some/path',
             internal: false,
           )
@@ -43,16 +45,29 @@ module VCAP::CloudController
       end
 
       context 'when the route is internal' do
-        let(:route) { instance_double(Route, guid: 'some-route-guid', fqdn: 'some-fqdn', internal?: true, path: '/some/path') }
+        let(:route) { Route.make(domain: internal_istio_domain) }
 
         it 'includes path in upsert call' do
           adapter.create_route(route)
-          expect(route).to have_received(:internal?)
           expect(copilot_client).to have_received(:upsert_route).with(
-            guid: 'some-route-guid',
-            host: 'some-fqdn',
-            path: '/some/path',
+            guid: route.guid,
+            host: route.fqdn,
+            path: '',
             internal: true,
+          )
+        end
+      end
+
+      context 'when the route is not associated with an istio domain' do
+        let(:route) { Route.make }
+
+        it 'does not make an upsert call' do
+          adapter.create_route(route)
+          expect(copilot_client).not_to have_received(:upsert_route).with(
+            guid: route.guid,
+            host: route.fqdn,
+            path: '',
+            internal: false,
           )
         end
       end
@@ -81,7 +96,7 @@ module VCAP::CloudController
     end
 
     describe '#map_route' do
-      let(:route) { Route.make }
+      let(:route) { Route.make(domain: istio_domain) }
       let(:app) { AppModel.make }
       let!(:process1) { ProcessModel.make(app: app) }
       let!(:process2) { ProcessModel.make(app: app) }
@@ -108,6 +123,20 @@ module VCAP::CloudController
         )
       end
 
+      context 'when the route is not associated with an istio domain' do
+        let(:route) { Route.make }
+
+        it 'does not make an upsert call' do
+          adapter.map_route(route_mapping)
+          expect(copilot_client).not_to have_received(:upsert_route).with(
+            guid: route.guid,
+            host: route.fqdn,
+            path: '',
+            internal: false,
+          )
+        end
+      end
+
       context 'when copilot_client.map_route returns an error' do
         before do
           allow(copilot_client).to receive(:map_route).and_raise('uh oh')
@@ -132,7 +161,7 @@ module VCAP::CloudController
     end
 
     describe '#unmap_route' do
-      let(:route) { Route.make }
+      let(:route) { Route.make(domain: istio_domain) }
       let(:app) { AppModel.make }
       let!(:process1) { ProcessModel.make(app: app) }
       let!(:process2) { ProcessModel.make(app: app) }
@@ -157,6 +186,20 @@ module VCAP::CloudController
           route_guid: route.guid,
           route_weight: 5
         )
+      end
+
+      context 'when the route is not associated with an istio domain' do
+        let(:route) { Route.make }
+
+        it 'does not make an upsert call' do
+          adapter.unmap_route(route_mapping)
+          expect(copilot_client).not_to have_received(:upsert_route).with(
+            guid: route.guid,
+            host: route.fqdn,
+            path: '',
+            internal: false,
+          )
+        end
       end
 
       context 'when copilot_client.unmap_route returns an error' do
