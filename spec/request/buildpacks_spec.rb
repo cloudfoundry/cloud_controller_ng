@@ -56,6 +56,7 @@ RSpec.describe 'buildpacks' do
             expected_response = {
               'name' => params[:name],
               'state' => 'AWAITING_UPLOAD',
+              'filename' => nil,
               'stack' => params[:stack],
               'position' => 1,
               'enabled' => params[:enabled],
@@ -160,6 +161,7 @@ RSpec.describe 'buildpacks' do
               'name' => buildpack.name,
               'state' => 'AWAITING_UPLOAD',
               'stack' => buildpack.stack,
+              'filename' => nil,
               'position' => buildpack.position,
               'enabled' => buildpack.enabled,
               'locked' => buildpack.locked,
