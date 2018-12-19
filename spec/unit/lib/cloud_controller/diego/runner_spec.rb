@@ -5,7 +5,7 @@ module VCAP::CloudController
     RSpec.describe Runner do
       let(:messenger) { instance_double(Messenger) }
       let(:process) { ProcessModelFactory.make(state: 'STARTED') }
-      let(:protocol) { instance_double(Diego::Protocol, desire_app_message: {}) }
+      let(:protocol) { instance_double(Diego::Protocol) }
       let(:default_health_check_timeout) { 9999 }
       let(:config) do
         Config.new({
@@ -115,17 +115,6 @@ module VCAP::CloudController
             expect(messenger).to_not receive(:send_desire_request)
             expect { runner.update_routes }.to raise_error(CloudController::Errors::ApiError, /App not started/)
           end
-        end
-      end
-
-      describe '#desire_app_message' do
-        before do
-          expect(Protocol).to receive(:new).and_return(protocol)
-        end
-
-        it "gets the procotol's desire_app_message" do
-          expect(runner.desire_app_message).to eq({})
-          expect(protocol).to have_received(:desire_app_message).with(process, default_health_check_timeout)
         end
       end
 

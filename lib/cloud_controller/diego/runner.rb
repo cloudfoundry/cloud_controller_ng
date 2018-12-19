@@ -29,10 +29,6 @@ module VCAP::CloudController
         with_logging('update_route') { messenger.send_desire_request(@process) unless @process.staging? }
       end
 
-      def desire_app_message
-        Diego::Protocol.new.desire_app_message(@process, @config.get(:default_health_check_timeout))
-      end
-
       def stop
         with_logging('stop_app') { messenger.send_stop_app_request(@process) }
       end
