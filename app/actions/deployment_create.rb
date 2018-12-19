@@ -1,5 +1,4 @@
 require 'repositories/deployment_event_repository'
-require 'actions/revision_create'
 
 module VCAP::CloudController
   class DeploymentCreate
@@ -37,10 +36,8 @@ module VCAP::CloudController
           end
           deployment.save
 
-          # This revision should be assigned to the app's non-web processes when restarted in the deployment updater
-          revision = RevisionCreate.create(app)
-          process = create_deployment_process(app, deployment.guid, web_process, revision)
-          deployment.update(deploying_web_process: process, revision_guid: revision.guid, revision_version: revision.version)
+          process = create_deployment_process(app, deployment.guid, web_process)
+          deployment.update(deploying_web_process: process)
         end
         record_audit_event(deployment, droplet, user_audit_info)
         deployment
@@ -48,7 +45,7 @@ module VCAP::CloudController
 
       private
 
-      def create_deployment_process(app, deployment_guid, web_process, revision)
+      def create_deployment_process(app, deployment_guid, web_process)
         process = ProcessModel.create(
           app: app,
           type: ProcessTypes::WEB,
@@ -66,7 +63,6 @@ module VCAP::CloudController
           health_check_invocation_timeout: web_process.health_check_invocation_timeout,
           enable_ssh: web_process.enable_ssh,
           ports: web_process.ports,
-          revision: revision,
         )
 
         DeploymentProcessModel.create(

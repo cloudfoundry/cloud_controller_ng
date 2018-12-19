@@ -39,16 +39,6 @@ module VCAP::CloudController
           expect(app.droplet).to eq(next_droplet)
         end
 
-        it 'creates a revision and sets it on the process and stores its guid and version on the deployment' do
-          deployment = nil
-          expect {
-            deployment = DeploymentCreate.create(app: app, droplet: next_droplet, user_audit_info: user_audit_info)
-          }.to change { RevisionModel.count }.by(1)
-          expect(deployment.revision_guid).to eq(RevisionModel.last.guid)
-          expect(deployment.revision_version).to eq(RevisionModel.last.version)
-          expect(deployment.deploying_web_process.revision).to eq(RevisionModel.last)
-        end
-
         it 'creates a process of web type with the same characteristics as the existing web process' do
           DeploymentCreate.create(app: app, droplet: app.droplet, user_audit_info: user_audit_info)
 
