@@ -10132,7 +10132,14 @@ applications:
 
           <h2 id="buildpacks">Buildpacks</h2>
 
-<p>A buildpack takes your source code and turns it into a running application.</p>
+<p>Buildpacks are used during a <a href="#builds">build</a>
+to download external dependencies
+and transform a <a href="#packages">package</a>
+into an executable <a href="#droplets">droplet</a>.
+In this way, buildpacks are a pluggable extension to Cloud Foundry
+that enable CF to run different languages and frameworks.
+Buildpacks will automatically detect if they support an application.
+Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a href="#builds">builds</a>.</p>
 
           <h3 id="the-buildpack-object">The buildpack object</h3>
 <pre class="highlight plaintext"><code>Example Buildpack object
@@ -10189,6 +10196,11 @@ applications:
 <td>The state of the buildpack. Valid value is: <code class="prettyprint">AWAITING_UPLOAD</code></td>
 </tr>
 <tr>
+<td><strong>filename</strong></td>
+<td><em>string</em></td>
+<td>The filename of the buildpack.</td>
+</tr>
+<tr>
 <td><strong>stack</strong></td>
 <td><em>string</em></td>
 <td>The name of the stack that the buildpack will use.</td>
@@ -10201,7 +10213,7 @@ applications:
 <tr>
 <td><strong>enabled</strong></td>
 <td><em>boolean</em></td>
-<td>Whether or not the buildpack will be used for staging</td>
+<td>Whether or not the buildpack can be used for staging</td>
 </tr>
 <tr>
 <td><strong>locked</strong></td>
