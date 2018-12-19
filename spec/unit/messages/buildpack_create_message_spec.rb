@@ -48,10 +48,16 @@ module VCAP::CloudController
           it { is_expected.to be_valid }
         end
 
+        context 'when it is at max length' do
+          let(:params) { { name: 'B' * MAX_NAME_LENGTH } }
+
+          it { is_expected.to be_valid }
+        end
+
         context 'when it is too long' do
           let(:params) { { name: 'B' * (MAX_NAME_LENGTH + 1) } }
 
-          it 'should return an error' do
+          it 'is not valid' do
             expect(subject).to be_invalid
             expect(subject.errors[:name]).to eq ["is too long (maximum is #{MAX_NAME_LENGTH} characters)"]
           end
@@ -59,6 +65,8 @@ module VCAP::CloudController
       end
 
       describe 'stack' do
+        MAX_STACK_LENGTH = 250
+
         context 'when it is not a string' do
           let(:params) { { name: 'the-name', stack: 4 } }
 
@@ -72,6 +80,15 @@ module VCAP::CloudController
           let(:params) { { name: 'the-name', stack: nil } }
 
           it { is_expected.to be_valid }
+        end
+
+        context 'when it is too long' do
+          let(:params) { { name: 'the-name', stack: 'B' * (MAX_NAME_LENGTH + 1) } }
+
+          it 'should return an error' do
+            expect(subject).to be_invalid
+            expect(subject.errors[:stack]).to eq ["is too long (maximum is #{MAX_NAME_LENGTH} characters)"]
+          end
         end
       end
 

@@ -15,7 +15,8 @@ module VCAP::CloudController
 
     validates :stack,
       string: true,
-      allow_nil: true
+      allow_nil: true,
+      length: { maximum: 250 }
 
     validates :position,
       allow_nil: true,
