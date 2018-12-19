@@ -55,7 +55,7 @@ RSpec.describe BuildpacksController, type: :controller do
           it 'returns a helpful error message' do
             post :create, params: params, as: :json
 
-            expect(parsed_body['errors'][0]['detail']).to include("Stack \"#{stack.name}\" does not exist")
+            expect(parsed_body['errors'][0]['detail']).to include("Stack '#{stack.name}' does not exist")
           end
         end
       end

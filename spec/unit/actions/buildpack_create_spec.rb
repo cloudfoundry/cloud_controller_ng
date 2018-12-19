@@ -47,7 +47,7 @@ module VCAP::CloudController
 
           expect {
             BuildpackCreate.new.create(message)
-          }.to raise_error(BuildpackCreate::Error, 'Stack "does-not-exist" does not exist')
+          }.to raise_error(BuildpackCreate::Error, "Stack 'does-not-exist' does not exist")
         end
       end
 
@@ -63,7 +63,7 @@ module VCAP::CloudController
             message = BuildpackCreateMessage.new(name: name)
             expect {
               BuildpackCreate.new.create(message)
-            }.to raise_error(BuildpackCreate::Error, 'The buildpack name "the-name" with an unassigned stack is already in use')
+            }.to raise_error(BuildpackCreate::Error, "The buildpack name 'the-name' with an unassigned stack is already in use")
           end
         end
 
@@ -76,7 +76,7 @@ module VCAP::CloudController
             message = BuildpackCreateMessage.new(name: name, stack: 'the-stack')
             expect {
               BuildpackCreate.new.create(message)
-            }.to raise_error(BuildpackCreate::Error, 'The buildpack name "the-name" with the stack "the-stack" is already in use')
+            }.to raise_error(BuildpackCreate::Error, "The buildpack name 'the-name' with the stack 'the-stack' is already in use")
           end
         end
       end
