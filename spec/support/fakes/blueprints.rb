@@ -456,7 +456,7 @@ module VCAP::CloudController
     name { Sham.name }
     stack { Stack.default.name }
     key { Sham.guid }
-    position { 0 }
+    position { Buildpack.count + 1 }
     enabled { true }
     filename { Sham.name }
     locked { false }
