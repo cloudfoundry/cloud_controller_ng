@@ -27,33 +27,33 @@ module VCAP::CloudController
     describe 'Attributes' do
       it do
         expect(VCAP::CloudController::SpacesController).to have_creatable_attributes({
-          name:                         { type: 'string', required: true },
-          allow_ssh:                    { type: 'bool', default: true },
-          isolation_segment_guid:       { type: 'string', default: nil, required: false },
-          organization_guid:            { type: 'string', required: true },
-          developer_guids:              { type: '[string]' },
-          manager_guids:                { type: '[string]' },
-          auditor_guids:                { type: '[string]' },
-          domain_guids:                 { type: '[string]' },
-          service_instance_guids:       { type: '[string]' },
-          security_group_guids:         { type: '[string]' },
+          name: { type: 'string', required: true },
+          allow_ssh: { type: 'bool', default: true },
+          isolation_segment_guid: { type: 'string', default: nil, required: false },
+          organization_guid: { type: 'string', required: true },
+          developer_guids: { type: '[string]' },
+          manager_guids: { type: '[string]' },
+          auditor_guids: { type: '[string]' },
+          domain_guids: { type: '[string]' },
+          service_instance_guids: { type: '[string]' },
+          security_group_guids: { type: '[string]' },
           staging_security_group_guids: { type: '[string]' },
-          space_quota_definition_guid:  { type: 'string' }
+          space_quota_definition_guid: { type: 'string' }
         })
       end
 
       it do
         expect(VCAP::CloudController::SpacesController).to have_updatable_attributes({
-          name:                         { type: 'string' },
-          allow_ssh:                    { type: 'bool' },
-          isolation_segment_guid:       { type: 'string', required: false },
-          organization_guid:            { type: 'string' },
-          developer_guids:              { type: '[string]' },
-          manager_guids:                { type: '[string]' },
-          auditor_guids:                { type: '[string]' },
-          domain_guids:                 { type: '[string]' },
-          service_instance_guids:       { type: '[string]' },
-          security_group_guids:         { type: '[string]' },
+          name: { type: 'string' },
+          allow_ssh: { type: 'bool' },
+          isolation_segment_guid: { type: 'string', required: false },
+          organization_guid: { type: 'string' },
+          developer_guids: { type: '[string]' },
+          manager_guids: { type: '[string]' },
+          auditor_guids: { type: '[string]' },
+          domain_guids: { type: '[string]' },
+          service_instance_guids: { type: '[string]' },
+          security_group_guids: { type: '[string]' },
           staging_security_group_guids: { type: '[string]' },
         })
       end
@@ -148,16 +148,16 @@ module VCAP::CloudController
       it do
         expect(VCAP::CloudController::SpacesController).to have_nested_routes(
           {
-            developers:              [:get, :put, :delete],
-            managers:                [:get, :put, :delete],
-            auditors:                [:get, :put, :delete],
-            apps:                    [:get],
-            routes:                  [:get],
-            domains:                 [:get, :put, :delete],
-            service_instances:       [:get],
-            app_events:              [:get],
-            events:                  [:get],
-            security_groups:         [:get, :put, :delete],
+            developers: [:get, :put, :delete],
+            managers: [:get, :put, :delete],
+            auditors: [:get, :put, :delete],
+            apps: [:get],
+            routes: [:get],
+            domains: [:get, :put, :delete],
+            service_instances: [:get],
+            app_events: [:get],
+            events: [:get],
+            security_groups: [:get, :put, :delete],
             staging_security_groups: [:get, :put, :delete],
           })
       end
@@ -195,16 +195,43 @@ module VCAP::CloudController
       end
 
       describe 'apps assocations' do
-        let(:space) { Space.make }
+        let(:organization) { Organization.make }
+        let(:domain) { PrivateDomain.make(owning_organization: organization) }
+        let(:space) { Space.make(organization: organization) }
         let(:app_model) { AppModel.make(space: space) }
-        let!(:web_process_0) { ProcessModel.make(app: app_model, created_at: 2.days.ago) }
-        let!(:web_process_1) { ProcessModel.make(app: app_model, created_at: 1.day.ago) }
+        let!(:web_process_0) { ProcessModel.make(app: app_model, type: 'web', created_at: 2.days.ago) }
+        let!(:web_process_1) { ProcessModel.make(app: app_model, type: 'web', created_at: 1.day.ago) }
 
         it 'returns only the newest process per app' do
           get "/v2/spaces/#{space.guid}/apps"
 
           expect(last_response.status).to eq(200), last_response.body
           expect(parsed_response['resources'].map { |r| r['metadata']['guid'] }).to contain_exactly(app_model.guid)
+        end
+
+        context 'when there are route mappings' do
+          let(:route) { Route.make(domain: domain, space: space) }
+          let!(:app_route_mapping) { RouteMappingModel.make(route: route, app: app_model, process_type: 'web') }
+
+          it 'returns only the newest app on the route via plural inline-relations' do
+            get '/v2/spaces?inline-relations-depth=2'
+            expect(last_response.status).to eq(200), last_response.body
+            expect(parsed_response['resources'].size).to eq(1), last_response.body
+
+            routes = parsed_response['resources'][0]['entity']['routes']
+            expect(routes.size).to eq(1)
+            expect(routes[0]['entity']['apps'].map { |app| app['metadata']['guid'] }).to contain_exactly(app_model.guid)
+          end
+
+          it 'returns only the newest app on the route via singular inline-relations' do
+            get "/v2/spaces/#{space.guid}?inline-relations-depth=2"
+
+            expect(last_response.status).to eq(200), last_response.body
+
+            routes = parsed_response['entity']['routes']
+            expect(routes.size).to eq(1)
+            expect(routes[0]['entity']['apps'].map { |app| app['metadata']['guid'] }).to contain_exactly(app_model.guid)
+          end
         end
       end
     end
@@ -222,11 +249,11 @@ module VCAP::CloudController
         set_current_user_as_admin
         space_developer_2.update(admin: true, active: true)
         allow(uaa_client).to receive(:usernames_for_ids).with(a_collection_containing_exactly(space_developer_1.guid,
-                                                               space_manager.guid,
-                                                               space_developer_2.guid)).
+          space_manager.guid,
+          space_developer_2.guid)).
           and_return({ space_developer_1.guid => 'joe',
-                       space_manager.guid => 'trish',
-                       space_developer_2.guid => 'bosco' })
+            space_manager.guid => 'trish',
+            space_developer_2.guid => 'bosco' })
       end
 
       context 'for a current space, with an admin' do
@@ -234,7 +261,7 @@ module VCAP::CloudController
           get "/v2/spaces/#{space_one.guid}/user_roles"
           expect(last_response.status).to eq(200), last_response.body
           expect(parsed_response['resources'].
-                  map { |x| (x1 = x['entity']) && [x1['username'], x1['admin'], x1['active']] }).
+            map { |x| (x1 = x['entity']) && [x1['username'], x1['admin'], x1['active']] }).
             to match_array(
               [['joe', false, false], ['trish', false, false], ['bosco', true, true]])
         end
@@ -629,8 +656,8 @@ module VCAP::CloudController
 
       context 'when there is a private service broker in a space' do
         before(:each) do
-          @broker       = ServiceBroker.make(space: space_one)
-          @service      = Service.make(service_broker: @broker, active: true)
+          @broker = ServiceBroker.make(space: space_one)
+          @service = Service.make(service_broker: @broker, active: true)
           @service_plan = ServicePlan.make(service: @service, public: false)
         end
 
@@ -1038,8 +1065,8 @@ module VCAP::CloudController
           end
 
           context 'when user is an Org Manager' do
-            let!(:space)  { Space.make }
-            let(:user)    { make_manager_for_org(space.organization) }
+            let!(:space) { Space.make }
+            let(:user) { make_manager_for_org(space.organization) }
             let!(:broker) { VCAP::CloudController::ServiceBroker.make(space_guid: space.guid) }
 
             it 'successfully deletes spaces with associated private service brokers' do

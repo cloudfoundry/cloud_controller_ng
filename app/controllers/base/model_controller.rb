@@ -105,6 +105,16 @@ module VCAP::CloudController::RestController
       )
     end
 
+    # injects the "show only newest duplicate web process" logic into
+    # visibility filters for inline-relations-depth queries.
+    # these are eventually used by secure_eager_loader.rb
+    def inject_recent_app_dataset_filter
+      @opts[:additional_visibility_filters] ||= {}
+      @opts[:additional_visibility_filters][:apps] = proc do |dataset|
+        AppsController.filter_dataset(dataset)
+      end
+    end
+
     def get_filtered_dataset_for_enumeration(model, dataset, query_params, opts)
       Query.filtered_dataset_from_query_params(model, dataset, query_params, opts)
     end

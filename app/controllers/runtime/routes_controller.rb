@@ -304,6 +304,16 @@ module VCAP::CloudController
       AppsController.filter_dataset(dataset)
     end
 
+    def read(guid)
+      inject_recent_app_dataset_filter
+      super
+    end
+
+    def enumerate
+      inject_recent_app_dataset_filter
+      super
+    end
+
     define_messages
     define_routes
 

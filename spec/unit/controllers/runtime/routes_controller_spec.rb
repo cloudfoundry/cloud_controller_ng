@@ -1172,15 +1172,33 @@ module VCAP::CloudController
       end
     end
 
-    describe 'GET /v2/routes/:guid/route_mappings' do
+    describe 'GET /v2/routes/ inline related resources' do
       let(:organization) { Organization.make }
       let(:domain) { PrivateDomain.make(owning_organization: organization) }
       let(:space) { Space.make(organization: organization) }
       let(:route) { Route.make(domain: domain, space: space) }
-      let(:process) { ProcessModelFactory.make(space: route.space) }
-      let!(:app_route_mapping) { RouteMappingModel.make(route: route, app: process.app, process_type: process.type) }
+      let(:myapp) { AppModel.make(name: 'myapp') }
+      let!(:app_route_mapping) { RouteMappingModel.make(route: route, app: myapp, process_type: 'web') }
+
+      let!(:webproc1) { ProcessModel.make(app: myapp, type: 'web', created_at: 1.day.ago) }
+      let!(:webproc2) { ProcessModel.make(app: myapp, type: 'web', created_at: 2.day.ago) }
 
       before { set_current_user_as_admin }
+
+      it 'with inline stuff should contain links to the apps and route_mappings resources 2' do
+        get 'v2/routes?inline-relations-depth=1'
+        expect(last_response.status).to eq(200)
+
+        expect(decoded_response['resources'].length).to eq(1)
+        expect(decoded_response['resources'][0]['entity']['apps'].size).to eq(1)
+      end
+
+      it 'for a single route, with inline stuff should contain links to the apps and route_mappings resources 2' do
+        get "v2/routes/#{route.guid}?inline-relations-depth=1"
+        expect(last_response.status).to eq(200)
+
+        expect(decoded_response['entity']['apps'].size).to eq(1)
+      end
     end
 
     describe 'GET /v2/routes/reserved/domain/:domain_guid/host/:hostname' do

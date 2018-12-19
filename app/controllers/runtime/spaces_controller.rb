@@ -62,6 +62,16 @@ module VCAP::CloudController
       @perm_client = dependencies.fetch(:perm_client)
     end
 
+    def read(guid)
+      inject_recent_app_dataset_filter
+      super
+    end
+
+    def enumerate
+      inject_recent_app_dataset_filter
+      super
+    end
+
     get '/v2/spaces/:guid/user_roles', :enumerate_user_roles
     def enumerate_user_roles(guid)
       logger.debug('cc.enumerate.related', guid: guid, association: 'user_roles')
