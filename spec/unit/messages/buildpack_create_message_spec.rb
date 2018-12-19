@@ -116,7 +116,7 @@ module VCAP::CloudController
 
           it 'is not valid' do
             expect(subject).not_to be_valid
-            expect(subject.errors[:enabled]).to include('is not included in the list')
+            expect(subject.errors[:enabled]).to include('must be a boolean')
           end
         end
 
@@ -133,7 +133,7 @@ module VCAP::CloudController
 
           it 'is not valid' do
             expect(subject).not_to be_valid
-            expect(subject.errors[:locked]).to include('is not included in the list')
+            expect(subject.errors[:locked]).to include('must be a boolean')
           end
         end
 
