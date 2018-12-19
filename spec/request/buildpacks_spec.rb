@@ -36,7 +36,6 @@ RSpec.describe 'buildpacks' do
           {
             name: 'the-r3al_Name',
             stack: stack.name,
-            position: 2,
             enabled: false,
             locked: true,
           }
@@ -48,28 +47,77 @@ RSpec.describe 'buildpacks' do
           expect(last_response.status).to eq(201)
         end
 
-        it 'returns the newly-created buildpack resource' do
-          post '/v3/buildpacks', params.to_json, headers
+        describe 'non-position values' do
+          it 'returns the newly-created buildpack resource' do
+            post '/v3/buildpacks', params.to_json, headers
 
-          buildpack = VCAP::CloudController::Buildpack.last
+            buildpack = VCAP::CloudController::Buildpack.last
 
-          expected_response = {
-            'name' => params[:name],
-            'state' => 'AWAITING_UPLOAD',
-            'stack' => params[:stack],
-            'position' => params[:position],
-            'enabled' => params[:enabled],
-            'locked' => params[:locked],
-            'guid' => buildpack.guid,
-            'created_at' => iso8601,
-            'updated_at' => iso8601,
-            'links' => {
-              'self' => {
-                'href' => "#{link_prefix}/v3/buildpacks/#{buildpack.guid}"
+            expected_response = {
+              'name' => params[:name],
+              'state' => 'AWAITING_UPLOAD',
+              'stack' => params[:stack],
+              'position' => 1,
+              'enabled' => params[:enabled],
+              'locked' => params[:locked],
+              'guid' => buildpack.guid,
+              'created_at' => iso8601,
+              'updated_at' => iso8601,
+              'links' => {
+                'self' => {
+                  'href' => "#{link_prefix}/v3/buildpacks/#{buildpack.guid}"
+                }
               }
             }
-          }
-          expect(parsed_response).to be_a_response_like(expected_response)
+            expect(parsed_response).to be_a_response_like(expected_response)
+          end
+        end
+
+        describe 'position' do
+          let!(:buildpack1) { VCAP::CloudController::Buildpack.make(position: 1) }
+          let!(:buildpack2) { VCAP::CloudController::Buildpack.make(position: 2) }
+          let!(:buildpack3) { VCAP::CloudController::Buildpack.make(position: 3) }
+
+          context 'the position is not provided' do
+            it 'defaults the position value to 1' do
+              post '/v3/buildpacks', params.to_json, headers
+
+              expect(parsed_response['position']).to eq(1)
+              expect(buildpack1.reload.position).to eq(2)
+              expect(buildpack2.reload.position).to eq(3)
+              expect(buildpack3.reload.position).to eq(4)
+            end
+          end
+
+          context 'the position is less than or equal to the total number of buildpacks' do
+            before do
+              params[:position] = 2
+            end
+
+            it 'sets the position value to the provided position' do
+              post '/v3/buildpacks', params.to_json, headers
+
+              expect(parsed_response['position']).to eq(2)
+              expect(buildpack1.reload.position).to eq(1)
+              expect(buildpack2.reload.position).to eq(3)
+              expect(buildpack3.reload.position).to eq(4)
+            end
+          end
+
+          context 'the position is greater than the total number of buildpacks' do
+            before do
+              params[:position] = 42
+            end
+
+            it 'sets the position value to the provided position' do
+              post '/v3/buildpacks', params.to_json, headers
+
+              expect(parsed_response['position']).to eq(4)
+              expect(buildpack1.reload.position).to eq(1)
+              expect(buildpack2.reload.position).to eq(2)
+              expect(buildpack3.reload.position).to eq(3)
+            end
+          end
         end
       end
     end

@@ -3,14 +3,18 @@ module VCAP::CloudController
     class Error < ::StandardError
     end
 
+    DEFAULT_POSITION = 1
+
     def create(message)
-      Buildpack.create(
-        name: message.name,
-        stack: message.stack,
-        position: message.position,
-        enabled: message.enabled,
-        locked: message.locked,
-      )
+      Buildpack.db.transaction do
+        buildpack = Buildpack.create(
+          name: message.name,
+          stack: message.stack,
+          enabled: message.enabled,
+          locked: message.locked,
+        )
+        buildpack.move_to(message.position || DEFAULT_POSITION)
+      end
     rescue Sequel::ValidationFailed => e
       validation_error!(e, message)
     end

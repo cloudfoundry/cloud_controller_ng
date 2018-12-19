@@ -4,6 +4,12 @@ require 'models/runtime/buildpack'
 
 RSpec.describe BuildpacksController, type: :controller do
   describe '#create' do
+    before do
+      VCAP::CloudController::Buildpack.make
+      VCAP::CloudController::Buildpack.make
+      VCAP::CloudController::Buildpack.make
+    end
+
     context 'when authorized' do
       let(:user) { VCAP::CloudController::User.make }
       let(:stack) { VCAP::CloudController::Stack.make }
@@ -28,7 +34,8 @@ RSpec.describe BuildpacksController, type: :controller do
           it 'should save the buildpack in the database' do
             post :create, params: params, as: :json
 
-            our_buildpack = VCAP::CloudController::Buildpack.last
+            buildpack_id = parsed_body['guid']
+            our_buildpack = VCAP::CloudController::Buildpack.find(guid: buildpack_id)
             expect(our_buildpack).to_not be_nil
             expect(our_buildpack.name).to eq(params[:name])
             expect(our_buildpack.stack).to eq(params[:stack])
