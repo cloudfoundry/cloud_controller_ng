@@ -256,7 +256,7 @@ GEM
     mime-types (3.1)
       mime-types-data (~> 3.2015)
     mime-types-data (3.2016.0521)
-    mini_portile2 (2.3.0)
+    mini_portile2 (2.4.0)
     minitest (5.11.3)
     ms_rest (0.6.4)
       concurrent-ruby (~> 1.0)
@@ -277,8 +277,8 @@ GEM
     net-ssh (5.0.2)
     netaddr (2.0.3)
     newrelic_rpm (5.3.0.346)
-    nokogiri (1.8.5)
-      mini_portile2 (~> 2.3.0)
+    nokogiri (1.9.1)
+      mini_portile2 (~> 2.4.0)
     os (0.9.6)
     palm_civet (1.1.0)
     parallel (1.12.1)
@@ -493,7 +493,7 @@ DEPENDENCIES
   net-ssh
   netaddr
   newrelic_rpm
-  nokogiri (~> 1.8.1)
+  nokogiri
   palm_civet
   parallel_tests
   pg
