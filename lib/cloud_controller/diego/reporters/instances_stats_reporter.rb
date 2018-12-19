@@ -15,7 +15,7 @@ module VCAP::CloudController
       def stats_for_app(process)
         result       = {}
         current_time = Time.now.to_f
-        formatted_current_time = Time.now.to_datetime.rfc3339 # rubocop:disable Style/DateTime
+        formatted_current_time = Time.now.to_datetime.rfc3339
 
         logger.debug('stats_for_app.fetching_container_metrics', process_guid: process.guid)
         envelopes = @logstats_client.container_metrics(

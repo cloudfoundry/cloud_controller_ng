@@ -31,7 +31,7 @@ module VCAP::CloudController
         let(:desired_instances) { bbs_actual_lrps_response.length }
         let(:bbs_actual_lrps_response) { [actual_lrp_1] }
         let(:bbs_desired_lrp_response) { ::Diego::Bbs::Models::DesiredLRP.new PlacementTags: ['isolation-segment-name'] }
-        let(:formatted_current_time) { Time.now.to_datetime.rfc3339 } # rubocop:disable Style/DateTime
+        let(:formatted_current_time) { Time.now.to_datetime.rfc3339 }
 
         let(:lrp_1_net_info) do
           ::Diego::Bbs::Models::ActualLRPNetInfo.new(
