@@ -1,10 +1,13 @@
 require 'presenters/v3/base_presenter'
 require 'presenters/helpers/censorship'
+require 'presenters/mixins/metadata_presentation_helpers'
 
 module VCAP::CloudController
   module Presenters
     module V3
       class PackagePresenter < BasePresenter
+        include VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers
+
         def initialize(resource, show_secrets: false, censored_message: Censorship::REDACTED_CREDENTIAL)
           super
         end
@@ -18,6 +21,10 @@ module VCAP::CloudController
             created_at: package.created_at,
             updated_at: package.updated_at,
             links:      build_links,
+            metadata: {
+              labels: hashified_labels(package.labels),
+              annotations: hashified_annotations(package.annotations),
+            }
           }
         end
 

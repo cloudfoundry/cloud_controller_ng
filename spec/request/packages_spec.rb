@@ -38,7 +38,8 @@ RSpec.describe 'Packages' do
             'username' => 'my-docker-username',
             'password' => '***'
           },
-          'state'      => 'READY',
+          'state' => 'READY',
+          'metadata' => { 'labels' => {}, 'annotations' => {} },
           'created_at' => iso8601,
           'updated_at' => iso8601,
           'links' => {
@@ -104,7 +105,8 @@ RSpec.describe 'Packages' do
             'username' => nil,
             'password' => nil,
           },
-          'state'      => 'READY',
+          'state' => 'READY',
+          'metadata' => { 'labels' => {}, 'annotations' => {} },
           'created_at' => iso8601,
           'updated_at' => iso8601,
           'links' => {
@@ -176,7 +178,8 @@ RSpec.describe 'Packages' do
               'checksum' => { 'type' => 'sha256', 'value' => nil },
               'error' => nil
             },
-            'state'      => VCAP::CloudController::PackageModel::CREATED_STATE,
+            'state' => VCAP::CloudController::PackageModel::CREATED_STATE,
+            'metadata' => { 'labels' => {}, 'annotations' => {} },
             'created_at' => iso8601,
             'updated_at' => iso8601,
             'links' => {
@@ -193,7 +196,8 @@ RSpec.describe 'Packages' do
               'checksum' => { 'type' => 'sha256', 'value' => nil },
               'error' => nil
             },
-            'state'      => VCAP::CloudController::PackageModel::CREATED_STATE,
+            'state' => VCAP::CloudController::PackageModel::CREATED_STATE,
+            'metadata' => { 'labels' => {}, 'annotations' => {} },
             'created_at' => iso8601,
             'updated_at' => iso8601,
             'links' => {
@@ -329,7 +333,8 @@ RSpec.describe 'Packages' do
               'checksum' => { 'type' => 'sha256', 'value' => nil },
               'error' => nil
             },
-            'state'      => VCAP::CloudController::PackageModel::CREATED_STATE,
+            'state' => VCAP::CloudController::PackageModel::CREATED_STATE,
+            'metadata' => { 'labels' => {}, 'annotations' => {} },
             'created_at' => iso8601,
             'updated_at' => iso8601,
             'links' => {
@@ -347,7 +352,8 @@ RSpec.describe 'Packages' do
               'username' => nil,
               'password' => nil,
             },
-            'state'      => VCAP::CloudController::PackageModel::READY_STATE,
+            'state' => VCAP::CloudController::PackageModel::READY_STATE,
+            'metadata' => { 'labels' => {}, 'annotations' => {} },
             'created_at' => iso8601,
             'updated_at' => iso8601,
             'links' => {
@@ -562,7 +568,8 @@ RSpec.describe 'Packages' do
           'checksum' => { 'type' => 'sha256', 'value' => nil },
           'error' => nil
         },
-        'state'      => VCAP::CloudController::PackageModel::CREATED_STATE,
+        'state' => VCAP::CloudController::PackageModel::CREATED_STATE,
+        'metadata' => { 'labels' => {}, 'annotations' => {} },
         'created_at' => iso8601,
         'updated_at' => iso8601,
         'links' => {
@@ -618,7 +625,8 @@ RSpec.describe 'Packages' do
           'checksum' => { 'type' => 'sha256', 'value' => nil },
           'error' => nil
         },
-        'state'      => VCAP::CloudController::PackageModel::PENDING_STATE,
+        'state' => VCAP::CloudController::PackageModel::PENDING_STATE,
+        'metadata' => { 'labels' => {}, 'annotations' => {} },
         'created_at' => iso8601,
         'updated_at' => iso8601,
         'links' => {
@@ -675,7 +683,8 @@ RSpec.describe 'Packages' do
             'checksum' => { 'type' => 'sha256', 'value' => nil },
             'error' => nil
           },
-          'state'      => VCAP::CloudController::PackageModel::PENDING_STATE,
+          'state' => VCAP::CloudController::PackageModel::PENDING_STATE,
+          'metadata' => { 'labels' => {}, 'annotations' => {} },
           'created_at' => iso8601,
           'updated_at' => iso8601,
           'links' => {

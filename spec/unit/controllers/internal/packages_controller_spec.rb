@@ -59,8 +59,8 @@ module VCAP::CloudController
 
         context 'when InvalidPackage is raised' do
           before do
-            allow_any_instance_of(VCAP::CloudController::PackageUpdate).to receive(:update).
-              and_raise(VCAP::CloudController::PackageUpdate::InvalidPackage.new('ya done goofed'))
+            allow_any_instance_of(VCAP::CloudController::InternalPackageUpdate).to receive(:update).
+              and_raise(VCAP::CloudController::InternalPackageUpdate::InvalidPackage.new('ya done goofed'))
           end
 
           it 'returns an UnprocessableEntity error' do

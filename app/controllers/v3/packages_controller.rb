@@ -1,11 +1,14 @@
 require 'presenters/v3/package_presenter'
 require 'presenters/v3/paginated_list_presenter'
+require 'fetchers/package_fetcher'
 require 'fetchers/package_list_fetcher'
 require 'actions/package_delete'
 require 'actions/package_upload'
 require 'actions/package_create'
 require 'actions/package_copy'
+require 'actions/package_update'
 require 'messages/package_create_message'
+require 'messages/package_update_message'
 require 'messages/package_upload_message'
 require 'messages/packages_list_message'
 require 'controllers/v3/mixins/app_sub_resource'
@@ -112,6 +115,19 @@ class PackagesController < ApplicationController
     render status: :created, json: Presenters::V3::PackagePresenter.new(package)
   rescue PackageCopy::InvalidPackage, PackageCreate::InvalidPackage => e
     unprocessable!(e.message)
+  end
+
+  def update
+    message = VCAP::CloudController::PackageUpdateMessage.new(hashed_params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    package, space, org = PackageFetcher.new.fetch(hashed_params[:guid])
+    package_not_found! unless package && permission_queryer.can_read_from_space?(space.guid, org.guid)
+    unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
+
+    package = PackageUpdate.new.update(package, message)
+
+    render status: :ok, json: Presenters::V3::PackagePresenter.new(package)
   end
 
   private

@@ -1,4 +1,4 @@
-require 'actions/package_update'
+require 'actions/internal_package_update'
 require 'messages/internal_package_update_message'
 
 module VCAP::CloudController
@@ -15,10 +15,10 @@ module VCAP::CloudController
         package = ::VCAP::CloudController::PackageModel.find(guid: guid)
         package_not_found! unless package
 
-        PackageUpdate.new.update(package, message)
+        InternalPackageUpdate.new.update(package, message)
 
         HTTP::NO_CONTENT
-      rescue PackageUpdate::InvalidPackage => e
+      rescue InternalPackageUpdate::InvalidPackage => e
         unprocessable!(e.message)
       rescue MultiJson::ParseError => e
         raise CloudController::Errors::ApiError.new_from_details('MessageParseError', e.message)

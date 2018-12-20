@@ -46,6 +46,24 @@ module VCAP::CloudController
         it 'returns an empty error list' do
           expect(package_delete.delete(package)).to be_empty
         end
+
+        it 'deletes associated labels' do
+          label = PackageLabelModel.make(resource_guid: package.guid)
+          expect {
+            package_delete.delete([package])
+          }.to change { PackageLabelModel.count }.by(-1)
+          expect(label.exists?).to be_falsey
+          expect(package.exists?).to be_falsey
+        end
+
+        it 'deletes associated annotations' do
+          annotation = PackageAnnotationModel.make(resource_guid: package.guid)
+          expect {
+            package_delete.delete([package])
+          }.to change { PackageAnnotationModel.count }.by(-1)
+          expect(annotation.exists?).to be_falsey
+          expect(package.exists?).to be_falsey
+        end
       end
 
       context 'when passed a set of packages' do

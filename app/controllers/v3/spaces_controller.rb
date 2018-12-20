@@ -59,7 +59,7 @@ class SpacesV3Controller < ApplicationController
 
     space = SpaceUpdate.new.update(space, message)
 
-    render :ok, json: Presenters::V3::SpacePresenter.new(space), status: :ok
+    render status: :ok, json: Presenters::V3::SpacePresenter.new(space)
   rescue AnnotationsUpdate::TooManyAnnotations => e
     unprocessable!(e.message)
   end

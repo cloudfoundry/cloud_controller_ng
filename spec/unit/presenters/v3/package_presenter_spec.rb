@@ -7,6 +7,39 @@ module VCAP::CloudController::Presenters::V3
       let(:result) { PackagePresenter.new(package).to_hash }
       let(:package) { VCAP::CloudController::PackageModel.make(type: 'package_type', sha256_checksum: 'sha256') }
 
+      let!(:release_label) do
+        VCAP::CloudController::PackageLabelModel.make(
+          key_name: 'release',
+          value: 'stable',
+          resource_guid: package.guid
+        )
+      end
+
+      let!(:potato_label) do
+        VCAP::CloudController::PackageLabelModel.make(
+          key_prefix: 'canberra.au',
+          key_name: 'potato',
+          value: 'mashed',
+          resource_guid: package.guid
+        )
+      end
+
+      let!(:mountain_annotation) do
+        VCAP::CloudController::PackageAnnotationModel.make(
+          key: 'altitude',
+          value: '14,412',
+          resource_guid: package.guid,
+        )
+      end
+
+      let!(:plain_annotation) do
+        VCAP::CloudController::PackageAnnotationModel.make(
+          key: 'maize',
+          value: 'hfcs',
+          resource_guid: package.guid,
+        )
+      end
+
       it 'presents the package as json' do
         links = {
           self: { href: "#{link_prefix}/v3/packages/#{package.guid}" },
@@ -21,6 +54,8 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:created_at]).to eq(package.created_at)
         expect(result[:updated_at]).to eq(package.updated_at)
         expect(result[:links]).to include(links)
+        expect(result[:metadata][:labels]).to eq('release' => 'stable', 'canberra.au/potato' => 'mashed')
+        expect(result[:metadata][:annotations]).to eq('altitude' => '14,412', 'maize' => 'hfcs')
       end
 
       context 'when the package type is bits' do
@@ -32,6 +67,8 @@ module VCAP::CloudController::Presenters::V3
 
           expect(result[:links][:download][:href]).to eq("#{link_prefix}/v3/packages/#{package.guid}/download")
           expect(result[:links][:download][:method]).to eq('GET')
+          expect(result[:metadata][:labels]).to eq('release' => 'stable', 'canberra.au/potato' => 'mashed')
+          expect(result[:metadata][:annotations]).to eq('altitude' => '14,412', 'maize' => 'hfcs')
         end
 
         context 'when bits-service is enabled' do

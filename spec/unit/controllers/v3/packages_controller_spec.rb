@@ -1,4 +1,5 @@
 require 'rails_helper'
+require 'permissions_spec_helper'
 
 RSpec.describe PackagesController, type: :controller do
   describe '#upload' do
@@ -363,6 +364,247 @@ RSpec.describe PackagesController, type: :controller do
 
           expect(response.status).to eq(404)
           expect(response.body).to include('ResourceNotFound')
+        end
+      end
+    end
+  end
+
+  describe '#update' do
+    let!(:org) { VCAP::CloudController::Organization.make(name: "Harold's Farm") }
+    let!(:space) { VCAP::CloudController::Space.make(name: 'roosters', organization: org) }
+    let(:app_model) { VCAP::CloudController::AppModel.make(name: 'needed to put the package in the space', space: space) }
+    let(:package) { VCAP::CloudController::PackageModel.make(app: app_model) }
+
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:labels) do
+      {
+        fruit: 'pears',
+        truck: 'hino'
+      }
+    end
+    let(:annotations) do
+      {
+        potato: 'celandine',
+        beet: 'formanova',
+      }
+    end
+    let!(:update_message) do
+      {
+        metadata: {
+          labels: {
+            fruit: 'passionfruit'
+          },
+          annotations: {
+            potato: 'adora'
+          }
+        }
+      }
+    end
+
+    before do
+      VCAP::CloudController::LabelsUpdate.update(package, labels, VCAP::CloudController::PackageLabelModel)
+      VCAP::CloudController::AnnotationsUpdate.update(package, annotations, VCAP::CloudController::PackageAnnotationModel)
+    end
+
+    context 'when the user is an admin' do
+      before do
+        set_current_user_as_admin
+      end
+
+      it 'updates the package' do
+        patch :update, params: { guid: package.guid }.merge(update_message), as: :json
+
+        expect(response.status).to eq(200)
+        expect(parsed_body['metadata']['labels']).to eq({ 'fruit' => 'passionfruit', 'truck' => 'hino' })
+        expect(parsed_body['metadata']['annotations']).to eq({ 'potato' => 'adora', 'beet' => 'formanova' })
+
+        package.reload
+        expect(package.labels.map { |label| { key: label.key_name, value: label.value } }).
+          to match_array([{ key: 'fruit', value: 'passionfruit' }, { key: 'truck', value: 'hino' }])
+        expect(package.annotations.map { |a| { key: a.key, value: a.value } }).
+          to match_array([{ key: 'potato', value: 'adora' }, { key: 'beet', value: 'formanova' }])
+      end
+
+      context 'when a label is deleted' do
+        let(:request_body) do
+          {
+            metadata: {
+              labels: {
+                fruit: nil
+              }
+            }
+          }
+        end
+
+        it 'succeeds' do
+          patch :update, params: { guid: package.guid }.merge(request_body), as: :json
+
+          expect(response.status).to eq(200)
+          expect(parsed_body['metadata']['labels']).to eq({ 'truck' => 'hino' })
+          expect(package.labels.map { |label| { key: label.key_name, value: label.value } }).to match_array([{ key: 'truck', value: 'hino' }])
+        end
+      end
+      context 'when an empty request is sent' do
+        let(:request_body) do
+          {}
+        end
+
+        it 'succeeds' do
+          patch :update, params: { guid: package.guid }.merge(request_body), as: :json
+          expect(response.status).to eq(200)
+          package.reload
+          expect(parsed_body['guid']).to eq(package.guid)
+        end
+      end
+
+      context 'when the message is invalid' do
+        before do
+          set_current_user_as_admin
+        end
+        let!(:update_message2) { update_message.merge({ animals: 'Cows' }) }
+
+        it 'fails' do
+          patch :update, params: { guid: package.guid }.merge(update_message2), as: :json
+          expect(response.status).to eq(422)
+        end
+      end
+
+      context 'when there is no such package' do
+        it 'fails' do
+          patch :update, params: { guid: "Greg's missing package" }.merge(update_message), as: :json
+
+          expect(response.status).to eq(404)
+        end
+      end
+
+      context 'when there is an invalid label' do
+        let(:request_body) do
+          {
+            metadata: {
+              labels: {
+                'cloudfoundry.org/label': 'value'
+              }
+            }
+          }
+        end
+
+        it 'displays an informative error' do
+          patch :update, params: { guid: package.guid }.merge(request_body), as: :json
+          expect(response.status).to eq(422)
+          expect(response).to have_error_message('Metadata key error: cloudfoundry.org is a reserved domain')
+        end
+      end
+
+      context 'when there is an invalid annotation' do
+        let(:request_body) do
+          {
+            metadata: {
+              annotations: {
+                key: 'big' * 5000
+              }
+            }
+          }
+        end
+
+        it 'displays an informative error' do
+          patch :update, params: { guid: package.guid }.merge(request_body), as: :json
+          expect(response.status).to eq(422)
+          expect(response).to have_error_message(/is greater than 5000 characters/)
+        end
+      end
+
+      context 'when there are too many annotations' do
+        let(:request_body) do
+          {
+            metadata: {
+              annotations: {
+                radish: 'daikon',
+                potato: 'idaho'
+              }
+            }
+          }
+        end
+
+        before do
+          VCAP::CloudController::Config.config.set(:max_annotations_per_resource, 2)
+        end
+
+        it 'fails with a 422' do
+          patch :update, params: { guid: package.guid }.merge(request_body), as: :json
+          expect(response.status).to eq(422)
+          expect(response).to have_error_message(/exceed maximum of 2/)
+        end
+      end
+
+      context 'when an annotation is deleted' do
+        let(:request_body) do
+          {
+            metadata: {
+              annotations: {
+                potato: nil
+              }
+            }
+          }
+        end
+
+        it 'succeeds' do
+          patch :update, params: { guid: package.guid }.merge(request_body), as: :json
+
+          expect(response.status).to eq(200)
+          expect(parsed_body['metadata']['annotations']).to eq({ 'beet' => 'formanova' })
+
+          package.reload
+          expect(package.annotations.map { |a| { key: a.key, value: a.value } }).to match_array([{ key: 'beet', value: 'formanova' }])
+        end
+      end
+    end
+
+    describe 'authorization' do
+      it_behaves_like 'permissions endpoint' do
+        let(:roles_to_http_responses) do
+          {
+            'admin' => 200,
+            'admin_read_only' => 403,
+            'global_auditor' => 403,
+            'space_developer' => 200,
+            'space_manager' => 403,
+            'space_auditor' => 403,
+            'org_manager' => 403,
+            'org_auditor' => 404,
+            'org_billing_manager' => 404,
+          }
+        end
+        let(:api_call) { lambda { patch :update, params: { guid: package.guid }.merge(update_message), as: :json } }
+      end
+
+      context 'permissions' do
+        let(:user) { set_current_user(VCAP::CloudController::User.make) }
+
+        context 'when the user cannot read the app' do
+          before do
+            disallow_user_read_access(user, space: space)
+          end
+
+          it 'returns a 404 ResourceNotFound error' do
+            patch :update, params: { guid: app_model.guid }.merge(update_message), as: :json
+
+            expect(response.status).to eq 404
+            expect(response.body).to include 'ResourceNotFound'
+          end
+        end
+
+        context 'when the user can read but cannot write to the app' do
+          before do
+            allow_user_read_access_for(user, spaces: [space])
+            disallow_user_write_access(user, space: space)
+          end
+
+          it 'raises ApiError NotAuthorized' do
+            patch :update, params: { guid: package.guid }.merge(update_message), as: :json
+
+            expect(response.status).to eq 403
+            expect(response.body).to include 'NotAuthorized'
+          end
         end
       end
     end

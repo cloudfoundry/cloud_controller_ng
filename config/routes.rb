@@ -49,6 +49,7 @@ Rails.application.routes.draw do
   # packages
   get '/packages', to: 'packages#index'
   get '/packages/:guid', to: 'packages#show'
+  patch '/packages/:guid', to: 'packages#update'
   post '/packages/:guid/upload', to: 'packages#upload'
   post '/packages', to: 'packages#create'
   get '/packages/:guid/download', to: 'packages#download'
