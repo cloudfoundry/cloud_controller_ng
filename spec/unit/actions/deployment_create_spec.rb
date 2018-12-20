@@ -12,6 +12,7 @@ module VCAP::CloudController
     let!(:route2) { VCAP::CloudController::Route.make(space: app.space) }
     let!(:route_mapping2) { VCAP::CloudController::RouteMappingModel.make(app: app, route: route2, process_type: web_process.type) }
     let(:user_audit_info) { UserAuditInfo.new(user_guid: '123', user_email: 'connor@example.com', user_name: 'braa') }
+    let(:runner) { instance_double(VCAP::CloudController::Diego::Runner) }
 
     before do
       app.update(droplet: original_droplet)
@@ -45,8 +46,8 @@ module VCAP::CloudController
           deploying_web_process = app.reload.newest_web_process
 
           expect(deploying_web_process.type).to eq(VCAP::CloudController::ProcessTypes::WEB)
-          expect(deploying_web_process.state).to eq(ProcessModel::STOPPED)
-          expect(deploying_web_process.instances).to eq(0)
+          expect(deploying_web_process.state).to eq(ProcessModel::STARTED)
+          expect(deploying_web_process.instances).to eq(1)
           expect(deploying_web_process.command).to eq(web_process.command)
           expect(deploying_web_process.memory).to eq(web_process.memory)
           expect(deploying_web_process.file_descriptors).to eq(web_process.file_descriptors)
@@ -59,6 +60,15 @@ module VCAP::CloudController
           expect(deploying_web_process.health_check_invocation_timeout).to eq(web_process.health_check_invocation_timeout)
           expect(deploying_web_process.enable_ssh).to eq(web_process.enable_ssh)
           expect(deploying_web_process.ports).to eq(web_process.ports)
+        end
+
+        it 'desires an LRP via the ProcessObserver', isolation: :truncation do
+          allow(runner).to receive(:start)
+          allow(VCAP::CloudController::Diego::Runner).to receive(:new).and_return(runner)
+
+          DeploymentCreate.create(app: app, droplet: app.droplet, user_audit_info: user_audit_info)
+
+          expect(runner).to have_received(:start).at_least(:once)
         end
 
         context 'when there are multiple web processes' do
@@ -87,8 +97,8 @@ module VCAP::CloudController
             deploying_web_process = app.reload.newest_web_process
 
             expect(deploying_web_process.type).to eq(VCAP::CloudController::ProcessTypes::WEB)
-            expect(deploying_web_process.state).to eq(ProcessModel::STOPPED)
-            expect(deploying_web_process.instances).to eq(0)
+            expect(deploying_web_process.state).to eq(ProcessModel::STARTED)
+            expect(deploying_web_process.instances).to eq(1)
             expect(deploying_web_process.command).to eq(web_process.command)
             expect(deploying_web_process.memory).to eq(web_process.memory)
             expect(deploying_web_process.file_descriptors).to eq(web_process.file_descriptors)

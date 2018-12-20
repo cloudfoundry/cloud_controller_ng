@@ -50,7 +50,7 @@ module VCAP::CloudController
           app: app,
           type: ProcessTypes::WEB,
           state: ProcessModel::STOPPED,
-          instances: 0,
+          instances: 1,
           command: web_process.command,
           memory: web_process.memory,
           file_descriptors: web_process.file_descriptors,
@@ -70,6 +70,9 @@ module VCAP::CloudController
           process_guid: process.guid,
           process_type: process.type
         )
+
+        # Need to transition from STOPPED to STARTED to engage the ProcessObserver to desire the LRP
+        process.reload.update(state: ProcessModel::STARTED)
 
         process
       end

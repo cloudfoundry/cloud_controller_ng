@@ -65,9 +65,8 @@ module VCAP::CloudController
         expect(deployment).to have_received(:lock!)
       end
 
-      it 'scales the web process down by one after the first iteration' do
+      it 'scales the old web process down by one after the first iteration' do
         expect {
-          subject.scale
           subject.scale
         }.to change {
           web_process.reload.instances
@@ -80,21 +79,6 @@ module VCAP::CloudController
         }.to change {
           deploying_web_process.reload.instances
         }.by(1)
-      end
-
-      it 'sets the state of the new web process to started' do
-        expect {
-          subject.scale
-        }.to change {
-          deploying_web_process.reload.state
-        }.from(ProcessModel::STOPPED).to(ProcessModel::STARTED)
-      end
-
-      it 'starts the new web process and does not scale the existing process in the first iteration' do
-        subject.scale
-
-        expect(deploying_web_process.reload.instances).to eq(1)
-        expect(web_process.reload.instances).to eq(current_web_instances)
       end
 
       context 'when the deployment process has reached original_web_process_instance_count' do
