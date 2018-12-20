@@ -13,18 +13,12 @@ module VCAP::CloudController
       let(:pagination_options) { PaginationOptions.new({}) }
       let(:filters) { {} }
       let(:message) { AppsListMessage.from_params(filters) }
-
-      apps = nil
+      let(:apps) { fetcher.fetch(message, space_guids) }
 
       before do
         app.save
         sad_app.save
         expect(message).to be_valid
-        apps = fetcher.fetch(message, space_guids)
-      end
-
-      after do
-        apps = nil
       end
 
       it 'fetch_all includes all the apps' do

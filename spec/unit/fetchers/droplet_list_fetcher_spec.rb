@@ -124,6 +124,18 @@ module VCAP::CloudController
           expect(results).to contain_exactly(staged_droplet_for_app1)
         end
       end
+
+      context 'filtering labels and space guids' do
+        let(:message) do DropletsListMessage.from_params({ 'label_selector' => 'key=value', 'space_guids' => app1.space_guid })
+        end
+        let!(:droplet1Label) { DropletLabelModel.make(key_name: 'key', value: 'value', droplet: staged_droplet_for_app1) }
+        let!(:droplet2Label) { DropletLabelModel.make(key_name: 'key', value: 'value', droplet: staged_droplet_for_app2) }
+
+        it 'returns the correct set of droplets' do
+          results = fetcher.fetch_all
+          expect(results).to contain_exactly(staged_droplet_for_app1)
+        end
+      end
     end
 
     describe '#fetch_for_spaces' do

@@ -11,12 +11,12 @@ module VCAP::CloudController
 
     def fetch(message, space_guids)
       dataset = AppModel.where(space_guid: space_guids)
-      filter(message, dataset)
+      filter(message, dataset, prefilter_label_queries: true)
     end
 
     private
 
-    def filter(message, dataset)
+    def filter(message, dataset, prefilter_label_queries: false)
       if message.requested?(:names)
         dataset = dataset.where(name: message.names)
       end
@@ -35,6 +35,7 @@ module VCAP::CloudController
           resource_dataset: dataset,
           requirements: message.requirements,
           resource_klass: AppModel,
+          prefilter_labels_by_resource_dataset: prefilter_label_queries,
         )
       end
 
