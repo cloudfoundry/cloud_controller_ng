@@ -52,15 +52,6 @@ module VCAP::CloudController
         dataset = dataset.where("#{droplet_table_name}__guid".to_sym => @message.guids)
       end
 
-      if @message.requested? :label_selector
-        dataset = LabelSelectorQueryGenerator.add_selector_queries(
-          label_klass: DropletLabelModel,
-          resource_dataset: dataset,
-          requirements: @message.requirements,
-          resource_klass: DropletModel,
-        )
-      end
-
       if @message.requested?(:organization_guids)
         space_guids_from_orgs = Organization.where(guid: @message.organization_guids).map(&:spaces).flatten.map(&:guid)
         dataset = dataset.select_all(droplet_table_name).
@@ -70,6 +61,15 @@ module VCAP::CloudController
       if scoped_space_guids.present?
         dataset = dataset.select_all(droplet_table_name).
                   join_table(:inner, AppModel.table_name, { guid: Sequel[:droplets][:app_guid], space_guid: scoped_space_guids }, { table_alias: :apps_spaces })
+      end
+
+      if @message.requested? :label_selector
+        dataset = LabelSelectorQueryGenerator.add_selector_queries(
+          label_klass: DropletLabelModel,
+          resource_dataset: dataset,
+          requirements: @message.requirements,
+          resource_klass: DropletModel,
+        )
       end
 
       dataset.exclude(state: DropletModel::STAGING_STATE).qualify(DropletModel.table_name)

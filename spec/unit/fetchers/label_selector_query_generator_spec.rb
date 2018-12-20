@@ -184,6 +184,26 @@ module VCAP::CloudController
           expect(dataset.count).to eq(0)
         end
       end
+
+      context 'when resource_dataset is a join table with a guid column' do
+        let(:join_table_dataset) do
+          AppModel.dataset.select_all(AppModel.table_name).join_table(:inner, Space.table_name, { guid: Sequel[:apps][:space_guid] })
+        end
+
+        it 'can still multiple queries correctly' do
+          dataset = subject.add_selector_queries(
+            label_klass: AppLabelModel,
+            resource_dataset: join_table_dataset,
+            requirements: [
+              VCAP::CloudController::LabelSelectorRequirement.new(key: 'foo', operator: :equal, values: 'town'),
+              VCAP::CloudController::LabelSelectorRequirement.new(key: 'easter', operator: :equal, values: 'bunny')
+            ],
+            resource_klass: AppModel,
+          )
+
+          expect(dataset.map(&:guid)).to contain_exactly(app3.guid)
+        end
+      end
     end
   end
 end

@@ -18,7 +18,11 @@ module VCAP::CloudController
             dataset_for_requirement = evaluate_not_exists(label_klass, resource_dataset, requirement, resource_klass)
           end
 
-          accumulated_dataset.nil? ? dataset_for_requirement : accumulated_dataset.join(dataset_for_requirement, [:guid])
+          if accumulated_dataset.nil?
+            dataset_for_requirement
+          else
+            accumulated_dataset.join(dataset_for_requirement, { guid: Sequel[resource_klass.table_name][:guid] })
+          end
         end
       end
 
