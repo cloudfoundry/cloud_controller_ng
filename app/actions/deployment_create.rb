@@ -46,7 +46,22 @@ module VCAP::CloudController
       private
 
       def create_deployment_process(app, deployment_guid, web_process)
-        process = ProcessModel.create(
+        process = clone_existing_web_process(app, web_process)
+
+        DeploymentProcessModel.create(
+          deployment_guid: deployment_guid,
+          process_guid: process.guid,
+          process_type: process.type
+        )
+
+        # Need to transition from STOPPED to STARTED to engage the ProcessObserver to desire the LRP
+        process.reload.update(state: ProcessModel::STARTED)
+
+        process
+      end
+
+      def clone_existing_web_process(app, web_process)
+        ProcessModel.create(
           app: app,
           type: ProcessTypes::WEB,
           state: ProcessModel::STOPPED,
@@ -64,17 +79,6 @@ module VCAP::CloudController
           enable_ssh: web_process.enable_ssh,
           ports: web_process.ports,
         )
-
-        DeploymentProcessModel.create(
-          deployment_guid: deployment_guid,
-          process_guid: process.guid,
-          process_type: process.type
-        )
-
-        # Need to transition from STOPPED to STARTED to engage the ProcessObserver to desire the LRP
-        process.reload.update(state: ProcessModel::STARTED)
-
-        process
       end
 
       def record_audit_event(deployment, droplet, user_audit_info)
