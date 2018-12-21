@@ -131,25 +131,23 @@ RSpec.describe AppsV3Controller, type: :controller do
       end
 
       it 'sorts and paginates the apps by name' do
-        get :index, params: { order_by: 'name', order_direction: 'asc', per_page: 2 }, as: :json
+        get :index, params: { order_by: '+name', per_page: 2 }, as: :json
 
         expect(response.status).to eq(200), response.body
         response_names = parsed_body['resources'].map { |r| r['name'] }
         expect(response_names).to match_array(%w/abel beale/)
         expect(parsed_body['pagination']['next']['href']).to match(/order_by=%2Bname/)
-        expect(parsed_body['pagination']['next']['href']).to match(/order_direction=asc/)
         expect(parsed_body['pagination']['next']['href']).to match(/per_page=2/)
         expect(parsed_body['pagination']['next']['href']).to match(/page=2/)
       end
 
       it 'sorts and paginates the apps by name using the default direction only' do
-        get :index, params: { order_by: '+name', order_direction: 'desc', per_page: 2 }, as: :json
+        get :index, params: { order_by: '-name', per_page: 2 }, as: :json
 
         expect(response.status).to eq(200), response.body
         response_names = parsed_body['resources'].map { |r| r['name'] }
-        expect(response_names).to match_array(%w/abel beale/)
-        expect(parsed_body['pagination']['next']['href']).to match(/order_by=%2Bname/)
-        expect(parsed_body['pagination']['next']['href']).to match(/order_direction=desc/)
+        expect(response_names).to match_array(%w/quartz rocky/)
+        expect(parsed_body['pagination']['next']['href']).to match(/order_by=-name/)
         expect(parsed_body['pagination']['next']['href']).to match(/per_page=2/)
         expect(parsed_body['pagination']['next']['href']).to match(/page=2/)
       end
@@ -165,13 +163,12 @@ RSpec.describe AppsV3Controller, type: :controller do
         expect(parsed_body['pagination']['previous']).to be_nil
       end
 
-      it 'can get the first page descending with order_direction' do
-        get :index, params: { order_by: '-name', order_direction: 'desc', per_page: 2, page: 1 }, as: :json
+      it 'can get the first page descending with a leading dash' do
+        get :index, params: { order_by: '-name', per_page: 2, page: 1 }, as: :json
         expect(response.status).to eq(200), response.body
         response_names = parsed_body['resources'].map { |r| r['name'] }
         expect(response_names).to match_array(%w/rocky quartz/)
         expect(parsed_body['pagination']['next']['href']).to match(/order_by=-name/)
-        expect(parsed_body['pagination']['next']['href']).to match(/order_direction=desc/)
         expect(parsed_body['pagination']['next']['href']).to match(/per_page=2/)
         expect(parsed_body['pagination']['next']['href']).to match(/page=2/)
         expect(parsed_body['pagination']['previous']).to be_nil
