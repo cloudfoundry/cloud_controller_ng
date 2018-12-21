@@ -7,6 +7,7 @@ RSpec.describe AppFeaturesController, type: :controller do
   let(:org) { space.organization }
   let(:user) { VCAP::CloudController::User.make }
   let(:app_feature_ssh_response) { { 'name' => 'ssh', 'description' => 'Enable SSHing into the app.', 'enabled' => true } }
+  let(:app_feature_revisions_response) { { 'name' => 'revisions', 'description' => 'Enable versioning of an application (experimental)', 'enabled' => false } }
 
   before do
     space.update(allow_ssh: true)
@@ -17,7 +18,7 @@ RSpec.describe AppFeaturesController, type: :controller do
   describe '#index' do
     let(:pagination_hash) do
       {
-        'total_results' => 1,
+        'total_results' => 2,
         'total_pages' => 1,
         'first' => { 'href' => "/v3/apps/#{app_model.guid}/features" },
         'last' => { 'href' => "/v3/apps/#{app_model.guid}/features" },
@@ -36,7 +37,7 @@ RSpec.describe AppFeaturesController, type: :controller do
     it 'returns app features' do
       get :index, params: { app_guid: app_model.guid }
       expect(parsed_body).to eq(
-        'resources' => [app_feature_ssh_response],
+        'resources' => [app_feature_ssh_response, app_feature_revisions_response],
         'pagination' => pagination_hash
       )
     end
@@ -54,9 +55,14 @@ RSpec.describe AppFeaturesController, type: :controller do
       let(:api_call) { lambda { get :show, params: { app_guid: app_model.guid, name: 'ssh' } } }
     end
 
-    it 'returns specific app feature' do
+    it 'returns the ssh app feature' do
       get :show, params: { app_guid: app_model.guid, name: 'ssh' }
       expect(parsed_body).to eq(app_feature_ssh_response)
+    end
+
+    it 'returns the revisions app feature' do
+      get :show, params: { app_guid: app_model.guid, name: 'revisions' }
+      expect(parsed_body).to eq(app_feature_revisions_response)
     end
 
     it 'throws 404 for a non-existent feature' do
@@ -81,16 +87,28 @@ RSpec.describe AppFeaturesController, type: :controller do
       let(:api_call) { lambda { patch :update, params: { app_guid: app_model.guid, name: 'ssh', enabled: false }, as: :json } }
     end
 
-    it 'updates a given app feature' do
-      expect(VCAP::CloudController::Permissions::Queryer).to receive(:new).and_call_original.exactly(:once)
-      expect {
+    context 'updating ssh to false' do
+      it 'disables ssh for the app' do
+        expect(VCAP::CloudController::Permissions::Queryer).to receive(:new).and_call_original.exactly(:once)
         patch :update, params: { app_guid: app_model.guid, name: 'ssh', enabled: false }, as: :json
-      }.to change { app_model.reload.enable_ssh }.to(false)
 
-      expect(response.status).to eq(200)
-      expect(parsed_body['name']).to eq('ssh')
-      expect(parsed_body['description']).to eq('Enable SSHing into the app.')
-      expect(parsed_body['enabled']).to eq(false)
+        expect(response.status).to eq(200)
+        expect(parsed_body['name']).to eq('ssh')
+        expect(parsed_body['description']).to eq('Enable SSHing into the app.')
+        expect(parsed_body['enabled']).to eq(false)
+      end
+    end
+
+    context 'updating revisions to true' do
+      it 'enables revisions for the app' do
+        expect(VCAP::CloudController::Permissions::Queryer).to receive(:new).and_call_original.exactly(:once)
+        patch :update, params: { app_guid: app_model.guid, name: 'revisions', enabled: true }, as: :json
+
+        expect(response.status).to eq(200)
+        expect(parsed_body['name']).to eq('revisions')
+        expect(parsed_body['description']).to eq('Enable versioning of an application (experimental)')
+        expect(parsed_body['enabled']).to eq(true)
+      end
     end
 
     it 'responds 404 when the feature does not exist' do
