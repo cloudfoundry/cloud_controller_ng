@@ -22,7 +22,7 @@ module VCAP::CloudController
     let!(:package_for_app3) { PackageModel.make(app_guid: app3_in_space2.guid, type: PackageModel::BITS_TYPE) }
 
     subject(:fetcher) { PackageListFetcher.new }
-    let(:message) { PackagesListMessage.new(filters) }
+    let(:message) { PackagesListMessage.from_params(filters) }
 
     let(:filters) { {} }
 
@@ -84,8 +84,17 @@ module VCAP::CloudController
         context 'filtering org guids' do
           let(:filters) { { organization_guids: [org_2_guid, org_3_guid] } }
 
-          it 'returns the correct set of tasks' do
+          it 'returns the correct set of packages' do
             expect(results.all).to match_array([package_in_space3, package_for_app3])
+          end
+        end
+
+        context 'filtering label selectors' do
+          let(:filters) { { 'label_selector' => 'key=value' } }
+          let!(:label) { PackageLabelModel.make(resource_guid: package_for_app3.guid, key_name: 'key', value: 'value') }
+
+          it 'returns the correct set of packages' do
+            expect(results.all).to match_array([package_for_app3])
           end
         end
       end
@@ -147,7 +156,7 @@ module VCAP::CloudController
         context 'filtering org guids' do
           let(:filters) { { organization_guids: [org_2_guid, org_3_guid] } }
 
-          it 'returns the correct set of tasks' do
+          it 'returns the correct set of packages' do
             expect(results.all).to match_array([package_in_space3])
           end
         end

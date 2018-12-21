@@ -6,7 +6,7 @@ module VCAP::CloudController
 
     def fetch_for_spaces(message:, space_guids:)
       dataset = joined_dataset.where(table_column_name(AppModel, :space_guid) => space_guids)
-      filter(message, dataset)
+      filter(message, dataset, prefilter_label_queries: true)
     end
 
     def fetch_for_app(message:)
@@ -32,7 +32,7 @@ module VCAP::CloudController
         join(AppModel.table_name, guid: :app_guid)
     end
 
-    def filter(message, dataset)
+    def filter(message, dataset, prefilter_label_queries: false)
       if message.requested? :states
         dataset = dataset.where(table_column_name(PackageModel, :state) => message.states)
       end
@@ -55,6 +55,16 @@ module VCAP::CloudController
 
       if message.requested? :organization_guids
         dataset = dataset.where(table_column_name(AppModel, :space_guid) => Organization.where(guid: message.organization_guids).map(&:spaces).flatten.map(&:guid))
+      end
+
+      if message.requested?(:label_selector)
+        dataset = LabelSelectorQueryGenerator.add_selector_queries(
+          label_klass: PackageLabelModel,
+          resource_dataset: dataset,
+          requirements: message.requirements,
+          resource_klass: PackageModel,
+          prefilter_labels_by_resource_dataset: prefilter_label_queries,
+        )
       end
 
       dataset

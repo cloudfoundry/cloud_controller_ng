@@ -1,4 +1,5 @@
 require 'messages/list_message'
+require 'messages/validators/label_selector_requirement_validator'
 
 module VCAP::CloudController
   class PackagesListMessage < ListMessage
@@ -9,10 +10,12 @@ module VCAP::CloudController
       :app_guids,
       :app_guid,
       :space_guids,
-      :organization_guids
+      :organization_guids,
+      :label_selector,
     ]
 
     validates_with NoAdditionalParamsValidator
+    validates_with LabelSelectorRequirementValidator, if: label_selector_requested?
 
     validates :states, array: true, allow_nil: true
     validates :types,  array: true, allow_nil: true

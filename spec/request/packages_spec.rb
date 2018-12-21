@@ -550,6 +550,31 @@ RSpec.describe 'Packages' do
         expect(parsed_response['resources'].map { |r| r['guid'] }).to match_array([package_in_org1.guid, package_in_org2.guid])
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
+
+      it 'filters by label selectors' do
+        target = VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
+        VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
+        VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
+        VCAP::CloudController::PackageLabelModel.make(key_name: 'fruit', value: 'strawberry', package: target)
+
+        get '/v3/packages?label_selector=fruit=strawberry', {}, user_header
+
+        expected_pagination = {
+          'total_results' => 1,
+          'total_pages'   => 1,
+          'first'         => { 'href' => "#{link_prefix}/v3/packages?label_selector=fruit%3Dstrawberry&page=1&per_page=50" },
+          'last'          => { 'href' => "#{link_prefix}/v3/packages?label_selector=fruit%3Dstrawberry&page=1&per_page=50" },
+          'next'          => nil,
+          'previous'      => nil
+        }
+
+        parsed_response = MultiJson.load(last_response.body)
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['resources'].count).to eq(1)
+        expect(parsed_response['resources'][0]['guid']).to eq(target.guid)
+        expect(parsed_response['pagination']).to eq(expected_pagination)
+      end
     end
   end
 
@@ -781,6 +806,47 @@ RSpec.describe 'Packages' do
           organization_guid: space.organization.guid
         })
       end
+    end
+  end
+
+  describe 'PATCH /v3/packages/:guid' do
+    let(:app_name) { 'sir meow' }
+    let(:app_guid) { 'meow-the-guid' }
+    let(:space) { VCAP::CloudController::Space.make }
+    let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid, name: app_name, guid: app_guid) }
+    let!(:package_model) do
+      VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
+    end
+    let(:metadata) { {
+      labels: {
+        release: 'stable',
+        'seriouseats.com/potato' => 'mashed'
+      },
+      annotations: { 'checksum' => 'SHA' },
+    }
+    }
+
+    let(:guid) { package_model.guid }
+
+    before do
+      space.organization.add_user user
+      space.add_developer user
+    end
+
+    it 'updates package metadata' do
+      patch "/v3/packages/#{guid}", { metadata: metadata }.to_json, user_header
+
+      expected_metadata = {
+        'labels' => {
+          'release' => 'stable',
+          'seriouseats.com/potato' => 'mashed',
+        },
+        'annotations' => { 'checksum' => 'SHA' },
+      }
+
+      parsed_response = MultiJson.load(last_response.body)
+      expect(last_response.status).to eq(200)
+      expect(parsed_response['metadata']).to eq(expected_metadata)
     end
   end
 

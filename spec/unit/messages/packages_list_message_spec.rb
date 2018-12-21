@@ -14,6 +14,7 @@ module VCAP::CloudController
           'guids' => 'guid1,guid2',
           'page'     => 1,
           'per_page' => 5,
+          'label_selector' => 'key=value',
         }
       end
 
@@ -29,6 +30,7 @@ module VCAP::CloudController
         expect(message.guids).to eq(['guid1', 'guid2'])
         expect(message.space_guids).to eq(['spaceguid1', 'spaceguid2'])
         expect(message.organization_guids).to eq(['organizationguid1', 'organizationguid2'])
+        expect(message.label_selector).to eq('key=value')
       end
 
       it 'converts requested keys to symbols' do
@@ -192,6 +194,16 @@ module VCAP::CloudController
           message = PackagesListMessage.new(organization_guids: nil)
           expect(message).to be_valid
         end
+      end
+
+      it 'validates requirements' do
+        message = PackagesListMessage.from_params('label_selector' => '')
+
+        expect_any_instance_of(Validators::LabelSelectorRequirementValidator).
+          to receive(:validate).
+          with(message).
+          and_call_original
+        message.valid?
       end
     end
   end
