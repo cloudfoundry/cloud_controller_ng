@@ -1032,6 +1032,49 @@ RSpec.describe PackagesController, type: :controller do
           expect(package.docker_password).to eq(docker_password)
         end
       end
+
+      context 'with metadata' do
+        let(:metadata_request_body) { request_body.merge(metadata) }
+        context 'when the label is invalid' do
+          let(:metadata) do {
+                metadata: {
+                    labels: {
+                      'cloudfoundry.org/release' => 'stable'
+                    }
+                }
+              }
+          end
+
+          it 'returns an UnprocessableEntity error' do
+            post :create, params: metadata_request_body, as: :json
+
+            expect(response.status).to eq 422
+            expect(response.body).to include 'UnprocessableEntity'
+            expect(response.body).to include 'cloudfoundry.org is a reserved domain'
+          end
+        end
+
+        context 'when the metadata is valid' do
+          let(:metadata) do {
+            metadata: {
+              labels: {
+                'release' => 'stable'
+              }
+            }
+          }
+          end
+
+          it 'Returns a 201 and the app with metadata' do
+            post :create, params: metadata_request_body, as: :json
+
+            response_body = parsed_body
+            response_metadata = response_body['metadata']
+
+            expect(response.status).to eq(201)
+            expect(response_metadata['labels']['release']).to eq 'stable'
+          end
+        end
+      end
     end
 
     context 'when copying an existing package' do

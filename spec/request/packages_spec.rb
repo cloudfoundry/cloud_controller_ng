@@ -21,11 +21,18 @@ RSpec.describe 'Packages' do
     let(:data) { { image: 'registry/image:latest', username: 'my-docker-username', password: 'my-password' } }
     let(:expected_data) { { image: 'registry/image:latest', username: 'my-docker-username', password: '***' } }
     let(:relationships) { { app: { data: { guid: app_model.guid } } } }
+    let(:metadata) { {
+      labels: {
+        release: 'stable',
+        'seriouseats.com/potato' => 'mashed'
+      },
+    }
+    }
 
     describe 'creation' do
       it 'creates a package' do
         expect {
-          post '/v3/packages', { type: type, data: data, relationships: relationships }.to_json, user_header
+          post '/v3/packages', { type: type, data: data, relationships: relationships, metadata: metadata }.to_json, user_header
         }.to change { VCAP::CloudController::PackageModel.count }.by(1)
 
         package = VCAP::CloudController::PackageModel.last
@@ -39,7 +46,7 @@ RSpec.describe 'Packages' do
             'password' => '***'
           },
           'state' => 'READY',
-          'metadata' => { 'labels' => {}, 'annotations' => {} },
+          'metadata' => { 'labels' => { 'release' => 'stable', 'seriouseats.com/potato' => 'mashed' }, 'annotations' => {} },
           'created_at' => iso8601,
           'updated_at' => iso8601,
           'links' => {
@@ -48,12 +55,13 @@ RSpec.describe 'Packages' do
           }
         }
 
-        expected_metadata = {
+        expected_event_metadata = {
           package_guid: package.guid,
           request: {
             type: type,
             data: expected_data,
-            relationships: relationships
+            relationships: relationships,
+            metadata: metadata,
           }
         }.to_json
 
@@ -71,7 +79,7 @@ RSpec.describe 'Packages' do
           actee:             package.app.guid,
           actee_type:        'app',
           actee_name:        package.app.name,
-          metadata:          expected_metadata,
+          metadata:          expected_event_metadata,
           space_guid:        space.guid,
           organization_guid: space.organization.guid
         })

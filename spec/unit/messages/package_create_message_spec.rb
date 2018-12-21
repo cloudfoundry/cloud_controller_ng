@@ -138,6 +138,27 @@ module VCAP::CloudController
           end
         end
       end
+
+      context 'when the message includes metadata' do
+        let(:params) { { relationships: relationships, type: 'bits' } }
+        let(:metadata) do
+          {
+
+            'metadata' => {
+              'labels' => {
+                'potatoes' => 'packagedTots'
+              }
+            }
+          }
+        end
+        let(:all_params) { params.merge(metadata) }
+
+        it 'is valid and correctly parses the labels' do
+          message = PackageCreateMessage.new(all_params)
+          expect(message).to be_valid
+          expect(message.labels).to include(potatoes: 'packagedTots')
+        end
+      end
     end
 
     describe '#audit_hash' do

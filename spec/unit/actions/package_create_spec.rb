@@ -6,7 +6,18 @@ module VCAP::CloudController
     let(:app) { AppModel.make }
     let(:type) { 'docker' }
     let(:relationships) { { app: { data: { guid: app.guid } } } }
-    let(:message) { PackageCreateMessage.new({ type: type, relationships: relationships }) }
+    let(:message) {
+      PackageCreateMessage.new({
+        type: type,
+        relationships: relationships,
+        metadata: {
+          labels: {
+            release: 'stable',
+            'seriouseats.com/potato' => 'mashed'
+          },
+        }
+      })
+    }
     let(:user_audit_info) { UserAuditInfo.new(user_guid: user_guid, user_email: user_email) }
 
     describe '#create' do
@@ -29,6 +40,12 @@ module VCAP::CloudController
           {
             'relationships' => relationships.deep_stringify_keys,
             'type' => type,
+            'metadata' => {
+              'labels' => {
+                'release' => 'stable',
+                'seriouseats.com/potato' => 'mashed'
+              },
+            },
           }
         )
 

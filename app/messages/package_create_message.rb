@@ -1,9 +1,9 @@
-require 'messages/base_message'
+require 'messages/metadata_base_message'
 require 'messages/validators/bits_data_validator'
 require 'messages/validators/docker_data_validator'
 
 module VCAP::CloudController
-  class PackageCreateMessage < BaseMessage
+  class PackageCreateMessage < MetadataBaseMessage
     register_allowed_keys [:relationships, :type, :data]
 
     validates_with NoAdditionalKeysValidator,
