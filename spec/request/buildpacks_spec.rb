@@ -1,6 +1,87 @@
 require 'spec_helper'
 
 RSpec.describe 'buildpacks' do
+  describe 'GET /v3/buildpacks' do
+    let(:user) { make_user }
+    let(:headers) { headers_for(user) }
+
+    it 'returns 200 OK' do
+      get '/v3/buildpacks', nil, headers
+      expect(last_response.status).to eq(200)
+    end
+
+    context 'When buildpacks exist' do
+      let!(:buildpack1) { VCAP::CloudController::Buildpack.make }
+      let!(:buildpack2) { VCAP::CloudController::Buildpack.make }
+      let!(:buildpack3) { VCAP::CloudController::Buildpack.make }
+
+      it 'returns a paginated list of buildpacks' do
+        get '/v3/buildpacks?page=1&per_page=2', nil, headers
+
+        expect(parsed_response).to be_a_response_like(
+          {
+            'pagination' => {
+              'total_results' => 3,
+              'total_pages' => 2,
+              'first' => {
+                'href' => "#{link_prefix}/v3/buildpacks?page=1&per_page=2"
+              },
+              'last' => {
+                'href' => "#{link_prefix}/v3/buildpacks?page=2&per_page=2"
+              },
+              'next' => {
+                'href' => "#{link_prefix}/v3/buildpacks?page=2&per_page=2"
+              },
+              'previous' => nil
+            },
+            'resources' => [
+              {
+                'guid' => buildpack1.guid,
+                'created_at' => iso8601,
+                'updated_at' => iso8601,
+                'name' => buildpack1.name,
+                'state' => 'AWAITING_UPLOAD',
+                'filename' => nil,
+                'stack' => buildpack1.stack,
+                'position' => 1,
+                'enabled' => true,
+                'locked' => false,
+                'links' => {
+                  'self' => {
+                    'href' => "#{link_prefix}/v3/buildpacks/#{buildpack1.guid}"
+                  },
+                  'upload' => {
+                    'href' => "#{link_prefix}/v3/buildpacks/#{buildpack1.guid}/upload"
+                  }
+                }
+              },
+              {
+                'guid' => buildpack2.guid,
+                'created_at' => iso8601,
+                'updated_at' => iso8601,
+                'name' => buildpack2.name,
+                'state' => 'AWAITING_UPLOAD',
+                'filename' => nil,
+                'stack' => buildpack2.stack,
+                'position' => 2,
+                'enabled' => true,
+                'locked' => false,
+                'links' => {
+                  'self' => {
+                    'href' => "#{link_prefix}/v3/buildpacks/#{buildpack2.guid}"
+                  },
+                  'upload' => {
+                    'href' => "#{link_prefix}/v3/buildpacks/#{buildpack2.guid}/upload"
+                  }
+                }
+              }
+            ]
+          }
+        )
+      end
+    end
+  end
+
   describe 'POST /v3/buildpacks' do
     context 'when not authenticated' do
       it 'returns 401' do
@@ -67,6 +148,9 @@ RSpec.describe 'buildpacks' do
               'links' => {
                 'self' => {
                   'href' => "#{link_prefix}/v3/buildpacks/#{buildpack.guid}"
+                },
+                'upload' => {
+                  'href' => "#{link_prefix}/v3/buildpacks/#{buildpack.guid}/upload"
                 }
               }
             }
@@ -171,6 +255,9 @@ RSpec.describe 'buildpacks' do
               'links' => {
                 'self' => {
                   'href' => "#{link_prefix}/v3/buildpacks/#{buildpack.guid}"
+                },
+                'upload' => {
+                  'href' => "#{link_prefix}/v3/buildpacks/#{buildpack.guid}/upload"
                 }
               }
             }

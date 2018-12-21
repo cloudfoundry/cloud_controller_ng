@@ -1,0 +1,34 @@
+### List buildpacks
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/buildpacks" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :paginated_list_of_buildpacks, '/v3/buildpacks' %>
+```
+
+Retrieve all buildpacks the user has access to.
+
+#### Definition
+`GET /v3/buildpacks`
+
+#### Query Parameters
+
+Name | Type | Description
+---- | ---- | ------------
+**page** | _integer_ | Page to display. Valid values are integers >= 1.
+**per_page** | _integer_ | Number of results per page. <br>Valid values are 1 through 5000.

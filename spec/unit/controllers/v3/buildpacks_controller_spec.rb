@@ -111,4 +111,70 @@ RSpec.describe BuildpacksController, type: :controller do
       end
     end
   end
+
+  describe '#index' do
+    let(:user) { VCAP::CloudController::User.make }
+
+    describe 'permissions by role' do
+      role_to_expected_http_response = {
+        'admin' => 200,
+        'space_developer' => 200,
+        'space_manager' => 200,
+        'space_auditor' => 200,
+        'org_manager' => 200,
+        'admin_read_only' => 200,
+        'global_auditor' => 200,
+        'org_auditor' => 200,
+        'org_billing_manager' => 200,
+        'org_user' => 200,
+      }.freeze
+
+      role_to_expected_http_response.each do |role, expected_return_value|
+        context "as an #{role}" do
+          let(:org) { VCAP::CloudController::Organization.make }
+          let(:space) { VCAP::CloudController::Space.make(organization: org) }
+
+          it "returns #{expected_return_value}" do
+            set_current_user_as_role(role: role, org: org, space: space, user: user)
+
+            get :index
+
+            expect(response.status).to eq expected_return_value
+          end
+        end
+      end
+
+      it 'returns 401 when logged out' do
+        get :index
+
+        expect(response.status).to eq 401
+      end
+    end
+
+    context 'when the user is logged in' do
+      let!(:buidlpack1) { VCAP::CloudController::Buildpack.make }
+      let!(:buidlpack2) { VCAP::CloudController::Buildpack.make }
+
+      before do
+        set_current_user(user)
+      end
+
+      it 'renders a paginated list of stacks' do
+        get :index
+
+        expect(parsed_body['resources'].first['guid']).to eq(buidlpack1.guid)
+        expect(parsed_body['resources'].second['guid']).to eq(buidlpack2.guid)
+      end
+
+      context 'when the query params are invalid' do
+        it 'returns an error' do
+          get :index, params: { per_page: 'whoops' }
+
+          expect(response.status).to eq 400
+          expect(response.body).to include('Per page must be a positive integer')
+          expect(response.body).to include('BadQueryParameter')
+        end
+      end
+    end
+  end
 end

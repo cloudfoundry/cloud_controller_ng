@@ -31,6 +31,9 @@ module VCAP::CloudController::Presenters::V3
         self: {
           href: url_builder.build_url(path: "/v3/buildpacks/#{buildpack.guid}")
         },
+        upload: {
+          href: url_builder.build_url(path: "/v3/buildpacks/#{buildpack.guid}/upload")
+        }
       }
     end
   end
