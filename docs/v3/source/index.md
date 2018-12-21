@@ -87,6 +87,7 @@ includes:
   - resources/packages/header
   - resources/packages/object
   - resources/packages/create
+  - resources/packages/update
   - resources/packages/get
   - resources/packages/stage
   - resources/packages/upload_bits
