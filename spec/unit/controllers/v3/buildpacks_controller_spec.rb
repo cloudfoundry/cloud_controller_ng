@@ -152,8 +152,8 @@ RSpec.describe BuildpacksController, type: :controller do
     end
 
     context 'when the user is logged in' do
-      let!(:buidlpack1) { VCAP::CloudController::Buildpack.make }
-      let!(:buidlpack2) { VCAP::CloudController::Buildpack.make }
+      let!(:buildpack1) { VCAP::CloudController::Buildpack.make }
+      let!(:buildpack2) { VCAP::CloudController::Buildpack.make }
 
       before do
         set_current_user(user)
@@ -162,8 +162,15 @@ RSpec.describe BuildpacksController, type: :controller do
       it 'renders a paginated list of stacks' do
         get :index
 
-        expect(parsed_body['resources'].first['guid']).to eq(buidlpack1.guid)
-        expect(parsed_body['resources'].second['guid']).to eq(buidlpack2.guid)
+        expect(parsed_body['resources'].first['guid']).to eq(buildpack1.guid)
+        expect(parsed_body['resources'].second['guid']).to eq(buildpack2.guid)
+      end
+
+      it 'renders a name filtered list of stacks' do
+        get :index, params: { names: buildpack2.name }
+
+        expect(parsed_body['resources']).to have(1).buildpack
+        expect(parsed_body['resources'].first['guid']).to eq(buildpack2.guid)
       end
 
       context 'when the query params are invalid' do
