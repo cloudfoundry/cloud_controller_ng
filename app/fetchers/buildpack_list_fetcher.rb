@@ -12,6 +12,10 @@ module VCAP::CloudController
       if message.requested?(:names)
         dataset = dataset.where(name: message.names)
       end
+
+      if message.requested?(:stacks)
+        dataset = dataset.where(stack: message.stacks)
+      end
       dataset
     end
   end

@@ -152,8 +152,11 @@ RSpec.describe BuildpacksController, type: :controller do
     end
 
     context 'when the user is logged in' do
-      let!(:buildpack1) { VCAP::CloudController::Buildpack.make }
-      let!(:buildpack2) { VCAP::CloudController::Buildpack.make }
+      let!(:stack1) { VCAP::CloudController::Stack.make }
+      let!(:stack2) { VCAP::CloudController::Stack.make }
+
+      let!(:buildpack1) { VCAP::CloudController::Buildpack.make(stack: stack1.name) }
+      let!(:buildpack2) { VCAP::CloudController::Buildpack.make(stack: stack2.name) }
 
       before do
         set_current_user(user)
@@ -168,6 +171,13 @@ RSpec.describe BuildpacksController, type: :controller do
 
       it 'renders a name filtered list of buildpacks' do
         get :index, params: { names: buildpack2.name }
+
+        expect(parsed_body['resources']).to have(1).buildpack
+        expect(parsed_body['resources'].first['guid']).to eq(buildpack2.guid)
+      end
+
+      it 'renders a stack filtered list of buildpacks' do
+        get :index, params: { stacks: stack2.name }
 
         expect(parsed_body['resources']).to have(1).buildpack
         expect(parsed_body['resources'].first['guid']).to eq(buildpack2.guid)

@@ -11,9 +11,13 @@ RSpec.describe 'buildpacks' do
     end
 
     context 'When buildpacks exist' do
-      let!(:buildpack1) { VCAP::CloudController::Buildpack.make }
-      let!(:buildpack2) { VCAP::CloudController::Buildpack.make }
-      let!(:buildpack3) { VCAP::CloudController::Buildpack.make }
+      let!(:stack1) { VCAP::CloudController::Stack.make }
+      let!(:stack2) { VCAP::CloudController::Stack.make }
+      let!(:stack3) { VCAP::CloudController::Stack.make }
+
+      let!(:buildpack1) { VCAP::CloudController::Buildpack.make(stack: stack1.name) }
+      let!(:buildpack2) { VCAP::CloudController::Buildpack.make(stack: stack2.name) }
+      let!(:buildpack3) { VCAP::CloudController::Buildpack.make(stack: stack3.name) }
 
       it 'returns a paginated list of buildpacks' do
         get '/v3/buildpacks?page=1&per_page=2', nil, headers
@@ -80,19 +84,19 @@ RSpec.describe 'buildpacks' do
         )
       end
 
-      it 'returns a list of name filtered stacks' do
-        get "/v3/buildpacks?names=#{buildpack1.name},#{buildpack3.name}", nil, headers
+      it 'returns a list of filtered buildpacks' do
+        get "/v3/buildpacks?names=#{buildpack1.name},#{buildpack3.name}&stacks=#{stack1.name}", nil, headers
 
         expect(parsed_response).to be_a_response_like(
           {
             'pagination' => {
-              'total_results' => 2,
+              'total_results' => 1,
               'total_pages' => 1,
               'first' => {
-                'href' => "#{link_prefix}/v3/buildpacks?names=#{buildpack1.name}%2C#{buildpack3.name}&page=1&per_page=50"
+                'href' => "#{link_prefix}/v3/buildpacks?names=#{buildpack1.name}%2C#{buildpack3.name}&page=1&per_page=50&stacks=#{stack1.name}"
               },
               'last' => {
-                'href' => "#{link_prefix}/v3/buildpacks?names=#{buildpack1.name}%2C#{buildpack3.name}&page=1&per_page=50"
+                'href' => "#{link_prefix}/v3/buildpacks?names=#{buildpack1.name}%2C#{buildpack3.name}&page=1&per_page=50&stacks=#{stack1.name}"
               },
               'next' => nil,
               'previous' => nil
@@ -105,7 +109,7 @@ RSpec.describe 'buildpacks' do
                 'name' => buildpack1.name,
                 'state' => 'AWAITING_UPLOAD',
                 'filename' => nil,
-                'stack' => buildpack1.stack,
+                'stack' => stack1.name,
                 'position' => 1,
                 'enabled' => true,
                 'locked' => false,

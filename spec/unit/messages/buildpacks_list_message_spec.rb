@@ -7,6 +7,7 @@ module VCAP::CloudController
       let(:params) do
         {
           'names' => 'name1,name2',
+          'stacks' => 'stack1,stack2',
           'page' => 1,
           'per_page' => 5,
         }
@@ -17,6 +18,7 @@ module VCAP::CloudController
 
         expect(message).to be_a(BuildpacksListMessage)
 
+        expect(message.stacks).to eq(%w(stack1 stack2))
         expect(message.names).to eq(%w(name1 name2))
         expect(message.page).to eq(1)
         expect(message.per_page).to eq(5)
@@ -25,6 +27,7 @@ module VCAP::CloudController
       it 'converts requested keys to symbols' do
         message = BuildpacksListMessage.from_params(params)
 
+        expect(message.requested?(:stacks)).to be_truthy
         expect(message.requested?(:names)).to be_truthy
         expect(message.requested?(:page)).to be_truthy
         expect(message.requested?(:per_page)).to be_truthy
@@ -35,13 +38,14 @@ module VCAP::CloudController
       let(:opts) do
         {
           names: %w(name1 name2),
+          stacks: %w(stack1 stack2),
           page: 1,
           per_page: 5,
         }
       end
 
       it 'excludes the pagination keys' do
-        expected_params = [:names]
+        expected_params = [:names, :stacks]
         expect(BuildpacksListMessage.new(opts).to_param_hash.keys).to match_array(expected_params)
       end
     end
@@ -50,7 +54,8 @@ module VCAP::CloudController
       it 'accepts a set of fields' do
         expect {
           BuildpacksListMessage.new({
-            names: []
+            names: [],
+            stacks: []
           })
         }.not_to raise_error
       end
@@ -73,6 +78,12 @@ module VCAP::CloudController
         message = BuildpacksListMessage.new names: 'not array'
         expect(message).to be_invalid
         expect(message.errors[:names].length).to eq 1
+      end
+
+      it 'validates stacks is an array' do
+        message = BuildpacksListMessage.new stacks: 'not array'
+        expect(message).to be_invalid
+        expect(message.errors[:stacks].length).to eq 1
       end
     end
   end

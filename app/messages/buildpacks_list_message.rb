@@ -3,16 +3,18 @@ require 'messages/list_message'
 module VCAP::CloudController
   class BuildpacksListMessage < ListMessage
     register_allowed_keys [
+      :stacks,
       :names,
       :page,
       :per_page,
     ]
     validates :names, array: true, allow_nil: true
+    validates :stacks, array: true, allow_nil: true
 
     validates_with NoAdditionalParamsValidator
 
     def self.from_params(params)
-      super(params, %w(names))
+      super(params, %w(names stacks))
     end
 
     def to_param_hash
