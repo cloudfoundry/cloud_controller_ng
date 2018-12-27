@@ -5629,6 +5629,10 @@ Only isolation segments that are entitled to the organization are eligible to be
     </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1d3bf0ec-5806-43c4-b64e-8364dba1086a"</span><span class="w">
     </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
   </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
 
@@ -5675,6 +5679,16 @@ Only isolation segments that are entitled to the organization are eligible to be
 <td><strong>links</strong></td>
 <td><a href="#links"><em>links object</em></a></td>
 <td>Links to related resources.</td>
+</tr>
+<tr>
+<td><strong>metadata.labels</strong> <em>(experimental)</em></td>
+<td><a href="#labels"><em>label object</em></a></td>
+<td>Labels applied to the package.</td>
+</tr>
+<tr>
+<td><strong>metadata.annotations</strong> <em>(experimental)</em></td>
+<td><a href="#annotations"><em>annotation object</em></a></td>
+<td>Annotations applied to the package.</td>
 </tr>
 </tbody></table>
 
@@ -5734,6 +5748,16 @@ Only isolation segments that are entitled to the organization are eligible to be
 <td><a href="#links"><em>links object</em></a></td>
 <td>Links to related resources.</td>
 </tr>
+<tr>
+<td><strong>metadata.labels</strong> <em>(experimental)</em></td>
+<td><a href="#labels"><em>label object</em></a></td>
+<td>Labels applied to the package.</td>
+</tr>
+<tr>
+<td><strong>metadata.annotations</strong> <em>(experimental)</em></td>
+<td><a href="#annotations"><em>annotation object</em></a></td>
+<td>Annotations applied to the package.</td>
+</tr>
 </tbody></table>
 
 <h4 id="docker-package">Docker package</h4>
@@ -5792,6 +5816,16 @@ Only isolation segments that are entitled to the organization are eligible to be
 <td><a href="#links"><em>links object</em></a></td>
 <td>Links to related resources.</td>
 </tr>
+<tr>
+<td><strong>metadata.labels</strong> <em>(experimental)</em></td>
+<td><a href="#labels"><em>label object</em></a></td>
+<td>Labels applied to the package.</td>
+</tr>
+<tr>
+<td><strong>metadata.annotations</strong> <em>(experimental)</em></td>
+<td><a href="#annotations"><em>annotation object</em></a></td>
+<td>Annotations applied to the package.</td>
+</tr>
 </tbody></table>
 
           <h3 id="create-a-package">Create a package</h3>
@@ -5845,6 +5879,10 @@ Only isolation segments that are entitled to the organization are eligible to be
     </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1d3bf0ec-5806-43c4-b64e-8364dba1086a"</span><span class="w">
     </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
   </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
 
@@ -5887,14 +5925,17 @@ Only isolation segments that are entitled to the organization are eligible to be
   </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"READY"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2015-11-03T00:53:54Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-06-08T16:41:26Z"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"links"</span><span class="p">:</span><span class="w">
-  </span><span class="p">{</span><span class="w">
+  </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/packages/4cb65058-f04f-458f-aca1-5f4e43de6407"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/d8b8148d-5798-44de-821a-64b85b15e968"</span><span class="w">
     </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
   </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
 
@@ -5967,6 +6008,74 @@ Only isolation segments that are entitled to the organization are eligible to be
 <td><em>string</em></td>
 <td>Optional when <code class="prettyprint">type</code> is <code class="prettyprint">docker</code> and accessing a secured registry.</td>
 </tr>
+<tr>
+<td><strong>metadata.labels</strong> <em>(experimental)</em></td>
+<td><a href="#labels"><em>label object</em></a></td>
+<td>Labels applied to the package.</td>
+</tr>
+<tr>
+<td><strong>metadata.annotations</strong> <em>(experimental)</em></td>
+<td><a href="#annotations"><em>annotation object</em></a></td>
+<td>Annotations applied to the package.</td>
+</tr>
+</tbody></table>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+</tbody></table>
+
+          <h3 id="update-a-package">Update a package</h3>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/packages/[guid]"</span> <span class="se">\</span>
+  -X PATCH <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+  -H <span class="s2">"Content-Type: application/json"</span> <span class="se">\</span>
+  -d <span class="s1">'{ "metadata": { "labels": { "key": "value" }, "annotations": {"note": "detailed information"}}}'</span>
+
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
+
+<span class="w">
+</span></code></pre>
+
+<h4 id="definition">Definition</h4>
+
+<p><code class="prettyprint">PATCH /v3/packages/:guid</code></p>
+
+<h4 id="optional-parameters">Optional Parameters</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>metadata.labels</strong> <em>(experimental)</em></td>
+<td><a href="#labels"><em>label object</em></a></td>
+<td>Labels applied to the package.</td>
+</tr>
+<tr>
+<td><strong>metadata.annotations</strong> <em>(experimental)</em></td>
+<td><a href="#annotations"><em>annotation object</em></a></td>
+<td>Annotations applied to the package.</td>
+</tr>
 </tbody></table>
 
 <h4 id="permitted-roles">Permitted Roles</h4>
@@ -6024,6 +6133,10 @@ Only isolation segments that are entitled to the organization are eligible to be
     </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1d3bf0ec-5806-43c4-b64e-8364dba1086a"</span><span class="w">
     </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
   </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
 
@@ -6109,6 +6222,10 @@ Only isolation segments that are entitled to the organization are eligible to be
     </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1d3bf0ec-5806-43c4-b64e-8364dba1086a"</span><span class="w">
     </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
   </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
 
@@ -6247,6 +6364,10 @@ the request in that case. Clients may need to follow the redirect without includ
     </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/36208a68-562d-4f51-94ea-28bd8553a271"</span><span class="w">
     </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
   </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
 
@@ -6391,6 +6512,10 @@ the request in that case. Clients may need to follow the redirect without includ
         </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
           </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/fa3558ce-1c4d-46fc-9776-54b9c8021745"</span><span class="w">
         </span><span class="p">}</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+        </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
       </span><span class="p">}</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="p">{</span><span class="w">
@@ -6411,6 +6536,10 @@ the request in that case. Clients may need to follow the redirect without includ
         </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
           </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/fa3558ce-1c4d-46fc-9776-54b9c8021745"</span><span class="w">
         </span><span class="p">}</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+        </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
       </span><span class="p">}</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">]</span><span class="w">
@@ -6478,6 +6607,11 @@ the request in that case. Clients may need to follow the redirect without includ
 <td><em>string</em></td>
 <td>Value to sort by. Defaults to ascending. Prepend with <code class="prettyprint">-</code> to sort descending. <br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code>.</td>
 </tr>
+<tr>
+<td><strong>label_selector</strong></td>
+<td><em>string</em></td>
+<td><strong>Experimental</strong> - A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements.</td>
+</tr>
 </tbody></table>
 
           <h3 id="list-packages-for-an-app">List packages for an app</h3>
@@ -6533,6 +6667,10 @@ the request in that case. Clients may need to follow the redirect without includ
         </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
           </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/f2efe391-2b5b-4836-8518-ad93fa9ebf69"</span><span class="w">
         </span><span class="p">}</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+        </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
       </span><span class="p">}</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">]</span><span class="w">
@@ -10492,6 +10630,21 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 <td><strong>per_page</strong></td>
 <td><em>integer</em></td>
 <td>Number of results per page. <br>Valid values are 1 through 5000.</td>
+</tr>
+<tr>
+<td><strong>names</strong></td>
+<td><em>list of strings</em></td>
+<td>Comma-delimited list of buildpack names to filter by.</td>
+</tr>
+<tr>
+<td><strong>stacks</strong></td>
+<td><em>list of strings</em></td>
+<td>Comma-delimited list of stack names to filter by.</td>
+</tr>
+<tr>
+<td><strong>order_by</strong></td>
+<td><em>string</em></td>
+<td>Value to sort by. Defaults to ascending. Prepend with <code class="prettyprint">-</code> to sort descending. <br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code>, <code class="prettyprint">position</code>, and <code class="prettyprint">name</code>.</td>
 </tr>
 </tbody></table>
 
