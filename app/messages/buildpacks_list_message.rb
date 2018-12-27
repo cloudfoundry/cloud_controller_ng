@@ -20,7 +20,7 @@ module VCAP::CloudController
     end
 
     def valid_order_by_values
-      super << :name
+      super << :name << :position
     end
   end
 end

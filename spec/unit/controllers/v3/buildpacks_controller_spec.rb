@@ -159,18 +159,26 @@ RSpec.describe BuildpacksController, type: :controller do
         set_current_user(user)
       end
 
-      it 'renders a paginated list of stacks' do
+      it 'renders a paginated list of buildpacks' do
         get :index
 
         expect(parsed_body['resources'].first['guid']).to eq(buildpack1.guid)
         expect(parsed_body['resources'].second['guid']).to eq(buildpack2.guid)
       end
 
-      it 'renders a name filtered list of stacks' do
+      it 'renders a name filtered list of buildpacks' do
         get :index, params: { names: buildpack2.name }
 
         expect(parsed_body['resources']).to have(1).buildpack
         expect(parsed_body['resources'].first['guid']).to eq(buildpack2.guid)
+      end
+
+      it 'renders an ordered list of buildpacks' do
+        get :index, params: { order_by: '-position' }
+
+        expect(parsed_body['resources']).to have(2).buildpack
+        expect(parsed_body['resources'].first['position']).to eq(buildpack2.position)
+        expect(parsed_body['resources'].second['position']).to eq(buildpack1.position)
       end
 
       context 'when the query params are invalid' do

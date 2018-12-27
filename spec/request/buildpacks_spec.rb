@@ -117,7 +117,30 @@ RSpec.describe 'buildpacks' do
                     'href' => "#{link_prefix}/v3/buildpacks/#{buildpack1.guid}/upload"
                   }
                 }
+              }
+            ]
+          }
+        )
+      end
+
+      it 'orders by position' do
+        get "/v3/buildpacks?names=#{buildpack1.name},#{buildpack3.name}&order_by=-position", nil, headers
+
+        expect(parsed_response).to be_a_response_like(
+          {
+            'pagination' => {
+              'total_results' => 2,
+              'total_pages' => 1,
+              'first' => {
+                'href' => "#{link_prefix}/v3/buildpacks?names=#{buildpack1.name}%2C#{buildpack3.name}&order_by=-position&page=1&per_page=50"
               },
+              'last' => {
+                'href' => "#{link_prefix}/v3/buildpacks?names=#{buildpack1.name}%2C#{buildpack3.name}&order_by=-position&page=1&per_page=50"
+              },
+              'next' => nil,
+              'previous' => nil
+            },
+            'resources' => [
               {
                 'guid' => buildpack3.guid,
                 'created_at' => iso8601,
@@ -138,6 +161,26 @@ RSpec.describe 'buildpacks' do
                   }
                 }
               },
+              {
+                'guid' => buildpack1.guid,
+                'created_at' => iso8601,
+                'updated_at' => iso8601,
+                'name' => buildpack1.name,
+                'state' => 'AWAITING_UPLOAD',
+                'filename' => nil,
+                'stack' => buildpack1.stack,
+                'position' => 1,
+                'enabled' => true,
+                'locked' => false,
+                'links' => {
+                  'self' => {
+                    'href' => "#{link_prefix}/v3/buildpacks/#{buildpack1.guid}"
+                  },
+                  'upload' => {
+                    'href' => "#{link_prefix}/v3/buildpacks/#{buildpack1.guid}/upload"
+                  }
+                }
+              }
             ]
           }
         )
