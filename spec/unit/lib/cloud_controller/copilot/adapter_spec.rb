@@ -105,7 +105,8 @@ module VCAP::CloudController
           app: app,
           route: route,
           process_type: 'web',
-          weight: 5
+          weight: 5,
+          app_port: 9090
         )
       end
 
@@ -114,12 +115,14 @@ module VCAP::CloudController
         expect(copilot_client).to have_received(:map_route).with(
           capi_process_guid: process1.guid,
           route_guid: route.guid,
-          route_weight: 5
+          route_weight: 5,
+          app_port: 9090
         )
         expect(copilot_client).to have_received(:map_route).with(
           capi_process_guid: process2.guid,
           route_guid: route.guid,
-          route_weight: 5
+          route_weight: 5,
+          app_port: 9090
         )
       end
 
@@ -170,7 +173,8 @@ module VCAP::CloudController
           app: app,
           route: route,
           process_type: 'web',
-          weight: 5
+          weight: 5,
+          app_port: 9090
         )
       end
 
@@ -179,12 +183,14 @@ module VCAP::CloudController
         expect(copilot_client).to have_received(:unmap_route).with(
           capi_process_guid: process1.guid,
           route_guid: route.guid,
-          route_weight: 5
+          route_weight: 5,
+          app_port: 9090
         )
         expect(copilot_client).to have_received(:unmap_route).with(
           capi_process_guid: process2.guid,
           route_guid: route.guid,
-          route_weight: 5
+          route_weight: 5,
+          app_port: 9090
         )
       end
 

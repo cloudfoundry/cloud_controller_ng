@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/cloudfoundry/copilot
-  revision: 36a84274c0733fb47674a2bbeb8c2c1150deaa23
+  revision: 6a31452d0423ea42150e414e4e01fa1b1c48adc6
   glob: sdk/ruby/*.gemspec
   specs:
     cf-copilot (0.0.11)
@@ -211,13 +211,13 @@ GEM
       multi_json (~> 1.11)
       os (~> 0.9)
       signet (~> 0.7)
-    grpc (1.17.0)
+    grpc (1.17.1)
       google-protobuf (~> 3.1)
       googleapis-common-protos-types (~> 1.0.0)
-    grpc (1.17.0-universal-darwin)
+    grpc (1.17.1-universal-darwin)
       google-protobuf (~> 3.1)
       googleapis-common-protos-types (~> 1.0.0)
-    grpc (1.17.0-x86_64-linux)
+    grpc (1.17.1-x86_64-linux)
       google-protobuf (~> 3.1)
       googleapis-common-protos-types (~> 1.0.0)
     hashdiff (0.3.7)
