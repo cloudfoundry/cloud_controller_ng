@@ -8,11 +8,17 @@ module VCAP::CloudController
       def start(app:, user_audit_info:, record_event: true)
         app.db.transaction do
           app.lock!
+          process_attributes = { state: ProcessModel::STARTED }
+
           if app.revisions_enabled && app.droplet_guid != app.latest_revision&.droplet_guid
-            RevisionCreate.create(app)
+            revision = RevisionCreate.create(app)
+            process_attributes[:revision_guid] = revision.guid
           end
+
           app.update(desired_state: ProcessModel::STARTED)
-          app.processes.each { |process| process.update(state: ProcessModel::STARTED) }
+          app.processes.each do |process|
+            process.update(process_attributes)
+          end
 
           record_audit_event(app, user_audit_info) if record_event
         end

@@ -107,6 +107,8 @@ module VCAP::CloudController
 
       context 'when the app has two associated droplets' do
         let(:app) { AppModel.make(:buildpack) }
+        let!(:web_process) { ProcessModel.make(app: app, type: 'web', revision: revisionA) }
+        let!(:worker_process) { ProcessModel.make(app: app, type: 'worker', revision: revisionA) }
         let(:package) { PackageModel.make(app: app, state: PackageModel::READY_STATE) }
         let!(:dropletA) { DropletModel.make(app: app, package: package, state: DropletModel::STAGED_STATE) }
         let!(:dropletB) { DropletModel.make(app: app, package: package, state: DropletModel::STAGED_STATE) }
@@ -118,7 +120,11 @@ module VCAP::CloudController
           expect do
             AppStart.start(app: app, user_audit_info: user_audit_info)
           end.to change { RevisionModel.count }.by(1)
-          expect(RevisionModel.last.version).to eq(revisionA.version + 1)
+          last_revision = RevisionModel.last
+          expect(last_revision.version).to eq(revisionA.version + 1)
+
+          expect(web_process.reload.revision).to eq(last_revision)
+          expect(worker_process.reload.revision).to eq(last_revision)
         end
 
         it 'does not create a new revision if the droplet did not change' do
@@ -128,6 +134,8 @@ module VCAP::CloudController
             AppStart.start(app: app, user_audit_info: user_audit_info)
           end.to change { RevisionModel.count }.by(0)
           expect(RevisionModel.last.version).to eq(revisionA.version)
+          expect(web_process.reload.revision).to eq(revisionA)
+          expect(worker_process.reload.revision).to eq(revisionA)
         end
 
         it 'does not create a new revision if revisions are disabled' do
@@ -137,6 +145,8 @@ module VCAP::CloudController
             AppStart.start(app: app, user_audit_info: user_audit_info)
           end.to change { RevisionModel.count }.by(0)
           expect(RevisionModel.last.version).to eq(revisionA.version)
+          expect(web_process.reload.revision).to eq(revisionA)
+          expect(worker_process.reload.revision).to eq(revisionA)
         end
       end
 
