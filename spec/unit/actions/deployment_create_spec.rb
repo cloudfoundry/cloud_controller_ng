@@ -41,7 +41,10 @@ module VCAP::CloudController
         end
 
         it 'creates a process of web type with the same characteristics as the existing web process' do
-          DeploymentCreate.create(app: app, droplet: app.droplet, user_audit_info: user_audit_info)
+          app.update(revisions_enabled: true)
+          expect {
+            DeploymentCreate.create(app: app, droplet: app.droplet, user_audit_info: user_audit_info)
+          }.to change { RevisionModel.count }.by(1)
 
           deploying_web_process = app.reload.newest_web_process
 
@@ -60,6 +63,7 @@ module VCAP::CloudController
           expect(deploying_web_process.health_check_invocation_timeout).to eq(web_process.health_check_invocation_timeout)
           expect(deploying_web_process.enable_ssh).to eq(web_process.enable_ssh)
           expect(deploying_web_process.ports).to eq(web_process.ports)
+          expect(deploying_web_process.revision).to eq(app.latest_revision)
         end
 
         it 'desires an LRP via the ProcessObserver', isolation: :truncation do

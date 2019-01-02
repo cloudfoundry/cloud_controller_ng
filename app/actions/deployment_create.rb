@@ -78,6 +78,7 @@ module VCAP::CloudController
           health_check_invocation_timeout: web_process.health_check_invocation_timeout,
           enable_ssh: web_process.enable_ssh,
           ports: web_process.ports,
+          revision: app.revisions_enabled ? RevisionCreate.create(app) : nil
         )
       end
 
