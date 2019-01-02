@@ -1149,15 +1149,16 @@ RSpec.describe 'Apps' do
   end
 
   describe 'PUT /v3/apps/:guid/start' do
-    it 'starts the app' do
-      stack = VCAP::CloudController::Stack.make(name: 'stack-name')
-      app_model = VCAP::CloudController::AppModel.make(
+    let(:stack) { VCAP::CloudController::Stack.make(name: 'stack-name') }
+    let(:app_model) {
+      VCAP::CloudController::AppModel.make(
         :buildpack,
-          name: 'app-name',
-          space: space,
-          desired_state: 'STOPPED',
+        name: 'app-name',
+        space: space,
+        desired_state: 'STOPPED',
       )
-
+    }
+    it 'starts the app' do
       app_model.lifecycle_data.buildpacks = ['http://example.com/git']
       app_model.lifecycle_data.stack = stack.name
       app_model.lifecycle_data.save
@@ -1219,6 +1220,33 @@ RSpec.describe 'Apps' do
                                           space_guid: space.guid,
                                           organization_guid: space.organization.guid,
                                       })
+    end
+
+    describe 'when there is a new desired droplet and revision feature is turned on' do
+      let(:droplet) {
+        VCAP::CloudController::DropletModel.make(
+          app: app_model,
+          process_types: { web: 'rackup' },
+          state: VCAP::CloudController::DropletModel::STAGED_STATE,
+          package: VCAP::CloudController::PackageModel.make
+        )
+      }
+
+      before do
+        app_model.update(revisions_enabled: true)
+      end
+
+      it 'creates a new revision' do
+        expect {
+          patch "/v3/apps/#{app_model.guid}/relationships/current_droplet", { data: { guid: droplet.guid } }.to_json, user_header
+          expect(last_response.status).to eq(200)
+        }.to change { VCAP::CloudController::RevisionModel.count }.by(0)
+
+        expect {
+          post "/v3/apps/#{app_model.guid}/actions/start", nil, user_header
+          expect(last_response.status).to eq(200), last_response.body
+        }.to change { VCAP::CloudController::RevisionModel.count }.by(1)
+      end
     end
   end
 

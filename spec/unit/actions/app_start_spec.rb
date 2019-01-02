@@ -105,6 +105,41 @@ module VCAP::CloudController
         end
       end
 
+      context 'when the app has two associated droplets' do
+        let(:app) { AppModel.make(:buildpack) }
+        let(:package) { PackageModel.make(app: app, state: PackageModel::READY_STATE) }
+        let!(:dropletA) { DropletModel.make(app: app, package: package, state: DropletModel::STAGED_STATE) }
+        let!(:dropletB) { DropletModel.make(app: app, package: package, state: DropletModel::STAGED_STATE) }
+        let!(:revisionA) { RevisionModel.make(app: app, droplet_guid: dropletA.guid) }
+
+        it 'creates a new revision when it switches droplets and revisions are enabled' do
+          app.update(revisions_enabled: true)
+          app.update(droplet: dropletB)
+          expect do
+            AppStart.start(app: app, user_audit_info: user_audit_info)
+          end.to change { RevisionModel.count }.by(1)
+          expect(RevisionModel.last.version).to eq(revisionA.version + 1)
+        end
+
+        it 'does not create a new revision if the droplet did not change' do
+          app.update(revisions_enabled: true)
+          app.update(droplet: dropletA)
+          expect do
+            AppStart.start(app: app, user_audit_info: user_audit_info)
+          end.to change { RevisionModel.count }.by(0)
+          expect(RevisionModel.last.version).to eq(revisionA.version)
+        end
+
+        it 'does not create a new revision if revisions are disabled' do
+          app.update(revisions_enabled: false)
+          app.update(droplet: dropletB)
+          expect do
+            AppStart.start(app: app, user_audit_info: user_audit_info)
+          end.to change { RevisionModel.count }.by(0)
+          expect(RevisionModel.last.version).to eq(revisionA.version)
+        end
+      end
+
       describe '#start_without_event' do
         let(:app) { AppModel.make(:buildpack, desired_state: 'STOPPED') }
 

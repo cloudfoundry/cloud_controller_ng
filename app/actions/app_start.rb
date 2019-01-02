@@ -1,3 +1,5 @@
+require 'actions/revision_create'
+
 module VCAP::CloudController
   class AppStart
     class InvalidApp < StandardError; end
@@ -6,6 +8,9 @@ module VCAP::CloudController
       def start(app:, user_audit_info:, record_event: true)
         app.db.transaction do
           app.lock!
+          if app.revisions_enabled && app.droplet_guid != app.latest_revision&.droplet_guid
+            RevisionCreate.create(app)
+          end
           app.update(desired_state: ProcessModel::STARTED)
           app.processes.each { |process| process.update(state: ProcessModel::STARTED) }
 

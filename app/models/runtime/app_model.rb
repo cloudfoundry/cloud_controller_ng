@@ -118,6 +118,10 @@ module VCAP::CloudController
       web_processes.last
     end
 
+    def latest_revision
+      RevisionModel.where(app: self).reverse(:created_at).first
+    end
+
     private
 
     def validate_environment_variables

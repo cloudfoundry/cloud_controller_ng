@@ -4,13 +4,16 @@ require 'actions/revision_create'
 module VCAP::CloudController
   RSpec.describe RevisionCreate do
     subject(:revision_create) { RevisionCreate }
+    let(:droplet) { DropletModel.make(app: app) }
     let(:app) { AppModel.make }
 
     describe '.create' do
       it 'creates a revision for the app' do
+        app.update(droplet: droplet)
         expect {
           subject.create(app)
         }.to change { RevisionModel.where(app: app).count }.by(1)
+        expect(RevisionModel.last.droplet_guid).to eq(droplet.guid)
       end
 
       context 'when there are multiple revisions for an app' do
