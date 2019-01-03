@@ -5,7 +5,7 @@ RSpec.describe UploadHandler do
   let(:tmpdir) { '/some/tmp/dir' }
   subject(:uploader) { UploadHandler.new(config) }
 
-  context 'Nginx mode' do
+  context 'NGINX mode' do
     let(:config) do
       VCAP::CloudController::Config.new({ nginx: { use_nginx: true }, directories: { tmpdir: tmpdir } })
     end
