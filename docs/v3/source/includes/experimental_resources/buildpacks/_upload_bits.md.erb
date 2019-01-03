@@ -1,0 +1,40 @@
+### Upload buildpack bits
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/buildpacks/[guid]/upload" \
+  -X POST \
+  -H "Authorization: bearer [token]" \
+  -F bits=@"buildpack.zip"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :single_buildpack %>
+```
+
+Upload file for a buildpack of type `bits`. The file must be sent as part of a multi-part form.
+
+#### Definition
+`POST /v3/buildpacks/:guid/upload`
+
+#### Required Parameters
+
+Name | Type | Description
+---- | ---- | -----------
+**bits** | _form field_ | A binary zip file containing the buildpack bits.
+
+#### Permitted Roles
+ |
+--- | ---
+Space Developer |
+Admin |

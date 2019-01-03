@@ -5,6 +5,11 @@ module VCAP::CloudController
     export_attributes :name, :stack, :position, :enabled, :locked, :filename
     import_attributes :name, :stack, :position, :enabled, :locked, :filename, :key
 
+    PACKAGE_STATES = [
+      CREATED_STATE = 'AWAITING_UPLOAD'.freeze,
+      READY_STATE = 'READY'.freeze,
+    ].map(&:freeze).freeze
+
     def self.list_admin_buildpacks(stack_name=nil)
       scoped = exclude(key: nil).exclude(key: '')
       if stack_name.present?
@@ -53,6 +58,10 @@ module VCAP::CloudController
 
     def custom?
       false
+    end
+
+    def state
+      filename.present? ? READY_STATE : CREATED_STATE
     end
 
     private

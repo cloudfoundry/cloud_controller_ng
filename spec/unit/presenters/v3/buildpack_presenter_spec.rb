@@ -13,8 +13,8 @@ RSpec.describe VCAP::CloudController::Presenters::V3::BuildpackPresenter do
         expect(result[:created_at]).to eq(buildpack.created_at)
         expect(result[:updated_at]).to eq(buildpack.updated_at)
         expect(result[:name]).to eq(buildpack.name)
-        expect(result[:state]).to eq('AWAITING_UPLOAD')
-        expect(result[:filename]).to eq(nil)
+        expect(result[:state]).to eq(buildpack.state)
+        expect(result[:filename]).to eq(buildpack.filename)
         expect(result[:stack]).to eq(buildpack.stack)
         expect(result[:position]).to eq(buildpack.position)
         expect(result[:enabled]).to eq(buildpack.enabled)
@@ -26,6 +26,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::BuildpackPresenter do
     context 'when optional fields are missing' do
       before do
         buildpack.stack = nil
+        buildpack.filename = nil
       end
 
       it 'still presents their keys with nil values' do
@@ -37,7 +38,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::BuildpackPresenter do
         expect(result[:created_at]).to eq(buildpack.created_at)
         expect(result[:updated_at]).to eq(buildpack.updated_at)
         expect(result[:name]).to eq(buildpack.name)
-        expect(result[:state]).to eq('AWAITING_UPLOAD')
+        expect(result[:state]).to eq(buildpack.state)
         expect(result[:filename]).to eq(nil)
         expect(result[:position]).to eq(buildpack.position)
         expect(result[:enabled]).to eq(buildpack.enabled)

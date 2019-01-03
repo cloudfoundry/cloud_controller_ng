@@ -245,7 +245,20 @@ module VCAP::CloudController
       end
     end
 
-    describe 'custom' do
+    describe '#state' do
+      let!(:buildpack1) { VCAP::CloudController::Buildpack.create({ name: 'first_buildpack', stack: Stack.make.name, key: 'xyz', position: 1, filename: '/some/file' }) }
+      let!(:buildpack2) { VCAP::CloudController::Buildpack.create({ name: 'second_buildpack', stack: Stack.make.name, key: 'xyz', position: 2, filename: nil }) }
+
+      it 'returns ready when the buildpack has a filename' do
+        expect(buildpack1.state).to eq('READY')
+      end
+
+      it 'returns awaiting upload when the buildpack does not have a file' do
+        expect(buildpack2.state).to eq('AWAITING_UPLOAD')
+      end
+    end
+
+    describe '#custom?' do
       it 'is not custom' do
         expect(subject.custom?).to be false
       end

@@ -42,6 +42,7 @@ require 'jobs/services/service_usage_events_cleanup'
 
 require 'jobs/v2/upload_droplet_from_user'
 
+require 'jobs/v3/buildpack_bits'
 require 'jobs/v3/buildpack_cache_upload'
 require 'jobs/v3/droplet_bits_copier'
 require 'jobs/v3/droplet_upload'

@@ -285,4 +285,101 @@ RSpec.describe BuildpacksController, type: :controller do
       end
     end
   end
+
+  describe '#upload' do
+    let(:stat_double) { instance_double(File::Stat, size: 2) }
+    let(:test_buildpack) { VCAP::CloudController::Buildpack.create_from_hash({ name: 'upload_binary_buildpack', stack: nil, position: 0 }) }
+    let(:user) { VCAP::CloudController::User.make }
+    let(:uploader) { instance_double(VCAP::CloudController::BuildpackUpload, upload_async: nil) }
+    let(:buildpack_bits_path) { '/tmp/buildpack_bits_path' }
+    let(:buildpack_bits_name) { 'buildpack.zip' }
+
+    before do
+      allow(File).to receive(:stat).and_return(stat_double)
+      allow(VCAP::CloudController::BuildpackUpload).to receive(:new).and_return(uploader)
+    end
+
+    describe 'permissions by role' do
+      role_to_expected_http_response = {
+          'admin' => 200,
+          'space_developer' => 403,
+          'space_manager' => 403,
+          'space_auditor' => 403,
+          'org_manager' => 403,
+          'admin_read_only' => 403,
+          'global_auditor' => 403,
+          'org_auditor' => 403,
+          'org_billing_manager' => 403,
+          'org_user' => 403,
+      }.freeze
+
+      role_to_expected_http_response.each do |role, expected_return_value|
+        context "as an #{role}" do
+          let(:org) { VCAP::CloudController::Organization.make }
+          let(:space) { VCAP::CloudController::Space.make(organization: org) }
+
+          it "returns #{expected_return_value}" do
+            set_current_user_as_role(role: role, org: org, space: space, user: user)
+
+            post :upload, params: { guid: test_buildpack.guid, bits_path: buildpack_bits_path, bits_name: buildpack_bits_name }
+
+            expect(response.status).to eq expected_return_value
+          end
+        end
+      end
+
+      it 'returns 401 when logged out' do
+        post :upload, params: { guid: test_buildpack.guid }
+
+        expect(response.status).to eq 401
+      end
+    end
+
+    describe 'when the user has permission to upload a buildpack' do
+      let(:params) { { guid: test_buildpack.guid, bits_path: buildpack_bits_path, bits_name: buildpack_bits_name } }
+
+      before do
+        set_current_user_as_admin(user: user)
+      end
+
+      it 'returns a 200 and the buildpack' do
+        post :upload, params: params.merge({}), as: :json
+
+        expect(response.status).to eq(200), response.body
+        expect(MultiJson.load(response.body)['guid']).to eq(test_buildpack.guid)
+        expect(test_buildpack.reload.state).to eq(VCAP::CloudController::Buildpack::CREATED_STATE)
+        expect(uploader).to have_received(:upload_async)
+      end
+
+      context 'when the buildpack does not exist' do
+        it 'errors' do
+          post :upload, params: { guid: 'dont-exist', bits_path: buildpack_bits_path, bits_name: buildpack_bits_name }.merge({}), as: :json
+
+          expect(response.status).to eq(404), response.body
+          expect(response.body).to include('ResourceNotFound')
+        end
+      end
+
+      context 'when the buildpack is locked' do
+        let(:bp) { VCAP::CloudController::Buildpack.make(locked: true) }
+
+        it 'returns a 422 and error message that the buildpack is locked' do
+          post :upload, params: { guid: bp.guid, bits_path: buildpack_bits_path, bits_name: buildpack_bits_name }.merge({}), as: :json
+          expect(response.status).to eq 422
+          expect(response.body).to include 'UnprocessableEntity'
+        end
+      end
+
+      context 'when the buildpack upload message is not valid' do
+        let(:params) { { guid: test_buildpack.guid, bits_path: nil } }
+
+        it 'errors' do
+          post :upload, params: params.merge({}), as: :json
+
+          expect(response.status).to eq 422
+          expect(response.body).to include('UnprocessableEntity')
+        end
+      end
+    end
+  end
 end
