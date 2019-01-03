@@ -38,9 +38,8 @@ RSpec.describe 'Revisions' do
   end
 
   describe 'GET /v3/apps/:guid/revisions' do
+    let!(:revision2) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 43) }
     it 'gets a list of revisions for the app' do
-      revision2 = VCAP::CloudController::RevisionModel.make(app: app_model, version: 43)
-
       get "/v3/apps/#{app_model.guid}/revisions?per_page=2", nil, user_header
       expect(last_response.status).to eq(200)
 
@@ -85,6 +84,57 @@ RSpec.describe 'Revisions' do
           ]
         }
       )
+    end
+
+    context 'filtering' do
+      it 'gets a list of revisions matching the provided versions' do
+        revision3 = VCAP::CloudController::RevisionModel.make(app: app_model, version: 44)
+
+        get "/v3/apps/#{app_model.guid}/revisions?per_page=2&versions=42,44", nil, user_header
+        expect(last_response.status).to eq(200)
+
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response).to be_a_response_like(
+          {
+            'pagination' => {
+              'total_results' => 2,
+              'total_pages' => 1,
+              'first' => {
+                'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions?page=1&per_page=2&versions=42%2C44"
+              },
+              'last' => {
+                'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions?page=1&per_page=2&versions=42%2C44"
+              },
+              'next' => nil,
+              'previous' => nil
+            },
+            'resources' => [
+              {
+                'guid' => revision.guid,
+                'version' =>  revision.version,
+                'created_at' => iso8601,
+                'updated_at' => iso8601,
+                'links' => {
+                  'self' => {
+                    'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/#{revision.guid}"
+                  }
+                }
+              },
+              {
+                'guid' => revision3.guid,
+                'version' =>  revision3.version,
+                'created_at' => iso8601,
+                'updated_at' => iso8601,
+                'links' => {
+                  'self' => {
+                    'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/#{revision3.guid}"
+                  }
+                }
+              }
+            ]
+          }
+        )
+      end
     end
   end
 end

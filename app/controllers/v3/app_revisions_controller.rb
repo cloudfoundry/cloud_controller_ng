@@ -1,5 +1,6 @@
 require 'messages/app_revisions_list_message'
 require 'fetchers/app_fetcher'
+require 'fetchers/app_revisions_fetcher'
 require 'presenters/v3/revision_presenter'
 require 'controllers/v3/mixins/app_sub_resource'
 
@@ -13,9 +14,11 @@ class AppRevisionsController < ApplicationController
     app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
 
+    dataset = AppRevisionsFetcher.fetch(app, message)
+
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::RevisionPresenter,
-      paginated_result: SequelPaginator.new.get_page(RevisionModel.where(app: app), message.try(:pagination_options)),
+      paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
       path: "/v3/apps/#{app.guid}/revisions",
       message: message
     )
