@@ -69,7 +69,6 @@ module VCAP::CloudController
           resource_dataset: dataset,
           requirements: @message.requirements,
           resource_klass: DropletModel,
-          prefilter_labels_by_resource_dataset: scoped_space_guids.present?,
         )
       end
 
