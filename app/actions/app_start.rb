@@ -10,7 +10,7 @@ module VCAP::CloudController
           app.lock!
           process_attributes = { state: ProcessModel::STARTED }
 
-          if app.revisions_enabled && app.droplet_guid != app.latest_revision&.droplet_guid
+          if app.should_create_revision?
             revision = RevisionCreate.create(app)
             process_attributes[:revision_guid] = revision.guid
           end

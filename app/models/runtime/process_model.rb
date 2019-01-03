@@ -59,6 +59,13 @@ module VCAP::CloudController
       right_primary_key: :app_guid, right_key: :guid,
       order:             [Sequel.desc(:created_at), Sequel.desc(:id)], limit: 1
 
+    one_through_one :latest_build,
+      class:             'VCAP::CloudController::BuildModel',
+      join_table:        AppModel.table_name,
+      left_primary_key:  :app_guid, left_key: :guid,
+      right_primary_key: :app_guid, right_key: :guid,
+      order:             [Sequel.desc(:created_at), Sequel.desc(:id)], limit: 1
+
     one_through_one :latest_droplet,
       class:             'VCAP::CloudController::DropletModel',
       join_table:        AppModel.table_name,
@@ -66,12 +73,11 @@ module VCAP::CloudController
       right_primary_key: :app_guid, right_key: :guid,
       order:             [Sequel.desc(:created_at), Sequel.desc(:id)], limit: 1
 
-    one_through_one :latest_build,
-      class:             'VCAP::CloudController::BuildModel',
+    one_through_one :current_droplet,
+      class:             '::VCAP::CloudController::DropletModel',
       join_table:        AppModel.table_name,
       left_primary_key:  :app_guid, left_key: :guid,
-      right_primary_key: :app_guid, right_key: :guid,
-      order:             [Sequel.desc(:created_at), Sequel.desc(:id)], limit: 1
+      right_primary_key: :guid, right_key: :droplet_guid
 
     dataset_module do
       def staged
@@ -104,12 +110,6 @@ module VCAP::CloudController
       right_primary_key: :guid, right_key: :route_guid,
       distinct:     true,
       order:        Sequel.asc(:id)
-
-    one_through_one :current_droplet,
-      class:             '::VCAP::CloudController::DropletModel',
-      join_table:        AppModel.table_name,
-      left_primary_key:  :app_guid, left_key: :guid,
-      right_primary_key: :guid, right_key: :droplet_guid
 
     one_to_many :route_mappings, class: 'VCAP::CloudController::RouteMappingModel', primary_key: [:app_guid, :type], key: [:app_guid, :process_type]
 

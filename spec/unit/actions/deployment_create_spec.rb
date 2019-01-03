@@ -34,6 +34,16 @@ module VCAP::CloudController
           expect(deployment.original_web_process_instance_count).to eq(3)
         end
 
+        it 'creates a revision' do
+          app.update(revisions_enabled: true)
+          expect {
+            DeploymentCreate.create(app: app, droplet: next_droplet, user_audit_info: user_audit_info)
+          }.to change { RevisionModel.count }.by(1)
+
+          deploying_web_process = app.reload.newest_web_process
+          expect(deploying_web_process.revision).to eq(app.latest_revision)
+        end
+
         it 'sets the current droplet of the app to be the provided droplet' do
           DeploymentCreate.create(app: app, droplet: next_droplet, user_audit_info: user_audit_info)
 
@@ -41,10 +51,7 @@ module VCAP::CloudController
         end
 
         it 'creates a process of web type with the same characteristics as the existing web process' do
-          app.update(revisions_enabled: true)
-          expect {
-            DeploymentCreate.create(app: app, droplet: app.droplet, user_audit_info: user_audit_info)
-          }.to change { RevisionModel.count }.by(1)
+          DeploymentCreate.create(app: app, droplet: next_droplet, user_audit_info: user_audit_info)
 
           deploying_web_process = app.reload.newest_web_process
 
@@ -263,6 +270,22 @@ module VCAP::CloudController
           expect {
             DeploymentCreate.create(app: app, droplet: nil, user_audit_info: user_audit_info)
           }.to raise_error DeploymentCreate::SetCurrentDropletError, /Ensure the droplet exists and belongs to this app/
+        end
+      end
+
+      context 'when the same droplet is provided (zdt-restart)' do
+        let!(:revision) { RevisionModel.make(app: app, droplet_guid: app.droplet_guid) }
+
+        it 'does NOT creates a revision' do
+          web_process.update(revision: revision)
+          app.update(revisions_enabled: true)
+
+          expect {
+            DeploymentCreate.create(app: app, droplet: app.droplet, user_audit_info: user_audit_info)
+          }.not_to change { RevisionModel.count }
+
+          deploying_web_process = app.reload.newest_web_process
+          expect(deploying_web_process.revision.guid).to eq(revision.guid)
         end
       end
     end
