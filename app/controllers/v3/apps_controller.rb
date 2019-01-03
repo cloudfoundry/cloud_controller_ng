@@ -17,13 +17,11 @@ require 'messages/app_create_message'
 require 'messages/app_update_environment_variables_message'
 require 'messages/app_manifest_message'
 require 'messages/app_builds_list_message'
-require 'messages/app_revisions_list_message'
 require 'presenters/v3/app_presenter'
 require 'presenters/v3/app_env_presenter'
 require 'presenters/v3/app_environment_variables_presenter'
 require 'presenters/v3/paginated_list_presenter'
 require 'presenters/v3/app_droplet_relationship_presenter'
-require 'presenters/v3/revision_presenter'
 require 'presenters/v3/build_presenter'
 require 'fetchers/app_list_fetcher'
 require 'fetchers/app_builds_list_fetcher'
@@ -280,31 +278,6 @@ class AppsV3Controller < ApplicationController
 
     droplet_not_found! unless droplet
     render status: :ok, json: Presenters::V3::DropletPresenter.new(droplet)
-  end
-
-  def revision
-    app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
-    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
-
-    revision = RevisionModel.find(guid: hashed_params[:revision_guid])
-    resource_not_found!(:revision) unless revision && revision.app_guid == app.guid
-
-    render status: :ok, json: Presenters::V3::RevisionPresenter.new(revision)
-  end
-
-  def revisions
-    message = AppRevisionsListMessage.from_params(query_params)
-    invalid_param!(message.errors.full_messages) unless message.valid?
-
-    app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
-    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
-
-    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
-      presenter: Presenters::V3::RevisionPresenter,
-      paginated_result: SequelPaginator.new.get_page(RevisionModel.where(app: app), message.try(:pagination_options)),
-      path: "/v3/apps/#{app.guid}/revisions",
-      message: message
-    )
   end
 
   class DeleteAppErrorTranslatorJob < VCAP::CloudController::Jobs::ErrorTranslatorJob

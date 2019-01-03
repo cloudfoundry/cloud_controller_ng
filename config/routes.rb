@@ -15,8 +15,6 @@ Rails.application.routes.draw do
   patch '/apps/:guid/relationships/current_droplet', to: 'apps_v3#assign_current_droplet'
   get '/apps/:guid/relationships/current_droplet', to: 'apps_v3#current_droplet_relationship'
   get '/apps/:guid/droplets/current', to: 'apps_v3#current_droplet'
-  get '/apps/:guid/revisions/:revision_guid', to: 'apps_v3#revision'
-  get '/apps/:guid/revisions', to: 'apps_v3#revisions'
 
   # app features
   get '/apps/:app_guid/features', to: 'app_features#index'
@@ -27,6 +25,10 @@ Rails.application.routes.draw do
   # app manifests
   post '/apps/:guid/actions/apply_manifest', to: 'app_manifests#apply_manifest'
   get '/apps/:guid/manifest', to: 'app_manifests#show'
+
+  # app revisions
+  get '/apps/:guid/revisions', to: 'app_revisions#index'
+  get '/apps/:guid/revisions/:revision_guid', to: 'app_revisions#show'
 
   # environment variables
   get '/apps/:guid/environment_variables', to: 'apps_v3#show_environment_variables'
