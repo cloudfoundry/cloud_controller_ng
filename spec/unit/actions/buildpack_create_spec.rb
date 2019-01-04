@@ -59,6 +59,32 @@ module VCAP::CloudController
         end
       end
 
+      context 'when enabled is not provided' do
+        it 'creates a buildpack with enabled set to true' do
+          message = BuildpackCreateMessage.new(
+            name: 'the-name',
+            stack: 'the-stack',
+            locked: true,
+          )
+          buildpack = BuildpackCreate.new.create(message)
+
+          expect(buildpack.enabled).to eq(true)
+        end
+      end
+
+      context 'when locked is not provided' do
+        it 'creates a buildpack with locked set to true' do
+          message = BuildpackCreateMessage.new(
+            name: 'the-name',
+            stack: 'the-stack',
+            enabled: true,
+          )
+          buildpack = BuildpackCreate.new.create(message)
+
+          expect(buildpack.locked).to eq(true)
+        end
+      end
+
       context 'when a model validation fails' do
         it 'raises an error' do
           errors = Sequel::Model::Errors.new

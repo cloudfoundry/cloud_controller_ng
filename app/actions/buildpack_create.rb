@@ -4,14 +4,16 @@ module VCAP::CloudController
     end
 
     DEFAULT_POSITION = 1
+    DEFAULT_ENABLED = true
+    DEFAULT_LOCKED = false
 
     def create(message)
       Buildpack.db.transaction do
         buildpack = Buildpack.create(
           name: message.name,
           stack: message.stack,
-          enabled: message.enabled,
-          locked: message.locked,
+          enabled: (message.enabled.nil? ? DEFAULT_ENABLED : message.enabled),
+          locked: (message.locked.nil? ? DEFAULT_ENABLED : message.locked),
         )
         buildpack.move_to(message.position || DEFAULT_POSITION)
       end
