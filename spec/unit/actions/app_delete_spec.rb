@@ -116,7 +116,7 @@ module VCAP::CloudController
           let(:process_type) { 'web' }
           let(:process) { ProcessModel.make(app: app, type: process_type) }
           let(:route) { Route.make }
-          let!(:route_mapping) { RouteMappingModel.make(app: app, route: route, process_type: process_type) }
+          let!(:route_mapping) { RouteMappingModel.make(app: app, route: route, process_type: process_type, app_port: 8080) }
 
           it 'deletes associated route mappings' do
             expect {
@@ -138,7 +138,7 @@ module VCAP::CloudController
             end
 
             it 'tells copilot to unmap the route' do
-              expect(copilot_client).to receive(:unmap_route).with({ capi_process_guid: process.guid, route_guid: route.guid, route_weight: 1 })
+              expect(copilot_client).to receive(:unmap_route).with({ capi_process_guid: process.guid, route_guid: route.guid, route_weight: 1, app_port: 8080 })
               app_delete.delete(app_dataset)
             end
 
