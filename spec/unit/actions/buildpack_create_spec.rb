@@ -81,7 +81,7 @@ module VCAP::CloudController
           )
           buildpack = BuildpackCreate.new.create(message)
 
-          expect(buildpack.locked).to eq(true)
+          expect(buildpack.locked).to eq(false)
         end
       end
 

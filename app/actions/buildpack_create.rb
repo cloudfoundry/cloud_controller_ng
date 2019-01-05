@@ -13,7 +13,7 @@ module VCAP::CloudController
           name: message.name,
           stack: message.stack,
           enabled: (message.enabled.nil? ? DEFAULT_ENABLED : message.enabled),
-          locked: (message.locked.nil? ? DEFAULT_ENABLED : message.locked),
+          locked: (message.locked.nil? ? DEFAULT_LOCKED : message.locked),
         )
         buildpack.move_to(message.position || DEFAULT_POSITION)
       end
