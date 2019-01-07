@@ -37,7 +37,6 @@ module VCAP::CloudController
 
         resource_timing = download_droplet(big_droplet_guid, resource_dir)
         puts "big droplet download timing: #{resource_timing * 1000}ms"
-
       ensure
         FileUtils.remove_dir(resource_dir, true)
         FileUtils.remove_dir(zip_output_dir, true)
