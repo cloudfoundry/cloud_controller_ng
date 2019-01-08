@@ -277,7 +277,7 @@ GEM
     net-ssh (5.0.2)
     netaddr (2.0.3)
     newrelic_rpm (5.3.0.346)
-    nokogiri (1.9.1)
+    nokogiri (1.10.0)
       mini_portile2 (~> 2.4.0)
     os (0.9.6)
     palm_civet (1.1.0)
