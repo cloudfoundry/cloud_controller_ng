@@ -1,3 +1,5 @@
+ENV['SINATRA_ACTIVESUPPORT_WARNING'] = 'false'
+
 if ENV['DB'] == 'postgresql'
   warn('Resetting env var DB from postgresql to postgres...')
   ENV['DB'] = 'postgres'
