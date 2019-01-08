@@ -26,6 +26,9 @@ RSpec.describe 'Packages' do
         release: 'stable',
         'seriouseats.com/potato' => 'mashed'
       },
+      annotations: {
+        potato: 'idaho'
+      }
     }
     }
 
@@ -46,7 +49,7 @@ RSpec.describe 'Packages' do
             'password' => '***'
           },
           'state' => 'READY',
-          'metadata' => { 'labels' => { 'release' => 'stable', 'seriouseats.com/potato' => 'mashed' }, 'annotations' => {} },
+          'metadata' => { 'labels' => { 'release' => 'stable', 'seriouseats.com/potato' => 'mashed' }, 'annotations' => { 'potato' => 'idaho' } },
           'created_at' => iso8601,
           'updated_at' => iso8601,
           'links' => {

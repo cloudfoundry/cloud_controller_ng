@@ -1054,11 +1054,33 @@ RSpec.describe PackagesController, type: :controller do
           end
         end
 
+        context 'when the annotation is invalid' do
+          let(:metadata) do {
+            metadata: {
+              annotations: {
+                '' => 'stable'
+              }
+            }
+          }
+          end
+
+          it 'returns an UnprocessableEntity error' do
+            post :create, params: metadata_request_body, as: :json
+
+            expect(response.status).to eq 422
+            expect(response.body).to include 'UnprocessableEntity'
+            expect(response.body).to include 'annotations key cannot be empty string'
+          end
+        end
+
         context 'when the metadata is valid' do
           let(:metadata) do {
             metadata: {
               labels: {
                 'release' => 'stable'
+              },
+              annotations: {
+                'notes' => 'detailed information'
               }
             }
           }
@@ -1072,6 +1094,7 @@ RSpec.describe PackagesController, type: :controller do
 
             expect(response.status).to eq(201)
             expect(response_metadata['labels']['release']).to eq 'stable'
+            expect(response_metadata['annotations']['notes']).to eq 'detailed information'
           end
         end
       end

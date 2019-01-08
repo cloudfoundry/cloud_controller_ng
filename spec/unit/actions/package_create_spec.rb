@@ -15,6 +15,9 @@ module VCAP::CloudController
             release: 'stable',
             'seriouseats.com/potato' => 'mashed'
           },
+          annotations: {
+            anno: 'tations'
+          }
         }
       })
     }
@@ -45,6 +48,9 @@ module VCAP::CloudController
                 'release' => 'stable',
                 'seriouseats.com/potato' => 'mashed'
               },
+              'annotations' => {
+                'anno' => 'tations'
+              }
             },
           }
         )
