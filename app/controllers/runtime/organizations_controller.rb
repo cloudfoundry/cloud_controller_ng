@@ -327,14 +327,6 @@ module VCAP::CloudController
 
     private
 
-    def visible_dataset
-      if queryer.can_read_globally?
-        Organization.dataset
-      else
-        Organization.dataset.filter({ "#{Organization.table_name}__guid".to_sym => queryer.readable_org_guids })
-      end
-    end
-
     def add_role(guid, role, user_id, username)
       user = User.first(guid: user_id) || User.create(guid: user_id)
 
