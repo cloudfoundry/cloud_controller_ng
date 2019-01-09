@@ -630,5 +630,60 @@ RSpec.describe 'Tasks' do
         expect(VCAP::CloudController::TaskModel.find(guid: guid)).to be_present
       end
     end
+
+    context 'when the client specifies a template' do
+      let(:process) { VCAP::CloudController::ProcessModel.make(app: app_model, command: 'start') }
+      it 'uses the command from the template process' do
+        body = {
+          name:         'best task ever',
+          template: {
+            process: {
+              guid: process.guid
+            }
+          },
+          memory_in_mb: 1234,
+          disk_in_mb:   1000,
+        }
+
+        post "/v3/apps/#{app_model.guid}/tasks", body.to_json, developer_headers
+
+        guid            = parsed_response['guid']
+        sequence_id     = parsed_response['sequence_id']
+
+        expected_response = {
+          'guid'         => guid,
+          'sequence_id'  => sequence_id,
+          'name'         => 'best task ever',
+          'command'      => process.command,
+          'state'        => 'RUNNING',
+          'memory_in_mb' => 1234,
+          'disk_in_mb'   => 1000,
+          'result'       => {
+            'failure_reason' => nil
+          },
+          'droplet_guid' => droplet.guid,
+          'created_at'   => iso8601,
+          'updated_at'   => iso8601,
+          'links'        => {
+            'self' => {
+              'href' => "#{link_prefix}/v3/tasks/#{guid}"
+            },
+            'app' => {
+              'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
+            },
+            'cancel' => {
+              'href' => "#{link_prefix}/v3/tasks/#{guid}/actions/cancel",
+              'method' => 'POST',
+            },
+            'droplet' => {
+              'href' => "#{link_prefix}/v3/droplets/#{droplet.guid}"
+            }
+          }
+        }
+
+        expect(last_response.status).to eq(202)
+        expect(parsed_response).to be_a_response_like(expected_response)
+      end
+    end
   end
 end

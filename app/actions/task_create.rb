@@ -24,7 +24,7 @@ module VCAP::CloudController
           name:                  use_requested_name_or_generate_name(message),
           state:                 TaskModel::PENDING_STATE,
           droplet:               droplet,
-          command:               message.command,
+          command:               command(message),
           app:                   app,
           disk_in_mb:            message.disk_in_mb || config.get(:default_app_disk_in_mb),
           memory_in_mb:          message.memory_in_mb || config.get(:default_app_memory),
@@ -49,6 +49,15 @@ module VCAP::CloudController
     private
 
     attr_reader :config
+
+    def command(message)
+      return message.command if message.command
+
+      process = ProcessModel.find(guid: message.template_process_guid)
+      raise CloudController::Errors::ApiError.new_from_details('ProcessNotFound', message.template_process_guid) unless process
+
+      process.specified_or_detected_command
+    end
 
     def submit_task(task)
       task_definition = Diego::TaskRecipeBuilder.new.build_app_task(config, task)

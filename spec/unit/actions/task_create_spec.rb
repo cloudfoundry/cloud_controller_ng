@@ -9,7 +9,7 @@ module VCAP::CloudController
     describe '#create' do
       let(:app) { AppModel.make }
       let(:space) { app.space }
-      let(:droplet) { DropletModel.make(app_guid: app.guid, state: DropletModel::STAGED_STATE) }
+      let(:droplet) { DropletModel.make(app_guid: app.guid, state: DropletModel::STAGED_STATE, process_types: { 'web' => 'start app' }) }
       let(:command) { 'bundle exec rake panda' }
       let(:name) { 'my_task_name' }
       let(:message) { TaskCreateMessage.new name: name, command: command, disk_in_mb: 2048, memory_in_mb: 1024 }
@@ -213,6 +213,38 @@ module VCAP::CloudController
           expect {
             task_create_action.create(app, message, user_audit_info)
           }.to raise_error(TaskCreate::MaximumDiskExceeded, /Cannot request disk_in_mb greater than 10/)
+        end
+      end
+
+      describe 'process templates' do
+        let(:process) { VCAP::CloudController::ProcessModel.make(app: app, command: 'start') }
+
+        context 'whn there is a template and no command provided' do
+          let(:message) { TaskCreateMessage.new name: name, disk_in_mb: 2048, memory_in_mb: 1024, template: { process: { guid: process.guid } } }
+
+          it 'uses the command from the template' do
+            task = task_create_action.create(app, message, user_audit_info)
+            expect(task.command).to eq(process.command)
+          end
+        end
+
+        context 'when there is a template and a command provided' do
+          let(:message) { TaskCreateMessage.new name: name, command: 'justdoit', disk_in_mb: 2048, memory_in_mb: 1024, template: { process: { guid: process.guid } } }
+
+          it 'uses the command provided' do
+            task = task_create_action.create(app, message, user_audit_info)
+            expect(task.command).to eq('justdoit')
+          end
+        end
+
+        context 'when there is no command and the template process has no command specified' do
+          let(:process) { VCAP::CloudController::ProcessModel.make(app: app, type: 'web') }
+          let(:message) { TaskCreateMessage.new name: name, disk_in_mb: 2048, memory_in_mb: 1024, template: { process: { guid: process.guid } } }
+
+          it 'uses the detected command from the process' do
+            task = task_create_action.create(app, message, user_audit_info)
+            expect(task.command).to eq('start app')
+          end
         end
       end
     end

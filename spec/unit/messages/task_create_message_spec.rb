@@ -8,7 +8,12 @@ module VCAP::CloudController
         'name' => 'mytask',
         'command' => 'rake db:migrate && true',
         'droplet_guid' => Sham.guid,
-        'memory_in_mb' => 2048
+        'memory_in_mb' => 2048,
+        'template' => {
+          'process' => {
+            'guid' => Sham.guid,
+          }
+        }
       }
     end
 
@@ -128,6 +133,65 @@ module VCAP::CloudController
 
           expect(message).to_not be_valid
           expect(message.errors.full_messages).to include('Disk in mb must be greater than 0')
+        end
+      end
+
+      describe 'template' do
+        it 'can be nil' do
+          body.delete 'template'
+
+          message = TaskCreateMessage.new(body)
+
+          expect(message).to be_valid
+        end
+
+        it 'is required when there is no command' do
+          body.delete 'template'
+          body.delete 'command'
+
+          message = TaskCreateMessage.new(body)
+
+          expect(message).to_not be_valid
+        end
+
+        it 'must be a hash' do
+          body['template'] = 'abc'
+
+          message = TaskCreateMessage.new(body)
+
+          expect(message).to_not be_valid
+        end
+
+        it 'must contain a process key' do
+          body['template'] = {}
+
+          message = TaskCreateMessage.new(body)
+
+          expect(message).to_not be_valid
+        end
+
+        it 'must contain a process hash' do
+          body['template'] = { 'process' => 'abc' }
+
+          message = TaskCreateMessage.new(body)
+
+          expect(message).to_not be_valid
+        end
+
+        it 'must contain a process has with a guid' do
+          body['template'] = { 'process' => {} }
+
+          message = TaskCreateMessage.new(body)
+
+          expect(message).to_not be_valid
+        end
+
+        it 'must contain a process has with a valid guid' do
+          body['template'] = { 'process' => { 'guid' => 32913 } }
+
+          message = TaskCreateMessage.new(body)
+
+          expect(message).to_not be_valid
         end
       end
     end
