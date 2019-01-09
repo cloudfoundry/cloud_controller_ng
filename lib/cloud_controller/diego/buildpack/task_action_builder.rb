@@ -7,11 +7,13 @@ module VCAP::CloudController
     module Buildpack
       class TaskActionBuilder
         include ::Diego::ActionBuilder
+        class InvalidStack < StandardError; end
 
         def initialize(config, task, lifecycle_data)
           @config = config
           @task = task
           @lifecycle_data = lifecycle_data
+          @stack = lifecycle_data[:stack]
         end
 
         def action
@@ -53,6 +55,9 @@ module VCAP::CloudController
         def image_layers
           return nil unless @config.get(:diego, :enable_declarative_asset_downloads)
 
+          destination = @config.get(:diego, :droplet_destinations)[@stack.to_sym]
+          raise InvalidStack.new("no droplet destination defined for requested stack '#{@stack}'") unless destination
+
           layers = [
             ::Diego::Bbs::Models::ImageLayer.new(
               name: "buildpack-#{lifecycle_stack}-lifecycle",
@@ -67,7 +72,7 @@ module VCAP::CloudController
             layers << ::Diego::Bbs::Models::ImageLayer.new(
               name: 'droplet',
               url: lifecycle_data[:droplet_uri],
-              destination_path: '/home/vcap',
+              destination_path: destination,
               layer_type: ::Diego::Bbs::Models::ImageLayer::Type::EXCLUSIVE,
               media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ,
               digest_value: task.droplet.sha256_checksum,

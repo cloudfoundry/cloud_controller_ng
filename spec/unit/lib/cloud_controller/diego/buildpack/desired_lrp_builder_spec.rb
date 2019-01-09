@@ -23,13 +23,18 @@ module VCAP::CloudController
           Config.new({
             diego: {
               file_server_url: 'http://file-server.example.com',
-              lifecycle_bundles: {
-                'buildpack/potato-stack': '/path/to/lifecycle.tgz',
-              },
+              lifecycle_bundles: lifecycle_bundles,
+              droplet_destinations: droplet_destinations,
               use_privileged_containers_for_running: use_privileged_containers_for_running,
               enable_declarative_asset_downloads: enable_declarative_asset_downloads,
             }
           })
+        end
+        let(:lifecycle_bundles) do
+          { "buildpack/#{stack}": '/path/to/lifecycle.tgz' }
+        end
+        let(:droplet_destinations) do
+          { stack.to_sym => '/value/from/config/based/on/stack' }
         end
         let(:use_privileged_containers_for_running) { false }
         let(:enable_declarative_asset_downloads) { false }
@@ -71,7 +76,11 @@ module VCAP::CloudController
           end
 
           context 'when searching for a nonexistant stack' do
+            let(:lifecycle_bundles) do
+              { "hot-potato": '/path/to/lifecycle.tgz' }
+            end
             let(:stack) { 'stack-thats-not-in-config' }
+
             it 'errors nicely' do
               expect { builder.cached_dependencies }.to raise_error("no compiler defined for requested stack 'stack-thats-not-in-config'")
             end
@@ -196,7 +205,7 @@ module VCAP::CloudController
                   ::Diego::Bbs::Models::ImageLayer.new(
                     name: 'droplet',
                     url: 'http://droplet-uri.com:1234?token=&%40home---%3E',
-                    destination_path: '/home/vcap',
+                    destination_path: '/value/from/config/based/on/stack',
                     layer_type: ::Diego::Bbs::Models::ImageLayer::Type::EXCLUSIVE,
                     media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ,
                     digest_value: 'checksum-value',
@@ -205,10 +214,25 @@ module VCAP::CloudController
                 )
               end
 
-              context 'when searching for a nonexistant stack' do
+              context 'when searching for a lifecycle associated with a nonexistant stack' do
+                let(:lifecycle_bundles) do
+                  { "hot-potato": '/path/to/lifecycle.tgz' }
+                end
                 let(:stack) { 'stack-thats-not-in-config' }
+
                 it 'errors nicely' do
                   expect { builder.image_layers }.to raise_error("no compiler defined for requested stack 'stack-thats-not-in-config'")
+                end
+              end
+
+              context 'when searching for a droplet destination associated with a nonexistant stack' do
+                let(:droplet_destinations) do
+                  { "hot-potato": '/value/from/config/based/on/stack' }
+                end
+                let(:stack) { 'stack-thats-not-in-config' }
+
+                it 'errors nicely' do
+                  expect { builder.image_layers }.to raise_error("no droplet destination defined for requested stack 'stack-thats-not-in-config'")
                 end
               end
             end

@@ -64,6 +64,9 @@ module VCAP::CloudController
           lifecycle_bundle = @config.get(:diego, :lifecycle_bundles)[lifecycle_bundle_key]
           raise InvalidStack.new("no compiler defined for requested stack '#{@stack}'") unless lifecycle_bundle
 
+          destination = @config.get(:diego, :droplet_destinations)[@stack.to_sym]
+          raise InvalidStack.new("no droplet destination defined for requested stack '#{@stack}'") unless destination
+
           layers = [
             ::Diego::Bbs::Models::ImageLayer.new(
               name: "buildpack-#{@stack}-lifecycle",
@@ -78,7 +81,7 @@ module VCAP::CloudController
             layers << ::Diego::Bbs::Models::ImageLayer.new(
               name: 'droplet',
               url: UriUtils.uri_escape(@droplet_uri),
-              destination_path: action_user_home,
+              destination_path: destination,
               layer_type: ::Diego::Bbs::Models::ImageLayer::Type::EXCLUSIVE,
               media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ,
               digest_value: @checksum_value,
@@ -120,10 +123,6 @@ module VCAP::CloudController
 
         def action_user
           'vcap'
-        end
-
-        def action_user_home
-          "/home/#{action_user}"
         end
       end
     end

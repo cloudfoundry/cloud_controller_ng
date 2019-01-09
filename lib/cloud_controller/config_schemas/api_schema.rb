@@ -281,6 +281,7 @@ module VCAP::CloudController
             cc_uploader_url: String,
             file_server_url: String,
             lifecycle_bundles: Hash,
+            droplet_destinations: Hash,
             pid_limit: Integer,
             use_privileged_containers_for_running: bool,
             use_privileged_containers_for_staging: bool,

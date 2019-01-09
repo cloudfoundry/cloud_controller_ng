@@ -13,9 +13,13 @@ module VCAP::CloudController
               enable_declarative_asset_downloads: enable_declarative_asset_downloads,
               lifecycle_bundles: {
                 'buildpack/potato-stack': 'http://file-server.service.cf.internal:8080/v1/static/potato_lifecycle_bundle_url'
-              }
+              },
+              droplet_destinations: droplet_destinations,
             }
           })
+        end
+        let(:droplet_destinations) do
+          { stack.to_sym => '/value/from/config/based/on/stack' }
         end
         let(:task) { TaskModel.make command: command, name: 'my-task' }
         let(:command) { 'echo "hello"' }
@@ -189,7 +193,7 @@ module VCAP::CloudController
                 ::Diego::Bbs::Models::ImageLayer.new(
                   name: 'droplet',
                   url: lifecycle_data[:droplet_uri],
-                  destination_path: '/home/vcap',
+                  destination_path: '/value/from/config/based/on/stack',
                   layer_type: ::Diego::Bbs::Models::ImageLayer::Type::EXCLUSIVE,
                   media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ,
                   digest_value: task.droplet.sha256_checksum,
@@ -204,7 +208,20 @@ module VCAP::CloudController
               it 'returns an error' do
                 expect {
                   builder.image_layers
-                }.to raise_error VCAP::CloudController::Diego::LifecycleBundleUriGenerator::InvalidStack
+                }.to raise_error('no compiler defined for requested stack')
+              end
+            end
+
+            context 'when the requested stack is not in the configured droplet destinations' do
+              let(:stack) { 'leek-stack' }
+              let(:droplet_destinations) do
+                { 'yucca' => '/value/from/config/based/on/stack' }
+              end
+
+              it 'returns an error' do
+                expect {
+                  builder.image_layers
+                }.to raise_error("no droplet destination defined for requested stack 'leek-stack'")
               end
             end
           end
