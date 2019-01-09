@@ -202,4 +202,87 @@ RSpec.describe BuildpacksController, type: :controller do
       end
     end
   end
+
+  describe '#destroy' do
+    let(:buildpack) { VCAP::CloudController::Buildpack.make }
+    let(:user) { VCAP::CloudController::User.make }
+
+    describe 'permissions by role' do
+      role_to_expected_http_response = {
+        'admin' => 202,
+
+        'reader_and_writer' => 403,
+
+        'admin_read_only' => 403,
+        'global_auditor' => 403,
+      }.freeze
+
+      role_to_expected_http_response.each do |role, expected_return_value|
+        context "as an #{role}" do
+          it "returns #{expected_return_value}" do
+            set_current_user_as_role(role: role, user: user)
+
+            delete :destroy, params: { guid: buildpack.guid }
+
+            expect(response.status).to eq expected_return_value
+          end
+        end
+      end
+
+      it 'returns 401 when logged out' do
+        delete :destroy, params: { guid: buildpack.guid }
+
+        expect(response.status).to eq 401
+      end
+    end
+
+    context 'as an admin user' do
+      before do
+        set_current_user_as_admin(user: user)
+      end
+
+      context 'when the buildpack exists' do
+        it 'creates a job to track the deletion and returns it in the location header' do
+          expect {
+            delete :destroy, params: { guid: buildpack.guid }
+          }.to change {
+            VCAP::CloudController::PollableJobModel.count
+          }.by(1)
+
+          job = VCAP::CloudController::PollableJobModel.last
+          enqueued_job = Delayed::Job.last
+          expect(job.delayed_job_guid).to eq(enqueued_job.guid)
+          expect(job.operation).to eq('buildpack.delete')
+          expect(job.state).to eq('PROCESSING')
+          expect(job.resource_guid).to eq(buildpack.guid)
+          expect(job.resource_type).to eq('buildpack')
+
+          expect(response.status).to eq(202)
+          expect(response.headers['Location']).to include "#{link_prefix}/v3/jobs/#{job.guid}"
+        end
+
+        it 'updates the job state when the job succeeds' do
+          delete :destroy, params: { guid: buildpack.guid }
+
+          job = VCAP::CloudController::PollableJobModel.find(resource_guid: buildpack.guid)
+          expect(job).to_not be_nil
+          expect(job.state).to eq('PROCESSING')
+
+          # one job to delete the model, which spawns another to delete the blob
+          execute_all_jobs(expected_successes: 2, expected_failures: 0)
+
+          expect(job.reload.state).to eq('COMPLETE')
+        end
+      end
+
+      context 'when the buildpack does not exist' do
+        it 'returns a 404 Not Found' do
+          delete :destroy, params: { guid: 'not-found' }
+
+          expect(response.status).to eq(404)
+          expect(response.body).to include('ResourceNotFound')
+        end
+      end
+    end
+  end
 end

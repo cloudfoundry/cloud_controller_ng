@@ -377,4 +377,19 @@ RSpec.describe 'buildpacks' do
       end
     end
   end
+
+  describe 'DELETE /v3/buildpacks/:guid' do
+    let(:buildpack) { VCAP::CloudController::Buildpack.make }
+
+    it 'deletes a buildpack asynchronously' do
+      delete "/v3/buildpacks/#{buildpack.guid}", nil, admin_headers
+
+      expect(last_response.status).to eq(202)
+      expect(last_response.headers['Location']).to match(%r(http.+/v3/jobs/[a-fA-F0-9-]+))
+
+      execute_all_jobs(expected_successes: 2, expected_failures: 0)
+      get "/v3/buildpacks/#{buildpack.guid}", {}, admin_headers
+      expect(last_response.status).to eq(404)
+    end
+  end
 end

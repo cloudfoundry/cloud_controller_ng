@@ -58,7 +58,7 @@ class DropletsController < ApplicationController
     pollable_job = Jobs::Enqueuer.new(deletion_job, queue: 'cc-generic').enqueue_pollable
 
     url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
-    head HTTP::ACCEPTED, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job.guid}")
+    head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job.guid}")
   end
 
   def update

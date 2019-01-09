@@ -2,6 +2,7 @@ require 'messages/buildpack_create_message'
 require 'messages/buildpacks_list_message'
 require 'fetchers/buildpack_list_fetcher'
 require 'actions/buildpack_create'
+require 'actions/buildpack_delete'
 require 'presenters/v3/buildpack_presenter'
 
 class BuildpacksController < ApplicationController
@@ -37,6 +38,20 @@ class BuildpacksController < ApplicationController
       path: '/v3/buildpacks',
       message: message
     )
+  end
+
+  def destroy
+    unauthorized! unless permission_queryer.can_write_globally?
+
+    buildpack = Buildpack.find(guid: hashed_params[:guid])
+    buildpack_not_found! unless buildpack
+
+    delete_action = BuildpackDelete.new
+    deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(Buildpack, buildpack.guid, delete_action)
+    pollable_job = Jobs::Enqueuer.new(deletion_job, queue: 'cc-generic').enqueue_pollable
+
+    url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
+    head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job.guid}")
   end
 
   private

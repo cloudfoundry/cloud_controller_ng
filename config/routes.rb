@@ -155,4 +155,5 @@ Rails.application.routes.draw do
   get '/buildpacks', to: 'buildpacks#index'
   get '/buildpacks/:guid', to: 'buildpacks#show'
   post '/buildpacks', to: 'buildpacks#create'
+  delete '/buildpacks/:guid', to: 'buildpacks#destroy'
 end
