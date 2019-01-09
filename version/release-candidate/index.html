@@ -10591,6 +10591,35 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 </tr>
 </tbody></table>
 
+          <h3 id="delete-a-buildpack">Delete a buildpack</h3>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/buildpacks/[guid]"</span> <span class="se">\</span>
+  -X DELETE <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">202</span> <span class="ne">Accepted</span>
+<span class="na">Location</span><span class="p">:</span> <span class="s">https://api.example.org/v3/jobs/[guid]</span>
+</code></pre>
+
+<h4 id="definition">Definition</h4>
+
+<p><code class="prettyprint">DELETE /v3/buildpacks/:guid</code></p>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Admin</td>
+</tr>
+</tbody></table>
+
           <h3 id="list-buildpacks">List buildpacks</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
