@@ -97,6 +97,12 @@ module VCAP::CloudController::Presenters::V3
       end
     end
 
+    context 'for buildpacks' do
+      it_behaves_like JobPresenter do
+        let(:resource_type) { 'buildpack' }
+      end
+    end
+
     context 'for droplets' do
       it_behaves_like JobPresenter do
         let(:resource_type) { 'droplet' }

@@ -6,6 +6,7 @@ module VCAP::CloudController
       class JobPresenter < BasePresenter
         RESOURCE_LINKS = {
           app: '/v3/apps/',
+          buildpack: '/v3/buildpacks/',
           droplet: '/v3/droplets/',
           package: '/v3/packages/',
           buildpack: '/v3/buildpacks/',
