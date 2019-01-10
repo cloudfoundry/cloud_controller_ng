@@ -10,24 +10,14 @@ RSpec.describe StacksController, type: :controller do
     describe 'permissions by role' do
       role_to_expected_http_response = {
         'admin' => 200,
-        'space_developer' => 200,
-        'space_manager' => 200,
-        'space_auditor' => 200,
-        'org_manager' => 200,
-        'admin_read_only' => 200,
-        'global_auditor' => 200,
-        'org_auditor' => 200,
-        'org_billing_manager' => 200,
-        'org_user' => 200,
+
+        'reader_and_writer' => 200,
       }.freeze
 
       role_to_expected_http_response.each do |role, expected_return_value|
         context "as an #{role}" do
-          let(:org) { VCAP::CloudController::Organization.make }
-          let(:space) { VCAP::CloudController::Space.make(organization: org) }
-
           it "returns #{expected_return_value}" do
-            set_current_user_as_role(role: role, org: org, space: space, user: user)
+            set_current_user_as_role(role: role, user: user)
 
             get :index
 
@@ -82,24 +72,14 @@ RSpec.describe StacksController, type: :controller do
     describe 'permissions by role' do
       role_to_expected_http_response = {
         'admin' => 200,
-        'space_developer' => 200,
-        'space_manager' => 200,
-        'space_auditor' => 200,
-        'org_manager' => 200,
-        'admin_read_only' => 200,
-        'global_auditor' => 200,
-        'org_auditor' => 200,
-        'org_billing_manager' => 200,
-        'org_user' => 200,
+
+        'reader_and_writer' => 200,
       }.freeze
 
       role_to_expected_http_response.each do |role, expected_return_value|
         context "as an #{role}" do
-          let(:org) { VCAP::CloudController::Organization.make }
-          let(:space) { VCAP::CloudController::Space.make(organization: org) }
-
           it "returns #{expected_return_value}" do
-            set_current_user_as_role(role: role, org: org, space: space, user: user)
+            set_current_user_as_role(role: role, user: user)
 
             get :index
 
@@ -154,19 +134,14 @@ RSpec.describe StacksController, type: :controller do
     describe 'permissions by role' do
       role_to_expected_http_response = {
         'admin' => 201,
-        'org_manager' => 403,
-        'admin_read_only' => 403,
-        'org_auditor' => 403,
-        'org_billing_manager' => 403,
-        'org_user' => 403,
+
+        'reader_and_writer' => 403,
       }.freeze
 
       role_to_expected_http_response.each do |role, expected_return_value|
         context "as an #{role}" do
-          let(:org) { VCAP::CloudController::Organization.make }
-
           it "returns #{expected_return_value}" do
-            set_current_user_as_role(role: role, org: org, user: user)
+            set_current_user_as_role(role: role, user: user)
 
             post :create, params: req_body, as: :json
 
@@ -210,24 +185,14 @@ RSpec.describe StacksController, type: :controller do
     describe 'permissions by role' do
       role_to_expected_http_response = {
         'admin' => 204,
-        'space_developer' => 403,
-        'space_manager' => 403,
-        'space_auditor' => 403,
-        'org_manager' => 403,
-        'admin_read_only' => 403,
-        'global_auditor' => 403,
-        'org_auditor' => 403,
-        'org_billing_manager' => 403,
-        'org_user' => 403,
+
+        'reader_and_writer' => 403,
       }.freeze
 
       role_to_expected_http_response.each do |role, expected_return_value|
         context "as an #{role}" do
-          let(:org) { VCAP::CloudController::Organization.make }
-          let(:space) { VCAP::CloudController::Space.make(organization: org) }
-
           it "returns #{expected_return_value}" do
-            set_current_user_as_role(role: role, org: org, space: space, user: user)
+            set_current_user_as_role(role: role, user: user)
 
             delete :destroy, params: { guid: stack.guid }
 
