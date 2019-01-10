@@ -30,16 +30,20 @@ Content-Type: application/json
 
 Name | Type | Description
 ---- | ---- | -----------
-**command** | _string_ | Command that will be executed
+**command**<sup>[1]</sup> | _string_ | Command that will be executed. **NOTE:** optional if a `template.process.guid` is provided
 
 #### Optional Parameters
 
 Name | Type | Description | Default
 ---- | ---- | ----------- | -------
 **name** | _string_ | Name of the task. | auto-generated
-**disk_in_mb** | _integer_ | Amount of disk to allocate for the task in MB. | operator-configured `default_app_disk_in_mb`
-**memory_in_mb** | _integer_ | Amount of memory to allocate for the task in MB. | operator-configured `default_app_memory`
+**disk_in_mb**<sup>[1]</sup> | _integer_ | Amount of disk to allocate for the task in MB. | operator-configured `default_app_disk_in_mb`
+**memory_in_mb**<sup>[1]</sup> | _integer_ | Amount of memory to allocate for the task in MB. | operator-configured `default_app_memory`
 **droplet_guid** | _uuid_ | The guid of the droplet that will be used to run the command. | the app's current droplet
+**droplet_guid** | _uuid_ | The guid of the droplet that will be used to run the command. | the app's current droplet
+**template.process.guid** _(experimental)_ | _uuid_ | The guid of the process that will be used as a template. | `null`
+
+<sup>1 If not provided, and a `template.process.guid` is provided, this field will use the value from the process with the given guid.</sup>
 
 #### Allowed Roles
  |
