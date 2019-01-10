@@ -124,6 +124,7 @@ includes:
   - resources/stacks/header
   - resources/stacks/object
   - resources/stacks/create
+  - resources/stacks/update
   - resources/stacks/list
   - resources/stacks/get
   - resources/stacks/delete

@@ -1,10 +1,14 @@
-<% content_for :single_stack do %>
+<% content_for :single_stack do | metadata={} |  %>
 {
    "guid": "11c916c9-c2f9-440e-8e73-102e79c4704d",
    "created_at": "2018-11-09T22:43:28Z",
    "updated_at": "2018-11-09T22:43:28Z",
    "name": "my-stack",
    "description": "Here is my stack!",
+   "metadata": {
+     "labels": <%= metadata.fetch(:labels, {}).to_json(space: ' ')%>,
+     "annotations": <%= metadata.fetch(:annotations, {}).to_json(space: ' ')%>
+   },
    "links": {
       "self": {
          "href": "https://api.example.com/v3/stacks/11c916c9-c2f9-440e-8e73-102e79c4704d"
@@ -36,6 +40,10 @@
       "updated_at": "2018-11-09T22:43:28Z",
       "name": "my-stack-1",
       "description": "This is my first stack!",
+      "metadata": {
+        "labels": {},
+        "annotations": {}
+      },
       "links": {
         "self": {
           "href": "https://api.example.org<%= base_url %>/11c916c9-c2f9-440e-8e73-102e79c4704d"
@@ -48,6 +56,10 @@
       "updated_at": "2018-11-09T22:43:29Z",
       "name": "my-stack-2",
       "description": "This is my second stack!",
+      "metadata": {
+        "labels": {},
+        "annotations": {}
+      },
       "links": {
         "self": {
           "href": "https://api.example.org<%= base_url %>/81c916c9-c2f9-440e-8e73-102e79c4704h"
