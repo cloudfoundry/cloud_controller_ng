@@ -72,6 +72,9 @@ module VCAP::CloudController
   DropletLabelModel.blueprint do
   end
 
+  IsolationSegmentLabelModel.blueprint do
+  end
+
   AppAnnotationModel.blueprint do
   end
 
@@ -91,6 +94,9 @@ module VCAP::CloudController
   end
 
   DropletAnnotationModel.blueprint do
+  end
+
+  IsolationSegmentAnnotationModel.blueprint do
   end
 
   BuildModel.blueprint do

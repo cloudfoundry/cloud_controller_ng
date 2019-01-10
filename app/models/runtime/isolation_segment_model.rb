@@ -5,9 +5,9 @@ module VCAP::CloudController
     include Serializer
     ISOLATION_SEGMENT_MODEL_REGEX = /\A[[:print:]]+\Z/.freeze
 
-    one_to_many :spaces,
-      key: :isolation_segment_guid,
-      primary_key: :guid
+    one_to_many :spaces, key: :isolation_segment_guid, primary_key: :guid
+    one_to_many :labels, class: 'VCAP::CloudController::IsolationSegmentLabelModel', key: :resource_guid, primary_key: :guid
+    one_to_many :annotations, class: 'VCAP::CloudController::IsolationSegmentAnnotationModel', key: :resource_guid, primary_key: :guid
 
     many_to_many :organizations,
       left_key: :isolation_segment_guid,

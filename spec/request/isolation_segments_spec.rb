@@ -10,7 +10,11 @@ RSpec.describe 'IsolationSegmentModels' do
   describe 'POST /v3/isolation_segments' do
     it 'creates an isolation segment' do
       create_request = {
-        name:                  'my_segment'
+        name: 'my_segment',
+        metadata: {
+          labels: { release: 'stable' },
+          annotations: { note: 'this info' }
+        }
       }
 
       post '/v3/isolation_segments', create_request.to_json, user_header
@@ -27,6 +31,10 @@ RSpec.describe 'IsolationSegmentModels' do
         'links'      => {
           'self' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{created_isolation_segment.guid}" },
           'organizations' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{created_isolation_segment.guid}/organizations" },
+        },
+        'metadata' => {
+          'annotations' => { 'note' => 'this info' },
+          'labels' => { 'release' => 'stable' }
         }
       }
 
@@ -161,6 +169,10 @@ RSpec.describe 'IsolationSegmentModels' do
           'links'      => {
             'self' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment_model.guid}" },
             'organizations' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment_model.guid}/organizations" },
+          },
+          'metadata' => {
+            'annotations' => {},
+            'labels' => {}
           }
         }
 
@@ -192,6 +204,10 @@ RSpec.describe 'IsolationSegmentModels' do
           'links'      => {
             'self' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment_model.guid}" },
             'organizations' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment_model.guid}/organizations" },
+          },
+          'metadata' => {
+            'annotations' => {},
+            'labels' => {}
           }
         }
 
@@ -230,6 +246,10 @@ RSpec.describe 'IsolationSegmentModels' do
             'links'      => {
               'self' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{shared_guid}" },
               'organizations' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{shared_guid}/organizations" },
+            },
+            'metadata' => {
+              'annotations' => {},
+              'labels' => {}
             }
           }
         ]
@@ -275,7 +295,11 @@ RSpec.describe 'IsolationSegmentModels' do
               'links'       =>  {
                 'self' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{models[1].guid}" },
                 'organizations' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{models[1].guid}/organizations" },
-              }
+              },
+              'metadata' => {
+                'annotations' => {},
+                'labels' => {}
+            }
             },
             {
               'guid'        =>  models[2].guid.to_s,
@@ -285,8 +309,12 @@ RSpec.describe 'IsolationSegmentModels' do
               'links'       =>  {
                 'self' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{models[2].guid}" },
                 'organizations' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{models[2].guid}/organizations" },
+              },
+              'metadata' => {
+                'annotations' => {},
+                'labels' => {}
               }
-            },
+            }
           ]
         }
 
@@ -375,6 +403,10 @@ RSpec.describe 'IsolationSegmentModels' do
         'links'      => {
           'self' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment_model.guid}" },
           'organizations' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment_model.guid}/organizations" },
+        },
+        'metadata' => {
+          'annotations' => {},
+          'labels' => {}
         }
       }
 

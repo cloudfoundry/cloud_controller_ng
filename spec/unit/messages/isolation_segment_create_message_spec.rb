@@ -33,6 +33,48 @@ module VCAP::CloudController
             expect(message.errors_on(:name)).to include('must be a string')
           end
         end
+
+        describe 'metadata' do
+          context 'when the metadata is valid' do
+            let(:params) do
+              {
+                name: 'some-name',
+                metadata: {
+                  annotations: {
+                    potato: 'mashed'
+                  },
+                  labels: {
+                    foo: 'bar'
+                  }
+                }
+              }
+            end
+
+            it 'is valid and correctly parses the annotations' do
+              message = IsolationSegmentCreateMessage.new(params)
+              expect(message).to be_valid
+              expect(message.annotations).to include(potato: 'mashed')
+              expect(message.labels).to include(foo: 'bar')
+            end
+          end
+
+          context 'when the annotations params are not valid' do
+            let(:params) do
+              {
+                name: 'some-name',
+                metadata: {
+                  annotations: 'timmyd'
+                }
+              }
+            end
+
+            it 'is invalid' do
+              message = IsolationSegmentCreateMessage.new(params)
+              expect(message).not_to be_valid
+              expect(message.errors_on(:metadata)).to include('\'annotations\' is not a hash')
+            end
+          end
+        end
       end
     end
   end

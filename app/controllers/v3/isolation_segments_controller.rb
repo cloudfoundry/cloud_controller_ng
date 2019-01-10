@@ -2,6 +2,7 @@ require 'actions/isolation_segment_assign'
 require 'actions/isolation_segment_unassign'
 require 'actions/isolation_segment_update'
 require 'actions/isolation_segment_delete'
+require 'actions/isolation_segment_create'
 
 require 'messages/isolation_segment_relationship_org_message'
 require 'messages/isolation_segment_create_message'
@@ -23,12 +24,7 @@ class IsolationSegmentsController < ApplicationController
     message = IsolationSegmentCreateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    isolation_segment = nil
-    IsolationSegmentModel.db.transaction do
-      isolation_segment = IsolationSegmentModel.create(
-        name: message.name,
-      )
-    end
+    isolation_segment = IsolationSegmentCreate.create(message)
 
     render status: :created, json: Presenters::V3::IsolationSegmentPresenter.new(isolation_segment)
   rescue Sequel::ValidationFailed => e
