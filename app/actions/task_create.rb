@@ -20,14 +20,15 @@ module VCAP::CloudController
       TaskModel.db.transaction do
         app.lock!
 
+        template_process = process_from_template(message)
         task = TaskModel.create(
           name:                  use_requested_name_or_generate_name(message),
+          app:                   app,
           state:                 TaskModel::PENDING_STATE,
           droplet:               droplet,
-          command:               command(message),
-          app:                   app,
-          disk_in_mb:            message.disk_in_mb || config.get(:default_app_disk_in_mb),
-          memory_in_mb:          message.memory_in_mb || config.get(:default_app_memory),
+          command:               command(message, template_process),
+          disk_in_mb:            disk_in_mb(message, template_process),
+          memory_in_mb:          memory_in_mb(message, template_process),
           sequence_id:           app.max_task_sequence_id
         )
 
@@ -56,13 +57,31 @@ module VCAP::CloudController
 
     attr_reader :config
 
-    def command(message)
-      return message.command if message.command
+    def process_from_template(message)
+      return unless message.template_requested?
 
       process = ProcessModel.find(guid: message.template_process_guid)
       raise CloudController::Errors::ApiError.new_from_details('ProcessNotFound', message.template_process_guid) unless process
 
-      process.specified_or_detected_command
+      process
+    end
+
+    def command(message, template_process)
+      return message.command if message.requested?(:command)
+
+      template_process.specified_or_detected_command
+    end
+
+    def memory_in_mb(message, template_process)
+      return message.memory_in_mb if message.requested?(:memory_in_mb)
+
+      template_process.present? ? template_process.memory : config.get(:default_app_memory)
+    end
+
+    def disk_in_mb(message, template_process)
+      return message.disk_in_mb if message.requested?(:disk_in_mb)
+
+      template_process.present? ? template_process.disk_quota : config.get(:default_app_disk_in_mb)
     end
 
     def submit_task(task)

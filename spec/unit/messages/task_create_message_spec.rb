@@ -3,6 +3,7 @@ require 'messages/task_create_message'
 
 module VCAP::CloudController
   RSpec.describe TaskCreateMessage do
+    let(:process_guid) { Sham.guid }
     let(:body) do
       {
         'name' => 'mytask',
@@ -11,7 +12,7 @@ module VCAP::CloudController
         'memory_in_mb' => 2048,
         'template' => {
           'process' => {
-            'guid' => Sham.guid,
+            'guid' => process_guid,
           }
         },
         'metadata' => {
@@ -196,6 +197,26 @@ module VCAP::CloudController
           message = TaskCreateMessage.new(body)
 
           expect(message).to_not be_valid
+        end
+      end
+
+      describe '#template_process_guid' do
+        context 'when a template is requested' do
+          it 'returns the process guid' do
+            message = TaskCreateMessage.new(body)
+
+            expect(message.template_process_guid).to eq(process_guid)
+          end
+        end
+
+        context 'when a template is NOT requested' do
+          it 'returns nil' do
+            body.delete 'template'
+
+            message = TaskCreateMessage.new(body)
+
+            expect(message.template_process_guid).to be_nil
+          end
         end
       end
     end

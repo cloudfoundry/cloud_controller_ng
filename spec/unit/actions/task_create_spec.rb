@@ -167,23 +167,33 @@ module VCAP::CloudController
         end
       end
 
-      describe 'default values' do
-        let(:message) { TaskCreateMessage.new name: name, command: command }
+      describe 'memory_in_mb' do
+        context 'when memory_in_mb is not specified' do
+          let(:message) { TaskCreateMessage.new name: name, command: command }
 
-        before { config.set(:default_app_memory, 200) }
+          before { config.set(:default_app_memory, 200) }
 
-        it 'sets disk_in_mb to configured :default_app_disk_in_mb' do
-          config.set(:default_app_disk_in_mb, 200)
+          it 'sets memory_in_mb to configured :default_app_memory' do
+            task = task_create_action.create(app, message, user_audit_info)
 
-          task = task_create_action.create(app, message, user_audit_info)
-
-          expect(task.disk_in_mb).to eq(200)
+            expect(task.memory_in_mb).to eq(200)
+          end
         end
+      end
 
-        it 'sets memory_in_mb to configured :default_app_memory' do
-          task = task_create_action.create(app, message, user_audit_info)
+      describe 'disk_in_mb' do
+        context 'when disk_in_mb is not specified' do
+          let(:message) { TaskCreateMessage.new name: name, command: command }
 
-          expect(task.memory_in_mb).to eq(200)
+          before { config.set(:default_app_memory, 200) }
+
+          it 'defaults disk_in_mb to configured :default_app_disk_in_mb' do
+            config.set(:default_app_disk_in_mb, 200)
+
+            task = task_create_action.create(app, message, user_audit_info)
+
+            expect(task.disk_in_mb).to eq(200)
+          end
         end
       end
 
@@ -241,31 +251,85 @@ module VCAP::CloudController
       describe 'process templates' do
         let(:process) { VCAP::CloudController::ProcessModel.make(app: app, command: 'start') }
 
-        context 'whn there is a template and no command provided' do
-          let(:message) { TaskCreateMessage.new name: name, disk_in_mb: 2048, memory_in_mb: 1024, template: { process: { guid: process.guid } } }
+        describe 'commands' do
+          context 'when there is a template and no command provided' do
+            let(:message) { TaskCreateMessage.new name: name, disk_in_mb: 2048, memory_in_mb: 1024, template: { process: { guid: process.guid } } }
 
-          it 'uses the command from the template' do
-            task = task_create_action.create(app, message, user_audit_info)
-            expect(task.command).to eq(process.command)
+            it 'uses the command from the template' do
+              task = task_create_action.create(app, message, user_audit_info)
+              expect(task.command).to eq(process.command)
+            end
+          end
+
+          context 'when there is a template and a command provided' do
+            let(:message) { TaskCreateMessage.new name: name, command: 'justdoit', disk_in_mb: 2048, memory_in_mb: 1024, template: { process: { guid: process.guid } } }
+
+            it 'uses the command provided' do
+              task = task_create_action.create(app, message, user_audit_info)
+              expect(task.command).to eq('justdoit')
+            end
+          end
+
+          context 'when the template process has no specified command and the message has no command requested' do
+            let(:process) { VCAP::CloudController::ProcessModel.make(app: app, type: 'web') }
+            let(:message) { TaskCreateMessage.new name: name, disk_in_mb: 2048, memory_in_mb: 1024, template: { process: { guid: process.guid } } }
+
+            it 'uses the detected command from the process\'s droplet' do
+              task = task_create_action.create(app, message, user_audit_info)
+              expect(task.command).to eq('start app')
+            end
           end
         end
 
-        context 'when there is a template and a command provided' do
-          let(:message) { TaskCreateMessage.new name: name, command: 'justdoit', disk_in_mb: 2048, memory_in_mb: 1024, template: { process: { guid: process.guid } } }
+        describe 'memory_in_mb' do
+          before do
+            config.set(:default_app_memory, 4096)
+          end
 
-          it 'uses the command provided' do
-            task = task_create_action.create(app, message, user_audit_info)
-            expect(task.command).to eq('justdoit')
+          context 'when there is a template and the message does NOT specify memory_in_mb' do
+            let(:process) { VCAP::CloudController::ProcessModel.make(app: app, type: 'web', memory: 23) }
+            let(:message) { TaskCreateMessage.new(name: name, command: 'ok', disk_in_mb: 2048, template: { process: { guid: process.guid } }) }
+
+            it 'uses the memory from the template process' do
+              task = task_create_action.create(app, message, user_audit_info)
+              expect(task.memory_in_mb).to eq(23)
+            end
+          end
+
+          context 'when there is a template and the message specifies memory_in_mb' do
+            let(:process) { VCAP::CloudController::ProcessModel.make(app: app, type: 'web', memory: 23) }
+            let(:message) { TaskCreateMessage.new(name: name, command: 'ok', memory_in_mb: 2048, template: { process: { guid: process.guid } }) }
+
+            it 'uses the memory from the template process' do
+              task = task_create_action.create(app, message, user_audit_info)
+              expect(task.memory_in_mb).to eq(2048)
+            end
           end
         end
 
-        context 'when there is no command and the template process has no command specified' do
-          let(:process) { VCAP::CloudController::ProcessModel.make(app: app, type: 'web') }
-          let(:message) { TaskCreateMessage.new name: name, disk_in_mb: 2048, memory_in_mb: 1024, template: { process: { guid: process.guid } } }
+        describe 'disk_in_mb' do
+          before do
+            config.set(:default_app_disk_in_mb, 4096)
+          end
 
-          it 'uses the detected command from the process' do
-            task = task_create_action.create(app, message, user_audit_info)
-            expect(task.command).to eq('start app')
+          context 'when there is a template and the message does NOT specify disk_in_mb' do
+            let(:process) { VCAP::CloudController::ProcessModel.make(app: app, type: 'web', disk_quota: 23) }
+            let(:message) { TaskCreateMessage.new(name: name, command: 'ok', memory_in_mb: 2048, template: { process: { guid: process.guid } }) }
+
+            it 'uses the memory from the template process' do
+              task = task_create_action.create(app, message, user_audit_info)
+              expect(task.disk_in_mb).to eq(23)
+            end
+          end
+
+          context 'when there is a template and the message specifies disk_in_mb' do
+            let(:process) { VCAP::CloudController::ProcessModel.make(app: app, type: 'web', disk_quota: 23) }
+            let(:message) { TaskCreateMessage.new(name: name, command: 'ok', disk_in_mb: 2048, template: { process: { guid: process.guid } }) }
+
+            it 'uses the memory from the template process' do
+              task = task_create_action.create(app, message, user_audit_info)
+              expect(task.disk_in_mb).to eq(2048)
+            end
           end
         end
       end
