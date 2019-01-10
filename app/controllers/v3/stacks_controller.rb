@@ -40,7 +40,7 @@ class StacksController < ApplicationController
   end
 
   def destroy
-    unauthorized! unless permission_queryer.can_write_globally?
+    stack_not_found! unless permission_queryer.can_write_globally?
 
     stack = Stack.find(guid: hashed_params[:guid])
     stack_not_found! unless stack

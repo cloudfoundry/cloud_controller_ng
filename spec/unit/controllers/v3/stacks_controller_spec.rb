@@ -209,15 +209,15 @@ RSpec.describe StacksController, type: :controller do
     describe 'permissions by role' do
       role_to_expected_http_response = {
         'admin' => 204,
-        'space_developer' => 403,
-        'space_manager' => 403,
-        'space_auditor' => 403,
-        'org_manager' => 403,
+        'space_developer' => 404,
+        'space_manager' => 404,
+        'space_auditor' => 404,
+        'org_manager' => 404,
         'admin_read_only' => 403,
         'global_auditor' => 403,
-        'org_auditor' => 403,
-        'org_billing_manager' => 403,
-        'org_user' => 403,
+        'org_auditor' => 404,
+        'org_billing_manager' => 404,
+        'org_user' => 404,
       }.freeze
 
       role_to_expected_http_response.each do |role, expected_return_value|
