@@ -4,20 +4,16 @@ module VCAP::CloudController
   class StacksListMessage < ListMessage
     register_allowed_keys [
       :names,
-      :page,
-      :per_page,
+      :label_selector,
     ]
 
     validates_with NoAdditionalParamsValidator
+    validates_with LabelSelectorRequirementValidator, if: label_selector_requested?
 
     validates :names, array: true, allow_nil: true
 
     def self.from_params(params)
       super(params, %w(names))
-    end
-
-    def to_param_hash
-      super(exclude: [:page, :per_page])
     end
 
     def valid_order_by_values

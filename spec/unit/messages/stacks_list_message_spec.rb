@@ -73,6 +73,16 @@ module VCAP::CloudController
         expect(message).to be_invalid
         expect(message.errors[:names].length).to eq 1
       end
+
+      it 'validates label selector' do
+        message = StacksListMessage.from_params('label_selector' => '')
+
+        expect_any_instance_of(Validators::LabelSelectorRequirementValidator).
+          to receive(:validate).
+          with(message).
+          and_call_original
+        message.valid?
+      end
     end
   end
 end

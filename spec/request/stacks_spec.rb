@@ -115,6 +115,62 @@ RSpec.describe 'Stacks Request' do
           }
         )
       end
+
+      context 'when there are labels' do
+        let!(:stack1_label) { VCAP::CloudController::StackLabelModel.make(
+          key_name: 'release',
+          value: 'stable',
+          resource_guid: stack1.guid
+        )
+        }
+        let!(:stack2_label) { VCAP::CloudController::StackLabelModel.make(
+          key_name: 'release',
+          value: 'unstable',
+          resource_guid: stack2.guid
+        )
+        }
+
+        it 'returns a list of label filtered stacks' do
+          get '/v3/stacks?label_selector=release=stable', nil, headers
+
+          expect(parsed_response).to be_a_response_like(
+            {
+              'pagination' => {
+                'total_results' => 1,
+                'total_pages' => 1,
+                'first' => {
+                  'href' => "#{link_prefix}/v3/stacks?label_selector=release%3Dstable&page=1&per_page=50"
+                },
+                'last' => {
+                  'href' => "#{link_prefix}/v3/stacks?label_selector=release%3Dstable&page=1&per_page=50"
+                },
+                'next' => nil,
+                'previous' => nil
+              },
+              'resources' => [
+                {
+                  'name' => stack1.name,
+                  'description' => stack1.description,
+                  'guid' => stack1.guid,
+                  'metadata' => {
+                    'labels' => {
+                      'release' => 'stable'
+                    },
+                    'annotations' => {}
+                  },
+                  'created_at' => iso8601,
+                  'updated_at' => iso8601,
+                  'links' => {
+                    'self' => {
+                      'href' => "#{link_prefix}/v3/stacks/#{stack1.guid}"
+                    }
+                  },
+                },
+              ]
+            }
+          )
+        end
+      end
     end
   end
 
