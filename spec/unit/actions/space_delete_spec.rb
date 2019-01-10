@@ -3,10 +3,9 @@ require 'actions/space_delete'
 
 module VCAP::CloudController
   RSpec.describe SpaceDelete do
-    subject(:space_delete) { SpaceDelete.new(user_audit_info, services_event_repository, space_roles_delete) }
+    subject(:space_delete) { SpaceDelete.new(user_audit_info, services_event_repository) }
     let(:services_event_repository) { Repositories::ServiceEventRepository.new(user_audit_info) }
     let(:user_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email) }
-    let(:space_roles_delete) { spy(PermSpaceRolesDelete) }
 
     describe '#delete' do
       let!(:space) { Space.make(name: 'space-1') }
@@ -243,28 +242,6 @@ module VCAP::CloudController
                 expect(errors.map(&:message).join).to match(/service instance fake-name is in progress/)
                 expect(errors.map(&:message).join).to match(/associated service instances: #{broker_to_be_deleted.name}/)
               end
-            end
-          end
-        end
-
-        describe 'role deletion' do
-          it 'deletes associated roles' do
-            space_delete.delete(space_dataset)
-
-            expect(space_roles_delete).to have_received(:delete).with(space)
-            expect(space_roles_delete).to have_received(:delete).with(space_2)
-          end
-
-          context 'when role deletion fails' do
-            let(:errors) { [CloudController::Errors::ApiError.new_from_details('SpaceRolesDeletionFailed', space_2.name)] }
-
-            before do
-              allow(space_roles_delete).to receive(:delete).with(space_2).and_return(errors)
-
-              result = space_delete.delete(space_dataset)
-
-              message = result.map(&:message).join("\n")
-              expect(message).to include("Failed to delete one or more roles for space #{space_2.name}")
             end
           end
         end

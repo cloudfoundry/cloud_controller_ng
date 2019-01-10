@@ -2,10 +2,9 @@ require 'actions/services/service_instance_delete'
 
 module VCAP::CloudController
   class SpaceDelete
-    def initialize(user_audit_info, services_event_repository, space_roles_deleter)
+    def initialize(user_audit_info, services_event_repository)
       @user_audit_info = user_audit_info
       @services_event_repository = services_event_repository
-      @space_roles_deleter = space_roles_deleter
     end
 
     def delete(dataset)
@@ -29,10 +28,6 @@ module VCAP::CloudController
             space_model.destroy
           end
         end
-
-        role_delete_errors = delete_roles(space_model)
-        err = accumulate_space_deletion_error(role_delete_errors, space_model.name)
-        errors << err unless err.nil?
       end
     end
 
@@ -109,10 +104,6 @@ module VCAP::CloudController
         errors_accumulator.push CloudController::Errors::ApiError.new_from_details('ServiceBrokerNotRemovable', broker.name)
       end
       errors_accumulator
-    end
-
-    def delete_roles(space_model)
-      @space_roles_deleter.delete(space_model)
     end
   end
 end

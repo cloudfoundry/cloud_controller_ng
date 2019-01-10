@@ -1,7 +1,5 @@
 require 'actions/organization_delete'
 require 'actions/space_delete'
-require 'actions/perm_org_roles_delete'
-require 'actions/perm_space_roles_delete'
 require 'fetchers/organization_user_roles_fetcher'
 require 'cloud_controller/roles'
 require 'controllers/runtime/mixins/uaa_origin_validator'
@@ -17,7 +15,6 @@ module VCAP::CloudController
         :services_event_repository,
         :user_event_repository,
         :organization_event_repository,
-        :perm_client
       ]
     end
 
@@ -28,7 +25,6 @@ module VCAP::CloudController
       @services_event_repository = dependencies.fetch(:services_event_repository)
       @user_event_repository = dependencies.fetch(:user_event_repository)
       @organization_event_repository = dependencies.fetch(:organization_event_repository)
-      @perm_client = dependencies.fetch(:perm_client)
     end
 
     define_attributes do
@@ -235,11 +231,8 @@ module VCAP::CloudController
 
         if recursive_delete? && role == :user
           org.send("remove_#{role}_recursive", user)
-          space_ids = org.spaces.map(&:guid)
-          @perm_client.unassign_roles(org_ids: [guid], space_ids: space_ids, user_id: user_id, issuer: SecurityContext.token['iss'])
         else
           org.send("remove_#{role}", user)
-          @perm_client.unassign_org_role(role: role, org_id: guid, user_id: user_id, issuer: SecurityContext.token['iss'])
         end
 
         @user_event_repository.record_organization_role_remove(
@@ -266,10 +259,8 @@ module VCAP::CloudController
         raise CloudController::Errors::ApiError.new_from_details('AssociationNotEmpty', 'spaces', Organization.table_name)
       end
 
-      space_roles_delete_action = PermSpaceRolesDelete.new(@perm_client)
-      space_delete_action = SpaceDelete.new(UserAuditInfo.from_context(SecurityContext), @services_event_repository, space_roles_delete_action)
-      org_roles_delete_action = PermOrgRolesDelete.new(@perm_client)
-      delete_action = OrganizationDelete.new(org_roles_delete_action, space_delete_action)
+      space_delete_action = SpaceDelete.new(UserAuditInfo.from_context(SecurityContext), @services_event_repository)
+      delete_action = OrganizationDelete.new(space_delete_action)
 
       deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(Organization, guid, delete_action)
       response = run_or_enqueue_deletion_job(deletion_job)
@@ -333,8 +324,6 @@ module VCAP::CloudController
       user.username = username
 
       org = find_guid_and_validate_access(:update, guid)
-
-      @perm_client.assign_org_role(role: role, org_id: org.guid, user_id: user_id, issuer: SecurityContext.token['iss'])
       org.send("add_#{role}", user)
 
       @user_event_repository.record_organization_role_add(org, user, role, UserAuditInfo.from_context(SecurityContext), request_attrs)
@@ -344,8 +333,6 @@ module VCAP::CloudController
 
     def remove_role(guid, role, user_id)
       response = remove_related(guid, "#{role}s".to_sym, user_id, Organization)
-
-      @perm_client.unassign_org_role(role: role, org_id: guid, user_id: user_id, issuer: SecurityContext.token['iss'])
 
       user = User.first(guid: user_id)
       user.username = '' unless user.username
@@ -366,10 +353,6 @@ module VCAP::CloudController
     end
 
     def after_create(organization)
-      VCAP::CloudController::Roles::ORG_ROLE_NAMES.each do |role|
-        @perm_client.create_org_role(role: role, org_id: organization.guid)
-      end
-
       user_audit_info = UserAuditInfo.from_context(SecurityContext)
 
       @organization_event_repository.record_organization_create(organization, user_audit_info, request_attrs)

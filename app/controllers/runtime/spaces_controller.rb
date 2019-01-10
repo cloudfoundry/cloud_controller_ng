@@ -9,7 +9,7 @@ module VCAP::CloudController
 
     def self.dependencies
       [:space_event_repository, :username_and_roles_populating_collection_renderer, :uaa_client,
-       :services_event_repository, :user_event_repository, :app_event_repository, :route_event_repository, :perm_client]
+       :services_event_repository, :user_event_repository, :app_event_repository, :route_event_repository]
     end
 
     define_attributes do
@@ -59,7 +59,6 @@ module VCAP::CloudController
       @services_event_repository = dependencies.fetch(:services_event_repository)
       @app_event_repository = dependencies.fetch(:app_event_repository)
       @route_event_repository = dependencies.fetch(:route_event_repository)
-      @perm_client = dependencies.fetch(:perm_client)
     end
 
     def read(guid)
@@ -181,8 +180,7 @@ module VCAP::CloudController
 
       @space_event_repository.record_space_delete_request(space, UserAuditInfo.from_context(SecurityContext), recursive_delete?)
 
-      role_delete_action = PermSpaceRolesDelete.new(@perm_client)
-      delete_action = SpaceDelete.new(UserAuditInfo.from_context(SecurityContext), @services_event_repository, role_delete_action)
+      delete_action = SpaceDelete.new(UserAuditInfo.from_context(SecurityContext), @services_event_repository)
 
       deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(Space, guid, delete_action)
       run_or_enqueue_deletion_job(deletion_job)
@@ -330,7 +328,6 @@ module VCAP::CloudController
 
       space = find_guid_and_validate_access(:update, guid)
 
-      @perm_client.assign_space_role(role: role, space_id: guid, user_id: user_id, issuer: SecurityContext.token['iss'])
       space.send("add_#{role}", user)
 
       @user_event_repository.record_space_role_add(space, user, role, UserAuditInfo.from_context(SecurityContext), request_attrs)
@@ -344,17 +341,12 @@ module VCAP::CloudController
 
       user.username = username
 
-      @perm_client.unassign_space_role(role: role, space_id: space.guid, user_id: user_id, issuer: SecurityContext.token['iss'])
       space.send("remove_#{role}", user)
 
       @user_event_repository.record_space_role_remove(space, user, role, UserAuditInfo.from_context(SecurityContext), request_attrs)
     end
 
     def after_create(space)
-      VCAP::CloudController::Roles::SPACE_ROLE_NAMES.each do |role|
-        @perm_client.create_space_role(role: role, space_id: space.guid)
-      end
-
       user_audit_info = UserAuditInfo.from_context(SecurityContext)
 
       @space_event_repository.record_space_create(space, user_audit_info, request_attrs)
