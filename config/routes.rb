@@ -149,6 +149,7 @@ Rails.application.routes.draw do
   get '/stacks', to: 'stacks#index'
   get '/stacks/:guid', to: 'stacks#show'
   post '/stacks', to: 'stacks#create'
+  patch '/stacks/:guid', to: 'stacks#update'
   delete '/stacks/:guid', to: 'stacks#destroy'
 
   # buildpacks

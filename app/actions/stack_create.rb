@@ -4,10 +4,17 @@ module VCAP::CloudController
     end
 
     def create(message)
-      VCAP::CloudController::Stack.create(
+      stack = VCAP::CloudController::Stack.create(
         name: message.name,
         description: message.description
       )
+
+      if message.requested?(:metadata)
+        LabelsUpdate.update(stack, message.labels, StackLabelModel)
+        AnnotationsUpdate.update(stack, message.annotations, StackAnnotationModel)
+      end
+
+      stack
     rescue Sequel::ValidationFailed => e
       validation_error!(e)
     end

@@ -1,7 +1,10 @@
+require 'presenters/mixins/metadata_presentation_helpers'
 require 'presenters/v3/base_presenter'
 
 module VCAP::CloudController::Presenters::V3
   class StackPresenter < BasePresenter
+    include VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers
+
     def to_hash
       {
         guid: stack.guid,
@@ -9,7 +12,11 @@ module VCAP::CloudController::Presenters::V3
         updated_at: stack.updated_at,
         name: stack.name,
         description: stack.description,
-        links: build_links,
+        metadata: {
+          labels: hashified_labels(stack.labels),
+          annotations: hashified_annotations(stack.annotations),
+        },
+        links: build_links
       }
     end
 

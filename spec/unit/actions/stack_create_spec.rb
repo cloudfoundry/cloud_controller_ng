@@ -9,11 +9,28 @@ module VCAP::CloudController
         message = VCAP::CloudController::StackCreateMessage.new(
           name: 'the-name',
           description: 'the-description',
+          metadata: {
+            labels: {
+              release: 'stable',
+              'seriouseats.com/potato' => 'mashed'
+            },
+            annotations: {
+              tomorrow: 'land',
+              backstreet: 'boys'
+            }
+          }
         )
         stack = StackCreate.new.create(message)
 
         expect(stack.name).to eq('the-name')
         expect(stack.description).to eq('the-description')
+
+        expect(stack.labels.map(&:key_name)).to contain_exactly('potato', 'release')
+        expect(stack.labels.map(&:key_prefix)).to contain_exactly('seriouseats.com', nil)
+        expect(stack.labels.map(&:value)).to contain_exactly('stable', 'mashed')
+
+        expect(stack.annotations.map(&:key)).to contain_exactly('tomorrow', 'backstreet')
+        expect(stack.annotations.map(&:value)).to contain_exactly('land', 'boys')
       end
 
       context 'when a model validation fails' do

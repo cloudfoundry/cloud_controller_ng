@@ -1,6 +1,9 @@
 require 'presenters/v3/stack_presenter'
 require 'actions/stack_create'
+require 'actions/stack_delete'
+require 'actions/stack_update'
 require 'messages/stack_create_message'
+require 'messages/stack_update_message'
 require 'messages/stacks_list_message'
 require 'fetchers/stack_list_fetcher'
 
@@ -32,6 +35,20 @@ class StacksController < ApplicationController
     unprocessable! e
   end
 
+  def update
+    unauthorized! unless permission_queryer.can_write_globally?
+
+    message = StackUpdateMessage.new(hashed_params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    stack = Stack.find(guid: hashed_params[:guid])
+    stack_not_found! unless stack
+
+    stack = StackUpdate.new.update(stack, message)
+
+    render status: :ok, json: Presenters::V3::StackPresenter.new(stack)
+  end
+
   def show
     stack = Stack.find(guid: hashed_params[:guid])
     stack_not_found! unless stack
@@ -46,7 +63,7 @@ class StacksController < ApplicationController
     stack_not_found! unless stack
 
     begin
-      stack.destroy
+      StackDelete.new.delete(stack)
     rescue Stack::AppsStillPresentError
       unprocessable! "Cannot delete stack '#{stack.name}' because apps are currently using the stack."
     end

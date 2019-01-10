@@ -5,7 +5,19 @@ RSpec.describe VCAP::CloudController::StackCreateMessage do
   describe 'validations' do
     subject { described_class.new(params) }
 
-    let(:valid_params) { { name: 'reasonable-name' } }
+    let(:valid_params) do
+      {
+      name: 'reasonable-name',
+      metadata: {
+        labels: {
+          potato: 'mashed'
+        },
+        annotations: {
+          happy: 'annotation',
+        },
+      }
+    }
+    end
 
     it 'is valid if using the valid parameters' do
       expect(described_class.new(valid_params)).to be_valid

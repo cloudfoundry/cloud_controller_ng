@@ -16,6 +16,9 @@ module VCAP::CloudController
       right_primary_key: :app_guid, right_key: :app_guid,
       conditions:        { type: ProcessTypes::WEB }
 
+    one_to_many :labels, class: 'VCAP::CloudController::StackLabelModel', key: :resource_guid, primary_key: :guid
+    one_to_many :annotations, class: 'VCAP::CloudController::StackAnnotationModel', key: :resource_guid, primary_key: :guid
+
     plugin :serialization
 
     export_attributes :name, :description

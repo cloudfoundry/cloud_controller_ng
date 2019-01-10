@@ -1,8 +1,7 @@
-require 'messages/base_message'
-require 'messages/validators/metadata_validator'
+require 'messages/metadata_base_message'
 
 module VCAP::CloudController
-  class StackCreateMessage < BaseMessage
+  class StackCreateMessage < MetadataBaseMessage
     register_allowed_keys [:name, :description]
 
     validates :name, presence: true, length: { maximum: 250 }

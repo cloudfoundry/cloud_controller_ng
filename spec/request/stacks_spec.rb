@@ -40,6 +40,7 @@ RSpec.describe 'Stacks Request' do
                 'name' => stack1.name,
                 'description' => stack1.description,
                 'guid' => stack1.guid,
+                'metadata' => { 'labels' => {}, 'annotations' => {} },
                 'created_at' => iso8601,
                 'updated_at' => iso8601,
                 'links' => {
@@ -52,6 +53,7 @@ RSpec.describe 'Stacks Request' do
                 'name' => stack2.name,
                 'description' => stack2.description,
                 'guid' => stack2.guid,
+                'metadata' => { 'labels' => {}, 'annotations' => {} },
                 'created_at' => iso8601,
                 'updated_at' => iso8601,
                 'links' => {
@@ -87,6 +89,7 @@ RSpec.describe 'Stacks Request' do
                 'name' => stack1.name,
                 'description' => stack1.description,
                 'guid' => stack1.guid,
+                'metadata' => { 'labels' => {}, 'annotations' => {} },
                 'created_at' => iso8601,
                 'updated_at' => iso8601,
                 'links' => {
@@ -99,6 +102,7 @@ RSpec.describe 'Stacks Request' do
                 'name' => stack3.name,
                 'description' => stack3.description,
                 'guid' => stack3.guid,
+                'metadata' => { 'labels' => {}, 'annotations' => {} },
                 'created_at' => iso8601,
                 'updated_at' => iso8601,
                 'links' => {
@@ -128,6 +132,7 @@ RSpec.describe 'Stacks Request' do
           'name' => stack.name,
           'description' => stack.description,
           'guid' => stack.guid,
+          'metadata' => { 'labels' => {}, 'annotations' => {} },
           'created_at' => iso8601,
           'updated_at' => iso8601,
           'links' => {
@@ -146,6 +151,14 @@ RSpec.describe 'Stacks Request' do
       {
         name: 'the-name',
         description: 'the-description',
+        metadata: {
+          "labels": {
+            "potato": 'yam'
+          },
+          "annotations": {
+            "potato": 'idaho'
+          }
+        }
       }.to_json
     end
     let(:headers) { admin_headers_for(user) }
@@ -165,6 +178,14 @@ RSpec.describe 'Stacks Request' do
         {
           'name' => 'the-name',
           'description' => 'the-description',
+          'metadata' => {
+            'labels' => {
+              'potato' => 'yam'
+            },
+            'annotations' => {
+              'potato' => 'idaho'
+            },
+          },
           'guid' => created_stack.guid,
           'created_at' => iso8601,
           'updated_at' => iso8601,
@@ -189,6 +210,53 @@ RSpec.describe 'Stacks Request' do
         expect(last_response.status).to eq(422)
         expect(last_response).to have_error_message('Name must be unique')
       end
+    end
+  end
+
+  describe 'PATCH /v3/stacks/:guid' do
+    let(:user) { make_user(admin: true) }
+    let(:stack) { VCAP::CloudController::Stack.make }
+    let(:request_body) do
+      {
+        metadata: {
+          "labels": {
+            "potato": 'yam'
+          },
+          "annotations": {
+            "potato": 'idaho'
+          }
+        }
+      }.to_json
+    end
+    let(:headers) { admin_headers_for(user) }
+
+    it 'updates the metadata of a new stack' do
+      patch "/v3/stacks/#{stack.guid}", request_body, headers
+
+      expect(last_response.status).to eq(200)
+
+      expect(parsed_response).to be_a_response_like(
+        {
+          'name' => stack.name,
+          'description' => stack.description,
+          'metadata' => {
+            'labels' => {
+              'potato' => 'yam'
+            },
+            'annotations' => {
+              'potato' => 'idaho'
+            },
+          },
+          'guid' => stack.guid,
+          'created_at' => iso8601,
+          'updated_at' => iso8601,
+          'links' => {
+            'self' => {
+              'href' => "#{link_prefix}/v3/stacks/#{stack.guid}"
+            }
+          }
+        }
+      )
     end
   end
 
