@@ -715,6 +715,17 @@ RSpec.describe IsolationSegmentsController, type: :controller do
             expect(response.body).to include('Revoke the Organization entitlements for your Isolation Segment.')
           end
         end
+
+        context 'when isolation segment has metadata' do
+          let!(:label) { VCAP::CloudController::IsolationSegmentAnnotationModel.make(key: 'string', value: 'string2', resource_guid: isolation_segment_model1.guid) }
+
+          it 'returns a 204 and deletes only the specified isolation segment' do
+            delete :destroy, params: { guid: isolation_segment_model1.guid }, as: :json
+
+            expect(response.status).to eq 204
+            expect(label).not_to exist
+          end
+        end
       end
 
       context 'when the isolation segment does not exist' do

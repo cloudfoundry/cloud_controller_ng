@@ -184,5 +184,23 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe 'metadata' do
+      let!(:label) { VCAP::CloudController::IsolationSegmentLabelModel.make(key_name: 'string', value: 'string2', resource_guid: isolation_segment_model.guid) }
+      let!(:annotation) { VCAP::CloudController::IsolationSegmentAnnotationModel.make(key: 'string', value: 'string2', resource_guid: isolation_segment_model.guid) }
+
+      it 'deletes metadata on destroy' do
+        isolation_segment_model.destroy
+        expect(label.exists?).to be_falsey
+        expect(annotation.exists?).to be_falsey
+      end
+
+      it 'complains when we delete the iso seg' do
+        expect {
+          isolation_segment_model.delete
+        }.to raise_error(Sequel::ForeignKeyConstraintViolation,
+          /Key \(guid\)=\(#{isolation_segment_model.guid}\) is still referenced from table \"isolation_segment_annotations\"\./)
+      end
+    end
   end
 end
