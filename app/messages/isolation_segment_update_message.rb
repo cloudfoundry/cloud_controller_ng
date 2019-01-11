@@ -1,7 +1,7 @@
 require 'messages/base_message'
 
 module VCAP::CloudController
-  class IsolationSegmentUpdateMessage < BaseMessage
+  class IsolationSegmentUpdateMessage < MetadataBaseMessage
     register_allowed_keys [:name]
 
     validates_with NoAdditionalKeysValidator

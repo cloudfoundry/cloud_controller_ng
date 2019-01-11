@@ -27,7 +27,7 @@ class IsolationSegmentsController < ApplicationController
     isolation_segment = IsolationSegmentCreate.create(message)
 
     render status: :created, json: Presenters::V3::IsolationSegmentPresenter.new(isolation_segment)
-  rescue Sequel::ValidationFailed => e
+  rescue IsolationSegmentCreate::Error => e
     unprocessable!(e.message)
   end
 

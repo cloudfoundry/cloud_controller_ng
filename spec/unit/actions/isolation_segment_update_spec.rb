@@ -26,6 +26,63 @@ module VCAP::CloudController
       expect(isolation_segment.name).to eq('Old Name')
     end
 
+    context 'when there is metadata' do
+      let!(:label) { IsolationSegmentLabelModel.make(resource_guid: isolation_segment.guid, key_name: 'freaky', value: 'tuesday') }
+      let!(:annotation) { IsolationSegmentAnnotationModel.make(resource_guid: isolation_segment.guid, key: 'hello', value: 'general kenobi') }
+
+      it 'updates the metadata' do
+        message = VCAP::CloudController::IsolationSegmentUpdateMessage.new({
+          metadata: {
+            labels: {
+              freaky: 'wednesday',
+            },
+            annotations: {
+              hello: 'there'
+            }
+          },
+        })
+
+        subject.update(isolation_segment, message)
+
+        expect(isolation_segment.labels.first.key_name).to eq 'freaky'
+        expect(isolation_segment.labels.first.value).to eq 'wednesday'
+        expect(isolation_segment.annotations.first.key).to eq 'hello'
+        expect(isolation_segment.annotations.first.value).to eq 'there'
+      end
+
+      it 'removes the metadata' do
+        message = VCAP::CloudController::IsolationSegmentUpdateMessage.new({
+          metadata: {
+            labels: {
+              freaky: nil,
+            },
+            annotations: {
+              hello: nil
+            }
+          },
+        })
+
+        subject.update(isolation_segment, message)
+
+        expect(isolation_segment.labels).to be_empty
+        expect(isolation_segment.annotations).to be_empty
+      end
+
+      it 'adds metadata' do
+        message = VCAP::CloudController::IsolationSegmentUpdateMessage.new({
+          metadata: {
+            annotations: {
+              howdy: 'yooo'
+            }
+          },
+        })
+
+        subject.update(isolation_segment, message)
+
+        expect(isolation_segment.annotations).to have(2).items
+      end
+    end
+
     context 'when the isolation_segment is invalid' do
       before do
         allow_any_instance_of(IsolationSegmentModel).to receive(:save).and_raise(Sequel::ValidationFailed.new('booooooo'))

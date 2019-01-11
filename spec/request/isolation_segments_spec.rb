@@ -392,7 +392,15 @@ RSpec.describe 'IsolationSegmentModels' do
       isolation_segment_model = VCAP::CloudController::IsolationSegmentModel.make(name: 'my_segment')
 
       update_request = {
-        name:                  'your_segment'
+        name: 'your_segment',
+        metadata: {
+          labels: {
+            one: 'two'
+          },
+          annotations: {
+            three: 'four'
+          }
+        }
       }
 
       expected_response = {
@@ -405,8 +413,8 @@ RSpec.describe 'IsolationSegmentModels' do
           'organizations' => { 'href' => "#{link_prefix}/v3/isolation_segments/#{isolation_segment_model.guid}/organizations" },
         },
         'metadata' => {
-          'annotations' => {},
-          'labels' => {}
+          'labels' => { 'one' => 'two' },
+          'annotations' => { 'three' => 'four' },
         }
       }
 

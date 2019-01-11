@@ -10,6 +10,10 @@ module VCAP::CloudController
         check_not_assigned!(isolation_segment)
 
         isolation_segment.name = message.name if message.requested?(:name)
+
+        LabelsUpdate.update(isolation_segment, message.labels, IsolationSegmentLabelModel)
+        AnnotationsUpdate.update(isolation_segment, message.annotations, IsolationSegmentAnnotationModel)
+
         isolation_segment.save
       end
     rescue Sequel::ValidationFailed => e
