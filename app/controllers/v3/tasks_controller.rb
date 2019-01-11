@@ -4,8 +4,10 @@ require 'fetchers/task_create_fetcher'
 require 'fetchers/task_fetcher'
 require 'actions/task_create'
 require 'actions/task_cancel'
+require 'actions/task_update'
 require 'messages/task_create_message'
 require 'messages/tasks_list_message'
+require 'messages/task_update_message'
 require 'presenters/v3/task_presenter'
 require 'controllers/v3/mixins/app_sub_resource'
 
@@ -68,6 +70,18 @@ class TasksController < ApplicationController
     render status: :accepted, json: Presenters::V3::TaskPresenter.new(task.reload)
   rescue TaskCancel::InvalidCancel => e
     unprocessable!(e)
+  end
+
+  def update
+    message = TaskUpdateMessage.new(hashed_params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    task, space, org = TaskFetcher.new.fetch(task_guid: hashed_params[:task_guid])
+    task_not_found! unless task && permission_queryer.can_read_from_space?(space.guid, org.guid)
+    unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
+
+    task = TaskUpdate.new.update(task, message)
+    render status: :ok, json: Presenters::V3::TaskPresenter.new(task)
   end
 
   def show

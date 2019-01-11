@@ -13,6 +13,10 @@ module VCAP::CloudController
           'process' => {
             'guid' => Sham.guid,
           }
+        },
+        'metadata' => {
+          'labels' => { 'gortz' => 'purple' },
+          'annotations' => { 'potatoe' => 'quayle' }
         }
       }
     end

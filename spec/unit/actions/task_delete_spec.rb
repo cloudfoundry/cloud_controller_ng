@@ -86,6 +86,30 @@ module VCAP::CloudController
           end
         end
       end
+
+      it 'deletes associated labels' do
+        label1 = TaskLabelModel.make(task: task1)
+        label2 = TaskLabelModel.make(task: task2)
+
+        expect {
+          task_delete.delete(task_dataset)
+        }.to change { TaskLabelModel.count }.by(-2)
+        expect(label1.exists?).to be_falsey
+        expect(task1.exists?).to be_falsey
+        expect(label2.exists?).to be_falsey
+        expect(task2.exists?).to be_falsey
+      end
+
+      it 'deletes associated annotations' do
+        annotation1 = TaskAnnotationModel.make(task: task1)
+        annotation2 = TaskAnnotationModel.make(task: task2)
+
+        expect {
+          task_delete.delete(task_dataset)
+        }.to change { TaskAnnotationModel.count }.by(-2)
+        expect(annotation1.exists?).to be_falsey
+        expect(annotation2.exists?).to be_falsey
+      end
     end
   end
 end

@@ -31,8 +31,14 @@ module VCAP::CloudController
           sequence_id:           app.max_task_sequence_id
         )
 
+        if message.requested?(:metadata)
+          LabelsUpdate.update(task, message.labels, TaskLabelModel)
+          AnnotationsUpdate.update(task, message.annotations, TaskAnnotationModel)
+        end
+
         app.update(max_task_sequence_id: app.max_task_sequence_id + 1)
         task_event_repository.record_task_create(task, user_audit_info)
+        task
       end
 
       submit_task(task)

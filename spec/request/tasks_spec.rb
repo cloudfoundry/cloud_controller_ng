@@ -71,6 +71,7 @@ RSpec.describe 'Tasks' do
               'failure_reason' => nil
             },
             'droplet_guid' => task1.droplet.guid,
+            'metadata' => { 'labels' => {}, 'annotations' => {} },
             'created_at'   => iso8601,
             'updated_at'   => iso8601,
             'links'        => {
@@ -100,6 +101,7 @@ RSpec.describe 'Tasks' do
               'failure_reason' => nil
             },
             'droplet_guid' => task2.droplet.guid,
+            'metadata' => { 'labels' => {}, 'annotations' => {} },
             'created_at'   => iso8601,
             'updated_at'   => iso8601,
             'links'        => {
@@ -201,6 +203,7 @@ RSpec.describe 'Tasks' do
           'failure_reason' => nil
         },
         'droplet_guid' => task.droplet.guid,
+        'metadata' => { 'labels' => {}, 'annotations' => {} },
         'created_at'   => iso8601,
         'updated_at'   => iso8601,
         'links'        => {
@@ -282,6 +285,76 @@ RSpec.describe 'Tasks' do
         organization_guid: space.organization.guid
       })
       expect(event.metadata['task_guid']).to eq(task.guid)
+    end
+  end
+
+  describe 'PATCH /v3/tasks/:guid' do
+    let(:task) { VCAP::CloudController::TaskModel.make(
+      name: 'task',
+      command: 'echo task',
+      app_guid: app_model.guid,
+      droplet_guid: app_model.droplet.guid,
+    disk_in_mb: 50,
+    memory_in_mb: 5)
+    }
+    let(:request_body) do
+      {
+        metadata: {
+          "labels": {
+            "potato": 'yam'
+          },
+          "annotations": {
+            "potato": 'idaho'
+          }
+        }
+      }.to_json
+    end
+    let(:headers) { admin_headers_for(user) }
+    let(:task_guid) { task.guid }
+
+    it "updates the task's metadata" do
+      patch "/v3/tasks/#{task_guid}", request_body, headers
+
+      expect(last_response.status).to eq(200)
+      expected_response = {
+        'guid'         => task.guid,
+        'sequence_id'  => task.sequence_id,
+        'name'         => 'task',
+        'command'      => 'echo task',
+        'state'        => 'RUNNING',
+        'memory_in_mb' => 5,
+        'disk_in_mb'   => 50,
+        'result'       => {
+          'failure_reason' => nil
+        },
+        'droplet_guid' => task.droplet.guid,
+        'metadata' =>  {
+          'labels' => {
+            'potato' => 'yam'
+          },
+          'annotations' => {
+            'potato' => 'idaho'
+          },
+        },
+        'created_at'   => iso8601,
+        'updated_at'   => iso8601,
+        'links'        => {
+          'self' => {
+            'href' => "#{link_prefix}/v3/tasks/#{task_guid}"
+          },
+          'app' => {
+            'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
+          },
+          'cancel' => {
+            'href' => "#{link_prefix}/v3/tasks/#{task_guid}/actions/cancel",
+            'method' => 'POST',
+          },
+          'droplet' => {
+            'href' => "#{link_prefix}/v3/droplets/#{app_model.droplet.guid}"
+          }
+        }
+      }
+      expect(parsed_response).to be_a_response_like(expected_response)
     end
   end
 
@@ -368,6 +441,7 @@ RSpec.describe 'Tasks' do
                 'failure_reason' => nil
               },
               'droplet_guid' => task1.droplet.guid,
+              'metadata' => { 'labels' => {}, 'annotations' => {} },
               'created_at'   => iso8601,
               'updated_at'   => iso8601,
               'links'        => {
@@ -398,6 +472,7 @@ RSpec.describe 'Tasks' do
                 'failure_reason' => nil
               },
               'droplet_guid' => task2.droplet.guid,
+              'metadata' => { 'labels' => {}, 'annotations' => {} },
               'created_at'   => iso8601,
               'updated_at'   => iso8601,
               'links'        => {
@@ -537,6 +612,14 @@ RSpec.describe 'Tasks' do
         command:      'be rake && true',
         memory_in_mb: 1234,
         disk_in_mb:   1000,
+        metadata: {
+          labels: {
+            bananas: 'gros_michel',
+          },
+          annotations: {
+            'potato/wombats' => 'althea',
+          }
+        },
       }
 
       post "/v3/apps/#{app_model.guid}/tasks", body.to_json, developer_headers
@@ -557,6 +640,8 @@ RSpec.describe 'Tasks' do
           'failure_reason' => nil
         },
         'droplet_guid' => droplet.guid,
+        'metadata' => { 'labels' => { 'bananas' => 'gros_michel', },
+          'annotations' => { 'potato/wombats' => 'althea' } },
         'created_at'   => iso8601,
         'updated_at'   => iso8601,
         'links'        => {
@@ -662,6 +747,7 @@ RSpec.describe 'Tasks' do
             'failure_reason' => nil
           },
           'droplet_guid' => droplet.guid,
+          'metadata' => { 'labels' => {}, 'annotations' => {} },
           'created_at'   => iso8601,
           'updated_at'   => iso8601,
           'links'        => {

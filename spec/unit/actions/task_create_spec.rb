@@ -12,7 +12,23 @@ module VCAP::CloudController
       let(:droplet) { DropletModel.make(app_guid: app.guid, state: DropletModel::STAGED_STATE, process_types: { 'web' => 'start app' }) }
       let(:command) { 'bundle exec rake panda' }
       let(:name) { 'my_task_name' }
-      let(:message) { TaskCreateMessage.new name: name, command: command, disk_in_mb: 2048, memory_in_mb: 1024 }
+      let(:message) { TaskCreateMessage.new(
+        name: name,
+        command: command,
+        disk_in_mb: 2048,
+        memory_in_mb: 1024,
+        metadata: {
+          labels: {
+            release: 'stable',
+            'seriouseats.com/potato' => 'mashed'
+          },
+          annotations: {
+            tomorrow: 'land',
+            backstreet: 'boys'
+          }
+        }
+      )
+      }
       let(:bbs_client) { instance_double(VCAP::CloudController::Diego::BbsTaskClient) }
       let(:user_audit_info) { instance_double(UserAuditInfo).as_null_object }
 
@@ -35,6 +51,12 @@ module VCAP::CloudController
         expect(task.name).to eq(name)
         expect(task.disk_in_mb).to eq(2048)
         expect(task.memory_in_mb).to eq(1024)
+        expect(task.labels.map(&:key_name)).to contain_exactly('potato', 'release')
+        expect(task.labels.map(&:key_prefix)).to contain_exactly('seriouseats.com', nil)
+        expect(task.labels.map(&:value)).to contain_exactly('stable', 'mashed')
+
+        expect(task.annotations.map(&:key)).to contain_exactly('tomorrow', 'backstreet')
+        expect(task.annotations.map(&:value)).to contain_exactly('land', 'boys')
         expect(TaskModel.count).to eq(1)
       end
 
@@ -139,9 +161,17 @@ module VCAP::CloudController
           task_create_action.create(app, message, user_audit_info)
           app.reload
           task = task_create_action.create(app, message, user_audit_info)
-          task.delete
+          task.destroy
           app.reload
           expect(task_create_action.create(app, message, user_audit_info).sequence_id).to eq(4)
+        end
+
+        it 'refuses to delete the task without deleting its metadata' do
+          task = task_create_action.create(app, message, user_audit_info)
+          expect {
+            task.delete
+          }.to raise_error(Sequel::ForeignKeyConstraintViolation,
+                           /Key \(guid\)=\(#{task.guid}\) is still referenced from table "task_annotations"./)
         end
       end
 

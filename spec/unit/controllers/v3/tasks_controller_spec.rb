@@ -6,10 +6,9 @@ RSpec.describe TasksController, type: :controller do
   let(:app_model) { VCAP::CloudController::AppModel.make }
   let(:space) { app_model.space }
   let(:org) { space.organization }
+  let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
   describe '#create' do
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
-
     let(:droplet) do
       VCAP::CloudController::DropletModel.make(
         app_guid: app_model.guid,
@@ -123,6 +122,106 @@ RSpec.describe TasksController, type: :controller do
         expect(response.status).to eq 404
         expect(response.body).to include 'ResourceNotFound'
         expect(response.body).to include 'App not found'
+      end
+    end
+
+    context 'metadata' do
+      context 'when the label is invalid' do
+        let(:metadata_request_body) { request_body.merge(
+          {
+            metadata: {
+              labels: {
+                'cloudfoundry.org/release' => 'stable'
+              }
+            }
+          }
+        )
+        }
+
+        it 'returns an UnprocessableEntity error' do
+          post :create, params: { app_guid: app_model.guid }.merge(metadata_request_body), as: :json
+
+          expect(response.status).to eq 422
+          expect(response.body).to include 'UnprocessableEntity'
+          expect(response.body).to include 'cloudfoundry.org is a reserved domain'
+        end
+      end
+
+      context 'when the annotation is invalid' do
+        let(:metadata_request_body) { request_body.merge(
+          {
+            metadata: {
+              labels: {
+                'release' => 'stable'
+              },
+              annotations: {
+                "": 'mashed',
+                "/potato": '.value.'
+              },
+            }
+          }
+        )
+        }
+
+        it 'returns an UnprocessableEntity error' do
+          post :create, params: { app_guid: app_model.guid }.merge(metadata_request_body), as: :json
+
+          expect(response.status).to eq 422
+          expect(response.body).to include 'UnprocessableEntity'
+          expect(response.body).to include 'Metadata annotations key cannot be empty string'
+        end
+      end
+
+      context 'when the metadata is valid' do
+        let(:metadata_request_body) { request_body.merge(
+          {
+            metadata: {
+              labels: {
+                release: 'stable'
+              },
+              annotations: {
+                this: 'is valid'
+              },
+            }
+          }
+        )
+        }
+
+        it 'Returns a 202 and the app with metadata' do
+          post :create, params: { app_guid: app_model.guid }.merge(metadata_request_body), as: :json
+
+          response_body = parsed_body
+          response_metadata = response_body['metadata']
+
+          expect(response.status).to eq 202
+          expect(response_metadata['labels']['release']).to eq 'stable'
+          expect(response_metadata['annotations']['this']).to eq 'is valid'
+        end
+      end
+
+      context 'when there are too many annotations' do
+        let(:metadata_request_body) { request_body.merge(
+          {
+            metadata: {
+              annotations: {
+                radish: 'daikon',
+                potato: 'idaho'
+              }
+            }
+          }
+        )
+        }
+
+        before do
+          VCAP::CloudController::Config.config.set(:max_annotations_per_resource, 1)
+        end
+
+        it 'responds with 422' do
+          post :create, params: { app_guid: app_model.guid }.merge(metadata_request_body), as: :json
+
+          expect(response.status).to eq(422)
+          expect(response).to have_error_message(/exceed maximum of 1/)
+        end
       end
     end
 
@@ -585,6 +684,188 @@ RSpec.describe TasksController, type: :controller do
 
           expect(response.status).to eq 403
           expect(response.body).to include('NotAuthorized')
+        end
+      end
+    end
+  end
+
+  describe '#update' do
+    let(:task) { VCAP::CloudController::TaskModel.make(app: app_model) }
+
+    before do
+      user = VCAP::CloudController::User.make
+      set_current_user(user)
+      allow_user_read_access_for(user, spaces: [space])
+      allow_user_write_access(user, space: space)
+    end
+
+    context 'when the request is invalid' do
+      let(:request_body) do
+        { name: 'scuppers' }
+      end
+
+      it 'returns an UnprocessableEntity error' do
+        patch :update, params: { task_guid: task.guid }.merge(request_body), as: :json
+
+        expect(response.status).to eq 422
+        expect(response.body).to include 'UnprocessableEntity'
+      end
+    end
+
+    context 'when the label is invalid' do
+      let(:request_body) do
+        {
+          metadata: {
+            labels: {
+              'cloudfoundry.org/release' => 'stable'
+            }
+          }
+        }
+      end
+
+      it 'returns an UnprocessableEntity error' do
+        patch :update, params: { task_guid: task.guid }.merge(request_body), as: :json
+
+        expect(response.status).to eq 422
+        expect(response.body).to include 'UnprocessableEntity'
+        expect(response.body).to include 'cloudfoundry.org is a reserved domain'
+      end
+    end
+
+    context 'when the annotation is invalid' do
+      let(:request_body) do
+        {
+          metadata: {
+            labels: {
+              'release' => 'stable'
+            },
+            annotations: {
+              '' => 'uhoh'
+            },
+          }
+        }
+      end
+
+      it 'returns an UnprocessableEntity error' do
+        patch :update, params: { task_guid: task.guid }.merge(request_body), as: :json
+
+        expect(response.status).to eq 422
+        expect(response.body).to include 'UnprocessableEntity'
+        expect(response.body).to include 'Metadata annotations key cannot be empty string'
+      end
+    end
+
+    context 'when the metadata is valid' do
+      let(:labels) do
+        {
+          potato: 'yam',
+          style: 'baked'
+        }
+      end
+      let(:annotations) do
+        {
+          potato: 'idaho',
+          style: 'french'
+        }
+      end
+
+      before do
+        VCAP::CloudController::LabelsUpdate.update(task, labels, VCAP::CloudController::TaskLabelModel)
+        VCAP::CloudController::AnnotationsUpdate.update(task, annotations, VCAP::CloudController::TaskAnnotationModel)
+      end
+
+      context 'when updating existing metadata' do
+        let(:request_body) do
+          {
+            metadata: {
+              labels: {
+                style: 'casserole'
+              },
+              annotations: {
+                potato: 'russet',
+              },
+            }
+          }
+        end
+
+        it 'updates the metadata' do
+          patch :update, params: { task_guid: task.guid }.merge(request_body), as: :json
+
+          expect(response.status).to eq(200)
+          expected_metadata_response = {
+            'labels' => {
+              'potato' => 'yam',
+              'style' => 'casserole',
+            },
+            'annotations' => {
+              'potato' => 'russet',
+              'style' => 'french',
+            }
+          }
+
+          parsed_response = MultiJson.load(response.body)
+          expect(parsed_response['metadata']).to be_a_response_like(expected_metadata_response)
+        end
+
+        context 'permissions' do
+          context 'when the user cannot read the app' do
+            before do
+              disallow_user_read_access(user, space: space)
+            end
+
+            it 'returns a 404 ResourceNotFound error' do
+              patch :update, params: { task_guid: task.guid }.merge(request_body), as: :json
+
+              expect(response.status).to eq 404
+              expect(response.body).to include 'ResourceNotFound'
+            end
+          end
+
+          context 'when the user can read but cannot write to the app' do
+            before do
+              allow_user_read_access_for(user, spaces: [space])
+              disallow_user_write_access(user, space: space)
+            end
+
+            it 'raises ApiError NotAuthorized' do
+              patch :update, params: { task_guid: task.guid }.merge(request_body), as: :json
+
+              expect(response.status).to eq 403
+              expect(response.body).to include 'NotAuthorized'
+            end
+          end
+        end
+
+        context 'when deleting existing metadata' do
+          let(:request_body) do
+            {
+              metadata: {
+                labels: {
+                  style: nil
+                },
+                annotations: {
+                  potato: nil,
+                },
+              }
+            }
+          end
+
+          it 'updates the metadata' do
+            patch :update, params: { task_guid: task.guid }.merge(request_body), as: :json
+
+            expect(response.status).to eq(200)
+            expected_metadata_response = {
+              'labels' => {
+                'potato' => 'yam',
+              },
+              'annotations' => {
+                'style' => 'french',
+              }
+            }
+
+            parsed_response = MultiJson.load(response.body)
+            expect(parsed_response['metadata']).to be_a_response_like(expected_metadata_response)
+          end
         end
       end
     end

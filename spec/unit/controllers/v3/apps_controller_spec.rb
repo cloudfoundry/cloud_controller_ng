@@ -1076,7 +1076,7 @@ RSpec.describe AppsV3Controller, type: :controller do
           }
         end
 
-        it 'Returns a 201 and the app with metadata' do
+        it 'Returns a 200 and the app with metadata' do
           patch :update, params: { guid: app_model.guid }.merge(request_body), as: :json
 
           response_body = parsed_body

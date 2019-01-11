@@ -66,6 +66,9 @@ module VCAP::CloudController
   StackLabelModel.blueprint do
   end
 
+  TaskLabelModel.blueprint do
+  end
+
   DropletLabelModel.blueprint do
   end
 
@@ -82,6 +85,9 @@ module VCAP::CloudController
   end
 
   StackAnnotationModel.blueprint do
+  end
+
+  TaskAnnotationModel.blueprint do
   end
 
   DropletAnnotationModel.blueprint do

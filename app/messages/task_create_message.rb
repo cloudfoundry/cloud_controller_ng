@@ -1,7 +1,7 @@
-require 'messages/base_message'
+require 'messages/metadata_base_message'
 
 module VCAP::CloudController
-  class TaskCreateMessage < BaseMessage
+  class TaskCreateMessage < MetadataBaseMessage
     register_allowed_keys [:name, :command, :disk_in_mb, :memory_in_mb, :droplet_guid, :template]
 
     validates_with NoAdditionalKeysValidator

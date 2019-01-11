@@ -1,9 +1,12 @@
+require 'presenters/mixins/metadata_presentation_helpers'
 require 'presenters/v3/base_presenter'
 
 module VCAP::CloudController
   module Presenters
     module V3
       class TaskPresenter < BasePresenter
+        include VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers
+
         def to_hash
           hide_secrets({
             guid:         task.guid,
@@ -17,6 +20,10 @@ module VCAP::CloudController
             created_at:   task.created_at,
             updated_at:   task.updated_at,
             droplet_guid: task.droplet_guid,
+            metadata: {
+              labels: hashified_labels(task.labels),
+              annotations: hashified_annotations(task.annotations),
+            },
             links:        build_links
           })
         end

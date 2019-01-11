@@ -135,6 +135,7 @@ Rails.application.routes.draw do
   get '/tasks/:task_guid', to: 'tasks#show'
   put '/tasks/:task_guid/cancel', to: 'tasks#cancel'
   post '/tasks/:task_guid/actions/cancel', to: 'tasks#cancel'
+  patch '/tasks/:task_guid', to: 'tasks#update'
 
   post '/apps/:app_guid/tasks', to: 'tasks#create'
   get '/apps/:app_guid/tasks', to: 'tasks#index'

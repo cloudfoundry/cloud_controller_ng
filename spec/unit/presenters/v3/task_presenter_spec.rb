@@ -16,6 +16,36 @@ module VCAP::CloudController::Presenters::V3
       task.reload
     }
 
+    let!(:release_label) do
+      VCAP::CloudController::TaskLabelModel.make(
+        key_name: 'release',
+        value: 'stable',
+        resource_guid: task.guid
+      )
+    end
+    let!(:potato_label) do
+      VCAP::CloudController::TaskLabelModel.make(
+        key_prefix: 'canberra.au',
+        key_name: 'potato',
+        value: 'mashed',
+        resource_guid: task.guid
+      )
+    end
+    let!(:mountain_annotation) do
+      VCAP::CloudController::TaskAnnotationModel.make(
+        key: 'altitude',
+        value: '14,412',
+        resource_guid: task.guid,
+      )
+    end
+    let!(:plain_annotation) do
+      VCAP::CloudController::TaskAnnotationModel.make(
+        key: 'maize',
+        value: 'hfcs',
+        resource_guid: task.guid,
+      )
+    end
+
     describe '#to_hash' do
       let(:result) { presenter.to_hash }
 
@@ -37,6 +67,8 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:sequence_id]).to eq(5)
         expect(result[:created_at]).to eq(task.created_at.iso8601)
         expect(result[:updated_at]).to eq(task.updated_at.iso8601)
+        expect(result[:metadata][:labels]).to eq('release' => 'stable', 'canberra.au/potato' => 'mashed')
+        expect(result[:metadata][:annotations]).to eq('altitude' => '14,412', 'maize' => 'hfcs')
         expect(result[:links]).to eq(links)
       end
 
