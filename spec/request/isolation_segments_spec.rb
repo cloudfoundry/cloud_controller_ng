@@ -385,6 +385,29 @@ RSpec.describe 'IsolationSegmentModels' do
         end
       end
     end
+
+    context 'label_selector' do
+      let!(:iso_segA) { VCAP::CloudController::IsolationSegmentModel.make(name: 'segmentA') }
+      let!(:iso_segB) { VCAP::CloudController::IsolationSegmentModel.make(name: 'segmentB') }
+      let!(:iso_segC) { VCAP::CloudController::IsolationSegmentModel.make(name: 'segmentC') }
+
+      let!(:isoAFruit) { VCAP::CloudController::IsolationSegmentLabelModel.make(key_name: 'fruit', value: 'strawberry', resource_guid: iso_segA.guid) }
+      let!(:isoAAnimal) { VCAP::CloudController::IsolationSegmentLabelModel.make(key_name: 'animal', value: 'horse', resource_guid: iso_segA.guid) }
+
+      let!(:isoBEnv) { VCAP::CloudController::IsolationSegmentLabelModel.make(key_name: 'env', value: 'prod', resource_guid: iso_segB.guid) }
+      let!(:isoBAnimal) { VCAP::CloudController::IsolationSegmentLabelModel.make(key_name: 'animal', value: 'dog', resource_guid: iso_segB.guid) }
+
+      let!(:isoCEnv) { VCAP::CloudController::IsolationSegmentLabelModel.make(key_name: 'env', value: 'prod', resource_guid: iso_segC.guid) }
+      let!(:isoCAnimal) { VCAP::CloudController::IsolationSegmentLabelModel.make(key_name: 'animal', value: 'horse', resource_guid: iso_segC.guid) }
+
+      it 'returns the matching iso segs' do
+        get '/v3/isolation_segments?label_selector=!fruit,env=prod,animal in (dog,horse)', nil, admin_headers
+        expect(last_response.status).to eq(200)
+
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(iso_segB.guid, iso_segC.guid)
+      end
+    end
   end
 
   describe 'PATCH /v3/isolation_segments/:guid' do

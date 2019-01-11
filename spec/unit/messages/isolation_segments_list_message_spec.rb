@@ -9,6 +9,7 @@ module VCAP::CloudController
           'names'              => 'name1,name2',
           'guids'              => 'guid1,guid2',
           'organization_guids' => 'o-guid1,o-guid2',
+          'label_selector' => 'foo=bar',
           'page'               => 1,
           'per_page'           => 5,
           'order_by'           => 'created_at'
@@ -22,6 +23,7 @@ module VCAP::CloudController
         expect(message.names).to eq(['name1', 'name2'])
         expect(message.guids).to eq(['guid1', 'guid2'])
         expect(message.organization_guids).to eq(['o-guid1', 'o-guid2'])
+        expect(message.label_selector).to eq('foo=bar')
         expect(message.page).to eq(1)
         expect(message.per_page).to eq(5)
         expect(message.order_by).to eq('created_at')
@@ -33,6 +35,7 @@ module VCAP::CloudController
         expect(message.requested?(:names)).to be_truthy
         expect(message.requested?(:guids)).to be_truthy
         expect(message.requested?(:organization_guids)).to be_truthy
+        expect(message.requested?(:label_selector)).to be_truthy
         expect(message.requested?(:page)).to be_truthy
         expect(message.requested?(:per_page)).to be_truthy
         expect(message.requested?(:order_by)).to be_truthy
@@ -45,6 +48,7 @@ module VCAP::CloudController
             names:              ['name1', 'name2'],
             guids:              ['guid1', 'guid2'],
             organization_guids:  ['o-guid1', 'o-guid2'],
+            label_selector: 'foo=bar',
             page:               1,
             per_page:           5,
             order_by:           'created_at',
@@ -52,7 +56,7 @@ module VCAP::CloudController
       end
 
       it 'excludes the pagination keys' do
-        expected_params = [:names, :guids, :organization_guids]
+        expected_params = [:names, :guids, :organization_guids, :label_selector]
         expect(IsolationSegmentsListMessage.new(opts).to_param_hash.keys).to match_array(expected_params)
       end
     end
@@ -64,6 +68,7 @@ module VCAP::CloudController
               names:              [],
               guids:              [],
               organization_guids: [],
+              label_selector:     '',
               page:               1,
               per_page:           5,
               order_by:           'created_at',
@@ -101,6 +106,16 @@ module VCAP::CloudController
           message = IsolationSegmentsListMessage.new guids: 'not array'
           expect(message).to be_invalid
           expect(message.errors[:guids].length).to eq 1
+        end
+
+        it 'validates requirements' do
+          message = IsolationSegmentsListMessage.from_params('label_selector' => '')
+
+          expect_any_instance_of(Validators::LabelSelectorRequirementValidator).
+            to receive(:validate).
+            with(message).
+            and_call_original
+          message.valid?
         end
       end
     end

@@ -6,7 +6,7 @@ require 'fetchers/isolation_segment_list_fetcher'
 module VCAP::CloudController
   RSpec.describe IsolationSegmentListFetcher do
     let(:filters) { {} }
-    let(:message) { IsolationSegmentsListMessage.new(filters) }
+    let(:message) { IsolationSegmentsListMessage.from_params(filters) }
     subject(:fetcher) { IsolationSegmentListFetcher.new(message: message) }
 
     let!(:isolation_segment_model_1) { VCAP::CloudController::IsolationSegmentModel.make }
@@ -63,6 +63,16 @@ module VCAP::CloudController
           it 'filters by organization guids' do
             isolation_segment_models = fetcher.fetch_all.all
             expect(isolation_segment_models).to contain_exactly(isolation_segment_model_1, isolation_segment_model_2)
+          end
+        end
+
+        context 'filtering label selectors' do
+          let(:filters) { { 'label_selector' => 'key=value' } }
+          let!(:label) { IsolationSegmentLabelModel.make(resource_guid: isolation_segment_model_3.guid, key_name: 'key', value: 'value') }
+
+          it 'returns the correct set of isosegs' do
+            isolation_segment_models = fetcher.fetch_all.all
+            expect(isolation_segment_models).to match_array([isolation_segment_model_3])
           end
         end
       end
