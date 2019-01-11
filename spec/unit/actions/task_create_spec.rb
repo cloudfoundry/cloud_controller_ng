@@ -165,14 +165,6 @@ module VCAP::CloudController
           app.reload
           expect(task_create_action.create(app, message, user_audit_info).sequence_id).to eq(4)
         end
-
-        it 'refuses to delete the task without deleting its metadata' do
-          task = task_create_action.create(app, message, user_audit_info)
-          expect {
-            task.delete
-          }.to raise_error(Sequel::ForeignKeyConstraintViolation,
-                           /Key \(guid\)=\(#{task.guid}\) is still referenced from table "task_annotations"./)
-        end
       end
 
       describe 'default values' do
