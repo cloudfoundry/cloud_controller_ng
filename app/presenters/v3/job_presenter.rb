@@ -4,14 +4,6 @@ module VCAP::CloudController
   module Presenters
     module V3
       class JobPresenter < BasePresenter
-        RESOURCE_LINKS = {
-          app: '/v3/apps/',
-          buildpack: '/v3/buildpacks/',
-          droplet: '/v3/droplets/',
-          package: '/v3/packages/',
-          buildpack: '/v3/buildpacks/',
-        }.freeze
-
         def to_hash
           {
             guid:       job.guid,
@@ -35,18 +27,20 @@ module VCAP::CloudController
 
         def build_links
           url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
-
           links = {
             self: { href: url_builder.build_url(path: "/v3/jobs/#{job.guid}") }
           }
 
           if job.resource_exists?
             resource_type = job.resource_type.to_sym
-            path = RESOURCE_LINKS[resource_type]
-            links[resource_type] = { href: url_builder.build_url(path: path + job.resource_guid) }
+            links[resource_type] = { href: url_builder.build_url(path: build_link_path) }
           end
 
           links
+        end
+
+        def build_link_path
+          "/v3/#{ActiveSupport::Inflector.pluralize(job.resource_type)}/#{job.resource_guid}"
         end
 
         def build_errors
