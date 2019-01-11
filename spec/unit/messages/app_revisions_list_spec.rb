@@ -36,7 +36,7 @@ module VCAP::CloudController
     describe 'fields' do
       it 'accepts a set of fields' do
         expect {
-          AppRevisionsListMessage.new({
+          AppRevisionsListMessage.from_params({
             versions: [],
             page: 1,
             per_page: 5,
@@ -46,13 +46,13 @@ module VCAP::CloudController
       end
 
       it 'accepts an empty set' do
-        message = AppRevisionsListMessage.new
+        message = AppRevisionsListMessage.from_params({})
         expect(message).to be_valid
       end
 
       describe 'validations' do
         it 'validates versions is an array' do
-          message = AppRevisionsListMessage.new(versions: 'not array')
+          message = AppRevisionsListMessage.from_params(versions: 'not array')
           expect(message).to be_invalid
           expect(message.errors[:versions].length).to eq 1
         end

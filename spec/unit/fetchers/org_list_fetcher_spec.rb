@@ -13,7 +13,7 @@ module VCAP::CloudController
 
     let(:fetcher) { OrgListFetcher.new }
 
-    let(:message) { OrgsListMessage.new }
+    let(:message) { OrgsListMessage.from_params({}) }
 
     describe '#fetch' do
       it 'includes all the orgs with the provided guids' do
@@ -23,7 +23,7 @@ module VCAP::CloudController
 
       describe 'filtering on message' do
         context 'when org names are provided' do
-          let(:message) { OrgsListMessage.new names: ['Marmot', 'Capybara'] }
+          let(:message) { OrgsListMessage.from_params names: ['Marmot', 'Capybara'] }
 
           it 'returns the correct set of orgs' do
             results = fetcher.fetch(message: message, guids: some_org_guids).all
@@ -31,7 +31,7 @@ module VCAP::CloudController
           end
 
           context 'respects any provided guids' do
-            let(:message) { OrgsListMessage.new names: ['Marmot', 'Rat'] }
+            let(:message) { OrgsListMessage.from_params names: ['Marmot', 'Rat'] }
 
             it 'does not return orgs asked for if they are not part of the array passed into #fetch' do
               results = fetcher.fetch(message: message, guids: some_org_guids).all
@@ -42,7 +42,7 @@ module VCAP::CloudController
 
         context 'when org guids are provided' do
           let(:all_org_guids) { [org1.guid, org2.guid, org3.guid, org4.guid, org5.guid] }
-          let(:message) { OrgsListMessage.new guids: some_org_guids }
+          let(:message) { OrgsListMessage.from_params guids: some_org_guids }
 
           it 'returns the correct set of orgs' do
             results = fetcher.fetch(message: message, guids: all_org_guids).all
@@ -50,7 +50,7 @@ module VCAP::CloudController
           end
 
           context 'respects any provided guids' do
-            let(:message) { OrgsListMessage.new guids: [org1.guid, org2.guid] }
+            let(:message) { OrgsListMessage.from_params guids: [org1.guid, org2.guid] }
 
             it 'does not return orgs asked for if they are not part of the array passed into #fetch' do
               results = fetcher.fetch(message: message, guids: some_org_guids).all
@@ -76,7 +76,7 @@ module VCAP::CloudController
 
       describe 'filtering on message' do
         context 'when org names are provided' do
-          let(:message) { OrgsListMessage.new names: ['Marmot', 'Capybara', 'Groundhog'] }
+          let(:message) { OrgsListMessage.from_params names: ['Marmot', 'Capybara', 'Groundhog'] }
 
           it 'returns the correct set of orgs' do
             results = fetcher.fetch_all(message: message).all
@@ -85,7 +85,7 @@ module VCAP::CloudController
         end
 
         context 'when org guids are provided' do
-          let(:message) { OrgsListMessage.new guids: some_org_guids }
+          let(:message) { OrgsListMessage.from_params guids: some_org_guids }
 
           it 'returns the correct set of orgs' do
             results = fetcher.fetch_all(message: message).all
@@ -110,7 +110,7 @@ module VCAP::CloudController
     describe '#fetch_for_isolation_segment' do
       let(:isolation_segment) { IsolationSegmentModel.make }
       let(:assigner) { IsolationSegmentAssign.new }
-      let(:message) { OrgsListMessage.new isolation_segment_guid: isolation_segment.guid }
+      let(:message) { OrgsListMessage.from_params isolation_segment_guid: isolation_segment.guid }
       let(:readable_org_guids) { [org1.guid, org2.guid] }
 
       before do
@@ -131,7 +131,7 @@ module VCAP::CloudController
     describe '#fetch_all_for_isoation_segments' do
       let(:isolation_segment) { IsolationSegmentModel.make }
       let(:assigner) { IsolationSegmentAssign.new }
-      let(:message) { OrgsListMessage.new isolation_segment_guid: isolation_segment.guid }
+      let(:message) { OrgsListMessage.from_params isolation_segment_guid: isolation_segment.guid }
 
       before do
         assigner.assign(isolation_segment, [org1, org2, org5])

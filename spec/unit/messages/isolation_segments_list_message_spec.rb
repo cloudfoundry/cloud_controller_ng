@@ -57,14 +57,14 @@ module VCAP::CloudController
 
       it 'excludes the pagination keys' do
         expected_params = [:names, :guids, :organization_guids, :label_selector]
-        expect(IsolationSegmentsListMessage.new(opts).to_param_hash.keys).to match_array(expected_params)
+        expect(IsolationSegmentsListMessage.from_params(opts).to_param_hash.keys).to match_array(expected_params)
       end
     end
 
     describe 'fields' do
       it 'accepts a set of fields' do
         expect {
-          IsolationSegmentsListMessage.new({
+          IsolationSegmentsListMessage.from_params({
               names:              [],
               guids:              [],
               organization_guids: [],
@@ -77,12 +77,12 @@ module VCAP::CloudController
       end
 
       it 'accepts an empty set' do
-        message = IsolationSegmentsListMessage.new
+        message = IsolationSegmentsListMessage.from_params({})
         expect(message).to be_valid
       end
 
       it 'does not accept a field not in this set' do
-        message = IsolationSegmentsListMessage.new({ foobar: 'pants' })
+        message = IsolationSegmentsListMessage.from_params({ foobar: 'pants' })
 
         expect(message).not_to be_valid
         expect(message.errors[:base]).to include("Unknown query parameter(s): 'foobar'")
@@ -90,20 +90,20 @@ module VCAP::CloudController
 
       describe 'order_by' do
         it 'allows name' do
-          message = IsolationSegmentsListMessage.new(order_by: 'name')
+          message = IsolationSegmentsListMessage.from_params(order_by: 'name')
           expect(message).to be_valid
         end
       end
 
       describe 'validations' do
         it 'validates names is an array' do
-          message = IsolationSegmentsListMessage.new names: 'not array'
+          message = IsolationSegmentsListMessage.from_params names: 'not array'
           expect(message).to be_invalid
           expect(message.errors[:names].length).to eq 1
         end
 
         it 'validates guids is an array' do
-          message = IsolationSegmentsListMessage.new guids: 'not array'
+          message = IsolationSegmentsListMessage.from_params guids: 'not array'
           expect(message).to be_invalid
           expect(message.errors[:guids].length).to eq 1
         end

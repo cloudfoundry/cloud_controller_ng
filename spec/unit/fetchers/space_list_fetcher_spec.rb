@@ -11,7 +11,7 @@ module VCAP::CloudController
     let!(:space3) { Space.make(name: 'Horse', organization: org1) }
     let!(:space4) { Space.make(name: 'Buffalo', organization: org2) }
 
-    let(:message) { SpacesListMessage.new }
+    let(:message) { SpacesListMessage.from_params({}) }
 
     let(:fetcher) { SpaceListFetcher.new }
 
@@ -24,7 +24,7 @@ module VCAP::CloudController
       end
 
       context 'when names filter is given' do
-        let(:message) { SpacesListMessage.new({ names: ['Lamb', 'Buffalo'] }) }
+        let(:message) { SpacesListMessage.from_params({ names: ['Lamb', 'Buffalo'] }) }
 
         it 'includes the spaces with the provided guids and matching the filter' do
           results = fetcher.fetch(message: message, guids: permitted_space_guids).all
@@ -33,7 +33,7 @@ module VCAP::CloudController
       end
 
       context 'when organization_guids are provided' do
-        let(:message) { SpacesListMessage.new({ organization_guids: [org2.guid] }) }
+        let(:message) { SpacesListMessage.from_params({ organization_guids: [org2.guid] }) }
 
         it 'includes the spaces with the provided guids and matching the filter' do
           results = fetcher.fetch(message: message, guids: permitted_space_guids).all
@@ -53,7 +53,7 @@ module VCAP::CloudController
       end
 
       context 'when names filter is given' do
-        let(:message) { SpacesListMessage.new({ names: ['Lamb'] }) }
+        let(:message) { SpacesListMessage.from_params({ names: ['Lamb'] }) }
 
         it 'includes the spaces with the provided guids and matching the filter' do
           results = fetcher.fetch_all(message: message).all
@@ -62,7 +62,7 @@ module VCAP::CloudController
       end
 
       context 'when organization_guids are provided' do
-        let(:message) { SpacesListMessage.new({ organization_guids: [org2.guid] }) }
+        let(:message) { SpacesListMessage.from_params({ organization_guids: [org2.guid] }) }
 
         it 'includes the spaces belonging to the specified organizations' do
           results = fetcher.fetch_all(message: message).all

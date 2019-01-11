@@ -39,19 +39,19 @@ module VCAP::CloudController
 
     describe 'validations' do
       it 'validates names is an array' do
-        message = SpacesListMessage.new names: 'not array'
+        message = SpacesListMessage.from_params names: 'not array'
         expect(message).to be_invalid
         expect(message.errors[:names].length).to eq 1
       end
 
       it 'validates organization_guids is an array' do
-        message = SpacesListMessage.new organization_guids: 'not array'
+        message = SpacesListMessage.from_params organization_guids: 'not array'
         expect(message).to be_invalid
         expect(message.errors[:organization_guids].length).to eq 1
       end
 
       it 'validates guids is an array' do
-        message = SpacesListMessage.new guids: 'not array'
+        message = SpacesListMessage.from_params guids: 'not array'
         expect(message).to be_invalid
         expect(message.errors[:guids].length).to eq 1
       end

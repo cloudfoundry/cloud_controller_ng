@@ -68,14 +68,14 @@ module VCAP::CloudController
 
       it 'excludes the pagination keys' do
         expected_params = [:names, :guids, :organization_guids, :space_guids, :include, :label_selector]
-        expect(AppsListMessage.new(opts).to_param_hash.keys).to match_array(expected_params)
+        expect(AppsListMessage.from_params(opts).to_param_hash.keys).to match_array(expected_params)
       end
     end
 
     describe 'fields' do
       it 'accepts a set of fields' do
         expect {
-          AppsListMessage.new({
+          AppsListMessage.from_params({
                                 names: [],
                                 guids: [],
                                 organization_guids: [],
@@ -90,52 +90,52 @@ module VCAP::CloudController
       end
 
       it 'accepts an empty set' do
-        message = AppsListMessage.new
+        message = AppsListMessage.from_params({})
         expect(message).to be_valid
       end
 
       it 'does not accept a field not in this set' do
-        message = AppsListMessage.new({ foobar: 'pants' })
+        message = AppsListMessage.from_params({ foobar: 'pants' })
 
         expect(message).not_to be_valid
         expect(message.errors[:base]).to include("Unknown query parameter(s): 'foobar'")
       end
 
       it 'does not accept include that is not space' do
-        message = AppsListMessage.new({ include: 'space' })
+        message = AppsListMessage.from_params({ include: 'space' })
         expect(message).to be_valid
-        message = AppsListMessage.new({ include: 'greg\'s buildpack' })
+        message = AppsListMessage.from_params({ include: 'greg\'s buildpack' })
         expect(message).not_to be_valid
       end
 
       describe 'order_by' do
         it 'allows name' do
-          message = AppsListMessage.new(order_by: 'name')
+          message = AppsListMessage.from_params(order_by: 'name')
           expect(message).to be_valid
         end
       end
 
       describe 'validations' do
         it 'validates names is an array' do
-          message = AppsListMessage.new names: 'not array'
+          message = AppsListMessage.from_params names: 'not array'
           expect(message).to be_invalid
           expect(message.errors[:names].length).to eq 1
         end
 
         it 'validates guids is an array' do
-          message = AppsListMessage.new guids: 'not array'
+          message = AppsListMessage.from_params guids: 'not array'
           expect(message).to be_invalid
           expect(message.errors[:guids].length).to eq 1
         end
 
         it 'validates organization_guids is an array' do
-          message = AppsListMessage.new organization_guids: 'not array'
+          message = AppsListMessage.from_params organization_guids: 'not array'
           expect(message).to be_invalid
           expect(message.errors[:organization_guids].length).to eq 1
         end
 
         it 'validates space_guids is an array' do
-          message = AppsListMessage.new space_guids: 'not array'
+          message = AppsListMessage.from_params space_guids: 'not array'
           expect(message).to be_invalid
           expect(message.errors[:space_guids].length).to eq 1
         end

@@ -38,7 +38,7 @@ module VCAP::CloudController
 
     describe 'validations' do
       it 'accepts a set of params' do
-        message = DeploymentsListMessage.new({
+        message = DeploymentsListMessage.from_params({
           app_guids: [],
           page:      1,
           per_page:  5,
@@ -49,32 +49,32 @@ module VCAP::CloudController
       end
 
       it 'accepts an empty set' do
-        message = DeploymentsListMessage.new
+        message = DeploymentsListMessage.from_params({})
         expect(message).to be_valid
       end
 
       it 'does not accept a param not in this set' do
-        message = DeploymentsListMessage.new({ foobar: 'pants' })
+        message = DeploymentsListMessage.from_params({ foobar: 'pants' })
 
         expect(message).not_to be_valid
         expect(message.errors[:base]).to include("Unknown query parameter(s): 'foobar'")
       end
 
       it 'reject an invalid order_by param' do
-        message = DeploymentsListMessage.new({
+        message = DeploymentsListMessage.from_params({
           order_by:  'fail!',
         })
         expect(message).not_to be_valid
       end
 
       it 'validates app_guids is an array' do
-        message = DeploymentsListMessage.new app_guids: 'tricked you, not an array'
+        message = DeploymentsListMessage.from_params app_guids: 'tricked you, not an array'
         expect(message).to be_invalid
         expect(message.errors[:app_guids].length).to eq 1
       end
 
       it 'validates states is an array' do
-        message = DeploymentsListMessage.new states: 'tricked you, not an array'
+        message = DeploymentsListMessage.from_params states: 'tricked you, not an array'
         expect(message).to be_invalid
         expect(message.errors[:states].length).to eq 1
       end

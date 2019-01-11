@@ -38,7 +38,7 @@ module VCAP::CloudController
 
     describe 'fields' do
       it 'accepts a set of fields' do
-        message = ServiceInstancesListMessage.new({
+        message = ServiceInstancesListMessage.from_params({
             page: 1,
             per_page: 5,
             order_by: 'created_at',
@@ -49,12 +49,12 @@ module VCAP::CloudController
       end
 
       it 'accepts an empty set' do
-        message = ServiceInstancesListMessage.new
+        message = ServiceInstancesListMessage.from_params({})
         expect(message).to be_valid
       end
 
       it 'does not accept a field not in this set' do
-        message = ServiceInstancesListMessage.new({ foobar: 'pants' })
+        message = ServiceInstancesListMessage.from_params({ foobar: 'pants' })
 
         expect(message).not_to be_valid
         expect(message.errors[:base]).to include("Unknown query parameter(s): 'foobar'")
@@ -64,7 +64,7 @@ module VCAP::CloudController
     describe 'validations' do
       context 'names' do
         it 'validates names is an array' do
-          message = ServiceInstancesListMessage.new names: 'tricked you, not an array'
+          message = ServiceInstancesListMessage.from_params names: 'tricked you, not an array'
           expect(message).to be_invalid
           expect(message.errors[:names]).to include('must be an array')
         end
@@ -72,7 +72,7 @@ module VCAP::CloudController
 
       context 'space guids' do
         it 'validates space_guids is an array' do
-          message = ServiceInstancesListMessage.new space_guids: 'tricked you, not an array'
+          message = ServiceInstancesListMessage.from_params space_guids: 'tricked you, not an array'
           expect(message).to be_invalid
           expect(message.errors[:space_guids]).to include('must be an array')
         end

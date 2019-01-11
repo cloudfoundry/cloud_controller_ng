@@ -45,13 +45,13 @@ module VCAP::CloudController
 
       it 'app_guid' do
         expected_params = []
-        expect(RouteMappingsListMessage.new(opts).to_param_hash.keys).to match_array(expected_params)
+        expect(RouteMappingsListMessage.from_params(opts).to_param_hash.keys).to match_array(expected_params)
       end
     end
 
     describe 'fields' do
       it 'accepts a set of fields' do
-        message = RouteMappingsListMessage.new({
+        message = RouteMappingsListMessage.from_params({
           page:        1,
           per_page:    5,
           order_by:    'created_at',
@@ -63,12 +63,12 @@ module VCAP::CloudController
       end
 
       it 'accepts an empty set' do
-        message = RouteMappingsListMessage.new
+        message = RouteMappingsListMessage.from_params({})
         expect(message).to be_valid
       end
 
       it 'does not accept a field not in this set' do
-        message = RouteMappingsListMessage.new(foobar: 'pants')
+        message = RouteMappingsListMessage.from_params(foobar: 'pants')
 
         expect(message).not_to be_valid
         expect(message.errors[:base]).to include("Unknown query parameter(s): 'foobar'")

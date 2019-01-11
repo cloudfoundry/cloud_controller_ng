@@ -64,7 +64,7 @@ module VCAP::CloudController
 
       it 'excludes the pagination keys' do
         expected_params = [:types, :app_guids, :space_guids, :organization_guids, :guids]
-        message = ProcessesListMessage.new(opts)
+        message = ProcessesListMessage.from_params(opts)
 
         expect(message.to_param_hash.keys).to match_array(expected_params)
       end
@@ -73,7 +73,7 @@ module VCAP::CloudController
     describe 'fields' do
       it 'accepts a set of fields' do
         expect {
-          ProcessesListMessage.new({
+          ProcessesListMessage.from_params({
             types:              ['bits', 'docker'],
             space_guids:        ['spaceguid1', 'spaceguid2'],
             app_guids:          ['appguid1', 'appguid2'],
@@ -88,12 +88,12 @@ module VCAP::CloudController
       end
 
       it 'accepts an empty set' do
-        message = ProcessesListMessage.new
+        message = ProcessesListMessage.from_params({})
         expect(message).to be_valid
       end
 
       it 'does not accept a field not in this set' do
-        message = ProcessesListMessage.new(foobar: 'pants')
+        message = ProcessesListMessage.from_params(foobar: 'pants')
 
         expect(message).not_to be_valid
         expect(message.errors[:base]).to include("Unknown query parameter(s): 'foobar'")
@@ -103,7 +103,7 @@ module VCAP::CloudController
     describe 'validations' do
       context 'app guids' do
         it 'validates app_guids is an array' do
-          message = ProcessesListMessage.new app_guids: 'tricked you, not an array'
+          message = ProcessesListMessage.from_params app_guids: 'tricked you, not an array'
           expect(message).to be_invalid
           expect(message.errors[:app_guids]).to include('must be an array')
         end
@@ -111,7 +111,7 @@ module VCAP::CloudController
         context 'app nested requests' do
           context 'user provides app_guids' do
             it 'is not valid' do
-              message = ProcessesListMessage.new(app_guid: 'blah', app_guids: ['app1', 'app2'])
+              message = ProcessesListMessage.from_params(app_guid: 'blah', app_guids: ['app1', 'app2'])
               expect(message).to_not be_valid
               expect(message.errors[:base]).to include("Unknown query parameter(s): 'app_guids'")
             end
@@ -119,7 +119,7 @@ module VCAP::CloudController
 
           context 'user provides organization_guids' do
             it 'is not valid' do
-              message = ProcessesListMessage.new(app_guid: 'blah', organization_guids: ['orgguid1', 'orgguid2'])
+              message = ProcessesListMessage.from_params(app_guid: 'blah', organization_guids: ['orgguid1', 'orgguid2'])
               expect(message).to_not be_valid
               expect(message.errors[:base]).to include("Unknown query parameter(s): 'organization_guids'")
             end
@@ -127,7 +127,7 @@ module VCAP::CloudController
 
           context 'user provides space guids' do
             it 'is not valid' do
-              message = ProcessesListMessage.new(app_guid: 'blah', space_guids: ['space1', 'space2'])
+              message = ProcessesListMessage.from_params(app_guid: 'blah', space_guids: ['space1', 'space2'])
               expect(message).to_not be_valid
               expect(message.errors[:base]).to include("Unknown query parameter(s): 'space_guids'")
             end

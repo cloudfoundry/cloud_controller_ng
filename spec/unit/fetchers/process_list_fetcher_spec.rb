@@ -5,7 +5,7 @@ module VCAP::CloudController
   RSpec.describe ProcessListFetcher do
     let(:fetcher) { ProcessListFetcher.new(message) }
     let(:pagination_options) { PaginationOptions.new({}) }
-    let(:message) { ProcessesListMessage.new(filters) }
+    let(:message) { ProcessesListMessage.from_params(filters) }
     let(:filters) { {} }
 
     describe '#fetch_all' do

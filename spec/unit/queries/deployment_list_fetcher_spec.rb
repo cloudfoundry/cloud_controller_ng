@@ -22,7 +22,7 @@ module VCAP::CloudController
 
     subject(:fetcher) { DeploymentListFetcher.new(message: message) }
     let(:pagination_options) { PaginationOptions.new({}) }
-    let(:message) { DeploymentsListMessage.new(filters) }
+    let(:message) { DeploymentsListMessage.from_params(filters) }
     let(:filters) { {} }
 
     describe '#fetch_all' do

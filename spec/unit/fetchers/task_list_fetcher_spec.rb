@@ -21,7 +21,7 @@ module VCAP::CloudController
     let!(:task_in_org2) { TaskModel.make(app_guid: app_in_org2.guid) }
 
     let(:pagination_options) { PaginationOptions.new({}) }
-    let(:message) { TasksListMessage.new(filters) }
+    let(:message) { TasksListMessage.from_params(filters) }
     let(:filters) { {} }
     subject(:fetcher) { TaskListFetcher.new }
 

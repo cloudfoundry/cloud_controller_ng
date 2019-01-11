@@ -11,6 +11,10 @@ module VCAP::CloudController
 
     register_allowed_keys ALLOWED_PAGINATION_KEYS
 
+    # Disallow directly calling <any>ListMessage.new
+    # All ListMessage classes should be instantiated via the from_params method
+    private_class_method :new
+
     attr_accessor(*ALLOWED_PAGINATION_KEYS, :pagination_params)
     attr_reader :pagination_options
 

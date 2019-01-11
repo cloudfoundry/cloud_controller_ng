@@ -35,7 +35,7 @@ module VCAP::CloudController
 
     describe 'fields' do
       it 'accepts a set of fields' do
-        message = AppBuildsListMessage.new({
+        message = AppBuildsListMessage.from_params({
           states:    [],
           page:      1,
           per_page:  5,
@@ -45,19 +45,19 @@ module VCAP::CloudController
       end
 
       it 'accepts an empty set' do
-        message = AppBuildsListMessage.new
+        message = AppBuildsListMessage.from_params({})
         expect(message).to be_valid
       end
 
       it 'does not accept a field not in this set' do
-        message = AppBuildsListMessage.new({ foobar: 'pants' })
+        message = AppBuildsListMessage.from_params({ foobar: 'pants' })
 
         expect(message).not_to be_valid
         expect(message.errors[:base]).to include("Unknown query parameter(s): 'foobar'")
       end
 
       it 'reject an invalid order_by field' do
-        message = AppBuildsListMessage.new({
+        message = AppBuildsListMessage.from_params({
           order_by:  'fail!',
         })
         expect(message).not_to be_valid
@@ -66,7 +66,7 @@ module VCAP::CloudController
       describe 'validations' do
         context 'when the request contains space_guids' do
           it 'is invalid' do
-            message = AppBuildsListMessage.new({ space_guids: ['app1', 'app2'] })
+            message = AppBuildsListMessage.from_params({ space_guids: ['app1', 'app2'] })
             expect(message).to_not be_valid
             expect(message.errors[:base]).to include("Unknown query parameter(s): 'space_guids'")
           end
@@ -74,14 +74,14 @@ module VCAP::CloudController
 
         context 'when the request contains organization_guids' do
           it 'is invalid' do
-            message = AppBuildsListMessage.new({ organization_guids: ['app1', 'app2'] })
+            message = AppBuildsListMessage.from_params({ organization_guids: ['app1', 'app2'] })
             expect(message).to_not be_valid
             expect(message.errors[:base]).to include("Unknown query parameter(s): 'organization_guids'")
           end
         end
 
         it 'validates states is an array' do
-          message = AppBuildsListMessage.new states: 'not array at all'
+          message = AppBuildsListMessage.from_params states: 'not array at all'
           expect(message).to be_invalid
           expect(message.errors[:states].length).to eq 1
         end

@@ -46,14 +46,14 @@ module VCAP::CloudController
 
       it 'excludes the pagination keys' do
         expected_params = [:names, :stacks]
-        expect(BuildpacksListMessage.new(opts).to_param_hash.keys).to match_array(expected_params)
+        expect(BuildpacksListMessage.from_params(opts).to_param_hash.keys).to match_array(expected_params)
       end
     end
 
     describe 'fields' do
       it 'accepts a set of fields' do
         expect {
-          BuildpacksListMessage.new({
+          BuildpacksListMessage.from_params({
             names: [],
             stacks: []
           })
@@ -61,12 +61,12 @@ module VCAP::CloudController
       end
 
       it 'accepts an empty set' do
-        message = BuildpacksListMessage.new
+        message = BuildpacksListMessage.from_params({})
         expect(message).to be_valid
       end
 
       it 'does not accept a field not in this set' do
-        message = BuildpacksListMessage.new({ foobar: 'pants' })
+        message = BuildpacksListMessage.from_params({ foobar: 'pants' })
 
         expect(message).not_to be_valid
         expect(message.errors[:base]).to include("Unknown query parameter(s): 'foobar'")
@@ -75,13 +75,13 @@ module VCAP::CloudController
 
     describe 'validations' do
       it 'validates names is an array' do
-        message = BuildpacksListMessage.new names: 'not array'
+        message = BuildpacksListMessage.from_params names: 'not array'
         expect(message).to be_invalid
         expect(message.errors[:names].length).to eq 1
       end
 
       it 'validates stacks is an array' do
-        message = BuildpacksListMessage.new stacks: 'not array'
+        message = BuildpacksListMessage.from_params stacks: 'not array'
         expect(message).to be_invalid
         expect(message.errors[:stacks].length).to eq 1
       end

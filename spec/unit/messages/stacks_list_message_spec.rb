@@ -41,26 +41,26 @@ module VCAP::CloudController
 
       it 'excludes the pagination keys' do
         expected_params = [:names]
-        expect(StacksListMessage.new(opts).to_param_hash.keys).to match_array(expected_params)
+        expect(StacksListMessage.from_params(opts).to_param_hash.keys).to match_array(expected_params)
       end
     end
 
     describe 'fields' do
       it 'accepts a set of fields' do
         expect {
-          StacksListMessage.new({
+          StacksListMessage.from_params({
             names: []
           })
         }.not_to raise_error
       end
 
       it 'accepts an empty set' do
-        message = StacksListMessage.new
+        message = StacksListMessage.from_params({})
         expect(message).to be_valid
       end
 
       it 'does not accept a field not in this set' do
-        message = StacksListMessage.new({ foobar: 'pants' })
+        message = StacksListMessage.from_params({ foobar: 'pants' })
 
         expect(message).not_to be_valid
         expect(message.errors[:base]).to include("Unknown query parameter(s): 'foobar'")
@@ -69,7 +69,7 @@ module VCAP::CloudController
 
     describe 'validations' do
       it 'validates names is an array' do
-        message = StacksListMessage.new names: 'not array'
+        message = StacksListMessage.from_params names: 'not array'
         expect(message).to be_invalid
         expect(message.errors[:names].length).to eq 1
       end

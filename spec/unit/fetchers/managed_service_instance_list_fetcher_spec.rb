@@ -5,7 +5,7 @@ require 'messages/service_instances_list_message'
 module VCAP::CloudController
   RSpec.describe ManagedServiceInstanceListFetcher do
     let(:filters) { {} }
-    let(:message) { ServiceInstancesListMessage.new(filters) }
+    let(:message) { ServiceInstancesListMessage.from_params(filters) }
     let(:fetcher) { ManagedServiceInstanceListFetcher.new }
 
     describe '#fetch_all' do

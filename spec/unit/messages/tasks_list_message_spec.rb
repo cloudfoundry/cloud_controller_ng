@@ -68,13 +68,13 @@ module VCAP::CloudController
 
       it 'excludes the pagination keys' do
         expected_params = [:names, :states, :guids, :app_guids, :organization_guids, :space_guids, :sequence_ids]
-        expect(TasksListMessage.new(opts).to_param_hash.keys).to match_array(expected_params)
+        expect(TasksListMessage.from_params(opts).to_param_hash.keys).to match_array(expected_params)
       end
     end
 
     describe 'fields' do
       it 'accepts a set of fields' do
-        message = TasksListMessage.new({
+        message = TasksListMessage.from_params({
           names:              [],
           states:             [],
           guids:              [],
@@ -88,12 +88,12 @@ module VCAP::CloudController
       end
 
       it 'accepts an empty set' do
-        message = TasksListMessage.new
+        message = TasksListMessage.from_params({})
         expect(message).to be_valid
       end
 
       it 'does not accept a field not in this set' do
-        message = TasksListMessage.new({ foobar: 'pants' })
+        message = TasksListMessage.from_params({ foobar: 'pants' })
 
         expect(message).not_to be_valid
         expect(message.errors[:base]).to include("Unknown query parameter(s): 'foobar'")
@@ -103,21 +103,21 @@ module VCAP::CloudController
         describe 'validating app nested query' do
           context 'when the request contains app_guid but not app_guids, space_guids, and org_guids' do
             it 'validates' do
-              message = TasksListMessage.new({ app_guid: 'blah' })
+              message = TasksListMessage.from_params({ app_guid: 'blah' })
               expect(message).to be_valid
             end
           end
 
           context 'when the request does not contain app_guid but space_guids, org_guids, and app_guids' do
             it 'validates' do
-              message = TasksListMessage.new({ app_guids: ['1'], space_guids: ['2'], organization_guids: ['5'] })
+              message = TasksListMessage.from_params({ app_guids: ['1'], space_guids: ['2'], organization_guids: ['5'] })
               expect(message).to be_valid
             end
           end
 
           context 'when the request contains both app_guid and app_guids' do
             it 'does not validate' do
-              message = TasksListMessage.new({ app_guid: 'blah', app_guids: ['app1', 'app2'] })
+              message = TasksListMessage.from_params({ app_guid: 'blah', app_guids: ['app1', 'app2'] })
               expect(message).to_not be_valid
               expect(message.errors[:base]).to include("Unknown query parameter(s): 'app_guids'")
             end
@@ -125,7 +125,7 @@ module VCAP::CloudController
 
           context 'when the request contains both app_guid and space_guids' do
             it 'does not validate' do
-              message = TasksListMessage.new({ app_guid: 'blah', space_guids: ['space1', 'space2'] })
+              message = TasksListMessage.from_params({ app_guid: 'blah', space_guids: ['space1', 'space2'] })
               expect(message).to_not be_valid
               expect(message.errors[:base]).to include("Unknown query parameter(s): 'space_guids'")
             end
@@ -133,7 +133,7 @@ module VCAP::CloudController
 
           context 'when the request contains both app_guid and org_guids' do
             it 'does not validate' do
-              message = TasksListMessage.new({ app_guid: 'blah', organization_guids: ['org1', 'org2'] })
+              message = TasksListMessage.from_params({ app_guid: 'blah', organization_guids: ['org1', 'org2'] })
               expect(message).to_not be_valid
               expect(message.errors[:base]).to include("Unknown query parameter(s): 'organization_guids'")
             end
@@ -141,7 +141,7 @@ module VCAP::CloudController
 
           context 'when the request contains both app_guid and app_guids, space_guids, and org_guids' do
             it 'does not validate' do
-              message = TasksListMessage.new({
+              message = TasksListMessage.from_params({
                 app_guid: 'blah',
                 app_guids: ['app1', 'app2'],
                 space_guids: ['space1', 'space2'],
@@ -153,50 +153,50 @@ module VCAP::CloudController
           end
 
           it 'validates sequence_ids is an array' do
-            message = TasksListMessage.new sequence_ids: 'not array'
+            message = TasksListMessage.from_params sequence_ids: 'not array'
             expect(message).to be_invalid
             expect(message.errors[:sequence_ids].length).to eq 1
           end
         end
 
         it 'validates names is an array' do
-          message = TasksListMessage.new names: 'not array'
+          message = TasksListMessage.from_params names: 'not array'
           expect(message).to be_invalid
           expect(message.errors[:names].length).to eq 1
         end
 
         it 'validates states is an array' do
-          message = TasksListMessage.new states: 'not array'
+          message = TasksListMessage.from_params states: 'not array'
           expect(message).to be_invalid
           expect(message.errors[:states].length).to eq 1
         end
 
         it 'validates guids is an array' do
-          message = TasksListMessage.new guids: 'not array'
+          message = TasksListMessage.from_params guids: 'not array'
           expect(message).to be_invalid
           expect(message.errors[:guids].length).to eq 1
         end
 
         it 'validates app_guids is an array' do
-          message = TasksListMessage.new app_guids: 'not array'
+          message = TasksListMessage.from_params app_guids: 'not array'
           expect(message).to be_invalid
           expect(message.errors[:app_guids].length).to eq 1
         end
 
         it 'validates organization_guids is an array' do
-          message = TasksListMessage.new organization_guids: 'not array'
+          message = TasksListMessage.from_params organization_guids: 'not array'
           expect(message).to be_invalid
           expect(message.errors[:organization_guids].length).to eq 1
         end
 
         it 'validates space_guids is an array' do
-          message = TasksListMessage.new space_guids: 'not array'
+          message = TasksListMessage.from_params space_guids: 'not array'
           expect(message).to be_invalid
           expect(message.errors[:space_guids].length).to eq 1
         end
 
         it 'does not allow sequence_ids' do
-          message = TasksListMessage.new sequence_ids: [1]
+          message = TasksListMessage.from_params sequence_ids: [1]
           expect(message).to be_invalid
           expect(message.errors[:base]).to include("Unknown query parameter(s): 'sequence_ids'")
         end

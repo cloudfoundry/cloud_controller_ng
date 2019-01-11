@@ -25,7 +25,7 @@ module VCAP::CloudController
 
     subject(:fetcher) { BuildListFetcher.new(message: message) }
     let(:pagination_options) { PaginationOptions.new({}) }
-    let(:message) { BuildsListMessage.new(filters) }
+    let(:message) { BuildsListMessage.from_params(filters) }
     let(:filters) { {} }
 
     describe '#fetch_all' do

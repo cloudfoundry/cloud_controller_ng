@@ -6,7 +6,7 @@ module VCAP::CloudController
   RSpec.describe DropletListFetcher do
     subject(:fetcher) { DropletListFetcher.new(message: message) }
     let(:pagination_options) { PaginationOptions.new({}) }
-    let(:message) { DropletsListMessage.new(filters) }
+    let(:message) { DropletsListMessage.from_params(filters) }
     let(:filters) { {} }
 
     describe '#fetch_all' do
