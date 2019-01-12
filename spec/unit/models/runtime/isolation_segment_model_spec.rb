@@ -198,8 +198,7 @@ module VCAP::CloudController
       it 'complains when we delete the iso seg' do
         expect {
           isolation_segment_model.delete
-        }.to raise_error(Sequel::ForeignKeyConstraintViolation,
-          /Key \(guid\)=\(#{isolation_segment_model.guid}\) is still referenced from table \"isolation_segment_annotations\"\./)
+        }.to raise_error(Sequel::ForeignKeyConstraintViolation)
       end
     end
   end
