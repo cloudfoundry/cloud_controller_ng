@@ -1,0 +1,49 @@
+### Update a buildpack
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/buildpacks/[guid]" \
+  -X PATCH \
+  -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
+  -d '{
+    "name": "ruby_buildpack",
+    "position": 42,
+    "enabled": true,
+    "locked": false,
+    "stack": "windows64"
+  }'
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :single_buildpack %>
+```
+
+#### Definition
+`PATCH /v3/buildpacks/:guid`
+
+#### Optional Parameters
+
+Name         | Type      | Description
+-----------  | --------  | -----------------------------------------------------------------------------
+**name**     | _string_  | Name of the buildpack.
+**stack**    | _string_  | The name of the stack that the buildpack will use.
+**position** | _integer_ | The order in which the buildpacks are checked during buildpack auto-detection.
+**enabled**  | _boolean_ | Whether or not the buildpack will be used for staging
+**locked**   | _boolean_ | Whether or not the buildpack is locked to prevent updating the bits
+
+#### Permitted Roles
+
+      |
+----- | ---
+Admin |

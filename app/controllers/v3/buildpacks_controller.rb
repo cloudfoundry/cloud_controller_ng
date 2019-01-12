@@ -1,9 +1,11 @@
 require 'messages/buildpack_create_message'
 require 'messages/buildpacks_list_message'
+require 'messages/buildpack_update_message'
 require 'messages/buildpack_upload_message'
 require 'fetchers/buildpack_list_fetcher'
 require 'actions/buildpack_create'
 require 'actions/buildpack_delete'
+require 'actions/buildpack_update'
 require 'actions/buildpack_upload'
 require 'presenters/v3/buildpack_presenter'
 
@@ -54,6 +56,21 @@ class BuildpacksController < ApplicationController
 
     url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
     head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job.guid}")
+  end
+
+  def update
+    unauthorized! unless permission_queryer.can_write_globally?
+
+    buildpack = Buildpack.find(guid: hashed_params[:guid])
+
+    message = BuildpackUpdateMessage.new(hashed_params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    buildpack = VCAP::CloudController::BuildpackUpdate.new.update(buildpack, message)
+
+    render status: :ok, json: Presenters::V3::BuildpackPresenter.new(buildpack)
+  rescue BuildpackUpdate::Error => e
+    unprocessable!(e)
   end
 
   def upload

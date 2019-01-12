@@ -427,4 +427,18 @@ RSpec.describe 'buildpacks' do
       expect(last_response.status).to eq(200)
     end
   end
+
+  describe 'PATCH /v3/buildpacks/:guid' do
+    let(:buildpack) { VCAP::CloudController::Buildpack.make }
+
+    it 'updates a buildpack' do
+      params = { enabled: false }
+
+      patch "/v3/buildpacks/#{buildpack.guid}", params.to_json, admin_headers
+
+      expect(parsed_response['enabled']).to eq(false)
+      expect(last_response.status).to eq(200)
+      expect(buildpack.reload).to_not be_enabled
+    end
+  end
 end

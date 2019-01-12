@@ -286,6 +286,103 @@ RSpec.describe BuildpacksController, type: :controller do
     end
   end
 
+  describe '#update' do
+    let(:user) { VCAP::CloudController::User.make }
+    let(:buildpack) do
+      VCAP::CloudController::Buildpack.make(stack: nil)
+    end
+
+    describe 'permissions by role' do
+      role_to_expected_http_response = {
+        'admin' => 200,
+
+        'reader_and_writer' => 403,
+
+        'admin_read_only' => 403,
+        'global_auditor' => 403,
+      }.freeze
+
+      role_to_expected_http_response.each do |role, expected_return_value|
+        context "as an #{role}" do
+          it "returns #{expected_return_value}" do
+            set_current_user_as_role(role: role, user: user)
+
+            patch :update, params: { guid: buildpack.guid }, as: :json
+
+            expect(response.status).to eq expected_return_value
+          end
+        end
+      end
+
+      it 'returns 401 when logged out' do
+        patch :update, params: { guid: buildpack.guid }, as: :json
+
+        expect(response.status).to eq 401
+      end
+    end
+
+    context 'when authenticated' do
+      let(:name) do
+        expect(buildpack.reload.enabled).to eq false
+      end
+
+      let(:user) { VCAP::CloudController::User.make }
+      let(:headers) { headers_for(user) }
+
+      before do
+        set_current_user_as_admin(user: user)
+      end
+
+      context 'when the request message has invalid parameters' do
+        it 'returns 422' do
+          patch :update, params: { guid: buildpack.guid, enabled: 'totally-not-a-valid-value' }, as: :json
+
+          expect(response.status).to eq 422
+          expect(parsed_body['errors'][0]['detail']).to include('Enabled must be a boolean')
+        end
+      end
+
+      context 'when there are model level validation failures' do
+        it 'returns 422' do
+          other_buildpack = VCAP::CloudController::Buildpack.make(stack: buildpack.stack)
+          patch :update, params: { guid: buildpack.guid, name: other_buildpack.name }, as: :json
+
+          expect(response.status).to eq 422
+          expect(parsed_body['errors'][0]['detail']).to include("The buildpack name '#{other_buildpack.name}' with an unassigned stack is already in use")
+        end
+      end
+
+      it 'updates the updatable fields' do
+        buildpack
+        other_buildpack = VCAP::CloudController::Buildpack.make
+        new_stack = VCAP::CloudController::Stack.make
+        new_values = {
+          name: 'new-name',
+          stack: new_stack.name,
+          position: other_buildpack.position,
+          enabled: !buildpack.enabled,
+          locked: !buildpack.locked
+        }
+        patch :update, params: { guid: buildpack.guid }.merge(new_values), as: :json
+
+        expect(response.status).to eq 200
+
+        expect(parsed_body['name']).to eq 'new-name'
+        expect(parsed_body['stack']).to eq new_stack.name
+        expect(parsed_body['position']).to eq other_buildpack.position
+        expect(parsed_body['enabled']).to eq !buildpack.enabled
+        expect(parsed_body['locked']).to eq !buildpack.locked
+
+        buildpack.reload
+        expect(buildpack.name).to eq 'new-name'
+        expect(buildpack.stack).to eq new_stack.name
+        expect(buildpack.position).to eq other_buildpack.position
+        expect(buildpack.enabled).to eq parsed_body['enabled']
+        expect(buildpack.locked).to eq parsed_body['locked']
+      end
+    end
+  end
+
   describe '#upload' do
     let(:stat_double) { instance_double(File::Stat, size: 2) }
     let(:test_buildpack) { VCAP::CloudController::Buildpack.create_from_hash({ name: 'upload_binary_buildpack', stack: nil, position: 0 }) }

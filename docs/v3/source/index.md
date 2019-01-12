@@ -155,6 +155,7 @@ includes:
   - experimental_resources/buildpacks/object
   - experimental_resources/buildpacks/create  
   - experimental_resources/buildpacks/get
+  - experimental_resources/buildpacks/update
   - experimental_resources/buildpacks/delete
   - experimental_resources/buildpacks/list
   - experimental_resources/buildpacks/upload_bits
