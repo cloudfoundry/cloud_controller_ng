@@ -83,6 +83,32 @@ module VCAP::CloudController
       end
     end
 
+    describe '#latest_revision' do
+      let!(:revision1) { RevisionModel.make(app: app_model, created_at: 10.minutes.ago) }
+      let!(:revision2) { RevisionModel.make(app: app_model) }
+      let!(:revision3) { RevisionModel.make(app: app_model, created_at: 5.minutes.ago) }
+
+      context 'when revisions are enabled' do
+        before do
+          app_model.update(revisions_enabled: true)
+        end
+
+        it 'returns the newest one' do
+          expect(app_model.latest_revision).to eq(revision2)
+        end
+      end
+
+      context 'when revisions are not enabled' do
+        before do
+          app_model.update(revisions_enabled: false)
+        end
+
+        it 'returns nil' do
+          expect(app_model.latest_revision).to be_nil
+        end
+      end
+    end
+
     describe '#staging_in_progress' do
       context 'when a build is in staging state' do
         let!(:build) { BuildModel.make(app_guid: app_model.guid, state: BuildModel::STAGING_STATE) }

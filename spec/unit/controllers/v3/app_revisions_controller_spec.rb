@@ -3,10 +3,11 @@ require 'permissions_spec_helper'
 
 RSpec.describe AppRevisionsController, type: :controller do
   describe '#revision' do
-    let!(:app_model) { VCAP::CloudController::AppModel.make }
+    let!(:droplet) { VCAP::CloudController::DropletModel.make }
+    let!(:app_model) { VCAP::CloudController::AppModel.make(droplet: droplet) }
     let!(:space) { app_model.space }
     let(:user) { VCAP::CloudController::User.make }
-    let(:revision) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 808) }
+    let(:revision) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 808, droplet_guid: droplet.guid) }
 
     before do
       set_current_user(user)
@@ -22,6 +23,34 @@ RSpec.describe AppRevisionsController, type: :controller do
         {
           'guid' => revision.guid,
           'version' => revision.version,
+          'droplet' => {
+            'guid' => droplet.guid
+          },
+          'created_at' => iso8601,
+          'updated_at' => iso8601,
+          'links' => {
+            'self' => {
+              'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/#{revision.guid}"
+            }
+          }
+        }
+      )
+    end
+
+    it 'still shows the revision droplet_guid even after the droplet is deleted' do
+      droplet_guid = droplet.guid
+      droplet.delete
+
+      get :show, params: { guid: app_model.guid, revision_guid: revision.guid }
+
+      expect(response.status).to eq(200)
+      expect(parsed_body).to be_a_response_like(
+        {
+          'guid' => revision.guid,
+          'version' => revision.version,
+          'droplet' => {
+            'guid' => droplet_guid
+          },
           'created_at' => iso8601,
           'updated_at' => iso8601,
           'links' => {

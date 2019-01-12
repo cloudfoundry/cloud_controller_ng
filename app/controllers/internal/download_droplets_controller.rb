@@ -49,10 +49,10 @@ module VCAP::CloudController
     def download_droplet(guid, droplet_checksum)
       process = ProcessModel.find(guid: guid)
       check_app_exists(process, guid)
-      raise ApiError.new_from_details('NotFound', droplet_checksum) unless process.droplet_checksum == droplet_checksum
+      raise ApiError.new_from_details('NotFound', droplet_checksum) unless process.actual_droplet.checksum == droplet_checksum
 
       blob_name = 'droplet'
-      droplet   = process.current_droplet
+      droplet   = process.actual_droplet
 
       if @blobstore.local?
         blob = @blobstore.blob(droplet.blobstore_key)

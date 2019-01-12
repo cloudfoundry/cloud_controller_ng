@@ -8,6 +8,9 @@ module VCAP::CloudController
           {
             guid: revision.guid,
             version: revision.version,
+            droplet: {
+              guid: revision.droplet_guid,
+            },
             created_at: revision.created_at,
             updated_at: revision.updated_at,
             links: build_links

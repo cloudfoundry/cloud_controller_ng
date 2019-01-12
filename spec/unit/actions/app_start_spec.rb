@@ -113,6 +113,7 @@ module VCAP::CloudController
         let!(:dropletA) { DropletModel.make(app: app, package: package, state: DropletModel::STAGED_STATE) }
         let!(:dropletB) { DropletModel.make(app: app, package: package, state: DropletModel::STAGED_STATE) }
         let!(:revisionA) { RevisionModel.make(app: app, droplet_guid: dropletA.guid) }
+        let!(:new_revision_number) { revisionA.version + 1 }
 
         it 'creates a new revision when it switches droplets and revisions are enabled' do
           app.update(revisions_enabled: true)
@@ -121,10 +122,16 @@ module VCAP::CloudController
             AppStart.start(app: app, user_audit_info: user_audit_info)
           end.to change { RevisionModel.count }.by(1)
           last_revision = RevisionModel.last
-          expect(last_revision.version).to eq(revisionA.version + 1)
+          expect(last_revision.version).to eq(new_revision_number)
+        end
 
-          expect(web_process.reload.revision).to eq(last_revision)
-          expect(worker_process.reload.revision).to eq(last_revision)
+        it 'does not create a new revision if it was already started' do
+          app.update(desired_state: ProcessModel::STARTED)
+          app.update(revisions_enabled: true)
+          app.update(droplet: dropletB)
+          expect do
+            AppStart.start(app: app, user_audit_info: user_audit_info)
+          end.not_to change { RevisionModel.count }
         end
 
         it 'does not create a new revision if the droplet did not change' do

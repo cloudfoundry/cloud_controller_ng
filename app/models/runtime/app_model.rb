@@ -119,11 +119,11 @@ module VCAP::CloudController
     end
 
     def latest_revision
-      RevisionModel.where(app: self).max_by(&:created_at)
+      RevisionModel.where(app: self).max_by(&:created_at) if revisions_enabled
     end
 
-    def should_create_revision?
-      self.revisions_enabled && self.droplet_guid != self.latest_revision&.droplet_guid
+    def can_create_revision?
+      revisions_enabled && droplet_guid != latest_revision&.droplet_guid
     end
 
     private

@@ -6,26 +6,27 @@ module VCAP::CloudController
     let(:runners) { instance_double(Runners, runner_for_process: runner) }
     let(:stager) { double(:stager) }
     let(:runner) { instance_double(Diego::Runner, stop: nil, start: nil) }
-    let(:app_active) { true }
+    let(:process_active) { true }
     let(:diego) { false }
-    let(:app) do
+    let(:process) do
       instance_double(ProcessModel,
         package_hash: package_hash,
-        guid: 'app-guid',
+        guid: 'process-guid',
         previous_changes: previous_changes,
-        started?: app_started,
-        needs_staging?: app_needs_staging,
-        active?: app_active,
+        started?: process_started,
+        needs_staging?: process_needs_staging,
+        active?: process_active,
         # TODO: why did we remove `buildpack_cache_key: key`?
         diego: diego,
         staging?: staging?,
         current_droplet: nil,
         memory: 12,
         disk_quota: 34,
+        revisions_enabled?: false,
       )
     end
-    let(:app_started) { false }
-    let(:app_needs_staging) { false }
+    let(:process_started) { false }
+    let(:process_needs_staging) { false }
     let(:previous_changes) { nil }
     let(:package_hash) { nil }
     let(:key) { nil }
@@ -37,14 +38,14 @@ module VCAP::CloudController
 
     describe '.deleted' do
       let(:key) { 'my-cache-key' }
-      subject { ProcessObserver.deleted(app) }
+      subject { ProcessObserver.deleted(process) }
 
-      it 'stops the app' do
+      it 'stops the process' do
         expect(runner).to receive(:stop)
         subject
       end
 
-      context 'diego app' do
+      context 'diego process' do
         let(:diego) { true }
 
         it 'does not care if diego is unavailable' do
@@ -55,25 +56,25 @@ module VCAP::CloudController
     end
 
     describe '.updated' do
-      subject { ProcessObserver.updated(app) }
+      subject { ProcessObserver.updated(process) }
 
-      context 'when the app state is changed' do
+      context 'when the process state is changed' do
         let(:previous_changes) { { state: 'original-state' } }
 
-        context 'if the desired app state is stopped' do
-          let(:app_started) { false }
+        context 'if the desired process state is stopped' do
+          let(:process_started) { false }
 
-          it 'stops the app' do
+          it 'stops the process' do
             expect(runner).to receive(:stop)
             subject
           end
 
-          it 'does not start the app' do
+          it 'does not start the process' do
             expect(runner).to_not receive(:start)
             subject
           end
 
-          context 'diego app' do
+          context 'diego process' do
             let(:diego) { true }
 
             it 'does not care if diego is unavailable' do
@@ -83,33 +84,50 @@ module VCAP::CloudController
           end
         end
 
-        context 'if the desired app state is started' do
-          let(:app_started) { true }
+        context 'if the desired process state is started' do
+          let(:process_started) { true }
 
-          it 'does not stop the app' do
+          it 'does not stop the process' do
             expect(runner).to_not receive(:stop)
             subject
           end
 
-          context 'when the app needs staging' do
-            let(:app_needs_staging) { true }
+          context 'when the process needs staging' do
+            let(:process_needs_staging) { true }
 
-            it 'does not start the app' do
+            it 'does not start the process' do
               expect(runner).to_not receive(:start)
               subject
             end
           end
 
-          context 'when the app does not need staging' do
-            let(:app_needs_staging) { false }
+          context 'when the process does not need staging' do
+            let(:process_needs_staging) { false }
 
-            it 'starts the app' do
+            it 'starts the process' do
               expect(runner).to receive(:start)
               subject
             end
+
+            context 'when revisions are enabled' do
+              let(:process) { ProcessModel.make }
+              let(:app) { process.app }
+              let!(:revision) { RevisionModel.make(app: app) }
+
+              before do
+                app.update(revisions_enabled: true)
+              end
+
+              it 'associates the revision to the process', isolation: :truncation do
+                expect(runner).to receive(:start)
+                process.update(state: ProcessModel::STARTED)
+                expect(app.latest_revision).not_to be_nil
+                expect(process.reload.revision).to eq(app.latest_revision)
+              end
+            end
           end
 
-          context 'diego app' do
+          context 'diego process' do
             let(:diego) { true }
 
             it 'does not care if diego is unavailable' do
@@ -120,44 +138,44 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the diego flag on the app has changed' do
+      context 'when the diego flag on the process has changed' do
         let(:previous_changes) { { diego: 'diego-change' } }
 
-        context 'if the desired state of the app is stopped' do
-          let(:app_started) { false }
+        context 'if the desired state of the process is stopped' do
+          let(:process_started) { false }
 
-          it 'stops the app' do
+          it 'stops the process' do
             expect(runner).to receive(:stop)
             subject
           end
 
-          it 'does not start the app' do
+          it 'does not start the process' do
             expect(runner).to_not receive(:start)
             subject
           end
         end
 
-        context 'if the desired state of the app is started' do
-          let(:app_started) { true }
+        context 'if the desired state of the process is started' do
+          let(:process_started) { true }
 
-          it 'does not stop the app' do
+          it 'does not stop the process' do
             expect(runner).to_not receive(:stop)
             subject
           end
 
-          context 'when the app needs staging' do
-            let(:app_needs_staging) { true }
+          context 'when the process needs staging' do
+            let(:process_needs_staging) { true }
 
-            it 'does not start the app' do
+            it 'does not start the process' do
               expect(runner).not_to receive(:start)
               subject
             end
           end
 
-          context 'when the app does not need staging' do
-            let(:app_needs_staging) { false }
+          context 'when the process does not need staging' do
+            let(:process_needs_staging) { false }
 
-            it 'starts the app' do
+            it 'starts the process' do
               expect(runner).to receive(:start)
               subject
             end
@@ -165,23 +183,23 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the enable_ssh flag on the app has changed' do
+      context 'when the enable_ssh flag on the process has changed' do
         let(:previous_changes) { { enable_ssh: true } }
 
-        context 'if the desired state of the app is stopped' do
-          let(:app_started) { false }
+        context 'if the desired state of the process is stopped' do
+          let(:process_started) { false }
 
-          it 'stops the app' do
+          it 'stops the process' do
             expect(runner).to receive(:stop)
             subject
           end
 
-          it 'does not start the app' do
+          it 'does not start the process' do
             expect(runner).to_not receive(:start)
             subject
           end
 
-          context 'diego app' do
+          context 'diego process' do
             let(:diego) { true }
 
             it 'does not care if diego is unavailable' do
@@ -191,32 +209,32 @@ module VCAP::CloudController
           end
         end
 
-        context 'if the desired state of the app is started' do
-          let(:app_started) { true }
+        context 'if the desired state of the process is started' do
+          let(:process_started) { true }
 
-          it 'does not stop the app' do
+          it 'does not stop the process' do
             expect(runner).to_not receive(:stop)
             subject
           end
 
-          context 'when the app needs staging' do
-            let(:app_needs_staging) { true }
+          context 'when the process needs staging' do
+            let(:process_needs_staging) { true }
 
-            it 'does not start the app' do
+            it 'does not start the process' do
               expect(runner).not_to receive(:start)
               subject
             end
           end
 
-          context 'when the app does not need staging' do
-            let(:app_needs_staging) { false }
+          context 'when the process does not need staging' do
+            let(:process_needs_staging) { false }
 
-            it 'starts the app' do
+            it 'starts the process' do
               expect(runner).to receive(:start)
               subject
             end
 
-            context 'diego app' do
+            context 'diego process' do
               let(:diego) { true }
 
               it 'does not care if diego is unavailable' do
@@ -228,63 +246,63 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the app instances have changed' do
+      context 'when the process instances have changed' do
         let(:previous_changes) { { instances: 'something' } }
 
-        context 'if the desired state of the app is stopped' do
-          let(:app_started) { false }
+        context 'if the desired state of the process is stopped' do
+          let(:process_started) { false }
 
-          it 'does not scale the app' do
+          it 'does not scale the process' do
             expect(runner).to_not receive(:scale)
             subject
           end
 
           context 'when Docker is enabled' do
-            let(:app_active) { true }
+            let(:process_active) { true }
 
-            it 'does not scale the app' do
+            it 'does not scale the process' do
               expect(runner).to_not receive(:scale)
               subject
             end
           end
 
           context 'when Docker is disabled' do
-            let(:app_active) { false }
+            let(:process_active) { false }
 
-            it 'does not scale the app' do
+            it 'does not scale the process' do
               expect(runner).to_not receive(:scale)
               subject
             end
           end
         end
 
-        context 'if the desired state of the app is started' do
-          let(:app_started) { true }
+        context 'if the desired state of the process is started' do
+          let(:process_started) { true }
 
-          it 'scales the app' do
+          it 'scales the process' do
             expect(runner).to receive(:scale)
             subject
           end
 
           context 'when Docker is enabled' do
-            let(:app_active) { true }
+            let(:process_active) { true }
 
-            it 'scales the app' do
+            it 'scales the process' do
               expect(runner).to receive(:scale)
               subject
             end
           end
 
           context 'when Docker is disabled' do
-            let(:app_active) { false }
+            let(:process_active) { false }
 
-            it 'does not scale the app' do
+            it 'does not scale the process' do
               expect(runner).to_not receive(:scale)
               subject
             end
           end
 
-          context 'diego app' do
+          context 'diego process' do
             let(:diego) { true }
 
             it 'does not care if diego is unavailable' do

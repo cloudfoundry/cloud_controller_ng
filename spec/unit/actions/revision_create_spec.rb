@@ -5,7 +5,7 @@ module VCAP::CloudController
   RSpec.describe RevisionCreate do
     subject(:revision_create) { RevisionCreate }
     let(:droplet) { DropletModel.make(app: app) }
-    let(:app) { AppModel.make }
+    let(:app) { AppModel.make(revisions_enabled: true) }
 
     describe '.create' do
       it 'creates a revision for the app' do
@@ -19,7 +19,9 @@ module VCAP::CloudController
       context 'when there are multiple revisions for an app' do
         it 'increments the version by 1' do
           subject.create(app)
-          subject.create(app)
+          expect {
+            subject.create(app)
+          }.to change { RevisionModel.where(app: app).count }.by(1)
 
           expect(RevisionModel.map(&:version)).to eq([1, 2])
         end

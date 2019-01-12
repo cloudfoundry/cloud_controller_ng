@@ -330,13 +330,47 @@ module VCAP
                 allow(process).to receive(:detected_start_command).and_return('/usr/bin/nc')
               end
 
-              it 'uses the deteceted start command' do
+              it 'uses the detected start command' do
                 builder_opts[:start_command] = '/usr/bin/nc'
                 expect(VCAP::CloudController::Diego::Buildpack::DesiredLrpBuilder).to receive(:new).with(
                   config,
                   builder_opts,
                 )
                 lifecycle_protocol.desired_lrp_builder(config, process)
+              end
+            end
+
+            context 'when revisions are enabled' do
+              before do
+                app.update(revisions_enabled: true)
+              end
+
+              context 'and theres a revision on the process' do
+                let(:new_droplet) { DropletModel.make(app: app) }
+                let(:revision) { RevisionModel.make(app: app, droplet_guid: new_droplet.guid) }
+                before do
+                  process.update(revision: revision)
+                end
+
+                it 'uses the droplet from the revision' do
+                  builder_opts.merge!(droplet_hash: new_droplet.droplet_hash, checksum_value: new_droplet.sha256_checksum)
+                  expect(VCAP::CloudController::Diego::Buildpack::DesiredLrpBuilder).to receive(:new).with(
+                    config,
+                    builder_opts,
+                  )
+                  lifecycle_protocol.desired_lrp_builder(config, process)
+                end
+              end
+
+              context 'but theres not a revision on the process' do
+                it 'uses the droplet from the process' do
+                  builder_opts.merge!(droplet_hash: droplet.droplet_hash, checksum_value: droplet.sha256_checksum)
+                  expect(VCAP::CloudController::Diego::Buildpack::DesiredLrpBuilder).to receive(:new).with(
+                    config,
+                    builder_opts,
+                  )
+                  lifecycle_protocol.desired_lrp_builder(config, process)
+                end
               end
             end
           end

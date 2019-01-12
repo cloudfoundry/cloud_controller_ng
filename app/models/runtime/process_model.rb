@@ -146,6 +146,10 @@ module VCAP::CloudController
 
     alias_method :diego?, :diego
 
+    def revisions_enabled?
+      app.revisions_enabled
+    end
+
     def package_hash
       # this caches latest_package for performance reasons
       package = latest_package
@@ -173,6 +177,12 @@ module VCAP::CloudController
 
     def droplet_checksum
       current_droplet.try(:checksum)
+    end
+
+    def actual_droplet
+      return current_droplet unless revisions_enabled?
+
+      revision&.droplet || current_droplet
     end
 
     def package_updated_at

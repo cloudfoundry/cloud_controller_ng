@@ -52,11 +52,11 @@ module VCAP::CloudController
         before do
           allow(ProcessRestart).
             to receive(:restart).
-            with(process: process1, config: config, stop_in_runtime: true).
+            with(process: process1, config: config, stop_in_runtime: true, revision: app.latest_revision).
             and_call_original
           allow(ProcessRestart).
             to receive(:restart).
-            with(process: process2, config: config, stop_in_runtime: true).
+            with(process: process2, config: config, stop_in_runtime: true, revision: app.latest_revision).
             and_call_original
         end
 
@@ -66,6 +66,8 @@ module VCAP::CloudController
         end
 
         it 'keeps process states to STARTED' do
+          AppRestart.restart(app: app, config: config, user_audit_info: user_audit_info)
+
           expect(process1.reload.state).to eq('STARTED')
           expect(process2.reload.state).to eq('STARTED')
         end
@@ -75,10 +77,34 @@ module VCAP::CloudController
 
           expect(ProcessRestart).
             to have_received(:restart).
-            with(process: process1, config: config, stop_in_runtime: true)
+            with(process: process1, config: config, stop_in_runtime: true, revision: app.latest_revision)
           expect(ProcessRestart).
             to have_received(:restart).
-            with(process: process2, config: config, stop_in_runtime: true)
+            with(process: process2, config: config, stop_in_runtime: true, revision: app.latest_revision)
+        end
+
+        context 'when we need to make a new revision' do
+          before do
+            app.update(revisions_enabled: true)
+            app.update(droplet: DropletModel.make(app: app))
+
+            allow(ProcessRestart).to receive(:restart).and_call_original
+            allow(ProcessRestart).to receive(:restart).and_call_original
+          end
+
+          it 'creates a revision and associates it to the processes' do
+            expect {
+              AppRestart.restart(app: app, config: config, user_audit_info: user_audit_info)
+            }.to change { RevisionModel.count }.by(1)
+
+            expect(app.reload.desired_state).to eq('STARTED')
+            expect(ProcessRestart).
+              to have_received(:restart).
+              with(process: process1, config: config, stop_in_runtime: true, revision: app.reload.latest_revision)
+            expect(ProcessRestart).
+              to have_received(:restart).
+              with(process: process2, config: config, stop_in_runtime: true, revision: app.reload.latest_revision)
+          end
         end
 
         it 'generates a STOP usage event' do
@@ -100,11 +126,11 @@ module VCAP::CloudController
         before do
           allow(ProcessRestart).
             to receive(:restart).
-            with(process: process1, config: config, stop_in_runtime: false).
+            with(process: process1, config: config, stop_in_runtime: false, revision: app.latest_revision).
             and_call_original
           allow(ProcessRestart).
             to receive(:restart).
-            with(process: process2, config: config, stop_in_runtime: false).
+            with(process: process2, config: config, stop_in_runtime: false, revision: app.latest_revision).
             and_call_original
         end
 
@@ -124,10 +150,10 @@ module VCAP::CloudController
 
           expect(ProcessRestart).
             to have_received(:restart).
-            with(process: process1, config: config, stop_in_runtime: false)
+            with(process: process1, config: config, stop_in_runtime: false, revision: app.latest_revision)
           expect(ProcessRestart).
             to have_received(:restart).
-            with(process: process2, config: config, stop_in_runtime: false)
+            with(process: process2, config: config, stop_in_runtime: false, revision: app.latest_revision)
         end
 
         it 'generates a START usage event' do

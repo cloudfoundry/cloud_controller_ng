@@ -52,11 +52,11 @@ module VCAP
           end
 
           def desired_app_message(process)
-            checksum_info = droplet_checksum_info(process.current_droplet)
+            checksum_info = droplet_checksum_info(process.actual_droplet)
             {
               'start_command' => process.specified_or_detected_command,
               'droplet_uri'   => @droplet_url_generator.perma_droplet_download_url(process.guid, checksum_info['value']),
-              'droplet_hash'  => process.current_droplet.droplet_hash,
+              'droplet_hash'  => process.actual_droplet.droplet_hash,
               'checksum'      => checksum_info,
             }
           end
@@ -72,10 +72,10 @@ module VCAP
           end
 
           def builder_opts(process)
-            checksum_info = droplet_checksum_info(process.current_droplet)
+            checksum_info = droplet_checksum_info(process.actual_droplet)
             {
               droplet_uri:        @droplet_url_generator.perma_droplet_download_url(process.guid, checksum_info['value']),
-              droplet_hash:       process.current_droplet.droplet_hash,
+              droplet_hash:       process.actual_droplet.droplet_hash,
               ports:              Protocol::OpenProcessPorts.new(process).to_a,
               process_guid:       ProcessGuid.from_process(process),
               stack:              process.app.lifecycle_data.stack,

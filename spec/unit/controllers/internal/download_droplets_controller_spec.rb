@@ -154,12 +154,30 @@ module VCAP::CloudController
       end
       after { FileUtils.rm_rf(workspace) }
 
-      def upload_droplet
+      def upload_droplet(target_droplet=droplet)
         droplet_file = Tempfile.new(v3_app.guid)
         droplet_file.write('droplet contents')
         droplet_file.close
 
-        Jobs::V3::DropletUpload.new(droplet_file.path, droplet.guid).perform
+        Jobs::V3::DropletUpload.new(droplet_file.path, target_droplet.guid).perform
+      end
+
+      context 'when using with a revision' do
+        let(:new_droplet) { DropletModel.make(state: 'STAGED') }
+
+        it 'succeeds when the the revisions droplet doesnt match the processes "desired" droplet' do
+          upload_droplet
+          upload_droplet(new_droplet)
+          new_droplet.reload
+
+          v3_app.update(revisions_enabled: true)
+          revision = RevisionModel.make(app: v3_app, droplet: new_droplet)
+          process.update(revision: revision)
+
+          get "/internal/v4/droplets/#{process.guid}/#{new_droplet.checksum}/download"
+          expect(last_response.status).to eq(200), last_response.body
+          expect(last_response.headers['X-Accel-Redirect']).to match("/cc-droplets/.*/#{new_droplet.droplet_hash}")
+        end
       end
 
       context 'when using with nginx' do
@@ -229,6 +247,28 @@ module VCAP::CloudController
 
           expect(last_response).to be_redirect
           expect(last_response.header['Location']).to eq('http://example.com/somewhere/else')
+        end
+
+        context 'when using with a revision' do
+          let(:new_droplet) { DropletModel.make(state: 'STAGED') }
+
+          it 'succeeds when the the revisions droplet doesnt match the processes "desired" droplet' do
+            upload_droplet
+            upload_droplet(new_droplet)
+            allow_any_instance_of(CloudController::Blobstore::UrlGenerator).to receive(:droplet_download_url).with(droplet).and_return('http://example.com/wrong/droplet')
+            allow_any_instance_of(CloudController::Blobstore::UrlGenerator).to receive(:droplet_download_url).with(new_droplet).and_return('http://example.com/correct/droplet')
+
+            new_droplet.reload
+
+            v3_app.update(revisions_enabled: true)
+            revision = RevisionModel.make(app: v3_app, droplet: new_droplet)
+            process.update(revision: revision)
+
+            get "/internal/v4/droplets/#{process.guid}/#{new_droplet.checksum}/download"
+
+            expect(last_response).to be_redirect
+            expect(last_response.header['Location']).to eq('http://example.com/correct/droplet')
+          end
         end
       end
     end

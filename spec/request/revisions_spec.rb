@@ -25,6 +25,9 @@ RSpec.describe 'Revisions' do
         {
           'guid' => revision.guid,
           'version' => revision.version,
+          'droplet' => {
+            'guid' => revision.droplet_guid
+          },
           'created_at' => iso8601,
           'updated_at' => iso8601,
           'links' => {
@@ -62,6 +65,9 @@ RSpec.describe 'Revisions' do
             {
               'guid' => revision.guid,
               'version' =>  revision.version,
+              'droplet' => {
+                'guid' => revision.droplet_guid
+              },
               'created_at' => iso8601,
               'updated_at' => iso8601,
               'links' => {
@@ -73,6 +79,9 @@ RSpec.describe 'Revisions' do
             {
               'guid' => revision2.guid,
               'version' =>  revision2.version,
+              'droplet' => {
+                'guid' => revision2.droplet_guid
+              },
               'created_at' => iso8601,
               'updated_at' => iso8601,
               'links' => {
@@ -112,6 +121,9 @@ RSpec.describe 'Revisions' do
               {
                 'guid' => revision.guid,
                 'version' =>  revision.version,
+                'droplet' => {
+                  'guid' => revision.droplet_guid
+                },
                 'created_at' => iso8601,
                 'updated_at' => iso8601,
                 'links' => {
@@ -123,6 +135,9 @@ RSpec.describe 'Revisions' do
               {
                 'guid' => revision3.guid,
                 'version' =>  revision3.version,
+                'droplet' => {
+                  'guid' => revision3.droplet_guid
+                },
                 'created_at' => iso8601,
                 'updated_at' => iso8601,
                 'links' => {

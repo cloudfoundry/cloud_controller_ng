@@ -872,6 +872,36 @@ module VCAP::CloudController
       end
     end
 
+    describe '#actual_droplet' do
+      let(:first_droplet) { DropletModel.make(app: parent_app, state: DropletModel::STAGED_STATE) }
+      let(:second_droplet) { DropletModel.make(app: parent_app, state: DropletModel::STAGED_STATE) }
+      let(:revision) { RevisionModel.make(app: parent_app, droplet_guid: first_droplet.guid) }
+      let(:process) { ProcessModel.make(app: parent_app, revision: revision) }
+
+      before do
+        first_droplet
+        parent_app.update(droplet_guid: second_droplet.guid)
+      end
+
+      context 'when revisions are disabled' do
+        it 'returns current_droplet' do
+          expect(process.actual_droplet).to eq(second_droplet)
+          expect(process.actual_droplet).to eq(process.latest_droplet)
+          expect(process.actual_droplet).to eq(process.current_droplet)
+        end
+      end
+
+      context 'when revisions are present and enabled' do
+        let(:parent_app) { AppModel.make(space: space, revisions_enabled: true) }
+
+        it 'returns the droplet from the latest revision' do
+          expect(process.actual_droplet).to eq(first_droplet)
+          expect(process.actual_droplet).to eq(process.revision.droplet)
+          expect(process.actual_droplet).not_to eq(process.latest_droplet)
+        end
+      end
+    end
+
     describe 'staged?' do
       subject(:process) { ProcessModelFactory.make }
 

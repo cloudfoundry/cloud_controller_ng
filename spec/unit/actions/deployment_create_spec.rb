@@ -34,11 +34,14 @@ module VCAP::CloudController
           expect(deployment.original_web_process_instance_count).to eq(3)
         end
 
-        it 'creates a revision' do
+        it 'creates a revision associated with the provided droplet' do
           app.update(revisions_enabled: true)
           expect {
             DeploymentCreate.create(app: app, droplet: next_droplet, user_audit_info: user_audit_info)
           }.to change { RevisionModel.count }.by(1)
+
+          revision = RevisionModel.last
+          expect(revision.droplet_guid).to eq(next_droplet.guid)
 
           deploying_web_process = app.reload.newest_web_process
           expect(deploying_web_process.revision).to eq(app.latest_revision)

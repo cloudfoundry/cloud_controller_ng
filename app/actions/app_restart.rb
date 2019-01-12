@@ -11,12 +11,14 @@ module VCAP::CloudController
 
         app.db.transaction do
           app.lock!
+          RevisionCreate.create(app) if app.can_create_revision?
           app.update(desired_state: ProcessModel::STARTED)
           app.processes.each do |process|
             ProcessRestart.restart(
               process: process,
               config: config,
-              stop_in_runtime: need_to_stop_in_runtime
+              revision: app.latest_revision,
+              stop_in_runtime: need_to_stop_in_runtime,
             )
           end
           record_audit_event(app, user_audit_info)
