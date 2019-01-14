@@ -15,7 +15,8 @@ module VCAP::CloudController
           'page'               => 1,
           'per_page'           => 5,
           'app_guid'           => 'blah-blah',
-          'sequence_ids'       => '1,2'
+          'sequence_ids'       => '1,2',
+          'label_selector'     => 'unicycling=fred',
         }
       end
 
@@ -33,6 +34,7 @@ module VCAP::CloudController
         expect(message.per_page).to eq(5)
         expect(message.app_guid).to eq('blah-blah')
         expect(message.sequence_ids).to eq(['1', '2'])
+        expect(message.label_selector).to eq('unicycling=fred')
       end
 
       it 'converts requested keys to symbols' do
@@ -48,6 +50,7 @@ module VCAP::CloudController
         expect(message.requested?(:per_page)).to be_truthy
         expect(message.requested?(:app_guid)).to be_truthy
         expect(message.requested?(:sequence_ids)).to be_truthy
+        expect(message.requested?(:label_selector)).to be_truthy
       end
     end
 
@@ -61,13 +64,14 @@ module VCAP::CloudController
           organization_guids: ['orgguid1', 'orgguid2'],
           space_guids:        ['spaceguid1', 'spaceguid2'],
           sequence_ids:       ['1, 2'],
+          label_selector:       'unicycling=fred',
           page:               1,
           per_page:           5,
         }
       end
 
       it 'excludes the pagination keys' do
-        expected_params = [:names, :states, :guids, :app_guids, :organization_guids, :space_guids, :sequence_ids]
+        expected_params = [:names, :states, :guids, :app_guids, :organization_guids, :space_guids, :sequence_ids, :label_selector]
         expect(TasksListMessage.from_params(opts).to_param_hash.keys).to match_array(expected_params)
       end
     end
@@ -199,6 +203,16 @@ module VCAP::CloudController
           message = TasksListMessage.from_params sequence_ids: [1]
           expect(message).to be_invalid
           expect(message.errors[:base]).to include("Unknown query parameter(s): 'sequence_ids'")
+        end
+
+        it 'validates metadata requirements' do
+          message = PackagesListMessage.from_params('label_selector' => '')
+
+          expect_any_instance_of(Validators::LabelSelectorRequirementValidator).
+            to receive(:validate).
+            with(message).
+            and_call_original
+          message.valid?
         end
       end
     end

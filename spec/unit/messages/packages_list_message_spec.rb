@@ -56,13 +56,14 @@ module VCAP::CloudController
           app_guids:          ['appguid1', 'appguid2'],
           organization_guids: ['organizationguid1', 'organizationguid2'],
           app_guid:           'appguid',
+          label_selector:     'key=value',
           page:               1,
           per_page:           5,
         }
       end
 
       it 'excludes the pagination keys' do
-        expected_params = [:states, :types, :app_guids, :guids, :space_guids, :organization_guids]
+        expected_params = [:states, :types, :app_guids, :guids, :space_guids, :organization_guids, :label_selector]
         expect(PackagesListMessage.from_params(opts).to_param_hash.keys).to match_array(expected_params)
       end
     end
@@ -196,7 +197,7 @@ module VCAP::CloudController
         end
       end
 
-      it 'validates requirements' do
+      it 'validates metadata requirements' do
         message = PackagesListMessage.from_params('label_selector' => '')
 
         expect_any_instance_of(Validators::LabelSelectorRequirementValidator).

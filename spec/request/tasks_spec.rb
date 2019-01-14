@@ -134,7 +134,7 @@ RSpec.describe 'Tasks' do
           memory_in_mb: 5,
           state:        VCAP::CloudController::TaskModel::SUCCEEDED_STATE,
         )
-        VCAP::CloudController::TaskModel.make(
+        task2 = VCAP::CloudController::TaskModel.make(
           name:         'task two',
           command:      'echo task',
           app_guid:     app_model.guid,
@@ -145,19 +145,23 @@ RSpec.describe 'Tasks' do
           app_guid: app_model.guid,
           droplet:  app_model.droplet,
         )
+        VCAP::CloudController::TaskLabelModel.make(key_name: 'boomerang', value: 'gel', task: task1)
+        VCAP::CloudController::TaskLabelModel.make(key_name: 'boomerang', value: 'gunnison', task: task2)
 
         query = {
           app_guids:          app_model.guid,
           names:              'task one',
           organization_guids: app_model.organization.guid,
           space_guids:        app_model.space.guid,
-          states:             'SUCCEEDED'
+          states:             'SUCCEEDED',
+          label_selector:     'boomerang',
         }
 
         get "/v3/tasks?#{query.to_query}", nil, developer_headers
 
-        expected_query = "app_guids=#{app_model.guid}&names=task+one&organization_guids=#{app_model.organization.guid}" \
-                            "&page=1&per_page=50&space_guids=#{app_model.space.guid}&states=SUCCEEDED"
+        expected_query = "app_guids=#{app_model.guid}&label_selector=boomerang&names=task+one" \
+                         "&organization_guids=#{app_model.organization.guid}" \
+                         "&page=1&per_page=50&space_guids=#{app_model.space.guid}&states=SUCCEEDED"
 
         parsed_response = MultiJson.load(last_response.body)
 
@@ -173,6 +177,48 @@ RSpec.describe 'Tasks' do
             'previous'      => nil,
           }
         )
+      end
+
+      it 'filters by label selectors' do
+        task1 = VCAP::CloudController::TaskModel.make(
+          name:         'task one',
+          command:      'echo task',
+          app_guid:     app_model.guid,
+          droplet:      app_model.droplet,
+          memory_in_mb: 5,
+          state:        VCAP::CloudController::TaskModel::SUCCEEDED_STATE,
+            )
+        VCAP::CloudController::TaskModel.make(
+          name:         'task two',
+          command:      'echo task',
+          app_guid:     app_model.guid,
+          droplet:      app_model.droplet,
+          memory_in_mb: 100,
+            )
+        VCAP::CloudController::TaskModel.make(
+          app_guid: app_model.guid,
+          droplet:  app_model.droplet,
+            )
+
+        VCAP::CloudController::TaskLabelModel.make(key_name: 'boomerang', value: 'gel', task: task1)
+
+        get '/v3/tasks?label_selector=boomerang=gel', {}, developer_headers
+
+        expected_pagination = {
+            'total_results' => 1,
+            'total_pages'   => 1,
+            'first'         => { 'href' => "#{link_prefix}/v3/tasks?label_selector=boomerang%3Dgel&page=1&per_page=50" },
+            'last'          => { 'href' => "#{link_prefix}/v3/tasks?label_selector=boomerang%3Dgel&page=1&per_page=50" },
+            'next'          => nil,
+            'previous'      => nil
+        }
+
+        parsed_response = MultiJson.load(last_response.body)
+
+        expect(last_response.status).to eq(200), last_response.body
+        expect(parsed_response['resources'].count).to eq(1)
+        expect(parsed_response['resources'][0]['guid']).to eq(task1.guid)
+        expect(parsed_response['pagination']).to eq(expected_pagination)
       end
     end
   end

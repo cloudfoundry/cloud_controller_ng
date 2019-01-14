@@ -59,6 +59,15 @@ module VCAP::CloudController
         task_dataset = task_dataset.where(sequence_id: message.sequence_ids)
       end
 
+      if message.requested?(:label_selector)
+        task_dataset = LabelSelectorQueryGenerator.add_selector_queries(
+          label_klass: TaskLabelModel,
+          resource_dataset: task_dataset,
+          requirements: message.requirements,
+          resource_klass: TaskModel
+        )
+      end
+
       task_dataset
     end
   end

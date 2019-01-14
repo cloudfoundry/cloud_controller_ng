@@ -10,10 +10,15 @@ module VCAP::CloudController
     let!(:task2_in_space1) { TaskModel.make(app_guid: app_in_space1.guid) }
     let!(:task_for_app2) { TaskModel.make(app_guid: app2_in_space1.guid) }
 
+    let!(:label_for_task_in_space1) { TaskLabelModel.make(resource_guid: task_in_space1.guid, key_name: 'key', value: 'value') }
+    let!(:label_for_task_in_space1_jr) { TaskLabelModel.make(resource_guid: task_in_space1.guid, key_name: 'key', value: 'slimjim') }
+
     let(:space2) { Space.make }
     let(:app_in_space2) { AppModel.make(space_guid: space2.guid) }
     let!(:task_in_space2) { TaskModel.make(app_guid: app_in_space2.guid) }
     let!(:failed_task_in_space2) { TaskModel.make(app_guid: app_in_space2.guid, state: TaskModel::FAILED_STATE) }
+
+    let!(:label_for_task_in_space2) { TaskLabelModel.make(resource_guid: task_in_space2.guid, key_name: 'key', value: 'value') }
 
     let(:org2) { Organization.make }
     let(:space_in_org2) { Space.make(organization_guid: org2.guid) }
@@ -91,6 +96,15 @@ module VCAP::CloudController
             expect(results).to match_array([task_in_org2])
           end
         end
+
+        context 'filtering label selectors' do
+          let(:filters) { { 'label_selector' => 'key=value' } }
+
+          it 'returns the correct set of tasks' do
+            expect(results.size).to eq(2)
+            expect(results).to match_array([task_in_space1, task_in_space2])
+          end
+        end
       end
     end
 
@@ -162,6 +176,15 @@ module VCAP::CloudController
 
           it 'returns the correct set of tasks' do
             expect(results).to match_array([])
+          end
+        end
+
+        context 'filtering label selectors' do
+          let(:filters) { { 'label_selector' => 'key=value' } }
+
+          it 'returns the correct set of tasks' do
+            expect(results.size).to eq(1)
+            expect(results).to match_array([task_in_space2])
           end
         end
       end
@@ -249,6 +272,23 @@ module VCAP::CloudController
 
           it 'returns the correct set of tasks' do
             expect(results.all).to match_array([task2_in_space1])
+          end
+        end
+
+        context 'filtering label selectors' do
+          context 'in space 1' do
+            let(:filters) { { 'label_selector' => 'key=value', 'app_guid' => app_in_space1.guid } }
+            it 'returns the correct set of tasks' do
+              expect(results.count).to eq(1)
+              expect(results.all).to match_array([task_in_space1])
+            end
+          end
+
+          context 'in space 2' do
+            let(:filters) { { 'label_selector' => 'key=slimjim', 'app_guid' => app_in_space2.guid } }
+            it 'returns the correct set of tasks' do
+              expect(results.count).to eq(0)
+            end
           end
         end
       end
