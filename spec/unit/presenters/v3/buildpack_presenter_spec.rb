@@ -7,6 +7,14 @@ RSpec.describe VCAP::CloudController::Presenters::V3::BuildpackPresenter do
   describe '#to_hash' do
     let(:result) { described_class.new(buildpack).to_hash }
 
+    describe 'links' do
+      it 'has self and upload links' do
+        expect(result[:links][:upload][:href]).to eq("#{link_prefix}/v3/buildpacks/#{buildpack.guid}/upload")
+        expect(result[:links][:upload][:method]).to eq('POST')
+        expect(result[:links][:self][:href]).to eq("#{link_prefix}/v3/buildpacks/#{buildpack.guid}")
+      end
+    end
+
     context 'when optional fields are present' do
       it 'presents the buildpack with those fields' do
         expect(result[:guid]).to eq(buildpack.guid)
@@ -19,7 +27,6 @@ RSpec.describe VCAP::CloudController::Presenters::V3::BuildpackPresenter do
         expect(result[:position]).to eq(buildpack.position)
         expect(result[:enabled]).to eq(buildpack.enabled)
         expect(result[:locked]).to eq(buildpack.locked)
-        expect(result[:links][:self][:href]).to eq("#{link_prefix}/v3/buildpacks/#{buildpack.guid}")
       end
     end
 
@@ -43,7 +50,6 @@ RSpec.describe VCAP::CloudController::Presenters::V3::BuildpackPresenter do
         expect(result[:position]).to eq(buildpack.position)
         expect(result[:enabled]).to eq(buildpack.enabled)
         expect(result[:locked]).to eq(buildpack.locked)
-        expect(result[:links][:self][:href]).to eq("#{link_prefix}/v3/buildpacks/#{buildpack.guid}")
       end
     end
   end

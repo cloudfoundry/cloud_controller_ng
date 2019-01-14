@@ -56,7 +56,8 @@ RSpec.describe 'buildpacks' do
                     'href' => "#{link_prefix}/v3/buildpacks/#{buildpack1.guid}"
                   },
                   'upload' => {
-                    'href' => "#{link_prefix}/v3/buildpacks/#{buildpack1.guid}/upload"
+                    'href' => "#{link_prefix}/v3/buildpacks/#{buildpack1.guid}/upload",
+                    'method' => 'POST'
                   }
                 }
               },
@@ -76,7 +77,8 @@ RSpec.describe 'buildpacks' do
                     'href' => "#{link_prefix}/v3/buildpacks/#{buildpack2.guid}"
                   },
                   'upload' => {
-                    'href' => "#{link_prefix}/v3/buildpacks/#{buildpack2.guid}/upload"
+                    'href' => "#{link_prefix}/v3/buildpacks/#{buildpack2.guid}/upload",
+                    'method' => 'POST'
                   }
                 }
               }
@@ -119,7 +121,8 @@ RSpec.describe 'buildpacks' do
                     'href' => "#{link_prefix}/v3/buildpacks/#{buildpack1.guid}"
                   },
                   'upload' => {
-                    'href' => "#{link_prefix}/v3/buildpacks/#{buildpack1.guid}/upload"
+                    'href' => "#{link_prefix}/v3/buildpacks/#{buildpack1.guid}/upload",
+                    'method' => 'POST'
                   }
                 }
               }
@@ -162,7 +165,8 @@ RSpec.describe 'buildpacks' do
                     'href' => "#{link_prefix}/v3/buildpacks/#{buildpack3.guid}"
                   },
                   'upload' => {
-                    'href' => "#{link_prefix}/v3/buildpacks/#{buildpack3.guid}/upload"
+                    'href' => "#{link_prefix}/v3/buildpacks/#{buildpack3.guid}/upload",
+                    'method' => 'POST'
                   }
                 }
               },
@@ -182,7 +186,8 @@ RSpec.describe 'buildpacks' do
                     'href' => "#{link_prefix}/v3/buildpacks/#{buildpack1.guid}"
                   },
                   'upload' => {
-                    'href' => "#{link_prefix}/v3/buildpacks/#{buildpack1.guid}/upload"
+                    'href' => "#{link_prefix}/v3/buildpacks/#{buildpack1.guid}/upload",
+                    'method' => 'POST'
                   }
                 }
               }
@@ -261,7 +266,8 @@ RSpec.describe 'buildpacks' do
                   'href' => "#{link_prefix}/v3/buildpacks/#{buildpack.guid}"
                 },
                 'upload' => {
-                  'href' => "#{link_prefix}/v3/buildpacks/#{buildpack.guid}/upload"
+                  'href' => "#{link_prefix}/v3/buildpacks/#{buildpack.guid}/upload",
+                  'method' => 'POST'
                 }
               }
             }
@@ -368,7 +374,8 @@ RSpec.describe 'buildpacks' do
                   'href' => "#{link_prefix}/v3/buildpacks/#{buildpack.guid}"
                 },
                 'upload' => {
-                  'href' => "#{link_prefix}/v3/buildpacks/#{buildpack.guid}/upload"
+                  'href' => "#{link_prefix}/v3/buildpacks/#{buildpack.guid}/upload",
+                  'method' => 'POST'
                 }
               }
             }
