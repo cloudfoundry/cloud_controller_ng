@@ -66,13 +66,15 @@ class BuildpacksController < ApplicationController
     buildpack_not_found! unless buildpack
     unprocessable!('Buildpack is locked') if buildpack.locked
 
-    BuildpackUpload.new.upload_async(
+    pollable_job = BuildpackUpload.new.upload_async(
       message: message,
       buildpack: buildpack,
       config: configuration
     )
 
-    render status: :ok, json: Presenters::V3::BuildpackPresenter.new(buildpack)
+    url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
+    response.set_header('Location', url_builder.build_url(path: "/v3/jobs/#{pollable_job.guid}"))
+    render status: :accepted, json: Presenters::V3::BuildpackPresenter.new(buildpack)
   end
 
   private

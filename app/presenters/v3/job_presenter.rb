@@ -8,6 +8,7 @@ module VCAP::CloudController
           app: '/v3/apps/',
           droplet: '/v3/droplets/',
           package: '/v3/packages/',
+          buildpack: '/v3/buildpacks/',
         }.freeze
 
         def to_hash

@@ -296,21 +296,21 @@ RSpec.describe BuildpacksController, type: :controller do
 
     before do
       allow(File).to receive(:stat).and_return(stat_double)
-      allow(VCAP::CloudController::BuildpackUpload).to receive(:new).and_return(uploader)
+      # allow(VCAP::CloudController::BuildpackUpload).to receive(:new).and_return(uploader)
     end
 
     describe 'permissions by role' do
       role_to_expected_http_response = {
-          'admin' => 200,
-          'space_developer' => 403,
-          'space_manager' => 403,
-          'space_auditor' => 403,
-          'org_manager' => 403,
-          'admin_read_only' => 403,
-          'global_auditor' => 403,
-          'org_auditor' => 403,
-          'org_billing_manager' => 403,
-          'org_user' => 403,
+        'admin' => 202,
+        'space_developer' => 403,
+        'space_manager' => 403,
+        'space_auditor' => 403,
+        'org_manager' => 403,
+        'admin_read_only' => 403,
+        'global_auditor' => 403,
+        'org_auditor' => 403,
+        'org_billing_manager' => 403,
+        'org_user' => 403,
       }.freeze
 
       role_to_expected_http_response.each do |role, expected_return_value|
@@ -342,13 +342,19 @@ RSpec.describe BuildpacksController, type: :controller do
         set_current_user_as_admin(user: user)
       end
 
-      it 'returns a 200 and the buildpack' do
-        post :upload, params: params.merge({}), as: :json
+      it 'returns a 202, the buildpack, and the job location header' do
+        expect {
+          post :upload, params: params.merge({}), as: :json
+        }.to change {
+          VCAP::CloudController::PollableJobModel.count
+        }.by(1)
 
-        expect(response.status).to eq(200), response.body
+        job = VCAP::CloudController::PollableJobModel.last
+        expect(job.operation).to eq('buildpack.upload')
+        expect(response.status).to eq(202), response.body
         expect(MultiJson.load(response.body)['guid']).to eq(test_buildpack.guid)
+        expect(response.headers['Location']).to include "#{link_prefix}/v3/jobs/#{job.guid}"
         expect(test_buildpack.reload.state).to eq(VCAP::CloudController::Buildpack::CREATED_STATE)
-        expect(uploader).to have_received(:upload_async)
       end
 
       context 'when the buildpack does not exist' do

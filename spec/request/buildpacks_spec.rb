@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'messages/buildpack_upload_message'
 
 RSpec.describe 'buildpacks' do
   describe 'GET /v3/buildpacks' do
@@ -390,6 +391,33 @@ RSpec.describe 'buildpacks' do
       execute_all_jobs(expected_successes: 2, expected_failures: 0)
       get "/v3/buildpacks/#{buildpack.guid}", {}, admin_headers
       expect(last_response.status).to eq(404)
+    end
+  end
+
+  describe 'POST /v3/buildpacks/guid/upload' do
+    let(:buildpack) { VCAP::CloudController::Buildpack.make }
+
+    before do
+      allow_any_instance_of(VCAP::CloudController::BuildpackUploadMessage).to receive(:valid?).and_return(true)
+    end
+
+    it 'enqueues a job to process the uploaded bits' do
+      file_upload_params = {
+        bits_name: 'buildpack.zip',
+        bits_path: 'tmpdir/buildpack.zip',
+      }
+
+      expect(Delayed::Job.count).to eq 0
+
+      post "/v3/buildpacks/#{buildpack.guid}/upload", file_upload_params.to_json, admin_headers
+
+      expect(Delayed::Job.count).to eq 1
+
+      expect(last_response.status).to eq(202)
+
+      get last_response.headers['Location'], nil, admin_headers
+
+      expect(last_response.status).to eq(200)
     end
   end
 end

@@ -22,7 +22,7 @@ module VCAP::CloudController
           }.to change { Delayed::Job.count }.by(1)
 
           job = Delayed::Job.last
-          expect(returned_job).to eq(job)
+          expect(returned_job.delayed_job_guid).to eq(job.guid)
           expect(job.queue).to eq('cc-local-1')
           expect(job.handler).to include(buildpack.guid)
           expect(job.handler).to include('BuildpackBits')
@@ -38,12 +38,9 @@ module VCAP::CloudController
             buildpack.guid,
             '/tmp/path',
             'buildpack.zip'
-          )
+          ).and_call_original
           buildpack_upload.upload_async(message: message, buildpack: buildpack, config: config)
         end
-      end
-
-      context 'when the buildpack and message are invalid' do
       end
     end
   end

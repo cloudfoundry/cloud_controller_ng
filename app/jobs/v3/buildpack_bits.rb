@@ -4,6 +4,9 @@ module VCAP::CloudController
   module Jobs
     module V3
       class BuildpackBits
+        attr_reader :buildpack_guid
+        alias_method :resource_guid, :buildpack_guid
+
         def initialize(buildpack_guid, buildpack_bits_path, buildpack_bits_name)
           @buildpack_guid = buildpack_guid
           @file_path = buildpack_bits_path
@@ -29,9 +32,17 @@ module VCAP::CloudController
           1
         end
 
+        def display_name
+          'buildpack.upload'
+        end
+
+        def resource_type
+          'buildpack'
+        end
+
         private
 
-        attr_reader :buildpack_guid, :file_path, :file_name
+        attr_reader :file_path, :file_name
       end
     end
   end
