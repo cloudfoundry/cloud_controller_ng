@@ -46,7 +46,7 @@ module VCAP::CloudController
         end
 
         it "returns '170002 NotStaged' when the app is pending to be staged" do
-          process.current_droplet.destroy
+          process.desired_droplet.destroy
           process.reload
 
           get "/v2/apps/#{process.app.guid}/instances"

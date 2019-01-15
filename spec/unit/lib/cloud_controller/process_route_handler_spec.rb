@@ -86,7 +86,7 @@ module VCAP::CloudController
         let!(:process) { ProcessModelFactory.make(state: 'STARTED') }
 
         before do
-          process.current_droplet.destroy
+          process.desired_droplet.destroy
         end
 
         it 'does not update the backend' do

@@ -77,8 +77,8 @@ module VCAP::CloudController
               "app:#{process.app.guid}"
             ]
           ),
-          image_username:                   process.current_droplet.docker_receipt_username,
-          image_password:                   process.current_droplet.docker_receipt_password,
+          image_username:                   process.desired_droplet.docker_receipt_username,
+          image_password:                   process.desired_droplet.docker_receipt_password,
         )
       end
 

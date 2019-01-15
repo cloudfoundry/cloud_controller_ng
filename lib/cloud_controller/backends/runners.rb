@@ -23,7 +23,7 @@ module VCAP::CloudController
         where(Sequel.lit("#{ProcessModel.table_name}.id > ?", last_id)).
         order("#{ProcessModel.table_name}__id".to_sym).
         limit(batch_size).
-        eager(:current_droplet, :space, :service_bindings, { routes: :domain }, { app: :buildpack_lifecycle_data }).
+        eager(:desired_droplet, :space, :service_bindings, { routes: :domain }, { app: :buildpack_lifecycle_data }).
         all
     end
 
@@ -34,7 +34,7 @@ module VCAP::CloudController
         runnable.
         where("#{ProcessModel.table_name}__guid".to_sym => diego_process_guids.map { |pg| Diego::ProcessGuid.cc_process_guid(pg) }).
         order("#{ProcessModel.table_name}__id".to_sym).
-        eager(:current_droplet, :space, :service_bindings, { routes: :domain }, { app: :buildpack_lifecycle_data }).
+        eager(:desired_droplet, :space, :service_bindings, { routes: :domain }, { app: :buildpack_lifecycle_data }).
         all.
         select { |process| diego_process_guids.include?(Diego::ProcessGuid.from_process(process)) }
     end

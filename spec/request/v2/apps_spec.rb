@@ -1298,7 +1298,7 @@ RSpec.describe 'Apps' do
       droplet_file.write('droplet contents')
       droplet_file.close
 
-      VCAP::CloudController::Jobs::V3::DropletUpload.new(droplet_file.path, process.current_droplet.guid).perform
+      VCAP::CloudController::Jobs::V3::DropletUpload.new(droplet_file.path, process.desired_droplet.guid).perform
     end
 
     it 'redirects to a blobstore to download the droplet' do
@@ -1608,7 +1608,7 @@ RSpec.describe 'Apps' do
       droplet.reload
 
       expect(droplet.state).to eq(VCAP::CloudController::DropletModel::STAGED_STATE)
-      expect(process.reload.current_droplet).to eq(droplet)
+      expect(process.reload.desired_droplet).to eq(droplet)
     end
   end
 

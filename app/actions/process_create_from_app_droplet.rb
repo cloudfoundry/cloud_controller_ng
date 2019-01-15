@@ -11,7 +11,7 @@ module VCAP::CloudController
     end
 
     def create(app)
-      @logger.info('process_current_droplet', guid: app.guid)
+      @logger.info('create', guid: app.guid)
 
       unless app.droplet && app.droplet.process_types
         @logger.warn('no process_types found', guid: app.guid)

@@ -92,7 +92,7 @@ module VCAP::CloudController
           package_state:                      Sequel.case(
             [
               [{ latest_droplet__state: DropletModel::FAILED_STATE }, 'FAILED'],
-              [{ latest_droplet__state: DropletModel::STAGED_STATE, latest_droplet__guid: :current_droplet__guid }, 'STAGED'],
+              [{ latest_droplet__state: DropletModel::STAGED_STATE, latest_droplet__guid: :desired_droplet__guid }, 'STAGED'],
               [{ latest_package__state: PackageModel::FAILED_STATE }, 'FAILED'],
             ],
             'PENDING'
@@ -102,8 +102,8 @@ module VCAP::CloudController
           previous_instance_count:            "#{ProcessModel.table_name}__instances".to_sym,
           memory_in_mb_per_instance:          "#{ProcessModel.table_name}__memory".to_sym,
           previous_memory_in_mb_per_instance: "#{ProcessModel.table_name}__memory".to_sym,
-          buildpack_guid:                     :current_droplet__buildpack_receipt_buildpack_guid,
-          buildpack_name:                     :current_droplet__buildpack_receipt_buildpack,
+          buildpack_guid:                     :desired_droplet__buildpack_receipt_buildpack_guid,
+          buildpack_name:                     :desired_droplet__buildpack_receipt_buildpack,
           space_guid:                         "#{Space.table_name}__guid".to_sym,
           space_name:                         "#{Space.table_name}__name".to_sym,
           org_guid:                           "#{Organization.table_name}__guid".to_sym,
@@ -118,7 +118,7 @@ module VCAP::CloudController
           join(AppModel.table_name, { guid: :app_guid }, table_alias: :parent_app).
           join(Space.table_name, guid: :space_guid).
           join(Organization.table_name, id: :organization_id).
-          left_join(DropletModel.table_name, { guid: :parent_app__droplet_guid }, table_alias: :current_droplet).
+          left_join(DropletModel.table_name, { guid: :parent_app__droplet_guid }, table_alias: :desired_droplet).
           left_join(
             PackageModel.table_name,
               {

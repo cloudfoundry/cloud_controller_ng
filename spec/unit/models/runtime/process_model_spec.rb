@@ -86,13 +86,13 @@ module VCAP::CloudController
         expect(process.reload.routes).to match_array([route1, route2])
       end
 
-      it 'has a current_droplet from the parent app' do
+      it 'has a desired_droplet from the parent app' do
         parent_app = AppModel.make
         droplet    = DropletModel.make(app: parent_app, state: DropletModel::STAGED_STATE)
         parent_app.update(droplet: droplet)
         process = ProcessModel.make(app: parent_app)
 
-        expect(process.current_droplet).to eq(parent_app.droplet)
+        expect(process.desired_droplet).to eq(parent_app.droplet)
       end
 
       it 'has a space from the parent app' do
@@ -603,7 +603,7 @@ module VCAP::CloudController
       let(:parent_app) { AppModel.make }
       subject(:process) { ProcessModel.make(app: parent_app) }
 
-      context 'when the app has a current droplet' do
+      context 'when the app has a droplet' do
         let(:droplet) do
           DropletModel.make(
             app:                parent_app,
@@ -621,9 +621,9 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the app does not have a current droplet' do
+      context 'when the app does not have a droplet' do
         it 'returns empty string' do
-          expect(process.current_droplet).to be_nil
+          expect(process.desired_droplet).to be_nil
           expect(process.execution_metadata).to eq('')
         end
       end
@@ -633,7 +633,7 @@ module VCAP::CloudController
       subject(:process) { ProcessModelFactory.make }
 
       before do
-        process.current_droplet.update(process_types: { web: 'detected-start-command' })
+        process.desired_droplet.update(process_types: { web: 'detected-start-command' })
       end
 
       context 'when the process has a command' do
@@ -661,9 +661,9 @@ module VCAP::CloudController
       subject(:process) { ProcessModelFactory.make(type: type) }
       let(:type) { 'web' }
 
-      context 'when the app has a current droplet with a web process' do
+      context 'when the process has a desired droplet with a web process' do
         before do
-          process.current_droplet.update(process_types: { web: 'run-my-app' })
+          process.desired_droplet.update(process_types: { web: 'run-my-app' })
           process.reload
         end
 
@@ -672,14 +672,14 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the app does not have a current droplet' do
+      context 'when the process does not have a desired droplet' do
         before do
-          process.current_droplet.destroy
+          process.desired_droplet.destroy
           process.reload
         end
 
         it 'returns the empty string' do
-          expect(process.current_droplet).to be_nil
+          expect(process.desired_droplet).to be_nil
           expect(process.detected_start_command).to eq('')
         end
       end
@@ -884,10 +884,10 @@ module VCAP::CloudController
       end
 
       context 'when revisions are disabled' do
-        it 'returns current_droplet' do
+        it 'returns desired_droplet' do
           expect(process.actual_droplet).to eq(second_droplet)
           expect(process.actual_droplet).to eq(process.latest_droplet)
-          expect(process.actual_droplet).to eq(process.current_droplet)
+          expect(process.actual_droplet).to eq(process.desired_droplet)
         end
       end
 
@@ -1364,7 +1364,7 @@ module VCAP::CloudController
         it 'creates an AppUsageEvent that contains the detected buildpack guid' do
           buildpack = Buildpack.make
           process = ProcessModelFactory.make(state: 'STOPPED')
-          process.current_droplet.update(
+          process.desired_droplet.update(
             buildpack_receipt_buildpack: 'Admin buildpack detect string',
             buildpack_receipt_buildpack_guid: buildpack.guid
           )
@@ -1511,7 +1511,7 @@ module VCAP::CloudController
       context 'when tcp ports are saved in the droplet metadata' do
         subject(:process) {
           process = ProcessModelFactory.make(diego: true, docker_image: 'some-docker-image')
-          process.current_droplet.update(
+          process.desired_droplet.update(
             execution_metadata: '{"ports":[{"Port":1024, "Protocol":"tcp"}, {"Port":4444, "Protocol":"udp"},{"Port":1025, "Protocol":"tcp"}]}',
           )
           process.reload
@@ -1539,7 +1539,7 @@ module VCAP::CloudController
           context 'when some tcp ports are exposed' do
             subject(:process) {
               process = ProcessModelFactory.make(diego: true, docker_image: 'some-docker-image', instances: 1)
-              process.current_droplet.update(
+              process.desired_droplet.update(
                 execution_metadata: '{"ports":[{"Port":1024, "Protocol":"tcp"}, {"Port":4444, "Protocol":"udp"},{"Port":1025, "Protocol":"tcp"}]}',
               )
               process.reload
@@ -1573,7 +1573,7 @@ module VCAP::CloudController
             it 'returns the ports that were specified during creation' do
               process = ProcessModelFactory.make(diego: true, docker_image: 'some-docker-image', instances: 1)
 
-              process.current_droplet.update(
+              process.desired_droplet.update(
                 execution_metadata: '{"ports":[{"Port":1024, "Protocol":"udp"}, {"Port":4444, "Protocol":"udp"},{"Port":1025, "Protocol":"udp"}]}',
               )
               process.reload
@@ -1585,7 +1585,7 @@ module VCAP::CloudController
           context 'when execution metadata is malformed' do
             it 'returns the ports that were specified during creation' do
               process = ProcessModelFactory.make(diego: true, docker_image: 'some-docker-image', instances: 1, ports: [1111])
-              process.current_droplet.update(
+              process.desired_droplet.update(
                 execution_metadata: 'some-invalid-json',
               )
               process.reload
@@ -1597,7 +1597,7 @@ module VCAP::CloudController
           context 'when no ports are specified in the execution metadata' do
             it 'returns the default port' do
               process = ProcessModelFactory.make(diego: true, docker_image: 'some-docker-image', instances: 1)
-              process.current_droplet.update(
+              process.desired_droplet.update(
                 execution_metadata: '{"cmd":"run.sh"}',
               )
               process.reload
@@ -1627,7 +1627,7 @@ module VCAP::CloudController
           context 'with execution_metadata' do
             it 'returns the ports that were specified during creation' do
               process = ProcessModelFactory.make(diego: true, ports: [1025, 1026, 1027, 1028], instances: 1)
-              process.current_droplet.update(
+              process.desired_droplet.update(
                 execution_metadata: '{"ports":[{"Port":1024, "Protocol":"tcp"}, {"Port":4444, "Protocol":"udp"},{"Port":8080, "Protocol":"tcp"}]}',
               )
               process.reload

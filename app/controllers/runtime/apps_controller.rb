@@ -158,7 +158,7 @@ module VCAP::CloudController
 
     def download_droplet(guid)
       process = find_guid_and_validate_access(:read, guid)
-      blob_dispatcher.send_or_redirect(guid: process.current_droplet.try(:blobstore_key))
+      blob_dispatcher.send_or_redirect(guid: process.desired_droplet.try(:blobstore_key))
     rescue CloudController::Errors::BlobNotFound
       raise CloudController::Errors::ApiError.new_from_details('ResourceNotFound', "Droplet not found for app with guid #{process.guid}")
     end

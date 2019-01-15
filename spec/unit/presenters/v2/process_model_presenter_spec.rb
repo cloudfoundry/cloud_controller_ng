@@ -43,7 +43,7 @@ module CloudController::Presenters::V2
         process.app.lifecycle_data.update(
           buildpacks: buildpacks
         )
-        process.current_droplet.update(
+        process.desired_droplet.update(
           buildpack_receipt_detect_output:  'detected buildpack',
           buildpack_receipt_buildpack_guid: 'i am a buildpack guid',
         )

@@ -19,7 +19,7 @@ module VCAP::CloudController
         # TODO: why did we remove `buildpack_cache_key: key`?
         diego: diego,
         staging?: staging?,
-        current_droplet: nil,
+        desired_droplet: nil,
         memory: 12,
         disk_quota: 34,
         revisions_enabled?: false,

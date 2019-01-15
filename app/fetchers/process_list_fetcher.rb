@@ -22,7 +22,7 @@ module VCAP::CloudController
     private
 
     def process_dataset
-      ProcessModel.dataset.eager(:current_droplet).eager_graph_with_options({ space: :organization }, join_type: :inner)
+      ProcessModel.dataset.eager(:desired_droplet).eager_graph_with_options({ space: :organization }, join_type: :inner)
     end
 
     def filter(dataset)

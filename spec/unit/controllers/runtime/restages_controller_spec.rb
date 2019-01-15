@@ -40,12 +40,12 @@ module VCAP::CloudController
         let(:account) { make_developer_for_space(process.space) }
 
         it 'removes the current droplet from the app' do
-          expect(process.current_droplet).not_to be_nil
+          expect(process.desired_droplet).not_to be_nil
 
           restage_request
           expect(last_response.status).to eq(201)
 
-          expect(process.reload.current_droplet).to be_nil
+          expect(process.reload.desired_droplet).to be_nil
         end
 
         it 'restages the app' do

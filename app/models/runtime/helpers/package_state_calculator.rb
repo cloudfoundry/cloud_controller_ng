@@ -3,7 +3,7 @@ module VCAP::CloudController
     def initialize(process)
       @latest_build = process.latest_build
       @latest_droplet = process.latest_droplet
-      @current_droplet = process.current_droplet
+      @desired_droplet = process.desired_droplet
       @latest_package = process.latest_package
     end
 
@@ -32,7 +32,7 @@ module VCAP::CloudController
     end
 
     def latest_droplet_is_current
-      @latest_droplet == @current_droplet && !newer_package_than_droplet
+      @latest_droplet == @desired_droplet && !newer_package_than_droplet
     end
 
     def process_has_package
@@ -50,7 +50,7 @@ module VCAP::CloudController
     def newer_package_than_droplet
       !process_has_droplet ||
         process_has_package &&
-        @current_droplet.try(:package) != @latest_package &&
+        @desired_droplet.try(:package) != @latest_package &&
         @latest_package.created_at >= @latest_droplet.created_at
     end
 

@@ -73,7 +73,7 @@ module VCAP::CloudController
       right_primary_key: :app_guid, right_key: :guid,
       order:             [Sequel.desc(:created_at), Sequel.desc(:id)], limit: 1
 
-    one_through_one :current_droplet,
+    one_through_one :desired_droplet,
       class:             '::VCAP::CloudController::DropletModel',
       join_table:        AppModel.table_name,
       left_primary_key:  :app_guid, left_key: :guid,
@@ -81,7 +81,7 @@ module VCAP::CloudController
 
     dataset_module do
       def staged
-        association_join(:current_droplet)
+        association_join(:desired_droplet)
       end
 
       def runnable
@@ -172,17 +172,17 @@ module VCAP::CloudController
     end
 
     def droplet_hash
-      current_droplet.try(:droplet_hash)
+      desired_droplet.try(:droplet_hash)
     end
 
     def droplet_checksum
-      current_droplet.try(:checksum)
+      desired_droplet.try(:checksum)
     end
 
     def actual_droplet
-      return current_droplet unless revisions_enabled?
+      return desired_droplet unless revisions_enabled?
 
-      revision&.droplet || current_droplet
+      revision&.droplet || desired_droplet
     end
 
     def package_updated_at
@@ -354,7 +354,7 @@ module VCAP::CloudController
     end
 
     def execution_metadata
-      current_droplet.try(:execution_metadata) || ''
+      desired_droplet.try(:execution_metadata) || ''
     end
 
     def specified_or_detected_command
@@ -362,19 +362,19 @@ module VCAP::CloudController
     end
 
     def detected_start_command
-      current_droplet.try(:process_types).try(:[], self.type) || ''
+      desired_droplet.try(:process_types).try(:[], self.type) || ''
     end
 
     def detected_buildpack_guid
-      current_droplet.try(:buildpack_receipt_buildpack_guid)
+      desired_droplet.try(:buildpack_receipt_buildpack_guid)
     end
 
     def detected_buildpack_name
-      current_droplet.try(:buildpack_receipt_buildpack)
+      desired_droplet.try(:buildpack_receipt_buildpack)
     end
 
     def detected_buildpack
-      current_droplet.try(:buildpack_receipt_detect_output)
+      desired_droplet.try(:buildpack_receipt_detect_output)
     end
 
     def staging_failed_reason
@@ -465,7 +465,7 @@ module VCAP::CloudController
     end
 
     def package_available?
-      current_droplet || latest_package.try(:ready?)
+      desired_droplet || latest_package.try(:ready?)
     end
 
     def active?
@@ -510,7 +510,7 @@ module VCAP::CloudController
 
     def docker_ports
       exposed_ports = []
-      if !self.needs_staging? && current_droplet.present? && self.execution_metadata.present?
+      if !self.needs_staging? && desired_droplet.present? && self.execution_metadata.present?
         begin
           metadata = JSON.parse(self.execution_metadata)
           unless metadata['ports'].nil?

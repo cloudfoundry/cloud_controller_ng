@@ -200,7 +200,7 @@ module VCAP::CloudController
 
           app_model.update(droplet: droplet)
           allow(VCAP::CloudController::IsolationSegmentSelector).to receive(:for_space).and_return('placement-tag')
-          process.current_droplet.execution_metadata = execution_metadata
+          process.desired_droplet.execution_metadata = execution_metadata
         end
 
         context 'when the lifecycle_type is "buildpack"' do

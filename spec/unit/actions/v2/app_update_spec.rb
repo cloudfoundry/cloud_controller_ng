@@ -446,9 +446,9 @@ module VCAP::CloudController
             end
 
             it 'unsets the current droplet' do
-              expect(process.current_droplet).not_to be_nil
+              expect(process.desired_droplet).not_to be_nil
               app_update.update(app, process, request_attrs)
-              expect(process.reload.current_droplet).to be_nil
+              expect(process.reload.desired_droplet).to be_nil
             end
           end
 
@@ -460,9 +460,9 @@ module VCAP::CloudController
             end
 
             it 'does not change the current droplet' do
-              expect(process.current_droplet).not_to be_nil
+              expect(process.desired_droplet).not_to be_nil
               app_update.update(app, process, request_attrs)
-              expect(process.reload.current_droplet).not_to be_nil
+              expect(process.reload.desired_droplet).not_to be_nil
             end
           end
         end

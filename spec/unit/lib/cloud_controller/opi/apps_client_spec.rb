@@ -18,7 +18,7 @@ RSpec.describe(OPI::Client) do
         guid: 'guid_1234',
         name: 'dora',
         version: '0.1.0',
-        current_droplet: droplet,
+        desired_droplet: droplet,
         specified_or_detected_command: 'ls -la',
         environment_json: { 'PORT': 8080, 'FOO': 'BAR' },
         desired_instances: 4,

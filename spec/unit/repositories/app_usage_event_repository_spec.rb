@@ -60,7 +60,7 @@ module VCAP::CloudController
         context 'when the app is created' do
           context 'when the package is pending' do
             before do
-              process.current_droplet.destroy
+              process.desired_droplet.destroy
               process.reload
             end
 
@@ -79,7 +79,7 @@ module VCAP::CloudController
 
           context 'when the package is failed' do
             before do
-              process.current_droplet.update(state: DropletModel::FAILED_STATE)
+              process.desired_droplet.update(state: DropletModel::FAILED_STATE)
               process.reload
             end
             it 'will create an event with failed package state' do
@@ -91,7 +91,7 @@ module VCAP::CloudController
 
         context 'when an admin buildpack is associated with the app' do
           before do
-            process.current_droplet.update(
+            process.desired_droplet.update(
               buildpack_receipt_buildpack_guid: 'buildpack-guid',
               buildpack_receipt_buildpack:      'buildpack-name'
             )
@@ -548,7 +548,7 @@ module VCAP::CloudController
 
           context 'with associated buildpack information' do
             before do
-              process.current_droplet.update(
+              process.desired_droplet.update(
                 buildpack_receipt_buildpack:      'detected-name',
                 buildpack_receipt_buildpack_guid: 'detected-guid',
               )
@@ -621,7 +621,7 @@ module VCAP::CloudController
 
             context 'when there is no current_droplet' do
               before do
-                process.current_droplet.destroy
+                process.desired_droplet.destroy
                 process.reload
               end
 

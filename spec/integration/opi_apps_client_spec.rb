@@ -50,12 +50,12 @@ RSpec.describe(OPI::Client, opi: skip_opi_tests) do
         )
       }
 
-      let(:lrp) {
+      let(:process) {
         double(
           guid: 'guid_1234',
           name: 'jeff',
           version: '0.1.0',
-          current_droplet: droplet,
+          desired_droplet: droplet,
           specified_or_detected_command: 'ls -la',
           environment_json: { 'PORT': 8080, 'FOO': 'BAR' },
           health_check_type: 'port',
@@ -74,7 +74,7 @@ RSpec.describe(OPI::Client, opi: skip_opi_tests) do
        )
       }
       it 'does not error' do
-        expect { client.desire_app(lrp) }.to_not raise_error
+        expect { client.desire_app(process) }.to_not raise_error
       end
     end
 

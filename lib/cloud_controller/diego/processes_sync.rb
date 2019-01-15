@@ -117,7 +117,7 @@ module VCAP::CloudController
                     runnable.
                     where(Sequel.lit("#{ProcessModel.table_name}.id > ?", last_id)).
                     order("#{ProcessModel.table_name}__id".to_sym).
-                    eager(:current_droplet, :space, :service_bindings, { routes: :domain }, { app: :buildpack_lifecycle_data }).
+                    eager(:desired_droplet, :space, :service_bindings, { routes: :domain }, { app: :buildpack_lifecycle_data }).
                     limit(BATCH_SIZE)
 
         processes = processes.buildpack_type unless FeatureFlag.enabled?(:diego_docker)

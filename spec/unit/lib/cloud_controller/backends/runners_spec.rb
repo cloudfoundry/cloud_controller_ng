@@ -77,7 +77,7 @@ module VCAP::CloudController
 
       it 'does not return unstaged apps' do
         unstaged_process = ProcessModelFactory.make(diego: true, state: 'STARTED')
-        unstaged_process.current_droplet.destroy
+        unstaged_process.desired_droplet.destroy
 
         batch = runners.diego_processes(100, 0)
 
@@ -102,7 +102,7 @@ module VCAP::CloudController
 
       it 'does not return unstaged apps' do
         unstaged_process = ProcessModelFactory.make(diego: true, state: 'STARTED')
-        unstaged_process.current_droplet.destroy
+        unstaged_process.desired_droplet.destroy
 
         batch = runners.processes_from_diego_process_guids(Diego::ProcessGuid.from_process(unstaged_process))
 
@@ -173,7 +173,7 @@ module VCAP::CloudController
 
       it 'does not return unstaged apps' do
         unstaged_process = ProcessModelFactory.make(diego: true, state: 'STARTED')
-        unstaged_process.current_droplet.destroy
+        unstaged_process.desired_droplet.destroy
 
         batch   = runners.diego_apps_cache_data(100, 0)
         app_ids = batch.map { |data| data[0] }
