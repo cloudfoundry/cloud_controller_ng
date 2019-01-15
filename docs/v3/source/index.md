@@ -131,6 +131,7 @@ includes:
   - resources/tasks/header
   - resources/tasks/object
   - resources/tasks/create
+  - resources/tasks/update
   - resources/tasks/get
   - resources/tasks/cancel
   - resources/tasks/list
