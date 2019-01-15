@@ -31,13 +31,13 @@ class DeploymentsController < ApplicationController
     unprocessable!('Unable to use app. Ensure that the app exists and you have access to it.') unless app && permission_queryer.can_write_to_space?(app.space.guid)
     unprocessable!('Cannot create a deployment for a STOPPED app.') if app.stopped?
 
+    revision_guid = hashed_params[:body].dig(:revision, :guid)
+    unprocessable!('Cannot create deployment from a revision for an app without revisions enabled') if revision_guid && !app.revisions_enabled
+
     droplet_guid = hashed_params[:body].dig(:droplet, :guid)
-    if droplet_guid
-      droplet = DropletModel.find(guid: droplet_guid)
-    else
-      droplet = app.droplet
-      unprocessable!('Invalid droplet. Please specify a droplet in the request or set a current droplet for the app.') unless droplet
-    end
+    unprocessable!("Cannot set both fields 'droplet' and 'revision'") if revision_guid && droplet_guid
+
+    droplet = choose_droplet(app, droplet_guid, revision_guid)
 
     begin
       deployment = DeploymentCreate.create(app: app, droplet: droplet, user_audit_info: user_audit_info)
@@ -74,6 +74,21 @@ class DeploymentsController < ApplicationController
   end
 
   private
+
+  def choose_droplet(app, droplet_guid, revision_guid)
+    if droplet_guid
+      droplet = DropletModel.find(guid: droplet_guid)
+    elsif revision_guid
+      revision = RevisionModel.find(guid: revision_guid)
+      unprocessable!('The revision does not exist') unless revision
+      droplet = DropletModel.find(guid: revision.droplet_guid)
+      unprocessable!('Invalid revision. Please specify a revision with a valid droplet in the request.') unless droplet
+    else
+      droplet = app.droplet
+      unprocessable!('Invalid droplet. Please specify a droplet in the request or set a current droplet for the app.') unless droplet
+    end
+    droplet
+  end
 
   def deployments_not_enabled!
     raise CloudController::Errors::ApiError.new_from_details('DeploymentsDisabled')

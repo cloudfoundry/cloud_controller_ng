@@ -203,6 +203,98 @@ RSpec.describe DeploymentsController, type: :controller do
           expect(response.body).to include('Cannot create a deployment for a STOPPED app.')
         end
       end
+
+      context 'when a revision is provided' do
+        let(:newer_droplet) { VCAP::CloudController::DropletModel.make(app: app) }
+        let!(:earlier_revision) { VCAP::CloudController::RevisionModel.make(app: app, droplet_guid: droplet.guid) }
+        let!(:later_revision) { VCAP::CloudController::RevisionModel.make(app: app, droplet_guid: newer_droplet.guid) }
+
+        let(:request_body) do
+          {
+            revision: {
+              guid: earlier_revision.guid
+            },
+            relationships: {
+              app: {
+                data: {
+                  guid: app_guid
+                }
+              }
+            },
+          }
+        end
+
+        before do
+          app.update(revisions_enabled: true)
+        end
+
+        it 'uses the droplet from the revision to create a new revision' do
+          expect(VCAP::CloudController::DeploymentCreate).
+            to receive(:create).
+            with(app: app, droplet: droplet, user_audit_info: instance_of(VCAP::CloudController::UserAuditInfo)).
+            and_call_original
+
+          expect {
+            post :create, params: request_body, as: :json
+          }.to change { VCAP::CloudController::RevisionModel.count }.by(1)
+          expect(VCAP::CloudController::RevisionModel.last.droplet_guid).to eq(droplet.guid)
+        end
+
+        it 'returns a 422 and an error if the revision does not exist' do
+          earlier_revision.delete
+          post :create, params: request_body, as: :json
+
+          expect(response.status).to eq 422
+          expect(response.body).to include('UnprocessableEntity')
+          expect(response.body).to include('The revision does not exist')
+        end
+
+        it 'returns a 422 and an error if droplet in the revision does not exist' do
+          droplet.delete
+          post :create, params: request_body, as: :json
+
+          expect(response.status).to eq 422
+          expect(response.body).to include('UnprocessableEntity')
+          expect(response.body).to include('Invalid revision. Please specify a revision with a valid droplet in the request.')
+        end
+
+        it 'returns a 422 and an error if revisions are not enabled' do
+          app.update(revisions_enabled: false)
+
+          post :create, params: request_body, as: :json
+          expect(response.status).to eq 422
+          expect(response.body).to include('Cannot create deployment from a revision for an app without revisions enabled')
+        end
+      end
+
+      context 'when both a revision and a droplet are provided' do
+        let!(:revision) { VCAP::CloudController::RevisionModel.make(app: app) }
+        let(:request_body) do
+          {
+            droplet: {
+              guid: droplet.guid
+            },
+            revision: {
+              guid: revision.guid
+            },
+            relationships: {
+              app: {
+                data: {
+                  guid: app_guid
+                }
+              }
+            },
+          }
+        end
+
+        it 'returns 422 with an error message' do
+          app.update(revisions_enabled: true)
+
+          post :create, params: request_body, as: :json
+          expect(response.status).to eq 422
+          expect(response.body).to include("Cannot set both fields 'droplet' and 'revision'")
+        end
+      end
     end
 
     it_behaves_like 'permissions endpoint' do

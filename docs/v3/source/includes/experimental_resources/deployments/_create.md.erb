@@ -1,7 +1,7 @@
 ### Create a Deployment
 
 ```
-Example Request
+Example Request with Droplet
 ```
 
 ```shell
@@ -12,6 +12,29 @@ curl "https://api.example.org/v3/deployments" \
 -d '{
   "droplet": {
     "guid": "[droplet-guid]"
+  },
+  "relationships": {
+    "app": {
+      "data": {
+        "guid": "[app-guid]"
+      }
+    }
+  }
+}'
+```
+
+```
+Example Request with Revision
+```
+
+```shell
+curl "https://api.example.org/v3/deployments" \
+-X POST \
+-H "Authorization: bearer [token]" \
+-H "Content-type: application/json" \
+-d '{
+  "revision": {
+    "guid": "[revision-guid]"
   },
   "relationships": {
     "app": {
@@ -47,7 +70,11 @@ Name | Type | Description
 
 Name | Type | Description | Default
 ---- | ---- | ----------- | -------
-**droplet** | _object_ | The droplet to deploy for the app. This will update the app's [current droplet](#get-current-droplet-association-for-an-app) to this droplet | The app's [current droplet](#get-current-droplet-association-for-an-app)
+**droplet**<sup>[1]</sup> | _object_ | The droplet to deploy for the app. This will update the app's [current droplet](#get-current-droplet-association-for-an-app) to this droplet | The app's [current droplet](#get-current-droplet-association-for-an-app)
+**revision**<sup>[1]</sup> | _object_ | The [revision](#revisions) whose droplet to deploy for the app. This will update the app's [current droplet](#get-current-droplet-association-for-an-app) to this droplet |
+
+
+<sup>1 Only a droplet _or_ a revision may be provided, not both.</sup>
 
 #### Permitted Roles
  |

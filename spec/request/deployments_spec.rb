@@ -126,6 +126,102 @@ RSpec.describe 'Deployments' do
         })
       end
     end
+
+    context 'when a revision is supplied with the request' do
+      let(:other_droplet) { VCAP::CloudController::DropletModel.make(app: app_model, process_types: { 'web': 'webby' }) }
+      let!(:revision) { VCAP::CloudController::RevisionModel.make(app: app_model, droplet: other_droplet) }
+      let!(:revision2) { VCAP::CloudController::RevisionModel.make(app: app_model, droplet: droplet) }
+
+      let(:create_request) do
+        {
+          revision: {
+            guid: revision.guid
+          },
+          relationships: {
+            app: {
+              data: {
+                guid: app_model.guid
+              }
+            },
+          }
+        }
+      end
+
+      it 'should create a deployment object using the droplet associated with the revision' do
+        app_model.update(revisions_enabled: true)
+
+        revision_count = VCAP::CloudController::RevisionModel.count
+        post '/v3/deployments', create_request.to_json, user_header
+        expect(last_response.status).to eq(201), last_response.body
+
+        parsed_response = MultiJson.load(last_response.body)
+
+        deployment = VCAP::CloudController::DeploymentModel.last
+
+        expect(VCAP::CloudController::RevisionModel.count).to eq(revision_count + 1)
+        expect(parsed_response).to be_a_response_like({
+          'guid' => deployment.guid,
+          'state' => 'DEPLOYING',
+          'droplet' => {
+            'guid' => other_droplet.guid
+          },
+          'previous_droplet' => {
+            'guid' => droplet.guid
+          },
+          'new_processes' => [{
+            'guid' => deployment.deploying_web_process.guid,
+            'type' => deployment.deploying_web_process.type
+          }],
+          'created_at' => iso8601,
+          'updated_at' => iso8601,
+          'relationships' => {
+            'app' => {
+              'data' => {
+                'guid' => app_model.guid
+              }
+            }
+          },
+          'links' => {
+            'self' => {
+              'href' => "#{link_prefix}/v3/deployments/#{deployment.guid}"
+            },
+            'app' => {
+              'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
+            }
+          }
+        })
+      end
+    end
+
+    context 'when a revision AND a droplet are supplied with the request' do
+      let(:create_request) do
+        {
+          revision: {
+            guid: 'bar'
+          },
+          droplet: {
+            guid: 'foo'
+          },
+          relationships: {
+            app: {
+              data: {
+                guid: app_model.guid
+              }
+            },
+          }
+        }
+      end
+
+      it 'fails' do
+        app_model.update(revisions_enabled: true)
+
+        post '/v3/deployments', create_request.to_json, user_header
+        expect(last_response.status).to eq(422)
+
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response['errors'][0]['detail']).to match('Cannot set both fields')
+      end
+    end
   end
 
   describe 'GET /v3/deployments/:guid' do
