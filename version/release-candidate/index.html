@@ -4120,6 +4120,10 @@ environment variables listed on the source droplet.</p>
       </span><span class="nt">"organizations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c/organizations"</span><span class="w">
       </span><span class="p">}</span><span class="w">
+   </span><span class="p">},</span><span class="w">
+   </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+      </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
    </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
 
@@ -4157,6 +4161,16 @@ environment variables listed on the source droplet.</p>
 <td><a href="#links"><em>links object</em></a></td>
 <td>Links to related resources.</td>
 </tr>
+<tr>
+<td><strong>metadata.labels</strong><em>(experimental)</em></td>
+<td><a href="#labels"><em>labels object</em></a></td>
+<td>Labels on the isolation segment</td>
+</tr>
+<tr>
+<td><strong>metadata.annotations</strong><em>(experimental)</em></td>
+<td><a href="#annotations"><em>annotations object</em></a></td>
+<td>Annotations on the isolation segment</td>
+</tr>
 </tbody></table>
 
           <h3 id="create-an-isolation-segment">Create an isolation segment</h3>
@@ -4187,6 +4201,10 @@ environment variables listed on the source droplet.</p>
       </span><span class="nt">"organizations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c/organizations"</span><span class="w">
       </span><span class="p">}</span><span class="w">
+   </span><span class="p">},</span><span class="w">
+   </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+      </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
    </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
 
@@ -4209,6 +4227,16 @@ environment variables listed on the source droplet.</p>
 <td><strong>name</strong></td>
 <td><em>string</em></td>
 <td>Name of the Isolation Segment.  Isolation Segment names must be unique across the entire system, and case is ignored when checking for uniqueness.</td>
+</tr>
+<tr>
+<td><strong>metadata.labels</strong> <em>(experimental)</em></td>
+<td><a href="#labels"><em>label object</em></a></td>
+<td>Labels applied to the isolation segment.</td>
+</tr>
+<tr>
+<td><strong>metadata.annotations</strong> <em>(experimental)</em></td>
+<td><a href="#annotations"><em>annotation object</em></a></td>
+<td>Annotations applied to the isolation segment.</td>
 </tr>
 </tbody></table>
 
@@ -4248,6 +4276,10 @@ environment variables listed on the source droplet.</p>
       </span><span class="nt">"organizations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c/organizations"</span><span class="w">
       </span><span class="p">}</span><span class="w">
+   </span><span class="p">},</span><span class="w">
+   </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+      </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
    </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
 
@@ -4313,6 +4345,10 @@ environment variables listed on the source droplet.</p>
       </span><span class="nt">"organizations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c/organizations"</span><span class="w">
       </span><span class="p">}</span><span class="w">
+   </span><span class="p">},</span><span class="w">
+   </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+      </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
    </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
 
@@ -4335,6 +4371,16 @@ environment variables listed on the source droplet.</p>
 <td><strong>name</strong></td>
 <td><em>string</em></td>
 <td>Name of the Isolation Segment.  Isolation Segment names must be unique across the entire system, and case is ignored when checking for uniqueness.</td>
+</tr>
+<tr>
+<td><strong>metadata.labels</strong> <em>(experimental)</em></td>
+<td><a href="#labels"><em>label object</em></a></td>
+<td>Labels applied to the isolation segment.</td>
+</tr>
+<tr>
+<td><strong>metadata.annotations</strong> <em>(experimental)</em></td>
+<td><a href="#annotations"><em>annotation object</em></a></td>
+<td>Annotations applied to the isolation segment.</td>
 </tr>
 </tbody></table>
 
@@ -4420,6 +4466,10 @@ environment variables listed on the source droplet.</p>
             </span><span class="nt">"organizations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
                </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/isolation_segments/b19f6525-cbd3-4155-b156-dc0c2a431b4c/organizations"</span><span class="w">
             </span><span class="p">}</span><span class="w">
+         </span><span class="p">},</span><span class="w">
+         </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+            </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
          </span><span class="p">}</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="p">{</span><span class="w">
@@ -4434,6 +4484,10 @@ environment variables listed on the source droplet.</p>
             </span><span class="nt">"organizations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
                </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/isolation_segments/68d54d31-9b3a-463b-ba94-e8e4c32edbac/organizations"</span><span class="w">
             </span><span class="p">}</span><span class="w">
+         </span><span class="p">},</span><span class="w">
+         </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+            </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
          </span><span class="p">}</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="p">{</span><span class="w">
@@ -4448,6 +4502,10 @@ environment variables listed on the source droplet.</p>
             </span><span class="nt">"organizations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
                </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/isolation_segments/ecdc67c3-a71e-43ff-bddf-048930b8cd03/organizations"</span><span class="w">
             </span><span class="p">}</span><span class="w">
+         </span><span class="p">},</span><span class="w">
+         </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+            </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
          </span><span class="p">}</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="p">{</span><span class="w">
@@ -4462,6 +4520,10 @@ environment variables listed on the source droplet.</p>
             </span><span class="nt">"organizations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
                </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/isolation_segments/424c89e4-4353-46b7-9bf4-f90bd9bacac0/organizations"</span><span class="w">
             </span><span class="p">}</span><span class="w">
+         </span><span class="p">},</span><span class="w">
+         </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+            </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
          </span><span class="p">}</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="p">{</span><span class="w">
@@ -4476,6 +4538,10 @@ environment variables listed on the source droplet.</p>
             </span><span class="nt">"organizations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
                </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/isolation_segments/0a79fcec-a648-4eb8-a6c3-2b5be39047c7/organizations"</span><span class="w">
             </span><span class="p">}</span><span class="w">
+         </span><span class="p">},</span><span class="w">
+         </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+            </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
          </span><span class="p">}</span><span class="w">
       </span><span class="p">}</span><span class="w">
    </span><span class="p">]</span><span class="w">
@@ -4527,6 +4593,11 @@ environment variables listed on the source droplet.</p>
 <td><strong>order_by</strong></td>
 <td><em>string</em></td>
 <td>Value to sort by. Defaults to ascending. Prepend with <code class="prettyprint">-</code> to sort descending. <br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code>, and <code class="prettyprint">name</code>.</td>
+</tr>
+<tr>
+<td><strong>label_selector</strong></td>
+<td><em>string</em></td>
+<td><strong>Experimental</strong> - A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements.</td>
 </tr>
 </tbody></table>
 
@@ -5616,6 +5687,10 @@ Only isolation segments that are entitled to the organization are eligible to be
   </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"PROCESSING_UPLOAD"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2015-11-13T17:02:56Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-06-08T16:41:26Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
   </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/packages/44f7c078-0934-470f-9883-4fcddc5b8f13"</span><span class="w">
@@ -5631,11 +5706,8 @@ Only isolation segments that are entitled to the organization are eligible to be
     </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1d3bf0ec-5806-43c4-b64e-8364dba1086a"</span><span class="w">
     </span><span class="p">}</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-     </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
-     </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
   </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
 
 </span></code></pre>
 
@@ -5865,6 +5937,10 @@ Only isolation segments that are entitled to the organization are eligible to be
   </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"PROCESSING_UPLOAD"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2015-11-13T17:02:56Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-06-08T16:41:26Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
   </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/packages/44f7c078-0934-470f-9883-4fcddc5b8f13"</span><span class="w">
@@ -5880,11 +5956,8 @@ Only isolation segments that are entitled to the organization are eligible to be
     </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1d3bf0ec-5806-43c4-b64e-8364dba1086a"</span><span class="w">
     </span><span class="p">}</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-     </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
-     </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
   </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
 
 </span></code></pre>
 <pre class="highlight plaintext"><code>Example Request (docker app)
@@ -6063,6 +6136,10 @@ Only isolation segments that are entitled to the organization are eligible to be
   </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"PROCESSING_UPLOAD"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2015-11-13T17:02:56Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-06-08T16:41:26Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"key"</span><span class="p">:</span><span class="w"> </span><span class="s2">"value"</span><span class="p">},</span><span class="w">
+    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"note"</span><span class="p">:</span><span class="w"> </span><span class="s2">"detailed information"</span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
   </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/packages/44f7c078-0934-470f-9883-4fcddc5b8f13"</span><span class="w">
@@ -6078,15 +6155,8 @@ Only isolation segments that are entitled to the organization are eligible to be
     </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1d3bf0ec-5806-43c4-b64e-8364dba1086a"</span><span class="w">
     </span><span class="p">}</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-     </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-       </span><span class="nt">"key"</span><span class="p">:</span><span class="w"> </span><span class="s2">"value"</span><span class="w">
-     </span><span class="p">},</span><span class="w">
-     </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-       </span><span class="nt">"note"</span><span class="p">:</span><span class="w"> </span><span class="s2">"detailed information"</span><span class="w">
-     </span><span class="p">}</span><span class="w">
   </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
 
 </span></code></pre>
 
@@ -6155,6 +6225,10 @@ Only isolation segments that are entitled to the organization are eligible to be
   </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"PROCESSING_UPLOAD"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2015-11-13T17:02:56Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-06-08T16:41:26Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
   </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/packages/44f7c078-0934-470f-9883-4fcddc5b8f13"</span><span class="w">
@@ -6170,11 +6244,8 @@ Only isolation segments that are entitled to the organization are eligible to be
     </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1d3bf0ec-5806-43c4-b64e-8364dba1086a"</span><span class="w">
     </span><span class="p">}</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-     </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
-     </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
   </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
 
 </span></code></pre>
 
@@ -6243,6 +6314,10 @@ Only isolation segments that are entitled to the organization are eligible to be
   </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"PROCESSING_UPLOAD"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2015-11-13T17:02:56Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-06-08T16:41:26Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
   </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/packages/44f7c078-0934-470f-9883-4fcddc5b8f13"</span><span class="w">
@@ -6258,11 +6333,8 @@ Only isolation segments that are entitled to the organization are eligible to be
     </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1d3bf0ec-5806-43c4-b64e-8364dba1086a"</span><span class="w">
     </span><span class="p">}</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-     </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
-     </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
   </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
 
 </span></code></pre>
 
@@ -8717,6 +8789,10 @@ An application will automatically use buildpacks associated with the application
    </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-11-09T22:43:28Z"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Here is my stack!"</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+     </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+     </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+   </span><span class="p">},</span><span class="w">
    </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.com/v3/stacks/11c916c9-c2f9-440e-8e73-102e79c4704d"</span><span class="w">
@@ -8759,6 +8835,16 @@ An application will automatically use buildpacks associated with the application
 <td>The time with zone when the object was last updated.</td>
 </tr>
 <tr>
+<td><strong>metadata.labels</strong> <em>(experimental)</em></td>
+<td><a href="#labels"><em>label object</em></a></td>
+<td>Labels applied to the stack.</td>
+</tr>
+<tr>
+<td><strong>metadata.annotations</strong> <em>(experimental)</em></td>
+<td><a href="#annotations"><em>annotation object</em></a></td>
+<td>Annotations applied to the stack.</td>
+</tr>
+<tr>
 <td><strong>links</strong></td>
 <td><a href="#links"><em>links object</em></a></td>
 <td>Links to related resources.</td>
@@ -8788,6 +8874,10 @@ An application will automatically use buildpacks associated with the application
    </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-11-09T22:43:28Z"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Here is my stack!"</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+     </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+     </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+   </span><span class="p">},</span><span class="w">
    </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.com/v3/stacks/11c916c9-c2f9-440e-8e73-102e79c4704d"</span><span class="w">
@@ -8833,6 +8923,18 @@ An application will automatically use buildpacks associated with the application
 <td>Description of the stack. Must no longer than 250 characters.</td>
 <td><code class="prettyprint">null</code></td>
 </tr>
+<tr>
+<td><strong>metadata.labels</strong> <em>(experimental)</em></td>
+<td><a href="#labels"><em>label object</em></a></td>
+<td>Labels applied to the stack.</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>metadata.annotations</strong> <em>(experimental)</em></td>
+<td><a href="#annotations"><em>annotation object</em></a></td>
+<td>Annotations applied to the stack.</td>
+<td></td>
+</tr>
 </tbody></table>
 
 <h4 id="permitted-roles">Permitted Roles</h4>
@@ -8842,6 +8944,80 @@ An application will automatically use buildpacks associated with the application
 <th></th>
 </tr>
 </thead><tbody>
+<tr>
+<td>Admin</td>
+</tr>
+</tbody></table>
+
+          <h3 id="update-a-stack">Update a stack</h3>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/stacks/[guid]"</span> <span class="se">\</span>
+  -X PATCH <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+  -H <span class="s2">"Content-Type: application/json"</span> <span class="se">\</span>
+  -d <span class="s1">'{ "metadata": { "labels": { "key": "value" }, "annotations": {"note": "detailed information"}}}'</span>
+
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
+
+<span class="p">{</span><span class="w">
+   </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"11c916c9-c2f9-440e-8e73-102e79c4704d"</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-11-09T22:43:28Z"</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-11-09T22:43:28Z"</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack"</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Here is my stack!"</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+     </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"key"</span><span class="p">:</span><span class="w"> </span><span class="s2">"value"</span><span class="p">},</span><span class="w">
+     </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"note"</span><span class="p">:</span><span class="w"> </span><span class="s2">"detailed information"</span><span class="p">}</span><span class="w">
+   </span><span class="p">},</span><span class="w">
+   </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+         </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.com/v3/stacks/11c916c9-c2f9-440e-8e73-102e79c4704d"</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+   </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+
+</span></code></pre>
+
+<h4 id="definition">Definition</h4>
+
+<p><code class="prettyprint">PATCH /v3/stacks/:guid</code></p>
+
+<h4 id="optional-parameters">Optional Parameters</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>metadata.labels</strong> <em>(experimental)</em></td>
+<td><a href="#labels"><em>label object</em></a></td>
+<td>Labels applied to the stack.</td>
+</tr>
+<tr>
+<td><strong>metadata.annotations</strong> <em>(experimental)</em></td>
+<td><a href="#annotations"><em>annotation object</em></a></td>
+<td>Annotations applied to the stack.</td>
+</tr>
+</tbody></table>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
 <tr>
 <td>Admin</td>
 </tr>
@@ -8881,6 +9057,10 @@ An application will automatically use buildpacks associated with the application
       </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-11-09T22:43:28Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack-1"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"This is my first stack!"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+        </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+      </span><span class="p">},</span><span class="w">
       </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
           </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/stacks/11c916c9-c2f9-440e-8e73-102e79c4704d"</span><span class="w">
@@ -8893,6 +9073,10 @@ An application will automatically use buildpacks associated with the application
       </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-11-09T22:43:29Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack-2"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"This is my second stack!"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+        </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+      </span><span class="p">},</span><span class="w">
       </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
           </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/stacks/81c916c9-c2f9-440e-8e73-102e79c4704h"</span><span class="w">
@@ -8935,6 +9119,11 @@ An application will automatically use buildpacks associated with the application
 <td><em>list of strings</em></td>
 <td>Comma-delimited list of app names to filter by.</td>
 </tr>
+<tr>
+<td><strong>label_selector</strong></td>
+<td><em>string</em></td>
+<td><strong>Experimental</strong> - A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements.</td>
+</tr>
 </tbody></table>
 
           <h3 id="get-a-stack">Get a stack</h3>
@@ -8955,6 +9144,10 @@ An application will automatically use buildpacks associated with the application
    </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-11-09T22:43:28Z"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-stack"</span><span class="p">,</span><span class="w">
    </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Here is my stack!"</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+     </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+     </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+   </span><span class="p">},</span><span class="w">
    </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.com/v3/stacks/11c916c9-c2f9-440e-8e73-102e79c4704d"</span><span class="w">
@@ -9053,6 +9246,10 @@ An application will automatically use buildpacks associated with the application
     </span><span class="nt">"failure_reason"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"droplet_guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"740ebd2b-162b-469a-bd72-3edb96fabd9a"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
   </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-05-04T17:00:41Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-05-04T17:00:42Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -9146,6 +9343,16 @@ An application will automatically use buildpacks associated with the application
 <td><a href="#links"><em>links object</em></a></td>
 <td>Links to related resources.</td>
 </tr>
+<tr>
+<td><strong>metadata.labels</strong> <em>(experimental)</em></td>
+<td><a href="#labels"><em>label object</em></a></td>
+<td>Labels applied to the task.</td>
+</tr>
+<tr>
+<td><strong>metadata.annotations</strong> <em>(experimental)</em></td>
+<td><a href="#annotations"><em>annotation object</em></a></td>
+<td>Annotations applied to the task.</td>
+</tr>
 </tbody></table>
 
           <h3 id="create-a-task">Create a task</h3>
@@ -9174,6 +9381,10 @@ An application will automatically use buildpacks associated with the application
     </span><span class="nt">"failure_reason"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"droplet_guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"740ebd2b-162b-469a-bd72-3edb96fabd9a"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
   </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-05-04T17:00:41Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-05-04T17:00:42Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -9209,9 +9420,9 @@ An application will automatically use buildpacks associated with the application
 </tr>
 </thead><tbody>
 <tr>
-<td><strong>command</strong></td>
+<td><strong>command</strong><sup>[1]</sup></td>
 <td><em>string</em></td>
-<td>Command that will be executed</td>
+<td>Command that will be executed. <strong>NOTE:</strong> optional if a <code class="prettyprint">template.process.guid</code> is provided</td>
 </tr>
 </tbody></table>
 
@@ -9232,13 +9443,13 @@ An application will automatically use buildpacks associated with the application
 <td>auto-generated</td>
 </tr>
 <tr>
-<td><strong>disk_in_mb</strong></td>
+<td><strong>disk_in_mb</strong><sup>[1]</sup></td>
 <td><em>integer</em></td>
 <td>Amount of disk to allocate for the task in MB.</td>
 <td>operator-configured <code class="prettyprint">default_app_disk_in_mb</code></td>
 </tr>
 <tr>
-<td><strong>memory_in_mb</strong></td>
+<td><strong>memory_in_mb</strong><sup>[1]</sup></td>
 <td><em>integer</em></td>
 <td>Amount of memory to allocate for the task in MB.</td>
 <td>operator-configured <code class="prettyprint">default_app_memory</code></td>
@@ -9249,9 +9460,121 @@ An application will automatically use buildpacks associated with the application
 <td>The guid of the droplet that will be used to run the command.</td>
 <td>the app&rsquo;s current droplet</td>
 </tr>
+<tr>
+<td><strong>template.process.guid</strong> <em>(experimental)</em></td>
+<td><em>uuid</em></td>
+<td>The guid of the process that will be used as a template.</td>
+<td><code class="prettyprint">null</code></td>
+</tr>
+<tr>
+<td><strong>metadata.labels</strong> <em>(experimental)</em></td>
+<td><a href="#labels"><em>label object</em></a></td>
+<td>Labels applied to the package.</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>metadata.annotations</strong> <em>(experimental)</em></td>
+<td><a href="#annotations"><em>annotation object</em></a></td>
+<td>Annotations applied to the package.</td>
+<td></td>
+</tr>
 </tbody></table>
 
+<p><sup>1 If not provided, and a <code class="prettyprint">template.process.guid</code> is provided, this field will use the value from the process with the given guid.</sup></p>
+
 <h4 id="allowed-roles">Allowed Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+</tbody></table>
+
+          <h3 id="update-a-task">Update a task</h3>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/tasks/[guid]"</span> <span class="se">\</span>
+  -X PATCH <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+  -H <span class="s2">"Content-Type: application/json"</span> <span class="se">\</span>
+  -d <span class="s1">'{ "metadata": { "labels": { "key": "value" }, "annotations": {"note": "detailed information"}}}'</span>
+
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
+
+<span class="p">{</span><span class="w">
+  </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"sequence_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"migrate"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"command"</span><span class="p">:</span><span class="w"> </span><span class="s2">"rake db:migrate"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"RUNNING"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">512</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"disk_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"result"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"failure_reason"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"droplet_guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"740ebd2b-162b-469a-bd72-3edb96fabd9a"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"key"</span><span class="p">:</span><span class="w"> </span><span class="s2">"value"</span><span class="p">},</span><span class="w">
+    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"note"</span><span class="p">:</span><span class="w"> </span><span class="s2">"detailed information"</span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-05-04T17:00:41Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-05-04T17:00:42Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/tasks/d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"cancel"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/tasks/d5cc22ec-99a3-4e6a-af91-a44b4ab7b6fa/actions/cancel"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"POST"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"droplet"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/droplets/740ebd2b-162b-469a-bd72-3edb96fabd9a"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+
+</span></code></pre>
+
+<h4 id="definition">Definition</h4>
+
+<p><code class="prettyprint">PATCH /v3/tasks/:guid</code></p>
+
+<h4 id="optional-parameters">Optional Parameters</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>metadata.labels</strong> <em>(experimental)</em></td>
+<td><a href="#labels"><em>label object</em></a></td>
+<td>Labels applied to the task.</td>
+</tr>
+<tr>
+<td><strong>metadata.annotations</strong> <em>(experimental)</em></td>
+<td><a href="#annotations"><em>annotation object</em></a></td>
+<td>Annotations applied to the task.</td>
+</tr>
+</tbody></table>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
 
 <table><thead>
 <tr>
@@ -9290,6 +9613,10 @@ An application will automatically use buildpacks associated with the application
     </span><span class="nt">"failure_reason"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"droplet_guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"740ebd2b-162b-469a-bd72-3edb96fabd9a"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
   </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-05-04T17:00:41Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-05-04T17:00:42Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -9372,6 +9699,10 @@ in the response based on the user&rsquo;s role.</p>
     </span><span class="nt">"failure_reason"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"droplet_guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"740ebd2b-162b-469a-bd72-3edb96fabd9a"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
   </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-05-04T17:00:41Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-05-04T17:00:42Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -9460,6 +9791,10 @@ in the response based on the user&rsquo;s role.</p>
         </span><span class="nt">"failure_reason"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="nt">"droplet_guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"740ebd2b-162b-469a-bd72-3edb96fabd9a"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+        </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+      </span><span class="p">},</span><span class="w">
       </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-05-04T17:00:41Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-05-04T17:00:42Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -9489,6 +9824,10 @@ in the response based on the user&rsquo;s role.</p>
         </span><span class="nt">"failure_reason"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Exited with status 1"</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="nt">"droplet_guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"740ebd2b-162b-469a-bd72-3edb96fabd9a"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+        </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+      </span><span class="p">},</span><span class="w">
       </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-05-04T17:00:41Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-05-04T17:00:42Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -9572,6 +9911,11 @@ in the response based on the user&rsquo;s role.</p>
 <td><em>string</em></td>
 <td>Value to sort by. Defaults to ascending. Prepend with <code class="prettyprint">-</code> to sort descending. <br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code>.</td>
 </tr>
+<tr>
+<td><strong>label_selector</strong></td>
+<td><em>string</em></td>
+<td><strong>Experimental</strong> - A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements.</td>
+</tr>
 </tbody></table>
 
           <h3 id="list-tasks-for-an-app">List tasks for an app</h3>
@@ -9613,6 +9957,10 @@ in the response based on the user&rsquo;s role.</p>
         </span><span class="nt">"failure_reason"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="nt">"droplet_guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"740ebd2b-162b-469a-bd72-3edb96fabd9a"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+        </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+      </span><span class="p">},</span><span class="w">
       </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-05-04T17:00:41Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-05-04T17:00:42Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -9642,6 +9990,10 @@ in the response based on the user&rsquo;s role.</p>
         </span><span class="nt">"failure_reason"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Exited with status 1"</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="nt">"droplet_guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"740ebd2b-162b-469a-bd72-3edb96fabd9a"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+        </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+      </span><span class="p">},</span><span class="w">
       </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-05-04T17:00:41Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-05-04T17:00:42Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -9715,6 +10067,11 @@ excluded in the response based on the user&rsquo;s role.</p>
 <td><strong>order_by</strong></td>
 <td><em>string</em></td>
 <td>Value to sort by. Defaults to ascending. Prepend with <code class="prettyprint">-</code> to sort descending. <br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code>.</td>
+</tr>
+<tr>
+<td><strong>label_selector</strong></td>
+<td><em>string</em></td>
+<td><strong>Experimental</strong> - A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements.</td>
 </tr>
 </tbody></table>
 
@@ -10341,6 +10698,10 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
     </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/buildpacks/fd35633f-5c5c-4e4e-a5a9-0722c970a9d2"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"upload"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/buildpacks/fd35633f-5c5c-4e4e-a5a9-0722c970a9d2/upload"</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"POST"</span><span class="w">
       </span><span class="p">}</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">}</span><span class="w">
@@ -10402,7 +10763,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 <tr>
 <td><strong>locked</strong></td>
 <td><em>boolean</em></td>
-<td>Whether or not the buildpack is locked to prevent updates</td>
+<td>Whether or not the buildpack is locked to prevent updating the bits</td>
 </tr>
 <tr>
 <td><strong>links</strong></td>
@@ -10445,6 +10806,10 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
     </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/buildpacks/fd35633f-5c5c-4e4e-a5a9-0722c970a9d2"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"upload"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/buildpacks/fd35633f-5c5c-4e4e-a5a9-0722c970a9d2/upload"</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"POST"</span><span class="w">
       </span><span class="p">}</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">}</span><span class="w">
@@ -10502,7 +10867,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 <tr>
 <td><strong>locked</strong></td>
 <td><em>boolean</em></td>
-<td>Whether or not the buildpack is locked to prevent updates</td>
+<td>Whether or not the buildpack is locked to prevent updating the bits</td>
 <td>false</td>
 </tr>
 </tbody></table>
@@ -10545,6 +10910,10 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
     </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/buildpacks/fd35633f-5c5c-4e4e-a5a9-0722c970a9d2"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"upload"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/buildpacks/fd35633f-5c5c-4e4e-a5a9-0722c970a9d2/upload"</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"POST"</span><span class="w">
       </span><span class="p">}</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">}</span><span class="w">
@@ -10588,6 +10957,102 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 </tr>
 <tr>
 <td>Global Auditor</td>
+</tr>
+</tbody></table>
+
+          <h3 id="update-a-buildpack">Update a buildpack</h3>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/buildpacks/[guid]"</span> <span class="se">\</span>
+  -X PATCH <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+  -H <span class="s2">"Content-type: application/json"</span> <span class="se">\</span>
+  -d <span class="s1">'{
+    "name": "ruby_buildpack",
+    "position": 42,
+    "enabled": true,
+    "locked": false,
+    "stack": "windows64"
+  }'</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
+
+<span class="w">  </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"fd35633f-5c5c-4e4e-a5a9-0722c970a9d2"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-18T23:26:46Z"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-10-17T20:00:42Z"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ruby_buildpack"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"AWAITING_UPLOAD"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"filename"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"stack"</span><span class="p">:</span><span class="w"> </span><span class="s2">"windows64"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"position"</span><span class="p">:</span><span class="w"> </span><span class="mi">42</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"enabled"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"locked"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/buildpacks/fd35633f-5c5c-4e4e-a5a9-0722c970a9d2"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"upload"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/buildpacks/fd35633f-5c5c-4e4e-a5a9-0722c970a9d2/upload"</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"POST"</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+
+</span></code></pre>
+
+<h4 id="definition">Definition</h4>
+
+<p><code class="prettyprint">PATCH /v3/buildpacks/:guid</code></p>
+
+<h4 id="optional-parameters">Optional Parameters</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>name</strong></td>
+<td><em>string</em></td>
+<td>Name of the buildpack.</td>
+</tr>
+<tr>
+<td><strong>stack</strong></td>
+<td><em>string</em></td>
+<td>The name of the stack that the buildpack will use.</td>
+</tr>
+<tr>
+<td><strong>position</strong></td>
+<td><em>integer</em></td>
+<td>The order in which the buildpacks are checked during buildpack auto-detection.</td>
+</tr>
+<tr>
+<td><strong>enabled</strong></td>
+<td><em>boolean</em></td>
+<td>Whether or not the buildpack will be used for staging</td>
+</tr>
+<tr>
+<td><strong>locked</strong></td>
+<td><em>boolean</em></td>
+<td>Whether or not the buildpack is locked to prevent updating the bits</td>
+</tr>
+</tbody></table>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Admin</td>
 </tr>
 </tbody></table>
 
@@ -10664,7 +11129,8 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
             </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/buildpacks/fd35633f-5c5c-4e4e-a5a9-0722c970a9d2"</span><span class="w">
           </span><span class="p">},</span><span class="w">
           </span><span class="nt">"upload"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-            </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/buildpacks/fd35633f-5c5c-4e4e-a5a9-0722c970a9d2/upload"</span><span class="w">
+            </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/buildpacks/fd35633f-5c5c-4e4e-a5a9-0722c970a9d2/upload"</span><span class="p">,</span><span class="w">
+            </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"POST"</span><span class="w">
           </span><span class="p">}</span><span class="w">
         </span><span class="p">}</span><span class="w">
       </span><span class="p">}</span><span class="w">
@@ -10712,6 +11178,81 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 <td><strong>order_by</strong></td>
 <td><em>string</em></td>
 <td>Value to sort by. Defaults to ascending. Prepend with <code class="prettyprint">-</code> to sort descending. <br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code>, and <code class="prettyprint">position</code>.</td>
+</tr>
+</tbody></table>
+
+          <h3 id="upload-buildpack-bits">Upload buildpack bits</h3>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/buildpacks/[guid]/upload"</span> <span class="se">\</span>
+  -X POST <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+  -F <span class="nv">bits</span><span class="o">=</span>@<span class="s2">"buildpack.zip"</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">202</span> <span class="ne">OK</span>
+<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
+<span class="na">Location</span><span class="p">:</span> <span class="s">https://api.example.org/v3/jobs/[guid]</span>
+
+<span class="w">  </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"fd35633f-5c5c-4e4e-a5a9-0722c970a9d2"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-18T23:26:46Z"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-10-17T20:00:42Z"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ruby_buildpack"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"AWAITING_UPLOAD"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"filename"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"stack"</span><span class="p">:</span><span class="w"> </span><span class="s2">"windows64"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"position"</span><span class="p">:</span><span class="w"> </span><span class="mi">42</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"enabled"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"locked"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/buildpacks/fd35633f-5c5c-4e4e-a5a9-0722c970a9d2"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"upload"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/buildpacks/fd35633f-5c5c-4e4e-a5a9-0722c970a9d2/upload"</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"POST"</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+
+</span></code></pre>
+
+<p>Upload file for a buildpack of type <code class="prettyprint">bits</code>. The file must be sent as part of a multi-part form.</p>
+
+<h4 id="definition">Definition</h4>
+
+<p><code class="prettyprint">POST /v3/buildpacks/:guid/upload</code></p>
+
+<h4 id="required-parameters">Required Parameters</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>bits</strong></td>
+<td><em>form field</em></td>
+<td>A binary zip file containing the buildpack bits.</td>
+</tr>
+</tbody></table>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Admin</td>
 </tr>
 </tbody></table>
 
@@ -10823,7 +11364,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 </tbody></table>
 
           <h3 id="create-a-deployment">Create a Deployment</h3>
-<pre class="highlight plaintext"><code>Example Request
+<pre class="highlight plaintext"><code>Example Request with Droplet
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/deployments"</span> <span class="se">\</span>
 -X POST <span class="se">\</span>
@@ -10832,6 +11373,25 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 -d <span class="s1">'{
   "droplet": {
     "guid": "[droplet-guid]"
+  },
+  "relationships": {
+    "app": {
+      "data": {
+        "guid": "[app-guid]"
+      }
+    }
+  }
+}'</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Request with Revision
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/deployments"</span> <span class="se">\</span>
+-X POST <span class="se">\</span>
+-H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+-H <span class="s2">"Content-type: application/json"</span> <span class="se">\</span>
+-d <span class="s1">'{
+  "revision": {
+    "guid": "[revision-guid]"
   },
   "relationships": {
     "app": {
@@ -10919,12 +11479,20 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 </tr>
 </thead><tbody>
 <tr>
-<td><strong>droplet</strong></td>
+<td><strong>droplet</strong><sup>[1]</sup></td>
 <td><em>object</em></td>
 <td>The droplet to deploy for the app. This will update the app&rsquo;s <a href="#get-current-droplet-association-for-an-app">current droplet</a> to this droplet</td>
 <td>The app&rsquo;s <a href="#get-current-droplet-association-for-an-app">current droplet</a></td>
 </tr>
+<tr>
+<td><strong>revision</strong><sup>[1]</sup></td>
+<td><em>object</em></td>
+<td>The <a href="#revisions">revision</a> whose droplet to deploy for the app. This will update the app&rsquo;s <a href="#get-current-droplet-association-for-an-app">current droplet</a> to this droplet</td>
+<td></td>
+</tr>
 </tbody></table>
+
+<p><sup>1 Only a droplet <em>or</em> a revision may be provided, not both.</sup></p>
 
 <h4 id="permitted-roles">Permitted Roles</h4>
 
@@ -11184,6 +11752,9 @@ represents code currently running in Cloud Foundry.</p>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
   </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"885735b5-aea4-4cf5-8e44-961af0e41920"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"version"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"droplet"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"585bc3c1-3743-497d-88b0-403ad6b56d16"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
   </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-02-01T01:33:58Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-02-01T01:33:58Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -11211,6 +11782,11 @@ represents code currently running in Cloud Foundry.</p>
 <td><strong>version</strong></td>
 <td><em>integer</em></td>
 <td>Human-readable identifier for the revision. Starts at 1, increments by 1 for each new revision of the app, and rolls back over to 1 at 9999.</td>
+</tr>
+<tr>
+<td><strong>droplet</strong></td>
+<td><em>object</em></td>
+<td>The droplet used by a process running the revision.</td>
 </tr>
 <tr>
 <td><strong>created_at</strong></td>
@@ -11244,6 +11820,9 @@ represents code currently running in Cloud Foundry.</p>
 <span class="p">{</span><span class="w">
   </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"885735b5-aea4-4cf5-8e44-961af0e41920"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"version"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"droplet"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"585bc3c1-3743-497d-88b0-403ad6b56d16"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
   </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-02-01T01:33:58Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-02-01T01:33:58Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -11318,6 +11897,9 @@ represents code currently running in Cloud Foundry.</p>
     </span><span class="p">{</span><span class="w">
       </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"885735b5-aea4-4cf5-8e44-961af0e41920"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"version"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"droplet"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"585bc3c1-3743-497d-88b0-403ad6b56d16"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
       </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-02-01T01:33:58Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-02-01T01:33:58Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
