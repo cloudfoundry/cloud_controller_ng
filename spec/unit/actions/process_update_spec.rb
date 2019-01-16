@@ -11,7 +11,19 @@ module VCAP::CloudController
         data: { timeout: 20 }
       }
     end
-    let(:message) { ProcessUpdateMessage.new({ command: 'new', health_check: health_check }) }
+    let(:message) { ProcessUpdateMessage.new({
+      command: 'new',
+      health_check: health_check,
+      metadata: {
+        labels: {
+          freaky: 'wednesday',
+        },
+        annotations: {
+          tokyo: 'grapes'
+        },
+      },
+    })
+    }
     let!(:droplet) { DropletModel.make(process_types: { web: 'BE rackup' }) }
     let!(:app) { AppModel.make(droplet: droplet) }
     let!(:process) do
@@ -38,6 +50,15 @@ module VCAP::CloudController
         expect(process.command).to eq('new')
         expect(process.health_check_type).to eq('process')
         expect(process.health_check_timeout).to eq(20)
+      end
+
+      it 'updates the process metadata' do
+        process_update.update(process, message, NonManifestStrategy)
+
+        process.reload
+        expect(process.labels.map { |label| { key: label.key_name, value: label.value } }).to match_array([{ key: 'freaky', value: 'wednesday' }])
+        expect(process.annotations.map { |a| { key: a.key, value: a.value } }).
+          to match_array([{ key: 'tokyo', value: 'grapes' }])
       end
 
       context 'when the new healthcheck is http' do
@@ -135,7 +156,8 @@ module VCAP::CloudController
               'health_check' => {
                 'type' => 'process',
                 'data' => { 'timeout' => 20 }
-              }
+              },
+              'metadata' => { 'annotations' => { 'tokyo' => 'grapes' }, 'labels' => { 'freaky' => 'wednesday' } }
             },
             manifest_triggered: false
           )
@@ -155,7 +177,8 @@ module VCAP::CloudController
                 'health_check' => {
                   'type' => 'process',
                   'data' => { 'timeout' => 20 }
-                }
+                },
+                'metadata' => { 'annotations' => { 'tokyo' => 'grapes' }, 'labels' => { 'freaky' => 'wednesday' } }
               },
               manifest_triggered: true
             )

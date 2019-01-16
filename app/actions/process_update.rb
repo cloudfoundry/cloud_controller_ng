@@ -18,6 +18,11 @@ module VCAP::CloudController
       process.db.transaction do
         process.lock!
 
+        if message.requested?(:metadata)
+          LabelsUpdate.update(process, message.labels, ProcessLabelModel)
+          AnnotationsUpdate.update(process, message.annotations, ProcessAnnotationModel)
+        end
+
         process.command              = strategy.updated_command if message.requested?(:command)
         process.health_check_type    = message.health_check_type if message.requested?(:health_check_type)
         process.health_check_timeout = message.health_check_timeout if message.requested?(:health_check_timeout)

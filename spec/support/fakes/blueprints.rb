@@ -75,6 +75,9 @@ module VCAP::CloudController
   IsolationSegmentLabelModel.blueprint do
   end
 
+  ProcessLabelModel.blueprint do
+  end
+
   AppAnnotationModel.blueprint do
   end
 
@@ -97,6 +100,9 @@ module VCAP::CloudController
   end
 
   IsolationSegmentAnnotationModel.blueprint do
+  end
+
+  ProcessAnnotationModel.blueprint do
   end
 
   BuildModel.blueprint do

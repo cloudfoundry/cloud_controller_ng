@@ -8,6 +8,14 @@ RSpec.describe 'Processes' do
   let(:developer_headers) { headers_for(developer, user_name: user_name) }
   let(:user_name) { 'ProcHudson' }
   let(:build_client) { instance_double(HTTPClient, post: nil) }
+  let(:metadata) { {
+    labels: {
+      release: 'stable',
+      'seriouseats.com/potato' => 'mashed'
+    },
+    annotations: { 'checksum' => 'SHA' },
+  }
+  }
 
   before do
     allow_any_instance_of(::Diego::Client).to receive(:build_client).and_return(build_client)
@@ -76,6 +84,7 @@ RSpec.describe 'Processes' do
                 'invocation_timeout' => nil
               }
             },
+            'metadata' => { 'annotations' => {}, 'labels' => {} },
             'created_at'   => iso8601,
             'updated_at'   => iso8601,
             'links'        => {
@@ -103,6 +112,7 @@ RSpec.describe 'Processes' do
                 'invocation_timeout' => nil
               }
             },
+            'metadata' => { 'annotations' => {}, 'labels' => {} },
             'created_at'   => iso8601,
             'updated_at'   => iso8601,
             'links'        => {
@@ -319,6 +329,7 @@ RSpec.describe 'Processes' do
             'invocation_timeout' => nil
           }
         },
+        'metadata' => { 'annotations' => {}, 'labels' => {} },
         'created_at'   => iso8601,
         'updated_at'   => iso8601,
         'links'        => {
@@ -483,7 +494,8 @@ RSpec.describe 'Processes' do
           data: {
             timeout: 20
           }
-        }
+        },
+        metadata: metadata,
       }.to_json
 
       patch "/v3/processes/#{process.guid}", update_request, developer_headers.merge('CONTENT_TYPE' => 'application/json')
@@ -513,6 +525,13 @@ RSpec.describe 'Processes' do
           'app'   => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
           'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
           'stats' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/stats" },
+        },
+        'metadata' => {
+          'labels' => {
+            'release' => 'stable',
+            'seriouseats.com/potato' => 'mashed',
+          },
+          'annotations' => { 'checksum' => 'SHA' },
         },
       }
 
@@ -548,6 +567,13 @@ RSpec.describe 'Processes' do
             'data' => {
               'timeout' => 20,
             }
+          },
+          'metadata' => {
+            'labels' => {
+              'release' => 'stable',
+              'seriouseats.com/potato' => 'mashed',
+            },
+            'annotations' => { 'checksum' => 'SHA' },
           }
         }
       })
@@ -593,7 +619,8 @@ RSpec.describe 'Processes' do
         },
         'created_at'   => iso8601,
         'updated_at'   => iso8601,
-        'links'        => {
+        'metadata' => { 'annotations' => {}, 'labels' => {} },
+        'links' => {
           'self'  => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}" },
           'scale' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/actions/scale", 'method' => 'POST' },
           'app'   => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
@@ -737,6 +764,7 @@ RSpec.describe 'Processes' do
                 'invocation_timeout' => nil
               }
             },
+            'metadata' => { 'annotations' => {}, 'labels' => {} },
             'created_at'   => iso8601,
             'updated_at'   => iso8601,
             'links'        => {
@@ -768,6 +796,7 @@ RSpec.describe 'Processes' do
                 'invocation_timeout' => nil
               }
             },
+            'metadata' => { 'annotations' => {}, 'labels' => {} },
             'created_at'   => iso8601,
             'updated_at'   => iso8601,
             'links'        => {
@@ -869,6 +898,7 @@ RSpec.describe 'Processes' do
             'invocation_timeout' => nil
           }
         },
+        'metadata' => { 'annotations' => {}, 'labels' => {} },
         'created_at'   => iso8601,
         'updated_at'   => iso8601,
         'links'        => {
@@ -925,7 +955,8 @@ RSpec.describe 'Processes' do
             timeout: 20,
             endpoint: '/healthcheck'
           }
-        }
+        },
+        metadata: metadata,
       }.to_json
 
       patch "/v3/apps/#{app_model.guid}/processes/web", update_request, developer_headers.merge('CONTENT_TYPE' => 'application/json')
@@ -957,6 +988,13 @@ RSpec.describe 'Processes' do
           'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
           'stats' => { 'href' => "#{link_prefix}/v3/processes/#{process.guid}/stats" },
         },
+        'metadata' => {
+          'labels' => {
+            'release' => 'stable',
+            'seriouseats.com/potato' => 'mashed',
+          },
+          'annotations' => { 'checksum' => 'SHA' },
+        }
       }
 
       parsed_response = MultiJson.load(last_response.body)
@@ -993,7 +1031,14 @@ RSpec.describe 'Processes' do
               'timeout' => 20,
               'endpoint' => '/healthcheck',
             }
-          }
+          },
+          'metadata' => {
+          'labels' => {
+            'release' => 'stable',
+            'seriouseats.com/potato' => 'mashed',
+          },
+          'annotations' => { 'checksum' => 'SHA' },
+        },
         }
       })
     end
@@ -1037,6 +1082,7 @@ RSpec.describe 'Processes' do
             'invocation_timeout' => nil
           }
         },
+        'metadata' => { 'annotations' => {}, 'labels' => {} },
         'created_at'   => iso8601,
         'updated_at'   => iso8601,
         'links'        => {

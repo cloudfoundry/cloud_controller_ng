@@ -31,6 +31,39 @@ module VCAP::CloudController::Presenters::V3
         }
       end
 
+      let!(:release_label) do
+        VCAP::CloudController::ProcessLabelModel.make(
+          key_name: 'release',
+          value: 'stable',
+          resource_guid: process.guid
+        )
+      end
+
+      let!(:potato_label) do
+        VCAP::CloudController::ProcessLabelModel.make(
+          key_prefix: 'canberra.au',
+          key_name: 'potato',
+          value: 'mashed',
+          resource_guid: process.guid
+        )
+      end
+
+      let!(:mountain_annotation) do
+        VCAP::CloudController::ProcessAnnotationModel.make(
+          key: 'altitude',
+          value: '14,412',
+          resource_guid: process.guid,
+        )
+      end
+
+      let!(:plain_annotation) do
+        VCAP::CloudController::ProcessAnnotationModel.make(
+          key: 'maize',
+          value: 'hfcs',
+          resource_guid: process.guid,
+        )
+      end
+
       before do
         process.updated_at = Time.at(2)
       end
@@ -62,6 +95,8 @@ module VCAP::CloudController::Presenters::V3
           expect(result[:health_check][:data][:endpoint]).to eq('/healthcheck')
           expect(result[:created_at]).to eq('1970-01-01T00:00:01Z')
           expect(result[:updated_at]).to eq('1970-01-01T00:00:02Z')
+          expect(result[:metadata][:labels]).to eq('release' => 'stable', 'canberra.au/potato' => 'mashed')
+          expect(result[:metadata][:annotations]).to eq('altitude' => '14,412', 'maize' => 'hfcs')
           expect(result[:links]).to eq(links)
         end
       end
@@ -79,6 +114,8 @@ module VCAP::CloudController::Presenters::V3
           expect(result[:health_check][:data]).to_not have_key(:endpoint)
           expect(result[:created_at]).to eq('1970-01-01T00:00:01Z')
           expect(result[:updated_at]).to eq('1970-01-01T00:00:02Z')
+          expect(result[:metadata][:labels]).to eq('release' => 'stable', 'canberra.au/potato' => 'mashed')
+          expect(result[:metadata][:annotations]).to eq('altitude' => '14,412', 'maize' => 'hfcs')
           expect(result[:links]).to eq(links)
         end
       end

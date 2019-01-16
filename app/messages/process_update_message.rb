@@ -2,7 +2,7 @@ require 'messages/base_message'
 require 'models/helpers/health_check_types'
 
 module VCAP::CloudController
-  class ProcessUpdateMessage < BaseMessage
+  class ProcessUpdateMessage < MetadataBaseMessage
     register_allowed_keys [:command, :health_check]
 
     def initialize(params={})

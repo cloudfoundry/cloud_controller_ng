@@ -1,11 +1,14 @@
 require 'cloud_controller/diego/protocol/open_process_ports'
 require 'presenters/v3/base_presenter'
 require 'models/helpers/health_check_types'
+require 'presenters/mixins/metadata_presentation_helpers'
 
 module VCAP::CloudController
   module Presenters
     module V3
       class ProcessPresenter < BasePresenter
+        include VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers
+
         def to_hash
           health_check_data = { timeout: process.health_check_timeout, invocation_timeout: process.health_check_invocation_timeout }
           health_check_data[:endpoint] = process.health_check_http_endpoint if process.health_check_type == HealthCheckTypes::HTTP
@@ -25,7 +28,11 @@ module VCAP::CloudController
             },
             created_at:   process.created_at,
             updated_at:   process.updated_at,
-            links:        build_links
+            metadata: {
+              labels: hashified_labels(process.labels),
+              annotations: hashified_annotations(process.annotations),
+            },
+            links:        build_links,
           }
         end
 
