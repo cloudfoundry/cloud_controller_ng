@@ -5,7 +5,7 @@ module VCAP::CloudController
     class SetCurrentDropletError < StandardError; end
 
     class << self
-      def create(app:, user_audit_info:, droplet:)
+      def create(app:, droplet:, user_audit_info:, message: DeploymentCreateMessage.new({}))
         previous_droplet = app.droplet
         begin
           AppAssignDroplet.new(user_audit_info).assign(app, droplet)
@@ -34,7 +34,13 @@ module VCAP::CloudController
             previous_deployment.update(state: DeploymentModel::DEPLOYED_STATE)
             previous_deployment.save
           end
+
           deployment.save
+
+          if message.requested?(:metadata)
+            LabelsUpdate.update(deployment, message.labels, DeploymentLabelModel)
+            AnnotationsUpdate.update(deployment, message.annotations, DeploymentAnnotationModel)
+          end
 
           process = create_deployment_process(app, deployment.guid, web_process)
           deployment.update(deploying_web_process: process)

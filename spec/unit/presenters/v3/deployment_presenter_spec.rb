@@ -28,6 +28,7 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:links][:self][:href]).to match(%r{/v3/deployments/#{deployment.guid}$})
         expect(result[:links][:self][:href]).to eq("#{link_prefix}/v3/deployments/#{deployment.guid}")
         expect(result[:links][:app][:href]).to eq("#{link_prefix}/v3/apps/#{deployment.app.guid}")
+        expect(result[:metadata]).to eq({ annotations: {}, labels: {} })
       end
 
       it 'includes new_processes' do

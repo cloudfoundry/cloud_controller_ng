@@ -21,15 +21,16 @@ RSpec.describe 'Packages' do
     let(:data) { { image: 'registry/image:latest', username: 'my-docker-username', password: 'my-password' } }
     let(:expected_data) { { image: 'registry/image:latest', username: 'my-docker-username', password: '***' } }
     let(:relationships) { { app: { data: { guid: app_model.guid } } } }
-    let(:metadata) { {
-      labels: {
-        release: 'stable',
-        'seriouseats.com/potato' => 'mashed'
-      },
-      annotations: {
-        potato: 'idaho'
+    let(:metadata) {
+      {
+        labels: {
+          release: 'stable',
+          'seriouseats.com/potato' => 'mashed',
+        },
+        annotations: {
+          potato: 'idaho',
+        },
       }
-    }
     }
 
     describe 'creation' do

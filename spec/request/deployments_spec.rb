@@ -9,6 +9,7 @@ RSpec.describe 'Deployments' do
   let(:user_header) { headers_for(user, email: user_email, user_name: user_name) }
   let(:user_email) { Sham.email }
   let(:user_name) { 'some-username' }
+  let(:metadata) { { 'labels' => {}, 'annotations' => {} } }
 
   before do
     TestConfig.override(temporary_disable_deployments: false)
@@ -50,6 +51,7 @@ RSpec.describe 'Deployments' do
           }],
           'created_at' => iso8601,
           'updated_at' => iso8601,
+          'metadata' => metadata,
           'relationships' => {
             'app' => {
               'data' => {
@@ -108,6 +110,7 @@ RSpec.describe 'Deployments' do
           }],
           'created_at' => iso8601,
           'updated_at' => iso8601,
+          'metadata' => metadata,
           'relationships' => {
             'app' => {
               'data' => {
@@ -153,12 +156,12 @@ RSpec.describe 'Deployments' do
         revision_count = VCAP::CloudController::RevisionModel.count
         post '/v3/deployments', create_request.to_json, user_header
         expect(last_response.status).to eq(201), last_response.body
+        expect(VCAP::CloudController::RevisionModel.count).to eq(revision_count + 1)
 
         parsed_response = MultiJson.load(last_response.body)
 
         deployment = VCAP::CloudController::DeploymentModel.last
 
-        expect(VCAP::CloudController::RevisionModel.count).to eq(revision_count + 1)
         expect(parsed_response).to be_a_response_like({
           'guid' => deployment.guid,
           'state' => 'DEPLOYING',
@@ -174,6 +177,7 @@ RSpec.describe 'Deployments' do
           }],
           'created_at' => iso8601,
           'updated_at' => iso8601,
+          'metadata' => metadata,
           'relationships' => {
             'app' => {
               'data' => {
@@ -222,6 +226,78 @@ RSpec.describe 'Deployments' do
         expect(parsed_response['errors'][0]['detail']).to match('Cannot set both fields')
       end
     end
+
+    context 'when metadata is supplied with the request' do
+      let(:metadata) {
+        {
+          'labels' => {
+            release: 'stable',
+            'seriouseats.com/potato' => 'mashed',
+          },
+          'annotations' => {
+            potato: 'idaho',
+          },
+        }
+      }
+
+      let(:create_request) do
+        {
+          relationships: {
+            app: {
+              data: {
+                guid: app_model.guid
+              },
+            },
+          },
+          metadata: metadata,
+        }
+      end
+
+      it 'should create a deployment object with the metadata' do
+        post '/v3/deployments', create_request.to_json, user_header
+        expect(last_response.status).to eq(201)
+
+        deployment = VCAP::CloudController::DeploymentModel.last
+        expect(deployment.labels.map(&:value)).to contain_exactly('stable', 'mashed')
+        expect(deployment.annotations.map(&:value)).to contain_exactly('idaho')
+
+        expect(parsed_response).to be_a_response_like({
+          'guid' => deployment.guid,
+          'state' => 'DEPLOYING',
+          'droplet' => {
+            'guid' => droplet.guid
+          },
+          'previous_droplet' => {
+            'guid' => droplet.guid
+          },
+          'new_processes' => [{
+            'guid' => deployment.deploying_web_process.guid,
+            'type' => deployment.deploying_web_process.type
+          }],
+          'metadata' => { 'labels' => { 'release' => 'stable', 'seriouseats.com/potato' => 'mashed' }, 'annotations' => { 'potato' => 'idaho' } },
+          'created_at' => iso8601,
+          'updated_at' => iso8601,
+          'relationships' => {
+            'app' => {
+              'data' => {
+                'guid' => app_model.guid
+              }
+            }
+          },
+          'links' => {
+            'self' => {
+              'href' => "#{link_prefix}/v3/deployments/#{deployment.guid}"
+            },
+            'app' => {
+              'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
+            }
+          }
+        })
+      end
+    end
+  end
+
+  describe 'PATCH /v3/deployments' do
   end
 
   describe 'GET /v3/deployments/:guid' do
@@ -254,6 +330,7 @@ RSpec.describe 'Deployments' do
         }],
         'created_at' => iso8601,
         'updated_at' => iso8601,
+        'metadata' => metadata,
         'relationships' => {
           'app' => {
             'data' => {
@@ -340,6 +417,7 @@ RSpec.describe 'Deployments' do
               }],
               'created_at' => iso8601,
               'updated_at' => iso8601,
+              'metadata' => metadata,
               'relationships' => {
                 'app' => {
                   'data' => {
@@ -371,6 +449,7 @@ RSpec.describe 'Deployments' do
               }],
               'created_at' => iso8601,
               'updated_at' => iso8601,
+              'metadata' => metadata,
               'relationships' => {
                 'app' => {
                   'data' => {
@@ -434,6 +513,7 @@ RSpec.describe 'Deployments' do
               }],
               'created_at' => iso8601,
               'updated_at' => iso8601,
+              'metadata' => metadata,
               'relationships' => {
                 'app' => {
                   'data' => {

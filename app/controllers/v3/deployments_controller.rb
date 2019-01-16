@@ -1,4 +1,5 @@
 require 'messages/deployments_list_message'
+require 'messages/deployment_create_message'
 require 'fetchers/deployment_list_fetcher'
 require 'presenters/v3/deployment_presenter'
 require 'actions/deployment_create'
@@ -26,21 +27,20 @@ class DeploymentsController < ApplicationController
   def create
     deployments_not_enabled! if Config.config.get(:temporary_disable_deployments)
 
-    app_guid = hashed_params[:body].dig(:relationships, :app, :data, :guid)
-    app = AppModel.find(guid: app_guid)
+    message = DeploymentCreateMessage.new(hashed_params[:body])
+
+    app = AppModel.find(guid: message.app_guid)
     unprocessable!('Unable to use app. Ensure that the app exists and you have access to it.') unless app && permission_queryer.can_write_to_space?(app.space.guid)
     unprocessable!('Cannot create a deployment for a STOPPED app.') if app.stopped?
+    unprocessable!('Cannot create deployment from a revision for an app without revisions enabled') if message.revision_guid && !app.revisions_enabled
 
-    revision_guid = hashed_params[:body].dig(:revision, :guid)
-    unprocessable!('Cannot create deployment from a revision for an app without revisions enabled') if revision_guid && !app.revisions_enabled
+    # push into message
+    unprocessable!("Cannot set both fields 'droplet' and 'revision'") if message.revision_guid && message.droplet_guid
 
-    droplet_guid = hashed_params[:body].dig(:droplet, :guid)
-    unprocessable!("Cannot set both fields 'droplet' and 'revision'") if revision_guid && droplet_guid
-
-    droplet = choose_droplet(app, droplet_guid, revision_guid)
+    droplet = choose_droplet(app, message.droplet_guid, message.revision_guid) # push into action
 
     begin
-      deployment = DeploymentCreate.create(app: app, droplet: droplet, user_audit_info: user_audit_info)
+      deployment = DeploymentCreate.create(app: app, droplet: droplet, user_audit_info: user_audit_info, message: message)
       logger.info("Created deployment #{deployment.guid} for app #{app.guid}")
     rescue DeploymentCreate::SetCurrentDropletError => e
       unprocessable!(e.message)

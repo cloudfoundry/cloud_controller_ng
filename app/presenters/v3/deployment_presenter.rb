@@ -1,7 +1,10 @@
 require 'presenters/v3/base_presenter'
+require 'presenters/mixins/metadata_presentation_helpers'
 
 module VCAP::CloudController::Presenters::V3
   class DeploymentPresenter < BasePresenter
+    include VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers
+
     def to_hash
       {
         guid: deployment.guid,
@@ -21,6 +24,10 @@ module VCAP::CloudController::Presenters::V3
               guid: deployment.app.guid
             }
           }
+        },
+        metadata: {
+          labels: hashified_labels(deployment.labels),
+          annotations: hashified_annotations(deployment.annotations),
         },
         links: build_links,
       }

@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'actions/deployment_create'
+require 'messages/deployment_create_message'
 
 module VCAP::CloudController
   RSpec.describe DeploymentCreate do
@@ -159,9 +160,9 @@ module VCAP::CloudController
           expect(event.space_guid).to eq(app.space_guid)
           expect(event.organization_guid).to eq(app.space.organization.guid)
           expect(event.metadata).to eq({
-                                           'droplet_guid' => next_droplet.guid,
-                                           'deployment_guid' => deployment.guid,
-                                       })
+            'droplet_guid' => next_droplet.guid,
+            'deployment_guid' => deployment.guid,
+          })
         end
 
         it 'creates a DeploymentProcessModel to save historical information about the deploying processes' do
@@ -213,9 +214,9 @@ module VCAP::CloudController
             expect(event.space_guid).to eq(app_without_current_droplet.space_guid)
             expect(event.organization_guid).to eq(app_without_current_droplet.space.organization.guid)
             expect(event.metadata).to eq({
-                                             'droplet_guid' => next_droplet.guid,
-                                             'deployment_guid' => deployment.guid,
-                                         })
+              'droplet_guid' => next_droplet.guid,
+              'deployment_guid' => deployment.guid,
+            })
           end
         end
 
@@ -264,6 +265,30 @@ module VCAP::CloudController
             DeploymentCreate.create(app: app, droplet: next_droplet, user_audit_info: user_audit_info)
 
             expect(existing_deployment.reload.state).to eq(DeploymentModel::DEPLOYED_STATE)
+          end
+        end
+
+        context 'when the message specifies metadata' do
+          let(:message) do
+            DeploymentCreateMessage.new({
+            'metadata' => {
+              labels: {
+                release: 'stable',
+                'seriouseats.com/potato': 'mashed'
+              },
+              annotations: {
+                superhero: 'Bummer-boy',
+                superpower: 'Bums you out',
+              }
+            },
+          })
+          end
+
+          it 'saves the metadata to the new deployment' do
+            deployment = DeploymentCreate.create(app: app, droplet: next_droplet, user_audit_info: user_audit_info, message: message)
+
+            expect(deployment.labels.map(&:value)).to contain_exactly('stable', 'mashed')
+            expect(deployment.annotations.map(&:value)).to contain_exactly('Bummer-boy', 'Bums you out')
           end
         end
       end

@@ -1,5 +1,6 @@
 require 'rails_helper'
 require 'permissions_spec_helper'
+require 'messages/deployment_create_message'
 
 RSpec.describe DeploymentsController, type: :controller do
   let(:user) { VCAP::CloudController::User.make }
@@ -15,6 +16,7 @@ RSpec.describe DeploymentsController, type: :controller do
       TestConfig.override(temporary_disable_deployments: false)
       app.update(droplet: droplet)
     end
+
     let(:request_body) do
       {
         relationships: {
@@ -42,8 +44,12 @@ RSpec.describe DeploymentsController, type: :controller do
         it 'creates a deployment using the app\'s current droplet' do
           expect(VCAP::CloudController::DeploymentCreate).
             to receive(:create).
-            with(app: app, droplet: app.droplet, user_audit_info: instance_of(VCAP::CloudController::UserAuditInfo)).
-            and_call_original
+            with(
+              app: app,
+              droplet: app.droplet,
+              user_audit_info: instance_of(VCAP::CloudController::UserAuditInfo),
+              message: instance_of(VCAP::CloudController::DeploymentCreateMessage),
+              ).and_call_original
 
           post :create, params: request_body, as: :json
         end
@@ -98,8 +104,12 @@ RSpec.describe DeploymentsController, type: :controller do
         it 'creates a deployment' do
           expect(VCAP::CloudController::DeploymentCreate).
             to receive(:create).
-            with(app: app, droplet: other_droplet, user_audit_info: instance_of(VCAP::CloudController::UserAuditInfo)).
-            and_call_original
+            with(
+              app: app,
+              droplet: other_droplet,
+              user_audit_info: instance_of(VCAP::CloudController::UserAuditInfo),
+              message: instance_of(VCAP::CloudController::DeploymentCreateMessage),
+              ).and_call_original
 
           expect {
             post :create, params: request_body, as: :json
@@ -114,8 +124,12 @@ RSpec.describe DeploymentsController, type: :controller do
           it 'creates a revision' do
             expect(VCAP::CloudController::DeploymentCreate).
               to receive(:create).
-              with(app: app, droplet: other_droplet, user_audit_info: instance_of(VCAP::CloudController::UserAuditInfo)).
-              and_call_original
+              with(
+                app: app,
+                droplet: other_droplet,
+                user_audit_info: instance_of(VCAP::CloudController::UserAuditInfo),
+                message: instance_of(VCAP::CloudController::DeploymentCreateMessage),
+                ).and_call_original
 
             expect {
               post :create, params: request_body, as: :json
@@ -231,8 +245,12 @@ RSpec.describe DeploymentsController, type: :controller do
         it 'uses the droplet from the revision to create a new revision' do
           expect(VCAP::CloudController::DeploymentCreate).
             to receive(:create).
-            with(app: app, droplet: droplet, user_audit_info: instance_of(VCAP::CloudController::UserAuditInfo)).
-            and_call_original
+            with(
+              app: app,
+              droplet: droplet,
+              user_audit_info: instance_of(VCAP::CloudController::UserAuditInfo),
+              message: instance_of(VCAP::CloudController::DeploymentCreateMessage),
+              ).and_call_original
 
           expect {
             post :create, params: request_body, as: :json
@@ -293,6 +311,39 @@ RSpec.describe DeploymentsController, type: :controller do
           post :create, params: request_body, as: :json
           expect(response.status).to eq 422
           expect(response.body).to include("Cannot set both fields 'droplet' and 'revision'")
+        end
+      end
+
+      context 'when metadata is provided' do
+        let(:metadata) {
+          {
+            'labels' => {
+              'seriouseats.com/potato' => 'mashed',
+            },
+            'annotations' => {
+              'potato' => 'idaho',
+            },
+          }
+        }
+
+        let(:request_body) do
+          {
+            relationships: {
+              app: {
+                data: {
+                  guid: app_guid
+                }
+              }
+            },
+            metadata: metadata,
+          }
+        end
+
+        it 'sets some metadata' do
+          post :create, params: request_body, as: :json
+
+          expect(response.status).to eq(201)
+          expect(parsed_body['metadata']).to eq(metadata)
         end
       end
     end
