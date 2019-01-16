@@ -39,7 +39,6 @@ module VCAP::CloudController
         context 'when the metadata is valid' do
           let(:params) do
             {
-              name: 'some-name',
               metadata: {
                 annotations: {
                   potato: 'mashed'
@@ -51,11 +50,36 @@ module VCAP::CloudController
             }
           end
 
-          it 'is valid and correctly parses the annotations' do
-            message = IsolationSegmentUpdateMessage.new(params)
-            expect(message).to be_valid
-            expect(message.annotations).to include(potato: 'mashed')
-            expect(message.labels).to include(foo: 'bar')
+          context 'with a name' do
+            let(:final_params) { params.merge({ name: 'new-name' }) }
+
+            it 'is valid and correctly parses the annotations' do
+              message = IsolationSegmentUpdateMessage.new(final_params)
+              expect(message).to be_valid
+              expect(message.annotations).to include(potato: 'mashed')
+              expect(message.labels).to include(foo: 'bar')
+              expect(message.name).to eq('new-name')
+            end
+          end
+
+          context 'with no name' do
+            let(:final_params) { params }
+
+            it 'is valid and correctly parses the annotations' do
+              message = IsolationSegmentUpdateMessage.new(final_params)
+              expect(message).to be_valid
+              expect(message.annotations).to include(potato: 'mashed')
+              expect(message.labels).to include(foo: 'bar')
+            end
+          end
+
+          context 'with a non-string name' do
+            let(:final_params) { params.merge({ name: 5 }) }
+
+            it 'is valid and correctly parses the annotations' do
+              message = IsolationSegmentUpdateMessage.new(final_params)
+              expect(message).not_to be_valid
+            end
           end
         end
 
