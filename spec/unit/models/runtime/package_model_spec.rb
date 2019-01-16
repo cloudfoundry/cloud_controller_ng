@@ -73,5 +73,14 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe 'metadata' do
+      let(:package) { PackageModel.make }
+      let(:annotation) { PackageAnnotationModel.make(package: package) }
+
+      it 'can access its annotations' do
+        expect(annotation.resource_guid).to eq(package.guid)
+      end
+    end
   end
 end
