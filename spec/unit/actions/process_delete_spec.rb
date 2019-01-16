@@ -26,6 +26,24 @@ module VCAP::CloudController
           expect(event.type).to eq('audit.app.process.delete')
           expect(event.metadata['process_guid']).to eq(process.guid)
         end
+
+        it 'deletes associated labels' do
+          label = ProcessLabelModel.make(resource_guid: process.guid)
+          expect {
+            process_delete.delete([process])
+          }.to change { ProcessLabelModel.count }.by(-1)
+          expect(label.exists?).to be_falsey
+          expect(process.exists?).to be_falsey
+        end
+
+        it 'deletes associated annotations' do
+          annotation = ProcessAnnotationModel.make(resource_guid: process.guid)
+          expect {
+            process_delete.delete([process])
+          }.to change { ProcessAnnotationModel.count }.by(-1)
+          expect(annotation.exists?).to be_falsey
+          expect(process.exists?).to be_falsey
+        end
       end
 
       context 'when deleting multiple' do
