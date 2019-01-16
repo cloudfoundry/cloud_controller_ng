@@ -132,6 +132,28 @@ RSpec.describe 'Processes' do
       expect(parsed_response).to be_a_response_like(expected_response)
     end
 
+    it 'filters by label selectors' do
+      VCAP::CloudController::ProcessLabelModel.make(key_name: 'fruit', value: 'strawberry', process: worker_process)
+
+      get '/v3/processes?label_selector=fruit=strawberry', {}, developer_headers
+
+      expected_pagination = {
+        'total_results' => 1,
+        'total_pages'   => 1,
+        'first'         => { 'href' => "#{link_prefix}/v3/processes?label_selector=fruit%3Dstrawberry&page=1&per_page=50" },
+        'last'          => { 'href' => "#{link_prefix}/v3/processes?label_selector=fruit%3Dstrawberry&page=1&per_page=50" },
+        'next'          => nil,
+        'previous'      => nil
+      }
+
+      parsed_response = MultiJson.load(last_response.body)
+
+      expect(last_response.status).to eq(200)
+      expect(parsed_response['resources'].count).to eq(1)
+      expect(parsed_response['resources'][0]['guid']).to eq(worker_process.guid)
+      expect(parsed_response['pagination']).to eq(expected_pagination)
+    end
+
     context 'faceted list' do
       context 'by types' do
         it 'returns only the matching processes' do

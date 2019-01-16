@@ -70,6 +70,16 @@ module VCAP::CloudController
             expect(results).to match_array([web, web2])
           end
         end
+
+        context 'label selectors' do
+          let(:filters) { { 'label_selector' => 'key=value' } }
+          let!(:label) { ProcessLabelModel.make(resource_guid: web2.guid, key_name: 'key', value: 'value') }
+
+          it 'returns the correct set of packages' do
+            results = fetcher.fetch_all.all
+            expect(results).to match_array([web2])
+          end
+        end
       end
     end
 

@@ -1,4 +1,5 @@
 require 'messages/list_message'
+require 'messages/validators/label_selector_requirement_validator'
 
 module VCAP::CloudController
   class ProcessesListMessage < ListMessage
@@ -9,19 +10,17 @@ module VCAP::CloudController
       :organization_guids,
       :app_guids,
       :guids,
+      :label_selector,
     ]
 
     validates_with NoAdditionalParamsValidator # from BaseMessage
+    validates_with LabelSelectorRequirementValidator, if: label_selector_requested?
 
     validates :app_guids, array: true, allow_nil: true
     validate :app_nested_request, if: -> { app_guid.present? }
 
     def self.from_params(params)
-      opts = params.dup
-      %w(types space_guids organization_guids app_guids guids).each do |param|
-        to_array!(opts, param)
-      end
-      new(opts.symbolize_keys)
+      super(params, %w(types space_guids organization_guids app_guids guids))
     end
 
     def to_param_hash

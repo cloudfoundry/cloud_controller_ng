@@ -15,6 +15,7 @@ module VCAP::CloudController
           'app_guids' => 'the-app-guid, the-app-guid2',
           'guids' => 'process-guid,process-guid2',
           'order_by' => 'created_at',
+          'label_selector' => 'key=value',
         }
       end
 
@@ -30,6 +31,7 @@ module VCAP::CloudController
         expect(message.organization_guids).to eq(['the_organization_guid', 'another-org-guid'])
         expect(message.app_guids).to eq(['the-app-guid', 'the-app-guid2'])
         expect(message.guids).to eq(['process-guid', 'process-guid2'])
+        expect(message.label_selector).to eq('key=value')
       end
 
       it 'converts requested keys to symbols' do
@@ -57,13 +59,14 @@ module VCAP::CloudController
           guids:              ['processguid1'],
           app_guid:           'appguid',
           page:               1,
+          label_selector:     'key=value',
           per_page:           5,
           order_by:           'created_at',
         }
       end
 
       it 'excludes the pagination keys' do
-        expected_params = [:types, :app_guids, :space_guids, :organization_guids, :guids]
+        expected_params = [:types, :app_guids, :space_guids, :organization_guids, :guids, :label_selector]
         message = ProcessesListMessage.from_params(opts)
 
         expect(message.to_param_hash.keys).to match_array(expected_params)
@@ -133,6 +136,16 @@ module VCAP::CloudController
             end
           end
         end
+      end
+
+      it 'validates metadata requirements' do
+        message = ProcessesListMessage.from_params('label_selector' => '')
+
+        expect_any_instance_of(Validators::LabelSelectorRequirementValidator).
+          to receive(:validate).
+          with(message).
+          and_call_original
+        message.valid?
       end
     end
   end
