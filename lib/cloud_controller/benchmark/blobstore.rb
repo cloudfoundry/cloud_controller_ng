@@ -32,7 +32,7 @@ module VCAP::CloudController
 
         big_droplet_file = Tempfile.new('big-droplet', resource_dir)
         big_droplet_file.write('abc' * 1024 * 1024 * 100)
-        big_droplet_guid, resource_timing = upload_droplet(big_droplet_file)
+        big_droplet_guid, resource_timing = upload_droplet(big_droplet_file.path)
         puts "big droplet upload timing: #{resource_timing * 1000}ms"
 
         resource_timing = download_droplet(big_droplet_guid, resource_dir)
