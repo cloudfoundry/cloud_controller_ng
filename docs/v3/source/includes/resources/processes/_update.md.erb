@@ -9,7 +9,7 @@ curl "https://api.example.org/v3/processes/[guid]" \
   -X PATCH \
   -H "Authorization: bearer [token]" \
   -H "Content-type: application/json" \
-  -d '{ "command": "rackup" }'
+  -d '{ "command": "rackup", "metadata": { "labels": { "key": "value" }, "annotations": {"note": "detailed information"}} }'
 ```
 
 ```
@@ -20,7 +20,7 @@ Example Response
 HTTP/1.1 200 OK
 Content-Type: application/json
 
-<%= yield_content :single_process %>
+<%= yield_content :single_process, labels: { "key" => "value" }, "annotations": {"note" => "detailed information"} %>
 ```
 
 #### Definition
@@ -32,6 +32,8 @@ Name | Type | Description
 ---- | ---- | -----------
 **command** | _string_ or _null_ | The command used to start the process. Use _null_ to revert to the buildpack-detected or procfile-provided start command.
 **health_check** | [_health_check object_](#the-health_check-object) | The health check to perform on the process.
+**metadata.labels** _(experimental)_| [_label object_](#labels) | Labels applied to the process.
+**metadata.annotations** _(experimental)_ | [_annotation object_](#annotations) | Annotations applied to the process.
 
 #### Permitted Roles
  |
