@@ -3,3 +3,4 @@
 --format progress
 --format ParallelTests::RSpec::SummaryLogger --out tmp/spec_summary.log
 --format ParallelTests::RSpec::RuntimeLogger --out tmp/parallel_runtime_rspec.log
+--order rand
