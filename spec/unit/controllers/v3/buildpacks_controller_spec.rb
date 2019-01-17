@@ -98,73 +98,75 @@ RSpec.describe BuildpacksController, type: :controller do
     let(:buildpack) { VCAP::CloudController::Buildpack.make }
     let(:user) { VCAP::CloudController::User.make }
 
-    describe 'permissions by role when a buildpack exists' do
-      role_to_expected_http_response = {
-        'admin' => 202,
-        'space_developer' => 403,
-        'space_manager' => 403,
-        'space_auditor' => 403,
-        'org_manager' => 403,
-        'admin_read_only' => 403,
-        'global_auditor' => 403,
-        'org_auditor' => 403,
-        'org_billing_manager' => 403,
-        'org_user' => 403,
-      }.freeze
+    describe 'permissions' do
+      context 'when the user does not have the write scope' do
+        before do
+          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
+        end
 
-      role_to_expected_http_response.each do |role, expected_return_value|
-        context "as an #{role}" do
-          let(:org) { VCAP::CloudController::Organization.make }
-          let(:space) { VCAP::CloudController::Space.make(organization: org) }
+        it 'raises an ApiError with a 403 code' do
+          delete :destroy, params: { guid: buildpack.guid }
 
-          it "returns #{expected_return_value}" do
-            set_current_user_as_role(role: role, org: org, space: space, user: user)
+          expect(response.status).to eq 403
+          expect(response.body).to include 'NotAuthorized'
+        end
+      end
 
-            delete :destroy, params: { guid: buildpack.guid }
+      context 'permissions by role when the buildpack exists' do
+        role_to_expected_http_response = {
+          'admin' => 202,
+          'reader_and_writer' => 403
+        }.freeze
 
-            expect(response.status).to eq expected_return_value
+        role_to_expected_http_response.each do |role, expected_return_value|
+          context "as an #{role}" do
+            let(:org) { VCAP::CloudController::Organization.make }
+            let(:space) { VCAP::CloudController::Space.make(organization: org) }
+
+            it "returns #{expected_return_value}" do
+              set_current_user_as_role(
+                role: role,
+                org: org,
+                space: space,
+                user: user,
+                scopes: %w(cloud_controller.read cloud_controller.write)
+              )
+              delete :destroy, params: { guid: buildpack.guid }, as: :json
+
+              expect(response.status).to eq expected_return_value
+            end
+          end
+        end
+      end
+
+      context 'permissions by role when the buildpack does not exist' do
+        role_to_expected_http_response = {
+          'admin' => 404,
+          'reader_and_writer' => 404,
+        }.freeze
+
+        role_to_expected_http_response.each do |role, expected_return_value|
+          context "as an #{role}" do
+            let(:org) { VCAP::CloudController::Organization.make }
+            let(:space) { VCAP::CloudController::Space.make(organization: org) }
+
+            it "returns #{expected_return_value}" do
+              set_current_user_as_role(
+                role: role,
+                org: org,
+                space: space,
+                user: user
+              )
+              delete :destroy, params: { guid: 'non-existent' }, as: :json
+
+              expect(response.status).to eq expected_return_value
+            end
           end
         end
       end
 
       it 'returns 401 when logged out' do
-        delete :destroy, params: { guid: buildpack.guid }
-
-        expect(response.status).to eq 401
-      end
-    end
-
-    describe 'permissions by role when a buildpack doesnt exist' do
-      role_to_expected_http_response = {
-        'admin' => 404,
-        'space_developer' => 404,
-        'space_manager' => 404,
-        'space_auditor' => 404,
-        'org_manager' => 404,
-        'admin_read_only' => 404,
-        'global_auditor' => 404,
-        'org_auditor' => 404,
-        'org_billing_manager' => 404,
-        'org_user' => 404,
-      }.freeze
-
-      role_to_expected_http_response.each do |role, expected_return_value|
-        context "as an #{role}" do
-          let(:org) { VCAP::CloudController::Organization.make }
-          let(:space) { VCAP::CloudController::Space.make(organization: org) }
-
-          it "returns #{expected_return_value}" do
-            set_current_user_as_role(role: role, org: org, space: space, user: user, scopes: %w(cloud_controller.write))
-
-            delete :destroy, params: { guid: 'non-existant-guid' }
-
-            expect(response.status).to eq expected_return_value
-          end
-        end
-      end
-
-      it 'returns 401 when logged out' do
-        delete :destroy, params: { guid: buildpack.guid }
+        delete :destroy, params: { guid: buildpack.guid }, as: :json
 
         expect(response.status).to eq 401
       end
@@ -335,24 +337,69 @@ RSpec.describe BuildpacksController, type: :controller do
       VCAP::CloudController::Buildpack.make(stack: nil)
     end
 
-    describe 'permissions by role' do
-      role_to_expected_http_response = {
-        'admin' => 200,
+    describe 'permissions' do
+      context 'when the user does not have the write scope' do
+        before do
+          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
+        end
 
-        'reader_and_writer' => 403,
+        it 'raises an ApiError with a 403 code' do
+          delete :destroy, params: { guid: buildpack.guid }
 
-        'admin_read_only' => 403,
-        'global_auditor' => 403,
-      }.freeze
+          expect(response.status).to eq 403
+          expect(response.body).to include 'NotAuthorized'
+        end
+      end
 
-      role_to_expected_http_response.each do |role, expected_return_value|
-        context "as an #{role}" do
-          it "returns #{expected_return_value}" do
-            set_current_user_as_role(role: role, user: user)
+      context 'permissions by role when the buildpack exists' do
+        role_to_expected_http_response = {
+          'admin' => 200,
+          'reader_and_writer' => 403
+        }.freeze
 
-            patch :update, params: { guid: buildpack.guid }, as: :json
+        role_to_expected_http_response.each do |role, expected_return_value|
+          context "as an #{role}" do
+            let(:org) { VCAP::CloudController::Organization.make }
+            let(:space) { VCAP::CloudController::Space.make(organization: org) }
 
-            expect(response.status).to eq expected_return_value
+            it "returns #{expected_return_value}" do
+              set_current_user_as_role(
+                role: role,
+                org: org,
+                space: space,
+                user: user,
+                scopes: %w(cloud_controller.read cloud_controller.write)
+              )
+              patch :update, params: { guid: buildpack.guid }, as: :json
+
+              expect(response.status).to eq expected_return_value
+            end
+          end
+        end
+      end
+
+      context 'permissions by role when the buildpack does not exist' do
+        role_to_expected_http_response = {
+          'admin' => 404,
+          'reader_and_writer' => 404,
+        }.freeze
+
+        role_to_expected_http_response.each do |role, expected_return_value|
+          context "as an #{role}" do
+            let(:org) { VCAP::CloudController::Organization.make }
+            let(:space) { VCAP::CloudController::Space.make(organization: org) }
+
+            it "returns #{expected_return_value}" do
+              set_current_user_as_role(
+                role: role,
+                org: org,
+                space: space,
+                user: user
+              )
+              patch :update, params: { guid: 'non-existent' }, as: :json
+
+              expect(response.status).to eq expected_return_value
+            end
           end
         end
       end

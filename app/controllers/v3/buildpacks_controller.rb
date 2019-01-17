@@ -59,9 +59,10 @@ class BuildpacksController < ApplicationController
   end
 
   def update
-    unauthorized! unless permission_queryer.can_write_globally?
-
     buildpack = Buildpack.find(guid: hashed_params[:guid])
+    buildpack_not_found! unless buildpack
+
+    unauthorized! unless permission_queryer.can_write_globally?
 
     message = BuildpackUpdateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?

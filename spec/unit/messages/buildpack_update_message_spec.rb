@@ -121,6 +121,15 @@ module VCAP::CloudController
 
           it { is_expected.to be_valid }
         end
+
+        context 'when it is null' do
+          let(:params) { { position: nil } }
+
+          it 'is not valid' do
+            expect(subject).to be_invalid
+            expect(subject.errors[:position]).to include('is not a number')
+          end
+        end
       end
 
       describe 'enabled' do
@@ -137,6 +146,15 @@ module VCAP::CloudController
           let(:params) { { enabled: true } }
 
           it { is_expected.to be_valid }
+        end
+
+        context 'when it is null' do
+          let(:params) { { enabled: nil } }
+
+          it 'is not valid' do
+            expect(subject).to be_invalid
+            expect(subject.errors[:enabled]).to include('must be a boolean')
+          end
         end
       end
 
@@ -155,6 +173,15 @@ module VCAP::CloudController
 
           it do
             is_expected.to be_valid
+          end
+        end
+
+        context 'when it is null' do
+          let(:params) { { locked: nil } }
+
+          it 'is not valid' do
+            expect(subject).to be_invalid
+            expect(subject.errors[:locked]).to include('must be a boolean')
           end
         end
       end
