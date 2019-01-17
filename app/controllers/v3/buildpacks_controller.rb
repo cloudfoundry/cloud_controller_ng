@@ -45,10 +45,10 @@ class BuildpacksController < ApplicationController
   end
 
   def destroy
-    unauthorized! unless permission_queryer.can_write_globally?
-
     buildpack = Buildpack.find(guid: hashed_params[:guid])
     buildpack_not_found! unless buildpack
+
+    unauthorized! unless permission_queryer.can_write_globally?
 
     delete_action = BuildpackDelete.new
     deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(Buildpack, buildpack.guid, delete_action)

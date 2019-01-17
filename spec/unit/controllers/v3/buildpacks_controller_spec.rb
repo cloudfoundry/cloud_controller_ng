@@ -98,22 +98,65 @@ RSpec.describe BuildpacksController, type: :controller do
     let(:buildpack) { VCAP::CloudController::Buildpack.make }
     let(:user) { VCAP::CloudController::User.make }
 
-    describe 'permissions by role' do
+    describe 'permissions by role when a buildpack exists' do
       role_to_expected_http_response = {
         'admin' => 202,
-
-        'reader_and_writer' => 403,
-
+        'space_developer' => 403,
+        'space_manager' => 403,
+        'space_auditor' => 403,
+        'org_manager' => 403,
         'admin_read_only' => 403,
         'global_auditor' => 403,
+        'org_auditor' => 403,
+        'org_billing_manager' => 403,
+        'org_user' => 403,
       }.freeze
 
       role_to_expected_http_response.each do |role, expected_return_value|
         context "as an #{role}" do
+          let(:org) { VCAP::CloudController::Organization.make }
+          let(:space) { VCAP::CloudController::Space.make(organization: org) }
+
           it "returns #{expected_return_value}" do
-            set_current_user_as_role(role: role, user: user)
+            set_current_user_as_role(role: role, org: org, space: space, user: user)
 
             delete :destroy, params: { guid: buildpack.guid }
+
+            expect(response.status).to eq expected_return_value
+          end
+        end
+      end
+
+      it 'returns 401 when logged out' do
+        delete :destroy, params: { guid: buildpack.guid }
+
+        expect(response.status).to eq 401
+      end
+    end
+
+    describe 'permissions by role when a buildpack doesnt exist' do
+      role_to_expected_http_response = {
+        'admin' => 404,
+        'space_developer' => 404,
+        'space_manager' => 404,
+        'space_auditor' => 404,
+        'org_manager' => 404,
+        'admin_read_only' => 404,
+        'global_auditor' => 404,
+        'org_auditor' => 404,
+        'org_billing_manager' => 404,
+        'org_user' => 404,
+      }.freeze
+
+      role_to_expected_http_response.each do |role, expected_return_value|
+        context "as an #{role}" do
+          let(:org) { VCAP::CloudController::Organization.make }
+          let(:space) { VCAP::CloudController::Space.make(organization: org) }
+
+          it "returns #{expected_return_value}" do
+            set_current_user_as_role(role: role, org: org, space: space, user: user, scopes: %w(cloud_controller.write))
+
+            delete :destroy, params: { guid: 'non-existant-guid' }
 
             expect(response.status).to eq expected_return_value
           end
