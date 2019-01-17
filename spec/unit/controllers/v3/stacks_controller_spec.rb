@@ -182,27 +182,75 @@ RSpec.describe StacksController, type: :controller do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
     let(:stack) { VCAP::CloudController::Stack.make }
 
-    describe 'permissions by role' do
-      role_to_expected_http_response = {
-        'admin' => 204,
+    describe 'permissions' do
+      context 'when the user does not have the write scope' do
+        before do
+          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
+        end
 
-        'reader_and_writer' => 403,
-      }.freeze
+        it 'raises an ApiError with a 403 code' do
+          delete :destroy, params: { guid: stack.guid }
 
-      role_to_expected_http_response.each do |role, expected_return_value|
-        context "as an #{role}" do
-          it "returns #{expected_return_value}" do
-            set_current_user_as_role(role: role, user: user)
+          expect(response.status).to eq 403
+          expect(response.body).to include 'NotAuthorized'
+        end
+      end
 
-            delete :destroy, params: { guid: stack.guid }
+      context 'permissions by role when the stack exists' do
+        role_to_expected_http_response = {
+          'admin' => 204,
+          'reader_and_writer' => 403
+        }.freeze
 
-            expect(response.status).to eq expected_return_value
+        role_to_expected_http_response.each do |role, expected_return_value|
+          context "as an #{role}" do
+            let(:org) { VCAP::CloudController::Organization.make }
+            let(:space) { VCAP::CloudController::Space.make(organization: org) }
+
+            it "returns #{expected_return_value}" do
+              set_current_user_as_role(
+                role: role,
+                org: org,
+                space: space,
+                user: user,
+                scopes: %w(cloud_controller.read cloud_controller.write)
+              )
+              delete :destroy, params: { guid: stack.guid }, as: :json
+
+              expect(response.status).to eq expected_return_value
+            end
+          end
+        end
+      end
+
+      context 'permissions by role when the stack does not exist' do
+        role_to_expected_http_response = {
+          'admin' => 404,
+          'reader_and_writer' => 404,
+        }.freeze
+
+        role_to_expected_http_response.each do |role, expected_return_value|
+          context "as an #{role}" do
+            let(:org) { VCAP::CloudController::Organization.make }
+            let(:space) { VCAP::CloudController::Space.make(organization: org) }
+
+            it "returns #{expected_return_value}" do
+              set_current_user_as_role(
+                role: role,
+                org: org,
+                space: space,
+                user: user
+              )
+              delete :destroy, params: { guid: 'non-existent' }, as: :json
+
+              expect(response.status).to eq expected_return_value
+            end
           end
         end
       end
 
       it 'returns 401 when logged out' do
-        delete :destroy, params: { guid: stack.guid }
+        delete :destroy, params: { guid: stack.guid }, as: :json
 
         expect(response.status).to eq 401
       end
