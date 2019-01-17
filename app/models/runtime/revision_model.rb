@@ -11,5 +11,8 @@ module VCAP::CloudController
       key: :droplet_guid,
       primary_key: :guid,
       without_guid_generation: true
+
+    one_to_many :labels, class: 'VCAP::CloudController::RevisionLabelModel', key: :resource_guid, primary_key: :guid
+    one_to_many :annotations, class: 'VCAP::CloudController::RevisionAnnotationModel', key: :resource_guid, primary_key: :guid
   end
 end

@@ -34,7 +34,8 @@ RSpec.describe 'Revisions' do
             'self' => {
               'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/#{revision.guid}"
             }
-          }
+          },
+          'metadata' => { 'labels' => {}, 'annotations' => {} }
         }
       )
     end
@@ -74,7 +75,8 @@ RSpec.describe 'Revisions' do
                 'self' => {
                   'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/#{revision.guid}"
                 }
-              }
+              },
+              'metadata' => { 'labels' => {}, 'annotations' => {} }
             },
             {
               'guid' => revision2.guid,
@@ -88,7 +90,8 @@ RSpec.describe 'Revisions' do
                 'self' => {
                   'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/#{revision2.guid}"
                 }
-              }
+              },
+              'metadata' => { 'labels' => {}, 'annotations' => {} }
             }
           ]
         }
@@ -130,7 +133,8 @@ RSpec.describe 'Revisions' do
                   'self' => {
                     'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/#{revision.guid}"
                   }
-                }
+                },
+                'metadata' => { 'labels' => {}, 'annotations' => {} }
               },
               {
                 'guid' => revision3.guid,
@@ -144,12 +148,55 @@ RSpec.describe 'Revisions' do
                   'self' => {
                     'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/#{revision3.guid}"
                   }
-                }
+                },
+                'metadata' => { 'labels' => {}, 'annotations' => {} }
               }
             ]
           }
         )
       end
+    end
+  end
+
+  describe 'PATCH /v3/apps/:guid/revisions/:revguid' do
+    let(:update_request) do
+      {
+        metadata: {
+          labels: {
+            freaky: 'thursday'
+          },
+          annotations: {
+            quality: 'p sus'
+          }
+        },
+      }.to_json
+    end
+
+    it 'updates the revision with metadata' do
+      patch "/v3/apps/#{app_model.guid}/revisions/#{revision.guid}", update_request, user_header
+      expect(last_response.status).to eq(200)
+
+      parsed_response = MultiJson.load(last_response.body)
+      expect(parsed_response).to be_a_response_like(
+        {
+          'guid' => revision.guid,
+          'version' => revision.version,
+          'droplet' => {
+            'guid' => revision.droplet_guid
+          },
+          'created_at' => iso8601,
+          'updated_at' => iso8601,
+          'links' => {
+            'self' => {
+              'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/#{revision.guid}"
+            }
+          },
+          'metadata' => {
+            'labels' => { 'freaky' => 'thursday' },
+            'annotations' => { 'quality' => 'p sus' }
+          }
+        }
+      )
     end
   end
 end

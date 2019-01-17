@@ -1,9 +1,12 @@
 require 'presenters/v3/base_presenter'
+require 'presenters/mixins/metadata_presentation_helpers'
 
 module VCAP::CloudController
   module Presenters
     module V3
       class RevisionPresenter < BasePresenter
+        include VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers
+
         def to_hash
           {
             guid: revision.guid,
@@ -13,7 +16,11 @@ module VCAP::CloudController
             },
             created_at: revision.created_at,
             updated_at: revision.updated_at,
-            links: build_links
+            links: build_links,
+            metadata: {
+              labels: hashified_labels(revision.labels),
+              annotations: hashified_annotations(revision.annotations),
+            }
           }
         end
 

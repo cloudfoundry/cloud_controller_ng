@@ -1,6 +1,8 @@
 require 'messages/app_revisions_list_message'
 require 'fetchers/app_fetcher'
 require 'fetchers/app_revisions_fetcher'
+require 'messages/app_revisions_update_message'
+require 'actions/app_revisions_update'
 require 'presenters/v3/revision_presenter'
 require 'controllers/v3/mixins/app_sub_resource'
 
@@ -30,6 +32,22 @@ class AppRevisionsController < ApplicationController
 
     revision = RevisionModel.find(guid: hashed_params[:revision_guid])
     resource_not_found!(:revision) unless revision && revision.app_guid == app.guid
+
+    render status: :ok, json: Presenters::V3::RevisionPresenter.new(revision)
+  end
+
+  def update
+    message = AppRevisionsUpdateMessage.new(hashed_params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
+    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
+    unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
+
+    revision = RevisionModel.find(guid: hashed_params[:revision_guid])
+    resource_not_found!(:revision) unless revision && revision.app_guid == app.guid
+
+    revision = AppRevisionsUpdate.new.update(revision, message)
 
     render status: :ok, json: Presenters::V3::RevisionPresenter.new(revision)
   end

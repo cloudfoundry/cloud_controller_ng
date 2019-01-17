@@ -60,6 +60,9 @@ module VCAP::CloudController
   PackageLabelModel.blueprint do
   end
 
+  RevisionLabelModel.blueprint do
+  end
+
   SpaceLabelModel.blueprint do
   end
 
@@ -85,6 +88,9 @@ module VCAP::CloudController
   end
 
   PackageAnnotationModel.blueprint do
+  end
+
+  RevisionAnnotationModel.blueprint do
   end
 
   SpaceAnnotationModel.blueprint do
