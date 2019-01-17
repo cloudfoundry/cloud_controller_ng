@@ -20,6 +20,7 @@ require 'security_group.pb'
 require 'volume_mount.pb'
 require 'check_definition.pb'
 require 'image_layer.pb'
+require 'metric_tags.pb'
 
 module Diego
   module Bbs
@@ -29,7 +30,11 @@ module Diego
       # Message Classes
       #
       class DesiredLRPSchedulingInfo < ::Protobuf::Message; end
-      class DesiredLRPRunInfo < ::Protobuf::Message; end
+      class DesiredLRPRunInfo < ::Protobuf::Message
+        class MetricTagsEntry < ::Protobuf::Message; end
+
+      end
+
       class ProtoRoutes < ::Protobuf::Message
         class RoutesEntry < ::Protobuf::Message; end
 
@@ -38,7 +43,11 @@ module Diego
       class DesiredLRPUpdate < ::Protobuf::Message; end
       class DesiredLRPKey < ::Protobuf::Message; end
       class DesiredLRPResource < ::Protobuf::Message; end
-      class DesiredLRP < ::Protobuf::Message; end
+      class DesiredLRP < ::Protobuf::Message
+        class MetricTagsEntry < ::Protobuf::Message; end
+
+      end
+
 
 
       ##
@@ -56,6 +65,11 @@ module Diego
       end
 
       class DesiredLRPRunInfo
+        class MetricTagsEntry
+          optional :string, :key, 1
+          optional ::Diego::Bbs::Models::MetricTagValue, :value, 2
+        end
+
         optional ::Diego::Bbs::Models::DesiredLRPKey, :desired_lrp_key, 1
         repeated ::Diego::Bbs::Models::EnvironmentVariable, :environment_variables, 2
         optional ::Diego::Bbs::Models::Action, :setup, 3
@@ -67,7 +81,7 @@ module Diego
         repeated :uint32, :ports, 9
         repeated ::Diego::Bbs::Models::SecurityGroupRule, :egress_rules, 10
         optional :string, :log_source, 11
-        optional :string, :metrics_guid, 12
+        optional :string, :metrics_guid, 12, :deprecated => true
         optional :int64, :created_at, 13
         repeated ::Diego::Bbs::Models::CachedDependency, :cached_dependencies, 14
         optional :string, :legacy_download_user, 15, :deprecated => true
@@ -80,6 +94,7 @@ module Diego
         optional :string, :image_password, 22
         optional ::Diego::Bbs::Models::CheckDefinition, :check_definition, 23
         repeated ::Diego::Bbs::Models::ImageLayer, :image_layers, 24
+        repeated ::Diego::Bbs::Models::DesiredLRPRunInfo::MetricTagsEntry, :metric_tags, 25
       end
 
       class ProtoRoutes
@@ -111,6 +126,11 @@ module Diego
       end
 
       class DesiredLRP
+        class MetricTagsEntry
+          optional :string, :key, 1
+          optional ::Diego::Bbs::Models::MetricTagValue, :value, 2
+        end
+
         optional :string, :process_guid, 1
         optional :string, :domain, 2
         optional :string, :root_fs, 3
@@ -129,7 +149,7 @@ module Diego
         optional ::Diego::Bbs::Models::ProtoRoutes, :routes, 15
         optional :string, :log_source, 16
         optional :string, :log_guid, 17
-        optional :string, :metrics_guid, 18
+        optional :string, :metrics_guid, 18, :deprecated => true
         optional :string, :annotation, 19
         repeated ::Diego::Bbs::Models::SecurityGroupRule, :egress_rules, 20
         optional ::Diego::Bbs::Models::ModificationTag, :modification_tag, 21
@@ -145,6 +165,7 @@ module Diego
         optional :string, :image_password, 32
         optional ::Diego::Bbs::Models::CheckDefinition, :check_definition, 33
         repeated ::Diego::Bbs::Models::ImageLayer, :image_layers, 34
+        repeated ::Diego::Bbs::Models::DesiredLRP::MetricTagsEntry, :metric_tags, 35
       end
 
     end

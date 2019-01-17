@@ -21,6 +21,7 @@ module Gogoproto
     optional :bool, :goproto_enum_stringer, 62021, :extension => true
     optional :bool, :enum_stringer, 62022, :extension => true
     optional :string, :enum_customname, 62023, :extension => true
+    optional :bool, :enumdecl, 62024, :extension => true
   end
 
   class ::Google::Protobuf::EnumValueOptions < ::Protobuf::Message
@@ -54,6 +55,12 @@ module Gogoproto
     optional :bool, :gogoproto_import, 63027, :extension => true
     optional :bool, :protosizer_all, 63028, :extension => true
     optional :bool, :compare_all, 63029, :extension => true
+    optional :bool, :typedecl_all, 63030, :extension => true
+    optional :bool, :enumdecl_all, 63031, :extension => true
+    optional :bool, :goproto_registration, 63032, :extension => true
+    optional :bool, :messagename_all, 63033, :extension => true
+    optional :bool, :goproto_sizecache_all, 63034, :extension => true
+    optional :bool, :goproto_unkeyed_all, 63035, :extension => true
   end
 
   class ::Google::Protobuf::MessageOptions < ::Protobuf::Message
@@ -79,6 +86,10 @@ module Gogoproto
     optional :bool, :goproto_unrecognized, 64026, :extension => true
     optional :bool, :protosizer, 64028, :extension => true
     optional :bool, :compare, 64029, :extension => true
+    optional :bool, :typedecl, 64030, :extension => true
+    optional :bool, :messagename, 64033, :extension => true
+    optional :bool, :goproto_sizecache, 64034, :extension => true
+    optional :bool, :goproto_unkeyed, 64035, :extension => true
   end
 
   class ::Google::Protobuf::FieldOptions < ::Protobuf::Message
@@ -93,6 +104,7 @@ module Gogoproto
     optional :string, :castvalue, 65009, :extension => true
     optional :bool, :stdtime, 65010, :extension => true
     optional :bool, :stdduration, 65011, :extension => true
+    optional :bool, :wktpointer, 65012, :extension => true
   end
 
 end
