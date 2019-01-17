@@ -8,6 +8,8 @@ module VCAP::CloudController
       :droplet,
     ]
 
+    validate :mutually_exclusive_droplet_sources
+
     def app_guid
       relationships&.dig(:app, :data, :guid)
     end
@@ -18,6 +20,14 @@ module VCAP::CloudController
 
     def droplet_guid
       droplet&.dig(:guid)
+    end
+
+    private
+
+    def mutually_exclusive_droplet_sources
+      if revision.present? && droplet.present?
+        errors.add(:droplet, "Cannot set both fields 'droplet' and 'revision'")
+      end
     end
   end
 end
