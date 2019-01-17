@@ -1,11 +1,22 @@
 module VCAP::CloudController
   class AppRevisionsFetcher
-    def self.fetch(app_guid, message)
+    def self.fetch(app, message)
+      dataset = RevisionModel.where(app_guid: app.guid)
+
       if message.requested?(:versions)
-        RevisionModel.where(app: app_guid, version: message.versions)
-      else
-        RevisionModel.where(app: app_guid)
+        dataset = dataset.where(app_guid: app.guid, version: message.versions)
       end
+
+      if message.requested?(:label_selector)
+        dataset = LabelSelectorQueryGenerator.add_selector_queries(
+          label_klass: RevisionLabelModel,
+          resource_dataset: dataset,
+          requirements: message.requirements,
+          resource_klass: RevisionModel,
+        )
+      end
+
+      dataset
     end
   end
 end

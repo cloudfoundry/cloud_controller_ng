@@ -155,6 +155,29 @@ RSpec.describe 'Revisions' do
           }
         )
       end
+
+      context 'label_selector' do
+        let!(:revisionA) { VCAP::CloudController::RevisionModel.make(app: app_model) }
+        let!(:revisionB) { VCAP::CloudController::RevisionModel.make(app: app_model) }
+        let!(:revisionC) { VCAP::CloudController::RevisionModel.make(app: app_model) }
+
+        let!(:revAFruit) { VCAP::CloudController::RevisionLabelModel.make(key_name: 'fruit', value: 'strawberry', resource_guid: revisionA.guid) }
+        let!(:revAAnimal) { VCAP::CloudController::RevisionLabelModel.make(key_name: 'animal', value: 'horse', resource_guid: revisionA.guid) }
+
+        let!(:revBEnv) { VCAP::CloudController::RevisionLabelModel.make(key_name: 'env', value: 'prod', resource_guid: revisionB.guid) }
+        let!(:revBAnimal) { VCAP::CloudController::RevisionLabelModel.make(key_name: 'animal', value: 'dog', resource_guid: revisionB.guid) }
+
+        let!(:revCEnv) { VCAP::CloudController::RevisionLabelModel.make(key_name: 'env', value: 'prod', resource_guid: revisionC.guid) }
+        let!(:revCAnimal) { VCAP::CloudController::RevisionLabelModel.make(key_name: 'animal', value: 'horse', resource_guid: revisionC.guid) }
+
+        it 'returns the matching revisions' do
+          get "/v3/apps/#{app_model.guid}/revisions?label_selector=!fruit,env=prod,animal in (dog,horse)", nil, user_header
+          expect(last_response.status).to eq(200)
+
+          parsed_response = MultiJson.load(last_response.body)
+          expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(revisionB.guid, revisionC.guid)
+        end
+      end
     end
   end
 
