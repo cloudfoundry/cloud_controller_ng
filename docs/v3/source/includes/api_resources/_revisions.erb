@@ -1,4 +1,4 @@
-<% content_for :revision do %>
+<% content_for :revision do | metadata={} | %>
 {
   "guid": "885735b5-aea4-4cf5-8e44-961af0e41920",
   "version": 1,
@@ -7,6 +7,10 @@
   },
   "created_at": "2017-02-01T01:33:58Z",
   "updated_at": "2017-02-01T01:33:58Z",
+  "metadata": {
+    "labels": <%= metadata.fetch(:labels, {}).to_json(space: ' ')%>,
+    "annotations": <%= metadata.fetch(:annotations, {}).to_json(space: ' ')%>
+  },
   "links": {
     "self": {
       "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/revisions/885735b5-aea4-4cf5-8e44-961af0e41920"
@@ -38,6 +42,10 @@
       },
       "created_at": "2017-02-01T01:33:58Z",
       "updated_at": "2017-02-01T01:33:58Z",
+      "metadata": {
+        "labels": {},
+        "annotations": {}
+      },
       "links": {
         "self": {
           "href": "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/revisions/885735b5-aea4-4cf5-8e44-961af0e41920"
