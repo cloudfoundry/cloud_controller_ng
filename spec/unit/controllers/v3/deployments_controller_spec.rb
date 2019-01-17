@@ -46,7 +46,6 @@ RSpec.describe DeploymentsController, type: :controller do
             to receive(:create).
             with(
               app: app,
-              droplet: app.droplet,
               user_audit_info: instance_of(VCAP::CloudController::UserAuditInfo),
               message: instance_of(VCAP::CloudController::DeploymentCreateMessage),
               ).and_call_original
@@ -106,7 +105,6 @@ RSpec.describe DeploymentsController, type: :controller do
             to receive(:create).
             with(
               app: app,
-              droplet: other_droplet,
               user_audit_info: instance_of(VCAP::CloudController::UserAuditInfo),
               message: instance_of(VCAP::CloudController::DeploymentCreateMessage),
               ).and_call_original
@@ -126,7 +124,6 @@ RSpec.describe DeploymentsController, type: :controller do
               to receive(:create).
               with(
                 app: app,
-                droplet: other_droplet,
                 user_audit_info: instance_of(VCAP::CloudController::UserAuditInfo),
                 message: instance_of(VCAP::CloudController::DeploymentCreateMessage),
                 ).and_call_original
@@ -247,7 +244,6 @@ RSpec.describe DeploymentsController, type: :controller do
             to receive(:create).
             with(
               app: app,
-              droplet: droplet,
               user_audit_info: instance_of(VCAP::CloudController::UserAuditInfo),
               message: instance_of(VCAP::CloudController::DeploymentCreateMessage),
               ).and_call_original

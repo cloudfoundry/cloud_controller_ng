@@ -4,8 +4,8 @@ module VCAP::CloudController
   class DeploymentCreateMessage < MetadataBaseMessage
     register_allowed_keys [
       :relationships,
-      :revision,
       :droplet,
+      :revision,
     ]
 
     validate :mutually_exclusive_droplet_sources
@@ -14,12 +14,12 @@ module VCAP::CloudController
       relationships&.dig(:app, :data, :guid)
     end
 
-    def revision_guid
-      revision&.dig(:guid)
-    end
-
     def droplet_guid
       droplet&.dig(:guid)
+    end
+
+    def revision_guid
+      revision&.dig(:guid)
     end
 
     private

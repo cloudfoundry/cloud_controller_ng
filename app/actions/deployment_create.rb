@@ -2,15 +2,17 @@ require 'repositories/deployment_event_repository'
 
 module VCAP::CloudController
   class DeploymentCreate
-    class SetCurrentDropletError < StandardError; end
+    class Error < StandardError; end
 
     class << self
-      def create(app:, droplet:, user_audit_info:, message: DeploymentCreateMessage.new({}))
+      def create(app:, user_audit_info:, message:)
+        droplet = choose_desired_droplet(app, message.droplet_guid, message.revision_guid)
+
         previous_droplet = app.droplet
         begin
           AppAssignDroplet.new(user_audit_info).assign(app, droplet)
         rescue AppAssignDroplet::Error => e
-          raise SetCurrentDropletError.new(e.message)
+          raise Error.new(e.message)
         end
 
         web_process = app.oldest_web_process
@@ -50,6 +52,23 @@ module VCAP::CloudController
       end
 
       private
+
+      def choose_desired_droplet(app, droplet_guid, revision_guid)
+        if droplet_guid
+          droplet = DropletModel.find(guid: droplet_guid)
+        elsif revision_guid
+          revision = RevisionModel.find(guid: revision_guid)
+          raise Error.new('The revision does not exist') unless revision
+
+          droplet = DropletModel.find(guid: revision.droplet_guid)
+          raise Error.new('Invalid revision. Please specify a revision with a valid droplet in the request.') unless droplet
+
+        else
+          droplet = app.droplet
+          raise Error.new('Invalid droplet. Please specify a droplet in the request or set a current droplet for the app.') unless droplet
+        end
+        droplet
+      end
 
       def create_deployment_process(app, deployment_guid, web_process)
         process = clone_existing_web_process(app, web_process)
