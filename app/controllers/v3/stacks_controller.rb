@@ -36,13 +36,13 @@ class StacksController < ApplicationController
   end
 
   def update
+    stack = Stack.find(guid: hashed_params[:guid])
+    stack_not_found! unless stack
+
     unauthorized! unless permission_queryer.can_write_globally?
 
     message = StackUpdateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
-
-    stack = Stack.find(guid: hashed_params[:guid])
-    stack_not_found! unless stack
 
     stack = StackUpdate.new.update(stack, message)
 

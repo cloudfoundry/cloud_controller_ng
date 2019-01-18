@@ -492,6 +492,20 @@ RSpec.describe StacksController, type: :controller do
       end
     end
 
+    context 'when the user is not an admin' do
+      before do
+        set_current_user(user)
+      end
+
+      context 'and the stack does not exist' do
+        it 'returns a 404' do
+          patch :update, params: { guid: 'bogus-stack-gyud' }.merge({}), as: :json
+
+          expect(response.status).to eq(404)
+        end
+      end
+    end
+
     describe 'authorization' do
       it_behaves_like 'permissions endpoint' do
         let(:roles_to_http_responses) do
