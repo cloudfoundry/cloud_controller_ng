@@ -526,6 +526,25 @@ RSpec.describe 'Deployments' do
           ]
         })
       end
+
+      it 'returns a list of label filtered deployments' do
+        VCAP::CloudController::DeploymentLabelModel.make(
+          key_name: 'release',
+          value: 'stable',
+          resource_guid: deployment2.guid
+        )
+        VCAP::CloudController::DeploymentLabelModel.make(
+          key_name: 'release',
+          value: 'unstable',
+          resource_guid: deployment3.guid
+        )
+
+        get '/v3/deployments?label_selector=release=stable', nil, admin_user_header
+        expect(last_response.status).to eq(200)
+
+        expect(parsed_response['resources']).to have(1).items
+        expect(parsed_response['resources'][0]['guid']).to eq(deployment2.guid)
+      end
     end
 
     context 'when there are other spaces the developer cannot see' do

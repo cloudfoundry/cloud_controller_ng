@@ -11,6 +11,7 @@ module VCAP::CloudController
           'order_by'  => 'created_at',
           'app_guids' => 'appguid1,appguid2',
           'states' => 'DEPLOYED,CANCELED',
+          'label_selector' => 'key=value'
         }
       end
 
@@ -23,6 +24,8 @@ module VCAP::CloudController
         expect(message.app_guids).to match_array(['appguid1', 'appguid2'])
         expect(message.states).to match_array(['CANCELED', 'DEPLOYED'])
         expect(message.order_by).to eq('created_at')
+        expect(message.label_selector).to eq('key=value')
+        expect(message).to be_valid
       end
 
       it 'converts requested keys to symbols' do
@@ -33,6 +36,7 @@ module VCAP::CloudController
         expect(message.requested?(:app_guids)).to be true
         expect(message.requested?(:order_by)).to be true
         expect(message.requested?(:states)).to be true
+        expect(message.requested?(:label_selector)).to be true
       end
     end
 
@@ -77,6 +81,16 @@ module VCAP::CloudController
         message = DeploymentsListMessage.from_params states: 'tricked you, not an array'
         expect(message).to be_invalid
         expect(message.errors[:states].length).to eq 1
+      end
+
+      it 'validates label selector' do
+        message = DeploymentsListMessage.from_params('label_selector' => '')
+
+        expect_any_instance_of(Validators::LabelSelectorRequirementValidator).
+          to receive(:validate).
+          with(message).
+          and_call_original
+        message.valid?
       end
     end
   end
