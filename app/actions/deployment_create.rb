@@ -39,10 +39,7 @@ module VCAP::CloudController
 
           deployment.save
 
-          if message.requested?(:metadata)
-            LabelsUpdate.update(deployment, message.labels, DeploymentLabelModel)
-            AnnotationsUpdate.update(deployment, message.annotations, DeploymentAnnotationModel)
-          end
+          MetadataUpdate.update(deployment, message)
 
           process = create_deployment_process(app, deployment.guid, web_process)
           deployment.update(deploying_web_process: process)

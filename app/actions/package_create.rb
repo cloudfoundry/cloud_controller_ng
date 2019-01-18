@@ -23,10 +23,7 @@ module VCAP::CloudController
         package.db.transaction do
           package.save
           record_audit_event(package, message, user_audit_info) if record_event
-          if message.requested?(:metadata)
-            LabelsUpdate.update(package, message.labels, PackageLabelModel)
-            AnnotationsUpdate.update(package, message.annotations, PackageAnnotationModel)
-          end
+          MetadataUpdate.update(package, message)
         end
 
         package

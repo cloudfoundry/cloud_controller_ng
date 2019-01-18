@@ -8,13 +8,10 @@ module VCAP::CloudController
     end
 
     def update(package, message)
-      if message.requested?(:metadata)
-        package.db.transaction do
-          LabelsUpdate.update(package, message.labels, PackageLabelModel)
-          AnnotationsUpdate.update(package, message.annotations, PackageAnnotationModel)
-        end
-        @logger.info("Finished updating metadata on package #{package.guid}")
+      package.db.transaction do
+        MetadataUpdate.update(package, message)
       end
+      @logger.info("Finished updating metadata on package #{package.guid}")
       package
     rescue Sequel::ValidationFailed => e
       raise InvalidPackage.new(e.message)

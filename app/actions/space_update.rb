@@ -7,8 +7,7 @@ module VCAP::CloudController
       space.db.transaction do
         space.lock!
         space.name = message.name if message.requested?(:name)
-        LabelsUpdate.update(space, message.labels, SpaceLabelModel) if message.requested?(:metadata)
-        AnnotationsUpdate.update(space, message.annotations, SpaceAnnotationModel) if message.requested?(:metadata)
+        MetadataUpdate.update(space, message)
 
         space.save
       end

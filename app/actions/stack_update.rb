@@ -8,13 +8,10 @@ module VCAP::CloudController
     end
 
     def update(stack, message)
-      if message.requested?(:metadata)
-        stack.db.transaction do
-          LabelsUpdate.update(stack, message.labels, StackLabelModel)
-          AnnotationsUpdate.update(stack, message.annotations, StackAnnotationModel)
-        end
-        @logger.info("Finished updating metadata on stack #{stack.guid}")
+      stack.db.transaction do
+        MetadataUpdate.update(stack, message)
       end
+      @logger.info("Finished updating metadata on stack #{stack.guid}")
       stack
     rescue Sequel::ValidationFailed => e
       raise InvalidStack.new(e.message)

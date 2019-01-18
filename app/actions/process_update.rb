@@ -1,4 +1,5 @@
 require 'models/helpers/health_check_types'
+require 'actions/metadata_update'
 
 module VCAP::CloudController
   class ProcessUpdate
@@ -18,10 +19,7 @@ module VCAP::CloudController
       process.db.transaction do
         process.lock!
 
-        if message.requested?(:metadata)
-          LabelsUpdate.update(process, message.labels, ProcessLabelModel)
-          AnnotationsUpdate.update(process, message.annotations, ProcessAnnotationModel)
-        end
+        MetadataUpdate.update(process, message)
 
         process.command              = strategy.updated_command if message.requested?(:command)
         process.health_check_type    = message.health_check_type if message.requested?(:health_check_type)

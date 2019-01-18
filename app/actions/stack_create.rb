@@ -9,10 +9,7 @@ module VCAP::CloudController
         description: message.description
       )
 
-      if message.requested?(:metadata)
-        LabelsUpdate.update(stack, message.labels, StackLabelModel)
-        AnnotationsUpdate.update(stack, message.annotations, StackAnnotationModel)
-      end
+      MetadataUpdate.update(stack, message)
 
       stack
     rescue Sequel::ValidationFailed => e

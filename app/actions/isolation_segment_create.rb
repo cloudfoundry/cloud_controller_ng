@@ -9,10 +9,7 @@ module VCAP::CloudController
         isolation_segment = IsolationSegmentModel.create(
           name: message.name,
         )
-        if message.requested?(:metadata)
-          LabelsUpdate.update(isolation_segment, message.labels, IsolationSegmentLabelModel)
-          AnnotationsUpdate.update(isolation_segment, message.annotations, IsolationSegmentAnnotationModel)
-        end
+        MetadataUpdate.update(isolation_segment, message)
       end
 
       isolation_segment

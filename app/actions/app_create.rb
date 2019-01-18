@@ -22,10 +22,7 @@ module VCAP::CloudController
 
         lifecycle.create_lifecycle_data_model(app)
 
-        if message.requested?(:metadata)
-          LabelsUpdate.update(app, message.labels, AppLabelModel)
-          AnnotationsUpdate.update(app, message.annotations, AppAnnotationModel)
-        end
+        MetadataUpdate.update(app, message)
 
         raise CloudController::Errors::ApiError.new_from_details('CustomBuildpacksDisabled') if using_disabled_custom_buildpack?(app)
 

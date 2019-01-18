@@ -11,8 +11,7 @@ module VCAP::CloudController
       space = nil
       Space.db.transaction do
         space = VCAP::CloudController::Space.create(name: message.name, organization: org)
-        LabelsUpdate.update(space, message.labels, SpaceLabelModel) if message.requested?(:metadata)
-        AnnotationsUpdate.update(space, message.annotations, SpaceAnnotationModel) if message.requested?(:metadata)
+        MetadataUpdate.update(space, message)
       end
 
       VCAP::CloudController::Roles::SPACE_ROLE_NAMES.each do |role|

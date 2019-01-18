@@ -8,13 +8,10 @@ module VCAP::CloudController
     end
 
     def update(revision, message)
-      if message.requested?(:metadata)
-        revision.db.transaction do
-          LabelsUpdate.update(revision, message.labels, RevisionLabelModel)
-          AnnotationsUpdate.update(revision, message.annotations, RevisionAnnotationModel)
-        end
-        @logger.info("Finished updating metadata on revision #{revision.guid}")
+      revision.db.transaction do
+        MetadataUpdate.update(revision, message)
       end
+      @logger.info("Finished updating metadata on revision #{revision.guid}")
       revision
     rescue Sequel::ValidationFailed => e
       raise InvalidAppRevisions.new(e.message)
