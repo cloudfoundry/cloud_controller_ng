@@ -10,10 +10,20 @@ module VCAP::CloudController
         prevent_changing_space(space, update_attrs)
         validate_changing_plan(service_plan, service, service_instance, update_attrs['service_plan_guid'])
         check_plan_still_valid(service_instance, service_plan, update_attrs['service_plan_guid'])
+        validate_update_of_service_parameters(service_instance, update_attrs['parameters'])
         true
       end
 
       private
+
+      def validate_update_of_service_parameters(service_instance, parameters)
+        return unless parameters
+        return if SecurityContext.current_user.admin
+
+        if ServicePlan.user_visible(SecurityContext.current_user, SecurityContext.current_user.admin).filter(guid: service_instance.service_plan.guid).count == 0
+          raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceWithInaccessiblePlanNotUpdateable', 'parameters')
+        end
+      end
 
       def validate_name_update(service_instance, update_attrs)
         return unless update_attrs['name'] && service_instance.shared?

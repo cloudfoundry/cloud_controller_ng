@@ -57,7 +57,11 @@ module VCAP::CloudController
     def allowed?(service_instance)
       return true if admin_user?
 
-      ServicePlan.user_visible(context.user, admin_user?).filter(guid: service_instance.service_plan.guid).count > 0
+      if service_instance.new? || service_instance.changed_columns.include?(:service_plan_id)
+        return ServicePlan.user_visible(context.user, admin_user?).filter(guid: service_instance.service_plan.guid).count > 0
+      end
+
+      true
     end
   end
 end

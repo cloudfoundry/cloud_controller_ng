@@ -323,6 +323,11 @@
   http_code: 404
   message: "The service instance could not be found: %s"
 
+60029:
+  name: ServiceInstanceWithInaccessiblePlanNotUpdateable
+  http_code: 403
+  message: "Cannot update %s of a service instance that belongs to inaccessible plan"
+
 70001:
   name: RuntimeInvalid
   http_code: 400
