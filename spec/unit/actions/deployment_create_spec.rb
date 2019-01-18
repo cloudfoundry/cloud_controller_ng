@@ -18,12 +18,14 @@ module VCAP::CloudController
     let(:message) { DeploymentCreateMessage.new({
       relationships: { app: { data: { guid: app.guid } } },
       droplet: { guid: next_droplet.guid },
-    })}
+    })
+    }
 
     let(:restart_message) { DeploymentCreateMessage.new({
       relationships: { app: { data: { guid: app.guid } } },
       droplet: { guid: original_droplet.guid },
-    })}
+    })
+    }
 
     before do
       app.update(droplet: original_droplet)
@@ -235,8 +237,8 @@ module VCAP::CloudController
           let(:message) { DeploymentCreateMessage.new({
             relationships: { app: { data: { guid: app.guid } } },
             droplet: { guid: unaffiliated_droplet.guid },
-          })}
-
+          })
+          }
 
           it 'raises a AppAssignDroplet error' do
             expect {
