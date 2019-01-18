@@ -1,8 +1,10 @@
 require 'messages/deployments_list_message'
 require 'messages/deployment_create_message'
+require 'messages/deployment_update_message'
 require 'fetchers/deployment_list_fetcher'
 require 'presenters/v3/deployment_presenter'
 require 'actions/deployment_create'
+require 'actions/deployment_update'
 require 'actions/deployment_cancel'
 
 class DeploymentsController < ApplicationController
@@ -43,6 +45,20 @@ class DeploymentsController < ApplicationController
     end
 
     render status: :created, json: Presenters::V3::DeploymentPresenter.new(deployment)
+  end
+
+  def update
+    deployment = DeploymentModel.find(guid: hashed_params[:guid])
+    resource_not_found!(:deployment) unless deployment &&
+      permission_queryer.can_read_from_space?(deployment.app.space.guid, deployment.app.space.organization.guid)
+    unauthorized! unless permission_queryer.can_write_to_space?(deployment.app.space.guid)
+
+    message = VCAP::CloudController::DeploymentUpdateMessage.new(hashed_params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    deployment = VCAP::CloudController::DeploymentUpdate.update(deployment, message)
+
+    render status: :ok, json: Presenters::V3::DeploymentPresenter.new(deployment)
   end
 
   def show

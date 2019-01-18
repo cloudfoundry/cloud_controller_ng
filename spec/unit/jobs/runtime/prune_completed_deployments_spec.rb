@@ -89,7 +89,29 @@ module VCAP::CloudController
           expect(DeploymentModel.order(Sequel.asc(:created_at)).map(&:id)).to eq((21..40).to_a + (46..60).to_a)
         end
 
-        it 'calls destroy on the Deployment so association dependencies are respected' do
+        it 'destroys metadata associated with pruned deployments' do
+          expect(DeploymentModel.count).to eq(0)
+          expect(DeploymentLabelModel.count).to eq(0)
+          expect(DeploymentAnnotationModel.count).to eq(0)
+
+          total = 50
+          (1..50).each do |i|
+            deployment = DeploymentModel.make(id: i, state: DeploymentModel::DEPLOYED_STATE, app: app, created_at: Time.now - total + i)
+            DeploymentAnnotationModel.make(deployment: deployment, key: i, value: i)
+            DeploymentLabelModel.make(deployment: deployment, key_name: i, value: i)
+          end
+
+          job.perform
+
+          expect(DeploymentModel.count).to eq(15)
+          expect(DeploymentModel.map(&:id)).to match_array((36..50).to_a)
+          expect(DeploymentLabelModel.count).to eq(15)
+          expect(DeploymentLabelModel.map(&:value)).to match_array((36..50).map(&:to_s))
+          expect(DeploymentAnnotationModel.count).to eq(15)
+          expect(DeploymentAnnotationModel.map(&:value)).to match_array((36..50).map(&:to_s))
+        end
+
+        it 'destroys associated historical processes to maintain key constraints' do
           expect(DeploymentModel.count).to eq(0)
 
           50.times do

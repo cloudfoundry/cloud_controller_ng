@@ -77,29 +77,5 @@ module VCAP::CloudController
         expect(deployment.deploying?).to be(false)
       end
     end
-
-    describe '#destroy' do
-      before do
-        DeploymentProcessModel.make(
-          deployment: deployment,
-          process_guid: deploying_web_process.guid,
-          process_type: deploying_web_process.type
-        )
-        DeploymentProcessModel.make(
-          deployment: deployment,
-          process_guid: 'guid-for-deleted-process',
-          process_type: 'i-do-not-exist!!!!!!!!!!'
-        )
-        DeploymentProcessModel.make(
-          deployment: DeploymentModel.make
-        )
-      end
-
-      it 'deletes any associated historical DeploymentProcessModels' do
-        expect {
-          deployment.destroy
-        }.to change { DeploymentProcessModel.count }.from(3).to(1)
-      end
-    end
   end
 end

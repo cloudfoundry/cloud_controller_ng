@@ -1,7 +1,18 @@
 module VCAP::CloudController
   class DeploymentDelete
-    def self.delete(deployments)
-      deployments.each(&:destroy)
+    class << self
+      def delete(deployments)
+        deployments.each do |deployment|
+          delete_metadata(deployment)
+          deployment.historical_related_processes.map(&:destroy)
+          deployment.destroy
+        end
+      end
+
+      def delete_metadata(deployment)
+        LabelDelete.delete(deployment.labels)
+        AnnotationDelete.delete(deployment.annotations)
+      end
     end
   end
 end

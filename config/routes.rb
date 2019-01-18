@@ -66,6 +66,7 @@ Rails.application.routes.draw do
 
   # deployments
   post '/deployments', to: 'deployments#create'
+  patch '/deployments/:guid', to: 'deployments#update'
   get '/deployments/', to: 'deployments#index'
   get '/deployments/:guid', to: 'deployments#show'
   post '/deployments/:guid/actions/cancel', to: 'deployments#cancel'

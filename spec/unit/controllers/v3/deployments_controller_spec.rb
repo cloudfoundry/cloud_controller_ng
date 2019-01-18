@@ -653,4 +653,193 @@ RSpec.describe DeploymentsController, type: :controller do
       let(:api_call) { lambda { post :cancel, params: { guid: deployment.guid } } }
     end
   end
+
+  describe '#update' do
+    let(:deployment) { VCAP::CloudController::DeploymentModel.make(app: app) }
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+
+    before do
+      allow_user_read_access_for(user, spaces: [space])
+      allow_user_write_access(user, space: space)
+    end
+
+    context 'when there is an invalid message validation failure' do
+      let(:request_body) do
+        {
+          metadata: {
+            labels: 'value'
+          }
+        }
+      end
+      it 'displays an informative error' do
+        patch :update, params: { guid: deployment.guid }.merge(request_body), as: :json
+        expect(response.status).to eq(422)
+        expect(response).to have_error_message("labels' is not a hash")
+      end
+    end
+
+    context 'permissions' do
+      context 'when the user cannot read the deployment due to roles' do
+        before do
+          disallow_user_read_access(user, space: space)
+          disallow_user_write_access(user, space: space)
+        end
+
+        it 'returns a 404 ResourceNotFound error' do
+          patch :update, params: { guid: deployment.guid }
+
+          expect(response.status).to eq(404)
+          expect(response.body).to include('ResourceNotFound')
+        end
+      end
+
+      context 'when the user can read but cannot write to the space' do
+        before do
+          disallow_user_write_access(user, space: space)
+        end
+
+        it 'returns 403 NotAuthorized' do
+          patch :update, params: { guid: deployment.guid }
+
+          expect(response.status).to eq(403)
+          expect(response.body).to include('NotAuthorized')
+        end
+      end
+    end
+
+    context 'metadata' do
+      context 'with labels' do
+        let(:request_body) do
+          {
+            metadata: {
+              labels: {
+                "key": 'value'
+              }
+            }
+          }
+        end
+
+        it 'updates' do
+          patch :update, params: { guid: deployment.guid }.merge(request_body), as: :json
+          expect(response.status).to eq(200)
+          expect(parsed_body['guid']).to eq(deployment.guid)
+          expect(parsed_body['metadata']['labels']['key']).to eq('value')
+        end
+      end
+      context 'when the label is invalid' do
+        let(:request_body) do
+          {
+            metadata: {
+              labels: {
+                'cloudfoundry.org/release' => 'stable'
+              }
+            }
+          }
+        end
+
+        it 'returns an UnprocessableEntity error' do
+          patch :update, params: { guid: deployment.guid }.merge(request_body), as: :json
+
+          expect(response.status).to eq 422
+          expect(response.body).to include 'UnprocessableEntity'
+          expect(response.body).to include 'cloudfoundry.org is a reserved domain'
+        end
+      end
+
+      context 'when the annotation is invalid' do
+        let(:request_body) do
+          {
+            metadata: {
+              labels: {
+                'release' => 'stable'
+              },
+              annotations: {
+                '' => 'uhoh'
+              },
+            }
+          }
+        end
+
+        it 'returns an UnprocessableEntity error' do
+          patch :update, params: { guid: deployment.guid }.merge(request_body), as: :json
+
+          expect(response.status).to eq 422
+          expect(response.body).to include 'UnprocessableEntity'
+          expect(response.body).to include 'Metadata annotations key cannot be empty string'
+        end
+      end
+
+      context 'when the metadata is valid' do
+        let(:request_body) do
+          {
+            metadata: {
+              labels: {
+                release: 'stable'
+              },
+              annotations: {
+                this: 'is valid'
+              },
+            }
+          }
+        end
+
+        it 'Returns a 200 and the deployment with metadata' do
+          patch :update, params: { guid: deployment.guid }.merge(request_body), as: :json
+
+          response_body = parsed_body
+          response_metadata = response_body['metadata']
+
+          expect(response.status).to eq 200
+          expect(response_metadata['labels']['release']).to eq 'stable'
+          expect(response_metadata['annotations']['this']).to eq 'is valid'
+        end
+      end
+
+      context 'when there are too many annotations' do
+        let(:request_body) do
+          {
+            metadata: {
+              annotations: {
+                radish: 'daikon',
+                potato: 'idaho'
+              }
+            }
+          }
+        end
+
+        before do
+          VCAP::CloudController::Config.config.set(:max_annotations_per_resource, 1)
+        end
+
+        it 'responds with 422' do
+          patch :update, params: { guid: deployment.guid }.merge(request_body), as: :json
+          expect(response.status).to eq(422)
+          expect(response.body).to include 'Failed to add 2 annotations because it would exceed maximum of 1'
+        end
+      end
+
+      context 'when there are too many labels' do
+        let(:request_body) do
+          {
+            metadata: {
+              labels: {
+                radish: 'daikon',
+                potato: 'idaho'
+              }
+            }
+          }
+        end
+
+        before do
+          VCAP::CloudController::Config.config.set(:max_labels_per_resource, 1)
+        end
+
+        it 'responds with 422' do
+          patch :update, params: { guid: deployment.guid }.merge(request_body), as: :json
+          expect(response.status).to eq(422)
+          expect(response.body).to include 'Failed to add 2 labels because it would exceed maximum of 1'
+        end
+      end
+    end
+  end
 end

@@ -40,8 +40,6 @@ module VCAP::CloudController
     one_to_many :labels, class: 'VCAP::CloudController::DeploymentLabelModel', key: :resource_guid, primary_key: :guid
     one_to_many :annotations, class: 'VCAP::CloudController::DeploymentAnnotationModel', key: :resource_guid, primary_key: :guid
 
-    add_association_dependencies historical_related_processes: :delete
-
     dataset_module do
       def deploying_count
         where(state: DeploymentModel::DEPLOYING_STATE).count

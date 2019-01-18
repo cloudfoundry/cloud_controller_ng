@@ -24,12 +24,13 @@ module VCAP::CloudController
                                   limit(max_retained_deployments_per_app).
                                   select(:id)
 
-            delete_count = deployments_dataset.
-                           exclude(state: [DeploymentModel::DEPLOYING_STATE, DeploymentModel::CANCELING_STATE]).
-                           exclude(id: deployments_to_keep).
-                           destroy
+            deployments_to_delete = deployments_dataset.
+                                    exclude(state: [DeploymentModel::DEPLOYING_STATE, DeploymentModel::CANCELING_STATE]).
+                                    exclude(id: deployments_to_keep)
 
-            logger.info("Cleaned up #{delete_count} DeploymentModel rows for app #{app_guid}")
+            DeploymentDelete.delete(deployments_to_delete)
+
+            logger.info("Cleaned up #{deployments_to_delete.count} DeploymentModel rows for app #{app_guid}")
           end
         end
 

@@ -54,6 +54,9 @@ module VCAP::CloudController
   AppLabelModel.blueprint do
   end
 
+  DeploymentLabelModel.blueprint do
+  end
+
   OrganizationLabelModel.blueprint do
   end
 
@@ -82,6 +85,9 @@ module VCAP::CloudController
   end
 
   AppAnnotationModel.blueprint do
+  end
+
+  DeploymentAnnotationModel.blueprint do
   end
 
   OrganizationAnnotationModel.blueprint do

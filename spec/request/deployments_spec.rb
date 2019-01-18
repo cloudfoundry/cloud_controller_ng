@@ -298,6 +298,63 @@ RSpec.describe 'Deployments' do
   end
 
   describe 'PATCH /v3/deployments' do
+    let(:deployment) {
+      VCAP::CloudController::DeploymentModel.make(
+        app: app_model,
+        droplet: droplet,
+      )
+    }
+    let(:update_request) do
+      {
+        metadata: {
+          labels: {
+            freaky: 'thursday'
+          },
+          annotations: {
+            quality: 'p sus'
+          }
+        },
+      }.to_json
+    end
+
+    it 'updates the deployment with metadata' do
+      patch "/v3/deployments/#{deployment.guid}", update_request, user_header
+      expect(last_response.status).to eq(200)
+
+      parsed_response = MultiJson.load(last_response.body)
+      expect(parsed_response).to be_a_response_like({
+        'guid' => deployment.guid,
+        'state' => 'DEPLOYING',
+        'droplet' => {
+          'guid' => droplet.guid,
+        },
+        'previous_droplet' => {
+          'guid' => nil,
+        },
+        'new_processes' => [],
+        'metadata' => {
+          'labels' => { 'freaky' => 'thursday' },
+          'annotations' => { 'quality' => 'p sus' },
+        },
+        'created_at' => iso8601,
+        'updated_at' => iso8601,
+        'relationships' => {
+          'app' => {
+            'data' => {
+              'guid' => app_model.guid
+            }
+          }
+        },
+        'links' => {
+          'self' => {
+            'href' => "#{link_prefix}/v3/deployments/#{deployment.guid}"
+          },
+          'app' => {
+            'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
+          }
+        }
+      })
+    end
   end
 
   describe 'GET /v3/deployments/:guid' do
