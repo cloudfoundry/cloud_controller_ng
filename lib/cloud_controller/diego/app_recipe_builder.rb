@@ -13,9 +13,6 @@ module VCAP::CloudController
     class AppRecipeBuilder
       include ::Diego::ActionBuilder
 
-      METRIC_TAG_VALUE = ::Diego::Bbs::Models::MetricTagValue
-      METRIC_TAG_ENTRY = ::Diego::Bbs::Models::DesiredLRP::MetricTagsEntry
-
       MONITORED_HEALTH_CHECK_TYPES = [HealthCheckTypes::PORT, HealthCheckTypes::HTTP, ''].map(&:freeze).freeze
 
       def initialize(config:, process:, ssh_key: SSHKey.new)
@@ -54,13 +51,7 @@ module VCAP::CloudController
           ports:                            ports,
           log_source:                       LRP_LOG_SOURCE,
           log_guid:                         process.app.guid,
-          metric_tags:                      [
-            METRIC_TAG_ENTRY.new(key: 'source_id', value: METRIC_TAG_VALUE.new(static: process.app.guid)),
-            METRIC_TAG_ENTRY.new(key: 'process_id', value: METRIC_TAG_VALUE.new(static: process.guid)),
-            METRIC_TAG_ENTRY.new(key: 'process_instance_id', value: METRIC_TAG_VALUE.new(dynamic: METRIC_TAG_VALUE::DynamicValue::INSTANCE_GUID)),
-            METRIC_TAG_ENTRY.new(key: 'instance_id', value: METRIC_TAG_VALUE.new(dynamic: METRIC_TAG_VALUE::DynamicValue::INDEX)),
-            METRIC_TAG_ENTRY.new(key: 'cf_process_instance_id', value: METRIC_TAG_VALUE.new(dynamic: METRIC_TAG_VALUE::DynamicValue::INSTANCE_GUID)),
-          ],
+          metrics_guid:                     process.guid,
           annotation:                       process.updated_at.to_f.to_s,
           egress_rules:                     generate_egress_rules,
           cached_dependencies:              desired_lrp_builder.cached_dependencies,
