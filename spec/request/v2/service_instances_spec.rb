@@ -83,7 +83,7 @@ RSpec.describe 'ServiceInstances' do
       end
     end
 
-    it 'creates updates a service instance' do
+    it 'updates a service instance' do
       put_params = MultiJson.dump({
         name:              'awesome-service-instance',
         space_guid:        space.guid,
@@ -133,6 +133,89 @@ RSpec.describe 'ServiceInstances' do
           }
         }
       )
+    end
+
+    context 'the user is space_developer' do
+      context 'current plan is not accessible' do
+        let(:old_service_plan) { VCAP::CloudController::ServicePlan.make(service: service, public: false) }
+        it 'allows updates for name and tags' do
+          put_params = MultiJson.dump({
+            name:              'awesome-service-instance',
+            space_guid:        space.guid,
+            tags:              ['no-sql', 'georeplicated'],
+          })
+
+          put "/v2/service_instances/#{service_instance.guid}", put_params, headers_for(user)
+
+          service_instance = VCAP::CloudController::ManagedServiceInstance.last
+          expect(last_response).to have_status_code(201)
+          parsed_response = MultiJson.load(last_response.body)
+          expect(parsed_response).to be_a_response_like(
+            {
+              'metadata' => {
+                'guid'       => service_instance.guid,
+                'url'        => "/v2/service_instances/#{service_instance.guid}",
+                'created_at' => iso8601,
+                'updated_at' => iso8601 },
+                'entity' => {
+                  'name'                 => 'awesome-service-instance',
+                  'credentials'          => service_instance.credentials,
+                  'service_guid'         => old_service_plan.service.guid,
+                  'service_plan_guid'    => old_service_plan.guid,
+                  'space_guid'           => space.guid,
+                  'gateway_data'         => service_instance.gateway_data,
+                  'dashboard_url'        => service_instance.dashboard_url,
+                  'type'                 => 'managed_service_instance',
+                  'last_operation' => {
+                    'type'        => 'update',
+                    'description' => nil,
+                    'state'       => 'succeeded',
+                    'updated_at'  => iso8601,
+                    'created_at'  => iso8601
+                  },
+                  'tags'                            => ['no-sql', 'georeplicated'],
+                  'space_url'                       => "/v2/spaces/#{space.guid}",
+                  'service_url'                     => "/v2/services/#{service_instance.service.guid}",
+                  'service_bindings_url'            => "/v2/service_instances/#{service_instance.guid}/service_bindings",
+                  'service_keys_url'                => "/v2/service_instances/#{service_instance.guid}/service_keys",
+                  'routes_url'                      => "/v2/service_instances/#{service_instance.guid}/routes",
+                  'shared_from_url'                 => "/v2/service_instances/#{service_instance.guid}/shared_from",
+                  'shared_to_url'                   => "/v2/service_instances/#{service_instance.guid}/shared_to",
+                  'service_instance_parameters_url' => "/v2/service_instances/#{service_instance.guid}/parameters",
+                }
+            }
+          )
+        end
+
+        it 'does not allow updates for parameters' do
+          put_params = MultiJson.dump({
+            space_guid:        space.guid,
+            parameters:        { 'KEY' => 'val' },
+          })
+
+          put "/v2/service_instances/#{service_instance.guid}", put_params, headers_for(user)
+
+          expect(last_response).to have_status_code(403)
+        end
+      end
+
+      context 'new plan is not accessible' do
+        let(:new_service_plan) { VCAP::CloudController::ServicePlan.make(service: service, public: false) }
+
+        it 'does not allow updates' do
+          put_params = MultiJson.dump({
+            name:              'awesome-service-instance',
+            service_plan_guid: new_service_plan.guid,
+            space_guid:        space.guid,
+            parameters:        { 'KEY' => 'val' },
+            tags:              ['no-sql', 'georeplicated'],
+          })
+
+          put "/v2/service_instances/#{service_instance.guid}", put_params, headers_for(user)
+
+          expect(last_response).to have_status_code(403)
+        end
+      end
     end
   end
 

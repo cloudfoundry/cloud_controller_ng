@@ -97,22 +97,6 @@ module VCAP::CloudController
         end
       end
 
-      context 'updating a service instance that is currently part of an invisible plan' do
-        let(:service_plan_active) { false }
-
-        it 'is allowed' do
-          expect(subject).to allow_op_on_object(:read_for_update, service_instance)
-        end
-      end
-
-      context 'updating a service instance to become part of an invisible plan' do
-        let(:service_plan_active) { false }
-
-        it 'is not allowed' do
-          expect(subject).to_not allow_op_on_object(:update, service_instance)
-        end
-      end
-
       context 'when the service broker is space-scoped' do
         before do
           broker = service.service_broker

@@ -256,6 +256,60 @@ module VCAP::CloudController
             end
           end
         end
+
+        context 'when the current user is an admin' do
+          context 'when the current plan is inactive and not public' do
+            let(:new_service_plan) { ServicePlan.make(:v2, service: service, active: false, public: false) }
+            let(:update_attrs) { { 'parameters' => '{foo: bar}' } }
+
+            it 'updates the parameters' do
+              user = VCAP::CloudController::User.make(admin: true)
+              set_current_user(user)
+              # set_current_user(user, { admin: true })
+              # set_current_user_as_admin
+              expect(ServiceUpdateValidator.validate!(service_instance, args)).to be true
+            end
+          end
+        end
+
+        context 'when the current user is space developer' do
+          before do
+            user = User.make
+            space.organization.add_user(user)
+            set_current_user_as_role(user: user, role: 'space_developer', space: space)
+          end
+
+          context 'when the current plan is active and public' do
+            let(:old_service_plan) { ServicePlan.make(:v2, service: service, active: true, public: true) }
+            let(:update_attrs) { { 'parameters' => '{foo: bar}' } }
+
+            it 'updates the parameters' do
+              expect(ServiceUpdateValidator.validate!(service_instance, args)).to be true
+            end
+          end
+
+          context 'when the current plan is not active' do
+            let(:old_service_plan) { ServicePlan.make(:v2, service: service, active: false) }
+            let(:update_attrs) { { 'parameters' => '{foo: bar}' } }
+
+            it 'should not allow update of parameters and raises a validation error' do
+              expect {
+                ServiceUpdateValidator.validate!(service_instance, args)
+              }.to raise_error(CloudController::Errors::ApiError, /Cannot update parameters of a service instance that belongs to inaccessible plan/)
+            end
+          end
+
+          context 'when the current plan is not public' do
+            let(:old_service_plan) { ServicePlan.make(:v2, service: service, active: true, public: false) }
+            let(:update_attrs) { { 'parameters' => '{foo: bar}' } }
+
+            it 'should not allow update of parameters and raises a validation error' do
+              expect {
+                ServiceUpdateValidator.validate!(service_instance, args)
+              }.to raise_error(CloudController::Errors::ApiError, /Cannot update parameters of a service instance that belongs to inaccessible plan/)
+            end
+          end
+        end
       end
     end
   end
