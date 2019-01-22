@@ -162,6 +162,7 @@ includes:
   - experimental_resources/deployments/header
   - experimental_resources/deployments/object
   - experimental_resources/deployments/create
+  - experimental_resources/deployments/update
   - experimental_resources/deployments/get
   - experimental_resources/deployments/list
   - experimental_resources/deployments/cancel
