@@ -75,13 +75,14 @@ class BuildpacksController < ApplicationController
   end
 
   def upload
+    buildpack = Buildpack.find(guid: hashed_params[:guid])
+    buildpack_not_found! unless buildpack
+
     unauthorized! unless permission_queryer.can_write_globally?
 
     message = BuildpackUploadMessage.create_from_params(hashed_params[:body])
-    unprocessable!(message.errors.full_messages) unless message.valid?
+    combine_messages(message.errors.full_messages) unless message.valid?
 
-    buildpack = Buildpack.find(guid: hashed_params[:guid])
-    buildpack_not_found! unless buildpack
     unprocessable!('Buildpack is locked') if buildpack.locked
 
     pollable_job = BuildpackUpload.new.upload_async(
@@ -93,11 +94,17 @@ class BuildpacksController < ApplicationController
     url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
     response.set_header('Location', url_builder.build_url(path: "/v3/jobs/#{pollable_job.guid}"))
     render status: :accepted, json: Presenters::V3::BuildpackPresenter.new(buildpack)
+  rescue VCAP::CloudController::BuildpackUploadMessage::MissingFilePathError => e
+    unprocessable!(e.message)
   end
 
   private
 
   def buildpack_not_found!
     resource_not_found!(:buildpack)
+  end
+
+  def combine_messages(messages)
+    unprocessable!("Uploaded buildpack file is invalid: #{messages.join(', ')}")
   end
 end

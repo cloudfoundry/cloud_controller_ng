@@ -8,9 +8,8 @@ module VCAP::CloudController
 
     validates_with NoAdditionalKeysValidator
 
-    validates :bits_path, presence: { presence: true, message: 'A buildpack zip file must be uploaded' }
+    validate :nginx_fields
     validate :bits_path_in_tmpdir
-    validates :bits_name, presence: { presence: true, message: 'A buildpack filename must be provided' }
     validate :is_zip
     validate :is_not_empty
 
@@ -18,10 +17,16 @@ module VCAP::CloudController
       opts = params.dup.symbolize_keys
 
       if opts.key?(VCAP::CloudController::Constants::INVALID_NGINX_UPLOAD_PARAM.to_sym)
-        raise MissingFilePathError.new('File field missing path information')
+        raise MissingFilePathError.new('Uploaded bits were not a valid buildpack file')
       end
 
       BuildpackUploadMessage.new(opts)
+    end
+
+    def nginx_fields
+      unless bits_path && bits_name
+        errors.add(:base, 'A buildpack zip file must be uploaded as \'bits\'')
+      end
     end
 
     def bits_path=(value)

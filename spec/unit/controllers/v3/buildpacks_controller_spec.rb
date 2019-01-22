@@ -344,7 +344,7 @@ RSpec.describe BuildpacksController, type: :controller do
         end
 
         it 'raises an ApiError with a 403 code' do
-          delete :destroy, params: { guid: buildpack.guid }
+          patch :update, params: { guid: buildpack.guid }
 
           expect(response.status).to eq 403
           expect(response.body).to include 'NotAuthorized'
@@ -486,37 +486,76 @@ RSpec.describe BuildpacksController, type: :controller do
       # allow(VCAP::CloudController::BuildpackUpload).to receive(:new).and_return(uploader)
     end
 
-    describe 'permissions by role' do
-      role_to_expected_http_response = {
-        'admin' => 202,
-        'space_developer' => 403,
-        'space_manager' => 403,
-        'space_auditor' => 403,
-        'org_manager' => 403,
-        'admin_read_only' => 403,
-        'global_auditor' => 403,
-        'org_auditor' => 403,
-        'org_billing_manager' => 403,
-        'org_user' => 403,
-      }.freeze
+    describe 'permissions' do
+      let(:params) { { bits_path: buildpack_bits_path, bits_name: buildpack_bits_name } }
+      context 'when the user does not have the write scope' do
+        before do
+          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
+        end
 
-      role_to_expected_http_response.each do |role, expected_return_value|
-        context "as an #{role}" do
-          let(:org) { VCAP::CloudController::Organization.make }
-          let(:space) { VCAP::CloudController::Space.make(organization: org) }
+        it 'raises an ApiError with a 403 code' do
+          post :upload, params: params.merge({ guid: test_buildpack.guid })
 
-          it "returns #{expected_return_value}" do
-            set_current_user_as_role(role: role, org: org, space: space, user: user)
+          expect(response.status).to eq 403
+          expect(response.body).to include 'NotAuthorized'
+        end
+      end
 
-            post :upload, params: { guid: test_buildpack.guid, bits_path: buildpack_bits_path, bits_name: buildpack_bits_name }
+      context 'permissions by role when the buildpack exists' do
+        role_to_expected_http_response = {
+          'admin' => 202,
+          'reader_and_writer' => 403
+        }.freeze
 
-            expect(response.status).to eq expected_return_value
+        role_to_expected_http_response.each do |role, expected_return_value|
+          context "as an #{role}" do
+            let(:org) { VCAP::CloudController::Organization.make }
+            let(:space) { VCAP::CloudController::Space.make(organization: org) }
+
+            it "returns #{expected_return_value}" do
+              set_current_user_as_role(
+                role: role,
+                org: org,
+                space: space,
+                user: user,
+                scopes: %w(cloud_controller.read cloud_controller.write)
+              )
+              post :upload, params: params.merge({ guid: test_buildpack.guid }), as: :json
+
+              expect(response.status).to eq expected_return_value
+            end
+          end
+        end
+      end
+
+      context 'permissions by role when the buildpack does not exist' do
+        role_to_expected_http_response = {
+          'admin' => 404,
+          'reader_and_writer' => 404,
+        }.freeze
+
+        role_to_expected_http_response.each do |role, expected_return_value|
+          context "as an #{role}" do
+            let(:org) { VCAP::CloudController::Organization.make }
+            let(:space) { VCAP::CloudController::Space.make(organization: org) }
+
+            it "returns #{expected_return_value}" do
+              set_current_user_as_role(
+                role: role,
+                org: org,
+                space: space,
+                user: user
+              )
+              post :upload, params: params.merge({ guid: 'doesnt-exist' }), as: :json
+
+              expect(response.status).to eq expected_return_value
+            end
           end
         end
       end
 
       it 'returns 401 when logged out' do
-        post :upload, params: { guid: test_buildpack.guid }
+        post :upload, params: params.merge({ guid: test_buildpack.guid }), as: :json
 
         expect(response.status).to eq 401
       end
@@ -544,15 +583,6 @@ RSpec.describe BuildpacksController, type: :controller do
         expect(test_buildpack.reload.state).to eq(VCAP::CloudController::Buildpack::CREATED_STATE)
       end
 
-      context 'when the buildpack does not exist' do
-        it 'errors' do
-          post :upload, params: { guid: 'dont-exist', bits_path: buildpack_bits_path, bits_name: buildpack_bits_name }.merge({}), as: :json
-
-          expect(response.status).to eq(404), response.body
-          expect(response.body).to include('ResourceNotFound')
-        end
-      end
-
       context 'when the buildpack is locked' do
         let(:bp) { VCAP::CloudController::Buildpack.make(locked: true) }
 
@@ -565,6 +595,17 @@ RSpec.describe BuildpacksController, type: :controller do
 
       context 'when the buildpack upload message is not valid' do
         let(:params) { { guid: test_buildpack.guid, bits_path: nil } }
+
+        it 'errors' do
+          post :upload, params: params.merge({}), as: :json
+
+          expect(response.status).to eq 422
+          expect(response.body).to include('UnprocessableEntity')
+        end
+      end
+
+      context 'when nginx_upload_dummy is present' do
+        let(:params) { { guid: test_buildpack.guid, VCAP::CloudController::Constants::INVALID_NGINX_UPLOAD_PARAM => '' } }
 
         it 'errors' do
           post :upload, params: params.merge({}), as: :json

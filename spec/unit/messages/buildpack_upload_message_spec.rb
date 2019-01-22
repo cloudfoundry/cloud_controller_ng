@@ -44,7 +44,7 @@ module VCAP::CloudController
         it 'is not valid' do
           upload_message = BuildpackUploadMessage.new(opts)
           expect(upload_message).not_to be_valid
-          expect(upload_message.errors[:bits_path]).to include('A buildpack zip file must be uploaded')
+          expect(upload_message.errors[:base]).to include('A buildpack zip file must be uploaded as \'bits\'')
         end
       end
 
@@ -60,7 +60,7 @@ module VCAP::CloudController
       end
 
       context 'when the bits_path is not within the tmpdir' do
-        let(:opts) { { bits_path: '/secret/file' } }
+        let(:opts) { { bits_path: '/secret/file', bits_name: 'buildpack.zip' } }
 
         it 'is not valid' do
           message = BuildpackUploadMessage.new(opts)
@@ -76,7 +76,7 @@ module VCAP::CloudController
         it ' is not valid' do
           upload_message = BuildpackUploadMessage.new(opts)
           expect(upload_message).not_to be_valid
-          expect(upload_message.errors[:bits_name]).to include('A buildpack filename must be provided')
+          expect(upload_message.errors[:base]).to include('A buildpack zip file must be uploaded as \'bits\'')
         end
       end
 
@@ -145,7 +145,7 @@ module VCAP::CloudController
         it 'raises an error' do
           expect {
             BuildpackUploadMessage.create_from_params(params)
-          }.to raise_error(BuildpackUploadMessage::MissingFilePathError, 'File field missing path information')
+          }.to raise_error(BuildpackUploadMessage::MissingFilePathError, 'Uploaded bits were not a valid buildpack file')
         end
       end
     end
