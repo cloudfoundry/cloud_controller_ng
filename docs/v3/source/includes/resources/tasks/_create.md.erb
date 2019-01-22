@@ -1,7 +1,7 @@
 ### Create a task
 
 ```
-Example Request
+Example Request with Command
 ```
 
 ```shell
@@ -10,6 +10,18 @@ curl "https://api.example.org/v3/apps/[guid]/tasks" \
   -H "Authorization: bearer [token]" \
   -H "Content-type: application/json" \
   -d '{ "command": "rake db:migrate" }'
+```
+
+```
+Example Request with Template Process
+```
+
+```shell
+curl "https://api.example.org/v3/apps/[guid]/tasks" \
+  -X POST \
+  -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
+  -d '{ "template": { "process": {"guid": "89323d4e-2e84-43e7-83e9-adbf50a20c0e"} } }'
 ```
 
 ```
