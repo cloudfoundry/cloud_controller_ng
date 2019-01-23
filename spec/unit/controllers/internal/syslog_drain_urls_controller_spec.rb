@@ -7,7 +7,7 @@ module VCAP::CloudController
     let(:app_obj) { AppModel.make(name: 'app-1', space: space) }
     let(:instance1) { UserProvidedServiceInstance.make(space: app_obj.space) }
     let(:instance2) { UserProvidedServiceInstance.make(space: app_obj.space) }
-    let!(:binding_with_drain1) { ServiceBinding.make(syslog_drain_url: 'fishfinger', app: app_obj, service_instance: instance1) }
+    let!(:binding_with_drain1) { ServiceBinding.make(syslog_drain_url: 'fish,finger', app: app_obj, service_instance: instance1) }
     let!(:binding_with_drain2) { ServiceBinding.make(syslog_drain_url: 'foobar', app: app_obj, service_instance: instance2) }
 
     describe 'GET /internal/v4/syslog_drain_urls' do
@@ -17,7 +17,7 @@ module VCAP::CloudController
         expect(decoded_results.count).to eq(1)
         expect(decoded_results).to include(
           {
-            app_obj.guid => { 'drains'   => match_array(['fishfinger', 'foobar']),
+            app_obj.guid => { 'drains'   => match_array(['fish%2cfinger', 'foobar']),
                               'hostname' => 'org-1.space-1.app-1' }
           }
         )
@@ -34,7 +34,7 @@ module VCAP::CloudController
           expect(decoded_results.count).to eq(1)
           expect(decoded_results).to include(
             {
-              app_obj.guid => { 'drains'   => match_array(['fishfinger', 'foobar']),
+              app_obj.guid => { 'drains'   => match_array(['fish%2cfinger', 'foobar']),
                                 'hostname' => 'org-2.space-2.app-2' }
             }
           )
@@ -52,7 +52,7 @@ module VCAP::CloudController
           expect(decoded_results.count).to eq(1)
           expect(decoded_results).to include(
             {
-              app_obj.guid => { 'drains'   => match_array(['fishfinger', 'foobar']),
+              app_obj.guid => { 'drains'   => match_array(['fish%2cfinger', 'foobar']),
                                 'hostname' => 'org-3.space-3.app-3' }
             }
           )
@@ -70,7 +70,7 @@ module VCAP::CloudController
           expect(decoded_results.count).to eq(1)
           expect(decoded_results).to include(
             {
-              app_obj.guid => { 'drains'   => match_array(['fishfinger', 'foobar']),
+              app_obj.guid => { 'drains'   => match_array(['fish%2cfinger', 'foobar']),
                                 'hostname' => 'org-4.space-4.app-4' }
             }
           )
@@ -94,7 +94,7 @@ module VCAP::CloudController
           expect(decoded_results.count).to eq(1)
           expect(decoded_results).to include(
             {
-              app_obj.guid => { 'drains'   => match_array(['fishfinger', 'foobar']),
+              app_obj.guid => { 'drains'   => match_array(['fish%2cfinger', 'foobar']),
                                 'hostname' => "#{orgName}.#{spaceName}.#{appName}"
               }
             }
@@ -116,7 +116,7 @@ module VCAP::CloudController
           expect(decoded_results.count).to eq(1)
           expect(decoded_results).to include(
             {
-              app_obj.guid => { 'drains'   => match_array(['fishfinger', 'foobar']),
+              app_obj.guid => { 'drains'   => match_array(['fish%2cfinger', 'foobar']),
                                 'hostname' => "#{orgName}.#{spaceName}.#{appName}"
               }
             }
@@ -181,7 +181,7 @@ module VCAP::CloudController
           3.times do
             app_obj  = AppModel.make
             instance = UserProvidedServiceInstance.make(space: app_obj.space)
-            ServiceBinding.make(syslog_drain_url: 'fishfinger', app: app_obj, service_instance: instance)
+            ServiceBinding.make(syslog_drain_url: 'fish,finger', app: app_obj, service_instance: instance)
           end
         end
 

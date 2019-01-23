@@ -88,6 +88,22 @@ module VCAP::CloudController
       self.guid ||= SecureRandom.uuid
     end
 
+    def before_update
+      encode_syslog_drain_url_commas
+      super
+    end
+
+    def before_create
+      encode_syslog_drain_url_commas
+      super
+    end
+
+    def encode_syslog_drain_url_commas
+      if syslog_drain_url
+        self.syslog_drain_url = syslog_drain_url.gsub(',', '%2c')
+      end
+    end
+
     def self.user_visibility_filter(user)
       { app: AppModel.user_visible(user) }
     end
