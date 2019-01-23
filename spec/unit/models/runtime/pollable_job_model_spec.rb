@@ -34,16 +34,15 @@ module VCAP::CloudController
     end
 
     describe '#resource_exists?' do
-      context 'when the operation is a delete' do
-        it 'returns true if the operation is in progress' do
-          job = PollableJobModel.make(state: 'PROCESSING', operation: 'droplet.delete')
-          expect(job.resource_exists?).to be(true)
-        end
+      it 'returns true if the resource exists' do
+        app = AppModel.make
+        job = PollableJobModel.make(resource_type: 'app', resource_guid: app.guid)
+        expect(job.resource_exists?).to be(true)
+      end
 
-        it 'returns false if the operation is complete' do
-          job = PollableJobModel.make(state: 'COMPLETE', operation: 'droplet.delete')
-          expect(job.resource_exists?).to be(false)
-        end
+      it 'returns false if the resource does NOT exist' do
+        job = PollableJobModel.make(resource_type: 'app', resource_guid: 'not-a-real-guid')
+        expect(job.resource_exists?).to be(false)
       end
     end
   end

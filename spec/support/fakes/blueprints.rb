@@ -234,10 +234,10 @@ module VCAP::CloudController
 
   PollableJobModel.blueprint do
     guid { Sham.guid }
-    operation { 'some.job' }
+    operation { 'app.job' }
     state { 'COMPLETE' }
     resource_guid { Sham.guid }
-    resource_type { 'some' }
+    resource_type { 'app' }
   end
 
   User.blueprint do

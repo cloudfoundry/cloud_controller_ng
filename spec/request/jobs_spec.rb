@@ -8,6 +8,7 @@ RSpec.describe 'Jobs' do
     it 'returns a json representation of the job with the requested guid' do
       operation = 'app.delete'
       job       = VCAP::CloudController::PollableJobModel.make(
+        resource_type: 'app',
         state:     VCAP::CloudController::PollableJobModel::COMPLETE_STATE,
         operation: operation,
       )

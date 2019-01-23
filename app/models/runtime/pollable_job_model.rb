@@ -9,7 +9,7 @@ module VCAP::CloudController
     end
 
     def resource_exists?
-      !complete?
+      !!Sequel::Model(ActiveSupport::Inflector.pluralize(resource_type).to_sym).find(guid: resource_guid)
     end
 
     def self.find_by_delayed_job(delayed_job)

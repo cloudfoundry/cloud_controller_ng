@@ -8,9 +8,9 @@ module VCAP::CloudController::Presenters::V3
       let(:job) do
         VCAP::CloudController::PollableJobModel.make(
           state: VCAP::CloudController::PollableJobModel::COMPLETE_STATE,
-          operation: "#{resource_type}.delete",
+          operation: "#{resource_type}.my_async_operation",
           resource_type: resource_type,
-          resource_guid: 'guid',
+          resource_guid: resource.guid,
           cf_api_error: api_error
         )
       end
@@ -19,10 +19,11 @@ module VCAP::CloudController::Presenters::V3
       describe '#to_hash' do
         it 'presents the job as json' do
           links = {
-            self: { href: "#{link_prefix}/v3/jobs/#{job.guid}" }
+            self: { href: "#{link_prefix}/v3/jobs/#{job.guid}" },
+            "#{resource_type}": { href: "#{link_prefix}/v3/#{resource_type}s/#{resource.guid}" }
           }
 
-          expect(result[:operation]).to eq("#{resource_type}.delete")
+          expect(result[:operation]).to eq("#{resource_type}.my_async_operation")
           expect(result[:state]).to eq(VCAP::CloudController::PollableJobModel::COMPLETE_STATE)
           expect(result[:links]).to eq(links)
           expect(result[:errors]).to eq([])
@@ -36,7 +37,7 @@ module VCAP::CloudController::Presenters::V3
           it 'shows the resource link when the jobs resource_type is defined' do
             links = {
               self: { href: "#{link_prefix}/v3/jobs/#{job.guid}" },
-              "#{resource_type}": { href: "#{link_prefix}/v3/#{resource_type}s/guid" }
+              "#{resource_type}": { href: "#{link_prefix}/v3/#{resource_type}s/#{resource.guid}" }
             }
 
             expect(result[:links]).to eq(links)
@@ -44,6 +45,21 @@ module VCAP::CloudController::Presenters::V3
         end
 
         context 'when the job has completed' do
+          it 'should still show the resource link' do
+            links = {
+              self: { href: "#{link_prefix}/v3/jobs/#{job.guid}" },
+              "#{resource_type}": { href: "#{link_prefix}/v3/#{resource_type}s/#{resource.guid}" }
+            }
+
+            expect(result[:links]).to eq(links)
+          end
+        end
+
+        context 'when the resource is deleted' do
+          before do
+            resource.delete
+          end
+
           it 'should not show the resource link' do
             links = {
               self: { href: "#{link_prefix}/v3/jobs/#{job.guid}" }
@@ -94,24 +110,28 @@ module VCAP::CloudController::Presenters::V3
     context 'for apps' do
       it_behaves_like JobPresenter do
         let(:resource_type) { 'app' }
+        let(:resource) { VCAP::CloudController::AppModel.make }
       end
     end
 
     context 'for buildpacks' do
       it_behaves_like JobPresenter do
         let(:resource_type) { 'buildpack' }
+        let(:resource) { VCAP::CloudController::Buildpack.make }
       end
     end
 
     context 'for droplets' do
       it_behaves_like JobPresenter do
         let(:resource_type) { 'droplet' }
+        let(:resource) { VCAP::CloudController::DropletModel.make }
       end
     end
 
     context 'for packages' do
       it_behaves_like JobPresenter do
         let(:resource_type) { 'package' }
+        let(:resource) { VCAP::CloudController::PackageModel.make }
       end
     end
   end
