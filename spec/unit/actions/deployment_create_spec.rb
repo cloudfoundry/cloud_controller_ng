@@ -324,6 +324,34 @@ module VCAP::CloudController
           deploying_web_process = app.reload.newest_web_process
           expect(deploying_web_process.revision.guid).to eq(revision.guid)
         end
+
+        context 'but the environment variables have changed' do
+          let(:new_environment_variables) do
+            {
+                'new-key' => 'another-new-value',
+            }
+          end
+
+          let!(:original_revision) { RevisionModel.make(app: app, droplet_guid: app.droplet_guid) }
+
+          it 'does create a new revision' do
+            web_process.update(revision: original_revision)
+            app.update(revisions_enabled: true)
+            app.update(environment_variables: new_environment_variables)
+
+            expect {
+              DeploymentCreate.create(app: app, message: restart_message, user_audit_info: user_audit_info)
+            }.to change { RevisionModel.count }.by(1)
+
+            current_revision = RevisionModel.last
+            expect(current_revision.droplet_guid).to eq(original_revision.droplet_guid)
+            expect(current_revision.environment_variables).to eq(new_environment_variables)
+            expect(current_revision.environment_variables).not_to eq(original_revision.environment_variables)
+
+            deploying_web_process = app.reload.newest_web_process
+            expect(deploying_web_process.revision).to eq(app.latest_revision)
+          end
+        end
       end
     end
   end

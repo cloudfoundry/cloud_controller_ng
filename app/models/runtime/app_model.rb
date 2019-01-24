@@ -123,7 +123,9 @@ module VCAP::CloudController
     end
 
     def can_create_revision?
-      revisions_enabled && droplet_guid != latest_revision&.droplet_guid
+      revisions_enabled &&
+        (droplet_guid != latest_revision&.droplet_guid ||
+          environment_variables != latest_revision&.environment_variables)
     end
 
     private

@@ -2035,7 +2035,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
             patch :update_environment_variables, params: { guid: app_model.guid }.merge(request_body), as: :json
 
-            expect(response.status).to eq(expected_return_value), response.body
+            expect(response.status).to eq(expected_return_value)
             if expected_return_value == 200
               expect(parsed_body).to eq(expected_success_response)
 

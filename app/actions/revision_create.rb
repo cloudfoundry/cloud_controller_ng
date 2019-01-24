@@ -9,7 +9,12 @@ module VCAP::CloudController
             existing_revision_for_version.destroy
           end
 
-          RevisionModel.create(app: app, version: next_version, droplet_guid: app.droplet_guid)
+          RevisionModel.create(
+            app: app,
+            version: next_version,
+            droplet_guid: app.droplet_guid,
+            environment_variables: app.environment_variables
+          )
         end
       end
 
