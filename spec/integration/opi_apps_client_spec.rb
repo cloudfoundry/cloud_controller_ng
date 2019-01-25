@@ -126,4 +126,3 @@ RSpec.describe(OPI::Client, opi: skip_opi_tests) do
     end
   end
 end
-

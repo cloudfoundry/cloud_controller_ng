@@ -69,7 +69,7 @@ module OPI
         process_guid: process_guid(process),
         docker_image: process.desired_droplet.docker_receipt_image,
         start_command: process.specified_or_detected_command,
-        environment: hash_values_to_s(vcap_application(process)),
+        environment: hash_values_to_s(environment_variables(process)),
         instances: process.desired_instances,
         memory_mb: process.memory,
         droplet_hash: process.desired_droplet.droplet_hash,
