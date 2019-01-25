@@ -13259,6 +13259,187 @@ represents code currently running in Cloud Foundry.</p>
 </tr>
 </tbody></table>
 
+          <h2 id="space-manifest">Space Manifest</h2>
+
+          <p>The space manifest is a method for applying bulk configuration to an application and its underlying processes.</p>
+
+<h3 id="the-space-manifest-specification">The space manifest specification</h3>
+<pre class="highlight plaintext"><code>Example Manifest
+</code></pre>
+<pre class="highlight yaml"><code><span class="nn">---</span>
+<span class="s">applications</span><span class="pi">:</span>
+<span class="pi">-</span> <span class="s">buildpacks</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="s">ruby_buildpack</span>
+  <span class="pi">-</span> <span class="s">java_buildpack</span>
+  <span class="s">env</span><span class="pi">:</span>
+    <span class="s">VAR1</span><span class="pi">:</span> <span class="s">value1</span>
+    <span class="s">VAR2</span><span class="pi">:</span> <span class="s">value2</span>
+  <span class="s">routes</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="s">route</span><span class="pi">:</span> <span class="s">route.example.com</span>
+  <span class="pi">-</span> <span class="s">route</span><span class="pi">:</span> <span class="s">another-route.example.com</span>
+  <span class="s">services</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="s">my-service1</span>
+  <span class="pi">-</span> <span class="s">my-service2</span>
+  <span class="s">stack</span><span class="pi">:</span> <span class="s">cflinuxfs2</span>
+  <span class="s">processes</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="s">type</span><span class="pi">:</span> <span class="s">web</span>
+    <span class="s">command</span><span class="pi">:</span> <span class="s">start-web.sh</span>
+    <span class="s">disk_quota</span><span class="pi">:</span> <span class="s">512M</span>
+    <span class="s">health-check-http-endpoint</span><span class="pi">:</span> <span class="s">/healthcheck</span>
+    <span class="s">health-check-type</span><span class="pi">:</span> <span class="s">http</span>
+    <span class="s">health-check-invocation-timeout</span><span class="pi">:</span> <span class="s">10</span>
+    <span class="s">instances</span><span class="pi">:</span> <span class="s">3</span>
+    <span class="s">memory</span><span class="pi">:</span> <span class="s">500M</span>
+    <span class="s">timeout</span><span class="pi">:</span> <span class="s">10</span>
+  <span class="pi">-</span> <span class="s">type</span><span class="pi">:</span> <span class="s">worker</span>
+    <span class="s">command</span><span class="pi">:</span> <span class="s">start-worker.sh</span>
+    <span class="s">disk_quota</span><span class="pi">:</span> <span class="s">1G</span>
+    <span class="s">health-check-type</span><span class="pi">:</span> <span class="s">process</span>
+    <span class="s">instances</span><span class="pi">:</span> <span class="s">2</span>
+    <span class="s">memory</span><span class="pi">:</span> <span class="s">256M</span>
+    <span class="s">timeout</span><span class="pi">:</span> <span class="s">15</span>
+</code></pre>
+
+<h4 id="app-level-configuration">App-level configuration</h4>
+
+<p>This configuration is specified at the top-level and applies to all of the app&rsquo;s processes.</p>
+
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>buildpacks</strong></td>
+<td>Must be an Array. <br>a) An empty array, which will automatically select the appropriate default buildpack according to the coding language. <br>b) An array of one or more URLs pointing to buildpacks. <br>c) An array of one or more installed buildpack names. <br>Replaces the legacy <code class="prettyprint">buildpack</code> field.</td>
+</tr>
+<tr>
+<td><strong>env</strong></td>
+<td>A key-value hash of environment variables to be used for the app when running.</td>
+</tr>
+<tr>
+<td><strong>no-route</strong></td>
+<td>Boolean value. Removes the app&rsquo;s routes if <code class="prettyprint">true</code>; ignored if <code class="prettyprint">false</code>. Cannot be used in conjunction with the <code class="prettyprint">routes</code> attribute when set to <code class="prettyprint">true</code>.</td>
+</tr>
+<tr>
+<td><strong>processes</strong></td>
+<td>List of configuration for individual process types. See <a href="#process-level-configuration"><em>Process-level configuration</em></a>.</td>
+</tr>
+<tr>
+<td><strong>random-route</strong></td>
+<td>Boolean value. Creates a random route for the app if <code class="prettyprint">true</code>; ignored if <code class="prettyprint">false</code>, if <code class="prettyprint">routes</code> is specified, if the app already has routes, or if <code class="prettyprint">no-route</code> is specified.</td>
+</tr>
+<tr>
+<td><strong>routes</strong></td>
+<td>An array of route hashes declaring HTTP and TCP routes to be mapped to the app. Each route is created if it does not already exist. Example route hash entry: <code class="prettyprint">- route: www.example.com/path</code></td>
+</tr>
+<tr>
+<td><strong>services</strong></td>
+<td>An array of service-instance names to bind to the app.</td>
+</tr>
+<tr>
+<td><strong>stack</strong></td>
+<td>The root filesystem to use with the buildpack, for example <code class="prettyprint">cflinuxfs2</code>.</td>
+</tr>
+<tr>
+<td><strong>buildpack</strong></td>
+<td><strong>DEPRECATED in favor of the <code class="prettyprint">buildpacks</code> field above.</strong> <br> a) Blank OR <code class="prettyprint">default</code> OR <code class="prettyprint">null</code> will automatically select the appropriate default buildpack according to the coding language. <br>b) A URL pointing to a buildpack. <br>c) Name of an installed buildpack.</td>
+</tr>
+</tbody></table>
+
+<h4 id="process-level-configuration">Process-level configuration</h4>
+
+<p>This configuration is for the individual process. Each process is created if it does not already exist.</p>
+
+<blockquote>
+<p><strong>Note:</strong> With the exception of &ldquo;type&rdquo;, process-level fields can also be provided at the top-level and will apply to the &ldquo;web&rdquo; process only. <br/><br/> If there is a process with &ldquo;type: web&rdquo; defined in the processes section, then all top level process configuration will be ignored.</p>
+</blockquote>
+
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>type</strong></td>
+<td><strong>(Required)</strong> Process type. The identifier for the processes to be configured.</td>
+</tr>
+<tr>
+<td><strong>command</strong></td>
+<td>The command used to start the process. This overrides start commands from <a href="#procfiles">Procfiles</a> and buildpacks.</td>
+</tr>
+<tr>
+<td><strong>disk_quota</strong></td>
+<td>The disk limit for all instances of the web process. <br>This attribute requires a unit of measurement: <code class="prettyprint">B</code>, <code class="prettyprint">K</code>, <code class="prettyprint">KB</code>, <code class="prettyprint">M</code>, <code class="prettyprint">MB</code>, <code class="prettyprint">G</code>, <code class="prettyprint">GB</code>, <code class="prettyprint">T</code>, or <code class="prettyprint">TB</code> in upper case or lower case.</td>
+</tr>
+<tr>
+<td><strong>health-check-http-endpoint</strong></td>
+<td>Endpoint called to determine if the app is healthy.</td>
+</tr>
+<tr>
+<td><strong>health-check-invocation-timeout</strong></td>
+<td>The timeout in seconds for individual health check requests for http and port health checks.</td>
+</tr>
+<tr>
+<td><strong>health-check-type</strong></td>
+<td>Type of health check to perform. <code class="prettyprint">none</code> is deprecated and an alias to <code class="prettyprint">process</code>.</td>
+</tr>
+<tr>
+<td><strong>instances</strong></td>
+<td>The number of instances to run.</td>
+</tr>
+<tr>
+<td><strong>memory</strong></td>
+<td>The memory limit for all instances of the web process. <br>This attribute requires a unit of measurement: <code class="prettyprint">B</code>, <code class="prettyprint">K</code>, <code class="prettyprint">KB</code>, <code class="prettyprint">M</code>, <code class="prettyprint">MB</code>, <code class="prettyprint">G</code>, <code class="prettyprint">GB</code>, <code class="prettyprint">T</code>, or <code class="prettyprint">TB</code> in upper case or lower case.</td>
+</tr>
+<tr>
+<td><strong>timeout</strong></td>
+<td>Time in seconds at which the health-check will report failure.</td>
+</tr>
+</tbody></table>
+
+          <h3 id="apply-a-space-manifest">Apply a space manifest</h3>
+
+<blockquote>
+<p><strong>Note:</strong> Apply manifest will only trigger an immediate update for the &ldquo;disk_quota&rdquo;, &ldquo;instances&rdquo;, and &ldquo;memory&rdquo; properties. All other properties will update on application restart.</p>
+</blockquote>
+
+<p>Apply changes specified in a manifest to the named app and its underlying processes. These changes are additive and will not modify any unspecified properties or remove any existing environment variables, routes, or services.</p>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/spaces/[guid]/actions/apply_manifest"</span> <span class="se">\</span>
+  -X POST <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+  -H <span class="s2">"Content-type: application/x-yaml"</span> <span class="se">\</span>
+  --data-binary @/path/to/manifest.yml
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">202</span> <span class="ne">Accepted</span>
+<span class="na">Location</span><span class="p">:</span> <span class="s">https://api.example.org/v3/jobs/[guid]</span>
+</code></pre>
+
+<h4 id="definition">Definition</h4>
+
+<p><code class="prettyprint">POST /v3/spaces/:guid/actions/apply_manifest</code></p>
+
+<h4 id="allowed-roles">Allowed Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+</tbody></table>
+
       </div>
       <div class="dark-box">
           <div class="lang-selector">
