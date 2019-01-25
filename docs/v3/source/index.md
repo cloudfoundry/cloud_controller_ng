@@ -185,6 +185,9 @@ includes:
   - experimental_resources/service_bindings/get
   - experimental_resources/service_bindings/delete
   - experimental_resources/service_bindings/list
+  - experimental_resources/space_manifest/header
+  - experimental_resources/space_manifest/object
+  - experimental_resources/space_manifest/apply
 
 search: true
 ---
