@@ -96,6 +96,14 @@ module VCAP::CloudController
         it 'returns the newest one' do
           expect(app_model.latest_revision).to eq(revision2)
         end
+
+        context 'when two were created in the same second' do
+          let!(:revision4) { RevisionModel.make(app: app_model, created_at: revision2.created_at) }
+
+          it 'prefers the one with the higher id' do
+            expect(app_model.latest_revision).to eq(revision4)
+          end
+        end
       end
 
       context 'when revisions are not enabled' do

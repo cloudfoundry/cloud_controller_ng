@@ -23,12 +23,21 @@ module VCAP::CloudController
     one_to_many :deployments, class: 'VCAP::CloudController::DeploymentModel', key: :app_guid, primary_key: :guid
     one_to_many :labels, class: 'VCAP::CloudController::AppLabelModel', key: :resource_guid, primary_key: :guid
     one_to_many :annotations, class: 'VCAP::CloudController::AppAnnotationModel', key: :resource_guid, primary_key: :guid
-    one_to_many :revisions, class: 'VCAP::CloudController::RevisionModel', key: :app_guid, primary_key: :guid
+    one_to_many :revisions,
+      class: 'VCAP::CloudController::RevisionModel',
+      key: :app_guid,
+      primary_key: :guid,
+      order: [Sequel.asc(:created_at), Sequel.asc(:id)]
 
     many_to_one :droplet, class: 'VCAP::CloudController::DropletModel', key: :droplet_guid, primary_key: :guid, without_guid_generation: true
-    one_to_many :web_processes, class: 'VCAP::CloudController::ProcessModel', key: :app_guid, primary_key: :guid, conditions: { type: ProcessTypes::WEB } do |dataset|
-      dataset.order(Sequel.asc(:created_at), Sequel.asc(:id))
-    end
+
+    one_to_many :web_processes,
+      class: 'VCAP::CloudController::ProcessModel',
+      key: :app_guid,
+      primary_key: :guid,
+      conditions: { type: ProcessTypes::WEB } do |dataset|
+        dataset.order(Sequel.asc(:created_at), Sequel.asc(:id))
+      end
 
     one_to_one :buildpack_lifecycle_data,
                 class: 'VCAP::CloudController::BuildpackLifecycleDataModel',
@@ -119,7 +128,7 @@ module VCAP::CloudController
     end
 
     def latest_revision
-      RevisionModel.where(app: self).max_by(&:created_at) if revisions_enabled
+      reload.revisions.last if revisions_enabled
     end
 
     def can_create_revision?

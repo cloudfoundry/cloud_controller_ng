@@ -332,10 +332,8 @@ module VCAP::CloudController
             }
           end
 
-          let!(:original_revision) { RevisionModel.make(app: app, droplet_guid: app.droplet_guid) }
-
           it 'does create a new revision' do
-            web_process.update(revision: original_revision)
+            web_process.update(revision: revision)
             app.update(revisions_enabled: true)
             app.update(environment_variables: new_environment_variables)
 
@@ -344,12 +342,12 @@ module VCAP::CloudController
             }.to change { RevisionModel.count }.by(1)
 
             current_revision = RevisionModel.last
-            expect(current_revision.droplet_guid).to eq(original_revision.droplet_guid)
+            expect(current_revision.droplet_guid).to eq(revision.droplet_guid)
             expect(current_revision.environment_variables).to eq(new_environment_variables)
-            expect(current_revision.environment_variables).not_to eq(original_revision.environment_variables)
+            expect(current_revision.environment_variables).not_to eq(revision.environment_variables)
 
             deploying_web_process = app.reload.newest_web_process
-            expect(deploying_web_process.revision).to eq(app.latest_revision)
+            expect(deploying_web_process.revision).to eq(app.reload.latest_revision)
           end
         end
       end
