@@ -692,6 +692,19 @@ module VCAP::CloudController
       it 'returns the parent app environment_variables' do
         expect(process.environment_json).to eq({ 'key' => 'value' })
       end
+
+      context 'when revisions are enabled and we have a revision' do
+        let!(:revision) { RevisionModel.make(app: parent_app, environment_variables: { 'key' => 'value2' }) }
+
+        before do
+          parent_app.update(revisions_enabled: true)
+          process.update(revision: revision)
+        end
+
+        it 'returns the environment variables from the revision' do
+          expect(process.environment_json).to eq({ 'key' => 'value2' })
+        end
+      end
     end
 
     describe '#database_uri' do

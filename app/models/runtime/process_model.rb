@@ -188,6 +188,12 @@ module VCAP::CloudController
       revision&.droplet || desired_droplet
     end
 
+    def environment_json
+      return app.environment_variables unless revisions_enabled?
+
+      revision&.environment_variables || app.environment_variables
+    end
+
     def package_updated_at
       latest_package.try(:created_at)
     end
@@ -411,10 +417,6 @@ module VCAP::CloudController
 
     def name
       app.name
-    end
-
-    def environment_json
-      app.environment_variables
     end
 
     def docker?
