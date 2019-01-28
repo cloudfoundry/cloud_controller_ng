@@ -248,6 +248,28 @@ module VCAP::CloudController
         expect(event.buildpack_guid).to eq(nil)
         expect(event.buildpack_name).to eq('http://some-buildpack.com')
       end
+
+      describe 'metadata' do
+        let!(:label) { VCAP::CloudController::BuildLabelModel.make(key_name: 'string', value: 'string2', resource_guid: build_model.guid) }
+        let!(:annotation) { VCAP::CloudController::BuildAnnotationModel.make(key: 'string', value: 'string2', resource_guid: build_model.guid) }
+
+        it 'can access its annotations and labels' do
+          expect(label.resource_guid).to eq(build_model.guid)
+          expect(annotation.resource_guid).to eq(build_model.guid)
+        end
+
+        it 'deletes metadata on destroy' do
+          build_model.destroy
+          expect(label.exists?).to be_falsey
+          expect(annotation.exists?).to be_falsey
+        end
+
+        it 'complains when we delete the build without deleting associated metadata' do
+          expect {
+            build_model.delete
+          }.to raise_error(Sequel::ForeignKeyConstraintViolation)
+        end
+      end
     end
   end
 end

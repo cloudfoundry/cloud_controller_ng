@@ -36,7 +36,16 @@ module VCAP::CloudController
 
     one_through_one :space, join_table: AppModel.table_name, left_key: :guid, left_primary_key: :app_guid, right_primary_key: :guid, right_key: :space_guid
 
+    one_to_many :labels, class: 'VCAP::CloudController::BuildLabelModel', key: :resource_guid, primary_key: :guid
+    one_to_many :annotations, class: 'VCAP::CloudController::BuildAnnotationModel', key: :resource_guid, primary_key: :guid
+
     add_association_dependencies buildpack_lifecycle_data: :destroy
+
+    def before_destroy
+      LabelDelete.delete(labels)
+      AnnotationDelete.delete(annotations)
+      super
+    end
 
     def lifecycle_type
       return BuildpackLifecycleDataModel::LIFECYCLE_TYPE if buildpack_lifecycle_data

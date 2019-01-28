@@ -1,9 +1,9 @@
-require 'messages/base_message'
+require 'messages/metadata_base_message'
 require 'messages/validators'
 require 'messages/buildpack_lifecycle_data_message'
 
 module VCAP::CloudController
-  class BuildCreateMessage < BaseMessage
+  class BuildCreateMessage < MetadataBaseMessage
     register_allowed_keys [:staging_memory_in_mb, :staging_disk_in_mb, :environment_variables, :lifecycle, :package]
 
     def self.lifecycle_requested?

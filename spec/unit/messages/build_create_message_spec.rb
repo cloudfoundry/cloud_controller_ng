@@ -129,9 +129,48 @@ module VCAP::CloudController
 
           describe 'docker lifecycle' do
             it 'is valid' do
-              params[:lifecycle] = { type: 'docker', data: {} }
               message = BuildCreateMessage.new(params)
               expect(message).to be_valid
+            end
+
+            context 'when the message includes metadata' do
+              let(:all_params) { params.merge(metadata) }
+
+              context 'when the metadata is not valid' do
+                let(:metadata) do
+                  {
+
+                    'metadata' => {
+                      'ladles' => {
+                        'tags' => 'tureens'
+                      }
+                    }
+                  }
+                end
+
+                it 'is not valid' do
+                  message = BuildCreateMessage.new(all_params)
+                  expect(message).not_to be_valid
+                end
+              end
+
+              context 'when the metadata is valid' do
+                let(:metadata) do
+                  {
+
+                    'metadata' => {
+                      'labels' => {
+                        'potatoes' => 'packagedTots'
+                      }
+                    }
+                  }
+                end
+                it 'includes the metadata in the message' do
+                  message = BuildCreateMessage.new(all_params)
+                  expect(message).to be_valid
+                  expect(message.labels).to include(potatoes: 'packagedTots')
+                end
+              end
             end
           end
         end

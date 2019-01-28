@@ -28,6 +28,17 @@ module VCAP::CloudController
         },
       }.deep_stringify_keys
     end
+    let(:metadata) do
+      {
+        labels: {
+          release: 'stable',
+          'seriouseats.com/potato' => 'mashed'
+        },
+        annotations: {
+          anno: 'tations'
+        }
+      }
+    end
     let(:lifecycle) { BuildpackLifecycle.new(package, staging_message) }
     let(:package) { PackageModel.make(app: app, state: PackageModel::READY_STATE) }
 
@@ -68,7 +79,7 @@ module VCAP::CloudController
           build = nil
 
           expect {
-            build = action.create_and_stage(package: package, lifecycle: lifecycle)
+            build = action.create_and_stage(package: package, lifecycle: lifecycle, metadata: metadata)
           }.to change { BuildModel.count }.by(1)
 
           expect(build.state).to eq(BuildModel::STAGING_STATE)
@@ -78,12 +89,18 @@ module VCAP::CloudController
           expect(build.created_by_user_guid).to eq('1234')
           expect(build.created_by_user_name).to eq('charles')
           expect(build.created_by_user_email).to eq('charles@las.gym')
+          expect(build.labels.map { |label| { prefix: label.key_prefix, key: label.key_name, value: label.value } }).
+            to match_array([{ prefix: nil, key: 'release', value: 'stable' },
+                            { prefix: 'seriouseats.com', key: 'potato', value: 'mashed' },
+            ])
+          expect(build.annotations.map { |a| { key: a.key, value: a.value } }).
+            to match_array([{ key: 'anno', value: 'tations' }])
         end
 
         it 'creates an app usage event for STAGING_STARTED' do
           build = nil
           expect {
-            build = action.create_and_stage(package: package, lifecycle: lifecycle)
+            build = action.create_and_stage(package: package, lifecycle: lifecycle, metadata: metadata)
           }.to change {
             AppUsageEvent.count
           }.by(1)
@@ -112,7 +129,7 @@ module VCAP::CloudController
         end
 
         it 'creates a build audit event' do
-          build = action.create_and_stage(package: package, lifecycle: lifecycle)
+          build = action.create_and_stage(package: package, lifecycle: lifecycle, metadata: metadata)
           event = Event.last
           expect(event.type).to eq('audit.app.build.create')
           expect(event.actor).to eq('1234')
@@ -151,6 +168,8 @@ module VCAP::CloudController
             expect(staging_details.environment_variables).to eq(environment_variables)
             expect(staging_details.lifecycle).to eq(lifecycle)
             expect(staging_details.isolation_segment).to be_nil
+            expect(build.labels.size).to eq(0)
+            expect(build.annotations.size).to eq(0)
           end
         end
 

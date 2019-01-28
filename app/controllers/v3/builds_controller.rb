@@ -1,8 +1,10 @@
 require 'messages/build_create_message'
 require 'messages/builds_list_message'
+require 'messages/build_update_message'
 require 'fetchers/build_list_fetcher'
 require 'presenters/v3/build_presenter'
 require 'actions/build_create'
+require 'actions/build_update'
 
 class BuildsController < ApplicationController
   def index
@@ -38,7 +40,7 @@ class BuildsController < ApplicationController
     lifecycle = LifecycleProvider.provide(package, message)
     unprocessable!(lifecycle.errors.full_messages) unless lifecycle.valid?
 
-    build = BuildCreate.new.create_and_stage(package: package, lifecycle: lifecycle)
+    build = BuildCreate.new.create_and_stage(package: package, lifecycle: lifecycle, metadata: message.metadata)
 
     render status: :created, json: Presenters::V3::BuildPresenter.new(build)
   rescue BuildCreate::InvalidPackage => e
@@ -53,6 +55,22 @@ class BuildsController < ApplicationController
     raise CloudController::Errors::ApiError.new_from_details('StagingInProgress')
   rescue BuildCreate::BuildError => e
     unprocessable!(e.message)
+  end
+
+  def update
+    build = BuildModel.find(guid: hashed_params[:guid])
+
+    build_not_found! unless build
+    space = build.package.space
+    build_not_found! unless permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
+    unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
+
+    message = VCAP::CloudController::BuildUpdateMessage.new(hashed_params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    build = BuildUpdate.new.update(build, message)
+
+    render status: :ok, json: Presenters::V3::BuildPresenter.new(build)
   end
 
   def show

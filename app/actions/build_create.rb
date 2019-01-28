@@ -33,7 +33,7 @@ module VCAP::CloudController
       @environment_builder     = environment_presenter
     end
 
-    def create_and_stage(package:, lifecycle:, start_after_staging: false)
+    def create_and_stage(package:, lifecycle:, metadata: nil, start_after_staging: false)
       logger.info("creating build for package #{package.guid}")
       staging_in_progress! if package.app.staging_in_progress?
       raise InvalidPackage.new('Cannot stage package whose state is not ready.') if package.state != PackageModel::READY_STATE
@@ -54,6 +54,10 @@ module VCAP::CloudController
         build.save
         staging_details.staging_guid = build.guid
         lifecycle.create_lifecycle_data_model(build)
+        if metadata
+          LabelsUpdate.update(build, metadata[:labels], BuildLabelModel)
+          AnnotationsUpdate.update(build, metadata[:annotations], BuildAnnotationModel)
+        end
 
         raise CloudController::Errors::ApiError.new_from_details('CustomBuildpacksDisabled') if using_disabled_custom_buildpack?(build)
 

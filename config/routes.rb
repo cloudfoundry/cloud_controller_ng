@@ -63,6 +63,7 @@ Rails.application.routes.draw do
   # builds
   post '/builds', to: 'builds#create'
   get '/builds', to: 'builds#index'
+  patch '/builds/:guid', to: 'builds#update'
   get '/builds/:guid', to: 'builds#show'
 
   # deployments

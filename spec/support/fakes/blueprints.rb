@@ -48,73 +48,10 @@ module VCAP::CloudController
     buildpack_lifecycle_data { nil.tap { |_| object.save } }
   end
 
-  AppModel.blueprint(:buildpack) do
-  end
-
-  AppLabelModel.blueprint do
-  end
-
-  DeploymentLabelModel.blueprint do
-  end
-
-  OrganizationLabelModel.blueprint do
-  end
-
-  PackageLabelModel.blueprint do
-  end
-
-  RevisionLabelModel.blueprint do
-  end
-
-  SpaceLabelModel.blueprint do
-  end
-
-  StackLabelModel.blueprint do
-  end
-
-  TaskLabelModel.blueprint do
-  end
-
-  DropletLabelModel.blueprint do
-  end
-
-  IsolationSegmentLabelModel.blueprint do
-  end
-
-  ProcessLabelModel.blueprint do
-  end
-
-  AppAnnotationModel.blueprint do
-  end
-
-  DeploymentAnnotationModel.blueprint do
-  end
-
-  OrganizationAnnotationModel.blueprint do
-  end
-
-  PackageAnnotationModel.blueprint do
-  end
-
-  RevisionAnnotationModel.blueprint do
-  end
-
-  SpaceAnnotationModel.blueprint do
-  end
-
-  StackAnnotationModel.blueprint do
-  end
-
-  TaskAnnotationModel.blueprint do
-  end
-
-  DropletAnnotationModel.blueprint do
-  end
-
-  IsolationSegmentAnnotationModel.blueprint do
-  end
-
-  ProcessAnnotationModel.blueprint do
+  %w/App Build Deployment Droplet IsolationSegment Organization
+     Package Process Revision Space Stack Task /.each do |root|
+    "VCAP::CloudController::#{root}LabelModel".constantize.blueprint do end
+    "VCAP::CloudController::#{root}AnnotationModel".constantize.blueprint do end
   end
 
   BuildpackLabelModel.blueprint do

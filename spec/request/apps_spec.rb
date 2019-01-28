@@ -930,6 +930,7 @@ RSpec.describe 'Apps' do
                                                                   'guid' => droplet.guid,
                                                                   'href' => "#{link_prefix}/v3/droplets/#{droplet.guid}",
                                                               },
+                                                              'metadata' => { 'labels' => {}, 'annotations' => {} },
                                                               'links' => {
                                                                   'self' => { 'href' => "#{link_prefix}/v3/builds/#{build.guid}", },
                                                                   'app' => { 'href' => "#{link_prefix}/v3/apps/#{package.app.guid}", }
@@ -954,6 +955,7 @@ RSpec.describe 'Apps' do
                                                                   'guid' => second_droplet.guid,
                                                                   'href' => "#{link_prefix}/v3/droplets/#{second_droplet.guid}",
                                                               },
+                                                              'metadata' => { 'labels' => {}, 'annotations' => {} },
                                                               'links' => {
                                                                   'self' => { 'href' => "#{link_prefix}/v3/builds/#{second_build.guid}", },
                                                                   'app' => { 'href' => "#{link_prefix}/v3/apps/#{package.app.guid}", }

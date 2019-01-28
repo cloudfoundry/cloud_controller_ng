@@ -62,6 +62,36 @@ module VCAP::CloudController
           expect(app.exists?).to be_falsey
         end
 
+        context 'when the builds have metadata' do
+          let(:old_labels) do
+            {
+              fruit: 'pears',
+              truck: 'hino'
+            }
+          end
+          let(:old_annotations) do
+            {
+              potato: 'celandine',
+              beet: 'formanova',
+            }
+          end
+          let(:build) { BuildModel.make(app: app) }
+
+          before do
+            LabelsUpdate.update(build, old_labels, BuildLabelModel)
+            AnnotationsUpdate.update(build, old_annotations, BuildAnnotationModel)
+          end
+
+          it 'deletes associated builds and metadata' do
+            befores = [BuildLabelModel.count, BuildAnnotationModel.count]
+            app_delete.delete(app_dataset)
+            afters = [BuildLabelModel.count, BuildAnnotationModel.count]
+            expect(build.exists?).to be_falsey
+            expect(app.exists?).to be_falsey
+            expect(befores - afters).to eq([2, 2])
+          end
+        end
+
         it 'deletes associated droplets' do
           droplet = DropletModel.make(app: app)
 

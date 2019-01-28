@@ -1,9 +1,10 @@
-require 'presenters/v3/base_presenter'
+require 'presenters/mixins/metadata_presentation_helpers'
 
 module VCAP::CloudController
   module Presenters
     module V3
       class BuildPresenter < BasePresenter
+        include VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers
         def to_hash
           {
             guid: build.guid,
@@ -17,6 +18,10 @@ module VCAP::CloudController
             },
             package: { guid: build.package_guid },
             droplet: droplet,
+            metadata: {
+              labels: hashified_labels(build.labels),
+              annotations: hashified_annotations(build.annotations),
+            },
             links: build_links,
             created_by: {
               guid: build.created_by_user_guid,

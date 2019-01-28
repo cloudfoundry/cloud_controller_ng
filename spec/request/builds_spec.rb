@@ -41,6 +41,17 @@ RSpec.describe 'Builds' do
         }
       }
     end
+    let(:metadata) {
+      {
+        labels: {
+          release: 'stable',
+          'seriouseats.com/potato' => 'mashed',
+        },
+        annotations: {
+          potato: 'idaho',
+        },
+      }
+    }
 
     before do
       stack = (VCAP::CloudController::Stack.find(name: create_request[:lifecycle][:data][:stack]) ||
@@ -57,7 +68,8 @@ RSpec.describe 'Builds' do
     end
 
     it 'creates a Builds resource' do
-      post '/v3/builds', create_request.to_json, developer_headers
+      post '/v3/builds', create_request.merge(metadata: metadata).to_json, developer_headers
+      expect(last_response.status).to eq(201)
 
       created_build = VCAP::CloudController::BuildModel.last
 
@@ -67,6 +79,7 @@ RSpec.describe 'Builds' do
           'created_at' => iso8601,
           'updated_at' => iso8601,
           'state' => 'STAGING',
+          'metadata' => { 'labels' => { 'release' => 'stable', 'seriouseats.com/potato' => 'mashed' }, 'annotations' => { 'potato' => 'idaho' } },
           'error' => nil,
           'lifecycle' => {
             'type' => 'buildpack',
@@ -197,6 +210,7 @@ RSpec.describe 'Builds' do
                 'guid' => droplet.guid,
                 'href' => "#{link_prefix}/v3/droplets/#{droplet.guid}",
               },
+              'metadata' => { 'labels' => {}, 'annotations' => {} },
               'links' => {
                 'self' => { 'href' => "#{link_prefix}/v3/builds/#{build.guid}", },
                 'app' => { 'href' => "#{link_prefix}/v3/apps/#{package.app.guid}", }
@@ -221,6 +235,7 @@ RSpec.describe 'Builds' do
                 'guid' => second_droplet.guid,
                 'href' => "#{link_prefix}/v3/droplets/#{second_droplet.guid}",
               },
+              'metadata' => { 'labels' => {}, 'annotations' => {} },
               'links' => {
                 'self' => { 'href' => "#{link_prefix}/v3/builds/#{second_build.guid}", },
                 'app' => { 'href' => "#{link_prefix}/v3/apps/#{package.app.guid}", }
@@ -287,6 +302,7 @@ RSpec.describe 'Builds' do
             'guid' => droplet.guid,
             'href' => "#{link_prefix}/v3/droplets/#{droplet.guid}",
           },
+          'metadata' => { 'labels' => {}, 'annotations' => {} },
           'links' => {
             'self' => {
               'href' => "#{link_prefix}/v3/builds/#{build.guid}",
@@ -304,6 +320,40 @@ RSpec.describe 'Builds' do
 
       expect(last_response.status).to eq(200)
       expect(parsed_response).to be_a_response_like(expected_response)
+    end
+  end
+
+  describe 'PATCH /v3/builds/:guid' do
+    let(:package_model) do
+      VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
+    end
+    let(:build_model) do
+      VCAP::CloudController::BuildModel.make(package: package_model)
+    end
+    let(:metadata) do
+      {
+        labels: {
+          release: 'stable',
+          'seriouseats.com/potato' => 'mashed'
+        },
+        annotations: { 'checksum' => 'SHA' },
+      }
+    end
+
+    it 'updates build metadata' do
+      patch "/v3/builds/#{build_model.guid}", { metadata: metadata }.to_json, developer_headers
+      expect(last_response.status).to eq(200), last_response.body
+
+      expected_metadata = {
+        'labels' => {
+          'release' => 'stable',
+          'seriouseats.com/potato' => 'mashed',
+        },
+        'annotations' => { 'checksum' => 'SHA' },
+      }
+
+      parsed_response = MultiJson.load(last_response.body)
+      expect(parsed_response['metadata']).to eq(expected_metadata)
     end
   end
 end

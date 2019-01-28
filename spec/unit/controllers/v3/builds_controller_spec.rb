@@ -552,6 +552,38 @@ RSpec.describe BuildsController, type: :controller do
       end
     end
 
+    describe 'metadata' do
+      context 'when there is no metadata' do
+        it 'does not pass metadata' do
+          post :create, body: req_body.to_json
+          build = VCAP::CloudController::BuildModel.last
+          expect(build.labels.size).to eq(0)
+          expect(build.annotations.size).to eq(0)
+        end
+      end
+
+      context 'when there is metadata' do
+        let(:metadata) do
+          {
+            labels: {
+              release: 'stable',
+              'seriouseats.com/potato' => 'mashed',
+            },
+            annotations: {
+              potato: 'idaho',
+            },
+          }
+        end
+        it 'passes metadata' do
+          post :create, params: req_body.merge(metadata: metadata), as: :json
+          expect(response.status).to eq(201), response.body
+          build = VCAP::CloudController::BuildModel.last
+          expect(build.labels.size).to eq(2)
+          expect(build.annotations.size).to eq(1)
+        end
+      end
+    end
+
     describe 'permissions' do
       it_behaves_like 'permissions endpoint' do
         let(:roles_to_http_responses) do
@@ -593,6 +625,125 @@ RSpec.describe BuildsController, type: :controller do
           expect(response.status).to eq 422
           expect(response.body).to include('UnprocessableEntity')
           expect(response.body).to include('Unable to use package. Ensure that the package exists and you have access to it.')
+        end
+      end
+    end
+  end
+
+  describe '#update' do
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:org) { VCAP::CloudController::Organization.make }
+    let(:space) { VCAP::CloudController::Space.make(organization: org) }
+    let(:stack) { VCAP::CloudController::Stack.default.name }
+    let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
+    let(:package) do
+      VCAP::CloudController::PackageModel.make(
+        app_guid: app_model.guid,
+        state: VCAP::CloudController::PackageModel::READY_STATE,
+        type: VCAP::CloudController::PackageModel::BITS_TYPE,
+      )
+    end
+    let(:build) { VCAP::CloudController::BuildModel.make(package: package, app: app_model) }
+    let(:new_labels) do
+      {
+        release: 'stable',
+        'seriouseats.com/potato' => 'mashed',
+      }
+    end
+    let(:new_annotations) do
+      {
+        potato: 'idaho',
+      }
+    end
+    let(:metadata) do
+      {
+        labels: new_labels,
+        annotations: new_annotations,
+      }
+    end
+    let(:req_body) do
+      {
+        guid: build.guid,
+        metadata: metadata
+      }
+    end
+
+    before do
+      set_current_user_as_admin
+    end
+
+    it 'does nothing with an empty request' do
+      patch :update, params: { guid: build.guid }, as: :json
+      expect(response.status).to eq(200), response.body
+      expect(parsed_body['metadata']).to eq({ 'annotations' => {}, 'labels' => {} })
+    end
+
+    it 'returns a 200 Created response' do
+      patch :update, params: req_body, as: :json
+      expect(response.status).to eq(200), response.body
+      expect(parsed_body['metadata']).to eq({
+        'labels' =>   {
+          'release' => 'stable',
+          'seriouseats.com/potato' => 'mashed',
+        },
+        'annotations' => {
+          'potato' => 'idaho',
+        }
+      })
+    end
+
+    it 'returns 422 with invalid metadata' do
+      patch :update, params: { guid: build.guid,
+        metadata: { annotations: { '' => 'stop', '*this*' => 'stuff' } } }, as: :json
+      expect(response.status).to eq(422)
+    end
+
+    describe 'authorization' do
+      it_behaves_like 'permissions endpoint' do
+        let(:roles_to_http_responses) do
+          {
+            'admin' => 200,
+            'admin_read_only' => 403,
+            'global_auditor' => 403,
+            'space_developer' => 200,
+            'space_manager' => 403,
+            'space_auditor' => 403,
+            'org_manager' => 403,
+            'org_auditor' => 404,
+            'org_billing_manager' => 404,
+          }
+        end
+        let(:api_call) { lambda { patch :update, params: req_body, as: :json } }
+      end
+
+      context 'permissions' do
+        let(:user) { set_current_user(VCAP::CloudController::User.make) }
+
+        context 'when the user cannot read the app' do
+          before do
+            disallow_user_read_access(user, space: space)
+          end
+
+          it 'returns a 404 ResourceNotFound error' do
+            patch :update, params: req_body, as: :json
+
+            expect(response.status).to eq 404
+            expect(response.body).to include 'ResourceNotFound'
+          end
+        end
+
+        context 'when the user can read but cannot write to the app' do
+          before do
+            allow_user_read_access_for(user, spaces: [space])
+            disallow_user_write_access(user, space: space)
+          end
+
+          it 'raises ApiError NotAuthorized' do
+            patch :update, params: req_body, as: :json
+
+            expect(response.status).to eq 403
+            expect(response.body).to include 'NotAuthorized'
+          end
         end
       end
     end
