@@ -51,6 +51,7 @@ RSpec.describe 'buildpacks' do
                 'position' => 1,
                 'enabled' => true,
                 'locked' => false,
+                'metadata' => { 'labels' => {}, 'annotations' => {} },
                 'links' => {
                   'self' => {
                     'href' => "#{link_prefix}/v3/buildpacks/#{buildpack1.guid}"
@@ -72,6 +73,7 @@ RSpec.describe 'buildpacks' do
                 'position' => 2,
                 'enabled' => true,
                 'locked' => false,
+                'metadata' => { 'labels' => {}, 'annotations' => {} },
                 'links' => {
                   'self' => {
                     'href' => "#{link_prefix}/v3/buildpacks/#{buildpack2.guid}"
@@ -116,6 +118,7 @@ RSpec.describe 'buildpacks' do
                 'position' => 1,
                 'enabled' => true,
                 'locked' => false,
+                'metadata' => { 'labels' => {}, 'annotations' => {} },
                 'links' => {
                   'self' => {
                     'href' => "#{link_prefix}/v3/buildpacks/#{buildpack1.guid}"
@@ -160,6 +163,7 @@ RSpec.describe 'buildpacks' do
                 'position' => 3,
                 'enabled' => true,
                 'locked' => false,
+                'metadata' => { 'labels' => {}, 'annotations' => {} },
                 'links' => {
                   'self' => {
                     'href' => "#{link_prefix}/v3/buildpacks/#{buildpack3.guid}"
@@ -181,6 +185,7 @@ RSpec.describe 'buildpacks' do
                 'position' => 1,
                 'enabled' => true,
                 'locked' => false,
+                'metadata' => { 'labels' => {}, 'annotations' => {} },
                 'links' => {
                   'self' => {
                     'href' => "#{link_prefix}/v3/buildpacks/#{buildpack1.guid}"
@@ -235,6 +240,14 @@ RSpec.describe 'buildpacks' do
             stack: stack.name,
             enabled: false,
             locked: true,
+            metadata: {
+              "labels": {
+                "potato": 'yam'
+              },
+              "annotations": {
+                "potato": 'idaho'
+              }
+            },
           }
         end
 
@@ -261,6 +274,14 @@ RSpec.describe 'buildpacks' do
               'guid' => buildpack.guid,
               'created_at' => iso8601,
               'updated_at' => iso8601,
+              'metadata' => {
+                'labels' => {
+                  'potato' => 'yam'
+                },
+                'annotations' => {
+                  'potato' => 'idaho'
+                },
+              },
               'links' => {
                 'self' => {
                   'href' => "#{link_prefix}/v3/buildpacks/#{buildpack.guid}"
@@ -369,6 +390,7 @@ RSpec.describe 'buildpacks' do
               'guid' => buildpack.guid,
               'created_at' => iso8601,
               'updated_at' => iso8601,
+              'metadata' => { 'labels' => {}, 'annotations' => {} },
               'links' => {
                 'self' => {
                   'href' => "#{link_prefix}/v3/buildpacks/#{buildpack.guid}"

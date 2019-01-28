@@ -30,6 +30,34 @@ module VCAP::CloudController
         end
       end
 
+      context 'when metadata is provided' do
+        it 'creates a buildpack with metadata' do
+          message = BuildpackCreateMessage.new(
+            name: 'the-name',
+            stack: 'the-stack',
+            enabled: false,
+            locked: true,
+            metadata: {
+              labels: {
+                fruit: 'passionfruit',
+              },
+              annotations: {
+                potato: 'adora',
+              },
+            },
+          )
+          buildpack = BuildpackCreate.new.create(message)
+
+          expect(buildpack.name).to eq('the-name')
+          expect(buildpack.stack).to eq('the-stack')
+          expect(buildpack.position).to eq(1)
+          expect(buildpack.enabled).to eq(false)
+          expect(buildpack.locked).to eq(true)
+          expect(buildpack.labels[0].key_name).to eq('fruit')
+          expect(buildpack.annotations[0].value).to eq('adora')
+        end
+      end
+
       context 'when position is provided' do
         context 'when position is between 1 and number of buildpacks' do
           it 'creates a buildpack at the specified position and shifts subsequent buildpacks position' do

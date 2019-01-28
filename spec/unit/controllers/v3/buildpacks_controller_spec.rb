@@ -264,6 +264,14 @@ RSpec.describe BuildpacksController, type: :controller do
           position: 2,
           enabled: false,
           locked: true,
+          metadata: {
+            labels: {
+              fruit: 'passionfruit',
+            },
+            annotations: {
+              potato: 'adora',
+            },
+          },
         }
       end
 
@@ -286,6 +294,8 @@ RSpec.describe BuildpacksController, type: :controller do
             expect(our_buildpack.position).to eq(params[:position])
             expect(our_buildpack.enabled).to eq(params[:enabled])
             expect(our_buildpack.locked).to eq(params[:locked])
+            expect(our_buildpack.labels[0].key_name).to eq('fruit')
+            expect(our_buildpack.annotations[0].value).to eq('adora')
           end
         end
 

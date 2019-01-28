@@ -15,6 +15,9 @@ module VCAP::CloudController
           enabled: (message.enabled.nil? ? DEFAULT_ENABLED : message.enabled),
           locked: (message.locked.nil? ? DEFAULT_LOCKED : message.locked),
         )
+
+        MetadataUpdate.update(buildpack, message)
+
         buildpack.move_to(message.position || DEFAULT_POSITION)
       end
     rescue Sequel::ValidationFailed => e
