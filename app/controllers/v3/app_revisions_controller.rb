@@ -5,6 +5,7 @@ require 'messages/app_revisions_update_message'
 require 'actions/app_revisions_update'
 require 'presenters/v3/revision_presenter'
 require 'controllers/v3/mixins/app_sub_resource'
+require 'presenters/v3/revision_environment_variables_presenter'
 
 class AppRevisionsController < ApplicationController
   include AppSubResource
@@ -50,5 +51,16 @@ class AppRevisionsController < ApplicationController
     revision = AppRevisionsUpdate.new.update(revision, message)
 
     render status: :ok, json: Presenters::V3::RevisionPresenter.new(revision)
+  end
+
+  def show_environment_variables
+    app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
+    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
+    unauthorized! unless permission_queryer.can_read_secrets_in_space?(space.guid, org.guid)
+
+    revision = RevisionModel.find(guid: hashed_params[:revision_guid])
+    resource_not_found!(:revision) unless revision && revision.app_guid == app.guid
+
+    render status: :ok, json: Presenters::V3::RevisionEnvironmentVariablesPresenter.new(revision)
   end
 end

@@ -14,16 +14,18 @@ module VCAP::CloudController
             links: build_links
           }
 
-          if !app.environment_variables.nil?
-            app.environment_variables.each do |key, value|
-              result[:var][key.to_sym] = value
-            end
+          env_vars&.each do |key, value|
+            result[:var][key.to_sym] = value
           end
 
           result
         end
 
         private
+
+        def env_vars
+          app&.environment_variables
+        end
 
         def build_links
           url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new

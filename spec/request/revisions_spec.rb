@@ -222,4 +222,32 @@ RSpec.describe 'Revisions' do
       )
     end
   end
+
+  describe 'GET /v3/apps/:guid/revision/:revguid/environment_variables' do
+    let!(:revision2) { VCAP::CloudController::RevisionModel.make(
+      app: app_model,
+      version: 43,
+      environment_variables: { 'key' => 'value' },
+    )
+    }
+
+    it 'gets the environment variables for the revision' do
+      get "/v3/apps/#{app_model.reload.guid}/revisions/#{revision2.guid}/environment_variables", nil, user_header
+      expect(last_response.status).to eq(200), last_response.body
+
+      parsed_response = MultiJson.load(last_response.body)
+      expect(parsed_response).to be_a_response_like(
+        {
+          'var' => {
+            'key' => 'value'
+          },
+          'links' => {
+            'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/#{revision2.guid}/environment_variables" },
+            'revision' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/#{revision2.guid}" },
+            'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+          }
+        }
+      )
+    end
+  end
 end

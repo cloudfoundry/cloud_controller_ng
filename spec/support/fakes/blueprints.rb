@@ -604,6 +604,7 @@ module VCAP::CloudController
   end
 
   RevisionModel.blueprint do
+    app { AppModel.make }
   end
 
   TestModel.blueprint do

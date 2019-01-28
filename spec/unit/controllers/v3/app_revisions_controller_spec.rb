@@ -354,4 +354,60 @@ RSpec.describe AppRevisionsController, type: :controller do
       end
     end
   end
+
+  describe '#show_environment_variables' do
+    let!(:droplet) { VCAP::CloudController::DropletModel.make }
+    let!(:app_model) { VCAP::CloudController::AppModel.make(droplet: droplet) }
+    let!(:space) { app_model.space }
+    let(:user) { VCAP::CloudController::User.make }
+    let(:revision) { VCAP::CloudController::RevisionModel.make(
+      app: app_model,
+      version: 808,
+      droplet_guid: droplet.guid,
+      environment_variables: { 'key' => 'value' },
+    )
+    }
+
+    before do
+      set_current_user(user)
+      allow_user_read_access_for(user, spaces: [space])
+      allow_user_secret_access(user, space: space)
+    end
+
+    it 'returns 200 and shows environment_variables' do
+      get :show_environment_variables, params: { guid: app_model.guid, revision_guid: revision.guid }
+
+      expect(response.status).to eq(200)
+      expect(parsed_body['var']).to eq({ 'key' => 'value' })
+    end
+
+    context 'when retrieving env variables for revision that do not exist' do
+      it '404s' do
+        get :show_environment_variables, params: { guid: app_model.guid, revision_guid: 'nonsense' }
+        expect(response.status).to eq(404)
+      end
+    end
+
+    context 'when access to the space is restricted' do
+      before do
+        disallow_user_read_access(user, space: space)
+      end
+
+      it '404s' do
+        get :show_environment_variables, params: { guid: app_model.guid, revision_guid: 'nonsense' }
+        expect(response.status).to eq(404)
+      end
+    end
+
+    context 'when access is restricted' do
+      before do
+        disallow_user_secret_access(user, space: space)
+      end
+
+      it '403s' do
+        get :show_environment_variables, params: { guid: app_model.guid, revision_guid: 'nonsense' }
+        expect(response.status).to eq(403)
+      end
+    end
+  end
 end
