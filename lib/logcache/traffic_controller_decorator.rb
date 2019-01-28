@@ -9,7 +9,7 @@ module Logcache
       @logcache_client = logcache_client
     end
 
-    def container_metrics(auth_token: nil, source_guid:)
+    def container_metrics(auth_token: nil, source_guid:, logcache_filter:)
       now = Time.now
       start_time = TimeUtils.to_nanoseconds(now - 2.minutes)
       end_time = TimeUtils.to_nanoseconds(now)
@@ -36,7 +36,7 @@ module Logcache
       end
 
       final_envelopes.
-        select { |e| has_container_metrics_fields?(e) }.
+        select { |e| has_container_metrics_fields?(e) && logcache_filter.call(e) }.
         uniq(&:instance_id).
         map { |e| convert_to_traffic_controller_envelope(source_guid, e) }
     end
@@ -67,22 +67,15 @@ module Logcache
     end
 
     def convert_to_traffic_controller_envelope(source_guid, logcache_envelope)
-      new_envelope = {
+      TrafficController::Models::Envelope.new(
+        containerMetric: TrafficController::Models::ContainerMetric.new({
           applicationId: source_guid,
           instanceIndex: logcache_envelope.instance_id,
-      }
-
-      if (metrics = logcache_envelope.gauge.metrics)
-        gauge_values = {
-            cpuPercentage: metrics['cpu'].value,
-            memoryBytes: metrics['memory'].value,
-            diskBytes: metrics['disk'].value
-        }
-        new_envelope.merge!(gauge_values)
-      end
-
-      TrafficController::Models::Envelope.new(
-        containerMetric: TrafficController::Models::ContainerMetric.new(new_envelope)
+          cpuPercentage: logcache_envelope.gauge.metrics['cpu'].value,
+          memoryBytes: logcache_envelope.gauge.metrics['memory'].value,
+          diskBytes: logcache_envelope.gauge.metrics['disk'].value,
+        }),
+        tags: logcache_envelope.tags.map { |k, v| TrafficController::Models::Envelope::TagsEntry.new(key: k, value: v) },
       )
     end
 

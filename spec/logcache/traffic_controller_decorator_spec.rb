@@ -3,7 +3,7 @@ require 'logcache/traffic_controller_decorator'
 require 'utils/time_utils'
 
 RSpec.describe Logcache::TrafficControllerDecorator do
-  subject { described_class.new(wrapped_logcache_client).container_metrics(source_guid: process_guid) }
+  subject { described_class.new(wrapped_logcache_client).container_metrics(source_guid: process_guid, logcache_filter: filter) }
   let(:wrapped_logcache_client) { instance_double(Logcache::Client, container_metrics: logcache_response) }
 
   let(:num_instances) { 11 }
@@ -23,7 +23,11 @@ RSpec.describe Logcache::TrafficControllerDecorator do
                 'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 100 * i + 2),
                 'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 100 * i + 3),
             }),
-          instance_id: (offset + i).to_s
+          instance_id: (offset + i).to_s,
+          tags: {
+            'source_id' => process.app.guid,
+            'process_id' => process.guid,
+          },
         ),
         Loggregator::V2::Envelope.new(
           timestamp: last_timestamp,
@@ -33,7 +37,11 @@ RSpec.describe Logcache::TrafficControllerDecorator do
               'absolute_entitlement' => Loggregator::V2::GaugeValue.new(unit: 'nanoseconds', value: 100 * i + 2),
               'container_age' => Loggregator::V2::GaugeValue.new(unit: 'nanoseconds', value: 100 * i + 3),
           }),
-          instance_id: (offset + i).to_s
+          instance_id: (offset + i).to_s,
+          tags: {
+            'source_id' => process.app.guid,
+            'process_id' => process.guid,
+          },
         )
       ]
     end
@@ -41,6 +49,8 @@ RSpec.describe Logcache::TrafficControllerDecorator do
   end
 
   describe 'converting from Logcache to TrafficController' do
+    let(:filter) { ->(_) { true } }
+
     before do
       allow(wrapped_logcache_client).to receive(:container_metrics).and_return(logcache_response)
     end
@@ -51,6 +61,54 @@ RSpec.describe Logcache::TrafficControllerDecorator do
       expect(wrapped_logcache_client).to have_received(:container_metrics).with(
         hash_including(source_guid: process_guid)
       )
+    end
+
+    context 'filters' do
+      let(:envelopes) {
+        Loggregator::V2::EnvelopeBatch.new(
+          batch: [
+            Loggregator::V2::Envelope.new(
+              source_id: process_guid,
+              gauge: Loggregator::V2::Gauge.new(metrics: {
+                'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 10),
+                'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 11),
+                'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 12),
+              }),
+              instance_id: '1'
+            ),
+            Loggregator::V2::Envelope.new(
+              source_id: process_guid,
+              gauge: Loggregator::V2::Gauge.new(metrics: {
+                'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 13),
+                'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 10),
+                'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 10),
+              }),
+              instance_id: '2'
+            ),
+            Loggregator::V2::Envelope.new(
+              source_id: process_guid,
+              gauge: Loggregator::V2::Gauge.new(metrics: {
+                'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 10),
+                'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 9),
+                'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 8),
+              }),
+              instance_id: '1'
+          ),
+          ]
+        )
+      }
+      let(:filter) { ->(e) { e.gauge.metrics['cpu'].value == 10 } }
+
+      it 'filters envelopes' do
+        subject
+
+        expect(subject).to have(1).items
+        expect(subject.first.containerMetric.applicationId).to eq(process_guid)
+        expect(subject.first.containerMetric.instanceIndex).to eq(1)
+        expect(subject.first.containerMetric.cpuPercentage).to eq(10)
+        expect(subject.first.containerMetric.memoryBytes).to eq(11)
+        expect(subject.first.containerMetric.diskBytes).to eq(12)
+      end
     end
 
     context 'when given an empty envelope batch' do
@@ -170,6 +228,29 @@ RSpec.describe Logcache::TrafficControllerDecorator do
       end
     end
 
+    context 'when the envelope does not have tags' do
+      let(:envelopes) {
+        Loggregator::V2::EnvelopeBatch.new(
+          batch: [
+            Loggregator::V2::Envelope.new(
+              source_id: process_guid,
+              gauge: Loggregator::V2::Gauge.new(metrics: {
+                'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 10),
+                'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 11),
+                'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 12),
+              }),
+              instance_id: '1',
+              tags: {},
+            ),
+          ]
+        )
+      }
+
+      it 'returns an envelope with an empty array of tags' do
+        expect(subject.first.tags).to be_empty
+      end
+    end
+
     context 'when given multiple envelopes back' do
       let(:envelopes) {
         Loggregator::V2::EnvelopeBatch.new(
@@ -181,7 +262,11 @@ RSpec.describe Logcache::TrafficControllerDecorator do
                 'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 11),
                 'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 12),
               }),
-              instance_id: '1'
+              instance_id: '1',
+              tags: {
+                'source_id' => process.app.guid,
+                'process_id' => process.guid,
+              },
             ),
             Loggregator::V2::Envelope.new(
               source_id: process_guid,
@@ -190,7 +275,11 @@ RSpec.describe Logcache::TrafficControllerDecorator do
                 'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 21),
                 'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 22),
               }),
-              instance_id: '2'
+              instance_id: '2',
+              tags: {
+                'source_id' => process.app.guid,
+                'process_id' => process.guid,
+              },
             ),
             Loggregator::V2::Envelope.new(
               source_id: process_guid,
@@ -199,7 +288,11 @@ RSpec.describe Logcache::TrafficControllerDecorator do
                 'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 31),
                 'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 32),
               }),
-              instance_id: '3'
+              instance_id: '3',
+              tags: {
+                'source_id' => process.app.guid,
+                'process_id' => process.guid,
+              },
             )
           ]
         )
@@ -212,6 +305,11 @@ RSpec.describe Logcache::TrafficControllerDecorator do
         expect(subject.first.containerMetric.cpuPercentage).to eq(10)
         expect(subject.first.containerMetric.memoryBytes).to eq(11)
         expect(subject.first.containerMetric.diskBytes).to eq(12)
+
+        expect(subject.first.tags[0].key).to eq('source_id')
+        expect(subject.first.tags[0].value).to eq(process.app.guid)
+        expect(subject.first.tags[1].key).to eq('process_id')
+        expect(subject.first.tags[1].value).to eq(process.guid)
 
         expect(subject.second.containerMetric.applicationId).to eq(process_guid)
         expect(subject.second.containerMetric.instanceIndex).to eq(2)

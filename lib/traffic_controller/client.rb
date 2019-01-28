@@ -10,7 +10,7 @@ module TrafficController
       @url = url
     end
 
-    def container_metrics(auth_token:, source_guid:)
+    def container_metrics(auth_token:, source_guid:, logcache_filter: nil)
       response = with_request_error_handling do
         client.get("/apps/#{source_guid}/containermetrics", nil, { 'Authorization' => auth_token })
       end

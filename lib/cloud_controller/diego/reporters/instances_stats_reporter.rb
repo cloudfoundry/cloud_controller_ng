@@ -18,22 +18,17 @@ module VCAP::CloudController
         formatted_current_time = Time.now.to_datetime.rfc3339
 
         logger.debug('stats_for_app.fetching_container_metrics', process_guid: process.guid)
-        envelopes = @logstats_client.container_metrics(
-          source_guid: process.guid,
-          auth_token: VCAP::CloudController::SecurityContext.auth_token,
-        )
-        actual_lrps = bbs_instances_client.lrp_instances(process)
         desired_lrp = bbs_instances_client.desired_lrp_instance(process)
 
-        stats = {}
-        envelopes.each do |envelope|
-          container_metrics                      = envelope.containerMetric
-          stats[container_metrics.instanceIndex] = {
-            time: formatted_current_time
-          }.merge(converted_container_metrics(container_metrics))
-        end
+        stats = envelopes(desired_lrp, process).
+                map { |e|
+                  [
+                    e.containerMetric.instanceIndex,
+                    converted_container_metrics(e.containerMetric, formatted_current_time),
+                  ]
+                }.to_h
 
-        actual_lrps.each do |actual_lrp|
+        bbs_instances_client.lrp_instances(process).each do |actual_lrp|
           next unless actual_lrp.actual_lrp_key.index < process.instances
 
           info = {
@@ -72,25 +67,41 @@ module VCAP::CloudController
 
       private
 
+      def envelopes(desired_lrp, process)
+        filter, source_guid = if desired_lrp.metric_tags.any? { |tag| tag.key == 'process_id' }
+                                [->(e) { e.tags.any? { |key, value| key == 'process_id' && value == process.guid } }, process.app.guid]
+                              else
+                                [->(_) { true }, process.guid]
+                              end
+
+        @logstats_client.container_metrics(
+          source_guid: source_guid,
+          auth_token: VCAP::CloudController::SecurityContext.auth_token,
+          logcache_filter: filter
+        )
+      end
+
       attr_reader :bbs_instances_client
 
       def logger
         @logger ||= Steno.logger('cc.diego.instances_reporter')
       end
 
-      def converted_container_metrics(container_metrics)
+      def converted_container_metrics(container_metrics, formatted_current_time)
         cpu = container_metrics.cpuPercentage
         mem = container_metrics.memoryBytes
         disk = container_metrics.diskBytes
 
         if cpu.nil? || mem.nil? || disk.nil?
           {
+            time: formatted_current_time,
             cpu: 0,
             mem: 0,
             disk: 0
           }
         else
           {
+            time: formatted_current_time,
             cpu: cpu / 100,
             mem:  mem,
             disk: disk
