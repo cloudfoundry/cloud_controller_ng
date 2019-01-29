@@ -391,8 +391,8 @@ RSpec.describe 'App Manifests' do
 
     let!(:service_binding) { VCAP::CloudController::ServiceBinding.make(app: app_model, service_instance: service_instance) }
     let!(:service_binding2) { VCAP::CloudController::ServiceBinding.make(app: app_model, service_instance: service_instance2) }
-    let!(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
-    let!(:service_instance2) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+    let!(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, name: 'si-1') }
+    let!(:service_instance2) { VCAP::CloudController::ManagedServiceInstance.make(space: space, name: 'si-2') }
 
     let!(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: app_model, route: route) }
     let!(:route_mapping2) { VCAP::CloudController::RouteMappingModel.make(app: app_model, route: second_route) }
