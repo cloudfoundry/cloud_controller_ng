@@ -1,4 +1,4 @@
-require 'messages/base_message'
+require 'messages/metadata_base_message'
 require 'messages/validators'
 
 module VCAP::CloudController
