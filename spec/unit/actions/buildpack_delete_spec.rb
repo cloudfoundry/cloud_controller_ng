@@ -36,6 +36,27 @@ module VCAP::CloudController
         end
       end
 
+      context 'when the buildpack has associated metadata' do
+        let!(:label) { BuildpackLabelModel.make(resource_guid: buildpack.guid) }
+        let!(:annotation) { BuildpackAnnotationModel.make(resource_guid: buildpack.guid) }
+
+        it 'deletes associated labels' do
+          expect {
+            buildpack_delete.delete([buildpack])
+          }.to change { BuildpackLabelModel.count }.by(-1)
+          expect(label.exists?).to be_falsey
+          expect(buildpack.exists?).to be_falsey
+        end
+
+        it 'deletes associated annotations' do
+          expect {
+            buildpack_delete.delete([buildpack])
+          }.to change { BuildpackAnnotationModel.count }.by(-1)
+          expect(annotation.exists?).to be_falsey
+          expect(buildpack.exists?).to be_falsey
+        end
+      end
+
       context 'when the buildpack does not have a blobstore key' do
         before do
           buildpack.update(key: nil)

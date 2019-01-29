@@ -2,7 +2,7 @@ require 'messages/base_message'
 require 'messages/validators'
 
 module VCAP::CloudController
-  class BuildpackUpdateMessage < BaseMessage
+  class BuildpackUpdateMessage < MetadataBaseMessage
     register_allowed_keys [:name, :stack, :position, :enabled, :locked]
     validates_with NoAdditionalKeysValidator
 

@@ -461,7 +461,11 @@ RSpec.describe BuildpacksController, type: :controller do
           stack: new_stack.name,
           position: other_buildpack.position,
           enabled: !buildpack.enabled,
-          locked: !buildpack.locked
+          locked: !buildpack.locked,
+          metadata: {
+            labels: { key: 'value' },
+            annotations: { key2: 'value2' },
+          },
         }
         patch :update, params: { guid: buildpack.guid }.merge(new_values), as: :json
 
@@ -472,6 +476,7 @@ RSpec.describe BuildpacksController, type: :controller do
         expect(parsed_body['position']).to eq other_buildpack.position
         expect(parsed_body['enabled']).to eq !buildpack.enabled
         expect(parsed_body['locked']).to eq !buildpack.locked
+        expect(parsed_body['metadata']).to eq({ 'labels' => { 'key' => 'value' }, 'annotations' => { 'key2' => 'value2' } })
 
         buildpack.reload
         expect(buildpack.name).to eq 'new-name'

@@ -9,6 +9,8 @@ module VCAP::CloudController
         end
       end
 
+      private
+
       def delete_metadata(deployment)
         LabelDelete.delete(deployment.labels)
         AnnotationDelete.delete(deployment.annotations)

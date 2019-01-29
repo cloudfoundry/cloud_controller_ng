@@ -5,6 +5,8 @@ module VCAP::CloudController
 
     def update(buildpack, message)
       Buildpack.db.transaction do
+        MetadataUpdate.update(buildpack, message)
+
         buildpack.move_to(message.position) if message.requested?(:position)
         buildpack.stack = message.stack if message.requested?(:stack)
         buildpack.enabled = message.enabled if message.requested?(:enabled)

@@ -117,6 +117,12 @@ module VCAP::CloudController
   ProcessAnnotationModel.blueprint do
   end
 
+  BuildpackLabelModel.blueprint do
+  end
+
+  BuildpackAnnotationModel.blueprint do
+  end
+
   BuildModel.blueprint do
     guid     { Sham.guid }
     app      { AppModel.make }

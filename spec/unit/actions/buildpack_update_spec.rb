@@ -12,7 +12,7 @@ module VCAP::CloudController
       context 'when position is provided' do
         context 'when position is between 1 and number of buildpacks' do
           it 'updates a buildpack at the specified position and shifts subsequent buildpacks position' do
-            message = BuildpackCreateMessage.new(
+            message = BuildpackUpdateMessage.new(
               position: 2,
               name: 'new-name'
             )
@@ -26,7 +26,7 @@ module VCAP::CloudController
         end
 
         it 'updates position transactionally' do
-          message = BuildpackCreateMessage.new(
+          message = BuildpackUpdateMessage.new(
             position: 2,
             stack: 'invalid-stack'
           )
@@ -38,7 +38,7 @@ module VCAP::CloudController
 
       context 'when enabled is changed' do
         it 'updates the buildpack enabled field' do
-          message = BuildpackCreateMessage.new(
+          message = BuildpackUpdateMessage.new(
             enabled: false,
           )
           buildpack = BuildpackUpdate.new.update(buildpack1, message)
@@ -49,7 +49,7 @@ module VCAP::CloudController
 
       context 'when locked is not provided' do
         it 'updates a buildpack with locked set to true' do
-          message = BuildpackCreateMessage.new(
+          message = BuildpackUpdateMessage.new(
             locked: true
           )
           buildpack = BuildpackUpdate.new.update(buildpack1, message)
@@ -60,7 +60,7 @@ module VCAP::CloudController
 
       context 'when name is changed' do
         it 'updates the buildpack name field' do
-          message = BuildpackCreateMessage.new(
+          message = BuildpackUpdateMessage.new(
             name: 'new-name',
           )
           buildpack = BuildpackUpdate.new.update(buildpack1, message)
@@ -69,10 +69,29 @@ module VCAP::CloudController
         end
       end
 
+      context 'when metadata is changed' do
+        it 'updates metadata' do
+          message = BuildpackUpdateMessage.new(
+            metadata: {
+              labels: {
+                fruit: 'passionfruit',
+              },
+              annotations: {
+                potato: 'adora',
+              },
+            },
+          )
+          buildpack = BuildpackUpdate.new.update(buildpack1, message)
+
+          expect(buildpack.labels[0].key_name).to eq('fruit')
+          expect(buildpack.annotations[0].value).to eq('adora')
+        end
+      end
+
       context 'validation errors' do
         context 'when the associated stack does not exist' do
           it 'raises a human-friendly error' do
-            message = BuildpackCreateMessage.new(stack: 'does-not-exist')
+            message = BuildpackUpdateMessage.new(stack: 'does-not-exist')
 
             expect {
               BuildpackUpdate.new.update(buildpack1, message)
@@ -85,7 +104,7 @@ module VCAP::CloudController
           let(:buildpack2) { Buildpack.make(stack: nil) }
 
           it 'raises a human-friendly error' do
-            message = BuildpackCreateMessage.new(name: buildpack1.name)
+            message = BuildpackUpdateMessage.new(name: buildpack1.name)
             expect {
               BuildpackUpdate.new.update(buildpack2, message)
             }.to raise_error(BuildpackUpdate::Error, "The buildpack name '#{buildpack1.name}' with an unassigned stack is already in use")
@@ -94,7 +113,7 @@ module VCAP::CloudController
 
         context 'when stack is being changed' do
           it 'raises a human-friendly error' do
-            message = BuildpackCreateMessage.new(stack: nil)
+            message = BuildpackUpdateMessage.new(stack: nil)
             expect {
               BuildpackUpdate.new.update(buildpack1, message)
             }.to raise_error(BuildpackUpdate::Error, 'Buildpack stack can not be changed')
@@ -103,7 +122,7 @@ module VCAP::CloudController
 
         it 'raises a human-friendly error when name and stack conflict' do
           expect(buildpack1.stack).to eq buildpack2.stack
-          message = BuildpackCreateMessage.new(name: buildpack1.name)
+          message = BuildpackUpdateMessage.new(name: buildpack1.name)
 
           expect {
             BuildpackUpdate.new.update(buildpack2, message)
@@ -111,7 +130,7 @@ module VCAP::CloudController
         end
 
         it 're-raises when there is an unknown error' do
-          message = BuildpackCreateMessage.new({})
+          message = BuildpackUpdateMessage.new({})
           buildpack1.errors.add(:foo, 'unknown error')
           allow(buildpack1).to receive(:save).and_raise(Sequel::ValidationFailed.new(buildpack1))
 
