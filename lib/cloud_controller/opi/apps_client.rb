@@ -125,7 +125,7 @@ module OPI
       {
         PORT: port.to_s,
         VCAP_APP_PORT: port.to_s,
-        VCAP_APP_HOST: '0.0.0.0',
+        VCAP_APP_HOST: '0.0.0.0'
       }
     end
 
@@ -151,7 +151,7 @@ module OPI
         if volume_mount['device']['mount_config'].present? && volume_mount['device']['mount_config']['name'].present?
           proto_volume_mount = {
       volume_id: volume_mount['device']['mount_config']['name'],
-      mount_dir: volume_mount['container_dir'],
+      mount_dir: volume_mount['container_dir']
          }
           proto_volume_mounts.append(proto_volume_mount)
         end

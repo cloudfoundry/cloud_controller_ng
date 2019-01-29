@@ -122,7 +122,7 @@ RSpec.describe(OPI::Client) do
                   'port' => 7777
                 }
               ]
-            },
+            }
         }
       }
 
@@ -168,7 +168,7 @@ RSpec.describe(OPI::Client) do
               device_type:   'shared',
               driver:        'local',
               device:        {
-                volume_id:    'def',
+                volume_id:    'def'
               }
             }
           ]

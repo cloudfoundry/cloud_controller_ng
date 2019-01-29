@@ -376,21 +376,11 @@ module CloudController
     end
 
     def build_opi_stager_client
-      ::OPI::StagerClient.new(config.get(:opi, :url), @config)
+      ::OPI::StagerClient.new(config.get(:opi, :url), config)
     end
 
     def build_bbs_stager_client
-      bbs_client = ::Diego::Client.new(
-        url: config.get(:diego, :bbs, :url),
-        ca_cert_file: config.get(:diego, :bbs, :ca_file),
-        client_cert_file: config.get(:diego, :bbs, :cert_file),
-        client_key_file: config.get(:diego, :bbs, :key_file),
-        connect_timeout: config.get(:diego, :bbs, :connect_timeout),
-        send_timeout: config.get(:diego, :bbs, :send_timeout),
-        receive_timeout: config.get(:diego, :bbs, :receive_timeout),
-    )
-
-      VCAP::CloudController::Diego::BbsStagerClient.new(bbs_client, @config)
+      VCAP::CloudController::Diego::BbsStagerClient.new(build_bbs_client, config)
     end
 
     def build_copilot_client
