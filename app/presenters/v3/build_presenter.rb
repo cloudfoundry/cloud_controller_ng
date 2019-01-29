@@ -1,3 +1,4 @@
+require 'presenters/v3/base_presenter'
 require 'presenters/mixins/metadata_presentation_helpers'
 
 module VCAP::CloudController
