@@ -296,7 +296,7 @@ module VCAP::CloudController
     end
 
     describe '#as_summary_json' do
-      it 'contains name, guid, and binding count' do
+      it 'contains name, guid, binding count and type' do
         instance = VCAP::CloudController::ServiceInstance.make(
           guid: 'ABCDEFG12',
           name: 'Random-Number-Service',
@@ -307,6 +307,7 @@ module VCAP::CloudController
           'guid' => 'ABCDEFG12',
           'name' => 'Random-Number-Service',
           'bound_app_count' => 1,
+          'type' => 'service_instance',
         })
       end
     end

@@ -130,6 +130,7 @@ module VCAP::CloudController
         'guid' => guid,
         'name' => name,
         'bound_app_count' => service_bindings_dataset.count,
+        'type' => type,
       }
     end
 

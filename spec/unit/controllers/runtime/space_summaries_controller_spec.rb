@@ -94,6 +94,15 @@ module VCAP::CloudController
         expect(decoded_response['services'].first['shared_from']).to be_nil
       end
 
+      it 'includes the type of all service instances' do
+        get "/v2/spaces/#{space.guid}/summary"
+
+        parsed_response = MultiJson.load(last_response.body)
+        parsed_response['services'].each do |service_json|
+          expect(service_json.fetch('type')).to eq('managed_service_instance')
+        end
+      end
+
       context 'when a managed service has been shared into this space' do
         let(:receiver_space) { Space.make }
         let(:originating_space) { Space.make }
