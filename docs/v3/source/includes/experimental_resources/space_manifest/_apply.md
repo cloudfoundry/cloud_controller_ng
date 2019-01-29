@@ -1,7 +1,7 @@
 ### Apply a space manifest
-> **Note:** Apply manifest will only trigger an immediate update for the "disk_quota", "instances", and "memory" properties. All other properties will update on application restart.
+> **Note:** Apply manifest will only trigger an immediate update for the "disk_quota", "instances", and "memory" properties. All other properties will update on app restart.
 
-Apply changes specified in a manifest to the named app and its underlying processes. These changes are additive and will not modify any unspecified properties or remove any existing environment variables, routes, or services.
+Apply changes specified in a manifest to the named apps and their underlying processes. These changes are additive and will not modify any unspecified properties or remove any existing environment variables, routes, or services.
 
 ```
 Example Request

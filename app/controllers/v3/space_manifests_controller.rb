@@ -1,10 +1,8 @@
-require 'controllers/v3/mixins/app_sub_resource'
 require 'presenters/v3/app_manifest_presenter'
 require 'repositories/app_event_repository'
+require 'messages/named_app_manifest_message'
 
 class SpaceManifestsController < ApplicationController
-  include AppSubResource
-
   YAML_CONTENT_TYPE = 'application/x-yaml'.freeze
 
   wrap_parameters :body, format: [:yaml]
@@ -12,46 +10,39 @@ class SpaceManifestsController < ApplicationController
   before_action :validate_content_type!, only: :apply_manifest
 
   def apply_manifest
-    message = AppManifestMessage.create_from_yml(parsed_app_manifest_params)
-    compound_error!(message.errors.full_messages) unless message.valid?
-
-    app, space = get_resources_for_space_manifest(hashed_params[:guid], parsed_app_manifest_params['name'])
-
+    space = Space.find(guid: hashed_params[:guid])
+    space_not_found! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
     unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
-    unsupported_for_docker_apps!(message) if app && incompatible_with_buildpacks(app.lifecycle_type, message)
+
+    messages = parsed_app_manifests.map { |app_manifest| NamedAppManifestMessage.create_from_yml(app_manifest) }
+    errors = messages.map do |message|
+      message.errors.full_messages.map { |error| "For application '#{message.name}': #{error}" } unless message.valid?
+    end.compact
+    compound_error!(errors.flatten) unless errors.empty?
+
+    app_guid_message_hash = messages.map do |m|
+      app = AppModel.find(name: m.name, space: space)
+
+      unsupported_for_docker_apps!(m) if incompatible_with_buildpacks(app.lifecycle_type, m)
+
+      [app.guid, m]
+    end.to_h
 
     apply_manifest_action = AppApplyManifest.new(user_audit_info)
-    apply_manifest_job = VCAP::CloudController::Jobs::ApplyManifestActionJob.new(app.guid, message, apply_manifest_action)
+    apply_manifest_job = Jobs::SpaceApplyManifestActionJob.new(space, app_guid_message_hash, apply_manifest_action, user_audit_info)
 
-    record_apply_manifest_audit_event(app, message, space)
+    app_guid_message_hash.each { |app_guid, message| record_apply_manifest_audit_event(AppModel.find(guid: app_guid), message, space) }
     job = Jobs::Enqueuer.new(apply_manifest_job, queue: 'cc-generic').enqueue_pollable
 
-    url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
+    url_builder = Presenters::ApiUrlBuilder.new
     head HTTP::ACCEPTED, 'Location' => url_builder.build_url(path: "/v3/jobs/#{job.guid}")
   end
 
   private
 
-  def get_resources_for_space_manifest(space_guid, app_name)
-    space = Space.find(guid: space_guid)
-    space_not_found! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
-
-    app = AppModel.find(name: app_name)
-    [app, space]
-  end
-
   def record_apply_manifest_audit_event(app, message, space)
     audited_request_yaml = { 'applications' => [message.audit_hash] }.to_yaml
     Repositories::AppEventRepository.new.record_app_apply_manifest(app, space, user_audit_info, audited_request_yaml)
-  end
-
-  def unsupported_for_docker_apps!(manifest)
-    error_message = manifest.buildpacks ? 'Buildpacks' : 'Buildpack'
-    raise unprocessable(error_message + ' cannot be configured for a docker lifecycle app.')
-  end
-
-  def incompatible_with_buildpacks(lifecycle_type, manifest)
-    lifecycle_type == 'docker' && (manifest.buildpack || manifest.buildpacks)
   end
 
   def compound_error!(error_messages)
@@ -70,15 +61,22 @@ class SpaceManifestsController < ApplicationController
     Mime::Type.lookup(request.content_type) == :yaml
   end
 
-  def parsed_app_manifest_params
-    parsed_application = params[:body]['applications'] && params[:body]['applications'].first
+  def parsed_app_manifests
+    parsed_applications = params[:body]['applications']
+    raise invalid_request!('Invalid app manifest') unless parsed_applications.present?
 
-    raise invalid_request!('Invalid app manifest') unless parsed_application.present?
-
-    parsed_application.to_unsafe_h
+    parsed_applications.map(&:to_unsafe_h)
   end
 
   def space_not_found!
     resource_not_found!('space')
+  end
+
+  def unsupported_for_docker_apps!(manifest)
+    raise unprocessable("For application '#{manifest.name}': #{manifest.buildpacks ? 'Buildpacks' : 'Buildpack'} cannot be configured for a docker lifecycle app.")
+  end
+
+  def incompatible_with_buildpacks(lifecycle_type, manifest)
+    lifecycle_type == 'docker' && (manifest.buildpack || manifest.buildpacks)
   end
 end

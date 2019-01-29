@@ -12,7 +12,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
 
     before do
       set_current_user_as_role(role: 'admin', org: org, space: space, user: user)
-      allow(VCAP::CloudController::Jobs::ApplyManifestActionJob).to receive(:new).and_call_original
+      allow(VCAP::CloudController::Jobs::SpaceApplyManifestActionJob).to receive(:new).and_call_original
       allow(VCAP::CloudController::AppApplyManifest).to receive(:new).and_return(app_apply_manifest_action)
       request.headers['CONTENT_TYPE'] = 'application/x-yaml'
     end
@@ -148,45 +148,45 @@ RSpec.describe SpaceManifestsController, type: :controller do
           expect(response.status).to eq(422)
           errors = parsed_body['errors']
           expect(errors.size).to eq(10)
-          expect(errors.map { |h| h.reject { |k, _| k == 'test_mode_info' } }).to match_array([
+          expect(errors.map {|h| h.reject {|k, _| k == 'test_mode_info'}}).to match_array([
             {
-              'detail' => 'Process "web": Memory must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB',
+              'detail' => 'For application \'blah\': Process "web": Memory must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB',
               'title' => 'CF-UnprocessableEntity',
               'code' => 10008
             }, {
-            'detail' => 'Process "web": Instances must be greater than or equal to 0',
+            'detail' => 'For application \'blah\': Process "web": Instances must be greater than or equal to 0',
             'title' => 'CF-UnprocessableEntity',
             'code' => 10008
           }, {
-            'detail' => 'Process "web": Command must be between 1 and 4096 characters',
+            'detail' => 'For application \'blah\': Process "web": Command must be between 1 and 4096 characters',
             'title' => 'CF-UnprocessableEntity',
             'code' => 10008
           }, {
-            'detail' => 'Env must be a hash of keys and values',
+            'detail' => 'For application \'blah\': Env must be a hash of keys and values',
             'title' => 'CF-UnprocessableEntity',
             'code' => 10008
           }, {
-            'detail' => 'Process "web": Health check type must be "http" to set a health check HTTP endpoint',
+            'detail' => 'For application \'blah\': Process "web": Health check type must be "http" to set a health check HTTP endpoint',
             'title' => 'CF-UnprocessableEntity',
             'code' => 10008
           }, {
-            'detail' => 'Process "web": Health check type must be "port", "process", or "http"',
+            'detail' => 'For application \'blah\': Process "web": Health check type must be "port", "process", or "http"',
             'title' => 'CF-UnprocessableEntity',
             'code' => 10008
           }, {
-            'detail' => 'Process "web": Health check invocation timeout must be greater than or equal to 1',
+            'detail' => 'For application \'blah\': Process "web": Health check invocation timeout must be greater than or equal to 1',
             'title' => 'CF-UnprocessableEntity',
             'code' => 10008
           }, {
-            'detail' => 'Process "web": Timeout must be greater than or equal to 1',
+            'detail' => 'For application \'blah\': Process "web": Timeout must be greater than or equal to 1',
             'title' => 'CF-UnprocessableEntity',
             'code' => 10008
           }, {
-            'detail' => "The route 'garbage' is not a properly formed URL",
+            'detail' => "For application 'blah': The route 'garbage' is not a properly formed URL",
             'title' => 'CF-UnprocessableEntity',
             'code' => 10008
           }, {
-            'detail' => 'Random-route must be a boolean',
+            'detail' => 'For application \'blah\': Random-route must be a boolean',
             'title' => 'CF-UnprocessableEntity',
             'code' => 10008
           }
@@ -208,6 +208,17 @@ RSpec.describe SpaceManifestsController, type: :controller do
           expect(CloudController::Errors::ApiError).to have_received(:new_from_details).with('InvalidRequest', 'Content-Type must be yaml').exactly :once
         end
       end
+
+      context 'when the request is missing a name' do
+        let(:request_body) do
+          { 'applications' => [{ 'instances' => 4 }] }
+        end
+
+        it 'returns a 422' do
+          post :apply_manifest, params: { guid: space.guid }.merge(request_body), as: :yaml
+          expect(response.status).to eq(422)
+        end
+      end
     end
 
     context 'when the request body includes a buildpack' do
@@ -221,12 +232,12 @@ RSpec.describe SpaceManifestsController, type: :controller do
         post :apply_manifest, params: { guid: space.guid }.merge(request_body), as: :yaml
 
         expect(response.status).to eq(202)
-        app_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppApplyManifest%'"))
-        expect(app_apply_manifest_jobs.count).to eq 1
+        space_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceApplyManifest%'"))
+        expect(space_apply_manifest_jobs.count).to eq 1
 
-        expect(VCAP::CloudController::Jobs::ApplyManifestActionJob).to have_received(:new) do |app_guid, message, action|
-          expect(app_guid).to eq app_model.guid
-          expect(message.buildpack).to eq 'php_buildpack'
+        expect(VCAP::CloudController::Jobs::SpaceApplyManifestActionJob).to have_received(:new) do |aspace, app_guid_message_hash, action|
+          expect(aspace).to eq space
+          expect(app_guid_message_hash.entries.first[1].buildpack).to eq 'php_buildpack'
           expect(action).to eq app_apply_manifest_action
         end
       end
@@ -241,11 +252,11 @@ RSpec.describe SpaceManifestsController, type: :controller do
           post :apply_manifest, params: { guid: space.guid }.merge(request_body), as: :yaml
 
           expect(response.status).to eq(202)
-          app_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppApplyManifest%'"))
-          expect(app_apply_manifest_jobs.count).to eq(1)
+          space_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceApplyManifest%'"))
+          expect(space_apply_manifest_jobs.count).to eq(1)
 
-          expect(VCAP::CloudController::Jobs::ApplyManifestActionJob).to have_received(:new) do |_, message, _|
-            expect(message.app_update_message.buildpack_data.buildpacks).to eq([])
+          expect(VCAP::CloudController::Jobs::SpaceApplyManifestActionJob).to have_received(:new) do |_, app_guid_message_hash, _|
+            expect(app_guid_message_hash.entries.first[1].app_update_message.buildpack_data.buildpacks).to eq([])
           end
         end
       end
@@ -265,7 +276,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
           expect(errors.size).to eq(1)
           expect(errors.map { |h| h.reject { |k, _| k == 'test_mode_info' } }).to match_array([
             {
-              'detail' => 'Buildpack cannot be configured for a docker lifecycle app.',
+              'detail' => "For application 'blah': Buildpack cannot be configured for a docker lifecycle app.",
               'title' => 'CF-UnprocessableEntity',
               'code' => 10008
             }
@@ -274,7 +285,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
       end
     end
 
-    context 'when the request body includes a buildpacks' do
+    context 'when the request body includes buildpacks' do
       let!(:php_buildpack) { VCAP::CloudController::Buildpack.make(name: 'php_buildpack') }
       let(:request_body) do
         { 'applications' =>
@@ -285,12 +296,12 @@ RSpec.describe SpaceManifestsController, type: :controller do
         post :apply_manifest, params: { guid: space.guid }.merge(request_body), as: :yaml
 
         expect(response.status).to eq(202)
-        app_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppApplyManifest%'"))
-        expect(app_apply_manifest_jobs.count).to eq 1
+        space_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceApplyManifest%'"))
+        expect(space_apply_manifest_jobs.count).to eq 1
 
-        expect(VCAP::CloudController::Jobs::ApplyManifestActionJob).to have_received(:new) do |app_guid, message, action|
-          expect(app_guid).to eq app_model.guid
-          expect(message.buildpacks).to eq ['php_buildpack']
+        expect(VCAP::CloudController::Jobs::SpaceApplyManifestActionJob).to have_received(:new) do |aspace, app_guid_message_hash, action|
+          expect(aspace).to eq space
+          expect(app_guid_message_hash.entries.first[1].buildpacks).to eq ['php_buildpack']
           expect(action).to eq app_apply_manifest_action
         end
       end
@@ -310,7 +321,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
           expect(errors.size).to eq(1)
           expect(errors.map { |h| h.reject { |k, _| k == 'test_mode_info' } }).to match_array([
             {
-              'detail' => 'Buildpacks cannot be configured for a docker lifecycle app.',
+              'detail' => "For application 'blah': Buildpacks cannot be configured for a docker lifecycle app.",
               'title' => 'CF-UnprocessableEntity',
               'code' => 10008
             }
@@ -329,12 +340,12 @@ RSpec.describe SpaceManifestsController, type: :controller do
         post :apply_manifest, params: { guid: space.guid }.merge(request_body), as: :yaml
 
         expect(response.status).to eq(202)
-        app_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppApplyManifest%'"))
-        expect(app_apply_manifest_jobs.count).to eq 1
+        space_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceApplyManifest%'"))
+        expect(space_apply_manifest_jobs.count).to eq 1
 
-        expect(VCAP::CloudController::Jobs::ApplyManifestActionJob).to have_received(:new) do |app_guid, message, action|
-          expect(app_guid).to eq app_model.guid
-          expect(message.stack).to eq 'cflinuxfs2'
+        expect(VCAP::CloudController::Jobs::SpaceApplyManifestActionJob).to have_received(:new) do |aspace, app_guid_message_hash, action|
+          expect(aspace).to eq space
+          expect(app_guid_message_hash.entries.first[1].stack).to eq 'cflinuxfs2'
           expect(action).to eq app_apply_manifest_action
         end
       end
@@ -350,12 +361,12 @@ RSpec.describe SpaceManifestsController, type: :controller do
         post :apply_manifest, params: { guid: space.guid }.merge(request_body), as: :yaml
 
         expect(response.status).to eq(202)
-        app_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppApplyManifest%'"))
-        expect(app_apply_manifest_jobs.count).to eq 1
+        space_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceApplyManifest%'"))
+        expect(space_apply_manifest_jobs.count).to eq 1
 
-        expect(VCAP::CloudController::Jobs::ApplyManifestActionJob).to have_received(:new) do |app_guid, message, action|
-          expect(app_guid).to eq app_model.guid
-          expect(message.command).to eq 'run-me.sh'
+        expect(VCAP::CloudController::Jobs::SpaceApplyManifestActionJob).to have_received(:new) do |aspace, app_guid_message_hash, action|
+          expect(aspace).to eq space
+          expect(app_guid_message_hash.entries.first[1].command).to eq 'run-me.sh'
           expect(action).to eq app_apply_manifest_action
         end
       end
@@ -371,12 +382,12 @@ RSpec.describe SpaceManifestsController, type: :controller do
         post :apply_manifest, params: { guid: space.guid }.merge(request_body), as: :yaml
 
         expect(response.status).to eq(202)
-        app_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppApplyManifest%'"))
-        expect(app_apply_manifest_jobs.count).to eq 1
+        space_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceApplyManifest%'"))
+        expect(space_apply_manifest_jobs.count).to eq 1
 
-        expect(VCAP::CloudController::Jobs::ApplyManifestActionJob).to have_received(:new) do |app_guid, message, action|
-          expect(app_guid).to eq app_model.guid
-          expect(message.health_check_type).to eq 'process'
+        expect(VCAP::CloudController::Jobs::SpaceApplyManifestActionJob).to have_received(:new) do |aspace, app_guid_message_hash, action|
+          expect(aspace).to eq space
+          expect(app_guid_message_hash.entries.first[1].health_check_type).to eq 'process'
           expect(action).to eq app_apply_manifest_action
         end
       end
@@ -392,12 +403,12 @@ RSpec.describe SpaceManifestsController, type: :controller do
         post :apply_manifest, params: { guid: space.guid }.merge(request_body), as: :yaml
 
         expect(response.status).to eq(202)
-        app_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppApplyManifest%'"))
-        expect(app_apply_manifest_jobs.count).to eq 1
+        space_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceApplyManifest%'"))
+        expect(space_apply_manifest_jobs.count).to eq 1
 
-        expect(VCAP::CloudController::Jobs::ApplyManifestActionJob).to have_received(:new) do |app_guid, message, action|
-          expect(app_guid).to eq app_model.guid
-          expect(message.health_check_http_endpoint).to eq '/health'
+        expect(VCAP::CloudController::Jobs::SpaceApplyManifestActionJob).to have_received(:new) do |aspace, app_guid_message_hash, action|
+          expect(aspace).to eq space
+          expect(app_guid_message_hash.entries.first[1].health_check_http_endpoint).to eq '/health'
           expect(action).to eq app_apply_manifest_action
         end
       end
@@ -413,12 +424,12 @@ RSpec.describe SpaceManifestsController, type: :controller do
         post :apply_manifest, params: { guid: space.guid }.merge(request_body), as: :yaml
 
         expect(response.status).to eq(202)
-        app_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppApplyManifest%'"))
-        expect(app_apply_manifest_jobs.count).to eq 1
+        space_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceApplyManifest%'"))
+        expect(space_apply_manifest_jobs.count).to eq 1
 
-        expect(VCAP::CloudController::Jobs::ApplyManifestActionJob).to have_received(:new) do |app_guid, message, action|
-          expect(app_guid).to eq app_model.guid
-          expect(message.health_check_invocation_timeout).to eq 55
+        expect(VCAP::CloudController::Jobs::SpaceApplyManifestActionJob).to have_received(:new) do |aspace, app_guid_message_hash, action|
+          expect(aspace).to eq space
+          expect(app_guid_message_hash.entries.first[1].health_check_invocation_timeout).to eq 55
           expect(action).to eq app_apply_manifest_action
         end
       end
@@ -434,12 +445,12 @@ RSpec.describe SpaceManifestsController, type: :controller do
         post :apply_manifest, params: { guid: space.guid }.merge(request_body), as: :yaml
 
         expect(response.status).to eq(202)
-        app_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppApplyManifest%'"))
-        expect(app_apply_manifest_jobs.count).to eq 1
+        space_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceApplyManifest%'"))
+        expect(space_apply_manifest_jobs.count).to eq 1
 
-        expect(VCAP::CloudController::Jobs::ApplyManifestActionJob).to have_received(:new) do |app_guid, message, action|
-          expect(app_guid).to eq app_model.guid
-          expect(message.timeout).to eq 9001
+        expect(VCAP::CloudController::Jobs::SpaceApplyManifestActionJob).to have_received(:new) do |aspace, app_guid_message_hash, action|
+          expect(aspace).to eq space
+          expect(app_guid_message_hash.entries.first[1].timeout).to eq 9001
           expect(action).to eq app_apply_manifest_action
         end
       end
@@ -455,12 +466,12 @@ RSpec.describe SpaceManifestsController, type: :controller do
         post :apply_manifest, params: { guid: space.guid }.merge(request_body), as: :yaml
 
         expect(response.status).to eq(202)
-        app_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppApplyManifest%'"))
-        expect(app_apply_manifest_jobs.count).to eq 1
+        space_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceApplyManifest%'"))
+        expect(space_apply_manifest_jobs.count).to eq 1
 
-        expect(VCAP::CloudController::Jobs::ApplyManifestActionJob).to have_received(:new) do |app_guid, message, action|
-          expect(app_guid).to eq app_model.guid
-          expect(message.env).to eq({ KEY100: 'banana' })
+        expect(VCAP::CloudController::Jobs::SpaceApplyManifestActionJob).to have_received(:new) do |aspace, app_guid_message_hash, action|
+          expect(aspace).to eq space
+          expect(app_guid_message_hash.entries.first[1].env).to eq({ KEY100: 'banana' })
           expect(action).to eq app_apply_manifest_action
         end
       end
@@ -476,12 +487,12 @@ RSpec.describe SpaceManifestsController, type: :controller do
         post :apply_manifest, params: { guid: space.guid }.merge(request_body), as: :yaml
 
         expect(response.status).to eq(202)
-        app_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppApplyManifest%'"))
-        expect(app_apply_manifest_jobs.count).to eq 1
+        space_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceApplyManifest%'"))
+        expect(space_apply_manifest_jobs.count).to eq 1
 
-        expect(VCAP::CloudController::Jobs::ApplyManifestActionJob).to have_received(:new) do |app_guid, message, action|
-          expect(app_guid).to eq app_model.guid
-          expect(message.routes).to eq([{ route: 'potato.yolo.io' }])
+        expect(VCAP::CloudController::Jobs::SpaceApplyManifestActionJob).to have_received(:new) do |aspace, app_guid_message_hash, action|
+          expect(aspace).to eq space
+          expect(app_guid_message_hash.entries.first[1].routes).to eq([{ route: 'potato.yolo.io' }])
           expect(action).to eq app_apply_manifest_action
         end
       end
@@ -491,12 +502,12 @@ RSpec.describe SpaceManifestsController, type: :controller do
       post :apply_manifest, params: { guid: space.guid }.merge(request_body), as: :yaml
 
       expect(response.status).to eq(202)
-      app_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppApplyManifest%'"))
-      expect(app_apply_manifest_jobs.count).to eq 1
+      space_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceApplyManifest%'"))
+      expect(space_apply_manifest_jobs.count).to eq 1
 
-      expect(VCAP::CloudController::Jobs::ApplyManifestActionJob).to have_received(:new) do |app_guid, message, action|
-        expect(app_guid).to eq app_model.guid
-        expect(message.instances).to eq 2
+      expect(VCAP::CloudController::Jobs::SpaceApplyManifestActionJob).to have_received(:new) do |aspace, app_guid_message_hash, action|
+        expect(aspace).to eq space
+        expect(app_guid_message_hash.entries.first[1].instances).to eq 2
         expect(action).to eq app_apply_manifest_action
       end
     end
@@ -513,20 +524,20 @@ RSpec.describe SpaceManifestsController, type: :controller do
       job = VCAP::CloudController::PollableJobModel.last
       enqueued_job = Delayed::Job.last
       expect(job.delayed_job_guid).to eq(enqueued_job.guid)
-      expect(job.operation).to eq('app.apply_manifest')
+      expect(job.operation).to eq('space.apply_manifest')
       expect(job.state).to eq('PROCESSING')
-      expect(job.resource_guid).to eq(app_model.guid)
-      expect(job.resource_type).to eq('app')
+      expect(job.resource_guid).to eq(space.guid)
+      expect(job.resource_type).to eq('space')
 
       expect(response.status).to eq(202)
       expect(response.headers['Location']).to include "#{link_prefix}/v3/jobs/#{job.guid}"
     end
 
     describe 'emitting an audit event' do
-      let(:app_event_repository) { instance_double(VCAP::CloudController::Repositories::AppEventRepository) }
       let(:request_body) do
         { 'applications' => [{ 'name' => 'blah', 'buildpacks' => ['ruby_buildpack', 'go_buildpack'] }] }
       end
+      let(:app_event_repository) { instance_double(VCAP::CloudController::Repositories::AppEventRepository) }
 
       before do
         allow(VCAP::CloudController::Repositories::AppEventRepository).
@@ -539,6 +550,72 @@ RSpec.describe SpaceManifestsController, type: :controller do
 
         expect(app_event_repository).to have_received(:record_app_apply_manifest).
           with(app_model, app_model.space, instance_of(VCAP::CloudController::UserAuditInfo), request_body.to_yaml)
+      end
+    end
+
+    context 'when there are multiple apps' do
+      context 'when the apps exist' do
+        let(:app1) { VCAP::CloudController::AppModel.make(name: 'honey', space: space) }
+        let(:app2) { VCAP::CloudController::AppModel.make(name: 'nut', space: space) }
+        let(:request_body) do
+          { 'applications' => [
+            { 'name' => app1.name, 'instances' => 2 },
+            { 'name' => app2.name, 'instances' => 4 },
+          ] }
+        end
+
+        context 'when there are manifest is invalid' do
+          let(:request_body) do
+            { 'applications' => [
+              { 'name' => app1.name, 'instances' => -1 },
+              { 'name' => app2.name, 'memory' => '10NOTaUnit'}
+            ] }
+          end
+
+          it 'returns manifest errors associated with their apps' do
+            post :apply_manifest, params: { guid: space.guid }.merge(request_body), as: :yaml
+            expect(response.status).to eq(422)
+            errors = parsed_body['errors']
+            expect(errors.size).to eq(2)
+            expect(errors.map {|h| h.reject {|k, _| k == 'test_mode_info'}}).to match_array([
+              {
+                'detail' => 'For application \'honey\': Process "web": Instances must be greater than or equal to 0',
+                'title' => 'CF-UnprocessableEntity',
+                'code' => 10008
+              },
+              {
+                'detail' => 'For application \'nut\': Process "web": Memory must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB',
+                'title' => 'CF-UnprocessableEntity',
+                'code' => 10008
+              },
+            ])
+          end
+        end
+
+        it 'successfully scales all apps in a single background job' do
+          post :apply_manifest, params: { guid: space.guid }.merge(request_body), as: :yaml
+
+          expect(response.status).to eq(202)
+          space_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceApplyManifest%'"))
+          expect(space_apply_manifest_jobs.count).to eq 1
+
+          expect(VCAP::CloudController::Jobs::SpaceApplyManifestActionJob).to have_received(:new) do |aspace, app_guid_message_hash, action|
+            expect(aspace.guid).to eq space.guid
+            expect(app_guid_message_hash.keys).to eq([app1.guid, app2.guid])
+            expect(app_guid_message_hash.values.map(&:instances)).to eq([2, 4])
+            expect(action).to eq app_apply_manifest_action
+          end
+        end
+
+        it 'emits an "App Apply Manifest" audit event for each app' do
+          post :apply_manifest, params: { guid: space.guid }.merge(request_body), as: :yaml
+
+          app_events = VCAP::CloudController::Event.where(actee_type: 'app')
+          expect(app_events.count).to eq(2)
+          expect(app_events.map(&:actee)).to contain_exactly(app1.guid, app2.guid)
+          metadatas = app_events.map { |e| YAML.safe_load(e.metadata['request']['manifest'], [ActiveSupport::HashWithIndifferentAccess]) }
+          expect(metadatas.map { |m| m['applications'].first['instances'] }).to contain_exactly(2, 4)
+        end
       end
     end
   end

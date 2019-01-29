@@ -1,4 +1,4 @@
-The space manifest is a method for applying bulk configuration to an application and its underlying processes.
+The space manifest is a method for applying bulk configurations to apps and their underlying processes.
 ### The space manifest specification
 
 ```
@@ -8,7 +8,8 @@ Example Manifest
 ```yaml
 ---
 applications:
-- buildpacks:
+- name: app1
+  buildpacks:
   - ruby_buildpack
   - java_buildpack
   env:
@@ -38,6 +39,13 @@ applications:
     instances: 2
     memory: 256M
     timeout: 15
+- name: app2
+  env:
+    VAR1: value1
+  processes:
+  - type: web
+    instances: 1
+    memory: 256M
 ```
 
 #### App-level configuration

@@ -1,5 +1,5 @@
 ### Apply an app manifest
-> **Note:** Apply manifest will only trigger an immediate update for the "disk_quota", "instances", and "memory" properties. All other properties will update on application restart.
+> **Note:** Apply manifest will only trigger an immediate update for the "disk_quota", "instances", and "memory" properties. All other properties will update on app restart.
 
 Apply changes specified in a manifest to an app and its underlying processes. These changes are additive and will not modify any unspecified properties or remove any existing environment variables, routes, or services.
 

@@ -2,13 +2,13 @@ require 'spec_helper'
 
 module VCAP::CloudController
   module Jobs
-    RSpec.describe ApplyManifestActionJob, job_context: :worker do
+    RSpec.describe AppApplyManifestActionJob, job_context: :worker do
       let(:user) { User.make(admin: true) }
       let(:apply_manifest_action) { instance_double(AppApplyManifest) }
       let(:app) { AppModel.make(name: Sham.guid) }
       let(:parsed_app_manifest) { AppManifestMessage.create_from_yml({ name: 'blah', instances: 4, routes: [{ route: 'foo.example.com' }] }) }
 
-      subject(:job) { ApplyManifestActionJob.new(app.guid, parsed_app_manifest, apply_manifest_action) }
+      subject(:job) { AppApplyManifestActionJob.new(app.guid, parsed_app_manifest, apply_manifest_action) }
 
       before do
         allow(apply_manifest_action).to receive(:apply).and_return([])

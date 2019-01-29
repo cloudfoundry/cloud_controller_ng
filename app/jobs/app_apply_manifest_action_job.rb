@@ -1,6 +1,6 @@
 module VCAP::CloudController
   module Jobs
-    class ApplyManifestActionJob < VCAP::CloudController::Jobs::CCJob
+    class AppApplyManifestActionJob < VCAP::CloudController::Jobs::CCJob
       def initialize(app_guid, apply_manifest_message, apply_manifest_action)
         @app_guid = app_guid
         @apply_manifest_message = apply_manifest_message

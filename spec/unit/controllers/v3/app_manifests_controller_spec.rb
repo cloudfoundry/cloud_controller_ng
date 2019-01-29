@@ -12,7 +12,7 @@ RSpec.describe AppManifestsController, type: :controller do
 
     before do
       set_current_user_as_role(role: 'admin', org: org, space: space, user: user)
-      allow(VCAP::CloudController::Jobs::ApplyManifestActionJob).to receive(:new).and_call_original
+      allow(VCAP::CloudController::Jobs::AppApplyManifestActionJob).to receive(:new).and_call_original
       allow(VCAP::CloudController::AppApplyManifest).to receive(:new).and_return(app_apply_manifest_action)
       request.headers['CONTENT_TYPE'] = 'application/x-yaml'
     end
@@ -167,7 +167,7 @@ RSpec.describe AppManifestsController, type: :controller do
         app_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppApplyManifest%'"))
         expect(app_apply_manifest_jobs.count).to eq 1
 
-        expect(VCAP::CloudController::Jobs::ApplyManifestActionJob).to have_received(:new) do |app_guid, message, action|
+        expect(VCAP::CloudController::Jobs::AppApplyManifestActionJob).to have_received(:new) do |app_guid, message, action|
           expect(app_guid).to eq app_model.guid
           expect(message.buildpack).to eq 'php_buildpack'
           expect(action).to eq app_apply_manifest_action
@@ -187,7 +187,7 @@ RSpec.describe AppManifestsController, type: :controller do
           app_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppApplyManifest%'"))
           expect(app_apply_manifest_jobs.count).to eq(1)
 
-          expect(VCAP::CloudController::Jobs::ApplyManifestActionJob).to have_received(:new) do |_, message, _|
+          expect(VCAP::CloudController::Jobs::AppApplyManifestActionJob).to have_received(:new) do |_, message, _|
             expect(message.app_update_message.buildpack_data.buildpacks).to eq([])
           end
         end
@@ -231,7 +231,7 @@ RSpec.describe AppManifestsController, type: :controller do
         app_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppApplyManifest%'"))
         expect(app_apply_manifest_jobs.count).to eq 1
 
-        expect(VCAP::CloudController::Jobs::ApplyManifestActionJob).to have_received(:new) do |app_guid, message, action|
+        expect(VCAP::CloudController::Jobs::AppApplyManifestActionJob).to have_received(:new) do |app_guid, message, action|
           expect(app_guid).to eq app_model.guid
           expect(message.buildpacks).to eq ['php_buildpack']
           expect(action).to eq app_apply_manifest_action
@@ -275,7 +275,7 @@ RSpec.describe AppManifestsController, type: :controller do
         app_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppApplyManifest%'"))
         expect(app_apply_manifest_jobs.count).to eq 1
 
-        expect(VCAP::CloudController::Jobs::ApplyManifestActionJob).to have_received(:new) do |app_guid, message, action|
+        expect(VCAP::CloudController::Jobs::AppApplyManifestActionJob).to have_received(:new) do |app_guid, message, action|
           expect(app_guid).to eq app_model.guid
           expect(message.stack).to eq 'cflinuxfs2'
           expect(action).to eq app_apply_manifest_action
@@ -296,7 +296,7 @@ RSpec.describe AppManifestsController, type: :controller do
         app_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppApplyManifest%'"))
         expect(app_apply_manifest_jobs.count).to eq 1
 
-        expect(VCAP::CloudController::Jobs::ApplyManifestActionJob).to have_received(:new) do |app_guid, message, action|
+        expect(VCAP::CloudController::Jobs::AppApplyManifestActionJob).to have_received(:new) do |app_guid, message, action|
           expect(app_guid).to eq app_model.guid
           expect(message.command).to eq 'run-me.sh'
           expect(action).to eq app_apply_manifest_action
@@ -317,7 +317,7 @@ RSpec.describe AppManifestsController, type: :controller do
         app_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppApplyManifest%'"))
         expect(app_apply_manifest_jobs.count).to eq 1
 
-        expect(VCAP::CloudController::Jobs::ApplyManifestActionJob).to have_received(:new) do |app_guid, message, action|
+        expect(VCAP::CloudController::Jobs::AppApplyManifestActionJob).to have_received(:new) do |app_guid, message, action|
           expect(app_guid).to eq app_model.guid
           expect(message.health_check_type).to eq 'process'
           expect(action).to eq app_apply_manifest_action
@@ -338,7 +338,7 @@ RSpec.describe AppManifestsController, type: :controller do
         app_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppApplyManifest%'"))
         expect(app_apply_manifest_jobs.count).to eq 1
 
-        expect(VCAP::CloudController::Jobs::ApplyManifestActionJob).to have_received(:new) do |app_guid, message, action|
+        expect(VCAP::CloudController::Jobs::AppApplyManifestActionJob).to have_received(:new) do |app_guid, message, action|
           expect(app_guid).to eq app_model.guid
           expect(message.health_check_http_endpoint).to eq '/health'
           expect(action).to eq app_apply_manifest_action
@@ -359,7 +359,7 @@ RSpec.describe AppManifestsController, type: :controller do
         app_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppApplyManifest%'"))
         expect(app_apply_manifest_jobs.count).to eq 1
 
-        expect(VCAP::CloudController::Jobs::ApplyManifestActionJob).to have_received(:new) do |app_guid, message, action|
+        expect(VCAP::CloudController::Jobs::AppApplyManifestActionJob).to have_received(:new) do |app_guid, message, action|
           expect(app_guid).to eq app_model.guid
           expect(message.health_check_invocation_timeout).to eq 55
           expect(action).to eq app_apply_manifest_action
@@ -380,7 +380,7 @@ RSpec.describe AppManifestsController, type: :controller do
         app_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppApplyManifest%'"))
         expect(app_apply_manifest_jobs.count).to eq 1
 
-        expect(VCAP::CloudController::Jobs::ApplyManifestActionJob).to have_received(:new) do |app_guid, message, action|
+        expect(VCAP::CloudController::Jobs::AppApplyManifestActionJob).to have_received(:new) do |app_guid, message, action|
           expect(app_guid).to eq app_model.guid
           expect(message.timeout).to eq 9001
           expect(action).to eq app_apply_manifest_action
@@ -401,7 +401,7 @@ RSpec.describe AppManifestsController, type: :controller do
         app_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppApplyManifest%'"))
         expect(app_apply_manifest_jobs.count).to eq 1
 
-        expect(VCAP::CloudController::Jobs::ApplyManifestActionJob).to have_received(:new) do |app_guid, message, action|
+        expect(VCAP::CloudController::Jobs::AppApplyManifestActionJob).to have_received(:new) do |app_guid, message, action|
           expect(app_guid).to eq app_model.guid
           expect(message.env).to eq({ KEY100: 'banana' })
           expect(action).to eq app_apply_manifest_action
@@ -422,7 +422,7 @@ RSpec.describe AppManifestsController, type: :controller do
         app_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppApplyManifest%'"))
         expect(app_apply_manifest_jobs.count).to eq 1
 
-        expect(VCAP::CloudController::Jobs::ApplyManifestActionJob).to have_received(:new) do |app_guid, message, action|
+        expect(VCAP::CloudController::Jobs::AppApplyManifestActionJob).to have_received(:new) do |app_guid, message, action|
           expect(app_guid).to eq app_model.guid
           expect(message.routes).to eq([{ route: 'potato.yolo.io' }])
           expect(action).to eq app_apply_manifest_action
@@ -437,7 +437,7 @@ RSpec.describe AppManifestsController, type: :controller do
       app_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppApplyManifest%'"))
       expect(app_apply_manifest_jobs.count).to eq 1
 
-      expect(VCAP::CloudController::Jobs::ApplyManifestActionJob).to have_received(:new) do |app_guid, message, action|
+      expect(VCAP::CloudController::Jobs::AppApplyManifestActionJob).to have_received(:new) do |app_guid, message, action|
         expect(app_guid).to eq app_model.guid
         expect(message.instances).to eq 2
         expect(action).to eq app_apply_manifest_action
