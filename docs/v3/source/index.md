@@ -49,6 +49,7 @@ includes:
   - resources/builds/header
   - resources/builds/object
   - resources/builds/create
+  - resources/builds/update
   - resources/builds/get
   - resources/builds/list
   - resources/builds/list_for_app

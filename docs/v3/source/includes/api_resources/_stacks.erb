@@ -6,8 +6,8 @@
    "name": "my-stack",
    "description": "Here is my stack!",
    "metadata": {
-     "labels": <%= metadata.fetch(:labels, {}).to_json(space: ' ')%>,
-     "annotations": <%= metadata.fetch(:annotations, {}).to_json(space: ' ')%>
+     "labels": <%= metadata.fetch(:labels, {}).to_json(space: ' ', object_nl: ' ')%>,
+     "annotations": <%= metadata.fetch(:annotations, {}).to_json(space: ' ', object_nl: ' ')%>
    },
    "links": {
       "self": {

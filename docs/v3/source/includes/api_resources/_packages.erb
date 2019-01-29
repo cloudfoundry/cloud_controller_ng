@@ -40,8 +40,8 @@
   "created_at": "2015-11-13T17:02:56Z",
   "updated_at": "2016-06-08T16:41:26Z",
   "metadata": {
-    "labels": <%= metadata.fetch(:labels, {}).to_json(space: ' ')%>,
-    "annotations": <%= metadata.fetch(:annotations, {}).to_json(space: ' ')%>
+    "labels": <%= metadata.fetch(:labels, {}).to_json(space: ' ', object_nl: ' ')%>,
+    "annotations": <%= metadata.fetch(:annotations, {}).to_json(space: ' ', object_nl: ' ')%>
   },
   "links": {
     "self": {
