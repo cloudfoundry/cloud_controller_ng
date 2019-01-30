@@ -6,12 +6,22 @@ module VCAP::CloudController
     end
 
     def fetch_all
-      build_dataset = BuildModel.where(app_guid: app_guid)
-      if message.requested? :states
-        build_dataset.where(state: message.states)
-      else
-        build_dataset
+      dataset = BuildModel.dataset.where(app_guid: app_guid)
+
+      if message.requested?(:label_selector)
+        dataset = LabelSelectorQueryGenerator.add_selector_queries(
+          label_klass: BuildLabelModel,
+          resource_dataset: dataset,
+          requirements: message.requirements,
+          resource_klass: BuildModel,
+        )
       end
+
+      if message.requested? :states
+        dataset.where(state: message.states)
+      end
+
+      dataset
     end
 
     private

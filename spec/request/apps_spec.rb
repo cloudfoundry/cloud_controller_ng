@@ -965,6 +965,16 @@ RSpec.describe 'Apps' do
                                                         ]
                                                     })
     end
+
+    it 'filters on label_selector' do
+      VCAP::CloudController::BuildLabelModel.make(key_name: 'fruit', value: 'strawberry', build: build)
+
+      get "/v3/apps/#{app_model.guid}/builds?label_selector=fruit=strawberry", {}, user_header
+
+      expect(last_response.status).to eq(200)
+      expect(parsed_response['resources'].count).to eq(1)
+      expect(parsed_response['resources'][0]['guid']).to eq(build.guid)
+    end
   end
 
   describe 'DELETE /v3/apps/guid' do

@@ -245,6 +245,16 @@ RSpec.describe 'Builds' do
           ]
         })
       end
+
+      it 'filters on label_selector' do
+        VCAP::CloudController::BuildLabelModel.make(key_name: 'fruit', value: 'strawberry', build: build)
+
+        get '/v3/builds?label_selector=fruit=strawberry', {}, developer_headers
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['resources'].count).to eq(1)
+        expect(parsed_response['resources'][0]['guid']).to eq(build.guid)
+      end
     end
   end
 

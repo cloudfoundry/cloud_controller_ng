@@ -11,6 +11,7 @@ module VCAP::CloudController
           'page'      => 1,
           'per_page'  => 5,
           'order_by'  => 'created_at',
+          'label_selector' => 'key=value',
         }
       end
 
@@ -23,6 +24,7 @@ module VCAP::CloudController
         expect(message.page).to eq(1)
         expect(message.per_page).to eq(5)
         expect(message.order_by).to eq('created_at')
+        expect(message.label_selector).to eq('key=value')
       end
 
       it 'converts requested keys to symbols' do
@@ -94,6 +96,16 @@ module VCAP::CloudController
           message = BuildsListMessage.from_params states: 'not array at all'
           expect(message).to be_invalid
           expect(message.errors[:states].length).to eq 1
+        end
+
+        it 'validates metadata requirements' do
+          message = BuildsListMessage.from_params('label_selector' => '')
+
+          expect_any_instance_of(Validators::LabelSelectorRequirementValidator).
+            to receive(:validate).
+              with(message).
+              and_call_original
+          message.valid?
         end
       end
     end

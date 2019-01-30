@@ -18,15 +18,22 @@ module VCAP::CloudController
     attr_reader :message
 
     def filter(app_dataset)
-      build_dataset = BuildModel.dataset
-      filter_build_dataset(build_dataset).where(app: filter_app_dataset(app_dataset))
-    end
+      dataset = BuildModel.dataset
 
-    def filter_build_dataset(build_dataset)
-      if message.requested? :states
-        build_dataset = build_dataset.where(state: message.states)
+      if message.requested?(:label_selector)
+        dataset = LabelSelectorQueryGenerator.add_selector_queries(
+          label_klass: BuildLabelModel,
+          resource_dataset: dataset,
+          requirements: message.requirements,
+          resource_klass: BuildModel,
+        )
       end
-      build_dataset
+
+      if message.requested? :states
+        dataset = dataset.where(state: message.states)
+      end
+
+      dataset.where(app: filter_app_dataset(app_dataset))
     end
 
     def filter_app_dataset(app_dataset)
