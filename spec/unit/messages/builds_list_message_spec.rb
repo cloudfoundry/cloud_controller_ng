@@ -103,8 +103,8 @@ module VCAP::CloudController
 
           expect_any_instance_of(Validators::LabelSelectorRequirementValidator).
             to receive(:validate).
-              with(message).
-              and_call_original
+            with(message).
+            and_call_original
           message.valid?
         end
       end
