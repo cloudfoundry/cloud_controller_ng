@@ -9,7 +9,7 @@ module VCAP::CloudController
     ]
 
     validates_with NoAdditionalParamsValidator
-    validates_with LabelSelectorRequirementValidator
+    validates_with LabelSelectorRequirementValidator, if: label_selector_requested?
 
     validates :states, array: true, allow_nil: true
 
