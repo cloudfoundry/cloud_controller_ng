@@ -29,11 +29,10 @@ module VCAP::CloudController
         error!(%{Stack '#{create_message.stack}' does not exist})
       end
       if error.errors.on([:name, :stack])&.include?(:unique)
-        error!(%{The buildpack name '#{create_message.name}' with the stack '#{create_message.stack}' is already in use})
+        error!(%{Buildpack with name '#{error.model.name}' and stack '#{error.model.stack}' already exists})
       end
-
       if error.errors.on(:stack)&.include?(:unique)
-        error!(%{The buildpack name '#{create_message.name}' with an unassigned stack is already in use})
+        error!(%{Buildpack with name '#{error.model.name}' and an unassigned stack already exists})
       end
 
       error!(error.message)

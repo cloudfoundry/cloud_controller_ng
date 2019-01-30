@@ -107,7 +107,7 @@ module VCAP::CloudController
             message = BuildpackUpdateMessage.new(name: buildpack1.name)
             expect {
               BuildpackUpdate.new.update(buildpack2, message)
-            }.to raise_error(BuildpackUpdate::Error, "The buildpack name '#{buildpack1.name}' with an unassigned stack is already in use")
+            }.to raise_error(BuildpackUpdate::Error, "Buildpack with name '#{buildpack1.name}' and an unassigned stack already exists")
           end
         end
 
@@ -126,7 +126,7 @@ module VCAP::CloudController
 
           expect {
             BuildpackUpdate.new.update(buildpack2, message)
-          }.to raise_error(BuildpackUpdate::Error, "The buildpack name '#{buildpack1.name}' with the stack '#{buildpack1.stack}' is already in use")
+          }.to raise_error(BuildpackUpdate::Error, "Buildpack with name '#{buildpack1.name}' and stack '#{buildpack1.stack}' already exists")
         end
 
         it 're-raises when there is an unknown error' do

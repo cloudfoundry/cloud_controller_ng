@@ -149,7 +149,7 @@ module VCAP::CloudController
             message = BuildpackCreateMessage.new(name: name)
             expect {
               BuildpackCreate.new.create(message)
-            }.to raise_error(BuildpackCreate::Error, "The buildpack name 'the-name' with an unassigned stack is already in use")
+            }.to raise_error(BuildpackCreate::Error, "Buildpack with name 'the-name' and an unassigned stack already exists")
           end
         end
 
@@ -162,7 +162,7 @@ module VCAP::CloudController
             message = BuildpackCreateMessage.new(name: name, stack: 'the-stack')
             expect {
               BuildpackCreate.new.create(message)
-            }.to raise_error(BuildpackCreate::Error, "The buildpack name 'the-name' with the stack 'the-stack' is already in use")
+            }.to raise_error(BuildpackCreate::Error, "Buildpack with name 'the-name' and stack 'the-stack' already exists")
           end
         end
       end

@@ -448,7 +448,7 @@ RSpec.describe BuildpacksController, type: :controller do
           patch :update, params: { guid: buildpack.guid, name: other_buildpack.name }, as: :json
 
           expect(response.status).to eq 422
-          expect(parsed_body['errors'][0]['detail']).to include("The buildpack name '#{other_buildpack.name}' with an unassigned stack is already in use")
+          expect(parsed_body['errors'][0]['detail']).to include("Buildpack with name '#{other_buildpack.name}' and an unassigned stack already exists")
         end
       end
 
