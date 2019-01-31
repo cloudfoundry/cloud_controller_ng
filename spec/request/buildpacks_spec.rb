@@ -11,6 +11,35 @@ RSpec.describe 'buildpacks' do
       expect(last_response.status).to eq(200)
     end
 
+    context 'when filtered by label_selector' do
+      let!(:buildpackA) { VCAP::CloudController::Buildpack.make(name: 'A') }
+      let!(:buildpackAFruit) { VCAP::CloudController::BuildpackLabelModel.make(key_name: 'fruit', value: 'strawberry', buildpack: buildpackA) }
+      let!(:buildpackAAnimal) { VCAP::CloudController::BuildpackLabelModel.make(key_name: 'animal', value: 'horse', buildpack: buildpackA) }
+
+      let!(:buildpackB) { VCAP::CloudController::Buildpack.make(name: 'B') }
+      let!(:buildpackBEnv) { VCAP::CloudController::BuildpackLabelModel.make(key_name: 'env', value: 'prod', buildpack: buildpackB) }
+      let!(:buildpackBAnimal) { VCAP::CloudController::BuildpackLabelModel.make(key_name: 'animal', value: 'dog', buildpack: buildpackB) }
+
+      let!(:buildpackC) { VCAP::CloudController::Buildpack.make(name: 'C') }
+      let!(:buildpackCEnv) { VCAP::CloudController::BuildpackLabelModel.make(key_name: 'env', value: 'prod', buildpack: buildpackC) }
+      let!(:buildpackCAnimal) { VCAP::CloudController::BuildpackLabelModel.make(key_name: 'animal', value: 'horse', buildpack: buildpackC) }
+
+      let!(:buildpackD) { VCAP::CloudController::Buildpack.make(name: 'D') }
+      let!(:buildpackDEnv) { VCAP::CloudController::BuildpackLabelModel.make(key_name: 'env', value: 'prod', buildpack: buildpackD) }
+
+      let!(:buildpackE) { VCAP::CloudController::Buildpack.make(name: 'E') }
+      let!(:buildpackEEnv) { VCAP::CloudController::BuildpackLabelModel.make(key_name: 'env', value: 'staging', buildpack: buildpackE) }
+      let!(:buildpackEAnimal) { VCAP::CloudController::BuildpackLabelModel.make(key_name: 'animal', value: 'dog', buildpack: buildpackE) }
+
+      it 'returns the matching buildpacks' do
+        get '/v3/buildpacks?label_selector=!fruit,env=prod,animal in (dog,horse)', nil, admin_headers
+        expect(last_response.status).to eq(200), last_response.body
+
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(buildpackB.guid, buildpackC.guid)
+      end
+    end
+
     context 'When buildpacks exist' do
       let!(:stack1) { VCAP::CloudController::Stack.make }
       let!(:stack2) { VCAP::CloudController::Stack.make }

@@ -8,6 +8,7 @@ module VCAP::CloudController
         {
           'names' => 'name1,name2',
           'stacks' => 'stack1,stack2',
+          'label_selector' => 'foo=bar',
           'page' => 1,
           'per_page' => 5,
         }
@@ -20,6 +21,8 @@ module VCAP::CloudController
 
         expect(message.stacks).to eq(%w(stack1 stack2))
         expect(message.names).to eq(%w(name1 name2))
+        expect(message.label_selector).to eq('foo=bar')
+        expect(message.requirements.first.key).to eq('foo')
         expect(message.page).to eq(1)
         expect(message.per_page).to eq(5)
       end
@@ -29,6 +32,7 @@ module VCAP::CloudController
 
         expect(message.requested?(:stacks)).to be_truthy
         expect(message.requested?(:names)).to be_truthy
+        expect(message.requested?(:label_selector)).to be_truthy
         expect(message.requested?(:page)).to be_truthy
         expect(message.requested?(:per_page)).to be_truthy
       end
@@ -39,13 +43,14 @@ module VCAP::CloudController
         {
           names: %w(name1 name2),
           stacks: %w(stack1 stack2),
+          label_selector:     'foo=bar',
           page: 1,
           per_page: 5,
         }
       end
 
       it 'excludes the pagination keys' do
-        expected_params = [:names, :stacks]
+        expected_params = [:names, :stacks, :label_selector]
         expect(BuildpacksListMessage.from_params(opts).to_param_hash.keys).to match_array(expected_params)
       end
     end
@@ -55,7 +60,8 @@ module VCAP::CloudController
         expect {
           BuildpacksListMessage.from_params({
             names: [],
-            stacks: []
+            stacks: [],
+            label_selector:     '',
           })
         }.not_to raise_error
       end
@@ -84,6 +90,16 @@ module VCAP::CloudController
         message = BuildpacksListMessage.from_params stacks: 'not array'
         expect(message).to be_invalid
         expect(message.errors[:stacks].length).to eq 1
+      end
+
+      it 'validates requirements' do
+        message = BuildpacksListMessage.from_params('label_selector' => '')
+
+        expect_any_instance_of(Validators::LabelSelectorRequirementValidator).
+          to receive(:validate).
+          with(message).
+          and_call_original
+        message.valid?
       end
     end
   end

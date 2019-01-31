@@ -9,7 +9,7 @@ module VCAP::CloudController
           'names'              => 'name1,name2',
           'guids'              => 'guid1,guid2',
           'organization_guids' => 'o-guid1,o-guid2',
-          'label_selector' => 'foo=bar',
+          'label_selector'     => 'foo=bar',
           'page'               => 1,
           'per_page'           => 5,
           'order_by'           => 'created_at'
@@ -48,7 +48,7 @@ module VCAP::CloudController
             names:              ['name1', 'name2'],
             guids:              ['guid1', 'guid2'],
             organization_guids:  ['o-guid1', 'o-guid2'],
-            label_selector: 'foo=bar',
+            label_selector:     'foo=bar',
             page:               1,
             per_page:           5,
             order_by:           'created_at',
