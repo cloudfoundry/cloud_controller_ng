@@ -20,8 +20,9 @@ class SpaceManifestsController < ApplicationController
     end.compact
     compound_error!(errors.flatten) unless errors.empty?
 
+    action = AppFindOrCreateSkeleton.new(user_audit_info)
     app_guid_message_hash = messages.map do |m|
-      app = AppModel.find(name: m.name, space: space)
+      app = action.find_or_create(message: m, space: space)
 
       unsupported_for_docker_apps!(m) if incompatible_with_buildpacks(app.lifecycle_type, m)
 
