@@ -80,7 +80,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
 
       context 'When the space exists' do
         role_to_expected_http_response = {
-        'admin' => 202,
+          'admin' => 202,
           'admin_read_only' => 403,
           'global_auditor' => 403,
           'space_developer' => 202,
@@ -148,7 +148,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
           expect(response.status).to eq(422)
           errors = parsed_body['errors']
           expect(errors.size).to eq(10)
-          expect(errors.map {|h| h.reject {|k, _| k == 'test_mode_info'}}).to match_array([
+          expect(errors.map { |h| h.reject { |k, _| k == 'test_mode_info' } }).to match_array([
             {
               'detail' => 'For application \'blah\': Process "web": Memory must use a supported unit: B, K, KB, M, MB, G, GB, T, or TB',
               'title' => 'CF-UnprocessableEntity',
@@ -568,7 +568,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
           let(:request_body) do
             { 'applications' => [
               { 'name' => app1.name, 'instances' => -1 },
-              { 'name' => app2.name, 'memory' => '10NOTaUnit'}
+              { 'name' => app2.name, 'memory' => '10NOTaUnit' }
             ] }
           end
 
@@ -577,7 +577,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
             expect(response.status).to eq(422)
             errors = parsed_body['errors']
             expect(errors.size).to eq(2)
-            expect(errors.map {|h| h.reject {|k, _| k == 'test_mode_info'}}).to match_array([
+            expect(errors.map { |h| h.reject { |k, _| k == 'test_mode_info' } }).to match_array([
               {
                 'detail' => 'For application \'honey\': Process "web": Instances must be greater than or equal to 0',
                 'title' => 'CF-UnprocessableEntity',
