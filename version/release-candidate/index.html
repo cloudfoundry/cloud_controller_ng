@@ -10506,7 +10506,7 @@ excluded in the response based on the user&rsquo;s role.</p>
 
           <h2 id="app-manifest">App Manifest</h2>
 
-          <p>The app manifest is a method for applying bulk configuration to an application and its underlying processes.</p>
+          <p>The app manifest is a method for applying bulk configuration to an app and its underlying processes.</p>
 
 <h3 id="the-app-manifest-specification">The app manifest specification</h3>
 <pre class="highlight plaintext"><code>Example Manifest
@@ -10698,7 +10698,7 @@ applications:
           <h3 id="apply-an-app-manifest">Apply an app manifest</h3>
 
 <blockquote>
-<p><strong>Note:</strong> Apply manifest will only trigger an immediate update for the &ldquo;disk_quota&rdquo;, &ldquo;instances&rdquo;, and &ldquo;memory&rdquo; properties. All other properties will update on application restart.</p>
+<p><strong>Note:</strong> Apply manifest will only trigger an immediate update for the &ldquo;disk_quota&rdquo;, &ldquo;instances&rdquo;, and &ldquo;memory&rdquo; properties. All other properties will update on app restart.</p>
 </blockquote>
 
 <p>Apply changes specified in a manifest to an app and its underlying processes. These changes are additive and will not modify any unspecified properties or remove any existing environment variables, routes, or services.</p>
@@ -13409,14 +13409,15 @@ represents code currently running in Cloud Foundry.</p>
 
           <h2 id="space-manifest">Space Manifest</h2>
 
-          <p>The space manifest is a method for applying bulk configuration to an application and its underlying processes.</p>
+          <p>The space manifest is a method for applying bulk configurations to apps and their underlying processes.</p>
 
 <h3 id="the-space-manifest-specification">The space manifest specification</h3>
 <pre class="highlight plaintext"><code>Example Manifest
 </code></pre>
 <pre class="highlight yaml"><code><span class="nn">---</span>
 <span class="s">applications</span><span class="pi">:</span>
-<span class="pi">-</span> <span class="s">buildpacks</span><span class="pi">:</span>
+<span class="pi">-</span> <span class="s">name</span><span class="pi">:</span> <span class="s">app1</span>
+  <span class="s">buildpacks</span><span class="pi">:</span>
   <span class="pi">-</span> <span class="s">ruby_buildpack</span>
   <span class="pi">-</span> <span class="s">java_buildpack</span>
   <span class="s">env</span><span class="pi">:</span>
@@ -13446,6 +13447,13 @@ represents code currently running in Cloud Foundry.</p>
     <span class="s">instances</span><span class="pi">:</span> <span class="s">2</span>
     <span class="s">memory</span><span class="pi">:</span> <span class="s">256M</span>
     <span class="s">timeout</span><span class="pi">:</span> <span class="s">15</span>
+<span class="pi">-</span> <span class="s">name</span><span class="pi">:</span> <span class="s">app2</span>
+  <span class="s">env</span><span class="pi">:</span>
+    <span class="s">VAR1</span><span class="pi">:</span> <span class="s">value1</span>
+  <span class="s">processes</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="s">type</span><span class="pi">:</span> <span class="s">web</span>
+    <span class="s">instances</span><span class="pi">:</span> <span class="s">1</span>
+    <span class="s">memory</span><span class="pi">:</span> <span class="s">256M</span>
 </code></pre>
 
 <h4 id="app-level-configuration">App-level configuration</h4>
@@ -13551,10 +13559,10 @@ represents code currently running in Cloud Foundry.</p>
           <h3 id="apply-a-space-manifest">Apply a space manifest</h3>
 
 <blockquote>
-<p><strong>Note:</strong> Apply manifest will only trigger an immediate update for the &ldquo;disk_quota&rdquo;, &ldquo;instances&rdquo;, and &ldquo;memory&rdquo; properties. All other properties will update on application restart.</p>
+<p><strong>Note:</strong> Apply manifest will only trigger an immediate update for the &ldquo;disk_quota&rdquo;, &ldquo;instances&rdquo;, and &ldquo;memory&rdquo; properties. All other properties will update on app restart.</p>
 </blockquote>
 
-<p>Apply changes specified in a manifest to the named app and its underlying processes. These changes are additive and will not modify any unspecified properties or remove any existing environment variables, routes, or services.</p>
+<p>Apply changes specified in a manifest to the named apps and their underlying processes. These changes are additive and will not modify any unspecified properties or remove any existing environment variables, routes, or services.</p>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/spaces/[guid]/actions/apply_manifest"</span> <span class="se">\</span>
