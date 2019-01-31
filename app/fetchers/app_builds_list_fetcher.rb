@@ -18,7 +18,7 @@ module VCAP::CloudController
       end
 
       if message.requested? :states
-        dataset.where(state: message.states)
+        dataset = dataset.where(state: message.states)
       end
 
       dataset
