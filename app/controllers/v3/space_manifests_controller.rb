@@ -15,10 +15,8 @@ class SpaceManifestsController < ApplicationController
     unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
 
     messages = parsed_app_manifests.map { |app_manifest| NamedAppManifestMessage.create_from_yml(app_manifest) }
-    errors = messages.map do |message|
-      message.errors.full_messages.map { |error| "For application '#{message.name}': #{error}" } unless message.valid?
-    end.compact
-    compound_error!(errors.flatten) unless errors.empty?
+    errors = messages.each_with_index.flat_map { |message, i| errors_for_message(message, i) }
+    compound_error!(errors) unless errors.empty?
 
     action = AppFindOrCreateSkeleton.new(user_audit_info)
     app_guid_message_hash = messages.map do |m|
@@ -40,6 +38,16 @@ class SpaceManifestsController < ApplicationController
   end
 
   private
+
+  def errors_for_message(message, index)
+    return [] if message.valid?
+
+    if message.name.present?
+      message.errors.full_messages.map { |error| "For application '#{message.name}': #{error}" }
+    else
+      message.errors.full_messages.map { |error| "For application at index #{index}: #{error}" }
+    end
+  end
 
   def record_apply_manifest_audit_event(app, message, space)
     audited_request_yaml = { 'applications' => [message.audit_hash] }.to_yaml

@@ -20,6 +20,7 @@ module VCAP::CloudController
           message = NamedAppManifestMessage.create_from_yml(params)
 
           expect(message).to_not be_valid
+          expect(message.errors.full_messages[0]).to match(/Name must not be empty/)
         end
       end
     end

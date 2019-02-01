@@ -217,6 +217,8 @@ RSpec.describe SpaceManifestsController, type: :controller do
         it 'returns a 422' do
           post :apply_manifest, params: { guid: space.guid }.merge(request_body), as: :yaml
           expect(response.status).to eq(422)
+          parsed_response = MultiJson.load(response.body)
+          expect(parsed_response['errors'][0]['detail']).to match(/For application at index 0:/)
         end
       end
     end

@@ -9,6 +9,6 @@ module VCAP::CloudController
       self.new(parsed_yaml, underscore_keys(parsed_yaml.deep_symbolize_keys))
     end
 
-    validates :name, string: true, allow_nil: false
+    validates :name, presence: { message: 'Name must not be empty' }, string: true
   end
 end
