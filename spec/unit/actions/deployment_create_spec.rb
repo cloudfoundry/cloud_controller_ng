@@ -48,17 +48,45 @@ module VCAP::CloudController
             expect(deployment.original_web_process_instance_count).to eq(3)
           end
 
-          it 'creates a revision associated with the provided droplet' do
-            app.update(revisions_enabled: true)
-            expect {
-              DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
-            }.to change { RevisionModel.count }.by(1)
+          context 'when revisions are enabled' do
+            before do
+              app.update(revisions_enabled: true)
+            end
 
-            revision = RevisionModel.last
-            expect(revision.droplet_guid).to eq(next_droplet.guid)
+            it 'creates a revision associated with the provided droplet' do
+              expect {
+                DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+              }.to change { RevisionModel.count }.by(1)
 
-            deploying_web_process = app.reload.newest_web_process
-            expect(deploying_web_process.revision).to eq(app.latest_revision)
+              revision = RevisionModel.last
+              expect(revision.droplet_guid).to eq(next_droplet.guid)
+
+              deploying_web_process = app.reload.newest_web_process
+              expect(deploying_web_process.revision).to eq(app.latest_revision)
+            end
+
+            it 'records the created revision on the deployment' do
+              deployment = DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+
+              revision = RevisionModel.last
+
+              expect(deployment.revision_guid).to eq(revision.guid)
+              expect(deployment.revision_version).to eq(revision.version)
+            end
+
+            it 'keeps a record of the revision even if it is deleted' do
+              deployment = DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+
+              revision = RevisionModel.last
+              revision_guid = revision.guid
+              revision_version = revision.version
+              revision.delete
+
+              deployment.reload
+
+              expect(deployment.revision_guid).to eq(revision_guid)
+              expect(deployment.revision_version).to eq(revision_version)
+            end
           end
 
           it 'sets the current droplet of the app to be the provided droplet' do

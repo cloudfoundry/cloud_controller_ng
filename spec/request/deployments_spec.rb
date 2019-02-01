@@ -42,6 +42,7 @@ RSpec.describe 'Deployments' do
           'droplet' => {
             'guid' => droplet.guid
           },
+          'revision' => nil,
           'previous_droplet' => {
             'guid' => droplet.guid
           },
@@ -101,6 +102,7 @@ RSpec.describe 'Deployments' do
           'droplet' => {
             'guid' => other_droplet.guid
           },
+          'revision' => nil,
           'previous_droplet' => {
             'guid' => droplet.guid
           },
@@ -161,12 +163,17 @@ RSpec.describe 'Deployments' do
         parsed_response = MultiJson.load(last_response.body)
 
         deployment = VCAP::CloudController::DeploymentModel.last
+        revision = VCAP::CloudController::RevisionModel.last
 
         expect(parsed_response).to be_a_response_like({
           'guid' => deployment.guid,
           'state' => 'DEPLOYING',
           'droplet' => {
             'guid' => other_droplet.guid
+          },
+          'revision' => {
+            'guid' => revision.guid,
+            'version' => revision.version,
           },
           'previous_droplet' => {
             'guid' => droplet.guid
@@ -267,6 +274,7 @@ RSpec.describe 'Deployments' do
           'droplet' => {
             'guid' => droplet.guid
           },
+          'revision' => nil,
           'previous_droplet' => {
             'guid' => droplet.guid
           },
@@ -277,6 +285,75 @@ RSpec.describe 'Deployments' do
           'metadata' => { 'labels' => { 'release' => 'stable', 'seriouseats.com/potato' => 'mashed' }, 'annotations' => { 'potato' => 'idaho' } },
           'created_at' => iso8601,
           'updated_at' => iso8601,
+          'relationships' => {
+            'app' => {
+              'data' => {
+                'guid' => app_model.guid
+              }
+            }
+          },
+          'links' => {
+            'self' => {
+              'href' => "#{link_prefix}/v3/deployments/#{deployment.guid}"
+            },
+            'app' => {
+              'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
+            }
+          }
+        })
+      end
+    end
+
+    context 'when revisions are enabled' do
+      let(:other_droplet) { VCAP::CloudController::DropletModel.make(app: app_model, process_types: { web: 'start-me-up' }) }
+      let(:create_request) do
+        {
+          droplet: {
+            guid: other_droplet.guid
+          },
+          relationships: {
+            app: {
+              data: {
+                guid: app_model.guid
+              }
+            },
+          }
+        }
+      end
+
+      before do
+        app_model.update(revisions_enabled: true)
+      end
+
+      it 'creates a deployment with a reference to the new revision' do
+        expect {
+          post '/v3/deployments', create_request.to_json, user_header
+          expect(last_response.status).to eq(201), last_response.body
+        }.to change { VCAP::CloudController::RevisionModel.count }.by(1)
+
+        deployment = VCAP::CloudController::DeploymentModel.last
+        revision = VCAP::CloudController::RevisionModel.last
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response).to be_a_response_like({
+          'guid' => deployment.guid,
+          'state' => 'DEPLOYING',
+          'droplet' => {
+            'guid' => other_droplet.guid
+          },
+          'revision' => {
+            'guid' => revision.guid,
+            'version' => revision.version,
+          },
+          'previous_droplet' => {
+            'guid' => droplet.guid
+          },
+          'new_processes' => [{
+                                'guid' => deployment.deploying_web_process.guid,
+                                'type' => deployment.deploying_web_process.type
+                              }],
+          'created_at' => iso8601,
+          'updated_at' => iso8601,
+          'metadata' => metadata,
           'relationships' => {
             'app' => {
               'data' => {
@@ -328,6 +405,7 @@ RSpec.describe 'Deployments' do
         'droplet' => {
           'guid' => droplet.guid,
         },
+        'revision' => nil,
         'previous_droplet' => {
           'guid' => nil,
         },
@@ -378,6 +456,7 @@ RSpec.describe 'Deployments' do
         'droplet' => {
           'guid' => droplet.guid
         },
+        'revision' => nil,
         'previous_droplet' => {
           'guid' => old_droplet.guid
         },
@@ -465,6 +544,7 @@ RSpec.describe 'Deployments' do
               'droplet' => {
                 'guid' => droplet.guid
               },
+              'revision' => nil,
               'previous_droplet' => {
                 'guid' => droplet.guid
               },
@@ -497,6 +577,7 @@ RSpec.describe 'Deployments' do
               'droplet' => {
                 'guid' => droplet2.guid
               },
+              'revision' => nil,
               'previous_droplet' => {
                 'guid' => nil
               },
@@ -580,6 +661,7 @@ RSpec.describe 'Deployments' do
               'droplet' => {
                 'guid' => droplet.guid
               },
+              'revision' => nil,
               'previous_droplet' => {
                 'guid' => droplet.guid
               },

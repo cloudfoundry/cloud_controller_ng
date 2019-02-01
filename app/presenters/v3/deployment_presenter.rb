@@ -30,6 +30,7 @@ module VCAP::CloudController::Presenters::V3
           annotations: hashified_annotations(deployment.annotations),
         },
         links: build_links,
+        revision: revision,
       }
     end
 
@@ -37,6 +38,10 @@ module VCAP::CloudController::Presenters::V3
 
     def deployment
       @resource
+    end
+
+    def revision
+      (deployment.app.revisions_enabled && deployment.revision_guid) ? { guid: deployment.revision_guid, version: deployment.revision_version } : nil
     end
 
     def new_processes

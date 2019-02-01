@@ -15,11 +15,11 @@ module VCAP::CloudController
           raise Error.new(e.message)
         end
 
-        revision = RevisionModel.find(guid: message.revision_guid)
-        if revision
+        given_revision = RevisionModel.find(guid: message.revision_guid)
+        if given_revision
           app.db.transaction do
             app.lock!
-            app.update(environment_variables: revision.environment_variables)
+            app.update(environment_variables: given_revision.environment_variables)
             app.save
           end
         end
@@ -32,12 +32,16 @@ module VCAP::CloudController
           desired_instances = previous_deployment.original_web_process_instance_count
         end
 
+        new_revision = app.can_create_revision? ? RevisionCreate.create(app) : web_process.revision
+
         deployment = DeploymentModel.new(
           app: app,
           state: DeploymentModel::DEPLOYING_STATE,
           droplet: droplet,
           previous_droplet: previous_droplet,
           original_web_process_instance_count: desired_instances,
+          revision_guid: new_revision&.guid,
+          revision_version: new_revision&.version,
         )
 
         DeploymentModel.db.transaction do
@@ -50,10 +54,11 @@ module VCAP::CloudController
 
           MetadataUpdate.update(deployment, message)
 
-          process = create_deployment_process(app, deployment.guid, web_process)
+          process = create_deployment_process(app, deployment.guid, web_process, new_revision)
           deployment.update(deploying_web_process: process)
         end
         record_audit_event(deployment, droplet, user_audit_info)
+
         deployment
       end
 
@@ -76,8 +81,8 @@ module VCAP::CloudController
         droplet
       end
 
-      def create_deployment_process(app, deployment_guid, web_process)
-        process = clone_existing_web_process(app, web_process)
+      def create_deployment_process(app, deployment_guid, web_process, revision)
+        process = clone_existing_web_process(app, web_process, revision)
 
         DeploymentProcessModel.create(
           deployment_guid: deployment_guid,
@@ -91,7 +96,7 @@ module VCAP::CloudController
         process
       end
 
-      def clone_existing_web_process(app, web_process)
+      def clone_existing_web_process(app, web_process, revision)
         ProcessModel.create(
           app: app,
           type: ProcessTypes::WEB,
@@ -109,7 +114,7 @@ module VCAP::CloudController
           health_check_invocation_timeout: web_process.health_check_invocation_timeout,
           enable_ssh: web_process.enable_ssh,
           ports: web_process.ports,
-          revision: app.can_create_revision? ? RevisionCreate.create(app) : web_process.revision
+          revision: revision
         )
       end
 
