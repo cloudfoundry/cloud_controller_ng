@@ -27,6 +27,9 @@ RSpec.describe 'App Features' do
           'droplets' => {
             'href' => "#{link_prefix}/v3/droplets"
           },
+          'feature_flags' => {
+            'href' => "#{link_prefix}/v3/feature_flags"
+          },
           'isolation_segments' => {
             'href' => "#{link_prefix}/v3/isolation_segments"
           },
