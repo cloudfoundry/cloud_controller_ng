@@ -15,6 +15,15 @@ module VCAP::CloudController
           raise Error.new(e.message)
         end
 
+        revision = RevisionModel.find(guid: message.revision_guid)
+        if revision
+          app.db.transaction do
+            app.lock!
+            app.update(environment_variables: revision.environment_variables)
+            app.save
+          end
+        end
+
         web_process = app.oldest_web_process
         previous_deployment = DeploymentModel.find(app: app, state: DeploymentModel::DEPLOYING_STATE)
 
