@@ -105,6 +105,7 @@ RSpec.resource 'Spaces', type: [:api, :legacy_api] do
 
       expect(parsed_response['apps'][0]['name']).to eq(process.name)
       expect(parsed_response['services'][0]['name']).to eq(service_instance.name)
+      expect(parsed_response['services'][0]['type']).to eq('managed_service_instance')
     end
   end
 end
