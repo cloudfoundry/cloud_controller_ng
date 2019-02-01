@@ -6,23 +6,10 @@ module VCAP::CloudController
 
     class << self
       def create(app:, user_audit_info:, message:)
-        droplet = choose_desired_droplet(app, message.droplet_guid, message.revision_guid)
-
         previous_droplet = app.droplet
-        begin
-          AppAssignDroplet.new(user_audit_info).assign(app, droplet)
-        rescue AppAssignDroplet::Error => e
-          raise Error.new(e.message)
-        end
 
-        given_revision = RevisionModel.find(guid: message.revision_guid)
-        if given_revision
-          app.db.transaction do
-            app.lock!
-            app.update(environment_variables: given_revision.environment_variables)
-            app.save
-          end
-        end
+        target_state = DeploymentTargetState.new(app, message)
+        target_state.apply_to_app(app, user_audit_info)
 
         web_process = app.oldest_web_process
         previous_deployment = DeploymentModel.find(app: app, state: DeploymentModel::DEPLOYING_STATE)
@@ -33,11 +20,10 @@ module VCAP::CloudController
         end
 
         new_revision = app.can_create_revision? ? RevisionCreate.create(app) : web_process.revision
-
         deployment = DeploymentModel.new(
           app: app,
           state: DeploymentModel::DEPLOYING_STATE,
-          droplet: droplet,
+          droplet: target_state.droplet,
           previous_droplet: previous_droplet,
           original_web_process_instance_count: desired_instances,
           revision_guid: new_revision&.guid,
@@ -57,28 +43,9 @@ module VCAP::CloudController
           process = create_deployment_process(app, deployment.guid, web_process, new_revision)
           deployment.update(deploying_web_process: process)
         end
-        record_audit_event(deployment, droplet, user_audit_info)
+        record_audit_event(deployment, target_state.droplet, user_audit_info)
 
         deployment
-      end
-
-      private
-
-      def choose_desired_droplet(app, droplet_guid, revision_guid)
-        if droplet_guid
-          droplet = DropletModel.find(guid: droplet_guid)
-        elsif revision_guid
-          revision = RevisionModel.find(guid: revision_guid)
-          raise Error.new('The revision does not exist') unless revision
-
-          droplet = DropletModel.find(guid: revision.droplet_guid)
-          raise Error.new('Invalid revision. Please specify a revision with a valid droplet in the request.') unless droplet
-
-        else
-          droplet = app.droplet
-          raise Error.new('Invalid droplet. Please specify a droplet in the request or set a current droplet for the app.') unless droplet
-        end
-        droplet
       end
 
       def create_deployment_process(app, deployment_guid, web_process, revision)
@@ -129,6 +96,75 @@ module VCAP::CloudController
             app.space.organization_guid
         )
       end
+    end
+  end
+
+  class DeploymentTargetState
+    attr_reader :droplet, :environment_variables
+
+    def initialize(app, message)
+      # @droplet, @environment_variables = if message.revision_guid
+      #                                      revision = RevisionModel.find(guid: message.revision_guid)
+      #                                      raise DeploymentCreate::Error.new('The revision does not exist') unless revision
+      #
+      #                                      [RevisionDropletSource.new(revision).get, revision.environment_variables]
+      #                                    elsif message.droplet_guid
+      #                                      [FromGuidDropletSource.new(message.droplet_guid).get, app.environment_variables]
+      #                                    else
+      #                                      [AppDropletSource.new(app.droplet).get, app.environment_variables]
+      #                                    end
+
+      revision = nil
+      @droplet = if message.revision_guid
+                   revision = RevisionModel.find(guid: message.revision_guid)
+                   raise DeploymentCreate::Error.new('The revision does not exist') unless revision
+
+                   RevisionDropletSource.new(revision).get
+                 elsif message.droplet_guid
+                   FromGuidDropletSource.new(message.droplet_guid).get
+                 else
+                   AppDropletSource.new(app.droplet).get
+                 end
+
+      @environment_variables = revision ? revision.environment_variables : app.environment_variables
+    end
+
+    def apply_to_app(app, user_audit_info)
+      app.db.transaction do
+        app.lock!
+
+        begin
+          AppAssignDroplet.new(user_audit_info).assign(app, @droplet)
+        rescue AppAssignDroplet::Error => e
+          raise DeploymentCreate::Error.new(e.message)
+        end
+
+        app.update(environment_variables: @environment_variables)
+        app.save
+      end
+    end
+  end
+
+  class RevisionDropletSource < Struct.new(:revision)
+    def get
+      droplet = DropletModel.find(guid: revision.droplet_guid)
+      raise DeploymentCreate::Error.new('Invalid revision. Please specify a revision with a valid droplet in the request.') unless droplet
+
+      droplet
+    end
+  end
+
+  class AppDropletSource < Struct.new(:droplet)
+    def get
+      raise DeploymentCreate::Error.new('Invalid droplet. Please specify a droplet in the request or set a current droplet for the app.') unless droplet
+
+      droplet
+    end
+  end
+
+  class FromGuidDropletSource < Struct.new(:droplet_guid)
+    def get
+      DropletModel.find(guid: droplet_guid)
     end
   end
 end
