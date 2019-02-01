@@ -38,6 +38,7 @@ class ApplicationController < ActionController::Base
 
   UNSCOPED_PAGES = ['not_found', 'internal_error', 'bad_request', 'v3_root'].map(&:freeze).freeze
   READ_SCOPE_HTTP_METHODS = ['GET', 'HEAD'].map(&:freeze).freeze
+  YAML_CONTENT_TYPE = 'application/x-yaml'.freeze
 
   wrap_parameters :body, format: [:json, :url_encoded_form, :multipart_form]
 

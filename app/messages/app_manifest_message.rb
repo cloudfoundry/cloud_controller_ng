@@ -34,7 +34,7 @@ module VCAP::CloudController
     HEALTH_CHECK_TYPE_MAPPING = { HealthCheckTypes::NONE => HealthCheckTypes::PROCESS }.freeze
 
     def self.create_from_yml(parsed_yaml)
-      AppManifestMessage.new(parsed_yaml, underscore_keys(parsed_yaml.deep_symbolize_keys))
+      self.new(parsed_yaml, underscore_keys(parsed_yaml.deep_symbolize_keys))
     end
 
     def self.underscore_keys(hash)

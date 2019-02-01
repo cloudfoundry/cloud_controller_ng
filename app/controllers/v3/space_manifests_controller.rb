@@ -3,8 +3,6 @@ require 'repositories/app_event_repository'
 require 'messages/named_app_manifest_message'
 
 class SpaceManifestsController < ApplicationController
-  YAML_CONTENT_TYPE = 'application/x-yaml'.freeze
-
   wrap_parameters :body, format: [:yaml]
 
   before_action :validate_content_type!, only: :apply_manifest

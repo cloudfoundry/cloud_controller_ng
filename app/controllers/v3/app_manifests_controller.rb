@@ -5,8 +5,6 @@ require 'repositories/app_event_repository'
 class AppManifestsController < ApplicationController
   include AppSubResource
 
-  YAML_CONTENT_TYPE = 'application/x-yaml'.freeze
-
   wrap_parameters :body, format: [:yaml]
 
   before_action :validate_content_type!, only: :apply_manifest
