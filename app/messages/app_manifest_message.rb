@@ -15,12 +15,12 @@ module VCAP::CloudController
       :buildpacks,
       :command,
       :disk_quota,
+      :docker,
       :env,
       :health_check_http_endpoint,
       :health_check_invocation_timeout,
       :health_check_timeout,
       :health_check_type,
-      :timeout,
       :instances,
       :memory,
       :no_route,
@@ -29,6 +29,7 @@ module VCAP::CloudController
       :routes,
       :services,
       :stack,
+      :timeout,
     ]
 
     HEALTH_CHECK_TYPE_MAPPING = { HealthCheckTypes::NONE => HealthCheckTypes::PROCESS }.freeze
@@ -77,7 +78,7 @@ module VCAP::CloudController
     end
 
     def app_update_message
-      @app_update_message ||= AppUpdateMessage.new(app_update_attribute_mapping)
+      @app_update_message ||= AppUpdateMessage.new(app_lifecycle_hash)
     end
 
     def app_update_environment_variables_message
@@ -95,6 +96,14 @@ module VCAP::CloudController
     def audit_hash
       overrides = original_yaml['env'] ? { 'env' => Presenters::Censorship::PRIVATE_DATA_HIDDEN } : {}
       original_yaml.merge(overrides)
+    end
+
+    def app_lifecycle_hash
+      lifecycle_data = requested?(:docker) ? docker_lifecycle_data : buildpacks_lifecycle_data
+
+      {
+          lifecycle: lifecycle_data
+      }.compact
     end
 
     private
@@ -181,13 +190,6 @@ module VCAP::CloudController
       mapping
     end
 
-    def app_update_attribute_mapping
-      mapping = {
-        lifecycle: buildpacks_lifecycle_data
-      }.compact
-      mapping
-    end
-
     def env_update_attribute_mapping
       mapping = {}
       if requested?(:env) && env.is_a?(Hash)
@@ -208,6 +210,10 @@ module VCAP::CloudController
       mapping = {}
       mapping[:services] = services if requested?(:services)
       mapping
+    end
+
+    def docker_lifecycle_data
+      { type: Lifecycles::DOCKER }
     end
 
     def buildpacks_lifecycle_data

@@ -1327,70 +1327,84 @@ module VCAP::CloudController
       let(:stack) { VCAP::CloudController::Stack.make }
       let(:parsed_yaml) { { 'buildpack' => buildpack.name, 'stack' => stack.name } }
 
-      it 'returns an AppUpdateMessage containing mapped attributes' do
-        message = AppManifestMessage.create_from_yml(parsed_yaml)
+      context 'when neither buildpack or docker is specified' do
+        context 'when attributes are not requested in the manifest' do
+          context 'when no lifecycle data is requested in the manifest' do
+            let(:parsed_yaml) { {} }
 
-        expect(message.app_update_message.buildpack_data.buildpacks).to include(buildpack.name)
-        expect(message.app_update_message.buildpack_data.stack).to eq(stack.name)
-      end
+            it 'does not forward missing attributes to the AppUpdateMessage' do
+              message = AppManifestMessage.create_from_yml(parsed_yaml)
 
-      context 'when attributes are not requested in the manifest' do
-        context 'when no lifecycle data is requested in the manifest' do
-          let(:parsed_yaml) { {} }
-
-          it 'does not forward missing attributes to the AppUpdateMessage' do
-            message = AppManifestMessage.create_from_yml(parsed_yaml)
-
-            expect(message.app_update_message.requested?(:lifecycle)).to be false
+              expect(message.app_update_message.requested?(:lifecycle)).to be false
+            end
           end
-        end
 
-        context 'when stack is not requested in the manifest but buildpack is requested' do
-          let(:parsed_yaml) { { 'buildpack' => buildpack.name } }
+          context 'when stack is not requested in the manifest but buildpack is requested' do
+            let(:parsed_yaml) { { 'buildpack' => buildpack.name } }
 
-          it 'does not forward missing attributes to the AppUpdateMessage' do
-            message = AppManifestMessage.create_from_yml(parsed_yaml)
+            it 'does not forward missing attributes to the AppUpdateMessage' do
+              message = AppManifestMessage.create_from_yml(parsed_yaml)
 
-            expect(message.app_update_message.requested?(:lifecycle)).to be true
-            expect(message.app_update_message.buildpack_data.requested?(:buildpacks)).to be true
-            expect(message.app_update_message.buildpack_data.requested?(:stack)).to be false
+              expect(message.app_update_message.requested?(:lifecycle)).to be true
+              expect(message.app_update_message.buildpack_data.requested?(:buildpacks)).to be true
+              expect(message.app_update_message.buildpack_data.requested?(:stack)).to be false
+            end
           end
-        end
 
-        context 'when buildpack is not requested in the manifest but stack is requested' do
-          let(:parsed_yaml) { { 'stack' => stack.name } }
+          context 'when buildpack is not requested in the manifest but stack is requested' do
+            let(:parsed_yaml) { { 'stack' => stack.name } }
 
-          it 'does not forward missing attributes to the AppUpdateMessage' do
-            message = AppManifestMessage.create_from_yml(parsed_yaml)
+            it 'does not forward missing attributes to the AppUpdateMessage' do
+              message = AppManifestMessage.create_from_yml(parsed_yaml)
 
-            expect(message.app_update_message.requested?(:lifecycle)).to be true
-            expect(message.app_update_message.buildpack_data.requested?(:buildpacks)).to be false
-            expect(message.app_update_message.buildpack_data.requested?(:stack)).to be true
+              expect(message.app_update_message.requested?(:lifecycle)).to be true
+              expect(message.app_update_message.buildpack_data.requested?(:buildpacks)).to be false
+              expect(message.app_update_message.buildpack_data.requested?(:stack)).to be true
+            end
           end
         end
       end
 
-      context 'when it specifies a "default" buildpack' do
-        let(:parsed_yaml) { { buildpack: 'default' } }
-        it 'updates the buildpack_data to be an empty array' do
+      context 'when buildpacks are specified' do
+        it 'returns an AppUpdateMessage containing mapped attributes' do
           message = AppManifestMessage.create_from_yml(parsed_yaml)
-          expect(message.app_update_message.buildpack_data.buildpacks).to be_empty
+
+          expect(message.app_update_message.buildpack_data.buildpacks).to include(buildpack.name)
+          expect(message.app_update_message.buildpack_data.stack).to eq(stack.name)
+        end
+
+        context 'when it specifies a "default" buildpack' do
+          let(:parsed_yaml) { { buildpack: 'default' } }
+          it 'updates the buildpack_data to be an empty array' do
+            message = AppManifestMessage.create_from_yml(parsed_yaml)
+            expect(message.app_update_message.buildpack_data.buildpacks).to be_empty
+          end
+        end
+
+        context 'when it specifies a null buildpack' do
+          let(:parsed_yaml) { { buildpack: nil } }
+          it 'updates the buildpack_data to be an empty array' do
+            message = AppManifestMessage.create_from_yml(parsed_yaml)
+            expect(message.app_update_message.buildpack_data.buildpacks).to be_empty
+          end
+        end
+
+        context 'when it specifies a "null" buildpack' do
+          let(:parsed_yaml) { { buildpack: 'null' } }
+          it 'updates the buildpack_data to be an empty array' do
+            message = AppManifestMessage.create_from_yml(parsed_yaml)
+            expect(message.app_update_message.buildpack_data.buildpacks).to be_empty
+          end
         end
       end
 
-      context 'when it specifies a null buildpack' do
-        let(:parsed_yaml) { { buildpack: nil } }
-        it 'updates the buildpack_data to be an empty array' do
-          message = AppManifestMessage.create_from_yml(parsed_yaml)
-          expect(message.app_update_message.buildpack_data.buildpacks).to be_empty
-        end
-      end
+      context 'when docker is specified' do
+        let(:parsed_yaml) { { docker: { image: 'my/docker' } } }
 
-      context 'when it specifies a "null" buildpack' do
-        let(:parsed_yaml) { { buildpack: 'null' } }
-        it 'updates the buildpack_data to be an empty array' do
+        it 'returns an AppUpdateMessage containing mapped attributes' do
           message = AppManifestMessage.create_from_yml(parsed_yaml)
-          expect(message.app_update_message.buildpack_data.buildpacks).to be_empty
+
+          expect(message.app_update_message.lifecycle_type).to eq(Lifecycles::DOCKER)
         end
       end
     end

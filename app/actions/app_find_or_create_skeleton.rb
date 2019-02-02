@@ -9,7 +9,9 @@ module VCAP::CloudController
 
       if app.nil?
         relationships = { space: { data: { guid: space.guid } } }
-        app_create_message = AppCreateMessage.new({ name: message.name, relationships: relationships })
+        app_create_args = { name: message.name, relationships: relationships }.merge(message.app_lifecycle_hash)
+
+        app_create_message = AppCreateMessage.new(app_create_args)
         lifecycle = AppLifecycleProvider.provide_for_create(app_create_message)
         app = AppCreate.new(@user_audit_info).create(app_create_message, lifecycle)
       end

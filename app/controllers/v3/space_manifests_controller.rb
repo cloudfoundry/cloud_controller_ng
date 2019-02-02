@@ -1,6 +1,7 @@
 require 'presenters/v3/app_manifest_presenter'
 require 'repositories/app_event_repository'
 require 'messages/named_app_manifest_message'
+require 'actions/app_find_or_create_skeleton'
 
 class SpaceManifestsController < ApplicationController
   wrap_parameters :body, format: [:yaml]
