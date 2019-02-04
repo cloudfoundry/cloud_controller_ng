@@ -182,6 +182,36 @@ module VCAP::CloudController
         end
       end
 
+      describe 'docker' do
+        let(:params) { { docker: { image: 'my/image' } } }
+
+        context 'when docker is enabled' do
+          before do
+            FeatureFlag.make(name: 'diego_docker', enabled: true, error_message: nil)
+          end
+
+          it 'is valid' do
+            message = AppManifestMessage.create_from_yml(params)
+
+            expect(message).to be_valid
+          end
+        end
+
+        context 'when docker is disabled' do
+          before do
+            FeatureFlag.make(name: 'diego_docker', enabled: false, error_message: 'I am a banana')
+          end
+
+          it 'is not valid' do
+            message = AppManifestMessage.create_from_yml(params)
+
+            expect(message).not_to be_valid
+            expect(message.errors.count).to eq(1)
+            expect(message.errors.full_messages).to include('Feature Disabled: I am a banana')
+          end
+        end
+      end
+
       describe 'stack' do
         context 'when providing a valid stack name' do
           let(:params) { { stack: 'cflinuxfs2' } }
