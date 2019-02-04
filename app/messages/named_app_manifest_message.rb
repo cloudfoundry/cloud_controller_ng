@@ -5,6 +5,6 @@ module VCAP::CloudController
   class NamedAppManifestMessage < AppManifestMessage
     register_allowed_keys [:name]
 
-    validates :name, presence: { message: 'Name must not be empty' }, string: true
+    validates :name, presence: { message: 'must not be empty' }, string: true
   end
 end
