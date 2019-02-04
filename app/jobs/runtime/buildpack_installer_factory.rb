@@ -27,13 +27,19 @@ module VCAP::CloudController
         class StacklessAndStackfulMatchingBuildpacksExistError < StandardError
         end
 
+        class LockedStacklessBuildpackUpgradeError < StandardError
+        end
+
         def plan(buildpack_name, manifest_fields)
           ensure_no_duplicate_buildpack_stacks!(manifest_fields)
+
           ensure_no_mix_of_stackless_and_stackful_buildpacks!(manifest_fields)
 
           planned_jobs = []
 
           found_buildpacks = Buildpack.where(name: buildpack_name).all
+
+          ensure_no_attempt_to_upgrade_a_stackless_locked_buildpack(buildpack_name, found_buildpacks, manifest_fields)
 
           manifest_fields.each do |buildpack_fields|
             guid_of_buildpack_to_update = find_buildpack_to_update(found_buildpacks, buildpack_fields[:stack], planned_jobs)
@@ -73,7 +79,8 @@ module VCAP::CloudController
 
         def ensure_no_buildpack_downgraded_to_nil_stack!(buildpacks)
           if buildpacks.size > 1 && buildpacks.any? { |b| b.stack.nil? }
-            raise StacklessAndStackfulMatchingBuildpacksExistError
+            msg = "Attempt to install #{buildpacks.first.name} failed due to a <StacklessAndStackfulMatchingBuildpacksExistError> error. Ensure that all buildpacks have a stack associated with them before upgrading."
+            raise StacklessAndStackfulMatchingBuildpacksExistError.new(msg)
           end
         end
 
@@ -106,6 +113,19 @@ module VCAP::CloudController
           end
 
           nil
+        end
+
+        private
+
+        # prevent creation of multiple buildpacks with the same name
+        # if the old buildpack is locked and stackless
+        #
+        def ensure_no_attempt_to_upgrade_a_stackless_locked_buildpack(buildpack_name, found_buildpacks, manifest_fields)
+          nil_locked_buildpack = found_buildpacks.find {|bp| bp.locked && bp.stack.nil?}
+          if manifest_fields.size > 1 && nil_locked_buildpack
+            msg = "Attempt to install #{buildpack_name} for multiple stacks failed due to <LockedStacklessBuildpackUpgradeError> error. Buildpack #{buildpack_name} cannot be locked during upgrade."
+            raise LockedStacklessBuildpackUpgradeError.new(msg)
+          end
         end
       end
     end
