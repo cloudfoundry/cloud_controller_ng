@@ -76,13 +76,13 @@ module VCAP::CloudController
 
       def process_workpool_exceptions(exceptions)
         exceptions.each do |e|
-          logger.error('error-cancelling-task', error: e.class.name, error_message: e.message, error_backtrace: truncated_backtrace_from_error(e))
+          logger.error('error-cancelling-task', error: e.class.name, error_message: e.message, error_backtrace: formatted_backtrace_from_error(e))
           @bump_freshness = false
         end
       end
 
-      def truncated_backtrace_from_error(error)
-        error.backtrace.present? ? error.backtrace[0..9].join("\n") + "\n..." : ''
+      def formatted_backtrace_from_error(error)
+        error.backtrace.present? ? error.backtrace.join("\n") + "\n..." : ''
       end
 
       def diego_task_missing?(task_guid)

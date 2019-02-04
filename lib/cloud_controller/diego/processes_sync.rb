@@ -88,15 +88,15 @@ module VCAP::CloudController
           elsif error_name == 'RunnerError' && e.message['the requested resource could not be found']
             logger.info('ignore-deleted-resource', error: error_name, error_message: e.message)
           else
-            logger.error('error-updating-lrp-state', error: error_name, error_message: e.message, error_backtrace: truncated_backtrace_from_error(e))
+            logger.error('error-updating-lrp-state', error: error_name, error_message: e.message, error_backtrace: formatted_backtrace_from_error(e))
             @bump_freshness = false
           end
         end
         @statsd_updater.update_synced_invalid_lrps(invalid_lrps)
       end
 
-      def truncated_backtrace_from_error(error)
-        error.backtrace.present? ? error.backtrace[0..9].join("\n") + "\n..." : ''
+      def formatted_backtrace_from_error(error)
+        error.backtrace.present? ? error.backtrace.join("\n") + "\n..." : ''
       end
 
       def batched_processes
