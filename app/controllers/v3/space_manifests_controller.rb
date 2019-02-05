@@ -22,6 +22,7 @@ class SpaceManifestsController < ApplicationController
       app = action.find_or_create(message: m, space: space)
 
       unsupported_for_docker_apps!(m) if incompatible_with_buildpacks(app.lifecycle_type, m)
+      unsupported_for_buildpack_apps!(m) if incompatible_with_docker(app.lifecycle_type, m)
 
       [app.guid, m]
     end.to_h
@@ -84,7 +85,15 @@ class SpaceManifestsController < ApplicationController
     raise unprocessable("For application '#{manifest.name}': #{manifest.buildpacks ? 'Buildpacks' : 'Buildpack'} cannot be configured for a docker lifecycle app.")
   end
 
+  def unsupported_for_buildpack_apps!(manifest)
+    raise unprocessable("For application '#{manifest.name}': Docker cannot be configured for a buildpack lifecycle app.")
+  end
+
   def incompatible_with_buildpacks(lifecycle_type, manifest)
     lifecycle_type == 'docker' && (manifest.buildpack || manifest.buildpacks)
+  end
+
+  def incompatible_with_docker(lifecycle_type, manifest)
+    lifecycle_type == 'buildpack' && manifest.docker
   end
 end

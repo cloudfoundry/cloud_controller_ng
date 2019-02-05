@@ -332,6 +332,56 @@ RSpec.describe SpaceManifestsController, type: :controller do
       end
     end
 
+    context 'when the request body includes docker' do
+      let(:request_body) do
+        { 'applications' =>
+              [{ 'name' => 'blah', 'docker' => { 'image' => 'my/image' } }] }
+      end
+
+      before do
+        VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: true, error_message: nil)
+      end
+
+      context 'for a docker app' do
+        let(:app_model) { VCAP::CloudController::AppModel.make(:docker, name: 'blah') }
+
+        it 'sets the docker image' do
+          puts request_body
+          post :apply_manifest, params: { guid: space.guid }.merge(request_body), as: :yaml
+
+          puts response.body
+          expect(response.status).to eq(202)
+          space_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceApplyManifest%'"))
+          expect(space_apply_manifest_jobs.count).to eq 1
+
+          expect(VCAP::CloudController::Jobs::SpaceApplyManifestActionJob).to have_received(:new) do |aspace, app_guid_message_hash, action|
+            expect(aspace).to eq space
+            expect(app_guid_message_hash.entries.first[1].docker[:image]).to eq 'my/image'
+            expect(action).to eq app_apply_manifest_action
+          end
+        end
+      end
+
+      context 'for a buildpack app' do
+        let(:app_model) { VCAP::CloudController::AppModel.make(:buildppack, name: 'blah') }
+
+        it 'returns an error' do
+          post :apply_manifest, params: { guid: space.guid }.merge(request_body), as: :yaml
+
+          expect(response.status).to eq(422)
+          errors = parsed_body['errors']
+          expect(errors.size).to eq(1)
+          expect(errors.map { |h| h.reject { |k, _| k == 'test_mode_info' } }).to match_array([
+            {
+                'detail' => "For application 'blah': Docker cannot be configured for a buildpack lifecycle app.",
+                'title' => 'CF-UnprocessableEntity',
+                'code' => 10008
+            }
+          ])
+        end
+      end
+    end
+
     context 'when the request body includes a stack' do
       let(:request_body) do
         { 'applications' =>
