@@ -33,14 +33,14 @@ RSpec.describe 'Service Broker API integration' do
       let(:default_poll_interval) { VCAP::CloudController::Config.config.get(:broker_client_default_async_poll_interval_seconds) }
       let(:retry_after_interval) { default_poll_interval * 4 }
 
-      context 'when provisioning a service instance' do
-        before do
-          setup_broker(default_catalog)
-          @broker = VCAP::CloudController::ServiceBroker.find guid: @broker_guid
-        end
+      before do
+        setup_broker(default_catalog)
+        @broker = VCAP::CloudController::ServiceBroker.find guid: @broker_guid
+        stub_async_last_operation(body: { state: 'in progress' }, headers: { 'Retry-After': retry_after_interval })
+      end
 
+      context 'when provisioning a service instance' do
         it 'should schedule a delayed job with correct run_at time' do
-          stub_async_last_operation(body: { state: 'in progress' }, headers: { 'Retry-After': retry_after_interval })
           async_provision_service
 
           expect(
@@ -49,23 +49,50 @@ RSpec.describe 'Service Broker API integration' do
 
           service_instance = VCAP::CloudController::ManagedServiceInstance.find(guid: @service_instance_guid)
 
-          Timecop.freeze(Time.now) do
-            # Initial call is made immediately after the job is scheduled
-            Delayed::Worker.new.work_off
-            expect(a_request(:get, %r{#{service_instance_url(service_instance)}/last_operation})).to have_been_made
+          assert_cc_uses_specified_polling_interval(
+            service_instance,
+            default_poll_interval,
+            retry_after_interval
+          )
+        end
+      end
 
-            # Check a call on the default interval has not been made, i.e. still have the initial call to last_operation
-            Timecop.travel(default_poll_interval.seconds)
-            Delayed::Worker.new.work_off
-            expect(a_request(:get, %r{#{service_instance_url(service_instance)}/last_operation})).to have_been_made.once
+      context 'when deprovisioning a service instance' do
+        let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space_guid: @space_guid, service_plan_guid: @plan_guid) }
 
-            # Check a new call has been made at the Retry-After interval
-            Timecop.travel(retry_after_interval.seconds)
-            Delayed::Worker.new.work_off
-            expect(a_request(:get, %r{#{service_instance_url(service_instance)}/last_operation})).to have_been_made.twice
-          end
+        before do
+          @service_instance_guid = service_instance.guid
+        end
+
+        it 'should schedule a delayed job with correct run_at time' do
+          async_delete_service
+
+          expect(
+            a_request(:delete, deprovision_url(service_instance, accepts_incomplete: true))
+          ).to have_been_made
+
+          assert_cc_uses_specified_polling_interval(
+            service_instance,
+            default_poll_interval,
+            retry_after_interval
+          )
         end
       end
     end
+  end
+end
+
+def assert_cc_uses_specified_polling_interval(service_instance, default_poll_interval, retry_after_interval)
+  Timecop.freeze(Time.now) do
+    Delayed::Worker.new.work_off
+    expect(a_request(:get, %r{#{service_instance_url(service_instance)}/last_operation})).to have_been_made
+
+    Timecop.travel(default_poll_interval.seconds)
+    Delayed::Worker.new.work_off
+    expect(a_request(:get, %r{#{service_instance_url(service_instance)}/last_operation})).to have_been_made.once
+
+    Timecop.travel(retry_after_interval.seconds)
+    Delayed::Worker.new.work_off
+    expect(a_request(:get, %r{#{service_instance_url(service_instance)}/last_operation})).to have_been_made.twice
   end
 end
