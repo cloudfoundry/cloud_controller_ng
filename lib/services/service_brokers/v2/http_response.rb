@@ -52,7 +52,7 @@ module VCAP::Services::ServiceBrokers::V2
       505 => 'HTTP Version Not Supported',
       507 => 'Insufficient Storage',
       508 => 'Loop Detected',
-      511 => 'Network Authentication Required',
+      511 => 'Network Authentication Required'
     }.freeze
 
     HEADER_RETRY_AFTER = 'Retry-After'.freeze

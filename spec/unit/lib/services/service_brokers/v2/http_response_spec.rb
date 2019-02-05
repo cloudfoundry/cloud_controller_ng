@@ -84,7 +84,7 @@ module VCAP::Services::ServiceBrokers::V2
           [423, 'Locked'],
           [424, 'Failed Dependency'],
           [507, 'Insufficient Storage'],
-          [508, 'Loop Detected'],
+          [508, 'Loop Detected']
         ]
 
         status_messages.each do |mapping|

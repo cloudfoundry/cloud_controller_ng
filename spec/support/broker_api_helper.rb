@@ -174,6 +174,7 @@ module VCAP::CloudController::BrokerApiHelper
 
     response = JSON.parse(last_response.body)
     @service_instance_guid = response['metadata']['guid']
+    last_response
   end
 
   def stub_async_last_operation(body: { state: 'succeeded' }, operation_data: nil, return_code: 200, url: '', headers: {})
