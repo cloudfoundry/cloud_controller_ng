@@ -176,7 +176,7 @@ module VCAP::CloudController::BrokerApiHelper
     @service_instance_guid = response['metadata']['guid']
   end
 
-  def stub_async_last_operation(body: { state: 'succeeded' }, operation_data: nil, return_code: 200, url: '')
+  def stub_async_last_operation(body: { state: 'succeeded' }, operation_data: nil, return_code: 200, url: '', headers: {})
     if !operation_data.nil?
       url += "\\?operation=#{operation_data}"
     end
@@ -186,7 +186,9 @@ module VCAP::CloudController::BrokerApiHelper
       with(basic_auth: [stubbed_broker_username, stubbed_broker_password]).
       to_return(
         status: return_code,
-        body: body.to_json)
+        body: body.to_json,
+        headers: headers
+    )
   end
 
   def provision_service(opts={})

@@ -447,6 +447,81 @@ module VCAP::CloudController
               assert_requested :get, expected_url_pattern, times: 1
             end
           end
+
+          context 'when brokers return Retry-After header' do
+            let(:state) { 'in progress' }
+            let(:default_polling_interval) { VCAP::CloudController::Config.config.get(:broker_client_default_async_poll_interval_seconds) }
+
+            before do
+              basic_auth = [broker.auth_username, broker.auth_password]
+              stub_request(:get, %r{#{broker.broker_url}/v2/service_instances/#{service_instance.guid}/last_operation}).with(basic_auth: basic_auth).to_return(
+                status: status,
+                  body: response.to_json,
+                  headers: { 'Retry-After': broker_polling_interval }
+              )
+            end
+
+            context 'when the broker returns interval' do
+              context 'when the interval is greater than the default configuration' do
+                let(:broker_polling_interval) { default_polling_interval * 2 }
+
+                it 'the polling interval should be the one broker returned' do
+                  Timecop.freeze(Time.now)
+                  first_run_time = Time.now
+
+                  Jobs::Enqueuer.new(job, { queue: 'cc-generic', run_at: first_run_time }).enqueue
+                  execute_all_jobs(expected_successes: 1, expected_failures: 0)
+                  expect(Delayed::Job.count).to eq(1)
+
+                  run_time_default_interval = first_run_time + default_polling_interval.seconds + 1.second
+                  Timecop.travel(run_time_default_interval) do
+                    execute_all_jobs(expected_successes: 0, expected_failures: 0)
+                  end
+
+                  run_time_broker_interval = first_run_time + broker_polling_interval.seconds + 1.second
+                  Timecop.travel(run_time_broker_interval) do
+                    execute_all_jobs(expected_successes: 1, expected_failures: 0)
+                  end
+                end
+              end
+
+              context 'when the interval is less than the default configuration' do
+                let(:broker_polling_interval) { default_polling_interval / 2 }
+
+                it 'the polling interval should be the default specified in the configuration' do
+                  Timecop.freeze(Time.now)
+                  first_run_time = Time.now
+
+                  Jobs::Enqueuer.new(job, { queue: 'cc-generic', run_at: first_run_time }).enqueue
+                  execute_all_jobs(expected_successes: 1, expected_failures: 0)
+                  expect(Delayed::Job.count).to eq(1)
+
+                  run_time_default_interval = first_run_time + default_polling_interval.seconds + 1.second
+                  Timecop.travel(run_time_default_interval) do
+                    execute_all_jobs(expected_successes: 1, expected_failures: 0)
+                  end
+                end
+              end
+
+              context 'when the interval is greater than the max value (24 hours)' do
+                let(:broker_polling_interval) { 24.hours.seconds + 1.minutes }
+
+                it 'the polling interval should not exceed the max' do
+                  Timecop.freeze(Time.now)
+                  first_run_time = Time.now
+
+                  Jobs::Enqueuer.new(job, { queue: 'cc-generic', run_at: first_run_time }).enqueue
+                  execute_all_jobs(expected_successes: 1, expected_failures: 0)
+                  expect(Delayed::Job.count).to eq(1)
+
+                  run_time_max_interval = first_run_time + 24.hours + 1.second
+                  Timecop.travel(run_time_max_interval) do
+                    execute_all_jobs(expected_successes: 1, expected_failures: 0)
+                  end
+                end
+              end
+            end
+          end
         end
 
         describe '#job_name_in_configuration' do

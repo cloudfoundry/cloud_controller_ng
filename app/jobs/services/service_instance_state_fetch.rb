@@ -19,10 +19,10 @@ module VCAP::CloudController
 
           client = VCAP::Services::ServiceClientProvider.provide(instance: service_instance)
 
-          attrs_to_update = client.fetch_service_instance_last_operation(service_instance)
-          update_with_attributes(attrs_to_update, service_instance)
+          last_operation_result = client.fetch_service_instance_last_operation(service_instance)
+          update_with_attributes(last_operation_result[:last_operation], service_instance)
 
-          retry_state_updater unless service_instance.terminal_state?
+          retry_state_updater(retry_after_header: last_operation_result[:retry_after]) unless service_instance.terminal_state?
         rescue HttpRequestError, HttpResponseError, Sequel::Error => e
           logger = Steno.logger('cc-background')
           logger.error("There was an error while fetching the service instance operation state: #{e}")
@@ -47,11 +47,11 @@ module VCAP::CloudController
           Repositories::ServiceEventRepository.new(@user_audit_info)
         end
 
-        def update_with_attributes(attrs_to_update, service_instance)
+        def update_with_attributes(last_operation, service_instance)
           ServiceInstance.db.transaction do
             service_instance.lock!
             service_instance.save_and_update_operation(
-              last_operation: attrs_to_update[:last_operation].slice(:state, :description)
+              last_operation: last_operation.slice(:state, :description)
             )
 
             if service_instance.last_operation.state == 'succeeded'
@@ -61,8 +61,8 @@ module VCAP::CloudController
           end
         end
 
-        def retry_state_updater
-          update_polling_interval
+        def retry_state_updater(retry_after_header: '')
+          update_polling_interval(retry_after_header: retry_after_header)
           if Time.now + @poll_interval > end_timestamp
             ManagedServiceInstance.first(guid: service_instance_guid).save_and_update_operation(
               last_operation: {
@@ -94,10 +94,10 @@ module VCAP::CloudController
           VCAP::CloudController::Jobs::Enqueuer.new(self, opts).enqueue
         end
 
-        def update_polling_interval
+        def update_polling_interval(retry_after_header: '')
           default_poll_interval = VCAP::CloudController::Config.config.get(:broker_client_default_async_poll_interval_seconds)
-          poll_interval         = [default_poll_interval, 24.hours].min
-          @poll_interval        = poll_interval
+          poll_interval         = [default_poll_interval, retry_after_header.to_i].max
+          @poll_interval        = [poll_interval, 24.hours].min
         end
       end
     end
