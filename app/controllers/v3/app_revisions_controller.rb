@@ -28,11 +28,13 @@ class AppRevisionsController < ApplicationController
   end
 
   def show
-    app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
-    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
-
     revision = RevisionModel.find(guid: hashed_params[:revision_guid])
-    resource_not_found!(:revision) unless revision && revision.app_guid == app.guid
+    resource_not_found!(:revision) unless revision
+
+    app = revision.app
+    space = app.space
+    org = space.organization
+    app_not_found! unless permission_queryer.can_read_from_space?(space.guid, org.guid)
 
     render status: :ok, json: Presenters::V3::RevisionPresenter.new(revision)
   end

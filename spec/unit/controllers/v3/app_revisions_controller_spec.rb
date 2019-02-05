@@ -16,7 +16,7 @@ RSpec.describe AppRevisionsController, type: :controller do
     end
 
     it 'returns 200 and shows the revision' do
-      get :show, params: { guid: app_model.guid, revision_guid: revision.guid }
+      get :show, params: { revision_guid: revision.guid }
 
       expect(response.status).to eq(200)
       expect(parsed_body).to be_a_response_like(
@@ -26,11 +26,21 @@ RSpec.describe AppRevisionsController, type: :controller do
           'droplet' => {
             'guid' => droplet.guid
           },
+          'relationships' => {
+            'app' => {
+              'data' => {
+                'guid' => app_model.guid
+              }
+            }
+          },
           'created_at' => iso8601,
           'updated_at' => iso8601,
           'links' => {
             'self' => {
-              'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/#{revision.guid}"
+              'href' => "#{link_prefix}/v3/revisions/#{revision.guid}"
+            },
+            'app' => {
+              'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
             }
           },
           'metadata' => {
@@ -45,7 +55,7 @@ RSpec.describe AppRevisionsController, type: :controller do
       droplet_guid = droplet.guid
       droplet.delete
 
-      get :show, params: { guid: app_model.guid, revision_guid: revision.guid }
+      get :show, params: { revision_guid: revision.guid }
 
       expect(response.status).to eq(200)
       expect(parsed_body).to be_a_response_like(
@@ -55,11 +65,21 @@ RSpec.describe AppRevisionsController, type: :controller do
           'droplet' => {
             'guid' => droplet_guid
           },
+          'relationships' => {
+            'app' => {
+              'data' => {
+                'guid' => app_model.guid
+              }
+            }
+          },
           'created_at' => iso8601,
           'updated_at' => iso8601,
           'links' => {
             'self' => {
-              'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/#{revision.guid}"
+              'href' => "#{link_prefix}/v3/revisions/#{revision.guid}"
+            },
+            'app' => {
+              'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
             }
           },
           'metadata' => {
@@ -70,24 +90,8 @@ RSpec.describe AppRevisionsController, type: :controller do
       )
     end
 
-    it 'raises an ApiError with a 404 code when the app does not exist' do
-      get :show, params: { guid: 'hahaha', revision_guid: revision.guid }
-
-      expect(response.status).to eq 404
-      expect(response.body).to include 'ResourceNotFound'
-    end
-
     it 'raises an ApiError with a 404 code when the revision does not exist' do
-      get :show, params: { guid: app_model.guid, revision_guid: 'hahaha' }
-
-      expect(response.status).to eq 404
-      expect(response.body).to include 'ResourceNotFound'
-    end
-
-    it 'raises an ApiError with a 404 code when the revision belongs to a different app' do
-      other_app = VCAP::CloudController::AppModel.make
-
-      get :show, params: { guid: other_app.guid, revision_guid: revision.guid }
+      get :show, params: { revision_guid: 'hahaha' }
 
       expect(response.status).to eq 404
       expect(response.body).to include 'ResourceNotFound'
@@ -100,7 +104,7 @@ RSpec.describe AppRevisionsController, type: :controller do
         end
 
         it 'raises an ApiError with a 403 code' do
-          get :show, params: { guid: app_model.guid, revision_guid: revision.guid }
+          get :show, params: { revision_guid: revision.guid }
 
           expect(response.body).to include 'NotAuthorized'
           expect(response.status).to eq 403
@@ -115,7 +119,7 @@ RSpec.describe AppRevisionsController, type: :controller do
         end
 
         it 'returns a 404 ResourceNotFound error' do
-          get :show, params: { guid: app_model.guid, revision_guid: revision.guid }
+          get :show, params: { revision_guid: revision.guid }
 
           expect(response.status).to eq 404
           expect(response.body).to include 'ResourceNotFound'
@@ -254,11 +258,21 @@ RSpec.describe AppRevisionsController, type: :controller do
             'droplet' => {
               'guid' => droplet.guid
             },
+            'relationships' => {
+              'app' => {
+                'data' => {
+                  'guid' => app_model.guid
+                }
+              }
+            },
             'created_at' => iso8601,
             'updated_at' => iso8601,
             'links' => {
               'self' => {
-                'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/#{revision.guid}"
+                'href' => "#{link_prefix}/v3/revisions/#{revision.guid}"
+              },
+              'app' => {
+                'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
               }
             },
             'metadata' => {
@@ -295,11 +309,21 @@ RSpec.describe AppRevisionsController, type: :controller do
             'droplet' => {
               'guid' => droplet.guid
             },
+            'relationships' => {
+              'app' => {
+                'data' => {
+                  'guid' => app_model.guid
+                }
+              }
+            },
             'created_at' => iso8601,
             'updated_at' => iso8601,
             'links' => {
               'self' => {
-                'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/#{revision.guid}"
+                'href' => "#{link_prefix}/v3/revisions/#{revision.guid}"
+              },
+              'app' => {
+                'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
               }
             },
             'metadata' => {

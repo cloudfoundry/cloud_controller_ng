@@ -14,6 +14,13 @@ module VCAP::CloudController
             droplet: {
               guid: revision.droplet_guid,
             },
+            relationships: {
+              app: {
+                data: {
+                  guid: revision.app_guid,
+                },
+              },
+            },
             created_at: revision.created_at,
             updated_at: revision.updated_at,
             links: build_links,
@@ -35,7 +42,10 @@ module VCAP::CloudController
 
           {
             self: {
-              href: url_builder.build_url(path: "/v3/apps/#{revision.app_guid}/revisions/#{revision.guid}")
+              href: url_builder.build_url(path: "/v3/revisions/#{revision.guid}")
+            },
+            app: {
+              href: url_builder.build_url(path: "/v3/apps/#{revision.app_guid}")
             }
           }
         end

@@ -28,9 +28,9 @@ Rails.application.routes.draw do
 
   # app revisions
   get '/apps/:guid/revisions', to: 'app_revisions#index'
-  get '/apps/:guid/revisions/:revision_guid', to: 'app_revisions#show'
   get '/apps/:guid/revisions/:revision_guid/environment_variables', to: 'app_revisions#show_environment_variables'
   patch '/apps/:guid/revisions/:revision_guid', to: 'app_revisions#update'
+  get '/revisions/:revision_guid', to: 'app_revisions#show'
 
   # environment variables
   get '/apps/:guid/environment_variables', to: 'apps_v3#show_environment_variables'

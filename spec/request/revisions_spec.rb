@@ -15,10 +15,10 @@ RSpec.describe 'Revisions' do
     space.add_developer(user)
   end
 
-  describe 'GET /v3/apps/:guid/revisions/:revguid' do
+  describe 'GET /v3/revisions/:revguid' do
     it 'gets a specific revision' do
-      get "/v3/apps/#{app_model.guid}/revisions/#{revision.guid}", nil, user_header
-      expect(last_response.status).to eq(200)
+      get "/v3/revisions/#{revision.guid}", nil, user_header
+      expect(last_response.status).to eq(200), last_response.body
 
       parsed_response = MultiJson.load(last_response.body)
       expect(parsed_response).to be_a_response_like(
@@ -28,12 +28,22 @@ RSpec.describe 'Revisions' do
           'droplet' => {
             'guid' => revision.droplet_guid
           },
+          'relationships' => {
+            'app' => {
+              'data' => {
+                'guid' => app_model.guid
+              }
+            }
+          },
           'created_at' => iso8601,
           'updated_at' => iso8601,
           'links' => {
             'self' => {
-              'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/#{revision.guid}"
-            }
+              'href' => "#{link_prefix}/v3/revisions/#{revision.guid}"
+            },
+            'app' => {
+              'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
+            },
           },
           'metadata' => { 'labels' => {}, 'annotations' => {} }
         }
@@ -69,12 +79,22 @@ RSpec.describe 'Revisions' do
               'droplet' => {
                 'guid' => revision.droplet_guid
               },
+              'relationships' => {
+                'app' => {
+                  'data' => {
+                    'guid' => app_model.guid
+                  }
+                }
+              },
               'created_at' => iso8601,
               'updated_at' => iso8601,
               'links' => {
                 'self' => {
-                  'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/#{revision.guid}"
-                }
+                  'href' => "#{link_prefix}/v3/revisions/#{revision.guid}"
+                },
+                'app' => {
+                  'href' => "#{link_prefix}/v3/apps/#{app_model.guid}",
+                },
               },
               'metadata' => { 'labels' => {}, 'annotations' => {} }
             },
@@ -84,12 +104,22 @@ RSpec.describe 'Revisions' do
               'droplet' => {
                 'guid' => revision2.droplet_guid
               },
+              'relationships' => {
+                'app' => {
+                  'data' => {
+                    'guid' => app_model.guid
+                  }
+                }
+              },
               'created_at' => iso8601,
               'updated_at' => iso8601,
               'links' => {
                 'self' => {
-                  'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/#{revision2.guid}"
-                }
+                  'href' => "#{link_prefix}/v3/revisions/#{revision2.guid}"
+                },
+                'app' => {
+                  'href' => "#{link_prefix}/v3/apps/#{app_model.guid}",
+                },
               },
               'metadata' => { 'labels' => {}, 'annotations' => {} }
             }
@@ -124,6 +154,13 @@ RSpec.describe 'Revisions' do
               {
                 'guid' => revision.guid,
                 'version' =>  revision.version,
+                'relationships' => {
+                  'app' => {
+                    'data' => {
+                      'guid' => app_model.guid
+                    }
+                  }
+                },
                 'droplet' => {
                   'guid' => revision.droplet_guid
                 },
@@ -131,8 +168,11 @@ RSpec.describe 'Revisions' do
                 'updated_at' => iso8601,
                 'links' => {
                   'self' => {
-                    'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/#{revision.guid}"
-                  }
+                    'href' => "#{link_prefix}/v3/revisions/#{revision.guid}"
+                  },
+                  'app' => {
+                    'href' => "#{link_prefix}/v3/apps/#{app_model.guid}",
+                  },
                 },
                 'metadata' => { 'labels' => {}, 'annotations' => {} }
               },
@@ -142,12 +182,22 @@ RSpec.describe 'Revisions' do
                 'droplet' => {
                   'guid' => revision3.droplet_guid
                 },
+                'relationships' => {
+                  'app' => {
+                    'data' => {
+                      'guid' => app_model.guid
+                    }
+                  }
+                },
                 'created_at' => iso8601,
                 'updated_at' => iso8601,
                 'links' => {
                   'self' => {
-                    'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/#{revision3.guid}"
-                  }
+                    'href' => "#{link_prefix}/v3/revisions/#{revision3.guid}"
+                  },
+                  'app' => {
+                    'href' => "#{link_prefix}/v3/apps/#{app_model.guid}",
+                  },
                 },
                 'metadata' => { 'labels' => {}, 'annotations' => {} }
               }
@@ -207,12 +257,22 @@ RSpec.describe 'Revisions' do
           'droplet' => {
             'guid' => revision.droplet_guid
           },
+          'relationships' => {
+            'app' => {
+              'data' => {
+                'guid' => app_model.guid
+              }
+            }
+          },
           'created_at' => iso8601,
           'updated_at' => iso8601,
           'links' => {
             'self' => {
-              'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/#{revision.guid}"
-            }
+              'href' => "#{link_prefix}/v3/revisions/#{revision.guid}",
+            },
+            'app' => {
+              'href' => "#{link_prefix}/v3/apps/#{app_model.guid}",
+            },
           },
           'metadata' => {
             'labels' => { 'freaky' => 'thursday' },
