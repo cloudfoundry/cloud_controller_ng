@@ -103,17 +103,6 @@ module VCAP::CloudController
     attr_reader :droplet, :environment_variables
 
     def initialize(app, message)
-      # @droplet, @environment_variables = if message.revision_guid
-      #                                      revision = RevisionModel.find(guid: message.revision_guid)
-      #                                      raise DeploymentCreate::Error.new('The revision does not exist') unless revision
-      #
-      #                                      [RevisionDropletSource.new(revision).get, revision.environment_variables]
-      #                                    elsif message.droplet_guid
-      #                                      [FromGuidDropletSource.new(message.droplet_guid).get, app.environment_variables]
-      #                                    else
-      #                                      [AppDropletSource.new(app.droplet).get, app.environment_variables]
-      #                                    end
-
       revision = nil
       @droplet = if message.revision_guid
                    revision = RevisionModel.find(guid: message.revision_guid)
