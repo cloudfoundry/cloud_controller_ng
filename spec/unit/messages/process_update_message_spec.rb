@@ -129,6 +129,17 @@ module VCAP::CloudController
         end
       end
 
+      context 'when health_check type is nil' do
+        let(:params) { { health_check: { type: nil } } }
+
+        it 'is not valid' do
+          message = ProcessUpdateMessage.new(params)
+
+          expect(message).not_to be_valid
+          expect(message.errors[:health_check_type]).to include('must be "port", "process", or "http"')
+        end
+      end
+
       context 'when health_check timeout is not an integer' do
         let(:params) do
           {
