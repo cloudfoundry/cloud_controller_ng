@@ -196,7 +196,6 @@ module VCAP::CloudController
               end
             end
           end
-
         end
 
         context 'when the manifest has multiple buildpack entries for one name, with different stacks' do
@@ -228,8 +227,8 @@ module VCAP::CloudController
                 end
 
                 it 'creates new Buildpacks for the remaining manifest entries' do
-                expect(jobs[1]).to be_a(CreateBuildpackInstaller)
-                expect(jobs[1].stack_name).to eq('manifest stack')
+                  expect(jobs[1]).to be_a(CreateBuildpackInstaller)
+                  expect(jobs[1].stack_name).to eq('manifest stack')
                 end
               end
 
@@ -237,12 +236,12 @@ module VCAP::CloudController
                 let!(:existing_buildpack) { Buildpack.make(name: name, stack: nil, key: 'new_key', guid: 'the-guid', locked: true) }
 
                 it 'raises' do
-                  msg = "Attempt to install #{name} for multiple stacks failed due to <LockedStacklessBuildpackUpgradeError> error. Buildpack #{name} cannot be locked during upgrade."
+                  msg = "Attempt to install #{name} for multiple stacks failed due to <LockedStacklessBuildpackUpgradeError> error." \
+                        "Buildpack #{name} cannot be locked during upgrade."
                   expect { factory.plan(name, buildpack_fields) }.to raise_error(
                     BuildpackInstallerFactory::LockedStacklessBuildpackUpgradeError, msg)
                 end
               end
-
             end
 
             context 'and the Buildpack has a non-nil stack' do
@@ -302,7 +301,8 @@ module VCAP::CloudController
             end
 
             it 'raises' do
-              msg = "Attempt to install #{name} failed due to a <StacklessAndStackfulMatchingBuildpacksExistError> error. Ensure that all buildpacks have a stack associated with them before upgrading."
+              msg = "Attempt to install #{name} failed due to a <StacklessAndStackfulMatchingBuildpacksExistError> error." \
+                    'Ensure that all buildpacks have a stack associated with them before upgrading.'
               expect { factory.plan(name, buildpack_fields) }.to raise_error(
                 BuildpackInstallerFactory::StacklessAndStackfulMatchingBuildpacksExistError, msg)
             end
