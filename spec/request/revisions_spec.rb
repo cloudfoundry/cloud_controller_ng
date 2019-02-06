@@ -231,7 +231,7 @@ RSpec.describe 'Revisions' do
     end
   end
 
-  describe 'PATCH /v3/apps/:guid/revisions/:revguid' do
+  describe 'PATCH /v3/revisions/:revguid' do
     let(:update_request) do
       {
         metadata: {
@@ -246,7 +246,7 @@ RSpec.describe 'Revisions' do
     end
 
     it 'updates the revision with metadata' do
-      patch "/v3/apps/#{app_model.guid}/revisions/#{revision.guid}", update_request, user_header
+      patch "/v3/revisions/#{revision.guid}", update_request, user_header
       expect(last_response.status).to eq(200)
 
       parsed_response = MultiJson.load(last_response.body)

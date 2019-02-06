@@ -248,7 +248,7 @@ RSpec.describe AppRevisionsController, type: :controller do
 
     context 'when the user can modify the app' do
       it 'returns a 200 and the updated revision' do
-        patch :update, params: { guid: app_model.guid, revision_guid: revision.guid }.merge(update_message), as: :json
+        patch :update, params: { revision_guid: revision.guid }.merge(update_message), as: :json
 
         expect(response.status).to eq(200)
         expect(parsed_body).to be_a_response_like(
@@ -299,7 +299,7 @@ RSpec.describe AppRevisionsController, type: :controller do
       end
 
       it 'is removed' do
-        patch :update, params: { guid: app_model.guid, revision_guid: revision.guid }.merge(update_message), as: :json
+        patch :update, params: { revision_guid: revision.guid }.merge(update_message), as: :json
 
         expect(response.status).to eq(200)
         expect(parsed_body).to be_a_response_like(
@@ -341,7 +341,7 @@ RSpec.describe AppRevisionsController, type: :controller do
       end
 
       it 'returns a 404' do
-        patch :update, params: { guid: app_model.guid, revision_guid: revision.guid }.merge(update_message), as: :json
+        patch :update, params: { revision_guid: revision.guid }.merge(update_message), as: :json
 
         expect(response.status).to eq(404)
       end
@@ -353,7 +353,7 @@ RSpec.describe AppRevisionsController, type: :controller do
       end
 
       it 'returns a 403' do
-        patch :update, params: { guid: app_model.guid, revision_guid: revision.guid }.merge(update_message), as: :json
+        patch :update, params: { revision_guid: revision.guid }.merge(update_message), as: :json
 
         expect(response.status).to eq(403)
       end
@@ -372,7 +372,7 @@ RSpec.describe AppRevisionsController, type: :controller do
       end
 
       it 'returns a 422' do
-        patch :update, params: { guid: app_model.guid, revision_guid: revision.guid }.merge(update_message), as: :json
+        patch :update, params: { revision_guid: revision.guid }.merge(update_message), as: :json
 
         expect(response.status).to eq(422)
       end
