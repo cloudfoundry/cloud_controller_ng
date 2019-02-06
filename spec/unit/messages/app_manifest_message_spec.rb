@@ -577,6 +577,43 @@ module VCAP::CloudController
         end
       end
 
+      describe 'combination errors' do
+        context 'when docker and buildpack is provided' do
+          before do
+            FeatureFlag.make(name: 'diego_docker', enabled: true, error_message: nil)
+          end
+
+          let(:buildpack) { Buildpack.make }
+          let(:params) { { buildpack: buildpack.name, docker: { image: 'my/image' } } }
+
+          it 'is not valid' do
+            message = AppManifestMessage.create_from_yml(params)
+
+            expect(message).not_to be_valid
+            expect(message.errors.count).to eq(1)
+            expect(message.errors.full_messages).to include('Cannot specify both buildpack(s) and docker keys')
+          end
+        end
+
+        context 'when docker and buildpacks is provided' do
+          before do
+            FeatureFlag.make(name: 'diego_docker', enabled: true, error_message: nil)
+          end
+
+          let(:buildpack) { Buildpack.make }
+          let(:buildpack2) { Buildpack.make }
+          let(:params) { { buildpacks: [buildpack.name, buildpack2.name], docker: { image: 'my/image' } } }
+
+          it 'is not valid' do
+            message = AppManifestMessage.create_from_yml(params)
+
+            expect(message).not_to be_valid
+            expect(message.errors.count).to eq(1)
+            expect(message.errors.full_messages).to include('Cannot specify both buildpack(s) and docker keys')
+          end
+        end
+      end
+
       context 'when there are multiple errors' do
         let(:params) do
           {

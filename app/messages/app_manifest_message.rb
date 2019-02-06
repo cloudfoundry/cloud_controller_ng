@@ -56,6 +56,7 @@ module VCAP::CloudController
     validate :validate_app_update_message!
     validate :validate_buildpack_and_buildpacks_combination!
     validate :validate_docker_enabled!
+    validate :validate_docker_buildpacks_combination!
     validate :validate_service_bindings_message!, if: proc { |record| record.requested?(:services) }
     validate :validate_env_update_message!, if: proc { |record| record.requested?(:env) }
     validate :validate_manifest_singular_buildpack_message!, if: proc { |record| record.requested?(:buildpack) }
@@ -367,6 +368,12 @@ module VCAP::CloudController
       end
     rescue => e
       errors.add(:base, e.message)
+    end
+
+    def validate_docker_buildpacks_combination!
+      if requested?(:docker) && (requested?(:buildpack) || requested?(:buildpacks))
+        errors.add(:base, 'Cannot specify both buildpack(s) and docker keys')
+      end
     end
 
     def add_process_error!(error_message, type)
