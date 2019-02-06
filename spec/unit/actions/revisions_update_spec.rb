@@ -1,9 +1,9 @@
 require 'spec_helper'
-require 'actions/app_revisions_update'
+require 'actions/revisions_update'
 
 module VCAP::CloudController
-  RSpec.describe AppRevisionsUpdate do
-    subject(:revision_update) { AppRevisionsUpdate.new }
+  RSpec.describe RevisionsUpdate do
+    subject(:revision_update) { RevisionsUpdate.new }
 
     describe '#update' do
       let(:body) do
@@ -19,7 +19,7 @@ module VCAP::CloudController
         }
       end
       let(:revision) { RevisionModel.make }
-      let(:message) { AppRevisionsUpdateMessage.new(body) }
+      let(:message) { RevisionsUpdateMessage.new(body) }
 
       it 'updates the revision metadata' do
         expect(message).to be_valid

@@ -292,7 +292,7 @@ RSpec.describe 'Revisions' do
     }
 
     it 'gets the environment variables for the revision' do
-      get "/v3/apps/#{app_model.reload.guid}/revisions/#{revision2.guid}/environment_variables", nil, user_header
+      get "/v3/revisions/#{revision2.guid}/environment_variables", nil, user_header
       expect(last_response.status).to eq(200), last_response.body
 
       parsed_response = MultiJson.load(last_response.body)
@@ -302,8 +302,8 @@ RSpec.describe 'Revisions' do
             'key' => 'value'
           },
           'links' => {
-            'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/#{revision2.guid}/environment_variables" },
-            'revision' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/#{revision2.guid}" },
+            'self' => { 'href' => "#{link_prefix}/v3/revisions/#{revision2.guid}/environment_variables" },
+            'revision' => { 'href' => "#{link_prefix}/v3/revisions/#{revision2.guid}" },
             'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
           }
         }

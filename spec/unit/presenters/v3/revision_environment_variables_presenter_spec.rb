@@ -21,10 +21,10 @@ module VCAP::CloudController::Presenters::V3
           },
           links: {
             self: {
-              href: "#{link_prefix}/v3/apps/#{revision.app.guid}/revisions/#{revision.guid}/environment_variables",
+              href: "#{link_prefix}/v3/revisions/#{revision.guid}/environment_variables",
             },
             revision: {
-              href: "#{link_prefix}/v3/apps/#{revision.app.guid}/revisions/#{revision.guid}",
+              href: "#{link_prefix}/v3/revisions/#{revision.guid}",
             },
             app: {
               href: "#{link_prefix}/v3/apps/#{revision.app.guid}",

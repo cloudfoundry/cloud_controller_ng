@@ -1,5 +1,5 @@
 module VCAP::CloudController
-  class AppRevisionsUpdate
+  class RevisionsUpdate
     class InvalidAppRevisions < StandardError
     end
 
