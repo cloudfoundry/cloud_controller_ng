@@ -236,8 +236,7 @@ module VCAP::CloudController
                 let!(:existing_buildpack) { Buildpack.make(name: name, stack: nil, key: 'new_key', guid: 'the-guid', locked: true) }
 
                 it 'raises' do
-                  msg = "Attempt to install #{name} for multiple stacks failed due to <LockedStacklessBuildpackUpgradeError> error." \
-                        "Buildpack #{name} cannot be locked during upgrade."
+                  msg = "Attempt to install '#{name}' for multiple stacks failed. Buildpack '#{name}' cannot be locked during upgrade."
                   expect { factory.plan(name, buildpack_fields) }.to raise_error(
                     BuildpackInstallerFactory::LockedStacklessBuildpackUpgradeError, msg)
                 end
@@ -301,8 +300,7 @@ module VCAP::CloudController
             end
 
             it 'raises' do
-              msg = "Attempt to install #{name} failed due to a <StacklessAndStackfulMatchingBuildpacksExistError> error." \
-                    'Ensure that all buildpacks have a stack associated with them before upgrading.'
+              msg = "Attempt to install '#{name}' failed. Ensure that all buildpacks have a stack associated with them before upgrading."
               expect { factory.plan(name, buildpack_fields) }.to raise_error(
                 BuildpackInstallerFactory::StacklessAndStackfulMatchingBuildpacksExistError, msg)
             end

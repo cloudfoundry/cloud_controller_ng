@@ -79,8 +79,7 @@ module VCAP::CloudController
 
         def ensure_no_buildpack_downgraded_to_nil_stack!(buildpacks)
           if buildpacks.size > 1 && buildpacks.any? { |b| b.stack.nil? }
-            msg = "Attempt to install #{buildpacks.first.name} failed due to a <StacklessAndStackfulMatchingBuildpacksExistError> error." \
-                  'Ensure that all buildpacks have a stack associated with them before upgrading.'
+            msg = "Attempt to install '#{buildpacks.first.name}' failed. Ensure that all buildpacks have a stack associated with them before upgrading."
             raise StacklessAndStackfulMatchingBuildpacksExistError.new(msg)
           end
         end
@@ -124,8 +123,7 @@ module VCAP::CloudController
         def ensure_no_attempt_to_upgrade_a_stackless_locked_buildpack(buildpack_name, found_buildpacks, manifest_fields)
           nil_locked_buildpack = found_buildpacks.find { |bp| bp.locked && bp.stack.nil? }
           if manifest_fields.size > 1 && nil_locked_buildpack
-            msg = "Attempt to install #{buildpack_name} for multiple stacks failed due to <LockedStacklessBuildpackUpgradeError> error." \
-                  "Buildpack #{buildpack_name} cannot be locked during upgrade."
+            msg = "Attempt to install '#{buildpack_name}' for multiple stacks failed. Buildpack '#{buildpack_name}' cannot be locked during upgrade."
             raise LockedStacklessBuildpackUpgradeError.new(msg)
           end
         end
