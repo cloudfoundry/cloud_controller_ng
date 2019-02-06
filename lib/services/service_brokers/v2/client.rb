@@ -272,6 +272,7 @@ module VCAP::Services::ServiceBrokers::V2
         result[:last_operation] = {}
         result[:last_operation][:state] = extract_state(service_binding, last_operation_hash)
         result[:last_operation][:description] = last_operation_hash['description'] if last_operation_hash['description']
+        result[:retry_after] = response[HttpResponse::HEADER_RETRY_AFTER] if response[HttpResponse::HEADER_RETRY_AFTER]
       end
     end
 
