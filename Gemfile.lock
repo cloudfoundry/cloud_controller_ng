@@ -477,7 +477,6 @@ DEPENDENCIES
   googleapis-common-protos
   hashdiff
   httpclient
-  i18n
   json-schema
   json_pure
   listen

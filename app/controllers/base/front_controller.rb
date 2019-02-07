@@ -14,9 +14,5 @@ module VCAP::CloudController
       @config = config
       super()
     end
-
-    before do
-      I18n.locale = env['HTTP_ACCEPT_LANGUAGE']
-    end
   end
 end

@@ -1,9 +1,14 @@
 class StructuredError < StandardError
   attr_reader :source
+  attr_accessor :error_prefix
 
   def initialize(msg, source)
     super(msg)
     @source = source
+  end
+
+  def message
+    "#{error_prefix}#{super}"
   end
 
   def to_h

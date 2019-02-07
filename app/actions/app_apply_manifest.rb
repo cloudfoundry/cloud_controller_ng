@@ -16,7 +16,8 @@ module VCAP::CloudController
     end
 
     def apply(app_guid, message)
-      app = AppModel.find(guid: app_guid)
+      app = AppModel.first(guid: app_guid)
+      app_instance_not_found!(app_guid) unless app
 
       message.manifest_process_update_messages.each do |manifest_process_update_msg|
         process_type = manifest_process_update_msg.type
@@ -101,6 +102,10 @@ module VCAP::CloudController
 
     def binding_exists?(service_instance, app)
       ServiceBinding.where(service_instance: service_instance, app: app).present?
+    end
+
+    def app_instance_not_found!(app_guid)
+      raise CloudController::Errors::NotFound.new_from_details('ResourceNotFound', "App with guid '#{app_guid}' not found")
     end
 
     def service_instance_not_found!(name)

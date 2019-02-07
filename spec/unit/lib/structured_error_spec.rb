@@ -9,10 +9,10 @@ RSpec.describe StructuredError do
       exception.set_backtrace(['/foo:1', '/bar:2'])
 
       expect(exception.to_h).to eq({
-        'description' => 'some msg',
-        'backtrace' => ['/foo:1', '/bar:2'],
-        'source' => source,
-      })
+                                     'description' => 'some msg',
+                                     'backtrace' => ['/foo:1', '/bar:2'],
+                                     'source' => source,
+                                   })
     end
   end
 
@@ -24,10 +24,10 @@ RSpec.describe StructuredError do
       exception.set_backtrace(['/foo:1', '/bar:2'])
 
       expect(exception.to_h).to eq({
-         'description' => 'some msg',
-         'backtrace' => ['/foo:1', '/bar:2'],
-         'source' => {},
-      })
+                                     'description' => 'some msg',
+                                     'backtrace' => ['/foo:1', '/bar:2'],
+                                     'source' => {},
+                                   })
     end
 
     context 'when the array is not hashable' do
@@ -38,10 +38,10 @@ RSpec.describe StructuredError do
         exception.set_backtrace(['/foo:1', '/bar:2'])
 
         expect(exception.to_h).to eq({
-         'description' => 'some msg',
-         'backtrace' => ['/foo:1', '/bar:2'],
-         'source' => '[{}]',
-        })
+                                       'description' => 'some msg',
+                                       'backtrace' => ['/foo:1', '/bar:2'],
+                                       'source' => '[{}]',
+                                     })
       end
     end
   end
@@ -58,9 +58,9 @@ RSpec.describe StructuredError do
 
       source_hash = exception.to_h.fetch('source')
       expect(source_hash).to eq({
-        'description' => 'something bad happened',
-        'backtrace' => ['/baz:1', '/asdf:2']
-      })
+                                  'description' => 'something bad happened',
+                                  'backtrace' => ['/baz:1', '/asdf:2']
+                                })
     end
   end
 
@@ -80,13 +80,13 @@ RSpec.describe StructuredError do
 
       source_hash = exception.to_h.fetch('source')
       expect(source_hash).to eq({
-        'description' => 'pausing the world',
-        'backtrace' => ['/qwer:1', '/zxcv:2'],
-        'source' => {
-          'description' => 'the universe implodes',
-          'backtrace' => ['/baz:1', '/asdf:2']
-        }
-      })
+                                  'description' => 'pausing the world',
+                                  'backtrace' => ['/qwer:1', '/zxcv:2'],
+                                  'source' => {
+                                    'description' => 'the universe implodes',
+                                    'backtrace' => ['/baz:1', '/asdf:2']
+                                  }
+                                })
     end
   end
 
@@ -97,6 +97,27 @@ RSpec.describe StructuredError do
       exception = StructuredError.new('some msg', source)
 
       expect(exception.to_h.fetch('source')).to eq('foo')
+    end
+  end
+
+  describe 'error_prefix' do
+    let(:source) { 'foo' }
+    let(:exception) { StructuredError.new('some msg', source) }
+
+    context 'when it is set' do
+      before do
+        exception.error_prefix = 'the prefix: '
+      end
+
+      it 'returns the message prefixed with the prefix' do
+        expect(exception.message).to eq('the prefix: some msg')
+      end
+    end
+
+    context 'when it is not set' do
+      it 'returns the message' do
+        expect(exception.message).to eq('some msg')
+      end
     end
   end
 end

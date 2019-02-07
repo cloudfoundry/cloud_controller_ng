@@ -11,33 +11,12 @@ module CloudController::Errors
     end
 
     let(:messageServiceInvalid) { 'ServiceInvalid' }
-    let(:messagePartialTranslated) { 'MessagePartialTranslated' }
-    let(:messageNotTranslated) { 'MessageNotTranslated' }
     let(:args) { ['foo', 'bar'] }
 
     let(:messageServiceInvalidDetails) { create_details(messageServiceInvalid) }
-    let(:messagePartialTranslatedDetails) { create_details(messagePartialTranslated) }
-    let(:messageNotTranslatedDetails) { create_details(messageNotTranslated) }
-
-    let(:translations) { Dir[File.expand_path('../../../../fixtures/i18n/*.yml', __dir__)] }
 
     before do
-      @original_load_paths = I18n.load_path.dup
-      I18n.fallbacks = nil
-      I18n.enforce_available_locales = true # this will be the default in a future version, so test that we cope with it
-      ApiError.setup_i18n(translations, 'en_US')
-
-      expect(I18n.default_locale).to eq(:en_US)
-
       allow(Details).to receive('new').with(messageServiceInvalid).and_return(messageServiceInvalidDetails)
-      allow(Details).to receive('new').with(messagePartialTranslated).and_return(messagePartialTranslatedDetails)
-      allow(Details).to receive('new').with(messageNotTranslated).and_return(messageNotTranslatedDetails)
-    end
-
-    after do
-      I18n.locale = 'en'
-      I18n.load_path = @original_load_paths
-      I18n.backend.reload!
     end
 
     context '.new_from_details' do
@@ -64,21 +43,11 @@ module CloudController::Errors
       end
     end
 
-    context 'get error message' do
+    describe 'message' do
       subject(:api_error) { ApiError.new_from_details(messageServiceInvalid, *args) }
-      subject(:api_error_with_partial_translation) { ApiError.new_from_details(messagePartialTranslated, *args) }
-      subject(:api_error_with_translation_missing)  { ApiError.new_from_details(messageNotTranslated, *args) }
 
-      it 'should translate the message based on the locale' do
-        I18n.locale = :en_US
-        expect(api_error.message).to eq('This is a translated message of foo bar.')
-        I18n.locale = :zh_CN
-        expect(api_error.message).to eq('这是一条被翻译的信息：foo bar。')
-      end
-
-      it 'should use the original message when the translation is missing' do
-        I18n.locale = :en_US
-        expect(api_error_with_translation_missing.message).to eq('Before foo bar after.')
+      it 'should interpolate the message' do
+        expect(api_error.message).to eq('Before foo bar after.')
       end
 
       context 'when initializing an api_error without new_from_details' do
@@ -88,6 +57,16 @@ module CloudController::Errors
           expect {
             api_error.message
           }.not_to raise_error
+        end
+      end
+
+      context 'when error_prefix is set' do
+        before do
+          api_error.error_prefix = 'the prefix: '
+        end
+
+        it 'returns the message prefixed with the prefix' do
+          expect(api_error.message).to eq('the prefix: Before foo bar after.')
         end
       end
     end

@@ -1,7 +1,5 @@
 require 'steno'
 require 'optparse'
-require 'i18n'
-require 'i18n/backend/fallbacks'
 require 'cloud_controller/uaa/uaa_token_decoder'
 require 'cloud_controller/uaa/uaa_verification_keys'
 require 'loggregator_emitter'
@@ -23,16 +21,7 @@ module VCAP::CloudController
       parse_options!
       parse_config
 
-      setup_i18n
-
       @log_counter = Steno::Sink::Counter.new
-    end
-
-    def setup_i18n
-      CloudController::Errors::ApiError.setup_i18n(
-        Dir[File.expand_path('../../vendor/errors/i18n/*.yml', __dir__)],
-        'en_US',
-      )
     end
 
     def logger

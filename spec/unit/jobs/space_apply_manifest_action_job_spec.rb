@@ -35,101 +35,76 @@ module VCAP::CloudController
         expect(apply_manifest_action).to have_received(:apply).with(app2.guid, app_guid_message_hash.values[1])
       end
 
-      context 'when the apply manifest action fails' do
+      context 'when an unknown error is raised' do
         before do
-          allow(apply_manifest_action).to receive(:apply).and_raise(StandardError)
+          allow(apply_manifest_action).to receive(:apply).and_raise(StandardError, 'the specific error')
         end
 
-        it 'bubbles up the error' do
-          expect { job.perform }.to raise_error(StandardError)
-        end
-      end
-
-      context 'when a ProcessScale::InvalidProcess error occurs' do
-        it 'wraps the error in an ApiError' do
-          allow(apply_manifest_action).to receive(:apply).with(app2.guid, anything).and_raise(ProcessScale::InvalidProcess, 'maximum instance count exceeded')
-          expect {
-            job.perform
-          }.to raise_error(CloudController::Errors::ApiError, /For application 'cut': maximum instance count exceeded/)
+        it 'bubbles up the error so an UnknownError can be generated for the user' do
+          expect { job.perform }.to raise_error(StandardError, 'the specific error')
         end
       end
 
-      context 'when an AppUpdate::InvalidApp error occurs' do
-        it 'wraps the error in an ApiError' do
-          allow(apply_manifest_action).to receive(:apply).and_raise(AppUpdate::InvalidApp, 'Specified unknown buildpack name')
+      [
+        AppPatchEnvironmentVariables::InvalidApp,
+        AppUpdate::InvalidApp,
+        ManifestRouteUpdate::InvalidRoute,
+        ProcessScale::InvalidProcess,
+        ProcessUpdate::InvalidProcess,
+        Route::InvalidOrganizationRelation,
+        RouteMappingCreate::SpaceMismatch,
+        ServiceBindingCreate::InvalidServiceBinding,
+        ServiceBindingCreate::ServiceBrokerInvalidSyslogDrainUrl,
+        ServiceBindingCreate::ServiceInstanceNotBindable,
+        ServiceBindingCreate::SpaceMismatch,
+        ServiceBindingCreate::VolumeMountServiceDisabled,
+      ].each do |klass|
+        it "wraps a #{klass} in an ApiError" do
+          allow(apply_manifest_action).to receive(:apply).
+            with(app2.guid, anything).
+            and_raise(klass, 'base msg')
+
           expect {
             job.perform
-          }.to raise_error(CloudController::Errors::ApiError, /unknown buildpack name/)
+          }.to raise_error(CloudController::Errors::ApiError, /For application '#{app2.name}': base msg/)
         end
       end
 
-      context 'when a ProcessUpdate::InvalidProcess error occurs' do
-        it 'wraps the error in an ApiError' do
-          allow(apply_manifest_action).to receive(:apply).and_raise(ProcessUpdate::InvalidProcess, 'Invalid health check type')
+      it 'annotates StructuredError with the app name' do
+        allow(apply_manifest_action).to receive(:apply).
+          with(app2.guid, anything).
+          and_raise(StructuredError.new('base msg', 'source'))
+
+        expect {
+          job.perform
+        }.to raise_error(StructuredError, /For application '#{app2.name}': base msg/)
+      end
+
+      context 'when a record goes missing' do
+        before do
+          allow(apply_manifest_action).to receive(:apply).
+            and_raise(CloudController::Errors::NotFound.new_from_details('ResourceNotFound', 'something went missing'))
+        end
+
+        it 'wraps the message of the error' do
           expect {
             job.perform
-          }.to raise_error(CloudController::Errors::ApiError, /Invalid health check type/)
+          }.to raise_error(CloudController::Errors::NotFound, /For application '#{app1.name}': something went missing/)
         end
       end
 
-      context 'when an AppPatchEnvironmentVariables::InvalidApp error occurs' do
-        it 'wraps the error in an ApiError' do
-          allow(apply_manifest_action).to receive(:apply).and_raise(AppPatchEnvironmentVariables::InvalidApp, 'Invalid env varz')
-          expect {
-            job.perform
-          }.to raise_error(CloudController::Errors::ApiError, /Invalid env varz/)
-        end
-      end
-
-      context 'when an ManifestRouteUpdate::InvalidRoute error occurs' do
-        it 'wraps the error in an ApiError' do
-          allow(apply_manifest_action).to receive(:apply).and_raise(ManifestRouteUpdate::InvalidRoute, 'Invalid route')
-          expect {
-            job.perform
-          }.to raise_error(CloudController::Errors::ApiError, /Invalid route/)
-        end
-      end
-
-      context 'when a Route::InvalidOrganizationRelation error occurs' do
-        it 'wraps the error in an ApiError' do
-          allow(apply_manifest_action).to receive(:apply).and_raise(Route::InvalidOrganizationRelation, 'Organization cannot use domain hello.there')
-          expect {
-            job.perform
-          }.to raise_error(CloudController::Errors::ApiError, /Organization cannot use domain hello\.there/)
-        end
-      end
-
-      context 'when an ServiceBindingCreate::InvalidServiceBinding error occurs' do
-        it 'wraps the error in an ApiError' do
-          allow(apply_manifest_action).to receive(:apply).and_raise(ServiceBindingCreate::InvalidServiceBinding, 'Invalid binding name')
-          expect {
-            job.perform
-          }.to raise_error(CloudController::Errors::ApiError, /Invalid binding name/)
+      context 'when an error occurs and the app no longer exists' do
+        before do
+          allow(apply_manifest_action).to receive(:apply).
+            and_raise(AppUpdate::InvalidApp, 'something bad happened')
+          app_guid_message_hash
+          app1.destroy
         end
 
-        context 'subclasses of InvalidServiceBinding' do
-          it 'wraps the error in an ApiError' do
-            [
-              ServiceBindingCreate::ServiceInstanceNotBindable,
-              ServiceBindingCreate::ServiceBrokerInvalidSyslogDrainUrl,
-              ServiceBindingCreate::VolumeMountServiceDisabled,
-              ServiceBindingCreate::SpaceMismatch
-            ].each do |exception|
-              allow(apply_manifest_action).to receive(:apply).and_raise(exception, 'Invalid binding name')
-              expect {
-                job.perform
-              }.to raise_error(CloudController::Errors::ApiError, /Invalid binding name/)
-            end
-          end
-        end
-      end
-
-      context 'when an RouteMappingCreate::SpaceMismatch error occurs' do
-        it 'wraps the error in an ApiError' do
-          allow(apply_manifest_action).to receive(:apply).and_raise(RouteMappingCreate::SpaceMismatch, 'space mismatch message')
+        it 'wraps the message of the error' do
           expect {
             job.perform
-          }.to raise_error(CloudController::Errors::ApiError, /space mismatch message/)
+          }.to raise_error(CloudController::Errors::ApiError, /^something bad happened/)
         end
       end
 

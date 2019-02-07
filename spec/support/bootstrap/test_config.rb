@@ -1,8 +1,6 @@
 require 'support/bootstrap/db_config'
 require 'support/paths'
 
-I18n.enforce_available_locales = false # avoid deprecation warning
-
 module TestConfig
   class << self
     def context

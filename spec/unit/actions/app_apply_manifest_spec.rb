@@ -659,6 +659,16 @@ module VCAP::CloudController
             end
           end
         end
+
+        describe 'when the app no longer exists' do
+          let(:message) { AppManifestMessage.create_from_yml({ name: 'blah', instances: 4 }) }
+          let(:app_guid) { 'fake-guid' }
+          it 'raises a NotFound error' do
+            expect {
+              app_apply_manifest.apply(app_guid, message)
+            }.to raise_error(CloudController::Errors::NotFound, "App with guid '#{app_guid}' not found")
+          end
+        end
       end
     end
 

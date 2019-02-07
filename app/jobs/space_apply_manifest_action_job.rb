@@ -23,8 +23,16 @@ module VCAP::CloudController
                  Route::InvalidOrganizationRelation,
                  RouteMappingCreate::SpaceMismatch,
                  ServiceBindingCreate::InvalidServiceBinding => e
-            app_name = AppModel.find(guid: app_guid).name
-            raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', "For application '#{app_name}': #{e.message}")
+
+            app_name = AppModel.find(guid: app_guid)&.name
+            error_message = app_name ? "For application '#{app_name}': #{e.message}" : e.message
+            raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', error_message)
+          rescue CloudController::Errors::NotFound,
+                 StructuredError => e
+
+            app_name = AppModel.find(guid: app_guid)&.name
+            e.error_prefix = "For application '#{app_name}': " if app_name
+            raise e
           end
         end
       end
