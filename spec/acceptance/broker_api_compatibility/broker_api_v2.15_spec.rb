@@ -124,6 +124,31 @@ RSpec.describe 'Service Broker API integration' do
             )
           end
         end
+
+        context 'when removing a service binding' do
+          let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space_guid: @space_guid, service_plan_guid: @plan_guid) }
+
+          before do
+            @service_instance_guid = service_instance.guid
+            create_app
+            bind_service
+          end
+
+          it 'should poll the broker at the given retry interval' do
+            expect(async_unbind_service(status: 202)).to have_status_code(202)
+
+            service_binding = VCAP::CloudController::ServiceBinding.last
+
+            expect(
+              a_request(:delete, unbind_url(service_binding, accepts_incomplete: true))).to have_been_made
+
+            assert_cc_polls_service_binding_last_operation(
+              service_instance,
+              default_poll_interval,
+              retry_after_interval
+            )
+          end
+        end
       end
     end
   end
