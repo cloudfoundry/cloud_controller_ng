@@ -188,8 +188,8 @@ module VCAP::CloudController
           it 'records an audit event for the deployment' do
             deployment = DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
 
-            event = Event.last
-            expect(event.type).to eq('audit.app.deployment.create')
+            event = VCAP::CloudController::Event.find(type: 'audit.app.deployment.create')
+            expect(event).not_to be_nil
             expect(event.actor).to eq('123')
             expect(event.actor_type).to eq('user')
             expect(event.actor_name).to eq('connor@example.com')

@@ -19,7 +19,7 @@ module VCAP::CloudController
           desired_instances = previous_deployment.original_web_process_instance_count
         end
 
-        new_revision = app.can_create_revision? ? RevisionCreate.create(app) : web_process.revision
+        new_revision = app.can_create_revision? ? RevisionCreate.create(app, user_audit_info) : web_process.revision
         deployment = DeploymentModel.new(
           app: app,
           state: DeploymentModel::DEPLOYING_STATE,

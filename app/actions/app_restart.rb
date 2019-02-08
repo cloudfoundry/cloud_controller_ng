@@ -11,7 +11,7 @@ module VCAP::CloudController
 
         app.db.transaction do
           app.lock!
-          RevisionCreate.create(app) if app.can_create_revision?
+          RevisionCreate.create(app, user_audit_info) if app.can_create_revision?
           app.update(desired_state: ProcessModel::STARTED)
           app.processes.each do |process|
             ProcessRestart.restart(
