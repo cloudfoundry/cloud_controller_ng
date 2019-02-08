@@ -172,6 +172,7 @@ includes:
   - experimental_resources/revisions/get
   - experimental_resources/revisions/update
   - experimental_resources/revisions/list
+  - experimental_resources/revisions/deployed_list
   - experimental_resources/route_mappings/header
   - experimental_resources/route_mappings/object
   - experimental_resources/route_mappings/create

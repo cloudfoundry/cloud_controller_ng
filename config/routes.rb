@@ -28,6 +28,7 @@ Rails.application.routes.draw do
 
   # app revisions
   get '/apps/:guid/revisions', to: 'app_revisions#index'
+  get '/apps/:guid/revisions/deployed', to: 'app_revisions#deployed'
 
   # revisions
   get '/revisions/:revision_guid/environment_variables', to: 'revisions#show_environment_variables'

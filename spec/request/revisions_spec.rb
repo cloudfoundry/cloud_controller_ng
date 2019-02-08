@@ -283,7 +283,7 @@ RSpec.describe 'Revisions' do
     end
   end
 
-  describe 'GET /v3/apps/:guid/revision/:revguid/environment_variables' do
+  describe 'GET /v3/revision/:revguid/environment_variables' do
     let!(:revision2) { VCAP::CloudController::RevisionModel.make(
       app: app_model,
       version: 43,
@@ -306,6 +306,89 @@ RSpec.describe 'Revisions' do
             'revision' => { 'href' => "#{link_prefix}/v3/revisions/#{revision2.guid}" },
             'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
           }
+        }
+      )
+    end
+  end
+
+  describe 'GET /v3/apps/:guid/revisions/deployed' do
+    let!(:revision2) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 43) }
+    let!(:revision3) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 44) }
+    let!(:process) { VCAP::CloudController::ProcessModel.make(app: app_model, revision: revision, type: 'web', state: 'STARTED') }
+    let!(:process2) { VCAP::CloudController::ProcessModel.make(app: app_model, revision: revision2, type: 'worker', state: 'STARTED') }
+    let!(:process3) { VCAP::CloudController::ProcessModel.make(app: app_model, revision: revision3, type: 'web', state: 'STOPPED') }
+
+    it 'gets a list of deployed revisions' do
+      get "/v3/apps/#{app_model.guid}/revisions/deployed?per_page=2", nil, user_header
+      expect(last_response.status).to eq(200), last_response.body
+
+      parsed_response = MultiJson.load(last_response.body)
+      expect(parsed_response).to be_a_response_like(
+        {
+          'pagination' => {
+            'total_results' => 2,
+            'total_pages' => 1,
+            'first' => {
+              'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/deployed?page=1&per_page=2"
+            },
+            'last' => {
+              'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/deployed?page=1&per_page=2"
+            },
+            'next' => nil,
+            'previous' => nil
+          },
+          'resources' => [
+            {
+              'guid' => revision.guid,
+              'version' =>  revision.version,
+              'droplet' => {
+                'guid' => revision.droplet_guid
+              },
+              'relationships' => {
+                'app' => {
+                  'data' => {
+                    'guid' => app_model.guid
+                  }
+                }
+              },
+              'created_at' => iso8601,
+              'updated_at' => iso8601,
+              'links' => {
+                'self' => {
+                  'href' => "#{link_prefix}/v3/revisions/#{revision.guid}"
+                },
+                'app' => {
+                  'href' => "#{link_prefix}/v3/apps/#{app_model.guid}",
+                },
+              },
+              'metadata' => { 'labels' => {}, 'annotations' => {} }
+            },
+            {
+              'guid' => revision2.guid,
+              'version' =>  revision2.version,
+              'droplet' => {
+                'guid' => revision2.droplet_guid
+              },
+              'relationships' => {
+                'app' => {
+                  'data' => {
+                    'guid' => app_model.guid
+                  }
+                }
+              },
+              'created_at' => iso8601,
+              'updated_at' => iso8601,
+              'links' => {
+                'self' => {
+                  'href' => "#{link_prefix}/v3/revisions/#{revision2.guid}"
+                },
+                'app' => {
+                  'href' => "#{link_prefix}/v3/apps/#{app_model.guid}",
+                },
+              },
+              'metadata' => { 'labels' => {}, 'annotations' => {} }
+            }
+          ]
         }
       )
     end

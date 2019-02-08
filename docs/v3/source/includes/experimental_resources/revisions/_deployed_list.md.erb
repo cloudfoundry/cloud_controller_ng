@@ -1,0 +1,36 @@
+### List deployed revisions for an app
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/apps/:guid/revisions/deployed" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :paginated_list_of_associated_revisions, '/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/revisions/deployed' %>
+```
+
+Retrieve deployed revisions for an app the user has access to.
+Deployed revisions are revisions that are linked to started processes in the app.
+
+#### Definition
+`GET /v3/apps/:guid/revisions/deployed`
+
+#### Query Parameters
+
+Name | Type | Description
+---- | ---- | ------------
+**page** | _integer_ | Page to display. Valid values are integers >= 1.
+**per_page** | _integer_ | Number of results per page. <br>Valid values are 1 through 5000.
+**order_by** | _string_ | Value to sort by. Defaults to ascending. Prepend with `-` to sort descending. <br>Valid values are `created_at`, `updated_at`.

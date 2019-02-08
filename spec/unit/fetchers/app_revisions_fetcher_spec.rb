@@ -4,16 +4,11 @@ require 'fetchers/app_revisions_fetcher'
 module VCAP::CloudController
   RSpec.describe AppRevisionsFetcher do
     let(:fetcher) { AppRevisionsFetcher }
+    let!(:app) { AppModel.make }
+    let!(:revision1) { RevisionModel.make(version: 21, app: app) }
+    let!(:revision2) { RevisionModel.make(version: 34, app: app) }
 
     describe '#fetch' do
-      before do
-        RevisionModel.dataset.destroy
-      end
-
-      let!(:app) { AppModel.make }
-      let!(:revision1) { RevisionModel.make(version: 21, app: app) }
-      let!(:revision2) { RevisionModel.make(version: 34, app: app) }
-
       let(:message) { AppRevisionsListMessage.from_params(filters) }
       subject { fetcher.fetch(app, message) }
 
@@ -43,6 +38,24 @@ module VCAP::CloudController
           results = fetcher.fetch(app, message).all
           expect(results).to contain_exactly(revision1)
         end
+      end
+    end
+
+    describe '#fetch_deployed' do
+      let!(:revision3) { RevisionModel.make(version: 35, app: app) }
+
+      let!(:process1) { ProcessModel.make(app: app, revision: revision1, type: 'web', state: 'STARTED') }
+      let!(:process2) { ProcessModel.make(app: app, revision: revision2, type: 'web', state: 'STOPPED') }
+
+      subject { fetcher.fetch_deployed(app) }
+
+      it 'fetches all the deployed revisions' do
+        expect(subject).to match_array([revision1])
+      end
+
+      it 'handles processes with no revisions' do
+        VCAP::CloudController::ProcessModel.make(app: app, type: 'web', state: 'STARTED')
+        expect(subject).to match_array([revision1])
       end
     end
   end

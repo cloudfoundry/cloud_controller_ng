@@ -18,5 +18,13 @@ module VCAP::CloudController
 
       dataset
     end
+
+    def self.fetch_deployed(app)
+      processes = ProcessModel.where(app_guid: app.guid, state: 'STARTED')
+
+      revisions = processes.map(&:revision_guid).compact
+
+      RevisionModel.where(guid: revisions)
+    end
   end
 end
