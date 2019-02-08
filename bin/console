@@ -4,4 +4,12 @@ require File.expand_path('../config/boot', __dir__)
 ENV['RAILS_ENV'] ||= 'production'
 ENV['SINATRA_ACTIVESUPPORT_WARNING'] ||= 'false'
 
+ENV['DB_CONNECTION_STRING'] ||= if ENV['POSTGRES_CONNECTION_PREFIX']
+                                  ENV['POSTGRES_CONNECTION_PREFIX'] + '/cc_test'
+                                elsif ENV['MYSQL_CONNECTION_PREFIX']
+                                  ENV['MYSQL_CONNECTION_PREFIX'] + '/cc_test'
+                                else
+                                  'mysql2://root:password@localhost:3306/cc_test'
+                                end
+
 require 'cloud_controller/console'
