@@ -43,7 +43,7 @@ module VCAP::CloudController
           process = create_deployment_process(app, deployment.guid, web_process, new_revision)
           deployment.update(deploying_web_process: process)
         end
-        record_audit_event(deployment, target_state.droplet, user_audit_info)
+        record_audit_event(deployment, target_state.droplet, user_audit_info, message)
 
         deployment
       end
@@ -85,15 +85,18 @@ module VCAP::CloudController
         )
       end
 
-      def record_audit_event(deployment, droplet, user_audit_info)
+      def record_audit_event(deployment, droplet, user_audit_info, message)
         app = deployment.app
+        type = message.revision_guid ? 'rollback' : nil
         Repositories::DeploymentEventRepository.record_create(
           deployment,
             droplet,
             user_audit_info,
             app.name,
             app.space_guid,
-            app.space.organization_guid
+            app.space.organization_guid,
+            message.audit_hash,
+            type
         )
       end
     end

@@ -1,12 +1,15 @@
 module VCAP::CloudController
   module Repositories
     class DeploymentEventRepository
-      def self.record_create(deployment, droplet, user_audit_info, v3_app_name, space_guid, org_guid)
+      def self.record_create(deployment, droplet, user_audit_info, v3_app_name, space_guid, org_guid, params, type)
         VCAP::Loggregator.emit(deployment.app_guid, "Creating deployment for app with guid #{deployment.app_guid}")
 
         metadata = {
           deployment_guid: deployment.guid,
-          droplet_guid: droplet&.guid
+          droplet_guid: droplet&.guid,
+          type: type,
+          revision_guid: deployment.revision_guid,
+          request: params
         }
 
         Event.create(

@@ -11,13 +11,17 @@ module VCAP::CloudController
       let(:email) { 'user-email' }
       let(:user_name) { 'user-name' }
       let(:user_audit_info) { UserAuditInfo.new(user_email: email, user_name: user_name, user_guid: user.guid) }
+      let(:params) do
+        { 'foo' => 'bar ' }
+      end
+      let(:type) { 'rollback' }
 
       describe '#record_create_deployment' do
         context 'when a droplet is associated with the deployment' do
           let(:deployment) { DeploymentModel.make(app_guid: app.guid, droplet_guid: droplet.guid) }
           it 'creates a new audit.app.deployment.create event' do
             event = DeploymentEventRepository.record_create(deployment, droplet, user_audit_info, app.name,
-                                                            app.space.guid, app.space.organization.guid)
+                                                            app.space.guid, app.space.organization.guid, params, type)
             event.reload
 
             expect(event.type).to eq('audit.app.deployment.create')
@@ -33,6 +37,8 @@ module VCAP::CloudController
             metadata = event.metadata
             expect(metadata['deployment_guid']).to eq(deployment.guid)
             expect(metadata['droplet_guid']).to eq(droplet.guid)
+            expect(metadata['request']).to eq(params)
+            expect(metadata['type']).to eq(type)
           end
         end
 
@@ -40,7 +46,7 @@ module VCAP::CloudController
           let(:deployment) { DeploymentModel.make(app_guid: app.guid) }
           it 'creates a new audit.app.deployment.create event' do
             event = DeploymentEventRepository.record_create(deployment, nil, user_audit_info, app.name,
-                                                            app.space.guid, app.space.organization.guid)
+                                                            app.space.guid, app.space.organization.guid, params, type)
             event.reload
 
             expect(event.type).to eq('audit.app.deployment.create')
@@ -56,6 +62,8 @@ module VCAP::CloudController
             metadata = event.metadata
             expect(metadata['deployment_guid']).to eq(deployment.guid)
             expect(metadata['droplet_guid']).to be_nil
+            expect(metadata['request']).to eq(params)
+            expect(metadata['type']).to eq(type)
           end
         end
       end
