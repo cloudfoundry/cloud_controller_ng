@@ -62,6 +62,7 @@ module OPI
 
     def desire_body(process)
       timeout_ms = (process.health_check_timeout || 0) * 1000
+      cpu_weight = VCAP::CloudController::Diego::TaskCpuWeightCalculator.new(memory_in_mb: process.memory).calculate
 
       body = {
         guid: process.guid,
@@ -72,6 +73,7 @@ module OPI
         environment: hash_values_to_s(environment_variables(process)),
         instances: process.desired_instances,
         memory_mb: process.memory,
+        cpu_weight: cpu_weight,
         droplet_hash: process.desired_droplet.droplet_hash,
         droplet_guid: process.desired_droplet.guid,
         health_check_type: process.health_check_type,
