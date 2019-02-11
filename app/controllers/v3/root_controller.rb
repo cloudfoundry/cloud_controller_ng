@@ -24,7 +24,8 @@ class RootController < ActionController::Base
             href: build_api_uri(path: '/droplets')
           },
           feature_flags: {
-            href: build_api_uri(path: '/feature_flags')
+            href: build_api_uri(path: '/feature_flags'),
+            experimental: true,
           },
           isolation_segments: {
             href: build_api_uri(path: '/isolation_segments')
