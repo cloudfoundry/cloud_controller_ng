@@ -8,38 +8,79 @@ module VCAP::CloudController
     subject(:app_update) { V2::AppUpdate.new(access_validator: access_validator, stagers: stagers) }
 
     describe 'update' do
-      it 'updates the process' do
-        process = ProcessModel.make
-        app     = process.app
+      context 'updating the process' do
+        let(:process) { ProcessModel.make }
+        let(:app) { process.app }
+        let(:request_attrs) do
+          {
+            'production'                 => false,
+            'memory'                     => 4,
+            'instances'                  => 2,
+            'disk_quota'                 => 30,
+            'command'                    => 'new-command',
+            'health_check_type'          => 'http',
+            'health_check_timeout'       => 20,
+            'health_check_http_endpoint' => '/health',
+            'diego'                      => true,
+            'enable_ssh'                 => false,
+            'ports'                      => [8080],
+            'route_guids'                => [],
+          }
+        end
 
-        request_attrs = {
-          'production'                 => false,
-          'memory'                     => 4,
-          'instances'                  => 2,
-          'disk_quota'                 => 30,
-          'command'                    => 'new-command',
-          'health_check_type'          => 'http',
-          'health_check_timeout'       => 20,
-          'health_check_http_endpoint' => '/health',
-          'diego'                      => true,
-          'enable_ssh'                 => false,
-          'ports'                      => [8080],
-          'route_guids'                => [],
-        }
+        context 'when the app is not deploying' do
+          it 'updates the process' do
+            app_update.update(app, process, request_attrs)
 
-        app_update.update(app, process, request_attrs)
+            expect(process.production).to eq(false)
+            expect(process.memory).to eq(4)
+            expect(process.instances).to eq(2)
+            expect(process.disk_quota).to eq(30)
+            expect(process.command).to eq('new-command')
+            expect(process.health_check_type).to eq('http')
+            expect(process.health_check_timeout).to eq(20)
+            expect(process.health_check_http_endpoint).to eq('/health')
+            expect(process.diego).to eq(true)
+            expect(process.ports).to eq([8080])
+            expect(process.route_guids).to eq([])
+          end
+        end
 
-        expect(process.production).to eq(false)
-        expect(process.memory).to eq(4)
-        expect(process.instances).to eq(2)
-        expect(process.disk_quota).to eq(30)
-        expect(process.command).to eq('new-command')
-        expect(process.health_check_type).to eq('http')
-        expect(process.health_check_timeout).to eq(20)
-        expect(process.health_check_http_endpoint).to eq('/health')
-        expect(process.diego).to eq(true)
-        expect(process.ports).to eq([8080])
-        expect(process.route_guids).to eq([])
+        context 'when the app is deploying' do
+          before do
+            VCAP::CloudController::DeploymentModel.make(app: app, state: 'DEPLOYING')
+          end
+
+          context 'when the process is of type web' do
+            let(:process) { ProcessModel.make(type: 'web') }
+
+            it 'raises an error and does NOT update the web process' do
+              expect {
+                app_update.update(app, process, request_attrs)
+              }.to raise_error(/scale this process while a deployment is in flight/)
+            end
+          end
+
+          context 'when the process is NOT of type web' do
+            let(:process) { ProcessModel.make(type: 'totes-not-web') }
+
+            it 'still updates the non-web processes' do
+              app_update.update(app, process, request_attrs)
+
+              expect(process.production).to eq(false)
+              expect(process.memory).to eq(4)
+              expect(process.instances).to eq(2)
+              expect(process.disk_quota).to eq(30)
+              expect(process.command).to eq('new-command')
+              expect(process.health_check_type).to eq('http')
+              expect(process.health_check_timeout).to eq(20)
+              expect(process.health_check_http_endpoint).to eq('/health')
+              expect(process.diego).to eq(true)
+              expect(process.ports).to eq([8080])
+              expect(process.route_guids).to eq([])
+            end
+          end
+        end
       end
 
       it 'updates the app' do

@@ -46,6 +46,10 @@ module VCAP::CloudController
           'command', 'console', 'debug', 'health_check_type', 'health_check_timeout', 'health_check_http_endpoint',
           'diego', 'ports', 'route_guids')
 
+        if !mass_assign.empty? && process.web? && process.app.deploying?
+          raise CloudController::Errors::ApiError.new_from_details('ScaleDisabledDuringDeployment')
+        end
+
         process.set(mass_assign)
       end
 
