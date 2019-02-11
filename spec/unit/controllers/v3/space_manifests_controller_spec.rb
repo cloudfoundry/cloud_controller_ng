@@ -346,7 +346,6 @@ RSpec.describe SpaceManifestsController, type: :controller do
         let(:app_model) { VCAP::CloudController::AppModel.make(:docker, name: 'blah') }
 
         it 'sets the docker image' do
-          puts request_body
           post :apply_manifest, params: { guid: space.guid }.merge(request_body), as: :yaml
 
           puts response.body
