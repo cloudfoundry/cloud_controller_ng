@@ -57,6 +57,8 @@ module VCAP::CloudController
             tasks: { href: url_builder.build_url(path: "/v3/apps/#{app.guid}/tasks") },
             start: { href: url_builder.build_url(path: "/v3/apps/#{app.guid}/actions/start"), method: 'POST' },
             stop: { href: url_builder.build_url(path: "/v3/apps/#{app.guid}/actions/stop"), method: 'POST' },
+            revisions: { href: url_builder.build_url(path: "/v3/apps/#{app.guid}/revisions") },
+            deployed_revisions: { href: url_builder.build_url(path: "/v3/apps/#{app.guid}/revisions/deployed") },
           }
 
           links.delete_if { |_, v| v.nil? }

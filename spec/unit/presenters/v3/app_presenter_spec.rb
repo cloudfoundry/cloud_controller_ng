@@ -37,6 +37,8 @@ module VCAP::CloudController::Presenters::V3
           start: { href: "#{link_prefix}/v3/apps/#{app.guid}/actions/start", method: 'POST' },
           stop: { href: "#{link_prefix}/v3/apps/#{app.guid}/actions/stop", method: 'POST' },
           environment_variables: { href: "#{link_prefix}/v3/apps/#{app.guid}/environment_variables" },
+          revisions: { href: "#{link_prefix}/v3/apps/#{app.guid}/revisions" },
+          deployed_revisions: { href: "#{link_prefix}/v3/apps/#{app.guid}/revisions/deployed" }
         }
 
         expect(result[:guid]).to eq(app.guid)
