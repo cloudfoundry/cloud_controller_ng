@@ -117,6 +117,81 @@ module VCAP::CloudController
       end
     end
 
+    describe '#can_create_revision' do
+      let!(:app_model) { AppModel.make(space: space, name: 'some-name', desired_state: ProcessModel::STARTED) }
+      let!(:process1) { ProcessModel.make(:process, app: app_model, type: 'web', command: 'webby') }
+      let!(:process2) { ProcessModel.make(:process, app: app_model, type: 'worker') }
+      let!(:droplet) { DropletModel.make(app: app_model, process_types: { 'web': 'webby', 'worker': nil }) }
+      let!(:environment_variables) { {} }
+
+      before do
+        app_model.update(revisions_enabled: true, droplet_guid: droplet.guid, environment_variables: environment_variables)
+      end
+
+      context 'when there are revisions associated with the app' do
+        let!(:revision) do
+          RevisionModel.make(
+            app: app_model,
+            droplet_guid: droplet.guid,
+            environment_variables: environment_variables,
+            commands_by_process_type: { 'web' => 'webby', 'worker' => nil },
+          )
+        end
+
+        it 'returns false when nothing has changed' do
+          expect(app_model.can_create_revision?).to be_falsey
+        end
+
+        context 'when droplet on the latest revision is different than the apps desired droplet' do
+          let!(:droplet2) { DropletModel.make(app: app_model, process_types: { 'web': 'webby', 'worker': nil }) }
+
+          before do
+            app_model.update(droplet: droplet2)
+          end
+
+          it 'returns true' do
+            expect(app_model.can_create_revision?).to be_truthy
+          end
+        end
+
+        context 'when env vars on the latest revision is different than the apps env vars' do
+          before do
+            app_model.update(environment_variables: { 'something' => 'different' })
+          end
+
+          it 'returns true' do
+            expect(app_model.can_create_revision?).to be_truthy
+          end
+        end
+
+        context 'when commands on the latest revision are different than the apps processes commands' do
+          before do
+            process1.update(command: 'dont start')
+          end
+
+          it 'returns true' do
+            expect(app_model.can_create_revision?).to be_truthy
+          end
+        end
+      end
+
+      context 'when there are no revisions associated with the app' do
+        it 'returns true' do
+          expect(app_model.can_create_revision?).to be_truthy
+        end
+      end
+
+      context 'when revisions are not enabled' do
+        before do
+          app_model.update(revisions_enabled: false)
+        end
+
+        it 'returns false' do
+          expect(app_model.can_create_revision?).to be_falsey
+        end
+      end
+    end
+
     describe '#staging_in_progress' do
       context 'when a build is in staging state' do
         let!(:build) { BuildModel.make(app_guid: app_model.guid, state: BuildModel::STAGING_STATE) }

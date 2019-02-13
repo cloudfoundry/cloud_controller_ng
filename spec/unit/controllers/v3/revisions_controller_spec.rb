@@ -46,7 +46,8 @@ RSpec.describe RevisionsController, type: :controller do
           'metadata' => {
             'labels' => {},
             'annotations' => {}
-          }
+          },
+          'processes' => {},
         }
       )
     end
@@ -85,7 +86,8 @@ RSpec.describe RevisionsController, type: :controller do
           'metadata' => {
             'labels' => {},
             'annotations' => {}
-          }
+          },
+          'processes' => {},
         }
       )
     end
@@ -200,7 +202,8 @@ RSpec.describe RevisionsController, type: :controller do
             'metadata' => {
               'labels' => { 'fruit' => 'passionfruit', 'truck' => 'hino' },
               'annotations' => { 'potato' => 'adora', 'beet' => 'formanova' }
-            }
+            },
+            'processes' => {},
           }
         )
       end
@@ -251,7 +254,8 @@ RSpec.describe RevisionsController, type: :controller do
             'metadata' => {
               'labels' => { 'truck' => 'hino' },
               'annotations' => { 'beet' => 'formanova' }
-            }
+            },
+            'processes' => {},
           }
         )
       end

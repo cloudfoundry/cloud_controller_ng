@@ -45,7 +45,8 @@ RSpec.describe 'Revisions' do
               'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
             },
           },
-          'metadata' => { 'labels' => {}, 'annotations' => {} }
+          'metadata' => { 'labels' => {}, 'annotations' => {} },
+          'processes' =>  {},
         }
       )
     end
@@ -96,7 +97,8 @@ RSpec.describe 'Revisions' do
                   'href' => "#{link_prefix}/v3/apps/#{app_model.guid}",
                 },
               },
-              'metadata' => { 'labels' => {}, 'annotations' => {} }
+              'metadata' => { 'labels' => {}, 'annotations' => {} },
+              'processes' => {},
             },
             {
               'guid' => revision2.guid,
@@ -121,7 +123,8 @@ RSpec.describe 'Revisions' do
                   'href' => "#{link_prefix}/v3/apps/#{app_model.guid}",
                 },
               },
-              'metadata' => { 'labels' => {}, 'annotations' => {} }
+              'metadata' => { 'labels' => {}, 'annotations' => {} },
+              'processes' => {},
             }
           ]
         }
@@ -174,7 +177,8 @@ RSpec.describe 'Revisions' do
                     'href' => "#{link_prefix}/v3/apps/#{app_model.guid}",
                   },
                 },
-                'metadata' => { 'labels' => {}, 'annotations' => {} }
+                'metadata' => { 'labels' => {}, 'annotations' => {} },
+                'processes' => {},
               },
               {
                 'guid' => revision3.guid,
@@ -199,7 +203,8 @@ RSpec.describe 'Revisions' do
                     'href' => "#{link_prefix}/v3/apps/#{app_model.guid}",
                   },
                 },
-                'metadata' => { 'labels' => {}, 'annotations' => {} }
+                'metadata' => { 'labels' => {}, 'annotations' => {} },
+                'processes' => {},
               }
             ]
           }
@@ -277,7 +282,8 @@ RSpec.describe 'Revisions' do
           'metadata' => {
             'labels' => { 'freaky' => 'thursday' },
             'annotations' => { 'quality' => 'p sus' }
-          }
+          },
+          'processes' => {},
         }
       )
     end
@@ -361,7 +367,8 @@ RSpec.describe 'Revisions' do
                   'href' => "#{link_prefix}/v3/apps/#{app_model.guid}",
                 },
               },
-              'metadata' => { 'labels' => {}, 'annotations' => {} }
+              'metadata' => { 'labels' => {}, 'annotations' => {} },
+              'processes' => {},
             },
             {
               'guid' => revision2.guid,
@@ -386,7 +393,8 @@ RSpec.describe 'Revisions' do
                   'href' => "#{link_prefix}/v3/apps/#{app_model.guid}",
                 },
               },
-              'metadata' => { 'labels' => {}, 'annotations' => {} }
+              'metadata' => { 'labels' => {}, 'annotations' => {} },
+              'processes' => {},
             }
           ]
         }

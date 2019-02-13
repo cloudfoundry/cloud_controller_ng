@@ -6,6 +6,8 @@ module VCAP::CloudController
     let(:droplet) { DropletModel.make(app: app) }
     let(:app) { AppModel.make(revisions_enabled: true, environment_variables: { 'key' => 'value' }) }
     let(:user_audit_info) { UserAuditInfo.new(user_guid: '456', user_email: 'mona@example.com', user_name: 'mona') }
+    let!(:process1) { ProcessModel.make(app: app, type: 'web', command: 'run my app') }
+    let!(:process2) { ProcessModel.make(app: app, type: 'worker') }
 
     describe '.create' do
       it 'creates a revision for the app' do
@@ -15,6 +17,8 @@ module VCAP::CloudController
         }.to change { RevisionModel.where(app: app).count }.by(1)
         expect(RevisionModel.last.droplet_guid).to eq(droplet.guid)
         expect(RevisionModel.last.environment_variables).to eq(app.environment_variables)
+        expect(RevisionModel.last.commands_by_process_type['web']).to eq('run my app')
+        expect(RevisionModel.last.commands_by_process_type['worker']).to be_nil
       end
 
       it 'records an audit event for the revision' do

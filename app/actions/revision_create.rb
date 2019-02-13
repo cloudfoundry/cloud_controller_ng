@@ -14,7 +14,8 @@ module VCAP::CloudController
             app: app,
             version: next_version,
             droplet_guid: app.droplet_guid,
-            environment_variables: app.environment_variables
+            environment_variables: app.environment_variables,
+            commands_by_process_type: app.commands_by_process_type,
           )
 
           record_audit_event(revision, user_audit_info)

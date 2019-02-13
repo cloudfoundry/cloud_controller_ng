@@ -14,6 +14,7 @@ module VCAP::CloudController
             droplet: {
               guid: revision.droplet_guid,
             },
+            processes: processes,
             relationships: {
               app: {
                 data: {
@@ -48,6 +49,15 @@ module VCAP::CloudController
               href: url_builder.build_url(path: "/v3/apps/#{revision.app_guid}")
             }
           }
+        end
+
+        def processes
+          result = {}
+          revision.commands_by_process_type&.each do |key, value|
+            result[key] = { 'command' => value }
+          end
+
+          result
         end
       end
     end

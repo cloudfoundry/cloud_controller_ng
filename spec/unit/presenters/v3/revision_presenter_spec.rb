@@ -4,7 +4,13 @@ require 'presenters/v3/revision_presenter'
 module VCAP::CloudController::Presenters::V3
   RSpec.describe RevisionPresenter do
     let(:app_model) { VCAP::CloudController::AppModel.make }
-    let(:revision) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 300, droplet_guid: 'some-guid') }
+    let(:revision) do VCAP::CloudController::RevisionModel.make(
+      app: app_model,
+      version: 300,
+      droplet_guid: 'some-guid',
+      commands_by_process_type: { 'worker' => nil, 'web' => './start' }
+    )
+    end
 
     let!(:release_label) do
       VCAP::CloudController::RevisionLabelModel.make(
@@ -55,6 +61,8 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:links]).to eq(links)
         expect(result[:metadata][:labels]).to eq('release' => 'stable', 'canberra.au/potato' => 'mashed')
         expect(result[:metadata][:annotations]).to eq('altitude' => '14,412', 'maize' => 'hfcs')
+        expect(result[:processes]['web']).to eq('command' => './start')
+        expect(result[:processes]['worker']).to eq('command' => nil)
       end
     end
   end
