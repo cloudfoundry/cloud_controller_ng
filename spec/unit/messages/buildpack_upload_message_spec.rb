@@ -11,6 +11,16 @@ module VCAP::CloudController
         allow(File).to receive(:stat).and_return(stat_double)
       end
 
+      context 'when the <ngnix_upload_module_dummy> param is set' do
+        let(:opts) { { '<ngx_upload_module_dummy>' => '', bits_path: '/tmp/foobar', bits_name: 'buildpack.zip' } }
+
+        it 'is invalid' do
+          upload_message = BuildpackUploadMessage.new(opts)
+          expect(upload_message).not_to be_valid
+          expect(upload_message.errors[:base]).to include('Uploaded bits are not a valid buildpack file')
+        end
+      end
+
       context 'when the path and name are provided correctly' do
         let(:opts) { { bits_path: '/tmp/foobar', bits_name: 'buildpack.zip' } }
 
@@ -137,16 +147,6 @@ module VCAP::CloudController
 
         expect(message.requested?(:bits_path)).to be_truthy
         expect(message.requested?(:bits_name)).to be_truthy
-      end
-
-      context 'when the <ngnix_upload_module_dummy> param is set' do
-        let(:params) { { 'bits_path' => 'foobar', '<ngx_upload_module_dummy>' => '' } }
-
-        it 'raises an error' do
-          expect {
-            BuildpackUploadMessage.create_from_params(params)
-          }.to raise_error(BuildpackUploadMessage::MissingFilePathError, 'Uploaded bits were not a valid buildpack file')
-        end
       end
     end
   end

@@ -12,15 +12,10 @@ module VCAP::CloudController
     validate :bits_path_in_tmpdir
     validate :is_zip
     validate :is_not_empty
+    validate :missing_file_path
 
     def self.create_from_params(params)
-      opts = params.dup.symbolize_keys
-
-      if opts.key?(VCAP::CloudController::Constants::INVALID_NGINX_UPLOAD_PARAM.to_sym)
-        raise MissingFilePathError.new('Uploaded bits were not a valid buildpack file')
-      end
-
-      BuildpackUploadMessage.new(opts)
+      BuildpackUploadMessage.new(params.dup.symbolize_keys)
     end
 
     def nginx_fields
@@ -52,6 +47,12 @@ module VCAP::CloudController
       return unless bits_name
 
       errors.add(:base, "#{bits_name} is not a zip") unless File.extname(bits_name) == '.zip'
+    end
+
+    def missing_file_path
+      return unless requested?(VCAP::CloudController::Constants::INVALID_NGINX_UPLOAD_PARAM.to_sym)
+
+      errors.add(:base, 'Uploaded bits are not a valid buildpack file')
     end
 
     def is_not_empty

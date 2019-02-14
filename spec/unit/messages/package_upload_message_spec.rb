@@ -13,6 +13,16 @@ module VCAP::CloudController
         expect(upload_message).to be_valid
       end
 
+      context 'when the <ngnix_upload_module_dummy> param is set' do
+        let(:opts) { { '<ngx_upload_module_dummy>' => '', bits_path: '/tmp/foobar' } }
+
+        it 'is invalid' do
+          upload_message = PackageUploadMessage.new(opts)
+          expect(upload_message).not_to be_valid
+          expect(upload_message.errors[:base]).to include('File field missing path information')
+        end
+      end
+
       context 'when the path is relative' do
         let(:opts) { { bits_path: '../tmp/mango/pear' } }
 
@@ -97,16 +107,6 @@ module VCAP::CloudController
         message = PackageUploadMessage.create_from_params(params)
 
         expect(message.requested?(:bits_path)).to be_truthy
-      end
-
-      context 'when the <ngnix_upload_module_dummy> param is set' do
-        let(:params) { { 'bits_path' => 'foobar', '<ngx_upload_module_dummy>' => '' } }
-
-        it 'raises an error' do
-          expect {
-            PackageUploadMessage.create_from_params(params)
-          }.to raise_error(PackageUploadMessage::MissingFilePathError, 'File field missing path information')
-        end
       end
 
       context 'when rack is handling the file upload' do

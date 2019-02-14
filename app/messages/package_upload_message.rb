@@ -10,13 +10,10 @@ module VCAP::CloudController
 
     validates :bits_path, presence: { presence: true, message: 'An application zip file must be uploaded' }
     validate :bits_path_in_tmpdir
+    validate :missing_file_path
 
     def self.create_from_params(params)
       opts = params.dup.symbolize_keys
-
-      if opts.key?(VCAP::CloudController::Constants::INVALID_NGINX_UPLOAD_PARAM.to_sym)
-        raise MissingFilePathError.new('File field missing path information')
-      end
 
       if opts[:bits].present?
         opts[:bits_path] = opts[:bits].tempfile.path
@@ -39,6 +36,12 @@ module VCAP::CloudController
       unless FilePathChecker.safe_path?(bits_path, tmpdir)
         errors.add(:bits_path, 'is invalid')
       end
+    end
+
+    def missing_file_path
+      return unless requested?(VCAP::CloudController::Constants::INVALID_NGINX_UPLOAD_PARAM.to_sym)
+
+      errors.add(:base, 'File field missing path information')
     end
 
     def tmpdir
