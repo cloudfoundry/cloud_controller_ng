@@ -273,6 +273,30 @@ module VCAP::CloudController
         end
       end
 
+      context 'when any buildpack is disabled' do
+        let!(:disabled_buildpack) { Buildpack.make(enabled: false, name: 'disabled-buildpack') }
+        let!(:enabled_buildpack) { Buildpack.make(name: 'enabled-buildpack') }
+        let!(:lifecycle_data_model) do
+          VCAP::CloudController::BuildpackLifecycleDataModel.make(
+            app:        app,
+            buildpacks: [disabled_buildpack.name, enabled_buildpack.name, 'http://custom-buildpack.example'],
+            stack:      stack.name
+          )
+        end
+        let(:lifecycle_data) do
+          {
+              stack:      stack.name,
+              buildpacks: [disabled_buildpack.name, enabled_buildpack.name, 'http://custom-buildpack.example']
+          }
+        end
+
+        it 'raises an InvalidBuildpack exception' do
+          expect {
+            action.create_and_stage(package: package, lifecycle: lifecycle)
+          }.to raise_error(CloudController::Errors::ApiError, /'#{disabled_buildpack.name}' are disabled/)
+        end
+      end
+
       context 'when there is already a staging in progress for the app' do
         it 'raises a StagingInProgress exception' do
           BuildModel.make(state: BuildModel::STAGING_STATE, app: app)

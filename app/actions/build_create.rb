@@ -38,6 +38,8 @@ module VCAP::CloudController
       staging_in_progress! if package.app.staging_in_progress?
       raise InvalidPackage.new('Cannot stage package whose state is not ready.') if package.state != PackageModel::READY_STATE
 
+      requested_buildpacks_disabled!(lifecycle)
+
       staging_details                     = get_staging_details(package, lifecycle)
       staging_details.start_after_staging = start_after_staging
 
@@ -81,6 +83,21 @@ module VCAP::CloudController
     alias_method :create_and_stage_without_event, :create_and_stage
 
     private
+
+    def requested_buildpacks_disabled!(lifecycle)
+      return if lifecycle.type == Lifecycles::DOCKER
+
+      admin_buildpack_records = lifecycle.buildpack_infos.map(&:buildpack_record).compact
+      disabled_buildpacks = admin_buildpack_records.reject(&:enabled)
+
+      if disabled_buildpacks.present?
+        names = disabled_buildpacks.map { |buildpack_record| "'#{buildpack_record.name}'" }.join(', ')
+        raise CloudController::Errors::ApiError.new_from_details(
+          'BuildpackInvalid',
+            "Requested buildpack(s) #{names} are disabled and cannot be used for staging"
+        )
+      end
+    end
 
     def using_disabled_custom_buildpack?(build)
       build.lifecycle_data.using_custom_buildpack? && custom_buildpacks_disabled?
