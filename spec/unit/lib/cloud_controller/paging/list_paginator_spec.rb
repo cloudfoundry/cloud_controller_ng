@@ -51,6 +51,14 @@ module VCAP::CloudController
           paginated_result = paginator.get_page(list, pagination_options)
           expect(paginated_result.records.first.guid).to eq(app_model1.guid)
         end
+
+        it 'handles nil values' do
+          app_model1.name = 'a'
+          app_model2.name = nil
+          pagination_options = PaginationOptions.new(default_options.merge(order_by: 'name', order_direction: 'asc'))
+          paginated_result = paginator.get_page(list, pagination_options)
+          expect(paginated_result.records).to eq([app_model2, app_model1])
+        end
       end
     end
   end

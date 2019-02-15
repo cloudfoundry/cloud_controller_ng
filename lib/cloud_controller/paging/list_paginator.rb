@@ -16,7 +16,15 @@ module VCAP::CloudController
     private
 
     def sort_list(list, order_by_method, order_direction)
-      sorted_list = list.sort_by { |object| object.public_send(order_by_method) }
+      sorted_list = list.sort do |object1, object2|
+        value1 = object1.public_send(order_by_method)
+        value2 = object2.public_send(order_by_method)
+        next 0 if value1.nil? && value2.nil?
+        next -1 if value1.nil?
+        next 1 if value2.nil?
+
+        value1 <=> value2
+      end
 
       if order_direction != VCAP::CloudController::PaginationOptions::DIRECTION_DEFAULT
         sorted_list.reverse!

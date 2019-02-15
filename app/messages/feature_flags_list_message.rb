@@ -12,5 +12,9 @@ module VCAP::CloudController
       super
       pagination_options.default_order_by = 'name'
     end
+
+    def valid_order_by_values
+      [:name]
+    end
   end
 end

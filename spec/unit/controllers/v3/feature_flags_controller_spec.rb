@@ -75,7 +75,48 @@ RSpec.describe FeatureFlagsController, type: :controller do
           response_names = parsed_body['resources'].collect { |ff| ff['name'] }
           expect(response_names).to eq(flag_names_sorted)
         end
+      end
+    end
+  end
 
+  describe '#show' do
+    let(:user) { VCAP::CloudController::User.make }
+
+    before do
+      stub_const('VCAP::CloudController::FeatureFlag::DEFAULT_FLAGS', {
+        flag1: false,
+      })
+      set_current_user(user)
+    end
+
+    context 'when there are no overrides' do
+      it 'returns the flag with the default value' do
+        get :show, params: { name: 'flag1' }
+
+        expect(response.status).to eq(200)
+        expect(parsed_body['name']).to eq('flag1')
+        expect(parsed_body['enabled']).to eq(false)
+      end
+    end
+
+    context 'when there are overrides' do
+      before { VCAP::CloudController::FeatureFlag.make(name: 'flag1', enabled: true, error_message: nil) }
+
+      it 'returns the overridden value' do
+        get :show, params: { name: 'flag1' }
+
+        expect(response.status).to eq(200)
+
+        expect(parsed_body['name']).to eq('flag1')
+        expect(parsed_body['enabled']).to eq(true)
+      end
+    end
+
+    context 'when the flag does not exist' do
+      it 'returns 404' do
+        get :show, params: { name: 'flag90' }
+
+        expect(response.status).to eq(404)
       end
     end
   end

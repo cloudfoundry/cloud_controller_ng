@@ -20,4 +20,26 @@ class FeatureFlagsController < ApplicationController
       message: message
     )
   end
+
+  def show
+    flag = find_flag(hashed_params[:name])
+
+    flag_not_found! unless flag
+
+    render status: :ok, json: Presenters::V3::FeatureFlagPresenter.new(flag)
+  end
+
+  def flag_not_found!
+    resource_not_found!(:feature_flag)
+  end
+
+  def find_flag(flag_name)
+    default_flag = FeatureFlag::DEFAULT_FLAGS.map do |name, value|
+      if name.to_s == flag_name
+        FeatureFlag.new(name: name.to_s, enabled: value)
+      end
+    end.compact
+
+    FeatureFlag.find(name: flag_name) || default_flag.first
+  end
 end

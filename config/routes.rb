@@ -173,4 +173,5 @@ Rails.application.routes.draw do
 
   # feature flags
   get '/feature_flags', to: 'feature_flags#index'
+  get '/feature_flags/:name', to: 'feature_flags#show'
 end

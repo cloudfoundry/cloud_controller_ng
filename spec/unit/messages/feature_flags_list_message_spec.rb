@@ -36,21 +36,17 @@ module VCAP::CloudController
       end
 
       it 'allows order_by to be overridden' do
-        message = FeatureFlagsListMessage.from_params({ 'order_by' => '-created_at' })
+        message = FeatureFlagsListMessage.from_params({ 'order_by' => '-name' })
 
-        expect(message.pagination_options.order_by).to eq('created_at')
+        expect(message.pagination_options.order_by).to eq('name')
+        expect(message.pagination_options.order_direction).to eq('desc')
       end
     end
 
     describe 'validations' do
       it 'is valid with pagination options' do
-        expect {
-          FeatureFlagsListMessage.from_params({
-            page: 1,
-            per_page: 5,
-            order_by: '-name',
-          })
-        }.not_to raise_error
+        message = FeatureFlagsListMessage.from_params({ page: 1, per_page: 5, order_by: '-name' })
+        expect(message).to be_valid
       end
 
       it 'is invalid with extra params' do
@@ -58,6 +54,12 @@ module VCAP::CloudController
 
         expect(message).not_to be_valid
         expect(message.errors[:base]).to include("Unknown query parameter(s): 'foobar'")
+      end
+
+      it 'validates that order_by value is in the supported list' do
+        message = FeatureFlagsListMessage.from_params order_by: 'created_at'
+        expect(message).to be_invalid
+        expect(message.errors[:order_by].length).to eq 1
       end
     end
   end
