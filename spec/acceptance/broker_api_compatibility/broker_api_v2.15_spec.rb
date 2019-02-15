@@ -28,5 +28,92 @@ RSpec.describe 'Service Broker API integration' do
         end
       end
     end
+
+    describe 'platform delays polling to last_operation based on Retry-After header' do
+      let(:default_poll_interval) { VCAP::CloudController::Config.config.get(:broker_client_default_async_poll_interval_seconds) }
+      let(:retry_after_interval) { default_poll_interval * 4 }
+
+      before do
+        setup_broker(default_catalog(plan_updateable: true))
+        @broker = VCAP::CloudController::ServiceBroker.find guid: @broker_guid
+        stub_async_last_operation(body: { state: 'in progress' }, headers: { 'Retry-After': retry_after_interval })
+      end
+
+      context 'when provisioning a service instance' do
+        it 'should poll the broker at the given retry interval' do
+          expect(async_provision_service).to have_status_code(202)
+
+          expect(
+            a_request(:put, provision_url_for_broker(@broker, accepts_incomplete: true))
+          ).to have_been_made
+
+          service_instance = VCAP::CloudController::ManagedServiceInstance.find(guid: @service_instance_guid)
+
+          assert_cc_uses_specified_polling_interval(
+            service_instance,
+            default_poll_interval,
+            retry_after_interval
+          )
+        end
+      end
+
+      context 'when deprovisioning a service instance' do
+        let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space_guid: @space_guid, service_plan_guid: @plan_guid) }
+
+        before do
+          @service_instance_guid = service_instance.guid
+        end
+
+        it 'should poll the broker at the given retry interval' do
+          expect(async_delete_service).to have_status_code(202)
+
+          expect(
+            a_request(:delete, deprovision_url(service_instance, accepts_incomplete: true))
+          ).to have_been_made
+
+          assert_cc_uses_specified_polling_interval(
+            service_instance,
+            default_poll_interval,
+            retry_after_interval
+          )
+        end
+      end
+
+      context 'when updating a service instance' do
+        let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space_guid: @space_guid, service_plan_guid: @plan_guid) }
+
+        before do
+          @service_instance_guid = service_instance.guid
+        end
+
+        it 'should poll the broker at the given retry interval' do
+          expect(async_update_service).to have_status_code(202)
+
+          expect(
+            a_request(:patch, update_url_for_broker(@broker, accepts_incomplete: true))).to have_been_made
+
+          assert_cc_uses_specified_polling_interval(
+            service_instance,
+            default_poll_interval,
+            retry_after_interval
+          )
+        end
+      end
+    end
+  end
+end
+
+def assert_cc_uses_specified_polling_interval(service_instance, default_poll_interval, retry_after_interval)
+  Timecop.freeze(Time.now) do
+    Delayed::Worker.new.work_off
+    expect(a_request(:get, %r{#{service_instance_url(service_instance)}/last_operation})).to have_been_made
+
+    Timecop.travel(default_poll_interval.seconds)
+    Delayed::Worker.new.work_off
+    expect(a_request(:get, %r{#{service_instance_url(service_instance)}/last_operation})).to have_been_made.once
+
+    Timecop.travel(retry_after_interval.seconds)
+    Delayed::Worker.new.work_off
+    expect(a_request(:get, %r{#{service_instance_url(service_instance)}/last_operation})).to have_been_made.twice
   end
 end

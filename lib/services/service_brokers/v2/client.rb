@@ -258,6 +258,7 @@ module VCAP::Services::ServiceBrokers::V2
       }
 
       result[:last_operation][:description] = last_operation_hash['description'] if last_operation_hash['description']
+      result[:retry_after] = response[HttpResponse::HEADER_RETRY_AFTER] if response[HttpResponse::HEADER_RETRY_AFTER]
       result.merge(parsed_response.symbolize_keys)
     end
 

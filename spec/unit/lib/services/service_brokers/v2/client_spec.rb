@@ -386,6 +386,7 @@ module VCAP::Services::ServiceBrokers::V2
         expect(http_client).to have_received(:get).
           with("/v2/service_instances/#{instance.guid}/last_operation?plan_id=#{plan.broker_provided_id}&service_id=#{instance.service.broker_provided_id}")
       end
+
       context 'when the broker operation id is specified' do
         let(:broker_provided_operation) { 'a_broker_provided_operation' }
         it 'makes a put request with correct path' do
@@ -474,6 +475,16 @@ module VCAP::Services::ServiceBrokers::V2
         it 'does not return a description field' do
           attrs = client.fetch_service_instance_last_operation(instance)
           expect(attrs).to eq({ last_operation: { state: 'succeeded' } })
+        end
+      end
+
+      context 'when the broker returns headers' do
+        let(:response) { HttpResponse.new(code: code, message: message, body: response_body, headers: { 'Retry-After' => 10 }) }
+
+        it 'returns the retry after header in the result' do
+          attrs          = client.fetch_service_instance_last_operation(instance)
+          expected_attrs = { retry_after: 10, last_operation: response_data.symbolize_keys }
+          expect(attrs).to eq(expected_attrs)
         end
       end
     end
