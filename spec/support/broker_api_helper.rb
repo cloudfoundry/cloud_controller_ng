@@ -289,6 +289,8 @@ module VCAP::CloudController::BrokerApiHelper
 
     metadata = JSON.parse(last_response.body).fetch('metadata', {})
     @binding_guid = metadata.fetch('guid', nil)
+
+    last_response
   end
 
   def async_bind_service(opts={})

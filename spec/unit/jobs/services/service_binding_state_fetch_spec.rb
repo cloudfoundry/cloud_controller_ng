@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'jobs/services/service_binding_state_fetch'
+require_relative 'shared/when_broker_returns_retry_after_header'
 
 module VCAP::CloudController
   module Jobs
@@ -524,10 +525,41 @@ module VCAP::CloudController
             end
           end
 
-          context 'when calling last operation responds with an error' do
+          context 'when calling last operation responds with an error HttpResponseError' do
             before do
               response = VCAP::Services::ServiceBrokers::V2::HttpResponse.new(code: 412, body: {})
               err = HttpResponseError.new('oops', 'uri', 'GET', response)
+              allow(client).to receive(:fetch_service_binding_last_operation).and_raise(err)
+
+              run_job(job)
+            end
+
+            it 'should enqueue another fetch job' do
+              expect(Delayed::Job.count).to eq 1
+            end
+
+            it 'maintains the service binding last operation details' do
+              service_binding.reload
+              expect(service_binding.last_operation.state).to eq('in progress')
+            end
+
+            context 'and the max poll duration has been reached' do
+              before do
+                Timecop.travel(Time.now + max_duration.minutes + 1.minute) do
+                  # executes job but does not enqueue another job
+                  execute_all_jobs(expected_successes: 1, expected_failures: 0)
+                end
+              end
+
+              it 'should not enqueue another fetch job' do
+                expect(Delayed::Job.count).to eq 0
+              end
+            end
+          end
+
+          context 'when calling last operation responds with an error HttpResponseError' do
+            before do
+              err = HttpRequestError.new('oops', 'uri', 'GET', RuntimeError.new)
               allow(client).to receive(:fetch_service_binding_last_operation).and_raise(err)
 
               run_job(job)
@@ -645,6 +677,8 @@ module VCAP::CloudController
               end
             end
           end
+
+          include_examples 'when brokers return Retry-After header', :fetch_service_binding_last_operation
         end
       end
     end

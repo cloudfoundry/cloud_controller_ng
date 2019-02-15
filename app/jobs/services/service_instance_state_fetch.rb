@@ -1,8 +1,12 @@
+require_relative 'asynchronous_operations'
+
 module VCAP::CloudController
   module Jobs
     module Services
       class ServiceInstanceStateFetch < VCAP::CloudController::Jobs::CCJob
-        attr_accessor :name, :service_instance_guid, :services_event_repository, :request_attrs, :poll_interval, :end_timestamp
+        include AsynchronousOperations
+
+        attr_accessor :name, :service_instance_guid, :request_attrs, :poll_interval, :end_timestamp, :user_audit_info
 
         def initialize(name, service_instance_guid, user_audit_info, request_attrs, end_timestamp=nil)
           @name                  = name
@@ -22,11 +26,11 @@ module VCAP::CloudController
           last_operation_result = client.fetch_service_instance_last_operation(service_instance)
           update_with_attributes(last_operation_result[:last_operation], service_instance)
 
-          retry_state_updater(retry_after_header: last_operation_result[:retry_after]) unless service_instance.terminal_state?
+          retry_job(retry_after_header: last_operation_result[:retry_after]) unless service_instance.terminal_state?
         rescue HttpRequestError, HttpResponseError, Sequel::Error => e
           logger = Steno.logger('cc-background')
           logger.error("There was an error while fetching the service instance operation state: #{e}")
-          retry_state_updater
+          retry_job
         end
 
         def job_name_in_configuration
@@ -39,12 +43,8 @@ module VCAP::CloudController
 
         private
 
-        def new_end_timestamp
-          Time.now + VCAP::CloudController::Config.config.get(:broker_client_max_async_poll_duration_minutes).minutes
-        end
-
         def repository
-          Repositories::ServiceEventRepository.new(@user_audit_info)
+          Repositories::ServiceEventRepository.new(user_audit_info)
         end
 
         def update_with_attributes(last_operation, service_instance)
@@ -56,23 +56,18 @@ module VCAP::CloudController
 
             if service_instance.last_operation.state == 'succeeded'
               apply_proposed_changes(service_instance)
-              record_event(service_instance, @request_attrs)
+              record_event(service_instance, request_attrs)
             end
           end
         end
 
-        def retry_state_updater(retry_after_header: '')
-          update_polling_interval(retry_after_header: retry_after_header)
-          if Time.now + @poll_interval > end_timestamp
-            ManagedServiceInstance.first(guid: service_instance_guid).save_and_update_operation(
-              last_operation: {
-                state:       'failed',
-                description: 'Service Broker failed to provision within the required time.',
-              }
-            )
-          else
-            enqueue_again
-          end
+        def end_timestamp_reached
+          ManagedServiceInstance.first(guid: service_instance_guid).save_and_update_operation(
+            last_operation: {
+              state: 'failed',
+              description: 'Service Broker failed to provision within the required time.',
+            }
+          )
         end
 
         def record_event(service_instance, request_attrs)
@@ -87,17 +82,6 @@ module VCAP::CloudController
           else
             service_instance.save_and_update_operation(service_instance.last_operation.proposed_changes)
           end
-        end
-
-        def enqueue_again
-          opts = { queue: 'cc-generic', run_at: Delayed::Job.db_time_now + @poll_interval }
-          VCAP::CloudController::Jobs::Enqueuer.new(self, opts).enqueue
-        end
-
-        def update_polling_interval(retry_after_header: '')
-          default_poll_interval = VCAP::CloudController::Config.config.get(:broker_client_default_async_poll_interval_seconds)
-          poll_interval         = [default_poll_interval, retry_after_header.to_i].max
-          @poll_interval        = [poll_interval, 24.hours].min
         end
       end
     end

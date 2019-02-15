@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'jobs/services/service_instance_state_fetch'
+require_relative 'shared/when_broker_returns_retry_after_header'
 
 module VCAP::CloudController
   module Jobs
@@ -84,12 +85,12 @@ module VCAP::CloudController
         end
 
         describe '#perform' do
+          let(:last_operation_response) { { last_operation: { state: state, description: description } } }
+          let(:client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client) }
+
           before do
-            basic_auth = [broker.auth_username, broker.auth_password]
-            stub_request(:get, %r{#{broker.broker_url}/v2/service_instances/#{service_instance.guid}/last_operation}).with(basic_auth: basic_auth).to_return(
-              status: status,
-              body: response.to_json
-            )
+            allow(VCAP::Services::ServiceClientProvider).to receive(:provide).and_return(client)
+            allow(client).to receive(:fetch_service_instance_last_operation).and_return(last_operation_response)
           end
 
           describe 'updating the service instance description' do
@@ -108,6 +109,7 @@ module VCAP::CloudController
             end
 
             context 'when the broker does not return a description' do
+              let(:last_operation_response) { { last_operation: { state: state } } }
               let(:response) do
                 {
                   state: 'in progress'
@@ -288,14 +290,13 @@ module VCAP::CloudController
           end
 
           context 'when fetching the service instance from the broker fails' do
-            let(:status) { 500 }
-            let(:response) { {} }
+            let(:state) { 'failed' }
+            let(:description) { 'Something went wrong' }
 
             context 'due to an HttpRequestError' do
               before do
-                basic_auth = [broker.auth_username, broker.auth_password]
-                stub_request(:get, %r{#{broker.broker_url}/v2/service_instances/#{service_instance.guid}/last_operation}).
-                  with(basic_auth: basic_auth).to_raise(HTTPClient::TimeoutError.new)
+                err = HttpRequestError.new('oops', 'uri', 'GET', RuntimeError.new)
+                allow(client).to receive(:fetch_service_instance_last_operation).and_raise(err)
               end
 
               it 'should enqueue another fetch job' do
@@ -307,6 +308,12 @@ module VCAP::CloudController
             end
 
             context 'due to an HttpResponseError' do
+              before do
+                response = VCAP::Services::ServiceBrokers::V2::HttpResponse.new(code: 412, body: {})
+                err = HttpResponseError.new('oops', 'uri', 'GET', response)
+                allow(client).to receive(:fetch_service_instance_last_operation).and_raise(err)
+              end
+
               it 'should enqueue another fetch job' do
                 run_job(job)
 
@@ -421,18 +428,12 @@ module VCAP::CloudController
           end
 
           context 'when the service broker credentials have changed since the job was enqueued' do
+            let(:newClient) { instance_double(VCAP::Services::ServiceBrokers::V2::Client) }
+
             it 'uses the updated credentials' do
               updated_url      = 'http://new.url'
               updated_username = 'new-username'
               updated_password = 'new-password'
-
-              basic_auth = [updated_username, updated_password]
-              expected_url_pattern = %r{#{updated_url}/v2/service_instances/#{service_instance.guid}/last_operation}
-
-              stub_request(:get, expected_url_pattern).with(basic_auth: basic_auth).to_return(
-                status: status,
-                body: response.to_json
-              )
 
               Jobs::Enqueuer.new(job, { queue: 'cc-generic', run_at: Delayed::Job.db_time_now }).enqueue
 
@@ -442,86 +443,16 @@ module VCAP::CloudController
                 auth_password: updated_password
               })
 
+              allow(VCAP::Services::ServiceClientProvider).to receive(:provide).and_return(newClient)
+              allow(newClient).to receive(:fetch_service_instance_last_operation).and_return(last_operation_response)
+
               execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
-              assert_requested :get, expected_url_pattern, times: 1
+              expect(newClient).to have_received(:fetch_service_instance_last_operation)
             end
           end
 
-          context 'when brokers return Retry-After header' do
-            let(:state) { 'in progress' }
-            let(:default_polling_interval) { VCAP::CloudController::Config.config.get(:broker_client_default_async_poll_interval_seconds) }
-
-            before do
-              basic_auth = [broker.auth_username, broker.auth_password]
-              stub_request(:get, %r{#{broker.broker_url}/v2/service_instances/#{service_instance.guid}/last_operation}).with(basic_auth: basic_auth).to_return(
-                status: status,
-                  body: response.to_json,
-                  headers: { 'Retry-After': broker_polling_interval }
-              )
-            end
-
-            context 'when the broker returns interval' do
-              context 'when the interval is greater than the default configuration' do
-                let(:broker_polling_interval) { default_polling_interval * 2 }
-
-                it 'the polling interval should be the one broker returned' do
-                  Timecop.freeze(Time.now)
-                  first_run_time = Time.now
-
-                  Jobs::Enqueuer.new(job, { queue: 'cc-generic', run_at: first_run_time }).enqueue
-                  execute_all_jobs(expected_successes: 1, expected_failures: 0)
-                  expect(Delayed::Job.count).to eq(1)
-
-                  run_time_default_interval = first_run_time + default_polling_interval.seconds + 1.second
-                  Timecop.travel(run_time_default_interval) do
-                    execute_all_jobs(expected_successes: 0, expected_failures: 0)
-                  end
-
-                  run_time_broker_interval = first_run_time + broker_polling_interval.seconds + 1.second
-                  Timecop.travel(run_time_broker_interval) do
-                    execute_all_jobs(expected_successes: 1, expected_failures: 0)
-                  end
-                end
-              end
-
-              context 'when the interval is less than the default configuration' do
-                let(:broker_polling_interval) { default_polling_interval / 2 }
-
-                it 'the polling interval should be the default specified in the configuration' do
-                  Timecop.freeze(Time.now)
-                  first_run_time = Time.now
-
-                  Jobs::Enqueuer.new(job, { queue: 'cc-generic', run_at: first_run_time }).enqueue
-                  execute_all_jobs(expected_successes: 1, expected_failures: 0)
-                  expect(Delayed::Job.count).to eq(1)
-
-                  run_time_default_interval = first_run_time + default_polling_interval.seconds + 1.second
-                  Timecop.travel(run_time_default_interval) do
-                    execute_all_jobs(expected_successes: 1, expected_failures: 0)
-                  end
-                end
-              end
-
-              context 'when the interval is greater than the max value (24 hours)' do
-                let(:broker_polling_interval) { 24.hours.seconds + 1.minutes }
-
-                it 'the polling interval should not exceed the max' do
-                  Timecop.freeze(Time.now)
-                  first_run_time = Time.now
-
-                  Jobs::Enqueuer.new(job, { queue: 'cc-generic', run_at: first_run_time }).enqueue
-                  execute_all_jobs(expected_successes: 1, expected_failures: 0)
-                  expect(Delayed::Job.count).to eq(1)
-
-                  run_time_max_interval = first_run_time + 24.hours + 1.second
-                  Timecop.travel(run_time_max_interval) do
-                    execute_all_jobs(expected_successes: 1, expected_failures: 0)
-                  end
-                end
-              end
-            end
-          end
+          include_examples 'when brokers return Retry-After header', :fetch_service_instance_last_operation
         end
 
         describe '#job_name_in_configuration' do

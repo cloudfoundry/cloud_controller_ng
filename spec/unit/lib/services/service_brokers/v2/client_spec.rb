@@ -1730,6 +1730,15 @@ module VCAP::Services::ServiceBrokers::V2
           end
         end
       end
+
+      context 'when the broker returns headers' do
+        let(:broker_response) { HttpResponse.new(code: 200, body: response_body, headers: { 'Retry-After' => 10 }) }
+
+        it 'returns the retry after header in the result' do
+          attrs = client.fetch_service_binding_last_operation(service_binding)
+          expect(attrs).to include(retry_after: 10)
+        end
+      end
     end
 
     def unwrap_delayed_job(job)

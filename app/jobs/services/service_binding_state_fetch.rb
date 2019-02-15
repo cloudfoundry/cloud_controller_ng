@@ -1,10 +1,16 @@
+require_relative 'asynchronous_operations'
+
 module VCAP::CloudController
   module Jobs
     module Services
       class ServiceBindingStateFetch < VCAP::CloudController::Jobs::CCJob
+        include AsynchronousOperations
+
+        attr_accessor :service_binding_guid, :end_timestamp, :user_audit_info, :request_attrs, :poll_interval
+
         def initialize(service_binding_guid, user_info, request_attrs)
           @service_binding_guid = service_binding_guid
-          @end_timestamp = Time.now + Config.config.get(:broker_client_max_async_poll_duration_minutes).minutes
+          @end_timestamp = new_end_timestamp
           @user_audit_info = user_info
           @request_attrs = request_attrs
           update_polling_interval
@@ -13,7 +19,7 @@ module VCAP::CloudController
         def perform
           logger = Steno.logger('cc-background')
 
-          service_binding = ServiceBinding.first(guid: @service_binding_guid)
+          service_binding = ServiceBinding.first(guid: service_binding_guid)
           return if service_binding.nil? # assume the binding has been purged
 
           client = VCAP::Services::ServiceClientProvider.provide(instance: service_binding.service_instance)
@@ -28,8 +34,9 @@ module VCAP::CloudController
             return if delete_result[:finished]
           end
 
-          retry_job unless service_binding.terminal_state?
+          retry_job(retry_after_header: last_operation_result[:retry_after]) unless service_binding.terminal_state?
         rescue HttpResponseError,
+               HttpRequestError,
                Sequel::Error,
                VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerApiTimeout,
                VCAP::Services::ServiceBrokers::V2::Errors::HttpClientTimeout => e
@@ -60,7 +67,7 @@ module VCAP::CloudController
               'syslog_drain_url' => binding_response[:syslog_drain_url],
               'volume_mounts' => binding_response[:volume_mounts],
             })
-            record_event(service_binding, @request_attrs)
+            record_event(service_binding, request_attrs)
             service_binding.last_operation.update(last_operation_result[:last_operation])
             return { finished: true }
           end
@@ -72,7 +79,7 @@ module VCAP::CloudController
         def process_delete_operation(service_binding, last_operation_result)
           if state_succeeded?(last_operation_result)
             service_binding.destroy
-            record_event(service_binding, @request_attrs)
+            record_event(service_binding, request_attrs)
             return { finished: true }
           end
 
@@ -80,16 +87,11 @@ module VCAP::CloudController
           { finished: false }
         end
 
-        def retry_job
-          update_polling_interval
-          if Time.now + @poll_interval > @end_timestamp
-            ServiceBinding.first(guid: @service_binding_guid).last_operation.update(
-              state: 'failed',
-              description: 'Service Broker failed to bind within the required time.'
-            )
-          else
-            enqueue_again
-          end
+        def end_timestamp_reached
+          ServiceBinding.first(guid: service_binding_guid).last_operation.update(
+            state: 'failed',
+            description: 'Service Broker failed to bind within the required time.'
+          )
         end
 
         def record_event(binding, request_attrs)
@@ -97,19 +99,10 @@ module VCAP::CloudController
           operation_type = binding.last_operation.type
 
           if operation_type == 'create'
-            repository.record_create(binding, @user_audit_info, request_attrs)
+            repository.record_create(binding, user_audit_info, request_attrs)
           elsif operation_type == 'delete'
-            repository.record_delete(binding, @user_audit_info)
+            repository.record_delete(binding, user_audit_info)
           end
-        end
-
-        def enqueue_again
-          opts = { queue: 'cc-generic', run_at: Delayed::Job.db_time_now + @poll_interval }
-          Jobs::Enqueuer.new(self, opts).enqueue
-        end
-
-        def update_polling_interval
-          @poll_interval = Config.config.get(:broker_client_default_async_poll_interval_seconds)
         end
 
         def set_binding_failed_state(service_binding, logger)
