@@ -8,7 +8,7 @@ module OPI
     ActualLRPKey = Struct.new(:index, :process_guid)
     ActualLRPNetInfo = Struct.new(:address, :ports)
     PortMapping = Struct.new(:container_port, :host_port)
-    DesiredLRP = Struct.new(:PlacementTags)
+    DesiredLRP = Struct.new(:PlacementTags, :metric_tags)
 
     class ActualLRPNetInfo
       def to_hash
@@ -61,7 +61,7 @@ module OPI
     # Currently opi does not support isolation segments. This stub is necessary
     # because cc relies that at least one placement tag will be available
     def desired_lrp_instance(process)
-      DesiredLRP.new(['placeholder'])
+      DesiredLRP.new(['placeholder'], [])
     end
 
     private
