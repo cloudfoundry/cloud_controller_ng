@@ -21,3 +21,4 @@ We recommend reaching out to slack first as the team will be most responsive the
 
 * The [Cloud Foundry V2 API](http://apidocs.cloudfoundry.org/) is still the primary API for interacting with Cloud Foundry.
 * [Running Tasks](https://docs.cloudfoundry.org/devguide/using-tasks.html)
+* [V3 API Documentation Source Code](https://github.com/cloudfoundry/cloud_controller_ng/tree/master/docs/v3)
