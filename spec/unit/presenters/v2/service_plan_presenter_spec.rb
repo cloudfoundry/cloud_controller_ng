@@ -39,6 +39,7 @@ module CloudController::Presenters::V2
            'description' => service_plan.description,
            'extra' => nil,
            'free' => false,
+           'maximum_polling_duration' => nil,
            'name' => service_plan.name,
            'public' => true,
            'relationship_url' => 'http://relationship.example.com',

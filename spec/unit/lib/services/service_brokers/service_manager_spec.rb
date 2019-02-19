@@ -79,6 +79,7 @@ module VCAP::Services::ServiceBrokers
                 'plan_updateable' => true,
                 'free'        => false,
                 'bindable'    => true,
+                'maximum_polling_duration' => 3600,
               }.merge(plan_metadata_hash).merge(plan_schemas_hash)
             ]
           }.merge(service_metadata_hash)
@@ -183,6 +184,7 @@ module VCAP::Services::ServiceBrokers
           'free' => service_plan.free,
           'description' => service_plan.description,
           'plan_updateable' => service_plan.plan_updateable,
+          'maximum_polling_duration' => service_plan.maximum_polling_duration,
           'service_guid' => service_plan.service.guid,
           'extra' => '{"cost":"0.0"}',
           'unique_id' => service_plan.unique_id,
@@ -226,6 +228,7 @@ module VCAP::Services::ServiceBrokers
           expect(plan.name).to eq(plan_name)
           expect(plan.description).to eq(plan_description)
           expect(plan.plan_updateable).to eq(true)
+          expect(plan.maximum_polling_duration).to eq(3600)
           expect(JSON.parse(plan.extra)).to eq({ 'cost' => '0.0' })
           expect(plan.create_instance_schema).to eq('{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}')
           expect(plan.update_instance_schema).to eq('{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}')

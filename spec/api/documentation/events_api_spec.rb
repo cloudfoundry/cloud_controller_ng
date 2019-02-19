@@ -642,19 +642,20 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
         actee_name: new_plan.name,
         space_guid: '',
         metadata:   {
-          'name'                   => new_plan.name,
-          'free'                   => new_plan.free,
-          'description'            => new_plan.description,
-          'service_guid'           => new_plan.service.guid,
-          'extra'                  => new_plan.extra,
-          'unique_id'              => new_plan.unique_id,
-          'public'                 => new_plan.public,
-          'active'                 => new_plan.active,
-          'bindable'               => new_plan.bindable,
-          'plan_updateable'        => new_plan.plan_updateable,
-          'create_instance_schema' => new_plan.create_instance_schema,
-          'update_instance_schema' => new_plan.update_instance_schema,
-          'create_binding_schema'  => new_plan.create_binding_schema
+          'name'                       => new_plan.name,
+          'free'                       => new_plan.free,
+          'description'                => new_plan.description,
+          'service_guid'               => new_plan.service.guid,
+          'extra'                      => new_plan.extra,
+          'unique_id'                  => new_plan.unique_id,
+          'public'                     => new_plan.public,
+          'active'                     => new_plan.active,
+          'bindable'                   => new_plan.bindable,
+          'plan_updateable'            => new_plan.plan_updateable,
+          'maximum_polling_duration'   => new_plan.maximum_polling_duration,
+          'create_instance_schema'     => new_plan.create_instance_schema,
+          'update_instance_schema'     => new_plan.update_instance_schema,
+          'create_binding_schema'      => new_plan.create_binding_schema
         }
       }
     end

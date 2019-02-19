@@ -34,6 +34,12 @@ module VCAP::Services::ServiceBrokers::V2
       end
     end
 
+    def validate_integer!(name, input, opts={})
+      if !input.is_a?(Integer) && !input.nil?
+        errors.add("#{human_readable_attr_name(name)} must be an integer, but has value #{input.inspect}")
+      end
+    end
+
     def validate_array_of_strings!(name, input)
       unless is_an_array_of(String, input)
         errors.add("#{human_readable_attr_name(name)} must be an array of strings, but has value #{input.inspect}")

@@ -13,14 +13,15 @@ module VCAP::Services::ServiceBrokers::V2
         'free'        => opts.fetch(:free, true),
         'bindable'    => opts[:bindable],
         'schemas'     => opts[:schemas] || {},
-        'plan_updateable' => opts[:plan_updateable]
+        'plan_updateable' => opts[:plan_updateable],
+        'maximum_polling_duration' => opts[:maximum_polling_duration]
       }
     end
     let(:catalog_service) { instance_double(VCAP::Services::ServiceBrokers::V2::CatalogService) }
     let(:opts) { {} }
 
     describe 'initializing' do
-      let(:opts) { { free: false, bindable: true, plan_updateable: true } }
+      let(:opts) { { free: false, bindable: true, plan_updateable: true, maximum_polling_duration: 3600 } }
 
       it 'should assign attributes' do
         expect(plan.broker_provided_id).to eq 'broker-provided-plan-id'
@@ -31,6 +32,7 @@ module VCAP::Services::ServiceBrokers::V2
         expect(plan.free).to be false
         expect(plan.bindable).to be true
         expect(plan.plan_updateable).to be true
+        expect(plan.maximum_polling_duration).to be 3600
         expect(plan.errors).to be_empty
       end
 
@@ -135,6 +137,13 @@ module VCAP::Services::ServiceBrokers::V2
 
         expect(plan).to_not be_valid
         expect(plan.errors.messages.first).to include 'Plan schemas must be a hash, but has value "true"'
+      end
+
+      it 'validates that @maximum_polling_duration is an integer' do
+        plan_attrs['maximum_polling_duration'] = 'true'
+
+        expect(plan).to_not be_valid
+        expect(plan.errors.messages).to include 'Maximum polling duration must be an integer, but has value "true"'
       end
 
       describe '#valid?' do
