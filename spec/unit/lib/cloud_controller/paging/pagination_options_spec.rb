@@ -83,6 +83,24 @@ module VCAP::CloudController
           it 'defaults to id' do
             expect(pagination_options.order_by).to eq('id')
           end
+
+          context 'when default_order_by is configured' do
+            before { pagination_options.default_order_by = 'something_else' }
+
+            it 'orders by the new default' do
+              expect(pagination_options.order_by).to eq('something_else')
+            end
+          end
+        end
+
+        context 'when order_by is configured by the user' do
+          context 'when default_order_by is configured' do
+            before { pagination_options.default_order_by = 'something_else' }
+
+            it 'uses the order_by param instead of the default' do
+              expect(pagination_options.order_by).to eq(order_by)
+            end
+          end
         end
       end
 
@@ -122,6 +140,41 @@ module VCAP::CloudController
           message = PaginationOptions.new(params)
 
           expect(message).to be_valid
+        end
+      end
+    end
+
+    describe 'ordering_configured?' do
+      let(:pagination_options) { PaginationOptions.new(order_by: order_by, order_direction: order_direction) }
+      let(:order_by) { 'anything' }
+      let(:order_direction) { 'desc' }
+
+      it 'returns true when both are configured' do
+        expect(pagination_options.ordering_configured?).to be_truthy
+      end
+
+      context 'when order_by is not configured' do
+        let(:order_by) { nil }
+
+        it 'returns true' do
+          expect(pagination_options.ordering_configured?).to be_truthy
+        end
+      end
+
+      context 'when order_direction is not configured' do
+        let(:order_direction) { nil }
+
+        it 'returns true' do
+          expect(pagination_options.ordering_configured?).to be_truthy
+        end
+      end
+
+      context 'when order_by AND order_direction are not configured' do
+        let(:order_by) { nil }
+        let(:order_direction) { nil }
+
+        it 'returns false' do
+          expect(pagination_options.ordering_configured?).to be_falsey
         end
       end
     end

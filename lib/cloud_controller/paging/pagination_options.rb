@@ -12,15 +12,14 @@ module VCAP::CloudController
     DIRECTION_DEFAULT = 'asc'.freeze
     VALID_DIRECTIONS  = %w(asc desc).freeze
 
-    attr_accessor :page, :per_page, :order_by, :order_direction
+    attr_writer :order_by, :order_direction, :default_order_by
+    attr_accessor :page, :per_page
 
     def initialize(params)
       super(params)
 
       @page ||= PAGE_DEFAULT
       @per_page ||= PER_PAGE_DEFAULT
-      @order_by ||= ORDER_DEFAULT
-      @order_direction ||= DIRECTION_DEFAULT
     end
 
     def self.from_params(params)
@@ -31,8 +30,26 @@ module VCAP::CloudController
       PaginationOptions.new(options)
     end
 
+    def order_by
+      @order_by || default_order_by
+    end
+
+    def order_direction
+      @order_direction || DIRECTION_DEFAULT
+    end
+
     def keys
       [:page, :per_page, :order_by, :order_direction]
+    end
+
+    def ordering_configured?
+      @order_by.present? || @order_direction.present?
+    end
+
+    private
+
+    def default_order_by
+      @default_order_by || ORDER_DEFAULT
     end
   end
 end

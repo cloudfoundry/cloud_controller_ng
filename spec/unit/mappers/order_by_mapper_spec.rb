@@ -28,20 +28,34 @@ module VCAP::CloudController
         end
       end
     end
+
     describe '#to_param_hash' do
       let(:order_by) { 'name' }
       let(:order_direction) { 'desc' }
+      let(:pagination_options) { PaginationOptions.new(order_by: order_by, order_direction: order_direction) }
 
       it 'returns a hash where the prefix of order_by describes the order_direction' do
-        expect(OrderByMapper.to_param_hash(order_by, order_direction)).
+        expect(OrderByMapper.to_param_hash(pagination_options)).
           to eq({ order_by: '-name' })
       end
 
-      context 'when order_by is `id`' do
-        let(:order_by) { 'id' }
+      context 'when ordering options are the defaults' do
+        let(:order_by) { nil }
+        let(:order_direction) { nil }
+
         it 'returns an empty hash' do
-          expect(OrderByMapper.to_param_hash(order_by, order_direction)).
+          expect(OrderByMapper.to_param_hash(pagination_options)).
             to eq({})
+        end
+      end
+
+      context 'when only order_direction is configured' do
+        let(:order_by) { nil }
+        let(:order_direction) { 'desc' }
+
+        it 'returns a hash where the prefix of order_by describes the order_direction' do
+          expect(OrderByMapper.to_param_hash(pagination_options)).
+            to eq({ order_by: '-id' })
         end
       end
     end

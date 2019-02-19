@@ -170,4 +170,7 @@ Rails.application.routes.draw do
   patch '/buildpacks/:guid', to: 'buildpacks#update'
   delete '/buildpacks/:guid', to: 'buildpacks#destroy'
   post '/buildpacks/:guid/upload', to: 'buildpacks#upload'
+
+  # feature flags
+  get '/feature_flags', to: 'feature_flags#index'
 end

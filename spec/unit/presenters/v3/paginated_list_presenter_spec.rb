@@ -8,7 +8,7 @@ module VCAP::CloudController::Presenters
       subject(:presenter) { PaginatedListPresenter.new(presenter: MonkeyPresenter, paginated_result: paginated_result, path: path, message: message) }
       let(:set) { [Monkey.new('bobo'), Monkey.new('george')] }
       let(:message) { double('message', pagination_options: pagination_options, to_param_hash: {}) }
-      let(:pagination_options) { double('pagination', per_page: 50, page: 1, order_by: 'monkeys', order_direction: 'asc') }
+      let(:pagination_options) { VCAP::CloudController::PaginationOptions.new(per_page: 50, page: 1, order_by: 'monkeys', order_direction: 'asc') }
       let(:paginated_result) { VCAP::CloudController::PaginatedResult.new(set, 2, pagination_options) }
 
       class Monkey
@@ -216,8 +216,8 @@ module VCAP::CloudController::Presenters
         context 'pagination options' do
           let(:page) { 2 }
           let(:total_results) { 3 }
-          let(:order_by) { 'id' }
-          let(:order_direction) { 'asc' }
+          let(:order_by) { nil }
+          let(:order_direction) { nil }
           let(:options) { { page: page, per_page: per_page, order_by: order_by, order_direction: order_direction } }
 
           it 'does not set order information if both order options are default' do

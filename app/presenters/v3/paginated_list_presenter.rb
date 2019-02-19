@@ -32,7 +32,7 @@ module VCAP::CloudController
           previous_page = pagination_options.page - 1
           next_page     = pagination_options.page + 1
 
-          order_params  = OrderByMapper.to_param_hash(pagination_options.order_by, pagination_options.order_direction)
+          order_params  = OrderByMapper.to_param_hash(pagination_options)
           filter_params = filters.nil? ? {} : filters.to_param_hash
           params        = { per_page: pagination_options.per_page }.merge(order_params).merge(filter_params)
 

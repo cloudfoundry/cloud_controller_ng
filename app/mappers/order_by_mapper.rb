@@ -15,11 +15,11 @@ module VCAP::CloudController
         [order_by1, order_direction]
       end
 
-      def to_param_hash(order_by, order_direction)
-        return {} if order_by == 'id'
+      def to_param_hash(pagination_options)
+        return {} unless pagination_options.ordering_configured?
 
-        prefix = direction_to_prefix(order_direction)
-        { order_by: "#{prefix}#{order_by}" }
+        prefix = direction_to_prefix(pagination_options.order_direction)
+        { order_by: "#{prefix}#{pagination_options.order_by}" }
       end
 
       private
