@@ -120,4 +120,84 @@ RSpec.describe FeatureFlagsController, type: :controller do
       end
     end
   end
+
+  describe '#update' do
+    let(:user) { VCAP::CloudController::User.make }
+    let(:feature_flag_name) { 'flag1' }
+
+    before do
+      stub_const('VCAP::CloudController::FeatureFlag::DEFAULT_FLAGS', {
+        flag1: false,
+      })
+      set_current_user(user)
+    end
+
+    context 'when user is not an admin' do
+      before do
+        set_current_user_as_reader_and_writer(user: user)
+      end
+
+      it 'returns 403' do
+        patch :update, params: { name: feature_flag_name }
+
+        expect(response.status).to eq 403
+        expect(response.body).to include 'NotAuthorized'
+      end
+    end
+
+    context 'when user is an admin' do
+      before do
+        set_current_user_as_admin(user: user)
+      end
+
+      context 'when updating the feature flag fails' do
+        before do
+          mock_ff_update = instance_double(VCAP::CloudController::FeatureFlagUpdate)
+          allow(mock_ff_update).to receive(:update).and_raise(VCAP::CloudController::FeatureFlagUpdate::Error.new('that did not work'))
+          allow(VCAP::CloudController::FeatureFlagUpdate).to receive(:new).and_return(mock_ff_update)
+        end
+
+        it 'returns a 422 with the error message' do
+          patch :update, params: { name: feature_flag_name, enabled: true }, as: :json
+
+          expect(response.status).to eq 422
+          expect(parsed_body['errors'].first['detail']).to eq 'that did not work'
+        end
+      end
+
+      context 'when the request is not valid' do
+        it 'returns an unprocessable error message' do
+          patch :update, params: {
+            name: feature_flag_name,
+            custom_error_message: 'Here is my custom error message!'
+          }
+          expect(response.status).to eq 422
+          expect(response.body).to include 'must be a boolean'
+          expect(parsed_body['errors'][0]['detail']).to include('Enabled must be a boolean')
+        end
+      end
+      context 'when the flag does not exist' do
+        it 'returns 404' do
+          patch :update, params: {
+            name: 'flag2',
+            enabled: true
+          }
+          expect(response.status).to eq(404)
+        end
+      end
+      context 'when the request is valid' do
+        it 'returns updated feature flag' do
+          patch :update, params: {
+            name: feature_flag_name,
+            enabled: true,
+            custom_error_message: 'Here is my custom error message!'
+          }, as: :json
+
+          expect(response.status).to eq 200
+          expect(parsed_body['enabled']).to eq true
+          expect(parsed_body['custom_error_message']).to eq 'Here is my custom error message!'
+        end
+      end
+    end
+  end
 end

@@ -1,5 +1,7 @@
 require 'presenters/v3/feature_flag_presenter'
 require 'messages/feature_flags_list_message'
+require 'messages/feature_flags_update_message'
+require 'actions/feature_flag_update'
 require 'cloud_controller/paging/list_paginator'
 
 class FeatureFlagsController < ApplicationController
@@ -28,6 +30,23 @@ class FeatureFlagsController < ApplicationController
 
     render status: :ok, json: Presenters::V3::FeatureFlagPresenter.new(flag)
   end
+
+  def update
+    flag = find_flag(hashed_params[:name])
+    flag_not_found! unless flag
+
+    unauthorized! unless permission_queryer.can_write_globally?
+
+    message = FeatureFlagsUpdateMessage.new(hashed_params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    flag = VCAP::CloudController::FeatureFlagUpdate.new.update(flag, message)
+    render status: :ok, json: Presenters::V3::FeatureFlagPresenter.new(flag)
+  rescue FeatureFlagUpdate::Error => e
+    unprocessable!(e)
+  end
+
+  private
 
   def flag_not_found!
     resource_not_found!(:feature_flag)
