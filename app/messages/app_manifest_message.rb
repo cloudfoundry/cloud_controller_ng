@@ -170,7 +170,6 @@ module VCAP::CloudController
 
       if requested?(:health_check_type)
         mapping[:health_check_type] = converted_health_check_type(health_check_type)
-        mapping[:health_check_http_endpoint] ||= '/' if health_check_type == HealthCheckTypes::HTTP
       end
       mapping
     end
@@ -186,7 +185,6 @@ module VCAP::CloudController
 
       if params.key?(:health_check_type)
         mapping[:health_check_type] = converted_health_check_type(params[:health_check_type])
-        mapping[:health_check_http_endpoint] ||= '/' if params[:health_check_type] == HealthCheckTypes::HTTP
         mapping[:health_check_timeout] = params[:health_check_timeout] if params.key?(:health_check_timeout)
       end
       mapping

@@ -398,6 +398,21 @@ module VCAP::CloudController
           let(:process) { ProcessModel.make }
           let(:app) { process.app }
 
+          context 'when the request is invalid' do
+            let(:message) { AppManifestMessage.create_from_yml({ health_check_type: 'http' }) }
+
+            before do
+              allow(process_update).
+                to receive(:update).and_raise(ProcessUpdate::InvalidProcess.new('invalid process'))
+            end
+
+            it 'bubbles up the error' do
+              expect {
+                app_apply_manifest.apply(app.guid, message)
+              }.to raise_error(ProcessUpdate::InvalidProcess, 'invalid process')
+            end
+          end
+
           context 'when the request is valid' do
             it 'returns the app' do
               expect(

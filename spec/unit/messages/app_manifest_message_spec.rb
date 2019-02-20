@@ -1114,18 +1114,6 @@ module VCAP::CloudController
             end
           end
 
-          context 'when health check type is http and endpoint is not specified' do
-            let(:parsed_yaml) { { 'health-check-type' => 'http' } }
-
-            it 'defaults endpoint to "/"' do
-              message = AppManifestMessage.create_from_yml(parsed_yaml)
-              expect(message).to be_valid
-              expect(message.manifest_process_update_messages.length).to eq(1)
-              expect(message.manifest_process_update_messages.first.health_check_type).to eq('http')
-              expect(message.manifest_process_update_messages.first.health_check_endpoint).to eq('/')
-            end
-          end
-
           context 'when health check type is port' do
             let(:parsed_yaml) { { 'health-check-type' => 'port' } }
 
@@ -1144,6 +1132,16 @@ module VCAP::CloudController
               expect(message).to be_valid
               expect(message.manifest_process_update_messages.length).to eq(1)
               expect(message.manifest_process_update_messages.first.health_check_invocation_timeout).to eq(2493)
+            end
+          end
+
+          context 'when the health check endpoint is not specified' do
+            let(:parsed_yaml) { { 'health-check-type' => 'http' } }
+
+            it 'returns nil as the endpoint' do
+              message = AppManifestMessage.create_from_yml(parsed_yaml)
+              expect(message).to be_valid
+              expect(message.manifest_process_update_messages.first.health_check_endpoint).to be_nil
             end
           end
 
@@ -1261,18 +1259,6 @@ module VCAP::CloudController
               expect(message).to be_valid
               expect(message.manifest_process_update_messages.length).to eq(1)
               expect(message.manifest_process_update_messages.first.health_check_timeout).to eq(10)
-            end
-          end
-
-          context 'when health check type is http and endpoint is not specified' do
-            let(:parsed_yaml) { { 'health-check-type' => 'http' } }
-
-            it 'defaults endpoint to "/"' do
-              message = AppManifestMessage.create_from_yml(parsed_yaml)
-              expect(message).to be_valid
-              expect(message.manifest_process_update_messages.length).to eq(1)
-              expect(message.manifest_process_update_messages.first.health_check_type).to eq('http')
-              expect(message.manifest_process_update_messages.first.health_check_endpoint).to eq('/')
             end
           end
 
