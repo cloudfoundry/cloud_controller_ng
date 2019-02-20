@@ -15,6 +15,7 @@ includes:
   - api_resources/buildpacks
   - api_resources/deployments
   - api_resources/droplets
+  - api_resources/feature_flags
   - api_resources/isolation_segments
   - api_resources/jobs
   - api_resources/organizations
@@ -167,6 +168,11 @@ includes:
   - experimental_resources/deployments/get
   - experimental_resources/deployments/list
   - experimental_resources/deployments/cancel
+  - experimental_resources/feature_flags/header
+  - experimental_resources/feature_flags/object
+  - experimental_resources/feature_flags/flags
+  - experimental_resources/feature_flags/get
+  - experimental_resources/feature_flags/list
   - experimental_resources/revisions/header
   - experimental_resources/revisions/object
   - experimental_resources/revisions/get

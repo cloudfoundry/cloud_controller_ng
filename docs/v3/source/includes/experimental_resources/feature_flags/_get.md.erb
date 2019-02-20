@@ -1,0 +1,38 @@
+### Get a feature_flag
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/feature_flags/[name]" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :single_feature_flag %>
+```
+
+#### Definition
+`GET /v3/feature_flags/:name`
+
+#### Permitted Roles
+ |
+--- | ---
+Space Developer |
+Space Manager |
+Space Auditor |
+Org Auditor |
+Org Manager |
+Admin |
+Admin Read-Only |
+Org Billing Manager |
+Global Auditor |

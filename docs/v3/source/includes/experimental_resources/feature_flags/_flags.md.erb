@@ -1,0 +1,24 @@
+### List of Feature Flags
+<% feature_flags = [
+["app_bits_upload", "true", "When enabled, space developers can upload app bits. When disabled, only admin users can upload app bits."],
+["app_scaling", "true", "When enabled, space developers can perform scaling operations (i.e. change memory, disk or instances). When disabled, only admins can perform scaling operations."],
+["diego_docker", "false", "When enabled, Docker applications are supported by Diego. When disabled, Docker applications will stop running. It will still be possible to stop and delete them and update their configurations."],
+["env_var_visibility", "true", "When enabled, all users can see their environment variables. When disabled, no users can see environment variables."],
+["hide_marketplace_from_unauthenticated_users", "false", "When enabled, service offerings available in the marketplace will be hidden from unauthenticated users. When disabled, unauthenticated users will be able to see the service offerings available in the marketplace."],
+["private_domain_creation", "true", "When enabled, an organization manager can create private domains for that organization. When disabled, only admin users can create private domains."],
+["route_creation", "true", "When enabled, a space developer can create routes in a space. When disabled, only admin users can create routes."],
+["service_instance_creation", "true", "When enabled, a space developer can create service instances in a space. When disabled, only admin users can create service instances."],
+["service_instance_sharing", "false", "When enabled, Space Developers can share service instances between two spaces (even across orgs!) in which they have the Space Developer role. When disabled, Space Developers cannot share service instances between two spaces."],
+["set_roles_by_username", "true", "When enabled, Org Managers or Space Managers can add access roles by username. In order for this feature to be enabled the CF operator must: <br>1) Enable the `/ids/users/` endpoint for UAA <br>2) Create a UAA `cloud_controller_username_lookup` client with the `scim.userids` authority"],
+["space_developer_env_var_visibility", "true", "When enabled, space developers can do a get on the /v2/apps/:guid/env and /v3/apps/:guid/env end points. When disabled, space developers can no longer do a get against these end points."],
+["space_scoped_private_broker_creation", "true", "When enabled, space developers can create space scoped private brokers. When disabled, only admin users can create create space scoped private brokers."],
+["task_creation", "true", "When enabled, space developers can create tasks. When disabled, only admin users can create tasks."],
+["unset_roles_by_username", "true", "When enabled, Org Managers or Space Managers can remove access roles by username. In order for this feature to be enabled the CF operator must: <br>1) Enable the `/ids/users/` endpoint for UAA <br>2) Create a UAA `cloud_controller_username_lookup` client with the `scim.userids` authority"],
+["user_org_creation", "false", "When enabled, any user can create an organization via the API. When disabled, only admin users can create organizations via the API."],
+] %>
+
+| |
+| --- |
+<% feature_flags.each do |feature_flag_name, feature_flag_default, feature_flag_description| %>
+|**Name:** `<%= feature_flag_name %>`<br>**Default:** `<%= feature_flag_default %>` <br>**Description:** <%= feature_flag_description %> |
+<% end %>
