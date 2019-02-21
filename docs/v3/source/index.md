@@ -172,6 +172,7 @@ includes:
   - experimental_resources/feature_flags/object
   - experimental_resources/feature_flags/flags
   - experimental_resources/feature_flags/get
+  - experimental_resources/feature_flags/update
   - experimental_resources/feature_flags/list
   - experimental_resources/revisions/header
   - experimental_resources/revisions/object

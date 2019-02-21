@@ -1,0 +1,43 @@
+### Update a feature_flag
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/feature_flags/[name]" \
+  -X PATCH \
+  -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
+  -d '{
+    "enabled": true,
+    "custom_error_message": "error message the user sees"
+  }'
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :single_feature_flag %>
+```
+
+#### Definition
+`PATCH /v3/feature_flags/:name`
+
+#### Optional Parameters
+
+Name         | Type      | Description
+-----------  | --------  | -----------------------------------------------------------------------------
+**enabled**  | _boolean_ | The state of the feature flag.
+**custom_error_message** | _string_  | The error string returned by the API when a client performs an action disabled by the feature flag.
+
+#### Permitted Roles
+
+      |
+----- | ---
+Admin |
