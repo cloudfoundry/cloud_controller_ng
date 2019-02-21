@@ -1,3 +1,5 @@
+require 'app/presenters/v3/base_presenter'
+
 module VCAP::CloudController::Presenters::V3
   class FeatureFlagPresenter < BasePresenter
     def to_hash
