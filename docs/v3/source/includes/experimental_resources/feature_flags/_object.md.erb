@@ -11,7 +11,7 @@ Example Feature Flag object
 Name                     | Type                     | Description
 --------------           | ------------------------ | ------------------------------------------------------
 **name**                 | _string_                 | The name of the feature flag.
-**enabled**              | _boolean_                | The state of the feature flag.
+**enabled**              | _boolean_                | Whether the feature flag is enabled.
 **updated_at**           | _datetime_               | The time with zone when the object was last updated. This will be blank for feature flags that have not been configured.
-**custom_error_message** | _string_                 | The custom error message for the feature flag.
+**custom_error_message** | _string_                 | The custom error message returned when trying to use features prevented by the feature flag.
 **links**                | [_links object_](#links) | Links to related resources.
