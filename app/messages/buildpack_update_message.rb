@@ -34,11 +34,11 @@ module VCAP::CloudController
       if: position_requested?
 
     validates :enabled,
-      inclusion: { in: [true, false], message: 'must be a boolean' },
+      boolean: true,
       if: enabled_requested?
 
     validates :locked,
-      inclusion: { in: [true, false], message: 'must be a boolean' },
+      boolean: true,
       if: locked_requested?
   end
 end

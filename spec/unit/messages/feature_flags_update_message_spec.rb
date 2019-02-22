@@ -9,9 +9,8 @@ module VCAP::CloudController
       context 'when no params are given' do
         let(:params) {}
 
-        it 'is not valid' do
-          expect(subject).not_to be_valid
-          expect(subject.errors.full_messages[0]).to include('Enabled')
+        it 'is valid' do
+          expect(subject).to be_valid
         end
       end
 
@@ -45,6 +44,15 @@ module VCAP::CloudController
           it 'is not valid' do
             expect(subject).to be_invalid
             expect(subject.errors[:custom_error_message]).to eq ["is too long (maximum is #{MAX_ERROR_MESSAGE_LENGTH} characters)"]
+          end
+        end
+
+        context 'when it is an empty string' do
+          let(:params) { { enabled: true, custom_error_message: '' } }
+
+          it 'is not valid' do
+            expect(subject).to be_invalid
+            expect(subject.errors[:custom_error_message]).to eq ["is too short (minimum is 1 character)"]
           end
         end
       end

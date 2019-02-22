@@ -169,11 +169,10 @@ RSpec.describe FeatureFlagsController, type: :controller do
         it 'returns an unprocessable error message' do
           patch :update, params: {
             name: feature_flag_name,
-            custom_error_message: 'Here is my custom error message!'
+            bogus_param: 'bogus value'
           }
           expect(response.status).to eq 422
-          expect(response.body).to include 'must be a boolean'
-          expect(parsed_body['errors'][0]['detail']).to include('Enabled must be a boolean')
+          expect(response.body).to include 'Unknown field'
         end
       end
       context 'when the flag does not exist' do
@@ -189,13 +188,41 @@ RSpec.describe FeatureFlagsController, type: :controller do
         it 'returns updated feature flag' do
           patch :update, params: {
             name: feature_flag_name,
-            enabled: true,
+            enabled: false,
             custom_error_message: 'Here is my custom error message!'
           }, as: :json
 
           expect(response.status).to eq 200
-          expect(parsed_body['enabled']).to eq true
+          expect(parsed_body['enabled']).to eq false
           expect(parsed_body['custom_error_message']).to eq 'Here is my custom error message!'
+        end
+
+        it 'works with an empty request body' do
+          patch :update, params: {
+            name: feature_flag_name,
+          }, as: :json
+
+          expect(response.status).to eq 200
+          expect(parsed_body['enabled']).to eq false
+          expect(parsed_body['custom_error_message']).to be_nil
+        end
+
+        it 'allows blanking of the error message' do
+          patch :update, params: {
+            name: feature_flag_name,
+            custom_error_message: 'something'
+          }, as: :json
+
+          expect(response.status).to eq 200
+          expect(parsed_body['custom_error_message']).to eq 'something'
+
+          patch :update, params: {
+            name: feature_flag_name,
+            custom_error_message: nil
+          }, as: :json
+
+          expect(response.status).to eq 200
+          expect(parsed_body['custom_error_message']).to be_nil
         end
       end
     end

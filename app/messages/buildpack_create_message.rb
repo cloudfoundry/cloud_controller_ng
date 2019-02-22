@@ -24,10 +24,10 @@ module VCAP::CloudController
 
     validates :enabled,
       allow_nil: true,
-      inclusion: { in: [true, false], message: 'must be a boolean' }
+      boolean: true
 
     validates :locked,
       allow_nil: true,
-      inclusion: { in: [true, false], message: 'must be a boolean' }
+      boolean: true
   end
 end

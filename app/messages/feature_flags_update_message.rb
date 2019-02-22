@@ -6,13 +6,17 @@ module VCAP::CloudController
     register_allowed_keys [:custom_error_message, :enabled]
     validates_with NoAdditionalKeysValidator
 
+    def self.enabled_requested?
+      @enabled_requested ||= proc { |a| a.requested?(:enabled) }
+    end
+
     validates :enabled,
-      inclusion: { in: [true, false], message: 'must be a boolean' },
-      presence: true
+      boolean: true,
+      if: enabled_requested?
 
     validates :custom_error_message,
       string: true,
-      length: { maximum: 250 },
+      length: { minimum: 1, maximum: 250 },
       allow_nil: true
   end
 end
