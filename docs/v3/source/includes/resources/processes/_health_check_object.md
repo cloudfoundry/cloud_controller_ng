@@ -1,4 +1,4 @@
-### The health_check object
+### The health check object
 
 Name | Type | Description
 ---- | ---- | -----------
