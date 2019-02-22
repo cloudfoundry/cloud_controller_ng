@@ -58,8 +58,8 @@ includes:
   - resources/droplets/object
   - resources/droplets/get
   - resources/droplets/list
-  - resources/droplets/package/list
-  - resources/droplets/app/list
+  - resources/droplets/list_for_package
+  - resources/droplets/list_for_app
   - resources/droplets/update
   - resources/droplets/delete
   - resources/droplets/copy
@@ -91,7 +91,7 @@ includes:
   - resources/packages/create
   - resources/packages/get
   - resources/packages/list
-  - resources/packages/app/list
+  - resources/packages/list_for_app
   - resources/packages/update
   - resources/packages/delete
   - resources/packages/copy_bits
@@ -135,7 +135,7 @@ includes:
   - resources/tasks/create
   - resources/tasks/get
   - resources/tasks/list
-  - resources/tasks/app/list
+  - resources/tasks/list_for_app
   - resources/tasks/update
   - resources/tasks/cancel
   - experimental_resources/header
@@ -185,7 +185,7 @@ includes:
   - experimental_resources/route_mappings/create
   - experimental_resources/route_mappings/get
   - experimental_resources/route_mappings/list
-  - experimental_resources/route_mappings/app/list
+  - experimental_resources/route_mappings/list_for_app
   - experimental_resources/route_mappings/update
   - experimental_resources/route_mappings/delete
   - experimental_resources/service_bindings/header
