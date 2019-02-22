@@ -17,3 +17,20 @@ Making New Files
 ----------------
 
 When you create a new file, ensure you include it in `source/index.md`
+
+Style Rules
+-----------
+- Ordering of sections:
+  - header
+  - object
+  - extra object info
+  - create
+  - get/read
+  - list
+  - update
+  - delete
+  - alphabetical everything else
+- Object names should be lowercased and separated by a space
+- Every object description should have examples
+- Every request should have a "Permitted Roles"
+  - Use "All Roles" to define any set of permissions that do not apply to org/space managers, developers, etc.
