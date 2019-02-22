@@ -36,7 +36,7 @@ module VCAP::CloudController
     def paginate_list(list, page_number, page_size)
       start_index = page_size * (page_number - 1)
       end_index = start_index + page_size - 1
-      list[start_index..end_index]
+      list[start_index..end_index] || []
     end
   end
 end

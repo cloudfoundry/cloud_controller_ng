@@ -34,6 +34,12 @@ module VCAP::CloudController
         expect(second_paginated_result.records.first.guid).to eq(app_model2.guid)
       end
 
+      it 'returns an empty set when you go off the end' do
+        pagination_options     = PaginationOptions.new(default_options.merge(page: 100))
+        result = paginator.get_page(list, pagination_options).records
+        expect(result).to eq([])
+      end
+
       describe 'sorting' do
         let(:per_page) { 10 }
         it 'sorts by the order_by option in the corresponding order_direction for asc' do
