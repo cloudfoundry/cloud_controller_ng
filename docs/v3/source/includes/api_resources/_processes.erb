@@ -183,3 +183,39 @@
   ]
 }
 <% end %>
+
+<% content_for :health_check  do %>
+{
+  "type": "port",
+  "data": {
+    "timeout": null
+  }
+}
+<% end %>
+
+<% content_for :process_stats  do %>
+{
+  "type": "web",
+  "index": 0,
+  "state": "RUNNING",
+  "usage": {
+    "time": "2016-03-23T23:17:30.476314154Z",
+    "cpu": 0.00038711029163348665,
+    "mem": 19177472,
+    "disk": 69705728
+  },
+  "host": "10.244.16.10",
+  "instance_ports": [
+    {
+      "external": 64546,
+      "internal": 8080
+    }
+  ],
+  "uptime": 9042,
+  "mem_quota": 268435456,
+  "disk_quota": 1073741824,
+  "fds_quota": 16384,
+  "isolation_segment": "example_iso_segment",
+  "details": null
+}
+<% end %>
