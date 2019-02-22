@@ -4430,7 +4430,7 @@ environment variables listed on the source droplet.</p>
 
 <p>Isolation Segments provide dedicated pools of resources to which apps can be deployed to isolate workloads.</p>
 
-          <h3 id="the-isolation_segment-object">The isolation_segment object</h3>
+          <h3 id="the-isolation-segment-object">The isolation segment object</h3>
 <pre class="highlight plaintext"><code>Example Isolation Segment object
 </code></pre>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
@@ -6809,7 +6809,7 @@ the request in that case. Clients may need to follow the redirect without includ
 </tr>
 </tbody></table>
 
-          <h3 id="copy-a-package">Copy a Package</h3>
+          <h3 id="copy-a-package">Copy a package</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/packages?source_guid=[guid]"</span> <span class="se">\</span>
@@ -7388,7 +7388,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 </tr>
 </tbody></table>
 
-          <h3 id="the-health_check-object">The health_check object</h3>
+          <h3 id="the-health-check-object">The health check object</h3>
 
 <table><thead>
 <tr>
@@ -8331,7 +8331,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 
 <p>An instantiation of a service offering.</p>
 
-          <h3 id="the-service_instance-object">The service_instance object</h3>
+          <h3 id="the-service-instance-object">The service instance object</h3>
 <pre class="highlight plaintext"><code>Example Service Instance object
 </code></pre>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
@@ -11237,7 +11237,7 @@ applications:
 
           <h2 id="app-ssh-enabled">App SSH Enabled</h2>
 
-          <h3 id="get-app-ssh-enabled">Get App SSH Enabled</h3>
+          <h3 id="get-app-ssh-enabled">Get app SSH enabled</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/:guid/ssh_enabled"</span> <span class="se">\</span>
@@ -12033,7 +12033,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 </tr>
 </tbody></table>
 
-          <h3 id="create-a-deployment">Create a Deployment</h3>
+          <h3 id="create-a-deployment">Create a deployment</h3>
 <pre class="highlight plaintext"><code>Example Request with Droplet
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/deployments"</span> <span class="se">\</span>
@@ -12553,7 +12553,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 
 <p>Feature flags are runtime flags that enable or disable functionality on the API.</p>
 
-          <h3 id="the-feature_flag-object">The feature_flag object</h3>
+          <h3 id="the-feature-flag-object">The feature flag object</h3>
 <pre class="highlight plaintext"><code>Example Feature Flag object
 </code></pre>
 <pre class="highlight json"><code><span class="w">  </span><span class="p">{</span><span class="w">
@@ -12604,7 +12604,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 </tr>
 </tbody></table>
 
-          <h3 id="list-of-feature-flags">List of Feature Flags</h3>
+          <h3 id="list-of-feature-flags">List of feature flags</h3>
 
 <table><thead>
 <tr>
@@ -12658,7 +12658,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 </tr>
 </tbody></table>
 
-          <h3 id="get-a-feature_flag">Get a feature_flag</h3>
+          <h3 id="get-a-feature-flag">Get a feature flag</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/feature_flags/[name]"</span> <span class="se">\</span>
@@ -12700,7 +12700,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 </tr>
 </tbody></table>
 
-          <h3 id="update-a-feature_flag">Update a feature_flag</h3>
+          <h3 id="update-a-feature-flag">Update a feature flag</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/feature_flags/[name]"</span> <span class="se">\</span>
@@ -12768,7 +12768,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 </tr>
 </tbody></table>
 
-          <h3 id="list-feature_flags">List feature_flags</h3>
+          <h3 id="list-feature-flags">List feature flags</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/feature_flags"</span> <span class="se">\</span>
@@ -13378,7 +13378,7 @@ Deployed revisions are revisions that are linked to started processes in the app
 
 <p>Route Mappings are relations between an app and a route; to direct traffic from a route to an app, you must first create a mapping.</p>
 
-          <h3 id="the-route_mapping-object">The route_mapping object</h3>
+          <h3 id="the-route-mapping-object">The route mapping object</h3>
 <pre class="highlight plaintext"><code>Example Route Mapping object
 </code></pre>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
@@ -13993,7 +13993,7 @@ Deployed revisions are revisions that are linked to started processes in the app
 
 <p>Not all services support binding, as some services deliver value to users directly without integration with an application.</p>
 
-          <h3 id="the-service_binding-object">The service_binding object</h3>
+          <h3 id="the-service-binding-object">The service binding object</h3>
 <pre class="highlight plaintext"><code>Example Service Binding object
 </code></pre>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
