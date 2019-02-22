@@ -153,75 +153,107 @@ RSpec.describe 'Service Broker API integration' do
     end
 
     describe 'platform limits polling duration to last_operation based on plan maximum_polling_duration value' do
-      context 'when creating a service instance' do
-        let(:default_max_poll_duration) { VCAP::CloudController::Config.config.get(:broker_client_max_async_poll_duration_minutes) }
-        let(:broker_max_poll_duration_in_seconds) { 60 }
+      let(:default_max_poll_duration) { VCAP::CloudController::Config.config.get(:broker_client_max_async_poll_duration_minutes) }
+      let(:broker_max_poll_duration_in_seconds) { 60 }
 
-        before do
-          setup_broker(default_catalog(maximum_polling_duration: broker_max_poll_duration_in_seconds))
-          @broker = VCAP::CloudController::ServiceBroker.find guid: @broker_guid
-          stub_async_last_operation(body: { state: 'in progress' })
+      before do
+        setup_broker(default_catalog(maximum_polling_duration: broker_max_poll_duration_in_seconds, plan_updateable: true, bindings_retrievable: true))
+        @broker = VCAP::CloudController::ServiceBroker.find guid: @broker_guid
+        stub_async_last_operation(body: { state: 'in progress' })
+      end
+
+      describe 'service instances' do
+        context 'when creating a service instance' do
+          it 'should stop polling the broker after the given maximum_polling_duration' do
+            expect(async_provision_service).to have_status_code(202)
+
+            expect(
+              a_request(:put, provision_url_for_broker(@broker, accepts_incomplete: true))
+            ).to have_been_made
+
+            service_instance = VCAP::CloudController::ManagedServiceInstance.find(guid: @service_instance_guid)
+
+            last_operation_url = %r{#{service_instance_url(service_instance)}/last_operation}
+            assert_cc_polls_last_operation_with_provided_max_duration(last_operation_url, broker_max_poll_duration_in_seconds, default_max_poll_duration)
+          end
         end
 
-        it 'should stop polling the broker after the given maximum_polling_duration' do
-          expect(async_provision_service).to have_status_code(202)
+        context 'when updating a service instance' do
+          let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space_guid: @space_guid, service_plan_guid: @plan_guid) }
 
-          expect(
-            a_request(:put, provision_url_for_broker(@broker, accepts_incomplete: true))
-          ).to have_been_made
+          before do
+            @service_instance_guid = service_instance.guid
+          end
 
-          service_instance = VCAP::CloudController::ManagedServiceInstance.find(guid: @service_instance_guid)
+          it 'should stop polling the broker after the given maximum_polling_duration' do
+            expect(async_update_service).to have_status_code(202)
 
-          last_operation_url = %r{#{service_instance_url(service_instance)}/last_operation}
-          assert_cc_polls_last_operation_with_provided_max_duration(last_operation_url, broker_max_poll_duration_in_seconds, default_max_poll_duration)
+            expect(a_request(:patch, update_url_for_broker(@broker, accepts_incomplete: true))).to have_been_made
+
+            service_instance = VCAP::CloudController::ManagedServiceInstance.find(guid: @service_instance_guid)
+
+            last_operation_url = %r{#{service_instance_url(service_instance)}/last_operation}
+            assert_cc_polls_last_operation_with_provided_max_duration(last_operation_url, broker_max_poll_duration_in_seconds, default_max_poll_duration)
+          end
+        end
+
+        context 'when deleting a service instance' do
+          let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space_guid: @space_guid, service_plan_guid: @plan_guid) }
+
+          before do
+            @service_instance_guid = service_instance.guid
+          end
+
+          it 'should stop polling the broker after the given maximum_polling_duration' do
+            expect(async_delete_service).to have_status_code(202)
+
+            expect(a_request(:delete, deprovision_url(service_instance, accepts_incomplete: true))).to have_been_made
+
+            service_instance = VCAP::CloudController::ManagedServiceInstance.find(guid: @service_instance_guid)
+
+            last_operation_url = %r{#{service_instance_url(service_instance)}/last_operation}
+            assert_cc_polls_last_operation_with_provided_max_duration(last_operation_url, broker_max_poll_duration_in_seconds, default_max_poll_duration)
+          end
         end
       end
 
-      context 'when updating a service instance' do
-        let(:default_max_poll_duration) { VCAP::CloudController::Config.config.get(:broker_client_max_async_poll_duration_minutes) }
-        let(:broker_max_poll_duration_in_seconds) { 60 }
-        let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space_guid: @space_guid, service_plan_guid: @plan_guid) }
+      describe 'service bindings' do
+        context 'when creating a service binding' do
+          let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space_guid: @space_guid, service_plan_guid: @plan_guid) }
 
-        before do
-          setup_broker(default_catalog(maximum_polling_duration: broker_max_poll_duration_in_seconds, plan_updateable: true))
-          @broker = VCAP::CloudController::ServiceBroker.find guid: @broker_guid
-          stub_async_last_operation(body: { state: 'in progress' })
-          @service_instance_guid = service_instance.guid
+          before do
+            @service_instance_guid = service_instance.guid
+            create_app
+          end
+
+          it 'should poll the broker at the given retry interval' do
+            expect(async_bind_service(status: 202)).to have_status_code(202)
+
+            expect(a_request(:put, bind_url(service_instance, accepts_incomplete: true))).to have_been_made
+
+            last_operation_url = %r{#{bind_url(service_instance)}/last_operation}
+            assert_cc_polls_last_operation_with_provided_max_duration(last_operation_url, broker_max_poll_duration_in_seconds, default_max_poll_duration)
+          end
         end
 
-        it 'should stop polling the broker after the given maximum_polling_duration' do
-          expect(async_update_service).to have_status_code(202)
+        context 'when removing a service binding' do
+          let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space_guid: @space_guid, service_plan_guid: @plan_guid) }
 
-          expect(a_request(:patch, update_url_for_broker(@broker, accepts_incomplete: true))).to have_been_made
+          before do
+            @service_instance_guid = service_instance.guid
+            create_app
+            bind_service
+          end
 
-          service_instance = VCAP::CloudController::ManagedServiceInstance.find(guid: @service_instance_guid)
+          it 'should poll the broker at the given retry interval' do
+            expect(async_unbind_service(status: 202)).to have_status_code(202)
 
-          last_operation_url = %r{#{service_instance_url(service_instance)}/last_operation}
-          assert_cc_polls_last_operation_with_provided_max_duration(last_operation_url, broker_max_poll_duration_in_seconds, default_max_poll_duration)
-        end
-      end
+            service_binding = VCAP::CloudController::ServiceBinding.last
 
-      context 'when deleting a service instance' do
-        let(:default_max_poll_duration) { VCAP::CloudController::Config.config.get(:broker_client_max_async_poll_duration_minutes) }
-        let(:broker_max_poll_duration_in_seconds) { 60 }
-        let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space_guid: @space_guid, service_plan_guid: @plan_guid) }
-
-        before do
-          setup_broker(default_catalog(maximum_polling_duration: broker_max_poll_duration_in_seconds))
-          @broker = VCAP::CloudController::ServiceBroker.find guid: @broker_guid
-          stub_async_last_operation(body: { state: 'in progress' })
-          @service_instance_guid = service_instance.guid
-        end
-
-        it 'should stop polling the broker after the given maximum_polling_duration' do
-          expect(async_delete_service).to have_status_code(202)
-
-          expect(a_request(:delete, deprovision_url(service_instance, accepts_incomplete: true))).to have_been_made
-
-          service_instance = VCAP::CloudController::ManagedServiceInstance.find(guid: @service_instance_guid)
-
-          last_operation_url = %r{#{service_instance_url(service_instance)}/last_operation}
-          assert_cc_polls_last_operation_with_provided_max_duration(last_operation_url, broker_max_poll_duration_in_seconds, default_max_poll_duration)
+            expect(a_request(:delete, unbind_url(service_binding, accepts_incomplete: true))).to have_been_made
+            last_operation_url = %r{#{service_binding_url(service_binding)}/last_operation}
+            assert_cc_polls_last_operation_with_provided_max_duration(last_operation_url, broker_max_poll_duration_in_seconds, default_max_poll_duration)
+          end
         end
       end
     end

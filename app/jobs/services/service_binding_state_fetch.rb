@@ -10,7 +10,7 @@ module VCAP::CloudController
 
         def initialize(service_binding_guid, user_info, request_attrs)
           @service_binding_guid = service_binding_guid
-          @end_timestamp = new_end_timestamp
+          @end_timestamp = new_end_timestamp(ServiceBinding.first(guid: service_binding_guid).try(:service_plan))
           @user_audit_info = user_info
           @request_attrs = request_attrs
           update_polling_interval

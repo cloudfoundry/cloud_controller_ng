@@ -8,8 +8,10 @@ module VCAP::CloudController
       RSpec.describe ServiceBindingStateFetch, job_context: :worker do
         let(:operation_type) { 'create' }
         let(:service_binding_operation) { ServiceBindingOperation.make(state: 'in progress', type: operation_type) }
+        let(:maximum_polling_duration_for_plan) {}
+        let(:service_plan) { ServicePlan.make(maximum_polling_duration: maximum_polling_duration_for_plan) }
         let(:service_binding) do
-          service_binding = ServiceBinding.make
+          service_binding = ServiceBinding.make(service_instance: ManagedServiceInstance.make(service_plan: service_plan))
           service_binding.service_binding_operation = service_binding_operation
           service_binding
         end
@@ -35,6 +37,30 @@ module VCAP::CloudController
         def run_job(job)
           Jobs::Enqueuer.new(job, { queue: 'cc-generic', run_at: Delayed::Job.db_time_now }).enqueue
           execute_all_jobs(expected_successes: 1, expected_failures: 0)
+        end
+
+        describe '#initialize' do
+          let(:job) { VCAP::CloudController::Jobs::Services::ServiceBindingStateFetch.new(service_binding.guid, user_info, request_attrs) }
+          context 'when the service plan has maximum_polling_duration' do
+            context "when the config value is smaller than plan's maximum_polling_duration" do
+              let(:maximum_polling_duration_for_plan) { 36000000 } # in seconds
+              let(:max_duration) { 10 } # in minutes
+              it 'should set end_timestamp to config value' do
+                Timecop.freeze(Time.now)
+                expect(job.end_timestamp).to eq(Time.now + max_duration.minutes)
+              end
+            end
+
+            context "when the config value is greater than plan's maximum_polling_duration" do
+              let(:maximum_polling_duration_for_plan) { 36000000 } # in seconds
+              let(:max_duration) { 1068367346 } # in minutes
+
+              it "should set end_timestamp to the plan's maximum_polling_duration value" do
+                Timecop.freeze(Time.now)
+                expect(job.end_timestamp).to eq(Time.now + maximum_polling_duration_for_plan.seconds)
+              end
+            end
+          end
         end
 
         describe '#perform' do
@@ -623,6 +649,8 @@ module VCAP::CloudController
           end
 
           context 'when a database operation fails' do
+            let!(:job) { VCAP::CloudController::Jobs::Services::ServiceBindingStateFetch.new(service_binding.guid, user_info, request_attrs) }
+
             before do
               allow(ServiceBinding).to receive(:first).and_raise(Sequel::Error)
               run_job(job)
