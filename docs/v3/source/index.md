@@ -36,115 +36,115 @@ includes:
   - resources/apps/object
   - resources/apps/create
   - resources/apps/get
+  - resources/apps/list
   - resources/apps/update
+  - resources/apps/delete
+  - resources/apps/get_current_droplet
+  - resources/apps/get_current_droplet_relationship
   - resources/apps/env
   - resources/apps/environment_variables
-  - resources/apps/update_environment_variables
   - resources/apps/current_droplet
-  - resources/apps/get_current_droplet_relationship
-  - resources/apps/get_current_droplet
   - resources/apps/start
   - resources/apps/stop
-  - resources/apps/delete
-  - resources/apps/list
+  - resources/apps/update_environment_variables
   - resources/builds/header
   - resources/builds/object
   - resources/builds/create
-  - resources/builds/update
   - resources/builds/get
   - resources/builds/list
   - resources/builds/list_for_app
+  - resources/builds/update
   - resources/droplets/header
   - resources/droplets/object
-  - resources/droplets/copy
   - resources/droplets/get
+  - resources/droplets/list
+  - resources/droplets/package/list
+  - resources/droplets/app/list
   - resources/droplets/update
   - resources/droplets/delete
-  - resources/droplets/list
-  - resources/droplets/app/list
-  - resources/droplets/package/list
+  - resources/droplets/copy
   - resources/isolation_segments/header
   - resources/isolation_segments/object
   - resources/isolation_segments/create
   - resources/isolation_segments/get
-  - resources/isolation_segments/update
-  - resources/isolation_segments/delete
   - resources/isolation_segments/list
-  - resources/isolation_segments/assign
-  - resources/isolation_segments/unassign
   - resources/isolation_segments/list_organizations
   - resources/isolation_segments/list_spaces
+  - resources/isolation_segments/update
+  - resources/isolation_segments/delete
+  - resources/isolation_segments/assign
+  - resources/isolation_segments/unassign
   - resources/jobs/header
   - resources/jobs/object
   - resources/jobs/get
   - resources/organizations/header
   - resources/organizations/object
   - resources/organizations/create
-  - resources/organizations/update
-  - resources/organizations/list
   - resources/organizations/get_an_organization
+  - resources/organizations/list
   - resources/organizations/list_for_isolation_segment
+  - resources/organizations/update
   - resources/organizations/assign_default_isolation_segment
   - resources/organizations/get_default_isolation_segment
   - resources/packages/header
   - resources/packages/object
   - resources/packages/create
-  - resources/packages/update
   - resources/packages/get
-  - resources/packages/stage
-  - resources/packages/upload_bits
-  - resources/packages/download_bits
-  - resources/packages/copy_bits
-  - resources/packages/delete
   - resources/packages/list
   - resources/packages/app/list
+  - resources/packages/update
+  - resources/packages/delete
+  - resources/packages/copy_bits
+  - resources/packages/download_bits
+  - resources/packages/stage
+  - resources/packages/upload_bits
   - resources/processes/header
   - resources/processes/object
   - resources/processes/health_check_object
   - resources/processes/stats_object
   - resources/processes/get
   - resources/processes/stats
+  - resources/processes/list
+  - resources/processes/list_for_app
   - resources/processes/update
   - resources/processes/scale
   - resources/processes/terminate_instance
-  - resources/processes/list
-  - resources/processes/list_for_app
   - resources/service_instances/header
   - resources/service_instances/object
   - resources/service_instances/list
+  - resources/service_instances/list_shared_spaces
   - resources/service_instances/share_to_space
   - resources/service_instances/unshare_from_space
-  - resources/service_instances/list_shared_spaces
   - resources/spaces/header
   - resources/spaces/object
   - resources/spaces/create
-  - resources/spaces/list
   - resources/spaces/get_a_space
+  - resources/spaces/list
   - resources/spaces/update
-  - resources/spaces/manage_isolation_segment
   - resources/spaces/get_assigned_isolation_segment
+  - resources/spaces/manage_isolation_segment
   - resources/stacks/header
   - resources/stacks/object
   - resources/stacks/create
-  - resources/stacks/update
-  - resources/stacks/list
   - resources/stacks/get
+  - resources/stacks/list
+  - resources/stacks/update
   - resources/stacks/delete
   - resources/tasks/header
   - resources/tasks/object
   - resources/tasks/create
-  - resources/tasks/update
   - resources/tasks/get
-  - resources/tasks/cancel
   - resources/tasks/list
   - resources/tasks/app/list
+  - resources/tasks/update
+  - resources/tasks/cancel
   - experimental_resources/header
   - experimental_resources/app_features/header
   - experimental_resources/app_features/object
   - experimental_resources/app_features/supported_features
   - experimental_resources/app_features/get
-  - experimental_resources/app_features/update
   - experimental_resources/app_features/list
+  - experimental_resources/app_features/update
   - experimental_resources/app_manifest/header
   - experimental_resources/app_manifest/object
   - experimental_resources/app_manifest/get
@@ -157,43 +157,43 @@ includes:
   - experimental_resources/buildpacks/object
   - experimental_resources/buildpacks/create  
   - experimental_resources/buildpacks/get
+  - experimental_resources/buildpacks/list
   - experimental_resources/buildpacks/update
   - experimental_resources/buildpacks/delete
-  - experimental_resources/buildpacks/list
   - experimental_resources/buildpacks/upload_bits
   - experimental_resources/deployments/header
   - experimental_resources/deployments/object
   - experimental_resources/deployments/create
-  - experimental_resources/deployments/update
   - experimental_resources/deployments/get
   - experimental_resources/deployments/list
+  - experimental_resources/deployments/update
   - experimental_resources/deployments/cancel
   - experimental_resources/feature_flags/header
   - experimental_resources/feature_flags/object
   - experimental_resources/feature_flags/flags
   - experimental_resources/feature_flags/get
-  - experimental_resources/feature_flags/update
   - experimental_resources/feature_flags/list
+  - experimental_resources/feature_flags/update
   - experimental_resources/revisions/header
   - experimental_resources/revisions/object
   - experimental_resources/revisions/get
-  - experimental_resources/revisions/update
   - experimental_resources/revisions/list
   - experimental_resources/revisions/deployed_list
+  - experimental_resources/revisions/update
   - experimental_resources/route_mappings/header
   - experimental_resources/route_mappings/object
   - experimental_resources/route_mappings/create
-  - experimental_resources/route_mappings/update
   - experimental_resources/route_mappings/get
-  - experimental_resources/route_mappings/delete
   - experimental_resources/route_mappings/list
   - experimental_resources/route_mappings/app/list
+  - experimental_resources/route_mappings/update
+  - experimental_resources/route_mappings/delete
   - experimental_resources/service_bindings/header
   - experimental_resources/service_bindings/object
   - experimental_resources/service_bindings/create
   - experimental_resources/service_bindings/get
-  - experimental_resources/service_bindings/delete
   - experimental_resources/service_bindings/list
+  - experimental_resources/service_bindings/delete
   - experimental_resources/space_manifest/header
   - experimental_resources/space_manifest/object
   - experimental_resources/space_manifest/apply
