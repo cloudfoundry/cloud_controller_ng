@@ -35,7 +35,7 @@ module VCAP::CloudController
       end
 
       it 'returns an empty set when you go off the end' do
-        pagination_options     = PaginationOptions.new(default_options.merge(page: 100))
+        pagination_options = PaginationOptions.new(default_options.merge(page: 100))
         result = paginator.get_page(list, pagination_options).records
         expect(result).to eq([])
       end

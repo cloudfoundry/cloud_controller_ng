@@ -52,7 +52,7 @@ module VCAP::CloudController
 
           it 'is not valid' do
             expect(subject).to be_invalid
-            expect(subject.errors[:custom_error_message]).to eq ["is too short (minimum is 1 character)"]
+            expect(subject.errors[:custom_error_message]).to eq ['is too short (minimum is 1 character)']
           end
         end
       end
