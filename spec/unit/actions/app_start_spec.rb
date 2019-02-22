@@ -112,7 +112,7 @@ module VCAP::CloudController
         let(:package) { PackageModel.make(app: app, state: PackageModel::READY_STATE) }
         let!(:dropletA) { DropletModel.make(app: app, package: package, state: DropletModel::STAGED_STATE) }
         let!(:dropletB) { DropletModel.make(app: app, package: package, state: DropletModel::STAGED_STATE) }
-        let!(:revisionA) { RevisionModel.make(app: app, droplet_guid: dropletA.guid, commands_by_process_type: { 'web' => nil, 'worker' => nil }) }
+        let!(:revisionA) { RevisionModel.make(app: app, droplet_guid: dropletA.guid) }
         let!(:new_revision_number) { revisionA.version + 1 }
 
         it 'creates a new revision when it switches droplets and revisions are enabled' do

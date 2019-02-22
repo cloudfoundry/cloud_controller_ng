@@ -52,7 +52,7 @@ Sequel::Schema::CreateTableGenerator.class_eval do
   def String(name, opts={})
     if opts[:case_insensitive]
       unless @db.respond_to?(:case_insensitive_string_column_type)
-        raise Error.new('DB adapater does not support case insensitive strings')
+        raise Error.new('DB adapter does not support case insensitive strings')
       end
 
       column(
@@ -73,7 +73,7 @@ Sequel::Schema::AlterTableGenerator.class_eval do
   def set_column_type(name, type, opts={})
     if type.to_s == 'String' && opts[:case_insensitive]
       unless @db.respond_to?(:case_insensitive_string_column_type)
-        raise Error.new('DB adapater does not support case insensitive strings')
+        raise Error.new('DB adapter does not support case insensitive strings')
       end
 
       set_column_type_original(

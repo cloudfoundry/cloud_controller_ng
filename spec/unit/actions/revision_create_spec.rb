@@ -15,10 +15,14 @@ module VCAP::CloudController
         expect {
           RevisionCreate.create(app, user_audit_info)
         }.to change { RevisionModel.where(app: app).count }.by(1)
-        expect(RevisionModel.last.droplet_guid).to eq(droplet.guid)
-        expect(RevisionModel.last.environment_variables).to eq(app.environment_variables)
-        expect(RevisionModel.last.commands_by_process_type['web']).to eq('run my app')
-        expect(RevisionModel.last.commands_by_process_type['worker']).to be_nil
+
+        revision = RevisionModel.last
+        expect(revision.droplet_guid).to eq(droplet.guid)
+        expect(revision.environment_variables).to eq(app.environment_variables)
+        expect(revision.commands_by_process_type).to eq({
+          'web' => 'run my app',
+          'worker' => nil,
+        })
       end
 
       it 'records an audit event for the revision' do

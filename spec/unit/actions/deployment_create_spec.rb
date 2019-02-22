@@ -80,7 +80,7 @@ module VCAP::CloudController
               revision = RevisionModel.last
               revision_guid = revision.guid
               revision_version = revision.version
-              revision.delete
+              RevisionDelete.delete(revision)
 
               deployment.reload
 
@@ -370,7 +370,9 @@ module VCAP::CloudController
         end
 
         context 'when the same droplet is provided (zdt-restart)' do
-          let!(:revision) { RevisionModel.make(app: app, droplet_guid: app.droplet_guid, commands_by_process_type: { 'web' => nil }) }
+          let!(:revision) do
+            RevisionModel.make(app: app, droplet_guid: app.droplet_guid)
+          end
 
           it 'does NOT creates a revision' do
             web_process.update(revision: revision)

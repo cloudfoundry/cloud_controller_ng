@@ -565,4 +565,7 @@ module VCAP::CloudController
 
   TestModelRedact.blueprint do
   end
+
+  RevisionProcessCommandModel.blueprint do
+  end
 end

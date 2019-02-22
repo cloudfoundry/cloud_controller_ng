@@ -133,14 +133,15 @@ module VCAP::CloudController
 
     def can_create_revision?
       return false unless revisions_enabled
+      return true unless latest_revision.present?
 
-      (droplet_guid != latest_revision&.droplet_guid ||
-      environment_variables != latest_revision&.environment_variables ||
-      commands_by_process_type != latest_revision&.commands_by_process_type)
+      (droplet_guid != latest_revision.droplet_guid ||
+      environment_variables != latest_revision.environment_variables ||
+      commands_by_process_type != latest_revision.commands_by_process_type)
     end
 
     def commands_by_process_type
-      processes.map { |p| [p.type, p.command] }.to_h
+      processes.select { |p| p.command.present? }.map { |p| [p.type, p.command] }.to_h
     end
 
     private

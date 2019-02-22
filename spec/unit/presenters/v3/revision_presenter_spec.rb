@@ -4,12 +4,12 @@ require 'presenters/v3/revision_presenter'
 module VCAP::CloudController::Presenters::V3
   RSpec.describe RevisionPresenter do
     let(:app_model) { VCAP::CloudController::AppModel.make }
-    let(:revision) do VCAP::CloudController::RevisionModel.make(
-      app: app_model,
-      version: 300,
-      droplet_guid: 'some-guid',
-      commands_by_process_type: { 'worker' => nil, 'web' => './start' }
-    )
+    let(:revision) do
+      VCAP::CloudController::RevisionModel.make(
+        app: app_model,
+        version: 300,
+        droplet_guid: 'some-guid'
+      )
     end
 
     let!(:release_label) do
@@ -43,6 +43,11 @@ module VCAP::CloudController::Presenters::V3
         value: 'hfcs',
         resource_guid: revision.guid,
       )
+    end
+
+    before do
+      revision.add_command_for_process_type('web', './start')
+      revision.add_command_for_process_type('worker', nil)
     end
 
     describe '#to_hash' do

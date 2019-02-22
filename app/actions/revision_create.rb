@@ -14,9 +14,10 @@ module VCAP::CloudController
             app: app,
             version: next_version,
             droplet_guid: app.droplet_guid,
-            environment_variables: app.environment_variables,
-            commands_by_process_type: app.commands_by_process_type,
+            environment_variables: app.environment_variables
           )
+
+          app.processes.each { |p| revision.add_command_for_process_type(p.type, p.command) }
 
           record_audit_event(revision, user_audit_info)
 

@@ -130,12 +130,12 @@ module VCAP::CloudController
 
       context 'when there are revisions associated with the app' do
         let!(:revision) do
-          RevisionModel.make(
+          revis = RevisionModel.make(
             app: app_model,
             droplet_guid: droplet.guid,
             environment_variables: environment_variables,
-            commands_by_process_type: { 'web' => 'webby', 'worker' => nil },
           )
+          RevisionProcessCommandModel.create(revision_guid: revis.guid, process_type: 'web', process_command: 'webby')
         end
 
         it 'returns false when nothing has changed' do
