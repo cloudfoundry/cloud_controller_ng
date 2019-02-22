@@ -2567,6 +2567,18 @@ Environment variable names may not start with VCAP_. PORT is not a valid environ
 </tr>
 </tbody></table>
 
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>All Roles</td>
+</tr>
+</tbody></table>
+
           <h2 id="builds">Builds</h2>
 
 <p>Builds represent the process of staging an application package. There are two types
@@ -3106,6 +3118,18 @@ resource can be created to initiate the staging process. A successful build resu
 </tr>
 </tbody></table>
 
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>All Roles</td>
+</tr>
+</tbody></table>
+
           <h3 id="list-builds-for-an-app">List builds for an app</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
@@ -3211,6 +3235,36 @@ resource can be created to initiate the staging process. A successful build resu
 <td><strong>label_selector</strong></td>
 <td><em>string</em></td>
 <td><strong>Experimental</strong> - A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements.</td>
+</tr>
+</tbody></table>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Space Manager</td>
+</tr>
+<tr>
+<td>Space Auditor</td>
+</tr>
+<tr>
+<td>Org Manager</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+<tr>
+<td>Admin Read-Only</td>
+</tr>
+<tr>
+<td>Global Auditor</td>
 </tr>
 </tbody></table>
 
@@ -3967,6 +4021,18 @@ environment variables listed on the source droplet.</p>
 </tr>
 </tbody></table>
 
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>All Roles</td>
+</tr>
+</tbody></table>
+
           <h3 id="list-droplets-for-an-app">List droplets for an app</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
@@ -4136,6 +4202,36 @@ environment variables listed on the source droplet.</p>
 </tr>
 </tbody></table>
 
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Space Manager</td>
+</tr>
+<tr>
+<td>Space Auditor</td>
+</tr>
+<tr>
+<td>Org Manager</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+<tr>
+<td>Admin Read-Only</td>
+</tr>
+<tr>
+<td>Global Auditor</td>
+</tr>
+</tbody></table>
+
           <h3 id="list-droplets-for-a-package">List droplets for a package</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
@@ -4297,6 +4393,36 @@ environment variables listed on the source droplet.</p>
 <td><strong>label_selector</strong></td>
 <td><em>string</em></td>
 <td><strong>Experimental</strong> - A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements.</td>
+</tr>
+</tbody></table>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Space Manager</td>
+</tr>
+<tr>
+<td>Space Auditor</td>
+</tr>
+<tr>
+<td>Org Manager</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+<tr>
+<td>Admin Read-Only</td>
+</tr>
+<tr>
+<td>Global Auditor</td>
 </tr>
 </tbody></table>
 
@@ -4797,6 +4923,18 @@ environment variables listed on the source droplet.</p>
 <td><strong>label_selector</strong></td>
 <td><em>string</em></td>
 <td><strong>Experimental</strong> - A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements.</td>
+</tr>
+</tbody></table>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>All Roles</td>
 </tr>
 </tbody></table>
 
@@ -5550,6 +5688,18 @@ In the case where the specified isolation segment is the system-wide shared segm
 </tr>
 </tbody></table>
 
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>All Roles</td>
+</tr>
+</tbody></table>
+
           <h3 id="get-an-organization">Get an organization</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
@@ -5714,6 +5864,33 @@ In the case where the specified isolation segment is the system-wide shared segm
 <td><strong>order_by</strong></td>
 <td><em>string</em></td>
 <td>Value to sort by. Defaults to ascending. Prepend with <code class="prettyprint">-</code> to sort descending. <br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code>, and <code class="prettyprint">name</code>.</td>
+</tr>
+</tbody></table>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Org Manager</td>
+</tr>
+<tr>
+<td>Org Billing Manager</td>
+</tr>
+<tr>
+<td>Org Auditor</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+<tr>
+<td>Admin Read-Only</td>
+</tr>
+<tr>
+<td>Global Auditor</td>
 </tr>
 </tbody></table>
 
@@ -6920,6 +7097,18 @@ the request in that case. Clients may need to follow the redirect without includ
 </tr>
 </tbody></table>
 
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>All Roles</td>
+</tr>
+</tbody></table>
+
           <h3 id="list-packages-for-an-app">List packages for an app</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
@@ -7028,6 +7217,36 @@ the request in that case. Clients may need to follow the redirect without includ
 <td><strong>order_by</strong></td>
 <td><em>string</em></td>
 <td>Value to sort by. Defaults to ascending. Prepend with <code class="prettyprint">-</code> to sort descending. <br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code>.</td>
+</tr>
+</tbody></table>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Space Manager</td>
+</tr>
+<tr>
+<td>Space Auditor</td>
+</tr>
+<tr>
+<td>Org Manager</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+<tr>
+<td>Admin Read-Only</td>
+</tr>
+<tr>
+<td>Global Auditor</td>
 </tr>
 </tbody></table>
 
@@ -7900,6 +8119,18 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 </tr>
 </tbody></table>
 
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>All Roles</td>
+</tr>
+</tbody></table>
+
           <h3 id="list-processes-for-app">List processes for app</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
@@ -8066,6 +8297,36 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 </tr>
 </tbody></table>
 
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Space Manager</td>
+</tr>
+<tr>
+<td>Space Auditor</td>
+</tr>
+<tr>
+<td>Org Manager</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+<tr>
+<td>Admin Read-Only</td>
+</tr>
+<tr>
+<td>Global Auditor</td>
+</tr>
+</tbody></table>
+
           <h2 id="service-instances">Service Instances</h2>
 
 <p>An instantiation of a service offering.</p>
@@ -8218,6 +8479,18 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 <td><strong>per_page</strong></td>
 <td><em>integer</em></td>
 <td>Number of results per page. <br>Valid values are 1 through 5000.</td>
+</tr>
+</tbody></table>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>All Roles</td>
 </tr>
 </tbody></table>
 
@@ -8721,6 +8994,18 @@ In order to share into a space the requesting user must be a space developer in 
 <td><strong>label_selector</strong></td>
 <td><em>string</em></td>
 <td><strong>Experimental</strong> - A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements.</td>
+</tr>
+</tbody></table>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>All Roles</td>
 </tr>
 </tbody></table>
 
@@ -9387,6 +9672,18 @@ An application will automatically use buildpacks associated with the application
 </tr>
 </tbody></table>
 
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>All Roles</td>
+</tr>
+</tbody></table>
+
           <h3 id="get-a-stack">Get a stack</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
@@ -9430,31 +9727,7 @@ An application will automatically use buildpacks associated with the application
 </tr>
 </thead><tbody>
 <tr>
-<td>Space Developer</td>
-</tr>
-<tr>
-<td>Space Manager</td>
-</tr>
-<tr>
-<td>Space Auditor</td>
-</tr>
-<tr>
-<td>Org Auditor</td>
-</tr>
-<tr>
-<td>Org Manager</td>
-</tr>
-<tr>
-<td>Admin</td>
-</tr>
-<tr>
-<td>Admin Read-Only</td>
-</tr>
-<tr>
-<td>Org Billing Manager</td>
-</tr>
-<tr>
-<td>Global Auditor</td>
+<td>All Roles</td>
 </tr>
 </tbody></table>
 
@@ -9751,7 +10024,7 @@ An application will automatically use buildpacks associated with the application
 
 <p><sup>1 If not provided, and a <code class="prettyprint">template.process.guid</code> is provided, this field will use the value from the process with the given guid.</sup></p>
 
-<h4 id="allowed-roles">Allowed Roles</h4>
+<h4 id="permitted-roles">Permitted Roles</h4>
 
 <table><thead>
 <tr>
@@ -9914,7 +10187,7 @@ in the response based on the user&rsquo;s role.</p>
 
 <p><code class="prettyprint">GET /v3/tasks/:guid</code></p>
 
-<h4 id="allowed-roles">Allowed Roles</h4>
+<h4 id="permitted-roles">Permitted Roles</h4>
 
 <table><thead>
 <tr>
@@ -10006,7 +10279,7 @@ in the response based on the user&rsquo;s role.</p>
 <p><code class="prettyprint">POST /v3/tasks/:task_guid/actions/cancel</code> <br>
 <code class="prettyprint">PUT /v3/tasks/:task_guid/cancel</code> <em>(Deprecated)</em></p>
 
-<h4 id="allowed-roles">Allowed Roles</h4>
+<h4 id="permitted-roles">Permitted Roles</h4>
 
 <table><thead>
 <tr>
@@ -10187,6 +10460,18 @@ in the response based on the user&rsquo;s role.</p>
 </tr>
 </tbody></table>
 
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>All Roles</td>
+</tr>
+</tbody></table>
+
           <h3 id="list-tasks-for-an-app">List tasks for an app</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
@@ -10344,6 +10629,36 @@ excluded in the response based on the user&rsquo;s role.</p>
 </tr>
 </tbody></table>
 
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Space Manager</td>
+</tr>
+<tr>
+<td>Space Auditor</td>
+</tr>
+<tr>
+<td>Org Manager</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+<tr>
+<td>Admin Read-Only</td>
+</tr>
+<tr>
+<td>Global Auditor</td>
+</tr>
+</tbody></table>
+
           <h1 id="experimental-resources">Experimental Resources</h1>
 
           <h2 id="app-features">App Features</h2>
@@ -10497,7 +10812,7 @@ excluded in the response based on the user&rsquo;s role.</p>
 </tr>
 </tbody></table>
 
-<h4 id="allowed-roles">Allowed Roles</h4>
+<h4 id="permitted-roles">Permitted Roles</h4>
 
 <table><thead>
 <tr>
@@ -10554,6 +10869,36 @@ excluded in the response based on the user&rsquo;s role.</p>
 <h4 id="definition">Definition</h4>
 
 <p><code class="prettyprint">GET /v3/apps/:guid/features</code></p>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Space Manager</td>
+</tr>
+<tr>
+<td>Space Auditor</td>
+</tr>
+<tr>
+<td>Org Manager</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+<tr>
+<td>Admin Read-Only</td>
+</tr>
+<tr>
+<td>Global Auditor</td>
+</tr>
+</tbody></table>
 
           <h2 id="app-manifest">App Manifest</h2>
 
@@ -11231,31 +11576,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 </tr>
 </thead><tbody>
 <tr>
-<td>Space Developer</td>
-</tr>
-<tr>
-<td>Space Manager</td>
-</tr>
-<tr>
-<td>Space Auditor</td>
-</tr>
-<tr>
-<td>Org Auditor</td>
-</tr>
-<tr>
-<td>Org Manager</td>
-</tr>
-<tr>
-<td>Admin</td>
-</tr>
-<tr>
-<td>Admin Read-Only</td>
-</tr>
-<tr>
-<td>Org Billing Manager</td>
-</tr>
-<tr>
-<td>Global Auditor</td>
+<td>All Roles</td>
 </tr>
 </tbody></table>
 
@@ -11500,6 +11821,18 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 <td><strong>label_selector</strong></td>
 <td><em>string</em></td>
 <td><strong>Experimental</strong> - A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements.</td>
+</tr>
+</tbody></table>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>All Roles</td>
 </tr>
 </tbody></table>
 
@@ -12172,6 +12505,18 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 </tr>
 </tbody></table>
 
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>All Roles</td>
+</tr>
+</tbody></table>
+
           <h3 id="cancel-a-deployment">Cancel a deployment</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
@@ -12240,7 +12585,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 <tr>
 <td><strong>enabled</strong></td>
 <td><em>boolean</em></td>
-<td>The state of the feature flag.</td>
+<td>Whether the feature flag is enabled.</td>
 </tr>
 <tr>
 <td><strong>updated_at</strong></td>
@@ -12250,7 +12595,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 <tr>
 <td><strong>custom_error_message</strong></td>
 <td><em>string</em></td>
-<td>The custom error message for the feature flag.</td>
+<td>The custom error message returned when trying to use features prevented by the feature flag.</td>
 </tr>
 <tr>
 <td><strong>links</strong></td>
@@ -12351,31 +12696,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 </tr>
 </thead><tbody>
 <tr>
-<td>Space Developer</td>
-</tr>
-<tr>
-<td>Space Manager</td>
-</tr>
-<tr>
-<td>Space Auditor</td>
-</tr>
-<tr>
-<td>Org Auditor</td>
-</tr>
-<tr>
-<td>Org Manager</td>
-</tr>
-<tr>
-<td>Admin</td>
-</tr>
-<tr>
-<td>Admin Read-Only</td>
-</tr>
-<tr>
-<td>Org Billing Manager</td>
-</tr>
-<tr>
-<td>Global Auditor</td>
+<td>All Roles</td>
 </tr>
 </tbody></table>
 
@@ -12531,6 +12852,18 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 <td><strong>order_by</strong></td>
 <td><em>string</em></td>
 <td>Value to sort by. Defaults to <code class="prettyprint">name</code> ascending. Prepend with <code class="prettyprint">-</code> to sort descending. <br>Valid value is <code class="prettyprint">name</code>.</td>
+</tr>
+</tbody></table>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>All Roles</td>
 </tr>
 </tbody></table>
 
@@ -12889,6 +13222,36 @@ represents code currently running in Cloud Foundry.</p>
 </tr>
 </tbody></table>
 
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Space Manager</td>
+</tr>
+<tr>
+<td>Space Auditor</td>
+</tr>
+<tr>
+<td>Org Manager</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+<tr>
+<td>Admin Read-Only</td>
+</tr>
+<tr>
+<td>Global Auditor</td>
+</tr>
+</tbody></table>
+
           <h3 id="list-deployed-revisions-for-an-app">List deployed revisions for an app</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
@@ -12978,6 +13341,36 @@ Deployed revisions are revisions that are linked to started processes in the app
 <td><strong>order_by</strong></td>
 <td><em>string</em></td>
 <td>Value to sort by. Defaults to ascending. Prepend with <code class="prettyprint">-</code> to sort descending. <br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code>.</td>
+</tr>
+</tbody></table>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Space Manager</td>
+</tr>
+<tr>
+<td>Space Auditor</td>
+</tr>
+<tr>
+<td>Org Manager</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+<tr>
+<td>Admin Read-Only</td>
+</tr>
+<tr>
+<td>Global Auditor</td>
 </tr>
 </tbody></table>
 
@@ -13442,6 +13835,18 @@ Deployed revisions are revisions that are linked to started processes in the app
 </tr>
 </tbody></table>
 
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>All Roles</td>
+</tr>
+</tbody></table>
+
           <h3 id="list-route-mappings-for-an-app">List route mappings for an app</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
@@ -13549,6 +13954,36 @@ Deployed revisions are revisions that are linked to started processes in the app
 <td><strong>order_by</strong></td>
 <td><em>string</em></td>
 <td>Value to sort by. Defaults to ascending. Prepend with <code class="prettyprint">-</code> to sort descending. <br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code>.</td>
+</tr>
+</tbody></table>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Space Manager</td>
+</tr>
+<tr>
+<td>Space Auditor</td>
+</tr>
+<tr>
+<td>Org Manager</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+<tr>
+<td>Admin Read-Only</td>
+</tr>
+<tr>
+<td>Global Auditor</td>
 </tr>
 </tbody></table>
 
@@ -13974,6 +14409,18 @@ Deployed revisions are revisions that are linked to started processes in the app
 <td><strong>order_by</strong></td>
 <td><em>string</em></td>
 <td>Value to sort by. Defaults to ascending. Prepend with <code class="prettyprint">-</code> to sort descending. <br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code>.</td>
+</tr>
+</tbody></table>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>All Roles</td>
 </tr>
 </tbody></table>
 
