@@ -236,19 +236,22 @@ module VCAP::CloudController
             expected_value: label1_sentinel,
             encrypted_value: label1_encrypted_value,
             encryption_key_label: label1,
-            salt: morton_salt
+            salt: morton_salt,
+            encryption_iterations: Encryptor::ENCRYPTION_ITERATIONS,
           )
           EncryptionKeySentinelModel.create(
             expected_value: label2_sentinel,
             encrypted_value: label2_encrypted_value,
             encryption_key_label: label2,
-            salt: morton_salt
+            salt: morton_salt,
+            encryption_iterations: Encryptor::ENCRYPTION_ITERATIONS,
           )
           EncryptionKeySentinelModel.create(
             expected_value: label3_sentinel,
             encrypted_value: label3_encrypted_value,
             encryption_key_label: label3,
-            salt: morton_salt
+            salt: morton_salt,
+            encryption_iterations: Encryptor::ENCRYPTION_ITERATIONS,
           )
         end
 
@@ -280,27 +283,39 @@ module VCAP::CloudController
             expected_value: label1_sentinel,
             encrypted_value: label1_encrypted_value,
             encryption_key_label: label1,
-            salt: morton_salt
+            salt: morton_salt,
+            encryption_iterations: Encryptor::ENCRYPTION_ITERATIONS,
           )
           EncryptionKeySentinelModel.create(
             expected_value: label2_sentinel,
             encrypted_value: label2_encrypted_value,
             encryption_key_label: label2,
-            salt: morton_salt
+            salt: morton_salt,
+            encryption_iterations: Encryptor::ENCRYPTION_ITERATIONS,
           )
           EncryptionKeySentinelModel.create(
             expected_value: label3_sentinel,
             encrypted_value: label3_encrypted_value,
             encryption_key_label: label3,
-            salt: morton_salt
+            salt: morton_salt,
+            encryption_iterations: Encryptor::ENCRYPTION_ITERATIONS,
           )
         end
 
         context 'when the expected value does not match the decrypted value' do
           before do
             allow(Encryptor).to receive(:decrypt_raw).and_call_original
-            allow(Encryptor).to receive(:decrypt_raw).with(label1_encrypted_value, changed_encryption_key, morton_salt).and_return('gibberish')
-            allow(Encryptor).to receive(:decrypt_raw).with(label2_encrypted_value, changed_encryption_key2, morton_salt).and_return('gibberish2')
+            allow(Encryptor).to receive(:decrypt_raw).with(
+              label1_encrypted_value,
+              changed_encryption_key,
+              morton_salt,
+              iterations: Encryptor::ENCRYPTION_ITERATIONS
+            ).and_return('gibberish')
+            allow(Encryptor).to receive(:decrypt_raw).with(label2_encrypted_value,
+              changed_encryption_key2,
+              morton_salt,
+              iterations: Encryptor::ENCRYPTION_ITERATIONS
+            ).and_return('gibberish2')
           end
 
           it 'raises an EncryptionKeySentinelDecryptionMismatchError' do
@@ -344,26 +359,30 @@ module VCAP::CloudController
             expected_value: label1_sentinel,
             encrypted_value: label1_encrypted_value,
             encryption_key_label: label1,
-            salt: morton_salt
+            salt: morton_salt,
+            encryption_iterations: Encryptor::ENCRYPTION_ITERATIONS,
           )
           EncryptionKeySentinelModel.create(
             expected_value: label1_sentinel,
             encrypted_value: label1_encrypted_value,
             encryption_key_label: 'another-extra-label',
-            salt: morton_salt
+            salt: morton_salt,
+            encryption_iterations: Encryptor::ENCRYPTION_ITERATIONS,
           )
 
           EncryptionKeySentinelModel.create(
             expected_value: label2_sentinel,
             encrypted_value: label2_encrypted_value,
             encryption_key_label: label2,
-            salt: morton_salt
+            salt: morton_salt,
+            encryption_iterations: Encryptor::ENCRYPTION_ITERATIONS,
           )
           EncryptionKeySentinelModel.create(
             expected_value: label3_sentinel,
             encrypted_value: label3_encrypted_value,
             encryption_key_label: label3,
-            salt: morton_salt
+            salt: morton_salt,
+            encryption_iterations: Encryptor::ENCRYPTION_ITERATIONS,
           )
         end
 

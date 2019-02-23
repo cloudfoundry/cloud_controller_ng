@@ -51,7 +51,12 @@ module VCAP::CloudController
           raise EncryptionKeySentinelMissingError unless sentinel_model.present?
 
           begin
-            decrypted_value = Encryptor.decrypt_raw(sentinel_model.encrypted_value, key_value, sentinel_model.salt)
+            decrypted_value = Encryptor.decrypt_raw(
+              sentinel_model.encrypted_value,
+              key_value,
+              sentinel_model.salt,
+              iterations: sentinel_model.encryption_iterations
+            )
           # A failed decryption occasionally results in a CipherError: bad decrypt instead of a garbled string
           rescue OpenSSL::Cipher::CipherError
             labels_with_changed_keys << label_string

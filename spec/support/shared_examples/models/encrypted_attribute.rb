@@ -39,7 +39,7 @@ module VCAP::CloudController
 
       serialized_value = value_to_encrypt.is_a?(Hash) ? MultiJson.dump(value_to_encrypt) : value_to_encrypt
       expect(
-        Encryptor.decrypt(saved_attribute, model.send(attr_salt))
+        Encryptor.decrypt(saved_attribute, model.send(attr_salt), iterations: model.encryption_iterations)
       ).to include(serialized_value)
 
       saved_attribute = last_row[storage_column]
@@ -51,7 +51,7 @@ module VCAP::CloudController
       errored = false
 
       begin
-        decrypted_value = Encryptor.decrypt(saved_attribute, model.send(attr_salt))
+        decrypted_value = Encryptor.decrypt(saved_attribute, model.send(attr_salt), iterations: model.encryption_iterations)
       rescue OpenSSL::Cipher::CipherError
         errored = true
       end

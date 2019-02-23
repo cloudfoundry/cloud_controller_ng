@@ -7,6 +7,8 @@ require 'base64'
 
 module VCAP::CloudController
   module Encryptor
+    ENCRYPTION_ITERATIONS = 100_000
+
     class << self
       ALGORITHM = 'AES-128-CBC'.freeze
 
@@ -24,19 +26,25 @@ module VCAP::CloudController
       end
 
       def encrypt_raw(input, key, salt)
-        Base64.strict_encode64(run_cipher(make_cipher.encrypt, input, salt, key))
+        Base64.strict_encode64(run_cipher(
+                                 make_cipher.encrypt,
+          input,
+          salt,
+          key,
+          iterations: Encryptor::ENCRYPTION_ITERATIONS
+        ))
       end
 
-      def decrypt(encrypted_input, salt, label=nil)
+      def decrypt(encrypted_input, salt, label: nil, iterations:)
         return unless encrypted_input
 
         key = key_to_use(label)
 
-        decrypt_raw(encrypted_input, key, salt)
+        decrypt_raw(encrypted_input, key, salt, iterations: iterations)
       end
 
-      def decrypt_raw(encrypted_input, key, salt)
-        run_cipher(make_cipher.decrypt, Base64.decode64(encrypted_input), salt, key)
+      def decrypt_raw(encrypted_input, key, salt, iterations:)
+        run_cipher(make_cipher.decrypt, Base64.decode64(encrypted_input), salt, key, iterations: iterations)
       end
 
       def encrypted_classes
@@ -64,11 +72,11 @@ module VCAP::CloudController
         OpenSSL::Cipher.new(ALGORITHM)
       end
 
-      def run_cipher(cipher, input, salt, key)
+      def run_cipher(cipher, input, salt, key, iterations:)
         if deprecated_short_salt?(salt)
           cipher.pkcs5_keyivgen(key, salt)
         else
-          cipher.key = OpenSSL::PKCS5.pbkdf2_hmac(key, salt, 2048, 16, OpenSSL::Digest::SHA256.new)
+          cipher.key = OpenSSL::PKCS5.pbkdf2_hmac(key, salt, iterations, 16, OpenSSL::Digest::SHA256.new)
           cipher.iv = salt
         end
         cipher.update(input) << cipher.final
@@ -119,6 +127,7 @@ module VCAP::CloudController
           storage_column = options[:column]
           raise "Salt field `#{salt_name}` does not exist" unless columns.include?(salt_name)
           raise 'Field "encryption_key_label" does not exist' unless columns.include?(:encryption_key_label)
+          raise 'Field "encryption_iterations" does not exist' unless columns.include?(:encryption_iterations)
 
           encrypted_fields << { field_name: field_name, salt_name: salt_name }
 
@@ -136,7 +145,7 @@ module VCAP::CloudController
           end
 
           define_method "#{field_name}_with_encryption" do
-            Encryptor.decrypt(send("#{field_name}_without_encryption"), send(salt_name), encryption_key_label)
+            Encryptor.decrypt(send("#{field_name}_without_encryption"), send(salt_name), label: encryption_key_label, iterations: encryption_iterations)
           end
           alias_method "#{field_name}_without_encryption", field_name
           alias_method field_name, "#{field_name}_with_encryption"
@@ -144,6 +153,7 @@ module VCAP::CloudController
           define_method "#{field_name}_with_encryption=" do |value|
             send("generate_#{salt_name}")
             db.transaction do
+              send('encryption_iterations=', Encryptor::ENCRYPTION_ITERATIONS)
               update_encryption_key
               encrypted_value = Encryptor.encrypt(value.presence, send(salt_name))
               send("#{field_name}_without_encryption=", encrypted_value)

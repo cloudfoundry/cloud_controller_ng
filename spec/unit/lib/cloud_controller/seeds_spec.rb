@@ -619,15 +619,17 @@ module VCAP::CloudController
             Seeds.seed_encryption_key_sentinels(config)
 
             label1_sentinel = EncryptionKeySentinelModel.find(encryption_key_label: label1)
-            decrypted_value = Encryptor.decrypt_raw(label1_sentinel.encrypted_value, 'secret_key1', label1_sentinel.salt)
+            expect(label1_sentinel.encryption_iterations).to eq(Encryptor::ENCRYPTION_ITERATIONS)
+
+            decrypted_value = Encryptor.decrypt_raw(label1_sentinel.encrypted_value, 'secret_key1', label1_sentinel.salt, iterations: label1_sentinel.encryption_iterations)
             expect(decrypted_value).to eq(label1_sentinel.expected_value)
 
             label2_sentinel = EncryptionKeySentinelModel.find(encryption_key_label: label2)
-            decrypted_value = Encryptor.decrypt_raw(label2_sentinel.encrypted_value, 'secret_key2', label2_sentinel.salt)
+            decrypted_value = Encryptor.decrypt_raw(label2_sentinel.encrypted_value, 'secret_key2', label2_sentinel.salt, iterations: label2_sentinel.encryption_iterations)
             expect(decrypted_value).to eq(label2_sentinel.expected_value)
 
             label3_sentinel = EncryptionKeySentinelModel.find(encryption_key_label: label3)
-            decrypted_value = Encryptor.decrypt_raw(label3_sentinel.encrypted_value, 'secret_key3', label3_sentinel.salt)
+            decrypted_value = Encryptor.decrypt_raw(label3_sentinel.encrypted_value, 'secret_key3', label3_sentinel.salt, iterations: label3_sentinel.encryption_iterations)
             expect(decrypted_value).to eq(label3_sentinel.expected_value)
           end
         end
@@ -654,15 +656,17 @@ module VCAP::CloudController
             Seeds.seed_encryption_key_sentinels(updated_config)
 
             label1_sentinel = EncryptionKeySentinelModel.find(encryption_key_label: label1)
-            decrypted_value = Encryptor.decrypt_raw(label1_sentinel.encrypted_value, 'secret_key1', label1_sentinel.salt)
+            expect(label1_sentinel.encryption_iterations).to eq(Encryptor::ENCRYPTION_ITERATIONS)
+
+            decrypted_value = Encryptor.decrypt_raw(label1_sentinel.encrypted_value, 'secret_key1', label1_sentinel.salt, iterations: label1_sentinel.encryption_iterations)
             expect(decrypted_value).to eq(label1_sentinel.expected_value)
 
             label2_sentinel = EncryptionKeySentinelModel.find(encryption_key_label: label2)
-            decrypted_value = Encryptor.decrypt_raw(label2_sentinel.encrypted_value, 'secret_key2', label2_sentinel.salt)
+            decrypted_value = Encryptor.decrypt_raw(label2_sentinel.encrypted_value, 'secret_key2', label2_sentinel.salt, iterations: label2_sentinel.encryption_iterations)
             expect(decrypted_value).to eq(label2_sentinel.expected_value)
 
             label3_sentinel = EncryptionKeySentinelModel.find(encryption_key_label: label3)
-            decrypted_value = Encryptor.decrypt_raw(label3_sentinel.encrypted_value, 'secret_key3', label3_sentinel.salt)
+            decrypted_value = Encryptor.decrypt_raw(label3_sentinel.encrypted_value, 'secret_key3', label3_sentinel.salt, iterations: label3_sentinel.encryption_iterations)
             expect(decrypted_value).to eq(label3_sentinel.expected_value)
           end
         end

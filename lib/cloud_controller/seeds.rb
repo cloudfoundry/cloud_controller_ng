@@ -177,7 +177,8 @@ module VCAP::CloudController
             expected_value: sentinel_string,
             encrypted_value: encrypted_value,
             encryption_key_label: label_string,
-            salt: salt
+            salt: salt,
+            encryption_iterations: Encryptor::ENCRYPTION_ITERATIONS,
           )
         end
       end
