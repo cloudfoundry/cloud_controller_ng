@@ -12,7 +12,7 @@ module VCAP::CloudController
           @name                  = name
           @service_instance_guid = service_instance_guid
           @request_attrs         = request_attrs
-          @end_timestamp         = end_timestamp || new_end_timestamp(ManagedServiceInstance.first(guid: service_instance_guid).try(:service_plan))
+          @end_timestamp         = end_timestamp || new_end_timestamp
           @user_audit_info       = user_audit_info
           update_polling_interval
         end
@@ -82,6 +82,13 @@ module VCAP::CloudController
           else
             service_instance.save_and_update_operation(service_instance.last_operation.proposed_changes)
           end
+        end
+
+        def service_plan
+          ManagedServiceInstance.first(guid: service_instance_guid).try(:service_plan)
+        rescue Sequel::Error => e
+          Steno.logger('cc-background').error("There was an error while fetching the service instance: #{e}")
+          nil
         end
       end
     end

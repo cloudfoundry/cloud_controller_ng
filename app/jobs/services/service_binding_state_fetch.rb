@@ -10,7 +10,7 @@ module VCAP::CloudController
 
         def initialize(service_binding_guid, user_info, request_attrs)
           @service_binding_guid = service_binding_guid
-          @end_timestamp = new_end_timestamp(ServiceBinding.first(guid: service_binding_guid).try(:service_plan))
+          @end_timestamp = new_end_timestamp
           @user_audit_info = user_info
           @request_attrs = request_attrs
           update_polling_interval
@@ -118,6 +118,13 @@ module VCAP::CloudController
 
         def valid_client_response?(last_operation_result)
           last_operation_result.key?(:last_operation)
+        end
+
+        def service_plan
+          ServiceBinding.first(guid: service_binding_guid).try(:service_plan)
+        rescue Sequel::Error => e
+          Steno.logger('cc-background').error("There was an error while fetching the service binding: #{e}")
+          nil
         end
       end
     end
