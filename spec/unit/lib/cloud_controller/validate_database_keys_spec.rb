@@ -356,7 +356,7 @@ module VCAP::CloudController
 
         before do
           # Delete seeded sentinels
-          EncryptionKeySentinelModel.truncate
+          EncryptionKeySentinelModel.dataset.destroy
 
           EncryptionKeySentinelModel.create(
             expected_value: label1_sentinel,
