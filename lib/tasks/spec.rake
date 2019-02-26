@@ -3,11 +3,19 @@ task spec: 'spec:all'
 
 namespace :spec do
   task all: ['db:pick', 'db:parallel:recreate'] do
-    run_specs_parallel('spec')
+    if ARGV[1]
+      run_specs(ARGV[1])
+    else
+      run_specs_parallel('spec')
+    end
   end
 
   task serial: ['db:pick', 'db:recreate'] do
-    run_specs('spec')
+    if ARGV[1]
+      run_specs(ARGV[1])
+    else
+      run_specs('spec')
+    end
   end
 
   task integration: ['db:pick', 'db:recreate'] do
