@@ -386,7 +386,9 @@ module VCAP::CloudController
               context: {
                 platform: 'cloudfoundry',
                 organization_guid: service_instance.organization.guid,
-                space_guid:        service_instance.space.guid
+                space_guid:        service_instance.space.guid,
+                organization_name: service_instance.organization.name,
+                space_name:        service_instance.space.name,
               }
             }
 
@@ -547,7 +549,9 @@ module VCAP::CloudController
               context: {
                 platform: 'cloudfoundry',
                 organization_guid: service_instance.organization.guid,
-                space_guid:        service_instance.space.guid
+                space_guid:        service_instance.space.guid,
+                organization_name: service_instance.organization.name,
+                space_name:        service_instance.space.name,
               }
             }
 

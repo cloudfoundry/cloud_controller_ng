@@ -258,7 +258,7 @@ RSpec.describe 'Service Broker API integration' do
       end
     end
 
-    context 'context hash' do
+    context 'service instance context hash' do
       let(:catalog) { default_catalog(plan_updateable: true) }
       let(:expected_context_attributes) { {
         'platform' => 'cloudfoundry',
@@ -294,6 +294,68 @@ RSpec.describe 'Service Broker API integration' do
         it 'receives the correct attributes in the context' do
           expect(
             a_request(:patch, %r{/v2/service_instances/#{@service_instance_guid}}).with { |req|
+              context = JSON.parse(req.body)['context']
+              context >= expected_context_attributes
+            }).to have_been_made
+        end
+      end
+    end
+
+    context 'service bindings context hash' do
+      let(:catalog) { default_catalog(requires: ['route_forwarding']) }
+      let(:expected_context_attributes) { {
+        'platform' => 'cloudfoundry',
+        'organization_guid' => @org_guid,
+        'space_guid' => @space_guid,
+        'organization_name' => @space.organization.name,
+        'space_name' => @space.name
+      }
+      }
+
+      before do
+        setup_broker(catalog)
+        @broker = VCAP::CloudController::ServiceBroker.find guid: @broker_guid
+        provision_service(name: 'instance-007')
+      end
+
+      context 'for binding to an application' do
+        before do
+          create_app
+          bind_service
+        end
+
+        it 'receives the correct attributes in the context' do
+          expect(
+            a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/#{@binding_guid}}).with { |req|
+              context = JSON.parse(req.body)['context']
+              context >= expected_context_attributes
+            }).to have_been_made
+        end
+      end
+
+      context 'for create service key' do
+        before do
+          create_service_key
+        end
+
+        it 'receives the correct attributes in the context' do
+          expect(
+            a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/#{@binding_guid}}).with { |req|
+              context = JSON.parse(req.body)['context']
+              context >= expected_context_attributes
+            }).to have_been_made
+        end
+      end
+
+      context 'for bind route service' do
+        let(:route) { VCAP::CloudController::Route.make(space: @space) }
+        before do
+          create_route_binding(route)
+        end
+
+        it 'receives the correct attributes in the context' do
+          expect(
+            a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/#{@binding_guid}}).with { |req|
               context = JSON.parse(req.body)['context']
               context >= expected_context_attributes
             }).to have_been_made
