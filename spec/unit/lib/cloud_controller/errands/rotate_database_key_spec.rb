@@ -38,6 +38,9 @@ module VCAP::CloudController
           # data with data that was encrypted with older keys
 
           # These apps' encryption_key_labels will be NULL
+          allow(Encryptor).to receive(:current_encryption_key_label) { nil }
+          allow(Encryptor).to receive(:database_encryption_keys) { {} }
+
           historical_app_with_no_environment.environment_variables = nil
           historical_app_with_no_environment.save(validate: false)
 

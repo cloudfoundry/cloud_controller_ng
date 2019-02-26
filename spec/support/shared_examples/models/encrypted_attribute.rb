@@ -3,7 +3,8 @@ require 'cloud_controller/encryptor'
 module VCAP::CloudController
   shared_examples 'a model with an encrypted attribute' do
     before do
-      allow(Encryptor).to receive(:db_encryption_key).and_return('correct-key')
+      allow(Encryptor).to receive(:database_encryption_keys).
+        and_return({ Encryptor.current_encryption_key_label.to_sym => 'correct-key' })
     end
 
     def new_model
@@ -39,19 +40,19 @@ module VCAP::CloudController
 
       serialized_value = value_to_encrypt.is_a?(Hash) ? MultiJson.dump(value_to_encrypt) : value_to_encrypt
       expect(
-        Encryptor.decrypt(saved_attribute, model.send(attr_salt), iterations: model.encryption_iterations)
+        Encryptor.decrypt(saved_attribute, model.send(attr_salt), label: model.encryption_key_label, iterations: model.encryption_iterations)
       ).to include(serialized_value)
 
-      saved_attribute = last_row[storage_column]
       expect(saved_attribute).not_to be_nil
 
-      allow(Encryptor).to receive(:db_encryption_key).and_return('a-totally-different-key')
+      allow(Encryptor).to receive(:database_encryption_keys).
+        and_return({ Encryptor.current_encryption_key_label.to_sym => 'a-totally-different-key' })
 
       decrypted_value = nil
       errored = false
 
       begin
-        decrypted_value = Encryptor.decrypt(saved_attribute, model.send(attr_salt), iterations: model.encryption_iterations)
+        decrypted_value = Encryptor.decrypt(saved_attribute, model.send(attr_salt), label: model.encryption_key_label, iterations: model.encryption_iterations)
       rescue OpenSSL::Cipher::CipherError
         errored = true
       end

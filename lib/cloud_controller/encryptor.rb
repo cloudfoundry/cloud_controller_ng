@@ -7,13 +7,17 @@ require 'base64'
 
 module VCAP::CloudController
   module Encryptor
-    ENCRYPTION_ITERATIONS = 100_000
+    ENCRYPTION_ITERATIONS = 2048
 
     class << self
       ALGORITHM = 'AES-128-CBC'.freeze
 
       def generate_salt
         SecureRandom.hex(8).to_s
+      end
+
+      def iteration_count
+        Encryptor::ENCRYPTION_ITERATIONS
       end
 
       def encrypt(input, salt)
@@ -31,7 +35,7 @@ module VCAP::CloudController
           input,
           salt,
           key,
-          iterations: Encryptor::ENCRYPTION_ITERATIONS
+          iterations: iteration_count
         ))
       end
 
@@ -92,17 +96,35 @@ module VCAP::CloudController
 
       private
 
-      def update_encryption_key
-        return if Encryptor.current_encryption_key_label.nil?
-        return if encryption_key_label == Encryptor.current_encryption_key_label
+      def encryption_key_changed?
+        encryption_key_label != Encryptor.current_encryption_key_label
+      end
+
+      def encryption_iterations_changed?
+        encryption_iterations != Encryptor.iteration_count
+      end
+
+      def using_legacy_encryption_key?
+        Encryptor.current_encryption_key_label.nil?
+      end
+
+      def encryption_settings_have_changed?
+        encryption_iterations_changed? || (!using_legacy_encryption_key? && encryption_key_changed?)
+      end
+
+      def update_encryption_key_and_iterations
+        return unless encryption_settings_have_changed?
 
         db.transaction do
-          (self.class.all_encrypted_fields || []).each do |field|
+          self.class.all_encrypted_fields.each do |field|
             current_value = send("#{field[:field_name]}_with_encryption")
+            next if current_value.nil?
+
             updated_encrypted_value = Encryptor.encrypt(current_value, send(field[:salt_name]))
             send("#{field[:field_name]}_without_encryption=", updated_encrypted_value)
           end
           self.encryption_key_label = Encryptor.current_encryption_key_label
+          self.encryption_iterations = Encryptor.iteration_count
         end
       end
 
@@ -153,8 +175,7 @@ module VCAP::CloudController
           define_method "#{field_name}_with_encryption=" do |value|
             send("generate_#{salt_name}")
             db.transaction do
-              send('encryption_iterations=', Encryptor::ENCRYPTION_ITERATIONS)
-              update_encryption_key
+              update_encryption_key_and_iterations
               encrypted_value = Encryptor.encrypt(value.presence, send(salt_name))
               send("#{field_name}_without_encryption=", encrypted_value)
             end
