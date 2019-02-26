@@ -11,13 +11,15 @@ module OPI
     end
 
     def stage(staging_guid, staging_details)
+      logger.info('stage.request', staging_guid: staging_guid)
       staging_request = to_request(staging_guid, staging_details)
 
       payload = MultiJson.dump(staging_request)
       response = @client.post("/stage/#{staging_guid}", body: payload)
       if response.status_code != 202
         response_json = OPI.recursive_ostruct(JSON.parse(response.body))
-        raise CloudController::Errors::ApiError.new_from_details('RunnerError', response_json)
+        logger.info('stage.response', staging_guid: staging_guid, error: response_json.message)
+        raise CloudController::Errors::ApiError.new_from_details('RunnerError', response_json.message)
       end
     end
 
@@ -54,5 +56,9 @@ module OPI
       path      = "/internal/v3/staging/#{staging_details.staging_guid}/build_completed?start=#{staging_details.start_after_staging}"
       "#{scheme}://#{auth}@#{host_port}#{path}"
     end
+
+     def logger
+       @logger ||= Steno.logger('cc.bbs.stager_client')
+     end
   end
 end

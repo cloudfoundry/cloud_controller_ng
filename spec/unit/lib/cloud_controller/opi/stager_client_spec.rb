@@ -56,11 +56,11 @@ RSpec.describe(OPI::StagerClient) do
     context 'when the response contains an error' do
       before do
         stub_request(:post, "#{eirini_url}/stage/guid").
-          to_return(status: 501, body: { 'error' => 'argh' }.to_json)
+          to_return(status: 501, body: { 'message' => 'failed to stage' }.to_json)
       end
 
       it 'should raise an error' do
-        expect { stager_client.stage('guid', staging_details) }.to raise_error(CloudController::Errors::ApiError)
+        expect { stager_client.stage('guid', staging_details) }.to raise_error(CloudController::Errors::ApiError, 'Runner error: failed to stage')
       end
     end
   end

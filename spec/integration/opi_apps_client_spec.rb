@@ -49,14 +49,6 @@ RSpec.describe(OPI::Client, opi: skip_opi_tests) do
           guid: 'some-droplet-guid'
         )
       }
-      let(:lifecycle_type) { nil }
-      let(:app_model) {
-        ::VCAP::CloudController::AppModel.make(lifecycle_type,
-                                               guid: 'app-guid',
-                                               droplet: droplet,
-                                               enable_ssh: false,
-                                               environment_variables: { 'BISH': 'BASH', 'FOO': 'BAR' })
-      }
 
       let(:process) {
         double(
