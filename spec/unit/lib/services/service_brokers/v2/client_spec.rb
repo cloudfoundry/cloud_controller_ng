@@ -85,7 +85,8 @@ module VCAP::Services::ServiceBrokers::V2
       let(:instance) do
         VCAP::CloudController::ManagedServiceInstance.make(
           service_plan: plan,
-          space:        space
+          space:        space,
+          name:     'instance-007'
         )
       end
 
@@ -140,7 +141,10 @@ module VCAP::Services::ServiceBrokers::V2
           context:           {
             platform:          'cloudfoundry',
             organization_guid: instance.organization.guid,
-            space_guid:        instance.space_guid
+            space_guid:        instance.space_guid,
+            instance_name:     instance.name,
+            organization_name: instance.organization.name,
+            space_name:        instance.space.name
           }
         )
       end
@@ -504,7 +508,8 @@ module VCAP::Services::ServiceBrokers::V2
       let(:instance) do
         VCAP::CloudController::ManagedServiceInstance.make(
           service_plan: old_plan,
-          space:        space
+          space:        space,
+          name:         'instance-007'
         )
       end
 
@@ -540,7 +545,10 @@ module VCAP::Services::ServiceBrokers::V2
             context: {
               platform:          'cloudfoundry',
               organization_guid: instance.organization.guid,
-              space_guid:        instance.space_guid
+              space_guid:        instance.space_guid,
+              instance_name:     instance.name,
+              organization_name: instance.organization.name,
+              space_name:        instance.space.name
             }
           })
         )

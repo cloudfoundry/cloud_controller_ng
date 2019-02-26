@@ -199,7 +199,7 @@ module VCAP::CloudController::BrokerApiHelper
       to_return(status: return_code, body: { dashboard_url: 'https://your.service.com/dashboard' }.to_json)
 
     body = {
-      name: 'test-service',
+      name: opts[:name] || 'test-service',
       space_guid: @space_guid,
       service_plan_guid: @plan_guid
     }

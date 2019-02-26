@@ -25,15 +25,17 @@ RSpec.describe 'Service Broker API integration' do
       end
 
       it 'receives the correct attributes in the context' do
-        expected_body = hash_including(context: {
-          platform: 'cloudfoundry',
-          organization_guid: @org_guid,
-          space_guid: @space_guid,
-        })
+        expected_context_attributes = {
+          'platform' => 'cloudfoundry',
+          'organization_guid' => @org_guid,
+          'space_guid' => @space_guid
+        }
 
         expect(
-          a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}}).with(body: expected_body)
-        ).to have_been_made
+          a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}}).with { |req|
+            context = JSON.parse(req.body)['context']
+            context >= expected_context_attributes
+          }).to have_been_made
       end
     end
 
@@ -52,15 +54,17 @@ RSpec.describe 'Service Broker API integration' do
       end
 
       it 'receives the correct attributes in the context' do
-        expected_body = hash_including(context: {
-          platform: 'cloudfoundry',
-          organization_guid: @org_guid,
-          space_guid: @space_guid,
-        })
+        expected_context_attributes = {
+          'platform' => 'cloudfoundry',
+          'organization_guid' => @org_guid,
+          'space_guid' => @space_guid
+        }
 
         expect(
-          a_request(:patch, %r{/v2/service_instances/#{@service_instance_guid}}).with(body: expected_body)
-        ).to have_been_made
+          a_request(:patch, %r{/v2/service_instances/#{@service_instance_guid}}).with { |req|
+            context = JSON.parse(req.body)['context']
+            context >= expected_context_attributes
+          }).to have_been_made
       end
     end
   end
