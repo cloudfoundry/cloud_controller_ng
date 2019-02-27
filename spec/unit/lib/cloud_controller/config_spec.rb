@@ -345,7 +345,8 @@ module VCAP::CloudController
                 previous: 'def-456',
                 old: 'ghi-789'
               },
-              current_key_label: 'current'
+              current_key_label: 'current',
+              pbkdf2_hmac_iterations: 100_020
           }
         end
 
@@ -364,6 +365,11 @@ module VCAP::CloudController
 
         it 'sets up the database encryption keys' do
           expect(Encryptor).to receive(:database_encryption_keys=).with(keys[:keys])
+          config_instance.configure_components
+        end
+
+        it 'sets up pbkdf2_hmac_iterations' do
+          expect(Encryptor).to receive(:pbkdf2_hmac_iterations=).with(keys[:pbkdf2_hmac_iterations])
           config_instance.configure_components
         end
       end

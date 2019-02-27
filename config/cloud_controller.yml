@@ -177,6 +177,7 @@ db_encryption_key: "asdfasdfasdf"
 database_encryption:
   keys: {"encryption_key_0":"asdfasdfasdf"}
   current_key_label: "encryption_key_0"
+  pbkdf2_hmac_iterations: 2048
 
 default_health_check_timeout: 60
 maximum_health_check_timeout: 180

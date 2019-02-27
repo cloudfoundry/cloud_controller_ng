@@ -16,8 +16,12 @@ module VCAP::CloudController
         SecureRandom.hex(8).to_s
       end
 
-      def iteration_count
-        Encryptor::ENCRYPTION_ITERATIONS
+      def pbkdf2_hmac_iterations
+        @pbkdf2_hmac_iterations ||= Encryptor::ENCRYPTION_ITERATIONS
+      end
+
+      def pbkdf2_hmac_iterations=(iterations)
+        @pbkdf2_hmac_iterations = [iterations.to_i, Encryptor::ENCRYPTION_ITERATIONS].max
       end
 
       def encrypt(input, salt)
@@ -35,7 +39,7 @@ module VCAP::CloudController
           input,
           salt,
           key,
-          iterations: iteration_count
+          iterations: pbkdf2_hmac_iterations
         ))
       end
 
@@ -101,7 +105,7 @@ module VCAP::CloudController
       end
 
       def encryption_iterations_changed?
-        encryption_iterations != Encryptor.iteration_count
+        encryption_iterations != Encryptor.pbkdf2_hmac_iterations
       end
 
       def using_legacy_encryption_key?
@@ -124,7 +128,7 @@ module VCAP::CloudController
             send("#{field[:field_name]}_without_encryption=", updated_encrypted_value)
           end
           self.encryption_key_label = Encryptor.current_encryption_key_label
-          self.encryption_iterations = Encryptor.iteration_count
+          self.encryption_iterations = Encryptor.pbkdf2_hmac_iterations
         end
       end
 

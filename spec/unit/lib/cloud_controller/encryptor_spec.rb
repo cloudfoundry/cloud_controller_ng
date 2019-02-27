@@ -82,7 +82,27 @@ module VCAP::CloudController
       end
     end
 
-    describe '#decrypt' do
+    describe '.pbkdf2_hmac_iterations=' do
+      after do
+        Encryptor.pbkdf2_hmac_iterations = Encryptor::ENCRYPTION_ITERATIONS
+      end
+
+      context 'when set to a value higher than Encryptor::ENCRYPTION_ITERATIONS' do
+        it 'sets pbkdf2_hmac_iterations' do
+          Encryptor.pbkdf2_hmac_iterations = 38_000
+          expect(Encryptor.pbkdf2_hmac_iterations).to eq 38_000
+        end
+      end
+
+      context 'when set to a value lower than Encryptor::ENCRYPTION_ITERATIONS' do
+        it 'remains set to ENCRYPTION_ITERATIONS' do
+          Encryptor.pbkdf2_hmac_iterations = 1
+          expect(Encryptor.pbkdf2_hmac_iterations).to eq Encryptor::ENCRYPTION_ITERATIONS
+        end
+      end
+    end
+
+    describe '.decrypt' do
       let(:unencrypted_string) { 'some-string' }
 
       before(:each) do
@@ -321,12 +341,12 @@ module VCAP::CloudController
 
       describe 'encryption iteration' do
         it 'updates to the newest iteration value' do
-          allow(Encryptor).to receive(:iteration_count).and_return(2048)
+          allow(Encryptor).to receive(:pbkdf2_hmac_iterations).and_return(2048)
           subject.encryption_iterations = 2048
           subject.salt = 'some salt'
           expect(Encryptor).to receive(:encrypt).with('hello', 'some salt')
 
-          allow(Encryptor).to receive(:iteration_count).and_return(100_001)
+          allow(Encryptor).to receive(:pbkdf2_hmac_iterations).and_return(100_001)
           subject.sekret = 'hello'
           expect(subject.encryption_iterations).to eq 100_001
         end
@@ -564,10 +584,10 @@ module VCAP::CloudController
             foo: 'fooencryptionkey'
           }
           allow(Encryptor).to receive(:current_encryption_key_label) { 'foo' }
-          allow(Encryptor).to receive(:iteration_count) { 2048 }
+          allow(Encryptor).to receive(:pbkdf2_hmac_iterations) { 2048 }
           subject.sekret = unencrypted_string
           expect(subject.sekret).to eq(unencrypted_string)
-          allow(Encryptor).to receive(:iteration_count) { 100_001 }
+          allow(Encryptor).to receive(:pbkdf2_hmac_iterations) { 100_001 }
         end
 
         it 'updates encryption_iterations in the record when encrypting' do
@@ -596,13 +616,13 @@ module VCAP::CloudController
           let(:subject) { multi_field_class.new }
 
           before do
-            allow(Encryptor).to receive(:iteration_count) { 2048 }
+            allow(Encryptor).to receive(:pbkdf2_hmac_iterations) { 2048 }
             subject.sekret = unencrypted_string
             subject.sekret2 = unencrypted_string2
           end
 
           it 're-encrypts all fields with the new iteration count' do
-            allow(Encryptor).to receive(:iteration_count) { 100_001 }
+            allow(Encryptor).to receive(:pbkdf2_hmac_iterations) { 100_001 }
             subject.sekret = 'nu'
 
             expect(subject.encryption_iterations).to eq(100_001)
@@ -641,10 +661,10 @@ module VCAP::CloudController
 
           before do
             allow(Encryptor).to receive(:encrypt).and_call_original
-            allow(Encryptor).to receive(:iteration_count) { 2048 }
+            allow(Encryptor).to receive(:pbkdf2_hmac_iterations) { 2048 }
             subject.sekret = unencrypted_string
             subject.sekret2 = unencrypted_string2
-            allow(Encryptor).to receive(:iteration_count) { 100_001 }
+            allow(Encryptor).to receive(:pbkdf2_hmac_iterations) { 100_001 }
           end
 
           it 're-encrypts all fields from the superclass' do

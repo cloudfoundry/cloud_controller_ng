@@ -20,8 +20,9 @@ module VCAP::CloudController
           db_encryption_key: enum(String, NilClass),
 
           optional(:database_encryption) => {
-              keys: Hash,
-              current_key_label: String
+            keys: Hash,
+            current_key_label: String,
+            optional(:pbkdf2_hmac_iterations) => Integer
           },
 
           logging: {

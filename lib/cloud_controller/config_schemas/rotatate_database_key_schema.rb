@@ -34,7 +34,8 @@ module VCAP::CloudController
 
           optional(:database_encryption) => {
             keys: Hash,
-            current_key_label: String
+            current_key_label: String,
+            optional(:pbkdf2_hmac_iterations) => Integer
           },
         }
       end

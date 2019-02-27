@@ -112,10 +112,10 @@ module VCAP::CloudController
 
       describe 'changing iteration count' do
         it 'does not update the encryption_iterations field until after decrypting existing data' do
-          allow(Encryptor).to receive(:iteration_count).and_return(2048)
+          allow(Encryptor).to receive(:pbkdf2_hmac_iterations).and_return(2048)
           var_group = EnvironmentVariableGroup.make(environment_json: { 'name' => 'value' })
 
-          allow(Encryptor).to receive(:iteration_count).and_return(12345)
+          allow(Encryptor).to receive(:pbkdf2_hmac_iterations).and_return(12345)
           var_group.update(environment_json: { 'name' => 'new_value' })
 
           expect(var_group.environment_json).to eq({ 'name' => 'new_value' })

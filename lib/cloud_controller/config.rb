@@ -99,6 +99,7 @@ module VCAP::CloudController
       if get(:database_encryption)
         Encryptor.database_encryption_keys = get(:database_encryption)[:keys]
         Encryptor.current_encryption_key_label = get(:database_encryption)[:current_key_label]
+        Encryptor.pbkdf2_hmac_iterations = get(:database_encryption)[:pbkdf2_hmac_iterations]
       end
 
       dependency_locator = CloudController::DependencyLocator.instance
