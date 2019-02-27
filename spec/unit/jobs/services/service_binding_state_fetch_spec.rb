@@ -398,6 +398,23 @@ module VCAP::CloudController
                 expect(Delayed::Job.count).to eq 0
               end
             end
+
+            context 'when enqueing the job reaches the max poll duration' do
+              before do
+                run_job(job)
+                Timecop.travel(Time.now + max_duration.minutes + 1.minute) do
+                  # executes job but does not enqueue another job
+                  execute_all_jobs(expected_successes: 1, expected_failures: 0)
+                end
+              end
+
+              it 'should mark the service instance operation as failed with appropriate description' do
+                service_binding.reload
+
+                expect(service_binding.last_operation.state).to eq('failed')
+                expect(service_binding.last_operation.description).to eq('Service Broker failed to create binding within the required time.')
+              end
+            end
           end
 
           context 'when the last_operation type is delete' do
@@ -503,6 +520,23 @@ module VCAP::CloudController
                 expect(event).to be_nil
               end
             end
+
+            context 'when enqueing the job reaches the max poll duration' do
+              before do
+                run_job(job)
+                Timecop.travel(Time.now + max_duration.minutes + 1.minute) do
+                  # executes job but does not enqueue another job
+                  execute_all_jobs(expected_successes: 1, expected_failures: 0)
+                end
+              end
+
+              it 'should mark the service instance operation as failed' do
+                service_binding.reload
+
+                expect(service_binding.last_operation.state).to eq('failed')
+                expect(service_binding.last_operation.description).to eq('Service Broker failed to delete binding within the required time.')
+              end
+            end
           end
 
           context 'when the broker responds to last_operation' do
@@ -532,13 +566,6 @@ module VCAP::CloudController
 
               it 'should not enqueue another fetch job' do
                 expect(Delayed::Job.count).to eq 0
-              end
-
-              it 'should mark the service instance operation as failed' do
-                service_binding.reload
-
-                expect(service_binding.last_operation.state).to eq('failed')
-                expect(service_binding.last_operation.description).to eq('Service Broker failed to bind within the required time.')
               end
             end
           end

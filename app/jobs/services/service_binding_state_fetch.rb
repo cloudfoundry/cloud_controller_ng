@@ -88,9 +88,10 @@ module VCAP::CloudController
         end
 
         def end_timestamp_reached
-          ServiceBinding.first(guid: service_binding_guid).last_operation.update(
+          binding_last_operation = ServiceBinding.first(guid: service_binding_guid).last_operation
+          binding_last_operation.update(
             state: 'failed',
-            description: 'Service Broker failed to bind within the required time.'
+            description: "Service Broker failed to #{binding_last_operation.type} binding within the required time."
           )
         end
 
