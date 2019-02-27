@@ -10,6 +10,43 @@ module VCAP::CloudController
         expect(hash['links']['self']['href']).to eq(expected_uri)
       end
 
+      describe 'bits service' do
+        context 'when bits service is enabled' do
+          before do
+            TestConfig.override(
+              bits_service: {
+                enabled: true,
+                public_endpoint: 'my-endpoint'
+              }
+            )
+          end
+
+          it 'returns a link to bits service' do
+            get '/'
+            hash = MultiJson.load(last_response.body)
+            expected_uri = (TestConfig.config[:bits_service][:public_endpoint]).to_s
+            expect(hash['links']['bits_service']['href']).to eq(expected_uri)
+          end
+        end
+
+        context 'when bits service is not enabled' do
+          before do
+            TestConfig.override(
+              bits_service: {
+                enabled: false,
+                public_endpoint: ''
+              }
+            )
+          end
+          it 'returns a link to bits service' do
+            get '/'
+            hash = MultiJson.load(last_response.body)
+            expected_uri = nil
+            expect(hash['links']['bits_service']['href']).to eq(expected_uri)
+          end
+        end
+      end
+
       it 'returns a cloud controller v2 link with metadata' do
         get '/'
         hash = MultiJson.load(last_response.body)

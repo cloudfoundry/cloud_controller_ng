@@ -9,9 +9,6 @@ class RootController < ActionController::Base
           apps: {
             href: build_api_uri(path: '/apps')
           },
-          bits_service: {
-            href: bits_service_uri
-          },
           buildpacks: {
             href: build_api_uri(path: '/buildpacks'),
             experimental: true,
@@ -64,9 +61,5 @@ class RootController < ActionController::Base
     my_uri        = URI::HTTP.build(host: VCAP::CloudController::Config.config.get(:external_domain), path: "/v3#{path}")
     my_uri.scheme = VCAP::CloudController::Config.config.get(:external_protocol)
     my_uri.to_s
-  end
-
-  def bits_service_uri
-    VCAP::CloudController::Config.config.get(:bits_service, :enabled) ? VCAP::CloudController::Config.config.get(:bits_service, :public_endpoint) : nil
   end
 end

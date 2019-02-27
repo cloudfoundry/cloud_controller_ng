@@ -13,9 +13,6 @@ RSpec.describe 'App Features' do
           'apps' => {
             'href' => "#{link_prefix}/v3/apps"
           },
-          'bits_service' => {
-            'href' => nil
-          },
           'buildpacks' => {
             'href' => "#{link_prefix}/v3/buildpacks",
             'experimental' => true,

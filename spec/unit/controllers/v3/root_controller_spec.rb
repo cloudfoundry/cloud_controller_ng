@@ -16,43 +16,6 @@ RSpec.describe RootController, type: :controller do
       expect(hash['links']['apps']['href']).to eq(expected_uri)
     end
 
-    describe 'bits service' do
-      context 'when bits service is enabled' do
-        before do
-          TestConfig.override(
-            bits_service: {
-              enabled: true,
-              public_endpoint: 'my-endpoint'
-            }
-          )
-        end
-
-        it 'returns a link to bits service' do
-          get :v3_root
-          hash = MultiJson.load(response.body)
-          expected_uri = (TestConfig.config[:bits_service][:public_endpoint]).to_s
-          expect(hash['links']['bits_service']['href']).to eq(expected_uri)
-        end
-      end
-
-      context 'when bits service is not enabled' do
-        before do
-          TestConfig.override(
-            bits_service: {
-              enabled: false,
-              public_endpoint: ''
-            }
-          )
-        end
-        it 'returns a link to bits service' do
-          get :v3_root
-          hash = MultiJson.load(response.body)
-          expected_uri = nil
-          expect(hash['links']['bits_service']['href']).to eq(expected_uri)
-        end
-      end
-    end
-
     it 'returns a link to buildpacks' do
       get :v3_root
       hash = MultiJson.load(response.body)
