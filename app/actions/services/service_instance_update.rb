@@ -19,7 +19,7 @@ module VCAP::CloudController
 
       update_cc_only_attrs(service_instance, request_attrs)
 
-      if update_broker_needed?(request_attrs, cached_service_instance['service_plan_guid'])
+      if update_broker_needed?(request_attrs, cached_service_instance['service_plan_guid'], service_instance)
         handle_broker_update(cached_service_instance, lock, previous_values, request_attrs, service_instance)
         update_deferred_attrs(service_instance, service_plan_guid: request_attrs.fetch('service_plan_guid', false))
       else
@@ -35,8 +35,9 @@ module VCAP::CloudController
 
     private
 
-    def update_broker_needed?(attrs, old_service_plan_guid)
+    def update_broker_needed?(attrs, old_service_plan_guid, service_instance)
       return true if attrs['parameters']
+      return true if attrs['name'] && service_instance.service.allow_context_updates
       return false if !attrs['service_plan_guid']
 
       attrs['service_plan_guid'] != old_service_plan_guid

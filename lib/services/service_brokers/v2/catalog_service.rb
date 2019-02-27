@@ -6,7 +6,8 @@ module VCAP::Services::ServiceBrokers::V2
 
     attr_reader :service_broker, :broker_provided_id, :metadata, :name,
       :description, :bindable, :tags, :plans, :requires, :dashboard_client,
-      :errors, :plan_updateable, :bindings_retrievable, :instances_retrievable
+      :errors, :plan_updateable, :bindings_retrievable, :instances_retrievable,
+      :allow_context_updates
 
     def initialize(service_broker, attrs)
       @service_broker     = service_broker
@@ -24,6 +25,7 @@ module VCAP::Services::ServiceBrokers::V2
       @plans              = []
       @bindings_retrievable = attrs.fetch('bindings_retrievable', false)
       @instances_retrievable = attrs.fetch('instances_retrievable', false)
+      @allow_context_updates = attrs.fetch('allow_context_updates', false)
 
       build_plans
     end
@@ -64,6 +66,7 @@ module VCAP::Services::ServiceBrokers::V2
       validate_bool!(:plan_updateable, plan_updateable, required: true)
       validate_bool!(:bindings_retrievable, bindings_retrievable, required: false)
       validate_bool!(:instances_retrievable, instances_retrievable, required: false)
+      validate_bool!(:allow_context_updates, allow_context_updates, required: false)
 
       validate_tags!(:tags, tags)
       validate_array_of_strings!(:requires, requires)
@@ -179,6 +182,7 @@ module VCAP::Services::ServiceBrokers::V2
         dashboard_client_redirect_uri: 'Service dashboard client redirect_uri',
         bindings_retrievable: 'Service "bindings_retrievable" field',
         instances_retrievable: 'Service "instances_retrievable" field',
+        allow_context_updates: 'Service "allow_context_updates" field',
       }.fetch(name) { raise NotImplementedError }
     end
   end

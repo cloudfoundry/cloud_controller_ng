@@ -29,7 +29,7 @@ module VCAP::CloudController::BrokerApiHelper
         body: catalog.to_json)
   end
 
-  def default_catalog(plan_updateable: false, requires: [], plan_schemas: {}, bindings_retrievable: false, maximum_polling_duration: nil)
+  def default_catalog(plan_updateable: false, requires: [], plan_schemas: {}, bindings_retrievable: false, maximum_polling_duration: nil, allow_context_updates: false)
     {
       services: [
         {
@@ -40,6 +40,7 @@ module VCAP::CloudController::BrokerApiHelper
           requires: requires,
           plan_updateable: plan_updateable,
           bindings_retrievable: bindings_retrievable,
+          allow_context_updates: allow_context_updates,
           plans: [
             {
               id: 'plan1-guid-here',
@@ -215,6 +216,15 @@ module VCAP::CloudController::BrokerApiHelper
 
     response = JSON.parse(last_response.body)
     @service_instance_guid = response['metadata']['guid']
+  end
+
+  def rename_service_instance(return_code, opts={})
+    stub_request(:patch, %r{broker-url/v2/service_instances/[[:alnum:]-]+}).to_return(status: return_code, body: {}.to_json)
+
+    put("/v2/service_instances/#{@service_instance_guid}",
+        { name: opts[:name] || 'new-name' }.to_json,
+        admin_headers
+    )
   end
 
   def update_service_instance(return_code, opts={})

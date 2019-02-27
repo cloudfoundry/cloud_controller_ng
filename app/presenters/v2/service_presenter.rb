@@ -28,7 +28,8 @@ module CloudController
             'service_broker_name'   => service&.service_broker&.name,
             'plan_updateable'       => service.plan_updateable,
             'bindings_retrievable'  => service.bindings_retrievable,
-            'instances_retrievable' => service.instances_retrievable
+            'instances_retrievable' => service.instances_retrievable,
+            'allow_context_updates' => service.allow_context_updates
           }.merge!(rel_hash)
         end
       end

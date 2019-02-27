@@ -14,7 +14,8 @@ module VCAP::CloudController
       )
     end
     let(:service_broker) { ServiceBroker.make }
-    let(:service) { Service.make(plan_updateable: true, service_broker: service_broker) }
+    let(:allow_context_updates) { false }
+    let(:service) { Service.make(plan_updateable: true, service_broker: service_broker, allow_context_updates: allow_context_updates) }
     let(:old_service_plan) { ServicePlan.make(:v2, service: service) }
     let(:new_service_plan) { ServicePlan.make(:v2, service: service) }
     let(:service_instance) { ManagedServiceInstance.make(service_plan: old_service_plan,
@@ -233,6 +234,43 @@ module VCAP::CloudController
             ).to have_been_made.once
 
             expect(service_instance.service_plan).to eq(new_service_plan)
+          end
+        end
+      end
+
+      context 'name is the only change' do
+        let(:request_attrs) { { 'name' => updated_name } }
+
+        context 'allow_context_updates is enabled for service' do
+          let(:allow_context_updates) { true }
+
+          it 'sends a request to the broker' do
+            service_instance_update.update_service_instance(service_instance, request_attrs)
+
+            expect(
+              a_request(:patch, update_url(service_instance)).with(
+                body: hash_including({
+                  'plan_id' => old_service_plan.broker_provided_id,
+                  'previous_values' => {
+                    'plan_id' => old_service_plan.broker_provided_id,
+                    'service_id' => service_instance.service.broker_provided_id,
+                    'organization_id' => service_instance.organization.guid,
+                    'space_id' => service_instance.space.guid
+                  }
+                })
+              )
+            ).to have_been_made.once
+          end
+        end
+
+        context 'allow_context_updates is disabled for service' do
+          let(:allow_context_updates) { false }
+
+          it 'does not send a request to the broker' do
+            service_instance_update.update_service_instance(service_instance, request_attrs)
+
+            expect(
+              a_request(:patch, update_url(service_instance))).not_to have_been_made
           end
         end
       end

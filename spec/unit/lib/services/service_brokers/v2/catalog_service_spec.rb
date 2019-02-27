@@ -47,6 +47,18 @@ module VCAP::Services::ServiceBrokers::V2
         service = CatalogService.new(instance_double(VCAP::CloudController::ServiceBroker), attrs)
         expect(service.plan_updateable).to eq true
       end
+
+      it 'defaults @allow_context_updates to false' do
+        attrs = build_valid_service_attrs
+        service = CatalogService.new(instance_double(VCAP::CloudController::ServiceBroker), attrs)
+        expect(service.allow_context_updates).to eq false
+      end
+
+      it 'sets @allow_context_updates if it is provided in the hash' do
+        attrs = build_valid_service_attrs(allow_context_updates: true)
+        service = CatalogService.new(instance_double(VCAP::CloudController::ServiceBroker), attrs)
+        expect(service.allow_context_updates).to eq true
+      end
     end
 
     describe 'validations' do
@@ -265,6 +277,14 @@ module VCAP::Services::ServiceBrokers::V2
         expect(service).not_to be_valid
 
         expect(service.errors.messages).to include 'Service "instances_retrievable" field must be a boolean, but has value "foo"'
+      end
+
+      it 'validates that @allow_context_updates is a boolean' do
+        attrs = build_valid_service_attrs(allow_context_updates: 'foo')
+        service = CatalogService.new(instance_double(VCAP::CloudController::ServiceBroker), attrs)
+        expect(service).not_to be_valid
+
+        expect(service.errors.messages).to include 'Service "allow_context_updates" field must be a boolean, but has value "foo"'
       end
 
       context 'when there are multiple duplicate plan names' do
