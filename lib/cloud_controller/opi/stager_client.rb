@@ -57,8 +57,8 @@ module OPI
       "#{scheme}://#{auth}@#{host_port}#{path}"
     end
 
-     def logger
-       @logger ||= Steno.logger('cc.bbs.stager_client')
-     end
+    def logger
+      @logger ||= Steno.logger('cc.bbs.stager_client')
+    end
   end
 end
