@@ -116,6 +116,14 @@ module VCAP::CloudController
         expect(hash['links']['logging']['href']).to eq(expected_uri)
       end
 
+      it 'returns a link to the v2 logging API' do
+        expected_uri = 'https://log-stream.example.com'
+
+        get '/'
+        hash = MultiJson.load(last_response.body)
+        expect(hash['links']['log_stream']['href']).to eq(expected_uri)
+      end
+
       it 'returns a link for app_ssh with metadata' do
         expected_ssh_endpoint = 'ssh://ssh.example.org:2222'
         expected_host_key_fingerprint = 'the-host-key-fingerprint'

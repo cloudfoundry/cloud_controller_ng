@@ -48,6 +48,10 @@ module VCAP::CloudController
             href: config.get(:doppler, :url)
           },
 
+          log_stream:             {
+              href: config.get(:log_stream, :url)
+          },
+
           app_ssh:             {
             href: config.get(:info, :app_ssh_endpoint),
             meta: {

@@ -219,6 +219,10 @@ module VCAP::CloudController
             url: String
           },
 
+          log_stream: {
+              url: String
+          },
+
           request_timeout_in_seconds: Integer,
           skip_cert_verify: bool,
 
