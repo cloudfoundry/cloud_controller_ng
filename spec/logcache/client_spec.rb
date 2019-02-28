@@ -58,6 +58,21 @@ module Logcache
         )
         expect(logcache_service).to have_received(:read).with(logcache_request)
       end
+
+      context 'when an error occurs' do
+        before do
+          allow(client).to receive(:sleep)
+          allow(logcache_service).to receive(:read).and_raise(StandardError)
+        end
+
+        it 'retries the request three times' do
+          expect {
+            client.container_metrics(source_guid: process.guid, envelope_limit: 1000, start_time: 100, end_time: 101)
+          }.to raise_error(StandardError)
+
+          expect(logcache_service).to have_received(:read).with(logcache_request).exactly(3).times
+        end
+      end
     end
   end
 end

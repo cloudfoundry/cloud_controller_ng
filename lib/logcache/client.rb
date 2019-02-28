@@ -18,19 +18,33 @@ module Logcache
     end
 
     def container_metrics(source_guid:, envelope_limit: DEFAULT_LIMIT, start_time:, end_time:)
-      service.read(
-        Logcache::V1::ReadRequest.new(
-          source_id: source_guid,
-          start_time: start_time,
-          end_time: end_time,
-          limit: envelope_limit,
-          descending: true,
-          envelope_types: [:GAUGE]
+      with_request_error_handling do
+        service.read(
+          Logcache::V1::ReadRequest.new(
+            source_id: source_guid,
+            start_time: start_time,
+            end_time: end_time,
+            limit: envelope_limit,
+            descending: true,
+            envelope_types: [:GAUGE]
+          )
         )
-      )
+      end
     end
 
     private
+
+    def with_request_error_handling(&blk)
+      tries ||= 3
+      yield
+    rescue
+      if (tries -= 1) > 0
+        sleep 0.1
+        retry
+      end
+
+      raise
+    end
 
     attr_reader :service
   end
