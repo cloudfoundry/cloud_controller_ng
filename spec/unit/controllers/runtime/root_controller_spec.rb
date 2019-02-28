@@ -38,11 +38,10 @@ module VCAP::CloudController
               }
             )
           end
-          it 'returns a link to bits service' do
+          it 'does not return a link' do
             get '/'
             hash = MultiJson.load(last_response.body)
-            expected_uri = nil
-            expect(hash['links']['bits_service']['href']).to eq(expected_uri)
+            expect(hash['links']['bits_service']).to eq(nil)
           end
         end
       end
