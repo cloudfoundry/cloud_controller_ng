@@ -3235,8 +3235,8 @@ module VCAP::CloudController
           end
         end
 
-        context 'and the instance operation is in progress' do
-          let(:last_operation) { ServiceInstanceOperation.make(state: 'in progress') }
+        context 'and the instance operation is update in progress' do
+          let(:last_operation) { ServiceInstanceOperation.make(state: 'in progress', type: 'update') }
           before do
             service_instance.service_instance_operation = last_operation
           end
@@ -3245,6 +3245,21 @@ module VCAP::CloudController
             delete "/v2/service_instances/#{service_instance.guid}"
             expect(last_response.status).to eq 409
             expect(last_response.body).to match 'AsyncServiceInstanceOperationInProgress'
+            # expect(last_response.status).to eq(204)
+            # expect(ManagedServiceInstance.find(guid: service_instance.guid)).to be_nil
+          end
+        end
+
+        context 'and the instance operation is create in progress' do
+          let(:last_operation) { ServiceInstanceOperation.make(state: 'in progress', type: 'create') }
+          before do
+            service_instance.service_instance_operation = last_operation
+          end
+
+          it 'should show an error message for delete operation' do
+            delete "/v2/service_instances/#{service_instance.guid}"
+            expect(last_response.status).to eq(204)
+            expect(ManagedServiceInstance.find(guid: service_instance.guid)).to be_nil
           end
         end
 

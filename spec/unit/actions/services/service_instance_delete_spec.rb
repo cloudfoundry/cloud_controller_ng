@@ -313,9 +313,12 @@ module VCAP::CloudController
         end
       end
 
-      context 'when a service instance has an operation in progress' do
+      context 'when a service instance has an update operation in progress' do
         before do
-          route_service_instance.service_instance_operation = ServiceInstanceOperation.make(state: 'in progress')
+          route_service_instance.service_instance_operation = ServiceInstanceOperation.make(
+            state: 'in progress',
+            type: 'update',
+          )
         end
 
         it 'returns an operation in progress error for route and service bindings' do
@@ -328,6 +331,110 @@ module VCAP::CloudController
         it 'still exists and is in an `in progress` state' do
           service_instance_delete.delete(service_instance_dataset)
           expect(route_service_instance.last_operation.reload.state).to eq 'in progress'
+        end
+      end
+
+      context 'when a service instance has a create operation in progress' do
+        let(:service_instance) { ManagedServiceInstance.make }
+
+        before do
+          service_instance.service_instance_operation = ServiceInstanceOperation.make(
+            state: 'in progress',
+            type: 'create',
+          )
+        end
+
+        context 'when service instance deprovision happen to be synchronous' do
+          before do
+            stub_deprovision(service_instance)
+          end
+
+          it 'should delete the instance' do
+            expect(event_repository).to receive(:record_service_instance_event).
+              with(:delete, instance_of(ManagedServiceInstance), {}).once
+            expect {
+              service_instance_delete.delete([service_instance])
+            }.to change { ServiceInstance.count }.by(-1)
+          end
+
+          it 'tells broker to deprovision the service' do
+            service_instance_delete.delete([service_instance])
+            broker_url = deprovision_url(service_instance)
+            expect(a_request(:delete, broker_url)).to have_been_made
+          end
+
+          it 'should not return any errors' do
+            errors, warnings = service_instance_delete.delete([service_instance])
+            expect(warnings).to be_empty
+            expect(errors.length).to eq 0
+          end
+        end
+
+        context 'when service instance deprovision happen to be asynchronous' do
+          subject(:service_instance_delete) do
+            ServiceInstanceDelete.new(
+              accepts_incomplete: true,
+              event_repository: event_repository,
+            )
+          end
+
+          before do
+            stub_deprovision(service_instance, accepts_incomplete: true, status: 202, body: {}.to_json)
+          end
+
+          it 'passes the accepts_incomplete flag to the client deprovision call' do
+            service_instance_delete.delete([service_instance])
+            broker_url = deprovision_url(service_instance, accepts_incomplete: true)
+            expect(a_request(:delete, broker_url)).to have_been_made
+          end
+
+          it 'updates the instance to be in progress' do
+            service_instance_delete.delete([service_instance])
+            expect(service_instance.last_operation.state).to eq 'in progress'
+          end
+
+          it 'updates the instance operation type to be delete' do
+            service_instance_delete.delete([service_instance])
+            expect(service_instance.last_operation.type).to eq 'delete'
+          end
+
+          it 'enqueues a job to fetch state' do
+            service_instance_delete.delete([service_instance])
+
+            job = Delayed::Job.last
+            expect(job).to be_a_fully_wrapped_job_of Jobs::Services::ServiceInstanceStateFetch
+
+            inner_job = job.payload_object.handler.handler
+            expect(inner_job.name).to eq 'service-instance-state-fetch'
+            expect(inner_job.service_instance_guid).to eq service_instance.guid
+            expect(inner_job.request_attrs).to eq({})
+            expect(inner_job.poll_interval).to eq(60)
+          end
+
+          it 'should not delete the instance' do
+            expect {
+              service_instance_delete.delete([service_instance])
+            }.to change { ServiceInstance.count }.by(0)
+          end
+
+          context 'when there is an error during service instance delete' do
+            before do
+              stub_deprovision(service_instance, accepts_incomplete: true, status: 422, body: { 'error': 'ConcurrencyError' }.to_json)
+            end
+
+            it 'does not update the operation type' do
+              expect(service_instance.last_operation.type).to eq 'create'
+              service_instance_delete.delete([service_instance])
+              expect(service_instance.last_operation.type).to eq 'create'
+            end
+
+            it 'returns errors it has captured' do
+              errors, warnings = service_instance_delete.delete([service_instance])
+              expect(warnings).to be_empty
+              expect(errors.count).to eq(1)
+              expect(errors.first.name).to eq 'AsyncServiceInstanceOperationInProgress'
+            end
+          end
         end
       end
 

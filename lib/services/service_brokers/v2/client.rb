@@ -238,6 +238,8 @@ module VCAP::Services::ServiceBrokers::V2
       }
     rescue VCAP::Services::ServiceBrokers::V2::Errors::ServiceBrokerConflict => e
       raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceDeprovisionFailed', e.message)
+    rescue VCAP::Services::ServiceBrokers::V2::Errors::ConcurrencyError
+      raise CloudController::Errors::ApiError.new_from_details('AsyncServiceInstanceOperationInProgress', instance.name)
     rescue => e
       raise e.exception("Service instance #{instance.name}: #{e.message}")
     end

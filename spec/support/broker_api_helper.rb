@@ -145,15 +145,17 @@ module VCAP::CloudController::BrokerApiHelper
     delete("/v2/service_brokers/#{@broker_guid}", '{}', admin_headers)
   end
 
-  def async_delete_service(status: 202, operation_data: nil)
-    broker_response_body = operation_data.nil? ? '{}' : %({"operation": "#{operation_data}"})
-
+  def delete_service(status: 200, broker_response_body: '{}', accepts_incomplete: false)
     stub_request(:delete, %r{broker-url/v2/service_instances/[[:alnum:]-]+}).
       to_return(status: status, body: broker_response_body)
 
-    delete("/v2/service_instances/#{@service_instance_guid}?accepts_incomplete=true",
+    delete("/v2/service_instances/#{@service_instance_guid}?accepts_incomplete=#{accepts_incomplete}",
            {}.to_json,
            admin_headers)
+  end
+
+  def async_delete_service(status: 202, broker_response_body: '{}')
+    delete_service(status: status, broker_response_body: broker_response_body, accepts_incomplete: true)
   end
 
   def async_provision_service(status: 202, operation_data: nil)

@@ -69,7 +69,7 @@ RSpec.describe 'Service Broker API integration' do
         let(:operation_data) { 'some_operation_data' }
 
         it 'calls the endpoint with state that was returned in delete' do
-          async_delete_service(operation_data: operation_data)
+          async_delete_service(broker_response_body: %({"operation": "#{operation_data}"}))
           stub_async_last_operation(operation_data: operation_data)
 
           expect(a_request(:delete, deprovision_url(service_instance, accepts_incomplete: true))).to have_been_made
