@@ -110,7 +110,17 @@ module VCAP::CloudController
         let!(:web_process) { ProcessModel.make(app: app, type: 'web', revision: revisionA) }
         let!(:worker_process) { ProcessModel.make(app: app, type: 'worker', revision: revisionA) }
         let(:package) { PackageModel.make(app: app, state: PackageModel::READY_STATE) }
-        let!(:dropletA) { DropletModel.make(app: app, package: package, state: DropletModel::STAGED_STATE) }
+        let!(:dropletA) do
+          DropletModel.make(
+            app: app,
+            package: package,
+            state: DropletModel::STAGED_STATE,
+            process_types: {
+              'web' => 'webby',
+              'worker' => 'workworkwork',
+            },
+          )
+        end
         let!(:dropletB) { DropletModel.make(app: app, package: package, state: DropletModel::STAGED_STATE) }
         let!(:revisionA) { RevisionModel.make(app: app, droplet_guid: dropletA.guid) }
         let!(:new_revision_number) { revisionA.version + 1 }

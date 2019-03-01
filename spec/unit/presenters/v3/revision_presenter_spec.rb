@@ -4,11 +4,26 @@ require 'presenters/v3/revision_presenter'
 module VCAP::CloudController::Presenters::V3
   RSpec.describe RevisionPresenter do
     let(:app_model) { VCAP::CloudController::AppModel.make }
+    let!(:droplet) do
+      VCAP::CloudController::DropletModel.make(
+        app: app_model,
+        process_types: {
+          'web' => 'droplet_web_command',
+          'worker' => 'droplet_worker_command',
+        })
+    end
     let(:revision) do
       VCAP::CloudController::RevisionModel.make(
         app: app_model,
         version: 300,
-        droplet_guid: 'some-guid'
+        droplet_guid: droplet.guid,
+      )
+    end
+    let!(:revision_web_process_command) do
+      VCAP::CloudController::RevisionProcessCommandModel.make(
+        revision_guid: revision.guid,
+        process_type: 'web',
+        process_command: './start'
       )
     end
 
@@ -43,11 +58,6 @@ module VCAP::CloudController::Presenters::V3
         value: 'hfcs',
         resource_guid: revision.guid,
       )
-    end
-
-    before do
-      revision.add_command_for_process_type('web', './start')
-      revision.add_command_for_process_type('worker', nil)
     end
 
     describe '#to_hash' do

@@ -37,7 +37,11 @@ module VCAP::CloudController
     end
 
     def commands_by_process_type
-      process_commands.map { |p| [p.process_type, p.process_command] }.to_h
+      # Unsure if this case ever actually happens outside of specs
+      return {} unless droplet&.process_types
+
+      droplet.process_types.keys.
+        map { |k| [k, process_commands_dataset.first(process_type: k)&.process_command] }.to_h
     end
   end
 end

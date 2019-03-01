@@ -35,7 +35,7 @@ module VCAP::CloudController
       end
 
       it 'deletes associated revision_process_commands' do
-        process_command = revision.add_command_for_process_type('web', nil)
+        process_command = revision.add_command_for_process_type('web', 'foo rackup')
 
         expect {
           revision_delete.delete(revision)

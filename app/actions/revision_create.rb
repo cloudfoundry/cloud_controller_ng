@@ -17,11 +17,9 @@ module VCAP::CloudController
             environment_variables: app.environment_variables
           )
 
-          newest_unique_processes_for_app(app).each do |p|
-            next if p.command.nil?
-
-            revision.add_command_for_process_type(p.type, p.command)
-          end
+          newest_unique_processes_for_app(app).
+            select { |p| p.command.present? }.
+            each   { |p| revision.add_command_for_process_type(p.type, p.command) }
 
           record_audit_event(revision, user_audit_info)
 

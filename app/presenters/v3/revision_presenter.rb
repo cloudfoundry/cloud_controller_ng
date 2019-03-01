@@ -52,12 +52,7 @@ module VCAP::CloudController
         end
 
         def processes
-          result = {}
-          revision.commands_by_process_type&.each do |key, value|
-            result[key] = { 'command' => value }
-          end
-
-          result
+          revision.commands_by_process_type.map { |k, v| [k, { 'command' => v }] }.to_h
         end
       end
     end

@@ -3,7 +3,14 @@ require 'actions/revision_create'
 
 module VCAP::CloudController
   RSpec.describe RevisionCreate do
-    let(:droplet) { DropletModel.make(app: app) }
+    let(:droplet) do
+      DropletModel.make(
+        app: app,
+      process_types: {
+        'web' => 'droplet_web_command',
+        'worker' => 'droplet_worker_command',
+      })
+    end
     let(:app) { AppModel.make(revisions_enabled: true, environment_variables: { 'key' => 'value' }) }
     let(:user_audit_info) { UserAuditInfo.new(user_guid: '456', user_email: 'mona@example.com', user_name: 'mona') }
     let!(:older_web_process) { ProcessModel.make(app: app, type: 'web', command: 'run my app', created_at: 2.minutes.ago) }
@@ -20,7 +27,8 @@ module VCAP::CloudController
         expect(revision.droplet_guid).to eq(droplet.guid)
         expect(revision.environment_variables).to eq(app.environment_variables)
         expect(revision.commands_by_process_type).to eq({
-          'web' => 'run my app'
+          'web' => 'run my app',
+          'worker' => nil,
         })
       end
 
@@ -35,7 +43,8 @@ module VCAP::CloudController
 
           revision = RevisionModel.last
           expect(revision.commands_by_process_type).to eq({
-            'web' => 'run my newer app!'
+            'web' => 'run my newer app!',
+            'worker' => nil,
           })
         end
       end

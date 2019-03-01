@@ -2,7 +2,15 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe RevisionModel do
-    let(:revision) { RevisionModel.make }
+    let!(:droplet) do
+      DropletModel.make(
+        process_types: {
+          'web' => 'droplet_web_command',
+          'worker' => 'droplet_worker_command',
+          'nil_process' => 'droplet_nil_process_command',
+        })
+    end
+    let(:revision) { RevisionModel.make(droplet: droplet) }
 
     let!(:revision_web_process_command) do
       RevisionProcessCommandModel.make(
@@ -17,14 +25,6 @@ module VCAP::CloudController
         revision: revision,
         process_type: 'worker',
         process_command: 'on the railroad',
-      )
-    end
-
-    let!(:revision_nil_process_command) do
-      RevisionProcessCommandModel.make(
-        revision: revision,
-        process_type: 'nil_process',
-        process_command: nil,
       )
     end
 

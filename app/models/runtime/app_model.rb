@@ -141,7 +141,7 @@ module VCAP::CloudController
     end
 
     def commands_by_process_type
-      processes.select { |p| p.command.present? }.map { |p| [p.type, p.command] }.to_h
+      processes.map { |p| [p.type, p.command] }.to_h
     end
 
     private
