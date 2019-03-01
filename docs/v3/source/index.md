@@ -63,6 +63,12 @@ includes:
   - resources/droplets/update
   - resources/droplets/delete
   - resources/droplets/copy
+  - resources/feature_flags/header
+  - resources/feature_flags/object
+  - resources/feature_flags/flags
+  - resources/feature_flags/get
+  - resources/feature_flags/list
+  - resources/feature_flags/update
   - resources/isolation_segments/header
   - resources/isolation_segments/object
   - resources/isolation_segments/create
@@ -168,12 +174,6 @@ includes:
   - experimental_resources/deployments/list
   - experimental_resources/deployments/update
   - experimental_resources/deployments/cancel
-  - experimental_resources/feature_flags/header
-  - experimental_resources/feature_flags/object
-  - experimental_resources/feature_flags/flags
-  - experimental_resources/feature_flags/get
-  - experimental_resources/feature_flags/list
-  - experimental_resources/feature_flags/update
   - experimental_resources/revisions/header
   - experimental_resources/revisions/object
   - experimental_resources/revisions/get
