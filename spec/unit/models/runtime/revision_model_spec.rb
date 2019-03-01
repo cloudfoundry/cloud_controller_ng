@@ -36,7 +36,6 @@ module VCAP::CloudController
           'nil_process' => nil,
         })
       end
-
     end
 
     context '#add_process_command' do

@@ -17,7 +17,11 @@ module VCAP::CloudController
             environment_variables: app.environment_variables
           )
 
-          app.processes.each { |p| revision.add_command_for_process_type(p.type, p.command) }
+          newest_unique_processes_for_app(app).each do |p|
+            next if p.command.nil?
+
+            revision.add_command_for_process_type(p.type, p.command)
+          end
 
           record_audit_event(revision, user_audit_info)
 
@@ -26,6 +30,10 @@ module VCAP::CloudController
       end
 
       private
+
+      def newest_unique_processes_for_app(app)
+        app.processes_dataset.order(Sequel.desc(:created_at), Sequel.desc(:id)).uniq(&:type)
+      end
 
       def calculate_next_version(app)
         previous_revision = app.latest_revision

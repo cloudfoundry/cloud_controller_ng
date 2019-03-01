@@ -44,7 +44,6 @@ module VCAP::CloudController
         expect(process_command.exists?).to be_falsey
         expect(revision.exists?).to be_falsey
       end
-
     end
   end
 end

@@ -6,8 +6,8 @@ module VCAP::CloudController
     let(:droplet) { DropletModel.make(app: app) }
     let(:app) { AppModel.make(revisions_enabled: true, environment_variables: { 'key' => 'value' }) }
     let(:user_audit_info) { UserAuditInfo.new(user_guid: '456', user_email: 'mona@example.com', user_name: 'mona') }
-    let!(:process1) { ProcessModel.make(app: app, type: 'web', command: 'run my app') }
-    let!(:process2) { ProcessModel.make(app: app, type: 'worker') }
+    let!(:older_web_process) { ProcessModel.make(app: app, type: 'web', command: 'run my app', created_at: 2.minutes.ago) }
+    let!(:worker_process) { ProcessModel.make(app: app, type: 'worker') }
 
     describe '.create' do
       it 'creates a revision for the app' do
@@ -20,9 +20,24 @@ module VCAP::CloudController
         expect(revision.droplet_guid).to eq(droplet.guid)
         expect(revision.environment_variables).to eq(app.environment_variables)
         expect(revision.commands_by_process_type).to eq({
-          'web' => 'run my app',
-          'worker' => nil,
+          'web' => 'run my app'
         })
+      end
+
+      context 'when there are multiple processes of the same type' do
+        let!(:newer_web_process) { ProcessModel.make(app: app, type: 'web', command: 'run my newer app!', created_at: 1.minute.ago) }
+
+        it 'saves off the custom start commands for the newer duplicate processes' do
+          app.update(droplet: droplet)
+          expect {
+            RevisionCreate.create(app, user_audit_info)
+          }.to change { RevisionModel.where(app: app).count }.by(1)
+
+          revision = RevisionModel.last
+          expect(revision.commands_by_process_type).to eq({
+            'web' => 'run my newer app!'
+          })
+        end
       end
 
       it 'records an audit event for the revision' do

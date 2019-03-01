@@ -39,6 +39,5 @@ module VCAP::CloudController
     def commands_by_process_type
       process_commands.map { |p| [p.process_type, p.process_command] }.to_h
     end
-
   end
 end
