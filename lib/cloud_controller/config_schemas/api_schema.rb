@@ -262,8 +262,6 @@ module VCAP::CloudController
             enabled: bool,
             optional(:public_endpoint) => enum(String, NilClass),
             optional(:private_endpoint) => enum(String, NilClass),
-            optional(:username) => enum(String, NilClass),
-            optional(:password) => enum(String, NilClass),
           },
 
           rate_limiter: {

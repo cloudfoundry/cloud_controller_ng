@@ -327,12 +327,9 @@ module CloudController
       return nil unless use_bits_service
 
       BitsService::ResourcePool.new(
-        endpoint: bits_service_options[:private_endpoint],
+        bits_service_options: bits_service_options,
         request_timeout_in_seconds: config.get(:request_timeout_in_seconds),
-        ca_cert_path: bits_service_options[:ca_cert_path],
-        vcap_request_id: VCAP::Request.current_id,
-        username: bits_service_options[:username],
-        password: bits_service_options[:password]
+        vcap_request_id: VCAP::Request.current_id
       )
     end
 
