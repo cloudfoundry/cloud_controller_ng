@@ -29,7 +29,6 @@ RSpec.describe 'App Features' do
           },
           'feature_flags' => {
             'href' => "#{link_prefix}/v3/feature_flags",
-            'experimental' => true,
           },
           'isolation_segments' => {
             'href' => "#{link_prefix}/v3/isolation_segments"
