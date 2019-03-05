@@ -39,6 +39,14 @@ RSpec.describe RootController, type: :controller do
       expect(hash['links']['deployments']['experimental']).to eq(true)
     end
 
+    it 'returns a link to domains' do
+      get :v3_root
+      hash = MultiJson.load(response.body)
+      expected_uri = "#{TestConfig.config[:external_protocol]}://#{TestConfig.config[:external_domain]}/v3/domains"
+      expect(hash['links']['domains']['href']).to eq(expected_uri)
+      expect(hash['links']['domains']['experimental']).to eq(true)
+    end
+
     it 'returns a link to droplets' do
       get :v3_root
       hash = MultiJson.load(response.body)

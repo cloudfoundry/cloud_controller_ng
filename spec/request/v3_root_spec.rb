@@ -24,6 +24,10 @@ RSpec.describe 'App Features' do
             'href' => "#{link_prefix}/v3/deployments",
             'experimental' => true
           },
+          'domains' => {
+            'href' => "#{link_prefix}/v3/domains",
+            'experimental' => true
+          },
           'droplets' => {
             'href' => "#{link_prefix}/v3/droplets"
           },

@@ -20,6 +20,10 @@ class RootController < ActionController::Base
             href: build_api_uri(path: '/deployments'),
             experimental: true,
           },
+          domains: {
+            href: build_api_uri(path: '/domains'),
+            experimental: true,
+          },
           droplets: {
             href: build_api_uri(path: '/droplets')
           },
