@@ -2,7 +2,7 @@ module VCAP::Services::ServiceBrokers::V2
   class CatalogPlan
     include CatalogValidationHelper
 
-    attr_reader :broker_provided_id, :name, :description, :metadata
+    attr_reader :broker_provided_id, :name, :description, :metadata, :maximum_polling_duration
     attr_reader :catalog_service, :errors, :free, :bindable, :schemas, :plan_updateable
 
     def initialize(catalog_service, attrs)
@@ -15,6 +15,7 @@ module VCAP::Services::ServiceBrokers::V2
       @free               = attrs['free'].nil? ? true : attrs['free']
       @bindable           = attrs['bindable']
       @plan_updateable    = attrs['plan_updateable']
+      @maximum_polling_duration = attrs['maximum_polling_duration']
       build_schemas(attrs['schemas'])
     end
 
@@ -48,6 +49,7 @@ module VCAP::Services::ServiceBrokers::V2
       validate_bool!(:free, free) if free
       validate_bool!(:bindable, bindable) if bindable
       validate_bool!(:plan_updateable, plan_updateable) if plan_updateable
+      validate_integer!(:maximum_polling_duration, maximum_polling_duration) if maximum_polling_duration
       validate_hash!(:schemas, @schemas_data) if @schemas_data
     end
 
@@ -59,14 +61,15 @@ module VCAP::Services::ServiceBrokers::V2
 
     def human_readable_attr_name(name)
       {
-        broker_provided_id: 'Plan id',
-        name:               'Plan name',
-        description:        'Plan description',
-        metadata:           'Plan metadata',
-        free:               'Plan free',
-        bindable:           'Plan bindable',
-        plan_updateable:    'Plan updateable',
-        schemas:            'Plan schemas',
+        broker_provided_id:         'Plan id',
+        name:                       'Plan name',
+        description:                'Plan description',
+        metadata:                   'Plan metadata',
+        free:                       'Plan free',
+        bindable:                   'Plan bindable',
+        plan_updateable:            'Plan updateable',
+        schemas:                    'Plan schemas',
+        maximum_polling_duration:   'Maximum polling duration',
       }.fetch(name) { raise NotImplementedError }
     end
   end

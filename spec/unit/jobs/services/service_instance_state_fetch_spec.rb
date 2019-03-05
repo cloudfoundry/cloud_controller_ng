@@ -7,13 +7,15 @@ module VCAP::CloudController
     module Services
       RSpec.describe ServiceInstanceStateFetch, job_context: :worker do
         let(:proposed_service_plan) { ServicePlan.make }
+        let(:maximum_polling_duration_for_plan) {}
+        let(:service_plan) { ServicePlan.make(maximum_polling_duration: maximum_polling_duration_for_plan) }
         let(:service_instance) do
           operation = ServiceInstanceOperation.make(proposed_changes: {
             name: 'new-fake-name',
             service_plan_guid: proposed_service_plan.guid,
           })
           operation.save
-          service_instance = ManagedServiceInstance.make
+          service_instance = ManagedServiceInstance.make(service_plan: service_plan)
           service_instance.save
 
           service_instance.service_instance_operation = operation
@@ -80,6 +82,26 @@ module VCAP::CloudController
 
             it 'enqueues the job using the maximum polling interval' do
               expect(job.poll_interval).to eq 24.hours
+            end
+          end
+
+          context 'when the service plan has maximum_polling_duration' do
+            context "when the config value is smaller than plan's maximum_polling_duration" do
+              let(:maximum_polling_duration_for_plan) { 36000000 } # in seconds
+              let(:max_duration) { 10 } # in minutes
+              it 'should set end_timestamp to config value' do
+                Timecop.freeze(Time.now)
+                expect(job.end_timestamp).to eq(Time.now + max_duration.minutes)
+              end
+            end
+
+            context "when the config value is greater than plan's maximum_polling_duration" do
+              let(:maximum_polling_duration_for_plan) { 36000000 } # in seconds
+              let(:max_duration) { 1068367346 } # in minutes
+              it "should set end_timestamp to the plan's maximum_polling_duration value" do
+                Timecop.freeze(Time.now)
+                expect(job.end_timestamp).to eq(Time.now + maximum_polling_duration_for_plan.seconds)
+              end
             end
           end
         end

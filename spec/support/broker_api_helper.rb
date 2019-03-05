@@ -29,7 +29,7 @@ module VCAP::CloudController::BrokerApiHelper
         body: catalog.to_json)
   end
 
-  def default_catalog(plan_updateable: false, requires: [], plan_schemas: {}, bindings_retrievable: false)
+  def default_catalog(plan_updateable: false, requires: [], plan_schemas: {}, bindings_retrievable: false, maximum_polling_duration: nil)
     {
       services: [
         {
@@ -45,7 +45,8 @@ module VCAP::CloudController::BrokerApiHelper
               id: 'plan1-guid-here',
               name: 'small',
               description: 'A small shared database with 100mb storage quota and 10 connections',
-              schemas: plan_schemas
+              schemas: plan_schemas,
+              maximum_polling_duration: maximum_polling_duration,
             },
             {
               id: 'plan2-guid-here',

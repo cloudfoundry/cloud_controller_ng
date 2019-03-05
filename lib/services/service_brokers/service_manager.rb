@@ -111,6 +111,7 @@ module VCAP::Services::ServiceBrokers
         active:      true,
         extra:       catalog_plan.metadata.try(:to_json),
         plan_updateable: catalog_plan.plan_updateable,
+        maximum_polling_duration: catalog_plan.maximum_polling_duration,
         create_instance_schema: create_instance,
         update_instance_schema: update_instance,
         create_binding_schema: create_binding,
