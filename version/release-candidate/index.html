@@ -4428,6 +4428,324 @@ environment variables listed on the source droplet.</p>
 </tr>
 </tbody></table>
 
+          <h2 id="feature-flags">Feature Flags</h2>
+
+<p>Feature flags are runtime flags that enable or disable functionality on the API.</p>
+
+          <h3 id="the-feature-flag-object">The feature flag object</h3>
+<pre class="highlight plaintext"><code>Example Feature Flag object
+</code></pre>
+<pre class="highlight json"><code><span class="w">  </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my_feature_flag"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"enabled"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-10-17T20:00:42Z"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"custom_error_message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"error message the user sees"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/feature_flags/my_feature_flag"</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+
+</span></code></pre>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>name</strong></td>
+<td><em>string</em></td>
+<td>The name of the feature flag.</td>
+</tr>
+<tr>
+<td><strong>enabled</strong></td>
+<td><em>boolean</em></td>
+<td>Whether the feature flag is enabled.</td>
+</tr>
+<tr>
+<td><strong>updated_at</strong></td>
+<td><em>datetime</em></td>
+<td>The time with zone when the object was last updated. This will be blank for feature flags that have not been configured.</td>
+</tr>
+<tr>
+<td><strong>custom_error_message</strong></td>
+<td><em>string</em></td>
+<td>The error string returned by the API when a client performs an action disabled by the feature flag.</td>
+</tr>
+<tr>
+<td><strong>links</strong></td>
+<td><a href="#links"><em>links object</em></a></td>
+<td>Links to related resources.</td>
+</tr>
+</tbody></table>
+
+          <h3 id="list-of-feature-flags">List of feature flags</h3>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>Name:</strong> <code class="prettyprint">app_bits_upload</code><br><strong>Default:</strong> <code class="prettyprint">true</code> <br><strong>Description:</strong> When enabled, space developers can upload app bits. When disabled, only admin users can upload app bits.</td>
+</tr>
+<tr>
+<td><strong>Name:</strong> <code class="prettyprint">app_scaling</code><br><strong>Default:</strong> <code class="prettyprint">true</code> <br><strong>Description:</strong> When enabled, space developers can perform scaling operations (i.e. change memory, disk or instances). When disabled, only admins can perform scaling operations.</td>
+</tr>
+<tr>
+<td><strong>Name:</strong> <code class="prettyprint">diego_docker</code><br><strong>Default:</strong> <code class="prettyprint">false</code> <br><strong>Description:</strong> When enabled, Docker applications are supported by Diego. When disabled, Docker applications will stop running. It will still be possible to stop and delete them and update their configurations.</td>
+</tr>
+<tr>
+<td><strong>Name:</strong> <code class="prettyprint">env_var_visibility</code><br><strong>Default:</strong> <code class="prettyprint">true</code> <br><strong>Description:</strong> When enabled, all users can see their environment variables. When disabled, no users can see environment variables.</td>
+</tr>
+<tr>
+<td><strong>Name:</strong> <code class="prettyprint">hide_marketplace_from_unauthenticated_users</code><br><strong>Default:</strong> <code class="prettyprint">false</code> <br><strong>Description:</strong> When enabled, service offerings available in the marketplace will be hidden from unauthenticated users. When disabled, unauthenticated users will be able to see the service offerings available in the marketplace.</td>
+</tr>
+<tr>
+<td><strong>Name:</strong> <code class="prettyprint">private_domain_creation</code><br><strong>Default:</strong> <code class="prettyprint">true</code> <br><strong>Description:</strong> When enabled, an organization manager can create private domains for that organization. When disabled, only admin users can create private domains.</td>
+</tr>
+<tr>
+<td><strong>Name:</strong> <code class="prettyprint">route_creation</code><br><strong>Default:</strong> <code class="prettyprint">true</code> <br><strong>Description:</strong> When enabled, a space developer can create routes in a space. When disabled, only admin users can create routes.</td>
+</tr>
+<tr>
+<td><strong>Name:</strong> <code class="prettyprint">service_instance_creation</code><br><strong>Default:</strong> <code class="prettyprint">true</code> <br><strong>Description:</strong> When enabled, a space developer can create service instances in a space. When disabled, only admin users can create service instances.</td>
+</tr>
+<tr>
+<td><strong>Name:</strong> <code class="prettyprint">service_instance_sharing</code><br><strong>Default:</strong> <code class="prettyprint">false</code> <br><strong>Description:</strong> When enabled, Space Developers can share service instances between two spaces (even across orgs!) in which they have the Space Developer role. When disabled, Space Developers cannot share service instances between two spaces.</td>
+</tr>
+<tr>
+<td><strong>Name:</strong> <code class="prettyprint">set_roles_by_username</code><br><strong>Default:</strong> <code class="prettyprint">true</code> <br><strong>Description:</strong> When enabled, Org Managers or Space Managers can add access roles by username. In order for this feature to be enabled the CF operator must: <br>1) Enable the <code class="prettyprint">/ids/users/</code> endpoint for UAA <br>2) Create a UAA <code class="prettyprint">cloud_controller_username_lookup</code> client with the <code class="prettyprint">scim.userids</code> authority</td>
+</tr>
+<tr>
+<td><strong>Name:</strong> <code class="prettyprint">space_developer_env_var_visibility</code><br><strong>Default:</strong> <code class="prettyprint">true</code> <br><strong>Description:</strong> When enabled, space developers can do a get on the /v2/apps/:guid/env and /v3/apps/:guid/env end points. When disabled, space developers can no longer do a get against these end points.</td>
+</tr>
+<tr>
+<td><strong>Name:</strong> <code class="prettyprint">space_scoped_private_broker_creation</code><br><strong>Default:</strong> <code class="prettyprint">true</code> <br><strong>Description:</strong> When enabled, space developers can create space scoped private brokers. When disabled, only admin users can create create space scoped private brokers.</td>
+</tr>
+<tr>
+<td><strong>Name:</strong> <code class="prettyprint">task_creation</code><br><strong>Default:</strong> <code class="prettyprint">true</code> <br><strong>Description:</strong> When enabled, space developers can create tasks. When disabled, only admin users can create tasks.</td>
+</tr>
+<tr>
+<td><strong>Name:</strong> <code class="prettyprint">unset_roles_by_username</code><br><strong>Default:</strong> <code class="prettyprint">true</code> <br><strong>Description:</strong> When enabled, Org Managers or Space Managers can remove access roles by username. In order for this feature to be enabled the CF operator must: <br>1) Enable the <code class="prettyprint">/ids/users/</code> endpoint for UAA <br>2) Create a UAA <code class="prettyprint">cloud_controller_username_lookup</code> client with the <code class="prettyprint">scim.userids</code> authority</td>
+</tr>
+<tr>
+<td><strong>Name:</strong> <code class="prettyprint">user_org_creation</code><br><strong>Default:</strong> <code class="prettyprint">false</code> <br><strong>Description:</strong> When enabled, any user can create an organization via the API. When disabled, only admin users can create organizations via the API.</td>
+</tr>
+</tbody></table>
+
+          <h3 id="get-a-feature-flag">Get a feature flag</h3>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/feature_flags/[name]"</span> <span class="se">\</span>
+  -X GET <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
+
+<span class="w">  </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my_feature_flag"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"enabled"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-10-17T20:00:42Z"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"custom_error_message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"error message the user sees"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/feature_flags/my_feature_flag"</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+
+</span></code></pre>
+
+<h4 id="definition">Definition</h4>
+
+<p><code class="prettyprint">GET /v3/feature_flags/:name</code></p>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>All Roles</td>
+</tr>
+</tbody></table>
+
+          <h3 id="list-feature-flags">List feature flags</h3>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/feature_flags"</span> <span class="se">\</span>
+  -X GET <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
+
+<span class="w">  </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"pagination"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"total_results"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"total_pages"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"first"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/feature_flags?page=1&amp;per_page=2"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"last"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/feature_flags?page=2&amp;per_page=2"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"next"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/feature_flags?page=2&amp;per_page=2"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"previous"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"resources"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my_feature_flag"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"enabled"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-10-17T20:00:42Z"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"custom_error_message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"error message the user sees"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/feature_flags/my_feature_flag"</span><span class="w">
+          </span><span class="p">}</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my_second_feature_flag"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"enabled"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"custom_error_message"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/feature_flags/my_second_feature_flag"</span><span class="w">
+          </span><span class="p">}</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">]</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+
+</span></code></pre>
+
+<p>Retrieve all feature_flags.</p>
+
+<h4 id="definition">Definition</h4>
+
+<p><code class="prettyprint">GET /v3/feature_flags</code></p>
+
+<h4 id="query-parameters">Query Parameters</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>page</strong></td>
+<td><em>integer</em></td>
+<td>Page to display. Valid values are integers &gt;= 1.</td>
+</tr>
+<tr>
+<td><strong>per_page</strong></td>
+<td><em>integer</em></td>
+<td>Number of results per page. <br>Valid values are 1 through 5000.</td>
+</tr>
+<tr>
+<td><strong>order_by</strong></td>
+<td><em>string</em></td>
+<td>Value to sort by. Defaults to <code class="prettyprint">name</code> ascending. Prepend with <code class="prettyprint">-</code> to sort descending. <br>Valid value is <code class="prettyprint">name</code>.</td>
+</tr>
+</tbody></table>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>All Roles</td>
+</tr>
+</tbody></table>
+
+          <h3 id="update-a-feature-flag">Update a feature flag</h3>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/feature_flags/[name]"</span> <span class="se">\</span>
+  -X PATCH <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+  -H <span class="s2">"Content-type: application/json"</span> <span class="se">\</span>
+  -d <span class="s1">'{
+    "enabled": true,
+    "custom_error_message": "error message the user sees"
+  }'</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
+
+<span class="w">  </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my_feature_flag"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"enabled"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-10-17T20:00:42Z"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"custom_error_message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"error message the user sees"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/feature_flags/my_feature_flag"</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+
+</span></code></pre>
+
+<h4 id="definition">Definition</h4>
+
+<p><code class="prettyprint">PATCH /v3/feature_flags/:name</code></p>
+
+<h4 id="optional-parameters">Optional Parameters</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>enabled</strong></td>
+<td><em>boolean</em></td>
+<td>Whether the feature flag is enabled.</td>
+</tr>
+<tr>
+<td><strong>custom_error_message</strong></td>
+<td><em>string</em></td>
+<td>The error string returned by the API when a client performs an action disabled by the feature flag.</td>
+</tr>
+</tbody></table>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Admin</td>
+</tr>
+</tbody></table>
+
           <h2 id="isolation-segments">Isolation Segments</h2>
 
 <p>Isolation Segments provide dedicated pools of resources to which apps can be deployed to isolate workloads.</p>
@@ -12584,324 +12902,6 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 <tr>
 <td>Space Developer</td>
 </tr>
-<tr>
-<td>Admin</td>
-</tr>
-</tbody></table>
-
-          <h2 id="feature-flags">Feature Flags</h2>
-
-<p>Feature flags are runtime flags that enable or disable functionality on the API.</p>
-
-          <h3 id="the-feature-flag-object">The feature flag object</h3>
-<pre class="highlight plaintext"><code>Example Feature Flag object
-</code></pre>
-<pre class="highlight json"><code><span class="w">  </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my_feature_flag"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"enabled"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-10-17T20:00:42Z"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"custom_error_message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"error message the user sees"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/feature_flags/my_feature_flag"</span><span class="w">
-      </span><span class="p">}</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-  </span><span class="p">}</span><span class="w">
-
-</span></code></pre>
-
-<table><thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead><tbody>
-<tr>
-<td><strong>name</strong></td>
-<td><em>string</em></td>
-<td>The name of the feature flag.</td>
-</tr>
-<tr>
-<td><strong>enabled</strong></td>
-<td><em>boolean</em></td>
-<td>Whether the feature flag is enabled.</td>
-</tr>
-<tr>
-<td><strong>updated_at</strong></td>
-<td><em>datetime</em></td>
-<td>The time with zone when the object was last updated. This will be blank for feature flags that have not been configured.</td>
-</tr>
-<tr>
-<td><strong>custom_error_message</strong></td>
-<td><em>string</em></td>
-<td>The error string returned by the API when a client performs an action disabled by the feature flag.</td>
-</tr>
-<tr>
-<td><strong>links</strong></td>
-<td><a href="#links"><em>links object</em></a></td>
-<td>Links to related resources.</td>
-</tr>
-</tbody></table>
-
-          <h3 id="list-of-feature-flags">List of feature flags</h3>
-
-<table><thead>
-<tr>
-<th></th>
-</tr>
-</thead><tbody>
-<tr>
-<td><strong>Name:</strong> <code class="prettyprint">app_bits_upload</code><br><strong>Default:</strong> <code class="prettyprint">true</code> <br><strong>Description:</strong> When enabled, space developers can upload app bits. When disabled, only admin users can upload app bits.</td>
-</tr>
-<tr>
-<td><strong>Name:</strong> <code class="prettyprint">app_scaling</code><br><strong>Default:</strong> <code class="prettyprint">true</code> <br><strong>Description:</strong> When enabled, space developers can perform scaling operations (i.e. change memory, disk or instances). When disabled, only admins can perform scaling operations.</td>
-</tr>
-<tr>
-<td><strong>Name:</strong> <code class="prettyprint">diego_docker</code><br><strong>Default:</strong> <code class="prettyprint">false</code> <br><strong>Description:</strong> When enabled, Docker applications are supported by Diego. When disabled, Docker applications will stop running. It will still be possible to stop and delete them and update their configurations.</td>
-</tr>
-<tr>
-<td><strong>Name:</strong> <code class="prettyprint">env_var_visibility</code><br><strong>Default:</strong> <code class="prettyprint">true</code> <br><strong>Description:</strong> When enabled, all users can see their environment variables. When disabled, no users can see environment variables.</td>
-</tr>
-<tr>
-<td><strong>Name:</strong> <code class="prettyprint">hide_marketplace_from_unauthenticated_users</code><br><strong>Default:</strong> <code class="prettyprint">false</code> <br><strong>Description:</strong> When enabled, service offerings available in the marketplace will be hidden from unauthenticated users. When disabled, unauthenticated users will be able to see the service offerings available in the marketplace.</td>
-</tr>
-<tr>
-<td><strong>Name:</strong> <code class="prettyprint">private_domain_creation</code><br><strong>Default:</strong> <code class="prettyprint">true</code> <br><strong>Description:</strong> When enabled, an organization manager can create private domains for that organization. When disabled, only admin users can create private domains.</td>
-</tr>
-<tr>
-<td><strong>Name:</strong> <code class="prettyprint">route_creation</code><br><strong>Default:</strong> <code class="prettyprint">true</code> <br><strong>Description:</strong> When enabled, a space developer can create routes in a space. When disabled, only admin users can create routes.</td>
-</tr>
-<tr>
-<td><strong>Name:</strong> <code class="prettyprint">service_instance_creation</code><br><strong>Default:</strong> <code class="prettyprint">true</code> <br><strong>Description:</strong> When enabled, a space developer can create service instances in a space. When disabled, only admin users can create service instances.</td>
-</tr>
-<tr>
-<td><strong>Name:</strong> <code class="prettyprint">service_instance_sharing</code><br><strong>Default:</strong> <code class="prettyprint">false</code> <br><strong>Description:</strong> When enabled, Space Developers can share service instances between two spaces (even across orgs!) in which they have the Space Developer role. When disabled, Space Developers cannot share service instances between two spaces.</td>
-</tr>
-<tr>
-<td><strong>Name:</strong> <code class="prettyprint">set_roles_by_username</code><br><strong>Default:</strong> <code class="prettyprint">true</code> <br><strong>Description:</strong> When enabled, Org Managers or Space Managers can add access roles by username. In order for this feature to be enabled the CF operator must: <br>1) Enable the <code class="prettyprint">/ids/users/</code> endpoint for UAA <br>2) Create a UAA <code class="prettyprint">cloud_controller_username_lookup</code> client with the <code class="prettyprint">scim.userids</code> authority</td>
-</tr>
-<tr>
-<td><strong>Name:</strong> <code class="prettyprint">space_developer_env_var_visibility</code><br><strong>Default:</strong> <code class="prettyprint">true</code> <br><strong>Description:</strong> When enabled, space developers can do a get on the /v2/apps/:guid/env and /v3/apps/:guid/env end points. When disabled, space developers can no longer do a get against these end points.</td>
-</tr>
-<tr>
-<td><strong>Name:</strong> <code class="prettyprint">space_scoped_private_broker_creation</code><br><strong>Default:</strong> <code class="prettyprint">true</code> <br><strong>Description:</strong> When enabled, space developers can create space scoped private brokers. When disabled, only admin users can create create space scoped private brokers.</td>
-</tr>
-<tr>
-<td><strong>Name:</strong> <code class="prettyprint">task_creation</code><br><strong>Default:</strong> <code class="prettyprint">true</code> <br><strong>Description:</strong> When enabled, space developers can create tasks. When disabled, only admin users can create tasks.</td>
-</tr>
-<tr>
-<td><strong>Name:</strong> <code class="prettyprint">unset_roles_by_username</code><br><strong>Default:</strong> <code class="prettyprint">true</code> <br><strong>Description:</strong> When enabled, Org Managers or Space Managers can remove access roles by username. In order for this feature to be enabled the CF operator must: <br>1) Enable the <code class="prettyprint">/ids/users/</code> endpoint for UAA <br>2) Create a UAA <code class="prettyprint">cloud_controller_username_lookup</code> client with the <code class="prettyprint">scim.userids</code> authority</td>
-</tr>
-<tr>
-<td><strong>Name:</strong> <code class="prettyprint">user_org_creation</code><br><strong>Default:</strong> <code class="prettyprint">false</code> <br><strong>Description:</strong> When enabled, any user can create an organization via the API. When disabled, only admin users can create organizations via the API.</td>
-</tr>
-</tbody></table>
-
-          <h3 id="get-a-feature-flag">Get a feature flag</h3>
-<pre class="highlight plaintext"><code>Example Request
-</code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/feature_flags/[name]"</span> <span class="se">\</span>
-  -X GET <span class="se">\</span>
-  -H <span class="s2">"Authorization: bearer [token]"</span>
-</code></pre>
-<pre class="highlight plaintext"><code>Example Response
-</code></pre>
-<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
-<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
-
-<span class="w">  </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my_feature_flag"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"enabled"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-10-17T20:00:42Z"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"custom_error_message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"error message the user sees"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/feature_flags/my_feature_flag"</span><span class="w">
-      </span><span class="p">}</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-  </span><span class="p">}</span><span class="w">
-
-</span></code></pre>
-
-<h4 id="definition">Definition</h4>
-
-<p><code class="prettyprint">GET /v3/feature_flags/:name</code></p>
-
-<h4 id="permitted-roles">Permitted Roles</h4>
-
-<table><thead>
-<tr>
-<th></th>
-</tr>
-</thead><tbody>
-<tr>
-<td>All Roles</td>
-</tr>
-</tbody></table>
-
-          <h3 id="list-feature-flags">List feature flags</h3>
-<pre class="highlight plaintext"><code>Example Request
-</code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/feature_flags"</span> <span class="se">\</span>
-  -X GET <span class="se">\</span>
-  -H <span class="s2">"Authorization: bearer [token]"</span>
-</code></pre>
-<pre class="highlight plaintext"><code>Example Response
-</code></pre>
-<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
-<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
-
-<span class="w">  </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"pagination"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"total_results"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"total_pages"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"first"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/feature_flags?page=1&amp;per_page=2"</span><span class="w">
-      </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"last"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/feature_flags?page=2&amp;per_page=2"</span><span class="w">
-      </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"next"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/feature_flags?page=2&amp;per_page=2"</span><span class="w">
-      </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"previous"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"resources"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-      </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my_feature_flag"</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"enabled"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-10-17T20:00:42Z"</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"custom_error_message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"error message the user sees"</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-            </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/feature_flags/my_feature_flag"</span><span class="w">
-          </span><span class="p">}</span><span class="w">
-        </span><span class="p">}</span><span class="w">
-      </span><span class="p">},</span><span class="w">
-      </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my_second_feature_flag"</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"enabled"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"custom_error_message"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-            </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/feature_flags/my_second_feature_flag"</span><span class="w">
-          </span><span class="p">}</span><span class="w">
-        </span><span class="p">}</span><span class="w">
-      </span><span class="p">}</span><span class="w">
-    </span><span class="p">]</span><span class="w">
-  </span><span class="p">}</span><span class="w">
-
-</span></code></pre>
-
-<p>Retrieve all feature_flags.</p>
-
-<h4 id="definition">Definition</h4>
-
-<p><code class="prettyprint">GET /v3/feature_flags</code></p>
-
-<h4 id="query-parameters">Query Parameters</h4>
-
-<table><thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead><tbody>
-<tr>
-<td><strong>page</strong></td>
-<td><em>integer</em></td>
-<td>Page to display. Valid values are integers &gt;= 1.</td>
-</tr>
-<tr>
-<td><strong>per_page</strong></td>
-<td><em>integer</em></td>
-<td>Number of results per page. <br>Valid values are 1 through 5000.</td>
-</tr>
-<tr>
-<td><strong>order_by</strong></td>
-<td><em>string</em></td>
-<td>Value to sort by. Defaults to <code class="prettyprint">name</code> ascending. Prepend with <code class="prettyprint">-</code> to sort descending. <br>Valid value is <code class="prettyprint">name</code>.</td>
-</tr>
-</tbody></table>
-
-<h4 id="permitted-roles">Permitted Roles</h4>
-
-<table><thead>
-<tr>
-<th></th>
-</tr>
-</thead><tbody>
-<tr>
-<td>All Roles</td>
-</tr>
-</tbody></table>
-
-          <h3 id="update-a-feature-flag">Update a feature flag</h3>
-<pre class="highlight plaintext"><code>Example Request
-</code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/feature_flags/[name]"</span> <span class="se">\</span>
-  -X PATCH <span class="se">\</span>
-  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
-  -H <span class="s2">"Content-type: application/json"</span> <span class="se">\</span>
-  -d <span class="s1">'{
-    "enabled": true,
-    "custom_error_message": "error message the user sees"
-  }'</span>
-</code></pre>
-<pre class="highlight plaintext"><code>Example Response
-</code></pre>
-<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
-<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
-
-<span class="w">  </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my_feature_flag"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"enabled"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-10-17T20:00:42Z"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"custom_error_message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"error message the user sees"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/feature_flags/my_feature_flag"</span><span class="w">
-      </span><span class="p">}</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-  </span><span class="p">}</span><span class="w">
-
-</span></code></pre>
-
-<h4 id="definition">Definition</h4>
-
-<p><code class="prettyprint">PATCH /v3/feature_flags/:name</code></p>
-
-<h4 id="optional-parameters">Optional Parameters</h4>
-
-<table><thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead><tbody>
-<tr>
-<td><strong>enabled</strong></td>
-<td><em>boolean</em></td>
-<td>Whether the feature flag is enabled.</td>
-</tr>
-<tr>
-<td><strong>custom_error_message</strong></td>
-<td><em>string</em></td>
-<td>The error string returned by the API when a client performs an action disabled by the feature flag.</td>
-</tr>
-</tbody></table>
-
-<h4 id="permitted-roles">Permitted Roles</h4>
-
-<table><thead>
-<tr>
-<th></th>
-</tr>
-</thead><tbody>
 <tr>
 <td>Admin</td>
 </tr>
