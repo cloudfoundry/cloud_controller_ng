@@ -27,7 +27,7 @@ module VCAP::Services::ServiceBrokers::V2
         plan_id:           instance.service_plan.broker_provided_id,
         organization_guid: instance.organization.guid,
         space_guid:        instance.space.guid,
-        context:           context_hash(instance)
+        context:           context_hash_with_additional_details(instance)
       }
 
       body[:parameters] = arbitrary_parameters if arbitrary_parameters.present?
@@ -170,7 +170,7 @@ module VCAP::Services::ServiceBrokers::V2
         service_id:      instance.service.broker_provided_id,
         plan_id:         plan.broker_provided_id,
         previous_values: previous_values,
-        context:         context_hash(instance)
+        context:         context_hash_with_additional_details(instance)
       }
       body[:parameters] = arbitrary_parameters if arbitrary_parameters
       response          = @http_client.patch(path, body)
@@ -289,6 +289,17 @@ module VCAP::Services::ServiceBrokers::V2
     end
 
     private
+
+    def context_hash_with_additional_details(service_instance)
+      {
+        platform:          PLATFORM,
+        organization_guid: service_instance.organization.guid,
+        space_guid:        service_instance.space.guid,
+        instance_name:     service_instance.name,
+        organization_name: service_instance.organization.name,
+        space_name:        service_instance.space.name
+      }
+    end
 
     def context_hash(service_instance)
       {
