@@ -86,8 +86,9 @@ module VCAP::CloudController
           end
 
           context 'when the service plan has maximum_polling_duration' do
+            let(:maximum_polling_duration_for_plan) { 36000000 } # in seconds
+
             context "when the config value is smaller than plan's maximum_polling_duration" do
-              let(:maximum_polling_duration_for_plan) { 36000000 } # in seconds
               let(:max_duration) { 10 } # in minutes
               it 'should set end_timestamp to config value' do
                 Timecop.freeze(Time.now)
@@ -96,12 +97,21 @@ module VCAP::CloudController
             end
 
             context "when the config value is greater than plan's maximum_polling_duration" do
-              let(:maximum_polling_duration_for_plan) { 36000000 } # in seconds
               let(:max_duration) { 1068367346 } # in minutes
               it "should set end_timestamp to the plan's maximum_polling_duration value" do
                 Timecop.freeze(Time.now)
                 expect(job.end_timestamp).to eq(Time.now + maximum_polling_duration_for_plan.seconds)
               end
+            end
+          end
+
+          context 'when there is a database error in fetching the plan' do
+            it 'should set end_timestamp to config value' do
+              allow(ManagedServiceInstance).to receive(:first) do |e|
+                raise Sequel::Error.new(e)
+              end
+              Timecop.freeze(Time.now)
+              expect(job.end_timestamp).to eq(Time.now + max_duration.minutes)
             end
           end
         end

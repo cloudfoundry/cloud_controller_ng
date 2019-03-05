@@ -43,15 +43,6 @@ module VCAP::CloudController
 
         private
 
-        def new_end_timestamp
-          max_poll_duration_configured = VCAP::CloudController::Config.config.get(:broker_client_max_async_poll_duration_minutes).minutes
-          max_poll_duration_on_plan = ManagedServiceInstance.first(guid: service_instance_guid).try(:service_plan).try(:maximum_polling_duration)
-
-          max_poll_duration_on_plan = (max_poll_duration_on_plan / 60).minutes if max_poll_duration_on_plan
-
-          Time.now + [max_poll_duration_configured, max_poll_duration_on_plan].compact.min
-        end
-
         def repository
           Repositories::ServiceEventRepository.new(user_audit_info)
         end
@@ -91,6 +82,13 @@ module VCAP::CloudController
           else
             service_instance.save_and_update_operation(service_instance.last_operation.proposed_changes)
           end
+        end
+
+        def service_plan
+          ManagedServiceInstance.first(guid: service_instance_guid).try(:service_plan)
+        rescue Sequel::Error => e
+          Steno.logger('cc-background').error("There was an error while fetching the service instance: #{e}")
+          nil
         end
       end
     end

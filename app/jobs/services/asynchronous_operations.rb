@@ -5,7 +5,12 @@ module VCAP::CloudController
         private
 
         def new_end_timestamp
-          Time.now + Config.config.get(:broker_client_max_async_poll_duration_minutes).minutes
+          max_poll_duration_configured = VCAP::CloudController::Config.config.get(:broker_client_max_async_poll_duration_minutes).minutes
+          max_poll_duration_on_plan = service_plan.try(:maximum_polling_duration)
+
+          max_poll_duration_on_plan = (max_poll_duration_on_plan / 60).minutes if max_poll_duration_on_plan
+
+          Time.now + [max_poll_duration_configured, max_poll_duration_on_plan].compact.min
         end
 
         def retry_job(retry_after_header: '')

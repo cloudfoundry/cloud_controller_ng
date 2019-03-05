@@ -88,9 +88,10 @@ module VCAP::CloudController
         end
 
         def end_timestamp_reached
-          ServiceBinding.first(guid: service_binding_guid).last_operation.update(
+          binding_last_operation = ServiceBinding.first(guid: service_binding_guid).last_operation
+          binding_last_operation.update(
             state: 'failed',
-            description: 'Service Broker failed to bind within the required time.'
+            description: "Service Broker failed to #{binding_last_operation.type} binding within the required time."
           )
         end
 
@@ -118,6 +119,13 @@ module VCAP::CloudController
 
         def valid_client_response?(last_operation_result)
           last_operation_result.key?(:last_operation)
+        end
+
+        def service_plan
+          ServiceBinding.first(guid: service_binding_guid).try(:service_plan)
+        rescue Sequel::Error => e
+          Steno.logger('cc-background').error("There was an error while fetching the service binding: #{e}")
+          nil
         end
       end
     end
