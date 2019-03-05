@@ -42,6 +42,10 @@ class RootController < ActionController::Base
           processes: {
             href: build_api_uri(path: '/processes')
           },
+          resource_match: {
+            href: build_api_uri(path: '/resource_match'),
+            experimental: true,
+          },
           service_instances: {
             href: build_api_uri(path: '/service_instances')
           },

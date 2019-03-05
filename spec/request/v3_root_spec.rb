@@ -46,6 +46,10 @@ RSpec.describe 'App Features' do
           'processes' => {
             'href' => "#{link_prefix}/v3/processes"
           },
+          'resource_match' => {
+            'href' => "#{link_prefix}/v3/resource_match",
+            'experimental' => true
+          },
           'service_instances' => {
             'href' => "#{link_prefix}/v3/service_instances"
           },
