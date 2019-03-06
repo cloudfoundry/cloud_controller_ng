@@ -217,8 +217,8 @@ RSpec.describe DeploymentsController, type: :controller do
 
       context 'when a revision is provided' do
         let(:newer_droplet) { VCAP::CloudController::DropletModel.make(app: app) }
-        let!(:earlier_revision) { VCAP::CloudController::RevisionModel.make(app: app, droplet_guid: droplet.guid, created_at: 5.days.ago) }
-        let!(:later_revision) { VCAP::CloudController::RevisionModel.make(app: app, droplet_guid: newer_droplet.guid) }
+        let!(:earlier_revision) { VCAP::CloudController::RevisionModel.make(app: app, droplet_guid: droplet.guid, created_at: 5.days.ago, version: 2) }
+        let!(:later_revision) { VCAP::CloudController::RevisionModel.make(app: app, droplet_guid: newer_droplet.guid, version: 3) }
 
         let(:request_body) do
           {

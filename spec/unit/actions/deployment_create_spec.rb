@@ -74,6 +74,23 @@ module VCAP::CloudController
               expect(deployment.revision_version).to eq(revision.version)
             end
 
+            it 'has the reason for the initial revision' do
+              DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+
+              revision = RevisionModel.last
+
+              expect(revision.description).to eq('Initial revision.')
+            end
+
+            it 'has the reason for a droplet changed' do
+              RevisionModel.make(app: app, droplet_guid: app.droplet.guid, environment_variables: app.environment_variables)
+              DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+
+              revision = RevisionModel.last
+
+              expect(revision.description).to eq('New droplet deployed.')
+            end
+
             it 'keeps a record of the revision even if it is deleted' do
               deployment = DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
 
@@ -416,13 +433,17 @@ module VCAP::CloudController
 
       context 'when a revision is provided on the message (rollback)' do
         let(:revision_droplet) { DropletModel.make(app: app, process_types: { 'web' => '1234' }) }
-        let!(:revision) { RevisionModel.make(droplet_guid: revision_droplet.guid, environment_variables: { 'foo' => 'var' }) }
+        let!(:revision) { RevisionModel.make(droplet_guid: revision_droplet.guid, environment_variables: { 'foo' => 'var' }, version: 3) }
         let(:message) {
           DeploymentCreateMessage.new({
             relationships: { app: { data: { guid: app.guid } } },
             revision: { guid: revision.guid },
           })
         }
+
+        before do
+          app.update(revisions_enabled: true)
+        end
 
         it 'creates a deployment with the droplet associated with the revision' do
           deployment = nil
@@ -436,10 +457,6 @@ module VCAP::CloudController
           expect(deployment.droplet_guid).to eq(revision.droplet_guid)
           expect(deployment.previous_droplet).to eq(original_droplet)
           expect(deployment.original_web_process_instance_count).to eq(3)
-        end
-
-        before do
-          app.update(revisions_enabled: true)
         end
 
         it 'creates a revision associated with the droplet from the associated revision' do
@@ -476,6 +493,12 @@ module VCAP::CloudController
 
           deploying_web_process = app.reload.newest_web_process
           expect(deploying_web_process.revision).to eq(app.latest_revision)
+        end
+
+        it 'sets the rollback description' do
+          DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+          revision = RevisionModel.last
+          expect(revision.description).to eq('Rolled back to revision 3')
         end
 
         it 'records a rollback deployment event' do

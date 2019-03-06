@@ -133,6 +133,7 @@ module VCAP::CloudController
           end.to change { RevisionModel.count }.by(1)
           last_revision = RevisionModel.last
           expect(last_revision.version).to eq(new_revision_number)
+          expect(last_revision.description).to eq('New droplet deployed.')
         end
 
         it 'does not create a new revision if it was already started' do

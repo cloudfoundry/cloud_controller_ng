@@ -8,6 +8,7 @@ gem 'cloudfront-signer'
 gem 'em-http-request', '~> 1.1'
 gem 'eventmachine', '~> 1.0.9'
 gem 'googleapis-common-protos'
+gem 'hashdiff'
 gem 'httpclient'
 gem 'json-schema'
 gem 'json_pure'
@@ -73,7 +74,6 @@ end
 group :test do
   gem 'cf-perm-test-helpers', '~> 0.0.6'
   gem 'codeclimate-test-reporter', require: false
-  gem 'hashdiff'
   gem 'machinist', '~> 1.0.6'
   gem 'parallel_tests'
   gem 'rack-test'

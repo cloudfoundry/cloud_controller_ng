@@ -25,6 +25,7 @@ RSpec.describe 'Revisions' do
         {
           'guid' => revision.guid,
           'version' => revision.version,
+          'description' => revision.description,
           'droplet' => {
             'guid' => revision.droplet_guid
           },
@@ -53,7 +54,7 @@ RSpec.describe 'Revisions' do
   end
 
   describe 'GET /v3/apps/:guid/revisions' do
-    let!(:revision2) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 43) }
+    let!(:revision2) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 43, description: 'New droplet deployed') }
     it 'gets a list of revisions for the app' do
       get "/v3/apps/#{app_model.guid}/revisions?per_page=2", nil, user_header
       expect(last_response.status).to eq(200)
@@ -77,6 +78,7 @@ RSpec.describe 'Revisions' do
             {
               'guid' => revision.guid,
               'version' =>  revision.version,
+              'description' => revision.description,
               'droplet' => {
                 'guid' => revision.droplet_guid
               },
@@ -103,6 +105,7 @@ RSpec.describe 'Revisions' do
             {
               'guid' => revision2.guid,
               'version' =>  revision2.version,
+              'description' => revision2.description,
               'droplet' => {
                 'guid' => revision2.droplet_guid
               },
@@ -133,7 +136,7 @@ RSpec.describe 'Revisions' do
 
     context 'filtering' do
       it 'gets a list of revisions matching the provided versions' do
-        revision3 = VCAP::CloudController::RevisionModel.make(app: app_model, version: 44)
+        revision3 = VCAP::CloudController::RevisionModel.make(app: app_model, version: 44, description: 'Rollback to revision 42')
 
         get "/v3/apps/#{app_model.guid}/revisions?per_page=2&versions=42,44", nil, user_header
         expect(last_response.status).to eq(200)
@@ -164,6 +167,7 @@ RSpec.describe 'Revisions' do
                     }
                   }
                 },
+                'description' => revision.description,
                 'droplet' => {
                   'guid' => revision.droplet_guid
                 },
@@ -183,6 +187,7 @@ RSpec.describe 'Revisions' do
               {
                 'guid' => revision3.guid,
                 'version' =>  revision3.version,
+                'description' => revision3.description,
                 'droplet' => {
                   'guid' => revision3.droplet_guid
                 },
@@ -259,6 +264,7 @@ RSpec.describe 'Revisions' do
         {
           'guid' => revision.guid,
           'version' => revision.version,
+          'description' => revision.description,
           'droplet' => {
             'guid' => revision.droplet_guid
           },
@@ -318,8 +324,8 @@ RSpec.describe 'Revisions' do
   end
 
   describe 'GET /v3/apps/:guid/revisions/deployed' do
-    let!(:revision2) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 43) }
-    let!(:revision3) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 44) }
+    let!(:revision2) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 43, description: 'New droplet deployed') }
+    let!(:revision3) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 44, description: 'New environment variables') }
     let!(:process) { VCAP::CloudController::ProcessModel.make(app: app_model, revision: revision, type: 'web', state: 'STARTED') }
     let!(:process2) { VCAP::CloudController::ProcessModel.make(app: app_model, revision: revision2, type: 'worker', state: 'STARTED') }
     let!(:process3) { VCAP::CloudController::ProcessModel.make(app: app_model, revision: revision3, type: 'web', state: 'STOPPED') }
@@ -347,6 +353,7 @@ RSpec.describe 'Revisions' do
             {
               'guid' => revision.guid,
               'version' =>  revision.version,
+              'description' => revision.description,
               'droplet' => {
                 'guid' => revision.droplet_guid
               },
@@ -373,6 +380,7 @@ RSpec.describe 'Revisions' do
             {
               'guid' => revision2.guid,
               'version' =>  revision2.version,
+              'description' => revision2.description,
               'droplet' => {
                 'guid' => revision2.droplet_guid
               },

@@ -548,6 +548,7 @@ module VCAP::CloudController
 
   RevisionModel.blueprint do
     app { AppModel.make }
+    description { 'Initial revision' }
   end
 
   TestModel.blueprint do

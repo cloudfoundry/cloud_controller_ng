@@ -26,6 +26,7 @@ RSpec.describe RevisionsController, type: :controller do
           'droplet' => {
             'guid' => droplet.guid
           },
+          'description' => revision.description,
           'relationships' => {
             'app' => {
               'data' => {
@@ -66,6 +67,7 @@ RSpec.describe RevisionsController, type: :controller do
           'droplet' => {
             'guid' => droplet_guid
           },
+          'description' => revision.description,
           'relationships' => {
             'app' => {
               'data' => {
@@ -182,6 +184,7 @@ RSpec.describe RevisionsController, type: :controller do
             'droplet' => {
               'guid' => droplet.guid
             },
+            'description' => revision.description,
             'relationships' => {
               'app' => {
                 'data' => {
@@ -234,6 +237,7 @@ RSpec.describe RevisionsController, type: :controller do
             'droplet' => {
               'guid' => droplet.guid
             },
+            'description' => revision.description,
             'relationships' => {
               'app' => {
                 'data' => {

@@ -99,6 +99,7 @@ module VCAP::CloudController
 
             expect(app.reload.desired_state).to eq('STARTED')
             expect(app.reload.latest_revision).not_to be_nil
+            expect(app.reload.latest_revision.description).to eq('Initial revision.')
             expect(ProcessRestart).
               to have_received(:restart).
               with(process: process1, config: config, stop_in_runtime: true, revision: app.reload.latest_revision)

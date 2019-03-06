@@ -15,6 +15,7 @@ module VCAP::CloudController
               guid: revision.droplet_guid,
             },
             processes: processes,
+            description: revision.description,
             relationships: {
               app: {
                 data: {

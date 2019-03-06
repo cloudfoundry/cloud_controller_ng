@@ -1,5 +1,6 @@
 require 'cloud_controller/database_uri_generator'
 require 'models/helpers/process_types'
+require 'hashdiff'
 
 module VCAP::CloudController
   class AppModel < Sequel::Model(:apps)
@@ -132,12 +133,43 @@ module VCAP::CloudController
     end
 
     def can_create_revision?
-      return false unless revisions_enabled
-      return true unless latest_revision.present?
+      !revision_reason.empty?
+    end
 
-      (droplet_guid != latest_revision.droplet_guid ||
-      environment_variables != latest_revision.environment_variables ||
-      commands_by_process_type != latest_revision.commands_by_process_type)
+    def revision_reason
+      return [] unless revisions_enabled
+
+      revision = latest_revision
+      return ['Initial revision.'] unless revision.present?
+
+      reasons = []
+
+      if droplet_guid != revision.droplet_guid
+        reasons.push('New droplet deployed.')
+      end
+
+      if environment_variables != revision.environment_variables
+        reasons.push('New environment variables deployed.')
+      end
+
+      commands_differences = HashDiff.diff(revision.commands_by_process_type, commands_by_process_type)
+
+      reasons.push(*commands_differences.map do |change_type, process_type, *command_change|
+                     if change_type == '+'
+                       "New process type '#{process_type}' added."
+                     elsif change_type == '-'
+                       "Process type '#{process_type}' removed."
+                     elsif command_change[0].nil?
+                       "Custom start command added for '#{process_type}' process."
+                     elsif command_change[1].nil?
+                       "Custom start command removed for '#{process_type}' process."
+                     else
+                       "Custom start command updated for '#{process_type}' process."
+                     end
+                   end
+      )
+
+      reasons
     end
 
     def commands_by_process_type

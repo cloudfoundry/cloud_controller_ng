@@ -2,7 +2,7 @@ require 'repositories/revision_event_repository'
 module VCAP::CloudController
   class RevisionCreate
     class << self
-      def create(app, user_audit_info)
+      def create(app, user_audit_info, previous_version: nil)
         RevisionModel.db.transaction do
           next_version = calculate_next_version(app)
 
@@ -10,11 +10,14 @@ module VCAP::CloudController
             existing_revision_for_version.destroy
           end
 
+          description = previous_version.nil? ? app.revision_reason.sort.join(' ') : "Rolled back to revision #{previous_version}"
+
           revision = RevisionModel.create(
             app: app,
             version: next_version,
             droplet_guid: app.droplet_guid,
-            environment_variables: app.environment_variables
+            environment_variables: app.environment_variables,
+            description: description,
           )
 
           newest_unique_processes_for_app(app).

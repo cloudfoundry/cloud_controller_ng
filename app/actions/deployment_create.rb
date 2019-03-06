@@ -19,7 +19,7 @@ module VCAP::CloudController
           desired_instances = previous_deployment.original_web_process_instance_count
         end
 
-        new_revision = app.can_create_revision? ? RevisionCreate.create(app, user_audit_info) : web_process.revision
+        new_revision = app.can_create_revision? ? RevisionCreate.create(app, user_audit_info, previous_version: target_state.version) : web_process.revision
         deployment = DeploymentModel.new(
           app: app,
           state: DeploymentModel::DEPLOYING_STATE,
@@ -103,21 +103,22 @@ module VCAP::CloudController
   end
 
   class DeploymentTargetState
-    attr_reader :droplet, :environment_variables
+    attr_reader :droplet, :environment_variables, :version
 
     def initialize(app, message)
       revision = nil
+
       @droplet = if message.revision_guid
                    revision = RevisionModel.find(guid: message.revision_guid)
                    raise DeploymentCreate::Error.new('The revision does not exist') unless revision
 
+                   @version = revision.version
                    RevisionDropletSource.new(revision).get
                  elsif message.droplet_guid
                    FromGuidDropletSource.new(message.droplet_guid).get
                  else
                    AppDropletSource.new(app.droplet).get
                  end
-
       @environment_variables = revision ? revision.environment_variables : app.environment_variables
     end
 

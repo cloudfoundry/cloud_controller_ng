@@ -17,6 +17,7 @@ module VCAP::CloudController::Presenters::V3
         app: app_model,
         version: 300,
         droplet_guid: droplet.guid,
+        description: 'Initial revision'
       )
     end
     let!(:revision_web_process_command) do
@@ -78,6 +79,7 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:metadata][:annotations]).to eq('altitude' => '14,412', 'maize' => 'hfcs')
         expect(result[:processes]['web']).to eq('command' => './start')
         expect(result[:processes]['worker']).to eq('command' => nil)
+        expect(result[:description]).to eq('Initial revision')
       end
     end
   end
