@@ -76,6 +76,9 @@ Rails.application.routes.draw do
   get '/deployments/:guid', to: 'deployments#show'
   post '/deployments/:guid/actions/cancel', to: 'deployments#cancel'
 
+  # domains
+  post '/domains', to: 'domains#create'
+
   # droplets
   post '/packages/:package_guid/droplets', to: 'droplets#create'
   post '/droplets', to: 'droplets#copy'
