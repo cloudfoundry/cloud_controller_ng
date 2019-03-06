@@ -524,6 +524,22 @@ module VCAP::CloudController
             'request' => message.audit_hash
           })
         end
+
+        it 'fails if the droplet does not exist' do
+          revision_droplet.delete
+
+          expect {
+            DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+          }.to raise_error(DeploymentCreate::Error, /Unable to deploy this revision, the droplet for this revision no longer exists./)
+        end
+
+        it 'fails if the droplet is expired' do
+          revision_droplet.update(state: DropletModel::EXPIRED_STATE)
+
+          expect {
+            DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+          }.to raise_error(DeploymentCreate::Error, /Unable to deploy this revision, the droplet for this revision no longer exists./)
+        end
       end
     end
   end

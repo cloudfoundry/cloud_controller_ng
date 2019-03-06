@@ -141,7 +141,8 @@ module VCAP::CloudController
   class RevisionDropletSource < Struct.new(:revision)
     def get
       droplet = DropletModel.find(guid: revision.droplet_guid)
-      raise DeploymentCreate::Error.new('Invalid revision. Please specify a revision with a valid droplet in the request.') unless droplet
+      raise DeploymentCreate::Error.new('Unable to deploy this revision, the droplet for this revision no longer exists.') unless
+          droplet && droplet.state != DropletModel::EXPIRED_STATE
 
       droplet
     end

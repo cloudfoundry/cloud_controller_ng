@@ -269,7 +269,7 @@ RSpec.describe DeploymentsController, type: :controller do
 
           expect(response.status).to eq 422
           expect(response.body).to include('UnprocessableEntity')
-          expect(response.body).to include('Invalid revision. Please specify a revision with a valid droplet in the request.')
+          expect(response.body).to include('Unable to deploy this revision, the droplet for this revision no longer exists.')
         end
 
         it 'returns a 422 and an error if revisions are not enabled' do
