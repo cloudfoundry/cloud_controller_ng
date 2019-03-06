@@ -67,6 +67,7 @@ module VCAP::CloudController::Presenters::V3
         links = {
           self: { href: "#{link_prefix}/v3/revisions/#{revision.guid}" },
           app:  { href: "#{link_prefix}/v3/apps/#{app_model.guid}" },
+          environment_variables:  { href: "#{link_prefix}/v3/revisions/#{revision.guid}/environment_variables" },
         }
         expect(result[:guid]).to eq(revision.guid)
         expect(result[:droplet][:guid]).to eq(revision.droplet_guid)

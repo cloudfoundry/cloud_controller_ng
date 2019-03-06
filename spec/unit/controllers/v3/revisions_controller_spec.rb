@@ -42,7 +42,10 @@ RSpec.describe RevisionsController, type: :controller do
             },
             'app' => {
               'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
-            }
+            },
+            'environment_variables' => {
+              'href' => "#{link_prefix}/v3/revisions/#{revision.guid}/environment_variables"
+            },
           },
           'metadata' => {
             'labels' => {},
@@ -83,7 +86,10 @@ RSpec.describe RevisionsController, type: :controller do
             },
             'app' => {
               'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
-            }
+            },
+            'environment_variables' => {
+              'href' => "#{link_prefix}/v3/revisions/#{revision.guid}/environment_variables"
+            },
           },
           'metadata' => {
             'labels' => {},
@@ -200,7 +206,10 @@ RSpec.describe RevisionsController, type: :controller do
               },
               'app' => {
                 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
-              }
+              },
+              'environment_variables' => {
+                'href' => "#{link_prefix}/v3/revisions/#{revision.guid}/environment_variables"
+              },
             },
             'metadata' => {
               'labels' => { 'fruit' => 'passionfruit', 'truck' => 'hino' },
@@ -253,7 +262,10 @@ RSpec.describe RevisionsController, type: :controller do
               },
               'app' => {
                 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
-              }
+              },
+              'environment_variables' => {
+                'href' => "#{link_prefix}/v3/revisions/#{revision.guid}/environment_variables"
+              },
             },
             'metadata' => {
               'labels' => { 'truck' => 'hino' },

@@ -45,6 +45,9 @@ RSpec.describe 'Revisions' do
             'app' => {
               'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
             },
+            'environment_variables' => {
+              'href' => "#{link_prefix}/v3/revisions/#{revision.guid}/environment_variables"
+            },
           },
           'metadata' => { 'labels' => {}, 'annotations' => {} },
           'processes' =>  {},
@@ -98,6 +101,9 @@ RSpec.describe 'Revisions' do
                 'app' => {
                   'href' => "#{link_prefix}/v3/apps/#{app_model.guid}",
                 },
+                'environment_variables' => {
+                  'href' => "#{link_prefix}/v3/revisions/#{revision.guid}/environment_variables"
+                },
               },
               'metadata' => { 'labels' => {}, 'annotations' => {} },
               'processes' => {},
@@ -124,6 +130,9 @@ RSpec.describe 'Revisions' do
                 },
                 'app' => {
                   'href' => "#{link_prefix}/v3/apps/#{app_model.guid}",
+                },
+                'environment_variables' => {
+                  'href' => "#{link_prefix}/v3/revisions/#{revision2.guid}/environment_variables"
                 },
               },
               'metadata' => { 'labels' => {}, 'annotations' => {} },
@@ -180,6 +189,9 @@ RSpec.describe 'Revisions' do
                   'app' => {
                     'href' => "#{link_prefix}/v3/apps/#{app_model.guid}",
                   },
+                  'environment_variables' => {
+                    'href' => "#{link_prefix}/v3/revisions/#{revision.guid}/environment_variables"
+                  },
                 },
                 'metadata' => { 'labels' => {}, 'annotations' => {} },
                 'processes' => {},
@@ -206,6 +218,9 @@ RSpec.describe 'Revisions' do
                   },
                   'app' => {
                     'href' => "#{link_prefix}/v3/apps/#{app_model.guid}",
+                  },
+                  'environment_variables' => {
+                    'href' => "#{link_prefix}/v3/revisions/#{revision3.guid}/environment_variables"
                   },
                 },
                 'metadata' => { 'labels' => {}, 'annotations' => {} },
@@ -283,6 +298,9 @@ RSpec.describe 'Revisions' do
             },
             'app' => {
               'href' => "#{link_prefix}/v3/apps/#{app_model.guid}",
+            },
+            'environment_variables' => {
+              'href' => "#{link_prefix}/v3/revisions/#{revision.guid}/environment_variables"
             },
           },
           'metadata' => {
@@ -373,6 +391,9 @@ RSpec.describe 'Revisions' do
                 'app' => {
                   'href' => "#{link_prefix}/v3/apps/#{app_model.guid}",
                 },
+                'environment_variables' => {
+                  'href' => "#{link_prefix}/v3/revisions/#{revision.guid}/environment_variables"
+                },
               },
               'metadata' => { 'labels' => {}, 'annotations' => {} },
               'processes' => {},
@@ -399,6 +420,9 @@ RSpec.describe 'Revisions' do
                 },
                 'app' => {
                   'href' => "#{link_prefix}/v3/apps/#{app_model.guid}",
+                },
+                'environment_variables' => {
+                  'href' => "#{link_prefix}/v3/revisions/#{revision2.guid}/environment_variables"
                 },
               },
               'metadata' => { 'labels' => {}, 'annotations' => {} },

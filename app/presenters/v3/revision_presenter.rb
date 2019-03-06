@@ -48,6 +48,9 @@ module VCAP::CloudController
             },
             app: {
               href: url_builder.build_url(path: "/v3/apps/#{revision.app_guid}")
+            },
+            environment_variables: {
+              href: url_builder.build_url(path: "/v3/revisions/#{revision.guid}/environment_variables")
             }
           }
         end
