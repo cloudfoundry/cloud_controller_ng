@@ -70,7 +70,7 @@ class PackagesController < ApplicationController
       unprocessable!(e.message)
     end
 
-    render status: :ok, json: Presenters::V3::PackagePresenter.new(package)
+    render status: :ok, json: Presenters::V3::PackagePresenter.new(package, show_bits_service_upload_link: true)
   end
 
   def download
@@ -112,7 +112,7 @@ class PackagesController < ApplicationController
   def create
     package = hashed_params[:source_guid] ? create_copy : create_fresh
 
-    render status: :created, json: Presenters::V3::PackagePresenter.new(package)
+    render status: :created, json: Presenters::V3::PackagePresenter.new(package, show_bits_service_upload_link: true)
   rescue PackageCopy::InvalidPackage, PackageCreate::InvalidPackage => e
     unprocessable!(e.message)
   end
@@ -127,7 +127,7 @@ class PackagesController < ApplicationController
 
     package = PackageUpdate.new.update(package, message)
 
-    render status: :ok, json: Presenters::V3::PackagePresenter.new(package)
+    render status: :ok, json: Presenters::V3::PackagePresenter.new(package, show_bits_service_upload_link: true)
   end
 
   private
