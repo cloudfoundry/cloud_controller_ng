@@ -322,6 +322,7 @@ RSpec.describe PackagesController, type: :controller do
 
     before do
       allow_user_read_access_for(user, spaces: [space])
+      disallow_user_write_access(user, space: space)
     end
 
     it 'returns a 200 OK and the package' do
@@ -364,6 +365,47 @@ RSpec.describe PackagesController, type: :controller do
 
           expect(response.status).to eq(404)
           expect(response.body).to include('ResourceNotFound')
+        end
+      end
+
+      context 'bits service upload link' do
+        let(:bits_service_double) { double('bits_service') }
+        let(:blob_double) { double('blob') }
+        let(:bits_service_public_upload_url) { "https://some.public/signed/url/to/upload/package#{package.guid}" }
+
+        before do
+          VCAP::CloudController::Config.config.set(:bits_service, { enabled: true })
+
+          allow_any_instance_of(CloudController::DependencyLocator).to receive(:package_blobstore).
+            and_return(bits_service_double)
+          allow(bits_service_double).to receive(:blob).and_return(blob_double)
+          allow(blob_double).to receive(:public_upload_url).and_return(bits_service_public_upload_url)
+        end
+
+        context 'when the user can write to the space' do
+          before do
+            allow_user_write_access(user, space: space)
+          end
+
+          it 'returns an upload link' do
+            get :show, params: { guid: package.guid }
+
+            expect(response.status).to eq(200)
+            expect(MultiJson.load(response.body)['links']['upload']['href']).to eq(bits_service_public_upload_url)
+          end
+        end
+
+        context 'when the user can NOT write to the space' do
+          before do
+            disallow_user_write_access(user, space: space)
+          end
+
+          it 'does not return a download link' do
+            get :show, params: { guid: package.guid }
+
+            expect(response.status).to eq(200)
+            expect(MultiJson.load(response.body)['links']['upload']).to be_nil
+          end
         end
       end
     end

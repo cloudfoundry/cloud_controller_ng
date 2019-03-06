@@ -93,7 +93,7 @@ class PackagesController < ApplicationController
     package = PackageModel.where(guid: hashed_params[:guid]).eager(:space, space: :organization).all.first
     package_not_found! unless package && permission_queryer.can_read_from_space?(package.space.guid, package.space.organization.guid)
 
-    render status: :ok, json: Presenters::V3::PackagePresenter.new(package)
+    render status: :ok, json: Presenters::V3::PackagePresenter.new(package, show_bits_service_upload_link: permission_queryer.can_write_to_space?(package.space.guid))
   end
 
   def destroy

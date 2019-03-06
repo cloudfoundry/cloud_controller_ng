@@ -8,8 +8,15 @@ module VCAP::CloudController
       class PackagePresenter < BasePresenter
         include VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers
 
-        def initialize(resource, show_secrets: false, censored_message: Censorship::REDACTED_CREDENTIAL)
-          super
+        def initialize(
+          resource,
+          show_secrets: false,
+          censored_message: Censorship::REDACTED_CREDENTIAL,
+          show_bits_service_upload_link: false
+        )
+          @show_bits_service_upload_link = show_bits_service_upload_link
+
+          super(resource, show_secrets: show_secrets, censored_message: censored_message)
         end
 
         def to_hash
@@ -60,7 +67,7 @@ module VCAP::CloudController
           download_link = nil
           if package.type == 'bits'
             upload_link = if VCAP::CloudController::Config.config.get(:bits_service, :enabled)
-                            { href: bits_service_client.blob(package.guid).public_upload_url, method: 'PUT' }
+                            bits_service_upload_link
                           else
                             { href: url_builder.build_url(path: "/v3/packages/#{package.guid}/upload"), method: 'POST' }
                           end
@@ -76,6 +83,12 @@ module VCAP::CloudController
           }
 
           links.delete_if { |_, v| v.nil? }
+        end
+
+        def bits_service_upload_link
+          return nil unless @show_bits_service_upload_link
+
+          { href: bits_service_client.blob(package.guid).public_upload_url, method: 'PUT' }
         end
 
         def bits_service_client
