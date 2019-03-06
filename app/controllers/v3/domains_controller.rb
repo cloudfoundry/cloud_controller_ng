@@ -12,6 +12,4 @@ class DomainsController < ApplicationController
 
     render status: :created, json: Presenters::V3::DomainPresenter.new(domain)
   end
-
-  private
 end

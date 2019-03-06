@@ -25,13 +25,13 @@ RSpec.describe DomainsController, type: :controller do
 
         expect(response.status).to eq(201)
 
-        createdDomain = VCAP::CloudController::Domain.last
-        expect(createdDomain.name).to eq('my-domain.biz')
-        expect(createdDomain.internal).to be_truthy
+        created_domain = VCAP::CloudController::Domain.last
+        expect(created_domain.name).to eq('my-domain.biz')
+        expect(created_domain.internal).to be_truthy
 
-        expect(parsed_body['guid']).to eq(createdDomain.guid)
-        expect(parsed_body['name']).to eq(createdDomain.name)
-        expect(parsed_body['internal']).to eq(createdDomain.internal)
+        expect(parsed_body['guid']).to eq(created_domain.guid)
+        expect(parsed_body['name']).to eq(created_domain.name)
+        expect(parsed_body['internal']).to eq(created_domain.internal)
       end
     end
 
