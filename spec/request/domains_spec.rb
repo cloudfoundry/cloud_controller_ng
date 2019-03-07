@@ -74,7 +74,8 @@ RSpec.describe 'Domains Request' do
 
             expect(last_response.status).to eq(422)
 
-            expect(parsed_response['errors'][0]['detail']).to eq 'Name can contain multiple subdomains, each having only alphanumeric characters and hyphens of up to 63 characters, see RFC 1035.'
+            expected_err = 'Name can contain multiple subdomains, each having only alphanumeric characters and hyphens of up to 63 characters, see RFC 1035.'
+            expect(parsed_response['errors'][0]['detail']).to eq expected_err
           end
         end
 
