@@ -7,7 +7,7 @@ module VCAP::CloudController
 
     describe '#validate_app' do
       let!(:admin_buildpack) { Buildpack.make(name: 'admin-buildpack') }
-      let(:buildpack_lifecycle_data) { BuildpackLifecycleDataModel.make(buildpacks: ['admin-buildpack']) }
+      let(:buildpack_lifecycle_data) { FactoryBot.create(:buildpack_lifecycle_data, buildpacks: ['admin-buildpack']) }
       let(:app_model) { AppModel.make }
       let(:process_model) { ProcessModelFactory.make(:buildpack, app: app_model) }
 
@@ -59,7 +59,7 @@ module VCAP::CloudController
 
         context 'and an admin buildpack is specified' do
           let(:buildpack_lifecycle_data) do
-            BuildpackLifecycleDataModel.make(buildpacks: %w(https://buildpacks.gov admin-buildpack))
+            FactoryBot.create(:buildpack_lifecycle_data, buildpacks: %w(https://buildpacks.gov admin-buildpack))
           end
 
           it 'raises an error' do
@@ -71,7 +71,7 @@ module VCAP::CloudController
 
         context 'and custom buildpacks are specified' do
           let(:buildpack_lifecycle_data) do
-            BuildpackLifecycleDataModel.make(buildpacks: %w(https://buildpacks.gov http://custom-buildpack.example.com))
+            FactoryBot.create(:buildpack_lifecycle_data, buildpacks: %w(https://buildpacks.gov http://custom-buildpack.example.com))
           end
 
           it 'does not raise' do

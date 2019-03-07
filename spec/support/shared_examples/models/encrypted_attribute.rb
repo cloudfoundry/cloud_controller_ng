@@ -8,7 +8,15 @@ module VCAP::CloudController
     end
 
     def new_model
-      model_factory.call.tap do |model|
+      begin
+        result = model_factory.call
+      rescue RuntimeError => e
+        raise unless e.message.match?(/No blueprint for class/)
+
+        result = FactoryBot.create(model_class.name.demodulize.underscore.to_sym)
+      end
+
+      result.tap do |model|
         model.update(encrypted_attr => value_to_encrypt)
       end
     end

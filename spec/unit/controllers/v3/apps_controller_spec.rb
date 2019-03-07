@@ -11,8 +11,8 @@ RSpec.describe AppsV3Controller, type: :controller do
     before do
       set_current_user(user)
       allow_user_read_access_for(user, spaces: [space_1])
-      VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model_1, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
-      VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model_2, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
+      FactoryBot.create(:buildpack_lifecycle_data, app: app_model_1, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
+      FactoryBot.create(:buildpack_lifecycle_data, app: app_model_2, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
     end
 
     it 'returns 200 and lists the apps for spaces user is allowed to read' do
@@ -30,9 +30,9 @@ RSpec.describe AppsV3Controller, type: :controller do
 
       before do
         allow_user_global_read_access(user)
-        VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model_1, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
-        VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model_2, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
-        VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model_3, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
+        FactoryBot.create(:buildpack_lifecycle_data, app: app_model_1, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
+        FactoryBot.create(:buildpack_lifecycle_data, app: app_model_2, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
+        FactoryBot.create(:buildpack_lifecycle_data, app: app_model_3, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
       end
 
       it 'fetches all the apps' do
@@ -223,7 +223,7 @@ RSpec.describe AppsV3Controller, type: :controller do
       set_current_user(user)
       allow_user_read_access_for(user, spaces: [space])
       allow_user_secret_access(user, space: space)
-      VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
+      FactoryBot.create(:buildpack_lifecycle_data, app: app_model, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
     end
 
     it 'returns a 200 and the app' do
@@ -1160,7 +1160,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     before do
       allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space: space)
-      VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
+      FactoryBot.create(:buildpack_lifecycle_data, app: app_model, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
       allow(VCAP::CloudController::Jobs::DeleteActionJob).to receive(:new).and_call_original
       allow(VCAP::CloudController::AppDelete).to receive(:new).and_return(app_delete_stub)
       allow(AppsV3Controller::DeleteAppErrorTranslatorJob).to receive(:new).and_call_original
@@ -1263,7 +1263,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     before do
       allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space: space)
-      VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
+      FactoryBot.create(:buildpack_lifecycle_data, app: app_model, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
     end
 
     it 'returns a 200 and the app' do
@@ -1404,7 +1404,7 @@ RSpec.describe AppsV3Controller, type: :controller do
       set_current_user(user)
       allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space: space)
-      VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
+      FactoryBot.create(:buildpack_lifecycle_data, app: app_model, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
     end
 
     it 'returns a 200 and the app' do
@@ -1491,7 +1491,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     let(:user) { VCAP::CloudController::User.make }
 
     before do
-      VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
+      FactoryBot.create(:buildpack_lifecycle_data, app: app_model, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
     end
 
     context 'permissions' do
@@ -1725,7 +1725,7 @@ RSpec.describe AppsV3Controller, type: :controller do
       allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space: space)
       allow_user_secret_access(user, space: space)
-      VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
+      FactoryBot.create(:buildpack_lifecycle_data, app: app_model, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
     end
 
     it 'returns 200 and the environment variables' do
@@ -2122,7 +2122,7 @@ RSpec.describe AppsV3Controller, type: :controller do
       set_current_user(user)
       allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space: space)
-      VCAP::CloudController::BuildpackLifecycleDataModel.make(app: app_model, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
+      FactoryBot.create(:buildpack_lifecycle_data, app: app_model, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
     end
 
     it 'returns 200 and the droplet guid' do

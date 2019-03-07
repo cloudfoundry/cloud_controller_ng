@@ -19,7 +19,7 @@ module VCAP::CloudController::Presenters::V3
       )
     end
     let!(:lifecycle_data) do
-      VCAP::CloudController::BuildpackLifecycleDataModel.make(buildpacks: buildpacks, stack: stack, build: build)
+      FactoryBot.create(:buildpack_lifecycle_data, buildpacks: buildpacks, stack: stack, build: build)
     end
 
     describe '#to_hash' do

@@ -95,7 +95,7 @@ module VCAP::CloudController
 
         context 'when the app has a stack' do
           before do
-            BuildpackLifecycleDataModel.make(app: app, stack: 'best-stack')
+            FactoryBot.create(:buildpack_lifecycle_data, app: app, stack: 'best-stack')
           end
 
           it 'uses the stack from the app' do
@@ -137,7 +137,7 @@ module VCAP::CloudController
       context 'when the user does not specify a stack' do
         context 'and the app has a stack' do
           before do
-            BuildpackLifecycleDataModel.make(app: app, stack: 'cooler-stack')
+            FactoryBot.create(:buildpack_lifecycle_data, app: app, stack: 'cooler-stack')
           end
 
           it 'uses the value set on the app' do

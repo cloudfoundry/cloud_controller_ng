@@ -343,7 +343,7 @@ module VCAP::CloudController
 
     describe '#lifecycle_type' do
       context 'the model contains buildpack_lifecycle_data' do
-        before { BuildpackLifecycleDataModel.make(app: app_model) }
+        before { FactoryBot.create(:buildpack_lifecycle_data, app: app_model) }
 
         it 'returns the string "buildpack" if buildpack_lifecycle_data is on the model' do
           expect(app_model.lifecycle_type).to eq('buildpack')
@@ -363,7 +363,7 @@ module VCAP::CloudController
     end
 
     describe '#lifecycle_data' do
-      let!(:lifecycle_data) { BuildpackLifecycleDataModel.make(app: app_model) }
+      let!(:lifecycle_data) { FactoryBot.create(:buildpack_lifecycle_data, app: app_model) }
 
       it 'returns buildpack_lifecycle_data if it is on the model' do
         expect(app_model.lifecycle_data).to eq(lifecycle_data)
