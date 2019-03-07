@@ -6,8 +6,8 @@ module VCAP::CloudController
     let(:fetcher) { BuildpackLifecycleFetcher.new }
 
     describe '#fetch' do
-      let!(:stack) { Stack.make }
-      let!(:stack2) { Stack.make }
+      let!(:stack) { FactoryBot.create(:stack) }
+      let!(:stack2) { FactoryBot.create(:stack) }
 
       let!(:buildpack) { Buildpack.make(name: 'buildpack-1', stack: stack.name) }
       let!(:buildpack2) { Buildpack.make(name: 'buildpack-2', stack: stack.name) }
@@ -24,7 +24,7 @@ module VCAP::CloudController
 
       context 'buildpacks with unknown stack exist' do
         context 'only buildpack with nil stack exists' do
-          let!(:stack3) { Stack.make }
+          let!(:stack3) { FactoryBot.create(:stack) }
           let!(:buildpack4) { Buildpack.make(:nil_stack, name: 'buildpack-3') }
 
           it 'returns the stack and buildpack' do

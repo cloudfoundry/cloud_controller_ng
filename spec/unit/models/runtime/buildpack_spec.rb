@@ -12,18 +12,18 @@ module VCAP::CloudController
       it { is_expected.to validate_uniqueness [:name, :stack] }
 
       describe 'stack' do
-        let(:stack) {  Stack.make(name: 'happy') }
+        let(:stack) {  FactoryBot.create(:stack, name: 'happy') }
 
         it 'can be changed if not set' do
           buildpack = Buildpack.create(name: 'test', stack: nil)
-          buildpack.stack = Stack.make.name
+          buildpack.stack = FactoryBot.create(:stack).name
 
           expect(buildpack).to be_valid
         end
 
         it 'cannot be changed once it is set' do
-          buildpack = Buildpack.create(name: 'test', stack: Stack.make.name)
-          buildpack.stack = Stack.make.name
+          buildpack = Buildpack.create(name: 'test', stack: FactoryBot.create(:stack).name)
+          buildpack.stack = FactoryBot.create(:stack).name
 
           expect(buildpack).not_to be_valid
           expect(buildpack.errors.on(:stack)).to include(:buildpack_cant_change_stacks)
@@ -138,7 +138,7 @@ module VCAP::CloudController
         end
 
         context 'and there are buildpacks with null keys' do
-          let!(:null_buildpack) { Buildpack.create(name: 'nil_key_custom_buildpack', stack: Stack.make.name, position: 0) }
+          let!(:null_buildpack) { Buildpack.create(name: 'nil_key_custom_buildpack', stack: FactoryBot.create(:stack).name, position: 0) }
 
           it 'only returns buildpacks with non-null keys' do
             expect(Buildpack.all).to include(null_buildpack)
@@ -148,7 +148,7 @@ module VCAP::CloudController
         end
 
         context 'and there are buildpacks with empty keys' do
-          let!(:empty_buildpack) { Buildpack.create(name: 'nil_key_custom_buildpack', stack: Stack.make.name, key: '', position: 0) }
+          let!(:empty_buildpack) { Buildpack.create(name: 'nil_key_custom_buildpack', stack: FactoryBot.create(:stack).name, key: '', position: 0) }
 
           it 'only returns buildpacks with non-null keys' do
             expect(Buildpack.all).to include(empty_buildpack)
@@ -175,8 +175,8 @@ module VCAP::CloudController
 
       context 'with a stack' do
         subject(:all_buildpacks) { Buildpack.list_admin_buildpacks('stack1') }
-        let!(:stack1) { Stack.make(name: 'stack1') }
-        let!(:stack2) { Stack.make(name: 'stack2') }
+        let!(:stack1) { FactoryBot.create(:stack, name: 'stack1') }
+        let!(:stack2) { FactoryBot.create(:stack, name: 'stack2') }
 
         before do
           buildpack_blobstore.cp_to_blobstore(buildpack_file_1.path, 'a key')
@@ -206,7 +206,7 @@ module VCAP::CloudController
 
     describe '#update' do
       let!(:buildpacks) do
-        Array.new(4) { |i| Buildpack.create(name: "name_#{100 - i}", stack: Stack.make.name, position: i + 1) }
+        Array.new(4) { |i| Buildpack.create(name: "name_#{100 - i}", stack: FactoryBot.create(:stack).name, position: i + 1) }
       end
 
       it 'does not modify the frozen hash provided by Sequel' do
@@ -217,8 +217,8 @@ module VCAP::CloudController
     end
 
     describe '#destroy' do
-      let!(:buildpack1) { VCAP::CloudController::Buildpack.create({ name: 'first_buildpack', stack: Stack.make.name, key: 'xyz', position: 1 }) }
-      let!(:buildpack2) { VCAP::CloudController::Buildpack.create({ name: 'second_buildpack', stack: Stack.make.name, key: 'xyz', position: 2 }) }
+      let!(:buildpack1) { VCAP::CloudController::Buildpack.create({ name: 'first_buildpack', stack: FactoryBot.create(:stack).name, key: 'xyz', position: 1 }) }
+      let!(:buildpack2) { VCAP::CloudController::Buildpack.create({ name: 'second_buildpack', stack: FactoryBot.create(:stack).name, key: 'xyz', position: 2 }) }
 
       it 'removes the specified buildpack' do
         expect {
@@ -246,8 +246,24 @@ module VCAP::CloudController
     end
 
     describe '#state' do
-      let!(:buildpack1) { VCAP::CloudController::Buildpack.create({ name: 'first_buildpack', stack: Stack.make.name, key: 'xyz', position: 1, filename: '/some/file' }) }
-      let!(:buildpack2) { VCAP::CloudController::Buildpack.create({ name: 'second_buildpack', stack: Stack.make.name, key: 'xyz', position: 2, filename: nil }) }
+      let!(:buildpack1) do
+        VCAP::CloudController::Buildpack.create({
+          name: 'first_buildpack',
+          stack: FactoryBot.create(:stack).name,
+          key: 'xyz',
+          position: 1,
+          filename: '/some/file'
+        })
+      end
+      let!(:buildpack2) do
+        VCAP::CloudController::Buildpack.create({
+          name: 'second_buildpack',
+          stack: FactoryBot.create(:stack).name,
+          key: 'xyz',
+          position: 2,
+          filename: nil
+        })
+      end
 
       it 'returns ready when the buildpack has a filename' do
         expect(buildpack1.state).to eq('READY')

@@ -43,8 +43,8 @@ RSpec.describe BuildpacksController, type: :controller do
     end
 
     context 'when the user is logged in' do
-      let!(:stack1) { VCAP::CloudController::Stack.make }
-      let!(:stack2) { VCAP::CloudController::Stack.make }
+      let!(:stack1) { FactoryBot.create(:stack) }
+      let!(:stack2) { FactoryBot.create(:stack) }
 
       let!(:buildpack1) { VCAP::CloudController::Buildpack.make(stack: stack1.name) }
       let!(:buildpack2) { VCAP::CloudController::Buildpack.make(stack: stack2.name) }
@@ -256,7 +256,7 @@ RSpec.describe BuildpacksController, type: :controller do
 
     context 'when authorized' do
       let(:user) { VCAP::CloudController::User.make }
-      let(:stack) { VCAP::CloudController::Stack.make }
+      let(:stack) { FactoryBot.create(:stack) }
       let(:params) do
         {
           name: 'the-r3al_Name',
@@ -281,7 +281,7 @@ RSpec.describe BuildpacksController, type: :controller do
 
       context 'when params are correct' do
         context 'when the stack exists' do
-          let(:stack) { VCAP::CloudController::Stack.make }
+          let(:stack) { FactoryBot.create(:stack) }
 
           it 'should save the buildpack in the database' do
             post :create, params: params, as: :json
@@ -455,7 +455,7 @@ RSpec.describe BuildpacksController, type: :controller do
       it 'updates the updatable fields' do
         buildpack
         other_buildpack = VCAP::CloudController::Buildpack.make
-        new_stack = VCAP::CloudController::Stack.make
+        new_stack = FactoryBot.create(:stack)
         new_values = {
           name: 'new-name',
           stack: new_stack.name,

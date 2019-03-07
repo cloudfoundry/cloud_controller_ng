@@ -8,7 +8,7 @@ module VCAP::CloudController
 
       let(:new_buildpack_options) { { enabled: true, locked: true, position: 1 } }
       let(:stack_name) { 'mystack' }
-      let(:existing_stack) { Stack.make(name: 'existing-stack') }
+      let(:existing_stack) { FactoryBot.create(:stack, name: 'existing-stack') }
       let!(:existing_buildpack) { Buildpack.make(name: 'mybuildpack', stack: nil, filename: nil, enabled: false) }
       let(:job_options) do
         {
@@ -90,7 +90,7 @@ module VCAP::CloudController
           end
 
           context 'with an existing buildpack' do
-            let(:existing_stack) { Stack.make(name: 'existing-stack') }
+            let(:existing_stack) { FactoryBot.create(:stack, name: 'existing-stack') }
             let!(:existing_buildpack) { Buildpack.make(name: 'mybuildpack', stack: existing_stack.name) }
 
             it 'does not update any values on the buildpack and re-raises the error' do

@@ -6,9 +6,9 @@ module VCAP::CloudController
     let(:fetcher) { BuildpackListFetcher.new }
 
     describe '#fetch_all' do
-      let!(:stack1) { Stack.make }
-      let!(:stack2) { Stack.make }
-      let!(:stack3) { Stack.make }
+      let!(:stack1) { FactoryBot.create(:stack) }
+      let!(:stack2) { FactoryBot.create(:stack) }
+      let!(:stack3) { FactoryBot.create(:stack) }
 
       let!(:buildpack1) { Buildpack.make(stack: stack1.name) }
       let!(:buildpack2) { Buildpack.make(stack: stack2.name) }

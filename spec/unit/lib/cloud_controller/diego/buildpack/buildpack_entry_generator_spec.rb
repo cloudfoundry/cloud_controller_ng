@@ -12,8 +12,8 @@ module VCAP::CloudController
         let(:build_artifacts_cache_download_uri) { 'http://buildpack-artifacts-cache.example.com' }
 
         let(:blobstore_url_generator) { double('fake url generator') }
-        let(:stack) { Stack.make }
-        let(:stack2) { Stack.make }
+        let(:stack) { FactoryBot.create(:stack) }
+        let(:stack2) { FactoryBot.create(:stack) }
 
         let!(:java_buildpack) do
           VCAP::CloudController::Buildpack.create(name: 'java', stack: stack.name, key: 'java-buildpack-key', position: 1, sha256_checksum: 'checksum')

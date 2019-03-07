@@ -60,7 +60,7 @@ module VCAP::CloudController
 
           context 'and when there is a single existing buildpack that matches by name' do
             context 'and when that buildpack record has a stack' do
-              let(:existing_stack) { Stack.make(name: 'existing stack') }
+              let(:existing_stack) { FactoryBot.create(:stack, name: 'existing stack') }
               let!(:existing_buildpack) { Buildpack.make(name: name, stack: existing_stack.name, key: 'new_key', guid: 'the-guid') }
 
               context 'and the buildpack zip has the same stack' do
@@ -148,10 +148,10 @@ module VCAP::CloudController
           end
 
           context 'and when there are many existing buildpacks' do
-            let(:existing_stack) { Stack.make(name: 'existing stack') }
+            let(:existing_stack) { FactoryBot.create(:stack, name: 'existing stack') }
             let!(:existing_buildpack) { Buildpack.make(name: name, stack: existing_stack.name, key: 'new_key', guid: 'the-guid') }
 
-            let(:another_existing_stack) { Stack.make(name: 'another existing stack') }
+            let(:another_existing_stack) { FactoryBot.create(:stack, name: 'another existing stack') }
             let!(:another_existing_buildpack) { Buildpack.make(name: name, stack: another_existing_stack.name, key: 'new_key', guid: 'another-guid') }
 
             context 'and one matches the manifest stack' do
@@ -244,7 +244,7 @@ module VCAP::CloudController
             end
 
             context 'and the Buildpack has a non-nil stack' do
-              let(:existing_stack) { Stack.make(name: 'existing stack') }
+              let(:existing_stack) { FactoryBot.create(:stack, name: 'existing stack') }
               let!(:existing_buildpack) { Buildpack.make(name: name, stack: existing_stack.name, key: 'new_key', guid: 'the-guid') }
 
               it 'creates a job for each buildpack' do
@@ -264,12 +264,12 @@ module VCAP::CloudController
           end
 
           context 'and there are multiple matching Buildpacks' do
-            let(:existing_stack) { Stack.make(name: 'existing stack') }
+            let(:existing_stack) { FactoryBot.create(:stack, name: 'existing stack') }
             let!(:existing_buildpack) { Buildpack.make(name: name, stack: existing_stack.name, key:
               'new_key', guid: 'the-guid')
             }
 
-            let(:another_existing_stack) { Stack.make(name: 'another existing stack') }
+            let(:another_existing_stack) { FactoryBot.create(:stack, name: 'another existing stack') }
             let!(:another_existing_buildpack) { Buildpack.make(name: name, stack: another_existing_stack.name, key: 'a_different_key', guid: 'a-different-guid') }
             let(:buildpack_fields) { [{ file: file, options: opts, stack: existing_stack.name }, { file: another_file, options: opts, stack: another_existing_stack.name }] }
 
@@ -294,7 +294,7 @@ module VCAP::CloudController
             let(:buildpack_fields) { [{ file: file, options: opts }] }
 
             before do
-              Stack.make(name: 'existing stack')
+              FactoryBot.create(:stack, name: 'existing stack')
               Buildpack.make(name: name, stack: 'existing stack')
               Buildpack.make(name: name, stack: nil)
             end

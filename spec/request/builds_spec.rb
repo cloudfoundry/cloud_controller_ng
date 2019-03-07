@@ -55,7 +55,7 @@ RSpec.describe 'Builds' do
 
     before do
       stack = (VCAP::CloudController::Stack.find(name: create_request[:lifecycle][:data][:stack]) ||
-               VCAP::CloudController::Stack.make(name: create_request[:lifecycle][:data][:stack]))
+               FactoryBot.create(:stack, name: create_request[:lifecycle][:data][:stack]))
       # putting stack in the App.make call leads to an "App doesn't have a primary key" error
       # message from sequel.
       process = VCAP::CloudController::ProcessModel.make(app: app_model, memory: 1024, disk_quota: 1536)

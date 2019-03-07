@@ -12,7 +12,7 @@ module VCAP::CloudController
     let(:buildpack) { 'http://original.com' }
     let(:app_name) { 'original name' }
     let!(:ruby_buildpack) { Buildpack.make(name: 'ruby', stack: stack.name) }
-    let(:stack) { Stack.make(name: 'SUSE') }
+    let(:stack) { FactoryBot.create(:stack, name: 'SUSE') }
 
     before do
       app_model.lifecycle_data.update(buildpacks: Array(buildpack), stack: Stack.default.name)

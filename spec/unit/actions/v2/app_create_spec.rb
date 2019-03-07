@@ -21,7 +21,7 @@ module VCAP::CloudController
         }
       end
 
-      let(:stack) { Stack.make(name: 'stacks-on-stacks') }
+      let(:stack) { FactoryBot.create(:stack, name: 'stacks-on-stacks') }
 
       it 'creates the app' do
         process = app_create.create(request_attrs)

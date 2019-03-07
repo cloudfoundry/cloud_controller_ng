@@ -54,7 +54,7 @@ module VCAP::CloudController
     end
 
     describe '#delete' do
-      let(:stack) { Stack.make }
+      let(:stack) { FactoryBot.create(:stack) }
 
       context 'if no app exist' do
         it 'succeds' do

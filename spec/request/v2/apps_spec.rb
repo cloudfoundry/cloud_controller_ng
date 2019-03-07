@@ -488,7 +488,7 @@ RSpec.describe 'Apps' do
 
   describe 'POST /v2/apps' do
     it 'creates an app' do
-      stack       = VCAP::CloudController::Stack.make
+      stack       = FactoryBot.create(:stack)
       post_params = MultiJson.dump({
         name:             'maria',
         space_guid:       space.guid,

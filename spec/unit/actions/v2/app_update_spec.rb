@@ -86,7 +86,7 @@ module VCAP::CloudController
       it 'updates the app' do
         process = ProcessModel.make
         app     = process.app
-        stack   = Stack.make(name: 'stack-name')
+        stack   = FactoryBot.create(:stack, name: 'stack-name')
 
         request_attrs = {
           'name'             => 'maria',
@@ -115,7 +115,7 @@ module VCAP::CloudController
         let(:current_state) { 'STARTED' }
         let(:process) { ProcessModel.make(state: current_state) }
         let(:app) { process.app }
-        let(:new_stack) { Stack.make }
+        let(:new_stack) { FactoryBot.create(:stack) }
         let(:request_attrs) do
           {
             'instances'                  => 2,
@@ -247,7 +247,7 @@ module VCAP::CloudController
       end
 
       describe 'setting stack' do
-        let(:new_stack) { Stack.make }
+        let(:new_stack) { FactoryBot.create(:stack) }
         let(:process) { ProcessModel.make }
         let(:app) { process.app }
         let(:request_attrs) { { 'stack_guid' => new_stack.guid } }

@@ -53,14 +53,14 @@ module VCAP::CloudController
           end
 
           context 'when the requested stack does exist' do
-            let!(:existing_stack) { Stack.make(name: stack_name) }
+            let!(:existing_stack) { FactoryBot.create(:stack, name: stack_name) }
 
             it_behaves_like :creating_a_buildpack
           end
         end
 
         context 'when the job raises an exception' do
-          let!(:existing_stack) { Stack.make(name: stack_name) }
+          let!(:existing_stack) { FactoryBot.create(:stack, name: stack_name) }
 
           let(:error) { StandardError.new('same message') }
           let(:logger) { double(:logger) }
@@ -78,7 +78,7 @@ module VCAP::CloudController
         end
 
         context 'when uploading the buildpack fails' do
-          let!(:existing_stack) { Stack.make(name: stack_name) }
+          let!(:existing_stack) { FactoryBot.create(:stack, name: stack_name) }
 
           before do
             allow_any_instance_of(UploadBuildpack).to receive(:upload_buildpack).and_raise

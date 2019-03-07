@@ -7,7 +7,7 @@ module VCAP::CloudController
 
     describe '#delete' do
       context 'when the stack exists' do
-        let!(:stack) { Stack.make }
+        let!(:stack) { FactoryBot.create(:stack) }
 
         it 'deletes the stack record' do
           expect {

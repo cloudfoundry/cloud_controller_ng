@@ -292,11 +292,6 @@ module VCAP::CloudController
     updated_at                { Time.now.utc }
   end
 
-  Stack.blueprint do
-    name              { Sham.name }
-    description       { Sham.description }
-  end
-
   # if you want to create a process with droplet, use ProcessModelFactory.make
   # This is because the lack of factory hooks in Machinist.
   ProcessModel.blueprint do
@@ -448,7 +443,7 @@ module VCAP::CloudController
 
   BuildpackLifecycleDataModel.blueprint do
     buildpacks { nil }
-    stack { Stack.make.name }
+    stack { FactoryBot.create(:stack).name }
   end
 
   BuildpackLifecycleBuildpackModel.blueprint do

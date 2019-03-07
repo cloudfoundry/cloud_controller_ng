@@ -42,8 +42,18 @@ RSpec::Matchers.define :validate_uniqueness do |*attributes|
     "validate uniqueness of #{Array.wrap(attributes).join(' and ')}"
   end
   match do |_|
-    source_obj = described_class.make(*make_arguments)
-    duplicate_object = described_class.make(*make_arguments)
+    begin
+      source_obj = described_class.make(*make_arguments)
+      duplicate_object = described_class.make(*make_arguments)
+    rescue RuntimeError => e
+      if e.message.match?(/No blueprint for class/)
+        source_obj = FactoryBot.create(described_class.name.demodulize.underscore.to_sym, *make_arguments)
+        duplicate_object = FactoryBot.create(described_class.name.demodulize.underscore.to_sym, *make_arguments)
+      else
+        raise
+      end
+    end
+
     Array.wrap(attributes).each do |attr|
       duplicate_object[attr] = source_obj[attr]
     end
