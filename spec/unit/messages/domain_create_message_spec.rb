@@ -37,8 +37,8 @@ module VCAP::CloudController
       end
 
       context 'name' do
-        MIN_NAME_LENGTH = DomainCreateMessage::MINIMUM_FQDN_DOMAIN_LENGTH
-        MAX_NAME_LENGTH = DomainCreateMessage::MAXIMUM_FQDN_DOMAIN_LENGTH
+        MIN_DOMAIN_NAME_LENGTH = DomainCreateMessage::MINIMUM_FQDN_DOMAIN_LENGTH
+        MAX_DOMAIN_NAME_LENGTH = DomainCreateMessage::MAXIMUM_FQDN_DOMAIN_LENGTH
         MAX_SUBDOMAIN_LENGTH = DomainCreateMessage::MAXIMUM_DOMAIN_LABEL_LENGTH
 
         context 'when not a string' do
@@ -53,20 +53,20 @@ module VCAP::CloudController
         end
 
         context 'when it is too short' do
-          let(:params) { { name: 'B' * (MIN_NAME_LENGTH - 1) } }
+          let(:params) { { name: 'B' * (MIN_DOMAIN_NAME_LENGTH - 1) } }
 
           it 'is not valid' do
             expect(subject).to be_invalid
-            expect(subject.errors[:name]).to include "is too short (minimum is #{MIN_NAME_LENGTH} characters)"
+            expect(subject.errors[:name]).to include "is too short (minimum is #{MIN_DOMAIN_NAME_LENGTH} characters)"
           end
         end
 
         context 'when it is too long' do
-          let(:params) { { name: 'B' * (MAX_NAME_LENGTH + 1) } }
+          let(:params) { { name: 'B' * (MAX_DOMAIN_NAME_LENGTH + 1) } }
 
           it 'is not valid' do
             expect(subject).to be_invalid
-            expect(subject.errors[:name]).to include "is too long (maximum is #{MAX_NAME_LENGTH} characters)"
+            expect(subject.errors[:name]).to include "is too long (maximum is #{MAX_DOMAIN_NAME_LENGTH} characters)"
           end
         end
 

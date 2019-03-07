@@ -25,7 +25,7 @@ module VCAP::CloudController
       end
 
       describe 'name' do
-        MAX_NAME_LENGTH = 250
+        MAX_BUILDPACK_NAME_LENGTH = 250
 
         context 'when it is non-alphanumeric' do
           let(:params) { { name: 'thë-name' } }
@@ -49,17 +49,17 @@ module VCAP::CloudController
         end
 
         context 'when it is at max length' do
-          let(:params) { { name: 'B' * MAX_NAME_LENGTH } }
+          let(:params) { { name: 'B' * MAX_BUILDPACK_NAME_LENGTH } }
 
           it { is_expected.to be_valid }
         end
 
         context 'when it is too long' do
-          let(:params) { { name: 'B' * (MAX_NAME_LENGTH + 1) } }
+          let(:params) { { name: 'B' * (MAX_BUILDPACK_NAME_LENGTH + 1) } }
 
           it 'is not valid' do
             expect(subject).to be_invalid
-            expect(subject.errors[:name]).to eq ["is too long (maximum is #{MAX_NAME_LENGTH} characters)"]
+            expect(subject.errors[:name]).to eq ["is too long (maximum is #{MAX_BUILDPACK_NAME_LENGTH} characters)"]
           end
         end
       end
@@ -83,11 +83,11 @@ module VCAP::CloudController
         end
 
         context 'when it is too long' do
-          let(:params) { { name: 'the-name', stack: 'B' * (MAX_NAME_LENGTH + 1) } }
+          let(:params) { { name: 'the-name', stack: 'B' * (MAX_BUILDPACK_NAME_LENGTH + 1) } }
 
           it 'should return an error' do
             expect(subject).to be_invalid
-            expect(subject.errors[:stack]).to eq ["is too long (maximum is #{MAX_NAME_LENGTH} characters)"]
+            expect(subject.errors[:stack]).to eq ["is too long (maximum is #{MAX_BUILDPACK_NAME_LENGTH} characters)"]
           end
         end
       end
