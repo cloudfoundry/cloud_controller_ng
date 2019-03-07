@@ -33,6 +33,25 @@ RSpec.describe DomainsController, type: :controller do
         expect(parsed_body['name']).to eq(created_domain.name)
         expect(parsed_body['internal']).to eq(created_domain.internal)
       end
+
+      describe 'validations' do
+        context 'when the request is invalid' do
+          let(:request_body) do
+            {
+              "name": 'my-domain.biz',
+              "internal": 8,
+            }
+          end
+
+          it 'returns an error' do
+            post :create, params: request_body, as: :json
+
+            expect(response.status).to eq(422)
+
+            expect(parsed_body['errors'][0]['detail']).to eq('Internal must be a boolean')
+          end
+        end
+      end
     end
 
     it_behaves_like 'permissions endpoint' do

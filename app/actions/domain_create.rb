@@ -2,19 +2,19 @@ require 'repositories/deployment_event_repository'
 
 module VCAP::CloudController
   class DomainCreate
-    class << self
-      def create(message:)
-        domain = SharedDomain.new(
-          name: message.name,
-          internal: message.internal,
-        )
+    INTERNAL_DEFAULT = false
 
-        SharedDomain.db.transaction do
-          domain.save
-        end
+    def create(message:)
+      domain = SharedDomain.new(
+        name: message.name,
+        internal: message.internal.nil? ? INTERNAL_DEFAULT : message.internal,
+      )
 
-        domain
+      SharedDomain.db.transaction do
+        domain.save
       end
+
+      domain
     end
   end
 end
