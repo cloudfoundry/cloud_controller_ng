@@ -61,11 +61,30 @@ RSpec.describe 'Domains Request' do
         end
       end
 
-      describe 'error cases' do
-        context 'when provided invalid arguments' do
+      context 'when provided invalid arguments' do
+        let(:params) do
+          {
+            name: 'non-RFC-1035-compliant-domain-name'
+          }
+        end
+
+        it 'returns 422' do
+          post '/v3/domains', params.to_json, headers
+
+          expect(last_response.status).to eq(422)
+
+          expected_err = 'Name can contain multiple subdomains, each having only alphanumeric characters and hyphens of up to 63 characters, see RFC 1035.'
+          expect(parsed_response['errors'][0]['detail']).to eq expected_err
+        end
+      end
+
+      describe 'collisions' do
+        context 'with an existing domain' do
+          let!(:existing_domain) { VCAP::CloudController::SharedDomain.make }
+
           let(:params) do
             {
-              name: 'non-RFC-1035-compliant-domain-name'
+              name: existing_domain.name,
             }
           end
 
@@ -74,92 +93,82 @@ RSpec.describe 'Domains Request' do
 
             expect(last_response.status).to eq(422)
 
-            expected_err = 'Name can contain multiple subdomains, each having only alphanumeric characters and hyphens of up to 63 characters, see RFC 1035.'
-            expect(parsed_response['errors'][0]['detail']).to eq expected_err
+            expect(parsed_response['errors'][0]['detail']).to eq "The domain name \"#{existing_domain.name}\" is already reserved by another domain or route."
           end
         end
 
-        describe 'collisions' do
-          context 'with an existing domain' do
-            let!(:existing_domain) { VCAP::CloudController::SharedDomain.make }
+        context 'with an existing route' do
+          let(:existing_route) { VCAP::CloudController::Route.make }
 
-            let(:params) do
-              {
-                name: existing_domain.name,
-              }
-            end
-
-            it 'returns 422' do
-              pending('not implemented')
-
-              post '/v3/domains', params.to_json, headers
-
-              expect(last_response.status).to eq(422)
-
-              expect(parsed_response['errors'][0]['detail']).to eq "The domain name \"#{existing_domain.name}\" is already reserved by another domain or route."
-            end
+          let(:params) do
+            {
+              name: existing_route.fqdn,
+            }
           end
 
-          context 'with an existing route' do
-            let(:existing_route) { VCAP::CloudController::Route.make }
+          it 'returns 422' do
+            post '/v3/domains', params.to_json, headers
 
-            let(:params) do
-              {
-                name: existing_route.fqdn,
-              }
-            end
+            expect(last_response.status).to eq(422)
 
-            it 'returns 422' do
-              pending('not implemented')
+            expect(parsed_response['errors'][0]['detail']).to eq "The domain name \"#{existing_route.fqdn}\" is already reserved by another domain or route."
+          end
+        end
 
-              post '/v3/domains', params.to_json, headers
+        context 'with an existing route as a subdomain' do
+          let(:existing_route) { VCAP::CloudController::Route.make }
+          let(:domain) { "sub.#{existing_route.fqdn}" }
 
-              expect(last_response.status).to eq(422)
-
-              expect(parsed_response['errors'][0]['detail']).to eq "The domain name \"#{existing_route.fqdn}\" is already reserved by another domain or route."
-            end
+          let(:params) do
+            {
+              name: domain,
+            }
           end
 
-          context 'with an existing domain as a subdomain' do
-            let(:existing_domain) { VCAP::CloudController::SharedDomain.make }
-            let(:domain) { "sub.#{existing_domain.name}" }
+          it 'returns 422' do
+            post '/v3/domains', params.to_json, headers
 
-            let(:params) do
-              {
-                name: domain,
-              }
-            end
+            expect(last_response.status).to eq(422)
 
-            it 'returns 422' do
-              pending('not implemented')
+            expect(parsed_response['errors'][0]['detail']).to eq "The domain name \"#{domain}\" is already reserved by another domain or route."
+          end
+        end
 
-              post '/v3/domains', params.to_json, headers
+        context 'with an existing unscoped domain as a subdomain' do
+          let(:existing_domain) { VCAP::CloudController::SharedDomain.make }
+          let(:domain) { "sub.#{existing_domain.name}" }
 
-              expect(last_response.status).to eq(422)
-
-              expect(parsed_response['errors'][0]['detail']).to eq "The domain name \"#{domain}\" is already reserved by another domain or route."
-            end
+          let(:params) do
+            {
+              name: domain,
+            }
           end
 
-          context 'with an existing route as a subdomain' do
-            let(:existing_route) { VCAP::CloudController::Route.make }
-            let(:domain) { "sub.#{existing_route.fqdn}" }
+          it 'returns 201' do
+            post '/v3/domains', params.to_json, headers
 
-            let(:params) do
-              {
-                name: domain,
-              }
-            end
+            expect(last_response.status).to eq(201)
 
-            it 'returns 422' do
-              pending('not implemented')
+            expect(parsed_response['name']).to eq domain
+          end
+        end
 
-              post '/v3/domains', params.to_json, headers
+        context 'with an existing scoped domain as a subdomain' do
+          let(:existing_domain) { VCAP::CloudController::PrivateDomain.make }
+          let(:domain) { "sub.#{existing_domain.name}" }
 
-              expect(last_response.status).to eq(500)
+          let(:params) do
+            {
+              name: domain,
+            }
+          end
 
-              expect(parsed_response['errors'][0]['detail']).to eq "The domain name \"#{domain}\" is already reserved by another domain or route."
-            end
+          it 'returns 422' do
+            post '/v3/domains', params.to_json, headers
+
+            expect(last_response.status).to eq(422)
+
+            expect(parsed_response['errors'][0]['detail']).to eq "The domain name \"#{domain}\" is already reserved by another domain or route."
           end
         end
       end

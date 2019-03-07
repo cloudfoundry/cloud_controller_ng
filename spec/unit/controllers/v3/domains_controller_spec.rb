@@ -1,6 +1,5 @@
 require 'rails_helper'
 require 'permissions_spec_helper'
-require 'messages/deployment_create_message'
 
 RSpec.describe DomainsController, type: :controller do
   let(:user) { VCAP::CloudController::User.make }
@@ -49,6 +48,27 @@ RSpec.describe DomainsController, type: :controller do
             expect(response.status).to eq(422)
 
             expect(parsed_body['errors'][0]['detail']).to eq('Internal must be a boolean')
+          end
+        end
+
+        context 'when creating the domain returns an error' do
+          let(:request_body) do
+            {
+              "name": 'my-domain.biz',
+            }
+          end
+
+          before do
+            expected_error = VCAP::CloudController::DomainCreate::Error.new('Banana')
+            allow_any_instance_of(VCAP::CloudController::DomainCreate).to receive(:create).and_raise(expected_error)
+          end
+
+          it 'returns the error' do
+            post :create, params: request_body, as: :json
+
+            expect(response.status).to eq(422)
+
+            expect(parsed_body['errors'][0]['detail']).to eq('Banana')
           end
         end
       end

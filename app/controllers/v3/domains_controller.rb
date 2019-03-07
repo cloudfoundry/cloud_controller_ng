@@ -11,5 +11,7 @@ class DomainsController < ApplicationController
     domain = DomainCreate.new.create(message: message)
 
     render status: :created, json: Presenters::V3::DomainPresenter.new(domain)
+  rescue DomainCreate::Error => e
+    unprocessable!(e)
   end
 end
