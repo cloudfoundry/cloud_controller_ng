@@ -10,17 +10,17 @@ module VCAP::CloudController
       end
 
       it 'should return an empty list when no resources match' do
-        res = @resource_pool.match_resources([@dummy_descriptor])
+        res = @resource_pool.match_resources([@nonexisting_descriptor])
         expect(res).to eq([])
       end
 
       it 'should return a resource that matches' do
-        res = @resource_pool.match_resources([@descriptors.first, @dummy_descriptor])
+        res = @resource_pool.match_resources([@descriptors.first, @nonexisting_descriptor])
         expect(res).to eq([@descriptors.first])
       end
 
       it 'should return many resources that match' do
-        res = @resource_pool.match_resources(@descriptors + [@dummy_descriptor])
+        res = @resource_pool.match_resources(@descriptors + [@nonexisting_descriptor])
         expect(res).to eq(@descriptors)
       end
 

@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-RSpec.describe 'App Features' do
+RSpec.describe 'v3 root' do
   describe 'GET /v3' do
     it 'returns a list of links to resources available on the v3 API' do
       get '/v3'
@@ -46,8 +46,8 @@ RSpec.describe 'App Features' do
           'processes' => {
             'href' => "#{link_prefix}/v3/processes"
           },
-          'resource_match' => {
-            'href' => "#{link_prefix}/v3/resource_match",
+          'resource_matches' => {
+            'href' => "#{link_prefix}/v3/resource_matches",
             'experimental' => true
           },
           'service_instances' => {

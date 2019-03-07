@@ -16,7 +16,7 @@ RSpec.resource 'Resource Match', type: [:api, :legacy_api] do
         Cloud Foundry operators may set minimum / maximum file sizes to match against.
         If the file size provided is outside this range, it will not be matched against.'
       @resource_pool.add_directory(@tmpdir)
-      resources = [@descriptors.first] + [@dummy_descriptor]
+      resources = [@descriptors.first] + [@nonexisting_descriptor]
       encoded_resources = MultiJson.dump(resources, pretty: true)
       client.put '/v2/resource_match', encoded_resources, headers
       expect(status).to eq(200)

@@ -14,10 +14,11 @@ module VCAP::CloudController
 
       set_current_user(user)
       send(verb, path, req, headers_for(user))
-      expect(last_response.status).to eq(200)
 
       resp = MultiJson.load(last_response.body)
       expect(resp).to eq(matches)
+
+      expect(last_response.status).to eq(200)
     end
 
     describe 'when the app_bits_upload feature flag is enabled' do
@@ -27,15 +28,15 @@ module VCAP::CloudController
 
       describe 'PUT /v2/resource_match' do
         it 'should return an empty list when no resources match' do
-          resource_match_request(:put, '/v2/resource_match', [], [@dummy_descriptor])
+          resource_match_request(:put, '/v2/resource_match', [], [@nonexisting_descriptor])
         end
 
         it 'should return a resource that matches' do
-          resource_match_request(:put, '/v2/resource_match', [@descriptors.first], [@dummy_descriptor])
+          resource_match_request(:put, '/v2/resource_match', [@descriptors.first], [@nonexisting_descriptor])
         end
 
         it 'should return many resources that match' do
-          resource_match_request(:put, '/v2/resource_match', @descriptors, [@dummy_descriptor])
+          resource_match_request(:put, '/v2/resource_match', @descriptors, [@nonexisting_descriptor])
         end
 
         context 'invalid json' do
