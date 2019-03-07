@@ -796,7 +796,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
     let!(:space2) { VCAP::CloudController::Space.make(name: 'Alpaca', organization: org1) }
     let!(:space3) { VCAP::CloudController::Space.make(name: 'Horse', organization: org2) }
     let!(:space4) { VCAP::CloudController::Space.make(name: 'Buffalo') }
-    let!(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
+    let!(:isolation_segment_model) { FactoryBot.create(:isolation_segment) }
     let!(:update_message) { { 'data' => { 'guid' => isolation_segment_model.guid } } }
     let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
 
@@ -906,7 +906,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
 
     let!(:org) { VCAP::CloudController::Organization.make(name: 'Lyle\'s Farm') }
     let!(:space) { VCAP::CloudController::Space.make(name: 'Lamb', organization: org) }
-    let!(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
+    let!(:isolation_segment_model) { FactoryBot.create(:isolation_segment) }
     let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
 
     context 'when the user has permissions to read from the space' do

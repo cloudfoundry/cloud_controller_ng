@@ -364,8 +364,8 @@ RSpec.resource 'Spaces', type: [:api, :legacy_api] do
     end
 
     describe 'Isolation Segments (experimental)' do
-      let(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
-      let(:isolation_segment_model2) { VCAP::CloudController::IsolationSegmentModel.make }
+      let(:isolation_segment_model) { FactoryBot.create(:isolation_segment) }
+      let(:isolation_segment_model2) { FactoryBot.create(:isolation_segment) }
       let(:org_manager) { VCAP::CloudController::User.make }
       let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
 

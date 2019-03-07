@@ -45,7 +45,7 @@ RSpec.describe 'IsolationSegmentModels' do
   describe 'GET /v3/isolation_segments/:guid/relationships/organizations' do
     let(:org1) { VCAP::CloudController::Organization.make }
     let(:org2) { VCAP::CloudController::Organization.make }
-    let(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
+    let(:isolation_segment_model) { FactoryBot.create(:isolation_segment) }
 
     before do
       assigner.assign(isolation_segment_model, [org1, org2])
@@ -78,7 +78,7 @@ RSpec.describe 'IsolationSegmentModels' do
   describe 'GET /v3/isolation_segments/:guid/relationships/spaces' do
     let(:space1) { VCAP::CloudController::Space.make }
     let(:space2) { VCAP::CloudController::Space.make }
-    let(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
+    let(:isolation_segment_model) { FactoryBot.create(:isolation_segment) }
 
     before do
       assigner.assign(isolation_segment_model, [space1.organization, space2.organization])
@@ -104,7 +104,7 @@ RSpec.describe 'IsolationSegmentModels' do
   describe 'POST /v3/isolation_segments/:guid/relationships/organizations' do
     let(:org1) { VCAP::CloudController::Organization.make }
     let(:org2) { VCAP::CloudController::Organization.make }
-    let(:isolation_segment) { VCAP::CloudController::IsolationSegmentModel.make }
+    let(:isolation_segment) { FactoryBot.create(:isolation_segment) }
 
     it 'assigns the isolation segment to the organization' do
       assign_request = {
@@ -135,7 +135,7 @@ RSpec.describe 'IsolationSegmentModels' do
   describe 'DELETE /v3/isolation_segments/:guid/relationships/organizations/:org_guid' do
     let(:org1) { VCAP::CloudController::Organization.make }
     let(:org2) { VCAP::CloudController::Organization.make }
-    let(:isolation_segment) { VCAP::CloudController::IsolationSegmentModel.make }
+    let(:isolation_segment) { FactoryBot.create(:isolation_segment) }
 
     before do
       assigner.assign(isolation_segment, [org1, org2])
@@ -152,7 +152,7 @@ RSpec.describe 'IsolationSegmentModels' do
   end
 
   describe 'GET /v3/isolation_segments/:guid' do
-    let(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
+    let(:isolation_segment_model) { FactoryBot.create(:isolation_segment) }
 
     context 'as an admin' do
       it 'returns the requested isolation segment' do
@@ -261,12 +261,12 @@ RSpec.describe 'IsolationSegmentModels' do
     context 'when there are multiple isolation segments' do
       let!(:models) {
         [
-          VCAP::CloudController::IsolationSegmentModel.make(name: 'segment1'),
-          VCAP::CloudController::IsolationSegmentModel.make(name: 'segment2'),
-          VCAP::CloudController::IsolationSegmentModel.make(name: 'segment3'),
-          VCAP::CloudController::IsolationSegmentModel.make(name: 'segment4'),
-          VCAP::CloudController::IsolationSegmentModel.make(name: 'segment5'),
-          VCAP::CloudController::IsolationSegmentModel.make(name: 'segment6')
+          FactoryBot.create(:isolation_segment, name: 'segment1'),
+          FactoryBot.create(:isolation_segment, name: 'segment2'),
+          FactoryBot.create(:isolation_segment, name: 'segment3'),
+          FactoryBot.create(:isolation_segment, name: 'segment4'),
+          FactoryBot.create(:isolation_segment, name: 'segment5'),
+          FactoryBot.create(:isolation_segment, name: 'segment6')
         ]
       }
 
@@ -387,9 +387,9 @@ RSpec.describe 'IsolationSegmentModels' do
     end
 
     context 'label_selector' do
-      let!(:iso_segA) { VCAP::CloudController::IsolationSegmentModel.make(name: 'segmentA') }
-      let!(:iso_segB) { VCAP::CloudController::IsolationSegmentModel.make(name: 'segmentB') }
-      let!(:iso_segC) { VCAP::CloudController::IsolationSegmentModel.make(name: 'segmentC') }
+      let!(:iso_segA) { FactoryBot.create(:isolation_segment, name: 'segmentA') }
+      let!(:iso_segB) { FactoryBot.create(:isolation_segment, name: 'segmentB') }
+      let!(:iso_segC) { FactoryBot.create(:isolation_segment, name: 'segmentC') }
 
       let!(:isoAFruit) { VCAP::CloudController::IsolationSegmentLabelModel.make(key_name: 'fruit', value: 'strawberry', resource_guid: iso_segA.guid) }
       let!(:isoAAnimal) { VCAP::CloudController::IsolationSegmentLabelModel.make(key_name: 'animal', value: 'horse', resource_guid: iso_segA.guid) }
@@ -412,7 +412,7 @@ RSpec.describe 'IsolationSegmentModels' do
 
   describe 'PATCH /v3/isolation_segments/:guid' do
     it 'updates the specified isolation segment' do
-      isolation_segment_model = VCAP::CloudController::IsolationSegmentModel.make(name: 'my_segment')
+      isolation_segment_model = FactoryBot.create(:isolation_segment, name: 'my_segment')
 
       update_request = {
         name: 'your_segment',
@@ -451,7 +451,7 @@ RSpec.describe 'IsolationSegmentModels' do
 
   describe 'DELETE /v3/isolation_segments/:guid' do
     it 'deletes the specified isolation segment' do
-      isolation_segment_model = VCAP::CloudController::IsolationSegmentModel.make(name: 'my_segment')
+      isolation_segment_model = FactoryBot.create(:isolation_segment, name: 'my_segment')
 
       delete "/v3/isolation_segments/#{isolation_segment_model.guid}", nil, user_header
       expect(last_response.status).to eq(204)

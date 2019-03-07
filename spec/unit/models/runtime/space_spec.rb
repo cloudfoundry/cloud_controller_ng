@@ -310,7 +310,7 @@ module VCAP::CloudController
       describe 'isolation_segment_models' do
         let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
         let(:space) { Space.make }
-        let(:isolation_segment_model) { IsolationSegmentModel.make }
+        let(:isolation_segment_model) { FactoryBot.create(:isolation_segment) }
 
         context 'adding an isolation segment' do
           context "and the Space's org does not have the isolation segment" do

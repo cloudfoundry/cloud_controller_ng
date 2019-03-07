@@ -2,7 +2,7 @@ require 'spec_helper'
 
 RSpec.describe 'Spaces' do
   let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
-  let(:isolation_segment) { VCAP::CloudController::IsolationSegmentModel.make }
+  let(:isolation_segment) { FactoryBot.create(:isolation_segment) }
   let(:user) { VCAP::CloudController::User.make }
   let(:org) { VCAP::CloudController::Organization.make }
 
@@ -64,7 +64,7 @@ RSpec.describe 'Spaces' do
 
   describe 'GET /v2/spaces' do
     context 'when a isolation segment is associated to the space' do
-      let(:isolation_segment) { VCAP::CloudController::IsolationSegmentModel.make }
+      let(:isolation_segment) { FactoryBot.create(:isolation_segment) }
       let(:space) { VCAP::CloudController::Space.make(organization: org) }
 
       before do
@@ -121,7 +121,7 @@ RSpec.describe 'Spaces' do
 
   describe 'GET /v2/spaces/:guid' do
     context 'when a isolation segment is associated to the space' do
-      let(:isolation_segment) { VCAP::CloudController::IsolationSegmentModel.make }
+      let(:isolation_segment) { FactoryBot.create(:isolation_segment) }
       let(:space) { VCAP::CloudController::Space.make(organization: org) }
 
       before do

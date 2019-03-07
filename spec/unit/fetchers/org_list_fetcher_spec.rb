@@ -108,7 +108,7 @@ module VCAP::CloudController
     end
 
     describe '#fetch_for_isolation_segment' do
-      let(:isolation_segment) { IsolationSegmentModel.make }
+      let(:isolation_segment) { FactoryBot.create(:isolation_segment) }
       let(:assigner) { IsolationSegmentAssign.new }
       let(:message) { OrgsListMessage.from_params isolation_segment_guid: isolation_segment.guid }
       let(:readable_org_guids) { [org1.guid, org2.guid] }
@@ -129,7 +129,7 @@ module VCAP::CloudController
     end
 
     describe '#fetch_all_for_isoation_segments' do
-      let(:isolation_segment) { IsolationSegmentModel.make }
+      let(:isolation_segment) { FactoryBot.create(:isolation_segment) }
       let(:assigner) { IsolationSegmentAssign.new }
       let(:message) { OrgsListMessage.from_params isolation_segment_guid: isolation_segment.guid }
 

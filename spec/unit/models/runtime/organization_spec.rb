@@ -62,9 +62,9 @@ module VCAP::CloudController
 
         it 'returns a list of all associated isolation segments guids' do
           organization = Organization.make
-          iso_seg_1 = IsolationSegmentModel.make
-          iso_seg_2 = IsolationSegmentModel.make
-          iso_seg_3 = IsolationSegmentModel.make
+          iso_seg_1 = FactoryBot.create(:isolation_segment)
+          iso_seg_2 = FactoryBot.create(:isolation_segment)
+          iso_seg_3 = FactoryBot.create(:isolation_segment)
 
           assigner.assign(iso_seg_1, [organization])
           assigner.assign(iso_seg_2, [organization])
@@ -81,8 +81,8 @@ module VCAP::CloudController
       let(:org) { Organization.make }
 
       context 'when there are isolation segments in the allowed list' do
-        let(:isolation_segment_model) { IsolationSegmentModel.make }
-        let(:isolation_segment_model2) { IsolationSegmentModel.make }
+        let(:isolation_segment_model) { FactoryBot.create(:isolation_segment) }
+        let(:isolation_segment_model2) { FactoryBot.create(:isolation_segment) }
         let(:assigner) { IsolationSegmentAssign.new }
 
         before do
@@ -164,8 +164,8 @@ module VCAP::CloudController
       end
 
       describe 'isolation_segments' do
-        let(:isolation_segment_model) { IsolationSegmentModel.make }
-        let(:isolation_segment_model2) { IsolationSegmentModel.make }
+        let(:isolation_segment_model) { FactoryBot.create(:isolation_segment) }
+        let(:isolation_segment_model2) { FactoryBot.create(:isolation_segment) }
         let(:assigner) { IsolationSegmentAssign.new }
 
         context 'when adding isolation segments to the allowed list' do
@@ -267,7 +267,7 @@ module VCAP::CloudController
       end
 
       describe 'default_isolation_segment' do
-        let(:isolation_segment_model) { IsolationSegmentModel.make }
+        let(:isolation_segment_model) { FactoryBot.create(:isolation_segment) }
         let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
 
         context 'assigning the default isolation segment' do
@@ -350,7 +350,7 @@ module VCAP::CloudController
                 end
 
                 context 'and the space has an assigned isolation segment' do
-                  let(:isolation_segment_model2) { IsolationSegmentModel.make }
+                  let(:isolation_segment_model2) { FactoryBot.create(:isolation_segment) }
 
                   before do
                     assigner.assign(isolation_segment_model2, [org])

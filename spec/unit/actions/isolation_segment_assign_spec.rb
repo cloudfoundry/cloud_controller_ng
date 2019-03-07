@@ -3,7 +3,7 @@ require 'isolation_segment_assign'
 
 module VCAP::CloudController
   RSpec.describe IsolationSegmentAssign do
-    let(:isolation_segment_model) { IsolationSegmentModel.make }
+    let(:isolation_segment_model) { FactoryBot.create(:isolation_segment) }
     let(:org) { Organization.make }
     let(:org2) { Organization.make }
 
@@ -45,7 +45,7 @@ module VCAP::CloudController
     end
 
     context 'and other isolation segments are already assigned to the org' do
-      let(:isolation_segment_model2) { IsolationSegmentModel.make }
+      let(:isolation_segment_model2) { FactoryBot.create(:isolation_segment) }
 
       before do
         subject.assign(isolation_segment_model, [org])

@@ -393,7 +393,7 @@ RSpec.resource 'Organizations', type: [:api, :legacy_api] do
 
     describe 'Isolation Segments (Experimental)' do
       delete '/v2/organizations/:guid/default_isolation_segment' do
-        let(:isolation_segment) { VCAP::CloudController::IsolationSegmentModel.make }
+        let(:isolation_segment) { FactoryBot.create(:isolation_segment) }
         let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
 
         before do

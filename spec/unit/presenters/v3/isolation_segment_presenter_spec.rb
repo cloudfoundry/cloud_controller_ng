@@ -16,7 +16,7 @@ module VCAP::CloudController::Presenters::V3
     )
     }
 
-    let(:isolation_segment) { VCAP::CloudController::IsolationSegmentModel.make }
+    let(:isolation_segment) { FactoryBot.create(:isolation_segment) }
 
     describe '#to_hash' do
       let(:result) { IsolationSegmentPresenter.new(isolation_segment).to_hash }

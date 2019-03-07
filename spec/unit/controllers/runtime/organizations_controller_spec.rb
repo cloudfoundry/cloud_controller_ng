@@ -153,8 +153,8 @@ module VCAP::CloudController
     end
 
     describe 'setting the default isolation segment' do
-      let(:isolation_segment) { IsolationSegmentModel.make }
-      let(:isolation_segment2) { IsolationSegmentModel.make }
+      let(:isolation_segment) { FactoryBot.create(:isolation_segment) }
+      let(:isolation_segment2) { FactoryBot.create(:isolation_segment) }
 
       context 'when the user is neither admin nor org manager' do
         let(:space) { Space.make(organization: org) }
@@ -256,8 +256,8 @@ module VCAP::CloudController
     end
 
     describe 'removing the default isolation segment' do
-      let(:isolation_segment) { IsolationSegmentModel.make }
-      let(:isolation_segment2) { IsolationSegmentModel.make }
+      let(:isolation_segment) { FactoryBot.create(:isolation_segment) }
+      let(:isolation_segment2) { FactoryBot.create(:isolation_segment) }
 
       context 'when the user is neither admin nor org manager' do
         let(:space) { Space.make(organization: org) }
@@ -387,7 +387,7 @@ module VCAP::CloudController
           end
 
           it 'does not set the default isolation segment on creation' do
-            isolation_segment = IsolationSegmentModel.make
+            isolation_segment = FactoryBot.create(:isolation_segment)
 
             post '/v2/organizations', MultiJson.dump({
               name: 'my-org-name',

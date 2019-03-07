@@ -5,8 +5,8 @@ require 'isolation_segment_unassign'
 module VCAP::CloudController
   RSpec.describe IsolationSegmentUnassign do
     let(:assigner) { IsolationSegmentAssign.new }
-    let(:isolation_segment_model) { IsolationSegmentModel.make }
-    let(:isolation_segment_model_2) { IsolationSegmentModel.make }
+    let(:isolation_segment_model) { FactoryBot.create(:isolation_segment) }
+    let(:isolation_segment_model_2) { FactoryBot.create(:isolation_segment) }
     let(:org) { Organization.make }
     let(:org2) { Organization.make }
 

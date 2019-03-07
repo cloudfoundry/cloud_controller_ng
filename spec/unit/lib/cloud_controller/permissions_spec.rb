@@ -510,7 +510,7 @@ module VCAP::CloudController
     end
 
     describe '#can_read_from_isolation_segment?' do
-      let(:isolation_segment) { IsolationSegmentModel.make }
+      let(:isolation_segment) { FactoryBot.create(:isolation_segment) }
       let(:assigner) { IsolationSegmentAssign.new }
 
       before do

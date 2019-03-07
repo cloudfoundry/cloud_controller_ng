@@ -3,7 +3,7 @@ require 'isolation_segment_update'
 
 module VCAP::CloudController
   RSpec.describe IsolationSegmentUpdate do
-    let!(:isolation_segment) { IsolationSegmentModel.make name: 'Old Name' }
+    let!(:isolation_segment) { FactoryBot.create(:isolation_segment, name: 'Old Name') }
 
     it 'updates the name of the isolation segment' do
       new_name = 'New Name'
