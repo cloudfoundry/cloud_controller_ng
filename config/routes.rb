@@ -77,7 +77,7 @@ Rails.application.routes.draw do
   post '/deployments/:guid/actions/cancel', to: 'deployments#cancel'
 
   # domains
-  # post '/domains', to: 'domains#create'
+  post '/domains', to: 'domains#create'
 
   # droplets
   post '/packages/:package_guid/droplets', to: 'droplets#create'

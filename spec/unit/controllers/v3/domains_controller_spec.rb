@@ -7,8 +7,6 @@ RSpec.describe DomainsController, type: :controller do
   let(:space) { FactoryBot.create(:space) }
   let(:org) { space.organization }
 
-  return if VCAP::CloudController::Constants::API_VERSION_V3 == '3.68.0'
-
   describe '#create' do
     let(:request_body) do
       {

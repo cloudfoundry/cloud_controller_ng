@@ -1,8 +1,6 @@
 require 'spec_helper'
 
 RSpec.describe 'Domains Request' do
-  return if VCAP::CloudController::Constants::API_VERSION_V3 == '3.68.0'
-
   describe 'POST /v3/domains' do
     context 'when not authenticated' do
       it 'returns 401' do
