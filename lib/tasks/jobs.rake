@@ -35,6 +35,7 @@ namespace :jobs do
       'pending_builds',
       'prune_completed_deployments',
       'prune_completed_builds',
+      'prune_excess_app_revisions',
       'request_counts_cleanup',
     ]
 

@@ -37,6 +37,7 @@ require 'jobs/runtime/prune_completed_tasks'
 require 'jobs/runtime/request_counts_cleanup'
 require 'jobs/runtime/prune_completed_deployments'
 require 'jobs/runtime/prune_completed_builds'
+require 'jobs/runtime/prune_excess_app_revisions'
 
 require 'jobs/services/legacy_jobs/service_instance_deletion'
 require 'jobs/services/service_usage_events_cleanup'
