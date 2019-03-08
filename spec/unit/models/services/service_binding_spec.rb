@@ -340,7 +340,7 @@ module VCAP::CloudController
       end
 
       context "when a user has no access to the app's space or the service instance's space" do
-        let(:user) { User.make }
+        let(:user) { FactoryBot.create(:user) }
 
         it 'the service binding is not visible' do
           expect(ServiceBinding.user_visible(user).all).to be_empty

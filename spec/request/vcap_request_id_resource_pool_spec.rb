@@ -2,7 +2,7 @@ require 'spec_helper'
 
 RSpec.describe 'making several resource_match requests when bits-service in enabled ' do
   let(:email) { 'potato@house.com' }
-  let(:user) { VCAP::CloudController::User.make }
+  let(:user) { FactoryBot.create(:user) }
   let(:user_name) { 'clarence' }
   let(:user_header) { headers_for(user, email: email, user_name: user_name) }
 

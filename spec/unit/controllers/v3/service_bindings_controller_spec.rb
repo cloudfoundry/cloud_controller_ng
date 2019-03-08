@@ -34,7 +34,7 @@ RSpec.describe ServiceBindingsController, type: :controller do
         body: body
       }
     end
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:user) { set_current_user(FactoryBot.create(:user)) }
 
     before do
       allow_user_read_access_for(user, spaces: [space])
@@ -320,7 +320,7 @@ RSpec.describe ServiceBindingsController, type: :controller do
   describe '#show' do
     let(:service_binding) { VCAP::CloudController::ServiceBinding.make(syslog_drain_url: 'syslog://syslog-drain.com') }
     let(:space) { service_binding.space }
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:user) { set_current_user(FactoryBot.create(:user)) }
 
     before do
       allow_user_read_access_for(user, spaces: [space])
@@ -399,7 +399,7 @@ RSpec.describe ServiceBindingsController, type: :controller do
     let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: allowed_space) }
     let(:allowed_space) { allowed_binding_1.space }
     let(:unauthorized_space) { binding_in_unauthorized_space.space }
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:user) { set_current_user(FactoryBot.create(:user)) }
 
     before do
       stub_readable_space_guids_for(user, [allowed_space])
@@ -491,7 +491,7 @@ RSpec.describe ServiceBindingsController, type: :controller do
   describe '#destroy' do
     let(:service_binding) { VCAP::CloudController::ServiceBinding.make(syslog_drain_url: 'syslog://syslog-drain.com') }
     let(:space) { service_binding.space }
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:user) { set_current_user(FactoryBot.create(:user)) }
 
     before do
       allow_user_read_access_for(user, spaces: [space])

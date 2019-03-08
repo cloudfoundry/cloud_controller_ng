@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 RSpec.describe 'App Features' do
-  let(:user) { VCAP::CloudController::User.make }
+  let(:user) { FactoryBot.create(:user) }
   let(:user_header) { headers_for(user, email: Sham.email, user_name: 'some-username') }
   let(:space) { FactoryBot.create(:space) }
   let(:app_model) { FactoryBot.create(:app, space: space, enable_ssh: true) }

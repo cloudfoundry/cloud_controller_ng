@@ -9,7 +9,7 @@ RSpec.describe DropletsController, type: :controller do
         type: VCAP::CloudController::PackageModel::BITS_TYPE,
         state: VCAP::CloudController::PackageModel::READY_STATE)
     end
-    let(:user) { set_current_user(user: VCAP::CloudController::User.make(guid: '1234'), email: 'dr@otter.com', user_name: 'dropper') }
+    let(:user) { set_current_user(user: FactoryBot.create(:user, guid: '1234'), email: 'dr@otter.com', user_name: 'dropper') }
     let(:space) { app_model.space }
 
     before do
@@ -37,7 +37,7 @@ RSpec.describe DropletsController, type: :controller do
         }
       }
     end
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:user) { set_current_user(FactoryBot.create(:user)) }
 
     before do
       allow_user_read_access_for(user, spaces: [source_space, target_space])
@@ -145,7 +145,7 @@ RSpec.describe DropletsController, type: :controller do
 
   describe '#show' do
     let(:droplet) { VCAP::CloudController::DropletModel.make }
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:user) { set_current_user(FactoryBot.create(:user)) }
     let(:space) { droplet.space }
 
     before do
@@ -172,7 +172,7 @@ RSpec.describe DropletsController, type: :controller do
     context 'permissions' do
       context 'when the user does not have the read scope' do
         before do
-          set_current_user(VCAP::CloudController::User.make, scopes: [])
+          set_current_user(FactoryBot.create(:user), scopes: [])
         end
 
         it 'returns a 403 NotAuthorized error' do
@@ -203,7 +203,7 @@ RSpec.describe DropletsController, type: :controller do
 
   describe '#destroy' do
     let(:droplet) { VCAP::CloudController::DropletModel.make }
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:user) { set_current_user(FactoryBot.create(:user)) }
     let(:space) { droplet.space }
     let(:stagers) { instance_double(VCAP::CloudController::Stagers, stager_for_app: stager) }
     let(:stager) { instance_double(VCAP::CloudController::Diego::Stager, stop_stage: nil) }
@@ -266,7 +266,7 @@ RSpec.describe DropletsController, type: :controller do
     context 'permissions' do
       context 'when the user does not have write scope' do
         before do
-          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
+          set_current_user(FactoryBot.create(:user), scopes: ['cloud_controller.read'])
         end
 
         it 'returns 403' do
@@ -307,7 +307,7 @@ RSpec.describe DropletsController, type: :controller do
   end
 
   describe '#index' do
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:user) { set_current_user(FactoryBot.create(:user)) }
     let(:app) { FactoryBot.create(:app) }
     let!(:space) { app.space }
     let!(:user_droplet_1) { VCAP::CloudController::DropletModel.make(app_guid: app.guid) }
@@ -491,7 +491,7 @@ RSpec.describe DropletsController, type: :controller do
     context 'permissions' do
       context 'when the user does not have read scope' do
         before do
-          set_current_user(VCAP::CloudController::User.make, scopes: [])
+          set_current_user(FactoryBot.create(:user), scopes: [])
           disallow_user_global_read_access(user)
         end
 
@@ -533,7 +533,7 @@ RSpec.describe DropletsController, type: :controller do
 
   describe '#update' do
     let(:droplet) { VCAP::CloudController::DropletModel.make }
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:user) { set_current_user(FactoryBot.create(:user)) }
     let(:space) { droplet.space }
     let(:stagers) { instance_double(VCAP::CloudController::Stagers, stager_for_app: stager) }
     let(:stager) { instance_double(VCAP::CloudController::Diego::Stager, stop_stage: nil) }
@@ -561,7 +561,7 @@ RSpec.describe DropletsController, type: :controller do
     context 'permissions' do
       context 'when the user does not have write scope' do
         before do
-          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
+          set_current_user(FactoryBot.create(:user), scopes: ['cloud_controller.read'])
         end
 
         it 'returns 403' do

@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe Permissions do
-    let(:user) { User.make }
+    let(:user) { FactoryBot.create(:user) }
     let(:space) { FactoryBot.create(:space, organization: org) }
     let(:org) { FactoryBot.create(:organization) }
     let(:space_guid) { space.guid }

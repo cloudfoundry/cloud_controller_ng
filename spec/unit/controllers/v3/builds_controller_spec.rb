@@ -3,7 +3,7 @@ require 'permissions_spec_helper'
 
 RSpec.describe BuildsController, type: :controller do
   describe '#index' do
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:user) { set_current_user(FactoryBot.create(:user)) }
     let(:organization) { FactoryBot.create(:organization) }
     let(:space) { FactoryBot.create(:space, organization: organization) }
     let(:app_model) { FactoryBot.create(:app, :buildpack, space: space) }
@@ -153,7 +153,7 @@ RSpec.describe BuildsController, type: :controller do
   end
 
   describe '#create' do
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:user) { set_current_user(FactoryBot.create(:user)) }
     let(:org) { FactoryBot.create(:organization) }
     let(:space) { FactoryBot.create(:space, organization: org) }
     let(:stack) { VCAP::CloudController::Stack.default.name }
@@ -631,7 +631,7 @@ RSpec.describe BuildsController, type: :controller do
   end
 
   describe '#update' do
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:user) { set_current_user(FactoryBot.create(:user)) }
     let(:org) { FactoryBot.create(:organization) }
     let(:space) { FactoryBot.create(:space, organization: org) }
     let(:stack) { VCAP::CloudController::Stack.default.name }
@@ -717,7 +717,7 @@ RSpec.describe BuildsController, type: :controller do
       end
 
       context 'permissions' do
-        let(:user) { set_current_user(VCAP::CloudController::User.make) }
+        let(:user) { set_current_user(FactoryBot.create(:user)) }
 
         context 'when the user cannot read the app' do
           before do
@@ -750,7 +750,7 @@ RSpec.describe BuildsController, type: :controller do
   end
 
   describe '#show' do
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:user) { set_current_user(FactoryBot.create(:user)) }
     let(:organization) { FactoryBot.create(:organization) }
     let(:space) { FactoryBot.create(:space, organization: organization) }
     let(:app_model) { FactoryBot.create(:app, space: space) }
@@ -833,7 +833,7 @@ RSpec.describe BuildsController, type: :controller do
 
       context 'when the user does not have the read scope' do
         before do
-          set_current_user(VCAP::CloudController::User.make, scopes: [])
+          set_current_user(FactoryBot.create(:user), scopes: [])
         end
 
         it 'returns a 403 NotAuthorized error' do

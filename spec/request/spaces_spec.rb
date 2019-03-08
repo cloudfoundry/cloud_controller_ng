@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 RSpec.describe 'Spaces' do
-  let(:user) { VCAP::CloudController::User.make }
+  let(:user) { FactoryBot.create(:user) }
   let(:user_header) { headers_for(user) }
   let(:admin_header) { admin_headers_for(user) }
   let(:organization)       { FactoryBot.create(:organization, name: 'Boardgames') }

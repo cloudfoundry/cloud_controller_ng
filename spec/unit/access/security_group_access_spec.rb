@@ -4,7 +4,7 @@ module VCAP::CloudController
   RSpec.describe SecurityGroupAccess, type: :access do
     subject(:access) { SecurityGroupAccess.new(Security::AccessContext.new) }
     let(:space) { FactoryBot.create(:space) }
-    let(:user) { User.make }
+    let(:user) { FactoryBot.create(:user) }
     let(:object) { SecurityGroup.make(space_guids: [space.guid]) }
 
     before { set_current_user(user) }

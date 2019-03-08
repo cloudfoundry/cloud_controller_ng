@@ -293,7 +293,7 @@ module VCAP::CloudController
 
       context 'when the user does not have permissions to read' do
         it 'returns a 403' do
-          set_current_user(User.make)
+          set_current_user(FactoryBot.create(:user))
           get "/v2/spaces/#{space_one.guid}/user_roles"
           expect(last_response.status).to eq(403)
         end
@@ -500,7 +500,7 @@ module VCAP::CloudController
         end
 
         describe 'enumerating services bound to a service-broker' do
-          let(:manager) { User.make(guid: 'manager-guid') }
+          let(:manager) { FactoryBot.create(:user, guid: 'manager-guid') }
           let(:org) { FactoryBot.create(:organization, guid: 'organization', manager_guids: [manager.guid], user_guids: org_user_guids) }
           let(:space) { FactoryBot.create(:space,
             organization: org,
@@ -1212,8 +1212,8 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/spaces/:guid/users' do
-      let(:mgr) { User.make }
-      let(:user) { User.make }
+      let(:mgr) { FactoryBot.create(:user) }
+      let(:user) { FactoryBot.create(:user) }
       let(:org) { FactoryBot.create(:organization, manager_guids: [mgr.guid], user_guids: [mgr.guid, user.guid]) }
       let(:space) { FactoryBot.create(:space, organization: org, manager_guids: [mgr.guid], developer_guids: [user.guid]) }
       before do
@@ -1234,8 +1234,8 @@ module VCAP::CloudController
     end
 
     describe 'DELETE /v2/spaces/:guid/developers/:user_guid' do
-      let(:mgr) { User.make }
-      let(:developer) { User.make }
+      let(:mgr) { FactoryBot.create(:user) }
+      let(:developer) { FactoryBot.create(:user) }
       let(:org) { FactoryBot.create(:organization, manager_guids: [mgr.guid], user_guids: org_user_guids) }
       let(:space) { FactoryBot.create(:space,
         organization: org,
@@ -1253,7 +1253,7 @@ module VCAP::CloudController
 
       context 'as admin who is not a developer or manager' do
         before do
-          set_current_user_as_admin(user: User.make)
+          set_current_user_as_admin(user: FactoryBot.create(:user))
         end
 
         it 'successfully removes the developer' do
@@ -1286,7 +1286,7 @@ module VCAP::CloudController
         end
 
         context 'when removing another developer' do
-          let(:dev) { User.make }
+          let(:dev) { FactoryBot.create(:user) }
           let(:space_dev_guids) { [dev.guid, developer.guid] }
           let(:org_user_guids) { [mgr.guid, developer.guid, dev.guid] }
 
@@ -1303,7 +1303,7 @@ module VCAP::CloudController
       end
 
       context 'as an auditor who is not a developer' do
-        let(:auditor) { User.make }
+        let(:auditor) { FactoryBot.create(:user) }
         let(:space_auditor_guids) { [auditor.guid] }
         let(:org_user_guids) { [mgr.guid, developer.guid, auditor.guid] }
 
@@ -1320,8 +1320,8 @@ module VCAP::CloudController
     end
 
     describe 'DELETE /v2/spaces/:guid/managers/:user_guid' do
-      let(:manager) { User.make }
-      let(:developer) { User.make }
+      let(:manager) { FactoryBot.create(:user) }
+      let(:developer) { FactoryBot.create(:user) }
       let(:org) { FactoryBot.create(:organization, manager_guids: [manager.guid], user_guids: org_user_guids) }
       let(:space) { FactoryBot.create(:space,
         organization: org,
@@ -1340,7 +1340,7 @@ module VCAP::CloudController
 
       context 'as admin who is not a developer or manager' do
         before do
-          set_current_user_as_admin(user: User.make)
+          set_current_user_as_admin(user: FactoryBot.create(:user))
         end
 
         it 'successfully removes the manager' do
@@ -1374,7 +1374,7 @@ module VCAP::CloudController
         end
 
         context 'when removing another manager' do
-          let(:mgr) { User.make }
+          let(:mgr) { FactoryBot.create(:user) }
           let(:space_manager_guids) { [mgr.guid, manager.guid] }
           let(:org_user_guids) { [manager.guid, mgr.guid, developer.guid] }
 
@@ -1390,7 +1390,7 @@ module VCAP::CloudController
       end
 
       context 'as an auditor who is not a manager' do
-        let(:auditor) { User.make }
+        let(:auditor) { FactoryBot.create(:user) }
         let(:space_auditor_guids) { [auditor.guid] }
         let(:org_user_guids) { [manager.guid, developer.guid, auditor.guid] }
 
@@ -1407,8 +1407,8 @@ module VCAP::CloudController
     end
 
     describe 'DELETE /v2/spaces/:guid/auditors/:user_guid' do
-      let(:manager) { User.make }
-      let(:auditor) { User.make }
+      let(:manager) { FactoryBot.create(:user) }
+      let(:auditor) { FactoryBot.create(:user) }
       let(:org) { FactoryBot.create(:organization, manager_guids: [manager.guid], user_guids: org_user_guids) }
       let(:space) { FactoryBot.create(:space,
         organization: org,
@@ -1427,7 +1427,7 @@ module VCAP::CloudController
 
       context 'as admin who is not a manager' do
         before do
-          set_current_user_as_admin(user: User.make)
+          set_current_user_as_admin(user: FactoryBot.create(:user))
         end
 
         it 'successfully removes the auditor' do
@@ -1437,7 +1437,7 @@ module VCAP::CloudController
       end
 
       context 'as developer' do
-        let(:developer) { User.make }
+        let(:developer) { FactoryBot.create(:user) }
         let(:space_dev_guids) { [developer.guid] }
         let(:org_user_guids) { [manager.guid, auditor.guid, developer.guid] }
 
@@ -1476,7 +1476,7 @@ module VCAP::CloudController
         end
 
         context 'when removing another auditor' do
-          let(:auditor2) { User.make }
+          let(:auditor2) { FactoryBot.create(:user) }
           let(:space_auditor_guids) { [auditor.guid, auditor2.guid] }
           let(:org_user_guids) { [manager.guid, auditor.guid, auditor2.guid] }
 
@@ -1498,7 +1498,7 @@ module VCAP::CloudController
       let(:name) { 'MySpace' }
 
       context 'setting roles at space creation time' do
-        let(:other_user) { User.make }
+        let(:other_user) { FactoryBot.create(:user) }
 
         before do
           set_current_user_as_admin
@@ -1571,7 +1571,7 @@ module VCAP::CloudController
     end
 
     describe 'PUT /v2/spaces/:guid' do
-      let(:user) { set_current_user(User.make) }
+      let(:user) { set_current_user(FactoryBot.create(:user)) }
       let(:isolation_segment_model) { FactoryBot.create(:isolation_segment) }
       let(:organization) { FactoryBot.create(:organization) }
       let(:space) { FactoryBot.create(:space, organization: organization) }
@@ -1679,7 +1679,7 @@ module VCAP::CloudController
       end
 
       context 'setting roles at space update time' do
-        let(:other_user) { User.make }
+        let(:other_user) { FactoryBot.create(:user) }
         let(:uri) { "/v2/spaces/#{space.guid}" }
 
         before do
@@ -1704,7 +1704,7 @@ module VCAP::CloudController
           end
 
           context 'when there is already another space manager' do
-            let(:mgr) { User.make }
+            let(:mgr) { FactoryBot.create(:user) }
 
             before do
               space.organization.add_user(mgr)
@@ -1724,7 +1724,7 @@ module VCAP::CloudController
         end
 
         context 'deassigning an space manager' do
-          let(:another_user) { User.make }
+          let(:another_user) { FactoryBot.create(:user) }
 
           before do
             space.organization.add_user(another_user)
@@ -1828,7 +1828,7 @@ module VCAP::CloudController
 
     describe 'DELETE /v2/spaces/:guid/isolation_segment' do
       let(:assigner) { IsolationSegmentAssign.new }
-      let(:user) { set_current_user(User.make) }
+      let(:user) { set_current_user(FactoryBot.create(:user)) }
       let(:isolation_segment_model) { FactoryBot.create(:isolation_segment) }
       let(:organization) { FactoryBot.create(:organization) }
       let(:space) { FactoryBot.create(:space, organization: organization) }
@@ -1920,7 +1920,7 @@ module VCAP::CloudController
     end
 
     describe 'DELETE /v2/spaces/:guid/unmapped_routes' do
-      let(:user) { set_current_user(User.make) }
+      let(:user) { set_current_user(FactoryBot.create(:user)) }
       let(:organization) { FactoryBot.create(:organization) }
       let(:space) { FactoryBot.create(:space, organization: organization) }
       let(:process) { VCAP::CloudController::ProcessModelFactory.make(state: 'STARTED') }
@@ -2022,7 +2022,7 @@ module VCAP::CloudController
     end
 
     describe 'security groups' do
-      let(:user) { User.make }
+      let(:user) { FactoryBot.create(:user) }
       let(:org) { FactoryBot.create(:organization, user_guids: [user.guid]) }
       let(:space) { FactoryBot.create(:space, organization: org) }
       let(:security_group) { SecurityGroup.make }
@@ -2194,7 +2194,7 @@ module VCAP::CloudController
       [:manager, :developer, :auditor].each do |role|
         plural_role = role.to_s.pluralize
         describe "PUT /v2/spaces/:guid/#{plural_role}" do
-          let(:user) { User.make(username: 'larry_the_user') }
+          let(:user) { FactoryBot.create(:user, username: 'larry_the_user') }
           let(:event_type) { "audit.user.space_#{role}_add" }
           let(:origin1) { 'larry_origin' }
           let(:origin2) { 'another_larry_origin' }
@@ -2212,7 +2212,7 @@ module VCAP::CloudController
             end
 
             context 'when the specified origin is not in the user\'s origins' do
-              let(:user) { User.make(username: 'fake@example.com') }
+              let(:user) { FactoryBot.create(:user, username: 'fake@example.com') }
               let(:fake_origin) { 'fake_origin' }
               before do
                 allow(uaa_client).to receive(:origins_for_username).with(user.username).and_return(['bogus-origin'])
@@ -2343,8 +2343,8 @@ module VCAP::CloudController
         [:manager, :developer, :auditor].each do |role|
           plural_role = role.to_s.pluralize
           describe "POST /v2/spaces/:guid/#{role}" do
-            let(:user) { User.make(username: 'larry_the_user') }
-            let(:user2) { User.make(username: 'larry_the_user') }
+            let(:user) { FactoryBot.create(:user, username: 'larry_the_user') }
+            let(:user2) { FactoryBot.create(:user, username: 'larry_the_user') }
             let(:origin1) { 'larry_origin' }
             let(:origin2) { 'another_larry_origin' }
             let(:event_type) { "audit.user.space_#{role}_add" }
@@ -2433,7 +2433,7 @@ module VCAP::CloudController
         [:manager, :developer, :auditor].each do |role|
           plural_role = role.to_s.pluralize
           describe "DELETE /v2/spaces/:guid/#{plural_role}" do
-            let(:user) { User.make(username: 'larry_the_user') }
+            let(:user) { FactoryBot.create(:user, username: 'larry_the_user') }
             let(:event_type) { "audit.user.space_#{role}_remove" }
 
             before do
@@ -2540,7 +2540,7 @@ module VCAP::CloudController
       [:manager, :developer, :auditor].each do |role|
         plural_role = role.to_s.pluralize
         describe "PUT /v2/spaces/:guid/#{plural_role}/:user_guid" do
-          let(:user) { User.make(username: 'larry_the_user') }
+          let(:user) { FactoryBot.create(:user, username: 'larry_the_user') }
           let(:space) { FactoryBot.create(:space) }
           let(:event_type) { "audit.user.space_#{role}_add" }
 
@@ -2587,7 +2587,7 @@ module VCAP::CloudController
       [:manager, :developer, :auditor].each do |role|
         plural_role = role.to_s.pluralize
         describe "DELETE /v2/spaces/:guid/#{plural_role}/:user_guid" do
-          let(:user) { User.make(username: 'larry_the_user') }
+          let(:user) { FactoryBot.create(:user, username: 'larry_the_user') }
           let(:space) { FactoryBot.create(:space) }
           let(:event_type) { "audit.user.space_#{role}_remove" }
 

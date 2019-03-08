@@ -143,7 +143,7 @@ module VCAP::CloudController
       let!(:other_key) { ServiceKey.make }
       let(:developer) { make_developer_for_space(service_instance.space) }
       let(:auditor) { make_auditor_for_space(service_instance.space) }
-      let(:other_user) { User.make }
+      let(:other_user) { FactoryBot.create(:user) }
 
       it 'only open to the space developers' do
         visible_to_developer = ServiceKey.user_visible(developer)

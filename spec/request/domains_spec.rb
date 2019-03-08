@@ -14,7 +14,7 @@ RSpec.describe 'Domains Request' do
     end
 
     context 'when authenticated but not admin' do
-      let(:user) { VCAP::CloudController::User.make }
+      let(:user) { FactoryBot.create(:user) }
       let(:headers) { headers_for(user) }
 
       it 'returns 403' do
@@ -27,7 +27,7 @@ RSpec.describe 'Domains Request' do
     end
 
     context 'when authenticated and admin' do
-      let(:user) { VCAP::CloudController::User.make }
+      let(:user) { FactoryBot.create(:user) }
       let(:headers) { admin_headers_for(user) }
 
       context 'when provided valid arguments' do

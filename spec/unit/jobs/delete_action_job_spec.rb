@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   module Jobs
     RSpec.describe DeleteActionJob, job_context: :worker do
-      let(:user) { User.make(admin: true) }
+      let(:user) { FactoryBot.create(:user, admin: true) }
       let(:delete_action) { instance_double(SpaceDelete, delete: []) }
       let(:space) { FactoryBot.create(:space, name: Sham.guid) }
 

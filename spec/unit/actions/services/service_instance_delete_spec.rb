@@ -4,7 +4,7 @@ require 'actions/services/service_instance_delete'
 module VCAP::CloudController
   RSpec.describe ServiceInstanceDelete do
     let(:event_repository) { Repositories::ServiceEventRepository.new(UserAuditInfo.new(user_guid: user.guid, user_email: user_email)) }
-    let(:user) { User.make }
+    let(:user) { FactoryBot.create(:user) }
     let(:user_email) { 'user@example.com' }
 
     subject(:service_instance_delete) { ServiceInstanceDelete.new(event_repository: event_repository) }

@@ -5,7 +5,7 @@ module VCAP::CloudController
     subject(:access) { QuotaDefinitionAccess.new(Security::AccessContext.new) }
     let(:scopes) { ['cloud_controller.read', 'cloud_controller.write'] }
 
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { FactoryBot.create(:user) }
     let(:object) { FactoryBot.create(:quota_definition) }
 
     before { set_current_user(user, scopes: scopes) }

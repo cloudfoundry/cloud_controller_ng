@@ -6,8 +6,8 @@ module VCAP::CloudController
       let(:request_attrs) { { 'name' => 'new-space' } }
       let(:org) { FactoryBot.create(:organization) }
       let(:space) { FactoryBot.create(:space, organization: org) }
-      let(:assigner) { User.make }
-      let(:assignee) { User.make(username: 'frank') }
+      let(:assigner) { FactoryBot.create(:user) }
+      let(:assignee) { FactoryBot.create(:user, username: 'frank') }
       let(:assigner_email) { 'foo@bar.com' }
       let(:assigner_username) { 'Mr.Foo' }
       let(:request_attrs) { { 'some_key' => 'some_val' } }

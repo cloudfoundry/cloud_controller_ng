@@ -596,7 +596,7 @@ module VCAP::CloudController
       end
 
       it 'nullifies any default_users' do
-        user = User.make
+        user = FactoryBot.create(:user)
         space.add_default_user(user)
         space.save
         expect { subject.destroy }.to change { user.reload.default_space }.from(space).to(nil)
@@ -751,8 +751,8 @@ module VCAP::CloudController
 
     describe '#has_developer?' do
       subject(:space) { FactoryBot.create(:space) }
-      let(:user) { User.make }
-      let(:other_developer) { User.make }
+      let(:user) { FactoryBot.create(:user) }
+      let(:other_developer) { FactoryBot.create(:user) }
 
       before do
         space.organization.add_user(user)
@@ -776,8 +776,8 @@ module VCAP::CloudController
 
     describe '#has_member?' do
       subject(:space) { FactoryBot.create(:space) }
-      let(:user) { User.make }
-      let(:other_user) { User.make }
+      let(:user) { FactoryBot.create(:user) }
+      let(:other_user) { FactoryBot.create(:user) }
 
       before do
         space.organization.add_user(user)
@@ -811,7 +811,7 @@ module VCAP::CloudController
 
     describe '#in_organization?' do
       subject(:space) { FactoryBot.create(:space) }
-      let(:user) { User.make }
+      let(:user) { FactoryBot.create(:user) }
 
       it "returns true if the given user is in the space's organization" do
         space.organization.add_user(user)

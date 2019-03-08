@@ -13,7 +13,7 @@ module VCAP::CloudController
       let!(:app) { FactoryBot.create(:app, space: space) }
 
       let(:space_dataset) { Space.dataset }
-      let(:user) { User.make }
+      let(:user) { FactoryBot.create(:user) }
       let(:user_email) { 'user@example.com' }
 
       it 'deletes the space record' do

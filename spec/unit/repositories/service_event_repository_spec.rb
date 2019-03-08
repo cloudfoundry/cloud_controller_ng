@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   module Repositories
     RSpec.describe ServiceEventRepository do
-      let(:user) { VCAP::CloudController::User.make }
+      let(:user) { FactoryBot.create(:user) }
       let(:email) { 'email@example.com' }
       let(:user_name) { 'arthur' }
       let(:logger) { double(:logger, error: nil) }

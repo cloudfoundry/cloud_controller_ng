@@ -167,10 +167,6 @@ module VCAP::CloudController
     resource_type { 'app' }
   end
 
-  User.blueprint do
-    guid { Sham.uaa_id }
-  end
-
   Domain.blueprint do
     name { Sham.domain }
   end

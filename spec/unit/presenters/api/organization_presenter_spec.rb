@@ -5,7 +5,7 @@ RSpec.describe OrganizationPresenter do
     let(:org) { FactoryBot.create(:organization) }
     before do
       FactoryBot.create(:space, organization: org)
-      user = VCAP::CloudController::User.make
+      user = FactoryBot.create(:user)
       user.add_organization org
       user.add_managed_organization org
     end

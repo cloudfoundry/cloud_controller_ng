@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 RSpec.describe 'ServiceInstances' do
-  let(:user) { VCAP::CloudController::User.make }
+  let(:user) { FactoryBot.create(:user) }
   let(:space) { FactoryBot.create(:space) }
 
   before do

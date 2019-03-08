@@ -48,7 +48,7 @@ module VCAP::CloudController
 
     describe '#remove_spaces' do
       let(:org) { FactoryBot.create(:organization) }
-      let(:user) { User.make }
+      let(:user) { FactoryBot.create(:user) }
       let(:space) { FactoryBot.create(:space) }
 
       before do
@@ -125,7 +125,7 @@ module VCAP::CloudController
 
     describe 'relationships' do
       let(:org) { FactoryBot.create(:organization) }
-      let(:user) { User.make }
+      let(:user) { FactoryBot.create(:user) }
 
       context 'when a user is a member of organzation' do
         before do
@@ -224,7 +224,7 @@ module VCAP::CloudController
     end
 
     describe '#export_attrs' do
-      let(:user) { User.make }
+      let(:user) { FactoryBot.create(:user) }
 
       it 'does not include username when username has not been set' do
         expect(user.export_attrs).to_not include(:username)
@@ -260,7 +260,7 @@ module VCAP::CloudController
 
     describe '#membership_spaces' do
       it 'returns a list of spaces that the user is a member of' do
-        user = User.make
+        user = FactoryBot.create(:user)
         organization = FactoryBot.create(:organization)
         organization.add_user user
         developer_space = FactoryBot.create(:space, organization: organization)

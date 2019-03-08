@@ -35,7 +35,7 @@ module VCAP::CloudController
     end
 
     describe '.visible_private_plan_ids_for_user(user)' do
-      let!(:user) { User.make }
+      let!(:user) { FactoryBot.create(:user) }
       let!(:org1) { FactoryBot.create(:organization) }
       let!(:org2) { FactoryBot.create(:organization) }
       let!(:org3) { FactoryBot.create(:organization) }

@@ -4,7 +4,7 @@ module VCAP::CloudController
   RSpec.describe AppUsageEventAccess, type: :access do
     subject(:access) { AppUsageEventAccess.new(Security::AccessContext.new) }
     let(:token) { { 'scope' => ['cloud_controller.read', 'cloud_controller.write'] } }
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { FactoryBot.create(:user) }
     let(:object) { VCAP::CloudController::AppUsageEvent.make }
 
     before do

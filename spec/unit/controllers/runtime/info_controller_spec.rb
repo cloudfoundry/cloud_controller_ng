@@ -4,7 +4,7 @@ module VCAP::CloudController
   RSpec.describe VCAP::CloudController::InfoController do
     describe 'GET /v2/info' do
       it "returns a 'user' entry when authenticated" do
-        set_current_user(User.make)
+        set_current_user(FactoryBot.create(:user))
 
         get '/v2/info'
         hash = MultiJson.load(last_response.body)

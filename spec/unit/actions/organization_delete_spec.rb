@@ -35,7 +35,7 @@ module VCAP::CloudController
       end
 
       let!(:org_dataset) { Organization.where(guid: [org_1.guid, org_2.guid]) }
-      let(:user) { User.make }
+      let(:user) { FactoryBot.create(:user) }
       let(:user_email) { 'user@example.com' }
 
       before do

@@ -3,7 +3,7 @@ require 'permissions_spec_helper'
 
 RSpec.describe OrganizationsV3Controller, type: :controller do
   describe '#show' do
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:user) { set_current_user(FactoryBot.create(:user)) }
 
     let!(:org) { FactoryBot.create(:organization, name: 'Eric\'s Farm') }
     let!(:space) { FactoryBot.create(:space, name: 'Cat', organization: org) }
@@ -59,7 +59,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
   end
 
   describe '#create' do
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { FactoryBot.create(:user) }
 
     before do
       set_current_user(user)
@@ -160,7 +160,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
   end
 
   describe '#index' do
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:user) { set_current_user(FactoryBot.create(:user)) }
 
     let!(:member_org) { FactoryBot.create(:organization, name: 'Marmot') }
     let!(:manager_org) { FactoryBot.create(:organization, name: 'Rat') }
@@ -369,7 +369,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
   end
 
   describe '#show_default_isolation_segment' do
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { FactoryBot.create(:user) }
     let(:org) { FactoryBot.create(:organization, name: 'Water') }
     let(:isolation_segment) { FactoryBot.create(:isolation_segment, name: 'default_seg') }
     let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
@@ -449,7 +449,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
   end
 
   describe '#update_default_isolation_segment' do
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { FactoryBot.create(:user) }
     let(:org) { FactoryBot.create(:organization, name: 'Water') }
     let(:isolation_segment) { FactoryBot.create(:isolation_segment, name: 'default_seg') }
     let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
@@ -622,7 +622,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
       }
     end
     let(:space) { FactoryBot.create(:space, organization: org) }
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { FactoryBot.create(:user) }
     let(:request_body) do
       {
         name: 'Fire',

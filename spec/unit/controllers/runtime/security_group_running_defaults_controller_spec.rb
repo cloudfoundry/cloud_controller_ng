@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe SecurityGroupRunningDefaultsController do
-    before { set_current_user(User.make) }
+    before { set_current_user(FactoryBot.create(:user)) }
 
     it 'allows non-admins to read running security groups' do
       set_current_user_as_admin
@@ -33,7 +33,7 @@ module VCAP::CloudController
       end
 
       it 'should prevent non-admins from creating security groups' do
-        set_current_user(User.make)
+        set_current_user(FactoryBot.create(:user))
         security_group = SecurityGroup.make(running_default: false)
 
         put "/v2/config/running_security_groups/#{security_group.guid}", {}
@@ -52,7 +52,7 @@ module VCAP::CloudController
     context 'removing a security group as a default' do
       before { set_current_user_as_admin }
       it 'should not allow non-admins to delete running security groups' do
-        set_current_user(User.make)
+        set_current_user(FactoryBot.create(:user))
         security_group = SecurityGroup.make(running_default: true)
 
         delete "/v2/config/running_security_groups/#{security_group.guid}"

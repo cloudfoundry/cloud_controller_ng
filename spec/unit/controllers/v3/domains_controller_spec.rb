@@ -2,7 +2,7 @@ require 'rails_helper'
 require 'permissions_spec_helper'
 
 RSpec.describe DomainsController, type: :controller do
-  let(:user) { VCAP::CloudController::User.make }
+  let(:user) { FactoryBot.create(:user) }
   let(:space) { FactoryBot.create(:space) }
   let(:org) { space.organization }
 

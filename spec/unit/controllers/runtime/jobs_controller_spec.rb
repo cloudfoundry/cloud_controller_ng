@@ -4,7 +4,7 @@ module VCAP::CloudController
   RSpec.describe VCAP::CloudController::JobsController do
     let(:job) { Delayed::Job.enqueue double(perform: nil) }
     let(:job_request_id) { job.guid }
-    let(:user) { User.make }
+    let(:user) { FactoryBot.create(:user) }
 
     describe 'GET /v2/jobs/:guid' do
       context 'permissions' do

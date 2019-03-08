@@ -19,7 +19,7 @@ module VCAP::CloudController
       end
 
       context 'when the user is not an admin' do
-        before { set_current_user(User.make) }
+        before { set_current_user(FactoryBot.create(:user)) }
 
         it 'returns a 403 NotAuthorized' do
           delete '/v2/blobstores/buildpack_cache'

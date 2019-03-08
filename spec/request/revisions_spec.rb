@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 RSpec.describe 'Revisions' do
-  let(:user) { VCAP::CloudController::User.make }
+  let(:user) { FactoryBot.create(:user) }
   let(:user_header) { headers_for(user, email: user_email, user_name: user_name) }
   let(:space) { FactoryBot.create(:space) }
   let(:stack) { FactoryBot.create(:stack) }

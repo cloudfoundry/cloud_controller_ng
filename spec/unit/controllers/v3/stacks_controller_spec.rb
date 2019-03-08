@@ -5,7 +5,7 @@ require 'permissions_spec_helper'
 RSpec.describe StacksController, type: :controller do
   describe '#index' do
     before { VCAP::CloudController::Stack.dataset.destroy }
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { FactoryBot.create(:user) }
 
     describe 'permissions by role' do
       role_to_expected_http_response = {
@@ -68,7 +68,7 @@ RSpec.describe StacksController, type: :controller do
   end
 
   describe '#show' do
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { FactoryBot.create(:user) }
     describe 'permissions by role' do
       role_to_expected_http_response = {
         'admin' => 200,
@@ -122,7 +122,7 @@ RSpec.describe StacksController, type: :controller do
   end
 
   describe '#create' do
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { FactoryBot.create(:user) }
     let(:req_body) do
       { 'name': 'the-name' }
     end
@@ -179,13 +179,13 @@ RSpec.describe StacksController, type: :controller do
   end
 
   describe '#destroy' do
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:user) { set_current_user(FactoryBot.create(:user)) }
     let(:stack) { FactoryBot.create(:stack) }
 
     describe 'permissions' do
       context 'when the user does not have the write scope' do
         before do
-          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
+          set_current_user(FactoryBot.create(:user), scopes: ['cloud_controller.read'])
         end
 
         it 'raises an ApiError with a 403 code' do
@@ -306,7 +306,7 @@ RSpec.describe StacksController, type: :controller do
   describe '#update' do
     let!(:org) { FactoryBot.create(:organization, name: "Harold's Farm") }
     let!(:space) { FactoryBot.create(:space, name: 'roosters', organization: org) }
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { FactoryBot.create(:user) }
     let(:stack) { FactoryBot.create(:stack) }
 
     let(:labels) do

@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe VCAP::CloudController::LegacyApiBase do
-    let(:user) { User.make(admin: true, active: true) }
+    let(:user) { FactoryBot.create(:user, admin: true, active: true) }
     let(:logger) { Steno.logger('vcap_spec') }
     let(:fake_req) { '' }
     let(:dependencies) do

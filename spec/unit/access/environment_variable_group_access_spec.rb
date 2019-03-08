@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe EnvironmentVariableGroupAccess, type: :access do
     subject(:access) { EnvironmentVariableGroupAccess.new(Security::AccessContext.new) }
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { FactoryBot.create(:user) }
     let(:object) { VCAP::CloudController::FeatureFlag.make }
 
     it_behaves_like :admin_full_access

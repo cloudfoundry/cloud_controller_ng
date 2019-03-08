@@ -5,7 +5,7 @@ module VCAP::CloudController
   module Repositories
     RSpec.describe DropletEventRepository do
       let(:app) { FactoryBot.create(:app, name: 'popsicle') }
-      let(:user) { User.make }
+      let(:user) { FactoryBot.create(:user) }
       let(:package) { PackageModel.make(app_guid: app.guid) }
       let(:droplet) { DropletModel.make(app_guid: app.guid, package: package) }
       let(:email) { 'user-email' }

@@ -88,7 +88,7 @@ module VCAP::CloudController
     end
 
     describe 'spaces' do
-      let(:user) { User.make }
+      let(:user) { FactoryBot.create(:user) }
       let(:org) { FactoryBot.create(:organization, user_guids: [user.guid]) }
       let(:space) { FactoryBot.create(:space, organization: org) }
       let(:security_group) { SecurityGroup.make }

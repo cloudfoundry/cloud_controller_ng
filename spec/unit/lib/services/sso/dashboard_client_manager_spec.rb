@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::Services::SSO
   RSpec.describe DashboardClientManager do
     let(:client_manager) { double('client_manager') }
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { FactoryBot.create(:user) }
     let(:email) { 'email@example.com' }
     let(:security_context) { double(:security_context, current_user: user, current_user_email: email) }
     let(:services_event_repository) do

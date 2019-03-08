@@ -3,7 +3,7 @@ require 'spec_helper'
 RSpec.describe 'Spaces' do
   let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
   let(:isolation_segment) { FactoryBot.create(:isolation_segment) }
-  let(:user) { VCAP::CloudController::User.make }
+  let(:user) { FactoryBot.create(:user) }
   let(:org) { FactoryBot.create(:organization) }
 
   describe 'POST /v2/spaces' do

@@ -125,8 +125,8 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
 
     let(:test_app) { VCAP::CloudController::ProcessModel.make }
     let(:test_v3app) { FactoryBot.create(:app) }
-    let(:test_assignee) { VCAP::CloudController::User.make }
-    let(:test_user) { VCAP::CloudController::User.make }
+    let(:test_assignee) { FactoryBot.create(:user) }
+    let(:test_user) { FactoryBot.create(:user) }
     let(:test_user_email) { 'user@example.com' }
     let(:test_space) { FactoryBot.create(:space) }
     let(:test_route) { VCAP::CloudController::Route.make }

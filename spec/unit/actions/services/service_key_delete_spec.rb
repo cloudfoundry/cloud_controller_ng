@@ -27,7 +27,7 @@ module VCAP::CloudController
       let!(:service_key_2) { ServiceKey.make }
       let(:service_instance) { service_key_1.service_instance }
       let!(:service_key_dataset) { ServiceKey.dataset }
-      let(:user) { User.make }
+      let(:user) { FactoryBot.create(:user) }
       let(:user_email) { 'user@example.com' }
       let(:client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client) }
 

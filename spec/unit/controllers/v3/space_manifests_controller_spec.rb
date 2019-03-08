@@ -6,7 +6,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
     let(:app_model) { FactoryBot.create(:app, name: 'blah') }
     let(:space) { app_model.space }
     let(:org) { space.organization }
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { FactoryBot.create(:user) }
     let(:app_apply_manifest_action) { instance_double(VCAP::CloudController::AppApplyManifest) }
     let(:request_body) { { 'applications' => [{ 'name' => app_model.name, 'instances' => 2 }] } }
 
@@ -19,7 +19,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
 
     describe 'permissions' do
       context 'when the user cannot read from the space' do
-        let(:user_from_another_space) { VCAP::CloudController::User.make }
+        let(:user_from_another_space) { FactoryBot.create(:user) }
 
         before do
           set_current_user(user_from_another_space)
@@ -35,7 +35,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
 
       context 'when the user does not have .write scope' do
         before do
-          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
+          set_current_user(FactoryBot.create(:user), scopes: ['cloud_controller.read'])
         end
 
         it 'raises an ApiError with a 403 code' do

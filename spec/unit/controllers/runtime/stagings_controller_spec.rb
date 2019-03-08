@@ -179,7 +179,7 @@ module VCAP::CloudController
     before do
       Fog.unmock!
       TestConfig.override(staging_config)
-      set_current_user_as_admin(user: User.make(guid: '1234'), email: 'joe@joe.com', user_name: 'briggs')
+      set_current_user_as_admin(user: FactoryBot.create(:user, guid: '1234'), email: 'joe@joe.com', user_name: 'briggs')
     end
 
     after { FileUtils.rm_rf(workspace) }

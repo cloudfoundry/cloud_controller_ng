@@ -57,7 +57,7 @@ module VCAP::CloudController
 
       context 'when the user is not an admin' do
         it 'returns a 403' do
-          set_current_user(User.make)
+          set_current_user(FactoryBot.create(:user))
           put '/v2/config/feature_flags/user_org_creation', MultiJson.dump({ enabled: true })
 
           expect(last_response.status).to eq(403)

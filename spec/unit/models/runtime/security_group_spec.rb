@@ -762,7 +762,7 @@ module VCAP::CloudController
     describe '.user_visibility_filter' do
       let(:security_group) { SecurityGroup.make }
       let(:space) { FactoryBot.create(:space) }
-      let(:user) { User.make }
+      let(:user) { FactoryBot.create(:user) }
 
       subject(:filtered_security_groups) do
         SecurityGroup.where(SecurityGroup.user_visibility_filter(user))

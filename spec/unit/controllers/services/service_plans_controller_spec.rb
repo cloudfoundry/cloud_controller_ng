@@ -211,7 +211,7 @@ module VCAP::CloudController
       end
 
       context 'non-admin user' do
-        let(:user) { User.make }
+        let(:user) { FactoryBot.create(:user) }
 
         before do
           set_current_user(user)
@@ -311,7 +311,7 @@ module VCAP::CloudController
       context 'as a space developer' do
         context 'with private service brokers' do
           it 'returns service plans from private brokers that are in the same space as the user' do
-            user = User.make
+            user = FactoryBot.create(:user)
             space = FactoryBot.create(:space)
             space.organization.add_user user
             private_broker = ServiceBroker.make(space: space)
@@ -333,7 +333,7 @@ module VCAP::CloudController
 
         context 'when a service instance is associated with an inactive plan' do
           it 'does not list the inactive service plan' do
-            user = User.make
+            user = FactoryBot.create(:user)
             space = FactoryBot.create(:space)
             service = Service.make
             service_plan = ServicePlan.make(service: service, public: true, active: true)

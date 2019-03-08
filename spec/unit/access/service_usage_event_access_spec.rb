@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe ServiceUsageEventAccess, type: :access do
     subject(:access) { ServiceUsageEventAccess.new(Security::AccessContext.new) }
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { FactoryBot.create(:user) }
     let(:object) { VCAP::CloudController::ServiceUsageEvent.make }
 
     before { set_current_user(user) }

@@ -5,7 +5,7 @@ module VCAP::CloudController
     subject(:access) { AppEventAccess.new(Security::AccessContext.new) }
     let(:token) { { 'scope' => ['cloud_controller.read', 'cloud_controller.write'] } }
 
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { FactoryBot.create(:user) }
     let(:org) { FactoryBot.create(:organization) }
     let(:space) { FactoryBot.create(:space, organization: org) }
     let(:process) { VCAP::CloudController::ProcessModelFactory.make(space: space) }

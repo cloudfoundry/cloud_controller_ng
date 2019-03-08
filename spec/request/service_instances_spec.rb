@@ -3,7 +3,7 @@ require 'spec_helper'
 RSpec.describe 'Service Instances' do
   let(:user_email) { 'user@email.example.com' }
   let(:user_name) { 'username' }
-  let(:user) { VCAP::CloudController::User.make }
+  let(:user) { FactoryBot.create(:user) }
   let(:user_header) { headers_for(user) }
   let(:admin_header) { admin_headers_for(user, email: user_email, user_name: user_name) }
   let(:space) { FactoryBot.create(:space) }

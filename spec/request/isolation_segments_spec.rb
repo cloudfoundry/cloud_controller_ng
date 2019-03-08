@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'isolation_segment_assign'
 
 RSpec.describe 'IsolationSegmentModels' do
-  let(:user) { VCAP::CloudController::User.make }
+  let(:user) { FactoryBot.create(:user) }
   let(:user_header) { admin_headers_for(user) }
   let(:space) { FactoryBot.create(:space) }
   let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }

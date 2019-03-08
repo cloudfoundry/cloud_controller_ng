@@ -88,7 +88,7 @@ module ControllerHelpers
 
   def admin_headers
     if !@admin_headers
-      user = User.make
+      user = FactoryBot.create(:user)
       @admin_headers = headers_for(user, scopes: %w(cloud_controller.admin))
       user.destroy
     end

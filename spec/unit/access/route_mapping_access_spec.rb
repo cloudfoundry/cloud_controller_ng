@@ -5,7 +5,7 @@ module VCAP::CloudController
     subject(:access) { RouteMappingModelAccess.new(Security::AccessContext.new) }
     let(:scopes) { ['cloud_controller.read', 'cloud_controller.write'] }
 
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { FactoryBot.create(:user) }
     let(:org) { FactoryBot.create(:organization) }
     let(:space) { FactoryBot.create(:space, organization: org) }
     let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: org) }

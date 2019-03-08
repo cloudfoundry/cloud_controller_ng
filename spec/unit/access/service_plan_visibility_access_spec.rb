@@ -4,7 +4,7 @@ module VCAP::CloudController
   RSpec.describe ServicePlanVisibilityAccess, type: :access do
     subject(:access) { ServicePlanVisibilityAccess.new(Security::AccessContext.new) }
 
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { FactoryBot.create(:user) }
     let(:service) { VCAP::CloudController::Service.make }
     let(:org) { FactoryBot.create(:organization) }
     let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service) }

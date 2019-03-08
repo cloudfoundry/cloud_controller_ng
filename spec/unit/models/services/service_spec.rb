@@ -48,8 +48,8 @@ module VCAP::CloudController
       let(:private_service) { Service.make }
       let(:public_service) { Service.make }
       let(:nonadmin_org) { FactoryBot.create(:organization) }
-      let(:admin_user) { User.make }
-      let(:nonadmin_user) { User.make }
+      let(:admin_user) { FactoryBot.create(:user) }
+      let(:nonadmin_user) { FactoryBot.create(:user) }
       let!(:private_plan) { ServicePlan.make service: private_service, public: false }
       before do
         ServicePlan.make service: public_service, public: true
@@ -88,7 +88,7 @@ module VCAP::CloudController
       describe 'services from private brokers' do
         it 'does not return the services to users with no roles in the space' do
           space = FactoryBot.create(:space)
-          space_developer = User.make
+          space_developer = FactoryBot.create(:user)
 
           space.organization.add_user space_developer
 
@@ -102,7 +102,7 @@ module VCAP::CloudController
 
         it "returns services from private brokers to space developers in that private broker's space" do
           space = FactoryBot.create(:space)
-          space_developer = User.make
+          space_developer = FactoryBot.create(:user)
 
           space.organization.add_user space_developer
 
@@ -118,7 +118,7 @@ module VCAP::CloudController
 
         it "returns services from private brokers to space auditors in that private broker's space" do
           space = FactoryBot.create(:space)
-          space_auditor = User.make
+          space_auditor = FactoryBot.create(:user)
 
           space.organization.add_user space_auditor
 
@@ -133,7 +133,7 @@ module VCAP::CloudController
 
         it "returns services from private brokers to space managers in that private broker's space" do
           space = FactoryBot.create(:space)
-          space_manager = User.make
+          space_manager = FactoryBot.create(:user)
 
           space.organization.add_user space_manager
 
@@ -320,7 +320,7 @@ module VCAP::CloudController
       let(:org) { FactoryBot.create(:organization) }
       let(:space) { FactoryBot.create(:space, organization: org) }
       let(:dev) { make_developer_for_space(space) }
-      let(:outside_dev) { User.make(admin: false, active: true) }
+      let(:outside_dev) { FactoryBot.create(:user, admin: false, active: true) }
 
       before(:each) do
         @private_broker = ServiceBroker.make(space: space)

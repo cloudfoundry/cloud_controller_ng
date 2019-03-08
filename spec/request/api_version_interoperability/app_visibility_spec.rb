@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 RSpec.describe 'App visibility between API versions' do
-  let(:user) { VCAP::CloudController::User.make }
+  let(:user) { FactoryBot.create(:user) }
   let(:user_header) { headers_for(user, email: Sham.email, user_name: 'some-username') }
   let(:space) { FactoryBot.create(:space) }
 

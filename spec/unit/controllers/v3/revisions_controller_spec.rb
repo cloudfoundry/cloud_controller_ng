@@ -6,7 +6,7 @@ RSpec.describe RevisionsController, type: :controller do
     let!(:droplet) { VCAP::CloudController::DropletModel.make }
     let!(:app_model) { FactoryBot.create(:app, droplet: droplet) }
     let!(:space) { app_model.space }
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { FactoryBot.create(:user) }
     let(:revision) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 808, droplet_guid: droplet.guid) }
 
     before do
@@ -110,7 +110,7 @@ RSpec.describe RevisionsController, type: :controller do
     context 'permissions' do
       context 'when the user does not have cc read scope' do
         before do
-          set_current_user(VCAP::CloudController::User.make, scopes: [])
+          set_current_user(FactoryBot.create(:user), scopes: [])
         end
 
         it 'raises an ApiError with a 403 code' do
@@ -142,7 +142,7 @@ RSpec.describe RevisionsController, type: :controller do
     let!(:droplet) { VCAP::CloudController::DropletModel.make }
     let!(:app_model) { FactoryBot.create(:app, droplet: droplet) }
     let!(:space) { app_model.space }
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { FactoryBot.create(:user) }
     let(:labels) do
       {
         fruit: 'pears',
@@ -325,7 +325,7 @@ RSpec.describe RevisionsController, type: :controller do
     let!(:droplet) { VCAP::CloudController::DropletModel.make }
     let!(:app_model) { FactoryBot.create(:app, droplet: droplet) }
     let!(:space) { app_model.space }
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { FactoryBot.create(:user) }
     let(:revision) do
       VCAP::CloudController::RevisionModel.make(
         app: app_model,

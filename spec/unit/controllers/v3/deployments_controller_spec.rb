@@ -3,7 +3,7 @@ require 'permissions_spec_helper'
 require 'messages/deployment_create_message'
 
 RSpec.describe DeploymentsController, type: :controller do
-  let(:user) { VCAP::CloudController::User.make }
+  let(:user) { FactoryBot.create(:user) }
   let(:app) { FactoryBot.create(:app, desired_state: VCAP::CloudController::ProcessModel::STARTED) }
   let!(:process_model) { VCAP::CloudController::ProcessModel.make(app: app) }
   let(:droplet) { VCAP::CloudController::DropletModel.make(app: app, process_types: { 'web' => 'spider' }) }
@@ -656,7 +656,7 @@ RSpec.describe DeploymentsController, type: :controller do
 
   describe '#update' do
     let(:deployment) { VCAP::CloudController::DeploymentModel.make(app: app) }
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:user) { set_current_user(FactoryBot.create(:user)) }
 
     before do
       allow_user_read_access_for(user, spaces: [space])

@@ -9,7 +9,7 @@ RSpec.describe 'Errors' do
   #
   # We are now testing via a request so that the required middlewares are present
   describe 'invalid request json' do
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { FactoryBot.create(:user) }
     let(:user_header) { headers_for(user, email: Sham.email, user_name: 'some-username') }
 
     it 'it returns a MessageParseError' do

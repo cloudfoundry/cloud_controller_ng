@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   module Jobs
     RSpec.describe SpaceApplyManifestActionJob, job_context: :worker do
-      let(:user) { User.make(admin: true) }
+      let(:user) { FactoryBot.create(:user, admin: true) }
       let(:user_audit_info) { UserAuditInfo.new(user_email: 'user.email', user_guid: user.guid, user_name: 'user.name') }
       let(:apply_manifest_action) { instance_double(AppApplyManifest) }
       let(:space) { FactoryBot.create(:space) }

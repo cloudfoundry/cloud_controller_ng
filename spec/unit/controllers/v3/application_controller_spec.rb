@@ -251,7 +251,7 @@ RSpec.describe ApplicationController, type: :controller do
   end
 
   describe '#handle_blobstore_error' do
-    let!(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let!(:user) { set_current_user(FactoryBot.create(:user)) }
 
     it 'rescues from ApiError and renders an error presenter' do
       routes.draw { get 'blobstore_error' => 'anonymous#blobstore_error' }
@@ -262,7 +262,7 @@ RSpec.describe ApplicationController, type: :controller do
   end
 
   describe '#handle_api_error' do
-    let!(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let!(:user) { set_current_user(FactoryBot.create(:user)) }
 
     it 'rescues from ApiError and renders an error presenter' do
       routes.draw { get 'api_explode' => 'anonymous#api_explode' }
@@ -273,7 +273,7 @@ RSpec.describe ApplicationController, type: :controller do
   end
 
   describe '#handle_compound_error' do
-    let!(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let!(:user) { set_current_user(FactoryBot.create(:user)) }
 
     it 'rescues from CompoundErrors and renders an error presenter' do
       routes.draw { get 'compound_error' => 'anonymous#compound_error' }
@@ -284,7 +284,7 @@ RSpec.describe ApplicationController, type: :controller do
   end
 
   describe '#handle_not_found' do
-    let!(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let!(:user) { set_current_user(FactoryBot.create(:user)) }
 
     it 'rescues from NotFound error and renders an error presenter' do
       routes.draw { get 'not_found' => 'anonymous#not_found' }

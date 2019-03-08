@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 RSpec.describe 'Apps' do
-  let(:user) { VCAP::CloudController::User.make }
+  let(:user) { FactoryBot.create(:user) }
   let(:space) { FactoryBot.create(:space) }
   let(:build_client) { instance_double(HTTPClient, post: nil) }
 

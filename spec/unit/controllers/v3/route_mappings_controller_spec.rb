@@ -18,7 +18,7 @@ RSpec.describe RouteMappingsController, type: :controller do
         }
       }
     end
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:user) { set_current_user(FactoryBot.create(:user)) }
 
     before do
       allow_user_read_access_for(user, spaces: [space])
@@ -140,7 +140,7 @@ RSpec.describe RouteMappingsController, type: :controller do
     let(:original_weight) { 3 }
     let(:updated_weight) { original_weight + 10 }
     let!(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: app, route: route, weight: original_weight) }
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:user) { set_current_user(FactoryBot.create(:user)) }
     let(:request_body) do
       {
         weight: updated_weight
@@ -241,7 +241,7 @@ RSpec.describe RouteMappingsController, type: :controller do
 
   describe '#show' do
     let(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: app, route: route) }
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:user) { set_current_user(FactoryBot.create(:user)) }
 
     before do
       allow_user_read_access_for(user, spaces: [space])
@@ -293,7 +293,7 @@ RSpec.describe RouteMappingsController, type: :controller do
   end
 
   describe '#index' do
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:user) { set_current_user(FactoryBot.create(:user)) }
 
     before do
       allow_user_read_access_for(user, spaces: [space])
@@ -422,7 +422,7 @@ RSpec.describe RouteMappingsController, type: :controller do
   end
 
   describe '#destroy' do
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:user) { set_current_user(FactoryBot.create(:user)) }
 
     before do
       allow_user_read_access_for(user, spaces: [space])

@@ -4,7 +4,7 @@ module VCAP::CloudController
   RSpec.describe ProcessModelAccess, type: :access do
     subject(:access) { ProcessModelAccess.new(Security::AccessContext.new) }
     let(:token) { { 'scope' => ['cloud_controller.read', 'cloud_controller.write'] } }
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { FactoryBot.create(:user) }
     let(:org) { FactoryBot.create(:organization) }
     let(:space) { FactoryBot.create(:space, organization: org) }
     let(:object) { VCAP::CloudController::ProcessModelFactory.make(space: space) }

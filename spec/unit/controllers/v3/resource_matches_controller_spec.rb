@@ -5,7 +5,7 @@ RSpec.describe ResourceMatchesController, type: :controller do
   describe '#create' do
     include_context 'resource pool'
 
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { FactoryBot.create(:user) }
     let(:req_body) do
       {
         "resources": [
@@ -63,7 +63,7 @@ RSpec.describe ResourceMatchesController, type: :controller do
 
       context 'when the user is not an admin' do
         before do
-          set_current_user(VCAP::CloudController::User.make)
+          set_current_user(FactoryBot.create(:user))
         end
 
         it 'raises FeatureDisabled' do

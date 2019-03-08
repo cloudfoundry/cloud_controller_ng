@@ -4,7 +4,7 @@ require 'models/runtime/buildpack'
 
 RSpec.describe BuildpacksController, type: :controller do
   describe '#index' do
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { FactoryBot.create(:user) }
 
     describe 'permissions by role' do
       role_to_expected_http_response = {
@@ -96,12 +96,12 @@ RSpec.describe BuildpacksController, type: :controller do
 
   describe '#destroy' do
     let(:buildpack) { VCAP::CloudController::Buildpack.make }
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { FactoryBot.create(:user) }
 
     describe 'permissions' do
       context 'when the user does not have the write scope' do
         before do
-          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
+          set_current_user(FactoryBot.create(:user), scopes: ['cloud_controller.read'])
         end
 
         it 'raises an ApiError with a 403 code' do
@@ -223,7 +223,7 @@ RSpec.describe BuildpacksController, type: :controller do
   end
 
   describe '#show' do
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { FactoryBot.create(:user) }
 
     before do
       set_current_user(user)
@@ -255,7 +255,7 @@ RSpec.describe BuildpacksController, type: :controller do
     end
 
     context 'when authorized' do
-      let(:user) { VCAP::CloudController::User.make }
+      let(:user) { FactoryBot.create(:user) }
       let(:stack) { FactoryBot.create(:stack) }
       let(:params) do
         {
@@ -342,7 +342,7 @@ RSpec.describe BuildpacksController, type: :controller do
   end
 
   describe '#update' do
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { FactoryBot.create(:user) }
     let(:buildpack) do
       VCAP::CloudController::Buildpack.make(stack: nil)
     end
@@ -350,7 +350,7 @@ RSpec.describe BuildpacksController, type: :controller do
     describe 'permissions' do
       context 'when the user does not have the write scope' do
         before do
-          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
+          set_current_user(FactoryBot.create(:user), scopes: ['cloud_controller.read'])
         end
 
         it 'raises an ApiError with a 403 code' do
@@ -426,7 +426,7 @@ RSpec.describe BuildpacksController, type: :controller do
         expect(buildpack.reload.enabled).to eq false
       end
 
-      let(:user) { VCAP::CloudController::User.make }
+      let(:user) { FactoryBot.create(:user) }
       let(:headers) { headers_for(user) }
 
       before do
@@ -491,7 +491,7 @@ RSpec.describe BuildpacksController, type: :controller do
   describe '#upload' do
     let(:stat_double) { instance_double(File::Stat, size: 2) }
     let(:test_buildpack) { VCAP::CloudController::Buildpack.create_from_hash({ name: 'upload_binary_buildpack', stack: nil, position: 0 }) }
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { FactoryBot.create(:user) }
     let(:uploader) { instance_double(VCAP::CloudController::BuildpackUpload, upload_async: nil) }
     let(:buildpack_bits_path) { '/tmp/buildpack_bits_path' }
     let(:buildpack_bits_name) { 'buildpack.zip' }
@@ -505,7 +505,7 @@ RSpec.describe BuildpacksController, type: :controller do
       let(:params) { { bits_path: buildpack_bits_path, bits_name: buildpack_bits_name } }
       context 'when the user does not have the write scope' do
         before do
-          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
+          set_current_user(FactoryBot.create(:user), scopes: ['cloud_controller.read'])
         end
 
         it 'raises an ApiError with a 403 code' do

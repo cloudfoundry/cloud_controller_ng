@@ -8,7 +8,7 @@ RSpec.describe PackagesController, type: :controller do
     let(:org) { space.organization }
     let(:params) { { 'bits_path' => 'path/to/bits' } }
     let(:form_headers) { { 'CONTENT_TYPE' => 'application/x-www-form-urlencoded' } }
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:user) { set_current_user(FactoryBot.create(:user)) }
 
     before do
       @request.env.merge!(form_headers)
@@ -243,7 +243,7 @@ RSpec.describe PackagesController, type: :controller do
     let(:package) { VCAP::CloudController::PackageModel.make(state: 'READY') }
     let(:space) { package.space }
     let(:org) { space.organization }
-    let(:user) { set_current_user(VCAP::CloudController::User.make, email: 'utako') }
+    let(:user) { set_current_user(FactoryBot.create(:user), email: 'utako') }
 
     before do
       blob = instance_double(CloudController::Blobstore::FogBlob, public_download_url: 'http://package.example.com')
@@ -300,7 +300,7 @@ RSpec.describe PackagesController, type: :controller do
     context 'permissions' do
       context 'user does not have read scope' do
         before do
-          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.write'])
+          set_current_user(FactoryBot.create(:user), scopes: ['cloud_controller.write'])
         end
 
         it 'returns an Unauthorized error' do
@@ -342,7 +342,7 @@ RSpec.describe PackagesController, type: :controller do
   describe '#show' do
     let(:package) { VCAP::CloudController::PackageModel.make }
     let(:space) { package.space }
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:user) { set_current_user(FactoryBot.create(:user)) }
 
     before do
       allow_user_read_access_for(user, spaces: [space])
@@ -441,7 +441,7 @@ RSpec.describe PackagesController, type: :controller do
     let(:app_model) { FactoryBot.create(:app, name: 'needed to put the package in the space', space: space) }
     let(:package) { VCAP::CloudController::PackageModel.make(app: app_model) }
 
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:user) { set_current_user(FactoryBot.create(:user)) }
     let(:labels) do
       {
         fruit: 'pears',
@@ -647,7 +647,7 @@ RSpec.describe PackagesController, type: :controller do
         let(:bits_service_double) { double('bits_service') }
         let(:blob_double) { double('blob') }
         let(:bits_service_public_upload_url) { "https://some.public/signed/url/to/upload/package#{package.guid}" }
-        let(:user) { set_current_user(VCAP::CloudController::User.make) }
+        let(:user) { set_current_user(FactoryBot.create(:user)) }
 
         before do
           VCAP::CloudController::Config.config.set(:bits_service, { enabled: true })
@@ -674,7 +674,7 @@ RSpec.describe PackagesController, type: :controller do
       end
 
       context 'permissions' do
-        let(:user) { set_current_user(VCAP::CloudController::User.make) }
+        let(:user) { set_current_user(FactoryBot.create(:user)) }
 
         context 'when the user cannot read the app' do
           before do
@@ -708,7 +708,7 @@ RSpec.describe PackagesController, type: :controller do
 
   describe '#destroy' do
     let(:package) { VCAP::CloudController::PackageModel.make }
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:user) { set_current_user(FactoryBot.create(:user)) }
     let(:space) { package.space }
     let(:package_delete_stub) { instance_double(VCAP::CloudController::PackageDelete) }
 
@@ -806,7 +806,7 @@ RSpec.describe PackagesController, type: :controller do
   end
 
   describe '#index' do
-    let(:user) { set_current_user(VCAP::CloudController::User.make) }
+    let(:user) { set_current_user(FactoryBot.create(:user)) }
     let(:app_model) { FactoryBot.create(:app) }
     let(:space) { app_model.space }
     let(:space1) { FactoryBot.create(:space) }
@@ -969,7 +969,7 @@ RSpec.describe PackagesController, type: :controller do
 
       context 'when the user does not have the read scope' do
         before do
-          set_current_user(VCAP::CloudController::User.make, scopes: [])
+          set_current_user(FactoryBot.create(:user), scopes: [])
         end
 
         it 'returns a 403 NotAuthorized error' do
@@ -994,7 +994,7 @@ RSpec.describe PackagesController, type: :controller do
           relationships: { app: { data: { guid: app_guid } } }
         }
       end
-      let(:user) { set_current_user(VCAP::CloudController::User.make) }
+      let(:user) { set_current_user(FactoryBot.create(:user)) }
 
       before do
         allow_user_read_access_for(user, spaces: [space])
@@ -1224,7 +1224,7 @@ RSpec.describe PackagesController, type: :controller do
       let(:source_app_model) { FactoryBot.create(:app) }
       let(:original_package) { VCAP::CloudController::PackageModel.make(type: 'bits', app_guid: source_app_model.guid) }
       let(:target_app_model) { FactoryBot.create(:app) }
-      let(:user) { set_current_user(VCAP::CloudController::User.make) }
+      let(:user) { set_current_user(FactoryBot.create(:user)) }
       let(:source_space) { source_app_model.space }
       let(:destination_space) { target_app_model.space }
       let(:relationship_request_body) { { relationships: { app: { data: { guid: target_app_model.guid } } } } }
@@ -1275,7 +1275,7 @@ RSpec.describe PackagesController, type: :controller do
       context 'permissions' do
         context 'when the user does not have write scope' do
           before do
-            set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
+            set_current_user(FactoryBot.create(:user), scopes: ['cloud_controller.read'])
           end
 
           it 'returns a 403 NotAuthorized error' do

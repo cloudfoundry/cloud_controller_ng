@@ -2,8 +2,8 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe VCAP::CloudController::AppsController do
-    let(:admin_user) { User.make }
-    let(:non_admin_user) { User.make }
+    let(:admin_user) { FactoryBot.create(:user) }
+    let(:non_admin_user) { FactoryBot.create(:user) }
     let(:app_event_repository) { Repositories::AppEventRepository.new }
     before do
       set_current_user(non_admin_user)
@@ -1278,7 +1278,7 @@ module VCAP::CloudController
       context 'when the user is a member of the space this app exists in' do
         context 'when the user is not a space developer' do
           before do
-            set_current_user(User.make)
+            set_current_user(FactoryBot.create(:user))
           end
 
           it 'returns a JSON payload indicating they do not have permission to read this endpoint' do
@@ -1461,7 +1461,7 @@ module VCAP::CloudController
         let(:process) { ProcessModelFactory.make(detected_buildpack: 'buildpack-name') }
 
         before do
-          set_current_user(User.make)
+          set_current_user(FactoryBot.create(:user))
         end
 
         it 'returns access denied' do
@@ -1705,7 +1705,7 @@ module VCAP::CloudController
         let(:req_body) { { droplet: valid_zip } }
 
         it 'is allowed' do
-          set_current_user(User.make, admin: true)
+          set_current_user(FactoryBot.create(:user), admin: true)
           put "/v2/apps/#{process.app.guid}/droplet/upload", req_body
 
           expect(last_response.status).to eq(201)
@@ -2154,7 +2154,7 @@ module VCAP::CloudController
 
       context 'when the user is not a developer in the apps space' do
         before do
-          set_current_user(User.make)
+          set_current_user(FactoryBot.create(:user))
         end
 
         it 'returns 403' do
@@ -2281,7 +2281,7 @@ module VCAP::CloudController
 
       context 'when the user is not a developer in the apps space' do
         before do
-          set_current_user(User.make)
+          set_current_user(FactoryBot.create(:user))
         end
 
         it 'returns 403' do
@@ -2414,7 +2414,7 @@ module VCAP::CloudController
 
       context 'when the user is not a developer in the apps space' do
         before do
-          set_current_user(User.make)
+          set_current_user(FactoryBot.create(:user))
         end
 
         it 'returns 403' do
@@ -2427,7 +2427,7 @@ module VCAP::CloudController
     describe 'GET /v2/apps/:guid/permissions' do
       let(:process) { ProcessModelFactory.make(space: space) }
       let(:space) { FactoryBot.create(:space) }
-      let(:user) { User.make }
+      let(:user) { FactoryBot.create(:user) }
 
       before do
         space.organization.add_user(user)
@@ -2562,7 +2562,7 @@ module VCAP::CloudController
 
       context 'when the user is not part of the org or space' do
         before do
-          new_user = User.make
+          new_user = FactoryBot.create(:user)
           set_current_user(new_user)
         end
 

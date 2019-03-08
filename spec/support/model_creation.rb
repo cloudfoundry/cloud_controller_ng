@@ -1,6 +1,6 @@
 module ModelCreation
   def make_user_for_org(org)
-    user = VCAP::CloudController::User.make
+    user = FactoryBot.create(:user)
     user.add_organization org
     org.refresh
     user
@@ -78,13 +78,13 @@ module ModelCreation
   end
 
   def make_user_with_default_space(opts={})
-    user = VCAP::CloudController::User.make(admin: opts.key?(:admin), active: true)
+    user = FactoryBot.create(:user, admin: opts.key?(:admin), active: true)
     space = make_space_for_user(user)
     user.default_space = space
     user
   end
 
   def make_user(opts={})
-    VCAP::CloudController::User.make(admin: opts.key?(:admin), active: true)
+    FactoryBot.create(:user, admin: opts.key?(:admin), active: true)
   end
 end

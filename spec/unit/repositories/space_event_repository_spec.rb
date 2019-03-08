@@ -4,7 +4,7 @@ module VCAP::CloudController
   module Repositories
     RSpec.describe SpaceEventRepository do
       let(:request_attrs) { { 'name' => 'new-space' } }
-      let(:user) { User.make }
+      let(:user) { FactoryBot.create(:user) }
       let(:space) { FactoryBot.create(:space) }
       let(:user_email) { 'email address' }
       let(:user_name) { 'user name' }

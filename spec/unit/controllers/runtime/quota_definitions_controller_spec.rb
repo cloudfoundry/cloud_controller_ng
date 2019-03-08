@@ -85,7 +85,7 @@ module VCAP::CloudController
       context 'when the user is not a cf admin' do
         let(:quota_name) { 'quota 2' }
 
-        before { set_current_user(User.make) }
+        before { set_current_user(FactoryBot.create(:user)) }
 
         it 'does not allow creation of a quota def' do
           post '/v2/quota_definitions', MultiJson.dump(quota_attributes)

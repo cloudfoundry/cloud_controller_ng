@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 RSpec.describe 'Organizations' do
-  let(:user) { VCAP::CloudController::User.make }
+  let(:user) { FactoryBot.create(:user) }
   let(:org) { FactoryBot.create(:organization) }
 
   describe 'GET /v2/organizations/:guid/services' do

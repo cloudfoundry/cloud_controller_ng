@@ -288,7 +288,7 @@ module VCAP::CloudController
           end
 
           before do
-            set_current_user(User.make)
+            set_current_user(FactoryBot.create(:user))
           end
 
           it 'returns 403' do
@@ -889,7 +889,7 @@ module VCAP::CloudController
 
         context 'when the user does not belong to the space' do
           it 'returns a 403' do
-            set_current_user(User.make)
+            set_current_user(FactoryBot.create(:user))
 
             delete "/v2/service_bindings/#{service_binding.guid}"
             expect(last_response).to have_status_code(403)
@@ -1566,7 +1566,7 @@ module VCAP::CloudController
           end
 
           context 'user permissions' do
-            let(:user) { User.make }
+            let(:user) { FactoryBot.create(:user) }
             let(:body) { {}.to_json }
 
             {

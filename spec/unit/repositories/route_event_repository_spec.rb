@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   module Repositories
     RSpec.describe RouteEventRepository do
-      let(:user) { User.make }
+      let(:user) { FactoryBot.create(:user) }
       let(:route) { Route.make }
       let(:request_attrs) { { 'host' => 'dora', 'domain_guid' => route.domain.guid, 'space_guid' => route.space.guid } }
       let(:user_email) { 'some@email.com' }

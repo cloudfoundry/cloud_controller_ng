@@ -6,11 +6,11 @@ module VCAP::CloudController
     describe '#fetch' do
       let(:org) { FactoryBot.create(:organization) }
       let(:space) { FactoryBot.create(:space, organization: org) }
-      let(:everything_user) { User.make }
-      let(:manager) { User.make }
-      let(:auditor) { User.make }
-      let(:developer) { User.make }
-      let(:not_a_user) { User.make }
+      let(:everything_user) { FactoryBot.create(:user) }
+      let(:manager) { FactoryBot.create(:user) }
+      let(:auditor) { FactoryBot.create(:user) }
+      let(:developer) { FactoryBot.create(:user) }
+      let(:not_a_user) { FactoryBot.create(:user) }
 
       before do
         org.add_user(everything_user)

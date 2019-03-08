@@ -297,7 +297,7 @@ RSpec.describe 'v3 service bindings' do
     end
 
     it 'redacts credentials for space auditors' do
-      auditor = VCAP::CloudController::User.make
+      auditor = FactoryBot.create(:user)
       space.organization.add_user(auditor)
       space.add_auditor(auditor)
 

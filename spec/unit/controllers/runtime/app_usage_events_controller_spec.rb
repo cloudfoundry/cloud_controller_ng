@@ -81,7 +81,7 @@ module VCAP::CloudController
       end
 
       it 'returns 403 as a non-admin' do
-        set_current_user(User.make)
+        set_current_user(FactoryBot.create(:user))
 
         expect {
           post '/v2/app_usage_events/destructively_purge_all_and_reseed_started_apps'
