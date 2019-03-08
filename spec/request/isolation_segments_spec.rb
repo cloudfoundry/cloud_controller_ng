@@ -4,7 +4,7 @@ require 'isolation_segment_assign'
 RSpec.describe 'IsolationSegmentModels' do
   let(:user) { VCAP::CloudController::User.make }
   let(:user_header) { admin_headers_for(user) }
-  let(:space) { VCAP::CloudController::Space.make }
+  let(:space) { FactoryBot.create(:space) }
   let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
 
   describe 'POST /v3/isolation_segments' do
@@ -76,8 +76,8 @@ RSpec.describe 'IsolationSegmentModels' do
   end
 
   describe 'GET /v3/isolation_segments/:guid/relationships/spaces' do
-    let(:space1) { VCAP::CloudController::Space.make }
-    let(:space2) { VCAP::CloudController::Space.make }
+    let(:space1) { FactoryBot.create(:space) }
+    let(:space2) { FactoryBot.create(:space) }
     let(:isolation_segment_model) { FactoryBot.create(:isolation_segment) }
 
     before do

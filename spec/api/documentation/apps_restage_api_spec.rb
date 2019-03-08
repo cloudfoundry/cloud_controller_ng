@@ -3,7 +3,7 @@ require 'rspec_api_documentation/dsl'
 
 RSpec.resource 'Apps', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
-  let(:space) { VCAP::CloudController::Space.make }
+  let(:space) { FactoryBot.create(:space) }
   let(:process) { VCAP::CloudController::ProcessModelFactory.make space: space }
   let(:user) { make_developer_for_space(process.space) }
   let(:stager) { instance_double(VCAP::CloudController::Diego::Stager, stage: nil) }

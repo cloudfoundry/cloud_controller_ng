@@ -15,8 +15,8 @@ module VCAP::CloudController
 
       context 'when there are spaces' do
         let(:space_quota) { SpaceQuotaDefinition.make(organization: organization) }
-        let(:space) { Space.make(organization: organization, space_quota_definition: space_quota) }
-        let(:space2) { Space.make(organization: organization, space_quota_definition: space_quota) }
+        let(:space) { FactoryBot.create(:space, organization: organization, space_quota_definition: space_quota) }
+        let(:space2) { FactoryBot.create(:space, organization: organization, space_quota_definition: space_quota) }
 
         it 'has no reserved ports' do
           expect(subject.count).to eq 0

@@ -3,7 +3,7 @@ require 'spec_helper'
 RSpec.describe 'Space Manifests' do
   let(:user) { VCAP::CloudController::User.make }
   let(:user_header) { headers_for(user, email: Sham.email, user_name: 'some-username') }
-  let(:space) { VCAP::CloudController::Space.make }
+  let(:space) { FactoryBot.create(:space) }
   let(:shared_domain) { VCAP::CloudController::SharedDomain.make }
   let(:route) { VCAP::CloudController::Route.make(domain: shared_domain, space: space, host: 'a_host') }
   let(:second_route) {

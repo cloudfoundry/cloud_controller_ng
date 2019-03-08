@@ -15,7 +15,7 @@ module VCAP::CloudController
 
     describe 'Associations' do
       context 'routes' do
-        let(:space) { Space.make }
+        let(:space) { FactoryBot.create(:space) }
         it { is_expected.to have_associated :routes,
              test_instance: SharedDomain.make,
              associated_instance: ->(domain) { Route.make(space: space, domain: domain) }
@@ -108,8 +108,8 @@ module VCAP::CloudController
         domain = PrivateDomain.make
         org = domain.owning_organization
 
-        space1 = Space.make(organization: org)
-        space2 = Space.make(organization: org)
+        space1 = FactoryBot.create(:space, organization: org)
+        space2 = FactoryBot.create(:space, organization: org)
 
         expect {
           @eager_loaded_domain = Domain.eager(:spaces_sti_eager_load).where(id: domain.id).all.first
@@ -131,8 +131,8 @@ module VCAP::CloudController
         org1 = domain1.owning_organization
         org2 = domain2.owning_organization
 
-        space1 = Space.make(organization: org1)
-        space2 = Space.make(organization: org2)
+        space1 = FactoryBot.create(:space, organization: org1)
+        space2 = FactoryBot.create(:space, organization: org2)
 
         expect {
           @eager_loaded_domains = Domain.eager(:spaces_sti_eager_load).where(id: [domain1.id, domain2.id]).order_by(:id).all
@@ -148,8 +148,8 @@ module VCAP::CloudController
         domain = PrivateDomain.make
         org = domain.owning_organization
 
-        space1 = Space.make(organization: org)
-        Space.make(organization: org)
+        space1 = FactoryBot.create(:space, organization: org)
+        FactoryBot.create(:space, organization: org)
 
         eager_block = proc { |ds| ds.where(id: space1.id) }
 
@@ -163,7 +163,7 @@ module VCAP::CloudController
       it 'allow nested eager_load' do
         domain = PrivateDomain.make
         org = domain.owning_organization
-        Space.make(organization: org)
+        FactoryBot.create(:space, organization: org)
 
         expect {
           @eager_loaded_domain = Domain.eager(spaces_sti_eager_load: :organization).where(id: domain.id).all.first

@@ -93,7 +93,7 @@ RSpec.resource 'Organizations', type: [:api, :legacy_api] do
 
     describe 'Spaces' do
       before do
-        VCAP::CloudController::Space.make(organization: organization)
+        FactoryBot.create(:space, organization: organization)
       end
 
       standard_model_list :space, VCAP::CloudController::SpacesController, outer_model: :organization
@@ -356,7 +356,7 @@ RSpec.resource 'Organizations', type: [:api, :legacy_api] do
       before do
         some_service = VCAP::CloudController::Service.make(active: true)
         VCAP::CloudController::ServicePlan.make(service: some_service, public: false)
-        space = VCAP::CloudController::Space.make(organization: organization)
+        space = FactoryBot.create(:space, organization: organization)
         VCAP::CloudController::ServicePlanVisibility.make(service_plan: some_service.service_plans.first, organization: space.organization)
       end
 
@@ -380,7 +380,7 @@ RSpec.resource 'Organizations', type: [:api, :legacy_api] do
           explanation "This endpoint returns a count of started app instances under an organization.
             Note that crashing apps are included in this count."
 
-          space = VCAP::CloudController::Space.make(organization: organization)
+          space = FactoryBot.create(:space, organization: organization)
           VCAP::CloudController::ProcessModelFactory.make(space: space, state: 'STARTED', instances: 3)
 
           client.get "/v2/organizations/#{guid}/instance_usage", {}, headers

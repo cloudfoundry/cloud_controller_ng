@@ -5,7 +5,7 @@ RSpec.describe 'Packages' do
   let(:user) { VCAP::CloudController::User.make }
   let(:user_name) { 'clarence' }
   let(:user_header) { headers_for(user, email: email, user_name: user_name) }
-  let(:space) { VCAP::CloudController::Space.make }
+  let(:space) { FactoryBot.create(:space) }
   let(:space_guid) { space.guid }
   let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space_guid) }
 
@@ -157,7 +157,7 @@ RSpec.describe 'Packages' do
   end
 
   describe 'GET /v3/apps/:guid/packages' do
-    let(:space) { VCAP::CloudController::Space.make }
+    let(:space) { FactoryBot.create(:space) }
     let!(:package) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, created_at: Time.at(1)) }
     let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
     let(:guid) { app_model.guid }
@@ -489,12 +489,12 @@ RSpec.describe 'Packages' do
       it 'filters by space guids' do
         package_on_space1 = VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
 
-        space2 = VCAP::CloudController::Space.make(organization: space.organization)
+        space2 = FactoryBot.create(:space, organization: space.organization)
         space2.add_developer(user)
         app_model2 = VCAP::CloudController::AppModel.make(space_guid: space2.guid)
         package_on_space2 = VCAP::CloudController::PackageModel.make(app_guid: app_model2.guid)
 
-        space3 = VCAP::CloudController::Space.make(organization: space.organization)
+        space3 = FactoryBot.create(:space, organization: space.organization)
         space3.add_developer(user)
         app_model3 = VCAP::CloudController::AppModel.make(space_guid: space3.guid)
         VCAP::CloudController::PackageModel.make(app_guid: app_model3.guid)
@@ -522,7 +522,7 @@ RSpec.describe 'Packages' do
 
         package_in_org1 = VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
 
-        space2 = VCAP::CloudController::Space.make
+        space2 = FactoryBot.create(:space)
         org2_guid = space2.organization.guid
         app_model2 = VCAP::CloudController::AppModel.make(space_guid: space2.guid)
 
@@ -531,7 +531,7 @@ RSpec.describe 'Packages' do
 
         package_in_org2 = VCAP::CloudController::PackageModel.make(app_guid: app_model2.guid)
 
-        space3 = VCAP::CloudController::Space.make
+        space3 = FactoryBot.create(:space)
         space3.organization.add_user(user)
         space3.add_developer(user)
         app_model3 = VCAP::CloudController::AppModel.make(space_guid: space3.guid)
@@ -583,7 +583,7 @@ RSpec.describe 'Packages' do
   end
 
   describe 'GET /v3/packages/:guid' do
-    let(:space) { VCAP::CloudController::Space.make }
+    let(:space) { FactoryBot.create(:space) }
     let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
     let(:package_model) do
       VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
@@ -630,7 +630,7 @@ RSpec.describe 'Packages' do
     let!(:package_model) do
       VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, type: type)
     end
-    let(:space) { VCAP::CloudController::Space.make }
+    let(:space) { FactoryBot.create(:space) }
     let(:app_model) { VCAP::CloudController::AppModel.make(guid: 'woof', space_guid: space.guid, name: 'meow') }
     let(:guid) { package_model.guid }
     let(:tmpdir) { Dir.mktmpdir }
@@ -763,7 +763,7 @@ RSpec.describe 'Packages' do
     let(:app_model) do
       VCAP::CloudController::AppModel.make(guid: 'woof-guid', space_guid: space.guid, name: 'meow')
     end
-    let(:space) { VCAP::CloudController::Space.make }
+    let(:space) { FactoryBot.create(:space) }
     let(:bits_download_url) { CloudController::DependencyLocator.instance.blobstore_url_generator.package_download_url(package_model) }
     let(:guid) { package_model.guid }
     let(:temp_file) do
@@ -816,7 +816,7 @@ RSpec.describe 'Packages' do
   describe 'PATCH /v3/packages/:guid' do
     let(:app_name) { 'sir meow' }
     let(:app_guid) { 'meow-the-guid' }
-    let(:space) { VCAP::CloudController::Space.make }
+    let(:space) { FactoryBot.create(:space) }
     let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid, name: app_name, guid: app_guid) }
     let!(:package_model) do
       VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
@@ -857,7 +857,7 @@ RSpec.describe 'Packages' do
   describe 'DELETE /v3/packages/:guid' do
     let(:app_name) { 'sir meow' }
     let(:app_guid) { 'meow-the-guid' }
-    let(:space) { VCAP::CloudController::Space.make }
+    let(:space) { FactoryBot.create(:space) }
     let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid, name: app_name, guid: app_guid) }
     let!(:package_model) do
       VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)

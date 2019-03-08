@@ -14,7 +14,7 @@ module VCAP::CloudController
       end
 
       context 'when there are services' do
-        let(:space) { Space.make }
+        let(:space) { FactoryBot.create(:space) }
         let(:app) { AppModel.make(environment_variables: { 'jesse' => 'awesome' }, space: space) }
         let(:service) { Service.make(label: 'elephantsql-n/a') }
         let(:service_alt) { Service.make(label: 'giraffesql-n/a') }

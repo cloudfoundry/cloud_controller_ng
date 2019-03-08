@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe RouteMappingModel do
     describe '#process' do
-      let(:space) { VCAP::CloudController::Space.make }
+      let(:space) { FactoryBot.create(:space) }
       let(:route) { VCAP::CloudController::Route.make(space: space) }
       let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
       let!(:web_process) do
@@ -32,7 +32,7 @@ module VCAP::CloudController
     end
 
     describe 'validations' do
-      let(:space) { VCAP::CloudController::Space.make }
+      let(:space) { FactoryBot.create(:space) }
       let(:route) { VCAP::CloudController::Route.make(space: space) }
       let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
 

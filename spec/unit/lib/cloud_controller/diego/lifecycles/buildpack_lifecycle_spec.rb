@@ -3,7 +3,7 @@ require_relative 'lifecycle_shared'
 
 module VCAP::CloudController
   RSpec.describe BuildpackLifecycle do
-    let(:app) { AppModel.create(name: 'some-app', space: Space.make) }
+    let(:app) { AppModel.create(name: 'some-app', space: FactoryBot.create(:space)) }
     let!(:package) { PackageModel.make(type: PackageModel::BITS_TYPE, app: app) }
     let(:staging_message) { BuildCreateMessage.new(lifecycle: { data: request_data, type: 'buildpack' }) }
     let(:request_data) { {} }
@@ -39,7 +39,7 @@ module VCAP::CloudController
       end
 
       context 'when the user does not specify buildpacks' do
-        let(:app) { AppModel.make(:buildpack, name: 'some-app', space: Space.make) }
+        let(:app) { AppModel.make(:buildpack, name: 'some-app', space: FactoryBot.create(:space)) }
         let(:request_data) { {} }
 
         context 'when the app has buildpacks' do

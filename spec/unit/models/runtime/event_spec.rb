@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe Event, type: :model do
-    let(:space) { Space.make }
+    let(:space) { FactoryBot.create(:space) }
 
     let(:event) do
       Event.make(
@@ -96,7 +96,7 @@ module VCAP::CloudController
         let(:space_guid) { 'space-guid-1234' }
 
         let(:new_org) { FactoryBot.create(:organization) }
-        let(:new_space) { Space.make(guid: space_guid, organization: new_org) }
+        let(:new_space) { FactoryBot.create(:space, guid: space_guid, organization: new_org) }
         let!(:new_event) { Event.make(space: new_space) }
 
         before { new_space.destroy }

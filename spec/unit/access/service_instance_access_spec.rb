@@ -7,7 +7,7 @@ module VCAP::CloudController
     let(:user) { VCAP::CloudController::User.make }
 
     let(:org) { FactoryBot.create(:organization) }
-    let(:space) { VCAP::CloudController::Space.make(organization: org) }
+    let(:space) { FactoryBot.create(:space, organization: org) }
     let(:service) { VCAP::CloudController::Service.make }
     let(:service_plan_active) { true }
     let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service, active: service_plan_active) }
@@ -136,7 +136,7 @@ module VCAP::CloudController
     context 'space developer in a space that the service instance has been shared into' do
       before do
         org.add_user(user)
-        target_space = VCAP::CloudController::Space.make(organization: org)
+        target_space = FactoryBot.create(:space, organization: org)
         target_space.add_developer(user)
         service_instance.add_shared_space(target_space)
       end

@@ -7,7 +7,7 @@ module VCAP::CloudController
 
     let(:user) { VCAP::CloudController::User.make }
     let(:org) { FactoryBot.create(:organization) }
-    let(:space) { VCAP::CloudController::Space.make(organization: org) }
+    let(:space) { FactoryBot.create(:space, organization: org) }
     let(:process) { VCAP::CloudController::ProcessModelFactory.make(space: space) }
     let(:object) { VCAP::CloudController::AppEvent.make(app: process) }
 

@@ -97,7 +97,7 @@ module VCAP::CloudController
     describe 'validations' do
       let(:task) { TaskModel.make }
       let(:org) { FactoryBot.create(:organization) }
-      let(:space) { Space.make organization: org }
+      let(:space) { FactoryBot.create(:space, organization: org) }
       let(:app) { AppModel.make space_guid: space.guid }
       let(:droplet) { DropletModel.make(app_guid: app.guid) }
 
@@ -283,7 +283,7 @@ module VCAP::CloudController
 
       describe 'quotas' do
         describe 'space quotas' do
-          let(:space) { Space.make organization: org, space_quota_definition: quota }
+          let(:space) { FactoryBot.create(:space, organization: org, space_quota_definition: quota) }
 
           context 'when there is no quota' do
             let(:quota) { nil }

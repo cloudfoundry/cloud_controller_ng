@@ -23,7 +23,7 @@ module VCAP::CloudController
     end
 
     context 'space developer' do
-      let(:space) { Space.make }
+      let(:space) { FactoryBot.create(:space) }
 
       before do
         set_current_user(user)

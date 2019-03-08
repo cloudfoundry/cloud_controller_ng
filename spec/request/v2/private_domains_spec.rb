@@ -2,7 +2,7 @@ require 'spec_helper'
 
 RSpec.describe 'PrivateDomains' do
   let(:user) { VCAP::CloudController::User.make }
-  let(:space) { VCAP::CloudController::Space.make }
+  let(:space) { FactoryBot.create(:space) }
   let(:organization) { space.organization }
 
   before do

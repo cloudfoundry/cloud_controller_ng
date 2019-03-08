@@ -8,8 +8,8 @@ module VCAP::CloudController
     let(:user_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email) }
 
     describe '#delete' do
-      let!(:space) { Space.make(name: 'space-1') }
-      let!(:space_2) { Space.make(name: 'space-2') }
+      let!(:space) { FactoryBot.create(:space, name: 'space-1') }
+      let!(:space_2) { FactoryBot.create(:space, name: 'space-2') }
       let!(:app) { AppModel.make(space_guid: space.guid) }
 
       let(:space_dataset) { Space.dataset }
@@ -60,8 +60,8 @@ module VCAP::CloudController
           end
 
           context 'when deletion of service instances fail' do
-            let!(:space_3) { Space.make(name: 'space-3') }
-            let!(:space_4) { Space.make(name: 'space-4') }
+            let!(:space_3) { FactoryBot.create(:space, name: 'space-3') }
+            let!(:space_4) { FactoryBot.create(:space, name: 'space-4') }
 
             let!(:service_instance_1) { ManagedServiceInstance.make(space: space_3) } # deletion fail
             let!(:service_instance_2) { ManagedServiceInstance.make(space: space_3) } # deletion fail
@@ -118,7 +118,7 @@ module VCAP::CloudController
           end
 
           context 'when unsharing a service instance that has been shared to the space' do
-            let(:other_space) { Space.make }
+            let(:other_space) { FactoryBot.create(:space) }
             let(:fake_shared_service) { instance_double(ManagedServiceInstance) }
 
             before do

@@ -3,7 +3,7 @@ require 'fetchers/log_access_fetcher'
 
 module VCAP::CloudController
   RSpec.describe LogAccessFetcher do
-    let(:space) { Space.make }
+    let(:space) { FactoryBot.create(:space) }
     let(:process) { AppModel.make(space_guid: space.guid) }
     let(:sad_process) { AppModel.make }
     let(:org) { space.organization }

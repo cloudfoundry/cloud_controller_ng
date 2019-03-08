@@ -14,7 +14,7 @@ module VCAP::CloudController
     describe 'Associations' do
       it 'has associated spaces' do
         private_domain = PrivateDomain.make
-        space = Space.make(organization: private_domain.owning_organization)
+        space = FactoryBot.create(:space, organization: private_domain.owning_organization)
         expect(private_domain.spaces).to include(space.reload)
       end
     end
@@ -178,7 +178,7 @@ module VCAP::CloudController
     end
 
     describe '#destroy' do
-      let(:space) { Space.make(organization: private_domain.owning_organization) }
+      let(:space) { FactoryBot.create(:space, organization: private_domain.owning_organization) }
 
       it 'destroys the routes' do
         route = Route.make(domain: private_domain, space: space)

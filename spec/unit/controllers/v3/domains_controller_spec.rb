@@ -4,7 +4,7 @@ require 'messages/deployment_create_message'
 
 RSpec.describe DomainsController, type: :controller do
   let(:user) { VCAP::CloudController::User.make }
-  let(:space) { VCAP::CloudController::Space.make }
+  let(:space) { FactoryBot.create(:space) }
   let(:org) { space.organization }
 
   return if VCAP::CloudController::Constants::API_VERSION_V3 == '3.68.0'

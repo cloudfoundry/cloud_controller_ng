@@ -33,7 +33,7 @@ RSpec.resource 'Service Bindings', type: [:api, :legacy_api] do
     field :parameters, 'Arbitrary parameters to pass along to the service broker. Must be a JSON object', required: false
 
     example 'Create a Service Binding' do
-      space = VCAP::CloudController::Space.make
+      space = FactoryBot.create(:space)
       service_instance_guid = VCAP::CloudController::ServiceInstance.make(space: space).guid
       process_guid = VCAP::CloudController::ProcessModelFactory.make(space: space).guid
       request_json = MultiJson.dump({ service_instance_guid: service_instance_guid, app_guid: process_guid, parameters: { the_service_broker: 'wants this object' } }, pretty: true)

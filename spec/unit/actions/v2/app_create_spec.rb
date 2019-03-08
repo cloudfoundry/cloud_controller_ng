@@ -3,7 +3,7 @@ require 'actions/v2/app_create'
 
 module VCAP::CloudController
   RSpec.describe V2::AppCreate do
-    let(:space) { Space.make }
+    let(:space) { FactoryBot.create(:space) }
     let(:access_validator) { double('access_validator', validate_access: true) }
     subject(:app_create) { V2::AppCreate.new(access_validator: access_validator) }
 

@@ -11,7 +11,7 @@ module VCAP::CloudController
       it { is_expected.to strip_whitespace :name }
 
       context 'name' do
-        subject(:space) { Space.make }
+        subject(:space) { FactoryBot.create(:space) }
 
         it 'should allow standard ascii character' do
           space.name = "A -_- word 2!?()\'\"&+."
@@ -67,7 +67,7 @@ module VCAP::CloudController
 
       context 'organization' do
         it 'fails when changing' do
-          expect { Space.make.organization = FactoryBot.create(:organization) }.to raise_error(CloudController::Errors::ApiError, /Cannot change organization/)
+          expect { FactoryBot.create(:space).organization = FactoryBot.create(:organization) }.to raise_error(CloudController::Errors::ApiError, /Cannot change organization/)
         end
       end
     end
@@ -82,10 +82,13 @@ module VCAP::CloudController
       it { is_expected.to have_associated :default_users, class: User }
       it { is_expected.to have_associated :domains, class: SharedDomain }
       it { is_expected.to have_associated :space_quota_definition, associated_instance: ->(space) { SpaceQuotaDefinition.make(organization: space.organization) } }
-      it { is_expected.to have_associated :service_instances_shared_from_other_spaces, associated_instance: ->(space) { ManagedServiceInstance.make(space: Space.make) } }
+      it do
+        is_expected.to have_associated :service_instances_shared_from_other_spaces,
+          associated_instance: ->(space) { ManagedServiceInstance.make(space: FactoryBot.create(:space)) }
+      end
 
       describe 'space_quota_definition' do
-        subject(:space) { Space.make }
+        subject(:space) { FactoryBot.create(:space) }
 
         it 'fails when the space quota is from another organization' do
           new_quota = SpaceQuotaDefinition.make
@@ -99,14 +102,14 @@ module VCAP::CloudController
       end
 
       describe 'service_instances_shared_from_other_spaces' do
-        subject(:space) { Space.make }
+        subject(:space) { FactoryBot.create(:space) }
 
         it 'is empty by default' do
           expect(space.service_instances_shared_from_other_spaces).to be_empty
         end
 
         it 'includes the services shared from other spaces' do
-          foreign_space = Space.make
+          foreign_space = FactoryBot.create(:space)
           foreign_service = ManagedServiceInstance.make(space: foreign_space)
 
           space.add_service_instances_shared_from_other_space(foreign_service)
@@ -116,7 +119,7 @@ module VCAP::CloudController
       end
 
       describe 'domains' do
-        subject(:space) { Space.make(organization: organization) }
+        subject(:space) { FactoryBot.create(:space, organization: organization) }
         let(:organization) { FactoryBot.create(:organization) }
 
         context 'listing domains' do
@@ -138,13 +141,13 @@ module VCAP::CloudController
           it "does nothing if the private domain already belongs to the space's org" do
             org = FactoryBot.create(:organization)
             private_domain = PrivateDomain.make(owning_organization: org)
-            space = Space.make(organization: org)
+            space = FactoryBot.create(:space, organization: org)
             expect { space.add_domain(private_domain) }.not_to change { space.domains }
           end
 
           it 'reports an error if the private domain belongs to another org' do
             space_org = FactoryBot.create(:organization)
-            space = Space.make(organization: space_org)
+            space = FactoryBot.create(:space, organization: space_org)
 
             domain_org = FactoryBot.create(:organization)
             private_domain = PrivateDomain.make(owning_organization: domain_org)
@@ -157,7 +160,7 @@ module VCAP::CloudController
         before { SharedDomain.dataset.destroy }
 
         it 'is able to eager load domains' do
-          space = Space.make
+          space = FactoryBot.create(:space)
           org = space.organization
 
           private_domain1 = PrivateDomain.make(owning_organization: org)
@@ -178,8 +181,8 @@ module VCAP::CloudController
         end
 
         it 'has correct domains for each space' do
-          space1 = Space.make
-          space2 = Space.make
+          space1 = FactoryBot.create(:space)
+          space2 = FactoryBot.create(:space)
 
           org1 = space1.organization
           org2 = space2.organization
@@ -203,7 +206,7 @@ module VCAP::CloudController
         end
 
         it 'passes in dataset to be loaded to eager_block option' do
-          space = Space.make
+          space = FactoryBot.create(:space)
           org = space.organization
 
           private_domain1 = PrivateDomain.make(owning_organization: org)
@@ -219,7 +222,7 @@ module VCAP::CloudController
         end
 
         it 'allow nested eager_load' do
-          space = Space.make
+          space = FactoryBot.create(:space)
           org = space.organization
 
           domain1 = PrivateDomain.make(owning_organization: org)
@@ -244,7 +247,7 @@ module VCAP::CloudController
         let!(:unassociated_sg) { SecurityGroup.make }
         let!(:default_sg) { SecurityGroup.make(running_default: true) }
         let!(:another_default_sg) { SecurityGroup.make(running_default: true) }
-        let!(:space) { Space.make(security_group_guids: [associated_sg.guid, default_sg.guid]) }
+        let!(:space) { FactoryBot.create(:space, security_groups: [associated_sg, default_sg]) }
 
         it 'returns security groups associated with the space, and the defaults' do
           expect(space.security_groups).to match_array [associated_sg, default_sg, another_default_sg]
@@ -260,15 +263,15 @@ module VCAP::CloudController
         end
 
         context 'when there are multiple spaces' do
-          let!(:another_space) { Space.make(security_group_guids: [associated_sg.guid, default_sg.guid]) }
-          let!(:yet_another_space) { Space.make(security_group_guids: [associated_sg.guid, another_default_sg.guid]) }
+          let!(:another_space) { FactoryBot.create(:space, security_group_guids: [associated_sg.guid, default_sg.guid]) }
+          let!(:yet_another_space) { FactoryBot.create(:space, security_group_guids: [associated_sg.guid, another_default_sg.guid]) }
 
           it 'returns booleans for the running_default property' do
             expect(space.security_groups.first.running_default).to be_in [true, false]
           end
 
           it 'only returns the groups for the given space and the global defaults' do
-            expect(space.security_groups).to eq [associated_sg, default_sg, another_default_sg]
+            expect(space.security_groups).to contain_exactly(associated_sg, default_sg, another_default_sg)
           end
         end
       end
@@ -278,7 +281,7 @@ module VCAP::CloudController
         let!(:unassociated_sg) { SecurityGroup.make }
         let!(:default_sg) { SecurityGroup.make(staging_default: true) }
         let!(:another_default_sg) { SecurityGroup.make(staging_default: true) }
-        let!(:space) { Space.make(staging_security_group_guids: [associated_sg.guid, default_sg.guid]) }
+        let!(:space) { FactoryBot.create(:space, staging_security_groups: [associated_sg, default_sg]) }
 
         it 'returns security groups associated with the space, and the defaults' do
           expect(space.staging_security_groups).to match_array [associated_sg, default_sg, another_default_sg]
@@ -286,7 +289,7 @@ module VCAP::CloudController
 
         it 'works when eager loading' do
           eager_space = Space.eager(:staging_security_groups).all.first
-          expect(eager_space.staging_security_groups).to eq [associated_sg, default_sg, another_default_sg]
+          expect(eager_space.staging_security_groups).to match_array [associated_sg, default_sg, another_default_sg]
         end
 
         it 'can be deleted when associated' do
@@ -294,22 +297,22 @@ module VCAP::CloudController
         end
 
         context 'when there are multiple spaces' do
-          let!(:another_space) { Space.make(staging_security_group_guids: [associated_sg.guid, default_sg.guid]) }
-          let!(:yet_another_space) { Space.make(staging_security_group_guids: [associated_sg.guid, another_default_sg.guid]) }
+          let!(:another_space) { FactoryBot.create(:space, staging_security_groups: [associated_sg, default_sg]) }
+          let!(:yet_another_space) { FactoryBot.create(:space, staging_security_groups: [associated_sg, another_default_sg]) }
 
           it 'returns booleans for the staging_default property' do
             expect(space.staging_security_groups.first.staging_default).to be_in [true, false]
           end
 
           it 'only returns the groups for the given space and the global defaults' do
-            expect(space.staging_security_groups).to eq [associated_sg, default_sg, another_default_sg]
+            expect(space.staging_security_groups).to match_array [associated_sg, default_sg, another_default_sg]
           end
         end
       end
 
       describe 'isolation_segment_models' do
         let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
-        let(:space) { Space.make }
+        let(:space) { FactoryBot.create(:space) }
         let(:isolation_segment_model) { FactoryBot.create(:isolation_segment) }
 
         context 'adding an isolation segment' do
@@ -369,7 +372,7 @@ module VCAP::CloudController
       end
 
       context 'bad relationships' do
-        subject(:space) { Space.make }
+        subject(:space) { FactoryBot.create(:space) }
 
         shared_examples 'bad app space permission' do |perm|
           context perm do
@@ -392,21 +395,21 @@ module VCAP::CloudController
 
       describe 'apps which is the process relationship' do
         it 'has apps' do
-          space = Space.make
+          space = FactoryBot.create(:space)
           process1  = ProcessModelFactory.make(space: space)
           process2  = ProcessModelFactory.make(space: space)
           expect(space.apps).to match_array([process1, process2])
         end
 
         it 'does not associate non-web v2 apps' do
-          space = Space.make
+          space = FactoryBot.create(:space)
           process1 = ProcessModelFactory.make(type: 'web', space: space)
           ProcessModelFactory.make(type: 'other', space: space)
           expect(space.apps).to match_array([process1])
         end
 
         context 'when there are multiple web processes for an app' do
-          let(:space) { Space.make }
+          let(:space) { FactoryBot.create(:space) }
           let(:app_one) { AppModel.make(space: space) }
           let(:app_two) { AppModel.make(space: space) }
           let!(:web_process_app_one) do
@@ -454,10 +457,10 @@ module VCAP::CloudController
         describe 'eager loading' do
           it 'loads only web processes' do
             # rubocop:disable UselessAssignment
-            space1 = Space.make
-            space2 = Space.make
-            space3 = Space.make
-            space4 = Space.make
+            space1 = FactoryBot.create(:space)
+            space2 = FactoryBot.create(:space)
+            space3 = FactoryBot.create(:space)
+            space4 = FactoryBot.create(:space)
 
             process1_space1 = ProcessModelFactory.make(space: space1)
             process2_space1 = ProcessModelFactory.make(space: space1)
@@ -491,10 +494,10 @@ module VCAP::CloudController
 
           it 'respects when an eager block is passed in' do
             # rubocop:disable UselessAssignment
-            space1 = Space.make
-            space2 = Space.make
-            space3 = Space.make
-            space4 = Space.make
+            space1 = FactoryBot.create(:space)
+            space2 = FactoryBot.create(:space)
+            space3 = FactoryBot.create(:space)
+            space4 = FactoryBot.create(:space)
 
             process1_space1 = ProcessModelFactory.make(space: space1)
             process2_space1 = ProcessModelFactory.make(space: space1)
@@ -560,7 +563,7 @@ module VCAP::CloudController
     end
 
     describe '#destroy' do
-      subject(:space) { Space.make }
+      subject(:space) { FactoryBot.create(:space) }
 
       let(:guid_pattern) { '[[:alnum:]-]+' }
 
@@ -616,7 +619,7 @@ module VCAP::CloudController
 
     describe '#has_remaining_memory' do
       let(:space_quota) { SpaceQuotaDefinition.make(memory_limit: 500) }
-      let(:space) { Space.make(space_quota_definition: space_quota, organization: space_quota.organization) }
+      let(:space) { FactoryBot.create(:space, space_quota_definition: space_quota, organization: space_quota.organization) }
 
       it 'returns true if there is enough memory remaining when no processes are running' do
         ProcessModelFactory.make(space: space, memory: 50, instances: 1)
@@ -653,7 +656,7 @@ module VCAP::CloudController
     describe '#instance_memory_limit' do
       let(:org) { FactoryBot.create(:organization) }
       let(:space_quota) { SpaceQuotaDefinition.make(instance_memory_limit: 50, organization: org) }
-      let(:space) { Space.make(space_quota_definition: space_quota, organization: org) }
+      let(:space) { FactoryBot.create(:space, space_quota_definition: space_quota, organization: org) }
 
       it 'returns the instance memory limit from the quota' do
         expect(space.instance_memory_limit).to eq(50)
@@ -671,7 +674,7 @@ module VCAP::CloudController
     describe '#app_task_limit' do
       let(:org) { FactoryBot.create(:organization) }
       let(:space_quota) { SpaceQuotaDefinition.make(app_task_limit: 1, organization: org) }
-      let(:space) { Space.make(space_quota_definition: space_quota, organization: org) }
+      let(:space) { FactoryBot.create(:space, space_quota_definition: space_quota, organization: org) }
 
       it 'returns the app task limit from the quota' do
         expect(space.app_task_limit).to eq(1)
@@ -689,7 +692,7 @@ module VCAP::CloudController
     describe '#meets_max_task_limit?' do
       let(:org) { FactoryBot.create(:organization) }
       let(:space_quota) { SpaceQuotaDefinition.make(app_task_limit: 1, organization: org) }
-      let(:space) { Space.make(space_quota_definition: space_quota, organization: org) }
+      let(:space) { FactoryBot.create(:space, space_quota_definition: space_quota, organization: org) }
       let(:app_model) { AppModel.make(space_guid: space.guid) }
 
       it 'returns false when the app task limit is not exceeded' do
@@ -709,10 +712,10 @@ module VCAP::CloudController
 
     describe '.having_developers' do
       it 'returns only spaces with developers containing the specified user' do
-        space1 = Space.make
+        space1 = FactoryBot.create(:space)
         user = make_developer_for_space(space1)
 
-        space2 = Space.make
+        space2 = FactoryBot.create(:space)
         spaces = Space.having_developers(user).all
 
         expect(spaces).to include(space1)
@@ -721,7 +724,7 @@ module VCAP::CloudController
     end
 
     describe 'space_quota_definition=' do
-      let(:space) { Space.make }
+      let(:space) { FactoryBot.create(:space) }
 
       context 'when the space quota defitinion exists' do
         let(:space_quota_definition) { SpaceQuotaDefinition.make }
@@ -747,7 +750,7 @@ module VCAP::CloudController
     end
 
     describe '#has_developer?' do
-      subject(:space) { Space.make }
+      subject(:space) { FactoryBot.create(:space) }
       let(:user) { User.make }
       let(:other_developer) { User.make }
 
@@ -772,7 +775,7 @@ module VCAP::CloudController
     end
 
     describe '#has_member?' do
-      subject(:space) { Space.make }
+      subject(:space) { FactoryBot.create(:space) }
       let(:user) { User.make }
       let(:other_user) { User.make }
 
@@ -807,7 +810,7 @@ module VCAP::CloudController
     end
 
     describe '#in_organization?' do
-      subject(:space) { Space.make }
+      subject(:space) { FactoryBot.create(:space) }
       let(:user) { User.make }
 
       it "returns true if the given user is in the space's organization" do

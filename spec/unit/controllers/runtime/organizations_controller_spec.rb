@@ -157,7 +157,7 @@ module VCAP::CloudController
       let(:isolation_segment2) { FactoryBot.create(:isolation_segment) }
 
       context 'when the user is neither admin nor org manager' do
-        let(:space) { Space.make(organization: org) }
+        let(:space) { FactoryBot.create(:space, organization: org) }
         let!(:user) { set_current_user(make_developer_for_space(space)) }
 
         before do
@@ -260,7 +260,7 @@ module VCAP::CloudController
       let(:isolation_segment2) { FactoryBot.create(:isolation_segment) }
 
       context 'when the user is neither admin nor org manager' do
-        let(:space) { Space.make(organization: org) }
+        let(:space) { FactoryBot.create(:space, organization: org) }
         let!(:user) { set_current_user(make_developer_for_space(space)) }
 
         before do
@@ -808,7 +808,7 @@ module VCAP::CloudController
 
     describe 'GET', '/v2/organizations/:guid/services' do
       let(:other_org) { FactoryBot.create(:organization) }
-      let(:space_one) { Space.make(organization: org) }
+      let(:space_one) { FactoryBot.create(:space, organization: org) }
       let(:user) { make_developer_for_space(space_one) }
 
       before do
@@ -905,7 +905,7 @@ module VCAP::CloudController
 
     describe 'GET /v2/organizations/:guid/memory_usage' do
       before do
-        space = Space.make(organization: org)
+        space = FactoryBot.create(:space, organization: org)
         ProcessModelFactory.make(space: space, memory: 200, instances: 2, state: 'STARTED', type: 'worker')
       end
 
@@ -988,7 +988,7 @@ module VCAP::CloudController
 
       context 'space roles' do
         let(:organization) { FactoryBot.create(:organization) }
-        let(:space) { Space.make(organization: organization) }
+        let(:space) { FactoryBot.create(:space, organization: organization) }
 
         context 'space developers without org role' do
           let(:space_developer) { make_developer_for_space(space) }
@@ -1025,8 +1025,8 @@ module VCAP::CloudController
       let(:org_users) { [user.guid] }
       let(:org) { FactoryBot.create(:organization, manager_guids: org_managers, user_guids: org_users) }
       let(:org_managers) { [mgr.guid] }
-      let(:org_space_empty) { Space.make(organization: org) }
-      let(:org_space_full)  { Space.make(organization: org, manager_guids: [user.guid], developer_guids: [user.guid], auditor_guids: [user.guid]) }
+      let(:org_space_empty) { FactoryBot.create(:space, organization: org) }
+      let(:org_space_full)  { FactoryBot.create(:space, organization: org, manager_guids: [user.guid], developer_guids: [user.guid], auditor_guids: [user.guid]) }
 
       before { set_current_user_as_admin }
 
@@ -1129,7 +1129,7 @@ module VCAP::CloudController
 
           context 'multiple organizations' do
             let(:org_2) { FactoryBot.create(:organization, user_guids: [user.guid]) }
-            let(:org2_space) { Space.make(organization: org_2, developer_guids: [user.guid]) }
+            let(:org2_space) { FactoryBot.create(:space, organization: org_2, developer_guids: [user.guid]) }
 
             it 'should remove all user roles from one organization, but no the other' do
               org.add_space(org_space_full)
@@ -1326,7 +1326,7 @@ module VCAP::CloudController
 
       context 'with recursive=false' do
         it 'raises an error when the org has anything but labels it' do
-          Space.make(organization: org)
+          FactoryBot.create(:space, organization: org)
           delete "/v2/organizations/#{org.guid}"
           expect(last_response).to have_status_code 400
           expect(decoded_response['error_code']).to eq 'CF-AssociationNotEmpty'
@@ -1344,8 +1344,8 @@ module VCAP::CloudController
 
       context 'with recursive=true' do
         it 'deletes the org and all of its spaces' do
-          space_1 = Space.make(organization: org)
-          space_2 = Space.make(organization: org)
+          space_1 = FactoryBot.create(:space, organization: org)
+          space_2 = FactoryBot.create(:space, organization: org)
 
           delete "/v2/organizations/#{org.guid}?recursive=true"
           expect(last_response).to have_status_code 204
@@ -1355,7 +1355,7 @@ module VCAP::CloudController
         end
 
         context 'when one of the spaces has a v3 app in it' do
-          let!(:space) { Space.make(organization: org) }
+          let!(:space) { FactoryBot.create(:space, organization: org) }
           let!(:app_model) { AppModel.make(space_guid: space.guid) }
           let(:user) { User.make }
 
@@ -1408,7 +1408,7 @@ module VCAP::CloudController
             set_current_user_as_admin
           end
 
-          let!(:space) { Space.make(organization: org) }
+          let!(:space) { FactoryBot.create(:space, organization: org) }
           let!(:service_instance) { ManagedServiceInstance.make(space: space) }
 
           it 'deletes the service instance' do
@@ -1445,7 +1445,7 @@ module VCAP::CloudController
         end
 
         context 'and async=true' do
-          let(:space) { Space.make(organization: org) }
+          let(:space) { FactoryBot.create(:space, organization: org) }
           let(:service_instance) { ManagedServiceInstance.make(space: space) }
 
           before do
@@ -1559,7 +1559,7 @@ module VCAP::CloudController
       end
 
       context 'when PrivateDomain is shared' do
-        let(:space) { Space.make }
+        let(:space) { FactoryBot.create(:space) }
         let(:private_domain) { PrivateDomain.make }
 
         it 'removes associated routes' do
@@ -2068,7 +2068,7 @@ module VCAP::CloudController
           end
 
           context 'when recursive delete is requested' do
-            let(:space) { Space.make(organization: org) }
+            let(:space) { FactoryBot.create(:space, organization: org) }
 
             before do
               org.add_user(user)

@@ -21,7 +21,7 @@ RSpec.resource 'User Provided Service Instances', type: [:api, :legacy_api] do
       field :route_service_url, 'URL to which requests for bound routes will be forwarded.', required: false, example_values: ['https://logger.example.com']
 
       example 'Creating a User Provided Service Instance' do
-        space_guid = VCAP::CloudController::Space.make.guid
+        space_guid = FactoryBot.create(:space).guid
         request_hash = {
           space_guid: space_guid,
           name: 'my-user-provided-instance',

@@ -2,13 +2,13 @@ require 'rails_helper'
 
 RSpec.describe ServiceInstancesV3Controller, type: :controller do
   let(:user) { set_current_user(VCAP::CloudController::User.make) }
-  let(:space) { VCAP::CloudController::Space.make(guid: 'space-1-guid') }
+  let(:space) { FactoryBot.create(:space, guid: 'space-1-guid') }
   let!(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, name: 'service-instance-1') }
 
   describe '#index' do
     context 'when there are multiple service instances' do
-      let!(:service_instance2) { VCAP::CloudController::ManagedServiceInstance.make(name: 'service-instance-2', space: VCAP::CloudController::Space.make(guid: 'space-2-guid')) }
-      let!(:service_instance3) { VCAP::CloudController::ManagedServiceInstance.make(name: 'service-instance-3', space: VCAP::CloudController::Space.make(guid: 'space-3-guid')) }
+      let!(:service_instance2) { VCAP::CloudController::ManagedServiceInstance.make(name: 'service-instance-2', space: FactoryBot.create(:space, guid: 'space-2-guid')) }
+      let!(:service_instance3) { VCAP::CloudController::ManagedServiceInstance.make(name: 'service-instance-3', space: FactoryBot.create(:space, guid: 'space-3-guid')) }
       let!(:user_provided_service_instance) { VCAP::CloudController::UserProvidedServiceInstance.make }
 
       context 'as an admin' do
@@ -93,7 +93,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
     end
 
     describe 'permissions by role for shared services' do
-      let(:target_space) { VCAP::CloudController::Space.make }
+      let(:target_space) { FactoryBot.create(:space) }
       before do
         service_instance.add_shared_space(target_space)
       end
@@ -134,7 +134,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
   end
 
   describe '#relationships_shared_spaces' do
-    let(:target_space) { VCAP::CloudController::Space.make(guid: 'target-space-guid') }
+    let(:target_space) { FactoryBot.create(:space, guid: 'target-space-guid') }
 
     before do
       service_instance.add_shared_space(target_space)
@@ -192,8 +192,8 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
 
   describe '#share_service_instance' do
     let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make }
-    let(:target_space) { VCAP::CloudController::Space.make }
-    let(:target_space2) { VCAP::CloudController::Space.make }
+    let(:target_space) { FactoryBot.create(:space) }
+    let(:target_space2) { FactoryBot.create(:space) }
     let(:service_instance_sharing_enabled) { true }
     let(:source_space) { service_instance.space }
 
@@ -277,7 +277,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
 
     context 'when the service instance plan is from a private space scoped broker' do
       let(:target_org) { FactoryBot.create(:organization, name: 'target-org') }
-      let(:target_space) { VCAP::CloudController::Space.make(name: 'target-space', organization: target_org) }
+      let(:target_space) { FactoryBot.create(:space, name: 'target-space', organization: target_org) }
       let(:broker) { VCAP::CloudController::ServiceBroker.make(space: space) }
       let(:service) { VCAP::CloudController::Service.make(service_broker: broker, label: 'space-scoped-service') }
       let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service, name: 'my-plan') }
@@ -453,7 +453,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
         service_instance.add_shared_space(target_space)
         set_current_user_as_role(role: 'space_developer', org: target_space.organization, space: target_space, user: user)
 
-        outer_space = VCAP::CloudController::Space.make
+        outer_space = FactoryBot.create(:space)
         request_body[:data] = [{ guid: outer_space.guid }]
       end
 
@@ -540,7 +540,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
 
   describe '#unshare_service_instance' do
     let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make }
-    let(:target_space) { VCAP::CloudController::Space.make }
+    let(:target_space) { FactoryBot.create(:space) }
     let(:source_space) { service_instance.space }
 
     before do
@@ -662,7 +662,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
     end
 
     context 'when trying to unshare a service instance that has not been shared' do
-      let(:target_space2) { VCAP::CloudController::Space.make }
+      let(:target_space2) { FactoryBot.create(:space) }
 
       it 'returns 422' do
         delete :unshare_service_instance, params: { service_instance_guid: service_instance.guid, space_guid: target_space2.guid }
@@ -674,7 +674,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
     end
 
     context 'when there are multiple shares' do
-      let(:target_space2) { VCAP::CloudController::Space.make }
+      let(:target_space2) { FactoryBot.create(:space) }
 
       before do
         service_instance.add_shared_space(target_space2)

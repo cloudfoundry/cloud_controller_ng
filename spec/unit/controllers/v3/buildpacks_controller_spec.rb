@@ -23,7 +23,7 @@ RSpec.describe BuildpacksController, type: :controller do
       role_to_expected_http_response.each do |role, expected_return_value|
         context "as an #{role}" do
           let(:org) { FactoryBot.create(:organization) }
-          let(:space) { VCAP::CloudController::Space.make(organization: org) }
+          let(:space) { FactoryBot.create(:space, organization: org) }
 
           it "returns #{expected_return_value}" do
             set_current_user_as_role(role: role, org: org, space: space, user: user)
@@ -121,7 +121,7 @@ RSpec.describe BuildpacksController, type: :controller do
         role_to_expected_http_response.each do |role, expected_return_value|
           context "as an #{role}" do
             let(:org) { FactoryBot.create(:organization) }
-            let(:space) { VCAP::CloudController::Space.make(organization: org) }
+            let(:space) { FactoryBot.create(:space, organization: org) }
 
             it "returns #{expected_return_value}" do
               set_current_user_as_role(
@@ -148,7 +148,7 @@ RSpec.describe BuildpacksController, type: :controller do
         role_to_expected_http_response.each do |role, expected_return_value|
           context "as an #{role}" do
             let(:org) { FactoryBot.create(:organization) }
-            let(:space) { VCAP::CloudController::Space.make(organization: org) }
+            let(:space) { FactoryBot.create(:space, organization: org) }
 
             it "returns #{expected_return_value}" do
               set_current_user_as_role(
@@ -370,7 +370,7 @@ RSpec.describe BuildpacksController, type: :controller do
         role_to_expected_http_response.each do |role, expected_return_value|
           context "as an #{role}" do
             let(:org) { FactoryBot.create(:organization) }
-            let(:space) { VCAP::CloudController::Space.make(organization: org) }
+            let(:space) { FactoryBot.create(:space, organization: org) }
 
             it "returns #{expected_return_value}" do
               set_current_user_as_role(
@@ -397,7 +397,7 @@ RSpec.describe BuildpacksController, type: :controller do
         role_to_expected_http_response.each do |role, expected_return_value|
           context "as an #{role}" do
             let(:org) { FactoryBot.create(:organization) }
-            let(:space) { VCAP::CloudController::Space.make(organization: org) }
+            let(:space) { FactoryBot.create(:space, organization: org) }
 
             it "returns #{expected_return_value}" do
               set_current_user_as_role(
@@ -525,7 +525,7 @@ RSpec.describe BuildpacksController, type: :controller do
         role_to_expected_http_response.each do |role, expected_return_value|
           context "as an #{role}" do
             let(:org) { FactoryBot.create(:organization) }
-            let(:space) { VCAP::CloudController::Space.make(organization: org) }
+            let(:space) { FactoryBot.create(:space, organization: org) }
 
             it "returns #{expected_return_value}" do
               set_current_user_as_role(
@@ -552,7 +552,7 @@ RSpec.describe BuildpacksController, type: :controller do
         role_to_expected_http_response.each do |role, expected_return_value|
           context "as an #{role}" do
             let(:org) { FactoryBot.create(:organization) }
-            let(:space) { VCAP::CloudController::Space.make(organization: org) }
+            let(:space) { FactoryBot.create(:space, organization: org) }
 
             it "returns #{expected_return_value}" do
               set_current_user_as_role(

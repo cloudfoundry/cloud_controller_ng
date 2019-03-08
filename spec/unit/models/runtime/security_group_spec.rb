@@ -234,18 +234,18 @@ module VCAP::CloudController
 
         it 'can be delete when it has associated spaces' do
           security_group = SecurityGroup.make
-          security_group.add_space(Space.make)
+          security_group.add_space(FactoryBot.create(:space))
 
           expect { security_group.destroy }.not_to raise_error
         end
       end
 
       describe 'staging_spaces' do
-        it { is_expected.to have_associated :staging_spaces, associated_instance: ->(_) { Space.make } }
+        it { is_expected.to have_associated :staging_spaces, associated_instance: ->(_) { FactoryBot.create(:space) } }
 
         it 'can be delete when it has associated staging_spaces' do
           security_group = SecurityGroup.make
-          security_group.add_staging_space(Space.make)
+          security_group.add_staging_space(FactoryBot.create(:space))
 
           expect { security_group.destroy }.not_to raise_error
         end
@@ -761,7 +761,7 @@ module VCAP::CloudController
 
     describe '.user_visibility_filter' do
       let(:security_group) { SecurityGroup.make }
-      let(:space) { Space.make }
+      let(:space) { FactoryBot.create(:space) }
       let(:user) { User.make }
 
       subject(:filtered_security_groups) do

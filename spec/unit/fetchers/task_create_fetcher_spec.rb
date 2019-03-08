@@ -4,7 +4,7 @@ module VCAP::CloudController
   RSpec.describe TaskCreateFetcher do
     let(:fetcher) { TaskCreateFetcher.new }
     let(:app) { AppModel.make(space_guid: space.guid) }
-    let(:space) { Space.make }
+    let(:space) { FactoryBot.create(:space) }
     let(:org) { space.organization }
 
     it 'should fetch the associated app, space, org' do

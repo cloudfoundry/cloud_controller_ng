@@ -42,7 +42,7 @@ module VCAP::CloudController
     let(:lifecycle) { BuildpackLifecycle.new(package, staging_message) }
     let(:package) { PackageModel.make(app: app, state: PackageModel::READY_STATE) }
 
-    let(:space) { Space.make }
+    let(:space) { FactoryBot.create(:space) }
     let(:org) { space.organization }
     let(:app) { AppModel.make(space: space) }
 

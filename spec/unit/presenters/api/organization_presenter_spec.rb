@@ -4,7 +4,7 @@ RSpec.describe OrganizationPresenter do
   describe '#to_hash' do
     let(:org) { FactoryBot.create(:organization) }
     before do
-      VCAP::CloudController::Space.make(organization: org)
+      FactoryBot.create(:space, organization: org)
       user = VCAP::CloudController::User.make
       user.add_organization org
       user.add_managed_organization org

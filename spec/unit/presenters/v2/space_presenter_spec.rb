@@ -22,7 +22,7 @@ module CloudController::Presenters::V2
 
       context 'when a space is associated to an isolation segment' do
         let(:isolation_segment_model) { FactoryBot.create(:isolation_segment) }
-        let(:space) { VCAP::CloudController::Space.make(
+        let(:space) { FactoryBot.create(:space,
           name: 'no_unicorns_no_rainbows',
           organization: organization,
           space_quota_definition: space_quota_definition,
@@ -54,7 +54,7 @@ module CloudController::Presenters::V2
       end
 
       context 'when a space is not associated to an isolation segment' do
-        let(:space) { VCAP::CloudController::Space.make(
+        let(:space) { FactoryBot.create(:space,
           name: 'no_unicorns_no_rainbows',
           organization: organization,
           allow_ssh: true

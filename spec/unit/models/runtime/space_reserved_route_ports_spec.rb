@@ -4,7 +4,7 @@ module VCAP::CloudController
   RSpec.describe SpaceReservedRoutePorts do
     let(:organization) { FactoryBot.create(:organization) }
     let(:space_quota) { SpaceQuotaDefinition.make(organization: organization) }
-    let(:space) { Space.make(organization: organization, space_quota_definition: space_quota) }
+    let(:space) { FactoryBot.create(:space, organization: organization, space_quota_definition: space_quota) }
 
     subject(:space_routes) { SpaceReservedRoutePorts.new(space) }
 

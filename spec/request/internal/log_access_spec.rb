@@ -3,7 +3,7 @@ require 'spec_helper'
 RSpec.describe 'Internal Log Access Endpoint' do
   let(:user) { VCAP::CloudController::User.make }
   let(:user_header) { headers_for(user) }
-  let(:space) { VCAP::CloudController::Space.make }
+  let(:space) { FactoryBot.create(:space) }
   let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
 
   before do

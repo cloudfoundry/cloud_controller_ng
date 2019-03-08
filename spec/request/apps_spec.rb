@@ -4,7 +4,7 @@ require 'actions/process_create_from_app_droplet'
 RSpec.describe 'Apps' do
   let(:user) { VCAP::CloudController::User.make }
   let(:user_header) { headers_for(user, email: user_email, user_name: user_name) }
-  let(:space) { VCAP::CloudController::Space.make }
+  let(:space) { FactoryBot.create(:space) }
   let(:stack) { FactoryBot.create(:stack) }
   let(:user_email) { Sham.email }
   let(:user_name) { 'some-username' }
@@ -630,8 +630,8 @@ RSpec.describe 'Apps' do
     end
 
     context 'labels and existing filters' do
-      let!(:space1) { VCAP::CloudController::Space.make }
-      let!(:space2) { VCAP::CloudController::Space.make }
+      let!(:space1) { FactoryBot.create(:space) }
+      let!(:space2) { FactoryBot.create(:space) }
       let!(:app1) { VCAP::CloudController::AppModel.make(name: 'name1', space: space1) }
       let!(:app2) { VCAP::CloudController::AppModel.make(name: 'name2', space: space2) }
       let!(:app3) { VCAP::CloudController::AppModel.make(name: 'name3', space: space2) }

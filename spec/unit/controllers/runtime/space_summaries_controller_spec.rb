@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe SpaceSummariesController do
-    let(:space) { Space.make }
+    let(:space) { FactoryBot.create(:space) }
     let(:process) { ProcessModelFactory.make(space: space) }
     let!(:first_route) { Route.make(space: space) }
     let!(:second_route) { Route.make(space: space) }
@@ -61,7 +61,7 @@ module VCAP::CloudController
       end
 
       it 'returns service summary for the space, including private service instances' do
-        foo_space = Space.make
+        foo_space = FactoryBot.create(:space)
         private_broker = ServiceBroker.make(space_guid: foo_space.guid)
         service = Service.make(service_broker: private_broker)
         service_plan = ServicePlan.make(service: service, public: false)
@@ -73,7 +73,7 @@ module VCAP::CloudController
       end
 
       it 'does not return private services from other spaces' do
-        other_space = Space.make
+        other_space = FactoryBot.create(:space)
         private_broker2 = ServiceBroker.make(space: other_space)
         service2 = Service.make(service_broker: private_broker2)
         service_plan2 = ServicePlan.make(service: service2, public: false)
@@ -86,7 +86,7 @@ module VCAP::CloudController
       end
 
       it 'does not include sharing information for not-shared service instances' do
-        space = Space.make
+        space = FactoryBot.create(:space)
         ManagedServiceInstance.make(space: space)
 
         get "/v2/spaces/#{space.guid}/summary"
@@ -104,8 +104,8 @@ module VCAP::CloudController
       end
 
       context 'when a managed service has been shared into this space' do
-        let(:receiver_space) { Space.make }
-        let(:originating_space) { Space.make }
+        let(:receiver_space) { FactoryBot.create(:space) }
+        let(:originating_space) { FactoryBot.create(:space) }
         let(:service_instance) { ManagedServiceInstance.make(space: originating_space) }
         let(:services_response) { decoded_response['services'] }
 
@@ -134,9 +134,9 @@ module VCAP::CloudController
       end
 
       context 'when a managed service instance is shared into another space' do
-        let(:host_space) { Space.make }
+        let(:host_space) { FactoryBot.create(:space) }
         let(:service_instance) { ManagedServiceInstance.make(space: host_space) }
-        let(:foreign_space) { Space.make }
+        let(:foreign_space) { FactoryBot.create(:space) }
         let(:services_response) { decoded_response['services'] }
 
         before(:each) do

@@ -27,7 +27,7 @@ module VCAP::CloudController
 
       describe 'space' do
         it 'gets its space from the containing app' do
-          space = Space.make
+          space = FactoryBot.create(:space)
           app = AppModel.make(space: space)
           build = BuildModel.make(app: app)
           expect(build.space).to eq(space)

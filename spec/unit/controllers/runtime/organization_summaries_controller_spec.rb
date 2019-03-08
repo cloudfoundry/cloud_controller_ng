@@ -15,7 +15,7 @@ module VCAP::CloudController
     before do
       @spaces = []
       num_spaces.times do
-        @spaces << Space.make(organization: org)
+        @spaces << FactoryBot.create(:space, organization: org)
       end
 
       num_services.times do
@@ -101,7 +101,7 @@ module VCAP::CloudController
           org.add_user member
           org.add_user non_member
           num_visible_spaces.times do
-            Space.make(organization: org).tap do |s|
+            FactoryBot.create(:space, organization: org).tap do |s|
               s.add_developer member
             end
           end

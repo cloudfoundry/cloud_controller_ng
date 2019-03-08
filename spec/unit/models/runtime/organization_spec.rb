@@ -227,7 +227,7 @@ module VCAP::CloudController
 
         it 'removes all associated routes when deleted' do
           private_domain = PrivateDomain.make
-          space = Space.make
+          space = FactoryBot.create(:space)
           org = space.organization
           org.add_private_domain(private_domain)
           route = Route.make(space: space, domain: private_domain)
@@ -295,7 +295,7 @@ module VCAP::CloudController
             end
 
             context 'when there are spaces in the org' do
-              let!(:space) { Space.make(organization: org) }
+              let!(:space) { FactoryBot.create(:space, organization: org) }
               let(:shared_segment) { IsolationSegmentModel.first(guid: IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID) }
 
               it 'sets the default Isolation Segment' do
@@ -385,7 +385,7 @@ module VCAP::CloudController
             end
 
             context 'and there are spaces in the organization' do
-              let!(:space) { Space.make(organization: org) }
+              let!(:space) { FactoryBot.create(:space, organization: org) }
 
               it 'unassigns the default isolation segment' do
                 org.update(default_isolation_segment_model: nil)
@@ -448,7 +448,7 @@ module VCAP::CloudController
 
       it 'should return the memory available when no processes are running' do
         org = FactoryBot.create(:organization, quota_definition: quota)
-        space = Space.make(organization: org)
+        space = FactoryBot.create(:space, organization: org)
         ProcessModelFactory.make(space: space, memory: 200, instances: 2)
 
         expect(org.has_remaining_memory(500)).to eq(true)
@@ -457,7 +457,7 @@ module VCAP::CloudController
 
       it 'should return the memory remaining when processes are consuming memory' do
         org = FactoryBot.create(:organization, quota_definition: quota)
-        space = Space.make(organization: org)
+        space = FactoryBot.create(:space, organization: org)
 
         ProcessModelFactory.make(space: space, memory: 200, instances: 2, state: 'STARTED', type: 'worker')
         ProcessModelFactory.make(space: space, memory: 50, instances: 1, state: 'STARTED')
@@ -468,7 +468,7 @@ module VCAP::CloudController
 
       it 'includes RUNNING tasks when returning remaining memory' do
         org = FactoryBot.create(:organization, quota_definition: quota)
-        space = Space.make(organization: org)
+        space = FactoryBot.create(:space, organization: org)
 
         process = ProcessModelFactory.make(space: space, memory: 250, instances: 1, state: 'STARTED', type: 'worker')
         TaskModel.make(app: process.app, memory_in_mb: 25, state: TaskModel::RUNNING_STATE)
@@ -480,7 +480,7 @@ module VCAP::CloudController
 
       it 'does NOT include non-RUNNING tasks when returning remaining memory' do
         org = FactoryBot.create(:organization, quota_definition: quota)
-        space = Space.make(organization: org)
+        space = FactoryBot.create(:space, organization: org)
 
         process = ProcessModelFactory.make(space: space, memory: 250, instances: 1, state: 'STARTED', type: 'worker')
         TaskModel.make(app: process.app, memory_in_mb: 25, state: TaskModel::PENDING_STATE)
@@ -526,7 +526,7 @@ module VCAP::CloudController
     end
 
     describe '#meets_max_task_limit?' do
-      let(:space) { Space.make }
+      let(:space) { FactoryBot.create(:space) }
       let(:org) { space.organization }
       let(:quota) { FactoryBot.create(:quota_definition, app_task_limit: 2) }
       let(:app_model) { AppModel.make(space_guid: space.guid) }
@@ -564,7 +564,7 @@ module VCAP::CloudController
       end
 
       context 'when there are spaces in the org' do
-        let!(:space) { Space.make(organization: org) }
+        let!(:space) { FactoryBot.create(:space, organization: org) }
 
         it 'raises a ForeignKeyConstraintViolation error' do
           expect { org.destroy }.to raise_error(Sequel::ForeignKeyConstraintViolation)
@@ -572,7 +572,7 @@ module VCAP::CloudController
       end
 
       context 'when there are service instances in the org' do
-        let(:space) { Space.make(organization: org) }
+        let(:space) { FactoryBot.create(:space, organization: org) }
 
         before do
           service_instance = ManagedServiceInstance.make(:v2, space: space)
@@ -702,7 +702,7 @@ module VCAP::CloudController
 
       it 'allow nested eager_load' do
         org = FactoryBot.create(:organization)
-        space = Space.make(organization: org)
+        space = FactoryBot.create(:space, organization: org)
 
         domain1 = PrivateDomain.make(owning_organization: org)
         domain2 = PrivateDomain.make(owning_organization: org)
@@ -724,8 +724,8 @@ module VCAP::CloudController
     describe 'removing a user' do
       let(:org)     { FactoryBot.create(:organization) }
       let(:user)    { User.make }
-      let(:space_1) { Space.make }
-      let(:space_2) { Space.make }
+      let(:space_1) { FactoryBot.create(:space) }
+      let(:space_2) { FactoryBot.create(:space) }
 
       before do
         org.add_user(user)

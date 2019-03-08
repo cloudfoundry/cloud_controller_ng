@@ -55,8 +55,8 @@ module VCAP::CloudController
       let!(:service_binding_2) { ServiceBinding.make(app: app_model2, service_instance: service_instance_2) }
       let!(:undesirable_service_binding) { ServiceBinding.make }
 
-      let(:space_1) { Space.make }
-      let(:space_2) { Space.make }
+      let(:space_1) { FactoryBot.create(:space) }
+      let(:space_2) { FactoryBot.create(:space) }
 
       let(:app_model) { AppModel.make(space: space_1) }
       let(:app_model2) { AppModel.make(space: space_2) }
@@ -92,7 +92,7 @@ module VCAP::CloudController
     end
 
     describe '#fetch_service_instance_bindings_in_space' do
-      let(:space) { Space.make }
+      let(:space) { FactoryBot.create(:space) }
       let(:service_instance) { ServiceInstance.make(space: space) }
 
       it 'returns a Sequel::Dataset' do

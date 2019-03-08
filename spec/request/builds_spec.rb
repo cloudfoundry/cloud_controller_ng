@@ -2,7 +2,7 @@ require 'spec_helper'
 
 RSpec.describe 'Builds' do
   let(:bbs_stager_client) { instance_double(VCAP::CloudController::Diego::BbsStagerClient) }
-  let(:space) { VCAP::CloudController::Space.make }
+  let(:space) { FactoryBot.create(:space) }
   let(:developer) { make_developer_for_space(space) }
   let(:developer_headers) { headers_for(developer, user_name: user_name, email: 'bob@loblaw.com') }
   let(:user_name) { 'bob the builder' }
@@ -167,7 +167,7 @@ RSpec.describe 'Builds' do
     end
 
     context 'when there are other spaces the developer cannot see' do
-      let(:non_accessible_space) { VCAP::CloudController::Space.make }
+      let(:non_accessible_space) { FactoryBot.create(:space) }
       let(:non_accessible_app_model) { VCAP::CloudController::AppModel.make(space_guid: non_accessible_space.guid, name: 'other-app') }
       let!(:non_accessible_build) { VCAP::CloudController::BuildModel.make(app: non_accessible_app_model) }
 

@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe AppModel do
     let(:app_model) { AppModel.create(space: space, name: 'some-name') }
-    let(:space) { Space.make }
+    let(:space) { FactoryBot.create(:space) }
 
     describe '#oldest_web_process' do
       context 'when there are no web processes' do
@@ -289,8 +289,8 @@ module VCAP::CloudController
         it 'name can be reused in different spaces' do
           name = 'zach'
 
-          space1 = Space.make
-          space2 = Space.make
+          space1 = FactoryBot.create(:space)
+          space2 = FactoryBot.create(:space)
 
           AppModel.make(name: name, space_guid: space1.guid)
           expect {
@@ -301,7 +301,7 @@ module VCAP::CloudController
         it 'name is unique in the same space' do
           name = 'zach'
 
-          space = Space.make
+          space = FactoryBot.create(:space)
 
           AppModel.make(name: name, space_guid: space.guid)
 

@@ -49,7 +49,7 @@ module VCAP::CloudController
     describe '#remove_spaces' do
       let(:org) { FactoryBot.create(:organization) }
       let(:user) { User.make }
-      let(:space) { Space.make }
+      let(:space) { FactoryBot.create(:space) }
 
       before do
         org.add_user(user)
@@ -263,9 +263,9 @@ module VCAP::CloudController
         user = User.make
         organization = FactoryBot.create(:organization)
         organization.add_user user
-        developer_space = Space.make organization: organization
-        auditor_space = Space.make organization: organization
-        manager_space = Space.make organization: organization
+        developer_space = FactoryBot.create(:space, organization: organization)
+        auditor_space = FactoryBot.create(:space, organization: organization)
+        manager_space = FactoryBot.create(:space, organization: organization)
 
         manager_space.add_manager user
         auditor_space.add_auditor user

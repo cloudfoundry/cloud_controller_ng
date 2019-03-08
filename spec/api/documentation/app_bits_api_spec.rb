@@ -18,7 +18,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
     }
   end
 
-  let(:space) { VCAP::CloudController::Space.make }
+  let(:space) { FactoryBot.create(:space) }
   let(:process) { VCAP::CloudController::ProcessModelFactory.make(space: space) }
 
   authenticated_request

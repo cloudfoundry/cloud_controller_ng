@@ -85,7 +85,7 @@ module VCAP::CloudController
 
       describe 'services from private brokers' do
         it 'does not return the services to users with no roles in the space' do
-          space = Space.make
+          space = FactoryBot.create(:space)
           space_developer = User.make
 
           space.organization.add_user space_developer
@@ -99,7 +99,7 @@ module VCAP::CloudController
         end
 
         it "returns services from private brokers to space developers in that private broker's space" do
-          space = Space.make
+          space = FactoryBot.create(:space)
           space_developer = User.make
 
           space.organization.add_user space_developer
@@ -115,7 +115,7 @@ module VCAP::CloudController
         end
 
         it "returns services from private brokers to space auditors in that private broker's space" do
-          space = Space.make
+          space = FactoryBot.create(:space)
           space_auditor = User.make
 
           space.organization.add_user space_auditor
@@ -130,7 +130,7 @@ module VCAP::CloudController
         end
 
         it "returns services from private brokers to space managers in that private broker's space" do
-          space = Space.make
+          space = FactoryBot.create(:space)
           space_manager = User.make
 
           space.organization.add_user space_manager
@@ -316,7 +316,7 @@ module VCAP::CloudController
 
     describe '.space_or_org_visible_for_user' do
       let(:org) { FactoryBot.create(:organization) }
-      let(:space) { Space.make(organization: org) }
+      let(:space) { FactoryBot.create(:space, organization: org) }
       let(:dev) { make_developer_for_space(space) }
       let(:outside_dev) { User.make(admin: false, active: true) }
 

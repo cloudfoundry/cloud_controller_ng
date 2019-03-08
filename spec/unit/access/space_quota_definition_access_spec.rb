@@ -6,7 +6,7 @@ module VCAP::CloudController
     let(:user) { VCAP::CloudController::User.make }
     let(:org) { FactoryBot.create(:organization) }
     let(:scopes) { nil }
-    let(:space) { Space.make(organization: org) }
+    let(:space) { FactoryBot.create(:space, organization: org) }
     let(:object) { VCAP::CloudController::SpaceQuotaDefinition.make(organization: org) }
 
     before { set_current_user(user, scopes: scopes) }

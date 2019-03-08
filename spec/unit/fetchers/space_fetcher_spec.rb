@@ -4,7 +4,7 @@ require 'fetchers/space_fetcher'
 module VCAP::CloudController
   RSpec.describe SpaceFetcher do
     describe '#fetch' do
-      let(:space) { Space.make }
+      let(:space) { FactoryBot.create(:space) }
 
       it 'returns the desired space' do
         returned_space = SpaceFetcher.new.fetch(space.guid)

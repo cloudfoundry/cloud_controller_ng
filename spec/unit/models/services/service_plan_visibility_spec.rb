@@ -17,7 +17,7 @@ module VCAP::CloudController
       context 'when the service plan visibility is for a private broker' do
         it 'returns a validation error' do
           organization = FactoryBot.create(:organization)
-          space = Space.make organization: organization
+          space = FactoryBot.create(:space, organization: organization)
           private_broker = ServiceBroker.make space: space
           service = Service.make service_broker: private_broker, active: true
           plan = ServicePlan.make service: service

@@ -6,10 +6,10 @@ module VCAP::CloudController
     let(:org1) { FactoryBot.create(:organization) }
     let(:org2) { FactoryBot.create(:organization) }
 
-    let!(:space1) { Space.make(name: 'Lamb', organization: org1) }
-    let!(:space2) { Space.make(name: 'Alpaca', organization: org2) }
-    let!(:space3) { Space.make(name: 'Horse', organization: org1) }
-    let!(:space4) { Space.make(name: 'Buffalo', organization: org2) }
+    let!(:space1) { FactoryBot.create(:space, name: 'Lamb', organization: org1) }
+    let!(:space2) { FactoryBot.create(:space, name: 'Alpaca', organization: org2) }
+    let!(:space3) { FactoryBot.create(:space, name: 'Horse', organization: org1) }
+    let!(:space4) { FactoryBot.create(:space, name: 'Buffalo', organization: org2) }
 
     let(:message) { SpacesListMessage.from_params({}) }
 

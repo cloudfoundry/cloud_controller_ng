@@ -9,7 +9,7 @@ module VCAP::CloudController
     subject(:create_action) { ServiceInstanceCreate.new(event_repository, logger) }
 
     describe '#create' do
-      let(:space) { Space.make }
+      let(:space) { FactoryBot.create(:space) }
       let(:service_plan) { ServicePlan.make }
       let(:request_attrs) do
         {

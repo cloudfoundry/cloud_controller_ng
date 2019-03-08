@@ -6,9 +6,9 @@ RSpec.describe UserSummaryPresenter do
     let(:managed_org) { FactoryBot.create(:organization) }
     let(:billing_managed_org) { FactoryBot.create(:organization) }
     let(:audited_org) { FactoryBot.create(:organization) }
-    let(:space) { VCAP::CloudController::Space.make(organization: org) }
-    let(:managed_space) { VCAP::CloudController::Space.make(organization: managed_org) }
-    let(:audited_space) { VCAP::CloudController::Space.make(organization: audited_org) }
+    let(:space) { FactoryBot.create(:space, organization: org) }
+    let(:managed_space) { FactoryBot.create(:space, organization: managed_org) }
+    let(:audited_space) { FactoryBot.create(:space, organization: audited_org) }
     let(:user) do
       u = make_developer_for_space(space)
       u.add_organization(managed_org)

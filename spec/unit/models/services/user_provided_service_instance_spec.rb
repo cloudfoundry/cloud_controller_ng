@@ -8,7 +8,7 @@ module VCAP::CloudController
       def new_model
         VCAP::CloudController::UserProvidedServiceInstance.create(
           name: Sham.name,
-          space: VCAP::CloudController::Space.make,
+          space: FactoryBot.create(:space),
           credentials: value_to_encrypt,
         )
       end
@@ -100,7 +100,7 @@ module VCAP::CloudController
       it 'saves with is_gateway_service false' do
         instance = VCAP::CloudController::UserProvidedServiceInstance.create(
           name: 'awesome-service',
-          space: VCAP::CloudController::Space.make,
+          space: FactoryBot.create(:space),
           credentials: { 'foo' => 'bar' },
           route_service_url: 'https://route.url.com'
         )

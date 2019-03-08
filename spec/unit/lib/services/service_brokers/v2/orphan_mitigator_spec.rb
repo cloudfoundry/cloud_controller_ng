@@ -6,7 +6,7 @@ module VCAP::Services
       let(:client_attrs) { { uri: 'broker.com' } }
 
       let(:plan) { VCAP::CloudController::ServicePlan.make }
-      let(:space) { VCAP::CloudController::Space.make }
+      let(:space) { FactoryBot.create(:space) }
       let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.new(service_plan: plan, space: space) }
       let(:service_binding) { VCAP::CloudController::ServiceBinding.make }
       let(:service_key) { VCAP::CloudController::ServiceKey.make }

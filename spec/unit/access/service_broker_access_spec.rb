@@ -5,7 +5,7 @@ module VCAP::CloudController
     subject(:access) { ServiceBrokerAccess.new(Security::AccessContext.new) }
     let(:user) { VCAP::CloudController::User.make }
     let(:org) { FactoryBot.create(:organization) }
-    let(:space) { VCAP::CloudController::Space.make(organization: org) }
+    let(:space) { FactoryBot.create(:space, organization: org) }
     let(:object) { VCAP::CloudController::ServiceBroker.make }
     let(:broker_with_space) { VCAP::CloudController::ServiceBroker.make space: space }
 

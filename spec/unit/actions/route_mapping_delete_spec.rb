@@ -7,7 +7,7 @@ module VCAP::CloudController
     let(:user) { User.make }
     let(:user_email) { 'user_email' }
     let(:user_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email) }
-    let(:space) { Space.make }
+    let(:space) { FactoryBot.create(:space) }
     let(:app) { AppModel.make(space: space) }
     let(:process1) { ProcessModel.make(app: app, type: 'other') }
     let(:process2) { ProcessModel.make(app: app, type: 'other') }

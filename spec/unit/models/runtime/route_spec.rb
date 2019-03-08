@@ -57,7 +57,7 @@ module VCAP::CloudController
       end
 
       context 'when the route belongs to a private domain' do
-        let(:space) { Space.make }
+        let(:space) { FactoryBot.create(:space) }
         let!(:private_domain) { PrivateDomain.make(owning_organization: space.organization) }
 
         context 'and the route has a port' do
@@ -80,11 +80,11 @@ module VCAP::CloudController
 
     describe 'Associations' do
       it { is_expected.to have_associated :domain }
-      it { is_expected.to have_associated :space, associated_instance: ->(route) { Space.make(organization: route.domain.owning_organization) } }
+      it { is_expected.to have_associated :space, associated_instance: ->(route) { FactoryBot.create(:space, organization: route.domain.owning_organization) } }
       it { is_expected.to have_associated :route_mappings, associated_instance: ->(route) { RouteMappingModel.make(app: AppModel.make(space: route.space), route: route) } }
 
       describe 'apps association' do
-        let(:space) { Space.make }
+        let(:space) { FactoryBot.create(:space) }
         let(:process) { ProcessModelFactory.make(space: space) }
         let(:route) { Route.make(space: space) }
 
@@ -126,7 +126,7 @@ module VCAP::CloudController
           it 'succeeds with no mapped apps' do
             route = Route.make(space: ProcessModelFactory.make.space, domain: SharedDomain.make)
 
-            expect { route.space = Space.make }.not_to raise_error
+            expect { route.space = FactoryBot.create(:space) }.not_to raise_error
           end
 
           it 'fails when changing the space when there are apps mapped to it' do
@@ -134,32 +134,32 @@ module VCAP::CloudController
             route = Route.make(space: process.space, domain: SharedDomain.make)
             RouteMappingModel.make(app: process.app, route: route, process_type: process.type)
 
-            expect { route.space = Space.make }.to raise_error(CloudController::Errors::InvalidAppRelation)
+            expect { route.space = FactoryBot.create(:space) }.to raise_error(CloudController::Errors::InvalidAppRelation)
           end
         end
 
         context 'with domain' do
           it 'succeeds if its a shared domain' do
             route = Route.make(domain: SharedDomain.make)
-            expect { route.space = Space.make }.not_to raise_error
+            expect { route.space = FactoryBot.create(:space) }.not_to raise_error
           end
 
           context 'private domain' do
             let(:org) { FactoryBot.create(:organization) }
             let(:domain) { PrivateDomain.make(owning_organization: org) }
-            let(:route) { Route.make(domain: domain, space: Space.make(organization: org)) }
+            let(:route) { Route.make(domain: domain, space: FactoryBot.create(:space, organization: org)) }
 
             it 'succeeds if in the same organization' do
-              expect { route.space = Space.make(organization: org) }.not_to raise_error
+              expect { route.space = FactoryBot.create(:space, organization: org) }.not_to raise_error
             end
 
             context 'with a different organization' do
               it 'fails' do
-                expect { route.space = Space.make }.to raise_error(Route::InvalidOrganizationRelation, /Organization cannot use domain/)
+                expect { route.space = FactoryBot.create(:space) }.to raise_error(Route::InvalidOrganizationRelation, /Organization cannot use domain/)
               end
 
               it 'succeeds if the organization shares the domain' do
-                space = Space.make
+                space = FactoryBot.create(:space)
                 domain.add_shared_organization(space.organization)
                 expect { route.space = space }.to_not raise_error
               end
@@ -185,7 +185,7 @@ module VCAP::CloudController
         end
 
         context 'when private' do
-          let(:space) { Space.make }
+          let(:space) { FactoryBot.create(:space) }
           let(:domain) { PrivateDomain.make(owning_organization: space.organization) }
           it 'succeeds if it is the same domain' do
             route = Route.make(space: space, domain: domain)
@@ -272,7 +272,7 @@ module VCAP::CloudController
 
       context 'when the requested route is a system hostname with a system domain' do
         let(:domain) { Domain.find(name: TestConfig.config[:system_domain]) }
-        let(:space) { Space.make(organization: domain.owning_organization) }
+        let(:space) { FactoryBot.create(:space, organization: domain.owning_organization) }
         let(:host) { 'loggregator' }
         let(:route) { Route.new(domain: domain, space: space, host: host) }
 
@@ -284,7 +284,7 @@ module VCAP::CloudController
 
       context 'when a route with the same hostname and domain already exists' do
         let(:domain) { SharedDomain.make }
-        let(:space) { Space.make }
+        let(:space) { FactoryBot.create(:space) }
         let(:host) { 'example' }
 
         context 'with a context path' do
@@ -300,7 +300,7 @@ module VCAP::CloudController
           end
 
           context 'and a user attempts to create the route in another space' do
-            let(:another_space) { Space.make }
+            let(:another_space) { FactoryBot.create(:space) }
 
             it 'is not valid' do
               route_obj = Route.new(domain: domain, space: another_space, host: host, path: path)
@@ -311,10 +311,10 @@ module VCAP::CloudController
 
           context 'and the domain is a private domain' do
             let(:domain) { PrivateDomain.make }
-            let(:space) { Space.make(organization: domain.owning_organization) }
+            let(:space) { FactoryBot.create(:space, organization: domain.owning_organization) }
 
             context 'and a user attempts to create the route in another space' do
-              let(:another_space) { Space.make(organization: domain.owning_organization) }
+              let(:another_space) { FactoryBot.create(:space, organization: domain.owning_organization) }
 
               it 'is valid' do
                 route_obj = Route.new(domain: domain, space: another_space, host: host, path: path)
@@ -330,7 +330,7 @@ module VCAP::CloudController
           end
 
           context 'and a user attempts to create the route in another space' do
-            let(:another_space) { Space.make }
+            let(:another_space) { FactoryBot.create(:space) }
 
             it 'is not valid' do
               route_obj = Route.new(domain: domain, space: another_space, host: host)
@@ -367,7 +367,7 @@ module VCAP::CloudController
         context 'when port is specified' do
           let(:domain) { SharedDomain.make(router_group_guid: 'tcp-router-group') }
           let(:space_quota_definition) { SpaceQuotaDefinition.make }
-          let(:space) { Space.make(space_quota_definition: space_quota_definition, organization: space_quota_definition.organization) }
+          let(:space) { FactoryBot.create(:space, space_quota_definition: space_quota_definition, organization: space_quota_definition.organization) }
           let(:routing_api_client) { double('routing_api_client', router_group: router_group) }
           let(:router_group) { double('router_group', type: 'tcp', guid: 'router-group-guid') }
           let(:dependency_double) { double('dependency_locator', routing_api_client: routing_api_client) }
@@ -465,7 +465,7 @@ module VCAP::CloudController
       end
 
       describe 'host' do
-        let(:space) { Space.make }
+        let(:space) { FactoryBot.create(:space) }
         let(:domain) { PrivateDomain.make(owning_organization: space.organization) }
 
         before do
@@ -597,7 +597,7 @@ module VCAP::CloudController
       end
 
       describe 'total allowed routes' do
-        let(:space) { Space.make }
+        let(:space) { FactoryBot.create(:space) }
         let(:org_quota) { space.organization.quota_definition }
         let(:space_quota) { nil }
 
@@ -736,7 +736,7 @@ module VCAP::CloudController
 
       describe 'total reserved route ports' do
         let(:space_quota) { SpaceQuotaDefinition.make }
-        let(:space) { Space.make(space_quota_definition: space_quota, organization: space_quota.organization) }
+        let(:space) { FactoryBot.create(:space, space_quota_definition: space_quota, organization: space_quota.organization) }
         let(:org_quota) { space.organization.quota_definition }
         let(:http_domain) { SharedDomain.make }
         let(:tcp_domain) { SharedDomain.make(router_group_guid: 'guid') }
@@ -759,7 +759,7 @@ module VCAP::CloudController
 
         context 'on create' do
           context 'when the space does not have a space quota' do
-            let(:space) { Space.make }
+            let(:space) { FactoryBot.create(:space) }
 
             it 'is valid' do
               expect(subject).to be_valid
@@ -887,7 +887,7 @@ module VCAP::CloudController
     end
 
     describe 'instance methods' do
-      let(:space) { Space.make }
+      let(:space) { FactoryBot.create(:space) }
 
       let(:domain) do
         PrivateDomain.make(
@@ -1010,7 +1010,7 @@ module VCAP::CloudController
       end
 
       describe '#in_suspended_org?' do
-        let(:space) { Space.make }
+        let(:space) { FactoryBot.create(:space) }
         subject(:route) { Route.new(space: space) }
 
         context 'when in a suspended organization' do
@@ -1031,10 +1031,10 @@ module VCAP::CloudController
 
     describe 'relations' do
       let(:org) { FactoryBot.create(:organization) }
-      let(:space_a) { Space.make(organization: org) }
+      let(:space_a) { FactoryBot.create(:space, organization: org) }
       let(:domain_a) { PrivateDomain.make(owning_organization: org) }
 
-      let(:space_b) { Space.make(organization: org) }
+      let(:space_b) { FactoryBot.create(:space, organization: org) }
       let(:domain_b) { PrivateDomain.make(owning_organization: org) }
 
       it 'should not allow creation of a empty host on a shared domain' do
@@ -1055,7 +1055,7 @@ module VCAP::CloudController
         fake_route_handler_app1 = instance_double(ProcessRouteHandler)
         fake_route_handler_app2 = instance_double(ProcessRouteHandler)
 
-        space = Space.make
+        space = FactoryBot.create(:space)
         process1 = ProcessModelFactory.make(space: space, state: 'STARTED', diego: false)
         process2 = ProcessModelFactory.make(space: space, state: 'STARTED', diego: false)
 

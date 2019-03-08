@@ -4,7 +4,7 @@ require 'fetchers/process_delete_fetcher'
 module VCAP::CloudController
   RSpec.describe ProcessDeleteFetcher do
     describe '#fetch' do
-      let(:space) { Space.make }
+      let(:space) { FactoryBot.create(:space) }
       let(:org) { space.organization }
       let!(:process) { ProcessModelFactory.make(space: space) }
 

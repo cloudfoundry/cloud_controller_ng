@@ -4,7 +4,7 @@ require 'actions/app_find_or_create_skeleton'
 module VCAP::CloudController
   RSpec.describe AppFindOrCreateSkeleton do
     let(:user_audit_info) { UserAuditInfo.new(user_email: 'gooid', user_guid: 'amelia@cats.com') }
-    let(:space) { Space.make }
+    let(:space) { FactoryBot.create(:space) }
     let(:name) { 'banana' }
 
     subject(:action) { AppFindOrCreateSkeleton.new(user_audit_info) }

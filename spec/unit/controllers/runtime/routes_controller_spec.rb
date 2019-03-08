@@ -142,7 +142,7 @@ module VCAP::CloudController
 
         let(:organization) { FactoryBot.create(:organization) }
         let(:http_domain) { PrivateDomain.make(owning_organization: organization) }
-        let(:space) { Space.make(organization: organization) }
+        let(:space) { FactoryBot.create(:space, organization: organization) }
         let(:route) { Route.make(domain: http_domain, space: space) }
         let!(:docker_process) do
           ProcessModelFactory.make(space: space, docker_image: 'some-image', state: 'STARTED')
@@ -236,7 +236,7 @@ module VCAP::CloudController
     describe 'POST /v2/routes' do
       let(:space_quota_definition) { SpaceQuotaDefinition.make }
       let(:space) do
-        Space.make(space_quota_definition: space_quota_definition,
+        FactoryBot.create(:space, space_quota_definition: space_quota_definition,
                    organization: space_quota_definition.organization)
       end
       let(:shared_domain) { SharedDomain.make }
@@ -293,7 +293,7 @@ module VCAP::CloudController
       end
 
       context 'when the requested route specifies a system hostname and a system domain' do
-        let(:space) { Space.make(organization: system_domain.owning_organization) }
+        let(:space) { FactoryBot.create(:space, organization: system_domain.owning_organization) }
         let(:system_domain) { Domain.find(name: TestConfig.config[:system_domain]) }
         let(:host) { 'api' }
         let(:req) do
@@ -408,7 +408,7 @@ module VCAP::CloudController
 
       context 'shared domains' do
         let(:shared_domain) { SharedDomain.make }
-        let(:another_space) { Space.make }
+        let(:another_space) { FactoryBot.create(:space) }
         let(:req) do
           {
             domain_guid: shared_domain.guid,
@@ -839,7 +839,7 @@ module VCAP::CloudController
     describe 'PUT /v2/routes/:guid' do
       let(:space_quota_definition) { SpaceQuotaDefinition.make }
       let(:space) do
-        Space.make(
+        FactoryBot.create(:space,
           space_quota_definition: space_quota_definition,
                    organization: space_quota_definition.organization
         )
@@ -940,7 +940,7 @@ module VCAP::CloudController
       let(:user) { User.make }
       let(:organization) { FactoryBot.create(:organization) }
       let(:domain) { PrivateDomain.make(owning_organization: organization) }
-      let(:space) { Space.make(organization: organization) }
+      let(:space) { FactoryBot.create(:space, organization: organization) }
       let(:route) { Route.make(domain: domain, space: space) }
 
       context 'as a space auditor' do
@@ -974,13 +974,13 @@ module VCAP::CloudController
     describe 'GET /v2/routes' do
       let(:organization) { FactoryBot.create(:organization) }
       let(:domain) { PrivateDomain.make(owning_organization: organization) }
-      let(:space) { Space.make(organization: organization) }
+      let(:space) { FactoryBot.create(:space, organization: organization) }
       let!(:first_route) { Route.make(domain: domain, space: space) }
       let!(:second_route) { Route.make(domain: domain, space: space) }
 
       let(:other_org) { FactoryBot.create(:organization) }
       let(:other_domain) { PrivateDomain.make(owning_organization: other_org) }
-      let(:other_space) { Space.make(organization: other_org) }
+      let(:other_space) { FactoryBot.create(:space, organization: other_org) }
       let!(:third_route_for_other_org) { Route.make(domain: other_domain, space: other_space) }
 
       before do
@@ -1023,11 +1023,11 @@ module VCAP::CloudController
           let(:first_route_info) { decoded_response.fetch('resources')[0] }
           let(:second_route_info) { decoded_response.fetch('resources')[1] }
           let(:third_route_info) { decoded_response.fetch('resources')[2] }
-          let(:space1) { Space.make(organization: organization) }
+          let(:space1) { FactoryBot.create(:space, organization: organization) }
 
           let(:organization2) { FactoryBot.create(:organization) }
           let(:domain2) { PrivateDomain.make(owning_organization: organization2) }
-          let(:space2) { Space.make(organization: organization2) }
+          let(:space2) { FactoryBot.create(:space, organization: organization2) }
           let!(:route_for_organization2) { Route.make(domain: domain2, space: space2) }
 
           it 'Allows organization_guid query at any place in query with preceding domain query' do
@@ -1175,7 +1175,7 @@ module VCAP::CloudController
     describe 'GET /v2/routes/ inline related resources' do
       let(:organization) { FactoryBot.create(:organization) }
       let(:domain) { PrivateDomain.make(owning_organization: organization) }
-      let(:space) { Space.make(organization: organization) }
+      let(:space) { FactoryBot.create(:space, organization: organization) }
       let(:route) { Route.make(domain: domain, space: space) }
       let(:myapp) { AppModel.make(name: 'myapp') }
       let!(:app_route_mapping) { RouteMappingModel.make(route: route, app: myapp, process_type: 'web') }
@@ -1282,7 +1282,7 @@ module VCAP::CloudController
 
         context 'when the domain is a private domain' do
           let(:domain) { PrivateDomain.make }
-          let(:route) { Route.make(domain: domain, host: '', space: Space.make(organization: domain.owning_organization)) }
+          let(:route) { Route.make(domain: domain, host: '', space: FactoryBot.create(:space, organization: domain.owning_organization)) }
 
           it 'returns NO_CONTENT (204)' do
             get "/v2/routes/reserved/domain/#{route.domain_guid}"
@@ -1374,13 +1374,13 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/routes/:guid/<related resource>' do
-      let(:route_space) { Space.make }
+      let(:route_space) { FactoryBot.create(:space) }
       let!(:route) { Route.make(space: route_space) }
 
-      let(:other_route_space) { Space.make }
+      let(:other_route_space) { FactoryBot.create(:space) }
       let!(:other_route) { Route.make(space: other_route_space) }
 
-      let(:no_route_space) { Space.make }
+      let(:no_route_space) { FactoryBot.create(:space) }
 
       let(:process1) { ProcessModelFactory.make(space: route_space) }
       let(:process2) { ProcessModelFactory.make(space: route_space) }

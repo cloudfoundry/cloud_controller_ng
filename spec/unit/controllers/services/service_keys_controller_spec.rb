@@ -400,7 +400,7 @@ module VCAP::CloudController
         end
 
         context 'when the service instance has been shared' do
-          let(:other_space) { Space.make }
+          let(:other_space) { FactoryBot.create(:space) }
 
           before do
             instance.add_shared_space(other_space)
@@ -436,7 +436,7 @@ module VCAP::CloudController
     end
 
     describe 'GET', '/v2/service_keys' do
-      let(:space) { Space.make }
+      let(:space) { FactoryBot.create(:space) }
       let(:developer) { make_developer_for_space(space) }
       let(:instance_a) { ManagedServiceInstance.make(space: space) }
       let(:instance_b) { ManagedServiceInstance.make(space: space) }
@@ -477,7 +477,7 @@ module VCAP::CloudController
     end
 
     describe 'GET', '/v2/service_keys/:service_key_guid' do
-      let(:space) { Space.make }
+      let(:space) { FactoryBot.create(:space) }
       let(:developer) { make_developer_for_space(space) }
       let(:instance) { ManagedServiceInstance.make(space: space) }
       let(:service_key) { ServiceKey.make(name: 'fake-key', service_instance: instance) }
@@ -507,7 +507,7 @@ module VCAP::CloudController
         end
 
         context 'when the user is a developer in a space to which the service instance is shared' do
-          let(:other_space) { Space.make }
+          let(:other_space) { FactoryBot.create(:space) }
           let(:developer) { make_developer_for_space(other_space) }
 
           before do
@@ -618,7 +618,7 @@ module VCAP::CloudController
         end
 
         context 'when the user is a developer in a space to which the service instance is shared' do
-          let(:other_space) { Space.make }
+          let(:other_space) { FactoryBot.create(:space) }
           let(:developer) { make_developer_for_space(other_space) }
 
           before do
@@ -664,7 +664,7 @@ module VCAP::CloudController
     end
 
     describe 'GET', '/v2/service_keys/:service_key_guid/parameters' do
-      let(:space) { Space.make }
+      let(:space) { FactoryBot.create(:space) }
       let(:developer) { make_developer_for_space(space) }
 
       before do

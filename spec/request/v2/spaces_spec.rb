@@ -65,7 +65,7 @@ RSpec.describe 'Spaces' do
   describe 'GET /v2/spaces' do
     context 'when a isolation segment is associated to the space' do
       let(:isolation_segment) { FactoryBot.create(:isolation_segment) }
-      let(:space) { VCAP::CloudController::Space.make(organization: org) }
+      let(:space) { FactoryBot.create(:space, organization: org) }
 
       before do
         assigner.assign(isolation_segment, [org])
@@ -122,7 +122,7 @@ RSpec.describe 'Spaces' do
   describe 'GET /v2/spaces/:guid' do
     context 'when a isolation segment is associated to the space' do
       let(:isolation_segment) { FactoryBot.create(:isolation_segment) }
-      let(:space) { VCAP::CloudController::Space.make(organization: org) }
+      let(:space) { FactoryBot.create(:space, organization: org) }
 
       before do
         assigner.assign(isolation_segment, [org])
@@ -171,9 +171,9 @@ RSpec.describe 'Spaces' do
   end
 
   describe 'GET /v2/spaces/:guid/service_instances' do
-    let(:originating_space) { VCAP::CloudController::Space.make }
+    let(:originating_space) { FactoryBot.create(:space) }
     let(:shared_service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: originating_space) }
-    let(:space) { VCAP::CloudController::Space.make }
+    let(:space) { FactoryBot.create(:space) }
 
     before do
       originating_space.organization.add_user(user)
@@ -229,7 +229,7 @@ RSpec.describe 'Spaces' do
   end
 
   describe 'GET /v2/spaces/:guid/services' do
-    let!(:space) { VCAP::CloudController::Space.make(organization: org) }
+    let!(:space) { FactoryBot.create(:space, organization: org) }
     let!(:service_1) { VCAP::CloudController::Service.make }
     let!(:service_plan_1) { VCAP::CloudController::ServicePlan.make(service: service_1) }
     let!(:service_2) { VCAP::CloudController::Service.make }
@@ -251,7 +251,7 @@ RSpec.describe 'Spaces' do
   end
 
   describe 'DELETE /v2/spaces/:guid/unmapped_routes' do
-    let(:space) { VCAP::CloudController::Space.make(organization: org) }
+    let(:space) { FactoryBot.create(:space, organization: org) }
     let(:process) { VCAP::CloudController::ProcessModelFactory.make(state: 'STARTED') }
 
     before do

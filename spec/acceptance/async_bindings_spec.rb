@@ -34,7 +34,7 @@ module VCAP::CloudController
 
       context 'when a service instance is shared' do
         let(:service_instance) { ManagedServiceInstance.make }
-        let(:target_space) { Space.make }
+        let(:target_space) { FactoryBot.create(:space) }
 
         before do
           service_instance.add_shared_space(target_space)
@@ -121,7 +121,7 @@ module VCAP::CloudController
 
       context 'when DELETE /v3/apps/:guid is called' do
         context 'and multiple service bindings exist' do
-          let(:space) { Space.make }
+          let(:space) { FactoryBot.create(:space) }
           let(:app_model) { VCAP::CloudController::AppModel.make(name: 'app_name', space: space) }
           let(:package) { VCAP::CloudController::PackageModel.make(app: app_model) }
           let!(:droplet) { VCAP::CloudController::DropletModel.make(package: package, app: app_model) }

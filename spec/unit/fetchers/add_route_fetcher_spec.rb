@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe AddRouteFetcher do
-    let(:space) { Space.make }
+    let(:space) { FactoryBot.create(:space) }
     let(:app) { AppModel.make(space_guid: space.guid) }
 
     let(:route) { Route.make(space: space) }

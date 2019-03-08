@@ -5,7 +5,7 @@ module VCAP::CloudController
   RSpec.describe SpaceUpdate do
     describe 'update' do
       let(:org) { FactoryBot.create(:organization) }
-      let(:space) { VCAP::CloudController::Space.make(name: 'old-space-name', organization: org) }
+      let(:space) { FactoryBot.create(:space, name: 'old-space-name', organization: org) }
 
       context 'when a name and label are requested' do
         let(:message) do
@@ -46,7 +46,7 @@ module VCAP::CloudController
 
         context 'when the space name is not unique' do
           it 'errors usefully' do
-            VCAP::CloudController::Space.make(name: 'new-space-name', organization: org)
+            FactoryBot.create(:space, name: 'new-space-name', organization: org)
 
             expect {
               SpaceUpdate.new.update(space, message)

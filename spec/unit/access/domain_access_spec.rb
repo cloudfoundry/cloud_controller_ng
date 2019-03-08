@@ -7,7 +7,7 @@ module VCAP::CloudController
 
     let(:user) { User.make }
     let(:org) { FactoryBot.create(:organization) }
-    let(:space) { Space.make(organization: org) }
+    let(:space) { FactoryBot.create(:space, organization: org) }
 
     let(:object) { Domain.make }
 

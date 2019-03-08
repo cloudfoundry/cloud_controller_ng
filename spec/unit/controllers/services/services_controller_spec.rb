@@ -103,7 +103,7 @@ module VCAP::CloudController
 
     describe 'GET /v2/services/:guid/service_plans' do
       let!(:organization) { FactoryBot.create(:organization) }
-      let!(:space) { Space.make(organization: organization) }
+      let!(:space) { FactoryBot.create(:space, organization: organization) }
       let!(:user) { User.make }
       let!(:broker) { ServiceBroker.make(space: space) }
       let!(:service) { Service.make(service_broker: broker) }
@@ -134,7 +134,7 @@ module VCAP::CloudController
     describe 'GET /v2/services/:guid' do
       let(:broker_name) { 'broker-1' }
       let!(:organization) { FactoryBot.create(:organization) }
-      let!(:space) { Space.make(organization: organization) }
+      let!(:space) { FactoryBot.create(:space, organization: organization) }
       let!(:user) { User.make }
       let!(:broker) { ServiceBroker.make(space: space, name: broker_name) }
       let!(:service) { Service.make(service_broker: broker) }
@@ -244,7 +244,7 @@ module VCAP::CloudController
 
       context 'with private brokers' do
         it 'returns plans visible in any space they are a member of' do
-          space = Space.make(organization: organization)
+          space = FactoryBot.create(:space, organization: organization)
           private_broker = ServiceBroker.make(space: space)
           service = Service.make(service_broker: private_broker, active: true)
           ServicePlan.make(service: service)

@@ -5,7 +5,7 @@ module VCAP::CloudController
     RSpec.describe DeleteActionJob, job_context: :worker do
       let(:user) { User.make(admin: true) }
       let(:delete_action) { instance_double(SpaceDelete, delete: []) }
-      let(:space) { Space.make(name: Sham.guid) }
+      let(:space) { FactoryBot.create(:space, name: Sham.guid) }
 
       subject(:job) { DeleteActionJob.new(Space, space.guid, delete_action) }
 

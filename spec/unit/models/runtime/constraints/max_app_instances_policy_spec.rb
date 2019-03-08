@@ -4,7 +4,7 @@ RSpec.describe MaxAppInstancesPolicy do
   let(:max_apps) { 8 }
   let(:current_org_instances) { 3 }
   let(:process) { VCAP::CloudController::ProcessModelFactory.make(instances: 1, state: 'STARTED') }
-  let(:org_space) { VCAP::CloudController::Space.make organization: process.organization }
+  let(:org_space) { FactoryBot.create(:space, organization: process.organization) }
   let!(:org_process) { VCAP::CloudController::ProcessModelFactory.make(space: org_space, instances: current_org_instances, state: 'STARTED') }
   let(:quota_definition) { double(app_instance_limit: max_apps) }
   let(:error_name) { :app_instance_limit_error }

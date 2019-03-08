@@ -76,7 +76,7 @@ module VCAP::CloudController
       end
 
       it 'unshares shared managed service instance and records only one unshare event' do
-        shared_to_space = Space.make
+        shared_to_space = FactoryBot.create(:space)
         managed_service_instance.add_shared_space(shared_to_space)
 
         expect(managed_service_instance).to receive(:remove_shared_space)
@@ -428,7 +428,7 @@ module VCAP::CloudController
         end
 
         it 'does not attempt to unshare the service instance' do
-          shared_to_space = Space.make
+          shared_to_space = FactoryBot.create(:space)
           managed_service_instance.add_shared_space(shared_to_space)
 
           expect_any_instance_of(ServiceInstanceUnshare).not_to receive(:unshare)
@@ -457,7 +457,7 @@ module VCAP::CloudController
 
       context 'when unsharing fails for a shared service instance' do
         before do
-          shared_to_space = Space.make
+          shared_to_space = FactoryBot.create(:space)
           managed_service_instance.add_shared_space(shared_to_space)
 
           allow(managed_service_instance).to receive(:remove_shared_space).and_raise('Unsharing failed')

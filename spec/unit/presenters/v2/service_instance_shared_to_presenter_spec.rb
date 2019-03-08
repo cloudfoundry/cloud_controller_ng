@@ -4,7 +4,7 @@ module CloudController::Presenters::V2
   RSpec.describe ServiceInstanceSharedToPresenter do
     describe '#to_hash' do
       it 'returns the space name, org name, and bound app count' do
-        space = VCAP::CloudController::Space.make
+        space = FactoryBot.create(:space)
         presenter = ServiceInstanceSharedToPresenter.new
         expect(presenter.to_hash(space, 42)).to eq(
           {

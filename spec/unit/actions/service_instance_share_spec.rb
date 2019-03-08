@@ -7,8 +7,8 @@ module VCAP::CloudController
     let(:service_instance) { ManagedServiceInstance.make }
     let(:user_provided_service_instance) { UserProvidedServiceInstance.make }
     let(:user_audit_info) { UserAuditInfo.new(user_guid: 'user-guid-1', user_email: 'user@email.com') }
-    let(:target_space1) { Space.make }
-    let(:target_space2) { Space.make }
+    let(:target_space1) { FactoryBot.create(:space) }
+    let(:target_space2) { FactoryBot.create(:space) }
 
     describe '#create' do
       it 'creates share' do
@@ -159,12 +159,12 @@ module VCAP::CloudController
 
       context 'when the service plan is from a private space-scoped broker' do
         let(:source_org) { FactoryBot.create(:organization, name: 'source-org') }
-        let(:source_space) { Space.make(name: 'source-space', organization: source_org) }
+        let(:source_space) { FactoryBot.create(:space, name: 'source-space', organization: source_org) }
         let(:broker) { ServiceBroker.make(space: source_space) }
         let(:service) { Service.make(service_broker: broker, label: 'space-scoped-service') }
         let(:service_plan) { ServicePlan.make(service: service, name: 'my-plan') }
         let(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan) }
-        let(:target_space1) { Space.make(name: 'target-space', organization: source_org) }
+        let(:target_space1) { FactoryBot.create(:space, name: 'target-space', organization: source_org) }
 
         it 'raises an api error' do
           error_msg = 'Access to service space-scoped-service and plan my-plan is not enabled in source-org/target-space'
@@ -188,7 +188,7 @@ module VCAP::CloudController
 
         context 'and when the source org has service plan access enabled but the target org has service plan access disabled' do
           let(:source_org) { FactoryBot.create(:organization) }
-          let(:space) { Space.make(organization: source_org) }
+          let(:space) { FactoryBot.create(:space, organization: source_org) }
           let(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan, space: space) }
 
           before do
@@ -206,7 +206,7 @@ module VCAP::CloudController
 
         context 'and when the source org has service plan access disabled but the target org has service plan access enabled' do
           let(:source_org) { FactoryBot.create(:organization) }
-          let(:space) { Space.make(organization: source_org) }
+          let(:space) { FactoryBot.create(:space, organization: source_org) }
           let(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan, space: space) }
 
           before do
@@ -221,7 +221,7 @@ module VCAP::CloudController
 
         context 'and when source org has had service plan access enabled and the target org has service plan access enabled' do
           let(:source_org) { FactoryBot.create(:organization) }
-          let(:space) { Space.make(organization: source_org) }
+          let(:space) { FactoryBot.create(:space, organization: source_org) }
           let(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan, space: space) }
 
           before do

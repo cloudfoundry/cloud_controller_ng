@@ -3,7 +3,7 @@ require 'spec_helper'
 RSpec.describe 'Staging Security Groups' do
   describe 'PUT /v2/spaces/:guid/staging_security_groups/:security_group_guid' do
     let(:org) { FactoryBot.create(:organization) }
-    let(:space) { VCAP::CloudController::Space.make(organization: org) }
+    let(:space) { FactoryBot.create(:space, organization: org) }
     let(:security_group) { VCAP::CloudController::SecurityGroup.make }
     let(:user) { VCAP::CloudController::User.make }
 
@@ -27,7 +27,7 @@ RSpec.describe 'Staging Security Groups' do
 
   describe 'DELETE /v2/spaces/:guid/staging_security_groups/:security_group_guid' do
     let(:org) { FactoryBot.create(:organization) }
-    let(:space) { VCAP::CloudController::Space.make(organization: org) }
+    let(:space) { FactoryBot.create(:space, organization: org) }
     let(:security_group) { VCAP::CloudController::SecurityGroup.make }
     let(:user) { VCAP::CloudController::User.make }
 
@@ -52,7 +52,7 @@ RSpec.describe 'Staging Security Groups' do
 
   describe 'PUT /v2/security_groups/:guid/staging_spaces/:space_guid' do
     let(:org) { FactoryBot.create(:organization) }
-    let(:space) { VCAP::CloudController::Space.make(organization: org) }
+    let(:space) { FactoryBot.create(:space, organization: org) }
     let(:security_group) do
       VCAP::CloudController::SecurityGroup.make(
         name:  'my-group-name',
@@ -107,7 +107,7 @@ RSpec.describe 'Staging Security Groups' do
 
   describe 'GET /v2/security_groups/:guid/staging_spaces/:space_guid' do
     let(:org) { FactoryBot.create(:organization) }
-    let(:space) { VCAP::CloudController::Space.make(organization: org) }
+    let(:space) { FactoryBot.create(:space, organization: org) }
     let(:security_group) { VCAP::CloudController::SecurityGroup.make }
     let(:user) { VCAP::CloudController::User.make }
 
@@ -131,7 +131,7 @@ RSpec.describe 'Staging Security Groups' do
 
   describe 'DELETE /v2/security_groups/:guid/staging_spaces/:space_guid' do
     let(:org) { FactoryBot.create(:organization) }
-    let(:space) { VCAP::CloudController::Space.make(organization: org) }
+    let(:space) { FactoryBot.create(:space, organization: org) }
     let(:security_group) { VCAP::CloudController::SecurityGroup.make }
     let(:user) { VCAP::CloudController::User.make }
 

@@ -174,7 +174,7 @@ module VCAP::CloudController
     end
 
     describe 'POST /v2/service_bindings/' do
-      let(:space) { Space.make }
+      let(:space) { FactoryBot.create(:space) }
       let(:developer) { make_developer_for_space(space) }
       let(:process) { ProcessModelFactory.make(space: space) }
 
@@ -529,7 +529,7 @@ module VCAP::CloudController
         end
 
         context 'when the app is in a space that the service instance is shared to' do
-          let(:shared_from_space) { Space.make }
+          let(:shared_from_space) { FactoryBot.create(:space) }
           let(:service_instance) { ManagedServiceInstance.make(space: shared_from_space) }
 
           before do
@@ -812,7 +812,7 @@ module VCAP::CloudController
 
     describe 'DELETE /v2/service_bindings/:service_binding_guid' do
       let(:service_binding) { ServiceBinding.make(service_instance: service_instance, app: process.app) }
-      let(:space) { Space.make }
+      let(:space) { FactoryBot.create(:space) }
       let(:developer) { make_developer_for_space(space) }
       let(:process) { ProcessModelFactory.make(space: space) }
 
@@ -1179,7 +1179,7 @@ module VCAP::CloudController
     end
 
     describe 'GET', '/v2/service_bindings?inline-relations-depth=1', regression: true do
-      let(:space) { Space.make }
+      let(:space) { FactoryBot.create(:space) }
       let(:managed_service_instance) { ManagedServiceInstance.make(space: space) }
       let(:user_provided_service_instance) { UserProvidedServiceInstance.make(space: space) }
       let(:process) { ProcessModelFactory.make(space: space) }
@@ -1315,12 +1315,12 @@ module VCAP::CloudController
       end
 
       context 'when there are service-instances in multiple spaces' do
-        let(:space1) { Space.make }
+        let(:space1) { FactoryBot.create(:space) }
         let(:process1) { ProcessModelFactory.make(space: space1) }
         let(:developer1) { make_developer_for_space(space1) }
         let(:si1) { ManagedServiceInstance.make(space: space1) }
 
-        let(:space2) { Space.make }
+        let(:space2) { FactoryBot.create(:space) }
         let(:process2) { ProcessModelFactory.make(space: space2) }
         let(:developer2) { make_developer_for_space(space2) }
         let(:si2) { ManagedServiceInstance.make(space: space2) }
@@ -1412,7 +1412,7 @@ module VCAP::CloudController
     end
 
     describe 'GET', '/v2/service_bindings/:guid/parameters' do
-      let(:space) { Space.make }
+      let(:space) { FactoryBot.create(:space) }
       let(:developer) { make_developer_for_space(space) }
 
       context 'when the service binding is valid' do
@@ -1522,7 +1522,7 @@ module VCAP::CloudController
           end
 
           context 'when the user has access to the binding of a shared service instance' do
-            let(:managed_service_instance) { ManagedServiceInstance.make(space: Space.make, service_plan: service_plan) }
+            let(:managed_service_instance) { ManagedServiceInstance.make(space: FactoryBot.create(:space), service_plan: service_plan) }
 
             before do
               managed_service_instance.add_shared_space(space)
@@ -1536,7 +1536,7 @@ module VCAP::CloudController
           end
 
           context 'when the user who shared the service instance tries to access binding parameters in the shared to space' do
-            let(:source_space) { Space.make }
+            let(:source_space) { FactoryBot.create(:space) }
             let(:managed_service_instance) { ManagedServiceInstance.make(space: source_space, service_plan: service_plan) }
             let(:developer) { make_developer_for_space(source_space) }
 

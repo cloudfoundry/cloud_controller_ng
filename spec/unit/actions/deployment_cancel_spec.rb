@@ -4,7 +4,7 @@ require 'cloud_controller/deployment_updater/dispatcher'
 
 module VCAP::CloudController
   RSpec.describe DeploymentCancel do
-    let(:space) { Space.make }
+    let(:space) { FactoryBot.create(:space) }
     let(:instance_count) { 6 }
     let(:app) { AppModel.make }
     let(:old_droplet) { DropletModel.make(app: app, process_types: { 'web' => 'the internet' }) }
