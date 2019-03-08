@@ -4,7 +4,7 @@ require 'rspec_api_documentation/dsl'
 RSpec.resource 'Organizations', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let(:organization) { VCAP::CloudController::Organization.make }
-  let(:quota_definition) { VCAP::CloudController::QuotaDefinition.make }
+  let(:quota_definition) { FactoryBot.create(:quota_definition) }
   let(:guid) { organization.guid }
 
   authenticated_request

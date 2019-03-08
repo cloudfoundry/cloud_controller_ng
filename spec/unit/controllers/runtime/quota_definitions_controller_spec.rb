@@ -54,7 +54,7 @@ module VCAP::CloudController
           app_task_limit: 10
         }
       end
-      let(:existing_quota) { VCAP::CloudController::QuotaDefinition.make }
+      let(:existing_quota) { FactoryBot.create(:quota_definition) }
 
       context 'when the user is a cf admin' do
         let(:quota_name) { 'quota 1' }
@@ -110,7 +110,7 @@ module VCAP::CloudController
     end
 
     describe 'Validation messages' do
-      let(:quota_definition) { QuotaDefinition.make }
+      let(:quota_definition) { FactoryBot.create(:quota_definition) }
 
       it 'returns QuotaDefinitionMemoryLimitNegative error correctly' do
         set_current_user_as_admin

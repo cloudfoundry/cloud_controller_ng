@@ -91,7 +91,7 @@ module VCAP::CloudController
       let(:original_plan) { ServicePlan.make(free: true) }
 
       let(:free_quota) do
-        QuotaDefinition.make(
+        FactoryBot.create(:quota_definition,
           total_services: 1,
           non_basic_services_allowed: false
         )
@@ -331,13 +331,13 @@ module VCAP::CloudController
       let(:paid_plan) { ServicePlan.make(free: false) }
 
       let(:free_quota) do
-        QuotaDefinition.make(
+        FactoryBot.create(:quota_definition,
           total_services: 1,
           non_basic_services_allowed: false
         )
       end
       let(:paid_quota) do
-        QuotaDefinition.make(
+        FactoryBot.create(:quota_definition,
           total_services: 1,
           non_basic_services_allowed: true
         )

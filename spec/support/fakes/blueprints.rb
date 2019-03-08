@@ -184,7 +184,7 @@ module VCAP::CloudController
 
   Organization.blueprint do
     name              { Sham.name }
-    quota_definition  { QuotaDefinition.make }
+    quota_definition  { FactoryBot.create(:quota_definition) }
     status            { 'active' }
   end
 
@@ -416,15 +416,6 @@ module VCAP::CloudController
     exit_status       { Random.rand(256) }
     exit_description  { Sham.description }
     timestamp         { Time.now.utc }
-  end
-
-  QuotaDefinition.blueprint do
-    name { Sham.name }
-    non_basic_services_allowed { true }
-    total_reserved_route_ports { 5 }
-    total_services { 60 }
-    total_routes { 1_000 }
-    memory_limit { 20_480 } # 20 GB
   end
 
   Buildpack.blueprint do

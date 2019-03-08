@@ -81,7 +81,7 @@ module VCAP::CloudController
             enumerate: 1
 
           it 'cannot update quota definition' do
-            quota = QuotaDefinition.make
+            quota = FactoryBot.create(:quota_definition)
             expect(@org_a.quota_definition.guid).to_not eq(quota.guid)
 
             put "/v2/organizations/#{@org_a.guid}", MultiJson.dump(quota_definition_guid: quota.guid)

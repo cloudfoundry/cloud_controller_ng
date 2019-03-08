@@ -9,7 +9,7 @@ RSpec.describe MaxServiceKeysPolicy do
   end
   let(:service_key) { VCAP::CloudController::ServiceKey.make_unsaved service_instance: service_instance }
   let(:total_service_keys) { 2 }
-  let(:quota) { VCAP::CloudController::QuotaDefinition.make total_service_keys: total_service_keys }
+  let(:quota) { FactoryBot.create(:quota_definition, total_service_keys: total_service_keys) }
   let(:existing_service_key_count) { 0 }
   let(:error_name) { :random_error_name }
 

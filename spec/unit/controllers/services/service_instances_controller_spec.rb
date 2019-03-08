@@ -4885,15 +4885,15 @@ module VCAP::CloudController
       end
     end
     describe 'Validation messages' do
-      let(:paid_quota) { QuotaDefinition.make(total_services: 1) }
+      let(:paid_quota) { FactoryBot.create(:quota_definition, total_services: 1) }
       let(:free_quota_with_no_services) do
-        QuotaDefinition.make(
+        FactoryBot.create(:quota_definition,
           total_services: 0,
           non_basic_services_allowed: false
         )
       end
       let(:free_quota_with_one_service) do
-        QuotaDefinition.make(
+        FactoryBot.create(:quota_definition,
           total_services: 1,
           non_basic_services_allowed: false
         )
