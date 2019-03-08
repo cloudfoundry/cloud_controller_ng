@@ -1,0 +1,48 @@
+### Create a domain
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/domains" \
+  -X POST \
+  -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
+  -d '{
+    "name": "example.com",
+    "internal": false
+  }'
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 201 Created
+Content-Type: application/json
+
+<%= yield_content :single_domain %>
+```
+
+#### Definition
+`POST /v3/domains`
+
+#### Required Parameters
+
+Name     | Type     | Description
+-------  | -------  | -----------
+**name** | _string_ | Name of the domain.
+
+#### Optional Parameters
+
+Name         | Type      | Description                                                               | Default
+-----------  | --------  | ------------------------------------------------------------------------  | -------
+**internal** | _boolean_ | Whether the domain is used for internal (container-to-container) traffic. | false
+
+#### Permitted Roles
+
+      |
+----- | ---
+Admin |

@@ -1,0 +1,18 @@
+
+### The domain object
+
+```
+Example Domain object
+```
+```json
+<%= yield_content :single_domain %>
+```
+
+Name           | Type                     | Description
+-------------- | ------------------------ | ------------------------------------------------------
+**guid**       | _uuid_                   | Unique identifier for the domain.
+**created_at** | _datetime_               | The time with zone when the object was created.
+**updated_at** | _datetime_               | The time with zone when the object was last updated.
+**name**       | _string_                 | The name of the domain.<br>Must be between 3 ~ 253 characters and follow [RFC 1035](https://tools.ietf.org/html/rfc1035).
+**internal**   | _boolean_                | Whether the domain is used for internal (container-to-container) traffic.
+**links**      | [_links object_](#links) | Links to related resources.

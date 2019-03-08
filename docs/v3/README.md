@@ -16,7 +16,9 @@ Getting Started
 Making New Files
 ----------------
 
-When you create a new file, ensure you include it in `source/index.md`
+When you create a new file, ensure you include it in `source/index.md`.
+
+JSON examples exist under `source/include/api_resources`, these need to be added to the top of `source/index.md`.
 
 Style Rules
 -----------
