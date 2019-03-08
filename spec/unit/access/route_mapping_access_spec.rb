@@ -6,7 +6,7 @@ module VCAP::CloudController
     let(:scopes) { ['cloud_controller.read', 'cloud_controller.write'] }
 
     let(:user) { VCAP::CloudController::User.make }
-    let(:org) { VCAP::CloudController::Organization.make }
+    let(:org) { FactoryBot.create(:organization) }
     let(:space) { VCAP::CloudController::Space.make(organization: org) }
     let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: org) }
     let(:process) { VCAP::CloudController::ProcessModelFactory.make(space: space) }

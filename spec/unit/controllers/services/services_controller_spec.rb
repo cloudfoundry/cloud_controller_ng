@@ -102,7 +102,7 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/services/:guid/service_plans' do
-      let!(:organization) { Organization.make }
+      let!(:organization) { FactoryBot.create(:organization) }
       let!(:space) { Space.make(organization: organization) }
       let!(:user) { User.make }
       let!(:broker) { ServiceBroker.make(space: space) }
@@ -133,7 +133,7 @@ module VCAP::CloudController
 
     describe 'GET /v2/services/:guid' do
       let(:broker_name) { 'broker-1' }
-      let!(:organization) { Organization.make }
+      let!(:organization) { FactoryBot.create(:organization) }
       let!(:space) { Space.make(organization: organization) }
       let!(:user) { User.make }
       let!(:broker) { ServiceBroker.make(space: space, name: broker_name) }
@@ -161,7 +161,7 @@ module VCAP::CloudController
 
     describe 'GET /v2/services' do
       let(:organization) do
-        Organization.make.tap do |org|
+        FactoryBot.create(:organization).tap do |org|
           org.add_user(user)
           org.add_manager(user)
           org.add_billing_manager(user)

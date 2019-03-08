@@ -16,7 +16,7 @@ module VCAP::CloudController
 
       context 'when the service plan visibility is for a private broker' do
         it 'returns a validation error' do
-          organization = Organization.make
+          organization = FactoryBot.create(:organization)
           space = Space.make organization: organization
           private_broker = ServiceBroker.make space: space
           service = Service.make service_broker: private_broker, active: true
@@ -36,9 +36,9 @@ module VCAP::CloudController
 
     describe '.visible_private_plan_ids_for_user(user)' do
       let!(:user) { User.make }
-      let!(:org1) { Organization.make }
-      let!(:org2) { Organization.make }
-      let!(:org3) { Organization.make }
+      let!(:org1) { FactoryBot.create(:organization) }
+      let!(:org2) { FactoryBot.create(:organization) }
+      let!(:org3) { FactoryBot.create(:organization) }
 
       let!(:plan_visible_to_both) { ServicePlan.make(public: false) }
       let!(:plan_visible_to_org1) { ServicePlan.make(public: false) }
@@ -64,7 +64,7 @@ module VCAP::CloudController
     end
 
     describe '.visible_private_plan_ids_for_organization' do
-      let!(:organization) { Organization.make }
+      let!(:organization) { FactoryBot.create(:organization) }
       let!(:visible_plan) { ServicePlan.make(public: false) }
       let!(:hidden_plan) { ServicePlan.make(public: false) }
 

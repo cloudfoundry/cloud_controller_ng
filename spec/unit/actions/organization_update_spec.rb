@@ -4,7 +4,7 @@ require 'actions/organization_update'
 module VCAP::CloudController
   RSpec.describe OrganizationUpdate do
     describe 'update' do
-      let(:org) { VCAP::CloudController::Organization.make(name: 'old-org-name') }
+      let(:org) { FactoryBot.create(:organization, name: 'old-org-name') }
 
       context 'when a name and label are requested' do
         let(:message) do
@@ -50,7 +50,7 @@ module VCAP::CloudController
 
         context 'when the org name is not unique' do
           it 'errors usefully' do
-            VCAP::CloudController::Organization.make(name: 'new-org-name')
+            FactoryBot.create(:organization, name: 'new-org-name')
 
             expect {
               OrganizationUpdate.new.update(org, message)

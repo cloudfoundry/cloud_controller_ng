@@ -1,11 +1,11 @@
 require 'spec_helper'
 
 RSpec.describe MaxServiceInstancePolicy do
-  let(:org) { VCAP::CloudController::Organization.make quota_definition: quota }
-  let(:space) { VCAP::CloudController::Space.make organization: org }
+  let(:org) { FactoryBot.create(:organization, quota_definition: quota) }
+  let(:space) { VCAP::CloudController::Space.make(organization: org) }
   let(:service_instance) do
     service_plan = VCAP::CloudController::ServicePlan.make
-    VCAP::CloudController::ManagedServiceInstance.make_unsaved space: space, service_plan: service_plan
+    VCAP::CloudController::ManagedServiceInstance.make_unsaved(space: space, service_plan: service_plan)
   end
   let(:total_services) { 2 }
   let(:quota) { FactoryBot.create(:quota_definition, total_services: total_services) }
@@ -19,15 +19,14 @@ RSpec.describe MaxServiceInstancePolicy do
   end
 
   it 'counts only managed service instances' do
-    total_services.times do
-      VCAP::CloudController::UserProvidedServiceInstance.make space: space
-    end
+    total_services.times { VCAP::CloudController::UserProvidedServiceInstance.make(space: space) }
 
     expect(policy).to validate_without_error(service_instance)
   end
 
   context 'when quota is nil' do
     let(:quota) { nil }
+
     it 'does not add errors' do
       expect(policy).to validate_without_error(service_instance)
     end

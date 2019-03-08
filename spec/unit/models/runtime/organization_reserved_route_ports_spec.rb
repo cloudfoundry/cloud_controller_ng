@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe OrganizationReservedRoutePorts do
-    let(:organization) { Organization.make }
+    let(:organization) { FactoryBot.create(:organization) }
 
     subject(:organization_routes) { OrganizationReservedRoutePorts.new(organization) }
 

@@ -46,7 +46,7 @@ RSpec.resource 'Space Quota Definitions', type: [:api, :legacy_api] do
   post '/v2/space_quota_definitions' do
     include_context 'updatable_fields', required: true
     example 'Creating a Space Quota Definition' do
-      organization_guid = VCAP::CloudController::Organization.make.guid
+      organization_guid = FactoryBot.create(:organization).guid
       client.post '/v2/space_quota_definitions', MultiJson.dump(
         required_fields.merge(organization_guid: organization_guid,
                               total_reserved_route_ports: 5,

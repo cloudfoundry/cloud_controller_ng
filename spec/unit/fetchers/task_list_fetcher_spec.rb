@@ -20,7 +20,7 @@ module VCAP::CloudController
 
     let!(:label_for_task_in_space2) { TaskLabelModel.make(resource_guid: task_in_space2.guid, key_name: 'key', value: 'value') }
 
-    let(:org2) { Organization.make }
+    let(:org2) { FactoryBot.create(:organization) }
     let(:space_in_org2) { Space.make(organization_guid: org2.guid) }
     let(:app_in_org2) { AppModel.make(space_guid: space_in_org2.guid) }
     let!(:task_in_org2) { TaskModel.make(app_guid: app_in_org2.guid) }

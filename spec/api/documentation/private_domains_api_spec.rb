@@ -25,7 +25,7 @@ RSpec.resource 'Private Domains', type: [:api, :legacy_api] do
     post '/v2/private_domains' do
       include_context 'updatable_fields'
       example 'Create a Private Domain owned by the given Organization' do
-        org_guid = VCAP::CloudController::Organization.make.guid
+        org_guid = FactoryBot.create(:organization).guid
         payload  = MultiJson.dump(
           {
             name:                     'exmaple.com',
@@ -77,7 +77,7 @@ RSpec.resource 'Private Domains', type: [:api, :legacy_api] do
     describe 'Shared Organizations' do
       before do
         pd  = VCAP::CloudController::PrivateDomain[guid: guid]
-        org = VCAP::CloudController::Organization.make
+        org = FactoryBot.create(:organization)
         org.add_private_domain(pd)
       end
 

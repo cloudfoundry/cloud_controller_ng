@@ -54,7 +54,7 @@ RSpec.resource 'Spaces', type: [:api, :legacy_api] do
     post '/v2/spaces/' do
       include_context 'createable_fields', required: true
       example 'Creating a Space' do
-        organization_guid = VCAP::CloudController::Organization.make.guid
+        organization_guid = FactoryBot.create(:organization).guid
         client.post '/v2/spaces', MultiJson.dump(required_fields.merge(organization_guid: organization_guid), pretty: true), headers
         expect(status).to eq(201)
 

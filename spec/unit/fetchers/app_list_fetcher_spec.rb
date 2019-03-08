@@ -59,7 +59,7 @@ module VCAP::CloudController
 
       context 'when the organization guids are provided' do
         let(:filters) { { organization_guids: [org.guid] } }
-        let(:sad_org) { Organization.make }
+        let(:sad_org) { FactoryBot.create(:organization) }
         let(:sad_space) { Space.make(organization_guid: sad_org.guid) }
         let(:sad_app) { AppModel.make(space_guid: sad_space.guid) }
         let(:space_guids) { [space.guid, sad_space.guid] }

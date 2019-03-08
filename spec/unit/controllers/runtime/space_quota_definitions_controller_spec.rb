@@ -149,7 +149,7 @@ module VCAP::CloudController
     end
 
     describe 'errors' do
-      let(:org) { Organization.make }
+      let(:org) { FactoryBot.create(:organization) }
 
       it 'returns SpaceQuotaDefinitionInvalid' do
         sqd_json = { name: '', non_basic_services_allowed: true, total_services: 1, total_service_keys: 1, total_routes: 1, memory_limit: 2, organization_guid: org.guid }

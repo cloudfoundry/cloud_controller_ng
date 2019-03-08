@@ -170,7 +170,7 @@ module VCAP::CloudController
     describe 'organization labels' do
       subject(:result) { LabelsUpdate.update(org, labels, OrganizationLabelModel) }
 
-      let(:org) { Organization.make }
+      let(:org) { FactoryBot.create(:organization) }
       let(:labels) do
         {
             release: 'stable',

@@ -1,13 +1,13 @@
 require 'spec_helper'
 
 RSpec.describe MaxServiceKeysPolicy do
-  let(:org) { VCAP::CloudController::Organization.make quota_definition: quota }
-  let(:space) { VCAP::CloudController::Space.make organization: org }
+  let(:org) { FactoryBot.create(:organization, quota_definition: quota) }
+  let(:space) { VCAP::CloudController::Space.make(organization: org) }
   let(:service_instance) do
     service_plan = VCAP::CloudController::ServicePlan.make
-    VCAP::CloudController::ManagedServiceInstance.make space: space, service_plan: service_plan
+    VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: service_plan)
   end
-  let(:service_key) { VCAP::CloudController::ServiceKey.make_unsaved service_instance: service_instance }
+  let(:service_key) { VCAP::CloudController::ServiceKey.make_unsaved(service_instance: service_instance) }
   let(:total_service_keys) { 2 }
   let(:quota) { FactoryBot.create(:quota_definition, total_service_keys: total_service_keys) }
   let(:existing_service_key_count) { 0 }

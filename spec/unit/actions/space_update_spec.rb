@@ -4,7 +4,7 @@ require 'actions/space_update'
 module VCAP::CloudController
   RSpec.describe SpaceUpdate do
     describe 'update' do
-      let(:org) { VCAP::CloudController::Organization.make }
+      let(:org) { FactoryBot.create(:organization) }
       let(:space) { VCAP::CloudController::Space.make(name: 'old-space-name', organization: org) }
 
       context 'when a name and label are requested' do

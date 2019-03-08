@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe SyslogDrainUrlsInternalController do
-    let(:org) { Organization.make(name: 'org-1') }
+    let(:org) { FactoryBot.create(:organization, name: 'org-1') }
     let(:space) { Space.make(name: 'space-1', organization: org) }
     let(:app_obj) { AppModel.make(name: 'app-1', space: space) }
     let(:instance1) { UserProvidedServiceInstance.make(space: app_obj.space) }
@@ -24,7 +24,7 @@ module VCAP::CloudController
       end
 
       context 'rfc-1034-compliance: whitespace converted to hyphens' do
-        let(:org) { Organization.make(name: 'org 2') }
+        let(:org) { FactoryBot.create(:organization, name: 'org 2') }
         let(:space) { Space.make(name: 'space 2', organization: org) }
         let(:app_obj) { AppModel.make(name: 'app 2', space: space) }
 
@@ -42,7 +42,7 @@ module VCAP::CloudController
       end
 
       context 'rfc-1034-compliance: named end with hyphens' do
-        let(:org) { Organization.make(name: 'org-3-') }
+        let(:org) { FactoryBot.create(:organization, name: 'org-3-') }
         let(:space) { Space.make(name: 'space-3--', organization: org) }
         let(:app_obj) { AppModel.make(name: 'app-3---', space: space) }
 
@@ -60,7 +60,7 @@ module VCAP::CloudController
       end
 
       context 'rfc-1034-compliance: remove disallowed characters' do
-        let(:org) { Organization.make(name: '!org@-4#' + [233].pack('U')) }
+        let(:org) { FactoryBot.create(:organization, name: '!org@-4#' + [233].pack('U')) }
         let(:space) { Space.make(name: '$space%-^4--&', organization: org) }
         let(:app_obj) { AppModel.make(name: '";*app(-)4_-=-+-[]{}\\|;:,.<>/?`~', space: space) }
 
@@ -80,7 +80,7 @@ module VCAP::CloudController
       context 'rfc-1034-compliance: truncate overlong name components to first 63' do
         let(:orgName) { 'org-5-' + 'x' * (63 - 6) }
         let(:orgNamePlus) { orgName + 'y' }
-        let(:org) { Organization.make(name: orgNamePlus) }
+        let(:org) { FactoryBot.create(:organization, name: orgNamePlus) }
         let(:spaceName) { 'space-5-' + 'x' * (63 - 8) }
         let(:spaceNamePlus) { spaceName + 'y' }
         let(:space) { Space.make(name: spaceNamePlus, organization: org) }
@@ -104,7 +104,7 @@ module VCAP::CloudController
 
       context 'rfc-1034-compliance: keep 63-char names' do
         let(:orgName) { 'org-5-' + 'x' * (63 - 6) }
-        let(:org) { Organization.make(name: orgName) }
+        let(:org) { FactoryBot.create(:organization, name: orgName) }
         let(:spaceName) { 'space-5-' + 'x' * (63 - 8) }
         let(:space) { Space.make(name: spaceName, organization: org) }
         let(:appName) { 'app-5-' + 'x' * (63 - 6) }

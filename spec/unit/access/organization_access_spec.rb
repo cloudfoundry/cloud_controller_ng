@@ -6,7 +6,7 @@ module VCAP::CloudController
 
     subject(:access) { OrganizationAccess.new(Security::AccessContext.new(queryer)) }
     let(:user) { VCAP::CloudController::User.make }
-    let(:org) { VCAP::CloudController::Organization.make }
+    let(:org) { FactoryBot.create(:organization) }
     let(:object) { org }
     let(:flag) { FeatureFlag.make(name: 'user_org_creation', enabled: false) }
 
@@ -145,7 +145,7 @@ module VCAP::CloudController
     end
 
     describe 'in a suspended org' do
-      let(:org) { VCAP::CloudController::Organization.make(status: VCAP::CloudController::Organization::SUSPENDED) }
+      let(:org) { FactoryBot.create(:organization, status: VCAP::CloudController::Organization::SUSPENDED) }
 
       it_behaves_like('an access control', :read, read_table)
       it_behaves_like('an access control', :delete, write_table)

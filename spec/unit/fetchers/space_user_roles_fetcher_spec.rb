@@ -4,7 +4,7 @@ require 'fetchers/space_user_roles_fetcher'
 module VCAP::CloudController
   RSpec.describe SpaceUserRolesFetcher do
     describe '#fetch' do
-      let(:org) { Organization.make }
+      let(:org) { FactoryBot.create(:organization) }
       let(:space) { Space.make(organization: org) }
       let(:everything_user) { User.make }
       let(:manager) { User.make }

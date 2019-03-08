@@ -130,9 +130,9 @@ RSpec.resource 'Users', type: [:api, :legacy_api] do
         associated_organization.add_user(user)
       end
 
-      let!(:associated_organization) { VCAP::CloudController::Organization.make }
+      let!(:associated_organization) { FactoryBot.create(:organization) }
       let(:associated_organization_guid) { associated_organization.guid }
-      let(:organization) { VCAP::CloudController::Organization.make }
+      let(:organization) { FactoryBot.create(:organization) }
       let(:organization_guid) { organization.guid }
 
       standard_model_list :organization, VCAP::CloudController::OrganizationsController, outer_model: :user
@@ -153,9 +153,9 @@ RSpec.resource 'Users', type: [:api, :legacy_api] do
         associated_managed_organization.add_manager(user)
       end
 
-      let!(:associated_managed_organization) { VCAP::CloudController::Organization.make }
+      let!(:associated_managed_organization) { FactoryBot.create(:organization) }
       let(:associated_managed_organization_guid) { associated_managed_organization.guid }
-      let(:managed_organization) { VCAP::CloudController::Organization.make }
+      let(:managed_organization) { FactoryBot.create(:organization) }
       let(:managed_organization_guid) { managed_organization.guid }
 
       standard_model_list :organization, VCAP::CloudController::OrganizationsController, outer_model: :user, path: :managed_organizations
@@ -175,9 +175,9 @@ RSpec.resource 'Users', type: [:api, :legacy_api] do
         associated_billing_managed_organization.add_billing_manager(user)
       end
 
-      let!(:associated_billing_managed_organization) { VCAP::CloudController::Organization.make }
+      let!(:associated_billing_managed_organization) { FactoryBot.create(:organization) }
       let(:associated_billing_managed_organization_guid) { associated_billing_managed_organization.guid }
-      let(:billing_managed_organization) { VCAP::CloudController::Organization.make }
+      let(:billing_managed_organization) { FactoryBot.create(:organization) }
       let(:billing_managed_organization_guid) { billing_managed_organization.guid }
 
       standard_model_list :organization, VCAP::CloudController::OrganizationsController, outer_model: :user, path: :billing_managed_organizations
@@ -197,9 +197,9 @@ RSpec.resource 'Users', type: [:api, :legacy_api] do
         associated_audited_organization.add_auditor(user)
       end
 
-      let!(:associated_audited_organization) { VCAP::CloudController::Organization.make }
+      let!(:associated_audited_organization) { FactoryBot.create(:organization) }
       let(:associated_audited_organization_guid) { associated_audited_organization.guid }
-      let(:audited_organization) { VCAP::CloudController::Organization.make }
+      let(:audited_organization) { FactoryBot.create(:organization) }
       let(:audited_organization_guid) { audited_organization.guid }
 
       standard_model_list :organization, VCAP::CloudController::OrganizationsController, outer_model: :user, path: :audited_organizations

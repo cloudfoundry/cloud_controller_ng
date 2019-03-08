@@ -6,7 +6,7 @@ module VCAP::CloudController
     let(:token) { { 'scope' => ['cloud_controller.read', 'cloud_controller.write'] } }
 
     let(:user) { VCAP::CloudController::User.make }
-    let(:org) { VCAP::CloudController::Organization.make }
+    let(:org) { FactoryBot.create(:organization) }
     let(:space) { VCAP::CloudController::Space.make(organization: org) }
     let(:process) { VCAP::CloudController::ProcessModelFactory.make(space: space) }
     let(:object) { VCAP::CloudController::AppEvent.make(app: process) }
@@ -68,7 +68,7 @@ module VCAP::CloudController
 
     context 'user in a different organization (defensive)' do
       before do
-        different_organization = VCAP::CloudController::Organization.make
+        different_organization = FactoryBot.create(:organization)
         different_organization.add_user(user)
       end
 
@@ -77,7 +77,7 @@ module VCAP::CloudController
 
     context 'manager in a different organization (defensive)' do
       before do
-        different_organization = VCAP::CloudController::Organization.make
+        different_organization = FactoryBot.create(:organization)
         different_organization.add_manager(user)
       end
 

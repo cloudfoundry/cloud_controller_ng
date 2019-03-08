@@ -33,7 +33,7 @@ RSpec.resource 'Domains (deprecated)', type: [:api, :legacy_api] do
 
       context 'Creating a domain owned by an organization' do
         example 'Create a Domain owned by the given Organization' do
-          org_guid = VCAP::CloudController::Organization.make.guid
+          org_guid = FactoryBot.create(:organization).guid
           payload = MultiJson.dump(
             {
               name:                     'exmaple.com',

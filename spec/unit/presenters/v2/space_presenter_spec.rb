@@ -17,7 +17,7 @@ module CloudController::Presenters::V2
         allow(RelationsPresenter).to receive(:new).and_return(relations_presenter)
       end
 
-      let(:organization) { VCAP::CloudController::Organization.make }
+      let(:organization) { FactoryBot.create(:organization) }
       let(:space_quota_definition) { VCAP::CloudController::SpaceQuotaDefinition.make(organization: organization) }
 
       context 'when a space is associated to an isolation segment' do

@@ -5,7 +5,7 @@ module VCAP::CloudController
   RSpec.describe SetDefaultIsolationSegment do
     subject(:set_default_isolation_segment) { SetDefaultIsolationSegment.new }
 
-    let(:org) { VCAP::CloudController::Organization.make }
+    let(:org) { FactoryBot.create(:organization) }
     let(:isolation_segment) { FactoryBot.create(:isolation_segment, name: 'JB') }
     let(:isolation_segment_guid) { isolation_segment.guid }
     let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }

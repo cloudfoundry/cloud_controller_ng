@@ -4,7 +4,7 @@ require 'permissions_spec_helper'
 RSpec.describe BuildsController, type: :controller do
   describe '#index' do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
-    let(:organization) { VCAP::CloudController::Organization.make }
+    let(:organization) { FactoryBot.create(:organization) }
     let(:space) { VCAP::CloudController::Space.make(organization: organization) }
     let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
     let(:package) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
@@ -154,7 +154,7 @@ RSpec.describe BuildsController, type: :controller do
 
   describe '#create' do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
-    let(:org) { VCAP::CloudController::Organization.make }
+    let(:org) { FactoryBot.create(:organization) }
     let(:space) { VCAP::CloudController::Space.make(organization: org) }
     let(:stack) { VCAP::CloudController::Stack.default.name }
     let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
@@ -632,7 +632,7 @@ RSpec.describe BuildsController, type: :controller do
 
   describe '#update' do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
-    let(:org) { VCAP::CloudController::Organization.make }
+    let(:org) { FactoryBot.create(:organization) }
     let(:space) { VCAP::CloudController::Space.make(organization: org) }
     let(:stack) { VCAP::CloudController::Stack.default.name }
     let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
@@ -751,7 +751,7 @@ RSpec.describe BuildsController, type: :controller do
 
   describe '#show' do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
-    let(:organization) { VCAP::CloudController::Organization.make }
+    let(:organization) { FactoryBot.create(:organization) }
     let(:space) { VCAP::CloudController::Space.make(organization: organization) }
     let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
     let(:package) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }

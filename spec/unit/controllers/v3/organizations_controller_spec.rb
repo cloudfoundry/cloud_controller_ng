@@ -5,7 +5,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
   describe '#show' do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
-    let!(:org) { VCAP::CloudController::Organization.make(name: 'Eric\'s Farm') }
+    let!(:org) { FactoryBot.create(:organization, name: 'Eric\'s Farm') }
     let!(:space) { VCAP::CloudController::Space.make(name: 'Cat', organization: org) }
 
     describe 'permissions by role' do
@@ -127,9 +127,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
       context 'when there is a model validation failure' do
         let(:name) { 'not-unique' }
 
-        before do
-          VCAP::CloudController::Organization.make name: name
-        end
+        before { FactoryBot.create(:organization, name: name) }
 
         it 'responds with 422' do
           post :create, params: { name: name }, as: :json
@@ -164,11 +162,11 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
   describe '#index' do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
-    let!(:member_org) { VCAP::CloudController::Organization.make(name: 'Marmot') }
-    let!(:manager_org) { VCAP::CloudController::Organization.make(name: 'Rat') }
-    let!(:billing_manager_org) { VCAP::CloudController::Organization.make(name: 'Beaver') }
-    let!(:auditor_org) { VCAP::CloudController::Organization.make(name: 'Capybara') }
-    let!(:other_org) { VCAP::CloudController::Organization.make(name: 'Groundhog') }
+    let!(:member_org) { FactoryBot.create(:organization, name: 'Marmot') }
+    let!(:manager_org) { FactoryBot.create(:organization, name: 'Rat') }
+    let!(:billing_manager_org) { FactoryBot.create(:organization, name: 'Beaver') }
+    let!(:auditor_org) { FactoryBot.create(:organization, name: 'Capybara') }
+    let!(:other_org) { FactoryBot.create(:organization, name: 'Groundhog') }
 
     before do
       member_org.add_user(user)
@@ -288,12 +286,12 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
     context 'when accessed as an isolation segment subresource' do
       let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
       let(:isolation_segment_model) { FactoryBot.create(:isolation_segment) }
-      let(:org1) { VCAP::CloudController::Organization.make }
-      let(:org2) { VCAP::CloudController::Organization.make }
-      let(:org3) { VCAP::CloudController::Organization.make }
+      let(:org1) { FactoryBot.create(:organization) }
+      let(:org2) { FactoryBot.create(:organization) }
+      let(:org3) { FactoryBot.create(:organization) }
 
       before do
-        VCAP::CloudController::Organization.make
+        FactoryBot.create(:organization)
         assigner.assign(isolation_segment_model, [org1, org2])
         org1.add_user(user)
         org2.add_user(user)
@@ -353,7 +351,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
       end
 
       context 'when the isolation segment organizations contains organizations the user cannot see' do
-        let(:org4) { VCAP::CloudController::Organization.make }
+        let(:org4) { FactoryBot.create(:organization) }
 
         before do
           assigner.assign(isolation_segment_model, [org4])
@@ -372,7 +370,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
 
   describe '#show_default_isolation_segment' do
     let(:user) { VCAP::CloudController::User.make }
-    let(:org) { VCAP::CloudController::Organization.make(name: 'Water') }
+    let(:org) { FactoryBot.create(:organization, name: 'Water') }
     let(:isolation_segment) { FactoryBot.create(:isolation_segment, name: 'default_seg') }
     let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
     let(:unassigner) { VCAP::CloudController::IsolationSegmentUnassign.new }
@@ -452,7 +450,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
 
   describe '#update_default_isolation_segment' do
     let(:user) { VCAP::CloudController::User.make }
-    let(:org) { VCAP::CloudController::Organization.make(name: 'Water') }
+    let(:org) { FactoryBot.create(:organization, name: 'Water') }
     let(:isolation_segment) { FactoryBot.create(:isolation_segment, name: 'default_seg') }
     let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
     let(:unassigner) { VCAP::CloudController::IsolationSegmentUnassign.new }
@@ -502,7 +500,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
     end
 
     context 'when the requested isolation segment has not been entitled to the org' do
-      let(:org2) { VCAP::CloudController::Organization.make }
+      let(:org2) { FactoryBot.create(:organization) }
       before do
         allow_user_read_access_for(user, orgs: [org2])
       end
@@ -610,7 +608,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
   end
 
   describe '#patch' do
-    let(:org) { VCAP::CloudController::Organization.make(name: 'Water') }
+    let(:org) { FactoryBot.create(:organization, name: 'Water') }
     let(:labels) do
       {
         fruit: 'pineapple',

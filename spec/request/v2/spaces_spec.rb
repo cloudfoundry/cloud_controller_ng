@@ -4,7 +4,7 @@ RSpec.describe 'Spaces' do
   let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
   let(:isolation_segment) { FactoryBot.create(:isolation_segment) }
   let(:user) { VCAP::CloudController::User.make }
-  let(:org) { VCAP::CloudController::Organization.make }
+  let(:org) { FactoryBot.create(:organization) }
 
   describe 'POST /v2/spaces' do
     let(:opts) do

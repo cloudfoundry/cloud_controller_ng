@@ -4,8 +4,8 @@ require 'isolation_segment_assign'
 module VCAP::CloudController
   RSpec.describe IsolationSegmentAssign do
     let(:isolation_segment_model) { FactoryBot.create(:isolation_segment) }
-    let(:org) { Organization.make }
-    let(:org2) { Organization.make }
+    let(:org) { FactoryBot.create(:organization) }
+    let(:org2) { FactoryBot.create(:organization) }
 
     describe 'sorting the organizations passed in for assignment' do
       it 'sorts them correctly when org2 has a lower index than org' do

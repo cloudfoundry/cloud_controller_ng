@@ -1,8 +1,8 @@
 require 'spec_helper'
 
 RSpec.describe PaidServiceInstancePolicy do
-  let(:org) { VCAP::CloudController::Organization.make quota_definition: quota }
-  let(:space) { VCAP::CloudController::Space.make organization: org }
+  let(:org) { FactoryBot.create(:organization, quota_definition: quota) }
+  let(:space) { VCAP::CloudController::Space.make(organization: org) }
   let(:basic_service_plan) { VCAP::CloudController::ServicePlan.make(free: true) }
   let(:paid_service_plan) { VCAP::CloudController::ServicePlan.make(free: false) }
   let(:service_instance) do

@@ -5,7 +5,7 @@ module VCAP::CloudController
     subject(:access) { ManagedServiceInstanceAccess.new(Security::AccessContext.new) }
 
     let(:user) { VCAP::CloudController::User.make }
-    let(:org) { VCAP::CloudController::Organization.make }
+    let(:org) { FactoryBot.create(:organization) }
     let(:space) { VCAP::CloudController::Space.make(organization: org) }
     let(:service) { VCAP::CloudController::Service.make }
     let(:service_plan_active) { true }

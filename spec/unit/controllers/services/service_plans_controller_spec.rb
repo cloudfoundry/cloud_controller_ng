@@ -237,7 +237,7 @@ module VCAP::CloudController
           end
 
           context 'and the user has a service instance associated with that plan' do
-            let(:organization) { Organization.make }
+            let(:organization) { FactoryBot.create(:organization) }
             let(:space) { Space.make(organization: organization) }
 
             before do

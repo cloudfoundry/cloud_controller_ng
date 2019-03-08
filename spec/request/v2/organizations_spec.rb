@@ -2,7 +2,7 @@ require 'spec_helper'
 
 RSpec.describe 'Organizations' do
   let(:user) { VCAP::CloudController::User.make }
-  let(:org) { VCAP::CloudController::Organization.make }
+  let(:org) { FactoryBot.create(:organization) }
 
   describe 'GET /v2/organizations/:guid/services' do
     let!(:space) { VCAP::CloudController::Space.make(organization: org) }

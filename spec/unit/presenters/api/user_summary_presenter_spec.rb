@@ -2,10 +2,10 @@ require 'spec_helper'
 
 RSpec.describe UserSummaryPresenter do
   describe '#to_hash' do
-    let(:org) { VCAP::CloudController::Organization.make }
-    let(:managed_org) { VCAP::CloudController::Organization.make }
-    let(:billing_managed_org) { VCAP::CloudController::Organization.make }
-    let(:audited_org) { VCAP::CloudController::Organization.make }
+    let(:org) { FactoryBot.create(:organization) }
+    let(:managed_org) { FactoryBot.create(:organization) }
+    let(:billing_managed_org) { FactoryBot.create(:organization) }
+    let(:audited_org) { FactoryBot.create(:organization) }
     let(:space) { VCAP::CloudController::Space.make(organization: org) }
     let(:managed_space) { VCAP::CloudController::Space.make(organization: managed_org) }
     let(:audited_space) { VCAP::CloudController::Space.make(organization: audited_org) }

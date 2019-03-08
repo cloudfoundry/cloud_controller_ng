@@ -61,7 +61,7 @@ module VCAP::CloudController
         let(:assigner) { IsolationSegmentAssign.new }
 
         it 'returns a list of all associated isolation segments guids' do
-          organization = Organization.make
+          organization = FactoryBot.create(:organization)
           iso_seg_1 = FactoryBot.create(:isolation_segment)
           iso_seg_2 = FactoryBot.create(:isolation_segment)
           iso_seg_3 = FactoryBot.create(:isolation_segment)
@@ -78,7 +78,7 @@ module VCAP::CloudController
     end
 
     describe 'destroying' do
-      let(:org) { Organization.make }
+      let(:org) { FactoryBot.create(:organization) }
 
       context 'when there are isolation segments in the allowed list' do
         let(:isolation_segment_model) { FactoryBot.create(:isolation_segment) }
@@ -120,7 +120,7 @@ module VCAP::CloudController
     end
 
     describe 'Validations' do
-      let(:org) { Organization.make }
+      let(:org) { FactoryBot.create(:organization) }
 
       it { is_expected.to validate_presence :name }
       it { is_expected.to validate_uniqueness :name }
@@ -423,13 +423,13 @@ module VCAP::CloudController
 
     context 'statuses' do
       describe 'when status == active' do
-        subject(:org) { Organization.make(status: 'active') }
+        subject(:org) { FactoryBot.create(:organization, status: 'active') }
         it('is active') { expect(org).to be_active }
         it('is not suspended') { expect(org).not_to be_suspended }
       end
 
       describe 'when status == suspended' do
-        subject(:org) { Organization.make(status: 'suspended') }
+        subject(:org) { FactoryBot.create(:organization, status: 'suspended') }
         it('is not active') { expect(org).not_to be_active }
         it('is suspended') { expect(org).to be_suspended }
       end
@@ -437,7 +437,7 @@ module VCAP::CloudController
 
     describe 'billing' do
       it 'should not be enabled for billing when first created' do
-        expect(Organization.make.billing_enabled).to eq(false)
+        expect(FactoryBot.create(:organization).billing_enabled).to eq(false)
       end
     end
 
@@ -447,7 +447,7 @@ module VCAP::CloudController
       end
 
       it 'should return the memory available when no processes are running' do
-        org = Organization.make(quota_definition: quota)
+        org = FactoryBot.create(:organization, quota_definition: quota)
         space = Space.make(organization: org)
         ProcessModelFactory.make(space: space, memory: 200, instances: 2)
 
@@ -456,7 +456,7 @@ module VCAP::CloudController
       end
 
       it 'should return the memory remaining when processes are consuming memory' do
-        org = Organization.make(quota_definition: quota)
+        org = FactoryBot.create(:organization, quota_definition: quota)
         space = Space.make(organization: org)
 
         ProcessModelFactory.make(space: space, memory: 200, instances: 2, state: 'STARTED', type: 'worker')
@@ -467,7 +467,7 @@ module VCAP::CloudController
       end
 
       it 'includes RUNNING tasks when returning remaining memory' do
-        org = Organization.make(quota_definition: quota)
+        org = FactoryBot.create(:organization, quota_definition: quota)
         space = Space.make(organization: org)
 
         process = ProcessModelFactory.make(space: space, memory: 250, instances: 1, state: 'STARTED', type: 'worker')
@@ -479,7 +479,7 @@ module VCAP::CloudController
       end
 
       it 'does NOT include non-RUNNING tasks when returning remaining memory' do
-        org = Organization.make(quota_definition: quota)
+        org = FactoryBot.create(:organization, quota_definition: quota)
         space = Space.make(organization: org)
 
         process = ProcessModelFactory.make(space: space, memory: 250, instances: 1, state: 'STARTED', type: 'worker')
@@ -493,7 +493,7 @@ module VCAP::CloudController
 
     describe '#instance_memory_limit' do
       let(:quota) { FactoryBot.create(:quota_definition, instance_memory_limit: 50) }
-      let(:org) { Organization.make quota_definition: quota }
+      let(:org) { FactoryBot.create(:organization, quota_definition: quota) }
 
       it 'returns the instance memory limit from the quota' do
         expect(org.instance_memory_limit).to eq(50)
@@ -510,7 +510,7 @@ module VCAP::CloudController
 
     describe '#app_task_limit' do
       let(:quota) { FactoryBot.create(:quota_definition, app_task_limit: 2) }
-      let(:org) { Organization.make quota_definition: quota }
+      let(:org) { FactoryBot.create(:organization, quota_definition: quota) }
 
       it 'returns the app task limit from the quota' do
         expect(org.app_task_limit).to eq(2)
@@ -552,7 +552,7 @@ module VCAP::CloudController
     end
 
     describe '#destroy' do
-      subject(:org) { Organization.make }
+      subject(:org) { FactoryBot.create(:organization) }
 
       let(:guid_pattern) { '[[:alnum:]-]+' }
 
@@ -628,19 +628,19 @@ module VCAP::CloudController
     describe 'adding domains' do
       it 'does not add domains to the organization if it is a shared domain' do
         shared_domain = SharedDomain.make
-        org = Organization.make
+        org = FactoryBot.create(:organization)
         expect { org.add_domain(shared_domain) }.not_to change { org.domains }
       end
 
       it 'does nothing if it is a private domain that belongs to the org' do
-        org = Organization.make
+        org = FactoryBot.create(:organization)
         private_domain = PrivateDomain.make(owning_organization: org)
         expect { org.add_domain(private_domain) }.not_to change { org.domains.collect(&:id) }
       end
 
       it 'raises error if the private domain does not belongs to the organization' do
-        org = Organization.make
-        private_domain = PrivateDomain.make(owning_organization: Organization.make)
+        org = FactoryBot.create(:organization)
+        private_domain = PrivateDomain.make(owning_organization: FactoryBot.create(:organization))
         expect { org.add_domain(private_domain) }.to raise_error(Domain::UnauthorizedAccessToPrivateDomain)
       end
     end
@@ -649,7 +649,7 @@ module VCAP::CloudController
       before { SharedDomain.dataset.destroy }
 
       it 'is able to eager load domains' do
-        org = Organization.make
+        org = FactoryBot.create(:organization)
         private_domain1 = PrivateDomain.make(owning_organization: org)
         private_domain2 = PrivateDomain.make(owning_organization: org)
         shared_domain = SharedDomain.make
@@ -668,8 +668,8 @@ module VCAP::CloudController
       end
 
       it 'has correct domains for each org' do
-        org1 = Organization.make
-        org2 = Organization.make
+        org1 = FactoryBot.create(:organization)
+        org2 = FactoryBot.create(:organization)
 
         private_domain1 = PrivateDomain.make(owning_organization: org1)
         private_domain2 = PrivateDomain.make(owning_organization: org2)
@@ -686,7 +686,7 @@ module VCAP::CloudController
       end
 
       it 'passes in dataset to be loaded to eager_block option' do
-        org1 = Organization.make
+        org1 = FactoryBot.create(:organization)
 
         private_domain1 = PrivateDomain.make(owning_organization: org1)
         PrivateDomain.make(owning_organization: org1)
@@ -701,7 +701,7 @@ module VCAP::CloudController
       end
 
       it 'allow nested eager_load' do
-        org = Organization.make
+        org = FactoryBot.create(:organization)
         space = Space.make(organization: org)
 
         domain1 = PrivateDomain.make(owning_organization: org)
@@ -722,7 +722,7 @@ module VCAP::CloudController
     end
 
     describe 'removing a user' do
-      let(:org)     { Organization.make }
+      let(:org)     { FactoryBot.create(:organization) }
       let(:user)    { User.make }
       let(:space_1) { Space.make }
       let(:space_2) { Space.make }
@@ -889,7 +889,7 @@ module VCAP::CloudController
       end
 
       context 'when a quota is specified' do
-        let(:org) { Organization.make_unsaved(quota_definition: nil, quota_definition_guid: quota_definition_guid) }
+        let(:org) { FactoryBot.build(:organization, quota_definition: nil, quota_definition_guid: quota_definition_guid) }
 
         context "and it's valid" do
           let(:my_quota)  { FactoryBot.create(:quota_definition) }
@@ -914,7 +914,7 @@ module VCAP::CloudController
     end
 
     describe '#has_user?' do
-      subject(:org) { Organization.make }
+      subject(:org) { FactoryBot.create(:organization) }
       let(:user) { User.make }
       let(:second_user) { User.make }
 

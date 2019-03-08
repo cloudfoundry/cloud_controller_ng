@@ -19,8 +19,8 @@ module VCAP::CloudController
         @user_a = User.make
         @user_b = User.make
 
-        @org_a = Organization.make
-        @org_b = Organization.make
+        @org_a = FactoryBot.create(:organization)
+        @org_b = FactoryBot.create(:organization)
 
         @space_a = Space.make organization: @org_a
         @space_b = Space.make organization: @org_b

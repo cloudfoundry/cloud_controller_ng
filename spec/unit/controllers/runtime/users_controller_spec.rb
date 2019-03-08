@@ -129,7 +129,7 @@ module VCAP::CloudController
     describe 'GET /v2/users/:guid/organizations' do
       let(:mgr) { User.make }
       let(:user) { User.make }
-      let(:org) { Organization.make(manager_guids: [mgr.guid], user_guids: [user.guid]) }
+      let(:org) { FactoryBot.create(:organization, manager_guids: [mgr.guid], user_guids: [user.guid]) }
 
       before { set_current_user(user) }
 

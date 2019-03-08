@@ -23,10 +23,10 @@ module VCAP::CloudController
       end
 
       context 'shared_organizations' do
-        let(:org) { Organization.make }
+        let(:org) { FactoryBot.create(:organization) }
 
         it 'associates with shared organizations' do
-          domain = Domain.make(owning_organization_id: Organization.make.id)
+          domain = Domain.make(owning_organization_id: FactoryBot.create(:organization).id)
           domain.add_shared_organization(org)
           expect(domain.shared_organizations).to include(org)
         end
@@ -49,7 +49,7 @@ module VCAP::CloudController
       end
 
       context 'owning_organization' do
-        let(:org) { Organization.make }
+        let(:org) { FactoryBot.create(:organization) }
         it do
           is_expected.to have_associated :owning_organization,
             test_instance: Domain.make(owning_organization: org),
@@ -61,7 +61,7 @@ module VCAP::CloudController
         context 'shared domains' do
           it 'prevents converting a shared domain into a private domain' do
             shared = SharedDomain.make
-            expect { shared.owning_organization = Organization.make }.to raise_error(CloudController::Errors::ApiError, /the owning organization cannot be changed/)
+            expect { shared.owning_organization = FactoryBot.create(:organization) }.to raise_error(CloudController::Errors::ApiError, /the owning organization cannot be changed/)
           end
 
           it 'succeeds when setting the org to the same thing' do
@@ -78,11 +78,12 @@ module VCAP::CloudController
 
           it 'prevents changing orgs on a private domain' do
             private_domain = PrivateDomain.make
-            expect { private_domain.owning_organization = Organization.make }.to raise_error(CloudController::Errors::ApiError, /the owning organization cannot be changed/)
+            expect { private_domain.owning_organization = FactoryBot.create(:organization) }.
+              to raise_error(CloudController::Errors::ApiError, /the owning organization cannot be changed/)
           end
 
           it 'succeeds when setting the org to the same thing' do
-            org = Organization.make
+            org = FactoryBot.create(:organization)
             private_domain = PrivateDomain.make(owning_organization: org)
             expect { private_domain.owning_organization = org }.to_not raise_error
           end

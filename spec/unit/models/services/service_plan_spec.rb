@@ -166,7 +166,7 @@ module VCAP::CloudController
     end
 
     describe '.plan_ids_from_private_brokers' do
-      let(:organization) { Organization.make }
+      let(:organization) { FactoryBot.create(:organization) }
       let(:space_1) { Space.make(organization: organization, id: Space.count + 9998) }
       let(:space_2) { Space.make(organization: organization, id: Space.count + 9999) }
       let(:user) { User.make }
@@ -198,7 +198,7 @@ module VCAP::CloudController
 
     describe '.plan_ids_for_visible_service_instances' do
       context 'when the service plans have service instances associated with them' do
-        let(:organization) { Organization.make }
+        let(:organization) { FactoryBot.create(:organization) }
         let(:space) { Space.make(organization: organization) }
         let(:other_space) { Space.make(organization: organization) }
         let(:user) { User.make }
@@ -241,7 +241,7 @@ module VCAP::CloudController
         visible_private_plan = ServicePlan.make(public: false)
         inactive_public_plan = ServicePlan.make(public: true, active: false)
 
-        organization = Organization.make
+        organization = FactoryBot.create(:organization)
         ServicePlanVisibility.make(organization: organization, service_plan: visible_private_plan)
 
         visible = ServicePlan.organization_visible(organization).all
@@ -259,7 +259,7 @@ module VCAP::CloudController
         visible_private_plan = ServicePlan.make(public: false)
         inactive_public_plan = ServicePlan.make(public: true, active: false)
 
-        organization = Organization.make
+        organization = FactoryBot.create(:organization)
         space = Space.make(organization: organization)
         ServicePlanVisibility.make(organization: organization, service_plan: visible_private_plan)
 
@@ -288,7 +288,7 @@ module VCAP::CloudController
       it 'returns true when included in .space_visible set' do
         visible_private_plan = ServicePlan.make(public: false)
 
-        organization = Organization.make
+        organization = FactoryBot.create(:organization)
         space = Space.make(organization: organization)
         ServicePlanVisibility.make(organization: organization, service_plan: visible_private_plan)
 
@@ -299,7 +299,7 @@ module VCAP::CloudController
 
       it 'returns false when not included in .space_visible set' do
         hidden_private_plan = ServicePlan.make(public: false)
-        organization = Organization.make
+        organization = FactoryBot.create(:organization)
         space = Space.make(organization: organization)
 
         visible = ServicePlan.space_visible(space).all

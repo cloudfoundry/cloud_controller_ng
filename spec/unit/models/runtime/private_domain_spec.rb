@@ -103,7 +103,7 @@ module VCAP::CloudController
       end
 
       describe 'total allowed private domains' do
-        let(:organization) { Organization.make }
+        let(:organization) { FactoryBot.create(:organization) }
         let(:org_quota) { organization.quota_definition }
 
         subject(:domain) { PrivateDomain.new(name: 'foo.com', owning_organization: organization) }
@@ -159,7 +159,7 @@ module VCAP::CloudController
     end
 
     describe '#in_suspended_org?' do
-      let(:org) { Organization.make }
+      let(:org) { FactoryBot.create(:organization) }
       let(:private_domain) { PrivateDomain.new(owning_organization: org) }
 
       context 'when in a suspended organization' do
@@ -210,7 +210,7 @@ module VCAP::CloudController
 
       context 'when not the owner' do
         it 'returns true when allowed to share the domain' do
-          org = Organization.make
+          org = FactoryBot.create(:organization)
           private_domain.add_shared_organization(org)
           expect(private_domain.usable_by_organization?(org)).to eq true
         end

@@ -182,19 +182,13 @@ module VCAP::CloudController
     guid { Sham.uaa_id }
   end
 
-  Organization.blueprint do
-    name              { Sham.name }
-    quota_definition  { FactoryBot.create(:quota_definition) }
-    status            { 'active' }
-  end
-
   Domain.blueprint do
     name { Sham.domain }
   end
 
   PrivateDomain.blueprint do
     name                { Sham.domain }
-    owning_organization { Organization.make }
+    owning_organization { FactoryBot.create(:organization) }
   end
 
   SharedDomain.blueprint do
@@ -215,7 +209,7 @@ module VCAP::CloudController
 
   Space.blueprint do
     name              { Sham.name }
-    organization      { Organization.make }
+    organization      { FactoryBot.create(:organization) }
   end
 
   Service.blueprint do
@@ -394,7 +388,7 @@ module VCAP::CloudController
 
   ServicePlanVisibility.blueprint do
     service_plan { ServicePlan.make }
-    organization { Organization.make }
+    organization { FactoryBot.create(:organization) }
   end
 
   Event.blueprint do
@@ -492,7 +486,7 @@ module VCAP::CloudController
     total_service_keys { 600 }
     total_routes { 1_000 }
     memory_limit { 20_480 } # 20 GB
-    organization { Organization.make }
+    organization { FactoryBot.create(:organization) }
   end
 
   EnvironmentVariableGroup.blueprint do

@@ -5,7 +5,7 @@ module VCAP::CloudController
     RSpec.describe OrganizationEventRepository do
       let(:request_attrs) { { 'name' => 'new-space' } }
       let(:user) { User.make }
-      let(:organization) { Organization.make }
+      let(:organization) { FactoryBot.create(:organization) }
       let(:user_email) { 'email address' }
       let(:user_name) { 'user name' }
       let(:user_audit_info) { UserAuditInfo.new(user_email: user_email, user_guid: user.guid, user_name: user_name) }

@@ -8,7 +8,7 @@ module VCAP::CloudController
           subject(:routing_info) { RoutingInfo.new(process) }
           let(:ri) { routing_info.routing_info }
 
-          let(:org) { Organization.make }
+          let(:org) { FactoryBot.create(:organization) }
           let(:space_quota) { SpaceQuotaDefinition.make(organization: org) }
           let(:space) { Space.make(organization: org, space_quota_definition: space_quota) }
           let(:domain) { PrivateDomain.make(name: 'mydomain.com', owning_organization: org) }

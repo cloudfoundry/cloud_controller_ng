@@ -3,7 +3,7 @@ require 'presenters/v3/organization_presenter'
 
 module VCAP::CloudController::Presenters::V3
   RSpec.describe OrganizationPresenter do
-    let(:organization) { VCAP::CloudController::Organization.make }
+    let(:organization) { FactoryBot.create(:organization) }
     let!(:release_label) do
       VCAP::CloudController::OrganizationLabelModel.make(
         key_name: 'release',

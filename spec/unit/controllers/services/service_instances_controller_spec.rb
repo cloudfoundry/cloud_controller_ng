@@ -128,7 +128,7 @@ module VCAP::CloudController
         end
 
         describe 'plans with public:false' do
-          let!(:unprivileged_organization) { Organization.make }
+          let!(:unprivileged_organization) { FactoryBot.create(:organization) }
           let!(:private_plan) { ServicePlan.make(:v2, public: false) }
           let!(:unprivileged_space) { Space.make(organization: unprivileged_organization) }
           let!(:developer) { make_developer_for_space(unprivileged_space) }
@@ -161,7 +161,7 @@ module VCAP::CloudController
 
           describe 'a user who belongs to a privileged organization' do
             let!(:privileged_organization) do
-              Organization.make.tap do |org|
+              FactoryBot.create(:organization).tap do |org|
                 ServicePlanVisibility.create(
                   organization: org,
                   service_plan: private_plan
@@ -1067,9 +1067,9 @@ module VCAP::CloudController
           before { set_current_user_as_admin }
 
           context 'when filtering by org guid' do
-            let(:org1) { Organization.make(guid: '1') }
-            let(:org2) { Organization.make(guid: '2') }
-            let(:org3) { Organization.make(guid: '3') }
+            let(:org1) { FactoryBot.create(:organization, guid: '1') }
+            let(:org2) { FactoryBot.create(:organization, guid: '2') }
+            let(:org3) { FactoryBot.create(:organization, guid: '3') }
             let(:space1) { Space.make(organization: org1) }
             let(:space2) { Space.make(organization: org2) }
             let(:space3) { Space.make(organization: org3) }
@@ -1177,9 +1177,9 @@ module VCAP::CloudController
           end
 
           context 'when filtering by other query parameters' do
-            let!(:org1) { Organization.make(guid: '1') }
-            let!(:org2) { Organization.make(guid: '2') }
-            let!(:org3) { Organization.make(guid: '3') }
+            let!(:org1) { FactoryBot.create(:organization, guid: '1') }
+            let!(:org2) { FactoryBot.create(:organization, guid: '2') }
+            let!(:org3) { FactoryBot.create(:organization, guid: '3') }
             let!(:space1) { Space.make(organization: org1) }
             let!(:space2) { Space.make(organization: org2) }
             let!(:space3) { Space.make(organization: org3) }
@@ -1268,9 +1268,9 @@ module VCAP::CloudController
           end
 
           context 'when filtering by name' do
-            let!(:org1) { Organization.make(guid: '1') }
-            let!(:org2) { Organization.make(guid: '2') }
-            let!(:org3) { Organization.make(guid: '3') }
+            let!(:org1) { FactoryBot.create(:organization, guid: '1') }
+            let!(:org2) { FactoryBot.create(:organization, guid: '2') }
+            let!(:org3) { FactoryBot.create(:organization, guid: '3') }
             let!(:space1) { Space.make(organization: org1) }
             let!(:space2) { Space.make(organization: org2) }
             let!(:space3) { Space.make(organization: org3) }
@@ -1386,8 +1386,8 @@ module VCAP::CloudController
         before { set_current_user_as_admin }
         let(:results_per_page) { 1 }
         let(:service_instance) { ManagedServiceInstance.make(gateway_name: Sham.name) }
-        let(:org1) { Organization.make(guid: '1') }
-        let(:org2) { Organization.make(guid: '2') }
+        let(:org1) { FactoryBot.create(:organization, guid: '1') }
+        let(:org2) { FactoryBot.create(:organization, guid: '2') }
         let(:space1) { Space.make(organization: org1) }
         let(:space2) { Space.make(organization: org2) }
         let!(:instances) do
@@ -2084,7 +2084,7 @@ module VCAP::CloudController
         end
 
         describe 'the space_guid parameter' do
-          let(:org) { Organization.make }
+          let(:org) { FactoryBot.create(:organization) }
           let(:space) { Space.make(organization: org) }
           let(:developer) { make_developer_for_space(space) }
           let(:instance) { ManagedServiceInstance.make(space: space) }
@@ -2472,7 +2472,7 @@ module VCAP::CloudController
         end
 
         describe 'and the space_guid is provided' do
-          let(:org) { Organization.make }
+          let(:org) { FactoryBot.create(:organization) }
           let(:space) { Space.make(organization: org) }
           let(:developer) { make_developer_for_space(space) }
           let(:instance) { ManagedServiceInstance.make(space: space) }
@@ -3953,7 +3953,7 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/service_instances/:service_instance_guid/permissions' do
-      let(:org) { Organization.make }
+      let(:org) { FactoryBot.create(:organization) }
       let(:space) { Space.make(organization: org) }
       let(:instance) { ManagedServiceInstance.make(space: space) }
       let(:user) { User.make }
@@ -4062,7 +4062,7 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/service_instances/:service_instance_guid/shared_from' do
-      let(:org) { Organization.make }
+      let(:org) { FactoryBot.create(:organization) }
       let(:space) { Space.make(organization: org) }
       let(:instance) { ManagedServiceInstance.make(space: space) }
 
@@ -4084,7 +4084,7 @@ module VCAP::CloudController
       end
 
       context 'when the service instance is shared' do
-        let(:other_org) { Organization.make }
+        let(:other_org) { FactoryBot.create(:organization) }
         let(:other_space) { Space.make(organization: other_org) }
 
         before do
@@ -4179,7 +4179,7 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/service_instances/:service_instance_guid/shared_to' do
-      let(:org) { Organization.make }
+      let(:org) { FactoryBot.create(:organization) }
       let(:space) { Space.make(organization: org) }
       let(:instance) { ManagedServiceInstance.make(space: space) }
 
@@ -4261,7 +4261,7 @@ module VCAP::CloudController
 
       describe 'permissions' do
         let(:user) { User.make }
-        let(:target_org) { Organization.make }
+        let(:target_org) { FactoryBot.create(:organization) }
         let(:target_space) { Space.make(organization: target_org) }
 
         before do
@@ -4343,7 +4343,7 @@ module VCAP::CloudController
         end
 
         context 'when the user is not a member of either the shared_from or shared_to space/org' do
-          let(:random_org) { Organization.make }
+          let(:random_org) { FactoryBot.create(:organization) }
           let(:random_space) { Space.make(organization: random_org) }
 
           {
@@ -4900,7 +4900,7 @@ module VCAP::CloudController
       end
       let(:paid_plan) { ServicePlan.make(:v2) }
       let(:free_plan) { ServicePlan.make(:v2, free: true) }
-      let(:org) { Organization.make(quota_definition: paid_quota) }
+      let(:org) { FactoryBot.create(:organization, quota_definition: paid_quota) }
       let(:space) { Space.make(organization: org) }
       let(:developer) { make_developer_for_space(space) }
 
@@ -5004,7 +5004,7 @@ module VCAP::CloudController
 
       context 'invalid space guid' do
         it 'returns a user friendly error' do
-          org = Organization.make
+          org = FactoryBot.create(:organization)
           space = Space.make(organization: org)
           plan = ServicePlan.make(:v2, free: true)
 
