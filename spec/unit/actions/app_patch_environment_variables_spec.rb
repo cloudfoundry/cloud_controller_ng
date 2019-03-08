@@ -5,7 +5,7 @@ module VCAP::CloudController
   RSpec.describe AppPatchEnvironmentVariables do
     subject(:app_update) { AppPatchEnvironmentVariables.new(user_audit_info) }
 
-    let(:app_model) { AppModel.make(name: app_name, environment_variables: existing_environment_variables) }
+    let(:app_model) { FactoryBot.create(:app, name: app_name, environment_variables: existing_environment_variables) }
     let(:user_guid) { double(:user, guid: '1337') }
     let(:user_email) { 'cool_dude@hoopy_frood.com' }
     let(:user_audit_info) { UserAuditInfo.new(user_email: user_email, user_guid: user_guid) }

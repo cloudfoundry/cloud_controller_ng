@@ -31,7 +31,7 @@ module VCAP::CloudController
       end
 
       it 'does not associate non-web v2 apps' do
-        app_model = AppModel.make
+        app_model = FactoryBot.create(:app)
         org = app_model.space.organization
         app1 = ProcessModel.make(type: 'web', app: app_model)
         ProcessModel.make(type: 'other', app: app_model)
@@ -39,7 +39,7 @@ module VCAP::CloudController
       end
 
       it 'has associated app models' do
-        app_model = AppModel.make
+        app_model = FactoryBot.create(:app)
         organization = app_model.space.organization
         expect(organization.app_models).to include(app_model.reload)
       end
@@ -313,7 +313,7 @@ module VCAP::CloudController
 
                 context 'and a space has an app' do
                   before do
-                    AppModel.make(space: space)
+                    FactoryBot.create(:app, space: space)
                   end
 
                   it 'sets the default to the shared segment but does not affect running apps' do
@@ -330,7 +330,7 @@ module VCAP::CloudController
 
               context 'and a space has an app' do
                 it 'sets the default but does not affect running apps' do
-                  AppModel.make(space: space)
+                  FactoryBot.create(:app, space: space)
                   expect {
                     org.update(default_isolation_segment_guid: isolation_segment_model.guid)
                   }.to_not raise_error
@@ -340,7 +340,7 @@ module VCAP::CloudController
                 end
 
                 it 'sets the default when assigning the shared segment as the default' do
-                  AppModel.make(space: space)
+                  FactoryBot.create(:app, space: space)
                   expect {
                     assigner.assign(shared_segment, [org])
                   }.to_not raise_error
@@ -355,7 +355,7 @@ module VCAP::CloudController
                   before do
                     assigner.assign(isolation_segment_model2, [org])
                     space.update(isolation_segment_model: isolation_segment_model2)
-                    AppModel.make(space: space)
+                    FactoryBot.create(:app, space: space)
                   end
 
                   it 'sets the default Isolation Segment' do
@@ -396,7 +396,7 @@ module VCAP::CloudController
 
               context 'and the space has apps' do
                 before do
-                  AppModel.make(space: space)
+                  FactoryBot.create(:app, space: space)
                 end
 
                 it 'removes the default isolation segment but does not affect running apps' do
@@ -529,7 +529,7 @@ module VCAP::CloudController
       let(:space) { FactoryBot.create(:space) }
       let(:org) { space.organization }
       let(:quota) { FactoryBot.create(:quota_definition, app_task_limit: 2) }
-      let(:app_model) { AppModel.make(space_guid: space.guid) }
+      let(:app_model) { FactoryBot.create(:app, space: space) }
 
       before do
         org.quota_definition = quota

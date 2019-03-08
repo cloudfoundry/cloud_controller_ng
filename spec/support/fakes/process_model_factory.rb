@@ -33,7 +33,7 @@ module VCAP
         def make_parent_app(package_attributes, parent_app_attributes, process_attributes)
           return process_attributes[:app] if process_attributes[:app]
 
-          parent_app_blueprint_type = package_attributes[:docker_image].present? ? :docker : nil
+          parent_app_blueprint_type = package_attributes[:docker_image].present? ? :docker : :buildpack
           if process_attributes.key?(:state)
             parent_app_attributes[:desired_state] = process_attributes[:state]
           end
@@ -50,10 +50,12 @@ module VCAP
               parent_app_attributes.delete(:stack)
             end
 
-            parent_app = VCAP::CloudController::AppModel.make(parent_app_blueprint_type, parent_app_attributes)
+            parent_app = FactoryBot.create(:app, parent_app_blueprint_type, parent_app_attributes)
+
             parent_app.lifecycle_data.update(buildpack_keys) if buildpack_keys.any?
           else
-            parent_app = VCAP::CloudController::AppModel.make(parent_app_blueprint_type, parent_app_attributes)
+            parent_app = FactoryBot.create(:app, parent_app_blueprint_type, parent_app_attributes)
+
           end
           process_attributes[:app] = parent_app
           parent_app

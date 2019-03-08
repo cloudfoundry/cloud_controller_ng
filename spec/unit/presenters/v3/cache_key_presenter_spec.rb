@@ -15,7 +15,7 @@ module VCAP::CloudController::Presenters::V3
 
     context 'v3 AppModel' do
       it 'renders as app_guid/stack_name' do
-        app = VCAP::CloudController::AppModel.make
+        app = FactoryBot.create(:app)
         stack_name = FactoryBot.create(:stack).name
         key = CacheKeyPresenter.cache_key(guid: app.guid, stack_name: stack_name)
         expect(key).to eq("#{app.guid}/#{stack_name}")

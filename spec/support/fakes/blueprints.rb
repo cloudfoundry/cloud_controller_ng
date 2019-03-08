@@ -31,18 +31,6 @@ Sham.define do
 end
 
 module VCAP::CloudController
-  AppModel.blueprint do
-    name       { Sham.name }
-    space      { FactoryBot.create(:space) }
-    buildpack_lifecycle_data { FactoryBot.create(:buildpack_lifecycle_data, app: object.save) }
-  end
-
-  AppModel.blueprint(:docker) do
-    name { Sham.name }
-    space { FactoryBot.create(:space) }
-    buildpack_lifecycle_data { nil.tap { |_| object.save } }
-  end
-
   %w/App Build Deployment Droplet IsolationSegment Organization
      Package Process Revision Space Stack Task /.each do |root|
     "VCAP::CloudController::#{root}LabelModel".constantize.blueprint do end
@@ -57,14 +45,14 @@ module VCAP::CloudController
 
   BuildModel.blueprint do
     guid     { Sham.guid }
-    app      { AppModel.make }
+    app      { FactoryBot.create(:app) }
     state    { VCAP::CloudController::BuildModel::STAGED_STATE }
   end
 
   BuildModel.blueprint(:docker) do
     guid     { Sham.guid }
     state    { VCAP::CloudController::DropletModel::STAGING_STATE }
-    app { AppModel.make(droplet_guid: guid) }
+    app { FactoryBot.create(:app, droplet_guid: guid) }
     buildpack_lifecycle_data { nil.tap { |_| object.save } }
   end
 
@@ -72,21 +60,22 @@ module VCAP::CloudController
     guid     { Sham.guid }
     state    { VCAP::CloudController::PackageModel::CREATED_STATE }
     type     { 'bits' }
-    app { AppModel.make }
+    app { FactoryBot.create(:app) }
   end
 
   PackageModel.blueprint(:docker) do
     guid     { Sham.guid }
     state    { VCAP::CloudController::PackageModel::READY_STATE }
     type     { 'docker' }
-    app { AppModel.make }
+    app { FactoryBot.create(:app) }
     docker_image { "org/image-#{Sham.guid}:latest" }
   end
 
   DropletModel.blueprint do
     guid     { Sham.guid }
     state    { VCAP::CloudController::DropletModel::STAGED_STATE }
-    app { AppModel.make(droplet_guid: guid) }
+    app { FactoryBot.create(:app, droplet_guid: guid)
+    }
     droplet_hash { Sham.guid }
     sha256_checksum { Sham.guid }
     buildpack_lifecycle_data { FactoryBot.create(:buildpack_lifecycle_data, droplet: object.save) }
@@ -97,13 +86,13 @@ module VCAP::CloudController
     droplet_hash { nil }
     sha256_checksum { nil }
     state { VCAP::CloudController::DropletModel::STAGING_STATE }
-    app { AppModel.make(droplet_guid: guid) }
+    app { FactoryBot.create(:app, droplet_guid: guid) }
     buildpack_lifecycle_data { nil.tap { |_| object.save } }
   end
 
   DeploymentModel.blueprint do
     state { VCAP::CloudController::DeploymentModel::DEPLOYING_STATE }
-    app { AppModel.make }
+    app { FactoryBot.create(:app) }
     droplet { DropletModel.make(app: app) }
     deploying_web_process { ProcessModel.make(app: app, type: "web-deployment-#{Sham.guid}") }
     original_web_process_instance_count { 1 }
@@ -117,7 +106,7 @@ module VCAP::CloudController
 
   TaskModel.blueprint do
     guid { Sham.guid }
-    app { AppModel.make }
+    app { FactoryBot.create(:app) }
     name { Sham.name }
     droplet { DropletModel.make(app: app) }
     command { 'bundle exec rake' }
@@ -128,7 +117,7 @@ module VCAP::CloudController
 
   TaskModel.blueprint(:running) do
     guid { Sham.guid }
-    app { AppModel.make }
+    app { FactoryBot.create(:app) }
     name { Sham.name }
     droplet { DropletModel.make(app: app) }
     command { 'bundle exec rake' }
@@ -139,7 +128,7 @@ module VCAP::CloudController
 
   TaskModel.blueprint(:canceling) do
     guid { Sham.guid }
-    app { AppModel.make }
+    app { FactoryBot.create(:app) }
     name { Sham.name }
     droplet { DropletModel.make(app: app) }
     command { 'bundle exec rake' }
@@ -150,7 +139,7 @@ module VCAP::CloudController
 
   TaskModel.blueprint(:succeeded) do
     guid { Sham.guid }
-    app { AppModel.make }
+    app { FactoryBot.create(:app) }
     name { Sham.name }
     droplet { DropletModel.make(app: app) }
     command { 'bundle exec rake' }
@@ -161,7 +150,7 @@ module VCAP::CloudController
 
   TaskModel.blueprint(:pending) do
     guid { Sham.guid }
-    app { AppModel.make }
+    app { FactoryBot.create(:app) }
     name { Sham.name }
     droplet { DropletModel.make(app: app) }
     command { 'bundle exec rake' }
@@ -287,12 +276,12 @@ module VCAP::CloudController
     instances { 1 }
     type { 'web' }
     diego { true }
-    app { AppModel.make }
+    app { FactoryBot.create(:app, :buildpack) }
     metadata { {} }
   end
 
   ProcessModel.blueprint(:process) do
-    app { AppModel.make }
+    app { FactoryBot.create(:app, :buildpack) }
     diego { true }
     instances { 1 }
     type { Sham.name }
@@ -300,7 +289,7 @@ module VCAP::CloudController
   end
 
   ProcessModel.blueprint(:diego_runnable) do
-    app { AppModel.make(droplet: DropletModel.make) }
+    app { FactoryBot.create(:app, :buildpack, droplet: DropletModel.make) }
     diego { true }
     instances { 1 }
     type { Sham.name }
@@ -309,7 +298,7 @@ module VCAP::CloudController
   end
 
   ProcessModel.blueprint(:docker) do
-    app { AppModel.make(:docker) }
+    app { FactoryBot.create(:app, :docker) }
     diego { true }
     instances { 1 }
     type { Sham.name }
@@ -320,7 +309,7 @@ module VCAP::CloudController
     instances { 1 }
     type { 'web' }
     diego { true }
-    app { AppModel.make }
+    app { FactoryBot.create(:app) }
     metadata { {} }
     guid { Sham.guid }
   end
@@ -334,7 +323,7 @@ module VCAP::CloudController
   ServiceBinding.blueprint do
     credentials { Sham.service_credentials }
     service_instance { ManagedServiceInstance.make }
-    app { AppModel.make(space: service_instance.space) }
+    app { FactoryBot.create(:app, space: service_instance.space) }
     syslog_drain_url { nil }
     type { 'app' }
     name { nil }
@@ -501,7 +490,7 @@ module VCAP::CloudController
   end
 
   RouteMappingModel.blueprint do
-    app { AppModel.make }
+    app { FactoryBot.create(:app) }
     route { Route.make(space: app.space) }
     process_type { 'web' }
     app_port { -1 }
@@ -512,7 +501,7 @@ module VCAP::CloudController
   end
 
   RevisionModel.blueprint do
-    app { AppModel.make }
+    app { FactoryBot.create(:app) }
     description { 'Initial revision' }
   end
 

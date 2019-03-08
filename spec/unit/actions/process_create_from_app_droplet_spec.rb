@@ -4,7 +4,7 @@ require 'actions/process_create_from_app_droplet'
 module VCAP::CloudController
   RSpec.describe ProcessCreateFromAppDroplet do
     let(:droplet) { nil }
-    let(:app) { AppModel.make(droplet: droplet, name: 'my_app') }
+    let(:app) { FactoryBot.create(:app, droplet: droplet, name: 'my_app') }
     let(:user_audit_info) { instance_double(UserAuditInfo).as_null_object }
     subject { ProcessCreateFromAppDroplet.new(user_audit_info) }
 
@@ -51,7 +51,7 @@ module VCAP::CloudController
 
       context 'when the app has a droplet, but the droplet does not have a process type' do
         let(:droplet) { DropletModel.make(state: DropletModel::STAGED_STATE, process_types: nil) }
-        let(:app) { AppModel.make(droplet: droplet) }
+        let(:app) { FactoryBot.create(:app, droplet: droplet) }
 
         it 'raises procfile not found' do
           expect {

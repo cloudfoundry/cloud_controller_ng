@@ -1,5 +1,4 @@
 require 'models/runtime/quota_definition'
-require_relative './sequences'
 
 FactoryBot.define do
   factory(:quota_definition, class: VCAP::CloudController::QuotaDefinition) do

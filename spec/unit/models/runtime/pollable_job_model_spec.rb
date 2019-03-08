@@ -35,7 +35,7 @@ module VCAP::CloudController
 
     describe '#resource_exists?' do
       it 'returns true if the resource exists' do
-        app = AppModel.make
+        app = FactoryBot.create(:app)
         job = PollableJobModel.make(resource_type: 'app', resource_guid: app.guid)
         expect(job.resource_exists?).to be(true)
       end

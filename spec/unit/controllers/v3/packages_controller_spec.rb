@@ -438,7 +438,7 @@ RSpec.describe PackagesController, type: :controller do
   describe '#update' do
     let!(:org) { FactoryBot.create(:organization, name: "Harold's Farm") }
     let!(:space) { FactoryBot.create(:space, name: 'roosters', organization: org) }
-    let(:app_model) { VCAP::CloudController::AppModel.make(name: 'needed to put the package in the space', space: space) }
+    let(:app_model) { FactoryBot.create(:app, name: 'needed to put the package in the space', space: space) }
     let(:package) { VCAP::CloudController::PackageModel.make(app: app_model) }
 
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
@@ -807,7 +807,7 @@ RSpec.describe PackagesController, type: :controller do
 
   describe '#index' do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
-    let(:app_model) { VCAP::CloudController::AppModel.make }
+    let(:app_model) { FactoryBot.create(:app) }
     let(:space) { app_model.space }
     let(:space1) { FactoryBot.create(:space) }
     let(:space2) { FactoryBot.create(:space) }
@@ -840,7 +840,7 @@ RSpec.describe PackagesController, type: :controller do
 
     context 'when accessed as an app subresource' do
       it 'uses the app as a filter' do
-        app = VCAP::CloudController::AppModel.make(space: space)
+        app = FactoryBot.create(:app, space: space)
         package_1 = VCAP::CloudController::PackageModel.make(app_guid: app.guid)
         package_2 = VCAP::CloudController::PackageModel.make(app_guid: app.guid)
         VCAP::CloudController::PackageModel.make
@@ -853,7 +853,7 @@ RSpec.describe PackagesController, type: :controller do
       end
 
       it "doesn't allow filtering on space_guids in a nested query" do
-        app = VCAP::CloudController::AppModel.make(space: space, guid: 'speshal-app-guid')
+        app = FactoryBot.create(:app, space: space, guid: 'speshal-app-guid')
 
         get :index, params: { app_guid: app.guid, page: 1, per_page: 10, states: 'AWAITING_UPLOAD',
                               space_guids: user_spaces.map(&:guid).join(',') }
@@ -863,7 +863,7 @@ RSpec.describe PackagesController, type: :controller do
       end
 
       it 'uses the app and pagination as query parameters' do
-        app = VCAP::CloudController::AppModel.make(space: space, guid: 'speshal-app-guid')
+        app = FactoryBot.create(:app, space: space, guid: 'speshal-app-guid')
         package_1 = VCAP::CloudController::PackageModel.make(app_guid: app.guid, guid: 'package-1')
         package_2 = VCAP::CloudController::PackageModel.make(app_guid: app.guid, guid: 'package-2')
         VCAP::CloudController::PackageModel.make
@@ -984,7 +984,7 @@ RSpec.describe PackagesController, type: :controller do
 
   describe '#create' do
     context 'when creating a new package' do
-      let(:app_model) { VCAP::CloudController::AppModel.make }
+      let(:app_model) { FactoryBot.create(:app) }
       let(:app_guid) { app_model.guid }
       let(:space) { app_model.space }
       let(:org) { space.organization }
@@ -1221,9 +1221,9 @@ RSpec.describe PackagesController, type: :controller do
     end
 
     context 'when copying an existing package' do
-      let(:source_app_model) { VCAP::CloudController::AppModel.make }
+      let(:source_app_model) { FactoryBot.create(:app) }
       let(:original_package) { VCAP::CloudController::PackageModel.make(type: 'bits', app_guid: source_app_model.guid) }
-      let(:target_app_model) { VCAP::CloudController::AppModel.make }
+      let(:target_app_model) { FactoryBot.create(:app) }
       let(:user) { set_current_user(VCAP::CloudController::User.make) }
       let(:source_space) { source_app_model.space }
       let(:destination_space) { target_app_model.space }

@@ -27,7 +27,7 @@ module VCAP::CloudController
         CloudController::DependencyLocator.instance.droplet_blobstore
       end
 
-      let(:v3_app) { AppModel.make(droplet: droplet) }
+      let(:v3_app) { FactoryBot.create(:app, droplet: droplet) }
       let(:process) { ProcessModel.make(app: v3_app) }
       let(:droplet) { DropletModel.make(state: 'STAGED') }
 
@@ -144,7 +144,7 @@ module VCAP::CloudController
         CloudController::DependencyLocator.instance.droplet_blobstore
       end
 
-      let(:v3_app) { AppModel.make(droplet: droplet) }
+      let(:v3_app) { FactoryBot.create(:app, droplet: droplet) }
       let(:process) { ProcessModel.make(app: v3_app) }
       let(:droplet) { DropletModel.make(state: 'STAGED') }
 

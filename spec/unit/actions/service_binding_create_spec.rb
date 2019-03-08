@@ -12,7 +12,7 @@ module VCAP::CloudController
 
       let(:service) { Service.make(bindings_retrievable: true) }
       let(:service_plan) { ServicePlan.make(service: service) }
-      let(:app) { AppModel.make }
+      let(:app) { FactoryBot.create(:app) }
       let(:service_instance) { ManagedServiceInstance.make(space: app.space, service_plan: service_plan) }
       let(:client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client, unbind: {}) }
       let(:accepts_incomplete) { false }
@@ -254,7 +254,7 @@ module VCAP::CloudController
       end
 
       context 'when the app and service instance are in different spaces' do
-        let(:app) { AppModel.make(space: FactoryBot.create(:space)) }
+        let(:app) { FactoryBot.create(:app, space: FactoryBot.create(:space)) }
         let(:service_instance) { ManagedServiceInstance.make(space: FactoryBot.create(:space)) }
 
         context 'when the service instance has not been shared into the app space' do

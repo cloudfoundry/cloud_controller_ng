@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe RouteMappingCreate do
     let(:space) { app.space }
-    let(:app) { AppModel.make }
+    let(:app) { FactoryBot.create(:app) }
     let(:user_guid) { 'user-guid' }
     let(:user_email) { '1@2.3' }
     let(:user_audit_info) { UserAuditInfo.new(user_email: user_email, user_guid: user_guid) }

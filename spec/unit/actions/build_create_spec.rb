@@ -44,7 +44,7 @@ module VCAP::CloudController
 
     let(:space) { FactoryBot.create(:space) }
     let(:org) { space.organization }
-    let(:app) { AppModel.make(space: space) }
+    let(:app) { FactoryBot.create(:app, space: space) }
 
     let(:buildpack_git_url) { 'http://example.com/repo.git' }
     let(:stack) { Stack.default }
@@ -307,7 +307,7 @@ module VCAP::CloudController
       end
 
       describe 'using custom buildpacks' do
-        let!(:app) { AppModel.make(space: space) }
+        let!(:app) { FactoryBot.create(:app, space: space) }
 
         context 'when custom buildpacks are disabled' do
           before { TestConfig.override(disable_custom_buildpacks: true) }

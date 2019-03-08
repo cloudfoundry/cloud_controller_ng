@@ -15,7 +15,7 @@ RSpec.describe 'clear process.command for buildpack-created apps', isolation: :t
   end
 
   context "when a process's command matches the detected command from its app's droplet" do
-    let!(:app) { VCAP::CloudController::AppModel.make }
+    let!(:app) { FactoryBot.create(:app) }
     let!(:process) { VCAP::CloudController::ProcessModelFactory.make(app: app, command: 'detected-buildpack-web-command', type: 'web') }
     let!(:other_process) { VCAP::CloudController::ProcessModelFactory.make(app: app, command: 'detected-buildpack-worker-command', type: 'worker') }
     let!(:droplet) do
@@ -49,7 +49,7 @@ RSpec.describe 'clear process.command for buildpack-created apps', isolation: :t
   end
 
   context "when a process's command doesn't match the detected command from its app's droplet" do
-    let!(:app) { VCAP::CloudController::AppModel.make }
+    let!(:app) { FactoryBot.create(:app) }
     let!(:process) { VCAP::CloudController::ProcessModelFactory.make(app: app, command: 'api-command-web', type: 'web') }
     let!(:droplet) { VCAP::CloudController::DropletModel.make(app: app, process_types: { web: 'detected-command-web' }) }
 
@@ -69,7 +69,7 @@ RSpec.describe 'clear process.command for buildpack-created apps', isolation: :t
     let(:command_b) { 'curl docs.cloudfoundry.org/start_command | sh' }
     let(:command_c) { 'php -f main.php' }
 
-    let!(:app) { VCAP::CloudController::AppModel.make }
+    let!(:app) { FactoryBot.create(:app) }
     let!(:process) { VCAP::CloudController::ProcessModelFactory.make(
       app: app,
       command: process_command,
@@ -258,7 +258,7 @@ RSpec.describe 'clear process.command for buildpack-created apps', isolation: :t
   end
 
   context 'when the process has malformed metadata' do
-    let!(:app) { VCAP::CloudController::AppModel.make }
+    let!(:app) { FactoryBot.create(:app) }
     let!(:process) { VCAP::CloudController::ProcessModelFactory.make(app: app, command: process_command, type: 'web') }
     let!(:droplet) { VCAP::CloudController::DropletModel.make(app: app, process_types: { 'web' => droplet_command }) }
     let(:droplet_command) { 'command_a' }
@@ -280,7 +280,7 @@ RSpec.describe 'clear process.command for buildpack-created apps', isolation: :t
   end
 
   context "when a droplet's process types are malformed" do
-    let!(:app) { VCAP::CloudController::AppModel.make }
+    let!(:app) { FactoryBot.create(:app) }
     let!(:process) { VCAP::CloudController::ProcessModelFactory.make(app: app, command: 'api-command-web', type: 'web', metadata: { command: 'start app' }) }
     let!(:droplet) { VCAP::CloudController::DropletModel.make(app: app, process_types: { web: 'detected-command-web' }) }
 
@@ -304,7 +304,7 @@ RSpec.describe 'clear process.command for buildpack-created apps', isolation: :t
   end
 
   context 'when a droplet has nil process_types' do
-    let!(:app) { VCAP::CloudController::AppModel.make }
+    let!(:app) { FactoryBot.create(:app) }
     let!(:process) { VCAP::CloudController::ProcessModelFactory.make(app: app, command: 'api-command-web', type: 'web') }
 
     before do
@@ -320,7 +320,7 @@ RSpec.describe 'clear process.command for buildpack-created apps', isolation: :t
   end
 
   context "when an app doesn't have a droplet" do
-    let!(:app1) { VCAP::CloudController::AppModel.make }
+    let!(:app1) { FactoryBot.create(:app) }
     let!(:process1) { VCAP::CloudController::ProcessModel.make(app: app1, command: 'api-command-web', type: 'web') }
 
     it "does not modify the process's command or raise an error" do

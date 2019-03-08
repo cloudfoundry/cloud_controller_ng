@@ -18,7 +18,7 @@ module VCAP::CloudController
 
     describe 'associations' do
       it 'has a foreign key to app' do
-        app = AppModel.make
+        app = FactoryBot.create(:app)
         BuildModel.make(app: app)
         expect {
           app.delete
@@ -28,7 +28,7 @@ module VCAP::CloudController
       describe 'space' do
         it 'gets its space from the containing app' do
           space = FactoryBot.create(:space)
-          app = AppModel.make(space: space)
+          app = FactoryBot.create(:app, space: space)
           build = BuildModel.make(app: app)
           expect(build.space).to eq(space)
         end

@@ -97,7 +97,7 @@ module VCAP::CloudController
 
     describe '#map_route' do
       let(:route) { Route.make(domain: istio_domain) }
-      let(:app) { AppModel.make }
+      let(:app) { FactoryBot.create(:app) }
       let!(:process1) { ProcessModel.make(app: app) }
       let!(:process2) { ProcessModel.make(app: app) }
       let(:route_mapping) do
@@ -165,7 +165,7 @@ module VCAP::CloudController
 
     describe '#unmap_route' do
       let(:route) { Route.make(domain: istio_domain) }
-      let(:app) { AppModel.make }
+      let(:app) { FactoryBot.create(:app) }
       let!(:process1) { ProcessModel.make(app: app) }
       let!(:process2) { ProcessModel.make(app: app) }
       let(:route_mapping) do

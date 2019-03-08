@@ -12,7 +12,7 @@ module VCAP::CloudController
     it_behaves_like 'a app lifecycle'
 
     describe '#create_lifecycle_data_model' do
-      let!(:app) { AppModel.make }
+      let!(:app) { FactoryBot.create(:app) }
 
       it 'creates BuildpackLifecycleDataModel' do
         expect {
@@ -84,7 +84,7 @@ module VCAP::CloudController
     end
 
     describe '#update_lifecycle_data_model' do
-      let(:app) { AppModel.make(:buildpack) }
+      let(:app) { FactoryBot.create(:app, :buildpack) }
       let!(:ruby_buildpack) { Buildpack.make(name: 'ruby_buildpack') }
       let(:lifecycle_request_data) { { buildpacks: ['http://oj.com', 'ruby_buildpack'], stack: 'sweetness' } }
 

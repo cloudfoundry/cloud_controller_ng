@@ -23,7 +23,7 @@ module VCAP::CloudController
       end
 
       describe '#create_from_process' do
-        let(:parent_app) { AppModel.make(name: 'parent-app') }
+        let(:parent_app) { FactoryBot.create(:app, name: 'parent-app') }
         let(:process) { ProcessModelFactory.make(app: parent_app, type: 'other') }
 
         it 'will create an event which matches the app' do
@@ -107,6 +107,7 @@ module VCAP::CloudController
 
         context 'when a custom buildpack is associated with the app' do
           let(:buildpack_url) { 'https://git.example.com/repo.git' }
+          let(:parent_app) { FactoryBot.create(:app, :buildpack, name: 'parent-app') }
 
           before do
             process.app.lifecycle_data.update(buildpacks: [buildpack_url])
@@ -133,6 +134,7 @@ module VCAP::CloudController
         end
 
         context "when the DEA doesn't provide optional buildpack information" do
+          let(:parent_app) { FactoryBot.create(:app, :buildpack, name: 'parent-app') }
           before do
             process.app.lifecycle_data.update(buildpacks: nil)
           end
@@ -309,7 +311,7 @@ module VCAP::CloudController
       describe '#create_from_build' do
         let(:org) { FactoryBot.create(:organization, guid: 'org-1') }
         let(:space) { FactoryBot.create(:space, guid: 'space-1', name: 'space-name', organization: org) }
-        let(:app_model) { AppModel.make(guid: 'app-1', name: 'frank-app', space: space) }
+        let(:app_model) { FactoryBot.create(:app, guid: 'app-1', name: 'frank-app', space: space) }
         let(:package_state) { PackageModel::READY_STATE }
         let(:package) { PackageModel.make(guid: 'package-1', app_guid: app_model.guid, state: package_state) }
         let!(:build) { BuildModel.make(guid: 'build-1', package: package, app_guid: app_model.guid, state: BuildModel::STAGING_STATE) }

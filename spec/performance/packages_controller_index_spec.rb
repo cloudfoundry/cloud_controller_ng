@@ -4,7 +4,7 @@ require 'rails_helper'
 RSpec.describe PackagesController, type: :controller do # , isolation: :truncation
   describe '#index' do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
-    let(:app_model) { VCAP::CloudController::AppModel.make }
+    let(:app_model) { FactoryBot.create(:app) }
     let(:space) { app_model.space }
     let(:space1) { FactoryBot.create(:space) }
     let(:space2) { FactoryBot.create(:space) }
@@ -25,7 +25,8 @@ RSpec.describe PackagesController, type: :controller do # , isolation: :truncati
       })
       allow_user_read_access_for(user, spaces: user_spaces)
       n.times do |i|
-        app = VCAP::CloudController::AppModel.make(space: user_spaces.sample, guid: "app-guid-#{i}")
+        app = FactoryBot.create(:app, space: user_spaces.sample, guid: "app-guid-#{i}")
+
         3.times do |j|
           VCAP::CloudController::PackageModel.make(app_guid: app.guid, guid: "package-guid-#{i}-#{j}")
         end

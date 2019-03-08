@@ -209,20 +209,20 @@ RSpec.describe 'Apps' do
       buildpack = VCAP::CloudController::Buildpack.make(name: 'bp-name')
       stack = FactoryBot.create(:stack, name: 'stack-name')
 
-      app_model1 = VCAP::CloudController::AppModel.make(name: 'name1', space: space, desired_state: 'STOPPED')
+      app_model1 = FactoryBot.create(:app, :buildpack, name: 'name1', space: space, desired_state: 'STOPPED')
       app_model1.lifecycle_data.update(
         buildpacks: [buildpack.name],
         stack: stack.name
       )
 
-      app_model2 = VCAP::CloudController::AppModel.make(
+      app_model2 = FactoryBot.create(:app,
         :docker,
           name: 'name2',
           space: space,
           desired_state: 'STARTED'
       )
-      VCAP::CloudController::AppModel.make(space: space)
-      VCAP::CloudController::AppModel.make
+      FactoryBot.create(:app, space: space)
+      FactoryBot.create(:app)
 
       get '/v3/apps?per_page=2&include=space', nil, user_header
       expect(last_response.status).to eq(200)
@@ -345,9 +345,9 @@ RSpec.describe 'Apps' do
       let(:admin_header) { headers_for(user, scopes: %w(cloud_controller.admin)) }
 
       it 'filters by guids' do
-        app_model1 = VCAP::CloudController::AppModel.make(name: 'name1')
-        VCAP::CloudController::AppModel.make(name: 'name2')
-        app_model3 = VCAP::CloudController::AppModel.make(name: 'name3')
+        app_model1 = FactoryBot.create(:app, name: 'name1')
+        FactoryBot.create(:app, name: 'name2')
+        app_model3 = FactoryBot.create(:app, name: 'name3')
 
         get "/v3/apps?guids=#{app_model1.guid}%2C#{app_model3.guid}", nil, admin_header
 
@@ -368,9 +368,9 @@ RSpec.describe 'Apps' do
       end
 
       it 'filters by names' do
-        VCAP::CloudController::AppModel.make(name: 'name1')
-        VCAP::CloudController::AppModel.make(name: 'name2')
-        VCAP::CloudController::AppModel.make(name: 'name3')
+        FactoryBot.create(:app, name: 'name1')
+        FactoryBot.create(:app, name: 'name2')
+        FactoryBot.create(:app, name: 'name3')
 
         get '/v3/apps?names=name1%2Cname2', nil, admin_header
 
@@ -391,9 +391,9 @@ RSpec.describe 'Apps' do
       end
 
       it 'filters by organizations' do
-        app_model1 = VCAP::CloudController::AppModel.make(name: 'name1')
-        VCAP::CloudController::AppModel.make(name: 'name2')
-        app_model3 = VCAP::CloudController::AppModel.make(name: 'name3')
+        app_model1 = FactoryBot.create(:app, name: 'name1')
+        FactoryBot.create(:app, name: 'name2')
+        app_model3 = FactoryBot.create(:app, name: 'name3')
 
         get "/v3/apps?organization_guids=#{app_model1.organization.guid}%2C#{app_model3.organization.guid}", nil, admin_header
 
@@ -414,9 +414,9 @@ RSpec.describe 'Apps' do
       end
 
       it 'filters by spaces' do
-        app_model1 = VCAP::CloudController::AppModel.make(name: 'name1')
-        VCAP::CloudController::AppModel.make(name: 'name2')
-        app_model3 = VCAP::CloudController::AppModel.make(name: 'name3')
+        app_model1 = FactoryBot.create(:app, name: 'name1')
+        FactoryBot.create(:app, name: 'name2')
+        app_model3 = FactoryBot.create(:app, name: 'name3')
 
         get "/v3/apps?space_guids=#{app_model1.space.guid}%2C#{app_model3.space.guid}", nil, admin_header
 
@@ -439,11 +439,11 @@ RSpec.describe 'Apps' do
 
     context 'ordering' do
       it 'can order by name' do
-        VCAP::CloudController::AppModel.make(space: space, name: 'zed')
-        VCAP::CloudController::AppModel.make(space: space, name: 'alpha')
-        VCAP::CloudController::AppModel.make(space: space, name: 'gamma')
-        VCAP::CloudController::AppModel.make(space: space, name: 'delta')
-        VCAP::CloudController::AppModel.make(space: space, name: 'theta')
+        FactoryBot.create(:app, space: space, name: 'zed')
+        FactoryBot.create(:app, space: space, name: 'alpha')
+        FactoryBot.create(:app, space: space, name: 'gamma')
+        FactoryBot.create(:app, space: space, name: 'delta')
+        FactoryBot.create(:app, space: space, name: 'theta')
 
         ascending = ['alpha', 'delta', 'gamma', 'theta', 'zed']
         descending = ascending.reverse
@@ -467,10 +467,10 @@ RSpec.describe 'Apps' do
     end
 
     context 'labels' do
-      let!(:app1) { VCAP::CloudController::AppModel.make(name: 'name1') }
+      let!(:app1) { FactoryBot.create(:app, name: 'name1') }
       let!(:app1_label) { VCAP::CloudController::AppLabelModel.make(resource_guid: app1.guid, key_name: 'foo', value: 'bar') }
 
-      let!(:app2) { VCAP::CloudController::AppModel.make(name: 'name2') }
+      let!(:app2) { FactoryBot.create(:app, name: 'name2') }
       let!(:app2_label) { VCAP::CloudController::AppLabelModel.make(resource_guid: app2.guid, key_name: 'foo', value: 'funky') }
       let!(:app2__exclusive_label) { VCAP::CloudController::AppLabelModel.make(resource_guid: app2.guid, key_name: 'santa', value: 'claus') }
 
@@ -632,9 +632,9 @@ RSpec.describe 'Apps' do
     context 'labels and existing filters' do
       let!(:space1) { FactoryBot.create(:space) }
       let!(:space2) { FactoryBot.create(:space) }
-      let!(:app1) { VCAP::CloudController::AppModel.make(name: 'name1', space: space1) }
-      let!(:app2) { VCAP::CloudController::AppModel.make(name: 'name2', space: space2) }
-      let!(:app3) { VCAP::CloudController::AppModel.make(name: 'name3', space: space2) }
+      let!(:app1) { FactoryBot.create(:app, name: 'name1', space: space1) }
+      let!(:app2) { FactoryBot.create(:app, name: 'name2', space: space2) }
+      let!(:app3) { FactoryBot.create(:app, name: 'name3', space: space2) }
       let!(:app1_label1) { VCAP::CloudController::AppLabelModel.make(resource_guid: app1.guid, key_name: 'foo', value: 'funky') }
       let!(:app2_label1) { VCAP::CloudController::AppLabelModel.make(resource_guid: app2.guid, key_name: 'foo', value: 'funky') }
       let!(:app2_label2) { VCAP::CloudController::AppLabelModel.make(resource_guid: app2.guid, key_name: 'fruit', value: 'strawberry') }
@@ -686,7 +686,7 @@ RSpec.describe 'Apps' do
     it 'gets a specific app' do
       buildpack = VCAP::CloudController::Buildpack.make(name: 'bp-name')
       stack = FactoryBot.create(:stack, name: 'stack-name')
-      app_model = VCAP::CloudController::AppModel.make(
+      app_model = FactoryBot.create(:app,
         :buildpack,
           name: 'my_app',
           space: space,
@@ -774,7 +774,7 @@ RSpec.describe 'Apps' do
 
   describe 'GET /v3/apps/:guid/env' do
     it 'returns the environment of the app, including environment variables provided by the system' do
-      app_model = VCAP::CloudController::AppModel.make(
+      app_model = FactoryBot.create(:app,
         name: 'my_app',
         space: space,
         environment_variables: { 'unicorn' => 'horn' },
@@ -856,7 +856,7 @@ RSpec.describe 'Apps' do
   end
 
   describe 'GET /v3/apps/:guid/builds' do
-    let(:app_model) { VCAP::CloudController::AppModel.make(space: space, name: 'my-app') }
+    let(:app_model) { FactoryBot.create(:app, space: space, name: 'my-app') }
     let(:build) do
       VCAP::CloudController::BuildModel.make(
         package: package,
@@ -988,7 +988,8 @@ RSpec.describe 'Apps' do
   end
 
   describe 'DELETE /v3/apps/guid' do
-    let!(:app_model) { VCAP::CloudController::AppModel.make(name: 'app_name', space: space) }
+    let!(:app_model) { FactoryBot.create(:app, name: 'app_name', space: space)
+    }
     let!(:package) { VCAP::CloudController::PackageModel.make(app: app_model) }
     let!(:droplet) { VCAP::CloudController::DropletModel.make(package: package, app: app_model) }
     let!(:process) { VCAP::CloudController::ProcessModel.make(app: app_model) }
@@ -1027,7 +1028,7 @@ RSpec.describe 'Apps' do
 
   describe 'PATCH /v3/apps/:guid' do
     it 'updates an app' do
-      app_model = VCAP::CloudController::AppModel.make(
+      app_model = FactoryBot.create(:app,
         :buildpack,
           name: 'original_name',
           space: space,
@@ -1175,7 +1176,7 @@ RSpec.describe 'Apps' do
   describe 'PUT /v3/apps/:guid/start' do
     let(:stack) { FactoryBot.create(:stack, name: 'stack-name') }
     let(:app_model) {
-      VCAP::CloudController::AppModel.make(
+      FactoryBot.create(:app,
         :buildpack,
         name: 'app-name',
         space: space,
@@ -1279,7 +1280,7 @@ RSpec.describe 'Apps' do
   describe 'POST /v3/apps/:guid/actions/stop' do
     it 'stops the app' do
       stack = FactoryBot.create(:stack, name: 'stack-name')
-      app_model = VCAP::CloudController::AppModel.make(
+      app_model = FactoryBot.create(:app,
         :buildpack,
           name: 'app-name',
           space: space,
@@ -1357,7 +1358,7 @@ RSpec.describe 'Apps' do
   describe 'POST /v3/apps/:guid/actions/restart' do
     it 'restart the app' do
       stack = FactoryBot.create(:stack, name: 'stack-name')
-      app_model = VCAP::CloudController::AppModel.make(
+      app_model = FactoryBot.create(:app,
         :buildpack,
           name: 'app-name',
           space: space,
@@ -1419,7 +1420,8 @@ RSpec.describe 'Apps' do
   end
 
   describe 'GET /v3/apps/:guid/relationships/current_droplet' do
-    let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
+    let(:app_model) { FactoryBot.create(:app, space: space) }
+
     let(:guid) { droplet_model.guid }
     let(:package_model) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
     let!(:droplet_model) do
@@ -1462,7 +1464,7 @@ RSpec.describe 'Apps' do
   end
 
   describe 'GET /v3/apps/:guid/droplets/current' do
-    let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
+    let(:app_model) { FactoryBot.create(:app, space: space) }
     let(:guid) { droplet_model.guid }
     let(:package_model) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
     let!(:droplet_model) do
@@ -1527,7 +1529,7 @@ RSpec.describe 'Apps' do
   describe 'PATCH /v3/apps/:guid/relationships/current_droplet' do
     let(:stack) { FactoryBot.create(:stack, name: 'stack-name') }
     let(:app_model) do
-      VCAP::CloudController::AppModel.make(
+      FactoryBot.create(:app,
         :buildpack,
           name: 'my_app',
           space: space,
@@ -1643,7 +1645,7 @@ RSpec.describe 'Apps' do
 
   describe 'PATCH /v3/apps/:guid/environment_variables' do
     it 'patches the environment variables for the app' do
-      app_model = VCAP::CloudController::AppModel.make(
+      app_model = FactoryBot.create(:app,
         name: 'name1',
         space: space,
         desired_state: 'STOPPED',
@@ -1682,7 +1684,7 @@ RSpec.describe 'Apps' do
 
   describe 'GET /v3/apps/:guid/environment_variables' do
     it 'gets the environment variables for the app' do
-      app_model = VCAP::CloudController::AppModel.make(name: 'name1', space: space, desired_state: 'STOPPED', environment_variables: { meep: 'moop' })
+      app_model = FactoryBot.create(:app, name: 'name1', space: space, desired_state: 'STOPPED', environment_variables: { meep: 'moop' })
 
       get "/v3/apps/#{app_model.guid}/environment_variables", nil, user_header
       expect(last_response.status).to eq(200)

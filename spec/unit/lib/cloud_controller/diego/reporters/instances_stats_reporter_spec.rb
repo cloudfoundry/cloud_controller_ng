@@ -5,7 +5,7 @@ module VCAP::CloudController
   module Diego
     RSpec.describe InstancesStatsReporter do
       subject(:instances_reporter) { InstancesStatsReporter.new(bbs_instances_client, traffic_controller_client) }
-      let(:app) { AppModel.make }
+      let(:app) { FactoryBot.create(:app) }
       let(:process) { ProcessModel.make(instances: desired_instances, app: app) }
       let(:desired_instances) { 1 }
       let(:bbs_instances_client) { instance_double(BbsInstancesClient) }

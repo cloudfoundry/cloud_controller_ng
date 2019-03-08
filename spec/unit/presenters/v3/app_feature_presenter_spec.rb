@@ -3,7 +3,7 @@ require 'presenters/v3/app_ssh_feature_presenter'
 
 module VCAP::CloudController::Presenters::V3
   RSpec.describe AppSshFeaturePresenter do
-    let(:app) { VCAP::CloudController::AppModel.make }
+    let(:app) { FactoryBot.create(:app) }
 
     describe '#to_hash' do
       it 'presents the app feature as json' do

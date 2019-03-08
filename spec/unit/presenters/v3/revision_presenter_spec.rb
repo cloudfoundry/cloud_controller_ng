@@ -3,7 +3,7 @@ require 'presenters/v3/revision_presenter'
 
 module VCAP::CloudController::Presenters::V3
   RSpec.describe RevisionPresenter do
-    let(:app_model) { VCAP::CloudController::AppModel.make }
+    let(:app_model) { FactoryBot.create(:app) }
     let!(:droplet) do
       VCAP::CloudController::DropletModel.make(
         app: app_model,

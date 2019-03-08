@@ -13,7 +13,7 @@ module VCAP::CloudController
       end
 
       describe '#perform' do
-        let(:app) { AppModel.make(name: 'app') }
+        let(:app) { FactoryBot.create(:app, name: 'app') }
 
         it 'deletes all the revisions over the limit' do
           expect(RevisionModel.count).to eq(0)
@@ -69,8 +69,8 @@ module VCAP::CloudController
         end
 
         context 'multiple apps' do
-          let(:app_the_second) { AppModel.make(name: 'app_the_second') }
-          let(:app_the_third) { AppModel.make(name: 'app_the_third') }
+          let(:app_the_second) { FactoryBot.create(:app, name: 'app_the_second') }
+          let(:app_the_third) { FactoryBot.create(:app, name: 'app_the_third') }
 
           it 'prunes revisions on multiple apps' do
             expect(RevisionModel.count).to eq(0)
@@ -96,7 +96,7 @@ module VCAP::CloudController
         end
 
         context 'apps without revisions' do
-          let!(:app_without_revisions) { AppModel.make }
+          let!(:app_without_revisions) { FactoryBot.create(:app) }
           let(:fake_logger) { instance_double(Steno::Logger, info: nil) }
 
           before do

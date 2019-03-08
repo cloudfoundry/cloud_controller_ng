@@ -13,7 +13,7 @@ RSpec.describe 'Apps' do
 
   describe 'GET /v2/apps' do
     let(:shared_app_model) do
-      VCAP::CloudController::AppModel.make(
+      FactoryBot.create(:app,
         space:                 space,
         environment_variables: { 'RAILS_ENV' => 'staging' }
       )
@@ -80,7 +80,7 @@ RSpec.describe 'Apps' do
               'package_updated_at'         => iso8601,
               'detected_start_command'     => '',
               'enable_ssh'                 => true,
-              'ports'                      => [8080],
+              'ports'                      => [],
               'space_url'                  => "/v2/spaces/#{space.guid}",
               'stack_url'                  => "/v2/stacks/#{process.stack.guid}",
               'routes_url'                 => "/v2/apps/#{process.guid}/routes",
@@ -125,7 +125,7 @@ RSpec.describe 'Apps' do
       end
       let!(:web_process_for_different_app) do
         VCAP::CloudController::ProcessModelFactory.make(:unstaged,
-          app:                        VCAP::CloudController::AppModel.make(
+          app:                        FactoryBot.create(:app,
             space:                 space,
             environment_variables: { 'RAILS_ENV' => 'staging' }
           ),
@@ -149,7 +149,7 @@ RSpec.describe 'Apps' do
       context 'pagination' do
         let!(:another_new_process) {
           VCAP::CloudController::ProcessModelFactory.make(:unstaged,
-                                                          app:                        VCAP::CloudController::AppModel.make(
+                                                          app:                        FactoryBot.create(:app,
                                                             space:                 space,
                                                             environment_variables: { 'RAILS_ENV' => 'staging' }
                                                           ),
@@ -247,7 +247,7 @@ RSpec.describe 'Apps' do
                 'package_updated_at'         => iso8601,
                 'detected_start_command'     => '',
                 'enable_ssh'                 => true,
-                'ports'                      => [8080],
+                'ports'                      => [],
                 'space_url'                  => "/v2/spaces/#{space.guid}",
                 'space'                      => {
                   'metadata' => {
@@ -700,7 +700,7 @@ RSpec.describe 'Apps' do
     end
 
     describe 'docker apps' do
-      let(:app_model) { VCAP::CloudController::AppModel.make(:docker, name: 'mario', space: space, environment_variables: { 'RAILS_ENV' => 'staging' }) }
+      let(:app_model) { FactoryBot.create(:app, :docker, name: 'mario', space: space, environment_variables: { 'RAILS_ENV' => 'staging' }) }
       let!(:process) {
         VCAP::CloudController::ProcessModelFactory.make(
           app:          app_model,
@@ -875,7 +875,7 @@ RSpec.describe 'Apps' do
     end
 
     describe 'docker apps' do
-      let(:app_model) { VCAP::CloudController::AppModel.make(:docker, space: space) }
+      let(:app_model) { FactoryBot.create(:app, :docker, space: space) }
       let!(:process) { VCAP::CloudController::ProcessModelFactory.make(app: app_model, docker_image: 'cloudfoundry/diego-docker-app:latest') }
 
       it 'deletes the specified app' do

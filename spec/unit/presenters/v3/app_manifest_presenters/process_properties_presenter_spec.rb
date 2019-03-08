@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController::Presenters::V3::AppManifestPresenters
   RSpec.describe ProcessPropertiesPresenter do
     describe 'command' do
-      let(:app) { VCAP::CloudController::AppModel.make }
+      let(:app) { FactoryBot.create(:app) }
 
       context 'when a process does not have a user-specified command' do
         before do

@@ -4,7 +4,7 @@ require 'fetchers/app_fetcher'
 module VCAP::CloudController
   RSpec.describe AppFetcher do
     describe '#fetch' do
-      let(:app) { AppModel.make }
+      let(:app) { FactoryBot.create(:app) }
       let(:space) { app.space }
       let(:org) { space.organization }
 

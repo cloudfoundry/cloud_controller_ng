@@ -3,7 +3,7 @@ require 'permissions_spec_helper'
 
 RSpec.describe AppManifestsController, type: :controller do
   describe '#apply_manifest' do
-    let(:app_model) { VCAP::CloudController::AppModel.make }
+    let(:app_model) { FactoryBot.create(:app) }
     let(:space) { app_model.space }
     let(:org) { space.organization }
     let(:user) { VCAP::CloudController::User.make }
@@ -154,6 +154,7 @@ RSpec.describe AppManifestsController, type: :controller do
     end
 
     context 'when the request body includes a buildpack' do
+      let(:app_model) { FactoryBot.create(:app, :buildpack) }
       let!(:php_buildpack) { VCAP::CloudController::Buildpack.make(name: 'php_buildpack') }
       let(:request_body) do
         { 'applications' =>
@@ -194,7 +195,7 @@ RSpec.describe AppManifestsController, type: :controller do
       end
 
       context 'for a docker app' do
-        let(:app_model) { VCAP::CloudController::AppModel.make(:docker) }
+        let(:app_model) { FactoryBot.create(:app, :docker) }
         let(:request_body) do
           { 'applications' =>
             [{ 'name' => 'blah', 'buildpack' => 'php_buildpack' }] }
@@ -218,6 +219,7 @@ RSpec.describe AppManifestsController, type: :controller do
     end
 
     context 'when the request body includes a buildpacks' do
+      let(:app_model) { FactoryBot.create(:app, :buildpack) }
       let!(:php_buildpack) { VCAP::CloudController::Buildpack.make(name: 'php_buildpack') }
       let(:request_body) do
         { 'applications' =>
@@ -239,7 +241,7 @@ RSpec.describe AppManifestsController, type: :controller do
       end
 
       context 'for a docker app' do
-        let(:app_model) { VCAP::CloudController::AppModel.make(:docker) }
+        let(:app_model) { FactoryBot.create(:app, :docker) }
         let(:request_body) do
           { 'applications' =>
             [{ 'name' => 'blah', 'buildpacks' => ['php_buildpack'] }] }
@@ -466,6 +468,7 @@ RSpec.describe AppManifestsController, type: :controller do
     end
 
     describe 'emitting an audit event' do
+      let(:app_model) { FactoryBot.create(:app, :buildpack) }
       let(:app_event_repository) { instance_double(VCAP::CloudController::Repositories::AppEventRepository) }
       let(:request_body) do
         { 'applications' => [{ 'name' => 'blah', 'buildpacks' => ['ruby_buildpack', 'go_buildpack'] }] }
@@ -487,7 +490,7 @@ RSpec.describe AppManifestsController, type: :controller do
   end
 
   describe '#show' do
-    let(:app_model) { VCAP::CloudController::AppModel.make }
+    let(:app_model) { FactoryBot.create(:app, :buildpack) }
     let(:space) { app_model.space }
     let(:org) { space.organization }
     let(:user) { VCAP::CloudController::User.make }

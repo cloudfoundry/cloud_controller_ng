@@ -3,7 +3,7 @@ require 'rails_helper'
 RSpec.describe TasksController, type: :controller do
   let(:client) { instance_double(VCAP::CloudController::Diego::BbsTaskClient, desire_task: nil) }
   let(:tasks_enabled) { true }
-  let(:app_model) { VCAP::CloudController::AppModel.make }
+  let(:app_model) { FactoryBot.create(:app) }
   let(:space) { app_model.space }
   let(:org) { space.organization }
   let(:user) { set_current_user(VCAP::CloudController::User.make) }

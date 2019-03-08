@@ -11,7 +11,7 @@ module VCAP::CloudController
 
     context 'when the app exists' do
       let(:message) { NamedAppManifestMessage.create_from_yml({ name: name }) }
-      let!(:app) { AppModel.make(name: name, space: space) }
+      let!(:app) { FactoryBot.create(:app, name: name, space: space) }
 
       it 'returns the existing app' do
         expect(action.find_or_create(message: message, space: space)).to eq app

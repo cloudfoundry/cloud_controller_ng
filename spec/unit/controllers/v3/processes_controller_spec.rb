@@ -2,7 +2,7 @@ require 'rails_helper'
 
 RSpec.describe ProcessesController, type: :controller do
   let(:space) { FactoryBot.create(:space) }
-  let(:app) { VCAP::CloudController::AppModel.make(space: space) }
+  let(:app) { FactoryBot.create(:app, space: space) }
 
   describe '#index' do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
@@ -168,7 +168,7 @@ RSpec.describe ProcessesController, type: :controller do
     end
 
     context 'accessed as an app sub resource' do
-      let(:app) { VCAP::CloudController::AppModel.make(space: space) }
+      let(:app) { FactoryBot.create(:app, space: space) }
       let!(:process_type) { VCAP::CloudController::ProcessModel.make(:process, app: app) }
       let!(:process_type2) { VCAP::CloudController::ProcessModel.make(:process, app: app) }
 
@@ -181,7 +181,7 @@ RSpec.describe ProcessesController, type: :controller do
 
       context 'when the requested process does not belong to the provided app guid' do
         it 'returns a 404' do
-          other_app = VCAP::CloudController::AppModel.make
+          other_app = FactoryBot.create(:app)
           other_process = VCAP::CloudController::ProcessModel.make(app: other_app, type: 'potato')
 
           get :show, params: { type: other_process.type, app_guid: app.guid }
@@ -256,7 +256,7 @@ RSpec.describe ProcessesController, type: :controller do
   end
 
   describe '#update' do
-    let(:app) { VCAP::CloudController::AppModel.make(space: space) }
+    let(:app) { FactoryBot.create(:app, space: space) }
     let(:process_type) { VCAP::CloudController::ProcessModel.make(:process, app: app) }
     let(:request_body) do
       {
@@ -281,7 +281,7 @@ RSpec.describe ProcessesController, type: :controller do
     end
 
     context 'accessed as an app sub resource' do
-      let(:app) { VCAP::CloudController::AppModel.make(space: space) }
+      let(:app) { FactoryBot.create(:app, space: space) }
       let!(:process_type) { VCAP::CloudController::ProcessModel.make(:process, app: app) }
       let!(:process_type2) { VCAP::CloudController::ProcessModel.make(:process, app: app) }
 
@@ -297,7 +297,7 @@ RSpec.describe ProcessesController, type: :controller do
 
       context 'when the requested process does not belong to the provided app guid' do
         it 'returns a 404' do
-          other_app = VCAP::CloudController::AppModel.make
+          other_app = FactoryBot.create(:app)
           other_process = VCAP::CloudController::ProcessModel.make(app: other_app, type: 'potato')
 
           patch :update, params: { app_guid: app.guid, type: other_process.type }.merge(request_body), as: :json
@@ -433,7 +433,7 @@ RSpec.describe ProcessesController, type: :controller do
   end
 
   describe '#terminate' do
-    let(:app) { VCAP::CloudController::AppModel.make(space: space) }
+    let(:app) { FactoryBot.create(:app, space: space) }
     let(:process_type) { VCAP::CloudController::ProcessModel.make(app: app) }
     let(:index_stopper) { instance_double(VCAP::CloudController::IndexStopper) }
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
@@ -555,7 +555,7 @@ RSpec.describe ProcessesController, type: :controller do
 
   describe '#scale' do
     let(:request_body) { { instances: 2, memory_in_mb: 100, disk_in_mb: 200 } }
-    let(:app) { VCAP::CloudController::AppModel.make(space: space) }
+    let(:app) { FactoryBot.create(:app, space: space) }
     let(:process_type) { VCAP::CloudController::ProcessModel.make(app: app) }
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
@@ -780,7 +780,7 @@ RSpec.describe ProcessesController, type: :controller do
   end
 
   describe '#stats' do
-    let(:app) { VCAP::CloudController::AppModel.make(space: space) }
+    let(:app) { FactoryBot.create(:app, space: space) }
     let(:process_type) { VCAP::CloudController::ProcessModel.make(:process, type: 'potato', app: app) }
     let(:stats) { { 0 => { stats: { usage: {}, net_info: { ports: [] } } } } }
     let(:instances_reporters) { double(:instances_reporters) }

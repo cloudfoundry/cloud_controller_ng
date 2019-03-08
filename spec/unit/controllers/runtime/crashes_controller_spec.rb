@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe VCAP::CloudController::CrashesController do
     describe 'GET /v2/apps/:id/crashes' do
-      let(:app_model) { AppModel.make }
+      let(:app_model) { FactoryBot.create(:app) }
       let(:process) { ProcessModel.make(app: app_model, guid: app_model.guid) }
       let(:user) { make_user_for_space(process.space) }
       let(:developer) { make_developer_for_space(process.space) }

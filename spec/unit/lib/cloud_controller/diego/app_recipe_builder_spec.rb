@@ -34,7 +34,7 @@ module VCAP::CloudController
         let(:platform_options) { [] }
 
         let(:lifecycle_type) { nil }
-        let(:app_model) { AppModel.make(lifecycle_type, guid: 'app-guid', droplet: DropletModel.make(state: 'STAGED'), enable_ssh: false) }
+        let(:app_model) { FactoryBot.create(:app, lifecycle_type, guid: 'app-guid', droplet: DropletModel.make(state: 'STAGED'), enable_ssh: false) }
         let(:package) { PackageModel.make(lifecycle_type, app: app_model) }
         let(:process) do
           process = ProcessModel.make(:process,
@@ -1205,7 +1205,7 @@ module VCAP::CloudController
 
       describe '#build_app_lrp_update' do
         let(:config) { Config.new({}) }
-        let(:app_model) { AppModel.make(:buildpack, guid: 'app-guid', droplet: DropletModel.make(state: 'STAGED')) }
+        let(:app_model) { FactoryBot.create(:app, :buildpack, guid: 'app-guid', droplet: DropletModel.make(state: 'STAGED')) }
         let(:process) do
           process = ProcessModel.make(:process, instances: 7, app: app_model)
           process.this.update(updated_at: Time.at(2))

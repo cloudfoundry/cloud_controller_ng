@@ -13,7 +13,7 @@ module VCAP::CloudController
       end
 
       describe '#perform' do
-        let(:app) { AppModel.make(name: 'app') }
+        let(:app) { FactoryBot.create(:app, name: 'app') }
 
         it 'deletes all the staged builds over the limit' do
           expect(BuildModel.count).to eq(0)
@@ -89,8 +89,8 @@ module VCAP::CloudController
         end
 
         context 'multiple apps' do
-          let(:app_the_second) { AppModel.make(name: 'app_the_second') }
-          let(:app_the_third) { AppModel.make(name: 'app_the_third') }
+          let(:app_the_second) { FactoryBot.create(:app, name: 'app_the_second') }
+          let(:app_the_third) { FactoryBot.create(:app, name: 'app_the_third') }
 
           it 'prunes builds on multiple apps' do
             expect(BuildModel.count).to eq(0)
@@ -116,7 +116,7 @@ module VCAP::CloudController
         end
 
         context 'apps without builds' do
-          let!(:app_without_builds) { AppModel.make }
+          let!(:app_without_builds) { FactoryBot.create(:app) }
           let(:fake_logger) { instance_double(Steno::Logger, info: nil) }
 
           before do

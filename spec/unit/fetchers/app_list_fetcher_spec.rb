@@ -5,8 +5,8 @@ module VCAP::CloudController
   RSpec.describe AppListFetcher do
     describe '#fetch' do
       let(:space) { FactoryBot.create(:space) }
-      let(:app) { AppModel.make(space_guid: space.guid) }
-      let(:sad_app) { AppModel.make(space_guid: space.guid) }
+      let(:app) { FactoryBot.create(:app, space: space) }
+      let(:sad_app) { FactoryBot.create(:app, space: space) }
       let(:org) { space.organization }
       let(:fetcher) { AppListFetcher.new }
       let(:space_guids) { [space.guid] }
@@ -28,7 +28,7 @@ module VCAP::CloudController
       end
 
       it 'fetch_all includes all the apps' do
-        app = AppModel.make
+        app = FactoryBot.create(:app)
         expect(fetcher.fetch_all(message).all).to include(app)
       end
 
@@ -49,7 +49,7 @@ module VCAP::CloudController
 
       context 'when the app space_guids are provided' do
         let(:filters) { { space_guids: [space.guid] } }
-        let(:sad_app) { AppModel.make }
+        let(:sad_app) { FactoryBot.create(:app) }
 
         it 'returns all of the desired apps' do
           expect(apps.all).to include(app)
@@ -61,7 +61,7 @@ module VCAP::CloudController
         let(:filters) { { organization_guids: [org.guid] } }
         let(:sad_org) { FactoryBot.create(:organization) }
         let(:sad_space) { FactoryBot.create(:space, organization: sad_org) }
-        let(:sad_app) { AppModel.make(space_guid: sad_space.guid) }
+        let(:sad_app) { FactoryBot.create(:app, space: sad_space) }
         let(:space_guids) { [space.guid, sad_space.guid] }
 
         it 'returns all of the desired apps' do
@@ -94,7 +94,7 @@ module VCAP::CloudController
         end
 
         context 'and other filters are present' do
-          let!(:happiest_app) { AppModel.make(space_guid: space.guid, name: 'bob') }
+          let!(:happiest_app) { FactoryBot.create(:app, space: space, name: 'bob') }
           let!(:happiest_app_label) do
             VCAP::CloudController::AppLabelModel.make(resource_guid: happiest_app.guid, key_name: 'dog', value: 'scooby-doo')
           end

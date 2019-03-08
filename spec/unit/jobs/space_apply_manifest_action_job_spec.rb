@@ -7,8 +7,8 @@ module VCAP::CloudController
       let(:user_audit_info) { UserAuditInfo.new(user_email: 'user.email', user_guid: user.guid, user_name: 'user.name') }
       let(:apply_manifest_action) { instance_double(AppApplyManifest) }
       let(:space) { FactoryBot.create(:space) }
-      let(:app1) { AppModel.make(name: 'steel', space: space) }
-      let(:app2) { AppModel.make(name: 'cut', space: space) }
+      let(:app1) { FactoryBot.create(:app, name: 'steel', space: space) }
+      let(:app2) { FactoryBot.create(:app, name: 'cut', space: space) }
       let(:app_guid_message_hash) do
         {
           app1.guid => NamedAppManifestMessage.create_from_yml({ name: app1.name, instances: 4, routes: [{ route: 'foo.example.com' }] }),

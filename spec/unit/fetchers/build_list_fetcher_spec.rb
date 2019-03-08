@@ -10,10 +10,10 @@ module VCAP::CloudController
     let(:org_1_guid) { space1.organization.guid }
     let(:org_2_guid) { space2.organization.guid }
     let(:org_3_guid) { space3.organization.guid }
-    let(:app_in_space1) { AppModel.make(space_guid: space1.guid, guid: 'app1') }
-    let(:app2_in_space1) { AppModel.make(space_guid: space1.guid, guid: 'app2') }
-    let(:app3_in_space2) { AppModel.make(space_guid: space2.guid, guid: 'app3') }
-    let(:app4_in_space3) { AppModel.make(space_guid: space3.guid, guid: 'app4') }
+    let(:app_in_space1) { FactoryBot.create(:app, space: space1, guid: 'app1') }
+    let(:app2_in_space1) { FactoryBot.create(:app, space: space1, guid: 'app2') }
+    let(:app3_in_space2) { FactoryBot.create(:app, space: space2, guid: 'app3') }
+    let(:app4_in_space3) { FactoryBot.create(:app, space: space3, guid: 'app4') }
 
     let!(:staged_build_for_app1_space1) { BuildModel.make(app_guid: app_in_space1.guid, state: BuildModel::STAGED_STATE) }
     let!(:failed_build_for_app1_space1) { BuildModel.make(app_guid: app_in_space1.guid, state: BuildModel::FAILED_STATE) }

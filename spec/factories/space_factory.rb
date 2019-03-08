@@ -1,5 +1,4 @@
 require 'models/runtime/space'
-require_relative './sequences'
 
 FactoryBot.define do
   factory(:space, class: VCAP::CloudController::Space) do

@@ -30,7 +30,7 @@ module VCAP::CloudController
       let(:package) { PackageModel.make(app_guid: app.guid) }
 
       context 'when the app defaults to buildpack' do
-        let(:app) { AppModel.make(:buildpack) }
+        let(:app) { FactoryBot.create(:app, :buildpack) }
 
         it 'returns a BuildpackLifecycle' do
           expect(LifecycleProvider.provide(package, message)).to be_a(BuildpackLifecycle)
@@ -38,7 +38,7 @@ module VCAP::CloudController
       end
 
       context 'when the app defaults to docker' do
-        let(:app) { AppModel.make(:docker) }
+        let(:app) { FactoryBot.create(:app, :docker) }
 
         it 'returns a DockerLifecycle' do
           expect(LifecycleProvider.provide(package, message)).to be_a(DockerLifecycle)

@@ -4,7 +4,7 @@ require 'presenters/v3/app_env_presenter'
 module VCAP::CloudController::Presenters::V3
   RSpec.describe AppEnvPresenter do
     let(:app) do
-      VCAP::CloudController::AppModel.make(
+      FactoryBot.create(:app,
         created_at: Time.at(1),
         updated_at: Time.at(2),
         environment_variables: { 'some' => 'stuff' },

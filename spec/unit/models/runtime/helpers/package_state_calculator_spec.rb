@@ -4,7 +4,7 @@ require 'models/runtime/helpers/package_state_calculator'
 module VCAP::CloudController
   RSpec.describe 'PackageStateCalculator' do
     describe '#calculate' do
-      let(:parent_app) { AppModel.make }
+      let(:parent_app) { FactoryBot.create(:app) }
       let(:process) { ProcessModel.make(app: parent_app) }
       subject(:calculator) { PackageStateCalculator.new(process) }
 

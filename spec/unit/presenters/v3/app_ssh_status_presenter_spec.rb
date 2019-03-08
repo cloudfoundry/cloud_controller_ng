@@ -3,7 +3,7 @@ require 'presenters/v3/app_ssh_status_presenter'
 
 module VCAP::CloudController::Presenters::V3
   RSpec.describe AppSshStatusPresenter do
-    let!(:app) { VCAP::CloudController::AppModel.make(enable_ssh: true) }
+    let!(:app) { FactoryBot.create(:app, enable_ssh: true) }
     let(:globally_enabled) { TestConfig.config_instance.get(:allow_app_ssh_access) }
 
     before do

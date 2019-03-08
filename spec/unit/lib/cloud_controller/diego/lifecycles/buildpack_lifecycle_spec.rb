@@ -39,7 +39,7 @@ module VCAP::CloudController
       end
 
       context 'when the user does not specify buildpacks' do
-        let(:app) { AppModel.make(:buildpack, name: 'some-app', space: FactoryBot.create(:space)) }
+        let(:app) { FactoryBot.create(:app, :buildpack, name: 'some-app', space: FactoryBot.create(:space)) }
         let(:request_data) { {} }
 
         context 'when the app has buildpacks' do

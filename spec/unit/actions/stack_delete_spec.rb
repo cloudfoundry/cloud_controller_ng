@@ -35,7 +35,7 @@ module VCAP::CloudController
         end
 
         context 'when there are apps associated with the stack' do
-          let!(:app) { AppModel.make }
+          let!(:app) { FactoryBot.create(:app) }
 
           before do
             stack.apps << app

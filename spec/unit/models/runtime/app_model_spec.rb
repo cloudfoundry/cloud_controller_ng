@@ -118,7 +118,7 @@ module VCAP::CloudController
     end
 
     describe '#can_create_revision' do
-      let!(:app_model) { AppModel.make(space: space, name: 'some-name', desired_state: ProcessModel::STARTED) }
+      let!(:app_model) { FactoryBot.create(:app, space: space, name: 'some-name', desired_state: ProcessModel::STARTED) }
       let!(:process1) { ProcessModel.make(:process, app: app_model, type: 'web', command: 'webby') }
       let!(:process2) { ProcessModel.make(:process, app: app_model, type: 'worker') }
       let!(:droplet) { DropletModel.make(app: app_model, process_types: { 'web': 'webby', 'worker': nil }) }
@@ -239,13 +239,13 @@ module VCAP::CloudController
 
       describe 'name' do
         let(:space_guid) { space.guid }
-        let(:app) { AppModel.make }
+        let(:app) { FactoryBot.create(:app) }
 
         it 'uniqueness is case insensitive' do
-          AppModel.make(name: 'lowercase', space_guid: space_guid)
+          FactoryBot.create(:app, name: 'lowercase', space_guid: space_guid)
 
           expect {
-            AppModel.make(name: 'lowerCase', space_guid: space_guid)
+            FactoryBot.create(:app, name: 'lowerCase', space_guid: space_guid)
           }.to raise_error(Sequel::ValidationFailed, 'name must be unique in space')
         end
 
@@ -292,9 +292,9 @@ module VCAP::CloudController
           space1 = FactoryBot.create(:space)
           space2 = FactoryBot.create(:space)
 
-          AppModel.make(name: name, space_guid: space1.guid)
+          FactoryBot.create(:app, name: name, space: space1)
           expect {
-            AppModel.make(name: name, space_guid: space2.guid)
+            FactoryBot.create(:app, name: name, space: space2)
           }.not_to raise_error
         end
 
@@ -303,10 +303,10 @@ module VCAP::CloudController
 
           space = FactoryBot.create(:space)
 
-          AppModel.make(name: name, space_guid: space.guid)
+          FactoryBot.create(:app, name: name, space: space)
 
           expect {
-            AppModel.make(name: name, space_guid: space.guid)
+            FactoryBot.create(:app, name: name, space: space)
           }.to raise_error(Sequel::ValidationFailed, 'name must be unique in space')
         end
       end
@@ -314,7 +314,7 @@ module VCAP::CloudController
       describe 'environment_variables' do
         it 'validates them' do
           expect {
-            AppModel.make(environment_variables: '')
+            FactoryBot.create(:app, environment_variables: '')
           }.to raise_error(Sequel::ValidationFailed, /must be a hash/)
         end
       end
@@ -384,7 +384,7 @@ module VCAP::CloudController
     end
 
     describe '#database_uri' do
-      let(:parent_app) { AppModel.make(environment_variables: { 'jesse' => 'awesome' }, space: space) }
+      let(:parent_app) { FactoryBot.create(:app, environment_variables: { 'jesse' => 'awesome' }, space: space) }
       let(:process) { ProcessModel.make(app: parent_app) }
 
       context 'when there are database-like services' do
@@ -441,10 +441,10 @@ module VCAP::CloudController
     describe 'default enable_ssh' do
       context 'when enable_ssh is set explicitly' do
         it 'does not overwrite it with the default' do
-          app1 = AppModel.make(enable_ssh: true)
+          app1 = FactoryBot.create(:app, enable_ssh: true)
           expect(app1.enable_ssh).to eq(true)
 
-          app2 = AppModel.make(enable_ssh: false)
+          app2 = FactoryBot.create(:app, enable_ssh: false)
           expect(app2.enable_ssh).to eq(false)
         end
       end
@@ -455,7 +455,7 @@ module VCAP::CloudController
         end
 
         it 'sets enable_ssh to true' do
-          app = AppModel.make
+          app = FactoryBot.create(:app)
           expect(app.enable_ssh).to eq(true)
         end
       end
@@ -466,14 +466,14 @@ module VCAP::CloudController
         end
 
         it 'sets enable_ssh to false' do
-          app = AppModel.make
+          app = FactoryBot.create(:app)
           expect(app.enable_ssh).to eq(false)
         end
       end
     end
 
     describe '#user_visibility_filter' do
-      let!(:other_app) { AppModel.make }
+      let!(:other_app) { FactoryBot.create(:app) }
 
       context "when a user is a developer in the app's space" do
         let(:user) { make_developer_for_space(app_model.space) }

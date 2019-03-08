@@ -4,7 +4,8 @@ require 'presenters/v3/app_presenter'
 module VCAP::CloudController::Presenters::V3
   RSpec.describe AppPresenter do
     let(:app) do
-      VCAP::CloudController::AppModel.make(
+      FactoryBot.create(:app,
+        :buildpack,
         name: 'Davis',
         environment_variables: { 'some' => 'stuff' },
         desired_state: 'STOPPED',

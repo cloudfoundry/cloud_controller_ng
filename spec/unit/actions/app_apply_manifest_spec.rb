@@ -142,7 +142,7 @@ module VCAP::CloudController
           let(:buildpack) { VCAP::CloudController::Buildpack.make }
           let(:message) { AppManifestMessage.create_from_yml({ name: 'blah', buildpack: buildpack.name }) }
           let(:app_update_message) { message.app_update_message }
-          let(:app) { AppModel.make }
+          let(:app) { FactoryBot.create(:app) }
 
           context 'when the request is valid' do
             it 'returns the app' do
@@ -178,7 +178,7 @@ module VCAP::CloudController
         describe 'updating stack' do
           let(:message) { AppManifestMessage.create_from_yml({ name: 'stack-test', stack: 'cflinuxfs2' }) }
           let(:app_update_message) { message.app_update_message }
-          let(:app) { AppModel.make }
+          let(:app) { FactoryBot.create(:app) }
 
           context 'when the request is valid' do
             it 'returns the app' do
@@ -214,7 +214,7 @@ module VCAP::CloudController
         describe 'updating environment variables' do
           let(:message) { AppManifestMessage.create_from_yml({ env: { 'foo': 'bar' } }) }
           let(:app_update_environment_variables_message) { message.app_update_environment_variables_message }
-          let(:app) { AppModel.make }
+          let(:app) { FactoryBot.create(:app) }
 
           context 'when the request is valid' do
             it 'returns the app' do
@@ -250,7 +250,7 @@ module VCAP::CloudController
         describe 'updating command' do
           let(:message) { AppManifestMessage.create_from_yml({ command: 'new-command' }) }
           let(:manifest_process_update_message) { message.manifest_process_update_messages.first }
-          let(:app) { AppModel.make }
+          let(:app) { FactoryBot.create(:app) }
 
           context 'when the request is valid' do
             it 'returns the app' do
@@ -347,7 +347,7 @@ module VCAP::CloudController
             )
           end
 
-          let!(:app) { AppModel.make }
+          let!(:app) { FactoryBot.create(:app) }
           let(:update_message) { message.manifest_process_update_messages.first }
           let(:scale_message) { message.manifest_process_scale_messages.first }
 
@@ -572,7 +572,7 @@ module VCAP::CloudController
         describe 'creating service bindings' do
           let(:message) { AppManifestMessage.create_from_yml({ services: ['si-name'] }) } # why defined here?
           let(:space) { FactoryBot.create(:space) }
-          let(:app) { AppModel.make(space: space) }
+          let(:app) { FactoryBot.create(:app, space: space) }
 
           before do
             TestConfig.override(volume_services_enabled: false)
@@ -622,7 +622,7 @@ module VCAP::CloudController
 
             context 'when theres a service instance in another space' do
               let(:new_space) { FactoryBot.create(:space) }
-              let(:new_app) { AppModel.make(space: new_space) }
+              let(:new_app) { FactoryBot.create(:app, space: new_space) }
               let!(:service_instance_with_same_name_the_first_one) { ManagedServiceInstance.make(name: 'si-name', space: new_space) }
               let(:message) { AppManifestMessage.create_from_yml({ services: ['si-name'] }) }
 

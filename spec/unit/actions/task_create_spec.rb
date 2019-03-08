@@ -7,7 +7,7 @@ module VCAP::CloudController
     let(:config) { Config.new({ maximum_app_disk_in_mb: 4096 }) }
 
     describe '#create' do
-      let(:app) { AppModel.make }
+      let(:app) { FactoryBot.create(:app) }
       let(:space) { app.space }
       let(:droplet) { DropletModel.make(app_guid: app.guid, state: DropletModel::STAGED_STATE, process_types: { 'web' => 'start app' }) }
       let(:command) { 'bundle exec rake panda' }
@@ -198,7 +198,7 @@ module VCAP::CloudController
       end
 
       context 'when the app does not have an assigned droplet' do
-        let(:app_with_no_droplet) { AppModel.make }
+        let(:app_with_no_droplet) { FactoryBot.create(:app) }
 
         it 'raises a NoAssignedDroplet error' do
           expect {

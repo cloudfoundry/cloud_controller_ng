@@ -4,7 +4,7 @@ require 'permissions_spec_helper'
 RSpec.describe RevisionsController, type: :controller do
   describe '#show' do
     let!(:droplet) { VCAP::CloudController::DropletModel.make }
-    let!(:app_model) { VCAP::CloudController::AppModel.make(droplet: droplet) }
+    let!(:app_model) { FactoryBot.create(:app, droplet: droplet) }
     let!(:space) { app_model.space }
     let(:user) { VCAP::CloudController::User.make }
     let(:revision) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 808, droplet_guid: droplet.guid) }
@@ -140,7 +140,7 @@ RSpec.describe RevisionsController, type: :controller do
 
   describe '#update' do
     let!(:droplet) { VCAP::CloudController::DropletModel.make }
-    let!(:app_model) { VCAP::CloudController::AppModel.make(droplet: droplet) }
+    let!(:app_model) { FactoryBot.create(:app, droplet: droplet) }
     let!(:space) { app_model.space }
     let(:user) { VCAP::CloudController::User.make }
     let(:labels) do
@@ -323,16 +323,17 @@ RSpec.describe RevisionsController, type: :controller do
 
   describe '#show_environment_variables' do
     let!(:droplet) { VCAP::CloudController::DropletModel.make }
-    let!(:app_model) { VCAP::CloudController::AppModel.make(droplet: droplet) }
+    let!(:app_model) { FactoryBot.create(:app, droplet: droplet) }
     let!(:space) { app_model.space }
     let(:user) { VCAP::CloudController::User.make }
-    let(:revision) { VCAP::CloudController::RevisionModel.make(
-      app: app_model,
-      version: 808,
-      droplet_guid: droplet.guid,
-      environment_variables: { 'key' => 'value' },
-    )
-    }
+    let(:revision) do
+      VCAP::CloudController::RevisionModel.make(
+        app: app_model,
+        version: 808,
+        droplet_guid: droplet.guid,
+        environment_variables: { 'key' => 'value' },
+      )
+    end
 
     before do
       set_current_user(user)

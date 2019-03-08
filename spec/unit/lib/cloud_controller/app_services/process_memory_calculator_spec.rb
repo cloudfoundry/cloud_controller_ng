@@ -4,7 +4,7 @@ module VCAP::CloudController
   RSpec.describe ProcessMemoryCalculator do
     subject { ProcessMemoryCalculator.new(process) }
     let(:process_guid) { 'i-do-not-match-the-app-guid' }
-    let(:app_model) { AppModel.make }
+    let(:app_model) { FactoryBot.create(:app) }
     let(:process) { ProcessModel.make(guid: process_guid, app: app_model) }
     let(:stopped_state) { 'STOPPED' }
     let(:started_state) { 'STARTED' }

@@ -7,7 +7,7 @@ module VCAP::CloudController
       subject(:route_mapping_create) { RouteMappingCreate.new(user_audit_info, route, process, request_attrs, logger) }
 
       let(:space) { app.space }
-      let(:app) { AppModel.make }
+      let(:app) { FactoryBot.create(:app) }
       let(:user_guid) { 'user-guid' }
       let(:user_email) { '1@2.3' }
       let(:user_audit_info) { UserAuditInfo.new(user_email: user_email, user_guid: user_guid) }
@@ -126,7 +126,7 @@ module VCAP::CloudController
 
         context 'when the process is web' do
           let(:process_type) { 'web' }
-
+          let(:app) { FactoryBot.create(:app, :buildpack) }
           let(:process) { ProcessModel.make(diego: true, app: app, type: process_type, ports: [1234, 5678], health_check_type: 'none') }
 
           context 'requesting available port' do

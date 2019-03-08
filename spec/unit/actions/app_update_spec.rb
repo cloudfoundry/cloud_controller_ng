@@ -5,7 +5,7 @@ module VCAP::CloudController
   RSpec.describe AppUpdate do
     subject(:app_update) { AppUpdate.new(user_audit_info) }
 
-    let(:app_model) { AppModel.make(name: app_name) }
+    let(:app_model) { FactoryBot.create(:app, :buildpack, name: app_name) }
     let(:user_guid) { double(:user, guid: '1337') }
     let(:user_email) { 'cool_dude@hoopy_frood.com' }
     let(:user_audit_info) { UserAuditInfo.new(user_email: user_email, user_guid: user_guid) }

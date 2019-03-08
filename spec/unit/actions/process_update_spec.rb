@@ -25,7 +25,7 @@ module VCAP::CloudController
     })
     }
     let!(:droplet) { DropletModel.make(process_types: { web: 'BE rackup' }) }
-    let!(:app) { AppModel.make(droplet: droplet) }
+    let!(:app) { FactoryBot.create(:app, droplet: droplet) }
     let!(:process) do
       ProcessModel.make(
         :process,

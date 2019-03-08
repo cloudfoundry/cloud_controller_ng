@@ -3,7 +3,7 @@ require 'spec_helper'
 RSpec.describe 'Deployments' do
   let(:user) { make_developer_for_space(space) }
   let(:space) { app_model.space }
-  let(:app_model) { VCAP::CloudController::AppModel.make(desired_state: VCAP::CloudController::ProcessModel::STARTED) }
+  let(:app_model) { FactoryBot.create(:app, desired_state: VCAP::CloudController::ProcessModel::STARTED) }
   let(:droplet) { VCAP::CloudController::DropletModel.make(app: app_model, process_types: { 'web': 'webby' }) }
   let!(:process_model) { VCAP::CloudController::ProcessModel.make(app: app_model) }
   let(:user_header) { headers_for(user, email: user_email, user_name: user_name) }

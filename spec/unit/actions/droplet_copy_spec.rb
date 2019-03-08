@@ -5,8 +5,8 @@ module VCAP::CloudController
   RSpec.describe DropletCopy do
     let(:droplet_copy) { DropletCopy.new(source_droplet) }
     let(:source_space) { FactoryBot.create(:space) }
-    let!(:target_app) { VCAP::CloudController::AppModel.make(name: 'target-app-name') }
-    let!(:source_app) { VCAP::CloudController::AppModel.make(name: 'source-app-name', space: source_space) }
+    let!(:target_app) { FactoryBot.create(:app, name: 'target-app-name') }
+    let!(:source_app) { FactoryBot.create(:app, name: 'source-app-name', space: source_space) }
     let(:lifecycle_type) { :buildpack }
     let!(:source_droplet) do
       VCAP::CloudController::DropletModel.make(lifecycle_type,

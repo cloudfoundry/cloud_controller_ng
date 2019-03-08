@@ -56,12 +56,12 @@ module VCAP::CloudController
 
       it 'returns only the route_mappings in spaces requested' do
         space1                   = FactoryBot.create(:space)
-        app_in_space1            = AppModel.make(space: space1)
+        app_in_space1            = FactoryBot.create(:app, space: space1)
         route_mapping1_in_space1 = RouteMappingModel.make(app: app_in_space1)
         route_mapping2_in_space1 = RouteMappingModel.make(app: app_in_space1)
 
         space2                   = FactoryBot.create(:space)
-        app_in_space2            = AppModel.make(space: space2)
+        app_in_space2            = FactoryBot.create(:app, space: space2)
         route_mapping1_in_space2 = RouteMappingModel.make(app: app_in_space2)
 
         RouteMappingModel.make
@@ -73,8 +73,8 @@ module VCAP::CloudController
       context 'filter' do
         context 'app_guids' do
           let(:space) { FactoryBot.create(:space) }
-          let!(:route_mapping1) { RouteMappingModel.make(app: AppModel.make(space: space)) }
-          let!(:route_mapping2) { RouteMappingModel.make(app: AppModel.make(space: space)) }
+          let!(:route_mapping1) { RouteMappingModel.make(app: FactoryBot.create(:app, space: space)) }
+          let!(:route_mapping2) { RouteMappingModel.make(app: FactoryBot.create(:app, space: space)) }
           let(:filters) { { app_guids: [route_mapping1.app.guid] } }
 
           it 'only returns matching route mappings' do
@@ -86,8 +86,8 @@ module VCAP::CloudController
 
         context 'route_guids' do
           let(:space) { FactoryBot.create(:space) }
-          let!(:route_mapping1) { RouteMappingModel.make(app: AppModel.make(space: space)) }
-          let!(:route_mapping2) { RouteMappingModel.make(app: AppModel.make(space: space)) }
+          let!(:route_mapping1) { RouteMappingModel.make(app: FactoryBot.create(:app, space: space)) }
+          let!(:route_mapping2) { RouteMappingModel.make(app: FactoryBot.create(:app, space: space)) }
           let(:filters) { { route_guids: [route_mapping1.route.guid] } }
 
           it 'only returns matching route mappings' do
@@ -100,7 +100,7 @@ module VCAP::CloudController
     end
 
     describe '#fetch_for_app' do
-      let(:app) { AppModel.make }
+      let(:app) { FactoryBot.create(:app) }
 
       it 'returns a Sequel::Dataset' do
         returned_app, results = fetcher.fetch_for_app(app_guid: app.guid)
@@ -121,8 +121,8 @@ module VCAP::CloudController
       context 'filter' do
         context 'app_guids' do
           let(:space) { FactoryBot.create(:space) }
-          let!(:route_mapping1) { RouteMappingModel.make(app: AppModel.make(space: space)) }
-          let!(:route_mapping2) { RouteMappingModel.make(app: AppModel.make(space: space)) }
+          let!(:route_mapping1) { RouteMappingModel.make(app: FactoryBot.create(:app, space: space)) }
+          let!(:route_mapping2) { RouteMappingModel.make(app: FactoryBot.create(:app, space: space)) }
           let(:filters) { { app_guids: [route_mapping1.app.guid, route_mapping2.app.guid] } }
 
           it 'only returns matching route mappings' do
@@ -134,8 +134,8 @@ module VCAP::CloudController
 
         context 'route_guids' do
           let(:space) { FactoryBot.create(:space) }
-          let!(:route_mapping1) { RouteMappingModel.make(app: AppModel.make(space: space)) }
-          let!(:route_mapping2) { RouteMappingModel.make(app: AppModel.make(space: space)) }
+          let!(:route_mapping1) { RouteMappingModel.make(app: FactoryBot.create(:app, space: space)) }
+          let!(:route_mapping2) { RouteMappingModel.make(app: FactoryBot.create(:app, space: space)) }
           let(:filters) { { route_guids: [route_mapping1.route.guid, route_mapping2.route.guid] } }
 
           it 'only returns matching route mappings' do

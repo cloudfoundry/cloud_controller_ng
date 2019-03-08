@@ -1356,7 +1356,7 @@ module VCAP::CloudController
 
         context 'when one of the spaces has a v3 app in it' do
           let!(:space) { FactoryBot.create(:space, organization: org) }
-          let!(:app_model) { AppModel.make(space_guid: space.guid) }
+          let!(:app_model) { FactoryBot.create(:app, space: space) }
           let(:user) { User.make }
 
           before { set_current_user(user, admin: true) }
@@ -1455,7 +1455,7 @@ module VCAP::CloudController
 
           it 'successfully deletes the space in a background job' do
             space_guid = space.guid
-            app_guid = AppModel.make(space_guid: space_guid).guid
+            app_guid = FactoryBot.create(:app, space_guid: space_guid).guid
             service_instance_guid = service_instance.guid
             route_guid = Route.make(space_guid: space_guid).guid
 

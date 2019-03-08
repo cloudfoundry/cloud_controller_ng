@@ -1,5 +1,4 @@
 require 'models/runtime/buildpack_lifecycle_data_model'
-require_relative './sequences'
 
 FactoryBot.define do
   factory(

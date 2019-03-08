@@ -4,7 +4,7 @@ RSpec.describe 'GET', '/internal/v4/log_access/:guid', type: [:api] do
   include RequestSpecHelper
 
   context 'when the guid is for a v3 app' do
-    let(:app_model) { VCAP::CloudController::AppModel.make }
+    let(:app_model) { FactoryBot.create(:app) }
 
     it 'queries the proper v3 app' do
       get "/internal/v4/log_access/#{app_model.guid}", {}, admin_headers

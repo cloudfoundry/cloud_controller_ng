@@ -53,7 +53,7 @@ module VCAP::CloudController
           context 'and service bindings exist' do
             before do
               ServiceBinding.make(
-                app: AppModel.make(space: service_instance.space),
+                app: FactoryBot.create(:app, space: service_instance.space),
                 service_instance: service_instance
               )
             end

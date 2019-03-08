@@ -4,7 +4,7 @@ module VCAP::CloudController
   RSpec.describe ProcessModel, type: :model do
     let(:org) { FactoryBot.create(:organization) }
     let(:space) { FactoryBot.create(:space, organization: org) }
-    let(:parent_app) { AppModel.make(space: space) }
+    let(:parent_app) { FactoryBot.create(:app, :buildpack, space: space) }
 
     let(:domain) { PrivateDomain.make(owning_organization: org) }
     let(:route) { Route.make(domain: domain, space: space) }
@@ -87,7 +87,7 @@ module VCAP::CloudController
       end
 
       it 'has a desired_droplet from the parent app' do
-        parent_app = AppModel.make
+        parent_app = FactoryBot.create(:app)
         droplet    = DropletModel.make(app: parent_app, state: DropletModel::STAGED_STATE)
         parent_app.update(droplet: droplet)
         process = ProcessModel.make(app: parent_app)
@@ -96,7 +96,7 @@ module VCAP::CloudController
       end
 
       it 'has a space from the parent app' do
-        parent_app = AppModel.make(space: space)
+        parent_app = FactoryBot.create(:app, space: space)
         process    = ProcessModel.make
         expect(process.space).not_to eq(space)
         process.update(app: parent_app)
@@ -104,7 +104,7 @@ module VCAP::CloudController
       end
 
       it 'has an organization from the parent app' do
-        parent_app = AppModel.make(space: space)
+        parent_app = FactoryBot.create(:app, space: space)
         process    = ProcessModel.make
         expect(process.organization).not_to eq(org)
         process.update(app: parent_app).reload
@@ -113,7 +113,7 @@ module VCAP::CloudController
 
       it 'has a stack from the parent app' do
         stack      = FactoryBot.create(:stack)
-        parent_app = AppModel.make(space: space)
+        parent_app = FactoryBot.create(:app, :buildpack, space: space)
         parent_app.lifecycle_data.update(stack: stack.name)
         process = ProcessModel.make
 
@@ -369,7 +369,7 @@ module VCAP::CloudController
 
           let(:org) { FactoryBot.create(:organization, quota_definition: quota) }
           let(:space) { FactoryBot.create(:space, name: 'hi', organization: org, space_quota_definition: space_quota) }
-          let(:parent_app) { AppModel.make(space: space) }
+          let(:parent_app) { FactoryBot.create(:app, space: space) }
           subject!(:process) { ProcessModelFactory.make(app: parent_app, memory: 64, instances: 2, state: 'STARTED') }
 
           it 'should raise error when quota is exceeded' do
@@ -600,7 +600,7 @@ module VCAP::CloudController
     end
 
     describe '#execution_metadata' do
-      let(:parent_app) { AppModel.make }
+      let(:parent_app) { FactoryBot.create(:app) }
       subject(:process) { ProcessModel.make(app: parent_app) }
 
       context 'when the app has a droplet' do
@@ -686,7 +686,7 @@ module VCAP::CloudController
     end
 
     describe '#environment_json' do
-      let(:parent_app) { AppModel.make(environment_variables: { 'key' => 'value' }) }
+      let(:parent_app) { FactoryBot.create(:app, environment_variables: { 'key' => 'value' }) }
       let!(:process) { ProcessModel.make(app: parent_app) }
 
       it 'returns the parent app environment_variables' do
@@ -708,7 +708,7 @@ module VCAP::CloudController
     end
 
     describe '#database_uri' do
-      let(:parent_app) { AppModel.make(environment_variables: { 'jesse' => 'awesome' }, space: space) }
+      let(:parent_app) { FactoryBot.create(:app, environment_variables: { 'jesse' => 'awesome' }, space: space) }
       subject(:process) { ProcessModel.make(app: parent_app) }
 
       context 'when there are database-like services' do
@@ -905,7 +905,7 @@ module VCAP::CloudController
       end
 
       context 'when revisions are present and enabled' do
-        let(:parent_app) { AppModel.make(space: space, revisions_enabled: true) }
+        let(:parent_app) { FactoryBot.create(:app, space: space, revisions_enabled: true) }
 
         it 'returns the droplet from the latest revision' do
           expect(process.actual_droplet).to eq(first_droplet)
@@ -1001,7 +1001,7 @@ module VCAP::CloudController
     end
 
     describe '#package_state' do
-      let(:parent_app) { AppModel.make }
+      let(:parent_app) { FactoryBot.create(:app) }
       subject(:process) { ProcessModel.make(app: parent_app) }
 
       it 'calculates the package state' do
@@ -1653,7 +1653,7 @@ module VCAP::CloudController
     end
 
     describe 'name' do
-      let(:parent_app) { AppModel.make(name: 'parent-app-name') }
+      let(:parent_app) { FactoryBot.create(:app, name: 'parent-app-name') }
       let!(:process) { ProcessModel.make(app: parent_app) }
 
       it 'returns the parent app name' do
@@ -1662,7 +1662,7 @@ module VCAP::CloudController
     end
 
     describe 'staging failures' do
-      let(:parent_app) { AppModel.make(name: 'parent-app-name') }
+      let(:parent_app) { FactoryBot.create(:app, name: 'parent-app-name') }
       subject(:process) { ProcessModel.make(app: parent_app) }
       let(:error_id) { 'StagingFailed' }
       let(:error_description) { 'stating failed' }

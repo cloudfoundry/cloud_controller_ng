@@ -3,8 +3,8 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe TaskListFetcher do
     let(:space1) { FactoryBot.create(:space) }
-    let(:app_in_space1) { AppModel.make(space_guid: space1.guid) }
-    let(:app2_in_space1) { AppModel.make(space_guid: space1.guid) }
+    let(:app_in_space1) { FactoryBot.create(:app, space: space1) }
+    let(:app2_in_space1) { FactoryBot.create(:app, space: space1) }
 
     let!(:task_in_space1) { TaskModel.make(app_guid: app_in_space1.guid) }
     let!(:task2_in_space1) { TaskModel.make(app_guid: app_in_space1.guid) }
@@ -14,7 +14,7 @@ module VCAP::CloudController
     let!(:label_for_task_in_space1_jr) { TaskLabelModel.make(resource_guid: task_in_space1.guid, key_name: 'key', value: 'slimjim') }
 
     let(:space2) { FactoryBot.create(:space) }
-    let(:app_in_space2) { AppModel.make(space_guid: space2.guid) }
+    let(:app_in_space2) { FactoryBot.create(:app, space: space2) }
     let!(:task_in_space2) { TaskModel.make(app_guid: app_in_space2.guid) }
     let!(:failed_task_in_space2) { TaskModel.make(app_guid: app_in_space2.guid, state: TaskModel::FAILED_STATE) }
 
@@ -22,7 +22,7 @@ module VCAP::CloudController
 
     let(:org2) { FactoryBot.create(:organization) }
     let(:space_in_org2) { FactoryBot.create(:space, organization: org2) }
-    let(:app_in_org2) { AppModel.make(space_guid: space_in_org2.guid) }
+    let(:app_in_org2) { FactoryBot.create(:app, space: space_in_org2) }
     let!(:task_in_org2) { TaskModel.make(app_guid: app_in_org2.guid) }
 
     let(:pagination_options) { PaginationOptions.new({}) }

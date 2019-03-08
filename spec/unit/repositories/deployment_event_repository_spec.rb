@@ -4,7 +4,7 @@ require 'repositories/deployment_event_repository'
 module VCAP::CloudController
   module Repositories
     RSpec.describe DeploymentEventRepository do
-      let(:app) { AppModel.make(name: 'popsicle') }
+      let(:app) { FactoryBot.create(:app, name: 'popsicle') }
       let(:user) { User.make }
       let(:droplet) { DropletModel.make }
       let(:deployment) { DeploymentModel.make(app_guid: app.guid) }

@@ -426,7 +426,7 @@ module VCAP::CloudController
     describe '#valid?' do
       it 'cannot be associated with both an app and a build' do
         build = BuildModel.make
-        app = AppModel.make
+        app = FactoryBot.create(:app)
         lifecycle_data.build = build
         lifecycle_data.app = app
         expect(lifecycle_data.valid?).to be(false)
@@ -435,7 +435,7 @@ module VCAP::CloudController
 
       it 'cannot be associated with both an app and a droplet' do
         droplet = DropletModel.make
-        app = AppModel.make
+        app = FactoryBot.create(:app)
         lifecycle_data.droplet = droplet
         lifecycle_data.app = app
         expect(lifecycle_data.valid?).to be(false)
@@ -443,7 +443,7 @@ module VCAP::CloudController
       end
 
       it 'cannot contain invalid buildpacks' do
-        app = AppModel.make
+        app = FactoryBot.create(:app)
         lifecycle_data.app = app
         lifecycle_data.buildpacks = [nil, nil]
         expect(lifecycle_data.valid?).to be(false)
@@ -452,7 +452,7 @@ module VCAP::CloudController
       end
 
       it 'adds BuildpackLifecyleBuildpack errors to the BuildpackLifecycleDataModels' do
-        app = AppModel.make
+        app = FactoryBot.create(:app)
         lifecycle_data.app = app
         lifecycle_data.buildpacks = ['invalid_buildpack_name']
         expect(lifecycle_data.valid?).to be(false)
@@ -470,7 +470,7 @@ module VCAP::CloudController
       end
 
       it 'can be associated with apps' do
-        app = AppModel.make
+        app = FactoryBot.create(:app)
         lifecycle_data.app = app
         lifecycle_data.save
         expect(lifecycle_data.reload.app).to eq(app)

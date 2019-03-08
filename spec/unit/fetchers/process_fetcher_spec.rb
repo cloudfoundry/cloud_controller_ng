@@ -6,7 +6,7 @@ module VCAP::CloudController
     subject(:fetcher) { ProcessFetcher }
 
     describe '.fetch' do
-      let(:app) { AppModel.make }
+      let(:app) { FactoryBot.create(:app) }
       let(:space) { app.space }
       let(:org) { app.organization }
       let!(:process) { ProcessModel.make(app: app) }
@@ -29,7 +29,7 @@ module VCAP::CloudController
     end
 
     describe 'fetch_for_app_by_type' do
-      let(:app) { AppModel.make }
+      let(:app) { FactoryBot.create(:app) }
       let(:space) { app.space }
       let(:org) { app.organization }
       let!(:process) { ProcessModel.make(app: app) }

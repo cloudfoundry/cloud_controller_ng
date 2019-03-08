@@ -10,7 +10,7 @@ module VCAP
           subject(:lifecycle_protocol) { LifecycleProtocol.new }
 
           it_behaves_like 'a lifecycle protocol' do
-            let(:app) { AppModel.make }
+            let(:app) { FactoryBot.create(:app) }
             let(:package) { PackageModel.make(:docker, app: app) }
             let(:droplet) { DropletModel.make(package: package, app: app) }
             let(:process) { ProcessModel.make(app: app) }
@@ -29,7 +29,7 @@ module VCAP
           end
 
           describe '#lifecycle_data' do
-            let(:app) { AppModel.make }
+            let(:app) { FactoryBot.create(:app) }
             let(:package) do
               PackageModel.make(:docker,
                 app:             app,
@@ -55,7 +55,7 @@ module VCAP
           end
 
           describe '#desired_app_message' do
-            let(:app) { AppModel.make }
+            let(:app) { FactoryBot.create(:app) }
             let(:droplet) do
               DropletModel.make(:docker,
                                 state: DropletModel::STAGED_STATE,
@@ -117,7 +117,7 @@ module VCAP
 
           describe '#desired_lrp_builder' do
             let(:config) { Config.new({}) }
-            let(:app) { AppModel.make(droplet: droplet) }
+            let(:app) { FactoryBot.create(:app, droplet: droplet) }
             let(:droplet) do
               DropletModel.make(:docker, {
                 state: DropletModel::STAGED_STATE,

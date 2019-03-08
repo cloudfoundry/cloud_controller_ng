@@ -5,7 +5,7 @@ module VCAP::CloudController::Presenters::Mixins
   RSpec.describe MetadataPresentationHelpers do
     let(:dummy_class) { Class.new { include MetadataPresentationHelpers } }
     subject { dummy_class.new }
-    let(:app) { VCAP::CloudController::AppModel.make }
+    let(:app) { FactoryBot.create(:app) }
 
     describe '#hashified_labels' do
       context 'when the list of labels is empty' do

@@ -1,7 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe RouteMappingsController, type: :controller do
-  let(:app) { VCAP::CloudController::AppModel.make }
+  let(:app) { FactoryBot.create(:app) }
   let(:space) { app.space }
   let(:org) { space.organization }
   let!(:app_process) { VCAP::CloudController::ProcessModel.make(:process, app: app, type: 'web', ports: [8080]) }
@@ -300,8 +300,8 @@ RSpec.describe RouteMappingsController, type: :controller do
     end
 
     it 'returns route mappings the user has roles to see' do
-      route_mapping_1 = VCAP::CloudController::RouteMappingModel.make(app: VCAP::CloudController::AppModel.make(space: space))
-      route_mapping_2 = VCAP::CloudController::RouteMappingModel.make(app: VCAP::CloudController::AppModel.make(space: space))
+      route_mapping_1 = VCAP::CloudController::RouteMappingModel.make(app: FactoryBot.create(:app, space: space))
+      route_mapping_2 = VCAP::CloudController::RouteMappingModel.make(app: FactoryBot.create(:app, space: space))
       VCAP::CloudController::RouteMappingModel.make
 
       get :index
@@ -320,7 +320,7 @@ RSpec.describe RouteMappingsController, type: :controller do
       it 'uses the app as a filter' do
         route_mapping_1 = VCAP::CloudController::RouteMappingModel.make(app: app)
         route_mapping_2 = VCAP::CloudController::RouteMappingModel.make(app: app)
-        VCAP::CloudController::RouteMappingModel.make(app: VCAP::CloudController::AppModel.make(space: space))
+        VCAP::CloudController::RouteMappingModel.make(app: FactoryBot.create(:app, space: space))
 
         get :index, params: { app_guid: app.guid }
 

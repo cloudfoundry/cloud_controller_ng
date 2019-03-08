@@ -15,7 +15,7 @@ module VCAP::CloudController::Presenters::V3
         weight:       55
       )
     end
-    let(:app) { VCAP::CloudController::AppModel.make }
+    let(:app) { FactoryBot.create(:app) }
     let(:process) { VCAP::CloudController::ProcessModel.make(app: app, type: 'some-type') }
     let(:route) { VCAP::CloudController::Route.make(space: app.space) }
 

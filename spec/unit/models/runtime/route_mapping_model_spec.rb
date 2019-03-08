@@ -5,7 +5,7 @@ module VCAP::CloudController
     describe '#process' do
       let(:space) { FactoryBot.create(:space) }
       let(:route) { VCAP::CloudController::Route.make(space: space) }
-      let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
+      let(:app_model) { FactoryBot.create(:app, space: space) }
       let!(:web_process) do
         VCAP::CloudController::ProcessModel.make(
           app: app_model,
@@ -34,7 +34,7 @@ module VCAP::CloudController
     describe 'validations' do
       let(:space) { FactoryBot.create(:space) }
       let(:route) { VCAP::CloudController::Route.make(space: space) }
-      let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
+      let(:app_model) { FactoryBot.create(:app, space: space) }
 
       it 'must define an app_port' do
         invalid_route_mapping_opts = { app: app_model, route: route, process_type: 'buckeyes', app_port: nil }

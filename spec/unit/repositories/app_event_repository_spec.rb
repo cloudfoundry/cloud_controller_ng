@@ -148,7 +148,7 @@ module VCAP::CloudController
 
       describe '#record_app_map_droplet' do
         let(:space) { FactoryBot.create(:space) }
-        let(:app) { AppModel.make(space: space) }
+        let(:app) { FactoryBot.create(:app, space: space) }
 
         it 'creates a new audit.app.droplet.mapped event' do
           event = app_event_repository.record_app_map_droplet(app, space, user_audit_info, { a: 1 })
@@ -167,7 +167,7 @@ module VCAP::CloudController
 
       describe '#record_app_apply_manifest' do
         let(:space) { FactoryBot.create(:space) }
-        let(:app) { AppModel.make(space: space) }
+        let(:app) { FactoryBot.create(:app, space: space) }
         let(:metadata) { { 'applications' => [{ 'name' => 'blah', 'instances' => 2 }] }.to_yaml }
 
         it 'creates a new audit.app.apply_manifest event' do
@@ -267,7 +267,7 @@ module VCAP::CloudController
         end
 
         context 'when given route mapping information' do
-          let(:app) { AppModel.make(space: route.space) }
+          let(:app) { FactoryBot.create(:app, space: route.space) }
           let(:route_mapping) { RouteMappingModel.make(route: route, app: app, process_type: 'potato') }
 
           it 'creates a new app.map_route audit event with appropriate metadata' do
@@ -445,7 +445,7 @@ module VCAP::CloudController
         end
 
         context 'v3' do
-          let(:app) { AppModel.make }
+          let(:app) { FactoryBot.create(:app) }
           let(:buildpack) { 'schmython' }
           let(:attrs) do
             {
@@ -484,7 +484,7 @@ module VCAP::CloudController
 
       context 'with a v3 app' do
         describe '#record_app_create' do
-          let(:app) { AppModel.make(:buildpack) }
+          let(:app) { FactoryBot.create(:app, :buildpack) }
           let(:request_attrs) do
             {
               'name'             => 'new',
@@ -509,7 +509,7 @@ module VCAP::CloudController
         end
 
         describe '#record_app_start' do
-          let(:app) { AppModel.make }
+          let(:app) { FactoryBot.create(:app) }
 
           it 'creates a new audit.app.start event' do
             event = app_event_repository.record_app_start(app, user_audit_info)
@@ -530,7 +530,7 @@ module VCAP::CloudController
         end
 
         describe '#record_app_stop' do
-          let(:app) { AppModel.make }
+          let(:app) { FactoryBot.create(:app) }
 
           it 'creates a new audit.app.stop event' do
             event = app_event_repository.record_app_stop(app, user_audit_info)
@@ -551,7 +551,7 @@ module VCAP::CloudController
         end
 
         describe '#record_app_restart' do
-          let(:app) { AppModel.make }
+          let(:app) { FactoryBot.create(:app) }
 
           it 'creates a new audit.app.restart event' do
             event = app_event_repository.record_app_restart(app, user_audit_info)

@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe DeploymentModel do
-    let(:app) { AppModel.make(name: 'rolling-app') }
+    let(:app) { FactoryBot.create(:app, name: 'rolling-app') }
     let(:droplet) { DropletModel.make(app: app) }
     let(:deploying_web_process) { ProcessModel.make }
 

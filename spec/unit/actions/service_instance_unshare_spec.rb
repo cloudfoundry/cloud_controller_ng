@@ -39,7 +39,7 @@ module VCAP::CloudController
       end
 
       context 'when bindings exist in the target space' do
-        let(:app) { AppModel.make(space: target_space, name: 'myapp') }
+        let(:app) { FactoryBot.create(:app, space: target_space, name: 'myapp') }
         let(:delete_binding_action) { instance_double(ServiceBindingDelete) }
         let(:service_binding) { ServiceBinding.make(app: app, service_instance: service_instance) }
 
@@ -65,9 +65,9 @@ module VCAP::CloudController
         end
 
         context 'when bindings have delete operations in progress' do
-          let(:app_1) { AppModel.make(space: target_space, name: 'myapp1') }
-          let(:app_2) { AppModel.make(space: target_space, name: 'myapp2') }
-          let(:app_3) { AppModel.make(space: target_space, name: 'myapp3') }
+          let(:app_1) { FactoryBot.create(:app, space: target_space, name: 'myapp1') }
+          let(:app_2) { FactoryBot.create(:app, space: target_space, name: 'myapp2') }
+          let(:app_3) { FactoryBot.create(:app, space: target_space, name: 'myapp3') }
           let(:service_binding_1) { ServiceBinding.make(app: app_1, service_instance: service_instance) }
           let(:service_binding_2) { ServiceBinding.make(app: app_2, service_instance: service_instance) }
           let(:service_binding_3) { ServiceBinding.make(app: app_3, service_instance: service_instance) }
@@ -110,7 +110,7 @@ module VCAP::CloudController
     end
 
     context 'when bindings exist in the source space' do
-      let(:app) { AppModel.make(space: service_instance.space, name: 'myapp') }
+      let(:app) { FactoryBot.create(:app, space: service_instance.space, name: 'myapp') }
       let(:delete_binding_action) { instance_double(ServiceBindingDelete) }
       let(:service_binding) { ServiceBinding.make(app: app, service_instance: service_instance) }
 

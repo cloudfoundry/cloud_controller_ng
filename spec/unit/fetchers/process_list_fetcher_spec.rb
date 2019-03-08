@@ -53,7 +53,7 @@ module VCAP::CloudController
 
         context 'app guids' do
           let!(:desired_process) { ProcessModel.make(app: desired_app) }
-          let(:desired_app) { AppModel.make }
+          let(:desired_app) { FactoryBot.create(:app) }
           let(:filters) { { app_guids: [desired_app.guid] } }
 
           it 'only returns matching processes' do
@@ -84,11 +84,11 @@ module VCAP::CloudController
     end
 
     describe '#fetch_for_spaces' do
-      let(:app1) { AppModel.make }
+      let(:app1) { FactoryBot.create(:app) }
       let(:space1) { app1.space }
       let!(:process_in_space1) { ProcessModel.make(app: app1, type: 'a') }
       let!(:process2_in_space1) { ProcessModel.make(app: app1, type: 'b') }
-      let(:app2) { AppModel.make }
+      let(:app2) { FactoryBot.create(:app) }
       let(:space2) { app2.space }
       let!(:process_in_space2) { ProcessModel.make(app: app2) }
 
@@ -115,7 +115,7 @@ module VCAP::CloudController
     end
 
     describe '#fetch_for_app' do
-      let(:app) { AppModel.make }
+      let(:app) { FactoryBot.create(:app) }
       let(:filters) { { app_guid: app.guid } }
 
       it 'returns a Sequel::Dataset and the app' do

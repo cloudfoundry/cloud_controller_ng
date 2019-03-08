@@ -41,7 +41,7 @@ module VCAP::CloudController
         end
 
         context 'when there are bindings in the target space' do
-          let(:target_app) { AppModel.make(space: target_space) }
+          let(:target_app) { FactoryBot.create(:app, space: target_space) }
           let!(:target_binding) { ServiceBinding.make(app: target_app, service_instance: service_instance) }
 
           it 'issues an unbind and fails the instance deletion if the service instance is deleted recursively and accepts_incomplete is true' do
@@ -70,7 +70,7 @@ module VCAP::CloudController
 
           context 'and when there are bindings in the source space' do
             let(:source_space) { service_instance.space }
-            let(:source_app) { AppModel.make(space: source_space) }
+            let(:source_app) { FactoryBot.create(:app, space: source_space) }
             let!(:source_binding) { ServiceBinding.make(app: source_app, service_instance: service_instance) }
 
             it 'issues unbinds and fails the instance deletion if the service instance is deleted recursively and accepts_incomplete is true' do
@@ -122,7 +122,7 @@ module VCAP::CloudController
       context 'when DELETE /v3/apps/:guid is called' do
         context 'and multiple service bindings exist' do
           let(:space) { FactoryBot.create(:space) }
-          let(:app_model) { VCAP::CloudController::AppModel.make(name: 'app_name', space: space) }
+          let(:app_model) { FactoryBot.create(:app, name: 'app_name', space: space) }
           let(:package) { VCAP::CloudController::PackageModel.make(app: app_model) }
           let!(:droplet) { VCAP::CloudController::DropletModel.make(package: package, app: app_model) }
           let!(:process) { VCAP::CloudController::ProcessModel.make(app: app_model) }

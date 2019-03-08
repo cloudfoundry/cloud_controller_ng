@@ -5,7 +5,7 @@ module VCAP::CloudController
     RSpec.describe BuildpackCacheUpload, job_context: :api do
       subject(:job) { BuildpackCacheUpload.new(local_path: local_file.path, app_guid: app.guid, stack_name: 'some-stack') }
 
-      let(:app) { AppModel.make(:buildpack) }
+      let(:app) { FactoryBot.create(:app, :buildpack) }
 
       let(:file_content) { 'some_file_content' }
       let(:local_file) do

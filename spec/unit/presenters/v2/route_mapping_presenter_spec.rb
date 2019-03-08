@@ -13,7 +13,7 @@ module CloudController::Presenters::V2
     let(:relations_hash) { { 'relationship_key' => 'relationship_value' } }
 
     describe '#entity_hash' do
-      let(:app) { VCAP::CloudController::AppModel.make }
+      let(:app) { FactoryBot.create(:app) }
       let(:route) { VCAP::CloudController::Route.make(space: app.space) }
       let(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: app, route: route, app_port: 9090) }
 

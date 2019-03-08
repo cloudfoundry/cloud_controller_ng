@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe TaskModel do
-    let(:parent_app) { AppModel.make }
+    let(:parent_app) { FactoryBot.create(:app) }
 
     describe 'after create' do
       it 'creates a TASK_STARTED event' do
@@ -98,7 +98,7 @@ module VCAP::CloudController
       let(:task) { TaskModel.make }
       let(:org) { FactoryBot.create(:organization) }
       let(:space) { FactoryBot.create(:space, organization: org) }
-      let(:app) { AppModel.make space_guid: space.guid }
+      let(:app) { FactoryBot.create(:app, space: space) }
       let(:droplet) { DropletModel.make(app_guid: app.guid) }
 
       describe 'name' do
@@ -202,7 +202,7 @@ module VCAP::CloudController
           task.sequence_id = 0
           task.save
 
-          other_app = AppModel.make space_guid: space.guid
+          other_app = FactoryBot.create(:app, space: space)
 
           expect {
             TaskModel.make app: other_app, sequence_id: 0

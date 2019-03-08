@@ -6,7 +6,7 @@ module VCAP::CloudController
     let(:builder) { StagingEnvironmentBuilder.new }
 
     describe '#build' do
-      let(:app) { AppModel.make(environment_variables: { 'APP_VAR' => 'is here' }) }
+      let(:app) { FactoryBot.create(:app, environment_variables: { 'APP_VAR' => 'is here' }) }
       let(:space) { app.space }
       let(:stack) { 'my-stack' }
       let(:memory_limit) { 12340 }

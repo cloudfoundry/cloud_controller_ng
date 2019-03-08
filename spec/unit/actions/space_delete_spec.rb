@@ -10,7 +10,7 @@ module VCAP::CloudController
     describe '#delete' do
       let!(:space) { FactoryBot.create(:space, name: 'space-1') }
       let!(:space_2) { FactoryBot.create(:space, name: 'space-2') }
-      let!(:app) { AppModel.make(space_guid: space.guid) }
+      let!(:app) { FactoryBot.create(:app, space: space) }
 
       let(:space_dataset) { Space.dataset }
       let(:user) { User.make }

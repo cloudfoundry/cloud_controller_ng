@@ -9,7 +9,7 @@ module VCAP::CloudController
         end
       end
 
-      let(:app) { AppModel.make }
+      let(:app) { FactoryBot.create(:app) }
       let(:annotations) do
         {
           release: 'stable',

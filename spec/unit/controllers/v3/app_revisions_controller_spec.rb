@@ -12,8 +12,8 @@ RSpec.describe AppRevisionsController, type: :controller do
   end
 
   describe '#index' do
-    let!(:app_model) { VCAP::CloudController::AppModel.make }
-    let!(:app_without_revisions) { VCAP::CloudController::AppModel.make(space: space) }
+    let!(:app_model) { FactoryBot.create(:app) }
+    let!(:app_without_revisions) { FactoryBot.create(:app, space: space) }
     let!(:revision1) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 808) }
     let!(:revision2) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 809) }
     let!(:revision_for_another_app) { VCAP::CloudController::RevisionModel.make }
@@ -82,8 +82,8 @@ RSpec.describe AppRevisionsController, type: :controller do
   end
 
   describe '#deployed' do
-    let!(:app_model) { VCAP::CloudController::AppModel.make }
-    let!(:app_without_revisions) { VCAP::CloudController::AppModel.make(space: space) }
+    let!(:app_model) { FactoryBot.create(:app) }
+    let!(:app_without_revisions) { FactoryBot.create(:app, space: space) }
     let!(:revision1) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 808) }
     let!(:revision2) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 809) }
     let!(:revision_for_another_app) { VCAP::CloudController::RevisionModel.make }

@@ -4,7 +4,7 @@ require 'cloud_controller/diego/task_environment'
 module VCAP::CloudController::Diego
   RSpec.describe TaskEnvironment do
     let(:app_env_vars) { { 'ENV_VAR_2' => 'jeff' } }
-    let(:app) { VCAP::CloudController::AppModel.make(environment_variables: app_env_vars, name: 'utako') }
+    let(:app) { FactoryBot.create(:app, environment_variables: app_env_vars, name: 'utako') }
     let(:task) { VCAP::CloudController::TaskModel.make(name: 'my-task', command: 'echo foo', memory_in_mb: 1024) }
     let(:space) { app.space }
     let(:staging_disk_in_mb) { 512 }
@@ -77,7 +77,7 @@ module VCAP::CloudController::Diego
       end
 
       context 'when the task is for a buildpack app' do
-        let(:app) { VCAP::CloudController::AppModel.make(:buildpack) }
+        let(:app) { FactoryBot.create(:app, :buildpack) }
 
         it 'sets the LANG environment variable' do
           constructed_envs = TaskEnvironment.new(app, task, space).build
@@ -86,7 +86,7 @@ module VCAP::CloudController::Diego
       end
 
       context 'when the task is for a docker app' do
-        let(:app) { VCAP::CloudController::AppModel.make(:docker) }
+        let(:app) { FactoryBot.create(:app, :docker) }
 
         it 'does not set the LANG environment variable' do
           constructed_envs = TaskEnvironment.new(app, task, space).build

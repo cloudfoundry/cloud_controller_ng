@@ -7,7 +7,7 @@ RSpec.describe 'Builds' do
   let(:developer_headers) { headers_for(developer, user_name: user_name, email: 'bob@loblaw.com') }
   let(:user_name) { 'bob the builder' }
   let(:parsed_response) { MultiJson.load(last_response.body) }
-  let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid, name: 'my-app') }
+  let(:app_model) { FactoryBot.create(:app, :buildpack, space: space, name: 'my-app') }
 
   describe 'POST /v3/builds' do
     let(:package) do
@@ -168,7 +168,7 @@ RSpec.describe 'Builds' do
 
     context 'when there are other spaces the developer cannot see' do
       let(:non_accessible_space) { FactoryBot.create(:space) }
-      let(:non_accessible_app_model) { VCAP::CloudController::AppModel.make(space_guid: non_accessible_space.guid, name: 'other-app') }
+      let(:non_accessible_app_model) { FactoryBot.create(:app, space: non_accessible_space, name: 'other-app') }
       let!(:non_accessible_build) { VCAP::CloudController::BuildModel.make(app: non_accessible_app_model) }
 
       let(:per_page) { 2 }

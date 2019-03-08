@@ -5,7 +5,7 @@ module VCAP::CloudController
     it { is_expected.to have_timestamp_columns }
 
     describe 'Associations' do
-      it { is_expected.to have_associated :app, associated_instance: ->(binding) { AppModel.make(space: binding.space) } }
+      it { is_expected.to have_associated :app, associated_instance: ->(binding) { FactoryBot.create(:app, space: binding.space) } }
       it { is_expected.to have_associated :service_instance, associated_instance: ->(binding) { ServiceInstance.make(space: binding.space) } }
 
       it 'has a v2 app through the v3 app' do
@@ -76,7 +76,7 @@ module VCAP::CloudController
       end
 
       context 'when a binding already exists with the same app_guid and name' do
-        let(:app) { AppModel.make }
+        let(:app) { FactoryBot.create(:app) }
         let(:service_instance) { ServiceInstance.make(space: app.space) }
 
         context 'and the name is not null' do
@@ -115,7 +115,7 @@ module VCAP::CloudController
           end
 
           it 'does not allow changing app after it has been set' do
-            binding.app = AppModel.make
+            binding.app = FactoryBot.create(:app)
             expect { binding.save }.to raise_error Sequel::ValidationFailed, /app/
           end
         end
@@ -134,7 +134,7 @@ module VCAP::CloudController
       end
 
       describe 'service instance and app space matching' do
-        let(:app) { AppModel.make }
+        let(:app) { FactoryBot.create(:app) }
 
         context 'when the service instance and the app are in different spaces' do
           let(:service_instance) { ManagedServiceInstance.make }
@@ -211,7 +211,7 @@ module VCAP::CloudController
     end
 
     describe '#in_suspended_org?' do
-      let(:app_model) { VCAP::CloudController::AppModel.make }
+      let(:app_model) { FactoryBot.create(:app) }
       subject(:service_binding) { VCAP::CloudController::ServiceBinding.new(app: app_model) }
 
       context 'when in a suspended organization' do
@@ -299,7 +299,7 @@ module VCAP::CloudController
     end
 
     describe '#user_visibility_filter' do
-      let(:app_model) { AppModel.make }
+      let(:app_model) { FactoryBot.create(:app) }
       let!(:service_instance) { ManagedServiceInstance.make }
       let!(:other_binding) { ServiceBinding.make }
       let!(:service_binding) do
@@ -448,7 +448,7 @@ module VCAP::CloudController
 
     describe '#save_with_new_operation' do
       let(:service_instance) { ServiceInstance.make }
-      let(:app) { AppModel.make(space: service_instance.space) }
+      let(:app) { FactoryBot.create(:app, space: service_instance.space) }
       let(:binding) {
         ServiceBinding.new(
           service_instance: service_instance,

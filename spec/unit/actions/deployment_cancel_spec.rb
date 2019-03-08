@@ -6,7 +6,7 @@ module VCAP::CloudController
   RSpec.describe DeploymentCancel do
     let(:space) { FactoryBot.create(:space) }
     let(:instance_count) { 6 }
-    let(:app) { AppModel.make }
+    let(:app) { FactoryBot.create(:app) }
     let(:old_droplet) { DropletModel.make(app: app, process_types: { 'web' => 'the internet' }) }
     let(:new_droplet) { DropletModel.make(app: app, process_types: { 'web' => 'the net' }) }
     let(:original_web_process) { ProcessModelFactory.make(space: space, instances: 1, state: 'STARTED', app: app) }

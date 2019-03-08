@@ -6,7 +6,7 @@ module VCAP::CloudController
 
     describe '#system_env' do
       context 'when there are no services' do
-        let(:app) { AppModel.make(environment_variables: { 'jesse' => 'awesome' }) }
+        let(:app) { FactoryBot.create(:app, environment_variables: { 'jesse' => 'awesome' }) }
 
         it 'contains an empty vcap_services' do
           expect(system_env_presenter.system_env[:VCAP_SERVICES]).to eq({})
@@ -15,7 +15,7 @@ module VCAP::CloudController
 
       context 'when there are services' do
         let(:space) { FactoryBot.create(:space) }
-        let(:app) { AppModel.make(environment_variables: { 'jesse' => 'awesome' }, space: space) }
+        let(:app) { FactoryBot.create(:app, environment_variables: { 'jesse' => 'awesome' }, space: space) }
         let(:service) { Service.make(label: 'elephantsql-n/a') }
         let(:service_alt) { Service.make(label: 'giraffesql-n/a') }
         let(:service_plan) { ServicePlan.make(service: service) }

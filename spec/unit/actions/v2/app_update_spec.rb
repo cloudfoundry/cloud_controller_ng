@@ -315,7 +315,7 @@ module VCAP::CloudController
 
       describe 'changing lifecycle types' do
         context 'when changing from docker to buildpack' do
-          let(:process) { ProcessModel.make(app: AppModel.make(:docker)) }
+          let(:process) { ProcessModel.make(app: FactoryBot.create(:app, :docker)) }
           let(:app) { process.app }
 
           it 'raises an error setting buildpack' do
@@ -336,7 +336,7 @@ module VCAP::CloudController
         end
 
         context 'when changing from buildpack to docker' do
-          let(:process) { ProcessModel.make(app: AppModel.make(:buildpack)) }
+          let(:process) { ProcessModel.make(app: FactoryBot.create(:app, :buildpack)) }
           let(:app) { process.app }
 
           it 'raises an error' do
@@ -350,7 +350,7 @@ module VCAP::CloudController
       end
 
       describe 'updating docker_image' do
-        let(:process) { ProcessModelFactory.make(app: AppModel.make(:docker), docker_image: 'repo/original-image') }
+        let(:process) { ProcessModelFactory.make(app: FactoryBot.create(:app, :docker), docker_image: 'repo/original-image') }
         let!(:original_package) { process.latest_package }
         let(:app_stage) { instance_double(V2::AppStage, stage: nil) }
 
@@ -425,7 +425,7 @@ module VCAP::CloudController
       end
 
       describe 'updating docker_credentials' do
-        let(:process) { ProcessModelFactory.make(app: AppModel.make(:docker), docker_image: 'repo/original-image') }
+        let(:process) { ProcessModelFactory.make(app: FactoryBot.create(:app, :docker), docker_image: 'repo/original-image') }
         let!(:original_package) { process.latest_package }
         let(:app_stage) { instance_double(V2::AppStage, stage: nil) }
 
@@ -450,7 +450,7 @@ module VCAP::CloudController
         end
 
         context 'when docker_image is not requested and the app does not have a docker_image' do
-          let(:process) { ProcessModelFactory.make(app: AppModel.make(:docker)) }
+          let(:process) { ProcessModelFactory.make(app: FactoryBot.create(:app, :docker)) }
 
           it 'raises an error' do
             request_attrs = { 'docker_credentials' => {

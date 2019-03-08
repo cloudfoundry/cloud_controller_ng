@@ -110,7 +110,7 @@ module VCAP::CloudController::Presenters::V3
     context 'for apps' do
       it_behaves_like JobPresenter do
         let(:resource_type) { 'app' }
-        let(:resource) { VCAP::CloudController::AppModel.make }
+        let(:resource) { FactoryBot.create(:app) }
       end
     end
 
