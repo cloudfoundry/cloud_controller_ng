@@ -178,6 +178,7 @@ module VCAP::CloudController
                 created_at: Time.now - 24.hours
               )
             end
+
             let!(:newer_web_process) do
               ProcessModel.make(
                 app: app,
@@ -188,7 +189,7 @@ module VCAP::CloudController
               )
             end
 
-            it 'creates a process of web-deployment-guid type with the same characteristics as the oldest web process' do
+            it 'creates a process of web-deployment-guid type with the same characteristics as the newer web process' do
               DeploymentCreate.create(app: app, message: restart_message, user_audit_info: user_audit_info)
 
               deploying_web_process = app.reload.newest_web_process
@@ -196,18 +197,18 @@ module VCAP::CloudController
               expect(deploying_web_process.type).to eq(ProcessTypes::WEB)
               expect(deploying_web_process.state).to eq(ProcessModel::STARTED)
               expect(deploying_web_process.instances).to eq(1)
-              expect(deploying_web_process.command).to eq(web_process.command)
-              expect(deploying_web_process.memory).to eq(web_process.memory)
-              expect(deploying_web_process.file_descriptors).to eq(web_process.file_descriptors)
-              expect(deploying_web_process.disk_quota).to eq(web_process.disk_quota)
-              expect(deploying_web_process.metadata).to eq(web_process.metadata)
-              expect(deploying_web_process.detected_buildpack).to eq(web_process.detected_buildpack)
-              expect(deploying_web_process.health_check_timeout).to eq(web_process.health_check_timeout)
-              expect(deploying_web_process.health_check_type).to eq(web_process.health_check_type)
-              expect(deploying_web_process.health_check_http_endpoint).to eq(web_process.health_check_http_endpoint)
-              expect(deploying_web_process.health_check_invocation_timeout).to eq(web_process.health_check_invocation_timeout)
-              expect(deploying_web_process.enable_ssh).to eq(web_process.enable_ssh)
-              expect(deploying_web_process.ports).to eq(web_process.ports)
+              expect(deploying_web_process.command).to eq(newer_web_process.command)
+              expect(deploying_web_process.memory).to eq(newer_web_process.memory)
+              expect(deploying_web_process.file_descriptors).to eq(newer_web_process.file_descriptors)
+              expect(deploying_web_process.disk_quota).to eq(newer_web_process.disk_quota)
+              expect(deploying_web_process.metadata).to eq(newer_web_process.metadata)
+              expect(deploying_web_process.detected_buildpack).to eq(newer_web_process.detected_buildpack)
+              expect(deploying_web_process.health_check_timeout).to eq(newer_web_process.health_check_timeout)
+              expect(deploying_web_process.health_check_type).to eq(newer_web_process.health_check_type)
+              expect(deploying_web_process.health_check_http_endpoint).to eq(newer_web_process.health_check_http_endpoint)
+              expect(deploying_web_process.health_check_invocation_timeout).to eq(newer_web_process.health_check_invocation_timeout)
+              expect(deploying_web_process.enable_ssh).to eq(newer_web_process.enable_ssh)
+              expect(deploying_web_process.ports).to eq(newer_web_process.ports)
             end
           end
 
@@ -428,12 +429,63 @@ module VCAP::CloudController
               expect(deploying_web_process.revision).to eq(app.reload.latest_revision)
             end
           end
+
+          context 'but the process commands have changed' do
+            let(:new_command) { 'foo rack' }
+
+            it 'does create a new revision' do
+              web_process.update(command: new_command)
+              app.update(revisions_enabled: true)
+
+              expect {
+                DeploymentCreate.create(app: app, message: restart_message, user_audit_info: user_audit_info)
+              }.to change { RevisionModel.count }.by(1)
+
+              current_revision = RevisionModel.last
+              expect(current_revision.droplet_guid).to eq(revision.droplet_guid)
+              expect(current_revision.commands_by_process_type['web']).to eq('foo rack')
+
+              deploying_web_process = app.reload.newest_web_process
+              expect(deploying_web_process.revision).to eq(app.reload.latest_revision)
+            end
+
+            it 'creates another revision from the newest web_process command' do
+              web_process.update(command: new_command)
+              app.update(revisions_enabled: true)
+
+              expect {
+                DeploymentCreate.create(app: app, message: restart_message, user_audit_info: user_audit_info)
+                app.reload.newest_web_process.update(command: 'something else')
+                app.reload
+                DeploymentCreate.create(app: app, message: restart_message, user_audit_info: user_audit_info)
+              }.to change { RevisionModel.count }.by(2)
+
+              expect(app.reload.newest_web_process.command).to eq 'something else'
+            end
+          end
         end
       end
 
       context 'when a revision is provided on the message (rollback)' do
         let(:revision_droplet) { DropletModel.make(app: app, process_types: { 'web' => '1234' }) }
-        let!(:revision) { FactoryBot.create(:revision, droplet_guid: revision_droplet.guid, environment_variables: { 'foo' => 'var' }, version: 3) }
+        let!(:current_revision) {
+          FactoryBot.create(:revision,
+            app: app,
+            droplet_guid: revision_droplet.guid,
+            environment_variables: { 'something' => 'different' },
+            version: 2,
+            created_at: 5.days.ago
+          )
+        }
+        let!(:revision) {
+          FactoryBot.create(
+            :revision,
+            app: app,
+            droplet_guid: revision_droplet.guid,
+            environment_variables: { 'foo' => 'var' },
+            version: 3
+          )
+        }
         let(:message) {
           DeploymentCreateMessage.new({
             relationships: { app: { data: { guid: app.guid } } },
@@ -445,7 +497,7 @@ module VCAP::CloudController
           app.update(revisions_enabled: true)
         end
 
-        it 'creates a deployment with the droplet associated with the revision' do
+        it 'creates a deployment with the droplet associated with the given revision' do
           deployment = nil
 
           expect {
@@ -483,6 +535,21 @@ module VCAP::CloudController
           expect(app.environment_variables).to eq({ 'foo' => 'var' })
         end
 
+        context 'when the revision has associated process commands' do
+          let!(:revision_process_command) { VCAP::CloudController::RevisionProcessCommandModel.make(
+            revision_guid: revision.guid,
+            process_type: 'web',
+            process_command: 'bundle exec earlier_app',
+          )
+          }
+
+          it 'sets the process command of the new web process to that of the associated revision' do
+            DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+
+            expect(app.newest_web_process.command).to eq('bundle exec earlier_app')
+          end
+        end
+
         it 'creates a revision associated with the environment variables of the associated revision' do
           expect {
             DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
@@ -498,7 +565,7 @@ module VCAP::CloudController
         it 'sets the rollback description' do
           DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
           revision = RevisionModel.last
-          expect(revision.description).to eq('Rolled back to revision 3')
+          expect(revision.description).to eq('Rolled back to revision 3.')
         end
 
         it 'records a rollback deployment event' do

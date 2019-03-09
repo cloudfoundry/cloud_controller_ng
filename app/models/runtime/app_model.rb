@@ -132,12 +132,14 @@ module VCAP::CloudController
       reload.revisions.last if revisions_enabled
     end
 
-    def can_create_revision?
-      !revision_reason.empty?
+    def can_create_revision?(previous_revision_version=nil)
+      previous_revision_version.present? || !revision_reason(previous_revision_version).empty?
     end
 
-    def revision_reason
+    def revision_reason(previous_version)
       return [] unless revisions_enabled
+
+      return ["Rolled back to revision #{previous_version}."] if previous_version.present?
 
       revision = latest_revision
       return ['Initial revision.'] unless revision.present?
@@ -173,7 +175,9 @@ module VCAP::CloudController
     end
 
     def commands_by_process_type
-      processes.map { |p| [p.type, p.command] }.to_h
+      processes.
+        select { |p| p.type != ProcessTypes::WEB || p == newest_web_process }.
+        map    { |p| [p.type, p.command] }.to_h
     end
 
     private

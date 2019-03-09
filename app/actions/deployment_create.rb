@@ -19,15 +19,12 @@ module VCAP::CloudController
           desired_instances = previous_deployment.original_web_process_instance_count
         end
 
-        new_revision = app.can_create_revision? ? RevisionCreate.create(app, user_audit_info, previous_version: target_state.version) : web_process.revision
         deployment = DeploymentModel.new(
           app: app,
           state: DeploymentModel::DEPLOYING_STATE,
           droplet: target_state.droplet,
           previous_droplet: previous_droplet,
           original_web_process_instance_count: desired_instances,
-          revision_guid: new_revision&.guid,
-          revision_version: new_revision&.version,
         )
 
         DeploymentModel.db.transaction do
@@ -40,7 +37,21 @@ module VCAP::CloudController
 
           MetadataUpdate.update(deployment, message)
 
-          process = create_deployment_process(app, deployment.guid, web_process, new_revision)
+          process = create_deployment_process(app, deployment.guid, web_process)
+          target_state.apply_to_process(process)
+
+          revision = if app.can_create_revision?(target_state.version)
+                       RevisionCreate.create(app, user_audit_info, previous_version: target_state.version)
+                     else
+                       web_process&.revision
+                     end
+          deployment.update(revision_guid: revision&.guid, revision_version: revision&.version)
+          process.update(revision: revision)
+          # Need to transition from STOPPED to STARTED to engage the ProcessObserver to desire the LRP.
+          # It'd be better to do this via Diego::Runner.new(process, config).start,
+          # but it is nontrivial to get that working in test.
+          process.reload.update(state: ProcessModel::STARTED)
+
           deployment.update(deploying_web_process: process)
         end
         record_audit_event(deployment, target_state.droplet, user_audit_info, message)
@@ -48,8 +59,8 @@ module VCAP::CloudController
         deployment
       end
 
-      def create_deployment_process(app, deployment_guid, web_process, revision)
-        process = clone_existing_web_process(app, web_process, revision)
+      def create_deployment_process(app, deployment_guid, web_process)
+        process = clone_existing_web_process(app, web_process)
 
         DeploymentProcessModel.create(
           deployment_guid: deployment_guid,
@@ -57,13 +68,10 @@ module VCAP::CloudController
           process_type: process.type
         )
 
-        # Need to transition from STOPPED to STARTED to engage the ProcessObserver to desire the LRP
-        process.reload.update(state: ProcessModel::STARTED)
-
         process
       end
 
-      def clone_existing_web_process(app, web_process, revision)
+      def clone_existing_web_process(app, web_process)
         ProcessModel.create(
           app: app,
           type: ProcessTypes::WEB,
@@ -81,7 +89,6 @@ module VCAP::CloudController
           health_check_invocation_timeout: web_process.health_check_invocation_timeout,
           enable_ssh: web_process.enable_ssh,
           ports: web_process.ports,
-          revision: revision
         )
       end
 
@@ -103,23 +110,34 @@ module VCAP::CloudController
   end
 
   class DeploymentTargetState
-    attr_reader :droplet, :environment_variables, :version
+    attr_reader :droplet, :environment_variables, :version, :rollback_target_revision
 
     def initialize(app, message)
-      revision = nil
+      @rollback_target_revision = nil
 
       @droplet = if message.revision_guid
-                   revision = RevisionModel.find(guid: message.revision_guid)
-                   raise DeploymentCreate::Error.new('The revision does not exist') unless revision
+                   @rollback_target_revision = RevisionModel.find(guid: message.revision_guid)
+                   raise DeploymentCreate::Error.new('The revision does not exist') unless rollback_target_revision
 
-                   @version = revision.version
-                   RevisionDropletSource.new(revision).get
+                   @version = @rollback_target_revision.version
+                   RevisionDropletSource.new(@rollback_target_revision).get
                  elsif message.droplet_guid
                    FromGuidDropletSource.new(message.droplet_guid).get
                  else
                    AppDropletSource.new(app.droplet).get
                  end
-      @environment_variables = revision ? revision.environment_variables : app.environment_variables
+
+      @environment_variables = if @rollback_target_revision
+                                 @rollback_target_revision.environment_variables
+                               else
+                                 app.environment_variables
+                               end
+
+      @commands_by_process_type = if @rollback_target_revision
+                                    @rollback_target_revision.commands_by_process_type
+                                  else
+                                    app.commands_by_process_type
+                                  end
     end
 
     def apply_to_app(app, user_audit_info)
@@ -134,6 +152,13 @@ module VCAP::CloudController
 
         app.update(environment_variables: @environment_variables)
         app.save
+      end
+    end
+
+    def apply_to_process(process)
+      process.db.transaction do
+        process.lock!
+        process.update(command: @commands_by_process_type[process.type])
       end
     end
   end

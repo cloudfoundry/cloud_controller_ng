@@ -173,6 +173,12 @@ module VCAP::CloudController
             expect(app_model.can_create_revision?).to be_truthy
           end
         end
+
+        context 'when a previous revision version is provided' do
+          it 'returns true' do
+            expect(app_model.can_create_revision?(42)).to be_truthy
+          end
+        end
       end
 
       context 'when there are no revisions associated with the app' do

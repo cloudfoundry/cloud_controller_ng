@@ -28,15 +28,6 @@ module VCAP
             DesiredLrpBuilder.new(config, builder_opts(process))
           end
 
-          def desired_app_message(process)
-            {
-              'start_command' => process.command,
-              'docker_image'  => process.actual_droplet.docker_receipt_image,
-              'docker_user' => process.actual_droplet.docker_receipt_username,
-              'docker_password' => process.actual_droplet.docker_receipt_password,
-            }
-          end
-
           private
 
           def builder_opts(process)

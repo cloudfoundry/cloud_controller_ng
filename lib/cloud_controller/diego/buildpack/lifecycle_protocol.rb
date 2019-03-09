@@ -51,16 +51,6 @@ module VCAP
             DesiredLrpBuilder.new(config, builder_opts(process))
           end
 
-          def desired_app_message(process)
-            checksum_info = droplet_checksum_info(process.actual_droplet)
-            {
-              'start_command' => process.specified_or_detected_command,
-              'droplet_uri'   => @droplet_url_generator.perma_droplet_download_url(process.guid, checksum_info['value']),
-              'droplet_hash'  => process.actual_droplet.droplet_hash,
-              'checksum'      => checksum_info,
-            }
-          end
-
           private
 
           def droplet_checksum_info(droplet)
@@ -81,7 +71,7 @@ module VCAP
               stack:              process.app.lifecycle_data.stack,
               checksum_algorithm: checksum_info['type'],
               checksum_value:     checksum_info['value'],
-              start_command:      process.specified_or_detected_command,
+              start_command:      process.started_command,
             }
           end
 

@@ -129,6 +129,7 @@ module VCAP::CloudController
 
         cleanup_web_processes_except(deploying_web_process)
 
+        update_non_web_processes
         restart_non_web_processes
         deployment.update(state: DeploymentModel::DEPLOYED_STATE)
       end
@@ -151,6 +152,14 @@ module VCAP::CloudController
             stop_in_runtime: true,
             revision: deploying_web_process.revision,
           )
+        end
+      end
+
+      def update_non_web_processes
+        return if deploying_web_process.revision.nil?
+
+        app.processes.reject(&:web?).each do |process|
+          process.update(command: deploying_web_process.revision.commands_by_process_type[process.type])
         end
       end
 

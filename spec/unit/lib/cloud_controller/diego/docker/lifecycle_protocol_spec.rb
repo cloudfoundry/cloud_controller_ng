@@ -54,67 +54,6 @@ module VCAP
             end
           end
 
-          describe '#desired_app_message' do
-            let(:app) { FactoryBot.create(:app) }
-            let(:droplet) do
-              DropletModel.make(:docker,
-                                state: DropletModel::STAGED_STATE,
-                                app: app,
-                                docker_receipt_image: 'the-image',
-                                docker_receipt_username: 'dockerusername',
-                                docker_receipt_password: 'dockerpassword',
-                               )
-            end
-            let(:process) { ProcessModel.make(app: app, diego: true, command: 'go go go', metadata: {}) }
-
-            before do
-              app.update(droplet_guid: droplet.guid)
-            end
-
-            it 'sets the start command' do
-              message = lifecycle_protocol.desired_app_message(process)
-              expect(message['start_command']).to eq('go go go')
-            end
-
-            it 'uses the droplet receipt image and docker credentials' do
-              message = lifecycle_protocol.desired_app_message(process)
-              expect(message['docker_image']).to eq('the-image')
-              expect(message['docker_user']).to eq('dockerusername')
-              expect(message['docker_password']).to eq('dockerpassword')
-            end
-
-            context 'when revisions are enabled' do
-              before do
-                app.update(revisions_enabled: true)
-              end
-
-              context 'and theres a revision on the process' do
-                let(:new_droplet) { DropletModel.make(:docker, app: app, docker_receipt_image: 'trololol') }
-                let(:revision) { FactoryBot.create(:revision, app: app, droplet_guid: new_droplet.guid) }
-                before do
-                  process.update(revision: revision)
-                end
-
-                it 'uses the droplet from the revision' do
-                  message = lifecycle_protocol.desired_app_message(process)
-
-                  expect(message['docker_image']).to eq('trololol')
-                  expect(message['docker_user']).to eq(new_droplet.docker_receipt_username)
-                  expect(message['docker_password']).to eq(new_droplet.docker_receipt_password)
-                end
-              end
-
-              context 'but theres not a revision on the process' do
-                it 'uses the droplet from the process' do
-                  message = lifecycle_protocol.desired_app_message(process)
-                  expect(message['docker_image']).to eq('the-image')
-                  expect(message['docker_user']).to eq('dockerusername')
-                  expect(message['docker_password']).to eq('dockerpassword')
-                end
-              end
-            end
-          end
-
           describe '#desired_lrp_builder' do
             let(:config) { Config.new({}) }
             let(:app) { FactoryBot.create(:app, droplet: droplet) }

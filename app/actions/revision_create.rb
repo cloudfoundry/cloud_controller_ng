@@ -10,7 +10,7 @@ module VCAP::CloudController
             existing_revision_for_version.destroy
           end
 
-          description = previous_version.nil? ? app.revision_reason.sort.join(' ') : "Rolled back to revision #{previous_version}"
+          description = app.revision_reason(previous_version).sort.join(' ')
 
           revision = RevisionModel.create(
             app: app,

@@ -366,12 +366,19 @@ module VCAP::CloudController
       desired_droplet.try(:execution_metadata) || ''
     end
 
+    def started_command
+      return specified_or_detected_command if !revisions_enabled? || revision.nil?
+
+      specified_commands = revision.commands_by_process_type
+      specified_commands[type] || revision.droplet&.process_start_command(type) || ''
+    end
+
     def specified_or_detected_command
       command.presence || detected_start_command
     end
 
     def detected_start_command
-      desired_droplet.try(:process_types).try(:[], self.type) || ''
+      desired_droplet&.process_start_command(type) || ''
     end
 
     def detected_buildpack_guid

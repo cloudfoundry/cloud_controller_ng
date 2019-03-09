@@ -130,78 +130,6 @@ module VCAP
             end
           end
 
-          describe '#desired_app_message' do
-            let(:app) { FactoryBot.create(:app) }
-            let(:package) { FactoryBot.create(:package, app_guid: app.guid) }
-            let(:droplet) do
-              DropletModel.make(
-                package_guid:    package.guid,
-                app_guid:        app.guid,
-                droplet_hash:    'droplet-sha1-checksum',
-                sha256_checksum: 'droplet-sha256-checksum',
-              )
-            end
-            let(:process) { ProcessModel.make(app: app, command: 'command from app', metadata: {}) }
-            let(:staging_details) do
-              Diego::StagingDetails.new.tap do |details|
-                details.droplet   = droplet
-                details.lifecycle = instance_double(BuildpackLifecycle, staging_stack: 'potato-stack', buildpack_infos: buildpack_infos)
-              end
-            end
-
-            before do
-              app.update(droplet_guid: droplet.guid)
-            end
-
-            it 'uses the process command' do
-              start_command = lifecycle_protocol.desired_app_message(process)['start_command']
-              expect(start_command).to eq('command from app')
-            end
-
-            it 'includes the droplet_uri' do
-              droplet_uri = lifecycle_protocol.desired_app_message(process)['droplet_uri']
-
-              expect(droplet_uri).to eq('www.droplet.com')
-            end
-
-            it 'includes the droplet_hash' do
-              droplet_hash = lifecycle_protocol.desired_app_message(process)['droplet_hash']
-
-              expect(droplet_hash).to eq('droplet-sha1-checksum')
-            end
-
-            it 'the "checksum" info defaults to sha256' do
-              droplet_hash = lifecycle_protocol.desired_app_message(process)['checksum']
-
-              expect(droplet_hash).to eq({ 'type' => 'sha256', 'value' => 'droplet-sha256-checksum' })
-            end
-
-            context 'when the droplet does not have sha256 checksum' do
-              before do
-                droplet.sha256_checksum = nil
-                droplet.save
-              end
-
-              it 'the "checksum" info falls back to sha1' do
-                droplet_hash = lifecycle_protocol.desired_app_message(process)['checksum']
-
-                expect(droplet_hash).to eq({ 'type' => 'sha1', 'value' => 'droplet-sha1-checksum' })
-              end
-            end
-
-            context 'when process does not have a start command set' do
-              before do
-                droplet.update(process_types: { other: 'command from droplet' })
-                process.update(command: '', type: 'other')
-              end
-
-              it 'uses the droplet detected start command' do
-                start_command = lifecycle_protocol.desired_app_message(process)['start_command']
-                expect(start_command).to eq('command from droplet')
-              end
-            end
-          end
-
           describe '#staging_action_builder' do
             let(:config) { Config.new({ some: 'config' }) }
             let(:package) { FactoryBot.create(:package) }
@@ -276,6 +204,7 @@ module VCAP
             let(:droplet) { DropletModel.make }
             let(:process) do
               ProcessModel.make(
+                type:     'worker',
                 app:      app,
                 diego:    true,
                 command:  'go go go',
@@ -346,25 +275,63 @@ module VCAP
               end
 
               context 'and theres a revision on the process' do
-                let(:new_droplet) { DropletModel.make(app: app) }
-                let(:revision) { FactoryBot.create(:revision, app: app, droplet_guid: new_droplet.guid) }
+                let(:new_droplet) {
+                  DropletModel.make(
+                    app: app,
+                    process_types: {
+                      'worker' => 'something else',
+                      'web'    => 'not this'
+                    }
+                  )
+                }
+
+                let(:revision) {
+                  FactoryBot.create(:revision,
+                    app: app,
+                    droplet_guid: new_droplet.guid
+                  )
+                }
                 before do
                   process.update(revision: revision)
                 end
 
-                it 'uses the droplet from the revision' do
-                  builder_opts.merge!(droplet_hash: new_droplet.droplet_hash, checksum_value: new_droplet.sha256_checksum)
+                it 'uses the droplet from the revision and the command in the droplet' do
+                  builder_opts.merge!(start_command: 'something else', droplet_hash: new_droplet.droplet_hash, checksum_value: new_droplet.sha256_checksum)
                   expect(VCAP::CloudController::Diego::Buildpack::DesiredLrpBuilder).to receive(:new).with(
                     config,
                     builder_opts,
                   )
                   lifecycle_protocol.desired_lrp_builder(config, process)
                 end
+
+                context 'when revision has specified process command' do
+                  let!(:revision_process_command) {
+                    RevisionProcessCommandModel.make(revision: revision, process_type: 'worker', process_command: 'stop stop stop')
+                  }
+
+                  it 'uses the command from the revision' do
+                    builder_opts.merge!(start_command: 'stop stop stop', droplet_hash: new_droplet.droplet_hash, checksum_value: new_droplet.sha256_checksum)
+                    expect(VCAP::CloudController::Diego::Buildpack::DesiredLrpBuilder).to receive(:new).with(
+                      config,
+                      builder_opts,
+                    )
+                    lifecycle_protocol.desired_lrp_builder(config, process)
+                  end
+                end
               end
 
-              context 'but theres not a revision on the process' do
+              context 'but there is not a revision on the process' do
                 it 'uses the droplet from the process' do
                   builder_opts.merge!(droplet_hash: droplet.droplet_hash, checksum_value: droplet.sha256_checksum)
+                  expect(VCAP::CloudController::Diego::Buildpack::DesiredLrpBuilder).to receive(:new).with(
+                    config,
+                    builder_opts,
+                  )
+                  lifecycle_protocol.desired_lrp_builder(config, process)
+                end
+
+                it 'uses the command from the process' do
+                  builder_opts[:start_command] = 'go go go'
                   expect(VCAP::CloudController::Diego::Buildpack::DesiredLrpBuilder).to receive(:new).with(
                     config,
                     builder_opts,

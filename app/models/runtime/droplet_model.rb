@@ -129,6 +129,10 @@ module VCAP::CloudController
       FINAL_STATES.include?(self.state)
     end
 
+    def process_start_command(process_type)
+      process_types.try(:[], process_type) || ''
+    end
+
     private
 
     def entering_staged?

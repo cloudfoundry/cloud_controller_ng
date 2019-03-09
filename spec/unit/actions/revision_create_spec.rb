@@ -51,6 +51,22 @@ module VCAP::CloudController
         end
       end
 
+      context 'when a newer process wants to go back to the droplet default' do
+        let!(:newer_web_process) { ProcessModel.make(app: app, type: 'web', command: nil, created_at: 1.minute.ago) }
+
+        it 'saves the start commands off as nil' do
+          expect {
+            RevisionCreate.create(app, user_audit_info)
+          }.to change { RevisionModel.where(app: app).count }.by(1)
+
+          revision = RevisionModel.last
+          expect(revision.commands_by_process_type).to eq({
+            'web' => nil,
+            'worker' => nil,
+          })
+        end
+      end
+
       it 'records an audit event for the revision' do
         revision = nil
         expect {
@@ -194,7 +210,7 @@ module VCAP::CloudController
         context 'when a revision is rolled back' do
           it 'only shows the rollback reason' do
             revision = RevisionCreate.create(app, user_audit_info, previous_version: 2)
-            expect(revision.description).to eq('Rolled back to revision 2')
+            expect(revision.description).to eq('Rolled back to revision 2.')
           end
         end
 

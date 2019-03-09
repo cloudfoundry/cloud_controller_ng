@@ -6,7 +6,8 @@ module VCAP::CloudController
     subject(:updater) { DeploymentUpdater::Updater.new(deployment, logger) }
     let(:a_day_ago) { Time.now - 1.day }
     let(:an_hour_ago) { Time.now - 1.hour }
-    let(:app) { FactoryBot.create(:app) }
+    let(:app) { FactoryBot.create(:app, droplet: droplet, revisions_enabled: true) }
+    let(:droplet) { nil }
     let!(:web_process) do
       ProcessModel.make(
         instances: current_web_instances,
@@ -26,7 +27,7 @@ module VCAP::CloudController
         state: ProcessModel::STOPPED,
       )
     end
-    let(:revision) { FactoryBot.create(:revision, app: app, version: 300) }
+    let(:revision) { FactoryBot.create(:revision, app: app, droplet: droplet, version: 300) }
     let!(:deploying_route_mapping) { RouteMappingModel.make(app: web_process.app, process_type: deploying_web_process.type) }
     let(:space) { web_process.space }
     let(:original_web_process_instance_count) { 6 }
@@ -82,6 +83,14 @@ module VCAP::CloudController
       end
 
       context 'when the deployment process has reached original_web_process_instance_count' do
+        let(:droplet) do
+          DropletModel.make(
+            process_types: {
+              'clock' => 'droplet_clock_command',
+              'worker' => 'droplet_worker_command',
+            })
+        end
+
         let(:current_deploying_instances) { original_web_process_instance_count }
 
         let!(:interim_deploying_web_process) {
@@ -96,7 +105,14 @@ module VCAP::CloudController
 
         let!(:interim_route_mapping) { RouteMappingModel.make(app: web_process.app, process_type: interim_deploying_web_process.type) }
 
-        let!(:non_web_process1) { ProcessModel.make(app: web_process.app, instances: 2, type: 'worker') }
+        let!(:non_web_process1) { ProcessModel.make(app: web_process.app, instances: 2, type: 'worker', command: 'something-else') }
+        let!(:revision_non_web_1_process_command) do
+          RevisionProcessCommandModel.make(
+            process_type: 'worker',
+            revision_guid: revision.guid,
+            process_command: 'revision-non-web-1-command',
+          )
+        end
         let!(:non_web_process2) { ProcessModel.make(app: web_process.app, instances: 2, type: 'clock') }
 
         let!(:route1) { Route.make(space: space, host: 'hostname1') }
@@ -158,6 +174,27 @@ module VCAP::CloudController
             with(process: deploying_web_process, config: TestConfig.config_instance, stop_in_runtime: true)
 
           expect(deployment.reload.state).to eq(DeploymentModel::DEPLOYED_STATE)
+        end
+
+        it 'sets the commands on the non-web processes to be the commands from the revision of the deploying web process' do
+          subject.scale
+
+          expect(non_web_process1.reload.command).to eq('revision-non-web-1-command')
+          expect(non_web_process2.reload.command).to be_nil
+        end
+
+        context 'when revisions are disabled so the deploying web process does not have one' do
+          before do
+            deploying_web_process.update(revision: nil)
+          end
+
+          it 'it leaves the non-web process commands alone' do
+            subject.scale
+
+            expect(logger).not_to have_received(:error)
+            expect(non_web_process1.reload.command).to eq('something-else')
+            expect(non_web_process2.reload.command).to be_nil
+          end
         end
       end
 
