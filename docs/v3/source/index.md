@@ -22,6 +22,7 @@ includes:
   - api_resources/organizations
   - api_resources/packages
   - api_resources/processes
+  - api_resources/resource_matches
   - api_resources/revisions
   - api_resources/route_mappings
   - api_resources/service_bindings
@@ -178,6 +179,8 @@ includes:
   - experimental_resources/domains/header
   - experimental_resources/domains/object
   - experimental_resources/domains/create
+  - experimental_resources/resource_matches/header
+  - experimental_resources/resource_matches/create
   - experimental_resources/revisions/header
   - experimental_resources/revisions/object
   - experimental_resources/revisions/get

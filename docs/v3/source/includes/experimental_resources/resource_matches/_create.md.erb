@@ -1,0 +1,61 @@
+### Create a resource match
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/resource_matches" \
+  -X POST \
+  -H "Authorization: bearer [token]" \
+  -H "Content-Type: application/json" \
+  -d '{
+        "resources": [
+          {
+            "checksum": { "value": "002d760bea1be268e27077412e11a320d0f164d3" },
+            "size_in_bytes": 36
+          },
+          {
+            "checksum": { "value": "a9993e364706816aba3e25717850c26c9cd0d89d" },
+            "size_in_bytes": 1
+          }
+        ]
+      }'
+
+```
+
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 201 OK
+Content-Type: application/json
+
+<%= yield_content :resource_match %>
+```
+
+#### Definition
+`POST /v3/resource_matches`
+
+#### Required Parameters
+
+Name          | Type                                           | Description
+------------- | ---------------------------------------------- | -----------
+**resources** | _array of [resource_object](#resource-object)_ | List of resources to check for in the resource cache
+
+#### Permitted Roles
+
+                |
+--------------- | -----
+Space Developer |
+Admin           |
+
+
+#### Resource Object
+
+Name               | Type      | Description
+------------------ | --------- | -----------
+**checksum.value** | _string_  | SHA-1 hash of file
+**size_in_bytes**  | _integer_ | Size of file in bytes

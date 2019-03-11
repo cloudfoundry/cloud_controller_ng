@@ -1,0 +1,9 @@
+## Resource Matches
+
+This endpoint matches given resource SHA-1 / file size pairs against the Cloud Controller cache,
+and reports the subset that describes already cached files.
+This is usually used to avoid uploading duplicate files
+when pushing an app which has only been partially changed.
+Cloud Foundry operators may set minimum / maximum file sizes to match against.
+If the file size provided is outside this range,
+it will not be matched against.
