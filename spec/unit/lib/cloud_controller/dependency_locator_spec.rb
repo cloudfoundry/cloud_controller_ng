@@ -32,13 +32,12 @@ RSpec.describe CloudController::DependencyLocator do
     end
 
     context('when bits service is enabled') do
-      let(:config) do
-        VCAP::CloudController::Config.new(
-          droplets: {
-            fog_connection: 'fog_connection',
-            droplet_directory_key: 'key',
-          },
-          bits_service: bits_service_config
+      let(:config) do VCAP::CloudController::Config.new(
+        droplets: {
+          fog_connection: 'fog_connection',
+          droplet_directory_key: 'key',
+        },
+        bits_service: bits_service_config
         )
       end
 
@@ -555,6 +554,40 @@ RSpec.describe CloudController::DependencyLocator do
         and_return(expected_client)
 
       expect(locator.statsd_client).to eq(expected_client)
+    end
+  end
+
+  describe '#bbs_stager_client' do
+    context 'opi staging is disabled' do
+      let(:diego_client) { double }
+
+      before do
+        allow(::Diego::Client).to receive(:new).and_return(diego_client)
+      end
+
+      it 'uses diego' do
+        expect(VCAP::CloudController::Diego::BbsStagerClient).to receive(:new).with(diego_client, config)
+        expect(::OPI::StagerClient).to_not receive(:new)
+        locator.bbs_stager_client
+      end
+    end
+
+    context 'opi staging is enabled' do
+      before do
+        TestConfig.override({
+          opi: {
+            enabled: true,
+            url: 'http://custom-opi-url.service.cf.internal',
+            opi_staging: true
+          }
+        })
+      end
+
+      it 'uses opi' do
+        expect(VCAP::CloudController::Diego::BbsStagerClient).to_not receive(:new)
+        expect(::OPI::StagerClient).to receive(:new)
+        locator.bbs_stager_client
+      end
     end
   end
 

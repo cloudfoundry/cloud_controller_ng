@@ -13,8 +13,7 @@ module VCAP::CloudController
 
         staging_guid = staging_details.staging_guid
 
-        task_definition = task_recipe_builder.build_staging_task(config, staging_details)
-        bbs_stager_client.stage(staging_guid, task_definition)
+        bbs_stager_client.stage(staging_guid, staging_details)
         @statsd_updater.start_staging_request_received
       end
 
@@ -51,10 +50,6 @@ module VCAP::CloudController
 
       def protocol
         @protocol ||= Protocol.new
-      end
-
-      def task_recipe_builder
-        @task_recipe_builder ||= TaskRecipeBuilder.new
       end
 
       def bbs_apps_client

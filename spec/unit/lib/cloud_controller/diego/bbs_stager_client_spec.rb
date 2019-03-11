@@ -1,24 +1,36 @@
 require 'spec_helper'
 require 'cloud_controller/diego/bbs_stager_client'
+require 'models/runtime/package_model'
 
 module VCAP::CloudController::Diego
   RSpec.describe BbsStagerClient do
     let(:staging_guid) { 'staging-guid' }
     let(:bbs_client) { instance_double(::Diego::Client) }
-
-    subject(:client) { BbsStagerClient.new(bbs_client) }
+    let(:config) { VCAP::CloudController::Config.new({ default_health_check_timeout: 99 }) }
+    subject(:client) { BbsStagerClient.new(bbs_client, config) }
 
     describe '#stage' do
-      let(:staging_message) { instance_double(::Diego::Bbs::Models::TaskDefinition) }
+      let(:task_recipe_builder) { instance_double(TaskRecipeBuilder) }
+
+      let(:package) { VCAP::CloudController::PackageModel.make }
+      let(:message) { { staging: 'message' } }
+      let(:staging_details) do
+        VCAP::CloudController::Diego::StagingDetails.new.tap do |sd|
+          sd.package = package
+          sd.staging_guid = staging_guid
+        end
+      end
 
       before do
         allow(bbs_client).to receive(:desire_task).and_return(::Diego::Bbs::Models::TaskLifecycleResponse.new)
+        allow(TaskRecipeBuilder).to receive(:new).and_return(task_recipe_builder)
+        allow(task_recipe_builder).to receive(:build_staging_task).and_return(message)
       end
 
       it 'desires a task' do
-        client.stage(staging_guid, staging_message)
+        client.stage(staging_guid, staging_details)
 
-        expect(bbs_client).to have_received(:desire_task).with(task_definition: staging_message, task_guid: staging_guid, domain: 'cf-app-staging')
+        expect(bbs_client).to have_received(:desire_task).with(task_definition: message, task_guid: staging_guid, domain: 'cf-app-staging')
       end
 
       context 'when bbs client errors' do
@@ -28,7 +40,7 @@ module VCAP::CloudController::Diego
 
         it 'raises an api error' do
           expect {
-            client.stage(staging_guid, staging_message)
+            client.stage(staging_guid, staging_details)
           }.to raise_error(CloudController::Errors::ApiError, /boom/) do |e|
             expect(e.name).to eq('StagerUnavailable')
           end
@@ -47,7 +59,7 @@ module VCAP::CloudController::Diego
 
         it 'raises an api error' do
           expect {
-            client.stage(staging_guid, staging_message)
+            client.stage(staging_guid, staging_details)
           }.to raise_error(CloudController::Errors::ApiError, /staging failed: error message/) do |e|
             expect(e.name).to eq('StagerError')
           end
