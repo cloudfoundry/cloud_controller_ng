@@ -10,9 +10,46 @@ skip_opi_tests = ENV['CF_RUN_OPI_SPECS'] != 'true'
 RSpec.describe(OPI::Client, opi: skip_opi_tests) do
   let(:opi_url) { 'http://localhost:8085' }
   subject(:client) { described_class.new(opi_url) }
-  let(:process) { double(guid: 'jeff',
-                         desired_instances: 5,
-                         updated_at: '1241232.42')
+  let(:app) {
+    double(
+      service_bindings: []
+    )
+  }
+  let(:droplet) {
+    VCAP::CloudController::DropletModel.make(
+      docker_receipt_image: 'http://example.org/image1234',
+      droplet_hash: 'd_haash',
+      guid: 'some-droplet-guid'
+    )
+  }
+  let(:process) {
+    double(
+      guid: 'guid_1234',
+      name: 'jeff',
+      version: '0.1.0',
+      app: app,
+      desired_droplet: droplet,
+      specified_or_detected_command: 'ls -la',
+      environment_json: { 'PORT': 8080, 'FOO': 'BAR' },
+      health_check_type: 'port',
+      health_check_http_endpoint: '/healthz',
+      health_check_timeout: 420,
+      desired_instances: 4,
+      disk_quota: 100,
+      database_uri: '',
+      ports: [8080],
+      memory: 256,
+      file_descriptors: 0xBAAAAAAD,
+      uris: [],
+      routes: [],
+      route_mappings: [],
+      service_bindings: {},
+      space: double(
+        name: 'name',
+        guid: 'guid',
+      ),
+      updated_at: Time.at(1529064800.9),
+   )
   }
 
   before :all do
@@ -42,37 +79,6 @@ RSpec.describe(OPI::Client, opi: skip_opi_tests) do
 
   context 'OPI system tests' do
     context 'Desire an app' do
-      let(:droplet) {
-        VCAP::CloudController::DropletModel.new(
-          docker_receipt_image: 'http://example.org/image1234',
-          droplet_hash: 'd_haash',
-          guid: 'some-droplet-guid'
-        )
-      }
-
-      let(:process) {
-        double(
-          guid: 'guid_1234',
-          name: 'jeff',
-          version: '0.1.0',
-          desired_droplet: droplet,
-          specified_or_detected_command: 'ls -la',
-          environment_json: { 'PORT': 8080, 'FOO': 'BAR' },
-          health_check_type: 'port',
-          health_check_http_endpoint: '/healthz',
-          health_check_timeout: 420,
-          desired_instances: 4,
-          disk_quota: 100,
-          memory: 256,
-          file_descriptors: 0xBAAAAAAD,
-          uris: [],
-          space: double(
-            name: 'name',
-            guid: 'guid',
-          ),
-          updated_at: Time.at(1529064800.9),
-       )
-      }
       it 'does not error' do
         expect { client.desire_app(process) }.to_not raise_error
       end

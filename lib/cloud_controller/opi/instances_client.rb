@@ -8,7 +8,7 @@ module OPI
     ActualLRPKey = Struct.new(:index, :process_guid)
     ActualLRPNetInfo = Struct.new(:address, :ports)
     PortMapping = Struct.new(:container_port, :host_port)
-    DesiredLRP = Struct.new(:PlacementTags)
+    DesiredLRP = Struct.new(:PlacementTags, :metric_tags)
 
     class ActualLRPNetInfo
       def to_hash
@@ -23,11 +23,11 @@ module OPI
       attr_reader :placement_error
       attr_reader :actual_lrp_net_info
 
-      def initialize(actual_lrp_key, state)
-        @actual_lrp_key = actual_lrp_key
-        @state = state
-        @since = 0
-        @placement_error = ''
+      def initialize(instance, process_guid)
+        @actual_lrp_key = ActualLRPKey.new(instance['index'], process_guid)
+        @state = instance['state']
+        @since = instance['since']
+        @placement_error = instance['placement_error']
         @actual_lrp_net_info = ActualLRPNetInfo.new('127.0.0.1', Array[PortMapping.new(8080, 80)])
       end
 
@@ -41,7 +41,7 @@ module OPI
     end
 
     def lrp_instances(process)
-      path = "/apps/#{process.guid}/instances"
+      path = "/apps/#{process.guid}/#{process.version}/instances"
       begin
         retries ||= 0
         resp = @client.get(path)
@@ -54,14 +54,14 @@ module OPI
       end
       process_guid = resp_json['process_guid']
       resp_json['instances'].map do |instance|
-        ActualLRP.new(ActualLRPKey.new(instance['index'], process_guid), instance['state'])
+        ActualLRP.new(instance, process_guid)
       end
     end
 
     # Currently opi does not support isolation segments. This stub is necessary
     # because cc relies that at least one placement tag will be available
     def desired_lrp_instance(process)
-      DesiredLRP.new(['placeholder'])
+      DesiredLRP.new(['placeholder'], [])
     end
 
     private

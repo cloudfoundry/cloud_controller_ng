@@ -22,7 +22,6 @@ module VCAP::CloudController
         let(:package) { PackageModel.make }
         let(:droplet) { DropletModel.make(package: package) }
         let(:staging_guid) { droplet.guid }
-        let(:message) { { staging: 'message' } }
         let(:staging_details) do
           VCAP::CloudController::Diego::StagingDetails.new.tap do |sd|
             sd.package = package
@@ -32,7 +31,6 @@ module VCAP::CloudController
 
         before do
           staging_details.lifecycle = instance_double(BuildpackLifecycle, type: Lifecycles::BUILDPACK)
-          allow(task_recipe_builder).to receive(:build_staging_task).and_return(message)
           allow(bbs_stager_client).to receive(:stage)
           allow(statsd_updater).to receive(:start_staging_request_received)
         end
@@ -45,8 +43,7 @@ module VCAP::CloudController
         it 'sends the staging message to the bbs' do
           messenger.send_stage_request(config, staging_details)
 
-          expect(task_recipe_builder).to have_received(:build_staging_task).with(config, staging_details)
-          expect(bbs_stager_client).to have_received(:stage).with(staging_guid, message)
+          expect(bbs_stager_client).to have_received(:stage).with(staging_guid, staging_details)
         end
       end
 
