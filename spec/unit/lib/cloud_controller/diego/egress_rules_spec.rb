@@ -5,7 +5,7 @@ module VCAP::CloudController
     RSpec.describe EgressRules do
       subject(:egress_rules) { EgressRules.new }
 
-      describe '#staging' do
+      describe '#staging_protobuf_rules' do
         let(:space) { FactoryBot.create(:space) }
         let(:process) { VCAP::CloudController::ProcessModelFactory.make(space: space) }
 
@@ -18,16 +18,37 @@ module VCAP::CloudController
         end
 
         it 'includes egress information for default staging security groups' do
-          expect(egress_rules.staging(app_guid: process.app.guid)).to match_array([
-            { 'protocol' => 'udp', 'port_range' => { 'start' => 8080, 'end' => 9090 }, 'destinations' => ['198.41.191.47/1'], 'annotations' => ['security_group_id:guid1'] },
-            { 'protocol' => 'tcp', 'ports' => [8080, 9090], 'destinations' => ['198.41.191.48/1'], 'log' => true, 'annotations' => ['security_group_id:guid2'] },
-            { 'protocol' => 'tcp', 'ports' => [443], 'destinations' => ['198.41.191.49/1'], 'annotations' => ['security_group_id:guid3'] },
-            { 'protocol' => 'icmp', 'icmp_info' => { 'type' => 0, 'code' => 1 }, 'destinations' => ['1.1.1.1-2.2.2.2'], 'annotations' => ['security_group_id:guid4'] },
+          expect(egress_rules.staging_protobuf_rules(app_guid: process.app.guid)).to match_array([
+            ::Diego::Bbs::Models::SecurityGroupRule.new({
+              protocol:     'udp',
+              port_range:   { 'start' => 8080, 'end' => 9090 },
+              destinations: ['198.41.191.47/1'],
+              annotations:  ['security_group_id:guid1'],
+            }),
+            ::Diego::Bbs::Models::SecurityGroupRule.new({
+              protocol:     'tcp',
+              ports:        [8080, 9090],
+              destinations: ['198.41.191.48/1'],
+              log:          true,
+              annotations:  ['security_group_id:guid2'],
+            }),
+            ::Diego::Bbs::Models::SecurityGroupRule.new({
+              protocol:     'tcp',
+              ports:        [443],
+              destinations: ['198.41.191.49/1'],
+              annotations:  ['security_group_id:guid3'],
+            }),
+            ::Diego::Bbs::Models::SecurityGroupRule.new({
+              protocol:     'icmp',
+              icmp_info:    { 'type' => 0, 'code' => 1 },
+              destinations: ['1.1.1.1-2.2.2.2'],
+              annotations:  ['security_group_id:guid4'],
+            }),
           ])
         end
 
         it 'orders the rules with logged rules last' do
-          logged = egress_rules.staging(app_guid: process.app.guid).drop_while { |rule| !rule['log'] }
+          logged = egress_rules.staging_protobuf_rules(app_guid: process.app.guid).drop_while { |rule| !rule['log'] }
           expect(logged).to have(1).items
         end
 
@@ -38,8 +59,13 @@ module VCAP::CloudController
           end
 
           it 'includes security groups associated with the space for staging' do
-            expect(egress_rules.staging(app_guid: process.app.guid)).to include(
-              { 'protocol' => 'udp', 'port_range' => { 'start' => 8081, 'end' => 9090 }, 'destinations' => ['198.41.191.50/1'], 'annotations' => ['security_group_id:guid6'] },
+            expect(egress_rules.staging_protobuf_rules(app_guid: process.app.guid)).to include(
+              ::Diego::Bbs::Models::SecurityGroupRule.new({
+                protocol:     'udp',
+                port_range:   { 'start' => 8081, 'end' => 9090 },
+                destinations: ['198.41.191.50/1'],
+                annotations:  ['security_group_id:guid6']
+              }),
             )
           end
         end
@@ -51,15 +77,18 @@ module VCAP::CloudController
           end
 
           it 'creates annotations with the guids for the default security group and the space security group' do
-            expect(egress_rules.staging(app_guid: process.app.guid)).to include(
-              { 'protocol' => 'udp', 'port_range' => { 'start' => 8080, 'end' => 9090 }, 'destinations' => ['198.41.191.47/1'],
-                'annotations' => ['security_group_id:guid1', 'security_group_id:guid6'] },
-            )
+            expect(egress_rules.staging_protobuf_rules(app_guid: process.app.guid)).
+              to include(::Diego::Bbs::Models::SecurityGroupRule.new({
+              protocol:     'udp',
+              port_range:   { 'start' => 8080, 'end' => 9090 },
+              destinations: ['198.41.191.47/1'],
+              annotations:  ['security_group_id:guid1', 'security_group_id:guid6']
+            }))
           end
         end
       end
 
-      describe '#running' do
+      describe '#running_protobuf_rules' do
         let(:process) { ProcessModelFactory.make }
         let(:sg_default_rules_1) { [{ 'protocol' => 'udp', 'ports' => '8080', 'destination' => '198.41.191.47/1' }] }
         let(:sg_default_rules_2) { [{ 'protocol' => 'tcp', 'ports' => '9090-9095', 'destination' => '198.41.191.48/1', 'log' => true }] }
@@ -72,18 +101,31 @@ module VCAP::CloudController
         end
 
         it 'should provide the egress rules in the start message' do
-          expect(egress_rules.running(process)).to match_array([
-            { 'protocol' => 'udp', 'ports' => [8080], 'destinations' => ['198.41.191.47/1'],
-              'annotations' => ['security_group_id:guid1'] },
-            { 'protocol' => 'tcp', 'port_range' => { 'start' => 9090, 'end' => 9095 }, 'destinations' => ['198.41.191.48/1'], 'log' => true,
-              'annotations' => ['security_group_id:guid2'] },
-            { 'protocol' => 'udp', 'ports' => [1010, 2020], 'destinations' => ['198.41.191.49/1'],
-              'annotations' => ['security_group_id:guid3'] },
+          expect(egress_rules.running_protobuf_rules(process)).to match_array([
+            ::Diego::Bbs::Models::SecurityGroupRule.new({
+              protocol:      'udp',
+              ports:         [8080],
+              destinations:  ['198.41.191.47/1'],
+              annotations:   ['security_group_id:guid1'],
+            }),
+            ::Diego::Bbs::Models::SecurityGroupRule.new({
+              protocol:     'tcp',
+              port_range:   { 'start' => 9090, 'end' => 9095 },
+              destinations: ['198.41.191.48/1'],
+              log:          true,
+              annotations:  ['security_group_id:guid2'],
+           }),
+            ::Diego::Bbs::Models::SecurityGroupRule.new({
+              protocol:     'udp',
+              ports:        [1010, 2020],
+              destinations: ['198.41.191.49/1'],
+              annotations:  ['security_group_id:guid3'],
+            }),
           ])
         end
 
         it 'orders the rules with logged rules last' do
-          logged = egress_rules.running(process).drop_while { |rule| !rule['log'] }
+          logged = egress_rules.running_protobuf_rules(process).drop_while { |rule| !rule['log'] }
           expect(logged).to have(1).items
         end
 
@@ -94,8 +136,12 @@ module VCAP::CloudController
           end
 
           it 'creates annotations with the guids for the default security group and the space security group' do
-            expect(egress_rules.running(process)).to include(
-              { 'protocol' => 'udp', 'ports' => [8080], 'destinations' => ['198.41.191.47/1'], 'annotations' => ['security_group_id:guid1', 'security_group_id:guid4'] },
+            expect(egress_rules.running_protobuf_rules(process)).to include(
+              ::Diego::Bbs::Models::SecurityGroupRule.new({ 'protocol' => 'udp',
+                'ports' => [8080],
+                'destinations' => ['198.41.191.47/1'],
+                'annotations' => ['security_group_id:guid1', 'security_group_id:guid4']
+              }),
             )
           end
         end

@@ -27,13 +27,10 @@ module VCAP::CloudController
         end
 
         def to_bbs_network
-          network = ::Diego::Bbs::Models::Network.new(properties: [])
+          network = ::Diego::Bbs::Models::Network.new(properties: {})
 
           to_h['properties'].each do |key, value|
-            network.properties << ::Diego::Bbs::Models::Network::PropertiesEntry.new(
-              key:   key,
-              value: value,
-            )
+            network.properties[key] = value
           end
 
           network

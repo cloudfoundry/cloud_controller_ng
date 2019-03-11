@@ -45,7 +45,7 @@ module VCAP::CloudController::Diego
         context 'when the bbs response contains a conflict error' do
           let(:lifecycle_error) { ::Diego::Bbs::Models::Error.new(type: ::Diego::Bbs::Models::Error::Type::ResourceConflict) }
 
-          it 'returns false' do
+          it 'does not raise error' do
             expect { client.desire_app(process) }.not_to raise_error
           end
         end

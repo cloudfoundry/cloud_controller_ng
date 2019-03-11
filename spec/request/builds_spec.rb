@@ -69,7 +69,7 @@ RSpec.describe 'Builds' do
 
     it 'creates a Builds resource' do
       post '/v3/builds', create_request.merge(metadata: metadata).to_json, developer_headers
-      expect(last_response.status).to eq(201)
+      expect(last_response.status).to eq(201), last_response.body
 
       created_build = VCAP::CloudController::BuildModel.last
 

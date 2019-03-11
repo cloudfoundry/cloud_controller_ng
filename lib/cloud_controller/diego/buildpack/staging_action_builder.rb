@@ -11,8 +11,8 @@ module VCAP::CloudController
 
         def initialize(config, staging_details, lifecycle_data)
           @config          = config
-          @lifecycle_data  = lifecycle_data
           @staging_details = staging_details
+          @lifecycle_data  = lifecycle_data
         end
 
         def action
@@ -32,7 +32,7 @@ module VCAP::CloudController
         end
 
         def image_layers
-          return nil unless @config.get(:diego, :enable_declarative_asset_downloads)
+          return [] unless @config.get(:diego, :enable_declarative_asset_downloads)
 
           layers = [
             ::Diego::Bbs::Models::ImageLayer.new(
@@ -45,7 +45,7 @@ module VCAP::CloudController
           ]
 
           if lifecycle_data[:app_bits_checksum][:type] == 'sha256'
-            layers << ::Diego::Bbs::Models::ImageLayer.new(
+            layers << ::Diego::Bbs::Models::ImageLayer.new({
               name:              'app package',
               url:               lifecycle_data[:app_bits_download_uri],
               destination_path:  '/tmp/app',
@@ -53,11 +53,11 @@ module VCAP::CloudController
               media_type:        ::Diego::Bbs::Models::ImageLayer::MediaType::ZIP,
               digest_algorithm:  ::Diego::Bbs::Models::ImageLayer::DigestAlgorithm::SHA256,
               digest_value:      lifecycle_data[:app_bits_checksum][:value],
-            )
+            }.compact)
           end
 
           if lifecycle_data[:build_artifacts_cache_download_uri] && lifecycle_data[:buildpack_cache_checksum].present?
-            layers << ::Diego::Bbs::Models::ImageLayer.new(
+            layers << ::Diego::Bbs::Models::ImageLayer.new({
               name:              'build artifacts cache',
               url:               lifecycle_data[:build_artifacts_cache_download_uri],
               destination_path:  '/tmp/cache',
@@ -65,7 +65,7 @@ module VCAP::CloudController
               media_type:        ::Diego::Bbs::Models::ImageLayer::MediaType::ZIP,
               digest_algorithm:  ::Diego::Bbs::Models::ImageLayer::DigestAlgorithm::SHA256,
               digest_value:      lifecycle_data[:buildpack_cache_checksum],
-            )
+            }.compact)
           end
 
           buildpack_layers = lifecycle_data[:buildpacks].
@@ -83,7 +83,7 @@ module VCAP::CloudController
               layer[:digest_value] = buildpack[:sha256]
             end
 
-            ::Diego::Bbs::Models::ImageLayer.new(layer)
+            ::Diego::Bbs::Models::ImageLayer.new(layer.compact)
           end
 
           layers.concat(buildpack_layers)
@@ -114,7 +114,7 @@ module VCAP::CloudController
               buildpack_dependency[:checksum_value] = buildpack[:sha256]
             end
 
-            ::Diego::Bbs::Models::CachedDependency.new(buildpack_dependency)
+            ::Diego::Bbs::Models::CachedDependency.new(buildpack_dependency.compact)
           end.compact
 
           dependencies.concat(others)
@@ -134,14 +134,14 @@ module VCAP::CloudController
           result = []
 
           unless @config.get(:diego, :enable_declarative_asset_downloads) && lifecycle_data[:app_bits_checksum][:type] == 'sha256'
-            result << ::Diego::Bbs::Models::DownloadAction.new(
+            result << ::Diego::Bbs::Models::DownloadAction.new({
               artifact:           'app package',
               from:               lifecycle_data[:app_bits_download_uri],
               to:                 '/tmp/app',
               user:               'vcap',
               checksum_algorithm: lifecycle_data[:app_bits_checksum][:type],
-              checksum_value:     lifecycle_data[:app_bits_checksum][:value],
-            )
+              checksum_value:     lifecycle_data[:app_bits_checksum][:value]
+            }.compact)
           end
 
           unless @config.get(:diego, :enable_declarative_asset_downloads)
@@ -153,7 +153,7 @@ module VCAP::CloudController
                 user:               'vcap',
                 checksum_algorithm: 'sha256',
                 checksum_value:     lifecycle_data[:buildpack_cache_checksum],
-              }))
+              }.compact))
             end
           end
 

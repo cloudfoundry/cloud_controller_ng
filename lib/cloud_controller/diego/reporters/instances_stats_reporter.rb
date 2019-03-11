@@ -60,19 +60,23 @@ module VCAP::CloudController
       rescue CloudController::Errors::NoRunningInstances => e
         logger.info('stats_for_app.error', error: e.to_s)
         fill_unreported_instances_with_down_instances({}, process)
-      rescue => e
+      rescue StandardError => e
         logger.error('stats_for_app.error', error: e.to_s)
-        raise CloudController::Errors::InstancesUnavailable.new(e)
+        exception = CloudController::Errors::InstancesUnavailable.new(e.message)
+        exception.set_backtrace(e.backtrace)
+        raise exception
       end
 
       private
 
       def envelopes(desired_lrp, process)
-        filter, source_guid = if desired_lrp.metric_tags.any? { |tag| tag.key == 'process_id' }
-                                [->(e) { e.tags.any? { |key, value| key == 'process_id' && value == process.guid } }, process.app.guid]
-                              else
-                                [->(_) { true }, process.guid]
-                              end
+        if desired_lrp.metric_tags['process_id']
+          filter = ->(envelope) { envelope.tags.any? { |key, value| key == 'process_id' && value == process.guid } }
+          source_guid = process.app.guid
+        else
+          filter = ->(_) { true }
+          source_guid = process.guid
+        end
 
         @logstats_client.container_metrics(
           source_guid: source_guid,

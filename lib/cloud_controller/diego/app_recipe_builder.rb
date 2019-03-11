@@ -14,7 +14,6 @@ module VCAP::CloudController
       include ::Diego::ActionBuilder
 
       METRIC_TAG_VALUE = ::Diego::Bbs::Models::MetricTagValue
-      METRIC_TAG_ENTRY = ::Diego::Bbs::Models::DesiredLRP::MetricTagsEntry
 
       MONITORED_HEALTH_CHECK_TYPES = [HealthCheckTypes::PORT, HealthCheckTypes::HTTP, ''].map(&:freeze).freeze
 
@@ -25,6 +24,28 @@ module VCAP::CloudController
       end
 
       def build_app_lrp
+        ::Diego::Bbs::Models::DesiredLRP.new(app_lrp_arguments)
+      end
+
+      def build_app_lrp_update(existing_lrp)
+        routes = generate_routes(routing_info)
+
+        existing_routes = existing_lrp.routes
+        ssh_route = existing_routes.routes[SSH_ROUTES_KEY]
+        routes[SSH_ROUTES_KEY] = ssh_route if ssh_route
+
+        ::Diego::Bbs::Models::DesiredLRPUpdate.new(
+          instances:  process.instances,
+          annotation: process.updated_at.to_f.to_s,
+          routes:     ::Diego::Bbs::Models::ProtoRoutes.new(routes: routes)
+        )
+      end
+
+      private
+
+      attr_reader :config, :process, :ssh_key
+
+      def app_lrp_arguments
         desired_lrp_builder = LifecycleProtocol.protocol_for_type(process.app.lifecycle_type).desired_lrp_builder(config, process)
 
         ports  = desired_lrp_builder.ports.dup
@@ -33,17 +54,13 @@ module VCAP::CloudController
         if allow_ssh?
           ports << DEFAULT_SSH_PORT
 
-          routes << ::Diego::Bbs::Models::ProtoRoutes::RoutesEntry.new(
-            key:   SSH_ROUTES_KEY,
-            value: MultiJson.dump({
-              container_port:   DEFAULT_SSH_PORT,
-              private_key:      ssh_key.private_key,
-              host_fingerprint: ssh_key.fingerprint
-            })
-          )
+          routes[SSH_ROUTES_KEY] = MultiJson.dump({
+            container_port:   DEFAULT_SSH_PORT,
+            private_key:      ssh_key.private_key,
+            host_fingerprint: ssh_key.fingerprint
+          })
         end
-
-        ::Diego::Bbs::Models::DesiredLRP.new(
+        {
           process_guid:                     Diego::ProcessGuid.from_process(process),
           instances:                        process.desired_instances,
           environment_variables:            desired_lrp_builder.global_environment_variables,
@@ -55,14 +72,14 @@ module VCAP::CloudController
           log_source:                       LRP_LOG_SOURCE,
           log_guid:                         process.app.guid,
           metrics_guid:                     process.app.guid,
-          metric_tags:                      [
-            METRIC_TAG_ENTRY.new(key: 'source_id', value: METRIC_TAG_VALUE.new(static: process.app.guid)),
-            METRIC_TAG_ENTRY.new(key: 'process_id', value: METRIC_TAG_VALUE.new(static: process.guid)),
-            METRIC_TAG_ENTRY.new(key: 'process_instance_id', value: METRIC_TAG_VALUE.new(dynamic: METRIC_TAG_VALUE::DynamicValue::INSTANCE_GUID)),
-            METRIC_TAG_ENTRY.new(key: 'instance_id', value: METRIC_TAG_VALUE.new(dynamic: METRIC_TAG_VALUE::DynamicValue::INDEX)),
-          ],
+          metric_tags:                      {
+            'source_id' => METRIC_TAG_VALUE.new(static: process.app.guid),
+            'process_id' => METRIC_TAG_VALUE.new(static: process.guid),
+            'process_instance_id' => METRIC_TAG_VALUE.new(dynamic: METRIC_TAG_VALUE::DynamicValue::INSTANCE_GUID),
+            'instance_id' => METRIC_TAG_VALUE.new(dynamic: METRIC_TAG_VALUE::DynamicValue::INDEX),
+          },
           annotation:                       process.updated_at.to_f.to_s,
-          egress_rules:                     generate_egress_rules,
+          egress_rules:                     Diego::EgressRules.new.running_protobuf_rules(process),
           cached_dependencies:              desired_lrp_builder.cached_dependencies,
           legacy_download_user:             desired_lrp_builder.action_user,
           trusted_system_certificates_path: RUNNING_TRUSTED_SYSTEM_CERT_PATH,
@@ -75,7 +92,7 @@ module VCAP::CloudController
           image_layers:                     desired_lrp_builder.image_layers,
           domain:                           APP_LRP_DOMAIN,
           volume_mounts:                    generate_volume_mounts,
-          PlacementTags:                    [IsolationSegmentSelector.for_space(process.space)],
+          PlacementTags:                    Array(IsolationSegmentSelector.for_space(process.space)),
           check_definition:                 generate_healthcheck_definition(desired_lrp_builder),
           routes:                           ::Diego::Bbs::Models::ProtoRoutes.new(routes: routes),
           max_pids:                         @config.get(:diego, :pid_limit),
@@ -88,26 +105,8 @@ module VCAP::CloudController
           ),
           image_username:                   process.desired_droplet.docker_receipt_username,
           image_password:                   process.desired_droplet.docker_receipt_password,
-        )
+        }.compact
       end
-
-      def build_app_lrp_update(existing_lrp)
-        routes = generate_routes(routing_info)
-
-        existing_routes = existing_lrp.routes
-        ssh_route       = existing_routes.routes.find { |r| r.key == SSH_ROUTES_KEY }
-        routes << ssh_route
-
-        ::Diego::Bbs::Models::DesiredLRPUpdate.new(
-          instances:  process.instances,
-          annotation: process.updated_at.to_f.to_s,
-          routes:     ::Diego::Bbs::Models::ProtoRoutes.new(routes: routes)
-        )
-      end
-
-      private
-
-      attr_reader :config, :process, :ssh_key
 
       def routing_info
         @routing_info ||= Protocol::RoutingInfo.new(process).routing_info
@@ -127,20 +126,11 @@ module VCAP::CloudController
           }
         end
 
-        [
-          ::Diego::Bbs::Models::ProtoRoutes::RoutesEntry.new(
-            key:   CF_ROUTES_KEY,
-            value: MultiJson.dump(http_routes)
-          ),
-          ::Diego::Bbs::Models::ProtoRoutes::RoutesEntry.new(
-            key:   TCP_ROUTES_KEY,
-            value: MultiJson.dump((info['tcp_routes'] || []))
-          ),
-          ::Diego::Bbs::Models::ProtoRoutes::RoutesEntry.new(
-            key:   INTERNAL_ROUTES_KEY,
-            value: MultiJson.dump((info['internal_routes'] || []))
-          )
-        ]
+        {
+          CF_ROUTES_KEY       => MultiJson.dump(http_routes),
+          TCP_ROUTES_KEY      => MultiJson.dump((info['tcp_routes'] || [])),
+          INTERNAL_ROUTES_KEY => MultiJson.dump((info['internal_routes'] || [])),
+        }
       end
 
       def allow_ssh?
@@ -264,7 +254,7 @@ module VCAP::CloudController
           actions << build_action(lrp_builder, port, index)
         end
 
-        action(timeout(parallel(actions), timeout_ms: 1000 * 10.minutes))
+        action(timeout(parallel(actions), timeout_ms: 10.minutes.in_milliseconds))
       end
 
       def build_action(lrp_builder, port, index)
@@ -283,21 +273,6 @@ module VCAP::CloudController
           log_source:          HEALTH_LOG_SOURCE,
           suppress_log_output: true,
         )
-      end
-
-      def generate_egress_rules
-        egress_rules = Diego::EgressRules.new
-        egress_rules.running(process).map do |rule|
-          ::Diego::Bbs::Models::SecurityGroupRule.new(
-            protocol:     rule['protocol'],
-            destinations: rule['destinations'],
-            ports:        rule['ports'],
-            port_range:   rule['port_range'],
-            icmp_info:    rule['icmp_info'],
-            log:          rule['log'],
-            annotations:  rule['annotations'],
-          )
-        end
       end
 
       def generate_network

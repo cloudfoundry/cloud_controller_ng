@@ -20,11 +20,11 @@ module VCAP::CloudController
         app_volume_mounts        = VCAP::CloudController::Diego::Protocol::AppVolumeMounts.new(task.app).as_json
         task_action_builder      = LifecycleProtocol.protocol_for_type(task.droplet.lifecycle_type).task_action_builder(config, task)
 
-        ::Diego::Bbs::Models::TaskDefinition.new(
+        ::Diego::Bbs::Models::TaskDefinition.new({
           completion_callback_url:          task_completion_callback,
           cpu_weight:                       cpu_weight(task),
           disk_mb:                          task.disk_in_mb,
-          egress_rules:                     generate_running_egress_rules(task.app),
+          egress_rules:                     @egress_rules.running_protobuf_rules(task.app),
           log_guid:                         task.app.guid,
           log_source:                       TASK_LOG_SOURCE,
           max_pids:                         config.get(:diego, :pid_limit),
@@ -39,7 +39,7 @@ module VCAP::CloudController
           cached_dependencies:              task_action_builder.cached_dependencies,
           root_fs:                          task_action_builder.stack,
           environment_variables:            task_action_builder.task_environment_variables,
-          PlacementTags:                    [VCAP::CloudController::IsolationSegmentSelector.for_space(task.space)],
+          placement_tags:                   [VCAP::CloudController::IsolationSegmentSelector.for_space(task.space)].compact,
           certificate_properties:           ::Diego::Bbs::Models::CertificateProperties.new(
             organizational_unit: [
               "organization:#{task.app.organization.guid}",
@@ -49,18 +49,18 @@ module VCAP::CloudController
           ),
           image_username:                   task.droplet.docker_receipt_username,
           image_password:                   task.droplet.docker_receipt_password,
-        )
+        }.compact)
       end
 
       def build_staging_task(config, staging_details)
         lifecycle_type = staging_details.lifecycle.type
         action_builder = LifecycleProtocol.protocol_for_type(lifecycle_type).staging_action_builder(config, staging_details)
 
-        ::Diego::Bbs::Models::TaskDefinition.new(
+        ::Diego::Bbs::Models::TaskDefinition.new({
           completion_callback_url:          staging_completion_callback(config, staging_details),
           cpu_weight:                       STAGING_TASK_CPU_WEIGHT,
           disk_mb:                          staging_details.staging_disk_in_mb,
-          egress_rules:                     generate_egress_rules(staging_details),
+          egress_rules:                     @egress_rules.staging_protobuf_rules(app_guid: staging_details.package.app_guid),
           log_guid:                         staging_details.package.app_guid,
           log_source:                       STAGING_LOG_SOURCE,
           memory_mb:                        staging_details.staging_memory_in_mb,
@@ -74,7 +74,7 @@ module VCAP::CloudController
           legacy_download_user:             LEGACY_DOWNLOAD_USER,
           image_layers:                     action_builder.image_layers,
           cached_dependencies:              action_builder.cached_dependencies,
-          PlacementTags:                    find_staging_isolation_segment(staging_details),
+          placement_tags:                   find_staging_isolation_segment(staging_details),
           max_pids:                         config.get(:diego, :pid_limit),
           certificate_properties:           ::Diego::Bbs::Models::CertificateProperties.new(
             organizational_unit: [
@@ -85,7 +85,7 @@ module VCAP::CloudController
           ),
           image_username:                   staging_details.package.docker_username,
           image_password:                   staging_details.package.docker_password,
-        )
+        }.compact)
       end
 
       private
@@ -113,34 +113,6 @@ module VCAP::CloudController
           [staging_details.isolation_segment]
         else
           []
-        end
-      end
-
-      def generate_egress_rules(staging_details)
-        @egress_rules.staging(app_guid: staging_details.package.app_guid).map do |rule|
-          ::Diego::Bbs::Models::SecurityGroupRule.new(
-            protocol:     rule['protocol'],
-            destinations: rule['destinations'],
-            ports:        rule['ports'],
-            port_range:   rule['port_range'],
-            icmp_info:    rule['icmp_info'],
-            log:          rule['log'],
-            annotations:  rule['annotations'],
-          )
-        end
-      end
-
-      def generate_running_egress_rules(process)
-        @egress_rules.running(process).map do |rule|
-          ::Diego::Bbs::Models::SecurityGroupRule.new(
-            protocol:     rule['protocol'],
-            destinations: rule['destinations'],
-            ports:        rule['ports'],
-            port_range:   rule['port_range'],
-            icmp_info:    rule['icmp_info'],
-            log:          rule['log'],
-            annotations:  rule['annotations'],
-          )
         end
       end
 

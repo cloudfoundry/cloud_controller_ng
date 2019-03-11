@@ -5,7 +5,7 @@ module VCAP::CloudController
   module Diego
     class BbsStagerClient
       ACCEPTABLE_DIEGO_ERRORS = [
-        ::Diego::Bbs::Models::Error::Type::ResourceNotFound,
+        ::Diego::Bbs::ErrorTypes::ResourceNotFound,
       ].freeze
 
       def initialize(client)

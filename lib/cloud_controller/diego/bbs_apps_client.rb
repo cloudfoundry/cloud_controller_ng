@@ -15,8 +15,8 @@ module VCAP::CloudController
           response = @client.desire_lrp(lrp)
           logger.info('desire.app.response', process_guid: lrp.process_guid, error: response.error)
 
-          runner_invalid_request!(response.error.message) if response.error.try(:type) == ::Diego::Bbs::Models::Error::Type::InvalidRequest
-          return response if response.error.try(:type) == ::Diego::Bbs::Models::Error::Type::ResourceConflict
+          runner_invalid_request!(response.error.message) if response.error&.type == ::Diego::Bbs::ErrorTypes::InvalidRequest
+          return response if response.error&.type == ::Diego::Bbs::ErrorTypes::ResourceConflict
 
           response
         end
@@ -32,8 +32,8 @@ module VCAP::CloudController
           response = @client.update_desired_lrp(process_guid, lrp_update)
           logger.info('update.app.response', process_guid: process_guid, error: response.error)
 
-          runner_invalid_request!(response.error.message) if response.error.try(:type) == ::Diego::Bbs::Models::Error::Type::InvalidRequest
-          return response if response.error.try(:type) == ::Diego::Bbs::Models::Error::Type::ResourceConflict
+          runner_invalid_request!(response.error.message) if response.error&.type == ::Diego::Bbs::ErrorTypes::InvalidRequest
+          return response if response.error&.type == ::Diego::Bbs::ErrorTypes::ResourceConflict
 
           response
         end
@@ -47,9 +47,7 @@ module VCAP::CloudController
           response = @client.desired_lrp_by_process_guid(process_guid)
           logger.info('get.app.response', process_guid: process_guid, error: response.error)
 
-          if response.error
-            return nil if response.error.type == ::Diego::Bbs::Models::Error::Type::ResourceNotFound
-          end
+          return nil if response.error&.type == ::Diego::Bbs::ErrorTypes::ResourceNotFound
 
           response
         end
@@ -63,9 +61,7 @@ module VCAP::CloudController
           response = @client.remove_desired_lrp(process_guid)
           logger.info('stop.app.response', process_guid: process_guid, error: response.error)
 
-          if response.error
-            return nil if response.error.type == ::Diego::Bbs::Models::Error::Type::ResourceNotFound
-          end
+          return nil if response.error&.type == ::Diego::Bbs::ErrorTypes::ResourceNotFound
 
           response
         end
@@ -78,9 +74,7 @@ module VCAP::CloudController
           response = @client.retire_actual_lrp(actual_lrp_key)
           logger.info('stop.index.response', process_guid: process_guid, index: index, error: response.error)
 
-          if response.error
-            return nil if response.error.type == ::Diego::Bbs::Models::Error::Type::ResourceNotFound
-          end
+          return nil if response.error&.type == ::Diego::Bbs::ErrorTypes::ResourceNotFound
 
           response
         end
@@ -119,7 +113,9 @@ module VCAP::CloudController
         rescue StandardError => e
           raise e unless process_guid
 
-          raise e.class.new("Process Guid: #{process_guid}: #{e}")
+          error = e.class.new("Process Guid: #{process_guid}: #{e}")
+          error.set_backtrace(e.backtrace)
+          raise error
         end
 
         if response.error

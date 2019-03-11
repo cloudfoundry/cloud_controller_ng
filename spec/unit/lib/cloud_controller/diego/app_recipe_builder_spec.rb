@@ -68,14 +68,14 @@ module VCAP::CloudController
         let(:ports) { '' }
         let(:expected_network) do
           ::Diego::Bbs::Models::Network.new(
-            properties: [
-              ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'policy_group_id', value: app_model.guid),
-              ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'app_id', value: app_model.guid),
-              ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'space_id', value: app_model.space.guid),
-              ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'org_id', value: app_model.organization.guid),
-              ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'ports', value: ports),
-              ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'container_workload', value: Protocol::ContainerNetworkInfo::APP),
-            ]
+            properties: {
+              'policy_group_id'    => app_model.guid,
+              'app_id'             => app_model.guid,
+              'space_id'           => app_model.space.guid,
+              'org_id'             => app_model.organization.guid,
+              'ports'              => ports,
+              'container_workload' => Protocol::ContainerNetworkInfo::APP,
+            }
           )
         end
         let(:expected_action_environment_variables) do
@@ -287,15 +287,13 @@ module VCAP::CloudController
             expect(lrp.max_pids).to eq(100)
             expect(lrp.memory_mb).to eq(128)
             expect(lrp.metrics_guid).to eq(process.app.guid)
-            expect(lrp.metric_tags.size).to eq(4)
-            expect(lrp.metric_tags[0].key).to eq('source_id')
-            expect(lrp.metric_tags[0].value.static).to eq(process.app.guid)
-            expect(lrp.metric_tags[1].key).to eq('process_id')
-            expect(lrp.metric_tags[1].value.static).to eq(process.guid)
-            expect(lrp.metric_tags[2].key).to eq('process_instance_id')
-            expect(lrp.metric_tags[2].value.dynamic).to eq(::Diego::Bbs::Models::MetricTagValue::DynamicValue::INSTANCE_GUID)
-            expect(lrp.metric_tags[3].key).to eq('instance_id')
-            expect(lrp.metric_tags[3].value.dynamic).to eq(::Diego::Bbs::Models::MetricTagValue::DynamicValue::INDEX)
+            expect(lrp.metric_tags.keys.size).to eq(4)
+
+            expect(lrp.metric_tags['source_id'].static).to eq(process.app.guid)
+            expect(lrp.metric_tags['process_id'].static).to eq(process.guid)
+            expect(lrp.metric_tags['process_instance_id'].dynamic).to eq(:INSTANCE_GUID)
+            expect(lrp.metric_tags['instance_id'].dynamic).to eq(:INDEX)
+
             expect(lrp.monitor).to eq(expected_monitor_action)
             expect(lrp.network).to eq(expected_network)
             expect(lrp.ports).to eq([4444, 5555])
@@ -307,6 +305,17 @@ module VCAP::CloudController
             expect(lrp.trusted_system_certificates_path).to eq(RUNNING_TRUSTED_SYSTEM_CERT_PATH)
             expect(lrp.PlacementTags).to eq(['placement-tag'])
             expect(lrp.certificate_properties).to eq(expected_certificate_properties)
+          end
+
+          context 'when the space is not entitled to any isolation segments' do
+            before do
+              allow(VCAP::CloudController::IsolationSegmentSelector).to receive(:for_space).and_return(nil)
+            end
+
+            it 'sets PlacementTags to empty array' do
+              app_lrp = builder.build_app_lrp
+              expect(app_lrp.PlacementTags).to eq []
+            end
           end
 
           context 'when a volume mount is provided' do
@@ -540,7 +549,7 @@ module VCAP::CloudController
 
               it 'keeps a TCP health check definition for other ports' do
                 lrp       = builder.build_app_lrp
-                tcp_check = lrp.check_definition.checks.second.tcp_check
+                tcp_check = lrp.check_definition.checks[1].tcp_check
                 expect(tcp_check.port).to eq(5555)
               end
             end
@@ -604,48 +613,39 @@ module VCAP::CloudController
 
             it 'includes the correct routes' do
               expected_routes = ::Diego::Bbs::Models::ProtoRoutes.new(
-                routes: [
-                  ::Diego::Bbs::Models::ProtoRoutes::RoutesEntry.new(
-                    key:   'cf-router',
-                    value: [
-                      {
-                        'hostnames'         => ['potato.example.com'],
-                        'port'              => 8080,
-                        'route_service_url' => nil,
-                        'isolation_segment' => 'placement-tag',
-                      },
-                      {
-                        'hostnames'         => ['tomato.example.com'],
-                        'port'              => 8080,
-                        'route_service_url' => 'https://potatosarebetter.example.com',
-                        'isolation_segment' => 'placement-tag',
-                      }
-                    ].to_json
-                  ),
-                  ::Diego::Bbs::Models::ProtoRoutes::RoutesEntry.new(
-                    key:   'tcp-router',
-                    value: [
-                      {
-                        'router_group_guid' => 'im-a-guid',
-                        'external_port'     => 1234,
-                        'container_port'    => 4321
-                      },
-                      {
-                        'router_group_guid' => 'im-probably-a-guid',
-                        'external_port'     => 789,
-                        'container_port'    => 987
-                      }
-                    ].to_json
-                  ),
-                  ::Diego::Bbs::Models::ProtoRoutes::RoutesEntry.new(
-                    key:   'internal-router',
-                    value: [
-                      {
-                        'hostname' => 'app-guid.apps.internal',
-                      }
-                    ].to_json
-                  )
-                ]
+                routes: {
+                  'cf-router' => [
+                    {
+                      'hostnames'         => ['potato.example.com'],
+                      'port'              => 8080,
+                      'route_service_url' => nil,
+                      'isolation_segment' => 'placement-tag',
+                    },
+                    {
+                      'hostnames'         => ['tomato.example.com'],
+                      'port'              => 8080,
+                      'route_service_url' => 'https://potatosarebetter.example.com',
+                      'isolation_segment' => 'placement-tag',
+                    }
+                  ].to_json,
+                  'tcp-router' => [
+                    {
+                      'router_group_guid' => 'im-a-guid',
+                      'external_port'     => 1234,
+                      'container_port'    => 4321
+                    },
+                    {
+                      'router_group_guid' => 'im-probably-a-guid',
+                      'external_port'     => 789,
+                      'container_port'    => 987
+                    }
+                  ].to_json,
+                  'internal-router' => [
+                    {
+                      'hostname' => 'app-guid.apps.internal',
+                    }
+                  ].to_json
+                }
               )
 
               lrp = builder.build_app_lrp
@@ -682,35 +682,26 @@ module VCAP::CloudController
 
               it 'includes empty cf-router entry' do
                 expected_routes = ::Diego::Bbs::Models::ProtoRoutes.new(
-                  routes: [
-                    ::Diego::Bbs::Models::ProtoRoutes::RoutesEntry.new(
-                      key:   'cf-router',
-                      value: [].to_json
-                    ),
-                    ::Diego::Bbs::Models::ProtoRoutes::RoutesEntry.new(
-                      key:   'tcp-router',
-                      value: [
-                        {
-                          'router_group_guid' => 'im-a-guid',
-                          'external_port'     => 1234,
-                          'container_port'    => 4321
-                        },
-                        {
-                          'router_group_guid' => 'im-probably-a-guid',
-                          'external_port'     => 789,
-                          'container_port'    => 987
-                        }
-                      ].to_json
-                    ),
-                    ::Diego::Bbs::Models::ProtoRoutes::RoutesEntry.new(
-                      key: 'internal-router',
-                      value: [
-                        {
-                          'hostname' => 'app-guid.apps.internal',
-                        }
-                      ].to_json
-                    )
-                  ]
+                  routes: {
+                    'cf-router' => [].to_json,
+                    'tcp-router' => [
+                      {
+                        'router_group_guid' => 'im-a-guid',
+                        'external_port'     => 1234,
+                        'container_port'    => 4321
+                      },
+                      {
+                        'router_group_guid' => 'im-probably-a-guid',
+                        'external_port'     => 789,
+                        'container_port'    => 987
+                      }
+                    ].to_json,
+                    'internal-router' => [
+                      {
+                        'hostname' => 'app-guid.apps.internal',
+                      }
+                    ].to_json
+                  }
                 )
 
                 lrp = builder.build_app_lrp
@@ -748,37 +739,28 @@ module VCAP::CloudController
 
               it 'includes empty tcp-router entry' do
                 expected_routes = ::Diego::Bbs::Models::ProtoRoutes.new(
-                  routes: [
-                    ::Diego::Bbs::Models::ProtoRoutes::RoutesEntry.new(
-                      key:   'cf-router',
-                      value: [
-                        {
-                          'hostnames'         => ['potato.example.com'],
-                          'port'              => 8080,
-                          'route_service_url' => nil,
-                          'isolation_segment' => 'placement-tag',
-                        },
-                        {
-                          'hostnames'         => ['tomato.example.com'],
-                          'port'              => 8080,
-                          'route_service_url' => 'https://potatosarebetter.example.com',
-                          'isolation_segment' => 'placement-tag',
-                        }
-                      ].to_json
-                    ),
-                    ::Diego::Bbs::Models::ProtoRoutes::RoutesEntry.new(
-                      key:   'tcp-router',
-                      value: [].to_json
-                    ),
-                    ::Diego::Bbs::Models::ProtoRoutes::RoutesEntry.new(
-                      key: 'internal-router',
-                      value: [
-                        {
-                          'hostname' => 'app-guid.apps.internal',
-                        }
-                      ].to_json
-                    )
-                  ]
+                  routes: {
+                    'cf-router' => [
+                      {
+                        'hostnames'         => ['potato.example.com'],
+                        'port'              => 8080,
+                        'route_service_url' => nil,
+                        'isolation_segment' => 'placement-tag',
+                      },
+                      {
+                        'hostnames'         => ['tomato.example.com'],
+                        'port'              => 8080,
+                        'route_service_url' => 'https://potatosarebetter.example.com',
+                        'isolation_segment' => 'placement-tag',
+                      }
+                    ].to_json,
+                    'tcp-router' => [].to_json,
+                    'internal-router' => [
+                      {
+                        'hostname' => 'app-guid.apps.internal',
+                      }
+                    ].to_json
+                  }
                 )
 
                 lrp = builder.build_app_lrp
@@ -801,16 +783,11 @@ module VCAP::CloudController
 
             it 'includes the lrp route' do
               lrp = builder.build_app_lrp
-              expect(lrp.routes.routes).to include(
-                ::Diego::Bbs::Models::ProtoRoutes::RoutesEntry.new(
-                  key:   'diego-ssh',
-                  value: MultiJson.dump({
-                    container_port:   2222,
-                    private_key:      ssh_key.private_key,
-                    host_fingerprint: ssh_key.fingerprint
-                  })
-                )
-              )
+              expect(lrp.routes.routes['diego-ssh']).to eq(MultiJson.dump({
+                container_port:   2222,
+                private_key:      ssh_key.private_key,
+                host_fingerprint: ssh_key.fingerprint
+              }))
             end
 
             it 'includes the ssh daemon run action' do
@@ -918,7 +895,7 @@ module VCAP::CloudController
               setup:                        nil,
               global_environment_variables: [],
               privileged?:                  false,
-              image_layers:                 nil,
+              image_layers:                 [],
               ports:                        lrp_builder_ports,
               port_environment_variables:   port_environment_variables,
               platform_options:             platform_options,
@@ -951,15 +928,14 @@ module VCAP::CloudController
             expect(lrp.max_pids).to eq(100)
             expect(lrp.memory_mb).to eq(128)
             expect(lrp.metrics_guid).to eq(process.app.guid)
-            expect(lrp.metric_tags.size).to eq(4)
-            expect(lrp.metric_tags[0].key).to eq('source_id')
-            expect(lrp.metric_tags[0].value.static).to eq(process.app.guid)
-            expect(lrp.metric_tags[1].key).to eq('process_id')
-            expect(lrp.metric_tags[1].value.static).to eq(process.guid)
-            expect(lrp.metric_tags[2].key).to eq('process_instance_id')
-            expect(lrp.metric_tags[2].value.dynamic).to eq(::Diego::Bbs::Models::MetricTagValue::DynamicValue::INSTANCE_GUID)
-            expect(lrp.metric_tags[3].key).to eq('instance_id')
-            expect(lrp.metric_tags[3].value.dynamic).to eq(::Diego::Bbs::Models::MetricTagValue::DynamicValue::INDEX)
+            expect(lrp.metric_tags.keys.size).to eq(4)
+
+            expect(lrp.metric_tags['source_id'].static).to eq(process.app.guid)
+            expect(lrp.metric_tags['process_id'].static).to eq(process.guid)
+            expect(lrp.metric_tags['process_instance_id'].dynamic).to eq(:INSTANCE_GUID)
+            expect(lrp.metric_tags['instance_id'].dynamic).to eq(:INDEX)
+
+            expect(lrp.monitor).to eq(expected_monitor_action)
             expect(lrp.monitor).to eq(expected_monitor_action)
             expect(lrp.network).to eq(expected_network)
             expect(lrp.ports).to eq([4444, 5555])
@@ -1121,16 +1097,11 @@ module VCAP::CloudController
 
             it 'includes the lrp route' do
               lrp = builder.build_app_lrp
-              expect(lrp.routes.routes).to include(
-                ::Diego::Bbs::Models::ProtoRoutes::RoutesEntry.new(
-                  key:   'diego-ssh',
-                  value: MultiJson.dump({
-                    container_port:   2222,
-                    private_key:      ssh_key.private_key,
-                    host_fingerprint: ssh_key.fingerprint
-                  })
-                )
-              )
+              expect(lrp.routes.routes['diego-ssh']).to eq(MultiJson.dump({
+                container_port:   2222,
+                private_key:      ssh_key.private_key,
+                host_fingerprint: ssh_key.fingerprint,
+              }))
             end
 
             it 'includes the ssh daemon run action' do
@@ -1246,11 +1217,13 @@ module VCAP::CloudController
         let(:existing_lrp) do
           ::Diego::Bbs::Models::DesiredLRP.new(
             routes: ::Diego::Bbs::Models::ProtoRoutes.new(
-              routes: [existing_ssh_route]
+              routes: existing_ssh_route
             )
           )
         end
-        let(:existing_ssh_route) { nil }
+        let(:existing_ssh_route) do
+          {}
+        end
 
         before do
           allow(VCAP::CloudController::IsolationSegmentSelector).to receive(:for_space).and_return('placement-tag')
@@ -1304,48 +1277,39 @@ module VCAP::CloudController
 
           it 'includes the correct routes' do
             expected_routes = ::Diego::Bbs::Models::ProtoRoutes.new(
-              routes: [
-                ::Diego::Bbs::Models::ProtoRoutes::RoutesEntry.new(
-                  key:   'cf-router',
-                  value: [
-                    {
-                      'hostnames'         => ['potato.example.com'],
-                      'port'              => 8080,
-                      'route_service_url' => nil,
-                      'isolation_segment' => 'placement-tag',
-                    },
-                    {
-                      'hostnames'         => ['tomato.example.com'],
-                      'port'              => 8080,
-                      'route_service_url' => 'https://potatosarebetter.example.com',
-                      'isolation_segment' => 'placement-tag',
-                    }
-                  ].to_json
-                ),
-                ::Diego::Bbs::Models::ProtoRoutes::RoutesEntry.new(
-                  key:   'tcp-router',
-                  value: [
-                    {
-                      'router_group_guid' => 'im-a-guid',
-                      'external_port'     => 1234,
-                      'container_port'    => 4321
-                    },
-                    {
-                      'router_group_guid' => 'im-probably-a-guid',
-                      'external_port'     => 789,
-                      'container_port'    => 987
-                    }
-                  ].to_json
-                ),
-                ::Diego::Bbs::Models::ProtoRoutes::RoutesEntry.new(
-                  key:   'internal-router',
-                  value: [
-                    {
-                      'hostname' => 'app-guid.apps.internal',
-                    }
-                  ].to_json
-                )
-              ]
+              routes: {
+                'cf-router' => [
+                  {
+                    'hostnames'         => ['potato.example.com'],
+                    'port'              => 8080,
+                    'route_service_url' => nil,
+                    'isolation_segment' => 'placement-tag',
+                  },
+                  {
+                    'hostnames'         => ['tomato.example.com'],
+                    'port'              => 8080,
+                    'route_service_url' => 'https://potatosarebetter.example.com',
+                    'isolation_segment' => 'placement-tag',
+                  }
+                ].to_json,
+                'tcp-router' => [
+                  {
+                    'router_group_guid' => 'im-a-guid',
+                    'external_port'     => 1234,
+                    'container_port'    => 4321
+                  },
+                  {
+                    'router_group_guid' => 'im-probably-a-guid',
+                    'external_port'     => 789,
+                    'container_port'    => 987
+                  }
+                ].to_json,
+                'internal-router' => [
+                  {
+                    'hostname' => 'app-guid.apps.internal',
+                  }
+                ].to_json
+              }
             )
 
             lrp_update = builder.build_app_lrp_update(existing_lrp)
@@ -1382,35 +1346,26 @@ module VCAP::CloudController
 
             it 'includes empty cf-router entry' do
               expected_routes = ::Diego::Bbs::Models::ProtoRoutes.new(
-                routes: [
-                  ::Diego::Bbs::Models::ProtoRoutes::RoutesEntry.new(
-                    key:   'cf-router',
-                    value: [].to_json
-                  ),
-                  ::Diego::Bbs::Models::ProtoRoutes::RoutesEntry.new(
-                    key:   'tcp-router',
-                    value: [
-                      {
-                        'router_group_guid' => 'im-a-guid',
-                        'external_port'     => 1234,
-                        'container_port'    => 4321
-                      },
-                      {
-                        'router_group_guid' => 'im-probably-a-guid',
-                        'external_port'     => 789,
-                        'container_port'    => 987
-                      }
-                    ].to_json
-                  ),
-                  ::Diego::Bbs::Models::ProtoRoutes::RoutesEntry.new(
-                    key:   'internal-router',
-                    value: [
-                      {
-                        'hostname' => 'app-guid.apps.internal',
-                      }
-                    ].to_json
-                  )
-                ]
+                routes: {
+                  'cf-router' =>  [].to_json,
+                  'tcp-router' => [
+                    {
+                      'router_group_guid' => 'im-a-guid',
+                      'external_port'     => 1234,
+                      'container_port'    => 4321
+                    },
+                    {
+                      'router_group_guid' => 'im-probably-a-guid',
+                      'external_port'     => 789,
+                      'container_port'    => 987
+                    }
+                  ].to_json,
+                  'internal-router' => [
+                    {
+                      'hostname' => 'app-guid.apps.internal',
+                    }
+                  ].to_json
+                }
               )
 
               lrp_update = builder.build_app_lrp_update(existing_lrp)
@@ -1447,37 +1402,28 @@ module VCAP::CloudController
 
             it 'includes empty tcp-router entry' do
               expected_routes = ::Diego::Bbs::Models::ProtoRoutes.new(
-                routes: [
-                  ::Diego::Bbs::Models::ProtoRoutes::RoutesEntry.new(
-                    key:   'cf-router',
-                    value: [
-                      {
-                        'hostnames'         => ['potato.example.com'],
-                        'port'              => 8080,
-                        'route_service_url' => nil,
-                        'isolation_segment' => 'placement-tag',
-                      },
-                      {
-                        'hostnames'         => ['tomato.example.com'],
-                        'port'              => 8080,
-                        'route_service_url' => 'https://potatosarebetter.example.com',
-                        'isolation_segment' => 'placement-tag',
-                      }
-                    ].to_json
-                  ),
-                  ::Diego::Bbs::Models::ProtoRoutes::RoutesEntry.new(
-                    key:   'tcp-router',
-                    value: [].to_json
-                  ),
-                  ::Diego::Bbs::Models::ProtoRoutes::RoutesEntry.new(
-                    key:   'internal-router',
-                    value: [
-                      {
-                        'hostname' => 'app-guid.apps.internal',
-                      }
-                    ].to_json
-                  )
-                ]
+                routes: {
+                  'cf-router' => [
+                    {
+                    'hostnames'         => ['potato.example.com'],
+                    'port'              => 8080,
+                    'route_service_url' => nil,
+                    'isolation_segment' => 'placement-tag',
+                  },
+                    {
+                      'hostnames'         => ['tomato.example.com'],
+                      'port'              => 8080,
+                      'route_service_url' => 'https://potatosarebetter.example.com',
+                      'isolation_segment' => 'placement-tag',
+                    }
+                  ].to_json,
+                  'tcp-router' => [].to_json,
+                  'internal-router' => [
+                    {
+                      'hostname' => 'app-guid.apps.internal',
+                    }
+                  ].to_json
+                }
               )
 
               lrp_update = builder.build_app_lrp_update(existing_lrp)
@@ -1488,15 +1434,12 @@ module VCAP::CloudController
 
           context 'when ssh routes are already present' do
             let(:existing_ssh_route) do
-              ::Diego::Bbs::Models::ProtoRoutes::RoutesEntry.new(
-                key:   SSH_ROUTES_KEY,
-                value: 'existing-data'
-              )
+              { SSH_ROUTES_KEY => 'existing-data' }
             end
 
             it 'includes the ssh route unchanged' do
               lrp = builder.build_app_lrp_update(existing_lrp)
-              expect(lrp.routes.routes).to include(existing_ssh_route)
+              expect(lrp.routes.routes[SSH_ROUTES_KEY]).to eq('existing-data')
             end
           end
         end

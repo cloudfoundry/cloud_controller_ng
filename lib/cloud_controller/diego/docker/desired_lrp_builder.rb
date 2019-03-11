@@ -32,7 +32,7 @@ module VCAP::CloudController
         end
 
         def image_layers
-          return nil unless @config.get(:diego, :enable_declarative_asset_downloads)
+          return [] unless @config.get(:diego, :enable_declarative_asset_downloads)
 
           [::Diego::Bbs::Models::ImageLayer.new(
             name: 'docker-lifecycle',

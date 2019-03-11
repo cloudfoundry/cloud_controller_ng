@@ -274,7 +274,7 @@ module VCAP::CloudController
               # this test can be removed once all app packages have sha256 checksums
               before do
                 lifecycle_data[:app_bits_checksum][:type] = 'sha1'
-                download_app_package_action[:checksum_algorithm] = 'sha1'
+                download_app_package_action['checksum_algorithm'] = 'sha1'
               end
 
               it 'includes the app package download in the staging action' do
@@ -420,7 +420,7 @@ module VCAP::CloudController
 
         describe '#image_layers' do
           it 'returns no image layers' do
-            expect(builder.image_layers).to be_nil
+            expect(builder.image_layers).to be_empty
           end
 
           context 'when enable_declarative_asset_downloads is true' do
@@ -459,7 +459,7 @@ module VCAP::CloudController
               end
 
               it 'does not include the app package as an image layer' do
-                expect(builder.image_layers.any? { |l| l[:name] == 'app package' }).to be false
+                expect(builder.image_layers.any? { |l| l['name'] == 'app package' }).to be false
               end
             end
 
@@ -483,7 +483,7 @@ module VCAP::CloudController
               end
 
               it 'does not include the buildpack cache as an image layer' do
-                expect(builder.image_layers.any? { |l| l[:name] == 'build artifacts cache' }).to be false
+                expect(builder.image_layers.any? { |l| l['name'] == 'build artifacts cache' }).to be false
               end
             end
 
@@ -493,7 +493,7 @@ module VCAP::CloudController
               end
 
               it 'does not include the buildpack cache as an image layer' do
-                expect(builder.image_layers.any? { |l| l[:name] == 'build artifacts cache' }).to be false
+                expect(builder.image_layers.any? { |l| l['name'] == 'build artifacts cache' }).to be false
               end
             end
 

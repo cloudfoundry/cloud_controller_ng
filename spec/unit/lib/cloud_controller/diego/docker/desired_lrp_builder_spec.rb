@@ -67,8 +67,8 @@ module VCAP::CloudController
             allow(LifecycleBundleUriGenerator).to receive(:uri).and_return('foo://bar.baz')
           end
 
-          it 'returns nil' do
-            expect(builder.image_layers).to be_nil
+          it 'returns empty array' do
+            expect(builder.image_layers).to be_empty
           end
 
           context 'when enable_declarative_asset_downloads is true' do

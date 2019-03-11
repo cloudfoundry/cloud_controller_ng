@@ -22,7 +22,7 @@ module Diego
     end
 
     describe '#ping' do
-      let(:response_body) { Bbs::Models::PingResponse.new(available: true).encode.to_s }
+      let(:response_body) { Bbs::Models::PingResponse.encode(Bbs::Models::PingResponse.new(available: true)).to_s }
       let(:response_status) { 200 }
 
       before do
@@ -63,7 +63,7 @@ module Diego
     end
 
     describe '#upsert_domain' do
-      let(:response_body) { Bbs::Models::UpsertDomainResponse.new(error: nil).encode.to_s }
+      let(:response_body) { Bbs::Models::UpsertDomainResponse.encode(Bbs::Models::UpsertDomainResponse.new(error: nil)).to_s }
       let(:response_status) { 200 }
       let(:domain) { 'domain' }
       let(:ttl) { 100 }
@@ -79,7 +79,7 @@ module Diego
 
         expect(response.error).to be_nil
         expect(a_request(:post, 'https://bbs.example.com:4443/v1/domains/upsert').with(
-                 body: expected_domain_request.encode.to_s,
+                 body: Bbs::Models::UpsertDomainRequest.encode(expected_domain_request).to_s,
                  headers: { 'Content-Type' => 'application/x-protobuf' }
         )).to have_been_made
       end
@@ -119,7 +119,7 @@ module Diego
     end
 
     describe '#desire_task' do
-      let(:response_body) { Bbs::Models::TaskLifecycleResponse.new(error: nil).encode.to_s }
+      let(:response_body) { Bbs::Models::TaskLifecycleResponse.encode(Bbs::Models::TaskLifecycleResponse.new(error: nil)).to_s }
       let(:response_status) { 200 }
       let(:task_definition) { Bbs::Models::TaskDefinition.new }
 
@@ -134,7 +134,7 @@ module Diego
 
         expect(response.error).to be_nil
         expect(a_request(:post, 'https://bbs.example.com:4443/v1/tasks/desire.r2').with(
-                 body: expected_task_request.encode.to_s,
+                 body: Bbs::Models::DesireTaskRequest.encode(expected_task_request).to_s,
                  headers: { 'Content-Type' => 'application/x-protobuf' }
         )).to have_been_made
       end
@@ -176,7 +176,7 @@ module Diego
     end
 
     describe '#tasks' do
-      let(:response_body) { Bbs::Models::TasksResponse.new(error: nil).encode.to_s }
+      let(:response_body) { Bbs::Models::TasksResponse.encode(Bbs::Models::TasksResponse.new(error: nil)).to_s }
       let(:response_status) { 200 }
 
       before do
@@ -190,7 +190,7 @@ module Diego
 
         expect(response.error).to be_nil
         expect(a_request(:post, 'https://bbs.example.com:4443/v1/tasks/list.r2').with(
-                 body: expected_request.encode.to_s,
+                 body: Bbs::Models::TasksRequest.encode(expected_request).to_s,
                  headers: { 'Content-Type' => 'application/x-protobuf' }
         )).to have_been_made
       end
@@ -203,7 +203,7 @@ module Diego
 
           expect(response.error).to be_nil
           expect(a_request(:post, 'https://bbs.example.com:4443/v1/tasks/list.r2').with(
-                   body: expected_request.encode.to_s,
+                   body: Bbs::Models::TasksRequest.encode(expected_request).to_s,
                    headers: { 'Content-Type' => 'application/x-protobuf' }
           )).to have_been_made
         end
@@ -215,7 +215,7 @@ module Diego
 
           expect(response.error).to be_nil
           expect(a_request(:post, 'https://bbs.example.com:4443/v1/tasks/list.r2').with(
-                   body: expected_request.encode.to_s,
+                   body: Bbs::Models::TasksRequest.encode(expected_request).to_s,
                    headers: { 'Content-Type' => 'application/x-protobuf' }
           )).to have_been_made
         end
@@ -256,7 +256,7 @@ module Diego
     end
 
     describe '#task_by_guid' do
-      let(:response_body) { Bbs::Models::TaskResponse.new(error: nil).encode.to_s }
+      let(:response_body) { Bbs::Models::TaskResponse.encode(Bbs::Models::TaskResponse.new(error: nil)).to_s }
       let(:response_status) { 200 }
 
       before do
@@ -270,7 +270,7 @@ module Diego
 
         expect(response.error).to be_nil
         expect(a_request(:post, 'https://bbs.example.com:4443/v1/tasks/get_by_task_guid.r2').with(
-                 body: expected_request.encode.to_s,
+                 body: Bbs::Models::TaskByGuidRequest.encode(expected_request).to_s,
                  headers: { 'Content-Type' => 'application/x-protobuf' }
         )).to have_been_made
       end
@@ -310,7 +310,7 @@ module Diego
     end
 
     describe '#cancel_task' do
-      let(:response_body) { Bbs::Models::TaskLifecycleResponse.new(error: nil).encode.to_s }
+      let(:response_body) { Bbs::Models::TaskLifecycleResponse.encode(Bbs::Models::TaskLifecycleResponse.new(error: nil)).to_s }
       let(:response_status) { 200 }
 
       before do
@@ -324,7 +324,7 @@ module Diego
 
         expect(response.error).to be_nil
         expect(a_request(:post, 'https://bbs.example.com:4443/v1/tasks/cancel').with(
-                 body: expected_cancel_request.encode.to_s,
+                 body: Bbs::Models::TaskGuidRequest.encode(expected_cancel_request).to_s,
                  headers: { 'Content-Type' => 'application/x-protobuf' }
         )).to have_been_made
       end
@@ -364,7 +364,7 @@ module Diego
     end
 
     describe '#desire_lrp' do
-      let(:response_body) { Bbs::Models::DesiredLRPLifecycleResponse.new(error: nil).encode.to_s }
+      let(:response_body) { Bbs::Models::DesiredLRPLifecycleResponse.encode(Bbs::Models::DesiredLRPLifecycleResponse.new(error: nil)).to_s }
       let(:response_status) { 200 }
       let(:lrp) { ::Diego::Bbs::Models::DesiredLRP.new }
 
@@ -379,7 +379,7 @@ module Diego
         expect(response).to be_a(Bbs::Models::DesiredLRPLifecycleResponse)
         expect(response.error).to be_nil
         expect(a_request(:post, 'https://bbs.example.com:4443/v1/desired_lrp/desire.r2').with(
-                 body: expected_desire_lrp_request.encode.to_s,
+                 body: Bbs::Models::DesireLRPRequest.encode(expected_desire_lrp_request).to_s,
                  headers: { 'Content-Type' => 'application/x-protobuf' }
         )).to have_been_made
       end
@@ -420,7 +420,7 @@ module Diego
 
     describe '#desired_lrp_by_process_guid' do
       let(:lrp) { ::Diego::Bbs::Models::DesiredLRP.new(process_guid: process_guid) }
-      let(:response_body) { Bbs::Models::DesiredLRPResponse.new(error: nil, desired_lrp: lrp).encode.to_s }
+      let(:response_body) { Bbs::Models::DesiredLRPResponse.encode(Bbs::Models::DesiredLRPResponse.new(error: nil, desired_lrp: lrp)).to_s }
       let(:response_status) { 200 }
 
       let(:process_guid) { 'process-guid' }
@@ -437,7 +437,7 @@ module Diego
         expect(response.error).to be_nil
         expect(response.desired_lrp).to eq(lrp)
         expect(a_request(:post, 'https://bbs.example.com:4443/v1/desired_lrps/get_by_process_guid.r2').with(
-                 body: expected_request.encode.to_s,
+                 body: Bbs::Models::DesiredLRPByProcessGuidRequest.encode(expected_request).to_s,
                  headers: { 'Content-Type' => 'application/x-protobuf' }
         )).to have_been_made
       end
@@ -480,7 +480,7 @@ module Diego
 
     describe '#remove_desired_lrp' do
       let(:process_guid) { 'process-guid' }
-      let(:response_body) { Bbs::Models::DesiredLRPLifecycleResponse.new(error: nil).encode.to_s }
+      let(:response_body) { Bbs::Models::DesiredLRPLifecycleResponse.encode(Bbs::Models::DesiredLRPLifecycleResponse.new(error: nil)).to_s }
       let(:response_status) { 200 }
 
       before do
@@ -494,7 +494,7 @@ module Diego
         expect(response).to be_a(Bbs::Models::DesiredLRPLifecycleResponse)
         expect(response.error).to be_nil
         expect(a_request(:post, 'https://bbs.example.com:4443/v1/desired_lrp/remove').with(
-                 body: expected_request.encode.to_s,
+                 body: Bbs::Models::RemoveDesiredLRPRequest.encode(expected_request).to_s,
                  headers: { 'Content-Type' => 'application/x-protobuf' }
         )).to have_been_made
       end
@@ -535,7 +535,7 @@ module Diego
 
     describe '#retire_actual_lrp' do
       let(:actual_lrp_key) { Bbs::Models::ActualLRPKey.new(process_guid: 'process-guid', index: 1, domain: 'domain') }
-      let(:response_body) { Bbs::Models::ActualLRPLifecycleResponse.new(error: nil).encode.to_s }
+      let(:response_body) { Bbs::Models::ActualLRPLifecycleResponse.encode(Bbs::Models::ActualLRPLifecycleResponse.new(error: nil)).to_s }
       let(:response_status) { 200 }
 
       before do
@@ -549,7 +549,7 @@ module Diego
         expect(response).to be_a(Bbs::Models::ActualLRPLifecycleResponse)
         expect(response.error).to be_nil
         expect(a_request(:post, 'https://bbs.example.com:4443/v1/actual_lrps/retire').with(
-                 body: expected_request.encode.to_s,
+                 body: Bbs::Models::RetireActualLRPRequest.encode(expected_request).to_s,
                  headers: { 'Content-Type' => 'application/x-protobuf' }
         )).to have_been_made
       end
@@ -613,7 +613,7 @@ module Diego
       let(:process_guid) { 'process-guid' }
       let(:lrp_update) { ::Diego::Bbs::Models::DesiredLRPUpdate.new(instances: 3) }
 
-      let(:response_body) { Bbs::Models::DesiredLRPLifecycleResponse.new(error: nil).encode.to_s }
+      let(:response_body) { Bbs::Models::DesiredLRPLifecycleResponse.encode(Bbs::Models::DesiredLRPLifecycleResponse.new(error: nil)).to_s }
       let(:response_status) { 200 }
 
       before do
@@ -627,7 +627,7 @@ module Diego
         expect(response).to be_a(Bbs::Models::DesiredLRPLifecycleResponse)
         expect(response.error).to be_nil
         expect(a_request(:post, 'https://bbs.example.com:4443/v1/desired_lrp/update').with(
-                 body: expected_request.encode.to_s,
+                 body: Bbs::Models::UpdateDesiredLRPRequest.encode(expected_request).to_s,
                  headers: { 'Content-Type' => 'application/x-protobuf' }
         )).to have_been_made
       end
@@ -669,7 +669,11 @@ module Diego
     describe '#actual_lrp_groups_by_process_guid' do
       let(:process_guid) { 'process-guid' }
 
-      let(:response_body) { Bbs::Models::ActualLRPGroupsResponse.new(error: nil, actual_lrp_groups: actual_lrp_groups).encode.to_s }
+      let(:response_body) do
+        Bbs::Models::ActualLRPGroupsResponse.encode(
+          Bbs::Models::ActualLRPGroupsResponse.new(error: nil, actual_lrp_groups: actual_lrp_groups)
+        ).to_s
+      end
       let(:actual_lrp_groups) { [::Diego::Bbs::Models::ActualLRPGroup.new] }
       let(:response_status) { 200 }
       before do
@@ -684,7 +688,7 @@ module Diego
         expect(response.error).to be_nil
         expect(response.actual_lrp_groups).to eq(actual_lrp_groups)
         expect(a_request(:post, 'https://bbs.example.com:4443/v1/actual_lrp_groups/list_by_process_guid').with(
-                 body: expected_request.encode.to_s,
+                 body: Bbs::Models::ActualLRPGroupsByProcessGuidRequest.encode(expected_request).to_s,
                  headers: { 'Content-Type' => 'application/x-protobuf' }
         )).to have_been_made
       end
@@ -692,7 +696,10 @@ module Diego
 
     describe '#desired_lrps_scheduling_infos' do
       let(:scheduling_infos) { [::Diego::Bbs::Models::DesiredLRPSchedulingInfo.new] }
-      let(:response_body) { Bbs::Models::DesiredLRPSchedulingInfosResponse.new(error: nil, desired_lrp_scheduling_infos: scheduling_infos).encode.to_s }
+      let(:response_body) {
+        response = Bbs::Models::DesiredLRPSchedulingInfosResponse.new(error: nil, desired_lrp_scheduling_infos: scheduling_infos)
+        Bbs::Models::DesiredLRPSchedulingInfosResponse.encode(response).to_s
+      }
       let(:response_status) { 200 }
       let(:domain) { 'domain' }
 
@@ -708,7 +715,7 @@ module Diego
         expect(response.error).to be_nil
         expect(response.desired_lrp_scheduling_infos).to eq(scheduling_infos)
         expect(a_request(:post, 'https://bbs.example.com:4443/v1/desired_lrp_scheduling_infos/list').with(
-                 body: expected_request.encode.to_s,
+                 body: Bbs::Models::DesiredLRPsRequest.encode(expected_request).to_s,
                  headers: { 'Content-Type' => 'application/x-protobuf' }
         )).to have_been_made
       end

@@ -33,14 +33,14 @@ module VCAP::CloudController
           it 'returns the BBS network object' do
             expect(container_info.to_bbs_network).to eq(
               ::Diego::Bbs::Models::Network.new(
-                properties: [
-                  ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'policy_group_id', value: app.guid),
-                  ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'app_id', value: app.guid),
-                  ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'space_id', value: app.space.guid),
-                  ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'org_id', value: app.organization.guid),
-                  ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'ports', value: ports_str),
-                  ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'container_workload', value: container_workload),
-                ]
+                properties: {
+                  'policy_group_id'    => app.guid,
+                  'app_id'             => app.guid,
+                  'space_id'           => app.space.guid,
+                  'org_id'             => app.organization.guid,
+                  'ports'              => ports_str,
+                  'container_workload' => container_workload,
+                }
               )
             )
           end

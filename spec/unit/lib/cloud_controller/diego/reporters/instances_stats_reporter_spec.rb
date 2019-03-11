@@ -38,16 +38,10 @@ module VCAP::CloudController
         end
         let(:placement_tags) { ['isolation-segment-name'] }
         let(:metrics_tags) {
-          [
-            ::Diego::Bbs::Models::DesiredLRP::MetricTagsEntry.new(
-              key: 'source_id',
-              value: ::Diego::Bbs::Models::MetricTagValue.new(static: process.app.guid),
-            ),
-            ::Diego::Bbs::Models::DesiredLRP::MetricTagsEntry.new(
-              key: 'process_id',
-              value: ::Diego::Bbs::Models::MetricTagValue.new(static: process.guid),
-            ),
-          ]
+          {
+             'source_id' => ::Diego::Bbs::Models::MetricTagValue.new(static: process.app.guid),
+             'process_id' => ::Diego::Bbs::Models::MetricTagValue.new(static: process.guid),
+          }
         }
         let(:formatted_current_time) { Time.now.to_datetime.rfc3339 }
 
@@ -162,12 +156,9 @@ module VCAP::CloudController
 
         context 'when the desired lrp does NOT have a process_id metric tag' do
           let(:metrics_tags) {
-            [
-              ::Diego::Bbs::Models::DesiredLRP::MetricTagsEntry.new(
-                key: 'source_id',
-                value: ::Diego::Bbs::Models::MetricTagValue.new(static: process.guid),
-              ),
-            ]
+            {
+              'source_id' => ::Diego::Bbs::Models::MetricTagValue.new(static: process.guid),
+            }
           }
           let(:traffic_controller_response) do
             [

@@ -23,7 +23,7 @@ module VCAP::CloudController
       def cancel_task(guid)
         logger.info('cancel.task.request', task_guid: guid)
 
-        handle_diego_errors(acceptable_errors: [::Diego::Bbs::Models::Error::Type::ResourceNotFound]) do
+        handle_diego_errors(acceptable_errors: [::Diego::Bbs::ErrorTypes::ResourceNotFound]) do
           response = client.cancel_task(guid)
           logger.info('cancel.task.response', task_guid: guid, error: response.error)
           response
@@ -33,7 +33,7 @@ module VCAP::CloudController
       def fetch_task(guid)
         logger.info('fetch.task.request')
 
-        handle_diego_errors(acceptable_errors: [::Diego::Bbs::Models::Error::Type::ResourceNotFound]) do
+        handle_diego_errors(acceptable_errors: [::Diego::Bbs::ErrorTypes::ResourceNotFound]) do
           response = client.task_by_guid(guid)
           logger.info('fetch.task.response', error: response.error)
           response

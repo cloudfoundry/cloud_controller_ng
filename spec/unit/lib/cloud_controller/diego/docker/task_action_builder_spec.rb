@@ -111,8 +111,8 @@ module VCAP::CloudController
         end
 
         describe '#image_layers' do
-          it 'returns nil' do
-            expect(task_action_builder.image_layers).to be_nil
+          it 'returns empty array' do
+            expect(task_action_builder.image_layers).to be_empty
           end
 
           context 'when enable_declarative_asset_downloads is true' do

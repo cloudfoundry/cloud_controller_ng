@@ -53,7 +53,7 @@ module VCAP::CloudController
         end
 
         def image_layers
-          return nil unless @config.get(:diego, :enable_declarative_asset_downloads)
+          return [] unless @config.get(:diego, :enable_declarative_asset_downloads)
 
           destination = @config.get(:diego, :droplet_destinations)[@stack.to_sym]
           raise InvalidStack.new("no droplet destination defined for requested stack '#{@stack}'") unless destination

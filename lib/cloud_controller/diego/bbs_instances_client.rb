@@ -41,7 +41,7 @@ module VCAP::CloudController
         end
 
         if response.error
-          if response.error.type == ::Diego::Bbs::Models::Error::Type::ResourceNotFound
+          if response.error.type == ::Diego::Bbs::ErrorTypes::ResourceNotFound
             raise CloudController::Errors::NoRunningInstances.new("No running instances found for process guid #{process_guid}")
           else
             raise CloudController::Errors::InstancesUnavailable.new(response.error.message)

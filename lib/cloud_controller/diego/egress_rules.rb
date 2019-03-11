@@ -1,6 +1,16 @@
 module VCAP::CloudController
   module Diego
     class EgressRules
+      def running_protobuf_rules(process)
+        running(process).map { |r| as_protobuf_rule(r) }
+      end
+
+      def staging_protobuf_rules(app_guid:)
+        staging(app_guid: app_guid).map { |r| as_protobuf_rule(r) }
+      end
+
+      private
+
       def staging(app_guid:)
         space = VCAP::CloudController::AppModel.find(guid: app_guid).space
         present_rules(space.staging_security_groups)
@@ -10,7 +20,17 @@ module VCAP::CloudController
         present_rules(process.space.security_groups)
       end
 
-      private
+      def as_protobuf_rule(rule)
+        ::Diego::Bbs::Models::SecurityGroupRule.new({
+          protocol:     rule['protocol'],
+          destinations: rule['destinations'],
+          ports:        rule['ports'],
+          port_range:   rule['port_range'],
+          icmp_info:    rule['icmp_info'],
+          log:          rule['log'],
+          annotations:  rule['annotations'],
+        }.compact)
+      end
 
       def present_rules(security_groups)
         order_rules(transform_rules(group_rules(security_groups)))

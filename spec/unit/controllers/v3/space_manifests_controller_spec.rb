@@ -348,7 +348,6 @@ RSpec.describe SpaceManifestsController, type: :controller do
         it 'sets the docker image' do
           post :apply_manifest, params: { guid: space.guid }.merge(request_body), as: :yaml
 
-          puts response.body
           expect(response.status).to eq(202)
           space_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceApplyManifest%'"))
           expect(space_apply_manifest_jobs.count).to eq 1

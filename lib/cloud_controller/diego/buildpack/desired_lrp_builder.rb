@@ -46,19 +46,19 @@ module VCAP::CloudController
           return nil if @config.get(:diego, :enable_declarative_asset_downloads) && @checksum_algorithm == 'sha256'
 
           serial([
-            ::Diego::Bbs::Models::DownloadAction.new(
+            ::Diego::Bbs::Models::DownloadAction.new({
               from: @droplet_uri,
               to: '.',
               cache_key: "droplets-#{@process_guid}",
               user: action_user,
               checksum_algorithm: @checksum_algorithm,
               checksum_value: @checksum_value,
-            )
+            }.compact)
           ])
         end
 
         def image_layers
-          return nil unless @config.get(:diego, :enable_declarative_asset_downloads)
+          return [] unless @config.get(:diego, :enable_declarative_asset_downloads)
 
           lifecycle_bundle_key = "buildpack/#{@stack}".to_sym
           lifecycle_bundle = @config.get(:diego, :lifecycle_bundles)[lifecycle_bundle_key]
@@ -78,7 +78,7 @@ module VCAP::CloudController
           ]
 
           if @checksum_algorithm == 'sha256'
-            layers << ::Diego::Bbs::Models::ImageLayer.new(
+            layers << ::Diego::Bbs::Models::ImageLayer.new({
               name: 'droplet',
               url: UriUtils.uri_escape(@droplet_uri),
               destination_path: destination,
@@ -86,7 +86,7 @@ module VCAP::CloudController
               media_type: ::Diego::Bbs::Models::ImageLayer::MediaType::TGZ,
               digest_value: @checksum_value,
               digest_algorithm: ::Diego::Bbs::Models::ImageLayer::DigestAlgorithm::SHA256,
-            )
+            }.compact)
           end
 
           layers

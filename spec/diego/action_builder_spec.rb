@@ -46,7 +46,7 @@ module Diego
         timeout_action = Bbs::Models::TimeoutAction.new
         action         = ActionBuilder.action(timeout_action)
         expect(action).to be_a(Bbs::Models::Action)
-        expect(action[:timeout_action]).to eq(timeout_action)
+        expect(action['timeout_action']).to eq(timeout_action)
       end
 
       it 'wraps an unwrapped action idempotently' do
@@ -54,11 +54,11 @@ module Diego
 
         action = ActionBuilder.action(timeout_action)
         expect(action).to be_a(Bbs::Models::Action)
-        expect(action[:timeout_action]).to eq(timeout_action)
+        expect(action['timeout_action']).to eq(timeout_action)
 
         idempotent_action = ActionBuilder.action(action)
         expect(idempotent_action).to be_a(Bbs::Models::Action)
-        expect(idempotent_action[:timeout_action]).to eq(timeout_action)
+        expect(idempotent_action['timeout_action']).to eq(timeout_action)
       end
     end
 
@@ -70,8 +70,8 @@ module Diego
         serial_action = ActionBuilder.serial([action1, action2])
 
         expect(serial_action).to be_a(Bbs::Models::Action)
-        expect(serial_action[:serial_action]).to be_a(Bbs::Models::SerialAction)
-        expect(serial_action[:serial_action].actions).to match_array([ActionBuilder.action(action1), ActionBuilder.action(action2)])
+        expect(serial_action['serial_action']).to be_a(Bbs::Models::SerialAction)
+        expect(serial_action['serial_action'].actions).to match_array([ActionBuilder.action(action1), ActionBuilder.action(action2)])
       end
     end
 
@@ -83,8 +83,8 @@ module Diego
         serial_action = ActionBuilder.parallel([action1, action2])
 
         expect(serial_action).to be_a(Bbs::Models::Action)
-        expect(serial_action[:parallel_action]).to be_a(Bbs::Models::ParallelAction)
-        expect(serial_action[:parallel_action].actions).to match_array([ActionBuilder.action(action1), ActionBuilder.action(action2)])
+        expect(serial_action['parallel_action']).to be_a(Bbs::Models::ParallelAction)
+        expect(serial_action['parallel_action'].actions).to match_array([ActionBuilder.action(action1), ActionBuilder.action(action2)])
       end
     end
 
@@ -95,10 +95,10 @@ module Diego
         timeout_action = ActionBuilder.timeout(action, timeout_ms: 30)
 
         expect(timeout_action).to be_a(Bbs::Models::Action)
-        expect(timeout_action[:timeout_action]).to be_a(Bbs::Models::TimeoutAction)
-        expect(timeout_action[:timeout_action].action).to be_a(Bbs::Models::Action)
-        expect(timeout_action[:timeout_action].action).to eq(ActionBuilder.action(action))
-        expect(timeout_action[:timeout_action].timeout_ms).to eq(30)
+        expect(timeout_action['timeout_action']).to be_a(Bbs::Models::TimeoutAction)
+        expect(timeout_action['timeout_action'].action).to be_a(Bbs::Models::Action)
+        expect(timeout_action['timeout_action'].action).to eq(ActionBuilder.action(action))
+        expect(timeout_action['timeout_action'].timeout_ms).to eq(30)
       end
     end
 
@@ -109,12 +109,12 @@ module Diego
         emit_progress_action = ActionBuilder.emit_progress(action, start_message: 'start', success_message: 'success', failure_message_prefix: 'failed: ')
 
         expect(emit_progress_action).to be_a(Bbs::Models::Action)
-        expect(emit_progress_action[:emit_progress_action]).to be_a(Bbs::Models::EmitProgressAction)
-        expect(emit_progress_action[:emit_progress_action].action).to be_a(Bbs::Models::Action)
-        expect(emit_progress_action[:emit_progress_action].action).to eq(ActionBuilder.action(action))
-        expect(emit_progress_action[:emit_progress_action].start_message).to eq('start')
-        expect(emit_progress_action[:emit_progress_action].success_message).to eq('success')
-        expect(emit_progress_action[:emit_progress_action].failure_message_prefix).to eq('failed: ')
+        expect(emit_progress_action['emit_progress_action']).to be_a(Bbs::Models::EmitProgressAction)
+        expect(emit_progress_action['emit_progress_action'].action).to be_a(Bbs::Models::Action)
+        expect(emit_progress_action['emit_progress_action'].action).to eq(ActionBuilder.action(action))
+        expect(emit_progress_action['emit_progress_action'].start_message).to eq('start')
+        expect(emit_progress_action['emit_progress_action'].success_message).to eq('success')
+        expect(emit_progress_action['emit_progress_action'].failure_message_prefix).to eq('failed: ')
       end
     end
 
@@ -126,8 +126,8 @@ module Diego
         serial_action = ActionBuilder.codependent([action1, action2])
 
         expect(serial_action).to be_a(Bbs::Models::Action)
-        expect(serial_action[:codependent_action]).to be_a(Bbs::Models::CodependentAction)
-        expect(serial_action[:codependent_action].actions).to match_array([ActionBuilder.action(action1), ActionBuilder.action(action2)])
+        expect(serial_action['codependent_action']).to be_a(Bbs::Models::CodependentAction)
+        expect(serial_action['codependent_action'].actions).to match_array([ActionBuilder.action(action1), ActionBuilder.action(action2)])
       end
     end
 
@@ -138,9 +138,9 @@ module Diego
         try_action = ActionBuilder.try_action(action)
 
         expect(try_action).to be_a(Bbs::Models::Action)
-        expect(try_action[:try_action]).to be_a(Bbs::Models::TryAction)
-        expect(try_action[:try_action].action).to be_a(Bbs::Models::Action)
-        expect(try_action[:try_action].action).to eq(ActionBuilder.action(action))
+        expect(try_action['try_action']).to be_a(Bbs::Models::TryAction)
+        expect(try_action['try_action'].action).to be_a(Bbs::Models::Action)
+        expect(try_action['try_action'].action).to eq(ActionBuilder.action(action))
       end
     end
   end

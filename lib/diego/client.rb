@@ -61,7 +61,7 @@ module Diego
       protobuf_decode!(response.body, Bbs::Models::TaskResponse)
     end
 
-    def tasks(domain: nil, cell_id: nil)
+    def tasks(domain: '', cell_id: '')
       request = protobuf_encode!({ domain: domain, cell_id: cell_id }, Bbs::Models::TasksRequest)
 
       response = with_request_error_handling do
@@ -172,8 +172,10 @@ module Diego
 
     attr_reader :client
 
-    def protobuf_encode!(object, encoder)
-      encoder.encode(object)
+    def protobuf_encode!(hash, protobuf_message_class)
+      # See below link to understand proto3 message encoding
+      # https://developers.google.com/protocol-buffers/docs/reference/ruby-generated#message
+      protobuf_message_class.encode(protobuf_message_class.new(hash))
     rescue => e
       raise EncodeError.new(e.message)
     end

@@ -31,14 +31,14 @@ module VCAP::CloudController
         let(:package) { PackageModel.make(app: app) }
         let(:expected_network) do
           ::Diego::Bbs::Models::Network.new(
-            properties: [
-              ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'policy_group_id', value: app.guid),
-              ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'app_id', value: app.guid),
-              ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'space_id', value: app.space.guid),
-              ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'org_id', value: app.organization.guid),
-              ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'ports', value: ''),
-              ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'container_workload', value: Protocol::ContainerNetworkInfo::STAGING),
-            ]
+            properties: {
+              'policy_group_id'    => app.guid,
+              'app_id'             => app.guid,
+              'space_id'           => app.space.guid,
+              'org_id'             => app.organization.guid,
+              'ports'              => '',
+              'container_workload' => Protocol::ContainerNetworkInfo::STAGING,
+            }
           )
         end
         let(:config) do
@@ -172,7 +172,7 @@ module VCAP::CloudController
 
             expect(result.image_layers).to eq(lifecycle_image_layers)
             expect(result.cached_dependencies).to eq(lifecycle_cached_dependencies)
-            expect(result.PlacementTags).to eq(['potato-segment'])
+            expect(result.placement_tags).to eq(['potato-segment'])
             expect(result.max_pids).to eq(100)
             expect(result.certificate_properties).to eq(certificate_properties)
           end
@@ -193,7 +193,7 @@ module VCAP::CloudController
             it 'sets PlacementTags to  an empty array' do
               result = task_recipe_builder.build_staging_task(config, staging_details)
 
-              expect(result.PlacementTags).to eq([])
+              expect(result.placement_tags).to eq([])
             end
           end
         end
@@ -219,7 +219,7 @@ module VCAP::CloudController
               action: docker_staging_action,
               task_environment_variables: lifecycle_environment_variables,
               cached_dependencies: lifecycle_cached_dependencies,
-              image_layers: nil,
+              image_layers: [],
             )
           end
 
@@ -308,10 +308,10 @@ module VCAP::CloudController
             expect(timeout_action.action.run_action).to eq(docker_staging_action)
           end
 
-          it 'sets the PlacementTags' do
+          it 'sets the placement tags' do
             result = task_recipe_builder.build_staging_task(config, staging_details)
 
-            expect(result.PlacementTags).to eq(['potato-segment'])
+            expect(result.placement_tags).to eq(['potato-segment'])
           end
 
           it 'sets the max_pids' do
@@ -350,14 +350,14 @@ module VCAP::CloudController
 
         let(:expected_network) do
           ::Diego::Bbs::Models::Network.new(
-            properties: [
-              ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'policy_group_id', value: app.guid),
-              ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'app_id', value: app.guid),
-              ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'space_id', value: app.space.guid),
-              ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'org_id', value: app.organization.guid),
-              ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'ports', value: ''),
-              ::Diego::Bbs::Models::Network::PropertiesEntry.new(key: 'container_workload', value: Protocol::ContainerNetworkInfo::TASK),
-            ]
+            properties: {
+              'policy_group_id' => app.guid,
+              'app_id' => app.guid,
+              'space_id' => app.space.guid,
+              'org_id' => app.organization.guid,
+              'ports' => '',
+              'container_workload' => Protocol::ContainerNetworkInfo::TASK,
+            }
           )
         end
 
@@ -490,7 +490,7 @@ module VCAP::CloudController
 
             expect(result.metrics_guid).to eq('')
             expect(result.cpu_weight).to eq(25)
-            expect(result.PlacementTags).to eq([isolation_segment])
+            expect(result.placement_tags).to eq([isolation_segment])
             expect(result.max_pids).to eq(100)
             expect(result.certificate_properties).to eq(certificate_properties)
           end
@@ -568,7 +568,7 @@ module VCAP::CloudController
 
             it 'configures no placement tags' do
               result = task_recipe_builder.build_app_task(config, task)
-              expect(result.PlacementTags).to eq([])
+              expect(result.placement_tags).to eq([])
             end
           end
         end
@@ -589,7 +589,7 @@ module VCAP::CloudController
               action: task_action,
               task_environment_variables: lifecycle_environment_variables,
               cached_dependencies: lifecycle_cached_dependencies,
-              image_layers: nil,
+              image_layers: [],
               stack: 'docker://potato-stack',
             )
           end
@@ -632,7 +632,7 @@ module VCAP::CloudController
 
             expect(result.metrics_guid).to eq('')
             expect(result.cpu_weight).to eq(25)
-            expect(result.PlacementTags).to eq([isolation_segment])
+            expect(result.placement_tags).to eq([isolation_segment])
             expect(result.max_pids).to eq(100)
             expect(result.certificate_properties).to eq(certificate_properties)
 
@@ -713,7 +713,7 @@ module VCAP::CloudController
 
             it 'configures no placement tags' do
               result = task_recipe_builder.build_app_task(config, task)
-              expect(result.PlacementTags).to eq([])
+              expect(result.placement_tags).to eq([])
             end
           end
         end
