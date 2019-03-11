@@ -103,6 +103,7 @@
 
 
           
+          
 
           
 
@@ -12902,6 +12903,151 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 <tr>
 <td>Space Developer</td>
 </tr>
+<tr>
+<td>Admin</td>
+</tr>
+</tbody></table>
+
+          <h2 id="domains">Domains</h2>
+
+<p>Domains represent a <a href="https://en.wikipedia.org/wiki/Fully_qualified_domain_name">fully qualified domain name</a> that is used for application routes.</p>
+
+<p>Domains can be scoped to a set of organizations or be left unscoped to allow all organizations access.</p>
+
+          <h3 id="the-domain-object">The domain object</h3>
+<pre class="highlight plaintext"><code>Example Domain object
+</code></pre>
+<pre class="highlight json"><code><span class="w">  </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3a5d3d89-3f89-4f05-8188-8a2b298c79d5"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-03-08T01:06:19Z"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-03-08T01:06:19Z"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"test-domain.com"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"internal"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/domains/3a5d3d89-3f89-4f05-8188-8a2b298c79d5"</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+
+</span></code></pre>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>guid</strong></td>
+<td><em>uuid</em></td>
+<td>Unique identifier for the domain.</td>
+</tr>
+<tr>
+<td><strong>created_at</strong></td>
+<td><em>datetime</em></td>
+<td>The time with zone when the object was created.</td>
+</tr>
+<tr>
+<td><strong>updated_at</strong></td>
+<td><em>datetime</em></td>
+<td>The time with zone when the object was last updated.</td>
+</tr>
+<tr>
+<td><strong>name</strong></td>
+<td><em>string</em></td>
+<td>The name of the domain.<br>Must be between 3 ~ 253 characters and follow <a href="https://tools.ietf.org/html/rfc1035">RFC 1035</a>.</td>
+</tr>
+<tr>
+<td><strong>internal</strong></td>
+<td><em>boolean</em></td>
+<td>Whether the domain is used for internal (container-to-container) traffic.</td>
+</tr>
+<tr>
+<td><strong>links</strong></td>
+<td><a href="#links"><em>links object</em></a></td>
+<td>Links to related resources.</td>
+</tr>
+</tbody></table>
+
+          <h3 id="create-a-domain">Create a domain</h3>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/domains"</span> <span class="se">\</span>
+  -X POST <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+  -H <span class="s2">"Content-type: application/json"</span> <span class="se">\</span>
+  -d <span class="s1">'{
+    "name": "example.com",
+    "internal": false
+  }'</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">201</span> <span class="ne">Created</span>
+<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
+
+<span class="w">  </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3a5d3d89-3f89-4f05-8188-8a2b298c79d5"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-03-08T01:06:19Z"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-03-08T01:06:19Z"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"test-domain.com"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"internal"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/domains/3a5d3d89-3f89-4f05-8188-8a2b298c79d5"</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+
+</span></code></pre>
+
+<h4 id="definition">Definition</h4>
+
+<p><code class="prettyprint">POST /v3/domains</code></p>
+
+<h4 id="required-parameters">Required Parameters</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>name</strong></td>
+<td><em>string</em></td>
+<td>Name of the domain.</td>
+</tr>
+</tbody></table>
+
+<h4 id="optional-parameters">Optional Parameters</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>internal</strong></td>
+<td><em>boolean</em></td>
+<td>Whether the domain is used for internal (container-to-container) traffic.</td>
+<td>false</td>
+</tr>
+</tbody></table>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
 <tr>
 <td>Admin</td>
 </tr>
