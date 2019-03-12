@@ -260,16 +260,6 @@ RSpec.describe 'Service Broker API integration' do
 
     context 'service instance context hash' do
       let(:catalog) { default_catalog(plan_updateable: true) }
-      let(:expected_context_attributes) { {
-        'platform' => 'cloudfoundry',
-        'organization_guid' => @org_guid,
-        'space_guid' => @space_guid,
-        'instance_name' => 'instance-007',
-        'organization_name' => @space.organization.name,
-        'space_name' => @space.name
-      }
-      }
-
       before do
         setup_broker(catalog)
         @broker = VCAP::CloudController::ServiceBroker.find guid: @broker_guid
@@ -278,6 +268,15 @@ RSpec.describe 'Service Broker API integration' do
 
       context 'service provision request' do
         it 'receives the correct attributes in the context' do
+          expected_context_attributes = {
+            'platform' => 'cloudfoundry',
+            'organization_guid' => @org_guid,
+            'space_guid' => @space_guid,
+            'instance_name' => 'instance-007',
+            'organization_name' => @space.organization.name,
+            'space_name' => @space.name
+          }
+
           expect(
             a_request(:put, %r{/v2/service_instances/#{@service_instance_guid}}).with { |req|
               context = JSON.parse(req.body)['context']
@@ -292,11 +291,57 @@ RSpec.describe 'Service Broker API integration' do
         end
 
         it 'receives the correct attributes in the context' do
+          expected_context_attributes = {
+            'platform' => 'cloudfoundry',
+            'organization_guid' => @org_guid,
+            'space_guid' => @space_guid,
+            'instance_name' => 'instance-007',
+            'organization_name' => @space.organization.name,
+            'space_name' => @space.name
+          }
+
           expect(
             a_request(:patch, %r{/v2/service_instances/#{@service_instance_guid}}).with { |req|
               context = JSON.parse(req.body)['context']
               context >= expected_context_attributes
             }).to have_been_made
+        end
+      end
+
+      context 'service rename request' do
+        before do
+          rename_service_instance(200, { name: 'instance-014' })
+        end
+
+        context 'when broker has allow_context_updates enabled in catalog' do
+          let(:catalog) { default_catalog(allow_context_updates: true) }
+
+          it 'receives the correct attributes in the context' do
+            expected_context_attributes = {
+              'platform' => 'cloudfoundry',
+              'organization_guid' => @org_guid,
+              'space_guid' => @space_guid,
+              'instance_name' => 'instance-014',
+              'organization_name' => @space.organization.name,
+              'space_name' => @space.name
+            }
+
+            expect(
+              a_request(:patch, %r{/v2/service_instances/#{@service_instance_guid}}).with { |req|
+                context = JSON.parse(req.body)['context']
+                context >= expected_context_attributes
+              }).to have_been_made
+          end
+        end
+
+        context 'when broker has allow_context_updates disabled in catalog' do
+          let(:catalog) { default_catalog(allow_context_updates: false) }
+
+          it 'does not receive a patch update request' do
+            expect(
+              a_request(:patch, %r{/v2/service_instances/#{@service_instance_guid}})
+            ).not_to have_been_made
+          end
         end
       end
     end

@@ -48,6 +48,7 @@ module CloudController::Presenters::V2
             'plan_updateable'       => service.plan_updateable,
             'bindings_retrievable'  => service.bindings_retrievable,
             'instances_retrievable' => service.instances_retrievable,
+            'allow_context_updates' => service.allow_context_updates,
             'relationship_url'      => 'http://relationship.example.com'
           }
         )
@@ -78,6 +79,7 @@ module CloudController::Presenters::V2
               'plan_updateable'       => service.plan_updateable,
               'bindings_retrievable'  => service.bindings_retrievable,
               'instances_retrievable' => service.instances_retrievable,
+              'allow_context_updates' => service.allow_context_updates,
               'relationship_url'      => 'http://relationship.example.com'
             }
           )

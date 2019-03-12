@@ -55,6 +55,7 @@ RSpec.describe 'Organizations' do
                 'plan_updateable'       => service_1.plan_updateable,
                 'bindings_retrievable'  => service_1.bindings_retrievable,
                 'instances_retrievable' => service_1.instances_retrievable,
+                'allow_context_updates' => service_1.allow_context_updates,
                 'service_plans_url'     => "/v2/services/#{service_1.guid}/service_plans"
               }
             },
@@ -85,6 +86,7 @@ RSpec.describe 'Organizations' do
                 'plan_updateable'       => service_2.plan_updateable,
                 'bindings_retrievable'  => service_2.bindings_retrievable,
                 'instances_retrievable' => service_2.instances_retrievable,
+                'allow_context_updates' => service_2.allow_context_updates,
                 'service_plans_url'     => "/v2/services/#{service_2.guid}/service_plans"
               }
             }

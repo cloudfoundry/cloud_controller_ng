@@ -773,6 +773,7 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
         plan_updateable: false,
         bindings_retrievable: true,
         instances_retrievable: true,
+        allow_context_updates: true,
         active:          true,
       )
       service_event_repository.with_service_event(new_service) do
@@ -808,6 +809,7 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
           'plan_updateable'     => new_service.plan_updateable,
           'bindings_retrievable'   => new_service.bindings_retrievable,
           'instances_retrievable'  => new_service.instances_retrievable,
+          'allow_context_updates'  => new_service.allow_context_updates,
         }
       }
     end

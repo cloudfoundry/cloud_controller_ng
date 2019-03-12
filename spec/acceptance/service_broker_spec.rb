@@ -156,6 +156,7 @@ RSpec.describe 'Service Broker' do
               bindable: true,
               bindings_retrievable: 'not-a-bool',
               instances_retrievable: 'not-a-bool',
+              allow_context_updates: 'not-a-bool',
               plans: [
                 {
                   id: 'plan-1',
@@ -266,6 +267,7 @@ RSpec.describe 'Service Broker' do
           "  Service description may not have more than 10000 characters\n" \
           "  Service \"bindings_retrievable\" field must be a boolean, but has value \"not-a-bool\"\n" \
           "  Service \"instances_retrievable\" field must be a boolean, but has value \"not-a-bool\"\n" \
+          "  Service \"allow_context_updates\" field must be a boolean, but has value \"not-a-bool\"\n" \
           "  Plan small\n" \
           "    Plan description may not have more than 10000 characters\n" \
           "    Schemas\n" \
@@ -1088,6 +1090,135 @@ RSpec.describe 'Service Broker' do
 
         expect(no_longer_free_plan['entity']['free']).to be false
         expect(no_longer_not_free_plan['entity']['free']).to be true
+      end
+    end
+
+    context 'when the allow_context_updates field for a service has changed' do
+      before do
+        stub_catalog_fetch(200, {
+          services: [
+            {
+              id: '12345',
+              name: 'allow-context-updates-service',
+              description: 'A service, duh!',
+              bindable: true,
+              bindings_retrievable: true,
+              allow_context_updates: true,
+              plans: [
+                {
+                  id: 'plan-1',
+                  name: 'random-name-1',
+                  description: 'A not free plan',
+                }
+              ]
+            }, {
+              id: '123456',
+              name: 'not-allow-context-updates-service',
+              description: 'A service, duh!',
+              bindable: true,
+              bindings_retrievable: false,
+              allow_context_updates: false,
+              plans: [
+                {
+                  id: 'plan-2',
+                  name: 'random-name-2',
+                  description: 'A not free plan',
+                }
+              ]
+            }, {
+              id: '1234567',
+              name: 'allow-context-updates-service-will-be-unset',
+              description: 'A service, duh!',
+              bindable: true,
+              bindings_retrievable: true,
+              allow_context_updates: true,
+              plans: [
+                {
+                  id: 'plan-3',
+                  name: 'random-name-2',
+                  description: 'A not free plan',
+                }
+              ]
+            }
+          ]
+        })
+
+        post('/v2/service_brokers', {
+          name: 'some-guid',
+          broker_url: 'http://broker-url',
+          auth_username: 'username',
+          auth_password: 'password'
+        }.to_json, admin_headers)
+
+        guid = VCAP::CloudController::ServiceBroker.first.guid
+
+        stub_catalog_fetch(200, {
+          services: [
+            {
+              id: '12345',
+              name: 'allow-context-updates-service',
+              description: 'A service, duh!',
+              bindable: true,
+              bindings_retrievable: false,
+              allow_context_updates: false,
+              plans: [
+                {
+                  id: 'plan-1',
+                  name: 'random-name-1',
+                  description: 'A not free plan',
+                }
+              ]
+            },
+            {
+              id: '123456',
+              name: 'not-allow-context-updates-service',
+              description: 'a service, duh!',
+              bindable: true,
+              bindings_retrievable: true,
+              allow_context_updates: true,
+              plans: [
+                {
+                  id: 'plan-2',
+                  name: 'random-name-2',
+                  description: 'a not free plan',
+                }
+              ]
+            }, {
+              id: '1234567',
+              name: 'allow-context-updates-service-will-be-unset',
+              description: 'A service, duh!',
+              bindable: true,
+              plans: [
+                {
+                  id: 'plan-3',
+                  name: 'random-name-2',
+                  description: 'A not free plan',
+                }
+              ]
+            }]
+        })
+
+        put("/v2/service_brokers/#{guid}", {
+          name: 'some-guid',
+          broker_url: 'http://broker-url',
+          auth_username: 'username',
+          auth_password: 'password'
+        }.to_json, admin_headers)
+      end
+
+      it 'sets the cc service allow_context_updates field' do
+        get('/v2/services', {}.to_json, admin_headers)
+        expect(last_response).to have_status_code(200)
+
+        resources = JSON.parse(last_response.body)['resources']
+
+        no_longer_allow_context_updates_service = resources.find { |service| service['entity']['label'] == 'allow-context-updates-service' }
+        now_allow_context_updates_service = resources.find { |service| service['entity']['label'] == 'not-allow-context-updates-service' }
+        unset_allow_context_updates_service = resources.find { |service| service['entity']['label'] == 'allow-context-updates-service-will-be-unset' }
+
+        expect(no_longer_allow_context_updates_service['entity']['allow_context_updates']).to be false
+        expect(now_allow_context_updates_service['entity']['allow_context_updates']).to be true
+        expect(unset_allow_context_updates_service['entity']['allow_context_updates']).to be false
       end
     end
 

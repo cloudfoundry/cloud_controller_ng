@@ -88,6 +88,7 @@ module VCAP::Services::ServiceBrokers
         plan_updateable: catalog_service.plan_updateable,
         bindings_retrievable: catalog_service.bindings_retrievable,
         instances_retrievable: catalog_service.instances_retrievable,
+        allow_context_updates: catalog_service.allow_context_updates,
       )
 
       @services_event_repository.with_service_event(service) do

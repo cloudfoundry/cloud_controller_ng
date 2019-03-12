@@ -71,6 +71,7 @@ module VCAP::Services::ServiceBrokers
             'plan_updateable' => true,
             'bindings_retrievable' => true,
             'instances_retrievable' => true,
+            'allow_context_updates' => true,
             'plans' => [
               {
                 'id'          => plan_id,
@@ -129,6 +130,7 @@ module VCAP::Services::ServiceBrokers
         expect(service.plan_updateable).to eq true
         expect(service.bindings_retrievable).to eq true
         expect(service.instances_retrievable).to eq true
+        expect(service.allow_context_updates).to eq true
       end
 
       it 'records an audit event for each service and plan' do
@@ -165,6 +167,7 @@ module VCAP::Services::ServiceBrokers
           'plan_updateable' => service.plan_updateable,
           'bindings_retrievable' => service.bindings_retrievable,
           'instances_retrievable' => service.instances_retrievable,
+          'allow_context_updates' => service.allow_context_updates,
         })
 
         event = VCAP::CloudController::Event.first(type: 'audit.service_plan.create')
@@ -722,6 +725,7 @@ module VCAP::Services::ServiceBrokers
                     'plan_updateable' => true,
                     'bindings_retrievable' => true,
                     'instances_retrievable' => true,
+                    'allow_context_updates' => true,
                     'plans' => [
                       {
                         'id'          => 'new-plan-id',
