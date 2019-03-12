@@ -128,6 +128,7 @@
 
 
           
+          
 
           
 
@@ -13050,6 +13051,109 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 </thead><tbody>
 <tr>
 <td>Admin</td>
+</tr>
+</tbody></table>
+
+          <h2 id="resource-matches">Resource Matches</h2>
+
+<p>This endpoint matches given resource SHA-1 / file size pairs against the Cloud Controller cache,
+and reports the subset that describes already cached files.
+This is usually used to avoid uploading duplicate files
+when pushing an app which has only been partially changed.
+Cloud Foundry operators may set minimum / maximum file sizes to match against.
+If the file size provided is outside this range,
+it will not be matched against.</p>
+
+          <h3 id="create-a-resource-match">Create a resource match</h3>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/resource_matches"</span> <span class="se">\</span>
+  -X POST <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+  -H <span class="s2">"Content-Type: application/json"</span> <span class="se">\</span>
+  -d <span class="s1">'{
+        "resources": [
+          {
+            "checksum": { "value": "002d760bea1be268e27077412e11a320d0f164d3" },
+            "size_in_bytes": 36
+          },
+          {
+            "checksum": { "value": "a9993e364706816aba3e25717850c26c9cd0d89d" },
+            "size_in_bytes": 1
+          }
+        ]
+      }'</span>
+
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">201</span> <span class="ne">OK</span>
+<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
+
+<span class="p">{</span><span class="w">
+  </span><span class="nt">"resources"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"checksum"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a9993e364706816aba3e25717850c26c9cd0d89d"</span><span class="w"> </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"size_in_bytes"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+
+</span></code></pre>
+
+<h4 id="definition">Definition</h4>
+
+<p><code class="prettyprint">POST /v3/resource_matches</code></p>
+
+<h4 id="required-parameters">Required Parameters</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>resources</strong></td>
+<td><em>array of <a href="#resource-object">resource_object</a></em></td>
+<td>List of resources to check for in the resource cache</td>
+</tr>
+</tbody></table>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+</tbody></table>
+
+<h4 id="resource-object">Resource Object</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>checksum.value</strong></td>
+<td><em>string</em></td>
+<td>SHA-1 hash of file</td>
+</tr>
+<tr>
+<td><strong>size_in_bytes</strong></td>
+<td><em>integer</em></td>
+<td>Size of file in bytes</td>
 </tr>
 </tbody></table>
 
