@@ -27,7 +27,7 @@ Location: https://api.example.org/v3/jobs/[guid]
 #### Definition
 `POST /v3/apps/:guid/actions/apply_manifest`
 
-#### Allowed Roles
+#### Permitted Roles
  |
 --- | ---
 Space Developer |

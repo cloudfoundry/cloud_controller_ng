@@ -102,7 +102,7 @@ RSpec.describe VCAP::CloudController::ResourceMatchCreateMessage do
 
         it 'has the correct error message' do
           expect(subject).to be_invalid
-          expect(subject.errors[:resources]).to include 'must have at least 1 resource'
+          expect(subject.errors[:resources]).to include('must have at least 1 resource')
         end
       end
 
@@ -120,7 +120,7 @@ RSpec.describe VCAP::CloudController::ResourceMatchCreateMessage do
 
         it 'has the correct error message' do
           expect(subject).to be_invalid
-          expect(subject.errors[:resources]).to include('At least one checksum is not an object')
+          expect(subject.errors[:resources]).to include('array contains at least one resource with a non-object checksum')
         end
       end
 
@@ -138,7 +138,7 @@ RSpec.describe VCAP::CloudController::ResourceMatchCreateMessage do
 
         it 'has the correct error message' do
           expect(subject).to be_invalid
-          expect(subject.errors[:resources]).to include('At least one checksum value is not a string')
+          expect(subject.errors[:resources]).to include('array contains at least one resource with a non-string checksum value')
         end
       end
 
@@ -156,12 +156,12 @@ RSpec.describe VCAP::CloudController::ResourceMatchCreateMessage do
 
         it 'has the correct error message' do
           expect(subject).to be_invalid
-          expect(subject.errors[:resources]).to include('At least one checksum value is not SHA-1 format')
+          expect(subject.errors[:resources]).to include('array contains at least one resource with a non-SHA1 checksum value')
         end
       end
 
-      context 'when the v3 resource size is not a non-negative integer' do
-        [-1, -2, true, 'x', 5.1, { size: 4 }].each do |size|
+      context 'when the v3 resource size is not an integer' do
+        [true, 'x', 5.1, { size: 4 }].each do |size|
           it "has the correct error message when size is #{size}" do
             message = described_class.new({
               resources: [
@@ -173,8 +173,47 @@ RSpec.describe VCAP::CloudController::ResourceMatchCreateMessage do
             })
 
             expect(message).to be_invalid
-            expect(message.errors[:resources]).to include('All sizes must be non-negative integers')
+            expect(message.errors[:resources]).to include('array contains at least one resource with a non-integer size_in_bytes')
           end
+        end
+      end
+
+      context 'when the v3 resource size is negative' do
+        it 'is invalid' do
+          message = described_class.new({
+            resources: [
+              {
+                checksum: { value: '002d760bea1be268e27077412e11a320d0f164d3' },
+                size_in_bytes: -1
+              }
+            ]
+          })
+
+          expect(message).to be_invalid
+          expect(message.errors[:resources]).to include('array contains at least one resource with a negative size_in_bytes')
+        end
+      end
+
+      context 'when there are multiple validation violations' do
+        let(:params) do
+          {
+            resources: [
+              {
+                checksum: { value: 'not-a-valid-sha' },
+                size_in_bytes: 36
+              },
+              {
+                checksum: { value: 'not-a-valid-sha' },
+                size_in_bytes: 36
+              }
+            ]
+          }
+        end
+
+        it 'prints only a single error message for that violation' do
+          expect(subject).to be_invalid
+          expect(subject.errors[:resources]).to include('array contains at least one resource with a non-SHA1 checksum value')
+          expect(subject.errors[:resources]).to have(1).items
         end
       end
     end

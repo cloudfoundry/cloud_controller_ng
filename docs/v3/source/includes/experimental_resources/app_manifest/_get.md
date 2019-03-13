@@ -37,7 +37,7 @@ applications:
 #### Definition
 `GET /v3/apps/:guid/manifest`
 
-#### Allowed Roles
+#### Permitted Roles
  |
 --- | ---
 Space Developer |
