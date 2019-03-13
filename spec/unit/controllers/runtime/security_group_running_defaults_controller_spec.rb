@@ -11,8 +11,8 @@ module VCAP::CloudController
     end
 
     it 'only returns SecurityGroups that are running defaults' do
-      SecurityGroup.make(running_default: false)
-      running_default = SecurityGroup.make(running_default: true)
+      FactoryBot.create(:security_group, running_default: false)
+      running_default = FactoryBot.create(:security_group, running_default: true)
 
       get '/v2/config/running_security_groups'
       expect(last_response.status).to eq(200)
@@ -23,7 +23,7 @@ module VCAP::CloudController
     describe 'assigning a security group as a default' do
       before { set_current_user_as_admin }
       it 'should set running_default to true on the security group and return the security group' do
-        security_group = SecurityGroup.make(running_default: false)
+        security_group = FactoryBot.create(:security_group, running_default: false)
 
         put "/v2/config/running_security_groups/#{security_group.guid}", {}
 
@@ -34,7 +34,7 @@ module VCAP::CloudController
 
       it 'should prevent non-admins from creating security groups' do
         set_current_user(FactoryBot.create(:user))
-        security_group = SecurityGroup.make(running_default: false)
+        security_group = FactoryBot.create(:security_group, running_default: false)
 
         put "/v2/config/running_security_groups/#{security_group.guid}", {}
 
@@ -53,14 +53,14 @@ module VCAP::CloudController
       before { set_current_user_as_admin }
       it 'should not allow non-admins to delete running security groups' do
         set_current_user(FactoryBot.create(:user))
-        security_group = SecurityGroup.make(running_default: true)
+        security_group = FactoryBot.create(:security_group, running_default: true)
 
         delete "/v2/config/running_security_groups/#{security_group.guid}"
         expect(last_response.status).to eq(403)
       end
 
       it 'should set running_default to false on the security group' do
-        security_group = SecurityGroup.make(running_default: true)
+        security_group = FactoryBot.create(:security_group, running_default: true)
 
         delete "/v2/config/running_security_groups/#{security_group.guid}"
 

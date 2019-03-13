@@ -243,10 +243,10 @@ module VCAP::CloudController
       end
 
       describe 'security_groups' do
-        let!(:associated_sg) { SecurityGroup.make }
-        let!(:unassociated_sg) { SecurityGroup.make }
-        let!(:default_sg) { SecurityGroup.make(running_default: true) }
-        let!(:another_default_sg) { SecurityGroup.make(running_default: true) }
+        let!(:associated_sg) { FactoryBot.create(:security_group) }
+        let!(:unassociated_sg) { FactoryBot.create(:security_group) }
+        let!(:default_sg) { FactoryBot.create(:security_group, running_default: true) }
+        let!(:another_default_sg) { FactoryBot.create(:security_group, running_default: true) }
         let!(:space) { FactoryBot.create(:space, security_groups: [associated_sg, default_sg]) }
 
         it 'returns security groups associated with the space, and the defaults' do
@@ -277,10 +277,10 @@ module VCAP::CloudController
       end
 
       describe 'staging_security_groups' do
-        let!(:associated_sg) { SecurityGroup.make }
-        let!(:unassociated_sg) { SecurityGroup.make }
-        let!(:default_sg) { SecurityGroup.make(staging_default: true) }
-        let!(:another_default_sg) { SecurityGroup.make(staging_default: true) }
+        let!(:associated_sg) { FactoryBot.create(:security_group) }
+        let!(:unassociated_sg) { FactoryBot.create(:security_group) }
+        let!(:default_sg) { FactoryBot.create(:security_group, staging_default: true) }
+        let!(:another_default_sg) { FactoryBot.create(:security_group, staging_default: true) }
         let!(:space) { FactoryBot.create(:space, staging_security_groups: [associated_sg, default_sg]) }
 
         it 'returns security groups associated with the space, and the defaults' do

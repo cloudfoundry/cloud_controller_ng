@@ -190,9 +190,9 @@ module VCAP::CloudController
 
         before do
           [
-            SecurityGroup.make(guid: 'guid1', rules: [{ 'protocol' => 'udp', 'ports' => '53', 'destination' => '0.0.0.0/0' }]),
-            SecurityGroup.make(guid: 'guid2', rules: [{ 'protocol' => 'tcp', 'ports' => '80', 'destination' => '0.0.0.0/0', 'log' => true }]),
-            SecurityGroup.make(guid: 'guid3', rules: [{ 'protocol' => 'tcp', 'ports' => '443', 'destination' => '0.0.0.0/0', 'log' => true }]),
+            FactoryBot.create(:security_group, guid: 'guid1', rules: [{ 'protocol' => 'udp', 'ports' => '53', 'destination' => '0.0.0.0/0' }]),
+            FactoryBot.create(:security_group, guid: 'guid2', rules: [{ 'protocol' => 'tcp', 'ports' => '80', 'destination' => '0.0.0.0/0', 'log' => true }]),
+            FactoryBot.create(:security_group, guid: 'guid3', rules: [{ 'protocol' => 'tcp', 'ports' => '443', 'destination' => '0.0.0.0/0', 'log' => true }]),
           ].each { |security_group| security_group.add_space(process.space) }
 
           RouteMappingModel.make(app: process.app, route: route_without_service, process_type: process.type, app_port: 1111)

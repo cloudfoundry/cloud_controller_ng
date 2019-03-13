@@ -233,7 +233,7 @@ module VCAP::CloudController
         it { is_expected.to have_associated :spaces }
 
         it 'can be delete when it has associated spaces' do
-          security_group = SecurityGroup.make
+          security_group = FactoryBot.create(:security_group)
           security_group.add_space(FactoryBot.create(:space))
 
           expect { security_group.destroy }.not_to raise_error
@@ -244,7 +244,7 @@ module VCAP::CloudController
         it { is_expected.to have_associated :staging_spaces, associated_instance: ->(_) { FactoryBot.create(:space) } }
 
         it 'can be delete when it has associated staging_spaces' do
-          security_group = SecurityGroup.make
+          security_group = FactoryBot.create(:security_group)
           security_group.add_staging_space(FactoryBot.create(:space))
 
           expect { security_group.destroy }.not_to raise_error
@@ -257,7 +257,7 @@ module VCAP::CloudController
       it { is_expected.to validate_uniqueness :name }
 
       context 'name' do
-        subject(:sec_group) { SecurityGroup.make }
+        subject(:sec_group) { FactoryBot.create(:security_group) }
 
         it 'should allow standard ascii characters' do
           sec_group.name = "A -_- word 2!?()\'\"&+."
@@ -760,7 +760,7 @@ module VCAP::CloudController
     end
 
     describe '.user_visibility_filter' do
-      let(:security_group) { SecurityGroup.make }
+      let(:security_group) { FactoryBot.create(:security_group) }
       let(:space) { FactoryBot.create(:space) }
       let(:user) { FactoryBot.create(:user) }
 

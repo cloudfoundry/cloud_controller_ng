@@ -4,7 +4,7 @@ RSpec.describe 'Staging Security Groups' do
   describe 'PUT /v2/spaces/:guid/staging_security_groups/:security_group_guid' do
     let(:org) { FactoryBot.create(:organization) }
     let(:space) { FactoryBot.create(:space, organization: org) }
-    let(:security_group) { VCAP::CloudController::SecurityGroup.make }
+    let(:security_group) { FactoryBot.create(:security_group) }
     let(:user) { FactoryBot.create(:user) }
 
     before do
@@ -28,7 +28,7 @@ RSpec.describe 'Staging Security Groups' do
   describe 'DELETE /v2/spaces/:guid/staging_security_groups/:security_group_guid' do
     let(:org) { FactoryBot.create(:organization) }
     let(:space) { FactoryBot.create(:space, organization: org) }
-    let(:security_group) { VCAP::CloudController::SecurityGroup.make }
+    let(:security_group) { FactoryBot.create(:security_group) }
     let(:user) { FactoryBot.create(:user) }
 
     before do
@@ -54,7 +54,7 @@ RSpec.describe 'Staging Security Groups' do
     let(:org) { FactoryBot.create(:organization) }
     let(:space) { FactoryBot.create(:space, organization: org) }
     let(:security_group) do
-      VCAP::CloudController::SecurityGroup.make(
+      FactoryBot.create(:security_group,
         name:  'my-group-name',
         rules: [
           {
@@ -108,7 +108,7 @@ RSpec.describe 'Staging Security Groups' do
   describe 'GET /v2/security_groups/:guid/staging_spaces/:space_guid' do
     let(:org) { FactoryBot.create(:organization) }
     let(:space) { FactoryBot.create(:space, organization: org) }
-    let(:security_group) { VCAP::CloudController::SecurityGroup.make }
+    let(:security_group) { FactoryBot.create(:security_group) }
     let(:user) { FactoryBot.create(:user) }
 
     before do
@@ -132,7 +132,7 @@ RSpec.describe 'Staging Security Groups' do
   describe 'DELETE /v2/security_groups/:guid/staging_spaces/:space_guid' do
     let(:org) { FactoryBot.create(:organization) }
     let(:space) { FactoryBot.create(:space, organization: org) }
-    let(:security_group) { VCAP::CloudController::SecurityGroup.make }
+    let(:security_group) { FactoryBot.create(:security_group) }
     let(:user) { FactoryBot.create(:user) }
 
     before do

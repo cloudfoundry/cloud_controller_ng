@@ -348,9 +348,9 @@ RSpec.resource 'Spaces', type: [:api, :legacy_api] do
     end
 
     describe 'Security Groups' do
-      let!(:associated_security_group) { VCAP::CloudController::SecurityGroup.make(space_guids: [space.guid]) }
+      let!(:associated_security_group) { FactoryBot.create(:security_group, space_guids: [space.guid]) }
       let(:associated_security_group_guid) { associated_security_group.guid }
-      let(:security_group) { VCAP::CloudController::SecurityGroup.make }
+      let(:security_group) { FactoryBot.create(:security_group) }
       let(:security_group_guid) { security_group.guid }
 
       standard_model_list :security_group, VCAP::CloudController::SecurityGroupsController, outer_model: :space
