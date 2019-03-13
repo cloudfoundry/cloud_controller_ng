@@ -2,8 +2,6 @@ require 'models/runtime/security_group'
 
 FactoryBot.define do
   factory :security_group, class: VCAP::CloudController::SecurityGroup do
-    to_create(&:save)
-
     name
 
     rules do

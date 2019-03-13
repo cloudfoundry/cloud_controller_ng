@@ -6,8 +6,6 @@ FactoryBot.define do
     aliases: [:buildpack_lifecycle_data_model],
     class: VCAP::CloudController::BuildpackLifecycleDataModel
   ) do
-    to_create(&:save)
-
     buildpacks { nil }
     stack { create(:stack).name }
   end

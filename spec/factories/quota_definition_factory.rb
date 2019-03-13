@@ -2,8 +2,6 @@ require 'models/runtime/quota_definition'
 
 FactoryBot.define do
   factory(:quota_definition, class: VCAP::CloudController::QuotaDefinition) do
-    to_create(&:save)
-
     name
     non_basic_services_allowed { true }
     total_reserved_route_ports { 5 }

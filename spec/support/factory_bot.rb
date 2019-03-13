@@ -5,6 +5,9 @@ RSpec.configure do |config|
     FactoryBot.find_definitions
 
     FactoryBot.define do
+      # Sequel uses #save instead of ActiveRecord's #save!
+      to_create(&:save)
+
       sequence :description do |index|
         "desc-#{index}"
       end

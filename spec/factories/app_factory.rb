@@ -2,8 +2,6 @@ require 'models/runtime/app_model'
 
 FactoryBot.define do
   factory :app, aliases: [:app_model], class: VCAP::CloudController::AppModel do
-    to_create(&:save)
-
     name
 
     transient do

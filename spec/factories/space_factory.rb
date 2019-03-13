@@ -2,8 +2,6 @@ require 'models/runtime/space'
 
 FactoryBot.define do
   factory(:space, class: VCAP::CloudController::Space) do
-    to_create(&:save)
-
     name
     organization
 
