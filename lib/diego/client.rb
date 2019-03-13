@@ -29,7 +29,7 @@ module Diego
     end
 
     def upsert_domain(domain:, ttl:)
-      request = protobuf_encode!({ domain: domain, ttl: ttl }, Bbs::Models::UpsertDomainRequest)
+      request = protobuf_encode!({ domain: domain, ttl: ttl.to_i }, Bbs::Models::UpsertDomainRequest)
 
       response = with_request_error_handling do
         client.post(Routes::UPSERT_DOMAIN, request, PROTOBUF_HEADER)

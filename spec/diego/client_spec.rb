@@ -66,14 +66,14 @@ module Diego
       let(:response_body) { Bbs::Models::UpsertDomainResponse.encode(Bbs::Models::UpsertDomainResponse.new(error: nil)).to_s }
       let(:response_status) { 200 }
       let(:domain) { 'domain' }
-      let(:ttl) { 100 }
+      let(:ttl) { VCAP::CloudController::Diego::APP_LRP_DOMAIN_TTL }
 
       before do
         stub_request(:post, 'https://bbs.example.com:4443/v1/domains/upsert').to_return(status: response_status, body: response_body)
       end
 
       it 'returns a domain lifecycle response' do
-        expected_domain_request = Bbs::Models::UpsertDomainRequest.new(ttl: ttl, domain: domain)
+        expected_domain_request = Bbs::Models::UpsertDomainRequest.new(ttl: 120, domain: 'domain')
 
         response = client.upsert_domain(domain: domain, ttl: ttl)
 
