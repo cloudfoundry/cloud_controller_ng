@@ -3,7 +3,7 @@ require 'rspec_api_documentation/dsl'
 
 RSpec.resource 'Space Quota Definitions', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
-  let(:space_quota_definition) { VCAP::CloudController::SpaceQuotaDefinition.make }
+  let(:space_quota_definition) { FactoryBot.create(:space_quota_definition) }
   let!(:guid) { space_quota_definition.guid }
 
   authenticated_request

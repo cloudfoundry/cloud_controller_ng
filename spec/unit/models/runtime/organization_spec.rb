@@ -16,7 +16,7 @@ module VCAP::CloudController
       it { is_expected.to have_associated :managers, class: User }
       it { is_expected.to have_associated :billing_managers, class: User }
       it { is_expected.to have_associated :auditors, class: User }
-      it { is_expected.to have_associated :space_quota_definitions, associated_instance: ->(org) { SpaceQuotaDefinition.make(organization: org) } }
+      it { is_expected.to have_associated :space_quota_definitions, associated_instance: ->(org) { FactoryBot.create(:space_quota_definition, organization: org) } }
 
       it 'has associated owned_private domains' do
         domain = PrivateDomain.make
@@ -191,7 +191,7 @@ module VCAP::CloudController
 
       describe 'space_quota_definitions' do
         it 'adds when in this org' do
-          quota = SpaceQuotaDefinition.make(organization: org)
+          quota = FactoryBot.create(:space_quota_definition, organization: org)
 
           expect { org.add_space_quota_definition(quota) }.to_not raise_error
         end
@@ -559,7 +559,7 @@ module VCAP::CloudController
       before { org.reload }
 
       it 'destroys all space quota definitions' do
-        sqd = SpaceQuotaDefinition.make(organization: org)
+        sqd = FactoryBot.create(:space_quota_definition, organization: org)
         expect { org.destroy }.to change { SpaceQuotaDefinition[id: sqd.id] }.from(sqd).to(nil)
       end
 

@@ -369,7 +369,7 @@ module VCAP::CloudController
 
         context 'when port is specified' do
           let(:domain) { SharedDomain.make(router_group_guid: 'tcp-router-group') }
-          let(:space_quota_definition) { SpaceQuotaDefinition.make }
+          let(:space_quota_definition) { FactoryBot.create(:space_quota_definition) }
           let(:space) { FactoryBot.create(:space, space_quota_definition: space_quota_definition, organization: space_quota_definition.organization) }
           let(:routing_api_client) { double('routing_api_client', router_group: router_group) }
           let(:router_group) { double('router_group', type: 'tcp', guid: 'router-group-guid') }
@@ -655,7 +655,7 @@ module VCAP::CloudController
         end
 
         context 'for space quotas' do
-          let(:space_quota) { SpaceQuotaDefinition.make(organization: subject.space.organization) }
+          let(:space_quota) { FactoryBot.create(:space_quota_definition, organization: subject.space.organization) }
           let(:tcp_domain) { SharedDomain.make(router_group_guid: 'guid') }
 
           context 'on create' do
@@ -718,7 +718,7 @@ module VCAP::CloudController
         end
 
         describe 'quota evaluation order' do
-          let(:space_quota) { SpaceQuotaDefinition.make(organization: subject.space.organization) }
+          let(:space_quota) { FactoryBot.create(:space_quota_definition, organization: subject.space.organization) }
 
           before do
             org_quota.total_routes = 0
@@ -738,7 +738,7 @@ module VCAP::CloudController
       end
 
       describe 'total reserved route ports' do
-        let(:space_quota) { SpaceQuotaDefinition.make }
+        let(:space_quota) { FactoryBot.create(:space_quota_definition) }
         let(:space) { FactoryBot.create(:space, space_quota_definition: space_quota, organization: space_quota.organization) }
         let(:org_quota) { space.organization.quota_definition }
         let(:http_domain) { SharedDomain.make }

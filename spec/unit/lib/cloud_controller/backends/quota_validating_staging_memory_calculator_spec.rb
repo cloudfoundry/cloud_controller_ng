@@ -12,7 +12,7 @@ module VCAP::CloudController
       let(:requested_limit) { 100 }
       let(:space) { FactoryBot.create(:space) }
       let(:org) { space.organization }
-      let(:space_quota_definition) { SpaceQuotaDefinition.make(organization: org, memory_limit: space_quota_limit) }
+      let(:space_quota_definition) { FactoryBot.create(:space_quota_definition, organization: org, memory_limit: space_quota_limit) }
       let(:quota_definition) { FactoryBot.create(:quota_definition, memory_limit: org_quota_limit) }
 
       before do

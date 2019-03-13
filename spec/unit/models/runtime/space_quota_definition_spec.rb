@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe SpaceQuotaDefinition, type: :model do
-    let(:space_quota_definition) { SpaceQuotaDefinition.make }
+    let(:space_quota_definition) { FactoryBot.create(:space_quota_definition) }
 
     it { is_expected.to have_timestamp_columns }
 

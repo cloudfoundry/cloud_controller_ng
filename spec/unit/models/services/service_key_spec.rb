@@ -38,7 +38,7 @@ module VCAP::CloudController
         end
 
         context 'with a space quota' do
-          let(:space_quota) { SpaceQuotaDefinition.make(organization: service_key.service_instance.organization) }
+          let(:space_quota) { FactoryBot.create(:space_quota_definition, organization: service_key.service_instance.organization) }
 
           before do
             quota = space_quota

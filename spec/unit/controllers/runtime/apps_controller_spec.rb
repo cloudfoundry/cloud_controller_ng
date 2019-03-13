@@ -1988,7 +1988,7 @@ module VCAP::CloudController
       end
 
       it 'returns space quota memory exceeded message correctly' do
-        space.space_quota_definition = SpaceQuotaDefinition.make(memory_limit: 0)
+        space.space_quota_definition = FactoryBot.create(:space_quota_definition, memory_limit: 0)
         space.save(validate: false)
 
         put "/v2/apps/#{process.app.guid}", MultiJson.dump(memory: 128)
@@ -2000,7 +2000,7 @@ module VCAP::CloudController
       it 'validates space quota memory limit before organization quotas' do
         space.organization.quota_definition = FactoryBot.create(:quota_definition, memory_limit: 0)
         space.organization.save(validate: false)
-        space.space_quota_definition = SpaceQuotaDefinition.make(memory_limit: 0)
+        space.space_quota_definition = FactoryBot.create(:space_quota_definition, memory_limit: 0)
         space.save(validate: false)
 
         put "/v2/apps/#{process.app.guid}", MultiJson.dump(memory: 128)
@@ -2027,7 +2027,7 @@ module VCAP::CloudController
       end
 
       it 'returns space instance memory limit exceeded error correctly' do
-        space.space_quota_definition = SpaceQuotaDefinition.make(instance_memory_limit: 100)
+        space.space_quota_definition = FactoryBot.create(:space_quota_definition, instance_memory_limit: 100)
         space.save(validate: false)
 
         put "/v2/apps/#{process.app.guid}", MultiJson.dump(memory: 128)
@@ -2049,7 +2049,7 @@ module VCAP::CloudController
       it 'validates space quota instance memory limit before organization quotas' do
         space.organization.quota_definition = FactoryBot.create(:quota_definition, instance_memory_limit: 100)
         space.organization.save(validate: false)
-        space.space_quota_definition = SpaceQuotaDefinition.make(instance_memory_limit: 100)
+        space.space_quota_definition = FactoryBot.create(:space_quota_definition, instance_memory_limit: 100)
         space.save(validate: false)
 
         put "/v2/apps/#{process.app.guid}", MultiJson.dump(memory: 128)
@@ -2075,7 +2075,7 @@ module VCAP::CloudController
       end
 
       it 'validates space quota app instance limit' do
-        space.space_quota_definition = SpaceQuotaDefinition.make(app_instance_limit: 2)
+        space.space_quota_definition = FactoryBot.create(:space_quota_definition, app_instance_limit: 2)
         space.save(validate: false)
 
         put "/v2/apps/#{process.app.guid}", MultiJson.dump(instances: 3)

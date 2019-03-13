@@ -234,7 +234,7 @@ module VCAP::CloudController
     end
 
     describe 'POST /v2/routes' do
-      let(:space_quota_definition) { SpaceQuotaDefinition.make }
+      let(:space_quota_definition) { FactoryBot.create(:space_quota_definition) }
       let(:space) do
         FactoryBot.create(:space, space_quota_definition: space_quota_definition,
                    organization: space_quota_definition.organization)
@@ -761,7 +761,7 @@ module VCAP::CloudController
       context 'quotas' do
         context 'when the total routes quota for the space has maxed out' do
           it 'returns 400 SpaceQuotaTotalRoutesExceeded' do
-            quota_definition             = SpaceQuotaDefinition.make(total_routes: 0, organization: space.organization)
+            quota_definition             = FactoryBot.create(:space_quota_definition, total_routes: 0, organization: space.organization)
             space.space_quota_definition = quota_definition
             space.save
 
@@ -807,7 +807,7 @@ module VCAP::CloudController
           let(:tcp_domain) { SharedDomain.make(router_group_guid: tcp_group_1) }
 
           it 'returns 400 SpaceQuotaTotalReservedRoutePortsExceeded' do
-            quota_definition             = SpaceQuotaDefinition.make(total_reserved_route_ports: 0, organization: space.organization)
+            quota_definition             = FactoryBot.create(:space_quota_definition, total_reserved_route_ports: 0, organization: space.organization)
             space.space_quota_definition = quota_definition
             space.save
 
@@ -837,7 +837,7 @@ module VCAP::CloudController
     end
 
     describe 'PUT /v2/routes/:guid' do
-      let(:space_quota_definition) { SpaceQuotaDefinition.make }
+      let(:space_quota_definition) { FactoryBot.create(:space_quota_definition) }
       let(:space) do
         FactoryBot.create(:space,
           space_quota_definition: space_quota_definition,
