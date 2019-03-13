@@ -16,7 +16,9 @@ module VCAP::CloudController::Presenters::V3
       fingerprints.map do |r|
         {
           checksum: { value: r['sha1'] },
-          size_in_bytes: r['size']
+          size_in_bytes: r['size'],
+          path: r['fn'],
+          mode: r['mode']
         }
       end
     end

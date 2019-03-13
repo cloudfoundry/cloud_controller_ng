@@ -7,6 +7,8 @@ module VCAP::CloudController::Presenters::V3
       StringIO.new([{
         'sha1' => '002d760bea1be268e27077412e11a320d0f164d3',
         'size' => 32,
+        'fn' => 'path/to/file',
+        'mode' => '123'
       }].to_json)
     }
 
@@ -16,7 +18,9 @@ module VCAP::CloudController::Presenters::V3
         resources: [
           {
             checksum: { value: '002d760bea1be268e27077412e11a320d0f164d3' },
-            size_in_bytes: 32
+            size_in_bytes: 32,
+            path: 'path/to/file',
+            mode: '123'
           }]
       })
     end

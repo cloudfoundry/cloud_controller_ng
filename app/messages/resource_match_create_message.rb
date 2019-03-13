@@ -18,7 +18,9 @@ module VCAP::CloudController
         'resources' => MultiJson.load(body.string).map do |r|
           {
             'size_in_bytes' => r['size'],
-            'checksum' => { 'value' => r['sha1'] }
+            'checksum' => { 'value' => r['sha1'] },
+            'path' => r['fn'],
+            'mode' => r['mode']
           }
         end
       }
@@ -29,7 +31,9 @@ module VCAP::CloudController
       v2_fingerprints = resources.map do |resource|
         {
           sha1: resource[:checksum][:value],
-          size: resource[:size_in_bytes]
+          size: resource[:size_in_bytes],
+          fn: resource[:path],
+          mode: resource[:mode]
         }
       end
 

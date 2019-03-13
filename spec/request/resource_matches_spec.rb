@@ -18,7 +18,9 @@ RSpec.describe 'Resource Matches' do
         to receive(:call).
         and_return(MultiJson.dump([{
             'sha1' => '002d760bea1be268e27077412e11a320d0f164d3',
-            'size' => 36
+            'size' => 36,
+            'fn' => '/path/to/filename',
+            'mode' => '0755'
           }]))
     end
 
@@ -27,11 +29,15 @@ RSpec.describe 'Resource Matches' do
           "resources": [
             {
               "checksum": { "value": '002d760bea1be268e27077412e11a320d0f164d3' },
-              "size_in_bytes": 36
+              "size_in_bytes": 36,
+              "path": '/path/to/filename',
+              'mode': '0755'
             },
             {
               "checksum": { "value": 'a9993e364706816aba3e25717850c26c9cd0d89d' },
-              "size_in_bytes": 1
+              "size_in_bytes": 1,
+              'path': 'C:\\unknown\\file',
+              'mode': '0644'
             }
           ]
       }
@@ -42,7 +48,9 @@ RSpec.describe 'Resource Matches' do
           'resources' => [
             {
               'checksum' => { 'value' => '002d760bea1be268e27077412e11a320d0f164d3' },
-              'size_in_bytes' => 36
+              'size_in_bytes' => 36,
+              'path' => '/path/to/filename',
+              'mode' => '0755'
             }
           ]
         }

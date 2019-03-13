@@ -11,11 +11,15 @@ RSpec.describe ResourceMatchesController, type: :controller do
         "resources": [
           {
             "checksum": { "value": '002d760bea1be268e27077412e11a320d0f164d3' },
-            "size_in_bytes": 36
+            "size_in_bytes": 36,
+            "path": 'path/to/file1',
+            "mode": '644'
           },
           {
             "checksum": { "value": 'a9993e364706816aba3e25717850c26c9cd0d89d' },
-            "size_in_bytes": 1
+            "size_in_bytes": 1,
+            "path": 'path/to/file2',
+            "mode": '645'
           }
         ]
       }
@@ -114,11 +118,15 @@ RSpec.describe ResourceMatchesController, type: :controller do
             "resources": [
               {
                 "checksum": { "value": @descriptors.first['sha1'] },
-                "size_in_bytes": @descriptors.first['size']
+                "size_in_bytes": @descriptors.first['size'],
+                "path": 'path/to/file1',
+                "mode": '644'
               },
               {
                 "checksum": { "value": @nonexisting_descriptor['sha1'] },
-                "size_in_bytes": @nonexisting_descriptor['size']
+                "size_in_bytes": @nonexisting_descriptor['size'],
+                "path": 'path/to/file2',
+                "mode": '645'
               }
             ]
           }
@@ -129,7 +137,9 @@ RSpec.describe ResourceMatchesController, type: :controller do
           expect(response.status).to eq(201)
           expect(parsed_body['resources']).to eq([{
             'checksum' => { 'value' => @descriptors.first['sha1'] },
-            'size_in_bytes' => @descriptors.first['size']
+            'size_in_bytes' => @descriptors.first['size'],
+            'path' => 'path/to/file1',
+            'mode' => '644'
           }])
         end
       end
@@ -140,15 +150,21 @@ RSpec.describe ResourceMatchesController, type: :controller do
             "resources": [
               {
                 "checksum": { "value": @descriptors.first['sha1'] },
-                "size_in_bytes": @descriptors.first['size']
+                "size_in_bytes": @descriptors.first['size'],
+                "path": 'path/to/file1',
+                "mode": '644'
               },
               {
                 "checksum": { "value": @descriptors.last['sha1'] },
-                "size_in_bytes": @descriptors.last['size']
+                "size_in_bytes": @descriptors.last['size'],
+                "path": 'path/to/file2',
+                "mode": '645'
               },
               {
                 "checksum": { "value": @nonexisting_descriptor['sha1'] },
-                "size_in_bytes": @nonexisting_descriptor['size']
+                "size_in_bytes": @nonexisting_descriptor['size'],
+                "path": 'path/to/file3',
+                "mode": '646'
               }
             ]
           }
@@ -160,11 +176,15 @@ RSpec.describe ResourceMatchesController, type: :controller do
           expect(parsed_body['resources']).to eq([
             {
               'checksum' => { 'value' => @descriptors.first['sha1'] },
-              'size_in_bytes' => @descriptors.first['size']
+              'size_in_bytes' => @descriptors.first['size'],
+              'path' => 'path/to/file1',
+              'mode' => '644'
             },
             {
               'checksum' => { 'value' => @descriptors.last['sha1'] },
-              'size_in_bytes' => @descriptors.last['size']
+              'size_in_bytes' => @descriptors.last['size'],
+              'path' => 'path/to/file2',
+              'mode' => '645'
             }
           ])
         end
