@@ -6,6 +6,16 @@ module VCAP::CloudController::Presenters::V3
     include VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers
 
     def to_hash
+      if domain.shared?
+        to_base_hash
+      else
+        to_base_hash.merge(org_relationship)
+      end
+    end
+
+    private
+
+    def to_base_hash
       {
         guid: domain.guid,
         created_at: domain.created_at,
@@ -16,7 +26,17 @@ module VCAP::CloudController::Presenters::V3
       }
     end
 
-    private
+    def org_relationship
+      {
+        relationships: {
+          organization: {
+            data: {
+              guid: domain.owning_organization.guid
+            },
+          },
+        },
+      }
+    end
 
     def domain
       @resource

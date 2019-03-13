@@ -1,6 +1,78 @@
 require 'spec_helper'
 
 RSpec.describe 'Domains Request' do
+  let(:user) { FactoryBot.create(:user) }
+  let(:user_header) { headers_for(user, email: user_email, user_name: user_name) }
+  let(:space) { FactoryBot.create(:space) }
+  let(:stack) { FactoryBot.create(:stack) }
+  let(:user_email) { Sham.email }
+  let(:user_name) { 'some-username' }
+  let(:org) { space.organization }
+
+  before do
+    org.add_user(user)
+    space.add_developer(user)
+    VCAP::CloudController::Domain.dataset.destroy
+  end
+
+  describe 'GET /v3/domains' do
+    let(:headers) { headers_for(user) }
+
+    let!(:shared_domain) { VCAP::CloudController::SharedDomain.make(name: 'my-domain.edu', guid: 'shared_domain') }
+    let!(:private_domain) { VCAP::CloudController::PrivateDomain.make(name: 'my-private-domain.edu', owning_organization: org, guid: 'private_domain') }
+
+    it 'lists all domains' do
+      get '/v3/domains', nil, headers
+
+      expect(last_response.status).to eq(200)
+
+      parsed_response = MultiJson.load(last_response.body)
+      expect(parsed_response).to be_a_response_like(
+        {
+          'pagination' => {
+            'total_results' => 2,
+            'total_pages' => 1,
+            'first' => {
+              'href' => "#{link_prefix}/v3/domains?page=1&per_page=50"
+            },
+            'last' => {
+              'href' => "#{link_prefix}/v3/domains?page=1&per_page=50"
+            },
+            'next' => nil,
+            'previous' => nil
+          },
+          'resources' => [
+            {
+              'guid' => 'shared_domain',
+              'created_at' => iso8601,
+              'updated_at' => iso8601,
+              'name' => 'my-domain.edu',
+              'internal' => false,
+              'links' => {
+                'self' => { 'href' => "#{link_prefix}/v3/domains/shared_domain" }
+              }
+            },
+            {
+              'guid' => 'private_domain',
+              'created_at' => iso8601,
+              'updated_at' => iso8601,
+              'name' => 'my-private-domain.edu',
+              'internal' => false,
+              'relationships' => {
+                'organization' => {
+                  'data' => { 'guid' => org.guid }
+                },
+              },
+              'links' => {
+                'self' => { 'href' => "#{link_prefix}/v3/domains/private_domain" }
+              }
+            }
+          ]
+        }
+      )
+    end
+  end
+
   describe 'POST /v3/domains' do
     context 'when not authenticated' do
       it 'returns 401' do

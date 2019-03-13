@@ -179,6 +179,7 @@ includes:
   - experimental_resources/domains/header
   - experimental_resources/domains/object
   - experimental_resources/domains/create
+  - experimental_resources/domains/list
   - experimental_resources/resource_matches/header
   - experimental_resources/resource_matches/create
   - experimental_resources/revisions/header

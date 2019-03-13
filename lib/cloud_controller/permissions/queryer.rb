@@ -60,6 +60,21 @@ class VCAP::CloudController::Permissions::Queryer
     end
   end
 
+  def readable_org_guids_for_domains
+    science 'readable_org_guids_for_domains' do |e|
+      e.use do
+        db_permissions.readable_org_guids_for_domains
+      end
+      e.try do
+        perm_permissions.readable_org_guids_for_domains
+      end
+
+      e.compare { |a, b| compare_arrays(a, b) }
+
+      e.run_if { !db_permissions.can_read_globally? }
+    end
+  end
+
   def can_read_from_org?(org_guid)
     science 'can_read_from_org' do |e|
       e.context(org_guid: org_guid)

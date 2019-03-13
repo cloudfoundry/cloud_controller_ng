@@ -118,6 +118,32 @@ module VCAP::CloudController
       end
     end
 
+    describe '#readable_org_guids_for_domains' do
+      context 'when user has valid membership' do
+        it 'combines readable orgs for both org-scoped and space-scoped roles' do
+          first_org_guid = double(:first_org_guid)
+          second_org_guid = double(:second_org_guid)
+          space_guid = double(:space_guid)
+          organization = double(:organization, guid: second_org_guid)
+          space = double(:space, organization: organization)
+
+          membership = instance_double(Membership)
+          allow(membership).to receive(:org_guids_for_roles).
+            with(Permissions::ORG_ROLES_FOR_READING_DOMAINS_FROM_ORGS).
+            and_return([first_org_guid])
+          allow(membership).to receive(:space_guids_for_roles).
+            with(Permissions::SPACE_ROLES_FOR_READING_DOMAINS_FROM_ORGS).
+            and_return([space_guid])
+          allow(Membership).to receive(:new).with(user).and_return(membership)
+          allow(Space).to receive(:find).with(guid: space_guid).
+            and_return(space)
+
+          expect(permissions.readable_org_guids_for_domains).
+            to contain_exactly(first_org_guid, second_org_guid)
+        end
+      end
+    end
+
     describe '#can_read_from_org?' do
       context 'user has no membership' do
         context 'and user is an admin' do

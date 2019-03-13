@@ -53,6 +53,9 @@ module VCAP::CloudController
       class:         'VCAP::CloudController::PrivateDomain',
       right_key:     :private_domain_id,
       dataset:       proc { |r|
+        # r.join_table_source = :organizations_private_domains
+        # r.qualified_right_key = :private_domain_id
+        # r.predicate_key = :organization_id
         VCAP::CloudController::Domain.dataset.where(owning_organization_id: self.id).
           or(id: db[r.join_table_source].select(r.qualified_right_key).where(r.predicate_key => self.id))
       },
