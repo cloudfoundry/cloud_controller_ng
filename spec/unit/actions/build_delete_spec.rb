@@ -8,7 +8,7 @@ module VCAP::CloudController
     let(:cancel_action) { instance_double(StagingCancel, cancel: nil) }
 
     describe '#delete' do
-      let!(:build) { BuildModel.make }
+      let!(:build) { FactoryBot.create(:build) }
 
       it 'deletes and cancels the build record' do
         build_delete.delete([build])

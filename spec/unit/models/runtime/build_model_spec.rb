@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe BuildModel do
     let(:package) { PackageModel.make(state: PackageModel::READY_STATE) }
-    let(:build_model) { BuildModel.make(package: package) }
+    let(:build_model) { FactoryBot.create(:build, package: package) }
     let!(:lifecycle_data) do
       FactoryBot.create(:buildpack_lifecycle_data,
         build: build_model,
@@ -19,7 +19,7 @@ module VCAP::CloudController
     describe 'associations' do
       it 'has a foreign key to app' do
         app = FactoryBot.create(:app)
-        BuildModel.make(app: app)
+        FactoryBot.create(:build, app: app)
         expect {
           app.delete
         }.to raise_error Sequel::ForeignKeyConstraintViolation
@@ -29,7 +29,7 @@ module VCAP::CloudController
         it 'gets its space from the containing app' do
           space = FactoryBot.create(:space)
           app = FactoryBot.create(:app, space: space)
-          build = BuildModel.make(app: app)
+          build = FactoryBot.create(:build, app: app)
           expect(build.space).to eq(space)
         end
       end
@@ -133,7 +133,7 @@ module VCAP::CloudController
       end
 
       context 'when the build is already in the FAILED state' do
-        let(:previously_failed_build) { BuildModel.make(package: package, state: BuildModel::FAILED_STATE) }
+        let(:previously_failed_build) { FactoryBot.create(:build, package: package, state: BuildModel::FAILED_STATE) }
 
         it 'creates an app usage event for STAGING_STOPPED' do
           expect {

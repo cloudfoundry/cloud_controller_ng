@@ -12,7 +12,7 @@ module VCAP::CloudController
       let(:protocol) { instance_double(Diego::Protocol) }
       let(:package) { PackageModel.make }
       let(:config) { TestConfig.config_instance }
-      let(:build) { BuildModel.make(package_guid: package.guid) }
+      let(:build) { FactoryBot.create(:build, package_guid: package.guid) }
       let!(:lifecycle_data_model) { FactoryBot.create(:buildpack_lifecycle_data, build: build) }
       let(:environment_variables) { { 'nightshade_vegetable' => 'potato' } }
 
@@ -83,7 +83,7 @@ module VCAP::CloudController
         let(:staging_response) { {} }
 
         context 'buildpack' do
-          let(:build) { BuildModel.make }
+          let(:build) { FactoryBot.create(:build) }
           let!(:lifecycle_data_model) { FactoryBot.create(:buildpack_lifecycle_data, build: build) }
 
           it 'delegates to a buildpack staging completion handler' do
@@ -94,7 +94,7 @@ module VCAP::CloudController
         end
 
         context 'docker' do
-          let(:build) { BuildModel.make(:docker) }
+          let(:build) { FactoryBot.create(:build, :docker) }
           let!(:lifecycle_data_model) { nil }
 
           it 'delegates to a docker staging completion handler' do

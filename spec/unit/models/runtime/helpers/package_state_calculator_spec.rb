@@ -37,7 +37,7 @@ module VCAP::CloudController
 
       context 'when the package is uploaded and there is no CURRENT droplet' do
         before do
-          build = BuildModel.make(app: parent_app, state: BuildModel::STAGED_STATE)
+          build = FactoryBot.create(:build, app: parent_app, state: BuildModel::STAGED_STATE)
           DropletModel.make(app: parent_app, build: build, state: DropletModel::STAGED_STATE)
           PackageModel.make(app: parent_app, package_hash: 'hash')
           parent_app.update(droplet: nil)
@@ -51,7 +51,7 @@ module VCAP::CloudController
       context 'when the current droplet is the latest droplet' do
         before do
           package = PackageModel.make(app: parent_app, package_hash: 'hash', state: PackageModel::READY_STATE)
-          build = BuildModel.make(app: parent_app, package: package, state: BuildModel::STAGED_STATE)
+          build = FactoryBot.create(:build, app: parent_app, package: package, state: BuildModel::STAGED_STATE)
           droplet = DropletModel.make(app: parent_app, package: package, build: build, state: DropletModel::STAGED_STATE)
           parent_app.update(droplet: droplet)
         end
@@ -75,7 +75,7 @@ module VCAP::CloudController
       context 'when the latest build failed to stage' do
         before do
           PackageModel.make(app: parent_app, package_hash: 'hash', state: PackageModel::READY_STATE)
-          BuildModel.make(app: parent_app, state: BuildModel::FAILED_STATE)
+          FactoryBot.create(:build, app: parent_app, state: BuildModel::FAILED_STATE)
         end
 
         it 'is FAILED' do

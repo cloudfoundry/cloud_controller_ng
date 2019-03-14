@@ -1661,8 +1661,8 @@ RSpec.describe AppsV3Controller, type: :controller do
     let(:space) { app_model.space }
     let(:org) { space.organization }
     let(:user) { FactoryBot.create(:user) }
-    let!(:build1) { VCAP::CloudController::BuildModel.make(app_guid: app_model.guid, guid: 'build-1') }
-    let!(:build2) { VCAP::CloudController::BuildModel.make(app_guid: app_model.guid, guid: 'build-2') }
+    let!(:build1) { FactoryBot.create(:build, app_guid: app_model.guid, guid: 'build-1') }
+    let!(:build2) { FactoryBot.create(:build, app_guid: app_model.guid, guid: 'build-2') }
     before do
       set_current_user_as_admin(user: user)
     end

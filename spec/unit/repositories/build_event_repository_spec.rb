@@ -7,7 +7,7 @@ module VCAP::CloudController
       let(:app) { FactoryBot.create(:app, name: 'popsicle') }
       let(:user) { FactoryBot.create(:user) }
       let(:package) { PackageModel.make(app_guid: app.guid) }
-      let(:build) { BuildModel.make(app_guid: app.guid, package: package) }
+      let(:build) { FactoryBot.create(:build, app_guid: app.guid, package: package) }
       let(:email) { 'user-email' }
       let(:user_name) { 'user-name' }
       let(:user_audit_info) { UserAuditInfo.new(user_email: email, user_name: user_name, user_guid: user.guid) }

@@ -38,7 +38,7 @@ module VCAP::CloudController
           },
         }
       end
-      let(:build) { BuildModel.make }
+      let(:build) { FactoryBot.create(:build) }
       let(:message) { BuildUpdateMessage.new(body) }
 
       context 'when there is no current metadata' do

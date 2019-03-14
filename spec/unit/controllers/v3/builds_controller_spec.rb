@@ -8,7 +8,7 @@ RSpec.describe BuildsController, type: :controller do
     let(:space) { FactoryBot.create(:space, organization: organization) }
     let(:app_model) { FactoryBot.create(:app, :buildpack, space: space) }
     let(:package) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
-    let(:build) { VCAP::CloudController::BuildModel.make(package: package, app: app_model) }
+    let(:build) { FactoryBot.create(:build, package: package, app: app_model) }
     let!(:droplet) do
       VCAP::CloudController::DropletModel.make(
         state: VCAP::CloudController::DropletModel::STAGED_STATE,
@@ -17,7 +17,7 @@ RSpec.describe BuildsController, type: :controller do
       )
     end
     let(:package2) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
-    let(:build2) { VCAP::CloudController::BuildModel.make(package: package2, app: app_model) }
+    let(:build2) { FactoryBot.create(:build, package: package2, app: app_model) }
     let!(:droplet2) do
       VCAP::CloudController::DropletModel.make(
         state: VCAP::CloudController::DropletModel::STAGED_STATE,
@@ -643,7 +643,7 @@ RSpec.describe BuildsController, type: :controller do
         type: VCAP::CloudController::PackageModel::BITS_TYPE,
       )
     end
-    let(:build) { VCAP::CloudController::BuildModel.make(package: package, app: app_model) }
+    let(:build) { FactoryBot.create(:build, package: package, app: app_model) }
     let(:new_labels) do
       {
         release: 'stable',
@@ -755,7 +755,7 @@ RSpec.describe BuildsController, type: :controller do
     let(:space) { FactoryBot.create(:space, organization: organization) }
     let(:app_model) { FactoryBot.create(:app, space: space) }
     let(:package) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
-    let(:build) { VCAP::CloudController::BuildModel.make(package: package, app: app_model) }
+    let(:build) { FactoryBot.create(:build, package: package, app: app_model) }
     let!(:droplet) do
       VCAP::CloudController::DropletModel.make(
         state: VCAP::CloudController::DropletModel::STAGED_STATE,

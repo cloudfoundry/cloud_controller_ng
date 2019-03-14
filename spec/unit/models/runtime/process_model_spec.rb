@@ -953,7 +953,7 @@ module VCAP::CloudController
       subject(:process) { ProcessModelFactory.make }
 
       it 'should return true if the latest_build is STAGING' do
-        BuildModel.make(app: process.app, package: process.latest_package, state: BuildModel::STAGING_STATE)
+        FactoryBot.create(:build, app: process.app, package: process.latest_package, state: BuildModel::STAGING_STATE)
         expect(process.reload.staging?).to be true
       end
 
@@ -992,8 +992,8 @@ module VCAP::CloudController
 
     describe '#latest_build' do
       let!(:process) { ProcessModel.make app: parent_app }
-      let!(:build1) { BuildModel.make(app: parent_app, state: BuildModel::STAGED_STATE) }
-      let!(:build2) { BuildModel.make(app: parent_app, state: BuildModel::STAGED_STATE) }
+      let!(:build1) { FactoryBot.create(:build, app: parent_app, state: BuildModel::STAGED_STATE) }
+      let!(:build2) { FactoryBot.create(:build, app: parent_app, state: BuildModel::STAGED_STATE) }
 
       it 'should return the most recently created build' do
         expect(process.latest_build).to eq build2
@@ -1668,7 +1668,7 @@ module VCAP::CloudController
       let(:error_description) { 'stating failed' }
 
       describe 'when there is a build but no droplet' do
-        let!(:build) { BuildModel.make app: parent_app, error_id: error_id, error_description: error_description }
+        let!(:build) { FactoryBot.create(:build, app: parent_app, error_id: error_id, error_description: error_description) }
 
         it 'returns the error_id and error_description from the build' do
           expect(process.staging_failed_reason).to eq(error_id)
@@ -1690,7 +1690,7 @@ module VCAP::CloudController
       subject(:process) { ProcessModel.make(app: parent_app) }
 
       context 'when there is a build but no droplet' do
-        let!(:build) { BuildModel.make(app: parent_app) }
+        let!(:build) { FactoryBot.create(:build, app: parent_app) }
 
         it 'is the build guid' do
           expect(process.staging_task_id).to eq(build.guid)

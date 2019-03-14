@@ -858,7 +858,7 @@ RSpec.describe 'Apps' do
   describe 'GET /v3/apps/:guid/builds' do
     let(:app_model) { FactoryBot.create(:app, space: space, name: 'my-app') }
     let(:build) do
-      VCAP::CloudController::BuildModel.make(
+      FactoryBot.create(:build,
         package: package,
         app: app_model,
         created_by_user_name: 'bob the builder',
@@ -867,7 +867,7 @@ RSpec.describe 'Apps' do
       )
     end
     let!(:second_build) do
-      VCAP::CloudController::BuildModel.make(
+      FactoryBot.create(:build,
         package: package,
         app: app_model,
         created_at: build.created_at - 1.day,

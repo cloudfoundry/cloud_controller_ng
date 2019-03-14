@@ -8,7 +8,7 @@ module VCAP::CloudController
         let(:logger) { instance_double(Steno::Logger, info: nil, error: nil, warn: nil) }
         let(:app) { FactoryBot.create(:app) }
         let(:package) { PackageModel.make(app: app) }
-        let!(:build) { BuildModel.make(app: app, package: package, state: BuildModel::STAGING_STATE) }
+        let!(:build) { FactoryBot.create(:build, app: app, package: package, state: BuildModel::STAGING_STATE) }
         let(:runners) { instance_double(Runners) }
 
         subject(:handler) { StagingCompletionHandler.new(build, runners) }

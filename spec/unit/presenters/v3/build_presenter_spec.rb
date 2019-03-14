@@ -9,7 +9,7 @@ module VCAP::CloudController::Presenters::V3
     let(:buildpacks) { [happy_buildpack.name, 'http://bob:secret@example.com/happy'] }
     let(:stack) { 'the-happiest-stack' }
     let(:build) do
-      VCAP::CloudController::BuildModel.make(
+      FactoryBot.create(:build,
         state:   VCAP::CloudController::BuildModel::STAGING_STATE,
         package: package,
         app:     app,

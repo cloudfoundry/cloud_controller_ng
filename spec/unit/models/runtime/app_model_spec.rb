@@ -194,7 +194,7 @@ module VCAP::CloudController
 
     describe '#staging_in_progress' do
       context 'when a build is in staging state' do
-        let!(:build) { BuildModel.make(app_guid: app_model.guid, state: BuildModel::STAGING_STATE) }
+        let!(:build) { FactoryBot.create(:build, app_guid: app_model.guid, state: BuildModel::STAGING_STATE) }
 
         it 'returns true' do
           expect(app_model.staging_in_progress?).to eq(true)
@@ -202,7 +202,7 @@ module VCAP::CloudController
       end
 
       context 'when a build is not in neither pending or staging state' do
-        let!(:build) { BuildModel.make(app_guid: app_model.guid, state: BuildModel::STAGED_STATE) }
+        let!(:build) { FactoryBot.create(:build, app_guid: app_model.guid, state: BuildModel::STAGED_STATE) }
 
         it 'returns false' do
           expect(app_model.staging_in_progress?).to eq(false)
