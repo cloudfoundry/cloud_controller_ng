@@ -112,7 +112,7 @@ module VCAP::CloudController
             context 'when revisions are enabled' do
               let(:process) { ProcessModel.make }
               let(:app) { process.app }
-              let!(:revision) { RevisionModel.make(app: app) }
+              let!(:revision) { FactoryBot.create(:revision, app: app) }
 
               before do
                 app.update(revisions_enabled: true)

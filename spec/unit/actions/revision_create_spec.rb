@@ -86,22 +86,22 @@ module VCAP::CloudController
         end
 
         it 'rolls over to version 1 when we pass version 9999' do
-          RevisionModel.make(app: app, version: 1, created_at: 5.days.ago)
-          RevisionModel.make(app: app, version: 2, created_at: 4.days.ago)
+          FactoryBot.create(:revision, app: app, version: 1, created_at: 5.days.ago)
+          FactoryBot.create(:revision, app: app, version: 2, created_at: 4.days.ago)
           # ...
-          RevisionModel.make(app: app, version: 9998, created_at: 3.days.ago)
-          RevisionModel.make(app: app, version: 9999, created_at: 2.days.ago)
+          FactoryBot.create(:revision, app: app, version: 9998, created_at: 3.days.ago)
+          FactoryBot.create(:revision, app: app, version: 9999, created_at: 2.days.ago)
 
           RevisionCreate.create(app, user_audit_info)
           expect(RevisionModel.order_by(:created_at).map(&:version)).to eq([2, 9998, 9999, 1])
         end
 
         it 'replaces any existing revisions after rolling over' do
-          RevisionModel.make(app: app, version: 2, created_at: 4.days.ago)
+          FactoryBot.create(:revision, app: app, version: 2, created_at: 4.days.ago)
           # ...
-          RevisionModel.make(app: app, version: 9998, created_at: 3.days.ago)
-          RevisionModel.make(app: app, version: 9999, created_at: 2.days.ago)
-          RevisionModel.make(app: app, version: 1, created_at: 1.days.ago)
+          FactoryBot.create(:revision, app: app, version: 9998, created_at: 3.days.ago)
+          FactoryBot.create(:revision, app: app, version: 9999, created_at: 2.days.ago)
+          FactoryBot.create(:revision, app: app, version: 1, created_at: 1.days.ago)
 
           RevisionCreate.create(app, user_audit_info)
           expect(RevisionModel.order_by(:created_at).map(&:version)).to eq([9998, 9999, 1, 2])
@@ -110,7 +110,7 @@ module VCAP::CloudController
 
       describe 'description' do
         before do
-          revision = RevisionModel.make(app: app, droplet_guid: app.droplet.guid, environment_variables: app.environment_variables)
+          revision = FactoryBot.create(:revision, app: app, droplet_guid: app.droplet.guid, environment_variables: app.environment_variables)
           RevisionProcessCommandModel.make(revision: revision, process_type: older_web_process.type, process_command: older_web_process.command)
           RevisionProcessCommandModel.make(revision: revision, process_type: worker_process.type, process_command: worker_process.command)
         end

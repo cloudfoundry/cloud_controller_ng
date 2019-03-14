@@ -4,7 +4,7 @@ require 'presenters/v3/revision_environment_variables_presenter'
 module VCAP::CloudController::Presenters::V3
   RSpec.describe RevisionEnvironmentVariablesPresenter do
     let(:revision) do
-      VCAP::CloudController::RevisionModel.make(
+      FactoryBot.create(:revision,
         environment_variables: { 'CUSTOM_ENV_VAR' => 'hello' },
       )
     end

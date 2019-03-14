@@ -217,8 +217,8 @@ RSpec.describe DeploymentsController, type: :controller do
 
       context 'when a revision is provided' do
         let(:newer_droplet) { VCAP::CloudController::DropletModel.make(app: app) }
-        let!(:earlier_revision) { VCAP::CloudController::RevisionModel.make(app: app, droplet_guid: droplet.guid, created_at: 5.days.ago, version: 2) }
-        let!(:later_revision) { VCAP::CloudController::RevisionModel.make(app: app, droplet_guid: newer_droplet.guid, version: 3) }
+        let!(:earlier_revision) { FactoryBot.create(:revision, app: app, droplet_guid: droplet.guid, created_at: 5.days.ago, version: 2) }
+        let!(:later_revision) { FactoryBot.create(:revision, app: app, droplet_guid: newer_droplet.guid, version: 3) }
 
         let(:request_body) do
           {
@@ -282,7 +282,7 @@ RSpec.describe DeploymentsController, type: :controller do
       end
 
       context 'when both a revision and a droplet are provided' do
-        let!(:revision) { VCAP::CloudController::RevisionModel.make(app: app) }
+        let!(:revision) { FactoryBot.create(:revision, app: app) }
         let(:request_body) do
           {
             droplet: {

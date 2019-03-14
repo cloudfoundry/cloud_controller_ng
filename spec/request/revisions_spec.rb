@@ -8,7 +8,7 @@ RSpec.describe 'Revisions' do
   let(:user_email) { Sham.email }
   let(:user_name) { 'some-username' }
   let(:app_model) { FactoryBot.create(:app, name: 'app_name', space: space) }
-  let!(:revision) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 42) }
+  let!(:revision) { FactoryBot.create(:revision, app: app_model, version: 42) }
 
   before do
     space.organization.add_user(user)
@@ -57,7 +57,7 @@ RSpec.describe 'Revisions' do
   end
 
   describe 'GET /v3/apps/:guid/revisions' do
-    let!(:revision2) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 43, description: 'New droplet deployed') }
+    let!(:revision2) { FactoryBot.create(:revision, app: app_model, version: 43, description: 'New droplet deployed') }
     it 'gets a list of revisions for the app' do
       get "/v3/apps/#{app_model.guid}/revisions?per_page=2", nil, user_header
       expect(last_response.status).to eq(200)
@@ -145,7 +145,7 @@ RSpec.describe 'Revisions' do
 
     context 'filtering' do
       it 'gets a list of revisions matching the provided versions' do
-        revision3 = VCAP::CloudController::RevisionModel.make(app: app_model, version: 44, description: 'Rollback to revision 42')
+        revision3 = FactoryBot.create(:revision, app: app_model, version: 44, description: 'Rollback to revision 42')
 
         get "/v3/apps/#{app_model.guid}/revisions?per_page=2&versions=42,44", nil, user_header
         expect(last_response.status).to eq(200)
@@ -232,9 +232,9 @@ RSpec.describe 'Revisions' do
       end
 
       context 'label_selector' do
-        let!(:revisionA) { VCAP::CloudController::RevisionModel.make(app: app_model) }
-        let!(:revisionB) { VCAP::CloudController::RevisionModel.make(app: app_model) }
-        let!(:revisionC) { VCAP::CloudController::RevisionModel.make(app: app_model) }
+        let!(:revisionA) { FactoryBot.create(:revision, app: app_model) }
+        let!(:revisionB) { FactoryBot.create(:revision, app: app_model) }
+        let!(:revisionC) { FactoryBot.create(:revision, app: app_model) }
 
         let!(:revAFruit) { VCAP::CloudController::RevisionLabelModel.make(key_name: 'fruit', value: 'strawberry', resource_guid: revisionA.guid) }
         let!(:revAAnimal) { VCAP::CloudController::RevisionLabelModel.make(key_name: 'animal', value: 'horse', resource_guid: revisionA.guid) }
@@ -314,7 +314,7 @@ RSpec.describe 'Revisions' do
   end
 
   describe 'GET /v3/revision/:revguid/environment_variables' do
-    let!(:revision2) { VCAP::CloudController::RevisionModel.make(
+    let!(:revision2) { FactoryBot.create(:revision,
       app: app_model,
       version: 43,
       environment_variables: { 'key' => 'value' },
@@ -342,8 +342,8 @@ RSpec.describe 'Revisions' do
   end
 
   describe 'GET /v3/apps/:guid/revisions/deployed' do
-    let!(:revision2) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 43, description: 'New droplet deployed') }
-    let!(:revision3) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 44, description: 'New environment variables') }
+    let!(:revision2) { FactoryBot.create(:revision, app: app_model, version: 43, description: 'New droplet deployed') }
+    let!(:revision3) { FactoryBot.create(:revision, app: app_model, version: 44, description: 'New environment variables') }
     let!(:process) { VCAP::CloudController::ProcessModel.make(app: app_model, revision: revision, type: 'web', state: 'STARTED') }
     let!(:process2) { VCAP::CloudController::ProcessModel.make(app: app_model, revision: revision2, type: 'worker', state: 'STARTED') }
     let!(:process3) { VCAP::CloudController::ProcessModel.make(app: app_model, revision: revision3, type: 'web', state: 'STOPPED') }

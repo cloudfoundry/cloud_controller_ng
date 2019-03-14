@@ -13,7 +13,7 @@ module VCAP::CloudController::Presenters::V3
         })
     end
     let(:revision) do
-      VCAP::CloudController::RevisionModel.make(
+      FactoryBot.create(:revision,
         app: app_model,
         version: 300,
         droplet_guid: droplet.guid,

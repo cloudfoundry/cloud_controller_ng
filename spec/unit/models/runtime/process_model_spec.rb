@@ -694,7 +694,7 @@ module VCAP::CloudController
       end
 
       context 'when revisions are enabled and we have a revision' do
-        let!(:revision) { RevisionModel.make(app: parent_app, environment_variables: { 'key' => 'value2' }) }
+        let!(:revision) { FactoryBot.create(:revision, app: parent_app, environment_variables: { 'key' => 'value2' }) }
 
         before do
           parent_app.update(revisions_enabled: true)
@@ -888,7 +888,7 @@ module VCAP::CloudController
     describe '#actual_droplet' do
       let(:first_droplet) { DropletModel.make(app: parent_app, state: DropletModel::STAGED_STATE) }
       let(:second_droplet) { DropletModel.make(app: parent_app, state: DropletModel::STAGED_STATE) }
-      let(:revision) { RevisionModel.make(app: parent_app, droplet_guid: first_droplet.guid) }
+      let(:revision) { FactoryBot.create(:revision, app: parent_app, droplet_guid: first_droplet.guid) }
       let(:process) { ProcessModel.make(app: parent_app, revision: revision) }
 
       before do

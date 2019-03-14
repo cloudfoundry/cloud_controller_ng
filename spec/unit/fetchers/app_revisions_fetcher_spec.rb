@@ -5,8 +5,8 @@ module VCAP::CloudController
   RSpec.describe AppRevisionsFetcher do
     let(:fetcher) { AppRevisionsFetcher }
     let!(:app) { FactoryBot.create(:app) }
-    let!(:revision1) { RevisionModel.make(version: 21, app: app) }
-    let!(:revision2) { RevisionModel.make(version: 34, app: app) }
+    let!(:revision1) { FactoryBot.create(:revision, version: 21, app: app) }
+    let!(:revision2) { FactoryBot.create(:revision, version: 34, app: app) }
 
     describe '#fetch' do
       let(:message) { AppRevisionsListMessage.from_params(filters) }
@@ -42,7 +42,7 @@ module VCAP::CloudController
     end
 
     describe '#fetch_deployed' do
-      let!(:revision3) { RevisionModel.make(version: 35, app: app) }
+      let!(:revision3) { FactoryBot.create(:revision, version: 35, app: app) }
 
       let!(:process1) { ProcessModel.make(app: app, revision: revision1, type: 'web', state: 'STARTED') }
       let!(:process2) { ProcessModel.make(app: app, revision: revision2, type: 'web', state: 'STOPPED') }

@@ -10,7 +10,7 @@ module VCAP::CloudController
           'nil_process' => 'droplet_nil_process_command',
         })
     end
-    let(:revision) { RevisionModel.make(droplet: droplet) }
+    let(:revision) { FactoryBot.create(:revision, droplet: droplet) }
 
     let!(:revision_web_process_command) do
       RevisionProcessCommandModel.make(

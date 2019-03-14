@@ -7,7 +7,7 @@ RSpec.describe RevisionsController, type: :controller do
     let!(:app_model) { FactoryBot.create(:app, droplet: droplet) }
     let!(:space) { app_model.space }
     let(:user) { FactoryBot.create(:user) }
-    let(:revision) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 808, droplet_guid: droplet.guid) }
+    let(:revision) { FactoryBot.create(:revision, app: app_model, version: 808, droplet_guid: droplet.guid) }
 
     before do
       set_current_user(user)
@@ -155,7 +155,7 @@ RSpec.describe RevisionsController, type: :controller do
         beet: 'formanova',
       }
     end
-    let(:revision) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 808, droplet_guid: droplet.guid) }
+    let(:revision) { FactoryBot.create(:revision, app: app_model, version: 808, droplet_guid: droplet.guid) }
     let!(:update_message) do
       {
         metadata: {
@@ -327,7 +327,7 @@ RSpec.describe RevisionsController, type: :controller do
     let!(:space) { app_model.space }
     let(:user) { FactoryBot.create(:user) }
     let(:revision) do
-      VCAP::CloudController::RevisionModel.make(
+      FactoryBot.create(:revision,
         app: app_model,
         version: 808,
         droplet_guid: droplet.guid,

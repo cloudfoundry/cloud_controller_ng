@@ -22,7 +22,7 @@ RSpec.describe 'Processes' do
   end
 
   describe 'GET /v3/processes' do
-    let!(:web_revision) { VCAP::CloudController::RevisionModel.make }
+    let!(:web_revision) { FactoryBot.create(:revision) }
 
     let!(:web_process) {
       VCAP::CloudController::ProcessModel.make(
@@ -320,7 +320,7 @@ RSpec.describe 'Processes' do
 
   describe 'GET /v3/processes/:guid' do
     it 'retrieves the process' do
-      revision = VCAP::CloudController::RevisionModel.make
+      revision = FactoryBot.create(:revision)
       process = VCAP::CloudController::ProcessModel.make(
         :process,
         app:        app_model,
@@ -494,7 +494,7 @@ RSpec.describe 'Processes' do
 
   describe 'PATCH /v3/processes/:guid' do
     it 'updates the process' do
-      revision = VCAP::CloudController::RevisionModel.make
+      revision = FactoryBot.create(:revision)
       process = VCAP::CloudController::ProcessModel.make(
         :process,
         app:                  app_model,
@@ -752,9 +752,9 @@ RSpec.describe 'Processes' do
     let!(:deployment_process) {
       VCAP::CloudController::ProcessModel.make(:process, app: app_model, type: 'web-deployment', revision: deployment_revision)
     }
-    let!(:revision3) { VCAP::CloudController::RevisionModel.make }
-    let!(:revision2) { VCAP::CloudController::RevisionModel.make }
-    let!(:deployment_revision) { VCAP::CloudController::RevisionModel.make }
+    let!(:revision3) { FactoryBot.create(:revision) }
+    let!(:revision2) { FactoryBot.create(:revision) }
+    let!(:deployment_revision) { FactoryBot.create(:revision) }
 
     it 'returns a paginated list of processes for an app' do
       get "/v3/apps/#{app_model.guid}/processes?per_page=2", nil, developer_headers
@@ -889,7 +889,7 @@ RSpec.describe 'Processes' do
 
   describe 'GET /v3/apps/:guid/processes/:type' do
     it 'retrieves the process for an app with the requested type' do
-      revision = VCAP::CloudController::RevisionModel.make
+      revision = FactoryBot.create(:revision)
       process = VCAP::CloudController::ProcessModel.make(
         :process,
         app:        app_model,

@@ -83,7 +83,7 @@ module VCAP::CloudController
             end
 
             it 'has the reason for a droplet changed' do
-              RevisionModel.make(app: app, droplet_guid: app.droplet.guid, environment_variables: app.environment_variables)
+              FactoryBot.create(:revision, app: app, droplet_guid: app.droplet.guid, environment_variables: app.environment_variables)
               DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
 
               revision = RevisionModel.last
@@ -388,7 +388,7 @@ module VCAP::CloudController
 
         context 'when the same droplet is provided (zdt-restart)' do
           let!(:revision) do
-            RevisionModel.make(app: app, droplet_guid: app.droplet_guid)
+            FactoryBot.create(:revision, app: app, droplet_guid: app.droplet_guid)
           end
 
           it 'does NOT creates a revision' do
@@ -433,7 +433,7 @@ module VCAP::CloudController
 
       context 'when a revision is provided on the message (rollback)' do
         let(:revision_droplet) { DropletModel.make(app: app, process_types: { 'web' => '1234' }) }
-        let!(:revision) { RevisionModel.make(droplet_guid: revision_droplet.guid, environment_variables: { 'foo' => 'var' }, version: 3) }
+        let!(:revision) { FactoryBot.create(:revision, droplet_guid: revision_droplet.guid, environment_variables: { 'foo' => 'var' }, version: 3) }
         let(:message) {
           DeploymentCreateMessage.new({
             relationships: { app: { data: { guid: app.guid } } },

@@ -122,7 +122,7 @@ module VCAP::CloudController::Presenters::V3
 
       describe '#revisions' do
         context('when the process has a revision') do
-          let(:revision) { VCAP::CloudController::RevisionModel.make }
+          let(:revision) { FactoryBot.create(:revision) }
           before do
             process.revision = revision
           end

@@ -84,9 +84,9 @@ module VCAP::CloudController
     end
 
     describe '#latest_revision' do
-      let!(:revision1) { RevisionModel.make(app: app_model, created_at: 10.minutes.ago) }
-      let!(:revision2) { RevisionModel.make(app: app_model) }
-      let!(:revision3) { RevisionModel.make(app: app_model, created_at: 5.minutes.ago) }
+      let!(:revision1) { FactoryBot.create(:revision, app: app_model, created_at: 10.minutes.ago) }
+      let!(:revision2) { FactoryBot.create(:revision, app: app_model) }
+      let!(:revision3) { FactoryBot.create(:revision, app: app_model, created_at: 5.minutes.ago) }
 
       context 'when revisions are enabled' do
         before do
@@ -98,7 +98,7 @@ module VCAP::CloudController
         end
 
         context 'when two were created in the same second' do
-          let!(:revision4) { RevisionModel.make(app: app_model, created_at: revision2.created_at) }
+          let!(:revision4) { FactoryBot.create(:revision, app: app_model, created_at: revision2.created_at) }
 
           it 'prefers the one with the higher id' do
             expect(app_model.latest_revision).to eq(revision4)
@@ -130,7 +130,7 @@ module VCAP::CloudController
 
       context 'when there are revisions associated with the app' do
         let!(:revision) do
-          revis = RevisionModel.make(
+          revis = FactoryBot.create(:revision,
             app: app_model,
             droplet_guid: droplet.guid,
             environment_variables: environment_variables,
