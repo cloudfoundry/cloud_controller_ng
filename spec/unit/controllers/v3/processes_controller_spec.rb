@@ -670,7 +670,7 @@ RSpec.describe ProcessesController, type: :controller do
     end
 
     context 'when scaling is disabled' do
-      before { VCAP::CloudController::FeatureFlag.make(name: 'app_scaling', enabled: false, error_message: nil) }
+      before { FactoryBot.create(:feature_flag, name: 'app_scaling', enabled: false, error_message: nil) }
 
       context 'non-admin user' do
         it 'raises 403' do

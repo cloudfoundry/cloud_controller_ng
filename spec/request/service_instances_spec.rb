@@ -9,7 +9,7 @@ RSpec.describe 'Service Instances' do
   let(:space) { FactoryBot.create(:space) }
   let(:another_space) { FactoryBot.create(:space) }
   let(:target_space) { FactoryBot.create(:space) }
-  let(:feature_flag) { VCAP::CloudController::FeatureFlag.make(name: 'service_instance_sharing', enabled: false, error_message: nil) }
+  let(:feature_flag) { FactoryBot.create(:feature_flag, name: 'service_instance_sharing', enabled: false, error_message: nil) }
   let!(:service_instance1) { VCAP::CloudController::ManagedServiceInstance.make(space: space, name: 'rabbitmq') }
   let!(:service_instance2) { VCAP::CloudController::ManagedServiceInstance.make(space: space, name: 'redis') }
   let!(:service_instance3) { VCAP::CloudController::ManagedServiceInstance.make(space: another_space, name: 'mysql') }
@@ -274,7 +274,7 @@ RSpec.describe 'Service Instances' do
 
   describe 'POST /v3/service_instances/:guid/relationships/shared_spaces' do
     before do
-      VCAP::CloudController::FeatureFlag.make(name: 'service_instance_sharing', enabled: true, error_message: nil)
+      FactoryBot.create(:feature_flag, name: 'service_instance_sharing', enabled: true, error_message: nil)
     end
 
     it 'shares the service instance with the target space' do

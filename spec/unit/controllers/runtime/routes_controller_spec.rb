@@ -823,7 +823,7 @@ module VCAP::CloudController
       context 'when route_creation feature flag is disabled' do
         before do
           allow_any_instance_of(RouteValidator).to receive(:validate)
-          FeatureFlag.make(name: 'route_creation', enabled: false, error_message: nil)
+          FactoryBot.create(:feature_flag, name: 'route_creation', enabled: false, error_message: nil)
         end
 
         it 'returns FeatureDisabled for users' do

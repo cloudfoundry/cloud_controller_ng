@@ -102,7 +102,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
 
     context 'when "user_org_creation" feature flag is enabled' do
       before do
-        VCAP::CloudController::FeatureFlag.make(name: 'user_org_creation', enabled: true)
+        FactoryBot.create(:feature_flag, name: 'user_org_creation', enabled: true)
       end
 
       it 'lets ALL users create orgs' do

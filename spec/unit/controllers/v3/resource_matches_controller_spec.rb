@@ -62,7 +62,7 @@ RSpec.describe ResourceMatchesController, type: :controller do
 
     context 'when resource matching feature flag is disabled' do
       before do
-        VCAP::CloudController::FeatureFlag.make(name: 'app_bits_upload', enabled: false)
+        FactoryBot.create(:feature_flag, name: 'app_bits_upload', enabled: false)
       end
 
       context 'when the user is not an admin' do
@@ -92,7 +92,7 @@ RSpec.describe ResourceMatchesController, type: :controller do
 
     context 'when resource matching feature flag is enabled' do
       before do
-        VCAP::CloudController::FeatureFlag.make(name: 'app_bits_upload', enabled: true)
+        FactoryBot.create(:feature_flag, name: 'app_bits_upload', enabled: true)
       end
 
       context 'when no resources match' do

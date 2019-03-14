@@ -709,7 +709,7 @@ RSpec.describe 'Apps' do
       }
 
       before do
-        VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: true)
+        FactoryBot.create(:feature_flag, name: 'diego_docker', enabled: true)
         allow_any_instance_of(VCAP::CloudController::V2::AppStage).to receive(:stage).and_return(nil)
         process.latest_package.update(docker_username: 'bob', docker_password: 'password')
       end

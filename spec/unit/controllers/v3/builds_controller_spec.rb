@@ -402,7 +402,7 @@ RSpec.describe BuildsController, type: :controller do
 
       context 'when diego_docker is enabled' do
         before do
-          VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: true, error_message: nil)
+          FactoryBot.create(:feature_flag, name: 'diego_docker', enabled: true, error_message: nil)
         end
 
         it 'returns a 201 Created response and creates a build model with an associated package' do
@@ -430,7 +430,7 @@ RSpec.describe BuildsController, type: :controller do
 
       context 'when diego_docker feature flag is disabled' do
         before do
-          VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: false, error_message: nil)
+          FactoryBot.create(:feature_flag, name: 'diego_docker', enabled: false, error_message: nil)
         end
 
         it 'raises 403' do

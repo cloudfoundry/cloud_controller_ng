@@ -18,7 +18,7 @@ module VCAP::CloudController
       it_behaves_like :full_access
 
       context 'when FeatureFlag space_scoped_private_broker_creation is false' do
-        before { FeatureFlag.make(name: 'space_scoped_private_broker_creation', enabled: false, error_message: nil) }
+        before { FactoryBot.create(:feature_flag, name: 'space_scoped_private_broker_creation', enabled: false, error_message: nil) }
 
         it_behaves_like :full_access
       end
@@ -44,12 +44,12 @@ module VCAP::CloudController
       it_behaves_like :no_access
 
       context 'when FeatureFlag space_scoped_private_broker_creation is true' do
-        before { FeatureFlag.make(name: 'space_scoped_private_broker_creation', enabled: true, error_message: nil) }
+        before { FactoryBot.create(:feature_flag, name: 'space_scoped_private_broker_creation', enabled: true, error_message: nil) }
         it { is_expected.to allow_op_on_object :create, broker_with_space }
       end
 
       context 'when FeatureFlag space_scoped_private_broker_creation is false' do
-        before { FeatureFlag.make(name: 'space_scoped_private_broker_creation', enabled: false, error_message: nil) }
+        before { FactoryBot.create(:feature_flag, name: 'space_scoped_private_broker_creation', enabled: false, error_message: nil) }
 
         it 'does not allow the create' do
           expect { subject.create?(broker_with_space) }.to raise_error(CloudController::Errors::ApiError, /space_scoped_private_broker_creation/)

@@ -200,7 +200,7 @@ module VCAP::CloudController
 
           context 'when route creation feature is disabled' do
             before do
-              VCAP::CloudController::FeatureFlag.make(name: 'route_creation', enabled: false, error_message: 'nope')
+              FactoryBot.create(:feature_flag, name: 'route_creation', enabled: false, error_message: 'nope')
             end
 
             it 'raises an unauthorized error' do

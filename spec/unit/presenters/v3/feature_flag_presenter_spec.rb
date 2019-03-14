@@ -3,7 +3,7 @@ require 'presenters/v3/feature_flag_presenter'
 
 module VCAP::CloudController::Presenters::V3
   RSpec.describe FeatureFlagPresenter do
-    let(:feature_flag) { VCAP::CloudController::FeatureFlag.make }
+    let(:feature_flag) { FactoryBot.create(:feature_flag) }
 
     describe '#to_hash' do
       let(:result) { FeatureFlagPresenter.new(feature_flag).to_hash }

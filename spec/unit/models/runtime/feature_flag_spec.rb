@@ -10,7 +10,7 @@ module VCAP::CloudController
        :space_developer_env_var_visibility, :service_instance_sharing,
        :hide_marketplace_from_unauthenticated_users]
     end
-    let(:feature_flag) { FeatureFlag.make }
+    let(:feature_flag) { FactoryBot.create(:feature_flag) }
 
     it { is_expected.to have_timestamp_columns }
 
@@ -19,7 +19,7 @@ module VCAP::CloudController
       it { is_expected.to validate_presence :enabled }
 
       it 'validates name is unique' do
-        existing_flag       = FeatureFlag.make
+        existing_flag       = FactoryBot.create(:feature_flag)
         duplicate_flag      = FeatureFlag.new
         duplicate_flag.name = existing_flag.name
         expect { duplicate_flag.save }.to raise_error(Sequel::ValidationFailed, /name unique/)
@@ -44,7 +44,7 @@ module VCAP::CloudController
       end
 
       describe 'error message' do
-        subject(:feature_flag) { FeatureFlag.make }
+        subject(:feature_flag) { FactoryBot.create(:feature_flag) }
 
         it 'shoud allow standard ascii characters' do
           feature_flag.error_message = "A -_- word 2!?()\'\'&+."
@@ -210,7 +210,7 @@ module VCAP::CloudController
         end
 
         context 'and there is a custom operator defined error message' do
-          let(:feature_flag) { FeatureFlag.make(error_message: 'foobar') }
+          let(:feature_flag) { FactoryBot.create(:feature_flag, error_message: 'foobar') }
 
           it 'raises FeatureDisabled with the custom error message' do
             expect { FeatureFlag.raise_unless_enabled!(feature_flag.name) }.to raise_error(CloudController::Errors::ApiError) do |error|

@@ -129,7 +129,7 @@ RSpec.describe 'Apps' do
 
     describe 'Docker app' do
       before do
-        VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: true, error_message: nil)
+        FactoryBot.create(:feature_flag, name: 'diego_docker', enabled: true, error_message: nil)
       end
 
       it 'create a docker app' do

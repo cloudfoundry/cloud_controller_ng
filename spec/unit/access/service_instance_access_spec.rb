@@ -48,7 +48,7 @@ module VCAP::CloudController
 
       context 'when the service_instance_creation feature flag is not set' do
         before do
-          FeatureFlag.make(name: 'service_instance_creation', enabled: false, error_message: nil)
+          FactoryBot.create(:feature_flag, name: 'service_instance_creation', enabled: false, error_message: nil)
         end
 
         it_behaves_like :full_access do
@@ -89,7 +89,7 @@ module VCAP::CloudController
 
       context 'when the service_instance_creation feature flag is not set' do
         before do
-          FeatureFlag.make(name: 'service_instance_creation', enabled: false, error_message: nil)
+          FactoryBot.create(:feature_flag, name: 'service_instance_creation', enabled: false, error_message: nil)
         end
 
         it 'allows all operations except create' do

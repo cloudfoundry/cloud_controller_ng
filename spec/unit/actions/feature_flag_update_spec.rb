@@ -6,7 +6,7 @@ module VCAP::CloudController
   RSpec.describe FeatureFlagUpdate do
     describe 'update' do
       context 'when enabled is changed' do
-        let(:feature_flag1) { FeatureFlag.make(enabled: true) }
+        let(:feature_flag1) { FactoryBot.create(:feature_flag, enabled: true) }
 
         it 'updates the feature flag enabled field' do
           message = FeatureFlagsUpdateMessage.new(
@@ -19,7 +19,7 @@ module VCAP::CloudController
       end
 
       context 'when error message is changed' do
-        let(:feature_flag1) { FeatureFlag.make(enabled: true, error_message: 'Old error message') }
+        let(:feature_flag1) { FactoryBot.create(:feature_flag, enabled: true, error_message: 'Old error message') }
         it 'updates the  feature flag error message field' do
           message = FeatureFlagsUpdateMessage.new(
             custom_error_message: 'New error message',

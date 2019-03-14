@@ -477,7 +477,7 @@ RSpec.describe 'ServiceInstances' do
       end
 
       before do
-        VCAP::CloudController::FeatureFlag.make(name: 'service_instance_sharing', enabled: true, error_message: nil)
+        FactoryBot.create(:feature_flag, name: 'service_instance_sharing', enabled: true, error_message: nil)
 
         other_space.organization.add_user(user)
         other_space.add_developer(user)

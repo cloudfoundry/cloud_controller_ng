@@ -108,7 +108,7 @@ RSpec.describe PackagesController, type: :controller do
 
     context 'when app_bits_upload is disabled' do
       before do
-        VCAP::CloudController::FeatureFlag.make(name: 'app_bits_upload', enabled: false, error_message: nil)
+        FactoryBot.create(:feature_flag, name: 'app_bits_upload', enabled: false, error_message: nil)
       end
 
       context 'non-admin user' do

@@ -359,7 +359,7 @@ module VCAP::CloudController
     describe 'POST /v2/organizations' do
       context 'when user_org_creation feature_flag is disabled' do
         before do
-          FeatureFlag.make(name: 'user_org_creation', enabled: false)
+          FactoryBot.create(:feature_flag, name: 'user_org_creation', enabled: false)
         end
 
         context 'as a non admin' do
@@ -416,7 +416,7 @@ module VCAP::CloudController
 
       context 'when user_org_creation feature_flag is enabled' do
         before do
-          FeatureFlag.make(name: 'user_org_creation', enabled: true)
+          FactoryBot.create(:feature_flag, name: 'user_org_creation', enabled: true)
         end
 
         context 'as a non admin' do

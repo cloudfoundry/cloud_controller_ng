@@ -19,6 +19,10 @@ RSpec.configure do |config|
       sequence :guid do
         "guid-#{SecureRandom.uuid}"
       end
+
+      sequence :error_message do |index|
+        "error-message-#{index}"
+      end
     end
   end
 end

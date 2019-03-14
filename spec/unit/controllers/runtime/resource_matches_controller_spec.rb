@@ -23,7 +23,7 @@ module VCAP::CloudController
 
     describe 'when the app_bits_upload feature flag is enabled' do
       before do
-        FeatureFlag.make(name: 'app_bits_upload', enabled: true)
+        FactoryBot.create(:feature_flag, name: 'app_bits_upload', enabled: true)
       end
 
       describe 'PUT /v2/resource_match' do
@@ -66,7 +66,7 @@ module VCAP::CloudController
 
     describe 'when the app_bits_upload feature flag is disabled' do
       before do
-        FeatureFlag.make(name: 'app_bits_upload', enabled: false)
+        FactoryBot.create(:feature_flag, name: 'app_bits_upload', enabled: false)
       end
 
       it 'allows the upload if the user is an admin' do

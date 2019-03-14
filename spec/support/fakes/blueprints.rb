@@ -465,12 +465,6 @@ module VCAP::CloudController
     end
   end
 
-  FeatureFlag.blueprint do
-    name { 'user_org_creation' }
-    enabled { false }
-    error_message { Sham.error_message }
-  end
-
   RouteMappingModel.blueprint do
     app { FactoryBot.create(:app) }
     route { Route.make(space: app.space) }
