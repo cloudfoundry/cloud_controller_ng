@@ -61,7 +61,7 @@ RSpec.describe VCAP::CloudController::ResourceMatchCreateMessage do
 
         it 'has the correct error message' do
           expect(subject).to be_invalid
-          expect(subject.errors[:resources]).to include('is too many (maximum is 5000 resources)')
+          expect(subject.errors[:resources]).to include('can have at most 5000 resources)')
         end
       end
 
