@@ -11433,7 +11433,7 @@ applications:
 
 <p><code class="prettyprint">GET /v3/apps/:guid/manifest</code></p>
 
-<h4 id="allowed-roles">Allowed Roles</h4>
+<h4 id="permitted-roles">Permitted Roles</h4>
 
 <table><thead>
 <tr>
@@ -11476,7 +11476,7 @@ applications:
 
 <p><code class="prettyprint">POST /v3/apps/:guid/actions/apply_manifest</code></p>
 
-<h4 id="allowed-roles">Allowed Roles</h4>
+<h4 id="permitted-roles">Permitted Roles</h4>
 
 <table><thead>
 <tr>
@@ -13060,7 +13060,14 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 and reports the subset that describes already cached files.
 This is usually used to avoid uploading duplicate files
 when pushing an app which has only been partially changed.
-Cloud Foundry operators may set minimum / maximum file sizes to match against.
+The <code class="prettyprint">path</code> and <code class="prettyprint">mode</code> fields are not used when matching.</p>
+
+<p>When [uploading package bits][#upload-package-bits],
+the response from this endpoint should be used as the <code class="prettyprint">resources</code> form field.
+As such, it is useful to include the <code class="prettyprint">path</code> and <code class="prettyprint">mode</code> fields for each resource
+even though they are not used when determining a resource match.</p>
+
+<p>Cloud Foundry operators may set minimum / maximum file sizes to match against.
 If the file size provided is outside this range,
 it will not be matched against.</p>
 
@@ -13075,11 +13082,15 @@ it will not be matched against.</p>
         "resources": [
           {
             "checksum": { "value": "002d760bea1be268e27077412e11a320d0f164d3" },
-            "size_in_bytes": 36
+            "size_in_bytes": 36,
+            "path": "C:\\path\\to\\file",
+            "mode": "645"
           },
           {
             "checksum": { "value": "a9993e364706816aba3e25717850c26c9cd0d89d" },
-            "size_in_bytes": 1
+            "size_in_bytes": 1,
+            "path": "path/to/file",
+            "mode": "644"
           }
         ]
       }'</span>
@@ -13094,7 +13105,9 @@ it will not be matched against.</p>
   </span><span class="nt">"resources"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
     </span><span class="p">{</span><span class="w">
       </span><span class="nt">"checksum"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a9993e364706816aba3e25717850c26c9cd0d89d"</span><span class="w"> </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"size_in_bytes"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="w">
+      </span><span class="nt">"size_in_bytes"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"path/to/file"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"mode"</span><span class="p">:</span><span class="w"> </span><span class="s2">"644"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">]</span><span class="w">
 </span><span class="p">}</span><span class="w">
@@ -13129,10 +13142,7 @@ it will not be matched against.</p>
 </tr>
 </thead><tbody>
 <tr>
-<td>Space Developer</td>
-</tr>
-<tr>
-<td>Admin</td>
+<td>All Roles</td>
 </tr>
 </tbody></table>
 
@@ -13154,6 +13164,16 @@ it will not be matched against.</p>
 <td><strong>size_in_bytes</strong></td>
 <td><em>integer</em></td>
 <td>Size of file in bytes</td>
+</tr>
+<tr>
+<td><strong>path</strong></td>
+<td><em>string</em></td>
+<td>Path to the file, relative to app root</td>
+</tr>
+<tr>
+<td><strong>mode</strong></td>
+<td><em>string</em></td>
+<td>File mode, i.e. POSIX file permissions</td>
 </tr>
 </tbody></table>
 
@@ -14917,7 +14937,7 @@ Deployed revisions are revisions that are linked to started processes in the app
 
 <p><code class="prettyprint">POST /v3/spaces/:guid/actions/apply_manifest</code></p>
 
-<h4 id="allowed-roles">Allowed Roles</h4>
+<h4 id="permitted-roles">Permitted Roles</h4>
 
 <table><thead>
 <tr>
