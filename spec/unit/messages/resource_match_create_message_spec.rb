@@ -2,34 +2,6 @@ require 'spec_helper'
 require 'messages/resource_match_create_message'
 
 RSpec.describe VCAP::CloudController::ResourceMatchCreateMessage do
-  describe 'creation with v2' do
-    let(:valid_v2_body) do
-      StringIO.new([
-        {
-          "sha1": 'e54e24b5521df47ee1dadd28d4acecdb5d116493',
-          "size": 36,
-          "fn": '/path/to/first',
-          "mode": '123'
-        },
-        {
-          "sha1": 'a9993e364706816aba3e25717850c26c9cd0d89d',
-          "size": 1,
-          "fn": '/path/to/second',
-          "mode": '456'
-        }
-      ].to_json)
-    end
-
-    it 'is valid if using the valid parameters' do
-      expect(described_class.from_v2_fingerprints(valid_v2_body)).to be_valid
-    end
-
-    it 'can marshal data back out to the v2 fingerprint format' do
-      message = described_class.from_v2_fingerprints(valid_v2_body)
-      expect(message.v2_fingerprints_body.string).to eq(valid_v2_body.string)
-    end
-  end
-
   describe 'creation with v3' do
     let(:valid_v3_params) do
       {

@@ -1,5 +1,6 @@
 require 'messages/base_message'
 require 'messages/validators'
+require 'messages/v2_v3_resource_translator'
 
 module VCAP::CloudController
   class ResourceMatchCreateMessage < BaseMessage
@@ -13,31 +14,10 @@ module VCAP::CloudController
     }
     validate :each_resource
 
-    def self.from_v2_fingerprints(body)
-      v3_body = {
-        'resources' => MultiJson.load(body.string).map do |r|
-          {
-            'size_in_bytes' => r['size'],
-            'checksum' => { 'value' => r['sha1'] },
-            'path' => r['fn'],
-            'mode' => r['mode']
-          }
-        end
-      }
-      new(v3_body)
-    end
-
     def v2_fingerprints_body
-      v2_fingerprints = resources.map do |resource|
-        {
-          sha1: resource[:checksum][:value],
-          size: resource[:size_in_bytes],
-          fn: resource[:path],
-          mode: resource[:mode]
-        }
-      end
+      translator = V2V3ResourceTranslator.new(resources)
 
-      StringIO.new(v2_fingerprints.to_json)
+      StringIO.new(translator.v2_fingerprints_body.to_json)
     end
 
     private
