@@ -10,7 +10,7 @@ module VCAP::CloudController
       end
 
       def fetch(process_guid:)
-        process = ProcessModel.where(guid: process_guid).eager(:space, :organization).all.first
+        process = ProcessModel.where(guid: process_guid).eager(:space, :organization).first
         return nil unless process
 
         [process, process.space, process.organization]

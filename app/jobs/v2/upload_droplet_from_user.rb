@@ -13,7 +13,7 @@ module VCAP::CloudController
         def perform
           Jobs::V3::DropletUpload.new(@local_path, @droplet_guid).perform
 
-          if (droplet = DropletModel.where(guid: @droplet_guid).eager(:app).all.first)
+          if (droplet = DropletModel.where(guid: @droplet_guid).eager(:app).first)
             droplet.db.transaction do
               droplet.lock!
 

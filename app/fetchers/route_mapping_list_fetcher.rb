@@ -17,7 +17,7 @@ module VCAP::CloudController
     end
 
     def fetch_for_app(app_guid:)
-      app = AppModel.where(guid: app_guid).eager(:space, :organization).all.first
+      app = AppModel.where(guid: app_guid).eager(:space, :organization).first
       return nil unless app
 
       [app, filter(RouteMappingModel.where(app_guid: app_guid))]

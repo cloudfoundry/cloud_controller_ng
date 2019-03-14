@@ -59,7 +59,7 @@ class ServiceBindingsController < ApplicationController
   end
 
   def destroy
-    binding = VCAP::CloudController::ServiceBinding.where(guid: hashed_params[:guid]).eager(service_instance: { space: :organization }).all.first
+    binding = VCAP::CloudController::ServiceBinding.where(guid: hashed_params[:guid]).eager(service_instance: { space: :organization }).first
 
     binding_not_found! unless binding && permission_queryer.can_read_from_space?(binding.space.guid, binding.space.organization.guid)
     unauthorized! unless permission_queryer.can_write_to_space?(binding.space.guid)

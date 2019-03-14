@@ -254,7 +254,7 @@ module VCAP::CloudController
         end
 
         it 'works when eager loading' do
-          eager_space = Space.eager(:security_groups).all.first
+          eager_space = Space.eager(:security_groups).first
           expect(eager_space.security_groups).to match_array [associated_sg, default_sg, another_default_sg]
         end
 
@@ -288,7 +288,7 @@ module VCAP::CloudController
         end
 
         it 'works when eager loading' do
-          eager_space = Space.eager(:staging_security_groups).all.first
+          eager_space = Space.eager(:staging_security_groups).first
           expect(eager_space.staging_security_groups).to match_array [associated_sg, default_sg, another_default_sg]
         end
 

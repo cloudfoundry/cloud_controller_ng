@@ -13,7 +13,7 @@ module VCAP::CloudController
     end
 
     def fetch_for_app
-      app = AppModel.where(guid: @message.app_guid).eager(:space, :organization).all.first
+      app = AppModel.where(guid: @message.app_guid).eager(:space, :organization).first
       return nil unless app
 
       [app, filter(app.processes_dataset)]

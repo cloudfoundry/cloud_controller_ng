@@ -6,7 +6,7 @@ module VCAP::CloudController
         :space,
         :droplet,
         space: :organization
-      ).all.first
+      ).first
 
       if droplet_guid
         droplet = app.droplets_dataset.where(guid: droplet_guid).first

@@ -52,7 +52,7 @@ class PackagesController < ApplicationController
     message = PackageUploadMessage.create_from_params(opts)
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    package = PackageModel.where(guid: hashed_params[:guid]).eager(:space, space: :organization).all.first
+    package = PackageModel.where(guid: hashed_params[:guid]).eager(:space, space: :organization).first
     package_not_found! unless package && permission_queryer.can_read_from_space?(package.space.guid, package.space.organization.guid)
     unauthorized! unless permission_queryer.can_write_to_space?(package.space.guid)
 
@@ -74,7 +74,7 @@ class PackagesController < ApplicationController
   end
 
   def download
-    package = PackageModel.where(guid: hashed_params[:guid]).eager(:space, space: :organization).all.first
+    package = PackageModel.where(guid: hashed_params[:guid]).eager(:space, space: :organization).first
     package_not_found! unless package && permission_queryer.can_read_from_space?(package.space.guid, package.space.organization.guid)
     unauthorized! unless permission_queryer.can_read_secrets_in_space?(package.space.guid, package.space.organization.guid)
 
@@ -90,14 +90,14 @@ class PackagesController < ApplicationController
   end
 
   def show
-    package = PackageModel.where(guid: hashed_params[:guid]).eager(:space, space: :organization).all.first
+    package = PackageModel.where(guid: hashed_params[:guid]).eager(:space, space: :organization).first
     package_not_found! unless package && permission_queryer.can_read_from_space?(package.space.guid, package.space.organization.guid)
 
     render status: :ok, json: Presenters::V3::PackagePresenter.new(package, show_bits_service_upload_link: permission_queryer.can_write_to_space?(package.space.guid))
   end
 
   def destroy
-    package = PackageModel.where(guid: hashed_params[:guid]).eager(:space, space: :organization).all.first
+    package = PackageModel.where(guid: hashed_params[:guid]).eager(:space, space: :organization).first
     package_not_found! unless package && permission_queryer.can_read_from_space?(package.space.guid, package.space.organization.guid)
     unauthorized! unless permission_queryer.can_write_to_space?(package.space.guid)
 
@@ -136,7 +136,7 @@ class PackagesController < ApplicationController
     message = PackageCreateMessage.new(JSON.parse(request.body))
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    app = AppModel.where(guid: message.app_guid).eager(:space, :organization).all.first
+    app = AppModel.where(guid: message.app_guid).eager(:space, :organization).first
     unprocessable_app! unless app &&
       permission_queryer.can_read_from_space?(app.space.guid, app.organization.guid) &&
       permission_queryer.can_write_to_space?(app.space.guid)
@@ -146,12 +146,12 @@ class PackagesController < ApplicationController
 
   def create_copy
     app_guid = JSON.parse(request.body).deep_symbolize_keys.dig(:relationships, :app, :data, :guid)
-    destination_app = AppModel.where(guid: app_guid).eager(:space, :organization).all.first
+    destination_app = AppModel.where(guid: app_guid).eager(:space, :organization).first
     unprocessable_app! unless destination_app &&
       permission_queryer.can_read_from_space?(destination_app.space.guid, destination_app.organization.guid) &&
       permission_queryer.can_write_to_space?(destination_app.space.guid)
 
-    source_package = PackageModel.where(guid: hashed_params[:source_guid]).eager(:app, :space, space: :organization).all.first
+    source_package = PackageModel.where(guid: hashed_params[:source_guid]).eager(:app, :space, space: :organization).first
     unprocessable_source_package! unless source_package &&
       permission_queryer.can_read_from_space?(source_package.space.guid, source_package.space.organization.guid) &&
       permission_queryer.can_write_to_space?(source_package.space.guid)

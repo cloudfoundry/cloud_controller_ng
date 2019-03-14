@@ -1,7 +1,7 @@
 module VCAP::CloudController
   class DropletFetcher
     def fetch(droplet_guid)
-      droplet = DropletModel.where(guid: droplet_guid).eager(:space, space: :organization).all.first
+      droplet = DropletModel.where(guid: droplet_guid).eager(:space, space: :organization).first
       return nil if droplet.nil?
 
       org = droplet.space ? droplet.space.organization : nil

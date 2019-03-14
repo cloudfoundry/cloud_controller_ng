@@ -4,7 +4,7 @@ module VCAP::CloudController
       app = AppModel.where(guid: app_guid).eager(
         :space,
         space: :organization
-      ).all.first
+      ).first
 
       return nil unless app
 
@@ -17,7 +17,7 @@ module VCAP::CloudController
       task = TaskModel.where(guid: task_guid).eager(
         :space,
         space: :organization
-      ).all.first
+      ).first
 
       return nil unless task
 

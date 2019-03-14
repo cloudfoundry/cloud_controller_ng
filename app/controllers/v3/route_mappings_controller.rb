@@ -86,7 +86,7 @@ class RouteMappingsController < ApplicationController
   end
 
   def destroy
-    route_mapping = RouteMappingModel.where(guid: hashed_params['route_mapping_guid']).eager(:route, :space, space: :organization, app: :processes).all.first
+    route_mapping = RouteMappingModel.where(guid: hashed_params['route_mapping_guid']).eager(:route, :space, space: :organization, app: :processes).first
 
     route_mapping_not_found! unless route_mapping && permission_queryer.can_read_from_space?(route_mapping.space.guid, route_mapping.space.organization.guid)
     unauthorized! unless permission_queryer.can_write_to_space?(route_mapping.space.guid)
