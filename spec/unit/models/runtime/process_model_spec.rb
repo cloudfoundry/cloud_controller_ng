@@ -1440,7 +1440,7 @@ module VCAP::CloudController
 
       it 'does not allow a docker package for a buildpack app' do
         process.app.lifecycle_data.update(buildpacks: [Buildpack.make.name])
-        FactoryBot.create(:package, :docker,  app: process.app)
+        FactoryBot.create(:package, :docker, app: process.app)
         expect {
           process.save
         }.to raise_error(Sequel::ValidationFailed, /incompatible with buildpack/)
@@ -1456,7 +1456,7 @@ module VCAP::CloudController
       subject(:process) { ProcessModelFactory.make(app: parent_app) }
 
       it 'retrieves the docker registry username from the package' do
-        FactoryBot.create(:package, :docker,  app: process.app, docker_image: 'someimage', docker_username: 'user')
+        FactoryBot.create(:package, :docker, app: process.app, docker_image: 'someimage', docker_username: 'user')
         expect(process.reload.docker_username).to eq('user')
       end
     end
@@ -1465,7 +1465,7 @@ module VCAP::CloudController
       subject(:process) { ProcessModelFactory.make(app: parent_app) }
 
       it 'retrieves the docker registry password from the package' do
-        FactoryBot.create(:package, :docker,  app: process.app, docker_image: 'someimage', docker_password: 'pass')
+        FactoryBot.create(:package, :docker, app: process.app, docker_image: 'someimage', docker_password: 'pass')
         expect(process.reload.docker_password).to eq('pass')
       end
     end

@@ -574,7 +574,7 @@ module VCAP::CloudController
         end
 
         context 'with a docker backend' do
-          let(:package) { FactoryBot.create(:package, :docker,  app: app) }
+          let(:package) { FactoryBot.create(:package, :docker, app: app) }
           let(:droplet) do
             DropletModel.make(:docker,
                               app: app,

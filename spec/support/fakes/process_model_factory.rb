@@ -66,7 +66,7 @@ module VCAP
             FactoryBot.create(:package, app: parent_app, state: PackageModel::READY_STATE, package_hash: Sham.guid)
           else
             docker_credentials = package_attributes[:docker_credentials].nil? ? {} : package_attributes[:docker_credentials]
-            FactoryBot.create(:package, :docker,  app: parent_app,
+            FactoryBot.create(:package, :docker, app: parent_app,
                                                               docker_image: package_attributes[:docker_image],
                                                               docker_username: docker_credentials['username'],
                                                               docker_password: docker_credentials['password'])

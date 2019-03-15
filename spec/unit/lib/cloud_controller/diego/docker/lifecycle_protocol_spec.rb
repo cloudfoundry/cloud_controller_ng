@@ -11,7 +11,7 @@ module VCAP
 
           it_behaves_like 'a lifecycle protocol' do
             let(:app) { FactoryBot.create(:app) }
-            let(:package) { FactoryBot.create(:package, :docker,  app: app) }
+            let(:package) { FactoryBot.create(:package, :docker, app: app) }
             let(:droplet) { DropletModel.make(package: package, app: app) }
             let(:process) { ProcessModel.make(app: app) }
 
