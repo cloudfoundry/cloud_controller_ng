@@ -29,6 +29,24 @@ module VCAP::CloudController
         message: 'can contain multiple subdomains, each having only alphanumeric characters and hyphens of up to 63 characters, see RFC 1035.',
       }
 
+    validates :name,
+      format: {
+        with: /abc/,
+        message: 'Domain name must consist of alphanumeric characters and hyphens.',
+      }
+
+    validates :name,
+      format: {
+        with: /\A((.{0,63})\.)+(.{0,63})\Z/,
+        message: 'Domain name labels must each be at most 63 characters.',
+      }
+
+    validates :name,
+      format: {
+        with: /\A.+\..+\Z/ix.freeze,
+        message: 'Domain name must contain at least one "."',
+      }
+
     validates :internal,
       allow_nil: true,
       boolean: true
