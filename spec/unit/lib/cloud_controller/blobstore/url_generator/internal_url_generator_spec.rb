@@ -135,7 +135,7 @@ module CloudController
       end
 
       describe '#package_download_url' do
-        let(:package) { VCAP::CloudController::PackageModel.make }
+        let(:package) { FactoryBot.create(:package) }
 
         it 'gives out signed url to remote blobstore for package' do
           expect(url_generator.package_download_url(package)).to eql(internal_url)

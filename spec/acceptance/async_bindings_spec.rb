@@ -123,7 +123,7 @@ module VCAP::CloudController
         context 'and multiple service bindings exist' do
           let(:space) { FactoryBot.create(:space) }
           let(:app_model) { FactoryBot.create(:app, name: 'app_name', space: space) }
-          let(:package) { VCAP::CloudController::PackageModel.make(app: app_model) }
+          let(:package) { FactoryBot.create(:package, app: app_model) }
           let!(:droplet) { VCAP::CloudController::DropletModel.make(package: package, app: app_model) }
           let!(:process) { VCAP::CloudController::ProcessModel.make(app: app_model) }
           let!(:deployment) { VCAP::CloudController::DeploymentModel.make(app: app_model) }

@@ -10,7 +10,7 @@ module VCAP::CloudController
 
       let(:messenger) { instance_double(Diego::Messenger) }
       let(:protocol) { instance_double(Diego::Protocol) }
-      let(:package) { PackageModel.make }
+      let(:package) { FactoryBot.create(:package) }
       let(:config) { TestConfig.config_instance }
       let(:build) { FactoryBot.create(:build, package_guid: package.guid) }
       let!(:lifecycle_data_model) { FactoryBot.create(:buildpack_lifecycle_data, build: build) }

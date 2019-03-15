@@ -63,10 +63,10 @@ module VCAP
 
         def make_package(package_attributes, parent_app)
           if package_attributes.empty?
-            VCAP::CloudController::PackageModel.make(app: parent_app, state: PackageModel::READY_STATE, package_hash: Sham.guid)
+            FactoryBot.create(:package, app: parent_app, state: PackageModel::READY_STATE, package_hash: Sham.guid)
           else
             docker_credentials = package_attributes[:docker_credentials].nil? ? {} : package_attributes[:docker_credentials]
-            VCAP::CloudController::PackageModel.make(:docker, app: parent_app,
+            FactoryBot.create(:package, :docker,  app: parent_app,
                                                               docker_image: package_attributes[:docker_image],
                                                               docker_username: docker_credentials['username'],
                                                               docker_password: docker_credentials['password'])

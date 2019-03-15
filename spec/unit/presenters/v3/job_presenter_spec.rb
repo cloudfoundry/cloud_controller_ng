@@ -131,7 +131,7 @@ module VCAP::CloudController::Presenters::V3
     context 'for packages' do
       it_behaves_like JobPresenter do
         let(:resource_type) { 'package' }
-        let(:resource) { VCAP::CloudController::PackageModel.make }
+        let(:resource) { FactoryBot.create(:package) }
       end
     end
   end

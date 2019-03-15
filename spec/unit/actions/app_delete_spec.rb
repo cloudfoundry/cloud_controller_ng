@@ -43,7 +43,7 @@ module VCAP::CloudController
 
       describe 'recursive deletion' do
         it 'deletes associated packages' do
-          package = PackageModel.make(app: app)
+          package = FactoryBot.create(:package, app: app)
 
           expect {
             app_delete.delete(app_dataset)

@@ -7,7 +7,7 @@ module VCAP::CloudController
       RSpec.describe StagingCompletionHandler do
         let(:logger) { instance_double(Steno::Logger, info: nil, error: nil, warn: nil) }
         let(:app) { FactoryBot.create(:app) }
-        let(:package) { PackageModel.make(app: app) }
+        let(:package) { FactoryBot.create(:package, app: app) }
         let!(:build) { FactoryBot.create(:build, app: app, package: package, state: BuildModel::STAGING_STATE) }
         let(:runners) { instance_double(Runners) }
 

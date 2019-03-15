@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe BuildModel do
-    let(:package) { PackageModel.make(state: PackageModel::READY_STATE) }
+    let(:package) { FactoryBot.create(:package, state: PackageModel::READY_STATE) }
     let(:build_model) { FactoryBot.create(:build, package: package) }
     let!(:lifecycle_data) do
       FactoryBot.create(:buildpack_lifecycle_data,

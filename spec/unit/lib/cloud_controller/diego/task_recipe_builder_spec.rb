@@ -28,7 +28,7 @@ module VCAP::CloudController
             stack:     'cool-stack'
           }
         end
-        let(:package) { PackageModel.make(app: app) }
+        let(:package) { FactoryBot.create(:package, app: app) }
         let(:expected_network) do
           ::Diego::Bbs::Models::Network.new(
             properties: {
@@ -201,7 +201,7 @@ module VCAP::CloudController
         context 'with a docker backend' do
           let(:droplet) { DropletModel.make(:docker, package: package, app: app) }
           let(:package) do
-            PackageModel.make(:docker,
+            FactoryBot.create(:package, :docker,
                               app: app,
                               docker_username: 'dockeruser',
                               docker_password: 'dockerpass',
@@ -574,7 +574,7 @@ module VCAP::CloudController
         end
 
         context 'with a docker backend' do
-          let(:package) { PackageModel.make(:docker, app: app) }
+          let(:package) { FactoryBot.create(:package, :docker,  app: app) }
           let(:droplet) do
             DropletModel.make(:docker,
                               app: app,

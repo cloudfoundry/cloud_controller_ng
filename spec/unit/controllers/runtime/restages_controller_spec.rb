@@ -62,7 +62,7 @@ module VCAP::CloudController
 
         context 'when the app is pending to be staged' do
           before do
-            PackageModel.make(app: process.app)
+            FactoryBot.create(:package, app: process.app)
             process.reload
           end
 

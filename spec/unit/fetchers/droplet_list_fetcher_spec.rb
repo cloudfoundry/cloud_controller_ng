@@ -259,7 +259,7 @@ module VCAP::CloudController
     end
 
     describe '#fetch_for_package' do
-      let(:package) { PackageModel.make }
+      let(:package) { FactoryBot.create(:package) }
       let!(:staged_droplet) { DropletModel.make(package_guid: package.guid, state: DropletModel::STAGED_STATE) }
       let!(:failed_droplet) { DropletModel.make(package_guid: package.guid, state: DropletModel::FAILED_STATE) }
       let(:filters) { { package_guid: package.guid } }

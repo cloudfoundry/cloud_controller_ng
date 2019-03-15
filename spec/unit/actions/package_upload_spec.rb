@@ -6,7 +6,7 @@ module VCAP::CloudController
     subject(:package_upload) { PackageUpload.new }
 
     describe '#upload_async' do
-      let(:package) { PackageModel.make(type: 'bits') }
+      let(:package) { FactoryBot.create(:package) }
       let(:message) { PackageUploadMessage.new({ 'bits_path' => '/tmp/path' }) }
       let(:config) { Config.new({ name: 'local', index: '1' }) }
       let(:user_guid) { 'gooid' }
@@ -54,7 +54,7 @@ module VCAP::CloudController
     end
 
     describe '#upload_async_without_event' do
-      let(:package) { PackageModel.make(type: 'bits') }
+      let(:package) { FactoryBot.create(:package, type: 'bits') }
       let(:message) { PackageUploadMessage.new({ 'bits_path' => '/tmp/path' }) }
       let(:config) { Config.new({ name: 'local', index: '1' }) }
 
@@ -78,7 +78,7 @@ module VCAP::CloudController
     end
 
     describe '#upload_sync_without_event' do
-      let(:package) { PackageModel.make(type: 'bits') }
+      let(:package) { FactoryBot.create(:package, type: 'bits') }
       let(:message) { PackageUploadMessage.new({ 'bits_path' => '/tmp/path' }) }
 
       before do

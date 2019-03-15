@@ -11,7 +11,7 @@ RSpec.describe 'Builds' do
 
   describe 'POST /v3/builds' do
     let(:package) do
-      VCAP::CloudController::PackageModel.make(
+      FactoryBot.create(:package,
         app_guid: app_model.guid,
         state: VCAP::CloudController::PackageModel::READY_STATE,
         type: VCAP::CloudController::PackageModel::BITS_TYPE,
@@ -140,7 +140,7 @@ RSpec.describe 'Builds' do
         created_by_user_email: 'bob@loblaw.com'
       )
     end
-    let(:package) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
+    let(:package) { FactoryBot.create(:package, app_guid: app_model.guid) }
     let(:droplet) { VCAP::CloudController::DropletModel.make(
       state: VCAP::CloudController::DropletModel::STAGED_STATE,
       package_guid: package.guid,
@@ -268,7 +268,7 @@ RSpec.describe 'Builds' do
         created_by_user_email: 'bob@loblaw.com'
       )
     end
-    let(:package) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
+    let(:package) { FactoryBot.create(:package, app_guid: app_model.guid) }
     let(:droplet) { VCAP::CloudController::DropletModel.make(
       state: VCAP::CloudController::DropletModel::STAGED_STATE,
       package_guid: package.guid,
@@ -335,7 +335,7 @@ RSpec.describe 'Builds' do
 
   describe 'PATCH /v3/builds/:guid' do
     let(:package_model) do
-      VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
+      FactoryBot.create(:package, app_guid: app_model.guid)
     end
     let(:build_model) do
       FactoryBot.create(:build, package: package_model)

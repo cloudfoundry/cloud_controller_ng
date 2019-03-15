@@ -19,7 +19,7 @@ module VCAP::CloudController
       end
 
       describe '#send_stage_request' do
-        let(:package) { PackageModel.make }
+        let(:package) { FactoryBot.create(:package) }
         let(:droplet) { DropletModel.make(package: package) }
         let(:staging_guid) { droplet.guid }
         let(:staging_details) do

@@ -33,7 +33,7 @@ module VCAP::CloudController
     context 'with an app with few droplets / packages' do
       it 'does not mark any as expired' do
         3.times { DropletModel.make(state: DropletModel::STAGED_STATE, app_guid: app.guid) }
-        3.times { PackageModel.make(state: PackageModel::READY_STATE, app_guid: app.guid) }
+        3.times { FactoryBot.create(:package, state: PackageModel::READY_STATE, app_guid: app.guid) }
         BitsExpiration.new.expire_droplets!(app)
         BitsExpiration.new.expire_packages!(app)
         expect(DropletModel.where(state: DropletModel::EXPIRED_STATE).count).to eq(0)
@@ -93,7 +93,7 @@ module VCAP::CloudController
     context 'with packages' do
       before do
         t                = Time.now
-        @current_package = PackageModel.make(
+        @current_package = FactoryBot.create(:package,
           package_hash: 'current_package_hash',
           state:        PackageModel::READY_STATE,
           app_guid:     app.guid,
@@ -106,10 +106,12 @@ module VCAP::CloudController
         app.update(droplet: @current)
 
         10.times do |i|
-          PackageModel.make(package_hash: 'real hash!',
-                            state:                        PackageModel::READY_STATE,
-                            app_guid:                     app.guid,
-                            created_at:                   t + i)
+          FactoryBot.create(:package,
+            package_hash: 'real hash!',
+            state:        PackageModel::READY_STATE,
+            app_guid:     app.guid,
+            created_at:   t + i
+          )
         end
       end
 

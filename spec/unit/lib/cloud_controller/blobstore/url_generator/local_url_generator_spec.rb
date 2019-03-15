@@ -103,7 +103,7 @@ module CloudController
       end
 
       describe 'package' do
-        let(:package) { VCAP::CloudController::PackageModel.make }
+        let(:package) { FactoryBot.create(:package) }
 
         it 'gives a local URI to the blobstore host/port' do
           uri = URI.parse(url_generator.package_download_url(package))

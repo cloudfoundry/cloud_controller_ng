@@ -5,7 +5,7 @@ module CloudController::Packager
   RSpec.describe PackageUploadHandler do
     subject(:packer) { PackageUploadHandler.new(package.guid, uploaded_files_path, cached_files_fingerprints) }
 
-    let(:package) { VCAP::CloudController::PackageModel.make(state: VCAP::CloudController::PackageModel::PENDING_STATE) }
+    let(:package) { FactoryBot.create(:package, state: VCAP::CloudController::PackageModel::PENDING_STATE) }
     let(:uploaded_files_path) { File.expand_path('../../../fixtures/good.zip', File.dirname(__FILE__)) }
     let(:cached_files_fingerprints) { [{ 'sha1' => 'abcde', 'fn' => 'lib.rb' }] }
 

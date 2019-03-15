@@ -6,7 +6,7 @@ module VCAP::CloudController
     subject(:package_copy) { PackageCopy.new }
 
     let(:target_app) { FactoryBot.create(:app) }
-    let!(:source_package) { PackageModel.make(type: type) }
+    let!(:source_package) { FactoryBot.create(:package, type: type) }
     let(:type) { 'docker' }
 
     describe '#copy' do
@@ -28,7 +28,7 @@ module VCAP::CloudController
       end
 
       it 'copies over docker info' do
-        source_package = PackageModel.make(type: 'docker', docker_image: 'image-magick.com')
+        source_package = FactoryBot.create(:package, type: 'docker', docker_image: 'image-magick.com')
         result = package_copy.copy(destination_app_guid: target_app.guid, source_package: source_package, user_audit_info: user_audit_info)
         created_package = PackageModel.find(guid: result.guid)
 
@@ -97,7 +97,7 @@ module VCAP::CloudController
       end
 
       context 'when the source and destination apps are the same' do
-        let!(:source_package) { PackageModel.make(type: type, app_guid: target_app.guid) }
+        let!(:source_package) { FactoryBot.create(:package, type: type, app_guid: target_app.guid) }
 
         it 'raises an InvalidPackage error' do
           expect {

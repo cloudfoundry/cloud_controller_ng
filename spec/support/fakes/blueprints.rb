@@ -37,21 +37,6 @@ module VCAP::CloudController
     "VCAP::CloudController::#{root}AnnotationModel".constantize.blueprint do end
   end
 
-  PackageModel.blueprint do
-    guid     { Sham.guid }
-    state    { VCAP::CloudController::PackageModel::CREATED_STATE }
-    type     { 'bits' }
-    app { FactoryBot.create(:app) }
-  end
-
-  PackageModel.blueprint(:docker) do
-    guid     { Sham.guid }
-    state    { VCAP::CloudController::PackageModel::READY_STATE }
-    type     { 'docker' }
-    app { FactoryBot.create(:app) }
-    docker_image { "org/image-#{Sham.guid}:latest" }
-  end
-
   DropletModel.blueprint do
     guid     { Sham.guid }
     state    { VCAP::CloudController::DropletModel::STAGED_STATE }

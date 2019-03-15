@@ -16,7 +16,7 @@ module VCAP::CloudController
       end
 
       context 'when the app package hash is blank' do
-        before { PackageModel.make(package_hash: nil, app: process_model) }
+        before { FactoryBot.create(:package, package_hash: nil, app: process_model) }
 
         it 'raises' do
           expect {

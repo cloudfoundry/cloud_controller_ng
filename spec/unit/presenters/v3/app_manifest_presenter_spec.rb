@@ -217,7 +217,7 @@ module VCAP::CloudController::Presenters::V3
             end
 
             let!(:package) do
-              VCAP::CloudController::PackageModel.make(
+              FactoryBot.create(:package,
                 :docker,
                 docker_image: 'my-image:tag',
                 docker_username: 'xXxMyL1ttlePwnyxXx',

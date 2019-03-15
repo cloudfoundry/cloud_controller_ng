@@ -7,7 +7,7 @@ RSpec.describe BuildsController, type: :controller do
     let(:organization) { FactoryBot.create(:organization) }
     let(:space) { FactoryBot.create(:space, organization: organization) }
     let(:app_model) { FactoryBot.create(:app, :buildpack, space: space) }
-    let(:package) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
+    let(:package) { FactoryBot.create(:package, app_guid: app_model.guid) }
     let(:build) { FactoryBot.create(:build, package: package, app: app_model) }
     let!(:droplet) do
       VCAP::CloudController::DropletModel.make(
@@ -16,7 +16,7 @@ RSpec.describe BuildsController, type: :controller do
         build: build,
       )
     end
-    let(:package2) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
+    let(:package2) { FactoryBot.create(:package, app_guid: app_model.guid) }
     let(:build2) { FactoryBot.create(:build, package: package2, app: app_model) }
     let!(:droplet2) do
       VCAP::CloudController::DropletModel.make(
@@ -159,7 +159,7 @@ RSpec.describe BuildsController, type: :controller do
     let(:stack) { VCAP::CloudController::Stack.default.name }
     let(:app_model) { FactoryBot.create(:app, :buildpack, space: space) }
     let(:package) do
-      VCAP::CloudController::PackageModel.make(
+      FactoryBot.create(:package,
         app_guid: app_model.guid,
         state: VCAP::CloudController::PackageModel::READY_STATE,
         type: VCAP::CloudController::PackageModel::BITS_TYPE,
@@ -378,7 +378,7 @@ RSpec.describe BuildsController, type: :controller do
     describe 'docker lifecycle' do
       let(:docker_app_model) { FactoryBot.create(:app, :docker, space: space) }
       let(:package) do
-        VCAP::CloudController::PackageModel.make(:docker,
+        FactoryBot.create(:package, :docker,
           app_guid: docker_app_model.guid,
           type: VCAP::CloudController::PackageModel::DOCKER_TYPE,
           state: VCAP::CloudController::PackageModel::READY_STATE
@@ -637,7 +637,7 @@ RSpec.describe BuildsController, type: :controller do
     let(:stack) { VCAP::CloudController::Stack.default.name }
     let(:app_model) { FactoryBot.create(:app, space: space) }
     let(:package) do
-      VCAP::CloudController::PackageModel.make(
+      FactoryBot.create(:package,
         app_guid: app_model.guid,
         state: VCAP::CloudController::PackageModel::READY_STATE,
         type: VCAP::CloudController::PackageModel::BITS_TYPE,
@@ -754,7 +754,7 @@ RSpec.describe BuildsController, type: :controller do
     let(:organization) { FactoryBot.create(:organization) }
     let(:space) { FactoryBot.create(:space, organization: organization) }
     let(:app_model) { FactoryBot.create(:app, space: space) }
-    let(:package) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
+    let(:package) { FactoryBot.create(:package, :docker, app_guid: app_model.guid) }
     let(:build) { FactoryBot.create(:build, package: package, app: app_model) }
     let!(:droplet) do
       VCAP::CloudController::DropletModel.make(

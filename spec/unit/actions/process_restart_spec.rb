@@ -16,7 +16,7 @@ module VCAP::CloudController
         )
       end
 
-      let(:package) { PackageModel.make(app: app, state: PackageModel::READY_STATE) }
+      let(:package) { FactoryBot.create(:package, app: app, state: PackageModel::READY_STATE) }
 
       let!(:droplet) { DropletModel.make(app: app) }
       let!(:process) { ProcessModel.make(:process, state: desired_state, app: app) }

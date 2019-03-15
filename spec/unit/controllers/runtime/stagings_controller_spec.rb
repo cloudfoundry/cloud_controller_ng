@@ -206,8 +206,8 @@ module VCAP::CloudController
     end
 
     describe 'GET /staging/packages/:guid' do
-      let(:package_without_bits) { PackageModel.make }
-      let(:package) { PackageModel.make }
+      let(:package_without_bits) { FactoryBot.create(:package) }
+      let(:package) { FactoryBot.create(:package) }
       before { authorize(staging_user, staging_password) }
 
       def create_test_blob
@@ -274,7 +274,7 @@ module VCAP::CloudController
 
       it_behaves_like 'a Build to Droplet stager' do
         let(:file_content) { 'droplet content' }
-        let(:package) { PackageModel.make(app: process) }
+        let(:package) { FactoryBot.create(:package, app: process) }
         let(:build) { FactoryBot.create(:build,
           package:               package,
           app:                   process,
@@ -317,7 +317,7 @@ module VCAP::CloudController
 
       it_behaves_like 'droplet staging error handling' do
         let(:file_content) { 'droplet content' }
-        let(:package) { PackageModel.make(app: process) }
+        let(:package) { FactoryBot.create(:package, app: process) }
         let(:build) { FactoryBot.create(:build, package: package, app: process) }
         let(:droplet) { nil }
         let(:upload_req) do

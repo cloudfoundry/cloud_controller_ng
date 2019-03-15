@@ -22,7 +22,7 @@ module VCAP::CloudController
           'error' => 'nothing bad'
         }
       end
-      let(:package) { PackageModel.make(state: PackageModel::PENDING_STATE) }
+      let(:package) { FactoryBot.create(:package, state: PackageModel::PENDING_STATE) }
       let(:message) { InternalPackageUpdateMessage.new(body) }
 
       it 'updates the package' do
@@ -36,7 +36,7 @@ module VCAP::CloudController
       end
 
       context 'when the package is already in READY_STATE' do
-        let(:package) { PackageModel.make(state: PackageModel::READY_STATE) }
+        let(:package) { FactoryBot.create(:package, state: PackageModel::READY_STATE) }
 
         it 'raises InvalidPackage' do
           expect {
@@ -46,7 +46,7 @@ module VCAP::CloudController
       end
 
       context 'when the package is already in FAILED_STATE' do
-        let(:package) { PackageModel.make(state: PackageModel::FAILED_STATE) }
+        let(:package) { FactoryBot.create(:package, state: PackageModel::FAILED_STATE) }
 
         it 'raises InvalidPackage' do
           expect {
@@ -60,7 +60,7 @@ module VCAP::CloudController
 
         context 'and the current state is COPYING' do
           let(:package) {
-            PackageModel.make(
+            FactoryBot.create(:package,
               state: PackageModel::COPYING_STATE,
               package_hash: 'existing-sha1',
               sha256_checksum: 'existing-sha256'
@@ -80,7 +80,7 @@ module VCAP::CloudController
         context 'and the current state is not COPYING' do
           [PackageModel::PENDING_STATE, PackageModel::CREATED_STATE, PackageModel::EXPIRED_STATE].each do |package_state|
             it 'requires checksums in the message' do
-              package = PackageModel.make(state: package_state)
+              package = FactoryBot.create(:package, state: package_state)
               expect {
                 package_update.update(package, message)
               }.to raise_error(InternalPackageUpdate::InvalidPackage, 'Checksums required when setting state to READY')

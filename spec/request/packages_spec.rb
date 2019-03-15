@@ -92,7 +92,7 @@ RSpec.describe 'Packages' do
 
     describe 'copying' do
       let(:target_app_model) { FactoryBot.create(:app, space_guid: space_guid) }
-      let!(:original_package) { VCAP::CloudController::PackageModel.make(type: 'docker', app_guid: app_model.guid, docker_image: 'http://awesome-sauce.com') }
+      let!(:original_package) { FactoryBot.create(:package, type: 'docker', app_guid: app_model.guid, docker_image: 'http://awesome-sauce.com') }
       let!(:guid) { target_app_model.guid }
       let(:source_package_guid) { original_package.guid }
 
@@ -158,7 +158,7 @@ RSpec.describe 'Packages' do
 
   describe 'GET /v3/apps/:guid/packages' do
     let(:space) { FactoryBot.create(:space) }
-    let!(:package) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, created_at: Time.at(1)) }
+    let!(:package) { FactoryBot.create(:package, app_guid: app_model.guid, created_at: Time.at(1)) }
     let(:app_model) { FactoryBot.create(:app, space: space) }
     let(:guid) { app_model.guid }
     let(:page) { 1 }
@@ -171,7 +171,7 @@ RSpec.describe 'Packages' do
     end
 
     it 'lists paginated result of all packages for an app' do
-      package2 = VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, created_at: Time.at(2))
+      package2 = FactoryBot.create(:package, app_guid: app_model.guid, created_at: Time.at(2))
 
       expected_response = {
         'pagination' => {
@@ -232,10 +232,10 @@ RSpec.describe 'Packages' do
 
     context 'faceted search' do
       it 'filters by types' do
-        VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, type: VCAP::CloudController::PackageModel::BITS_TYPE)
-        VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, type: VCAP::CloudController::PackageModel::BITS_TYPE)
-        VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, type: VCAP::CloudController::PackageModel::DOCKER_TYPE)
-        VCAP::CloudController::PackageModel.make(type: VCAP::CloudController::PackageModel::BITS_TYPE)
+        FactoryBot.create(:package, app_guid: app_model.guid, type: VCAP::CloudController::PackageModel::BITS_TYPE)
+        FactoryBot.create(:package, app_guid: app_model.guid, type: VCAP::CloudController::PackageModel::BITS_TYPE)
+        FactoryBot.create(:package, app_guid: app_model.guid, type: VCAP::CloudController::PackageModel::DOCKER_TYPE)
+        FactoryBot.create(:package, type: VCAP::CloudController::PackageModel::BITS_TYPE)
 
         get '/v3/packages?types=bits', {}, user_header
 
@@ -257,10 +257,10 @@ RSpec.describe 'Packages' do
       end
 
       it 'filters by states' do
-        VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, state: VCAP::CloudController::PackageModel::PENDING_STATE)
-        VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, state: VCAP::CloudController::PackageModel::PENDING_STATE)
-        VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, state: VCAP::CloudController::PackageModel::READY_STATE)
-        VCAP::CloudController::PackageModel.make(state: VCAP::CloudController::PackageModel::PENDING_STATE)
+        FactoryBot.create(:package, app_guid: app_model.guid, state: VCAP::CloudController::PackageModel::PENDING_STATE)
+        FactoryBot.create(:package, app_guid: app_model.guid, state: VCAP::CloudController::PackageModel::PENDING_STATE)
+        FactoryBot.create(:package, app_guid: app_model.guid, state: VCAP::CloudController::PackageModel::READY_STATE)
+        FactoryBot.create(:package, state: VCAP::CloudController::PackageModel::PENDING_STATE)
 
         get "/v3/apps/#{app_model.guid}/packages?states=PROCESSING_UPLOAD", {}, user_header
 
@@ -282,9 +282,9 @@ RSpec.describe 'Packages' do
       end
 
       it 'filters by package guids' do
-        package1 = VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
-        package2 = VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
-        VCAP::CloudController::PackageModel.make
+        package1 = FactoryBot.create(:package, app_guid: app_model.guid)
+        package2 = FactoryBot.create(:package, app_guid: app_model.guid)
+        FactoryBot.create(:package)
 
         get "/v3/apps/#{app_model.guid}/packages?guids=#{package1.guid},#{package2.guid}", {}, user_header
 
@@ -307,7 +307,6 @@ RSpec.describe 'Packages' do
   end
 
   describe 'GET /v3/packages' do
-    let(:bits_type) { 'bits' }
     let(:docker_type) { 'docker' }
     let(:page) { 1 }
     let(:per_page) { 2 }
@@ -318,14 +317,14 @@ RSpec.describe 'Packages' do
     end
 
     it 'gets all the packages' do
-      bits_package = VCAP::CloudController::PackageModel.make(type: bits_type, app_guid: app_model.guid)
-      docker_package = VCAP::CloudController::PackageModel.make(
+      bits_package = FactoryBot.create(:package, app_guid: app_model.guid)
+      docker_package = FactoryBot.create(:package,
         type: docker_type,
         app_guid: app_model.guid,
         state: VCAP::CloudController::PackageModel::READY_STATE,
         docker_image: 'http://location-of-image.com')
-      VCAP::CloudController::PackageModel.make(type: docker_type, app_guid: app_model.guid, docker_image: 'http://location-of-image-2.com')
-      VCAP::CloudController::PackageModel.make(app_guid: FactoryBot.create(:app).guid)
+      FactoryBot.create(:package, type: docker_type, app_guid: app_model.guid, docker_image: 'http://location-of-image-2.com')
+      FactoryBot.create(:package, app_guid: FactoryBot.create(:app).guid)
 
       expected_response =
         {
@@ -385,12 +384,12 @@ RSpec.describe 'Packages' do
 
     context 'faceted search' do
       it 'filters by types' do
-        VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, type: VCAP::CloudController::PackageModel::BITS_TYPE)
-        VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, type: VCAP::CloudController::PackageModel::BITS_TYPE)
-        VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, type: VCAP::CloudController::PackageModel::DOCKER_TYPE)
+        FactoryBot.create(:package, app_guid: app_model.guid, type: VCAP::CloudController::PackageModel::BITS_TYPE)
+        FactoryBot.create(:package, app_guid: app_model.guid, type: VCAP::CloudController::PackageModel::BITS_TYPE)
+        FactoryBot.create(:package, app_guid: app_model.guid, type: VCAP::CloudController::PackageModel::DOCKER_TYPE)
 
         another_app_in_same_space = FactoryBot.create(:app, space_guid: space_guid)
-        VCAP::CloudController::PackageModel.make(app_guid: another_app_in_same_space.guid, type: VCAP::CloudController::PackageModel::BITS_TYPE)
+        FactoryBot.create(:package, app_guid: another_app_in_same_space.guid, type: VCAP::CloudController::PackageModel::BITS_TYPE)
 
         get '/v3/packages?types=bits', {}, user_header
 
@@ -412,12 +411,12 @@ RSpec.describe 'Packages' do
       end
 
       it 'filters by states' do
-        VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, state: VCAP::CloudController::PackageModel::PENDING_STATE)
-        VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, state: VCAP::CloudController::PackageModel::PENDING_STATE)
-        VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, state: VCAP::CloudController::PackageModel::READY_STATE)
+        FactoryBot.create(:package, app_guid: app_model.guid, state: VCAP::CloudController::PackageModel::PENDING_STATE)
+        FactoryBot.create(:package, app_guid: app_model.guid, state: VCAP::CloudController::PackageModel::PENDING_STATE)
+        FactoryBot.create(:package, app_guid: app_model.guid, state: VCAP::CloudController::PackageModel::READY_STATE)
 
         another_app_in_same_space = FactoryBot.create(:app, space_guid: space_guid)
-        VCAP::CloudController::PackageModel.make(app_guid: another_app_in_same_space.guid, state: VCAP::CloudController::PackageModel::PENDING_STATE)
+        FactoryBot.create(:package, app_guid: another_app_in_same_space.guid, state: VCAP::CloudController::PackageModel::PENDING_STATE)
 
         get '/v3/packages?states=PROCESSING_UPLOAD', {}, user_header
 
@@ -440,9 +439,9 @@ RSpec.describe 'Packages' do
 
       it 'filters by app guids' do
         app_model2 = FactoryBot.create(:app, space_guid: space_guid)
-        package1 = VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
-        package2 = VCAP::CloudController::PackageModel.make(app_guid: app_model2.guid)
-        VCAP::CloudController::PackageModel.make
+        package1 = FactoryBot.create(:package, app_guid: app_model.guid)
+        package2 = FactoryBot.create(:package, app_guid: app_model2.guid)
+        FactoryBot.create(:package)
 
         get "/v3/packages?app_guids=#{app_model.guid},#{app_model2.guid}", {}, user_header
 
@@ -464,9 +463,9 @@ RSpec.describe 'Packages' do
 
       it 'filters by package guids' do
         app_model2 = FactoryBot.create(:app, space_guid: space_guid)
-        package1 = VCAP::CloudController::PackageModel.make(app_guid: app_model2.guid)
-        package2 = VCAP::CloudController::PackageModel.make(app_guid: app_model2.guid)
-        VCAP::CloudController::PackageModel.make
+        package1 = FactoryBot.create(:package, app_guid: app_model2.guid)
+        package2 = FactoryBot.create(:package, app_guid: app_model2.guid)
+        FactoryBot.create(:package)
 
         get "/v3/packages?guids=#{package1.guid},#{package2.guid}", {}, user_header
 
@@ -487,17 +486,17 @@ RSpec.describe 'Packages' do
       end
 
       it 'filters by space guids' do
-        package_on_space1 = VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
+        package_on_space1 = FactoryBot.create(:package, app_guid: app_model.guid)
 
         space2 = FactoryBot.create(:space, organization: space.organization)
         space2.add_developer(user)
         app_model2 = FactoryBot.create(:app, space: space2)
-        package_on_space2 = VCAP::CloudController::PackageModel.make(app_guid: app_model2.guid)
+        package_on_space2 = FactoryBot.create(:package, app_guid: app_model2.guid)
 
         space3 = FactoryBot.create(:space, organization: space.organization)
         space3.add_developer(user)
         app_model3 = FactoryBot.create(:app, space: space3)
-        VCAP::CloudController::PackageModel.make(app_guid: app_model3.guid)
+        FactoryBot.create(:package, app_guid: app_model3.guid)
 
         get "/v3/packages?space_guids=#{space2.guid},#{space_guid}", {}, user_header
 
@@ -520,7 +519,7 @@ RSpec.describe 'Packages' do
       it 'filters by org guids' do
         org1_guid = space.organization.guid
 
-        package_in_org1 = VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
+        package_in_org1 = FactoryBot.create(:package, app_guid: app_model.guid)
 
         space2 = FactoryBot.create(:space)
         org2_guid = space2.organization.guid
@@ -529,13 +528,13 @@ RSpec.describe 'Packages' do
         space2.organization.add_user(user)
         space2.add_developer(user)
 
-        package_in_org2 = VCAP::CloudController::PackageModel.make(app_guid: app_model2.guid)
+        package_in_org2 = FactoryBot.create(:package, app_guid: app_model2.guid)
 
         space3 = FactoryBot.create(:space)
         space3.organization.add_user(user)
         space3.add_developer(user)
         app_model3 = FactoryBot.create(:app, space: space3)
-        VCAP::CloudController::PackageModel.make(app_guid: app_model3.guid)
+        FactoryBot.create(:package, app_guid: app_model3.guid)
 
         get "/v3/packages?organization_guids=#{org1_guid},#{org2_guid}", {}, user_header
 
@@ -556,9 +555,9 @@ RSpec.describe 'Packages' do
       end
 
       it 'filters by label selectors' do
-        target = VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
-        VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
-        VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
+        target = FactoryBot.create(:package, app_guid: app_model.guid)
+        FactoryBot.create(:package, app_guid: app_model.guid)
+        FactoryBot.create(:package, app_guid: app_model.guid)
         VCAP::CloudController::PackageLabelModel.make(key_name: 'fruit', value: 'strawberry', package: target)
 
         get '/v3/packages?label_selector=fruit=strawberry', {}, user_header
@@ -586,7 +585,7 @@ RSpec.describe 'Packages' do
     let(:space) { FactoryBot.create(:space) }
     let(:app_model) { FactoryBot.create(:app, space: space) }
     let(:package_model) do
-      VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
+      FactoryBot.create(:package, app_guid: app_model.guid)
     end
 
     let(:guid) { package_model.guid }
@@ -628,7 +627,7 @@ RSpec.describe 'Packages' do
   describe 'POST /v3/packages/:guid/upload' do
     let(:type) { 'bits' }
     let!(:package_model) do
-      VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, type: type)
+      FactoryBot.create(:package, app_guid: app_model.guid, type: type)
     end
     let(:space) { FactoryBot.create(:space) }
     let(:app_model) { FactoryBot.create(:app, guid: 'woof', space: space, name: 'meow') }
@@ -758,7 +757,7 @@ RSpec.describe 'Packages' do
   describe 'GET /v3/packages/:guid/download' do
     let(:type) { 'bits' }
     let!(:package_model) do
-      VCAP::CloudController::PackageModel.make(app_guid: app_model.guid, type: type)
+      FactoryBot.create(:package, app_guid: app_model.guid, type: type)
     end
     let(:app_model) do
       FactoryBot.create(:app, guid: 'woof-guid', space: space, name: 'meow')
@@ -819,7 +818,7 @@ RSpec.describe 'Packages' do
     let(:space) { FactoryBot.create(:space) }
     let(:app_model) { FactoryBot.create(:app, space: space, name: app_name, guid: app_guid) }
     let!(:package_model) do
-      VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
+      FactoryBot.create(:package, app_guid: app_model.guid)
     end
     let(:metadata) { {
       labels: {
@@ -860,7 +859,7 @@ RSpec.describe 'Packages' do
     let(:space) { FactoryBot.create(:space) }
     let(:app_model) { FactoryBot.create(:app, space: space, name: app_name, guid: app_guid) }
     let!(:package_model) do
-      VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
+      FactoryBot.create(:package, app_guid: app_model.guid)
     end
 
     let(:guid) { package_model.guid }
@@ -900,7 +899,7 @@ RSpec.describe 'Packages' do
   end
 
   describe 'PATCH /internal/v4/packages/:guid' do
-    let!(:package_model) { VCAP::CloudController::PackageModel.make(state: VCAP::CloudController::PackageModel::PENDING_STATE) }
+    let!(:package_model) { FactoryBot.create(:package, state: VCAP::CloudController::PackageModel::PENDING_STATE) }
     let(:body) do
       {
         'state'     => 'READY',

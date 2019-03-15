@@ -12,7 +12,7 @@ RSpec.describe 'Droplets' do
 
   describe 'GET /v3/droplets/:guid' do
     let(:guid) { droplet_model.guid }
-    let(:package_model) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
+    let(:package_model) { FactoryBot.create(:package, app_guid: app_model.guid) }
 
     let(:app_guid) { droplet_model.app_guid }
 
@@ -139,7 +139,7 @@ RSpec.describe 'Droplets' do
   describe 'GET /v3/droplets' do
     let(:buildpack) { VCAP::CloudController::Buildpack.make }
     let(:package_model) do
-      VCAP::CloudController::PackageModel.make(
+      FactoryBot.create(:package,
         app_guid: app_model.guid,
         type:     VCAP::CloudController::PackageModel::BITS_TYPE
       )
@@ -256,7 +256,7 @@ RSpec.describe 'Droplets' do
     end
 
     context 'when a droplet does not have a buildpack lifecycle' do
-      let!(:droplet_without_lifecycle) { VCAP::CloudController::DropletModel.make(:buildpack, package_guid: VCAP::CloudController::PackageModel.make.guid) }
+      let!(:droplet_without_lifecycle) { VCAP::CloudController::DropletModel.make(:buildpack, package_guid: FactoryBot.create(:package).guid) }
 
       it 'is excluded' do
         get '/v3/droplets', nil, developer_headers
@@ -414,7 +414,7 @@ RSpec.describe 'Droplets' do
   describe 'GET /v3/apps/:guid/droplets' do
     let(:buildpack) { VCAP::CloudController::Buildpack.make }
     let(:package_model) do
-      VCAP::CloudController::PackageModel.make(
+      FactoryBot.create(:package,
         app_guid: app_model.guid,
         type:     VCAP::CloudController::PackageModel::BITS_TYPE
       )
@@ -466,7 +466,7 @@ RSpec.describe 'Droplets' do
     end
     let!(:droplet3Label) { VCAP::CloudController::DropletLabelModel.make(key_name: 'fruit', value: 'mango', droplet: droplet3) }
     let(:other_package_model) do
-      VCAP::CloudController::PackageModel.make(
+      FactoryBot.create(:package,
         app_guid: other_app_model.guid,
         type:     VCAP::CloudController::PackageModel::BITS_TYPE
       )
@@ -648,13 +648,13 @@ RSpec.describe 'Droplets' do
   describe 'GET /v3/packages/:guid/droplets' do
     let(:buildpack) { VCAP::CloudController::Buildpack.make }
     let(:package_model) do
-      VCAP::CloudController::PackageModel.make(
+      FactoryBot.create(:package,
         app_guid: app_model.guid,
         type:     VCAP::CloudController::PackageModel::BITS_TYPE
       )
     end
     let(:other_package_model) do
-      VCAP::CloudController::PackageModel.make(
+      FactoryBot.create(:package,
         app_guid: other_app_model.guid,
         type:     VCAP::CloudController::PackageModel::BITS_TYPE
       )
@@ -832,7 +832,7 @@ RSpec.describe 'Droplets' do
 
   describe 'POST /v3/droplets/:guid/copy' do
     let(:new_app) { FactoryBot.create(:app, space: space) }
-    let(:package_model) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
+    let(:package_model) { FactoryBot.create(:package, app_guid: app_model.guid) }
     let!(:og_droplet) do
       VCAP::CloudController::DropletModel.make(
         state:                        VCAP::CloudController::DropletModel::STAGED_STATE,
@@ -896,7 +896,7 @@ RSpec.describe 'Droplets' do
   end
 
   describe 'PATCH v3/droplets/:guid' do
-    let(:package_model) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
+    let(:package_model) { FactoryBot.create(:package, app_guid: app_model.guid) }
     let!(:og_droplet) do
       VCAP::CloudController::DropletModel.make(
         state:                        VCAP::CloudController::DropletModel::STAGED_STATE,

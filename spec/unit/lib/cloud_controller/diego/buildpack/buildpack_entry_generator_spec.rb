@@ -36,7 +36,7 @@ module VCAP::CloudController
 
         describe '#buildpack_entries' do
           let(:v3_app) { FactoryBot.create(:app) }
-          let(:package) { PackageModel.make(app_guid: v3_app.guid) }
+          let(:package) { FactoryBot.create(:package, app_guid: v3_app.guid) }
           let(:buildpack_info) { BuildpackInfo.new(buildpack, VCAP::CloudController::Buildpack.find(name: buildpack)) }
           let(:buildpack_infos) { [buildpack_info] }
 

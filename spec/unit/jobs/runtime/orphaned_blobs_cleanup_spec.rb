@@ -237,7 +237,7 @@ module VCAP::CloudController
           end
 
           context 'when a blobstore file matches an existing package' do
-            let!(:package) { PackageModel.make(guid: 'real-package-blob') }
+            let!(:package) { FactoryBot.create(:package, guid: 'real-package-blob') }
             let(:package_files) { [double(:blob, key: 're/al/real-package-blob')] }
 
             it 'does not mark the droplet blob as an orphan' do
@@ -520,7 +520,7 @@ module VCAP::CloudController
             before do
               allow(BlobstoreDelete).to receive(:new)
 
-              PackageModel.make(guid: 'real-package-blob')
+              FactoryBot.create(:package, guid: 'real-package-blob')
               OrphanedBlob.create(blob_key: 're/al/real-package-blob', dirty_count: OrphanedBlobsCleanup::DIRTY_THRESHOLD, blobstore_type: 'package_blobstore')
             end
 
