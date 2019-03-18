@@ -13062,7 +13062,7 @@ This is usually used to avoid uploading duplicate files
 when pushing an app which has only been partially changed.
 The <code class="prettyprint">path</code> and <code class="prettyprint">mode</code> fields are not used when matching.</p>
 
-<p>When [uploading package bits][#upload-package-bits],
+<p>When <a href="#upload-package-bits">uploading package bits</a>,
 the response from this endpoint should be used as the <code class="prettyprint">resources</code> form field.
 As such, it is useful to include the <code class="prettyprint">path</code> and <code class="prettyprint">mode</code> fields for each resource
 even though they are not used when determining a resource match.</p>
@@ -13158,12 +13158,12 @@ it will not be matched against.</p>
 <tr>
 <td><strong>checksum.value</strong></td>
 <td><em>string</em></td>
-<td>SHA-1 hash of file</td>
+<td><strong>(Required)</strong> SHA-1 hash of file</td>
 </tr>
 <tr>
 <td><strong>size_in_bytes</strong></td>
 <td><em>integer</em></td>
-<td>Size of file in bytes</td>
+<td><strong>(Required)</strong> Size of file in bytes</td>
 </tr>
 <tr>
 <td><strong>path</strong></td>
