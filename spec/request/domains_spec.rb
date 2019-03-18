@@ -136,7 +136,7 @@ RSpec.describe 'Domains Request' do
       context 'when provided invalid arguments' do
         let(:params) do
           {
-            name: 'non-RFC-1035-compliant-domain-name'
+            name: "#{'f' * 63}$"
           }
         end
 
@@ -145,8 +145,11 @@ RSpec.describe 'Domains Request' do
 
           expect(last_response.status).to eq(422)
 
-          expected_err = 'Name can contain multiple subdomains, each having only alphanumeric characters and hyphens of up to 63 characters, see RFC 1035.'
-          expect(parsed_response['errors'][0]['detail']).to eq expected_err
+          expected_err = ['Name does not comply with RFC 1035 standards',
+                          'Name must contain at least one "."',
+                          'Name subdomains must each be at most 63 characters',
+                          'Name must consist of alphanumeric characters and hyphens']
+          expect(parsed_response['errors'][0]['detail']).to eq expected_err.join(', ')
         end
       end
 

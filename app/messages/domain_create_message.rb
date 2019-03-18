@@ -26,29 +26,33 @@ module VCAP::CloudController
       },
       format: {
         with: CloudController::DomainDecorator::DOMAIN_REGEX,
-        message: 'can contain multiple subdomains, each having only alphanumeric characters and hyphens of up to 63 characters, see RFC 1035.',
+        message: 'does not comply with RFC 1035 standards',
       }
 
     validates :name,
       format: {
-        with: /abc/,
-        message: 'Domain name must consist of alphanumeric characters and hyphens.',
+        with: /\./.freeze,
+        message: 'must contain at least one "."',
       }
 
     validates :name,
       format: {
         with: /\A((.{0,63})\.)+(.{0,63})\Z/,
-        message: 'Domain name labels must each be at most 63 characters.',
+        message: 'subdomains must each be at most 63 characters',
       }
 
-    validates :name,
-      format: {
-        with: /\A.+\..+\Z/ix.freeze,
-        message: 'Domain name must contain at least one "."',
-      }
+    validate :alpha_numeric
 
     validates :internal,
       allow_nil: true,
       boolean: true
+
+    private
+
+    def alpha_numeric
+      if /[^a-z0-9\-\.]/i.match?(name.to_s)
+        errors.add(:name, 'must consist of alphanumeric characters and hyphens')
+      end
+    end
   end
 end

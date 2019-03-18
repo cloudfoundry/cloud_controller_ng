@@ -70,12 +70,39 @@ module VCAP::CloudController
           end
         end
 
-        context 'when it does not conform to RFC 1035 for subdomains' do
+        context 'when it does not contain a .' do
+          let(:params) { { name: 'idontlikedots' } }
+
+          it 'is not valid' do
+            expect(subject).to be_invalid
+            expect(subject.errors[:name]).to include 'must contain at least one "."'
+          end
+        end
+
+        context 'when the subdomain is too long' do
           let(:params) { { name: 'B' * (MAX_SUBDOMAIN_LENGTH + 1) + '.example.com' } }
 
           it 'is not valid' do
             expect(subject).to be_invalid
-            expect(subject.errors[:name]).to eq ['can contain multiple subdomains, each having only alphanumeric characters and hyphens of up to 63 characters, see RFC 1035.']
+            expect(subject.errors[:name]).to include 'subdomains must each be at most 63 characters'
+          end
+        end
+
+        context 'when it contains invalid characters' do
+          let(:params) { { name: '_!@#$%^&*().swag' } }
+
+          it 'is not valid' do
+            expect(subject).to be_invalid
+            expect(subject.errors[:name]).to include 'must consist of alphanumeric characters and hyphens'
+          end
+        end
+
+        context 'when it does not conform to RFC 1035' do
+          let(:params) { { name: 'B' * (MAX_SUBDOMAIN_LENGTH + 1) + '.example.com' } }
+
+          it 'is not valid' do
+            expect(subject).to be_invalid
+            expect(subject.errors[:name]).to include 'does not comply with RFC 1035 standards'
           end
         end
       end
