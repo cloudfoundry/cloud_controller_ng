@@ -101,10 +101,10 @@ module CloudFoundry
               _, response_headers, _ = middleware.call(user_1_env)
               expect(response_headers['X-RateLimit-Reset']).to eq(valid_until.utc.to_i.to_s)
 
-              Timecop.travel(Time.now + 61.minutes)
+              Timecop.travel(Time.now + 91.minutes)
               valid_until = Time.now + 60.minutes
               _, response_headers, _ = middleware.call(user_1_env)
-              expect(response_headers['X-RateLimit-Reset']).to eq(valid_until.utc.to_i.to_s)
+              expect(response_headers['X-RateLimit-Reset'].to_i).to be_between(valid_until.utc.to_i, valid_until.utc.to_i + 1)
             end
           end
         end
