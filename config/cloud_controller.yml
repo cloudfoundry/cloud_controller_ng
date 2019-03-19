@@ -99,6 +99,9 @@ logcache_tls:
 doppler:
   url: 'wss://doppler.example.com:443'
 
+log_stream:
+  url: 'https://log-stream.example.com'
+
 uaa:
   url: "http://localhost:8080/uaa"
   internal_url: "http://localhost:6789"
