@@ -151,7 +151,7 @@ module VCAP::CloudController
           field_name = field_name.to_sym
           salt_name = (options[:salt] || 'salt').to_sym
           storage_column = options[:column]
-          raise "Salt field `#{salt_name}` does not exist" unless columns.include?(salt_name)
+          raise "Salt field '#{salt_name}' does not exist" unless columns.include?(salt_name)
           raise 'Field "encryption_key_label" does not exist' unless columns.include?(:encryption_key_label)
           raise 'Field "encryption_iterations" does not exist' unless columns.include?(:encryption_iterations)
 

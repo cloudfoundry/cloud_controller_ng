@@ -11,13 +11,13 @@ RSpec.describe VCAP::CloudController::DbConnection::OptionsFactory do
       it 'raises if the database_scheme is unsupported' do
         expect {
           VCAP::CloudController::DbConnection::OptionsFactory.build(database_parts: { adapter: 'foo' })
-        }.to raise_error(VCAP::CloudController::DbConnection::UnknownSchemeError, /Unknown .* `foo`/)
+        }.to raise_error(VCAP::CloudController::DbConnection::UnknownSchemeError, /Unknown .* 'foo'/)
       end
 
       it 'raises if the database_scheme is missing' do
         expect {
           VCAP::CloudController::DbConnection::OptionsFactory.build(database_parts: {})
-        }.to raise_error(VCAP::CloudController::DbConnection::UnknownSchemeError, /Unknown .* ``/)
+        }.to raise_error(VCAP::CloudController::DbConnection::UnknownSchemeError, /Unknown .* ''/)
       end
 
       context 'for `mysql`' do

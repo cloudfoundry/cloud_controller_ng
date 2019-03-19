@@ -9,7 +9,7 @@ module VCAP::CloudController
       end
 
       def to_s
-        "Unknown database scheme provided: `#{@scheme}`"
+        "Unknown database scheme provided: '#{@scheme}'"
       end
     end
 
