@@ -132,48 +132,6 @@ module VCAP::CloudController
       reload.revisions.last if revisions_enabled
     end
 
-    def can_create_revision?(previous_revision_version=nil)
-      previous_revision_version.present? || !revision_reason(previous_revision_version).empty?
-    end
-
-    def revision_reason(previous_version)
-      return [] unless revisions_enabled
-
-      return ["Rolled back to revision #{previous_version}."] if previous_version.present?
-
-      revision = latest_revision
-      return ['Initial revision.'] unless revision.present?
-
-      reasons = []
-
-      if droplet_guid != revision.droplet_guid
-        reasons.push('New droplet deployed.')
-      end
-
-      if environment_variables != revision.environment_variables
-        reasons.push('New environment variables deployed.')
-      end
-
-      commands_differences = HashDiff.diff(revision.commands_by_process_type, commands_by_process_type)
-
-      reasons.push(*commands_differences.map do |change_type, process_type, *command_change|
-                     if change_type == '+'
-                       "New process type '#{process_type}' added."
-                     elsif change_type == '-'
-                       "Process type '#{process_type}' removed."
-                     elsif command_change[0].nil?
-                       "Custom start command added for '#{process_type}' process."
-                     elsif command_change[1].nil?
-                       "Custom start command removed for '#{process_type}' process."
-                     else
-                       "Custom start command updated for '#{process_type}' process."
-                     end
-                   end
-      )
-
-      reasons
-    end
-
     def commands_by_process_type
       processes.
         select { |p| p.type != ProcessTypes::WEB || p == newest_web_process }.

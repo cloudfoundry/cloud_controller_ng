@@ -1,4 +1,5 @@
 require 'actions/process_restart'
+require 'actions/revision_resolver'
 
 module VCAP::CloudController
   class AppRestart
@@ -11,7 +12,7 @@ module VCAP::CloudController
 
         app.db.transaction do
           app.lock!
-          RevisionCreate.create(app, user_audit_info) if app.can_create_revision?
+          RevisionResolver.update_app_revision(app, user_audit_info)
           app.update(desired_state: ProcessModel::STARTED)
           app.processes.each do |process|
             ProcessRestart.restart(

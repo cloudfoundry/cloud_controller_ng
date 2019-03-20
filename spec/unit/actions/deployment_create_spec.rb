@@ -172,24 +172,46 @@ module VCAP::CloudController
             let!(:web_process) do
               ProcessModel.make(
                 app: app,
+                type: ProcessTypes::WEB,
+                created_at: Time.now - 24.hours,
                 command: 'old command!',
                 instances: 3,
-                type: ProcessTypes::WEB,
-                created_at: Time.now - 24.hours
+                memory: 1,
+                file_descriptors: 3,
+                disk_quota: 5,
+                metadata: { foo: 'bar' },
+                detected_buildpack: 'ruby yo',
+                health_check_timeout: 7,
+                health_check_type: 'http',
+                health_check_http_endpoint: '/old_dawg',
+                health_check_invocation_timeout: 9,
+                enable_ssh: true,
+                ports: [],
               )
             end
 
             let!(:newer_web_process) do
               ProcessModel.make(
                 app: app,
+                type: ProcessTypes::WEB,
+                created_at: Time.now - 23.hours,
                 command: 'new command!',
                 instances: 4,
-                type: ProcessTypes::WEB,
-                created_at: Time.now - 23.hours
+                memory: 2,
+                file_descriptors: 4,
+                disk_quota: 6,
+                metadata: { qux: 'baz' },
+                detected_buildpack: 'golang',
+                health_check_timeout: 8,
+                health_check_type: 'port',
+                health_check_http_endpoint: '/new_cat',
+                health_check_invocation_timeout: 10,
+                enable_ssh: false,
+                ports: nil,
               )
             end
 
-            it 'creates a process of web-deployment-guid type with the same characteristics as the newer web process' do
+            it 'creates a process of web type with the same characteristics as the newer web process' do
               DeploymentCreate.create(app: app, message: restart_message, user_audit_info: user_audit_info)
 
               deploying_web_process = app.reload.newest_web_process
@@ -536,17 +558,18 @@ module VCAP::CloudController
         end
 
         context 'when the revision has associated process commands' do
-          let!(:revision_process_command) { VCAP::CloudController::RevisionProcessCommandModel.make(
-            revision_guid: revision.guid,
-            process_type: 'web',
-            process_command: 'bundle exec earlier_app',
-          )
-          }
+          let!(:revision_process_command) do
+            VCAP::CloudController::RevisionProcessCommandModel.make(
+              revision_guid: revision.guid,
+              process_type: 'web',
+              process_command: 'bundle exec earlier_app',
+            )
+          end
 
           it 'sets the process command of the new web process to that of the associated revision' do
             DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
 
-            expect(app.newest_web_process.command).to eq('bundle exec earlier_app')
+            expect(app.reload.newest_web_process.command).to eq('bundle exec earlier_app')
           end
         end
 

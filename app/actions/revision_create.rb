@@ -1,8 +1,9 @@
 require 'repositories/revision_event_repository'
+
 module VCAP::CloudController
   class RevisionCreate
     class << self
-      def create(app, user_audit_info, previous_version: nil)
+      def create(app:, droplet_guid:, environment_variables:, description:, commands_by_process_type:, user_audit_info:)
         RevisionModel.db.transaction do
           next_version = calculate_next_version(app)
 
@@ -10,19 +11,16 @@ module VCAP::CloudController
             existing_revision_for_version.destroy
           end
 
-          description = app.revision_reason(previous_version).sort.join(' ')
-
           revision = RevisionModel.create(
             app: app,
             version: next_version,
-            droplet_guid: app.droplet_guid,
-            environment_variables: app.environment_variables,
+            droplet_guid: droplet_guid,
+            environment_variables: environment_variables,
             description: description,
           )
 
-          newest_unique_processes_for_app(app).
-            select { |p| p.command.present? }.
-            each   { |p| revision.add_command_for_process_type(p.type, p.command) }
+          commands_by_process_type.
+            each { |process_type, command| revision.add_command_for_process_type(process_type, command) }
 
           record_audit_event(revision, user_audit_info)
 
@@ -31,10 +29,6 @@ module VCAP::CloudController
       end
 
       private
-
-      def newest_unique_processes_for_app(app)
-        app.processes_dataset.order(Sequel.desc(:created_at), Sequel.desc(:id)).uniq(&:type)
-      end
 
       def calculate_next_version(app)
         previous_revision = app.latest_revision
