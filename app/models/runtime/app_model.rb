@@ -30,6 +30,8 @@ module VCAP::CloudController
       primary_key: :guid,
       order: [Sequel.asc(:created_at), Sequel.asc(:id)]
 
+    one_to_many :sidecars, class: 'VCAP::CloudController::SidecarModel', key: :app_guid, primary_key: :guid
+
     many_to_one :droplet, class: 'VCAP::CloudController::DropletModel', key: :droplet_guid, primary_key: :guid, without_guid_generation: true
 
     one_to_many :web_processes,

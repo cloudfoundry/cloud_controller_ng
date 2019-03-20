@@ -5,12 +5,12 @@ module VCAP::CloudController
   RSpec.describe RevisionsUpdateMessage do
     let(:body) do
       {
-        "metadata": {
-          "labels": {
-            "potato": 'mashed'
+        metadata: {
+          labels: {
+            potato: 'mashed'
           },
-          "annotations": {
-            "cheese": 'bono'
+          annotations: {
+            cheese: 'bono'
           }
         }
       }
