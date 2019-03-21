@@ -81,7 +81,7 @@ module VCAP::CloudController
       it { is_expected.to have_associated :security_groups }
       it { is_expected.to have_associated :default_users, class: User }
       it { is_expected.to have_associated :domains, class: SharedDomain }
-      it { is_expected.to have_associated :space_quota_definition, associated_instance: ->(space) { FactoryBot.create(:space_quota_definition, organization: space.organization) } }
+      it { is_expected.to have_associated :space_quota_definition, associated_instance: ->(space) { SpaceQuotaDefinition.make(organization: space.organization) } }
       it do
         is_expected.to have_associated :service_instances_shared_from_other_spaces,
           associated_instance: ->(space) { ManagedServiceInstance.make(space: FactoryBot.create(:space)) }
@@ -618,7 +618,7 @@ module VCAP::CloudController
     end
 
     describe '#has_remaining_memory' do
-      let(:space_quota) { FactoryBot.create(:space_quota_definition, memory_limit: 500) }
+      let(:space_quota) { SpaceQuotaDefinition.make(memory_limit: 500) }
       let(:space) { FactoryBot.create(:space, space_quota_definition: space_quota, organization: space_quota.organization) }
 
       it 'returns true if there is enough memory remaining when no processes are running' do
@@ -655,7 +655,7 @@ module VCAP::CloudController
 
     describe '#instance_memory_limit' do
       let(:org) { FactoryBot.create(:organization) }
-      let(:space_quota) { FactoryBot.create(:space_quota_definition, instance_memory_limit: 50, organization: org) }
+      let(:space_quota) { SpaceQuotaDefinition.make(instance_memory_limit: 50, organization: org) }
       let(:space) { FactoryBot.create(:space, space_quota_definition: space_quota, organization: org) }
 
       it 'returns the instance memory limit from the quota' do
@@ -673,7 +673,7 @@ module VCAP::CloudController
 
     describe '#app_task_limit' do
       let(:org) { FactoryBot.create(:organization) }
-      let(:space_quota) { FactoryBot.create(:space_quota_definition, app_task_limit: 1, organization: org) }
+      let(:space_quota) { SpaceQuotaDefinition.make(app_task_limit: 1, organization: org) }
       let(:space) { FactoryBot.create(:space, space_quota_definition: space_quota, organization: org) }
 
       it 'returns the app task limit from the quota' do
@@ -691,7 +691,7 @@ module VCAP::CloudController
 
     describe '#meets_max_task_limit?' do
       let(:org) { FactoryBot.create(:organization) }
-      let(:space_quota) { FactoryBot.create(:space_quota_definition, app_task_limit: 1, organization: org) }
+      let(:space_quota) { SpaceQuotaDefinition.make(app_task_limit: 1, organization: org) }
       let(:space) { FactoryBot.create(:space, space_quota_definition: space_quota, organization: org) }
       let(:app_model) { FactoryBot.create(:app, space: space) }
 
@@ -727,7 +727,7 @@ module VCAP::CloudController
       let(:space) { FactoryBot.create(:space) }
 
       context 'when the space quota defitinion exists' do
-        let(:space_quota_definition) { FactoryBot.create(:space_quota_definition) }
+        let(:space_quota_definition) { SpaceQuotaDefinition.make }
         let(:space_quota_definition_guid) { space_quota_definition.guid }
 
         it 'updates the association' do

@@ -299,7 +299,7 @@ module VCAP::CloudController
           end
 
           describe 'when the quota has a memory_limit' do
-            let(:quota) { FactoryBot.create(:space_quota_definition, memory_limit: 20, organization: org) }
+            let(:quota) { SpaceQuotaDefinition.make(memory_limit: 20, organization: org) }
 
             it 'allows tasks that fit in the available space' do
               expect {
@@ -321,7 +321,7 @@ module VCAP::CloudController
 
             it 'does not raise errors when canceling task above quota' do
               task = TaskModel.make(memory_in_mb: 10, app: app)
-              space.update(space_quota_definition: FactoryBot.create(:space_quota_definition, memory_limit: 5, organization: org))
+              space.update(space_quota_definition: SpaceQuotaDefinition.make(memory_limit: 5, organization: org))
 
               task.update(state: TaskModel::CANCELING_STATE)
               expect(task.reload).to be_valid
@@ -329,7 +329,7 @@ module VCAP::CloudController
           end
 
           describe 'when the quota has an instance_memory_limit' do
-            let(:quota) { FactoryBot.create(:space_quota_definition, instance_memory_limit: 2, organization: org) }
+            let(:quota) { SpaceQuotaDefinition.make(instance_memory_limit: 2, organization: org) }
 
             it 'allows tasks that fit in the instance memory limit' do
               expect {
@@ -350,7 +350,7 @@ module VCAP::CloudController
             end
 
             context 'when the quota is unlimited' do
-              let(:quota) { FactoryBot.create(:space_quota_definition, instance_memory_limit: QuotaDefinition::UNLIMITED, organization: org) }
+              let(:quota) { SpaceQuotaDefinition.make(instance_memory_limit: QuotaDefinition::UNLIMITED, organization: org) }
 
               it 'allows tasks of all sizes' do
                 expect {
@@ -364,7 +364,7 @@ module VCAP::CloudController
           end
 
           describe 'when the quota has an app_task_limit' do
-            let(:quota) { FactoryBot.create(:space_quota_definition, app_task_limit: 1, organization: org) }
+            let(:quota) { SpaceQuotaDefinition.make(app_task_limit: 1, organization: org) }
 
             it 'allows tasks that is within app tasks limit' do
               expect { TaskModel.make(app: app) }.not_to raise_error

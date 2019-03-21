@@ -367,7 +367,7 @@ module VCAP::CloudController
         end
 
         context 'when the Routing API is not enabled' do
-          let(:space_quota) { FactoryBot.create(:space_quota_definition, organization: space.organization) }
+          let(:space_quota) { SpaceQuotaDefinition.make(organization: space.organization) }
           let(:tcp_domain) { SharedDomain.make(name: 'tcp.com', router_group_guid: 'guid_1') }
           let(:tcp_route) { Route.make(port: 9090, host: '', space: space, domain: tcp_domain) }
           let(:process) { ProcessModelFactory.make(space: space, ports: [9090], diego: true) }

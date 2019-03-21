@@ -42,8 +42,8 @@ module VCAP::CloudController
       include_context 'permissions'
 
       before do
-        @obj_a = FactoryBot.create(:space_quota_definition, organization: @org_a)
-        @obj_b = FactoryBot.create(:space_quota_definition, organization: @org_b)
+        @obj_a = SpaceQuotaDefinition.make(organization_guid: @org_a.guid)
+        @obj_b = SpaceQuotaDefinition.make(organization_guid: @org_b.guid)
 
         @space_a.space_quota_definition = @obj_a
         @space_a.save
@@ -161,7 +161,7 @@ module VCAP::CloudController
       end
 
       it 'returns SpaceQuotaDefinitionNameTaken errors on unique name errors' do
-        FactoryBot.create(:space_quota_definition, name: 'foo', organization: org)
+        SpaceQuotaDefinition.make(name: 'foo', organization: org)
         sqd_json = { name: 'foo', non_basic_services_allowed: true, total_services: 1, total_service_keys: 1, total_routes: 1, memory_limit: 2, organization_guid: org.guid }
         post '/v2/space_quota_definitions', MultiJson.dump(sqd_json)
 

@@ -153,7 +153,7 @@ module VCAP::CloudController
       describe 'org and space quota validator policies' do
         subject(:process) { ProcessModelFactory.make(app: parent_app) }
         let(:org) { FactoryBot.create(:organization) }
-        let(:space) { FactoryBot.create(:space, organization: org, space_quota_definition: FactoryBot.create(:space_quota_definition, organization: org)) }
+        let(:space) { FactoryBot.create(:space, organization: org, space_quota_definition: SpaceQuotaDefinition.make(organization: org)) }
 
         it 'validates org and space using MaxMemoryPolicy' do
           max_memory_policies = process.validation_policies.select { |policy| policy.instance_of? AppMaxMemoryPolicy }
@@ -356,7 +356,7 @@ module VCAP::CloudController
           FactoryBot.create(:quota_definition, memory_limit: 128)
         end
         let(:space_quota) do
-          FactoryBot.create(:space_quota_definition, memory_limit: 128, organization: org)
+          SpaceQuotaDefinition.make(memory_limit: 128, organization: org)
         end
 
         context 'app update' do

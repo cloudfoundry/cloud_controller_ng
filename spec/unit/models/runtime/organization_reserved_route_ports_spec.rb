@@ -14,7 +14,7 @@ module VCAP::CloudController
       end
 
       context 'when there are spaces' do
-        let(:space_quota) { FactoryBot.create(:space_quota_definition, organization: organization) }
+        let(:space_quota) { SpaceQuotaDefinition.make(organization: organization) }
         let(:space) { FactoryBot.create(:space, organization: organization, space_quota_definition: space_quota) }
         let(:space2) { FactoryBot.create(:space, organization: organization, space_quota_definition: space_quota) }
 

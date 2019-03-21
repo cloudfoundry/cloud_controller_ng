@@ -8,7 +8,7 @@ module VCAP::CloudController
       let(:user_audit_info) { instance_double(UserAuditInfo) }
       let(:route_event_repo) { instance_double(Repositories::RouteEventRepository) }
       let(:host) { 'some-host' }
-      let(:space_quota_definition) { FactoryBot.create(:space_quota_definition) }
+      let(:space_quota_definition) { SpaceQuotaDefinition.make }
       let(:space) do
         FactoryBot.create(:space, space_quota_definition: space_quota_definition,
                    organization: space_quota_definition.organization)

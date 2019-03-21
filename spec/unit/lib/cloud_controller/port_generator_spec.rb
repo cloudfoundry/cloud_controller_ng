@@ -9,7 +9,7 @@ module VCAP::CloudController
 
     let(:domain_guid1) { domain1.guid }
     let(:domain1) { SharedDomain.make(router_group_guid: router_group_guid1) }
-    let(:space_quota) { FactoryBot.create(:space_quota_definition) }
+    let(:space_quota) { SpaceQuotaDefinition.make }
     let(:space) { FactoryBot.create(:space, organization: space_quota.organization, space_quota_definition: space_quota) }
     let(:dependency_double) { double('dependency_locator', routing_api_client: routing_api_client) }
 

@@ -101,7 +101,7 @@ RSpec.resource 'Organizations', type: [:api, :legacy_api] do
 
     describe 'Space Quota Definitions' do
       before do
-        FactoryBot.create(:space_quota_definition, organization: organization)
+        VCAP::CloudController::SpaceQuotaDefinition.make(organization: organization)
       end
 
       standard_model_list :space_quota_definition, VCAP::CloudController::SpaceQuotaDefinitionsController, outer_model: :organization
