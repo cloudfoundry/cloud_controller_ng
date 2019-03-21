@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe SecurityGroupStagingDefaultsController do
-    before { set_current_user(FactoryBot.create(:user)) }
+    before { set_current_user(User.make) }
 
     it 'allows admins to read staging security groups' do
       set_current_user_as_admin

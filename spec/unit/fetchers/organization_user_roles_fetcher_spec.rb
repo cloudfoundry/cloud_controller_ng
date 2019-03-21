@@ -5,12 +5,12 @@ module VCAP::CloudController
   RSpec.describe OrganizationUserRolesFetcher do
     describe '#fetch' do
       let(:org) { FactoryBot.create(:organization) }
-      let(:everything_user) { FactoryBot.create(:user) }
-      let(:manager) { FactoryBot.create(:user) }
-      let(:auditor) { FactoryBot.create(:user) }
-      let(:biller) { FactoryBot.create(:user) }
-      let(:user) { FactoryBot.create(:user) }
-      let!(:not_a_user) { FactoryBot.create(:user) }
+      let(:everything_user) { User.make }
+      let(:manager) { User.make }
+      let(:auditor) { User.make }
+      let(:biller) { User.make }
+      let(:user) { User.make }
+      let!(:not_a_user) { User.make }
       let(:admin) { false }
 
       before do

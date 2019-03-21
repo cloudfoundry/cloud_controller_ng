@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe VCAP::CloudController::StacksController do
-    let(:user) { FactoryBot.create(:user) }
+    let(:user) { User.make }
 
     before do
       set_current_user(user, admin: true)

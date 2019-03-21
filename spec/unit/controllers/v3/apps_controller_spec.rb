@@ -6,7 +6,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     let(:app_model_1) { FactoryBot.create(:app) }
     let!(:app_model_2) { FactoryBot.create(:app) }
     let!(:space_1) { app_model_1.space }
-    let(:user) { FactoryBot.create(:user) }
+    let(:user) { VCAP::CloudController::User.make }
 
     before do
       set_current_user(user)
@@ -46,7 +46,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
     context 'when the user does not have read scope' do
       before do
-        set_current_user(FactoryBot.create(:user), scopes: ['cloud_controller.write'])
+        set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.write'])
       end
 
       it 'raises an ApiError with a 403 code' do
@@ -119,7 +119,7 @@ RSpec.describe AppsV3Controller, type: :controller do
   end
 
   describe '#index' do
-    let(:user) { FactoryBot.create(:user) }
+    let(:user) { VCAP::CloudController::User.make }
     context 'sorting' do
       before do
         set_current_user_as_admin(user: user)
@@ -217,7 +217,7 @@ RSpec.describe AppsV3Controller, type: :controller do
   describe '#show' do
     let!(:app_model) { FactoryBot.create(:app) }
     let(:space) { app_model.space }
-    let(:user) { FactoryBot.create(:user) }
+    let(:user) { VCAP::CloudController::User.make }
 
     before do
       set_current_user(user)
@@ -267,7 +267,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     context 'permissions' do
       context 'when the user does not have cc read scope' do
         before do
-          set_current_user(FactoryBot.create(:user), scopes: [])
+          set_current_user(VCAP::CloudController::User.make, scopes: [])
         end
 
         it 'raises an ApiError with a 403 code' do
@@ -296,7 +296,7 @@ RSpec.describe AppsV3Controller, type: :controller do
   end
 
   describe '#create' do
-    let(:user) { set_current_user(FactoryBot.create(:user)) }
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
     let(:space) { FactoryBot.create(:space) }
     let(:request_body) do
       {
@@ -634,7 +634,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
       context 'when the user does not have write scope' do
         before do
-          set_current_user(FactoryBot.create(:user), scopes: ['cloud_controller.read'])
+          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
         end
 
         it 'raises an ApiError with a 403 code' do
@@ -671,7 +671,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     let(:request_body) { { name: 'new-name' } }
 
     before do
-      user = FactoryBot.create(:user)
+      user = VCAP::CloudController::User.make
       set_current_user(user)
       allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space: space)
@@ -1119,7 +1119,7 @@ RSpec.describe AppsV3Controller, type: :controller do
       let(:app_model) { FactoryBot.create(:app) }
       let(:space) { app_model.space }
       let(:org) { space.organization }
-      let(:user) { set_current_user(FactoryBot.create(:user)) }
+      let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
       context 'when the user cannot read the app' do
         before do
@@ -1154,7 +1154,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     let(:app_model) { FactoryBot.create(:app) }
     let(:space) { app_model.space }
     let(:org) { space.organization }
-    let(:user) { set_current_user(FactoryBot.create(:user)) }
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
     let(:app_delete_stub) { instance_double(VCAP::CloudController::AppDelete) }
 
     before do
@@ -1169,7 +1169,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     context 'permissions' do
       context 'when the user does not have the write scope' do
         before do
-          set_current_user(FactoryBot.create(:user), scopes: ['cloud_controller.read'])
+          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
         end
 
         it 'raises an ApiError with a 403 code' do
@@ -1258,7 +1258,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     let(:droplet) { VCAP::CloudController::DropletModel.make(:buildpack, state: VCAP::CloudController::DropletModel::STAGED_STATE) }
     let(:space) { app_model.space }
     let(:org) { space.organization }
-    let(:user) { set_current_user(FactoryBot.create(:user)) }
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
       allow_user_read_access_for(user, spaces: [space])
@@ -1279,7 +1279,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     context 'permissions' do
       context 'when the user does not have write permissions' do
         before do
-          set_current_user(FactoryBot.create(:user), scopes: ['cloud_controller.read'])
+          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
         end
 
         it 'raises an ApiError with a 403 code' do
@@ -1398,7 +1398,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     let(:droplet) { VCAP::CloudController::DropletModel.make(state: VCAP::CloudController::DropletModel::STAGED_STATE) }
     let(:space) { app_model.space }
     let(:org) { space.organization }
-    let(:user) { FactoryBot.create(:user) }
+    let(:user) { VCAP::CloudController::User.make }
 
     before do
       set_current_user(user)
@@ -1420,7 +1420,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     context 'permissions' do
       context 'when the user does not have the write scope' do
         before do
-          set_current_user(FactoryBot.create(:user), scopes: ['cloud_controller.read'])
+          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
         end
 
         it 'raises an ApiError with a 403 code' do
@@ -1488,7 +1488,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     let(:droplet) { VCAP::CloudController::DropletModel.make(state: VCAP::CloudController::DropletModel::STAGED_STATE) }
     let(:space) { app_model.space }
     let(:org) { space.organization }
-    let(:user) { FactoryBot.create(:user) }
+    let(:user) { VCAP::CloudController::User.make }
 
     before do
       FactoryBot.create(:buildpack_lifecycle_data, app: app_model, buildpacks: nil, stack: VCAP::CloudController::Stack.default.name)
@@ -1660,7 +1660,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     let(:app_model) { FactoryBot.create(:app) }
     let(:space) { app_model.space }
     let(:org) { space.organization }
-    let(:user) { FactoryBot.create(:user) }
+    let(:user) { VCAP::CloudController::User.make }
     let!(:build1) { VCAP::CloudController::BuildModel.make(app_guid: app_model.guid, guid: 'build-1') }
     let!(:build2) { VCAP::CloudController::BuildModel.make(app_guid: app_model.guid, guid: 'build-2') }
     before do
@@ -1718,7 +1718,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     let(:app_model) { FactoryBot.create(:app, environment_variables: { meep: 'moop', beep: 'boop' }) }
     let(:space) { app_model.space }
     let(:org) { space.organization }
-    let(:user) { FactoryBot.create(:user) }
+    let(:user) { VCAP::CloudController::User.make }
 
     before do
       set_current_user(user)
@@ -1738,7 +1738,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     context 'permissions' do
       context 'when the user does not have read permissions' do
         before do
-          set_current_user(FactoryBot.create(:user), scopes: ['cloud_controller.write'])
+          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.write'])
         end
 
         it 'returns a 403' do
@@ -1857,7 +1857,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     let(:app_model) { FactoryBot.create(:app, environment_variables: { meep: 'moop', beep: 'boop' }) }
     let(:space) { app_model.space }
     let(:org) { space.organization }
-    let(:user) { FactoryBot.create(:user) }
+    let(:user) { VCAP::CloudController::User.make }
 
     let(:expected_success_response) do
       {
@@ -1942,7 +1942,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     end
 
     context 'when the user does not have read scope' do
-      let(:user) { FactoryBot.create(:user) }
+      let(:user) { VCAP::CloudController::User.make }
 
       before do
         org.add_user(user)
@@ -1986,7 +1986,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     let(:app_model) { FactoryBot.create(:app, environment_variables: { override: 'value-to-override', preserve: 'value-to-keep' }) }
     let(:space) { app_model.space }
     let(:org) { space.organization }
-    let(:user) { FactoryBot.create(:user) }
+    let(:user) { VCAP::CloudController::User.make }
 
     let(:expected_success_response) do
       {
@@ -2115,7 +2115,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     let(:droplet_link) { { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets/current" } }
     let(:space) { app_model.space }
     let(:org) { space.organization }
-    let(:user) { FactoryBot.create(:user) }
+    let(:user) { VCAP::CloudController::User.make }
 
     before do
       app_model.add_droplet(droplet)
@@ -2224,7 +2224,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     context 'permissions' do
       context 'when the user does not have write permissions' do
         before do
-          set_current_user(FactoryBot.create(:user), scopes: ['cloud_controller.read'])
+          set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read'])
         end
 
         it 'raises an ApiError with a 403 code' do
@@ -2270,7 +2270,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     let(:droplet_link) { { 'href' => "/v3/apps/#{app_model.guid}/droplets/current" } }
     let(:space) { app_model.space }
     let(:org) { space.organization }
-    let(:user) { FactoryBot.create(:user) }
+    let(:user) { VCAP::CloudController::User.make }
 
     before do
       app_model.add_droplet(droplet)
@@ -2308,7 +2308,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     context 'permissions' do
       context 'when the user does not have the read scope' do
         before do
-          set_current_user(FactoryBot.create(:user), scopes: [])
+          set_current_user(VCAP::CloudController::User.make, scopes: [])
         end
 
         it 'returns a 403 NotAuthorized error' do
@@ -2359,7 +2359,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     let(:droplet_link) { { 'href' => "/v3/apps/#{app_model.guid}/droplets/current" } }
     let(:space) { app_model.space }
     let(:org) { space.organization }
-    let(:user) { FactoryBot.create(:user) }
+    let(:user) { VCAP::CloudController::User.make }
 
     before do
       app_model.add_droplet(droplet)
@@ -2397,7 +2397,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     context 'permissions' do
       context 'when the user does not have the read scope' do
         before do
-          set_current_user(FactoryBot.create(:user), scopes: [])
+          set_current_user(VCAP::CloudController::User.make, scopes: [])
         end
 
         it 'returns a 403 NotAuthorized error' do

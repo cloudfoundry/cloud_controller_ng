@@ -4,7 +4,7 @@ module VCAP::CloudController
   RSpec.describe SharedDomainAccess, type: :access do
     subject(:access) { SharedDomainAccess.new(Security::AccessContext.new) }
 
-    let(:user) { FactoryBot.create(:user) }
+    let(:user) { VCAP::CloudController::User.make }
     let(:object) { VCAP::CloudController::SharedDomain.new }
 
     before { set_current_user(user) }

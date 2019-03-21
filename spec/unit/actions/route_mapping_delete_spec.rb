@@ -4,7 +4,7 @@ module VCAP::CloudController
   RSpec.describe RouteMappingDelete do
     subject(:route_mapping_delete) { RouteMappingDelete.new(user_audit_info) }
     let(:logger) { instance_double(Steno::Logger) }
-    let(:user) { FactoryBot.create(:user) }
+    let(:user) { User.make }
     let(:user_email) { 'user_email' }
     let(:user_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email) }
     let(:space) { FactoryBot.create(:space) }

@@ -245,7 +245,7 @@ RSpec.describe 'buildpacks' do
     end
 
     context 'when authenticated but not admin' do
-      let(:user) { FactoryBot.create(:user) }
+      let(:user) { VCAP::CloudController::User.make }
       let(:headers) { headers_for(user) }
 
       it 'returns 403' do
@@ -258,7 +258,7 @@ RSpec.describe 'buildpacks' do
     end
 
     context 'when authenticated and admin' do
-      let(:user) { FactoryBot.create(:user) }
+      let(:user) { VCAP::CloudController::User.make }
       let(:headers) { admin_headers_for(user) }
 
       context 'when successful' do
@@ -390,7 +390,7 @@ RSpec.describe 'buildpacks' do
     end
 
     context 'when authenticated' do
-      let(:user) { FactoryBot.create(:user) }
+      let(:user) { VCAP::CloudController::User.make }
       let(:headers) { headers_for(user) }
 
       context 'the buildpack does not exist' do

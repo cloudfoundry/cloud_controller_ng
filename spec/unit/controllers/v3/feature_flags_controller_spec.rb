@@ -2,7 +2,7 @@ require 'rails_helper'
 
 RSpec.describe FeatureFlagsController, type: :controller do
   describe '#index' do
-    let(:user) { FactoryBot.create(:user) }
+    let(:user) { VCAP::CloudController::User.make }
     let(:flag_defaults) { VCAP::CloudController::FeatureFlag::DEFAULT_FLAGS }
     let(:flag_names_sorted) { flag_defaults.keys.sort.map(&:to_s) }
 
@@ -80,7 +80,7 @@ RSpec.describe FeatureFlagsController, type: :controller do
   end
 
   describe '#show' do
-    let(:user) { FactoryBot.create(:user) }
+    let(:user) { VCAP::CloudController::User.make }
 
     before do
       stub_const('VCAP::CloudController::FeatureFlag::DEFAULT_FLAGS', {
@@ -122,7 +122,7 @@ RSpec.describe FeatureFlagsController, type: :controller do
   end
 
   describe '#update' do
-    let(:user) { FactoryBot.create(:user) }
+    let(:user) { VCAP::CloudController::User.make }
     let(:feature_flag_name) { 'flag1' }
 
     before do

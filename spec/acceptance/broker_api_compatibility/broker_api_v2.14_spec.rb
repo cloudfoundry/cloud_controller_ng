@@ -47,7 +47,7 @@ RSpec.describe 'Service Broker API integration' do
           end
 
           it 'sends the broker the X-Broker-Api-Originating-Identity header' do
-            user = FactoryBot.create(:user)
+            user = VCAP::CloudController::User.make
             base64_encoded_user_id = Base64.strict_encode64("{\"user_id\":\"#{user.guid}\"}")
 
             get("/v2/service_bindings/#{@binding_guid}/parameters",

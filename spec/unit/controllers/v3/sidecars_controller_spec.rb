@@ -2,8 +2,8 @@ require 'rails_helper'
 require 'permissions_spec_helper'
 
 RSpec.describe SidecarsController, type: :controller do
-  let!(:app_model) { FactoryBot.create(:app, space: space) }
-  let(:user) { FactoryBot.create(:user) }
+  let!(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
+  let(:user) { VCAP::CloudController::User.make }
   let!(:org) { FactoryBot.create(:organization, name: 'Lyle\'s Farm') }
   let!(:space) { FactoryBot.create(:space, name: 'Cat', organization: org) }
 
@@ -79,7 +79,7 @@ RSpec.describe SidecarsController, type: :controller do
 
       role_to_expected_http_response.each do |role, expected_return_value|
         context "as an #{role}" do
-          let(:new_user) { FactoryBot.create(:user) }
+          let(:new_user) { VCAP::CloudController::User.make }
 
           before do
             set_current_user(new_user)

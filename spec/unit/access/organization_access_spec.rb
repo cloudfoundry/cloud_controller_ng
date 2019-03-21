@@ -5,7 +5,7 @@ module VCAP::CloudController
     let(:queryer) { instance_spy(Permissions::Queryer) }
 
     subject(:access) { OrganizationAccess.new(Security::AccessContext.new(queryer)) }
-    let(:user) { FactoryBot.create(:user) }
+    let(:user) { VCAP::CloudController::User.make }
     let(:org) { FactoryBot.create(:organization) }
     let(:object) { org }
     let(:flag) { FeatureFlag.make(name: 'user_org_creation', enabled: false) }
@@ -156,7 +156,7 @@ module VCAP::CloudController
     describe 'related objects' do
       context 'removing managers' do
         context 'when there is a manager other than the current user' do
-          let(:manager) { FactoryBot.create(:user) }
+          let(:manager) { VCAP::CloudController::User.make }
           let(:op_params) { { relation: :managers, related_guid: manager.guid } }
 
           before do
@@ -187,7 +187,7 @@ module VCAP::CloudController
 
       context 'removing org users' do
         context 'when there is a manager other than the current user' do
-          let(:org_user) { FactoryBot.create(:user) }
+          let(:org_user) { VCAP::CloudController::User.make }
           let(:op_params) { { related_guid: org_user.guid, relation: :users } }
 
           before do

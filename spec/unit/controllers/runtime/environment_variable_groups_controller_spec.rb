@@ -16,7 +16,7 @@ module VCAP::CloudController
       context 'and the name is running' do
         context 'whether or not the user is an admin' do
           it 'returns the json as a hash' do
-            set_current_user(FactoryBot.create(:user))
+            set_current_user(User.make)
 
             group = EnvironmentVariableGroup.running
             group.environment_json = {
@@ -38,7 +38,7 @@ module VCAP::CloudController
       context 'and the name is staging' do
         context 'whether or not the user is an admin' do
           it 'returns the json as a hash' do
-            set_current_user(FactoryBot.create(:user))
+            set_current_user(User.make)
 
             group = EnvironmentVariableGroup.staging
             group.environment_json = {
@@ -71,7 +71,7 @@ module VCAP::CloudController
       context 'when the name is staging' do
         context 'and the user is not an admin' do
           it 'returns a 403' do
-            set_current_user(FactoryBot.create(:user))
+            set_current_user(User.make)
 
             put '/v2/config/environment_variable_groups/staging', '{"foo": "bar"}'
             expect(last_response.status).to eq(403)
@@ -119,7 +119,7 @@ module VCAP::CloudController
       context 'when the name is running' do
         context 'and the user is not an admin' do
           it 'returns a 403' do
-            set_current_user(FactoryBot.create(:user))
+            set_current_user(User.make)
 
             put '/v2/config/environment_variable_groups/running', '{"foo": "bar"}'
             expect(last_response.status).to eq(403)

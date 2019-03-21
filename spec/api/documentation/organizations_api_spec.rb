@@ -56,8 +56,8 @@ RSpec.resource 'Organizations', type: [:api, :legacy_api] do
 
   describe 'Nested endpoints' do
     include_context 'guid_parameter'
-    let(:everything_user) { FactoryBot.create(:user) }
-    let(:user_user) { FactoryBot.create(:user) }
+    let(:everything_user) { VCAP::CloudController::User.make }
+    let(:user_user) { VCAP::CloudController::User.make }
     let(:username_map) do
       {
         everything_user.guid => 'everything@example.com',
@@ -141,11 +141,11 @@ RSpec.resource 'Organizations', type: [:api, :legacy_api] do
         allow_any_instance_of(VCAP::CloudController::UaaClient).to receive(:usernames_for_ids).and_return({ associated_user.guid => 'user@example.com' })
       end
 
-      let!(:associated_user) { FactoryBot.create(:user) }
+      let!(:associated_user) { VCAP::CloudController::User.make }
 
       context 'by user guid' do
         let(:associated_user_guid) { associated_user.guid }
-        let(:user) { FactoryBot.create(:user) }
+        let(:user) { VCAP::CloudController::User.make }
         let(:user_guid) { user.guid }
 
         standard_model_list :user, VCAP::CloudController::UsersController, outer_model: :organization
@@ -196,11 +196,11 @@ RSpec.resource 'Organizations', type: [:api, :legacy_api] do
         make_manager_for_org(organization)
       end
 
-      let!(:associated_manager) { FactoryBot.create(:user) }
+      let!(:associated_manager) { VCAP::CloudController::User.make }
       let(:associated_manager_guid) { associated_manager.guid }
 
       context 'by user guid' do
-        let(:manager) { FactoryBot.create(:user) }
+        let(:manager) { VCAP::CloudController::User.make }
         let(:manager_guid) { manager.guid }
 
         standard_model_list :user, VCAP::CloudController::UsersController, outer_model: :organization, path: :managers
@@ -250,11 +250,11 @@ RSpec.resource 'Organizations', type: [:api, :legacy_api] do
         allow_any_instance_of(VCAP::CloudController::UaaClient).to receive(:usernames_for_ids).and_return({ associated_billing_manager.guid => 'billing_manager@example.com' })
       end
 
-      let!(:associated_billing_manager) { FactoryBot.create(:user) }
+      let!(:associated_billing_manager) { VCAP::CloudController::User.make }
       let(:associated_billing_manager_guid) { associated_billing_manager.guid }
 
       context 'by user guid' do
-        let(:billing_manager) { FactoryBot.create(:user) }
+        let(:billing_manager) { VCAP::CloudController::User.make }
         let(:billing_manager_guid) { billing_manager.guid }
 
         standard_model_list :user, VCAP::CloudController::UsersController, outer_model: :organization, path: :billing_managers
@@ -304,11 +304,11 @@ RSpec.resource 'Organizations', type: [:api, :legacy_api] do
         allow_any_instance_of(VCAP::CloudController::UaaClient).to receive(:usernames_for_ids).and_return({ associated_auditor.guid => 'auditor@example.com' })
       end
 
-      let!(:associated_auditor) { FactoryBot.create(:user) }
+      let!(:associated_auditor) { VCAP::CloudController::User.make }
       let(:associated_auditor_guid) { associated_auditor.guid }
 
       context 'by user guid' do
-        let(:auditor) { FactoryBot.create(:user) }
+        let(:auditor) { VCAP::CloudController::User.make }
         let(:auditor_guid) { auditor.guid }
 
         standard_model_list :user, VCAP::CloudController::UsersController, outer_model: :organization, path: :auditors

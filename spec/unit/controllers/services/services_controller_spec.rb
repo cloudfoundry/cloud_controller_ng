@@ -104,7 +104,7 @@ module VCAP::CloudController
     describe 'GET /v2/services/:guid/service_plans' do
       let!(:organization) { FactoryBot.create(:organization) }
       let!(:space) { FactoryBot.create(:space, organization: organization) }
-      let!(:user) { FactoryBot.create(:user) }
+      let!(:user) { User.make }
       let!(:broker) { ServiceBroker.make(space: space) }
       let!(:service) { Service.make(service_broker: broker) }
       let!(:service_plan) { ServicePlan.make(service: service, public: false) }
@@ -135,7 +135,7 @@ module VCAP::CloudController
       let(:broker_name) { 'broker-1' }
       let!(:organization) { FactoryBot.create(:organization) }
       let!(:space) { FactoryBot.create(:space, organization: organization) }
-      let!(:user) { FactoryBot.create(:user) }
+      let!(:user) { User.make }
       let!(:broker) { ServiceBroker.make(space: space, name: broker_name) }
       let!(:service) { Service.make(service_broker: broker) }
       let!(:service_plan) { ServicePlan.make(service: service, public: false) }
@@ -169,7 +169,7 @@ module VCAP::CloudController
         end
       end
 
-      let(:user) { FactoryBot.create(:user) }
+      let(:user) { VCAP::CloudController::User.make }
       let(:broker_name) { 'broker-1' }
       let(:service_broker) { ServiceBroker.make(name: broker_name) }
       before { set_current_user(user) }
@@ -271,7 +271,7 @@ module VCAP::CloudController
       context 'when the user has an invalid auth token' do
         context 'and when the hide_marketplace_from_unauthenticated_users feature flag is disabled' do
           it 'raises an InvalidAuthToken error' do
-            set_current_user(FactoryBot.create(:user), token: :invalid_token)
+            set_current_user(User.make, token: :invalid_token)
             get '/v2/services'
 
             expect(last_response).to have_status_code 401
@@ -284,7 +284,7 @@ module VCAP::CloudController
             VCAP::CloudController::FeatureFlag.create(name: 'hide_marketplace_from_unauthenticated_users', enabled: true)
           end
           it 'continues to raise an InvalidAuthToken error' do
-            set_current_user(FactoryBot.create(:user), token: :invalid_token)
+            set_current_user(User.make, token: :invalid_token)
             get '/v2/services'
 
             expect(last_response).to have_status_code 401
@@ -335,7 +335,7 @@ module VCAP::CloudController
       let!(:service_binding) { ServiceBinding.make(service_instance: service_instance) }
       let!(:service_key) { ServiceKey.make(service_instance: service_instance) }
       let(:email) { 'admin@example.com' }
-      let(:user) { FactoryBot.create(:user) }
+      let(:user) { User.make }
 
       before { set_current_user(user, { email: email, admin: true }) }
       context 'when no purge parameter is given' do
@@ -379,7 +379,7 @@ module VCAP::CloudController
           delete "/v2/services/#{service.guid}"
           expect(last_response).to have_status_code 401
 
-          set_current_user(FactoryBot.create(:user))
+          set_current_user(User.make)
           delete "/v2/services/#{service.guid}"
           expect(last_response).to have_status_code 403
         end

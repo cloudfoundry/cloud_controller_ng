@@ -18,7 +18,7 @@ module VCAP::CloudController
 
         let(:max_duration) { 10080 }
         let(:default_polling_interval) { 60 }
-        let(:user) { FactoryBot.create(:user) }
+        let(:user) { User.make }
         let(:user_email) { 'fake@mail.foo' }
         let(:user_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email) }
         let(:request_attrs) do

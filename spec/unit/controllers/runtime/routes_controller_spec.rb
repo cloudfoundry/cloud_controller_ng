@@ -7,7 +7,7 @@ module VCAP::CloudController
     let(:tcp_group_2) { 'tcp-group-2' }
     let(:tcp_group_3) { 'tcp-group-3' }
     let(:http_group) { 'http-group' }
-    let(:user) { FactoryBot.create(:user) }
+    let(:user) { User.make }
     let(:router_groups) do
       [
         RoutingApi::RouterGroup.new({ 'guid' => tcp_group_1, 'name' => 'TCP1', 'type' => 'tcp', 'reservable_ports' => '1024-65535' }),
@@ -844,7 +844,7 @@ module VCAP::CloudController
                    organization: space_quota_definition.organization
         )
       end
-      let(:user) { FactoryBot.create(:user) }
+      let(:user) { User.make }
       let(:domain) { SharedDomain.make }
       let(:domain_guid) { domain.guid }
 
@@ -937,7 +937,7 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/routes/:guid' do
-      let(:user) { FactoryBot.create(:user) }
+      let(:user) { User.make }
       let(:organization) { FactoryBot.create(:organization) }
       let(:domain) { PrivateDomain.make(owning_organization: organization) }
       let(:space) { FactoryBot.create(:space, organization: organization) }
@@ -1202,7 +1202,7 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/routes/reserved/domain/:domain_guid/host/:hostname' do
-      before { set_current_user(FactoryBot.create(:user)) }
+      before { set_current_user(User.make) }
 
       context 'when the domain does not exist' do
         it 'returns a NOT_FOUND (404)' do
@@ -1263,7 +1263,7 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/routes/reserved/domain/:domain_guid' do
-      before { set_current_user(FactoryBot.create(:user)) }
+      before { set_current_user(User.make) }
 
       context 'when the domain does not exist' do
         it 'returns a NOT_FOUND (404)' do
@@ -1550,7 +1550,7 @@ module VCAP::CloudController
 
       context 'when the user is not a SpaceDeveloper' do
         before do
-          set_current_user(FactoryBot.create(:user))
+          set_current_user(User.make)
         end
 
         it 'returns 403' do
@@ -1690,7 +1690,7 @@ module VCAP::CloudController
 
       context 'when the user is not a SpaceDeveloper' do
         before do
-          set_current_user(FactoryBot.create(:user))
+          set_current_user(User.make)
         end
 
         it 'returns 403' do

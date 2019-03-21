@@ -2,7 +2,7 @@ require 'spec_helper'
 
 RSpec.describe 'Packages' do
   let(:email) { 'potato@house.com' }
-  let(:user) { FactoryBot.create(:user) }
+  let(:user) { VCAP::CloudController::User.make }
   let(:user_name) { 'clarence' }
   let(:user_header) { headers_for(user, email: email, user_name: user_name) }
   let(:space) { FactoryBot.create(:space) }

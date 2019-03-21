@@ -97,7 +97,7 @@ module VCAP::Services::ServiceBrokers
         'email' => user_email,
       }
     end
-    let(:user) { FactoryBot.create(:user) }
+    let(:user) { VCAP::CloudController::User.make }
 
     before do
       VCAP::CloudController::SecurityContext.set(user, token)

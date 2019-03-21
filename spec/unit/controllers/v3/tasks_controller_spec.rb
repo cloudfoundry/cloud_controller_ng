@@ -6,7 +6,7 @@ RSpec.describe TasksController, type: :controller do
   let(:app_model) { FactoryBot.create(:app) }
   let(:space) { app_model.space }
   let(:org) { space.organization }
-  let(:user) { set_current_user(FactoryBot.create(:user)) }
+  let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
   describe '#create' do
     let(:droplet) do
@@ -356,7 +356,7 @@ RSpec.describe TasksController, type: :controller do
 
   describe '#show' do
     let!(:task) { VCAP::CloudController::TaskModel.make name: 'mytask', app_guid: app_model.guid, memory_in_mb: 2048 }
-    let(:user) { set_current_user(FactoryBot.create(:user)) }
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
       allow_user_read_access_for(user, spaces: [space])
@@ -450,7 +450,7 @@ RSpec.describe TasksController, type: :controller do
   end
 
   describe '#index' do
-    let(:user) { set_current_user(FactoryBot.create(:user)) }
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
       allow_user_read_access_for(user, spaces: [space])
@@ -640,7 +640,7 @@ RSpec.describe TasksController, type: :controller do
 
   describe '#cancel' do
     let!(:task) { VCAP::CloudController::TaskModel.make name: 'usher', app_guid: app_model.guid }
-    let(:user) { set_current_user(FactoryBot.create(:user)) }
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
       allow_user_read_access_for(user, spaces: [space])
@@ -715,7 +715,7 @@ RSpec.describe TasksController, type: :controller do
     let(:task) { VCAP::CloudController::TaskModel.make(app: app_model) }
 
     before do
-      user = FactoryBot.create(:user)
+      user = VCAP::CloudController::User.make
       set_current_user(user)
       allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space: space)

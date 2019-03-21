@@ -207,7 +207,7 @@ module VCAP::CloudController
       let(:service_instance) { ManagedServiceInstance.make }
       let(:developer) { make_developer_for_space(service_instance.space) }
       let(:manager) { make_manager_for_space(service_instance.space) }
-      let(:admin_read_only) { set_current_user_as_admin_read_only(user: FactoryBot.create(:user)) }
+      let(:admin_read_only) { set_current_user_as_admin_read_only(user: User.make) }
 
       before do
         last_operation = { state: 'in progress', description: '10%' }

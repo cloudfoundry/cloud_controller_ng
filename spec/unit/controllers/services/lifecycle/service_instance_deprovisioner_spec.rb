@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe ServiceInstanceDeprovisioner do
-    let(:event_repository) { Repositories::ServiceEventRepository.new(UserAuditInfo.new(user_guid: FactoryBot.create(:user).guid, user_email: 'email')) }
+    let(:event_repository) { Repositories::ServiceEventRepository.new(UserAuditInfo.new(user_guid: User.make.guid, user_email: 'email')) }
     let(:deprovisioner) { ServiceInstanceDeprovisioner.new(event_repository) }
 
     describe '#deprovision_service_instance' do

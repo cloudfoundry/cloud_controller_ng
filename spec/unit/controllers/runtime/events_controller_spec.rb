@@ -16,8 +16,8 @@ module VCAP::CloudController
 
     describe 'GET /v2/events' do
       before do
-        @user_a = FactoryBot.create(:user)
-        @user_b = FactoryBot.create(:user)
+        @user_a = User.make
+        @user_b = User.make
 
         @org_a = FactoryBot.create(:organization)
         @org_b = FactoryBot.create(:organization)

@@ -3,8 +3,8 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe UserAccess, type: :access do
     subject(:access) { UserAccess.new(Security::AccessContext.new) }
-    let(:object) { FactoryBot.create(:user) }
-    let(:user) { FactoryBot.create(:user) }
+    let(:object) { VCAP::CloudController::User.make }
+    let(:user) { VCAP::CloudController::User.make }
 
     before { set_current_user(user) }
 

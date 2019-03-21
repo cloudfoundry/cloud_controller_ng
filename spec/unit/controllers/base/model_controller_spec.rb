@@ -3,7 +3,7 @@ require 'stringio'
 
 module VCAP::CloudController
   RSpec.describe RestController::ModelController do
-    let(:user) { FactoryBot.create(:user, active: true) }
+    let(:user) { User.make(active: true) }
     let(:dep) do
       {
         object_renderer: nil,

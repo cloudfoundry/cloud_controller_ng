@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   module Jobs
     RSpec.describe AppApplyManifestActionJob, job_context: :worker do
-      let(:user) { FactoryBot.create(:user, admin: true) }
+      let(:user) { User.make(admin: true) }
       let(:apply_manifest_action) { instance_double(AppApplyManifest) }
       let(:app) { FactoryBot.create(:app, name: Sham.guid) }
       let(:parsed_app_manifest) { AppManifestMessage.create_from_yml({ name: 'blah', instances: 4, routes: [{ route: 'foo.example.com' }] }) }

@@ -263,7 +263,7 @@ module VCAP::CloudController
             let(:update_attrs) { { 'parameters' => '{foo: bar}' } }
 
             it 'updates the parameters' do
-              user = FactoryBot.create(:user, admin: true)
+              user = VCAP::CloudController::User.make(admin: true)
               set_current_user(user)
               # set_current_user(user, { admin: true })
               # set_current_user_as_admin
@@ -274,7 +274,7 @@ module VCAP::CloudController
 
         context 'when the current user is space developer' do
           before do
-            user = FactoryBot.create(:user)
+            user = User.make
             space.organization.add_user(user)
             set_current_user_as_role(user: user, role: 'space_developer', space: space)
           end

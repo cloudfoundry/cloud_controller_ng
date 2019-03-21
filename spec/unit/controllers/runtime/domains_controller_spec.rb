@@ -144,7 +144,7 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/domains/:id' do
-      let(:user) { FactoryBot.create(:user) }
+      let(:user) { User.make }
       let(:organization) { FactoryBot.create(:organization) }
 
       before { set_current_user(user) }
@@ -205,7 +205,7 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/domains' do
-      let(:user) { FactoryBot.create(:user) }
+      let(:user) { User.make }
       let(:space) { FactoryBot.create(:space) }
       let(:organization) { space.organization }
       let!(:private_domain) { PrivateDomain.make(owning_organization: organization) }
@@ -273,7 +273,7 @@ module VCAP::CloudController
     end
     describe 'POST /v2/domains' do
       context 'as an org manager' do
-        let(:user) { FactoryBot.create(:user) }
+        let(:user) { User.make }
         let(:organization) { FactoryBot.create(:organization) }
 
         let(:request_body) do

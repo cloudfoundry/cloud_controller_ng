@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe 'Organizations' do
-    let(:user) { FactoryBot.create(:user) }
+    let(:user) { VCAP::CloudController::User.make }
     let(:user_header) { headers_for(user) }
     let(:admin_header) { admin_headers_for(user) }
     let!(:organization1) { FactoryBot.create(:organization,  name: 'Apocalypse World') }

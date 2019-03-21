@@ -4,7 +4,7 @@ module VCAP::CloudController
   RSpec.describe ManagedServiceInstanceAccess, type: :access do
     subject(:access) { ManagedServiceInstanceAccess.new(Security::AccessContext.new) }
 
-    let(:user) { FactoryBot.create(:user) }
+    let(:user) { VCAP::CloudController::User.make }
     let(:org) { FactoryBot.create(:organization) }
     let(:space) { FactoryBot.create(:space, organization: org) }
     let(:service) { VCAP::CloudController::Service.make }

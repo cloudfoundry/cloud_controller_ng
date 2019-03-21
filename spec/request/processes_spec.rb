@@ -372,7 +372,7 @@ RSpec.describe 'Processes' do
     it 'redacts information for auditors' do
       process = VCAP::CloudController::ProcessModel.make(:process, app: app_model, command: 'rackup')
 
-      auditor = FactoryBot.create(:user)
+      auditor = VCAP::CloudController::User.make
       space.organization.add_user(auditor)
       space.add_auditor(auditor)
 
@@ -941,7 +941,7 @@ RSpec.describe 'Processes' do
     it 'redacts information for auditors' do
       VCAP::CloudController::ProcessModel.make(:process, app: app_model, type: 'web', command: 'rackup')
 
-      auditor = FactoryBot.create(:user)
+      auditor = VCAP::CloudController::User.make
       space.organization.add_user(auditor)
       space.add_auditor(auditor)
 

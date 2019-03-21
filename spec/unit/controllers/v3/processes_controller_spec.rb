@@ -5,7 +5,7 @@ RSpec.describe ProcessesController, type: :controller do
   let(:app) { FactoryBot.create(:app, space: space) }
 
   describe '#index' do
-    let(:user) { set_current_user(FactoryBot.create(:user)) }
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
       allow_user_read_access_for(user, spaces: [space])
@@ -84,7 +84,7 @@ RSpec.describe ProcessesController, type: :controller do
 
     context 'when the user does not have read scope' do
       before do
-        set_current_user(FactoryBot.create(:user), scopes: ['cloud_controller.write'])
+        set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.write'])
       end
 
       it 'returns 403 NotAuthorized' do
@@ -153,7 +153,7 @@ RSpec.describe ProcessesController, type: :controller do
 
   describe '#show' do
     let(:process_type) { VCAP::CloudController::ProcessModel.make(app: app) }
-    let(:user) { set_current_user(FactoryBot.create(:user)) }
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
       allow_user_read_access_for(user, spaces: [space])
@@ -263,7 +263,7 @@ RSpec.describe ProcessesController, type: :controller do
           'command' => 'new command',
       }
     end
-    let(:user) { set_current_user(FactoryBot.create(:user)) }
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
       allow_user_read_access_for(user, spaces: [space])
@@ -420,7 +420,7 @@ RSpec.describe ProcessesController, type: :controller do
       end
 
       context 'when the user does not have write permissions' do
-        before { set_current_user(FactoryBot.create(:user), scopes: ['cloud_controller.read']) }
+        before { set_current_user(VCAP::CloudController::User.make, scopes: ['cloud_controller.read']) }
 
         it 'raises an ApiError with a 403 code' do
           patch :update, params: { process_guid: process_type.guid }.merge(request_body), as: :json
@@ -436,7 +436,7 @@ RSpec.describe ProcessesController, type: :controller do
     let(:app) { FactoryBot.create(:app, space: space) }
     let(:process_type) { VCAP::CloudController::ProcessModel.make(app: app) }
     let(:index_stopper) { instance_double(VCAP::CloudController::IndexStopper) }
-    let(:user) { set_current_user(FactoryBot.create(:user)) }
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
       allow(index_stopper).to receive(:stop_index)
@@ -557,7 +557,7 @@ RSpec.describe ProcessesController, type: :controller do
     let(:request_body) { { instances: 2, memory_in_mb: 100, disk_in_mb: 200 } }
     let(:app) { FactoryBot.create(:app, space: space) }
     let(:process_type) { VCAP::CloudController::ProcessModel.make(app: app) }
-    let(:user) { set_current_user(FactoryBot.create(:user)) }
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
       allow_user_read_access_for(user, spaces: [space])
@@ -784,7 +784,7 @@ RSpec.describe ProcessesController, type: :controller do
     let(:process_type) { VCAP::CloudController::ProcessModel.make(:process, type: 'potato', app: app) }
     let(:stats) { { 0 => { stats: { usage: {}, net_info: { ports: [] } } } } }
     let(:instances_reporters) { double(:instances_reporters) }
-    let(:user) { set_current_user(FactoryBot.create(:user)) }
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     before do
       allow_user_read_access_for(user, spaces: [space])

@@ -169,7 +169,7 @@ module VCAP::CloudController
       let(:organization) { FactoryBot.create(:organization) }
       let(:space_1) { FactoryBot.create(:space, organization: organization, id: Space.count + 9998) }
       let(:space_2) { FactoryBot.create(:space, organization: organization, id: Space.count + 9999) }
-      let(:user) { FactoryBot.create(:user) }
+      let(:user) { User.make }
       let(:broker_1) { ServiceBroker.make(space: space_1) }
       let(:broker_2) { ServiceBroker.make(space: space_2) }
       let(:service_1) { Service.make(service_broker: broker_1) }
@@ -201,7 +201,7 @@ module VCAP::CloudController
         let(:organization) { FactoryBot.create(:organization) }
         let(:space) { FactoryBot.create(:space, organization: organization) }
         let(:other_space) { FactoryBot.create(:space, organization: organization) }
-        let(:user) { FactoryBot.create(:user) }
+        let(:user) { User.make }
         let(:broker) { ServiceBroker.make }
         let(:service) { Service.make(service_broker: broker) }
         let(:service_plan) { ServicePlan.make(service: service, public: true, active: true) }

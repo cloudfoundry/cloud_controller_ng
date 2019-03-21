@@ -136,7 +136,7 @@ end
 
 RSpec.resource 'Users', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
-  let(:user) { FactoryBot.create(:user) }
+  let(:user) { VCAP::CloudController::User.make }
 
   authenticated_request
 

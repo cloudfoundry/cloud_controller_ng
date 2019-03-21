@@ -5,13 +5,5 @@ FactoryBot.define do
     name
     quota_definition
     status { 'active' }
-
-    transient do
-      users { [] }
-    end
-
-    after(:create) do |organization, evaluator|
-      evaluator.users.each { |u| organization.add_user(u) }
-    end
   end
 end

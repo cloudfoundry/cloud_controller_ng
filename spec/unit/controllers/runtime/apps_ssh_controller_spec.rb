@@ -5,7 +5,7 @@ module VCAP::CloudController
   RSpec.describe AppsSSHController do
     let(:diego) { true }
     let(:enable_ssh) { true }
-    let(:user) { FactoryBot.create(:user) }
+    let(:user) { User.make }
     let(:process) { ProcessModelFactory.make(diego: diego, enable_ssh: enable_ssh) }
     let(:instance_index) { '2' }
     let(:space) { process.space }
@@ -125,7 +125,7 @@ module VCAP::CloudController
       end
 
       context 'as an admin user' do
-        let(:admin) { FactoryBot.create(:user) }
+        let(:admin) { User.make }
         before do
           space.organization.add_user(admin)
           set_current_user(admin, { admin: true })
@@ -150,7 +150,7 @@ module VCAP::CloudController
       end
 
       context 'as a user who cannot update' do
-        let(:auditor) { FactoryBot.create(:user) }
+        let(:auditor) { User.make }
 
         before do
           set_current_user(auditor)
@@ -165,7 +165,7 @@ module VCAP::CloudController
       end
 
       context 'when the user does not have access to the application' do
-        let(:other_user) { FactoryBot.create(:user) }
+        let(:other_user) { User.make }
 
         before { set_current_user(other_user) }
 

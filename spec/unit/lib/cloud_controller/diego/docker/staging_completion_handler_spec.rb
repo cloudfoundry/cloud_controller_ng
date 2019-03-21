@@ -16,7 +16,7 @@ module VCAP::CloudController
         before do
           allow(Steno).to receive(:logger).and_return(logger)
           allow(VCAP::Loggregator).to receive(:emit_error)
-          set_current_user_as_admin(user: FactoryBot.create(:user, guid: '1234'), email: 'joe@joe.com', user_name: 'briggs')
+          set_current_user_as_admin(user: User.make(guid: '1234'), email: 'joe@joe.com', user_name: 'briggs')
         end
 
         describe '#staging_complete' do

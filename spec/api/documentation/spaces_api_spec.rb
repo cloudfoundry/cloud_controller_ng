@@ -86,7 +86,7 @@ RSpec.resource 'Spaces', type: [:api, :legacy_api] do
 
   describe 'Nested endpoints' do
     include_context 'guid_parameter'
-    let(:user) { FactoryBot.create(:user) }
+    let(:user) { VCAP::CloudController::User.make }
 
     before do
       VCAP::CloudController::SecurityContext.set(user, 'valid_token')
@@ -113,8 +113,8 @@ RSpec.resource 'Spaces', type: [:api, :legacy_api] do
         allow_any_instance_of(VCAP::CloudController::UaaClient).to receive(:usernames_for_ids).and_return({ associated_developer.guid => 'developer@example.com' })
       end
 
-      let!(:associated_developer) { FactoryBot.create(:user) }
-      let(:developer) { FactoryBot.create(:user) }
+      let!(:associated_developer) { VCAP::CloudController::User.make }
+      let(:developer) { VCAP::CloudController::User.make }
 
       context 'by user guid' do
         let(:associated_developer_guid) { associated_developer.guid }
@@ -171,8 +171,8 @@ RSpec.resource 'Spaces', type: [:api, :legacy_api] do
         allow_any_instance_of(VCAP::CloudController::UaaClient).to receive(:usernames_for_ids).and_return({ associated_manager.guid => 'manager@example.com' })
       end
 
-      let!(:associated_manager) { FactoryBot.create(:user) }
-      let(:manager) { FactoryBot.create(:user) }
+      let!(:associated_manager) { VCAP::CloudController::User.make }
+      let(:manager) { VCAP::CloudController::User.make }
 
       context 'by user guid' do
         let(:associated_manager_guid) { associated_manager.guid }
@@ -229,8 +229,8 @@ RSpec.resource 'Spaces', type: [:api, :legacy_api] do
         allow_any_instance_of(VCAP::CloudController::UaaClient).to receive(:usernames_for_ids).and_return({ associated_auditor.guid => 'auditor@example.com' })
       end
 
-      let!(:associated_auditor) { FactoryBot.create(:user) }
-      let(:auditor) { FactoryBot.create(:user) }
+      let!(:associated_auditor) { VCAP::CloudController::User.make }
+      let(:auditor) { VCAP::CloudController::User.make }
 
       context 'by user guid' do
         let(:associated_auditor_guid) { associated_auditor.guid }
@@ -280,7 +280,7 @@ RSpec.resource 'Spaces', type: [:api, :legacy_api] do
     end
 
     describe 'User Roles' do
-      let(:everything_user) { FactoryBot.create(:user) }
+      let(:everything_user) { VCAP::CloudController::User.make }
 
       before do
         space.organization.add_user(everything_user)
@@ -339,7 +339,7 @@ RSpec.resource 'Spaces', type: [:api, :legacy_api] do
 
     describe 'Events' do
       before do
-        user                   = FactoryBot.create(:user)
+        user                   = VCAP::CloudController::User.make
         space_event_repository = VCAP::CloudController::Repositories::SpaceEventRepository.new
         space_event_repository.record_space_update(space, VCAP::CloudController::UserAuditInfo.new(user_guid: user.guid, user_email: 'user@example.com'), { 'name' => 'new_name' })
       end
@@ -366,7 +366,7 @@ RSpec.resource 'Spaces', type: [:api, :legacy_api] do
     describe 'Isolation Segments (experimental)' do
       let(:isolation_segment_model) { FactoryBot.create(:isolation_segment) }
       let(:isolation_segment_model2) { FactoryBot.create(:isolation_segment) }
-      let(:org_manager) { FactoryBot.create(:user) }
+      let(:org_manager) { VCAP::CloudController::User.make }
       let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
 
       before do

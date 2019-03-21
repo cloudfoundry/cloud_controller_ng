@@ -3,7 +3,7 @@ require 'actions/droplet_delete'
 
 module VCAP::CloudController
   RSpec.describe DropletUpdate do
-    let(:user) { FactoryBot.create(:user) }
+    let(:user) { User.make }
     let(:user_email) { 'user@example.com' }
     let(:user_audit_info) { UserAuditInfo.new(user_email: 'user@example.com', user_guid: user.guid) }
 

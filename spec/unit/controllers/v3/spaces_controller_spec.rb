@@ -3,7 +3,7 @@ require 'permissions_spec_helper'
 
 RSpec.describe SpacesV3Controller, type: :controller do
   describe '#show' do
-    let(:user) { set_current_user(FactoryBot.create(:user)) }
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     let!(:org) { FactoryBot.create(:organization, name: 'Lyle\'s Farm') }
     let!(:space) { FactoryBot.create(:space, name: 'Cat', organization: org) }
@@ -48,7 +48,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
   end
 
   describe '#index' do
-    let(:user) { set_current_user(FactoryBot.create(:user)) }
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     let!(:org1) { FactoryBot.create(:organization, name: 'Lyle\'s Farm') }
     let!(:org2) { FactoryBot.create(:organization, name: 'Greg\'s Ranch') }
@@ -392,8 +392,8 @@ RSpec.describe SpacesV3Controller, type: :controller do
   end
 
   describe '#create' do
-    let(:user) { FactoryBot.create(:user) }
-    let(:user_without_role) { FactoryBot.create(:user) }
+    let(:user) { VCAP::CloudController::User.make }
+    let(:user_without_role) { VCAP::CloudController::User.make }
     let(:org) { FactoryBot.create(:organization) }
 
     let(:name) { 'space1' }
@@ -554,7 +554,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
   end
 
   describe '#patch' do
-    let(:user) { set_current_user(FactoryBot.create(:user)) }
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
     let!(:org) { FactoryBot.create(:organization, name: 'Lyle\'s Farm') }
     let!(:space) { FactoryBot.create(:space, name: 'Lamb', organization: org) }
     let(:labels) do
@@ -788,7 +788,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
   end
 
   describe '#update_isolation_segment' do
-    let(:user) { set_current_user(FactoryBot.create(:user)) }
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     let!(:org1) { FactoryBot.create(:organization, name: 'Lyle\'s Farm') }
     let!(:org2) { FactoryBot.create(:organization, name: 'Greg\'s Ranch') }
@@ -902,7 +902,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
   end
 
   describe '#show_isolation_segment' do
-    let(:user) { set_current_user(FactoryBot.create(:user)) }
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     let!(:org) { FactoryBot.create(:organization, name: 'Lyle\'s Farm') }
     let!(:space) { FactoryBot.create(:space, name: 'Lamb', organization: org) }

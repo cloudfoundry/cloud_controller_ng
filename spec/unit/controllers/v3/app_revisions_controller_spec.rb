@@ -3,7 +3,7 @@ require 'permissions_spec_helper'
 
 RSpec.describe AppRevisionsController, type: :controller do
   let!(:space) { app_model.space }
-  let(:user) { FactoryBot.create(:user) }
+  let(:user) { VCAP::CloudController::User.make }
 
   before do
     set_current_user(user)
@@ -53,7 +53,7 @@ RSpec.describe AppRevisionsController, type: :controller do
     context 'permissions' do
       context 'when the user does not have cc read scope' do
         before do
-          set_current_user(FactoryBot.create(:user), scopes: [])
+          set_current_user(VCAP::CloudController::User.make, scopes: [])
         end
 
         it 'raises an ApiError with a 403 code' do
@@ -109,7 +109,7 @@ RSpec.describe AppRevisionsController, type: :controller do
     context 'permissions' do
       context 'when the user does not have cc read scope' do
         before do
-          set_current_user(FactoryBot.create(:user), scopes: [])
+          set_current_user(VCAP::CloudController::User.make, scopes: [])
         end
 
         it 'raises an ApiError with a 403 code' do

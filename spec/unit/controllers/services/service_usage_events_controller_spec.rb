@@ -164,7 +164,7 @@ module VCAP::CloudController
 
       context 'when the user is not an admin (i.e. is not authorized)' do
         it 'returns 403' do
-          set_current_user(FactoryBot.create(:user))
+          set_current_user(User.make)
           get '/v2/service_usage_events'
           expect(last_response.status).to eq(403)
         end
@@ -181,7 +181,7 @@ module VCAP::CloudController
       end
 
       it 'returns 403 as a non-admin' do
-        set_current_user(FactoryBot.create(:user))
+        set_current_user(User.make)
         url = "/v2/service_usage_events/#{event_guid1}"
         get url
         expect(last_response.status).to eq(403)
@@ -189,7 +189,7 @@ module VCAP::CloudController
     end
 
     describe 'POST /v2/service_usage_events/destructively_purge_all_and_reseed_existing_instance', isolation: :truncation do
-      let(:user) { FactoryBot.create(:user) }
+      let(:user) { User.make }
       let(:instance) { ManagedServiceInstance.make }
 
       it 'purge all existing events' do

@@ -4,7 +4,7 @@ module VCAP::CloudController
   RSpec.describe ServiceInstanceAccess, type: :access do
     subject(:access) { ServiceInstanceAccess.new(Security::AccessContext.new) }
     let(:scopes) { ['cloud_controller.read', 'cloud_controller.write'] }
-    let(:user) { FactoryBot.create(:user) }
+    let(:user) { VCAP::CloudController::User.make }
 
     let(:org) { FactoryBot.create(:organization) }
     let(:space) { FactoryBot.create(:space, organization: org) }

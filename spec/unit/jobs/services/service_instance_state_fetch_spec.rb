@@ -24,7 +24,7 @@ module VCAP::CloudController
         let(:broker) { service_instance.service_broker }
         let(:name) { 'fake-name' }
 
-        let(:user) { FactoryBot.create(:user) }
+        let(:user) { User.make }
         let(:user_email) { 'fake@mail.foo' }
 
         let(:status) { 200 }

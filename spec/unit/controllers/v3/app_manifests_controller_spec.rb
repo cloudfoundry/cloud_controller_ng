@@ -6,7 +6,7 @@ RSpec.describe AppManifestsController, type: :controller do
     let(:app_model) { FactoryBot.create(:app) }
     let(:space) { app_model.space }
     let(:org) { space.organization }
-    let(:user) { FactoryBot.create(:user) }
+    let(:user) { VCAP::CloudController::User.make }
     let(:app_apply_manifest_action) { instance_double(VCAP::CloudController::AppApplyManifest) }
     let(:request_body) { { 'applications' => [{ 'name' => 'blah', 'instances' => 2 }] } }
 
@@ -493,7 +493,7 @@ RSpec.describe AppManifestsController, type: :controller do
     let(:app_model) { FactoryBot.create(:app, :buildpack) }
     let(:space) { app_model.space }
     let(:org) { space.organization }
-    let(:user) { FactoryBot.create(:user) }
+    let(:user) { VCAP::CloudController::User.make }
 
     let(:expected_yml_manifest) do
       {

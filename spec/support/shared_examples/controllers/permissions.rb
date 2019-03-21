@@ -1,10 +1,10 @@
 shared_context 'permissions' do
   before do
     @org_a = FactoryBot.create(:organization)
-    @org_a_manager = FactoryBot.create(:user)
-    @org_a_member = FactoryBot.create(:user)
-    @org_a_billing_manager = FactoryBot.create(:user)
-    @org_a_auditor = FactoryBot.create(:user)
+    @org_a_manager = VCAP::CloudController::User.make
+    @org_a_member = VCAP::CloudController::User.make
+    @org_a_billing_manager = VCAP::CloudController::User.make
+    @org_a_auditor = VCAP::CloudController::User.make
     @org_a.add_user(@org_a_manager)
     @org_a.add_user(@org_a_member)
     @org_a.add_user(@org_a_billing_manager)
@@ -22,10 +22,10 @@ shared_context 'permissions' do
     @space_a.add_auditor(@space_a_auditor)
 
     @org_b = FactoryBot.create(:organization)
-    @org_b_manager = FactoryBot.create(:user)
-    @org_b_member = FactoryBot.create(:user)
-    @org_b_billing_manager = FactoryBot.create(:user)
-    @org_b_auditor = FactoryBot.create(:user)
+    @org_b_manager = VCAP::CloudController::User.make
+    @org_b_member = VCAP::CloudController::User.make
+    @org_b_billing_manager = VCAP::CloudController::User.make
+    @org_b_auditor = VCAP::CloudController::User.make
     @org_b.add_user(@org_b_manager)
     @org_b.add_user(@org_b_member)
     @org_b.add_user(@org_b_billing_manager)

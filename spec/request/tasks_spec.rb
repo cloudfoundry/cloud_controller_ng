@@ -285,7 +285,7 @@ RSpec.describe 'Tasks' do
       )
       task_guid = task.guid
 
-      auditor = FactoryBot.create(:user)
+      auditor = VCAP::CloudController::User.make
       space.organization.add_user(auditor)
       space.add_auditor(auditor)
 

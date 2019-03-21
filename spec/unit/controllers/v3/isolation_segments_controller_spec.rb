@@ -2,7 +2,7 @@ require 'rails_helper'
 require 'isolation_segment_assign'
 
 RSpec.describe IsolationSegmentsController, type: :controller do
-  let(:user) { set_current_user(FactoryBot.create(:user)) }
+  let(:user) { set_current_user(VCAP::CloudController::User.make) }
   let(:isolation_segment_model) { FactoryBot.create(:isolation_segment) }
   let(:org1) { FactoryBot.create(:organization) }
   let(:org2) { FactoryBot.create(:organization) }

@@ -480,7 +480,7 @@ module VCAP::CloudController
 
         context 'when the user is not a SpaceDeveloper' do
           before do
-            set_current_user(FactoryBot.create(:user))
+            set_current_user(User.make)
           end
 
           it 'raises a 403' do

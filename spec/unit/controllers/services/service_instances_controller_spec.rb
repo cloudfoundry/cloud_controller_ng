@@ -1992,7 +1992,7 @@ module VCAP::CloudController
           end
 
           context 'when the user has no read permissions to the space' do
-            let(:org_auditor) { FactoryBot.create(:user) }
+            let(:org_auditor) { User.make }
 
             before do
               service_instance.space.organization.add_auditor(org_auditor)
@@ -2008,7 +2008,7 @@ module VCAP::CloudController
           end
 
           context 'when the user has read but not write permissions to the space' do
-            let(:space_auditor) { FactoryBot.create(:user) }
+            let(:space_auditor) { User.make }
 
             before do
               service_instance.space.organization.add_user(space_auditor)
@@ -2418,7 +2418,7 @@ module VCAP::CloudController
           end
 
           context 'when the user has read but not write permissions' do
-            let(:auditor) { FactoryBot.create(:user) }
+            let(:auditor) { User.make }
 
             before do
               service_instance.space.organization.add_auditor(auditor)
@@ -3956,7 +3956,7 @@ module VCAP::CloudController
       let(:org) { FactoryBot.create(:organization) }
       let(:space) { FactoryBot.create(:space, organization: org) }
       let(:instance) { ManagedServiceInstance.make(space: space) }
-      let(:user) { FactoryBot.create(:user) }
+      let(:user) { User.make }
 
       context 'when the user is a member of the space this instance exists in' do
         describe 'permissions' do
@@ -4104,7 +4104,7 @@ module VCAP::CloudController
         end
 
         describe 'permissions' do
-          let(:user) { FactoryBot.create(:user) }
+          let(:user) { User.make }
 
           context 'when the user is a member of the org/space this instance exists in' do
             {
@@ -4260,7 +4260,7 @@ module VCAP::CloudController
       end
 
       describe 'permissions' do
-        let(:user) { FactoryBot.create(:user) }
+        let(:user) { User.make }
         let(:target_org) { FactoryBot.create(:organization) }
         let(:target_space) { FactoryBot.create(:space, organization: target_org) }
 

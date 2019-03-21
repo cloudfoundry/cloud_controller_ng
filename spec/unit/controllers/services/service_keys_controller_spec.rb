@@ -787,7 +787,7 @@ module VCAP::CloudController
           end
 
           context 'user permissions' do
-            let(:user) { FactoryBot.create(:user) }
+            let(:user) { User.make }
             let(:body) { {}.to_json }
 
             {

@@ -110,11 +110,11 @@ module VCAP::CloudController
         let(:num_visible_spaces) { 4 }
 
         let(:member) do
-          FactoryBot.create(:user, admin: false)
+          VCAP::CloudController::User.make(admin: false)
         end
 
         let(:non_member) do
-          FactoryBot.create(:user, admin: false)
+          VCAP::CloudController::User.make(admin: false)
         end
 
         context 'when the user is a member of the space' do

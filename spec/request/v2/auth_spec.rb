@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 RSpec.describe 'Auth' do
-  let(:user) { FactoryBot.create(:user) }
+  let(:user) { VCAP::CloudController::User.make }
 
   before do
     @test_mode = ENV['CC_TEST']

@@ -2,7 +2,7 @@ require 'rails_helper'
 require 'permissions_spec_helper'
 
 RSpec.describe ServiceInstancesV3Controller, type: :controller do
-  let(:user) { set_current_user(FactoryBot.create(:user)) }
+  let(:user) { set_current_user(VCAP::CloudController::User.make) }
   let(:space) { FactoryBot.create(:space, guid: 'space-1-guid') }
   let!(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, name: 'service-instance-1') }
 

@@ -5,7 +5,7 @@ RSpec.describe AppFeaturesController, type: :controller do
   let(:app_model) { FactoryBot.create(:app, enable_ssh: true) }
   let(:space) { app_model.space }
   let(:org) { space.organization }
-  let(:user) { FactoryBot.create(:user) }
+  let(:user) { VCAP::CloudController::User.make }
   let(:app_feature_ssh_response) { { 'name' => 'ssh', 'description' => 'Enable SSHing into the app.', 'enabled' => true } }
   let(:app_feature_revisions_response) { { 'name' => 'revisions', 'description' => 'Enable versioning of an application (experimental)', 'enabled' => false } }
 

@@ -6,7 +6,7 @@ module VCAP::CloudController
     let(:app_model) { FactoryBot.create(:app, enable_ssh: true) }
     let(:space) { app_model.space }
     let(:org) { space.organization }
-    let(:user) { FactoryBot.create(:user) }
+    let(:user) { VCAP::CloudController::User.make }
     let(:logger) { instance_double(Steno::Logger) }
 
     let(:log_access_controller) do

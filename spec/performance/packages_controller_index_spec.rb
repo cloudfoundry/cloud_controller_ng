@@ -3,7 +3,7 @@ require 'rails_helper'
 
 RSpec.describe PackagesController, type: :controller do # , isolation: :truncation
   describe '#index' do
-    let(:user) { set_current_user(FactoryBot.create(:user)) }
+    let(:user) { set_current_user(VCAP::CloudController::User.make) }
     let(:app_model) { FactoryBot.create(:app) }
     let(:space) { app_model.space }
     let(:space1) { FactoryBot.create(:space) }

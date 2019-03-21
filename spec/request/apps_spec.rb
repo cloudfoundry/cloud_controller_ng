@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'actions/process_create_from_app_droplet'
 
 RSpec.describe 'Apps' do
-  let(:user) { FactoryBot.create(:user) }
+  let(:user) { VCAP::CloudController::User.make }
   let(:user_header) { headers_for(user, email: user_email, user_name: user_name) }
   let(:space) { FactoryBot.create(:space) }
   let(:stack) { FactoryBot.create(:stack) }

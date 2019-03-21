@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe FeatureFlagAccess, type: :access do
     subject(:access) { FeatureFlagAccess.new(Security::AccessContext.new) }
-    let(:user) { FactoryBot.create(:user) }
+    let(:user) { VCAP::CloudController::User.make }
     let(:object) { VCAP::CloudController::FeatureFlag.make }
 
     it_behaves_like :admin_full_access

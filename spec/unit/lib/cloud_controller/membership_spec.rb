@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe Membership do
-    let(:user) { FactoryBot.create(:user) }
+    let(:user) { User.make }
     let!(:space) { FactoryBot.create(:space, organization: organization) }
     let(:organization) { FactoryBot.create(:organization) }
 
@@ -428,7 +428,7 @@ module VCAP::CloudController
     end
 
     describe '#space_guids_for_roles' do
-      let(:user) { FactoryBot.create(:user) }
+      let(:user) { User.make }
 
       before do
         organization.add_user(user)

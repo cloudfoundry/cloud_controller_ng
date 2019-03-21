@@ -76,7 +76,7 @@ module VCAP::CloudController
       end
     end
 
-    let(:user) { FactoryBot.create(:user) }
+    let(:user) { User.make }
 
     before do
       allow_any_instance_of(TestController).to receive(:logger).and_return(logger)

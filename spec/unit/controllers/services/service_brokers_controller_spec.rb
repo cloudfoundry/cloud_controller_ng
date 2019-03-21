@@ -86,7 +86,7 @@ module VCAP::CloudController
     describe 'GET /v2/service_brokers' do
       let(:space_a) { FactoryBot.create(:space) }
       let(:space_b) { FactoryBot.create(:space) }
-      let(:user) { FactoryBot.create(:user) }
+      let(:user) { User.make }
       let!(:public_broker) { ServiceBroker.make }
       let!(:space_a_broker) { ServiceBroker.make space: space_a }
       let!(:space_b_broker) { ServiceBroker.make space: space_b }
@@ -175,7 +175,7 @@ module VCAP::CloudController
 
       let(:body) { body_hash.to_json }
       let(:errors) { instance_double(Sequel::Model::Errors, on: nil) }
-      let(:user) { FactoryBot.create(:user) }
+      let(:user) { User.make }
 
       before { set_current_user_as_admin }
 
@@ -247,7 +247,7 @@ module VCAP::CloudController
       describe 'adding a broker to a space only' do
         let(:space) { FactoryBot.create(:space) }
         let(:body) { body_hash.merge({ space_guid: space.guid }).to_json }
-        let(:user) { FactoryBot.create(:user) }
+        let(:user) { User.make }
 
         before do
           space.organization.add_user user
@@ -269,7 +269,7 @@ module VCAP::CloudController
         end
 
         it 'returns a 403 if a user is not a SpaceDeveloper for the space' do
-          set_current_user(FactoryBot.create(:user))
+          set_current_user(User.make)
 
           post '/v2/service_brokers', body
           expect(last_response.status).to eq(403)
@@ -305,7 +305,7 @@ module VCAP::CloudController
       end
 
       context 'when the user is a SpaceDeveloper' do
-        let(:user) { FactoryBot.create(:user) }
+        let(:user) { User.make }
         let(:space) { FactoryBot.create(:space) }
 
         before do
@@ -585,7 +585,7 @@ module VCAP::CloudController
 
     describe 'DELETE /v2/service_brokers/:guid' do
       let!(:broker) { ServiceBroker.make(name: 'FreeWidgets', broker_url: 'http://example.com/', auth_password: 'secret') }
-      let(:user) { FactoryBot.create(:user) }
+      let(:user) { User.make }
 
       before { set_current_user_as_admin }
 
@@ -641,7 +641,7 @@ module VCAP::CloudController
 
       describe 'authentication' do
         it 'returns a forbidden status for non-admin users' do
-          set_current_user(FactoryBot.create(:user))
+          set_current_user(User.make)
 
           delete "/v2/service_brokers/#{broker.guid}"
           expect(last_response).to be_forbidden
@@ -674,7 +674,7 @@ module VCAP::CloudController
           auth_password: 'abc123',
         )
       end
-      let(:user) { FactoryBot.create(:user) }
+      let(:user) { User.make }
 
       before do
         attrs = {
@@ -827,7 +827,7 @@ module VCAP::CloudController
 
         describe 'authentication' do
           it 'returns a forbidden status for non-admin users' do
-            set_current_user(FactoryBot.create(:user))
+            set_current_user(User.make)
             put "/v2/service_brokers/#{broker.guid}", body
 
             expect(last_response).to be_forbidden
@@ -844,7 +844,7 @@ module VCAP::CloudController
             auth_password: 'abc123',
             space_id: space.id)
           end
-          let(:user) { FactoryBot.create(:user) }
+          let(:user) { User.make }
 
           before do
             space.organization.add_user user

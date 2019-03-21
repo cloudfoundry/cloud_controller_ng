@@ -100,7 +100,7 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
         expected_org_guids = org_guids
 
         # There may be > 50 results (default page size) due to pollution
-        response = make_get_request('/v3/organizations?per_page=5000', http_headers(user_token(FactoryBot.create(:user, opts))))
+        response = make_get_request('/v3/organizations?per_page=5000', http_headers(user_token(VCAP::CloudController::User.make, opts)))
         expect(response.code).to eq('200')
 
         actual_org_guids = response.json_body['resources'].map { |resource| resource['guid'] }
@@ -256,7 +256,7 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
         expected_space_guids = space_guids
 
         # There may be > 50 results (default page size) due to pollution
-        response = make_get_request('/v3/spaces?per_page=5000', http_headers(user_token(FactoryBot.create(:user, opts))))
+        response = make_get_request('/v3/spaces?per_page=5000', http_headers(user_token(VCAP::CloudController::User.make, opts)))
         expect(response.code).to eq('200')
 
         actual_space_guids = response.json_body['resources'].map { |resource| resource['guid'] }
@@ -466,7 +466,7 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
         expected_app_guids = app_guids
 
         # There may be > 50 results (default page size) due to pollution
-        response = make_get_request('/v3/apps?per_page=5000', http_headers(user_token(FactoryBot.create(:user, opts))))
+        response = make_get_request('/v3/apps?per_page=5000', http_headers(user_token(VCAP::CloudController::User.make, opts)))
         expect(response.code).to eq('200')
 
         actual_app_guids = response.json_body['resources'].map { |resource| resource['guid'] }

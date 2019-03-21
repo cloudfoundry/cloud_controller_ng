@@ -4,7 +4,7 @@ module VCAP::CloudController
   RSpec.describe EventAccess, type: :access do
     subject(:access) { EventAccess.new(Security::AccessContext.new) }
 
-    let(:user) { FactoryBot.create(:user) }
+    let(:user) { VCAP::CloudController::User.make }
     let(:org) { FactoryBot.create(:organization) }
     let(:space) { FactoryBot.create(:space, organization: org) }
     let!(:object) { VCAP::CloudController::Event.make(space: space) }

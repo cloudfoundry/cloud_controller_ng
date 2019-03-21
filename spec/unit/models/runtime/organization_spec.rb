@@ -723,7 +723,7 @@ module VCAP::CloudController
 
     describe 'removing a user' do
       let(:org)     { FactoryBot.create(:organization) }
-      let(:user)    { FactoryBot.create(:user) }
+      let(:user)    { User.make }
       let(:space_1) { FactoryBot.create(:space) }
       let(:space_2) { FactoryBot.create(:space) }
 
@@ -831,7 +831,7 @@ module VCAP::CloudController
         end
 
         context 'when the user only has non-user org roles' do
-          let(:user) { FactoryBot.create(:user) }
+          let(:user) { User.make }
           before do
             org.add_manager(user)
             org.add_auditor(user)
@@ -850,7 +850,7 @@ module VCAP::CloudController
         end
 
         context 'when the user only has an org-user role' do
-          let(:user) { FactoryBot.create(:user) }
+          let(:user) { User.make }
           before do
             org.add_user(user)
           end
@@ -915,8 +915,8 @@ module VCAP::CloudController
 
     describe '#has_user?' do
       subject(:org) { FactoryBot.create(:organization) }
-      let(:user) { FactoryBot.create(:user) }
-      let(:second_user) { FactoryBot.create(:user) }
+      let(:user) { User.make }
+      let(:second_user) { User.make }
 
       before do
         org.add_user(second_user)

@@ -9,7 +9,7 @@ module VCAP::CloudController
     end
 
     def resource_match_request(verb, path, matches, non_matches)
-      user = FactoryBot.create(:user, admin: false, active: true)
+      user = User.make(admin: false, active: true)
       req = MultiJson.dump(matches + non_matches)
 
       set_current_user(user)
@@ -77,7 +77,7 @@ module VCAP::CloudController
       end
 
       it 'returns FeatureDisabled unless the user is an admin' do
-        set_current_user(FactoryBot.create(:user))
+        set_current_user(User.make)
 
         put '/v2/resource_match', '[]'
 

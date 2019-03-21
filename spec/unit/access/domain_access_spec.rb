@@ -5,7 +5,7 @@ module VCAP::CloudController
     subject(:access) { DomainAccess.new(Security::AccessContext.new) }
     let(:token) { { 'scope' => ['cloud_controller.read', 'cloud_controller.write'] } }
 
-    let(:user) { FactoryBot.create(:user) }
+    let(:user) { User.make }
     let(:org) { FactoryBot.create(:organization) }
     let(:space) { FactoryBot.create(:space, organization: org) }
 

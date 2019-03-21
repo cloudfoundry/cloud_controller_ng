@@ -5,7 +5,7 @@ RSpec.describe 'Staging Security Groups' do
     let(:org) { FactoryBot.create(:organization) }
     let(:space) { FactoryBot.create(:space, organization: org) }
     let(:security_group) { VCAP::CloudController::SecurityGroup.make }
-    let(:user) { FactoryBot.create(:user) }
+    let(:user) { VCAP::CloudController::User.make }
 
     before do
       space.organization.add_user(user)
@@ -29,7 +29,7 @@ RSpec.describe 'Staging Security Groups' do
     let(:org) { FactoryBot.create(:organization) }
     let(:space) { FactoryBot.create(:space, organization: org) }
     let(:security_group) { VCAP::CloudController::SecurityGroup.make }
-    let(:user) { FactoryBot.create(:user) }
+    let(:user) { VCAP::CloudController::User.make }
 
     before do
       space.organization.add_user(user)
@@ -65,7 +65,7 @@ RSpec.describe 'Staging Security Groups' do
         ]
       )
     end
-    let(:user) { FactoryBot.create(:user) }
+    let(:user) { VCAP::CloudController::User.make }
 
     before do
       space.organization.add_user(user)
@@ -109,7 +109,7 @@ RSpec.describe 'Staging Security Groups' do
     let(:org) { FactoryBot.create(:organization) }
     let(:space) { FactoryBot.create(:space, organization: org) }
     let(:security_group) { VCAP::CloudController::SecurityGroup.make }
-    let(:user) { FactoryBot.create(:user) }
+    let(:user) { VCAP::CloudController::User.make }
 
     before do
       space.organization.add_user(user)
@@ -133,7 +133,7 @@ RSpec.describe 'Staging Security Groups' do
     let(:org) { FactoryBot.create(:organization) }
     let(:space) { FactoryBot.create(:space, organization: org) }
     let(:security_group) { VCAP::CloudController::SecurityGroup.make }
-    let(:user) { FactoryBot.create(:user) }
+    let(:user) { VCAP::CloudController::User.make }
 
     before do
       space.organization.add_user(user)
