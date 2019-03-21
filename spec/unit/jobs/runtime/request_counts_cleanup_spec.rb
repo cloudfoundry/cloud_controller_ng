@@ -21,7 +21,7 @@ module VCAP::CloudController
 
       describe '#perform' do
         it 'deletes request_counts that are no longer valid' do
-          invalid_request_count = FactoryBot.create(:request_count, valid_until: 1.days.ago)
+          invalid_request_count = RequestCount.make(valid_until: 1.days.ago)
           expect {
             job.perform
           }.to change { invalid_request_count.exists? }.to(false)
@@ -30,7 +30,7 @@ module VCAP::CloudController
         end
 
         it 'does not delete request_counts that are still valid' do
-          valid_request_count = FactoryBot.create(:request_count, valid_until: 1.days.since)
+          valid_request_count = RequestCount.make(valid_until: 1.days.since)
           expect {
             job.perform
           }.not_to change { valid_request_count.exists? }.from(true)

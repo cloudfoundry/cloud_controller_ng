@@ -466,6 +466,10 @@ module VCAP::CloudController
     app_port { -1 }
   end
 
+  RequestCount.blueprint do
+    valid_until { Time.now.utc }
+  end
+
   TestModel.blueprint do
     required_attr true
   end
