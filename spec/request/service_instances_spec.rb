@@ -241,6 +241,32 @@ RSpec.describe 'Service Instances' do
         )
       end
     end
+
+    context 'when we filter by label selectors' do
+      it 'returns a paginated list of service instances that match the label selector' do
+        set_current_user_as_role(role: 'space_developer', org: space.organization, space: space, user: user)
+
+        VCAP::CloudController::ServiceInstanceLabelModel.make(key_name: 'fruit', value: 'strawberry', service_instance: service_instance2)
+
+        get '/v3/service_instances?label_selector=fruit=strawberry', {}, user_header
+
+        expected_pagination = {
+          'total_results' => 1,
+          'total_pages'   => 1,
+          'first'         => { 'href' => "#{link_prefix}/v3/service_instances?label_selector=fruit%3Dstrawberry&page=1&per_page=50" },
+          'last'          => { 'href' => "#{link_prefix}/v3/service_instances?label_selector=fruit%3Dstrawberry&page=1&per_page=50" },
+          'next'          => nil,
+          'previous'      => nil
+        }
+
+        parsed_response = MultiJson.load(last_response.body)
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['resources'].count).to eq(1)
+        expect(parsed_response['resources'][0]['guid']).to eq(service_instance2.guid)
+        expect(parsed_response['pagination']).to eq(expected_pagination)
+      end
+    end
   end
 
   describe 'GET /v3/service_instances/:guid/relationships/shared_spaces' do

@@ -88,6 +88,16 @@ module VCAP::CloudController
             expect(results).to match_array([service_instance_4])
           end
         end
+
+        context 'filtering label selectors' do
+          let(:filters) { { 'label_selector' => 'key=value' } }
+          let!(:label) { ServiceInstanceLabelModel.make(resource_guid: service_instance_3.guid, key_name: 'key', value: 'value') }
+
+          it 'returns the correct set of service instances' do
+            results = fetcher.fetch_all(message: message).all
+            expect(results).to match_array([service_instance_3])
+          end
+        end
       end
     end
 

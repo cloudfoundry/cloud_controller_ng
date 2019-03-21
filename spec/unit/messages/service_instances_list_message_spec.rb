@@ -11,6 +11,7 @@ module VCAP::CloudController
           'order_by'  => 'name',
           'names' => 'rabbitmq, redis,mysql',
           'space_guids' => 'space-1, space-2, space-3',
+          'label_selector' => 'key=value',
         }
       end
 
@@ -23,6 +24,7 @@ module VCAP::CloudController
         expect(message.order_by).to eq('name')
         expect(message.names).to match_array(['mysql', 'rabbitmq', 'redis'])
         expect(message.space_guids).to match_array(['space-1', 'space-2', 'space-3'])
+        expect(message.label_selector).to eq('key=value')
       end
 
       it 'converts requested keys to symbols' do
@@ -33,6 +35,7 @@ module VCAP::CloudController
         expect(message.requested?(:order_by)).to be_truthy
         expect(message.requested?(:names)).to be_truthy
         expect(message.requested?(:space_guids)).to be_truthy
+        expect(message.requested?(:label_selector)).to be_truthy
       end
     end
 
@@ -76,6 +79,16 @@ module VCAP::CloudController
           expect(message).to be_invalid
           expect(message.errors[:space_guids]).to include('must be an array')
         end
+      end
+
+      it 'validates metadata requirements' do
+        message = ServiceInstancesListMessage.from_params('label_selector' => '')
+
+        expect_any_instance_of(Validators::LabelSelectorRequirementValidator).
+          to receive(:validate).
+          with(message).
+          and_call_original
+        message.valid?
       end
     end
   end

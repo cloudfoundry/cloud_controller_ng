@@ -5,9 +5,12 @@ module VCAP::CloudController
     register_allowed_keys [
       :names,
       :space_guids,
+      :label_selector,
     ]
 
     validates_with NoAdditionalParamsValidator
+    validates_with LabelSelectorRequirementValidator, if: label_selector_requested?
+
     validates :names, array: true, allow_nil: true
     validates :space_guids, array: true, allow_nil: true
 

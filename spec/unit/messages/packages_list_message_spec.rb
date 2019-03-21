@@ -43,6 +43,7 @@ module VCAP::CloudController
         expect(message.requested?(:app_guids)).to be_truthy
         expect(message.requested?(:space_guids)).to be_truthy
         expect(message.requested?(:organization_guids)).to be_truthy
+        expect(message.requested?(:label_selector)).to be_truthy
       end
     end
 

@@ -29,6 +29,15 @@ module VCAP::CloudController
                   join_table(:inner, Space.table_name, { id: Sequel.qualify(:service_instances, :space_id), guid: message.space_guids })
       end
 
+      if message.requested?(:label_selector)
+        dataset = LabelSelectorQueryGenerator.add_selector_queries(
+          label_klass: ServiceInstanceLabelModel,
+          resource_dataset: dataset,
+          requirements: message.requirements,
+          resource_klass: ServiceInstance,
+        )
+      end
+
       dataset
     end
   end
