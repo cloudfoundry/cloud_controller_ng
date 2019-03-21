@@ -12,7 +12,7 @@ module RuboCop
         }.freeze
         STRING_SIZE_WARNING = 'Please specify an explicit size for String columns.' +
           ' `size: 255` is a good size for small strings, `size: 16_000` is the maximum for UTF8 strings.'.freeze
-        STRING_TEXT_WARNING = 'Please use `size: 16_000` (max UTF8 size) instead of `text: true`.'.freeze
+        STRING_TEXT_WARNING = 'Considering using string with an appropriate size rather than `text: true`. The size of `text: true` depends on MySQL vs Postgres'.freeze
 
         def on_block(node)
           node.each_descendant(:send) do |inner_node|

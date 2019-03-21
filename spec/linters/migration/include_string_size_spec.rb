@@ -11,7 +11,7 @@ RSpec.describe RuboCop::Cop::Migration::IncludeStringSize do
     'Please specify an explicit size for String columns. `size: 255` is a good size for small strings, `size: 16_000` is the maximum for UTF8 strings.'
   end
   let(:string_text_message) do
-    'Please use `size: 16_000` (max UTF8 size) instead of `text: true`.'
+    'Considering using string with an appropriate size rather than `text: true`. The size of `text: true` depends on MySQL vs Postgres'
   end
 
   RSpec.shared_examples 'a cop that validates inclusion of string size' do |method_name|
