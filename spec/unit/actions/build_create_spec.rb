@@ -299,7 +299,7 @@ module VCAP::CloudController
 
       context 'when there is already a staging in progress for the app' do
         it 'raises a StagingInProgress exception' do
-          FactoryBot.create(:build, state: BuildModel::STAGING_STATE, app: app)
+          BuildModel.make(state: BuildModel::STAGING_STATE, app: app)
           expect {
             action.create_and_stage(package: package, lifecycle: lifecycle)
           }.to raise_error(BuildCreate::StagingInProgress)

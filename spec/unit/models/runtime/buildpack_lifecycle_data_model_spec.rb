@@ -425,7 +425,7 @@ module VCAP::CloudController
 
     describe '#valid?' do
       it 'cannot be associated with both an app and a build' do
-        build = FactoryBot.create(:build)
+        build = BuildModel.make
         app = FactoryBot.create(:app)
         lifecycle_data.build = build
         lifecycle_data.app = app
@@ -477,7 +477,7 @@ module VCAP::CloudController
       end
 
       it 'can be associated with a build' do
-        build = FactoryBot.create(:build)
+        build = BuildModel.make
         lifecycle_data.build = build
         lifecycle_data.save
         expect(lifecycle_data.reload.build).to eq(build)

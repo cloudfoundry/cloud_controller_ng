@@ -30,7 +30,7 @@ module VCAP::CloudController
       end
 
       describe 'when there are builds staging' do
-        before { FactoryBot.create(:build, app: app, state: BuildModel::STAGING_STATE) }
+        before { BuildModel.make(app: app, state: BuildModel::STAGING_STATE) }
 
         it 'does things' do
           V2::AppStop.stop(app, cancel_action)

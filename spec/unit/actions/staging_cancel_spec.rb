@@ -16,7 +16,7 @@ module VCAP::CloudController
 
     describe '#cancel' do
       context 'when the build is staging' do
-        let!(:build) { FactoryBot.create(:build, state: BuildModel::STAGING_STATE) }
+        let!(:build) { BuildModel.make(state: BuildModel::STAGING_STATE) }
 
         it 'sends a stop staging request' do
           cancel_action.cancel([build])
@@ -25,7 +25,7 @@ module VCAP::CloudController
       end
 
       context 'when the build is in a terminal state' do
-        let!(:build) { FactoryBot.create(:build, state: BuildModel::FAILED_STATE) }
+        let!(:build) { BuildModel.make(state: BuildModel::FAILED_STATE) }
 
         it 'does NOT send a stop staging request' do
           cancel_action.cancel([build])

@@ -275,7 +275,7 @@ module VCAP::CloudController
       it_behaves_like 'a Build to Droplet stager' do
         let(:file_content) { 'droplet content' }
         let(:package) { PackageModel.make(app: process) }
-        let(:build) { FactoryBot.create(:build,
+        let(:build) { BuildModel.make(
           package:               package,
           app:                   process,
           created_by_user_guid:  '1234',
@@ -318,7 +318,7 @@ module VCAP::CloudController
       it_behaves_like 'droplet staging error handling' do
         let(:file_content) { 'droplet content' }
         let(:package) { PackageModel.make(app: process) }
-        let(:build) { FactoryBot.create(:build, package: package, app: process) }
+        let(:build) { BuildModel.make(package: package, app: process) }
         let(:droplet) { nil }
         let(:upload_req) do
           { upload: { droplet: Rack::Test::UploadedFile.new(temp_file_with_content(file_content)) } }

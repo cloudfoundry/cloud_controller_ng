@@ -37,6 +37,19 @@ module VCAP::CloudController
     "VCAP::CloudController::#{root}AnnotationModel".constantize.blueprint do end
   end
 
+  BuildModel.blueprint do
+    guid     { Sham.guid }
+    app      { FactoryBot.create(:app) }
+    state    { VCAP::CloudController::BuildModel::STAGED_STATE }
+  end
+
+  BuildModel.blueprint(:docker) do
+    guid     { Sham.guid }
+    state    { VCAP::CloudController::DropletModel::STAGING_STATE }
+    app { FactoryBot.create(:app, droplet_guid: guid) }
+    buildpack_lifecycle_data { nil.tap { |_| object.save } }
+  end
+
   PackageModel.blueprint do
     guid     { Sham.guid }
     state    { VCAP::CloudController::PackageModel::CREATED_STATE }

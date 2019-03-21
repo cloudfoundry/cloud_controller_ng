@@ -95,7 +95,7 @@ module VCAP::CloudController
           let(:process) { ProcessModelFactory.make(state: 'STARTED') }
 
           before do
-            FactoryBot.create(:build, app: process.app, package: process.latest_package, state: BuildModel::STAGING_STATE)
+            BuildModel.make(app: process.app, package: process.latest_package, state: BuildModel::STAGING_STATE)
             process.reload
           end
 

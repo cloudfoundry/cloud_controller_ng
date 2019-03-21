@@ -21,7 +21,7 @@ module VCAP
 
           package = make_package(package_attributes, parent_app)
 
-          build   = FactoryBot.create(:build, app: parent_app, package: package)
+          build   = BuildModel.make(app: parent_app, package: package)
           droplet = DropletModel.make(app: parent_app, build: build, package: package)
           parent_app.update(droplet_guid: droplet.guid)
 

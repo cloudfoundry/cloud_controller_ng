@@ -25,7 +25,7 @@ module VCAP::CloudController
         end
 
         it 'uses the buildpacks from the user' do
-          build = FactoryBot.create(:build)
+          build = BuildModel.make
 
           expect {
             buildpack_lifecycle.create_lifecycle_data_model(build)
@@ -50,7 +50,7 @@ module VCAP::CloudController
           end
 
           it 'uses the buildpacks on the app' do
-            build = FactoryBot.create(:build)
+            build = BuildModel.make
 
             expect {
               buildpack_lifecycle.create_lifecycle_data_model(build)
@@ -65,7 +65,7 @@ module VCAP::CloudController
 
         context 'when the app does not have buildpacks' do
           it 'does not assign any buildpacks' do
-            build = FactoryBot.create(:build)
+            build = BuildModel.make
 
             expect {
               buildpack_lifecycle.create_lifecycle_data_model(build)
@@ -85,7 +85,7 @@ module VCAP::CloudController
         end
 
         it 'uses that stack' do
-          data_model = buildpack_lifecycle.create_lifecycle_data_model(FactoryBot.create(:build))
+          data_model = buildpack_lifecycle.create_lifecycle_data_model(BuildModel.make)
           expect(data_model.stack).to eq('cool-stack')
         end
       end
@@ -99,14 +99,14 @@ module VCAP::CloudController
           end
 
           it 'uses the stack from the app' do
-            data_model = buildpack_lifecycle.create_lifecycle_data_model(FactoryBot.create(:build))
+            data_model = buildpack_lifecycle.create_lifecycle_data_model(BuildModel.make)
             expect(data_model.stack).to eq('best-stack')
           end
         end
 
         context 'when the app does not have a stack' do
           it 'uses the default stack' do
-            data_model = buildpack_lifecycle.create_lifecycle_data_model(FactoryBot.create(:build))
+            data_model = buildpack_lifecycle.create_lifecycle_data_model(BuildModel.make)
             expect(data_model.stack).to eq(Stack.default.name)
           end
         end

@@ -122,7 +122,7 @@ RSpec.describe 'Builds' do
 
   describe 'GET /v3/builds' do
     let(:build) do
-      FactoryBot.create(:build,
+      VCAP::CloudController::BuildModel.make(
         package: package,
         app: app_model,
         created_by_user_name: 'bob the builder',
@@ -131,7 +131,7 @@ RSpec.describe 'Builds' do
       )
     end
     let!(:second_build) do
-      FactoryBot.create(:build,
+      VCAP::CloudController::BuildModel.make(
         package: package,
         app: app_model,
         created_at: build.created_at - 1.day,
@@ -169,7 +169,7 @@ RSpec.describe 'Builds' do
     context 'when there are other spaces the developer cannot see' do
       let(:non_accessible_space) { FactoryBot.create(:space) }
       let(:non_accessible_app_model) { FactoryBot.create(:app, space: non_accessible_space, name: 'other-app') }
-      let!(:non_accessible_build) { FactoryBot.create(:build, app: non_accessible_app_model) }
+      let!(:non_accessible_build) { VCAP::CloudController::BuildModel.make(app: non_accessible_app_model) }
 
       let(:per_page) { 2 }
       let(:order_by) { '-created_at' }
@@ -260,7 +260,7 @@ RSpec.describe 'Builds' do
 
   describe 'GET /v3/builds/:guid' do
     let(:build) do
-      FactoryBot.create(:build,
+      VCAP::CloudController::BuildModel.make(
         package: package,
         app: app_model,
         created_by_user_name: 'bob the builder',
@@ -338,7 +338,7 @@ RSpec.describe 'Builds' do
       VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
     end
     let(:build_model) do
-      FactoryBot.create(:build, package: package_model)
+      VCAP::CloudController::BuildModel.make(package: package_model)
     end
     let(:metadata) do
       {

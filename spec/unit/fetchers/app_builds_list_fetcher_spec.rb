@@ -15,13 +15,13 @@ module VCAP::CloudController
     let(:app3_in_space2) { FactoryBot.create(:app, space: space2, guid: 'app3') }
     let(:app4_in_space3) { FactoryBot.create(:app, space: space3, guid: 'app4') }
 
-    let!(:staged_build_for_app1_space1) { FactoryBot.create(:build, app_guid: app_in_space1.guid, state: BuildModel::STAGED_STATE) }
-    let!(:failed_build_for_app1_space1) { FactoryBot.create(:build, app_guid: app_in_space1.guid, state: BuildModel::FAILED_STATE) }
+    let!(:staged_build_for_app1_space1) { BuildModel.make(app_guid: app_in_space1.guid, state: BuildModel::STAGED_STATE) }
+    let!(:failed_build_for_app1_space1) { BuildModel.make(app_guid: app_in_space1.guid, state: BuildModel::FAILED_STATE) }
 
-    let!(:staged_build_for_app2_space1) { FactoryBot.create(:build, app_guid: app2_in_space1.guid, state: BuildModel::STAGED_STATE) }
+    let!(:staged_build_for_app2_space1) { BuildModel.make(app_guid: app2_in_space1.guid, state: BuildModel::STAGED_STATE) }
 
-    let!(:staging_build_for_app3_space2) { FactoryBot.create(:build, app_guid: app3_in_space2.guid, state: BuildModel::STAGING_STATE) }
-    let!(:staging_build_for_app4_space3) { FactoryBot.create(:build, app_guid: app4_in_space3.guid, state: BuildModel::STAGING_STATE) }
+    let!(:staging_build_for_app3_space2) { BuildModel.make(app_guid: app3_in_space2.guid, state: BuildModel::STAGING_STATE) }
+    let!(:staging_build_for_app4_space3) { BuildModel.make(app_guid: app4_in_space3.guid, state: BuildModel::STAGING_STATE) }
 
     subject(:fetcher) { AppBuildsListFetcher.new(app_guid, message) }
     let(:pagination_options) { PaginationOptions.new({}) }

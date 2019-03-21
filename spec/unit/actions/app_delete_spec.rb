@@ -53,7 +53,7 @@ module VCAP::CloudController
         end
 
         it 'deletes associated builds' do
-          build = FactoryBot.create(:build, app: app)
+          build = BuildModel.make(app: app)
 
           expect {
             app_delete.delete(app_dataset)
@@ -75,7 +75,7 @@ module VCAP::CloudController
               beet: 'formanova',
             }
           end
-          let(:build) { FactoryBot.create(:build, app: app) }
+          let(:build) { BuildModel.make(app: app) }
 
           before do
             LabelsUpdate.update(build, old_labels, BuildLabelModel)

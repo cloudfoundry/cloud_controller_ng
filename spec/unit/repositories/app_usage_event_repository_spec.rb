@@ -314,7 +314,7 @@ module VCAP::CloudController
         let(:app_model) { FactoryBot.create(:app, guid: 'app-1', name: 'frank-app', space: space) }
         let(:package_state) { PackageModel::READY_STATE }
         let(:package) { PackageModel.make(guid: 'package-1', app_guid: app_model.guid, state: package_state) }
-        let!(:build) { FactoryBot.create(:build, guid: 'build-1', package: package, app_guid: app_model.guid, state: BuildModel::STAGING_STATE) }
+        let!(:build) { BuildModel.make(guid: 'build-1', package: package, app_guid: app_model.guid, state: BuildModel::STAGING_STATE) }
 
         let(:state) { 'TEST_STATE' }
 
@@ -394,7 +394,8 @@ module VCAP::CloudController
 
           context 'when the build has BOTH an associated droplet and lifecycle data' do
             let!(:build) do
-              FactoryBot.create(:build,
+              BuildModel.make(
+                :buildpack,
                 guid:         'build-1',
                 package_guid: package.guid,
                 app_guid:     app_model.guid,
@@ -427,7 +428,7 @@ module VCAP::CloudController
 
         context 'docker builds' do
           let!(:build) do
-            FactoryBot.create(:build,
+            BuildModel.make(
               :docker,
               guid:         'build-1',
               package_guid: package.guid,
@@ -445,7 +446,7 @@ module VCAP::CloudController
 
         context 'when the build is updating its state' do
           let(:old_build_state) { BuildModel::STAGED_STATE }
-          let(:existing_build) { FactoryBot.create(:build,
+          let(:existing_build) { BuildModel.make(
             guid:     'existing-build',
             state:    old_build_state,
             package:  package,
@@ -493,7 +494,7 @@ module VCAP::CloudController
           end
 
           context 'when the build has no package' do
-            let(:existing_build) { FactoryBot.create(:build, guid: 'existing-build', state: old_build_state, app_guid: app_model.guid) }
+            let(:existing_build) { BuildModel.make(guid: 'existing-build', state: old_build_state, app_guid: app_model.guid) }
 
             context 'when an attribute changes' do
               before do

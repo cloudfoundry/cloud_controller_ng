@@ -18,8 +18,8 @@ module VCAP::CloudController
         let(:fake_logger) { instance_double(Steno::Logger, error: nil, info: nil) }
 
         context 'with builds which have been staging for too long' do
-          let!(:build1) { FactoryBot.create(:build, state: BuildModel::STAGING_STATE) }
-          let!(:build2) { FactoryBot.create(:build, state: BuildModel::STAGING_STATE) }
+          let!(:build1) { BuildModel.make(state: BuildModel::STAGING_STATE) }
+          let!(:build2) { BuildModel.make(state: BuildModel::STAGING_STATE) }
 
           before do
             allow(Steno).to receive(:logger).and_return(fake_logger)
@@ -54,8 +54,8 @@ module VCAP::CloudController
         end
 
         context 'when the builds were created recently' do
-          let!(:build1) { FactoryBot.create(:build, state: BuildModel::STAGING_STATE) }
-          let!(:build2) { FactoryBot.create(:build, state: BuildModel::STAGING_STATE) }
+          let!(:build1) { BuildModel.make(state: BuildModel::STAGING_STATE) }
+          let!(:build2) { BuildModel.make(state: BuildModel::STAGING_STATE) }
 
           before do
             build1.this.update(updated_at: non_expired_time, created_at: non_expired_time)
@@ -75,8 +75,8 @@ module VCAP::CloudController
         end
 
         it 'ignores builds that have not been staging for too long' do
-          build1 = FactoryBot.create(:build, state: BuildModel::STAGING_STATE)
-          build2 = FactoryBot.create(:build, state: BuildModel::STAGING_STATE)
+          build1 = BuildModel.make(state: BuildModel::STAGING_STATE)
+          build2 = BuildModel.make(state: BuildModel::STAGING_STATE)
 
           cleanup_job.perform
 
@@ -85,8 +85,8 @@ module VCAP::CloudController
         end
 
         it 'ignores builds in a completed state' do
-          build1 = FactoryBot.create(:build, state: BuildModel::STAGED_STATE)
-          build2 = FactoryBot.create(:build, state: BuildModel::STAGED_STATE)
+          build1 = BuildModel.make(state: BuildModel::STAGED_STATE)
+          build2 = BuildModel.make(state: BuildModel::STAGED_STATE)
           build1.this.update(updated_at: expired_time)
           build2.this.update(updated_at: expired_time)
 

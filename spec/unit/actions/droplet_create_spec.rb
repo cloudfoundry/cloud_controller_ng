@@ -7,7 +7,7 @@ module VCAP::CloudController
     let(:app) { FactoryBot.create(:app) }
     let(:package) { PackageModel.make app: app }
     let(:build) do
-      FactoryBot.create(:build,
+      BuildModel.make(
         app: app,
         package: package,
         created_by_user_guid: 'schneider',
@@ -58,7 +58,7 @@ module VCAP::CloudController
 
       context 'when the build does not contain created_by fields' do
         let(:build) do
-          FactoryBot.create(:build,
+          BuildModel.make(
             app: app,
             package: package,
           )
@@ -124,7 +124,7 @@ module VCAP::CloudController
 
       context 'when the build does not contain created_by fields' do
         let(:build) do
-          FactoryBot.create(:build,
+          BuildModel.make(
             app: app,
             package: package,
           )
