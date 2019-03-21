@@ -289,7 +289,7 @@ module VCAP::CloudController
 
         context 'when domain_creation feature_flag is disabled' do
           before do
-            FactoryBot.create(:feature_flag, name: 'private_domain_creation', enabled: false, error_message: nil)
+            FeatureFlag.make(name: 'private_domain_creation', enabled: false, error_message: nil)
           end
 
           it 'returns FeatureDisabled' do

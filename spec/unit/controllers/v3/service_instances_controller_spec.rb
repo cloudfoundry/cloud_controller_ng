@@ -415,7 +415,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
 
     before do
       set_current_user_as_admin
-      FactoryBot.create(:feature_flag, name: 'service_instance_sharing', enabled: service_instance_sharing_enabled, error_message: nil)
+      VCAP::CloudController::FeatureFlag.make(name: 'service_instance_sharing', enabled: service_instance_sharing_enabled, error_message: nil)
     end
 
     it 'calls the service instance share action' do

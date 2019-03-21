@@ -41,7 +41,7 @@ RSpec.describe 'Feature Flags Request' do
     end
 
     context 'there is an override' do
-      let(:feature_flag) { FactoryBot.create(:feature_flag, name: 'diego_docker', enabled: true, error_message: 'error') }
+      let(:feature_flag) { VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: true, error_message: 'error') }
       it 'returns details of the requested feature flag when there is an override' do
         get "/v3/feature_flags/#{feature_flag.name}", nil, headers
         expect(last_response.status).to eq 200

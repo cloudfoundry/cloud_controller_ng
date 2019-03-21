@@ -47,7 +47,7 @@ RSpec.describe FeatureFlagsController, type: :controller do
 
       context 'when there are overrides from the database' do
         let!(:updated_feature_flag) do
-          FactoryBot.create(:feature_flag, name: feature_flag_key, enabled: true, error_message: 'some_custom_message')
+          VCAP::CloudController::FeatureFlag.make(name: feature_flag_key, enabled: true, error_message: 'some_custom_message')
         end
 
         it 'returns the flags with their overridden for enabled where needed' do
@@ -100,7 +100,7 @@ RSpec.describe FeatureFlagsController, type: :controller do
     end
 
     context 'when there are overrides' do
-      before { FactoryBot.create(:feature_flag, name: 'flag1', enabled: true, error_message: nil) }
+      before { VCAP::CloudController::FeatureFlag.make(name: 'flag1', enabled: true, error_message: nil) }
 
       it 'returns the overridden value' do
         get :show, params: { name: 'flag1' }

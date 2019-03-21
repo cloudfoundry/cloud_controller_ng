@@ -187,7 +187,7 @@ module VCAP::CloudController
 
         context 'when docker is enabled' do
           before do
-            FactoryBot.create(:feature_flag, name: 'diego_docker', enabled: true, error_message: nil)
+            FeatureFlag.make(name: 'diego_docker', enabled: true, error_message: nil)
           end
 
           it 'is valid' do
@@ -199,7 +199,7 @@ module VCAP::CloudController
 
         context 'when docker is disabled' do
           before do
-            FactoryBot.create(:feature_flag, name: 'diego_docker', enabled: false, error_message: 'I am a banana')
+            FeatureFlag.make(name: 'diego_docker', enabled: false, error_message: 'I am a banana')
           end
 
           it 'is not valid' do
@@ -580,7 +580,7 @@ module VCAP::CloudController
       describe 'combination errors' do
         context 'when docker and buildpack is provided' do
           before do
-            FactoryBot.create(:feature_flag, name: 'diego_docker', enabled: true, error_message: nil)
+            FeatureFlag.make(name: 'diego_docker', enabled: true, error_message: nil)
           end
 
           let(:buildpack) { Buildpack.make }
@@ -597,7 +597,7 @@ module VCAP::CloudController
 
         context 'when docker and buildpacks is provided' do
           before do
-            FactoryBot.create(:feature_flag, name: 'diego_docker', enabled: true, error_message: nil)
+            FeatureFlag.make(name: 'diego_docker', enabled: true, error_message: nil)
           end
 
           let(:buildpack) { Buildpack.make }

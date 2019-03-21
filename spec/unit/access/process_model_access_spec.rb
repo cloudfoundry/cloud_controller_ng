@@ -20,7 +20,7 @@ module VCAP::CloudController
     context 'admin' do
       include_context :admin_setup
 
-      before { FactoryBot.create(:feature_flag, name: 'app_bits_upload', enabled: false) }
+      before { FeatureFlag.make(name: 'app_bits_upload', enabled: false) }
 
       it_behaves_like :full_access
 
@@ -37,7 +37,7 @@ module VCAP::CloudController
     context 'global auditor only' do
       include_context :global_auditor_setup
 
-      before { FactoryBot.create(:feature_flag, name: 'app_bits_upload', enabled: false) }
+      before { FeatureFlag.make(name: 'app_bits_upload', enabled: false) }
 
       it_behaves_like :read_only_access
 
@@ -53,7 +53,7 @@ module VCAP::CloudController
     context 'admin read only' do
       include_context :admin_read_only_setup
 
-      before { FactoryBot.create(:feature_flag, name: 'app_bits_upload', enabled: false) }
+      before { FeatureFlag.make(name: 'app_bits_upload', enabled: false) }
 
       it_behaves_like :read_only_access
 
@@ -87,7 +87,7 @@ module VCAP::CloudController
 
       context 'app_bits_upload FeatureFlag' do
         it 'disallows when enabled' do
-          FactoryBot.create(:feature_flag, name: 'app_bits_upload', enabled: false, error_message: nil)
+          FeatureFlag.make(name: 'app_bits_upload', enabled: false, error_message: nil)
           expect { subject.upload?(object) }.to raise_error(CloudController::Errors::ApiError, /app_bits_upload/)
         end
       end
@@ -98,7 +98,7 @@ module VCAP::CloudController
       end
 
       context 'when the app_scaling feature flag is disabled' do
-        before { FactoryBot.create(:feature_flag, name: 'app_scaling', enabled: false, error_message: nil) }
+        before { FeatureFlag.make(name: 'app_scaling', enabled: false, error_message: nil) }
 
         it 'cannot scale' do
           expect { subject.read_for_update?(object, { 'memory' => 2 }) }.to raise_error(CloudController::Errors::ApiError, /app_scaling/)

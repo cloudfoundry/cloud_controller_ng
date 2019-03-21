@@ -569,7 +569,7 @@ module VCAP::CloudController
 
       describe 'app_scaling feature flag' do
         context 'when the flag is enabled' do
-          before { FactoryBot.create(:feature_flag, name: 'app_scaling', enabled: true) }
+          before { FeatureFlag.make(name: 'app_scaling', enabled: true) }
 
           it 'allows updating memory' do
             put "/v2/apps/#{process.app.guid}", '{ "memory": 2 }'
@@ -578,7 +578,7 @@ module VCAP::CloudController
         end
 
         context 'when the flag is disabled' do
-          before { FactoryBot.create(:feature_flag, name: 'app_scaling', enabled: false, error_message: nil) }
+          before { FeatureFlag.make(name: 'app_scaling', enabled: false, error_message: nil) }
 
           it 'fails with the proper error code and message' do
             put "/v2/apps/#{process.app.guid}", '{ "memory": 2 }'
@@ -1488,7 +1488,7 @@ module VCAP::CloudController
 
       context 'when the space_developer_env_var_visibility feature flag is disabled' do
         before do
-          FactoryBot.create(:feature_flag, name: 'space_developer_env_var_visibility', enabled: false, error_message: nil)
+          VCAP::CloudController::FeatureFlag.make(name: 'space_developer_env_var_visibility', enabled: false, error_message: nil)
         end
 
         it 'raises 403 for non-admins' do
@@ -1528,7 +1528,7 @@ module VCAP::CloudController
 
       context 'when the env_var_visibility feature flag is disabled' do
         before do
-          FactoryBot.create(:feature_flag, name: 'env_var_visibility', enabled: false, error_message: nil)
+          VCAP::CloudController::FeatureFlag.make(name: 'env_var_visibility', enabled: false, error_message: nil)
         end
 
         it 'raises 403 all user' do
@@ -1541,7 +1541,7 @@ module VCAP::CloudController
 
         context 'when the space_developer_env_var_visibility feature flag is enabled' do
           before do
-            FactoryBot.create(:feature_flag, name: 'space_developer_env_var_visibility', enabled: true, error_message: nil)
+            VCAP::CloudController::FeatureFlag.make(name: 'space_developer_env_var_visibility', enabled: true, error_message: nil)
           end
 
           it 'raises 403 for non-admins' do
@@ -1556,7 +1556,7 @@ module VCAP::CloudController
 
       context 'when the env_var_visibility feature flag is enabled' do
         before do
-          FactoryBot.create(:feature_flag, name: 'env_var_visibility', enabled: true, error_message: nil)
+          VCAP::CloudController::FeatureFlag.make(name: 'env_var_visibility', enabled: true, error_message: nil)
         end
 
         it 'continues to show 403 for roles that never had access to envs' do
@@ -1596,7 +1596,7 @@ module VCAP::CloudController
 
         context 'when the space_developer_env_var_visibility feature flag is disabled' do
           before do
-            FactoryBot.create(:feature_flag, name: 'space_developer_env_var_visibility', enabled: false, error_message: nil)
+            VCAP::CloudController::FeatureFlag.make(name: 'space_developer_env_var_visibility', enabled: false, error_message: nil)
           end
 
           it 'raises 403 for space developers' do

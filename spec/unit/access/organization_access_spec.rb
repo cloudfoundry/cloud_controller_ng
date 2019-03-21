@@ -8,7 +8,7 @@ module VCAP::CloudController
     let(:user) { FactoryBot.create(:user) }
     let(:org) { FactoryBot.create(:organization) }
     let(:object) { org }
-    let(:flag) { FactoryBot.create(:feature_flag, name: 'user_org_creation', enabled: false) }
+    let(:flag) { FeatureFlag.make(name: 'user_org_creation', enabled: false) }
 
     before do
       flag.save

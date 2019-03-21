@@ -341,7 +341,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
       end
 
       before do
-        FactoryBot.create(:feature_flag, name: 'diego_docker', enabled: true, error_message: nil)
+        VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: true, error_message: nil)
       end
 
       context 'for a docker app' do

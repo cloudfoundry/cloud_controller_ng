@@ -26,7 +26,7 @@ RSpec.describe TasksController, type: :controller do
     before do
       allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space: space)
-      FactoryBot.create(:feature_flag, name: 'task_creation', enabled: tasks_enabled, error_message: nil)
+      VCAP::CloudController::FeatureFlag.make(name: 'task_creation', enabled: tasks_enabled, error_message: nil)
 
       app_model.droplet = droplet
       app_model.save

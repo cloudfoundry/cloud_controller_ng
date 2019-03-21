@@ -37,7 +37,7 @@ module VCAP::CloudController
         let(:req_body) { { resources: '[]', application: valid_zip } }
 
         it 'allows upload even if app_bits_upload flag is disabled' do
-          FactoryBot.create(:feature_flag, name: 'app_bits_upload', enabled: false)
+          FeatureFlag.make(name: 'app_bits_upload', enabled: false)
           make_request
           expect(last_response.status).to eq(201)
         end
@@ -50,7 +50,7 @@ module VCAP::CloudController
           let(:req_body) { { resources: '[]', application: valid_zip } }
 
           before do
-            FactoryBot.create(:feature_flag, name: 'app_bits_upload', enabled: false, error_message: nil)
+            FeatureFlag.make(name: 'app_bits_upload', enabled: false, error_message: nil)
             make_request
             process.refresh
           end
@@ -70,7 +70,7 @@ module VCAP::CloudController
 
         context 'when the app_bits_upload feature flag is enabled' do
           before do
-            FactoryBot.create(:feature_flag, name: 'app_bits_upload', enabled: true)
+            FeatureFlag.make(name: 'app_bits_upload', enabled: true)
           end
 
           context 'with an empty request' do
@@ -347,7 +347,7 @@ module VCAP::CloudController
               let(:req_body) { { resources: JSON.dump([{ 'fn' => 'lol', 'sha1' => 'abc', 'size' => 2048, 'mode' => '300' }]) } }
 
               before do
-                FactoryBot.create(:feature_flag, name: 'app_bits_upload', enabled: true)
+                FeatureFlag.make(name: 'app_bits_upload', enabled: true)
               end
 
               it 'fails to upload' do

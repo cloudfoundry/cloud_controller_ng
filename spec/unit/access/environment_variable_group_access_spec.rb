@@ -4,7 +4,7 @@ module VCAP::CloudController
   RSpec.describe EnvironmentVariableGroupAccess, type: :access do
     subject(:access) { EnvironmentVariableGroupAccess.new(Security::AccessContext.new) }
     let(:user) { FactoryBot.create(:user) }
-    let(:object) { FactoryBot.create(:feature_flag) }
+    let(:object) { VCAP::CloudController::FeatureFlag.make }
 
     it_behaves_like :admin_full_access
     it_behaves_like :admin_read_only_access

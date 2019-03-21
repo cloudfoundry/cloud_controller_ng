@@ -590,7 +590,7 @@ RSpec.describe AppsV3Controller, type: :controller do
       end
 
       before do
-        FactoryBot.create(:feature_flag, name: 'diego_docker', enabled: false, error_message: nil)
+        VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: false, error_message: nil)
       end
 
       context 'admin' do
@@ -1364,7 +1364,7 @@ RSpec.describe AppsV3Controller, type: :controller do
       let(:droplet) { VCAP::CloudController::DropletModel.make(:docker, state: VCAP::CloudController::DropletModel::STAGED_STATE) }
 
       before do
-        FactoryBot.create(:feature_flag, name: 'diego_docker', enabled: false, error_message: nil)
+        VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: false, error_message: nil)
       end
 
       context 'admin' do
@@ -1580,7 +1580,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
         context 'and diego_docker feature flag is enabled' do
           before do
-            FactoryBot.create(:feature_flag, name: 'diego_docker', enabled: true, error_message: nil)
+            VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: true, error_message: nil)
           end
 
           it 'returns 200' do
@@ -1592,7 +1592,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
         context 'and diego_docker feature flag is disabled' do
           before do
-            FactoryBot.create(:feature_flag, name: 'diego_docker', enabled: false, error_message: nil)
+            VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: false, error_message: nil)
           end
 
           context 'admin' do
@@ -1788,7 +1788,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
       context 'when the space_developer_env_var_visibility feature flag is disabled' do
         before do
-          FactoryBot.create(:feature_flag, name: 'space_developer_env_var_visibility', enabled: false, error_message: nil)
+          VCAP::CloudController::FeatureFlag.make(name: 'space_developer_env_var_visibility', enabled: false, error_message: nil)
         end
 
         it 'raises 403 for non-admins' do
@@ -1830,7 +1830,7 @@ RSpec.describe AppsV3Controller, type: :controller do
       context 'when the env_var_visibility feature flag is disabled' do
         before do
           allow_user_secret_access(user, space: space)
-          FactoryBot.create(:feature_flag, name: 'env_var_visibility', enabled: false, error_message: nil)
+          VCAP::CloudController::FeatureFlag.make(name: 'env_var_visibility', enabled: false, error_message: nil)
         end
 
         it 'raises 403 for all users' do
@@ -1906,7 +1906,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
       context 'when the space_developer_env_var_visibility feature flag is disabled' do
         before do
-          FactoryBot.create(:feature_flag, name: 'space_developer_env_var_visibility', enabled: false, error_message: nil)
+          VCAP::CloudController::FeatureFlag.make(name: 'space_developer_env_var_visibility', enabled: false, error_message: nil)
         end
 
         role_to_expected_http_response.merge({ 'space_developer' => 403 }).each do |role, expected_return_value|
@@ -1928,7 +1928,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
       context 'when the env_var_visibility feature flag is disabled' do
         before do
-          FactoryBot.create(:feature_flag, name: 'env_var_visibility', enabled: false, error_message: nil)
+          VCAP::CloudController::FeatureFlag.make(name: 'env_var_visibility', enabled: false, error_message: nil)
         end
 
         it 'raises 403 for all users' do

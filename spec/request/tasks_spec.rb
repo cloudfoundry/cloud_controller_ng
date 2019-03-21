@@ -16,7 +16,7 @@ RSpec.describe 'Tasks' do
   let(:bbs_task_client) { instance_double(VCAP::CloudController::Diego::BbsTaskClient) }
 
   before do
-    FactoryBot.create(:feature_flag, name: 'task_creation', enabled: true, error_message: nil)
+    VCAP::CloudController::FeatureFlag.make(name: 'task_creation', enabled: true, error_message: nil)
 
     app_model.droplet = droplet
     app_model.save

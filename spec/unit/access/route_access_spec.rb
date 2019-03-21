@@ -10,7 +10,7 @@ module VCAP::CloudController
     let(:org) { FactoryBot.create(:organization) }
     let(:space) { FactoryBot.create(:space, organization: org) }
     let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: org) }
-    let(:flag) { FactoryBot.create(:feature_flag, name: 'route_creation', enabled: false) }
+    let(:flag) { FeatureFlag.make(name: 'route_creation', enabled: false) }
     let(:object) { VCAP::CloudController::Route.make(domain: domain, space: space) }
 
     before do

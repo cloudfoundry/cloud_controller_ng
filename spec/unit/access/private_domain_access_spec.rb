@@ -16,7 +16,7 @@ module VCAP::CloudController
     context 'admin' do
       include_context :admin_setup
 
-      before { FactoryBot.create(:feature_flag, name: 'private_domain_creation', enabled: false) }
+      before { FeatureFlag.make(name: 'private_domain_creation', enabled: false) }
 
       it_behaves_like :full_access
     end
@@ -32,7 +32,7 @@ module VCAP::CloudController
 
       context 'when private_domain_creation FeatureFlag is disabled' do
         it 'cannot create a private domain' do
-          FactoryBot.create(:feature_flag, name: 'private_domain_creation', enabled: false, error_message: nil)
+          FeatureFlag.make(name: 'private_domain_creation', enabled: false, error_message: nil)
           expect { subject.create?(object) }.to raise_error(CloudController::Errors::ApiError, /private_domain_creation/)
         end
       end
