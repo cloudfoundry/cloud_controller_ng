@@ -121,6 +121,7 @@ includes:
   - resources/service_instances/object
   - resources/service_instances/list
   - resources/service_instances/list_shared_spaces
+  - resources/service_instances/update
   - resources/service_instances/share_to_space
   - resources/service_instances/unshare_from_space
   - resources/spaces/header

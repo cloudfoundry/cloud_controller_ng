@@ -1,0 +1,41 @@
+### Update a service instance
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/service_instances/[guid]" \
+  -X PATCH \
+  -H "Authorization: bearer [token]" \
+  -H "Content-Type: application/json" \
+  -d '{ "metadata": { "labels": { "key": "value" }, "annotations": {"note": "detailed information"}}}'
+
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :single_service_instance, labels: { "key" => "value" }, "annotations": {"note" => "detailed information"} %>
+```
+
+#### Definition
+`PATCH /v3/service_instances/:guid`
+
+#### Optional Parameters
+
+Name | Type | Description
+---- | ---- | -----------
+**metadata.labels** _(experimental)_| [_label object_](#labels) | Labels applied to the service_instance.
+**metadata.annotations** _(experimental)_ | [_annotation object_](#annotations) | Annotations applied to the service_instance.
+
+#### Permitted Roles
+ |
+--- | ---
+Space Developer |
+Admin |

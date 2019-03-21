@@ -8,6 +8,10 @@
       "guid": "b19f6525-cbd3-4155-b156-dc0c2a431b4c"
     }
   ],
+  "metadata": {
+    "labels": {},
+    "annotations": {}
+  },
   "links": {
     "self": {
       "href": "https://api.example.org/v3/service_instances/bdeg4371-cbd3-4155-b156-dc0c2a431b4c/relationships/shared_spaces"
@@ -16,7 +20,7 @@
 }
 <% end %>
 
-<% content_for :paginated_list_of_service_instances do %>
+<% content_for :paginated_list_of_service_instances do | metadata={} | %>
 {
   "pagination": {
     "total_results": 1,
@@ -43,6 +47,10 @@
           }
         }
       },
+      "metadata": {
+        "labels": <%= metadata.fetch(:labels, {}).to_json(space: ' ', object_nl: ' ')%>,
+        "annotations": <%= metadata.fetch(:annotations, {}).to_json(space: ' ', object_nl: ' ')%>
+      },
       "links": {
         "space": {
           "href": "https://api.example.org/v3/spaces/ae0031f9-dd49-461c-a945-df40e77c39cb"
@@ -53,7 +61,7 @@
 }
 <% end %>
 
-<% content_for :single_service_instance do %>
+<% content_for :single_service_instance do | metadata={} | %>
 {
   "guid": "85ccdcad-d725-4109-bca4-fd6ba062b5c8",
   "created_at": "2017-11-17T13:54:21Z",
@@ -65,6 +73,10 @@
         "guid": "ae0031f9-dd49-461c-a945-df40e77c39cb"
       }
     }
+  },
+  "metadata": {
+    "labels": <%= metadata.fetch(:labels, {}).to_json(space: ' ', object_nl: ' ')%>,
+    "annotations": <%= metadata.fetch(:annotations, {}).to_json(space: ' ', object_nl: ' ')%>
   },
   "links": {
     "space": {
