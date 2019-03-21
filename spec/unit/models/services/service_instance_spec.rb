@@ -481,5 +481,18 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe 'metadata' do
+      let(:service_instance) { ServiceInstance.make }
+      let(:annotation) { ServiceInstanceAnnotationModel.make(service_instance: service_instance) }
+      let(:label) { ServiceInstanceLabelModel.make(service_instance: service_instance) }
+
+      it 'can access a service_instance from its metadata' do
+        expect(annotation.resource_guid).to eq(service_instance.guid)
+        expect(label.resource_guid).to eq(service_instance.guid)
+        expect(service_instance.labels).to match_array([label])
+        expect(service_instance.annotations).to match_array([annotation])
+      end
+    end
   end
 end

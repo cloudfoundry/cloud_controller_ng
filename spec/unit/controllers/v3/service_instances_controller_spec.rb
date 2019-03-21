@@ -1,4 +1,5 @@
 require 'rails_helper'
+require 'permissions_spec_helper'
 
 RSpec.describe ServiceInstancesV3Controller, type: :controller do
   let(:user) { set_current_user(FactoryBot.create(:user)) }
@@ -129,6 +130,213 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
         expect(response.status).to eq(400)
         expect(response.body).to include 'BadQueryParameter'
         expect(response.body).to include("Order by can only be: 'created_at', 'updated_at', 'name'")
+      end
+    end
+  end
+
+  describe '#update' do
+    let(:labels) do
+      {
+        fruit: 'pineapple',
+        truck: 'mazda5'
+      }
+    end
+    let(:annotations) do
+      {
+        potato: 'yellow',
+        beet: 'golden',
+      }
+    end
+    let(:update_message) do
+      {
+        metadata: {
+          labels: {
+            fruit: 'passionfruit'
+          },
+          annotations: {
+            potato: 'purple'
+          }
+        }
+      }
+    end
+    before do
+      VCAP::CloudController::LabelsUpdate.update(service_instance, labels, VCAP::CloudController::ServiceInstanceLabelModel)
+      VCAP::CloudController::AnnotationsUpdate.update(service_instance, annotations, VCAP::CloudController::ServiceInstanceAnnotationModel)
+    end
+
+    context 'when the user is an admin' do
+      before do
+        set_current_user_as_admin
+      end
+
+      it 'updates the service_instance' do
+        patch :update, params: { guid: service_instance.guid }.merge(update_message), as: :json
+
+        expect(response.status).to eq(200)
+        expect(parsed_body['metadata']['labels']).to eq({ 'fruit' => 'passionfruit', 'truck' => 'mazda5' })
+        expect(parsed_body['metadata']['annotations']).to eq({ 'potato' => 'purple', 'beet' => 'golden' })
+
+        service_instance.reload
+        expect(service_instance.labels.map { |label| { key: label.key_name, value: label.value } }).
+          to match_array([{ key: 'fruit', value: 'passionfruit' }, { key: 'truck', value: 'mazda5' }])
+        expect(service_instance.annotations.map { |a| { key: a.key, value: a.value } }).
+          to match_array([{ key: 'potato', value: 'purple' }, { key: 'beet', value: 'golden' }])
+      end
+
+      context 'when a label is deleted' do
+        let(:request_body) do
+          {
+            metadata: {
+              labels: {
+                fruit: nil
+              }
+            }
+          }
+        end
+
+        it 'succeeds' do
+          patch :update, params: { guid: service_instance.guid }.merge(request_body), as: :json
+
+          expect(response.status).to eq(200)
+          expect(parsed_body['metadata']['labels']).to eq({ 'truck' => 'mazda5' })
+
+          service_instance.reload
+          expect(service_instance.labels.map { |label| { key: label.key_name, value: label.value } }).to match_array([{ key: 'truck', value: 'mazda5' }])
+        end
+      end
+
+      context 'when an empty request is sent' do
+        let(:update_message) do
+          {}
+        end
+
+        it 'succeeds but does not modify existing metadata' do
+          patch :update, params: { guid: service_instance.guid }.merge(update_message), as: :json
+          expect(response.status).to eq(200)
+          service_instance.reload
+          expect(parsed_body['guid']).to eq(service_instance.guid)
+          expect(parsed_body['metadata']['labels']).to eq({ 'truck' => 'mazda5', 'fruit' => 'pineapple' })
+          expect(parsed_body['metadata']['annotations']).to eq({ 'potato' => 'yellow', 'beet' => 'golden' })
+        end
+      end
+
+      context 'when the message is invalid' do
+        let!(:update_message) { { animals: 'Cows' } }
+
+        it 'fails' do
+          patch :update, params: { guid: service_instance.guid }.merge(update_message), as: :json
+          expect(response.status).to eq(422)
+        end
+      end
+
+      context 'when there is no such service_instance' do
+        it 'fails' do
+          patch :update, params: { guid: "Greg's missing service_instance" }.merge(update_message), as: :json
+
+          expect(response.status).to eq(404)
+        end
+      end
+
+      context 'when there is an invalid label' do
+        let(:request_body) do
+          {
+            metadata: {
+              labels: {
+                'cloudfoundry.org/label': 'value'
+              }
+            }
+          }
+        end
+
+        it 'displays an informative error' do
+          patch :update, params: { guid: service_instance.guid }.merge(request_body), as: :json
+          expect(response.status).to eq(422)
+          expect(response).to have_error_message('Metadata key error: cloudfoundry.org is a reserved domain')
+        end
+      end
+
+      context 'when there is an invalid annotation' do
+        let(:request_body) do
+          {
+            metadata: {
+              annotations: {
+                key: 'big' * 5000
+              }
+            }
+          }
+        end
+
+        it 'displays an informative error' do
+          patch :update, params: { guid: service_instance.guid }.merge(request_body), as: :json
+          expect(response.status).to eq(422)
+          expect(response).to have_error_message(/is greater than 5000 characters/)
+        end
+      end
+
+      context 'when there are too many annotations' do
+        let(:request_body) do
+          {
+            metadata: {
+              annotations: {
+                radish: 'daikon',
+                potato: 'idaho'
+              }
+            }
+          }
+        end
+
+        before do
+          VCAP::CloudController::Config.config.set(:max_annotations_per_resource, 2)
+        end
+
+        it 'fails with a 422' do
+          patch :update, params: { guid: service_instance.guid }.merge(request_body), as: :json
+          expect(response.status).to eq(422)
+          expect(response).to have_error_message(/exceed maximum of 2/)
+        end
+      end
+
+      context 'when an annotation is deleted' do
+        let(:request_body) do
+          {
+            metadata: {
+              annotations: {
+                potato: nil
+              }
+            }
+          }
+        end
+
+        it 'succeeds' do
+          patch :update, params: { guid: service_instance.guid }.merge(request_body), as: :json
+
+          expect(response.status).to eq(200)
+          expect(parsed_body['metadata']['annotations']).to eq({ 'beet' => 'golden' })
+
+          service_instance.reload
+          expect(service_instance.annotations.map { |a| { key: a.key, value: a.value } }).to match_array([{ key: 'beet', value: 'golden' }])
+        end
+      end
+    end
+
+    describe 'authorization' do
+      let(:org) { space.organization }
+
+      it_behaves_like 'permissions endpoint' do
+        let(:roles_to_http_responses) do
+          {
+            'admin' => 200,
+            'admin_read_only' => 403,
+            'global_auditor' => 403,
+            'space_developer' => 200,
+            'space_manager' => 403,
+            'space_auditor' => 403,
+            'org_manager' => 403,
+            'org_auditor' => 404,
+            'org_billing_manager' => 404,
+          }
+        end
+        let(:api_call) { lambda { patch :update, params: { guid: service_instance.guid }.merge(update_message), as: :json } }
       end
     end
   end

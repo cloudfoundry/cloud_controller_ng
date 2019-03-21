@@ -51,6 +51,7 @@ RSpec.describe 'Service Instances' do
                   }
                 }
               },
+              'metadata' => { 'labels' => {}, 'annotations' => {} },
               'links' => {
                 'space' => {
                   'href' => "#{link_prefix}/v3/spaces/#{service_instance3.space.guid}"
@@ -69,6 +70,7 @@ RSpec.describe 'Service Instances' do
                   }
                 }
               },
+              'metadata' => { 'labels' => {}, 'annotations' => {} },
               'links' => {
                 'space' => {
                   'href' => "#{link_prefix}/v3/spaces/#{service_instance1.space.guid}"
@@ -113,6 +115,7 @@ RSpec.describe 'Service Instances' do
                   }
                 }
               },
+              'metadata' => { 'labels' => {}, 'annotations' => {} },
               'links' => {
                 'space' => {
                   'href' => "#{link_prefix}/v3/spaces/#{service_instance2.space.guid}"
@@ -153,10 +156,11 @@ RSpec.describe 'Service Instances' do
               'relationships' => {
                 'space' => {
                   'data' => {
-                   'guid' => service_instance1.space.guid
+                    'guid' => service_instance1.space.guid
                   }
                 }
               },
+              'metadata' => { 'labels' => {}, 'annotations' => {} },
               'links' => {
                 'space' => {
                   'href' => "#{link_prefix}/v3/spaces/#{service_instance1.space.guid}"
@@ -175,6 +179,7 @@ RSpec.describe 'Service Instances' do
                   }
                 }
               },
+              'metadata' => { 'labels' => {}, 'annotations' => {} },
               'links' => {
                 'space' => {
                   'href' => "#{link_prefix}/v3/spaces/#{service_instance2.space.guid}"
@@ -224,6 +229,7 @@ RSpec.describe 'Service Instances' do
                     }
                   }
                 },
+                'metadata' => { 'labels' => {}, 'annotations' => {} },
                 'links' => {
                   'space' => {
                     'href' => "#{link_prefix}/v3/spaces/#{service_instance1.space.guid}"
@@ -302,18 +308,72 @@ RSpec.describe 'Service Instances' do
 
       event = VCAP::CloudController::Event.last
       expect(event.values).to include({
-        type:              'audit.service_instance.share',
-        actor:             user.guid,
-        actor_type:        'user',
-        actor_name:        user_email,
-        actor_username:    user_name,
-        actee:             service_instance1.guid,
-        actee_type:        'service_instance',
-        actee_name:        service_instance1.name,
-        space_guid:        space.guid,
+        type: 'audit.service_instance.share',
+        actor: user.guid,
+        actor_type: 'user',
+        actor_name: user_email,
+        actor_username: user_name,
+        actee: service_instance1.guid,
+        actee_type: 'service_instance',
+        actee_name: service_instance1.name,
+        space_guid: space.guid,
         organization_guid: space.organization.guid
       })
       expect(event.metadata['target_space_guids']).to eq([target_space.guid])
+    end
+  end
+
+  describe 'PATCH /v3/service_instances/:guid' do
+    let(:metadata_request) do
+      {
+        "metadata": {
+          "labels": {
+            "potato": 'yam',
+            "style": 'baked'
+          },
+          "annotations": {
+            "potato": 'idaho',
+            "style": 'mashed'
+          }
+        }
+      }
+    end
+    it 'updates metadata on a service instance' do
+      patch "/v3/service_instances/#{service_instance1.guid}", metadata_request.to_json, admin_header
+
+      parsed_response = MultiJson.load(last_response.body)
+      expect(last_response.status).to eq(200)
+
+      expect(parsed_response).to be_a_response_like(
+        {
+          'guid' => service_instance1.guid,
+          'name' => service_instance1.name,
+          'created_at' => iso8601,
+          'updated_at' => iso8601,
+          'relationships' => {
+            'space' => {
+              'data' => {
+                'guid' => service_instance1.space.guid
+              }
+            }
+          },
+          'links' => {
+            'space' => {
+              'href' => "#{link_prefix}/v3/spaces/#{service_instance1.space.guid}"
+            }
+          },
+          'metadata' => {
+            'labels' => {
+              'potato' => 'yam',
+              'style' => 'baked'
+            },
+            'annotations' => {
+              'potato' => 'idaho',
+              'style' => 'mashed'
+            }
+          }
+        }
+      )
     end
   end
 
@@ -342,15 +402,15 @@ RSpec.describe 'Service Instances' do
 
       event = VCAP::CloudController::Event.last
       expect(event.values).to include({
-        type:              'audit.service_instance.unshare',
-        actor:             user.guid,
-        actor_type:        'user',
-        actor_name:        user_email,
-        actor_username:    user_name,
-        actee:             service_instance1.guid,
-        actee_type:        'service_instance',
-        actee_name:        service_instance1.name,
-        space_guid:        space.guid,
+        type: 'audit.service_instance.unshare',
+        actor: user.guid,
+        actor_type: 'user',
+        actor_name: user_email,
+        actor_username: user_name,
+        actee: service_instance1.guid,
+        actee_type: 'service_instance',
+        actee_name: service_instance1.name,
+        space_guid: space.guid,
         organization_guid: space.organization.guid
       })
       expect(event.metadata['target_space_guid']).to eq(target_space.guid)

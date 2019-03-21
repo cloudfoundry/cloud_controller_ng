@@ -77,9 +77,13 @@ module VCAP::CloudController
     describe 'metadata' do
       let(:package) { FactoryBot.create(:package) }
       let(:annotation) { PackageAnnotationModel.make(package: package) }
+      let(:label) { PackageLabelModel.make(package: package) }
 
-      it 'can access its annotations' do
-        expect(annotation.resource_guid).to eq(package.guid)
+      it 'can access its metadata' do
+        expect(annotation.package.guid).to eq(package.guid)
+        expect(label.package.guid).to eq(package.guid)
+        expect(package.labels).to match_array([label])
+        expect(package.annotations).to match_array([annotation])
       end
     end
   end

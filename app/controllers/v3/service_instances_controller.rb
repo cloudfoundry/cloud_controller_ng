@@ -1,11 +1,13 @@
 require 'messages/to_many_relationship_message'
 require 'messages/service_instances_list_message'
+require 'messages/service_instance_update_message'
 require 'presenters/v3/relationship_presenter'
 require 'presenters/v3/to_many_relationship_presenter'
 require 'presenters/v3/paginated_list_presenter'
 require 'presenters/v3/service_instance_presenter'
 require 'actions/service_instance_share'
 require 'actions/service_instance_unshare'
+require 'actions/service_instance_update'
 require 'fetchers/managed_service_instance_list_fetcher'
 
 class ServiceInstancesV3Controller < ApplicationController
@@ -24,6 +26,19 @@ class ServiceInstancesV3Controller < ApplicationController
       paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
       path: '/v3/service_instances',
       message: message)
+  end
+
+  def update
+    message = ServiceInstanceUpdateMessage.new(hashed_params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    service_instance = ServiceInstance.first(guid: hashed_params[:guid])
+    resource_not_found!(:service_instance) unless service_instance && can_read_service_instance?(service_instance)
+    unauthorized! unless can_write_space?(service_instance.space)
+
+    service_instance = ServiceInstanceUpdate.update(service_instance, message)
+
+    render status: :ok, json: Presenters::V3::ServiceInstancePresenter.new(service_instance)
   end
 
   def share_service_instance
