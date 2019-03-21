@@ -75,7 +75,7 @@ module VCAP::CloudController
 
           it 'is not valid' do
             expect(subject).to be_invalid
-            expect(subject.errors[:name]).to include 'must contain at least one "."'
+            expect(subject.errors[:name]).to match ['does not comply with RFC 1035 standards', 'must contain at least one "."']
           end
         end
 
