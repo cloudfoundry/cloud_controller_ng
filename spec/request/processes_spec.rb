@@ -2,7 +2,7 @@ require 'spec_helper'
 
 RSpec.describe 'Processes' do
   let(:space) { FactoryBot.create(:space) }
-  let(:app_model) { FactoryBot.create(:app, space: space, name: 'my_app', droplet: droplet) }
+  let(:app_model) { VCAP::CloudController::AppModel.make(space: space, name: 'my_app', droplet: droplet) }
   let(:droplet) { VCAP::CloudController::DropletModel.make }
   let(:developer) { make_developer_for_space(space) }
   let(:developer_headers) { headers_for(developer, user_name: user_name) }
@@ -180,7 +180,7 @@ RSpec.describe 'Processes' do
 
       context 'by space_guids' do
         let(:other_space) { FactoryBot.create(:space, organization: space.organization) }
-        let(:other_app_model) { FactoryBot.create(:app, space: other_space) }
+        let(:other_app_model) { VCAP::CloudController::AppModel.make(space: other_space) }
         let!(:other_space_process) {
           VCAP::CloudController::ProcessModel.make(
             :process,
@@ -233,7 +233,7 @@ RSpec.describe 'Processes' do
             command:    'rackup',
           )
         }
-        let(:other_app_model) { FactoryBot.create(:app, space: other_space) }
+        let(:other_app_model) { VCAP::CloudController::AppModel.make(space: other_space) }
         let(:developer) { make_developer_for_space(other_space) }
 
         it 'returns only the matching processes' do
@@ -259,7 +259,7 @@ RSpec.describe 'Processes' do
       end
 
       context 'by app guids' do
-        let(:desired_app) { FactoryBot.create(:app, space: space) }
+        let(:desired_app) { VCAP::CloudController::AppModel.make(space: space) }
         let!(:desired_process) do
           VCAP::CloudController::ProcessModel.make(:process,
             app:        desired_app,

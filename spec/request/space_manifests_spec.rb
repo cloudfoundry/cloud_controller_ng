@@ -18,7 +18,7 @@ RSpec.describe 'Space Manifests' do
   describe 'POST /v3/spaces/:guid/actions/apply_manifest' do
     let(:buildpack) { VCAP::CloudController::Buildpack.make }
     let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
-    let(:app_model) { FactoryBot.create(:app, :buildpack, name: 'blah', space: space) }
+    let(:app_model) { VCAP::CloudController::AppModel.make(name: 'blah', space: space) }
 
     let!(:process) { VCAP::CloudController::ProcessModel.make(app: app_model) }
     let(:yml_manifest) do

@@ -3,7 +3,7 @@ require 'fetchers/log_access_fetcher'
 
 module VCAP::CloudController
   RSpec.describe LogAccessController do
-    let(:app_model) { FactoryBot.create(:app, enable_ssh: true) }
+    let(:app_model) { VCAP::CloudController::AppModel.make(enable_ssh: true) }
     let(:space) { app_model.space }
     let(:org) { space.organization }
     let(:user) { VCAP::CloudController::User.make }

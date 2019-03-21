@@ -22,7 +22,7 @@ module VCAP
           let(:droplet_download_url) { 'droplet-download-url' }
 
           it_behaves_like 'a lifecycle protocol' do
-            let(:app) { FactoryBot.create(:app, :buildpack) }
+            let(:app) { AppModel.make }
             let(:package) { PackageModel.make(app_guid: app.guid) }
             let(:droplet) { DropletModel.make(package_guid: package.guid, app_guid: app.guid) }
             let(:process) { ProcessModel.make(app: app) }
@@ -47,7 +47,7 @@ module VCAP
           end
 
           describe '#lifecycle_data' do
-            let(:app) { FactoryBot.create(:app) }
+            let(:app) { AppModel.make }
             let(:package) { PackageModel.make(app: app) }
             let(:droplet) { DropletModel.make(package: package, app: app) }
             let(:buildpack) { nil }
@@ -200,7 +200,7 @@ module VCAP
 
           describe '#desired_lrp_builder' do
             let(:config) { Config.new({}) }
-            let(:app) { FactoryBot.create(:app, :buildpack, droplet: droplet) }
+            let(:app) { AppModel.make(droplet: droplet) }
             let(:droplet) { DropletModel.make }
             let(:process) do
               ProcessModel.make(

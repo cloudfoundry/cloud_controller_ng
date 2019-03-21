@@ -4,7 +4,7 @@ require 'vcap/vars_builder'
 module VCAP::CloudController
   RSpec.describe 'VarsBuilder' do
     describe 'vcap_application' do
-      let(:v3_app_model) { FactoryBot.create(:app, name: 'v3-app-name') }
+      let(:v3_app_model) { AppModel.make(name: 'v3-app-name') }
       let(:v2_app) { ProcessModelFactory.make(memory: 259, disk_quota: 799, file_descriptors: 1234, name: 'v2-app-name') }
       let(:space) { FactoryBot.create(:space) }
 

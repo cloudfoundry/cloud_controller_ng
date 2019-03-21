@@ -7,7 +7,7 @@ RSpec.describe 'Revisions' do
   let(:stack) { FactoryBot.create(:stack) }
   let(:user_email) { Sham.email }
   let(:user_name) { 'some-username' }
-  let(:app_model) { FactoryBot.create(:app, name: 'app_name', space: space) }
+  let(:app_model) { VCAP::CloudController::AppModel.make(name: 'app_name', space: space) }
   let!(:revision) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 42) }
 
   before do

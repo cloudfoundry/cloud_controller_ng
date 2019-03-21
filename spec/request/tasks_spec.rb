@@ -3,7 +3,7 @@ require 'spec_helper'
 RSpec.describe 'Tasks' do
   let(:space) { FactoryBot.create(:space) }
   let(:user) { make_developer_for_space(space) }
-  let(:app_model) { FactoryBot.create(:app, space: space) }
+  let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
   let(:droplet) do
     VCAP::CloudController::DropletModel.make(
       app_guid: app_model.guid,

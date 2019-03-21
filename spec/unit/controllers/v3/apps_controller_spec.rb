@@ -3,8 +3,8 @@ require 'permissions_spec_helper'
 
 RSpec.describe AppsV3Controller, type: :controller do
   describe '#index' do
-    let(:app_model_1) { FactoryBot.create(:app) }
-    let!(:app_model_2) { FactoryBot.create(:app) }
+    let(:app_model_1) { VCAP::CloudController::AppModel.make }
+    let!(:app_model_2) { VCAP::CloudController::AppModel.make }
     let!(:space_1) { app_model_1.space }
     let(:user) { VCAP::CloudController::User.make }
 
@@ -24,9 +24,9 @@ RSpec.describe AppsV3Controller, type: :controller do
     end
 
     context 'when the user has global read access' do
-      let!(:app_model_1) { FactoryBot.create(:app) }
-      let!(:app_model_2) { FactoryBot.create(:app) }
-      let!(:app_model_3) { FactoryBot.create(:app) }
+      let!(:app_model_1) { VCAP::CloudController::AppModel.make }
+      let!(:app_model_2) { VCAP::CloudController::AppModel.make }
+      let!(:app_model_3) { VCAP::CloudController::AppModel.make }
 
       before do
         allow_user_global_read_access(user)
@@ -123,11 +123,11 @@ RSpec.describe AppsV3Controller, type: :controller do
     context 'sorting' do
       before do
         set_current_user_as_admin(user: user)
-        FactoryBot.create(:app, name: 'clem')
-        FactoryBot.create(:app, name: 'abel')
-        FactoryBot.create(:app, name: 'quartz')
-        FactoryBot.create(:app, name: 'beale')
-        FactoryBot.create(:app, name: 'rocky')
+        VCAP::CloudController::AppModel.make(name: 'clem')
+        VCAP::CloudController::AppModel.make(name: 'abel')
+        VCAP::CloudController::AppModel.make(name: 'quartz')
+        VCAP::CloudController::AppModel.make(name: 'beale')
+        VCAP::CloudController::AppModel.make(name: 'rocky')
       end
 
       it 'sorts and paginates the apps by name' do
@@ -215,7 +215,7 @@ RSpec.describe AppsV3Controller, type: :controller do
   end
 
   describe '#show' do
-    let!(:app_model) { FactoryBot.create(:app) }
+    let!(:app_model) { VCAP::CloudController::AppModel.make }
     let(:space) { app_model.space }
     let(:user) { VCAP::CloudController::User.make }
 
@@ -663,7 +663,7 @@ RSpec.describe AppsV3Controller, type: :controller do
   end
 
   describe '#update' do
-    let(:app_model) { FactoryBot.create(:app, :buildpack) }
+    let(:app_model) { VCAP::CloudController::AppModel.make(:buildpack) }
 
     let(:space) { app_model.space }
     let(:org) { space.organization }
@@ -775,7 +775,7 @@ RSpec.describe AppsV3Controller, type: :controller do
         end
 
         context 'for a docker app' do
-          let(:app_model) { FactoryBot.create(:app, :docker) }
+          let(:app_model) { VCAP::CloudController::AppModel.make(:docker) }
 
           it 'uses the existing lifecycle on app' do
             patch :update, params: { guid: app_model.guid }.merge(request_body), as: :json
@@ -866,7 +866,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
             it 'sets the stack to the user provided stack' do
               patch :update, params: { guid: app_model.guid }.merge(request_body), as: :json
-              expect(app_model.reload.lifecycle_data.stack).to eq('redhat')
+              expect(app_model.lifecycle_data.stack).to eq('redhat')
             end
           end
 
@@ -952,7 +952,7 @@ RSpec.describe AppsV3Controller, type: :controller do
       end
 
       context 'docker request' do
-        let(:app_model) { FactoryBot.create(:app, :docker) }
+        let(:app_model) { VCAP::CloudController::AppModel.make(:docker) }
 
         context 'when attempting to change to another lifecycle type' do
           let(:request_body) do
@@ -1116,7 +1116,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     end
 
     context 'permissions' do
-      let(:app_model) { FactoryBot.create(:app) }
+      let(:app_model) { VCAP::CloudController::AppModel.make }
       let(:space) { app_model.space }
       let(:org) { space.organization }
       let(:user) { set_current_user(VCAP::CloudController::User.make) }
@@ -1151,7 +1151,7 @@ RSpec.describe AppsV3Controller, type: :controller do
   end
 
   describe '#destroy' do
-    let(:app_model) { FactoryBot.create(:app) }
+    let(:app_model) { VCAP::CloudController::AppModel.make }
     let(:space) { app_model.space }
     let(:org) { space.organization }
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
@@ -1254,7 +1254,7 @@ RSpec.describe AppsV3Controller, type: :controller do
   end
 
   describe '#start' do
-    let(:app_model) { FactoryBot.create(:app, droplet: droplet) }
+    let(:app_model) { VCAP::CloudController::AppModel.make(droplet_guid: droplet.guid) }
     let(:droplet) { VCAP::CloudController::DropletModel.make(:buildpack, state: VCAP::CloudController::DropletModel::STAGED_STATE) }
     let(:space) { app_model.space }
     let(:org) { space.organization }
@@ -1394,7 +1394,7 @@ RSpec.describe AppsV3Controller, type: :controller do
   end
 
   describe '#stop' do
-    let(:app_model) { FactoryBot.create(:app, droplet: droplet, desired_state: 'STARTED') }
+    let(:app_model) { VCAP::CloudController::AppModel.make(droplet_guid: droplet.guid, desired_state: 'STARTED') }
     let(:droplet) { VCAP::CloudController::DropletModel.make(state: VCAP::CloudController::DropletModel::STAGED_STATE) }
     let(:space) { app_model.space }
     let(:org) { space.organization }
@@ -1484,7 +1484,7 @@ RSpec.describe AppsV3Controller, type: :controller do
   end
 
   describe '#restart' do
-    let(:app_model) { FactoryBot.create(:app, droplet: droplet, desired_state: 'STARTED') }
+    let(:app_model) { VCAP::CloudController::AppModel.make(droplet_guid: droplet.guid, desired_state: 'STARTED') }
     let(:droplet) { VCAP::CloudController::DropletModel.make(state: VCAP::CloudController::DropletModel::STAGED_STATE) }
     let(:space) { app_model.space }
     let(:org) { space.organization }
@@ -1657,7 +1657,7 @@ RSpec.describe AppsV3Controller, type: :controller do
   end
 
   describe '#builds' do
-    let(:app_model) { FactoryBot.create(:app) }
+    let(:app_model) { VCAP::CloudController::AppModel.make }
     let(:space) { app_model.space }
     let(:org) { space.organization }
     let(:user) { VCAP::CloudController::User.make }
@@ -1715,7 +1715,7 @@ RSpec.describe AppsV3Controller, type: :controller do
   end
 
   describe '#show_env' do
-    let(:app_model) { FactoryBot.create(:app, environment_variables: { meep: 'moop', beep: 'boop' }) }
+    let(:app_model) { VCAP::CloudController::AppModel.make(environment_variables: { meep: 'moop', beep: 'boop' }) }
     let(:space) { app_model.space }
     let(:org) { space.organization }
     let(:user) { VCAP::CloudController::User.make }
@@ -1854,7 +1854,7 @@ RSpec.describe AppsV3Controller, type: :controller do
   end
 
   describe '#show_environment_variables' do
-    let(:app_model) { FactoryBot.create(:app, environment_variables: { meep: 'moop', beep: 'boop' }) }
+    let(:app_model) { VCAP::CloudController::AppModel.make(environment_variables: { meep: 'moop', beep: 'boop' }) }
     let(:space) { app_model.space }
     let(:org) { space.organization }
     let(:user) { VCAP::CloudController::User.make }
@@ -1967,7 +1967,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     end
 
     context 'when the app does not have environment variables' do
-      let(:app_model) { FactoryBot.create(:app) }
+      let(:app_model) { VCAP::CloudController::AppModel.make }
 
       it 'returns 200 and the set of links' do
         set_current_user_as_admin(user: user)
@@ -1983,7 +1983,7 @@ RSpec.describe AppsV3Controller, type: :controller do
   end
 
   describe '#update_environment_variables' do
-    let(:app_model) { FactoryBot.create(:app, environment_variables: { override: 'value-to-override', preserve: 'value-to-keep' }) }
+    let(:app_model) { VCAP::CloudController::AppModel.make(environment_variables: { override: 'value-to-override', preserve: 'value-to-keep' }) }
     let(:space) { app_model.space }
     let(:org) { space.organization }
     let(:user) { VCAP::CloudController::User.make }
@@ -2109,7 +2109,7 @@ RSpec.describe AppsV3Controller, type: :controller do
   end
 
   describe '#assign_current_droplet' do
-    let(:app_model) { FactoryBot.create(:app) }
+    let(:app_model) { VCAP::CloudController::AppModel.make }
     let(:droplet) { VCAP::CloudController::DropletModel.make(process_types: { 'web' => 'start app' }, state: VCAP::CloudController::DropletModel::STAGED_STATE) }
     let(:request_body) { { data: { guid: droplet.guid } } }
     let(:droplet_link) { { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets/current" } }
@@ -2265,7 +2265,7 @@ RSpec.describe AppsV3Controller, type: :controller do
   end
 
   describe '#current_droplet' do
-    let(:app_model) { FactoryBot.create(:app, droplet: droplet) }
+    let(:app_model) { VCAP::CloudController::AppModel.make(droplet_guid: droplet.guid) }
     let(:droplet) { VCAP::CloudController::DropletModel.make(process_types: { 'web' => 'start app' }, state: VCAP::CloudController::DropletModel::STAGED_STATE) }
     let(:droplet_link) { { 'href' => "/v3/apps/#{app_model.guid}/droplets/current" } }
     let(:space) { app_model.space }
@@ -2295,7 +2295,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     end
 
     context 'when the current droplet is not set' do
-      let(:app_model) { FactoryBot.create(:app) }
+      let(:app_model) { VCAP::CloudController::AppModel.make }
 
       it 'returns a 404 Not Found' do
         get :current_droplet, params: { guid: app_model.guid }
@@ -2354,7 +2354,7 @@ RSpec.describe AppsV3Controller, type: :controller do
   end
 
   describe '#current_droplet_relationship' do
-    let(:app_model) { FactoryBot.create(:app, droplet: droplet) }
+    let(:app_model) { VCAP::CloudController::AppModel.make(droplet_guid: droplet.guid) }
     let(:droplet) { VCAP::CloudController::DropletModel.make(process_types: { 'web' => 'start app' }, state: VCAP::CloudController::DropletModel::STAGED_STATE) }
     let(:droplet_link) { { 'href' => "/v3/apps/#{app_model.guid}/droplets/current" } }
     let(:space) { app_model.space }
@@ -2384,7 +2384,7 @@ RSpec.describe AppsV3Controller, type: :controller do
     end
 
     context 'when the current droplet is not set' do
-      let(:app_model) { FactoryBot.create(:app) }
+      let(:app_model) { VCAP::CloudController::AppModel.make }
 
       it 'returns a 404 Not Found' do
         get :current_droplet_relationship, params: { guid: app_model.guid }

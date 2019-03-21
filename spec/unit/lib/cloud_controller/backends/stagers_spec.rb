@@ -8,7 +8,7 @@ module VCAP::CloudController
     describe '#validate_app' do
       let!(:admin_buildpack) { Buildpack.make(name: 'admin-buildpack') }
       let(:buildpack_lifecycle_data) { FactoryBot.create(:buildpack_lifecycle_data, buildpacks: ['admin-buildpack']) }
-      let(:app_model) { FactoryBot.create(:app) }
+      let(:app_model) { AppModel.make }
       let(:process_model) { ProcessModelFactory.make(:buildpack, app: app_model) }
 
       before do
@@ -26,7 +26,7 @@ module VCAP::CloudController
       end
 
       context 'with a docker app' do
-        let(:app_model) { FactoryBot.create(:app, :docker) }
+        let(:app_model) { AppModel.make(:docker) }
         let(:app) { ProcessModelFactory.make(app: app_model, docker_image: 'docker/image') }
 
         before { app_model.update(buildpack_lifecycle_data: nil) }
@@ -85,7 +85,7 @@ module VCAP::CloudController
 
     describe '#stager_for_app' do
       let(:lifecycle_type) { 'buildpack' }
-      let(:app) { FactoryBot.create(:app) }
+      let(:app) { AppModel.make }
 
       context 'when the app has diego processes' do
         before do

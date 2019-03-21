@@ -1961,7 +1961,7 @@ module VCAP::CloudController
             context 'and service bindings exist' do
               before do
                 ServiceBinding.make(
-                  app: FactoryBot.create(:app, space: service_instance.space),
+                  app: AppModel.make(space: service_instance.space),
                   service_instance: service_instance
                 )
               end
@@ -2804,7 +2804,7 @@ module VCAP::CloudController
             context 'and there are bindings to the shared instance' do
               before do
                 ServiceBinding.make(
-                  app: FactoryBot.create(:app, space: shared_to_space),
+                  app: AppModel.make(space: shared_to_space),
                   service_instance: service_instance
                 )
               end
@@ -4236,11 +4236,11 @@ module VCAP::CloudController
 
         context 'when there are apps bound to the shared service instance' do
           before do
-            ServiceBinding.make(service_instance: instance, app: FactoryBot.create(:app, space: space1))
-            ServiceBinding.make(service_instance: instance, app: FactoryBot.create(:app, space: space1))
-            ServiceBinding.make(service_instance: ServiceInstance.make(space: space1), app: FactoryBot.create(:app, space: space1))
+            ServiceBinding.make(service_instance: instance, app: AppModel.make(space: space1))
+            ServiceBinding.make(service_instance: instance, app: AppModel.make(space: space1))
+            ServiceBinding.make(service_instance: ServiceInstance.make(space: space1), app: AppModel.make(space: space1))
 
-            ServiceBinding.make(service_instance: instance, app: FactoryBot.create(:app, space: space2))
+            ServiceBinding.make(service_instance: instance, app: AppModel.make(space: space2))
           end
 
           it 'returns the correct bound_app_count' do

@@ -983,7 +983,7 @@ module VCAP::Services::ServiceBrokers::V2
 
     describe '#bind' do
       let(:instance) { VCAP::CloudController::ManagedServiceInstance.make }
-      let(:app) { FactoryBot.create(:app, space: instance.space) }
+      let(:app) { VCAP::CloudController::AppModel.make(space: instance.space) }
       let(:binding) do
         VCAP::CloudController::ServiceBinding.new(
           service_instance: instance,
@@ -1608,7 +1608,7 @@ module VCAP::Services::ServiceBrokers::V2
 
     describe '#fetch_service_binding' do
       let(:instance) { VCAP::CloudController::ManagedServiceInstance.make }
-      let(:app) { FactoryBot.create(:app, space: instance.space) }
+      let(:app) { VCAP::CloudController::AppModel.make(space: instance.space) }
       let(:binding) do
         VCAP::CloudController::ServiceBinding.new(
           service_instance: instance,

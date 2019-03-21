@@ -4,7 +4,7 @@ module VCAP::CloudController
   module Diego
     class Protocol
       RSpec.describe ContainerNetworkInfo do
-        let(:app) { FactoryBot.create(:app, :buildpack) }
+        let(:app) { AppModel.make }
         let!(:web_process) { ProcessModel.make(app: app, type: 'web') }
         let!(:other_process) { ProcessModel.make(app: app, ports: [8765], type: 'meow') }
         let!(:no_exposed_port_process) { ProcessModel.make(app: app, type: 'woof') }

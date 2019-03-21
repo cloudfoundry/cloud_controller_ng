@@ -4,7 +4,7 @@ require 'fetchers/app_delete_fetcher'
 module VCAP::CloudController
   RSpec.describe AppDeleteFetcher do
     describe '#fetch' do
-      let(:app) { FactoryBot.create(:app) }
+      let(:app) { AppModel.make }
       let(:space) { app.space }
       let(:org) { space.organization }
 

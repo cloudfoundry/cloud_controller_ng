@@ -4,7 +4,10 @@ require 'presenters/v3/app_manifest_presenter'
 module VCAP::CloudController::Presenters::V3
   RSpec.describe AppManifestPresenter do
     let(:environment_variables) { { 'one' => 'potato', 'two' => 'tomato' } }
-    let(:app) { FactoryBot.create(:app, :buildpack, environment_variables: environment_variables) }
+    let(:app) { VCAP::CloudController::AppModel.make(
+      environment_variables: environment_variables
+    )
+    }
     let(:space) { app.space }
 
     describe '#to_hash' do
@@ -22,7 +25,12 @@ module VCAP::CloudController::Presenters::V3
         end
 
         context 'for docker apps' do
-          let(:app) { FactoryBot.create(:app, :docker, environment_variables: environment_variables) }
+          let(:app) {
+            VCAP::CloudController::AppModel.make(
+              :docker,
+            environment_variables: environment_variables
+          )
+          }
 
           it 'only returns application name' do
             result = AppManifestPresenter.new(app, service_bindings, routes).to_hash
@@ -165,7 +173,7 @@ module VCAP::CloudController::Presenters::V3
         end
 
         context 'when the app is a docker app' do
-          let(:app) { FactoryBot.create(:app, :docker) }
+          let(:app) { VCAP::CloudController::AppModel.make :docker }
 
           context 'when the app has a current droplet' do
             let(:docker_username) { 'xXxMyL1ttlePwnyxXx' }

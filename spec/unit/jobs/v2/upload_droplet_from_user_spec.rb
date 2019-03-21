@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   module Jobs::V2
     RSpec.describe UploadDropletFromUser, job_context: :api do
-      let(:app) { FactoryBot.create(:app) }
+      let(:app) { AppModel.make }
       let(:droplet) { DropletModel.make(app: app, state: DropletModel::PROCESSING_UPLOAD_STATE) }
 
       subject(:job) { UploadDropletFromUser.new('file_path', droplet.guid) }

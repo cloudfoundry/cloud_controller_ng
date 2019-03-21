@@ -4,7 +4,7 @@ require 'cloud_controller/deployments/deployment_target_state'
 module VCAP::CloudController
   RSpec.describe DeploymentTargetState do
     subject(:target_state) { DeploymentTargetState.new(app, message) }
-    let(:app) { FactoryBot.create(:app, environment_variables: { 'foo' => 'bar' }) }
+    let(:app) { AppModel.make(environment_variables: { 'foo' => 'bar' }) }
     let(:droplet) { DropletModel.make(app: app, process_types: { 'web' => 'command' }) }
 
     describe 'droplet' do

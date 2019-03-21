@@ -6,7 +6,7 @@ module VCAP::CloudController
   RSpec.describe V2::AppStop do
     let(:cancel_action) { instance_double(StagingCancel, cancel: nil) }
 
-    let(:app) { FactoryBot.create(:app, desired_state: 'STARTED') }
+    let(:app) { AppModel.make(desired_state: 'STARTED') }
     let!(:process1) { ProcessModelFactory.make(app: app, state: 'STARTED', type: 'this') }
     let!(:process2) { ProcessModelFactory.make(app: app, state: 'STARTED', type: 'that') }
 

@@ -5,13 +5,7 @@ module VCAP::CloudController
     subject(:decorator) { IncludeAppSpaceDecorator }
     let(:space1) { FactoryBot.create(:space, name: 'first-space') }
     let(:space2) { FactoryBot.create(:space, name: 'second-space') }
-    let(:apps) do
-      [
-        FactoryBot.create(:app, space: space1),
-        FactoryBot.create(:app, space: space2),
-        FactoryBot.create(:app, space: space1)
-      ]
-    end
+    let(:apps) { [AppModel.make(space: space1), AppModel.make(space: space2), AppModel.make(space: space1)] }
 
     it 'decorates the given hash with spaces from apps' do
       wreathless_hash = { foo: 'bar' }

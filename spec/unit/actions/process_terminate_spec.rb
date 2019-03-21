@@ -4,7 +4,7 @@ require 'actions/process_terminate'
 module VCAP::CloudController
   RSpec.describe ProcessTerminate do
     subject(:process_terminate) { ProcessTerminate.new(user_audit_info, process, index) }
-    let(:app) { FactoryBot.create(:app) }
+    let(:app) { AppModel.make }
     let!(:process) { ProcessModelFactory.make(app: app) }
     let(:user_audit_info) { instance_double(UserAuditInfo).as_null_object }
     let(:index) { 0 }

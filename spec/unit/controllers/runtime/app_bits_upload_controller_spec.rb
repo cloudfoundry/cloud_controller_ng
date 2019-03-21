@@ -387,7 +387,7 @@ module VCAP::CloudController
       end
 
       context 'when the app is a docker app' do
-        let(:process) { ProcessModel.make(app: FactoryBot.create(:app, :docker)) }
+        let(:process) { ProcessModel.make(app: AppModel.make(:docker)) }
         let(:req_body) { { resources: '[]', application: valid_zip } }
         let(:headers) { admin_headers }
 

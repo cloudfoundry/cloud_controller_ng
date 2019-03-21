@@ -5,7 +5,7 @@ module VCAP::CloudController
   RSpec.describe PackageCopy do
     subject(:package_copy) { PackageCopy.new }
 
-    let(:target_app) { FactoryBot.create(:app) }
+    let(:target_app) { AppModel.make }
     let!(:source_package) { PackageModel.make(type: type) }
     let(:type) { 'docker' }
 

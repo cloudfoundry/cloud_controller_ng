@@ -6,7 +6,7 @@ module VCAP::CloudController
   RSpec.describe AppAssignDroplet do
     subject(:app_assign_droplet) { AppAssignDroplet.new(user_audit_info) }
 
-    let(:app_model) { FactoryBot.create(:app, desired_state: ProcessModel::STOPPED) }
+    let(:app_model) { AppModel.make desired_state: ProcessModel::STOPPED }
     let(:user) { double(:user, guid: '1337') }
     let(:user_email) { 'cool_dude@hoopy_frood.com' }
     let(:user_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email) }

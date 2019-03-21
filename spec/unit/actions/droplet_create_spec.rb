@@ -4,7 +4,7 @@ require 'actions/droplet_create'
 module VCAP::CloudController
   RSpec.describe DropletCreate do
     subject(:droplet_create) { DropletCreate.new }
-    let(:app) { FactoryBot.create(:app) }
+    let(:app) { AppModel.make }
     let(:package) { PackageModel.make app: app }
     let(:build) do
       BuildModel.make(

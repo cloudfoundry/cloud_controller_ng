@@ -5,11 +5,11 @@ module VCAP::CloudController
     describe '#perform' do
       context 'rotation' do
         # Apps are an example of a single encrypted field
-        let(:historical_app) { FactoryBot.create(:app) }
-        let(:historical_app_with_no_environment) { FactoryBot.create(:app) }
-        let(:app) { FactoryBot.create(:app) }
-        let(:app_the_second) { FactoryBot.create(:app) }
-        let(:app_new_key_label) { FactoryBot.create(:app) }
+        let(:historical_app) { AppModel.make }
+        let(:historical_app_with_no_environment) { AppModel.make }
+        let(:app) { AppModel.make }
+        let(:app_the_second) { AppModel.make }
+        let(:app_new_key_label) { AppModel.make }
         let(:env_vars) { { 'environment' => 'vars', 'PORT' => 344, 'longstring' => 'x' * 4097 } } # PORT is invalid!
         let(:env_vars_2) { { 'vars' => 'environment' } }
 
@@ -158,8 +158,8 @@ module VCAP::CloudController
         end
 
         context 'batching so we do not load entire tables into memory' do
-          let(:app2) { FactoryBot.create(:app) }
-          let(:app3) { FactoryBot.create(:app) }
+          let(:app2) { AppModel.make }
+          let(:app3) { AppModel.make }
 
           before do
             allow(Encryptor).to receive(:current_encryption_key_label) { 'old' }
@@ -256,7 +256,7 @@ module VCAP::CloudController
 
       describe 'logging' do
         let(:logger) { instance_double(Steno::Logger, info: nil, error: nil) }
-        let!(:app) { FactoryBot.create(:app) }
+        let!(:app) { AppModel.make }
         let!(:task) { TaskModel.make(app: app) }
         let!(:task_jr) { TaskModel.make(app: app) }
         let!(:task_the_third) { TaskModel.make(app: app) }

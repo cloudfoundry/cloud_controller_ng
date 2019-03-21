@@ -6,7 +6,7 @@ module VCAP::CloudController
       subject(:task_recipe_builder) { TaskRecipeBuilder.new }
 
       describe '#build_staging_task' do
-        let(:app) { FactoryBot.create(:app, guid: 'banana-guid') }
+        let(:app) { AppModel.make(guid: 'banana-guid') }
         let(:staging_details) do
           Diego::StagingDetails.new.tap do |details|
             details.staging_guid = droplet.guid
@@ -334,7 +334,7 @@ module VCAP::CloudController
       end
 
       describe '#build_app_task' do
-        let(:app) { FactoryBot.create(:app, guid: 'banana-guid') }
+        let(:app) { AppModel.make(guid: 'banana-guid') }
         let(:task) do
           TaskModel.create(
             name: 'potato-task',

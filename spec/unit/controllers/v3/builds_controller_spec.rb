@@ -6,7 +6,7 @@ RSpec.describe BuildsController, type: :controller do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
     let(:organization) { FactoryBot.create(:organization) }
     let(:space) { FactoryBot.create(:space, organization: organization) }
-    let(:app_model) { FactoryBot.create(:app, :buildpack, space: space) }
+    let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
     let(:package) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
     let(:build) { VCAP::CloudController::BuildModel.make(package: package, app: app_model) }
     let!(:droplet) do
@@ -157,7 +157,7 @@ RSpec.describe BuildsController, type: :controller do
     let(:org) { FactoryBot.create(:organization) }
     let(:space) { FactoryBot.create(:space, organization: org) }
     let(:stack) { VCAP::CloudController::Stack.default.name }
-    let(:app_model) { FactoryBot.create(:app, :buildpack, space: space) }
+    let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
     let(:package) do
       VCAP::CloudController::PackageModel.make(
         app_guid: app_model.guid,
@@ -376,7 +376,7 @@ RSpec.describe BuildsController, type: :controller do
     end
 
     describe 'docker lifecycle' do
-      let(:docker_app_model) { FactoryBot.create(:app, :docker, space: space) }
+      let(:docker_app_model) { VCAP::CloudController::AppModel.make(:docker, space: space) }
       let(:package) do
         VCAP::CloudController::PackageModel.make(:docker,
           app_guid: docker_app_model.guid,
@@ -635,7 +635,7 @@ RSpec.describe BuildsController, type: :controller do
     let(:org) { FactoryBot.create(:organization) }
     let(:space) { FactoryBot.create(:space, organization: org) }
     let(:stack) { VCAP::CloudController::Stack.default.name }
-    let(:app_model) { FactoryBot.create(:app, space: space) }
+    let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
     let(:package) do
       VCAP::CloudController::PackageModel.make(
         app_guid: app_model.guid,
@@ -753,7 +753,7 @@ RSpec.describe BuildsController, type: :controller do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
     let(:organization) { FactoryBot.create(:organization) }
     let(:space) { FactoryBot.create(:space, organization: organization) }
-    let(:app_model) { FactoryBot.create(:app, space: space) }
+    let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
     let(:package) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
     let(:build) { VCAP::CloudController::BuildModel.make(package: package, app: app_model) }
     let!(:droplet) do

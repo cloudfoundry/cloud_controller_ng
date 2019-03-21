@@ -16,7 +16,7 @@ RSpec.describe 'Sets missing attributes for previously backfilled processes', is
   # * enable_ssh = 0
   #
   context 'when there are processes with null values for memory, disk_quota, file_descriptors, or enable_ssh' do
-    let(:app_model) { FactoryBot.create(:app) }
+    let(:app_model) { VCAP::CloudController::AppModel.make }
     let!(:unaffected_process) do
       VCAP::CloudController::ProcessModelFactory.make(
         type: 'web',
@@ -101,7 +101,7 @@ RSpec.describe 'Sets missing attributes for previously backfilled processes', is
   end
 
   context 'when a process has a null value for memory' do
-    let(:app_model) { FactoryBot.create(:app) }
+    let(:app_model) { VCAP::CloudController::AppModel.make }
     before do
       process_hash = {
         guid: app_model.guid,
@@ -138,7 +138,7 @@ RSpec.describe 'Sets missing attributes for previously backfilled processes', is
   end
 
   context 'when a process has a null value for disk_quota' do
-    let(:app_model) { FactoryBot.create(:app) }
+    let(:app_model) { VCAP::CloudController::AppModel.make }
     before do
       process_hash = {
         guid: app_model.guid,
@@ -175,7 +175,7 @@ RSpec.describe 'Sets missing attributes for previously backfilled processes', is
   end
 
   context 'when a process has a null value for file_descriptors' do
-    let(:app_model) { FactoryBot.create(:app) }
+    let(:app_model) { VCAP::CloudController::AppModel.make }
     before do
       process_hash = {
         guid: app_model.guid,
@@ -212,7 +212,7 @@ RSpec.describe 'Sets missing attributes for previously backfilled processes', is
   end
 
   context 'when a process has a null value for enable_ssh' do
-    let(:app_model) { FactoryBot.create(:app) }
+    let(:app_model) { VCAP::CloudController::AppModel.make }
     before do
       process_hash = {
         guid: app_model.guid,

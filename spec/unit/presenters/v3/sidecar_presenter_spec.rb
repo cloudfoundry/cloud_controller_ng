@@ -3,7 +3,7 @@ require 'presenters/v3/sidecar_presenter'
 
 module VCAP::CloudController::Presenters::V3
   RSpec.describe SidecarPresenter do
-    let(:app_model) { FactoryBot.create(:app) }
+    let(:app_model) { VCAP::CloudController::AppModel.make }
     let(:sidecar) do
       FactoryBot.create(:sidecar,
         app: app_model,

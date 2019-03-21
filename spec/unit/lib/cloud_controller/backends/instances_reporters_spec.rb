@@ -100,7 +100,7 @@ module VCAP::CloudController
     end
 
     describe '#stats_for_app' do
-      let(:app) { FactoryBot.create(:app) }
+      let(:app) { AppModel.make }
 
       before do
         allow(diego_instances_stats_reporter).to receive(:stats_for_app).with(app)

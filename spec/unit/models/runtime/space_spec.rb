@@ -341,7 +341,7 @@ module VCAP::CloudController
 
             context 'and the space has apps' do
               before do
-                FactoryBot.create(:app, space: space)
+                AppModel.make(space: space)
               end
 
               it 'adds the isolation segment but does not affect the running app' do
@@ -410,8 +410,8 @@ module VCAP::CloudController
 
         context 'when there are multiple web processes for an app' do
           let(:space) { FactoryBot.create(:space) }
-          let(:app_one) { FactoryBot.create(:app, space: space) }
-          let(:app_two) { FactoryBot.create(:app, space: space) }
+          let(:app_one) { AppModel.make(space: space) }
+          let(:app_two) { AppModel.make(space: space) }
           let!(:web_process_app_one) do
             VCAP::CloudController::ProcessModel.make(
               app: app_one,
@@ -693,7 +693,7 @@ module VCAP::CloudController
       let(:org) { FactoryBot.create(:organization) }
       let(:space_quota) { SpaceQuotaDefinition.make(app_task_limit: 1, organization: org) }
       let(:space) { FactoryBot.create(:space, space_quota_definition: space_quota, organization: org) }
-      let(:app_model) { FactoryBot.create(:app, space: space) }
+      let(:app_model) { AppModel.make(space_guid: space.guid) }
 
       it 'returns false when the app task limit is not exceeded' do
         expect(space.meets_max_task_limit?).to be false

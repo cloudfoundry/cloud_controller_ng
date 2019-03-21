@@ -782,7 +782,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
     end
 
     context 'an application in the target space is bound to the service instance' do
-      let(:test_app) { FactoryBot.create(:app, space: target_space, name: 'manatea') }
+      let(:test_app) { VCAP::CloudController::AppModel.make(space: target_space, name: 'manatea') }
       let!(:service_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: service_instance, app: test_app, credentials: { 'amelia' => 'apples' }) }
 
       context 'and the service broker successfully unbinds' do

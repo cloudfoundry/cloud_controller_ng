@@ -11,7 +11,7 @@ module VCAP::CloudController
         'worker' => 'droplet_worker_command',
       })
     end
-    let(:app) { FactoryBot.create(:app, revisions_enabled: true) }
+    let(:app) { AppModel.make(revisions_enabled: true) }
     let(:user_audit_info) { UserAuditInfo.new(user_guid: '456', user_email: 'mona@example.com', user_name: 'mona') }
 
     before do

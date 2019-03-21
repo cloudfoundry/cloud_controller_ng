@@ -162,7 +162,7 @@ module VCAP::CloudController
     end
 
     describe '#audit_hash' do
-      let(:app) { FactoryBot.create(:app) }
+      let(:app) { AppModel.make }
       let(:relationships) { { app: { data: { guid: app.guid } } } }
 
       context 'when a data field is present' do

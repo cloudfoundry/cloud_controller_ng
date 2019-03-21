@@ -11,7 +11,7 @@ module VCAP::CloudController
           'worker' => 'droplet_worker_command',
         })
     end
-    let(:app) { FactoryBot.create(:app, revisions_enabled: true, environment_variables: { 'key' => 'value' }) }
+    let(:app) { AppModel.make(revisions_enabled: true, environment_variables: { 'key' => 'value' }) }
     let(:user_audit_info) { UserAuditInfo.new(user_guid: '456', user_email: 'mona@example.com', user_name: 'mona') }
     let!(:older_web_process) { ProcessModel.make(app: app, type: 'web', command: 'run my app', created_at: 2.minutes.ago) }
     let!(:worker_process) { ProcessModel.make(app: app, type: 'worker') }

@@ -3,7 +3,7 @@ require 'actions/sidecar_create'
 
 module VCAP::CloudController
   RSpec.describe SidecarCreate do
-    let(:app) { FactoryBot.create(:app) }
+    let(:app) { AppModel.make }
     let(:params) do
       {
         name: 'sidecar-name',

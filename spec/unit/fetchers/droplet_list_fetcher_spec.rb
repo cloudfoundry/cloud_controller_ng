@@ -10,11 +10,11 @@ module VCAP::CloudController
     let(:filters) { {} }
 
     describe '#fetch_all' do
-      let(:app1) { FactoryBot.create(:app) }
+      let(:app1) { AppModel.make }
       let!(:staged_droplet_for_app1) { DropletModel.make(app_guid: app1.guid, state: DropletModel::STAGED_STATE) }
       let!(:failed_droplet_for_app1) { DropletModel.make(app_guid: app1.guid, state: DropletModel::FAILED_STATE) }
 
-      let(:app2) { FactoryBot.create(:app) }
+      let(:app2) { AppModel.make }
       let!(:staged_droplet_for_app2) { DropletModel.make(app_guid: app2.guid, state: DropletModel::STAGED_STATE) }
 
       it 'returns a Sequel::Dataset' do
@@ -128,15 +128,15 @@ module VCAP::CloudController
 
     describe '#fetch_for_spaces' do
       let(:space1) { app1.space }
-      let(:app1) { FactoryBot.create(:app) }
+      let(:app1) { AppModel.make }
       let!(:staged_droplet_for_app1) { DropletModel.make(app_guid: app1.guid, state: DropletModel::STAGED_STATE) }
       let!(:failed_droplet_for_app1) { DropletModel.make(app_guid: app1.guid, state: DropletModel::FAILED_STATE) }
 
-      let(:app2) { FactoryBot.create(:app) }
+      let(:app2) { AppModel.make }
       let(:space2) { app2.space }
       let!(:staged_droplet_for_app2) { DropletModel.make(app_guid: app2.guid, state: DropletModel::STAGED_STATE) }
 
-      let(:app3) { FactoryBot.create(:app) }
+      let(:app3) { AppModel.make }
       let(:space3) { app3.space }
       let!(:expired_droplet_for_app3) { DropletModel.make(app_guid: app3.guid, state: DropletModel::EXPIRED_STATE) }
 
@@ -192,7 +192,7 @@ module VCAP::CloudController
     end
 
     describe '#fetch_for_app' do
-      let(:app) { FactoryBot.create(:app) }
+      let(:app) { AppModel.make }
       let!(:staged_droplet) { DropletModel.make(app_guid: app.guid, state: DropletModel::STAGED_STATE) }
       let!(:failed_droplet) { DropletModel.make(app_guid: app.guid, state: DropletModel::FAILED_STATE) }
       let(:filters) { { app_guid: app.guid } }

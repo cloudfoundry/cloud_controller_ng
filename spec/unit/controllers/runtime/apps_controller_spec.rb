@@ -860,7 +860,7 @@ module VCAP::CloudController
 
       describe 'changing lifecycle types' do
         context 'when changing from docker to buildpack' do
-          let(:process) { ProcessModel.make(app: FactoryBot.create(:app, :docker)) }
+          let(:process) { ProcessModel.make(app: AppModel.make(:docker)) }
 
           it 'raises an error setting buildpack' do
             put "/v2/apps/#{process.app.guid}", MultiJson.dump({ buildpack: 'https://buildpack.example.com' })
@@ -876,7 +876,7 @@ module VCAP::CloudController
         end
 
         context 'when changing from buildpack to docker' do
-          let(:process) { ProcessModel.make(app: FactoryBot.create(:app, :buildpack)) }
+          let(:process) { ProcessModel.make(app: AppModel.make(:buildpack)) }
 
           it 'raises an error' do
             put "/v2/apps/#{process.app.guid}", MultiJson.dump({ docker_image: 'repo/great-image' })
@@ -892,7 +892,7 @@ module VCAP::CloudController
         end
 
         it 'creates a new docker package' do
-          process          = ProcessModelFactory.make(app: FactoryBot.create(:app, :docker), docker_image: 'repo/original-image')
+          process          = ProcessModelFactory.make(app: AppModel.make(:docker), docker_image: 'repo/original-image')
           original_package = process.latest_package
 
           expect(process.docker_image).not_to eq('repo/new-image')
@@ -916,7 +916,7 @@ module VCAP::CloudController
           end
 
           it 'creates a new docker package with those credentials' do
-            process          = ProcessModelFactory.make(app: FactoryBot.create(:app, :docker), docker_image: 'repo/original-image')
+            process          = ProcessModelFactory.make(app: AppModel.make(:docker), docker_image: 'repo/original-image')
             original_package = process.latest_package
 
             expect(process.docker_image).not_to eq('repo/new-image')
@@ -943,7 +943,7 @@ module VCAP::CloudController
 
           it 'returns an UnprocessableEntity error' do
             set_current_user(admin_user, admin: true)
-            process = ProcessModelFactory.make(app: FactoryBot.create(:app, :docker), docker_image: 'repo/original-image')
+            process = ProcessModelFactory.make(app: AppModel.make(:docker), docker_image: 'repo/original-image')
 
             put "/v2/apps/#{process.app.guid}", MultiJson.dump({ docker_credentials: { username: 'username', password: 'foo' } })
 
@@ -1422,7 +1422,7 @@ module VCAP::CloudController
 
       context 'when the user reads environment variables from the app endpoint using inline-relations-depth=2' do
         let!(:test_environment_json) { { 'environ_key' => 'value' } }
-        let(:parent_app) { FactoryBot.create(:app, environment_variables: test_environment_json) }
+        let(:parent_app) { AppModel.make(environment_variables: test_environment_json) }
         let!(:process) do
           ProcessModelFactory.make(
             detected_buildpack: 'buildpack-name',
@@ -1882,8 +1882,8 @@ module VCAP::CloudController
       include_context 'permissions'
 
       before do
-        @obj_a = ProcessModelFactory.make(app: FactoryBot.create(:app, space: @space_a))
-        @obj_b = ProcessModelFactory.make(app: FactoryBot.create(:app, space: @space_b))
+        @obj_a = ProcessModelFactory.make(app: AppModel.make(space: @space_a))
+        @obj_b = ProcessModelFactory.make(app: AppModel.make(space: @space_b))
       end
 
       describe 'Org Level Permissions' do
@@ -1970,7 +1970,7 @@ module VCAP::CloudController
       end
 
       it 'returns duplicate app name message correctly' do
-        existing_process = ProcessModel.make(app: FactoryBot.create(:app, space: space))
+        existing_process = ProcessModel.make(app: AppModel.make(space: space))
         put "/v2/apps/#{process.app.guid}", MultiJson.dump(name: existing_process.name)
 
         expect(last_response.status).to eq(400)

@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe TaskCreateFetcher do
     let(:fetcher) { TaskCreateFetcher.new }
-    let(:app) { FactoryBot.create(:app, space: space) }
+    let(:app) { AppModel.make(space_guid: space.guid) }
     let(:space) { FactoryBot.create(:space) }
     let(:org) { space.organization }
 

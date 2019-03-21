@@ -336,7 +336,7 @@ module VCAP::CloudController
       let(:upload_req) do
         { upload: { droplet: Rack::Test::UploadedFile.new(temp_file_with_content(file_content)) } }
       end
-      let(:app_model) { FactoryBot.create(:app) }
+      let(:app_model) { AppModel.make }
       let(:stack) { Sham.name }
 
       context 'with a valid app' do
@@ -398,7 +398,7 @@ module VCAP::CloudController
     end
 
     describe 'GET /staging/v3/buildpack_cache/:stack/:app_guid/download' do
-      let(:app_model) { FactoryBot.create(:app) }
+      let(:app_model) { AppModel.make }
       let(:buildpack_cache) { Tempfile.new(app_model.guid) }
       let(:stack) { Sham.name }
 

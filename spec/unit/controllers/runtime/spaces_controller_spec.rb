@@ -198,7 +198,7 @@ module VCAP::CloudController
         let(:organization) { FactoryBot.create(:organization) }
         let(:domain) { PrivateDomain.make(owning_organization: organization) }
         let(:space) { FactoryBot.create(:space, organization: organization) }
-        let(:app_model) { FactoryBot.create(:app, space: space) }
+        let(:app_model) { AppModel.make(space: space) }
         let!(:web_process_0) { ProcessModel.make(app: app_model, type: 'web', created_at: 2.days.ago) }
         let!(:web_process_1) { ProcessModel.make(app: app_model, type: 'web', created_at: 1.day.ago) }
 
@@ -868,8 +868,7 @@ module VCAP::CloudController
         end
 
         it 'fails to delete spaces with apps associated to it' do
-          FactoryBot.create(:app, space: space)
-
+          AppModel.make(space: space)
           delete "/v2/spaces/#{space.guid}"
 
           expect(last_response).to have_status_code(400)
@@ -921,7 +920,7 @@ module VCAP::CloudController
         let!(:org) { FactoryBot.create(:organization) }
         let!(:space) { FactoryBot.create(:space, organization: org) }
         let!(:space_guid) { space.guid }
-        let!(:app_guid) { FactoryBot.create(:app, space_guid: space_guid).guid }
+        let!(:app_guid) { AppModel.make(space_guid: space_guid).guid }
         let!(:route_guid) { Route.make(space_guid: space_guid).guid }
         let!(:service_instance) { ManagedServiceInstance.make(space_guid: space_guid) }
         let!(:service_instance_guid) { service_instance.guid }
@@ -998,7 +997,7 @@ module VCAP::CloudController
         end
 
         describe 'deleting service instances' do
-          let(:app_model) { FactoryBot.create(:app, space: space) }
+          let(:app_model) { AppModel.make(space: space) }
           let!(:service_instance_1) { ManagedServiceInstance.make(space_guid: space_guid) }
           let!(:service_instance_2) { ManagedServiceInstance.make(space_guid: space_guid) }
           let!(:service_instance_3) { ManagedServiceInstance.make(space_guid: space_guid) }

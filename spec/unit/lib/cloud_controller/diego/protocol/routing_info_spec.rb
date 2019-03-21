@@ -71,7 +71,7 @@ module VCAP::CloudController
               end
 
               describe 'docker ports' do
-                let(:parent_app) { FactoryBot.create(:app, :docker, space: space) }
+                let(:parent_app) { AppModel.make(:docker, space: space) }
                 let(:process) { ProcessModelFactory.make(app: parent_app, diego: true) }
                 let(:droplet) do
                   DropletModel.make(

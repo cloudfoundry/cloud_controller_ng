@@ -4,7 +4,7 @@ require 'repositories/package_event_repository'
 module VCAP::CloudController
   module Repositories
     RSpec.describe PackageEventRepository do
-      let(:app) { FactoryBot.create(:app, name: 'potato') }
+      let(:app) { AppModel.make(name: 'potato') }
       let(:user_guid) { 'user_guid' }
       let(:package) { PackageModel.make(app_guid: app.guid) }
       let(:email) { 'user-email' }

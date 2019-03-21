@@ -2,7 +2,7 @@ require 'rails_helper'
 require 'permissions_spec_helper'
 
 RSpec.describe AppFeaturesController, type: :controller do
-  let(:app_model) { FactoryBot.create(:app, enable_ssh: true) }
+  let(:app_model) { VCAP::CloudController::AppModel.make(enable_ssh: true) }
   let(:space) { app_model.space }
   let(:org) { space.organization }
   let(:user) { VCAP::CloudController::User.make }

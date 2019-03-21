@@ -14,7 +14,7 @@ module VCAP::CloudController
       end
 
       context 'syncing' do
-        let(:app) { FactoryBot.create(:app) }
+        let(:app) { VCAP::CloudController::AppModel.make }
 
         let(:route) { Route.make(domain: istio_domain, host: 'some-host', path: '/some/path') }
         let!(:route_mapping) { RouteMappingModel.make(route: route, app: app, process_type: 'web', app_port: 9191) }
@@ -123,8 +123,8 @@ module VCAP::CloudController
 
         let(:route_1) { Route.make(domain: istio_domain, host: 'some-host', path: '/some/path') }
         let(:route_2) { Route.make(domain: istio_domain, host: 'some-other-host', path: '/some/other/path') }
-        let(:app_1) { FactoryBot.create(:app) }
-        let(:app_2) { FactoryBot.create(:app) }
+        let(:app_1) { VCAP::CloudController::AppModel.make }
+        let(:app_2) { VCAP::CloudController::AppModel.make }
         let!(:route_mapping_1) { RouteMappingModel.make(route: route_1, app: app_1, process_type: 'web') }
         let!(:route_mapping_2) { RouteMappingModel.make(route: route_2, app: app_2, process_type: 'web') }
         let!(:web_process_model_1) { VCAP::CloudController::ProcessModel.make(type: 'web', app: app_1) }

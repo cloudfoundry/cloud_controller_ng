@@ -1177,7 +1177,7 @@ module VCAP::CloudController
       let(:domain) { PrivateDomain.make(owning_organization: organization) }
       let(:space) { FactoryBot.create(:space, organization: organization) }
       let(:route) { Route.make(domain: domain, space: space) }
-      let(:myapp) { FactoryBot.create(:app, name: 'myapp') }
+      let(:myapp) { AppModel.make(name: 'myapp') }
       let!(:app_route_mapping) { RouteMappingModel.make(route: route, app: myapp, process_type: 'web') }
 
       let!(:webproc1) { ProcessModel.make(app: myapp, type: 'web', created_at: 1.day.ago) }

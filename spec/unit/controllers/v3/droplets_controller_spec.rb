@@ -2,7 +2,7 @@ require 'rails_helper'
 
 RSpec.describe DropletsController, type: :controller do
   describe '#create' do
-    let(:app_model) { FactoryBot.create(:app) }
+    let(:app_model) { VCAP::CloudController::AppModel.make }
     let(:stagers) { instance_double(VCAP::CloudController::Stagers) }
     let(:package) do
       VCAP::CloudController::PackageModel.make(app_guid: app_model.guid,
@@ -24,8 +24,8 @@ RSpec.describe DropletsController, type: :controller do
   describe '#copy' do
     let(:source_space) { FactoryBot.create(:space) }
     let(:target_space) { FactoryBot.create(:space) }
-    let(:target_app) { FactoryBot.create(:app, space: target_space) }
-    let(:source_app_guid) { FactoryBot.create(:app, space: source_space).guid }
+    let(:target_app) { VCAP::CloudController::AppModel.make(space_guid: target_space.guid) }
+    let(:source_app_guid) { VCAP::CloudController::AppModel.make(space_guid: source_space.guid).guid }
     let(:target_app_guid) { target_app.guid }
     let(:state) { 'STAGED' }
     let!(:source_droplet) { VCAP::CloudController::DropletModel.make(:buildpack, state: state, app_guid: source_app_guid) }
@@ -308,7 +308,7 @@ RSpec.describe DropletsController, type: :controller do
 
   describe '#index' do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
-    let(:app) { FactoryBot.create(:app) }
+    let(:app) { VCAP::CloudController::AppModel.make }
     let!(:space) { app.space }
     let!(:user_droplet_1) { VCAP::CloudController::DropletModel.make(app_guid: app.guid) }
     let!(:user_droplet_2) { VCAP::CloudController::DropletModel.make(app_guid: app.guid) }
@@ -367,7 +367,7 @@ RSpec.describe DropletsController, type: :controller do
 
     context 'accessed as an app subresource' do
       it 'returns droplets for the app' do
-        app = FactoryBot.create(:app, space: space)
+        app = VCAP::CloudController::AppModel.make(space: space)
         droplet_1 = VCAP::CloudController::DropletModel.make(app_guid: app.guid, state: VCAP::CloudController::DropletModel::STAGED_STATE)
         droplet_2 = VCAP::CloudController::DropletModel.make(app_guid: app.guid, state: VCAP::CloudController::DropletModel::STAGED_STATE)
         VCAP::CloudController::DropletModel.make

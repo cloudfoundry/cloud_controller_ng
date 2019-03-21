@@ -6,27 +6,25 @@ RSpec.describe(OPI::Client) do
     subject(:client) { described_class.new(opi_url) }
     let(:opi_url) { 'http://opi.service.cf.internal:8077' }
     let(:img_url) { 'http://example.org/image1234' }
-    let(:droplet) do
-      VCAP::CloudController::DropletModel.make(
-        docker_receipt_image: 'http://example.org/image1234',
-        droplet_hash: 'd_haash',
-        guid: 'some-droplet-guid',
-      )
-    end
+    let(:droplet) { VCAP::CloudController::DropletModel.make(
+      docker_receipt_image: 'http://example.org/image1234',
+      droplet_hash: 'd_haash',
+      guid: 'some-droplet-guid',
+    )
+    }
     let(:routing_info) {
       instance_double(VCAP::CloudController::Diego::Protocol::RoutingInfo)
     }
 
     let(:cfg) { ::VCAP::CloudController::Config.new({ default_health_check_timeout: 99 }) }
-    let(:app_model) do
-      FactoryBot.create(
-        :app,
-        guid: 'app-guid',
-        droplet: droplet,
-        enable_ssh: false,
-        environment_variables: { 'BISH': 'BASH', 'FOO': 'BAR' }
-      )
-    end
+    let(:lifecycle_type) { nil }
+    let(:app_model) {
+      ::VCAP::CloudController::AppModel.make(lifecycle_type,
+                                             guid: 'app-guid',
+                                             droplet: droplet,
+                                             enable_ssh: false,
+                                             environment_variables: { 'BISH': 'BASH', 'FOO': 'BAR' })
+    }
 
     let(:lrp) do
       lrp = ::VCAP::CloudController::ProcessModel.make(:process,
@@ -99,8 +97,8 @@ RSpec.describe(OPI::Client) do
                   }}.delete(' ').delete("\n"),
               'MEMORY_LIMIT': '128m',
               'VCAP_SERVICES': '{}',
-              'PORT': '',
-              'VCAP_APP_PORT': '',
+              'PORT': '8080',
+              'VCAP_APP_PORT': '8080',
               'VCAP_APP_HOST': '0.0.0.0'
             },
             instances: 21,
@@ -113,7 +111,7 @@ RSpec.describe(OPI::Client) do
             health_check_timeout_ms: 12000,
             last_updated: '2.0',
             volume_mounts: [],
-            ports: [],
+            ports: [8080],
             routes: {
               'cf-router' => [
                 {

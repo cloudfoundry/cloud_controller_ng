@@ -4,7 +4,7 @@ require 'presenters/v3/process_presenter'
 module VCAP::CloudController::Presenters::V3
   RSpec.describe ProcessPresenter do
     describe '#to_hash' do
-      let(:app_model) { FactoryBot.create(:app) }
+      let(:app_model) { VCAP::CloudController::AppModel.make }
       let(:health_check_type) { 'http' }
       let(:process) {
         VCAP::CloudController::ProcessModel.make(

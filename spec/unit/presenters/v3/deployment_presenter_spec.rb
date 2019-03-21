@@ -5,7 +5,7 @@ module VCAP::CloudController::Presenters::V3
   RSpec.describe DeploymentPresenter do
     let(:droplet) { VCAP::CloudController::DropletModel.make }
     let(:previous_droplet) { VCAP::CloudController::DropletModel.make }
-    let(:app) { FactoryBot.create(:app) }
+    let(:app) { VCAP::CloudController::AppModel.make }
     let(:process) { VCAP::CloudController::ProcessModel.make(guid: 'deploying-process-guid', type: 'web-deployment-guid-type') }
     let!(:deployment) do
       VCAP::CloudController::DeploymentModelTestFactory.make(

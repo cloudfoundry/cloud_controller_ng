@@ -4,7 +4,7 @@ require 'fetchers/app_revisions_fetcher'
 module VCAP::CloudController
   RSpec.describe AppRevisionsFetcher do
     let(:fetcher) { AppRevisionsFetcher }
-    let!(:app) { FactoryBot.create(:app) }
+    let!(:app) { AppModel.make }
     let!(:revision1) { RevisionModel.make(version: 21, app: app) }
     let!(:revision2) { RevisionModel.make(version: 34, app: app) }
 

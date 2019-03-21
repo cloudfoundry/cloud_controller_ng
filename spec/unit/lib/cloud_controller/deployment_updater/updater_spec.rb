@@ -6,7 +6,7 @@ module VCAP::CloudController
     subject(:updater) { DeploymentUpdater::Updater.new(deployment, logger) }
     let(:a_day_ago) { Time.now - 1.day }
     let(:an_hour_ago) { Time.now - 1.hour }
-    let(:app) { FactoryBot.create(:app, droplet: droplet, revisions_enabled: true) }
+    let(:app) { AppModel.make(droplet: droplet, revisions_enabled: true) }
     let(:droplet) { nil }
     let!(:web_process) do
       ProcessModel.make(

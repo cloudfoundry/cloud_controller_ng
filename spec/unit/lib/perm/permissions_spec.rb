@@ -753,10 +753,10 @@ module VCAP::CloudController::Perm
 
         org1 = FactoryBot.create(:organization)
         space1 = FactoryBot.create(:space, organization: org1)
-        app1 = FactoryBot.create(:app, space: space1)
+        app1 = VCAP::CloudController::AppModel.make(space: space1)
         org2 = FactoryBot.create(:organization)
         space2 = FactoryBot.create(:space, organization: org2)
-        app2 = FactoryBot.create(:app, space: space2)
+        app2 = VCAP::CloudController::AppModel.make(space: space2)
 
         app_guids = permissions.readable_app_guids
 
@@ -773,10 +773,10 @@ module VCAP::CloudController::Perm
 
         org1 = FactoryBot.create(:organization)
         space1 = FactoryBot.create(:space, organization: org1)
-        app1 = FactoryBot.create(:app, space: space1)
+        app1 = VCAP::CloudController::AppModel.make(space: space1)
         org2 = FactoryBot.create(:organization)
         space2 = FactoryBot.create(:space, organization: org2)
-        app2 = FactoryBot.create(:app, space: space2)
+        app2 = VCAP::CloudController::AppModel.make(space: space2)
 
         app_guids = permissions.readable_app_guids
 
@@ -793,10 +793,10 @@ module VCAP::CloudController::Perm
 
         org1 = FactoryBot.create(:organization)
         space1 = FactoryBot.create(:space, organization: org1)
-        app1 = FactoryBot.create(:app, space: space1)
+        app1 = VCAP::CloudController::AppModel.make(space: space1)
         org2 = FactoryBot.create(:organization)
         space2 = FactoryBot.create(:space, organization: org2)
-        app2 = FactoryBot.create(:app, space: space2)
+        app2 = VCAP::CloudController::AppModel.make(space: space2)
 
         app_guids = permissions.readable_app_guids
 
@@ -812,11 +812,11 @@ module VCAP::CloudController::Perm
         org_guids = [org1.guid, org2.guid]
 
         space1 = FactoryBot.create(:space, organization: org1)
-        app1 = FactoryBot.create(:app, space: space1)
-        app2 = FactoryBot.create(:app, space: space1)
+        app1 = VCAP::CloudController::AppModel.make(space: space1)
+        app2 = VCAP::CloudController::AppModel.make(space: space1)
 
         space2 = FactoryBot.create(:space, organization: org2)
-        app3 = FactoryBot.create(:app, space: space2)
+        app3 = VCAP::CloudController::AppModel.make(space: space2)
 
         org_app_guids = [app1.guid, app2.guid, app3.guid]
         org_actions = %w(org.manager)
@@ -827,9 +827,9 @@ module VCAP::CloudController::Perm
 
         org3 = FactoryBot.create(:organization)
         space3 = FactoryBot.create(:space, organization: org3)
-        app4 = FactoryBot.create(:app, space: space3)
+        app4 = VCAP::CloudController::AppModel.make(space: space3)
         space4 = FactoryBot.create(:space, organization: org3)
-        app5 = FactoryBot.create(:app, space: space4)
+        app5 = VCAP::CloudController::AppModel.make(space: space4)
 
         readable_space_guids = [space3.guid, space4.guid]
         readable_app_guids = [app4.guid, app5.guid]
@@ -859,11 +859,11 @@ module VCAP::CloudController::Perm
 
         org1 = FactoryBot.create(:organization)
         space1 = FactoryBot.create(:space, organization: org1)
-        app1 = FactoryBot.create(:app, space: space1)
+        app1 = VCAP::CloudController::AppModel.make(space: space1)
         route_mapping1 = VCAP::CloudController::RouteMappingModel.make(app: app1)
         org2 = FactoryBot.create(:organization)
         space2 = FactoryBot.create(:space, organization: org2)
-        app2 = FactoryBot.create(:app, space: space2)
+        app2 = VCAP::CloudController::AppModel.make(space: space2)
         route_mapping2 = VCAP::CloudController::RouteMappingModel.make(app: app2)
 
         route_mapping_guids = permissions.readable_route_mapping_guids
@@ -881,11 +881,11 @@ module VCAP::CloudController::Perm
 
         org1 = FactoryBot.create(:organization)
         space1 = FactoryBot.create(:space, organization: org1)
-        app1 = FactoryBot.create(:app, space: space1)
+        app1 = VCAP::CloudController::AppModel.make(space: space1)
         route_mapping1 = VCAP::CloudController::RouteMappingModel.make(app: app1)
         org2 = FactoryBot.create(:organization)
         space2 = FactoryBot.create(:space, organization: org2)
-        app2 = FactoryBot.create(:app, space: space2)
+        app2 = VCAP::CloudController::AppModel.make(space: space2)
         route_mapping2 = VCAP::CloudController::RouteMappingModel.make(app: app2)
 
         route_mapping_guids = permissions.readable_route_mapping_guids
@@ -903,11 +903,11 @@ module VCAP::CloudController::Perm
 
         org1 = FactoryBot.create(:organization)
         space1 = FactoryBot.create(:space, organization: org1)
-        app1 = FactoryBot.create(:app, space: space1)
+        app1 = VCAP::CloudController::AppModel.make(space: space1)
         route_mapping1 = VCAP::CloudController::RouteMappingModel.make(app: app1)
         org2 = FactoryBot.create(:organization)
         space2 = FactoryBot.create(:space, organization: org2)
-        app2 = FactoryBot.create(:app, space: space2)
+        app2 = VCAP::CloudController::AppModel.make(space: space2)
         route_mapping2 = VCAP::CloudController::RouteMappingModel.make(app: app2)
 
         route_mapping_guids = permissions.readable_route_mapping_guids
@@ -924,13 +924,13 @@ module VCAP::CloudController::Perm
         org_guids = [org1.guid, org2.guid]
 
         space1 = FactoryBot.create(:space, organization: org1)
-        app1 = FactoryBot.create(:app, space: space1)
+        app1 = VCAP::CloudController::AppModel.make(space: space1)
         route_mapping1 = VCAP::CloudController::RouteMappingModel.make(app: app1)
-        app2 = FactoryBot.create(:app, space: space1)
+        app2 = VCAP::CloudController::AppModel.make(space: space1)
         route_mapping2 = VCAP::CloudController::RouteMappingModel.make(app: app2)
 
         space2 = FactoryBot.create(:space, organization: org2)
-        app3 = FactoryBot.create(:app, space: space2)
+        app3 = VCAP::CloudController::AppModel.make(space: space2)
         route_mapping3 = VCAP::CloudController::RouteMappingModel.make(app: app3)
 
         org_route_mapping_guids = [route_mapping1.guid, route_mapping2.guid, route_mapping3.guid]
@@ -942,10 +942,10 @@ module VCAP::CloudController::Perm
 
         org3 = FactoryBot.create(:organization)
         space3 = FactoryBot.create(:space, organization: org3)
-        app4 = FactoryBot.create(:app, space: space3)
+        app4 = VCAP::CloudController::AppModel.make(space: space3)
         route_mapping4 = VCAP::CloudController::RouteMappingModel.make(app: app4)
         space4 = FactoryBot.create(:space, organization: org3)
-        app5 = FactoryBot.create(:app, space: space4)
+        app5 = VCAP::CloudController::AppModel.make(space: space4)
         route_mapping5 = VCAP::CloudController::RouteMappingModel.make(app: app5)
 
         readable_space_guids = [space3.guid, space4.guid]

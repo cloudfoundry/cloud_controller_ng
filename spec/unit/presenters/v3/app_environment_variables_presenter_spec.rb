@@ -4,7 +4,7 @@ require 'presenters/v3/app_environment_variables_presenter'
 module VCAP::CloudController::Presenters::V3
   RSpec.describe AppEnvironmentVariablesPresenter do
     let(:app) do
-      FactoryBot.create(:app,
+      VCAP::CloudController::AppModel.make(
         environment_variables: { 'CUSTOM_ENV_VAR' => 'hello' },
       )
     end

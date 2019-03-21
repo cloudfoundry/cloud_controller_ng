@@ -52,7 +52,7 @@ module VCAP::CloudController
 
         context 'and the space has an app' do
           before do
-            FactoryBot.create(:app, space: space)
+            AppModel.make(space: space)
           end
 
           it 'removes the Organization from the Isolation Segment' do

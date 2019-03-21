@@ -9,7 +9,7 @@ RSpec.describe 'App Manifests' do
   let(:second_route) {
     VCAP::CloudController::Route.make(domain: shared_domain, space: space, path: '/path', host: 'b_host')
   }
-  let(:app_model) { FactoryBot.create(:app, :buildpack, space: space) }
+  let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
 
   let!(:process) { VCAP::CloudController::ProcessModel.make(app: app_model) }
 
@@ -387,7 +387,7 @@ RSpec.describe 'App Manifests' do
   end
 
   describe 'GET /v3/apps/:guid/manifest' do
-    let(:app_model) { FactoryBot.create(:app, lifecycle_type, space: space, environment_variables: { 'one' => 'tomato', 'two' => 'potato' }) }
+    let(:app_model) { VCAP::CloudController::AppModel.make(space: space, environment_variables: { 'one' => 'tomato', 'two' => 'potato' }) }
 
     let!(:service_binding) { VCAP::CloudController::ServiceBinding.make(app: app_model, service_instance: service_instance) }
     let!(:service_binding2) { VCAP::CloudController::ServiceBinding.make(app: app_model, service_instance: service_instance2) }
@@ -409,7 +409,6 @@ RSpec.describe 'App Manifests' do
     end
 
     context 'for a buildpack' do
-      let(:lifecycle_type) { 'buildpack' }
       let!(:buildpack) { VCAP::CloudController::Buildpack.make }
       let!(:buildpack2) { VCAP::CloudController::Buildpack.make }
 
@@ -469,7 +468,6 @@ RSpec.describe 'App Manifests' do
     end
 
     context 'for a docker app' do
-      let(:lifecycle_type) { 'docker' }
       let(:docker_package) do
         VCAP::CloudController::PackageModel.make(
           :docker,
@@ -482,7 +480,7 @@ RSpec.describe 'App Manifests' do
       end
 
       let(:app_model) do
-        FactoryBot.create(:app, :docker, space: space, environment_variables: { 'one' => 'tomato', 'two' => 'potato' })
+        VCAP::CloudController::AppModel.make(:docker, space: space, environment_variables: { 'one' => 'tomato', 'two' => 'potato' })
       end
 
       before do

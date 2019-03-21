@@ -8,8 +8,8 @@ module VCAP::CloudController
 
     describe '#get_page' do
       let(:dataset) { AppModel.dataset }
-      let!(:app_model1) { FactoryBot.create(:app) }
-      let!(:app_model2) { FactoryBot.create(:app) }
+      let!(:app_model1) { AppModel.make }
+      let!(:app_model2) { AppModel.make }
       let(:page) { 1 }
       let(:per_page) { 1 }
 

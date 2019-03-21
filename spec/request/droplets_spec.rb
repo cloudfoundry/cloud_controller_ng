@@ -2,8 +2,8 @@ require 'spec_helper'
 
 RSpec.describe 'Droplets' do
   let(:space) { FactoryBot.create(:space) }
-  let(:app_model) { FactoryBot.create(:app, space: space, name: 'my-app') }
-  let(:other_app_model) { FactoryBot.create(:app, space: space, name: 'my-app-3') }
+  let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid, name: 'my-app') }
+  let(:other_app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid, name: 'my-app-3') }
   let(:developer) { make_developer_for_space(space) }
   let(:developer_headers) { headers_for(developer, user_name: user_name) }
   let(:user_name) { 'sundance kid' }
@@ -266,8 +266,8 @@ RSpec.describe 'Droplets' do
 
     context 'faceted list' do
       let(:space2) { FactoryBot.create(:space) }
-      let(:app_model2) { FactoryBot.create(:app, space: space) }
-      let(:app_model3) { FactoryBot.create(:app, space: space2) }
+      let(:app_model2) { VCAP::CloudController::AppModel.make(space: space) }
+      let(:app_model3) { VCAP::CloudController::AppModel.make(space: space2) }
       let!(:droplet3) { VCAP::CloudController::DropletModel.make(app: app_model2, state: VCAP::CloudController::DropletModel::FAILED_STATE) }
       let!(:droplet4) { VCAP::CloudController::DropletModel.make(app: app_model3, state: VCAP::CloudController::DropletModel::FAILED_STATE) }
 
@@ -831,7 +831,7 @@ RSpec.describe 'Droplets' do
   end
 
   describe 'POST /v3/droplets/:guid/copy' do
-    let(:new_app) { FactoryBot.create(:app, space: space) }
+    let(:new_app) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
     let(:package_model) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
     let!(:og_droplet) do
       VCAP::CloudController::DropletModel.make(

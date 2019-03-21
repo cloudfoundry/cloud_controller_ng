@@ -4,7 +4,7 @@ require 'messages/deployment_create_message'
 
 RSpec.describe DeploymentsController, type: :controller do
   let(:user) { VCAP::CloudController::User.make }
-  let(:app) { FactoryBot.create(:app, desired_state: VCAP::CloudController::ProcessModel::STARTED) }
+  let(:app) { VCAP::CloudController::AppModel.make(desired_state: VCAP::CloudController::ProcessModel::STARTED) }
   let!(:process_model) { VCAP::CloudController::ProcessModel.make(app: app) }
   let(:droplet) { VCAP::CloudController::DropletModel.make(app: app, process_types: { 'web' => 'spider' }) }
   let(:app_guid) { app.guid }
@@ -55,7 +55,7 @@ RSpec.describe DeploymentsController, type: :controller do
 
         context 'the app does not have a current droplet' do
           let(:app_without_droplet) {
-            FactoryBot.create(:app,
+            VCAP::CloudController::AppModel.make(
               desired_state: VCAP::CloudController::ProcessModel::STARTED,
               space: space
             )

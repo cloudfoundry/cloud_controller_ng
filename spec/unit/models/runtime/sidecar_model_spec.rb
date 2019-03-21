@@ -14,7 +14,7 @@ module VCAP::CloudController
     end
 
     describe 'validations' do
-      let(:app_model) { FactoryBot.create(:app) }
+      let(:app_model) { AppModel.make }
       let!(:sidecar) { FactoryBot.create(:sidecar, name: 'my_sidecar', app: app_model) }
 
       it 'validates unique sidecar name per app' do

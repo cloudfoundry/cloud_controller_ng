@@ -4,15 +4,15 @@ require 'fetchers/log_access_fetcher'
 module VCAP::CloudController
   RSpec.describe LogAccessFetcher do
     let(:space) { FactoryBot.create(:space) }
-    let(:process) { FactoryBot.create(:app, space: space) }
-    let(:sad_process) { FactoryBot.create(:app) }
+    let(:process) { AppModel.make(space_guid: space.guid) }
+    let(:sad_process) { AppModel.make }
     let(:org) { space.organization }
     let(:fetcher) { LogAccessFetcher.new }
     let(:space_guids) { [space.guid] }
 
     describe '#app_exists?' do
       context 'for a v3 app guid' do
-        let(:app_model) { FactoryBot.create(:app) }
+        let(:app_model) { AppModel.make }
 
         it 'returns true' do
           expect(fetcher.app_exists?(app_model.guid)).to eq(true)

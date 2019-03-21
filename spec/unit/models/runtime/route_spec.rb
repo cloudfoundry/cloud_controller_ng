@@ -81,10 +81,7 @@ module VCAP::CloudController
     describe 'Associations' do
       it { is_expected.to have_associated :domain }
       it { is_expected.to have_associated :space, associated_instance: ->(route) { FactoryBot.create(:space, organization: route.domain.owning_organization) } }
-      it do
-        is_expected.to have_associated :route_mappings,
-          associated_instance: ->(route) { RouteMappingModel.make(app: FactoryBot.create(:app, space: route.space), route: route) }
-      end
+      it { is_expected.to have_associated :route_mappings, associated_instance: ->(route) { RouteMappingModel.make(app: AppModel.make(space: route.space), route: route) } }
 
       describe 'apps association' do
         let(:space) { FactoryBot.create(:space) }
@@ -207,7 +204,7 @@ module VCAP::CloudController
       context 'deleting with route mappings' do
         it 'removes the associated route mappings' do
           route = Route.make
-          app = FactoryBot.create(:app, space: route.space)
+          app = AppModel.make(space: route.space)
           mapping1 = RouteMappingModel.make(route: route, app: app, process_type: 'thing')
           mapping2 = RouteMappingModel.make(route: route, app: app, process_type: 'other')
 

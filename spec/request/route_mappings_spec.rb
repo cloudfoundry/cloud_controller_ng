@@ -2,7 +2,7 @@ require 'spec_helper'
 
 RSpec.describe 'Route Mappings' do
   let(:space) { FactoryBot.create(:space) }
-  let(:app_model) { FactoryBot.create(:app, space: space) }
+  let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
   let(:process) { VCAP::CloudController::ProcessModel.make(:process, app: app_model, type: 'worker', ports: [8080]) }
   let(:route) { VCAP::CloudController::Route.make(space: space) }
   let(:developer) { make_developer_for_space(space) }
@@ -175,7 +175,7 @@ RSpec.describe 'Route Mappings' do
 
     context 'faceted list' do
       context 'by app_guids' do
-        let(:app_model2) { FactoryBot.create(:app, space: space) }
+        let(:app_model2) { VCAP::CloudController::AppModel.make(space: space) }
         let!(:route_mapping5) { VCAP::CloudController::RouteMappingModel.make(app: app_model2, route: route, process_type: 'other') }
 
         it 'returns only the matching route mappings' do

@@ -12,7 +12,7 @@ module VCAP::CloudController
       let(:environment_variables) { { 'FOO' => 'bar' } }
       let(:desired_state) { ProcessModel::STARTED }
       let(:app) do
-        FactoryBot.create(:app,
+        AppModel.make(
           :docker,
           desired_state:         desired_state,
           environment_variables: environment_variables

@@ -124,7 +124,7 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
     standard_list_parameters VCAP::CloudController::EventsController
 
     let(:test_app) { VCAP::CloudController::ProcessModel.make }
-    let(:test_v3app) { FactoryBot.create(:app) }
+    let(:test_v3app) { VCAP::CloudController::AppModel.make }
     let(:test_assignee) { VCAP::CloudController::User.make }
     let(:test_user) { VCAP::CloudController::User.make }
     let(:test_user_email) { 'user@example.com' }

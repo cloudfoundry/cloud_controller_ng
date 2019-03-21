@@ -9,8 +9,8 @@ module VCAP::CloudController
     describe '#get_page' do
       let(:list) { [app_model1, app_model2] }
       let(:default_options) { { order_by: 'id', order_direction: 'asc', page: 1, per_page: per_page } }
-      let!(:app_model1) { FactoryBot.create(:app, name: 'zora') }
-      let!(:app_model2) { FactoryBot.create(:app, name: 'dora') }
+      let!(:app_model1) { AppModel.make(name: 'zora') }
+      let!(:app_model2) { AppModel.make(name: 'dora') }
       let(:per_page) { 1 }
 
       it 'finds all records from the page upto the per_page limit' do

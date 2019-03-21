@@ -4,8 +4,7 @@ module VCAP::CloudController
   RSpec.describe SyslogDrainUrlsInternalController do
     let(:org) { FactoryBot.create(:organization, name: 'org-1') }
     let(:space) { FactoryBot.create(:space, name: 'space-1', organization: org) }
-    let(:app_obj) { FactoryBot.create(:app, name: 'app-1', space: space)
-    }
+    let(:app_obj) { AppModel.make(name: 'app-1', space: space) }
     let(:instance1) { UserProvidedServiceInstance.make(space: app_obj.space) }
     let(:instance2) { UserProvidedServiceInstance.make(space: app_obj.space) }
     let!(:binding_with_drain1) { ServiceBinding.make(syslog_drain_url: 'fish,finger', app: app_obj, service_instance: instance1) }
@@ -27,7 +26,7 @@ module VCAP::CloudController
       context 'rfc-1034-compliance: whitespace converted to hyphens' do
         let(:org) { FactoryBot.create(:organization, name: 'org 2') }
         let(:space) { FactoryBot.create(:space, name: 'space 2', organization: org) }
-        let(:app_obj) { FactoryBot.create(:app, name: 'app 2', space: space) }
+        let(:app_obj) { AppModel.make(name: 'app 2', space: space) }
 
         it 'truncates trailing hyphens' do
           get '/internal/v4/syslog_drain_urls', '{}'
@@ -45,7 +44,7 @@ module VCAP::CloudController
       context 'rfc-1034-compliance: named end with hyphens' do
         let(:org) { FactoryBot.create(:organization, name: 'org-3-') }
         let(:space) { FactoryBot.create(:space, name: 'space-3--', organization: org) }
-        let(:app_obj) { FactoryBot.create(:app, name: 'app-3---', space: space) }
+        let(:app_obj) { AppModel.make(name: 'app-3---', space: space) }
 
         it 'truncates trailing hyphens' do
           get '/internal/v4/syslog_drain_urls', '{}'
@@ -63,7 +62,7 @@ module VCAP::CloudController
       context 'rfc-1034-compliance: remove disallowed characters' do
         let(:org) { FactoryBot.create(:organization, name: '!org@-4#' + [233].pack('U')) }
         let(:space) { FactoryBot.create(:space, name: '$space%-^4--&', organization: org) }
-        let(:app_obj) { FactoryBot.create(:app, name: '";*app(-)4_-=-+-[]{}\\|;:,.<>/?`~', space: space) }
+        let(:app_obj) { AppModel.make(name: '";*app(-)4_-=-+-[]{}\\|;:,.<>/?`~', space: space) }
 
         it 'truncates trailing hyphens' do
           get '/internal/v4/syslog_drain_urls', '{}'
@@ -87,7 +86,7 @@ module VCAP::CloudController
         let(:space) { FactoryBot.create(:space, name: spaceNamePlus, organization: org) }
         let(:appName) { 'app-5-' + 'x' * (63 - 6) }
         let(:appNamePlus) { appName + 'y' }
-        let(:app_obj) { FactoryBot.create(:app, name: appNamePlus, space: space) }
+        let(:app_obj) { AppModel.make(name: appNamePlus, space: space) }
 
         it 'truncates trailing hyphens' do
           get '/internal/v4/syslog_drain_urls', '{}'
@@ -109,7 +108,7 @@ module VCAP::CloudController
         let(:spaceName) { 'space-5-' + 'x' * (63 - 8) }
         let(:space) { FactoryBot.create(:space, name: spaceName, organization: org) }
         let(:appName) { 'app-5-' + 'x' * (63 - 6) }
-        let(:app_obj) { FactoryBot.create(:app, name: appName, space: space) }
+        let(:app_obj) { AppModel.make(name: appName, space: space) }
 
         it 'retains length-compliant names' do
           get '/internal/v4/syslog_drain_urls', '{}'
@@ -126,7 +125,7 @@ module VCAP::CloudController
       end
 
       context 'when an app has no service binding' do
-        let!(:app_no_binding) { FactoryBot.create(:app) }
+        let!(:app_no_binding) { AppModel.make }
 
         it 'does not include that app' do
           get '/internal/v4/syslog_drain_urls', '{}'
@@ -180,7 +179,7 @@ module VCAP::CloudController
       describe 'paging' do
         before do
           3.times do
-            app_obj  = FactoryBot.create(:app)
+            app_obj  = AppModel.make
             instance = UserProvidedServiceInstance.make(space: app_obj.space)
             ServiceBinding.make(syslog_drain_url: 'fish,finger', app: app_obj, service_instance: instance)
           end
@@ -243,7 +242,7 @@ module VCAP::CloudController
 
         context 'when an app has no service_bindings' do
           before do
-            FactoryBot.create(:app, guid: '00000')
+            AppModel.make(guid: '00000')
           end
 
           it 'does not affect the paging results' do
@@ -258,7 +257,7 @@ module VCAP::CloudController
         end
 
         context 'when an app has no syslog_drain_urls' do
-          let(:app_with_first_ordered_guid) { FactoryBot.create(:app, guid: '000', space: instance1.space) }
+          let(:app_with_first_ordered_guid) { AppModel.make(guid: '000', space: instance1.space) }
           before do
             ServiceBinding.make(syslog_drain_url: nil, app: app_with_first_ordered_guid, service_instance: instance1)
           end

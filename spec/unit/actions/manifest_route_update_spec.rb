@@ -14,7 +14,7 @@ module VCAP::CloudController
     let(:user_audit_info) { instance_double(UserAuditInfo).as_null_object }
 
     describe '#update' do
-      let!(:app) { FactoryBot.create(:app) }
+      let!(:app) { AppModel.make }
       let!(:process) { ProcessModel.make(app: app) }
       let!(:another_process) { ProcessModel.make(app: app) }
 

@@ -6,7 +6,7 @@ module VCAP::CloudController
       allow(Config).to receive(:config).and_return(config)
     end
 
-    let(:app) { FactoryBot.create(:app) }
+    let(:app) { AppModel.make }
     let(:blobstore) do
       CloudController::DependencyLocator.instance.droplet_blobstore
     end

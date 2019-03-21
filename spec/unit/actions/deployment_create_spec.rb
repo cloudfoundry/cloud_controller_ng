@@ -4,7 +4,7 @@ require 'messages/deployment_create_message'
 
 module VCAP::CloudController
   RSpec.describe DeploymentCreate do
-    let(:app) { FactoryBot.create(:app) }
+    let(:app) { AppModel.make }
     let!(:web_process) { ProcessModel.make(app: app, instances: 3) }
     let(:original_droplet) { DropletModel.make(app: app, process_types: { 'web' => 'asdf' }) }
     let(:next_droplet) { DropletModel.make(app: app, process_types: { 'web' => '1234' }) }
@@ -292,7 +292,7 @@ module VCAP::CloudController
           end
 
           context 'when the app does not have a droplet set' do
-            let(:app_without_current_droplet) { FactoryBot.create(:app) }
+            let(:app_without_current_droplet) { AppModel.make }
             let(:next_droplet) { DropletModel.make(app: app_without_current_droplet, process_types: { 'web' => 'asdf' }) }
 
             it 'sets the droplet on the deployment' do

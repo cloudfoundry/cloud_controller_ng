@@ -22,7 +22,7 @@ module VCAP::CloudController
       it { is_expected.to have_associated :space }
       it do
         is_expected.to have_associated :service_bindings, associated_instance: ->(service_instance) {
-          app = FactoryBot.create(:app, space: service_instance.space)
+          app = VCAP::CloudController::AppModel.make(space: service_instance.space)
           ServiceBinding.make(app: app, service_instance: service_instance, credentials: Sham.service_credentials)
         }
       end
@@ -426,7 +426,7 @@ module VCAP::CloudController
       context 'when the instance has bindings' do
         before do
           ServiceBinding.make(
-            app: FactoryBot.create(:app, space: service_instance.space),
+            app: AppModel.make(space: service_instance.space),
             service_instance: service_instance
           )
         end

@@ -12,9 +12,9 @@ module VCAP::CloudController
 
       context 'when the app has a docker lifecycle' do
         let(:app) do
-          FactoryBot.create(:app,
+          AppModel.make(
             :docker,
-            desired_state: 'STOPPED',
+            desired_state:         'STOPPED',
             environment_variables: environment_variables
           )
         end
@@ -43,12 +43,9 @@ module VCAP::CloudController
 
       context 'when the app has a buildpack lifecycle' do
         let(:app) do
-          FactoryBot.create(
-            :app,
-            :buildpack,
-            desired_state: 'STOPPED',
-            environment_variables: environment_variables
-          )
+          AppModel.make(:buildpack,
+            desired_state:         'STOPPED',
+            environment_variables: environment_variables)
         end
         let!(:droplet) { DropletModel.make(app: app) }
         let!(:process1) { ProcessModel.make(:process, state: 'STOPPED', app: app) }
@@ -87,9 +84,9 @@ module VCAP::CloudController
         context 'and the droplet has a package' do
           let!(:droplet) do
             DropletModel.make(
-              app: app,
+              app:     app,
               package: package,
-              state: DropletModel::STAGED_STATE,
+              state:   DropletModel::STAGED_STATE,
             )
           end
           let(:package) { PackageModel.make(app: app, package_hash: 'some-awesome-thing', state: PackageModel::READY_STATE) }
@@ -109,7 +106,7 @@ module VCAP::CloudController
       end
 
       context 'when the app has two associated droplets' do
-        let(:app) { FactoryBot.create(:app, :buildpack) }
+        let(:app) { AppModel.make(:buildpack) }
         let!(:web_process) { ProcessModel.make(app: app, type: 'web', revision: revisionA) }
         let!(:worker_process) { ProcessModel.make(app: app, type: 'worker', revision: revisionA) }
         let(:package) { PackageModel.make(app: app, state: PackageModel::READY_STATE) }
@@ -172,7 +169,7 @@ module VCAP::CloudController
       end
 
       describe '#start_without_event' do
-        let(:app) { FactoryBot.create(:app, :buildpack, desired_state: 'STOPPED') }
+        let(:app) { AppModel.make(:buildpack, desired_state: 'STOPPED') }
 
         it 'sets the desired state on the app' do
           AppStart.start_without_event(app)

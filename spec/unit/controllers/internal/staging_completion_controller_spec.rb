@@ -44,7 +44,7 @@ module VCAP::CloudController
 
     context 'staging a package through /droplet_completed (legacy for rolling deploy)' do
       let(:url) { "/internal/v3/staging/#{staging_guid}/droplet_completed" }
-      let(:staged_app) { FactoryBot.create(:app) }
+      let(:staged_app) { AppModel.make }
       let(:package) { PackageModel.make(state: 'READY', app_guid: staged_app.guid) }
       let(:droplet) { DropletModel.make(package_guid: package.guid, app_guid: staged_app.guid, state: DropletModel::STAGING_STATE) }
       let(:staging_guid) { droplet.guid }
@@ -223,7 +223,7 @@ module VCAP::CloudController
 
     describe '/build_completed' do
       let(:url) { "/internal/v3/staging/#{staging_guid}/build_completed" }
-      let(:staged_app) { FactoryBot.create(:app) }
+      let(:staged_app) { AppModel.make }
       let(:package) { PackageModel.make(state: 'READY', app_guid: staged_app.guid) }
       let!(:droplet) { DropletModel.make }
       let(:build) { BuildModel.make(package_guid: package.guid, app: staged_app) }

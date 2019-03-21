@@ -798,10 +798,10 @@ module VCAP::CloudController
 
         org1 = FactoryBot.create(:organization)
         space1 = FactoryBot.create(:space, organization: org1)
-        app1 = FactoryBot.create(:app, space: space1)
+        app1 = AppModel.make(space: space1)
         org2 = FactoryBot.create(:organization)
         space2 = FactoryBot.create(:space, organization: org2)
-        app2 = FactoryBot.create(:app, space: space2)
+        app2 = AppModel.make(space: space2)
 
         app_guids = subject.readable_app_guids
 
@@ -815,10 +815,10 @@ module VCAP::CloudController
 
         org1 = FactoryBot.create(:organization)
         space1 = FactoryBot.create(:space, organization: org1)
-        app1 = FactoryBot.create(:app, space: space1)
+        app1 = AppModel.make(space: space1)
         org2 = FactoryBot.create(:organization)
         space2 = FactoryBot.create(:space, organization: org2)
-        app2 = FactoryBot.create(:app, space: space2)
+        app2 = AppModel.make(space: space2)
 
         app_guids = subject.readable_app_guids
 
@@ -832,10 +832,10 @@ module VCAP::CloudController
 
         org1 = FactoryBot.create(:organization)
         space1 = FactoryBot.create(:space, organization: org1)
-        app1 = FactoryBot.create(:app, space: space1)
+        app1 = AppModel.make(space: space1)
         org2 = FactoryBot.create(:organization)
         space2 = FactoryBot.create(:space, organization: org2)
-        app2 = FactoryBot.create(:app, space: space2)
+        app2 = AppModel.make(space: space2)
 
         app_guids = subject.readable_app_guids
 
@@ -846,22 +846,22 @@ module VCAP::CloudController
       it 'returns app guids where the user has an appropriate org membership' do
         manager_org = FactoryBot.create(:organization)
         manager_space = FactoryBot.create(:space, organization: manager_org)
-        manager_app = FactoryBot.create(:app, space: manager_space)
+        manager_app = AppModel.make(space: manager_space)
         manager_org.add_manager(user)
 
         auditor_org = FactoryBot.create(:organization)
         auditor_space = FactoryBot.create(:space, organization: auditor_org)
-        auditor_app = FactoryBot.create(:app, space: auditor_space)
+        auditor_app = AppModel.make(space: auditor_space)
         auditor_org.add_auditor(user)
 
         billing_manager_org = FactoryBot.create(:organization)
         billing_manager_space = FactoryBot.create(:space, organization: billing_manager_org)
-        billing_manager_app = FactoryBot.create(:app, space: billing_manager_space)
+        billing_manager_app = AppModel.make(space: billing_manager_space)
         billing_manager_org.add_billing_manager(user)
 
         member_org = FactoryBot.create(:organization)
         member_space = FactoryBot.create(:space, organization: member_org)
-        member_app = FactoryBot.create(:app, space: member_space)
+        member_app = AppModel.make(space: member_space)
         member_org.add_user(user)
 
         app_guids = permissions.readable_app_guids
@@ -877,15 +877,15 @@ module VCAP::CloudController
         org.add_user(user)
 
         developer_space = FactoryBot.create(:space, organization: org)
-        developer_app = FactoryBot.create(:app, space: developer_space)
+        developer_app = AppModel.make(space: developer_space)
         developer_space.add_developer(user)
 
         manager_space = FactoryBot.create(:space, organization: org)
-        manager_app = FactoryBot.create(:app, space: manager_space)
+        manager_app = AppModel.make(space: manager_space)
         manager_space.add_manager(user)
 
         auditor_space = FactoryBot.create(:space, organization: org)
-        auditor_app = FactoryBot.create(:app, space: auditor_space)
+        auditor_app = AppModel.make(space: auditor_space)
         auditor_space.add_auditor(user)
 
         app_guids = permissions.readable_app_guids
@@ -901,11 +901,11 @@ module VCAP::CloudController
 
         org1 = FactoryBot.create(:organization)
         space1 = FactoryBot.create(:space, organization: org1)
-        app1 = FactoryBot.create(:app, space: space1)
+        app1 = AppModel.make(space: space1)
         route_mapping1 = RouteMappingModel.make(app: app1)
         org2 = FactoryBot.create(:organization)
         space2 = FactoryBot.create(:space, organization: org2)
-        app2 = FactoryBot.create(:app, space: space2)
+        app2 = AppModel.make(space: space2)
         route_mapping2 = RouteMappingModel.make(app: app2)
 
         route_mapping_guids = subject.readable_route_mapping_guids
@@ -920,11 +920,11 @@ module VCAP::CloudController
 
         org1 = FactoryBot.create(:organization)
         space1 = FactoryBot.create(:space, organization: org1)
-        app1 = FactoryBot.create(:app, space: space1)
+        app1 = AppModel.make(space: space1)
         route_mapping1 = RouteMappingModel.make(app: app1)
         org2 = FactoryBot.create(:organization)
         space2 = FactoryBot.create(:space, organization: org2)
-        app2 = FactoryBot.create(:app, space: space2)
+        app2 = AppModel.make(space: space2)
         route_mapping2 = RouteMappingModel.make(app: app2)
 
         route_mapping_guids = subject.readable_route_mapping_guids
@@ -939,11 +939,11 @@ module VCAP::CloudController
 
         org1 = FactoryBot.create(:organization)
         space1 = FactoryBot.create(:space, organization: org1)
-        app1 = FactoryBot.create(:app, space: space1)
+        app1 = AppModel.make(space: space1)
         route_mapping1 = RouteMappingModel.make(app: app1)
         org2 = FactoryBot.create(:organization)
         space2 = FactoryBot.create(:space, organization: org2)
-        app2 = FactoryBot.create(:app, space: space2)
+        app2 = AppModel.make(space: space2)
         route_mapping2 = RouteMappingModel.make(app: app2)
 
         route_mapping_guids = subject.readable_route_mapping_guids
@@ -955,25 +955,25 @@ module VCAP::CloudController
       it 'returns app guids where the user has an appropriate org membership' do
         manager_org = FactoryBot.create(:organization)
         manager_space = FactoryBot.create(:space, organization: manager_org)
-        manager_app = FactoryBot.create(:app, space: manager_space)
+        manager_app = AppModel.make(space: manager_space)
         manager_route_mapping = RouteMappingModel.make(app: manager_app)
         manager_org.add_manager(user)
 
         auditor_org = FactoryBot.create(:organization)
         auditor_space = FactoryBot.create(:space, organization: auditor_org)
-        auditor_app = FactoryBot.create(:app, space: auditor_space)
+        auditor_app = AppModel.make(space: auditor_space)
         auditor_route_mapping = RouteMappingModel.make(app: auditor_app)
         auditor_org.add_auditor(user)
 
         billing_manager_org = FactoryBot.create(:organization)
         billing_manager_space = FactoryBot.create(:space, organization: billing_manager_org)
-        billing_manager_app = FactoryBot.create(:app, space: billing_manager_space)
+        billing_manager_app = AppModel.make(space: billing_manager_space)
         billing_manager_route_mapping = RouteMappingModel.make(app: billing_manager_app)
         billing_manager_org.add_billing_manager(user)
 
         member_org = FactoryBot.create(:organization)
         member_space = FactoryBot.create(:space, organization: member_org)
-        member_app = FactoryBot.create(:app, space: member_space)
+        member_app = AppModel.make(space: member_space)
         member_route_mapping = RouteMappingModel.make(app: member_app)
         member_org.add_user(user)
 
@@ -990,17 +990,17 @@ module VCAP::CloudController
         org.add_user(user)
 
         developer_space = FactoryBot.create(:space, organization: org)
-        developer_app = FactoryBot.create(:app, space: developer_space)
+        developer_app = AppModel.make(space: developer_space)
         developer_route_mapping = RouteMappingModel.make(app: developer_app)
         developer_space.add_developer(user)
 
         manager_space = FactoryBot.create(:space, organization: org)
-        manager_app = FactoryBot.create(:app, space: manager_space)
+        manager_app = AppModel.make(space: manager_space)
         manager_route_mapping = RouteMappingModel.make(app: manager_app)
         manager_space.add_manager(user)
 
         auditor_space = FactoryBot.create(:space, organization: org)
-        auditor_app = FactoryBot.create(:app, space: auditor_space)
+        auditor_app = AppModel.make(space: auditor_space)
         auditor_route_mapping = RouteMappingModel.make(app: auditor_app)
         auditor_space.add_auditor(user)
 

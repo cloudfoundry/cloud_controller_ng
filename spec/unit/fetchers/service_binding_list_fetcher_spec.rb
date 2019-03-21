@@ -58,8 +58,8 @@ module VCAP::CloudController
       let(:space_1) { FactoryBot.create(:space) }
       let(:space_2) { FactoryBot.create(:space) }
 
-      let(:app_model) { FactoryBot.create(:app, space: space_1) }
-      let(:app_model2) { FactoryBot.create(:app, space: space_2) }
+      let(:app_model) { AppModel.make(space: space_1) }
+      let(:app_model2) { AppModel.make(space: space_2) }
 
       it 'returns all of the desired service bindings' do
         results = fetcher.fetch(space_guids: [space_1.guid, space_2.guid]).all
@@ -108,7 +108,7 @@ module VCAP::CloudController
       end
 
       context 'when a binding exists in a space' do
-        let!(:service_binding) { ServiceBinding.make(app: FactoryBot.create(:app, space: space), service_instance: service_instance) }
+        let!(:service_binding) { ServiceBinding.make(app: AppModel.make(space: space), service_instance: service_instance) }
         let!(:other_service_binding) { ServiceBinding.make }
 
         it 'returns the binding for the correct space' do
@@ -118,8 +118,8 @@ module VCAP::CloudController
       end
 
       context 'when multiple bindings exist in a space' do
-        let!(:service_binding1) { ServiceBinding.make(app: FactoryBot.create(:app, space: space), service_instance: service_instance) }
-        let!(:service_binding2) { ServiceBinding.make(app: FactoryBot.create(:app, space: space), service_instance: service_instance) }
+        let!(:service_binding1) { ServiceBinding.make(app: AppModel.make(space: space), service_instance: service_instance) }
+        let!(:service_binding2) { ServiceBinding.make(app: AppModel.make(space: space), service_instance: service_instance) }
         let!(:other_service_binding) { ServiceBinding.make }
 
         it 'returns the bindings for the correct space' do
@@ -129,7 +129,7 @@ module VCAP::CloudController
       end
 
       context 'when multiple service instances exist' do
-        let!(:service_binding) { ServiceBinding.make(app: FactoryBot.create(:app, space: space), service_instance: service_instance) }
+        let!(:service_binding) { ServiceBinding.make(app: AppModel.make(space: space), service_instance: service_instance) }
         let!(:other_service_binding) { ServiceBinding.make(service_instance: ServiceInstance.make(space: space)) }
 
         it 'returns the binding for the correct service instance' do

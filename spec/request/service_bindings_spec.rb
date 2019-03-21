@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 RSpec.describe 'v3 service bindings' do
-  let(:app_model) { FactoryBot.create(:app) }
+  let(:app_model) { VCAP::CloudController::AppModel.make }
   let(:space) { app_model.space }
   let(:user) { make_developer_for_space(space) }
   let(:user_headers) { headers_for(user, user_name: user_name) }
@@ -413,7 +413,7 @@ RSpec.describe 'v3 service bindings' do
 
     context 'faceted list' do
       context 'by app_guids' do
-        let(:app_model2) { FactoryBot.create(:app, space: space) }
+        let(:app_model2) { VCAP::CloudController::AppModel.make(space: space) }
         let!(:another_apps_service_binding) do
           VCAP::CloudController::ServiceBinding.make(service_instance: service_instance1,
                                                      app: app_model2,
@@ -422,7 +422,7 @@ RSpec.describe 'v3 service bindings' do
                                                      volume_mounts: [{ 'stuff' => 'thing', 'container_dir' => 'some-path' }],
           )
         end
-        let(:app_model3) { FactoryBot.create(:app, space: space) }
+        let(:app_model3) { VCAP::CloudController::AppModel.make(space: space) }
         let!(:another_apps_service_binding2) do
           VCAP::CloudController::ServiceBinding.make(service_instance: service_instance1,
                                                      app: app_model3,

@@ -3,7 +3,7 @@ require 'actions/service_binding_create'
 
 RSpec.describe ServiceBindingsController, type: :controller do
   describe '#create' do
-    let(:app_model) { FactoryBot.create(:app) }
+    let(:app_model) { VCAP::CloudController::AppModel.make }
     let(:space) { app_model.space }
     let(:org_guid) { space.organization.guid }
     let(:service_binding_type) { 'app' }

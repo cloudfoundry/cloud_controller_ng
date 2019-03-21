@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 RSpec.describe 'Sidecars' do
-  let(:app_model) { FactoryBot.create(:app) }
+  let(:app_model) { VCAP::CloudController::AppModel.make }
   let(:user_header) { headers_for(user) }
   let(:user) { VCAP::CloudController::User.make }
 
