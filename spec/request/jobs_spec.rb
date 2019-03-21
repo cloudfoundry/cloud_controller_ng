@@ -7,7 +7,7 @@ RSpec.describe 'Jobs' do
   describe 'GET /v3/jobs/:guid' do
     it 'returns a json representation of the job with the requested guid' do
       operation = 'app.delete'
-      job       = FactoryBot.create(:pollable_job,
+      job       = VCAP::CloudController::PollableJobModel.make(
         resource_type: 'app',
         state:     VCAP::CloudController::PollableJobModel::COMPLETE_STATE,
         operation: operation,

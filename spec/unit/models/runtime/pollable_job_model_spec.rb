@@ -15,7 +15,7 @@ module VCAP::CloudController
 
     describe '#complete?' do
       context 'when the state is complete' do
-        let(:job) { FactoryBot.create(:pollable_job, state: 'COMPLETE') }
+        let(:job) { PollableJobModel.make(state: 'COMPLETE') }
 
         it 'returns true' do
           expect(job.complete?).to be(true)
@@ -23,8 +23,8 @@ module VCAP::CloudController
       end
 
       context 'when the state is not complete' do
-        let(:failed_job) { FactoryBot.create(:pollable_job, state: 'FAILED') }
-        let(:processing_job) { FactoryBot.create(:pollable_job, state: 'PROCESSING') }
+        let(:failed_job) { PollableJobModel.make(state: 'FAILED') }
+        let(:processing_job) { PollableJobModel.make(state: 'PROCESSING') }
 
         it 'returns false' do
           expect(failed_job.complete?).to be(false)
@@ -36,12 +36,12 @@ module VCAP::CloudController
     describe '#resource_exists?' do
       it 'returns true if the resource exists' do
         app = FactoryBot.create(:app)
-        job = FactoryBot.create(:pollable_job, resource_type: 'app', resource_guid: app.guid)
+        job = PollableJobModel.make(resource_type: 'app', resource_guid: app.guid)
         expect(job.resource_exists?).to be(true)
       end
 
       it 'returns false if the resource does NOT exist' do
-        job = FactoryBot.create(:pollable_job, resource_type: 'app', resource_guid: 'not-a-real-guid')
+        job = PollableJobModel.make(resource_type: 'app', resource_guid: 'not-a-real-guid')
         expect(job.resource_exists?).to be(false)
       end
     end

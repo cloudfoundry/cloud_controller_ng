@@ -153,6 +153,14 @@ module VCAP::CloudController
     sequence_id { Sham.sequence_id }
   end
 
+  PollableJobModel.blueprint do
+    guid { Sham.guid }
+    operation { 'app.job' }
+    state { 'COMPLETE' }
+    resource_guid { Sham.guid }
+    resource_type { 'app' }
+  end
+
   Domain.blueprint do
     name { Sham.domain }
   end

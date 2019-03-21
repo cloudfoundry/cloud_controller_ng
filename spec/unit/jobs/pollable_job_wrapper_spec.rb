@@ -43,7 +43,7 @@ module VCAP::CloudController::Jobs
         context 'when there is an associated job model' do
           it 'marks the job model failed and records errors' do
             enqueued_job = VCAP::CloudController::Jobs::Enqueuer.new(pollable_job).enqueue
-            job_model = FactoryBot.create(:pollable_job, delayed_job_guid: enqueued_job.guid, state: 'PROCESSING')
+            job_model = VCAP::CloudController::PollableJobModel.make(delayed_job_guid: enqueued_job.guid, state: 'PROCESSING')
 
             execute_all_jobs(expected_successes: 0, expected_failures: 1)
 

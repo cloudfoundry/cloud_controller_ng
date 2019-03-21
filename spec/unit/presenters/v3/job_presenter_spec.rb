@@ -6,7 +6,7 @@ module VCAP::CloudController::Presenters::V3
     shared_examples_for(JobPresenter) do
       let(:api_error) { nil }
       let(:job) do
-        FactoryBot.create(:pollable_job,
+        VCAP::CloudController::PollableJobModel.make(
           state: VCAP::CloudController::PollableJobModel::COMPLETE_STATE,
           operation: "#{resource_type}.my_async_operation",
           resource_type: resource_type,

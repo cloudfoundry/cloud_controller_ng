@@ -2,7 +2,7 @@ require 'rails_helper'
 
 RSpec.describe V3::JobsController, type: :controller do
   describe '#show' do
-    let!(:job) { FactoryBot.create(:pollable_job, resource_type: 'app') }
+    let!(:job) { VCAP::CloudController::PollableJobModel.make(resource_type: 'app') }
     let(:user) { FactoryBot.create(:user) }
 
     before do
