@@ -44,12 +44,12 @@ module VCAP::CloudController
 
       it 'denies private foo.com when another org has bar.foo.com' do
         PrivateDomain.make name: 'bar.foo.com'
-        expect { PrivateDomain.make name: 'foo.com' }.to raise_error(Sequel::ValidationFailed, /overlapping_domain/)
+        expect { PrivateDomain.make name: 'foo.com' }.to raise_error(Sequel::ValidationFailed, /is already reserved by another domain/)
       end
 
       it 'denies private foo.com when there is a shared bar.foo.com' do
         SharedDomain.make name: 'bar.foo.com'
-        expect { PrivateDomain.make name: 'foo.com' }.to raise_error(Sequel::ValidationFailed, /overlapping_domain/)
+        expect { PrivateDomain.make name: 'foo.com' }.to raise_error(Sequel::ValidationFailed, /is already reserved by another domain/)
       end
 
       it 'denies private foo.com when there is a shared foo.com' do
@@ -66,13 +66,17 @@ module VCAP::CloudController
       it 'denies private bar.foo.com a when private baz.bar.foo.com has a different owner and shared foo.com exist' do
         PrivateDomain.make name: 'baz.bar.foo.com'
         SharedDomain.make name: 'foo.com'
-        expect { PrivateDomain.make name: 'bar.foo.com' }.to raise_error(Sequel::ValidationFailed, /overlapping_domain/)
+        expect { PrivateDomain.make name: 'bar.foo.com' }.to raise_error(Sequel::ValidationFailed,
+          %{The domain name "bar.foo.com" cannot be created because "baz.bar.foo.com" is already reserved by another domain}
+        )
       end
 
       it 'denies private bar.foo.com a when shared baz.bar.foo.com and foo.com exist' do
         SharedDomain.make name: 'baz.bar.foo.com'
         SharedDomain.make name: 'foo.com'
-        expect { PrivateDomain.make name: 'bar.foo.com' }.to raise_error(Sequel::ValidationFailed, /overlapping_domain/)
+        expect { PrivateDomain.make name: 'bar.foo.com' }.to raise_error(Sequel::ValidationFailed,
+          %{The domain name "bar.foo.com" cannot be created because "baz.bar.foo.com" is already reserved by another domain}
+        )
       end
 
       context 'with reserved private domains' do

@@ -12,11 +12,12 @@ module VCAP::CloudController
       context 'provided every valid field' do
         let(:internal) { true }
 
-        let(:message) { DomainCreateMessage.new({
-          name: name,
-          internal: internal,
-        })
-        }
+        let(:message) do
+          DomainCreateMessage.new({
+            name: name,
+            internal: internal,
+          })
+        end
 
         it 'creates a domain with all the provided fields' do
           domain = nil
@@ -47,18 +48,18 @@ module VCAP::CloudController
         end
       end
 
-      context 'provided an overlapping domain name' do
-        context 'with an existing domain' do
-          let(:existing_domain) { SharedDomain.make }
-          let(:message) { DomainCreateMessage.new({ name: existing_domain.name }) }
+      context 'provided an already existing domain name' do
+        let(:existing_domain) { SharedDomain.make }
+        let(:message) { DomainCreateMessage.new({ name: existing_domain.name }) }
 
-          it 'returns an error' do
-            expect {
-              subject.create(message: message)
-            }.to raise_error(DomainCreate::Error, "The domain name \"#{existing_domain.name}\" is already reserved by another domain or route.")
-          end
+        it 'returns an error' do
+          expect {
+            subject.create(message: message)
+          }.to raise_error(DomainCreate::Error, %{The domain name "#{existing_domain.name}" is already in use})
         end
+      end
 
+      context 'provided an overlapping domain name' do
         context 'with an existing scoped domain as a sub domain' do
           let(:private_domain) { PrivateDomain.make }
           let(:domain) { "sub.#{private_domain.name}" }
@@ -67,7 +68,7 @@ module VCAP::CloudController
           it 'returns an error' do
             expect {
               subject.create(message: message)
-            }.to raise_error(DomainCreate::Error, "The domain name \"#{domain}\" is already reserved by another domain or route.")
+            }.to raise_error(DomainCreate::Error, %{The domain name "#{domain}" cannot be created because "#{private_domain.name}" is already reserved by another domain})
           end
         end
 
@@ -80,7 +81,7 @@ module VCAP::CloudController
           it 'returns an error' do
             expect {
               subject.create(message: message)
-            }.to raise_error(DomainCreate::Error, "The domain name \"#{domain}\" is already reserved by another domain or route.")
+            }.to raise_error(DomainCreate::Error, %{The domain name "#{domain}" cannot be created because "#{route.fqdn}" is already reserved by a route})
           end
         end
       end

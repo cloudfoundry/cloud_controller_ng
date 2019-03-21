@@ -168,16 +168,18 @@ RSpec.describe 'Domains Request' do
 
             expect(last_response.status).to eq(422)
 
-            expect(parsed_response['errors'][0]['detail']).to eq "The domain name \"#{existing_domain.name}\" is already reserved by another domain or route."
+            expect(parsed_response['errors'][0]['detail']).to eq "The domain name \"#{existing_domain.name}\" is already in use"
           end
         end
 
         context 'with an existing route' do
-          let(:existing_route) { VCAP::CloudController::Route.make }
+          let(:existing_domain) { VCAP::CloudController::SharedDomain.make }
+          let(:existing_route) { VCAP::CloudController::Route.make(domain: existing_domain) }
+          let(:domain_name) { existing_route.fqdn }
 
           let(:params) do
             {
-              name: existing_route.fqdn,
+              name: domain_name,
             }
           end
 
@@ -186,7 +188,9 @@ RSpec.describe 'Domains Request' do
 
             expect(last_response.status).to eq(422)
 
-            expect(parsed_response['errors'][0]['detail']).to eq "The domain name \"#{existing_route.fqdn}\" is already reserved by another domain or route."
+            expect(parsed_response['errors'][0]['detail']).to match(
+              /The domain name "#{domain_name}" cannot be created because "#{existing_route.fqdn}" is already reserved by a route/
+            )
           end
         end
 
@@ -205,7 +209,9 @@ RSpec.describe 'Domains Request' do
 
             expect(last_response.status).to eq(422)
 
-            expect(parsed_response['errors'][0]['detail']).to eq "The domain name \"#{domain}\" is already reserved by another domain or route."
+            expect(parsed_response['errors'][0]['detail']).to match(
+              /The domain name "#{domain}" cannot be created because "#{existing_route.fqdn}" is already reserved by a route/
+            )
           end
         end
 
@@ -243,7 +249,9 @@ RSpec.describe 'Domains Request' do
 
             expect(last_response.status).to eq(422)
 
-            expect(parsed_response['errors'][0]['detail']).to eq "The domain name \"#{domain}\" is already reserved by another domain or route."
+            expect(parsed_response['errors'][0]['detail']).to eq(
+              %{The domain name "#{domain}" cannot be created because "#{existing_domain.name}" is already reserved by another domain}
+            )
           end
         end
       end

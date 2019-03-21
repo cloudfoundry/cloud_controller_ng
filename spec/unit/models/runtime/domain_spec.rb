@@ -10,15 +10,18 @@ module VCAP::CloudController
 
     it "can't be created if foo would become parent" do
       PrivateDomain.make name: 'bar.foo.com'
-      expect { PrivateDomain.make name: 'foo.com' }.to raise_error(Sequel::ValidationFailed, /name overlapping_domain/)
+      expect { PrivateDomain.make name: 'foo.com' }.to raise_error(
+        Sequel::ValidationFailed,
+        /The domain name "foo.com" cannot be created because "bar.foo.com" is already reserved by another domain/
+      )
     end
 
     describe 'Associations' do
       context 'routes' do
         let(:space) { FactoryBot.create(:space) }
         it { is_expected.to have_associated :routes,
-             test_instance: SharedDomain.make,
-             associated_instance: ->(domain) { Route.make(space: space, domain: domain) }
+          test_instance: SharedDomain.make,
+          associated_instance: ->(domain) { Route.make(space: space, domain: domain) }
         }
       end
 
@@ -99,6 +102,18 @@ module VCAP::CloudController
     describe 'Validations' do
       it { is_expected.to validate_presence :name }
       it { is_expected.to validate_uniqueness :name }
+
+      describe 'route collisions' do
+        let!(:existing_domain) { SharedDomain.make(name: 'base.domain') }
+        let!(:existing_route) { Route.make(host: 'route', domain: existing_domain) }
+
+        it 'does not allow a new domain to overlap with an existing route' do
+          expect { Domain.make(name: 'something.route.base.domain') }.to raise_error(
+            Sequel::ValidationFailed,
+            /The domain name "something.route.base.domain" cannot be created because "route.base.domain" is already reserved by a route/
+          )
+        end
+      end
     end
 
     describe '#spaces_sti_eager_load (eager loading)' do

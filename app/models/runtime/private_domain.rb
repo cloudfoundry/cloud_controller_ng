@@ -41,8 +41,9 @@ module VCAP::CloudController
       errors.add(:name, :reserved) if reserved?
 
       validates_presence :owning_organization
-      errors.add(:name, :overlapping_domain) if domains_exist_in_other_orgs?
-
+      if (offending_domain = domains_exist_in_other_orgs?)
+        errors.add(:name, Sequel.lit(%{The domain name "#{name}" cannot be created because "#{offending_domain.name}" is already reserved by another domain}))
+      end
       validate_total_private_domains
     end
 
@@ -90,7 +91,7 @@ module VCAP::CloudController
         exclude(owning_organization_id: owning_organization_id).
         or(SHARED_DOMAIN_CONDITION).
         filter(Sequel.like(:name, "%.#{name}")).
-        count > 0
+        first
     end
 
     def shared_by?(org)

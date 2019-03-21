@@ -87,8 +87,12 @@ module VCAP::CloudController
         message: 'can contain multiple subdomains, each having only alphanumeric characters and hyphens of up to 63 characters, see RFC 1035.'
       validates_length_range 3..MAXIMUM_FQDN_DOMAIN_LENGTH, :name, message: "must be no more than #{MAXIMUM_FQDN_DOMAIN_LENGTH} characters"
 
-      errors.add(:name, :overlapping_domain) if name_overlaps?
-      errors.add(:name, :route_conflict) if routes_match?
+      if (offending_domain = name_overlaps?)
+        errors.add(:name, Sequel.lit(%{The domain name "#{name}" cannot be created because "#{offending_domain.name}" is already reserved by another domain}))
+      end
+      if (offending_routes = routes_match?)
+        errors.add(:name, Sequel.lit(%{The domain name "#{name}" cannot be created because "#{offending_routes}" is already reserved by a route}))
+      end
     end
 
     def self.user_visibility_filter(user)
@@ -143,7 +147,7 @@ module VCAP::CloudController
 
     def name_overlaps?
       intermediate_domain_names = CloudController::DomainDecorator.new(name).intermediate_domains
-      intermediate_domain_names.any? do |intermediate_domain|
+      intermediate_domain_names.find do |intermediate_domain|
         domain = Domain.find(name: intermediate_domain.name)
         domain && domain.owning_organization != owning_organization && !domain.shared?
       end
@@ -153,7 +157,7 @@ module VCAP::CloudController
       return false unless name
 
       domain = CloudController::DomainDecorator.new(name)
-      domain.intermediate_domains.any? { |intermediate_domain| does_route_exist?(intermediate_domain) }
+      domain.intermediate_domains.find { |intermediate_domain| does_route_exist?(intermediate_domain) }
     end
 
     def does_route_exist?(domain)

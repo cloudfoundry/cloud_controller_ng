@@ -24,9 +24,14 @@ module VCAP::CloudController
     private
 
     def validation_error!(name, error)
-      if error.errors.on(:name)&.any? { |e| [:unique, :overlapping_domain, :route_conflict].include?(e) }
-        error!("The domain name \"#{name}\" is already reserved by another domain or route.")
+      if error.errors.on(:name)&.any? { |e| e.match?(/is already reserved by/) }
+        error!(error.message)
       end
+
+      if error.errors.on(:name)&.any? { |e| [:unique].include?(e) }
+        error!("The domain name \"#{name}\" is already in use")
+      end
+
       error!(error.message)
     end
 

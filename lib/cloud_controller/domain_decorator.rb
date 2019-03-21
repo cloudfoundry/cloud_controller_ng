@@ -25,6 +25,10 @@ module CloudController
       end
     end
 
+    def to_s
+      name
+    end
+
     def is_sub_domain_of?(parent_domain_name:)
       parent_domain_name != name && intermediate_domains.map(&:name).include?(parent_domain_name)
     end
