@@ -5,7 +5,7 @@ module VCAP::CloudController
   RSpec.describe DockerLifecycle do
     subject(:lifecycle) { DockerLifecycle.new(package, staging_message) }
     let(:package) do
-      FactoryBot.create(:package, :docker,
+      PackageModel.make(:docker,
                         docker_image: 'test-image',
                         docker_username: 'dockerusername',
                         docker_password: 'dockerpassword',

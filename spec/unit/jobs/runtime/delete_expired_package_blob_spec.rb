@@ -4,7 +4,7 @@ module VCAP::CloudController
   module Jobs::Runtime
     RSpec.describe DeleteExpiredPackageBlob, job_context: :worker do
       subject(:job) { DeleteExpiredPackageBlob.new(package.guid) }
-      let(:package) { FactoryBot.create(:package, package_hash: 'some-hash', sha256_checksum: 'example-256-checksum') }
+      let(:package) { PackageModel.make(package_hash: 'some-hash', sha256_checksum: 'example-256-checksum') }
 
       it { is_expected.to be_a_valid_job }
 

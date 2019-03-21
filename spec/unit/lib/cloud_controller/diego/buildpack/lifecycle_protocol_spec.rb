@@ -23,7 +23,7 @@ module VCAP
 
           it_behaves_like 'a lifecycle protocol' do
             let(:app) { FactoryBot.create(:app, :buildpack) }
-            let(:package) { FactoryBot.create(:package, app_guid: app.guid) }
+            let(:package) { PackageModel.make(app_guid: app.guid) }
             let(:droplet) { DropletModel.make(package_guid: package.guid, app_guid: app.guid) }
             let(:process) { ProcessModel.make(app: app) }
             let(:staging_details) do
@@ -48,7 +48,7 @@ module VCAP
 
           describe '#lifecycle_data' do
             let(:app) { FactoryBot.create(:app) }
-            let(:package) { FactoryBot.create(:package, app: app) }
+            let(:package) { PackageModel.make(app: app) }
             let(:droplet) { DropletModel.make(package: package, app: app) }
             let(:buildpack) { nil }
             let(:buildpack_infos) { [BuildpackInfo.new(buildpack, VCAP::CloudController::Buildpack.find(name: buildpack))] }
@@ -132,7 +132,7 @@ module VCAP
 
           describe '#staging_action_builder' do
             let(:config) { Config.new({ some: 'config' }) }
-            let(:package) { FactoryBot.create(:package) }
+            let(:package) { PackageModel.make }
             let(:droplet) { DropletModel.make }
             let(:staging_details) do
               StagingDetails.new.tap do |details|

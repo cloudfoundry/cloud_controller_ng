@@ -5,11 +5,9 @@ RSpec.describe DropletsController, type: :controller do
     let(:app_model) { FactoryBot.create(:app) }
     let(:stagers) { instance_double(VCAP::CloudController::Stagers) }
     let(:package) do
-      FactoryBot.create(:package,
-        app_guid: app_model.guid,
+      VCAP::CloudController::PackageModel.make(app_guid: app_model.guid,
         type: VCAP::CloudController::PackageModel::BITS_TYPE,
-        state: VCAP::CloudController::PackageModel::READY_STATE
-      )
+        state: VCAP::CloudController::PackageModel::READY_STATE)
     end
     let(:user) { set_current_user(user: FactoryBot.create(:user, guid: '1234'), email: 'dr@otter.com', user_name: 'dropper') }
     let(:space) { app_model.space }
@@ -411,7 +409,7 @@ RSpec.describe DropletsController, type: :controller do
     end
 
     context 'accessed as a package subresource' do
-      let(:package) { FactoryBot.create(:package, app_guid: app.guid) }
+      let(:package) { VCAP::CloudController::PackageModel.make(app_guid: app.guid) }
       let!(:droplet_1) { VCAP::CloudController::DropletModel.make(package_guid: package.guid, state: VCAP::CloudController::DropletModel::STAGED_STATE) }
 
       it 'returns droplets for the package' do

@@ -73,7 +73,7 @@ module VCAP::CloudController
 
         describe '#staging_complete' do
           let(:app) { FactoryBot.create(:app) }
-          let(:package) { FactoryBot.create(:package, app: app) }
+          let(:package) { PackageModel.make(app: app) }
           let!(:build) do
             FactoryBot.create(:build, app: app, package: package, state: BuildModel::STAGING_STATE).tap do |build|
               FactoryBot.create(:buildpack_lifecycle_data, build: build)

@@ -54,7 +54,7 @@ module VCAP::CloudController
     end
 
     describe '#succeed_upload!' do
-      let!(:package) { FactoryBot.create(:package, state: PackageModel::PENDING_STATE) }
+      let!(:package) { PackageModel.make state: PackageModel::PENDING_STATE }
 
       it 'updates the checksums and moves the package state to READY' do
         package.succeed_upload!(sha1: 'sha-1-checksum', sha256: 'sha-2-checksum')
@@ -75,7 +75,7 @@ module VCAP::CloudController
     end
 
     describe 'metadata' do
-      let(:package) { FactoryBot.create(:package) }
+      let(:package) { PackageModel.make }
       let(:annotation) { PackageAnnotationModel.make(package: package) }
       let(:label) { PackageLabelModel.make(package: package) }
 

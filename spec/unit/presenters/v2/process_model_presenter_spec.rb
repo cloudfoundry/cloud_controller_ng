@@ -161,7 +161,7 @@ module CloudController::Presenters::V2
       describe 'docker' do
         context 'with no credentials' do
           before do
-            FactoryBot.create(:package, :docker, app: process.app, docker_image: 'someimage')
+            VCAP::CloudController::PackageModel.make(:docker, app: process.app, docker_image: 'someimage')
             process.reload
           end
 
@@ -177,7 +177,7 @@ module CloudController::Presenters::V2
 
         context 'with credentials' do
           before do
-            FactoryBot.create(:package, :docker, app: process.app, docker_image: 'someimage', docker_username: 'user', docker_password: 'secret')
+            VCAP::CloudController::PackageModel.make(:docker, app: process.app, docker_image: 'someimage', docker_username: 'user', docker_password: 'secret')
             process.reload
           end
 

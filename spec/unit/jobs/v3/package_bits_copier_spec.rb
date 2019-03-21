@@ -11,8 +11,8 @@ module VCAP::CloudController
         CloudController::Blobstore::FogClient.new(connection_config: { provider: 'Local', local_root: blobstore_dir },
                                                   directory_key: 'package')
       end
-      let(:source_package) { FactoryBot.create(:package, type: 'bits', package_hash: 'something', sha256_checksum: 'sha256') }
-      let(:destination_package) { FactoryBot.create(:package, type: 'bits') }
+      let(:source_package) { PackageModel.make(type: 'bits', package_hash: 'something', sha256_checksum: 'sha256') }
+      let(:destination_package) { PackageModel.make(type: 'bits') }
 
       before do
         Fog.unmock!

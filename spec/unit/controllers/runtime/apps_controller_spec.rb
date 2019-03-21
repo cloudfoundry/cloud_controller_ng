@@ -824,7 +824,7 @@ module VCAP::CloudController
           let(:process) { ProcessModelFactory.make(state: 'STARTED') }
 
           before do
-            FactoryBot.create(:package, app: process.app, package_hash: 'some-hash', state: PackageModel::READY_STATE)
+            PackageModel.make(app: process.app, package_hash: 'some-hash', state: PackageModel::READY_STATE)
             process.reload
           end
 

@@ -5,7 +5,7 @@ module VCAP::CloudController
     RSpec.describe PackagesController do
       describe '#update' do
         let!(:package) {
-          FactoryBot.create(:package, state: VCAP::CloudController::PackageModel::PENDING_STATE)
+          VCAP::CloudController::PackageModel.make(state: VCAP::CloudController::PackageModel::PENDING_STATE)
         }
         let(:request_body) do
           {

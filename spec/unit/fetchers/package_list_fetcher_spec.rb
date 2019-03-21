@@ -14,12 +14,12 @@ module VCAP::CloudController
     let(:app3_in_space2) { FactoryBot.create(:app, space: space2) }
     let(:app4_in_space3) { FactoryBot.create(:app, space: space3) }
 
-    let!(:package_in_space1) { FactoryBot.create(:package, app_guid: app1_in_space1.guid, type: PackageModel::BITS_TYPE, state: PackageModel::FAILED_STATE) }
-    let!(:package2_in_space1) { FactoryBot.create(:package, app_guid: app1_in_space1.guid, type: PackageModel::DOCKER_TYPE, state: PackageModel::READY_STATE) }
-    let!(:package_in_space3) { FactoryBot.create(:package, app_guid: app4_in_space3.guid, type: PackageModel::DOCKER_TYPE, state: PackageModel::FAILED_STATE) }
+    let!(:package_in_space1) { PackageModel.make(app_guid: app1_in_space1.guid, type: PackageModel::BITS_TYPE, state: PackageModel::FAILED_STATE) }
+    let!(:package2_in_space1) { PackageModel.make(app_guid: app1_in_space1.guid, type: PackageModel::DOCKER_TYPE, state: PackageModel::READY_STATE) }
+    let!(:package_in_space3) { PackageModel.make(app_guid: app4_in_space3.guid, type: PackageModel::DOCKER_TYPE, state: PackageModel::FAILED_STATE) }
 
-    let!(:package_for_app2) { FactoryBot.create(:package, app_guid: app2_in_space1.guid, type: PackageModel::DOCKER_TYPE, state: PackageModel::CREATED_STATE) }
-    let!(:package_for_app3) { FactoryBot.create(:package, app_guid: app3_in_space2.guid, type: PackageModel::BITS_TYPE) }
+    let!(:package_for_app2) { PackageModel.make(app_guid: app2_in_space1.guid, type: PackageModel::DOCKER_TYPE, state: PackageModel::CREATED_STATE) }
+    let!(:package_for_app3) { PackageModel.make(app_guid: app3_in_space2.guid, type: PackageModel::BITS_TYPE) }
 
     subject(:fetcher) { PackageListFetcher.new }
     let(:message) { PackagesListMessage.from_params(filters) }

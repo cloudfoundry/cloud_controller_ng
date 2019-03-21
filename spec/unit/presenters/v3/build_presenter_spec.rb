@@ -4,7 +4,7 @@ require 'presenters/v3/build_presenter'
 module VCAP::CloudController::Presenters::V3
   RSpec.describe BuildPresenter do
     let(:app) { FactoryBot.create(:app) }
-    let(:package) { FactoryBot.create(:package, app: app) }
+    let(:package) { VCAP::CloudController::PackageModel.make(app: app) }
     let!(:happy_buildpack) { VCAP::CloudController::Buildpack.make(name: 'the-happiest-buildpack') }
     let(:buildpacks) { [happy_buildpack.name, 'http://bob:secret@example.com/happy'] }
     let(:stack) { 'the-happiest-stack' }

@@ -18,7 +18,7 @@ module VCAP::CloudController
           },
         }
       end
-      let(:package) { FactoryBot.create(:package) }
+      let(:package) { PackageModel.make }
       let(:message) { PackageUpdateMessage.new(body) }
 
       it 'updates the package metadata' do

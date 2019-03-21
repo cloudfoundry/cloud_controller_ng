@@ -924,7 +924,7 @@ module VCAP::CloudController
       end
 
       it 'should return false if package_state is PENDING' do
-        FactoryBot.create(:package, app: process.app)
+        PackageModel.make(app: process.app)
         process.reload
 
         expect(process.package_state).to eq('PENDING')
@@ -936,7 +936,7 @@ module VCAP::CloudController
       subject(:process) { ProcessModelFactory.make }
 
       it 'should return true if package_state is PENDING' do
-        FactoryBot.create(:package, app: process.app)
+        PackageModel.make(app: process.app)
         process.reload
 
         expect(process.package_state).to eq('PENDING')
@@ -958,7 +958,7 @@ module VCAP::CloudController
       end
 
       it 'should return false if a new package has been uploaded but a droplet has not been created for it' do
-        FactoryBot.create(:package, app: process.app)
+        PackageModel.make(app: process.app)
         process.reload
         expect(process.staging?).to be false
       end
@@ -1024,7 +1024,7 @@ module VCAP::CloudController
         end
 
         it 'should return true if PENDING is set' do
-          FactoryBot.create(:package, app: process.app, package_hash: 'hash')
+          PackageModel.make(app: process.app, package_hash: 'hash')
           expect(process.reload.needs_staging?).to be true
         end
 
@@ -1440,14 +1440,14 @@ module VCAP::CloudController
 
       it 'does not allow a docker package for a buildpack app' do
         process.app.lifecycle_data.update(buildpacks: [Buildpack.make.name])
-        FactoryBot.create(:package, :docker, app: process.app)
+        PackageModel.make(:docker, app: process.app)
         expect {
           process.save
         }.to raise_error(Sequel::ValidationFailed, /incompatible with buildpack/)
       end
 
       it 'retrieves the docker image from the package' do
-        FactoryBot.create(:package, :docker,  app: process.app, docker_image: 'someimage')
+        PackageModel.make(:docker, app: process.app, docker_image: 'someimage')
         expect(process.reload.docker_image).to eq('someimage')
       end
     end
@@ -1456,7 +1456,7 @@ module VCAP::CloudController
       subject(:process) { ProcessModelFactory.make(app: parent_app) }
 
       it 'retrieves the docker registry username from the package' do
-        FactoryBot.create(:package, :docker, app: process.app, docker_image: 'someimage', docker_username: 'user')
+        PackageModel.make(:docker, app: process.app, docker_image: 'someimage', docker_username: 'user')
         expect(process.reload.docker_username).to eq('user')
       end
     end
@@ -1465,7 +1465,7 @@ module VCAP::CloudController
       subject(:process) { ProcessModelFactory.make(app: parent_app) }
 
       it 'retrieves the docker registry password from the package' do
-        FactoryBot.create(:package, :docker, app: process.app, docker_image: 'someimage', docker_password: 'pass')
+        PackageModel.make(:docker, app: process.app, docker_image: 'someimage', docker_password: 'pass')
         expect(process.reload.docker_password).to eq('pass')
       end
     end

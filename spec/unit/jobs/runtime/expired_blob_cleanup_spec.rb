@@ -51,8 +51,8 @@ module VCAP::CloudController
 
       describe 'packages' do
         context 'expired' do
-          let!(:expired_package) { FactoryBot.create(:package, state: PackageModel::EXPIRED_STATE) }
-          let!(:non_expired_package) { FactoryBot.create(:package, state: PackageModel::READY_STATE, package_hash: 'not-nil') }
+          let!(:expired_package) { PackageModel.make(state: PackageModel::EXPIRED_STATE) }
+          let!(:non_expired_package) { PackageModel.make(state: PackageModel::READY_STATE, package_hash: 'not-nil') }
 
           it 'enqueues a deletion job when package_hash is not nil' do
             expired_package.update(package_hash: 'not-nil')

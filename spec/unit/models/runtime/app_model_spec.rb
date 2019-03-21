@@ -443,7 +443,7 @@ module VCAP::CloudController
 
     describe '#current_package' do
       context 'when the app has a current droplet assigned' do
-        let(:package) { FactoryBot.create(:package) }
+        let(:package) { PackageModel.make }
 
         before do
           app_model.update(droplet: DropletModel.make(package: package))

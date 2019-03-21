@@ -45,25 +45,25 @@ module VCAP::CloudController
 
       describe 'packages' do
         it 'deletes packages that are expired and have nil checksum information' do
-          package = FactoryBot.create(:package, state: PackageModel::EXPIRED_STATE, package_hash: nil, sha256_checksum: nil)
+          package = PackageModel.make(state: PackageModel::EXPIRED_STATE, package_hash: nil, sha256_checksum: nil)
           expect { job.perform }.to change { PackageModel.count }.by(-1)
           expect(package).to_not exist
         end
 
         it 'does NOT delete packages that are expired but have a sha1 checksum' do
-          package = FactoryBot.create(:package, state: PackageModel::EXPIRED_STATE, package_hash: 'not-nil', sha256_checksum: nil)
+          package = PackageModel.make(state: PackageModel::EXPIRED_STATE, package_hash: 'not-nil', sha256_checksum: nil)
           job.perform
           expect(package).to exist
         end
 
         it 'does NOT delete packages that are expired but have a sha256 checksum' do
-          package = FactoryBot.create(:package, state: PackageModel::EXPIRED_STATE, package_hash: nil, sha256_checksum: 'not-nill')
+          package = PackageModel.make(state: PackageModel::EXPIRED_STATE, package_hash: nil, sha256_checksum: 'not-nill')
           job.perform
           expect(package).to exist
         end
 
         it 'does NOT delete packages that are NOT expired' do
-          package = FactoryBot.create(:package)
+          package = PackageModel.make
           job.perform
           expect(package).to exist
         end

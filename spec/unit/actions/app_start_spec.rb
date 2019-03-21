@@ -18,7 +18,7 @@ module VCAP::CloudController
             environment_variables: environment_variables
           )
         end
-        let(:package) { FactoryBot.create(:package, :docker,  app: app, state: PackageModel::READY_STATE) }
+        let(:package) { PackageModel.make(:docker, app: app, state: PackageModel::READY_STATE) }
         let!(:droplet) { DropletModel.make(:docker, app: app, package: package, state: DropletModel::STAGED_STATE, docker_receipt_image: package.image) }
         let!(:process1) { ProcessModel.make(:process, state: 'STOPPED', app: app) }
         let!(:process2) { ProcessModel.make(:process, state: 'STOPPED', app: app) }
@@ -92,7 +92,7 @@ module VCAP::CloudController
               state: DropletModel::STAGED_STATE,
             )
           end
-          let(:package) { FactoryBot.create(:package, app: app, package_hash: 'some-awesome-thing', state: PackageModel::READY_STATE) }
+          let(:package) { PackageModel.make(app: app, package_hash: 'some-awesome-thing', state: PackageModel::READY_STATE) }
 
           it 'sets the package hash correctly on the process' do
             AppStart.start(app: app, user_audit_info: user_audit_info)
@@ -112,7 +112,7 @@ module VCAP::CloudController
         let(:app) { FactoryBot.create(:app, :buildpack) }
         let!(:web_process) { ProcessModel.make(app: app, type: 'web', revision: revisionA) }
         let!(:worker_process) { ProcessModel.make(app: app, type: 'worker', revision: revisionA) }
-        let(:package) { FactoryBot.create(:package, app: app, state: PackageModel::READY_STATE) }
+        let(:package) { PackageModel.make(app: app, state: PackageModel::READY_STATE) }
         let!(:dropletA) do
           DropletModel.make(
             app: app,

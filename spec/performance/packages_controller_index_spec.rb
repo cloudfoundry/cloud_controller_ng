@@ -10,9 +10,9 @@ RSpec.describe PackagesController, type: :controller do # , isolation: :truncati
     let(:space2) { FactoryBot.create(:space) }
     let(:space3) { FactoryBot.create(:space) }
     let(:user_spaces) { [space, space1, space2, space3] }
-    let!(:user_package_1) { FactoryBot.create(:package, app_guid: app_model.guid) }
-    let!(:user_package_2) { FactoryBot.create(:package, app_guid: app_model.guid) }
-    let!(:admin_package) { FactoryBot.create(:package) }
+    let!(:user_package_1) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
+    let!(:user_package_2) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
+    let!(:admin_package) { VCAP::CloudController::PackageModel.make }
 
     let(:n) { 10 }
 
@@ -28,7 +28,7 @@ RSpec.describe PackagesController, type: :controller do # , isolation: :truncati
         app = FactoryBot.create(:app, space: user_spaces.sample, guid: "app-guid-#{i}")
 
         3.times do |j|
-          FactoryBot.create(:package, app_guid: app.guid, guid: "package-guid-#{i}-#{j}")
+          VCAP::CloudController::PackageModel.make(app_guid: app.guid, guid: "package-guid-#{i}-#{j}")
         end
       end
     end

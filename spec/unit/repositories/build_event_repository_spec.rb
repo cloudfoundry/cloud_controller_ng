@@ -6,7 +6,7 @@ module VCAP::CloudController
     RSpec.describe BuildEventRepository do
       let(:app) { FactoryBot.create(:app, name: 'popsicle') }
       let(:user) { FactoryBot.create(:user) }
-      let(:package) { FactoryBot.create(:package, app_guid: app.guid) }
+      let(:package) { PackageModel.make(app_guid: app.guid) }
       let(:build) { FactoryBot.create(:build, app_guid: app.guid, package: package) }
       let(:email) { 'user-email' }
       let(:user_name) { 'user-name' }

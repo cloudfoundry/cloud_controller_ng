@@ -471,7 +471,7 @@ RSpec.describe 'App Manifests' do
     context 'for a docker app' do
       let(:lifecycle_type) { 'docker' }
       let(:docker_package) do
-        FactoryBot.create(:package,
+        VCAP::CloudController::PackageModel.make(
           :docker,
           app: app_model,
           docker_username: 'xXxMyL1ttlePwnyxXx')

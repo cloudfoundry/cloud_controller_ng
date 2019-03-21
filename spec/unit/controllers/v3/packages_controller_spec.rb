@@ -3,7 +3,7 @@ require 'permissions_spec_helper'
 
 RSpec.describe PackagesController, type: :controller do
   describe '#upload' do
-    let(:package) { FactoryBot.create(:package) }
+    let(:package) { VCAP::CloudController::PackageModel.make }
     let(:space) { package.space }
     let(:org) { space.organization }
     let(:params) { { 'bits_path' => 'path/to/bits' } }
@@ -240,7 +240,7 @@ RSpec.describe PackagesController, type: :controller do
   end
 
   describe '#download' do
-    let(:package) { FactoryBot.create(:package, state: 'READY') }
+    let(:package) { VCAP::CloudController::PackageModel.make(state: 'READY') }
     let(:space) { package.space }
     let(:org) { space.organization }
     let(:user) { set_current_user(FactoryBot.create(:user), email: 'utako') }
@@ -340,7 +340,7 @@ RSpec.describe PackagesController, type: :controller do
   end
 
   describe '#show' do
-    let(:package) { FactoryBot.create(:package) }
+    let(:package) { VCAP::CloudController::PackageModel.make }
     let(:space) { package.space }
     let(:user) { set_current_user(FactoryBot.create(:user)) }
 
@@ -439,7 +439,7 @@ RSpec.describe PackagesController, type: :controller do
     let!(:org) { FactoryBot.create(:organization, name: "Harold's Farm") }
     let!(:space) { FactoryBot.create(:space, name: 'roosters', organization: org) }
     let(:app_model) { FactoryBot.create(:app, name: 'needed to put the package in the space', space: space) }
-    let(:package) { FactoryBot.create(:package, app: app_model) }
+    let(:package) { VCAP::CloudController::PackageModel.make(app: app_model) }
 
     let(:user) { set_current_user(FactoryBot.create(:user)) }
     let(:labels) do
@@ -707,7 +707,7 @@ RSpec.describe PackagesController, type: :controller do
   end
 
   describe '#destroy' do
-    let(:package) { FactoryBot.create(:package) }
+    let(:package) { VCAP::CloudController::PackageModel.make }
     let(:user) { set_current_user(FactoryBot.create(:user)) }
     let(:space) { package.space }
     let(:package_delete_stub) { instance_double(VCAP::CloudController::PackageDelete) }
@@ -813,9 +813,9 @@ RSpec.describe PackagesController, type: :controller do
     let(:space2) { FactoryBot.create(:space) }
     let(:space3) { FactoryBot.create(:space) }
     let(:user_spaces) { [space, space1, space2, space3] }
-    let!(:user_package_1) { FactoryBot.create(:package, app_guid: app_model.guid) }
-    let!(:user_package_2) { FactoryBot.create(:package, app_guid: app_model.guid) }
-    let!(:admin_package) { FactoryBot.create(:package) }
+    let!(:user_package_1) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
+    let!(:user_package_2) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
+    let!(:admin_package) { VCAP::CloudController::PackageModel.make }
 
     before do
       allow_user_read_access_for(user, spaces: user_spaces)
@@ -841,9 +841,9 @@ RSpec.describe PackagesController, type: :controller do
     context 'when accessed as an app subresource' do
       it 'uses the app as a filter' do
         app = FactoryBot.create(:app, space: space)
-        package_1 = FactoryBot.create(:package, app_guid: app.guid)
-        package_2 = FactoryBot.create(:package, app_guid: app.guid)
-        FactoryBot.create(:package)
+        package_1 = VCAP::CloudController::PackageModel.make(app_guid: app.guid)
+        package_2 = VCAP::CloudController::PackageModel.make(app_guid: app.guid)
+        VCAP::CloudController::PackageModel.make
 
         get :index, params: { app_guid: app.guid }
 
@@ -864,9 +864,9 @@ RSpec.describe PackagesController, type: :controller do
 
       it 'uses the app and pagination as query parameters' do
         app = FactoryBot.create(:app, space: space, guid: 'speshal-app-guid')
-        package_1 = FactoryBot.create(:package, app_guid: app.guid, guid: 'package-1')
-        package_2 = FactoryBot.create(:package, app_guid: app.guid, guid: 'package-2')
-        FactoryBot.create(:package)
+        package_1 = VCAP::CloudController::PackageModel.make(app_guid: app.guid, guid: 'package-1')
+        package_2 = VCAP::CloudController::PackageModel.make(app_guid: app.guid, guid: 'package-2')
+        VCAP::CloudController::PackageModel.make
 
         get :index, params: { app_guids: app.guid, page: 1, per_page: 10, states: 'AWAITING_UPLOAD', }
 
@@ -1222,7 +1222,7 @@ RSpec.describe PackagesController, type: :controller do
 
     context 'when copying an existing package' do
       let(:source_app_model) { FactoryBot.create(:app) }
-      let(:original_package) { FactoryBot.create(:package, type: 'bits', app_guid: source_app_model.guid) }
+      let(:original_package) { VCAP::CloudController::PackageModel.make(type: 'bits', app_guid: source_app_model.guid) }
       let(:target_app_model) { FactoryBot.create(:app) }
       let(:user) { set_current_user(FactoryBot.create(:user)) }
       let(:source_space) { source_app_model.space }

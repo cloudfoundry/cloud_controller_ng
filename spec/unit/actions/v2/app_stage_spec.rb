@@ -17,7 +17,7 @@ module VCAP::CloudController
 
         it 'delegates to BuildCreate with a BuildCreateMessage based on the process' do
           process = ProcessModel.make(memory: 765, disk_quota: 1234)
-          package = FactoryBot.create(:package, app: process.app, state: PackageModel::READY_STATE)
+          package = PackageModel.make(app: process.app, state: PackageModel::READY_STATE)
           process.reload
 
           action.stage(process)

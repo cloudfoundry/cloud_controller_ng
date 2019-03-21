@@ -6,7 +6,7 @@ module VCAP::CloudController::Presenters::V3
     describe '#to_hash' do
       let(:show_bits_service_upload_link) { true }
       let(:result) { PackagePresenter.new(package, show_bits_service_upload_link: show_bits_service_upload_link).to_hash }
-      let(:package) { FactoryBot.create(:package, type: 'package_type', sha256_checksum: 'sha256') }
+      let(:package) { VCAP::CloudController::PackageModel.make(type: 'package_type', sha256_checksum: 'sha256') }
 
       let!(:release_label) do
         VCAP::CloudController::PackageLabelModel.make(
@@ -60,7 +60,7 @@ module VCAP::CloudController::Presenters::V3
       end
 
       context 'when the package type is bits' do
-        let(:package) { FactoryBot.create(:package, type: 'bits') }
+        let(:package) { VCAP::CloudController::PackageModel.make(type: 'bits') }
 
         it 'includes links to upload, download, and stage' do
           expect(result[:links][:upload][:href]).to eq("#{link_prefix}/v3/packages/#{package.guid}/upload")
@@ -111,7 +111,7 @@ module VCAP::CloudController::Presenters::V3
 
       context 'when the package type is docker' do
         let(:package) do
-          FactoryBot.create(:package,
+          VCAP::CloudController::PackageModel.make(
             type: 'docker',
             docker_image: 'registry/image:latest',
             docker_username: 'jarjarbinks',
@@ -133,7 +133,7 @@ module VCAP::CloudController::Presenters::V3
 
         context 'when no docker credentials are present' do
           let(:package) do
-            FactoryBot.create(:package,
+            VCAP::CloudController::PackageModel.make(
               type: 'docker',
               docker_image: 'registry/image:latest',
             )
@@ -149,7 +149,7 @@ module VCAP::CloudController::Presenters::V3
       end
 
       context 'when the package type is not bits' do
-        let(:package) { FactoryBot.create(:package, type: 'docker', docker_image: 'some-image') }
+        let(:package) { VCAP::CloudController::PackageModel.make(type: 'docker', docker_image: 'some-image') }
 
         it 'does NOT include a link to upload' do
           expect(result[:links][:upload]).to be_nil

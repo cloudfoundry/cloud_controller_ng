@@ -40,7 +40,7 @@ module VCAP::CloudController
       }
     end
     let(:lifecycle) { BuildpackLifecycle.new(package, staging_message) }
-    let(:package) { FactoryBot.create(:package, app: app, state: PackageModel::READY_STATE) }
+    let(:package) { PackageModel.make(app: app, state: PackageModel::READY_STATE) }
 
     let(:space) { FactoryBot.create(:space) }
     let(:org) { space.organization }
@@ -265,7 +265,7 @@ module VCAP::CloudController
       end
 
       context 'when the package is not ready' do
-        let(:package) { FactoryBot.create(:package, app: app, state: PackageModel::PENDING_STATE) }
+        let(:package) { PackageModel.make(app: app, state: PackageModel::PENDING_STATE) }
         it 'raises an InvalidPackage exception' do
           expect {
             action.create_and_stage(package: package, lifecycle: lifecycle)

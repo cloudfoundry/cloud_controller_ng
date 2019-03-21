@@ -10,7 +10,7 @@ module VCAP::CloudController
 
     describe '#delete' do
       context 'when the package exists' do
-        let!(:package) { FactoryBot.create(:package) }
+        let!(:package) { PackageModel.make }
 
         it 'deletes the package record' do
           expect {
@@ -67,7 +67,7 @@ module VCAP::CloudController
       end
 
       context 'when passed a set of packages' do
-        let!(:packages) { FactoryBot.create_list(:package, 2) }
+        let!(:packages) { [PackageModel.make, PackageModel.make] }
 
         it 'bulk deletes them' do
           expect {

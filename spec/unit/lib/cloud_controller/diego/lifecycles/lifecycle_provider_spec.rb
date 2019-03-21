@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe LifecycleProvider do
-    let(:package) { FactoryBot.create(:package) }
+    let(:package) { PackageModel.make }
     let(:message) { BuildCreateMessage.new(request) }
 
     context 'when lifecycle type is requested on the message' do
@@ -27,7 +27,7 @@ module VCAP::CloudController
 
     context 'when lifecycle type is not requested on the message' do
       let(:request) { {} }
-      let(:package) { FactoryBot.create(:package, app_guid: app.guid) }
+      let(:package) { PackageModel.make(app_guid: app.guid) }
 
       context 'when the app defaults to buildpack' do
         let(:app) { FactoryBot.create(:app, :buildpack) }

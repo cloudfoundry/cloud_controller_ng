@@ -313,7 +313,7 @@ module VCAP::CloudController
         let(:space) { FactoryBot.create(:space, guid: 'space-1', name: 'space-name', organization: org) }
         let(:app_model) { FactoryBot.create(:app, guid: 'app-1', name: 'frank-app', space: space) }
         let(:package_state) { PackageModel::READY_STATE }
-        let(:package) { FactoryBot.create(:package, guid: 'package-1', app_guid: app_model.guid, state: package_state) }
+        let(:package) { PackageModel.make(guid: 'package-1', app_guid: app_model.guid, state: package_state) }
         let!(:build) { FactoryBot.create(:build, guid: 'build-1', package: package, app_guid: app_model.guid, state: BuildModel::STAGING_STATE) }
 
         let(:state) { 'TEST_STATE' }
@@ -652,7 +652,7 @@ module VCAP::CloudController
 
             context 'when a new package has been added to a previously staged app' do
               before do
-                FactoryBot.create(:package, app: process.app)
+                PackageModel.make(app: process.app)
                 process.reload
               end
 

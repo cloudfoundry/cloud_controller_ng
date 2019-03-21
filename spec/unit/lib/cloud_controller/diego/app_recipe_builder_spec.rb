@@ -35,7 +35,7 @@ module VCAP::CloudController
 
         let(:lifecycle_type) { nil }
         let(:app_model) { FactoryBot.create(:app, lifecycle_type, guid: 'app-guid', droplet: DropletModel.make(state: 'STAGED'), enable_ssh: false) }
-        let(:package) { FactoryBot.create(:package, app: app_model) }
+        let(:package) { PackageModel.make(lifecycle_type, app: app_model) }
         let(:process) do
           process = ProcessModel.make(:process,
             app:                  app_model,
@@ -867,7 +867,7 @@ module VCAP::CloudController
             })
           end
           let(:lifecycle_type) { :docker }
-          let(:package) { FactoryBot.create(:package, lifecycle_type, app: app_model) }
+          let(:package) { PackageModel.make(lifecycle_type, app: app_model) }
           let(:droplet) do
             DropletModel.make(:docker,
               package:                 package,
