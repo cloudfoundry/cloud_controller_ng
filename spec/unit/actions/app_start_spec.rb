@@ -125,7 +125,7 @@ module VCAP::CloudController
           )
         end
         let!(:dropletB) { DropletModel.make(app: app, package: package, state: DropletModel::STAGED_STATE) }
-        let!(:revisionA) { FactoryBot.create(:revision, app: app, droplet_guid: dropletA.guid) }
+        let!(:revisionA) { RevisionModel.make(app: app, droplet_guid: dropletA.guid) }
         let!(:new_revision_number) { revisionA.version + 1 }
 
         it 'creates a new revision when it switches droplets and revisions are enabled' do

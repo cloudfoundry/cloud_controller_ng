@@ -75,7 +75,7 @@ module VCAP::CloudController
 
       context 'when there are multiple revisions for an app' do
         it 'increments the version by 1' do
-          FactoryBot.create(:revision, app: app, version: 1, created_at: 4.days.ago)
+          RevisionModel.make(app: app, version: 1, created_at: 4.days.ago)
 
           expect {
             RevisionCreate.create(
@@ -92,11 +92,11 @@ module VCAP::CloudController
         end
 
         it 'rolls over to version 1 when we pass version 9999' do
-          FactoryBot.create(:revision, app: app, version: 1, created_at: 5.days.ago)
-          FactoryBot.create(:revision, app: app, version: 2, created_at: 4.days.ago)
+          RevisionModel.make(app: app, version: 1, created_at: 5.days.ago)
+          RevisionModel.make(app: app, version: 2, created_at: 4.days.ago)
           # ...
-          FactoryBot.create(:revision, app: app, version: 9998, created_at: 3.days.ago)
-          FactoryBot.create(:revision, app: app, version: 9999, created_at: 2.days.ago)
+          RevisionModel.make(app: app, version: 9998, created_at: 3.days.ago)
+          RevisionModel.make(app: app, version: 9999, created_at: 2.days.ago)
 
           RevisionCreate.create(
             app: app,
@@ -110,11 +110,11 @@ module VCAP::CloudController
         end
 
         it 'replaces any existing revisions after rolling over' do
-          FactoryBot.create(:revision, app: app, version: 2, created_at: 4.days.ago)
+          RevisionModel.make(app: app, version: 2, created_at: 4.days.ago)
           # ...
-          FactoryBot.create(:revision, app: app, version: 9998, created_at: 3.days.ago)
-          FactoryBot.create(:revision, app: app, version: 9999, created_at: 2.days.ago)
-          FactoryBot.create(:revision, app: app, version: 1, created_at: 1.days.ago)
+          RevisionModel.make(app: app, version: 9998, created_at: 3.days.ago)
+          RevisionModel.make(app: app, version: 9999, created_at: 2.days.ago)
+          RevisionModel.make(app: app, version: 1, created_at: 1.days.ago)
 
           RevisionCreate.create(
             app: app,

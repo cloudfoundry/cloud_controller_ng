@@ -190,7 +190,7 @@ module VCAP::CloudController
         end
 
         it 'deletes associated revisions' do
-          revision = FactoryBot.create(:revision, app: app)
+          revision = RevisionModel.make(app: app)
 
           expect {
             app_delete.delete(app_dataset)

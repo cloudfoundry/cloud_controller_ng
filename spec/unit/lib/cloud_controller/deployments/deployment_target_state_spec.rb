@@ -9,7 +9,7 @@ module VCAP::CloudController
 
     describe 'droplet' do
       context 'revision provided' do
-        let(:revision) { FactoryBot.create(:revision, droplet: droplet) }
+        let(:revision) { RevisionModel.create(droplet: droplet) }
         let(:message) {
           DeploymentCreateMessage.new({
             relationships: { app: { data: { guid: app.guid } } },
@@ -106,7 +106,9 @@ module VCAP::CloudController
 
     describe 'environment_variables' do
       context 'a revision is provided' do
-        let(:revision) { FactoryBot.create(:revision, droplet: droplet, environment_variables: { 'baz' => 'qux' }) }
+        let(:revision) do
+          RevisionModel.make(droplet: droplet, environment_variables: { 'baz' => 'qux' })
+        end
         let(:message) {
           DeploymentCreateMessage.new({
             relationships: { app: { data: { guid: app.guid } } },
@@ -135,7 +137,7 @@ module VCAP::CloudController
 
     describe 'rollback_target_revision' do
       context 'a revision is provided' do
-        let(:revision) { FactoryBot.create(:revision, droplet: droplet) }
+        let(:revision) { RevisionModel.make(droplet: droplet) }
         let(:message) {
           DeploymentCreateMessage.new({
             relationships: { app: { data: { guid: app.guid } } },
@@ -195,7 +197,9 @@ module VCAP::CloudController
       end
 
       context 'assigning environment variables' do
-        let(:revision) { FactoryBot.create(:revision, droplet: droplet, environment_variables: { 'baz' => 'qux' }) }
+        let(:revision) do
+          RevisionModel.make(droplet: droplet, environment_variables: { 'baz' => 'qux' })
+        end
         let(:message) {
           DeploymentCreateMessage.new({
             relationships: { app: { data: { guid: app.guid } } },

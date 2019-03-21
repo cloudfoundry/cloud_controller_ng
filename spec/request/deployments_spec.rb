@@ -134,8 +134,8 @@ RSpec.describe 'Deployments' do
 
     context 'when a revision is supplied with the request' do
       let(:other_droplet) { VCAP::CloudController::DropletModel.make(app: app_model, process_types: { 'web': 'webby' }) }
-      let!(:revision) { FactoryBot.create(:revision, app: app_model, droplet: other_droplet, created_at: 5.days.ago) }
-      let!(:revision2) { FactoryBot.create(:revision, app: app_model, droplet: droplet) }
+      let!(:revision) { VCAP::CloudController::RevisionModel.make(app: app_model, droplet: other_droplet, created_at: 5.days.ago) }
+      let!(:revision2) { VCAP::CloudController::RevisionModel.make(app: app_model, droplet: droplet) }
 
       let(:create_request) do
         {

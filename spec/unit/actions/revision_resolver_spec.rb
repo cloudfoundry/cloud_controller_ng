@@ -50,8 +50,7 @@ module VCAP::CloudController
 
       context 'when the latest revision is out of date' do
         it 'creates a revision from the app values with the appropriate description' do
-          existing_revision = FactoryBot.create(
-            :revision,
+          existing_revision = RevisionModel.make(
             app: app,
             droplet: app.droplet,
             environment_variables: { 'foo' => 'bar' },
@@ -77,7 +76,7 @@ module VCAP::CloudController
 
       context 'when the latest revisions is up to date' do
         it 'returns the latest_revision' do
-          existing_revision = FactoryBot.create(
+          existing_revision = RevisionModel.make(
             :revision,
             app: app,
             droplet: app.droplet,
@@ -101,7 +100,7 @@ module VCAP::CloudController
 
     describe '.rollback_app_revision' do
       let(:revision) do
-        FactoryBot.create(:revision,
+        RevisionModel.make(
           version: 2,
           droplet: droplet,
           app: app,

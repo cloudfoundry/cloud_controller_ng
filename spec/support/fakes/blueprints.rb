@@ -470,6 +470,11 @@ module VCAP::CloudController
     valid_until { Time.now.utc }
   end
 
+  RevisionModel.blueprint do
+    app { FactoryBot.create(:app) }
+    description { 'Initial revision' }
+  end
+
   TestModel.blueprint do
     required_attr true
   end

@@ -18,7 +18,7 @@ module VCAP::CloudController
           },
         }
       end
-      let(:revision) { FactoryBot.create(:revision) }
+      let(:revision) { RevisionModel.make }
       let(:message) { RevisionsUpdateMessage.new(body) }
 
       it 'updates the revision metadata' do

@@ -6,8 +6,8 @@ module VCAP::CloudController
     subject(:revision_delete) { RevisionDelete }
 
     describe '#delete' do
-      let!(:revision) { FactoryBot.create(:revision) }
-      let!(:revision2) { FactoryBot.create(:revision) }
+      let!(:revision) { RevisionModel.make }
+      let!(:revision2) { RevisionModel.make }
 
       it 'deletes the revision' do
         revision_delete.delete([revision, revision2])

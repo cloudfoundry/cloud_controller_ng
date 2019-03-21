@@ -14,9 +14,9 @@ RSpec.describe AppRevisionsController, type: :controller do
   describe '#index' do
     let!(:app_model) { FactoryBot.create(:app) }
     let!(:app_without_revisions) { FactoryBot.create(:app, space: space) }
-    let!(:revision1) { FactoryBot.create(:revision, app: app_model, version: 808) }
-    let!(:revision2) { FactoryBot.create(:revision, app: app_model, version: 809) }
-    let!(:revision_for_another_app) { FactoryBot.create(:revision) }
+    let!(:revision1) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 808) }
+    let!(:revision2) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 809) }
+    let!(:revision_for_another_app) { VCAP::CloudController::RevisionModel.make }
 
     it 'returns 200 and shows the revisions' do
       get :index, params: { guid: app_model.guid }
@@ -26,7 +26,7 @@ RSpec.describe AppRevisionsController, type: :controller do
     end
 
     context 'filters' do
-      let!(:revision3) { FactoryBot.create(:revision, app: app_model, version: 810) }
+      let!(:revision3) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 810) }
 
       it 'by version' do
         get :index, params: { guid: app_model.guid, versions: '808,810' }
@@ -84,10 +84,10 @@ RSpec.describe AppRevisionsController, type: :controller do
   describe '#deployed' do
     let!(:app_model) { FactoryBot.create(:app) }
     let!(:app_without_revisions) { FactoryBot.create(:app, space: space) }
-    let!(:revision1) { FactoryBot.create(:revision, app: app_model, version: 808) }
-    let!(:revision2) { FactoryBot.create(:revision, app: app_model, version: 809) }
-    let!(:revision_for_another_app) { FactoryBot.create(:revision) }
-    let!(:revision3) { FactoryBot.create(:revision, app: app_model, version: 810) }
+    let!(:revision1) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 808) }
+    let!(:revision2) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 809) }
+    let!(:revision_for_another_app) { VCAP::CloudController::RevisionModel.make }
+    let!(:revision3) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 810) }
     let!(:process1) { VCAP::CloudController::ProcessModel.make(app: app_model, revision: revision1, type: 'web', state: 'STARTED') }
     let!(:process2) { VCAP::CloudController::ProcessModel.make(app: app_model, revision: revision2, type: 'worker', state: 'STARTED') }
     let!(:process3) { VCAP::CloudController::ProcessModel.make(app: app_model, revision: revision3, type: 'web', state: 'STOPPED') }

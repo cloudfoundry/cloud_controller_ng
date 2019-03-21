@@ -94,7 +94,7 @@ module VCAP
 
               context 'and theres a revision on the process' do
                 let(:new_droplet) { DropletModel.make(:docker, app: app, docker_receipt_image: 'trololol') }
-                let(:revision) { FactoryBot.create(:revision, app: app, droplet_guid: new_droplet.guid) }
+                let(:revision) { RevisionModel.make(app: app, droplet_guid: new_droplet.guid) }
                 before do
                   process.update(revision: revision)
                 end

@@ -161,7 +161,7 @@ module VCAP::CloudController
       end
 
       context 'revision to set' do
-        let(:revision) { FactoryBot.create(:revision) }
+        let(:revision) { RevisionModel.make }
 
         it 'sets the revision of the process if passed in' do
           ProcessRestart.restart(process: process, config: config, stop_in_runtime: false, revision: revision)

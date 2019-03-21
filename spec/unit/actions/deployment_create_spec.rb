@@ -15,17 +15,19 @@ module VCAP::CloudController
     let(:user_audit_info) { UserAuditInfo.new(user_guid: '123', user_email: 'connor@example.com', user_name: 'braa') }
     let(:runner) { instance_double(Diego::Runner) }
 
-    let(:message) { DeploymentCreateMessage.new({
-      relationships: { app: { data: { guid: app.guid } } },
-      droplet: { guid: next_droplet.guid },
-    })
-    }
+    let(:message) do
+      DeploymentCreateMessage.new({
+        relationships: { app: { data: { guid: app.guid } } },
+        droplet: { guid: next_droplet.guid },
+      })
+    end
 
-    let(:restart_message) { DeploymentCreateMessage.new({
-      relationships: { app: { data: { guid: app.guid } } },
-      droplet: { guid: original_droplet.guid },
-    })
-    }
+    let(:restart_message) do
+      DeploymentCreateMessage.new({
+        relationships: { app: { data: { guid: app.guid } } },
+        droplet: { guid: original_droplet.guid },
+      })
+    end
 
     before do
       app.update(droplet: original_droplet)
@@ -83,7 +85,7 @@ module VCAP::CloudController
             end
 
             it 'has the reason for a droplet changed' do
-              FactoryBot.create(:revision, app: app, droplet_guid: app.droplet.guid, environment_variables: app.environment_variables)
+              RevisionModel.make(app: app, droplet_guid: app.droplet.guid, environment_variables: app.environment_variables)
               DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
 
               revision = RevisionModel.last
@@ -411,7 +413,7 @@ module VCAP::CloudController
 
         context 'when the same droplet is provided (zdt-restart)' do
           let!(:revision) do
-            FactoryBot.create(:revision, app: app, droplet_guid: app.droplet_guid)
+            RevisionModel.make(app: app, droplet_guid: app.droplet_guid)
           end
 
           it 'does NOT creates a revision' do
@@ -490,24 +492,15 @@ module VCAP::CloudController
 
       context 'when a revision is provided on the message (rollback)' do
         let(:revision_droplet) { DropletModel.make(app: app, process_types: { 'web' => '1234' }) }
-        let!(:current_revision) {
-          FactoryBot.create(:revision,
-            app: app,
-            droplet_guid: revision_droplet.guid,
-            environment_variables: { 'something' => 'different' },
-            version: 2,
-            created_at: 5.days.ago
-          )
-        }
-        let!(:revision) {
-          FactoryBot.create(
-            :revision,
-            app: app,
+        let!(:revision) do
+          RevisionModel.make(
+            app_guid: app.guid,
             droplet_guid: revision_droplet.guid,
             environment_variables: { 'foo' => 'var' },
             version: 3
           )
-        }
+        end
+
         let(:message) {
           DeploymentCreateMessage.new({
             relationships: { app: { data: { guid: app.guid } } },

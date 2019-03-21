@@ -217,23 +217,13 @@ RSpec.describe DeploymentsController, type: :controller do
 
       context 'when a revision is provided' do
         let(:newer_droplet) { VCAP::CloudController::DropletModel.make(app: app, process_types: { 'web' => 'rackup' }) }
-        let!(:earlier_revision) {
-          FactoryBot.create(:revision,
-            app: app,
-            droplet_guid: droplet.guid,
-            created_at: 5.days.ago,
-            version: 2,
-            description: 'earlier revision'
-          )
-        }
-        let!(:later_revision) {
-          FactoryBot.create(:revision,
-            app: app,
-            droplet_guid: newer_droplet.guid,
-            version: 3, description:
-              'later revision'
-          )
-        }
+        let!(:earlier_revision) do
+          VCAP::CloudController::RevisionModel.make(app: app, droplet_guid: droplet.guid, created_at: 5.days.ago, version: 2, description: 'earlier revision')
+        end
+        let!(:later_revision) do
+          VCAP::CloudController::RevisionModel.make(app: app, droplet_guid: newer_droplet.guid, version: 3, description: 'later revision')
+        end
+
         let(:request_body) do
           {
             revision: {
@@ -269,21 +259,23 @@ RSpec.describe DeploymentsController, type: :controller do
         end
 
         context 'when the provided revision specifies start commands' do
-          let!(:earlier_revision) { FactoryBot.create(:revision,
-            app: app,
-            droplet_guid: newer_droplet.guid, # same droplet as currently associated revision
-            created_at: 5.days.ago,
-            version: 2,
-            description: 'reassigned earlier_revision',
-          )
-          }
+          let!(:earlier_revision) do
+            VCAP::CloudController::RevisionModel.make(
+              app: app,
+              droplet_guid: newer_droplet.guid, # same droplet as currently associated revision
+              created_at: 5.days.ago,
+              version: 2,
+              description: 'reassigned earlier_revision',
+            )
+          end
 
-          let!(:earlier_revision_process_command) { VCAP::CloudController::RevisionProcessCommandModel.make(
-            process_type: 'web',
-            revision_guid: earlier_revision.guid,
-            process_command: 'bundle exec earlier_app',
-          )
-          }
+          let!(:earlier_revision_process_command) do
+            VCAP::CloudController::RevisionProcessCommandModel.make(
+              process_type: 'web',
+              revision_guid: earlier_revision.guid,
+              process_command: 'bundle exec earlier_app',
+            )
+          end
 
           it 'uses the process commands from the revision to create a new revision' do
             expect(VCAP::CloudController::DeploymentCreate).
@@ -323,7 +315,7 @@ RSpec.describe DeploymentsController, type: :controller do
       end
 
       context 'when both a revision and a droplet are provided' do
-        let!(:revision) { FactoryBot.create(:revision, app: app) }
+        let!(:revision) { VCAP::CloudController::RevisionModel.make(app: app) }
         let(:request_body) do
           {
             droplet: {

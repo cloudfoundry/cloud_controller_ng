@@ -171,7 +171,7 @@ module VCAP::CloudController
           new_droplet.reload
 
           v3_app.update(revisions_enabled: true)
-          revision = FactoryBot.create(:revision, app: v3_app, droplet: new_droplet)
+          revision = RevisionModel.make(app: v3_app, droplet: new_droplet)
           process.update(revision: revision)
 
           get "/internal/v4/droplets/#{process.guid}/#{new_droplet.checksum}/download"
@@ -261,7 +261,7 @@ module VCAP::CloudController
             new_droplet.reload
 
             v3_app.update(revisions_enabled: true)
-            revision = FactoryBot.create(:revision, app: v3_app, droplet: new_droplet)
+            revision = RevisionModel.make(app: v3_app, droplet: new_droplet)
             process.update(revision: revision)
 
             get "/internal/v4/droplets/#{process.guid}/#{new_droplet.checksum}/download"

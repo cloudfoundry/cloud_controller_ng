@@ -20,7 +20,7 @@ module VCAP::CloudController
 
           total = 50
           (1..50).each do |i|
-            FactoryBot.create(:revision, version: i, app: app, created_at: Time.now - total + i)
+            RevisionModel.make(version: i, app: app, created_at: Time.now - total + i)
           end
 
           job.perform
@@ -36,7 +36,7 @@ module VCAP::CloudController
 
           total = 50
           (1..50).each do |i|
-            revision = FactoryBot.create(:revision, version: i, app: app, created_at: Time.now - total + i)
+            revision = RevisionModel.make(version: i, app: app, created_at: Time.now - total + i)
             RevisionAnnotationModel.make(revision: revision, key: i, value: i)
             RevisionLabelModel.make(revision: revision, key_name: i, value: i)
           end
@@ -56,7 +56,7 @@ module VCAP::CloudController
 
           process_commands = []
           50.times do |i|
-            revision = FactoryBot.create(:revision, app: app)
+            revision = RevisionModel.make(app: app)
             process_commands << revision.add_command_for_process_type('web', "foo rackup #{i}")
           end
 
@@ -78,7 +78,7 @@ module VCAP::CloudController
             [app, app_the_second, app_the_third].each_with_index do |current_app, app_index|
               total = 50
               (1..total).each do |i|
-                FactoryBot.create(:revision, version: i + 1000 * app_index, app: current_app, created_at: Time.now - total + i)
+                RevisionModel.make(version: i + 1000 * app_index, app: current_app, created_at: Time.now - total + i)
               end
             end
 

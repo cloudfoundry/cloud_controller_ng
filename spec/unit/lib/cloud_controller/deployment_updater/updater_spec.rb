@@ -27,7 +27,7 @@ module VCAP::CloudController
         state: ProcessModel::STOPPED,
       )
     end
-    let(:revision) { FactoryBot.create(:revision, app: app, droplet: droplet, version: 300) }
+    let(:revision) { RevisionModel.make(app: app, droplet: droplet, version: 300) }
     let!(:deploying_route_mapping) { RouteMappingModel.make(app: web_process.app, process_type: deploying_web_process.type) }
     let(:space) { web_process.space }
     let(:original_web_process_instance_count) { 6 }

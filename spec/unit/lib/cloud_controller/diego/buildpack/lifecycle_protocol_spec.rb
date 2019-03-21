@@ -275,7 +275,7 @@ module VCAP
               end
 
               context 'and theres a revision on the process' do
-                let(:new_droplet) {
+                let(:new_droplet) do
                   DropletModel.make(
                     app: app,
                     process_types: {
@@ -283,14 +283,8 @@ module VCAP
                       'web'    => 'not this'
                     }
                   )
-                }
-
-                let(:revision) {
-                  FactoryBot.create(:revision,
-                    app: app,
-                    droplet_guid: new_droplet.guid
-                  )
-                }
+                end
+                let(:revision) { RevisionModel.make(app: app, droplet_guid: new_droplet.guid) }
                 before do
                   process.update(revision: revision)
                 end
