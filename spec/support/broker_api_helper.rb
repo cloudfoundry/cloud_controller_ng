@@ -234,16 +234,17 @@ module VCAP::CloudController::BrokerApiHelper
       broker_update_response_body[:dashboard_url] = opts[:dashboard_url]
     end
 
-    stub_request(:patch, %r{broker-url/v2/service_instances/[[:alnum:]-]+}).to_return(status: return_code, body: broker_update_response_body.to_json)
+    broker_url = @broker_url || 'broker-url'
+    stub_request(:patch, %r{#{broker_url}/v2/service_instances/[[:alnum:]-]+}).to_return(status: return_code, body: broker_update_response_body.to_json)
 
     body = {
       service_plan_guid: @large_plan_guid
     }
-    if opts[:parameters]
-      body[:parameters] = opts[:parameters]
-    end
+    body[:parameters] = opts[:parameters] if opts[:parameters]
+    body = opts[:body] if opts[:body]
 
     headers = opts[:user] ? admin_headers_for(opts[:user]) : admin_headers
+    headers = opts[:headers] if opts[:headers]
 
     put("/v2/service_instances/#{@service_instance_guid}",
         body.to_json,
