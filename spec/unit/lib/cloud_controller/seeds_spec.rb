@@ -526,7 +526,7 @@ module VCAP::CloudController
 
       context 'when there are exisiting security groups' do
         before do
-          FactoryBot.create(:security_group, name: 'EXISTING SECURITY GROUP')
+          SecurityGroup.make(name: 'EXISTING SECURITY GROUP')
         end
 
         it 'does nothing' do

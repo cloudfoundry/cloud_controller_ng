@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe SecurityGroupsController do
-    let(:group) { FactoryBot.create(:security_group) }
+    let(:group) { SecurityGroup.make }
 
     describe 'Query Parameters' do
       it { expect(SecurityGroupsController).to be_queryable_by(:name) }
@@ -51,7 +51,7 @@ module VCAP::CloudController
       end
 
       it 'returns SecurityGroupNameTaken errors on unique name errors' do
-        FactoryBot.create(:security_group, name: 'foo')
+        SecurityGroup.make(name: 'foo')
         post '/v2/security_groups', '{"name":"foo"}'
 
         expect(last_response.status).to eq(400)
@@ -91,7 +91,7 @@ module VCAP::CloudController
       let(:user) { FactoryBot.create(:user) }
       let(:org) { FactoryBot.create(:organization, user_guids: [user.guid]) }
       let(:space) { FactoryBot.create(:space, organization: org) }
-      let(:security_group) { FactoryBot.create(:security_group) }
+      let(:security_group) { SecurityGroup.make }
 
       before do
         set_current_user(user)

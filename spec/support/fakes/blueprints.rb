@@ -439,6 +439,20 @@ module VCAP::CloudController
     service_label { Sham.label }
   end
 
+  SecurityGroup.blueprint do
+    name { Sham.name }
+    rules do
+      [
+        {
+          'protocol' => 'udp',
+          'ports' => '8080',
+          'destination' => '198.41.191.47/1',
+        }
+      ]
+    end
+    staging_default { false }
+  end
+
   SpaceQuotaDefinition.blueprint do
     name { Sham.name }
     non_basic_services_allowed { true }

@@ -106,13 +106,13 @@ module VCAP::CloudController
         end
 
         before do
-          FactoryBot.create(:security_group, guid: 'guid1',
+          SecurityGroup.make(guid: 'guid1',
                              rules: [{ 'protocol' => 'udp', 'ports' => '53', 'destination' => '0.0.0.0/0' }],
                              staging_default: true)
-          FactoryBot.create(:security_group, guid: 'guid2',
+          SecurityGroup.make(guid: 'guid2',
                              rules: [{ 'protocol' => 'tcp', 'ports' => '80', 'destination' => '0.0.0.0/0', 'log' => true }],
                              staging_default: true)
-          security_group = FactoryBot.create(:security_group, guid: 'guid3',
+          security_group = SecurityGroup.make(guid: 'guid3',
                                               rules: [{ 'protocol' => 'tcp', 'ports' => '443', 'destination' => '0.0.0.0/0', 'log' => true }],
                                               staging_default: false)
           security_group.add_staging_space(app.space)
@@ -404,9 +404,9 @@ module VCAP::CloudController
         before do
           allow(VCAP::CloudController::IsolationSegmentSelector).to receive(:for_space).and_return(isolation_segment)
 
-          FactoryBot.create(:security_group, guid: 'guid1', rules: [{ 'protocol' => 'udp', 'ports' => '53', 'destination' => '0.0.0.0/0' }], running_default: true)
+          SecurityGroup.make(guid: 'guid1', rules: [{ 'protocol' => 'udp', 'ports' => '53', 'destination' => '0.0.0.0/0' }], running_default: true)
           app.space.add_security_group(
-            FactoryBot.create(:security_group, guid: 'guid2', rules: [{ 'protocol' => 'tcp', 'ports' => '80', 'destination' => '0.0.0.0/0', 'log' => true }])
+            SecurityGroup.make(guid: 'guid2', rules: [{ 'protocol' => 'tcp', 'ports' => '80', 'destination' => '0.0.0.0/0', 'log' => true }])
           )
         end
 

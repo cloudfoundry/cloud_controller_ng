@@ -6,7 +6,7 @@ RSpec.resource 'Security Groups', type: [:api, :legacy_api] do
   let(:security_group) { VCAP::CloudController::SecurityGroup.first }
   let(:guid) { security_group.guid }
   before do
-    3.times { FactoryBot.create(:security_group) }
+    3.times { VCAP::CloudController::SecurityGroup.make }
   end
 
   authenticated_request

@@ -2025,7 +2025,7 @@ module VCAP::CloudController
       let(:user) { FactoryBot.create(:user) }
       let(:org) { FactoryBot.create(:organization, user_guids: [user.guid]) }
       let(:space) { FactoryBot.create(:space, organization: org) }
-      let(:security_group) { FactoryBot.create(:security_group) }
+      let(:security_group) { SecurityGroup.make }
 
       before do
         set_current_user(user)

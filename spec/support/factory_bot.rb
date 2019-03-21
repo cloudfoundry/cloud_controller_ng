@@ -13,7 +13,7 @@ RSpec.configure do |config|
       end
 
       sequence :name do |index|
-        "factory-bot-name-#{index}"
+        "name-#{index}"
       end
 
       sequence :guid do
