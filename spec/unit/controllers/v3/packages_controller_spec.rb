@@ -85,36 +85,7 @@ RSpec.describe PackagesController, type: :controller do
       end
 
       context 'with correctly named cached resources' do
-        context 'v2 resource format' do
-          let(:new_options) do
-            {
-              resources: JSON.dump([{ 'fn' => 'lol', 'sha1' => 'abc', 'size' => 2048 }]),
-            }
-          end
-          let(:uploader) { instance_double(VCAP::CloudController::PackageUpload, upload_async: nil) }
-
-          before do
-            allow(VCAP::CloudController::PackageUpload).to receive(:new).and_return(uploader)
-          end
-
-          it 'returns a 201 and the package' do
-            post :upload, params: params.merge(new_options), as: :json
-
-            expect(response.status).to eq(200), response.body
-            expect(MultiJson.load(response.body)['guid']).to eq(package.guid)
-            expect(package.reload.state).to eq(VCAP::CloudController::PackageModel::CREATED_STATE)
-            expect(uploader).to have_received(:upload_async) do |args|
-              expect(args[:message].resources).to match_array([{ fn: 'lol', sha1: 'abc', size: 2048 }])
-            end
-          end
-        end
-
-        context 'v3 resource format' do
-          let(:new_options) do
-            {
-              resources: JSON.dump([{ 'path' => 'lol', 'checksum' => { 'value' => 'abc' }, 'size_in_bytes' => 2048, 'mode' => '645' }]),
-            }
-          end
+        shared_examples_for :uploading_successfully do
           let(:uploader) { instance_double(VCAP::CloudController::PackageUpload, upload_async: nil) }
 
           before do
@@ -131,6 +102,26 @@ RSpec.describe PackagesController, type: :controller do
               expect(args[:message].resources).to match_array([{ fn: 'lol', sha1: 'abc', size: 2048, mode: '645' }])
             end
           end
+        end
+
+        context 'v2 resource format' do
+          let(:new_options) do
+            {
+              resources: JSON.dump([{ 'fn' => 'lol', 'sha1' => 'abc', 'size' => 2048, 'mode' => '645' }]),
+            }
+          end
+
+          include_examples :uploading_successfully
+        end
+
+        context 'v3 resource format' do
+          let(:new_options) do
+            {
+              resources: JSON.dump([{ 'path' => 'lol', 'checksum' => { 'value' => 'abc' }, 'size_in_bytes' => 2048, 'mode' => '645' }]),
+            }
+          end
+
+          include_examples :uploading_successfully
         end
       end
     end

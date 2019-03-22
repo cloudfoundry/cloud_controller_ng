@@ -648,6 +648,55 @@ RSpec.describe 'Packages' do
       }
     end
 
+    shared_examples :upload_bits_successfully do
+      it 'uploads the bits for the package' do
+        expect(Delayed::Job.count).to eq 0
+
+        post "/v3/packages/#{guid}/upload", packages_params.to_json, user_header
+
+        expect(Delayed::Job.count).to eq 1
+
+        expected_response = {
+          'type'       => package_model.type,
+          'guid'       => guid,
+          'data'       => {
+            'checksum' => { 'type' => 'sha256', 'value' => nil },
+            'error' => nil
+          },
+          'state' => VCAP::CloudController::PackageModel::PENDING_STATE,
+          'metadata' => { 'labels' => {}, 'annotations' => {} },
+          'created_at' => iso8601,
+          'updated_at' => iso8601,
+          'links' => {
+            'self'   => { 'href' => "#{link_prefix}/v3/packages/#{guid}" },
+            'upload' => { 'href' => "#{link_prefix}/v3/packages/#{guid}/upload", 'method' => 'POST' },
+            'download' => { 'href' => "#{link_prefix}/v3/packages/#{guid}/download", 'method' => 'GET' },
+            'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+          }
+        }
+        parsed_response = MultiJson.load(last_response.body)
+        expect(last_response.status).to eq(200)
+        expect(parsed_response).to be_a_response_like(expected_response)
+
+        expected_metadata = { package_guid: package_model.guid }.to_json
+
+        event = VCAP::CloudController::Event.last
+        expect(event.values).to include({
+          type:              'audit.app.package.upload',
+          actor:             user.guid,
+          actor_type:        'user',
+          actor_name:        email,
+          actor_username:    user_name,
+          actee:             'woof',
+          actee_type:        'app',
+          actee_name:        'meow',
+          metadata:          expected_metadata,
+          space_guid:        space.guid,
+          organization_guid: space.organization.guid
+        })
+      end
+    end
+
     it 'uploads the bits for the package' do
       expect(Delayed::Job.count).to eq 0
 
@@ -706,52 +755,7 @@ RSpec.describe 'Packages' do
         }
       end
 
-      it 'uploads the bits for the package' do
-        expect(Delayed::Job.count).to eq 0
-
-        post "/v3/packages/#{guid}/upload", packages_params.to_json, user_header
-
-        expect(Delayed::Job.count).to eq 1
-
-        expected_response = {
-          'type'       => package_model.type,
-          'guid'       => guid,
-          'data'       => {
-            'checksum' => { 'type' => 'sha256', 'value' => nil },
-            'error' => nil
-          },
-          'state' => VCAP::CloudController::PackageModel::PENDING_STATE,
-          'metadata' => { 'labels' => {}, 'annotations' => {} },
-          'created_at' => iso8601,
-          'updated_at' => iso8601,
-          'links' => {
-            'self'   => { 'href' => "#{link_prefix}/v3/packages/#{guid}" },
-            'upload' => { 'href' => "#{link_prefix}/v3/packages/#{guid}/upload", 'method' => 'POST' },
-            'download' => { 'href' => "#{link_prefix}/v3/packages/#{guid}/download", 'method' => 'GET' },
-            'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
-          }
-        }
-        parsed_response = MultiJson.load(last_response.body)
-        expect(last_response.status).to eq(200)
-        expect(parsed_response).to be_a_response_like(expected_response)
-
-        expected_metadata = { package_guid: package_model.guid }.to_json
-
-        event = VCAP::CloudController::Event.last
-        expect(event.values).to include({
-          type:              'audit.app.package.upload',
-          actor:             user.guid,
-          actor_type:        'user',
-          actor_name:        email,
-          actor_username:    user_name,
-          actee:             'woof',
-          actee_type:        'app',
-          actee_name:        'meow',
-          metadata:          expected_metadata,
-          space_guid:        space.guid,
-          organization_guid: space.organization.guid
-        })
-      end
+      include_examples :upload_bits_successfully
     end
 
     context 'with v3 resources' do
@@ -765,52 +769,7 @@ RSpec.describe 'Packages' do
         }
       end
 
-      it 'uploads the bits for the package' do
-        expect(Delayed::Job.count).to eq 0
-
-        post "/v3/packages/#{guid}/upload", packages_params.to_json, user_header
-
-        expect(Delayed::Job.count).to eq 1
-
-        expected_response = {
-          'type'       => package_model.type,
-          'guid'       => guid,
-          'data'       => {
-            'checksum' => { 'type' => 'sha256', 'value' => nil },
-            'error' => nil
-          },
-          'state' => VCAP::CloudController::PackageModel::PENDING_STATE,
-          'metadata' => { 'labels' => {}, 'annotations' => {} },
-          'created_at' => iso8601,
-          'updated_at' => iso8601,
-          'links' => {
-            'self'   => { 'href' => "#{link_prefix}/v3/packages/#{guid}" },
-            'upload' => { 'href' => "#{link_prefix}/v3/packages/#{guid}/upload", 'method' => 'POST' },
-            'download' => { 'href' => "#{link_prefix}/v3/packages/#{guid}/download", 'method' => 'GET' },
-            'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
-          }
-        }
-        parsed_response = MultiJson.load(last_response.body)
-        expect(last_response.status).to eq(200)
-        expect(parsed_response).to be_a_response_like(expected_response)
-
-        expected_metadata = { package_guid: package_model.guid }.to_json
-
-        event = VCAP::CloudController::Event.last
-        expect(event.values).to include({
-          type:              'audit.app.package.upload',
-          actor:             user.guid,
-          actor_type:        'user',
-          actor_name:        email,
-          actor_username:    user_name,
-          actee:             'woof',
-          actee_type:        'app',
-          actee_name:        'meow',
-          metadata:          expected_metadata,
-          space_guid:        space.guid,
-          organization_guid: space.organization.guid
-        })
-      end
+      include_examples :upload_bits_successfully
     end
   end
 
