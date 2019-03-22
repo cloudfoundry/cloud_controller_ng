@@ -9,21 +9,21 @@ module VCAP::CloudController
       it { is_expected.to have_associated :default_space, class: Space }
       it do
         is_expected.to have_associated :managed_organizations, associated_instance: ->(user) {
-          org = FactoryBot.create(:organization)
+          org = Organization.make
           user.add_organization(org)
           org
         }
       end
       it do
         is_expected.to have_associated :billing_managed_organizations, associated_instance: ->(user) {
-          org = FactoryBot.create(:organization)
+          org = Organization.make
           user.add_organization(org)
           org
         }
       end
       it do
         is_expected.to have_associated :audited_organizations, associated_instance: ->(user) {
-          org = FactoryBot.create(:organization)
+          org = Organization.make
           user.add_organization(org)
           org
         }
@@ -47,7 +47,7 @@ module VCAP::CloudController
     end
 
     describe '#remove_spaces' do
-      let(:org) { FactoryBot.create(:organization) }
+      let(:org) { Organization.make }
       let(:user) { User.make }
       let(:space) { Space.make }
 
@@ -124,7 +124,7 @@ module VCAP::CloudController
     end
 
     describe 'relationships' do
-      let(:org) { FactoryBot.create(:organization) }
+      let(:org) { Organization.make }
       let(:user) { User.make }
 
       context 'when a user is a member of organzation' do
@@ -261,7 +261,7 @@ module VCAP::CloudController
     describe '#membership_spaces' do
       it 'returns a list of spaces that the user is a member of' do
         user = User.make
-        organization = FactoryBot.create(:organization)
+        organization = Organization.make
         organization.add_user user
         developer_space = Space.make organization: organization
         auditor_space = Space.make organization: organization

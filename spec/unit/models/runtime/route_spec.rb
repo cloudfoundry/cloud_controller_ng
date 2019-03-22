@@ -145,7 +145,7 @@ module VCAP::CloudController
           end
 
           context 'private domain' do
-            let(:org) { FactoryBot.create(:organization) }
+            let(:org) { Organization.make }
             let(:domain) { PrivateDomain.make(owning_organization: org) }
             let(:route) { Route.make(domain: domain, space: Space.make(organization: org)) }
 
@@ -1030,7 +1030,7 @@ module VCAP::CloudController
     end
 
     describe 'relations' do
-      let(:org) { FactoryBot.create(:organization) }
+      let(:org) { Organization.make }
       let(:space_a) { Space.make(organization: org) }
       let(:domain_a) { PrivateDomain.make(owning_organization: org) }
 

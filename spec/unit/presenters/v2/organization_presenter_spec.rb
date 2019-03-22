@@ -18,7 +18,7 @@ module CloudController::Presenters::V2
       end
 
       let(:org) do
-        FactoryBot.create(:organization,
+        VCAP::CloudController::Organization.make(
           name: 'george',
           billing_enabled: true,
           quota_definition_guid: quota_definition.guid,

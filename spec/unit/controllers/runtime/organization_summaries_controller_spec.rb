@@ -10,7 +10,7 @@ module VCAP::CloudController
     free_mem_size = 1024
     num_apps = num_prod_apps + num_free_apps
 
-    let(:org) { FactoryBot.create(:organization) }
+    let(:org) { Organization.make }
 
     before do
       @spaces = []

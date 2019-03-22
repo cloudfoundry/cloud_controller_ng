@@ -98,7 +98,7 @@ module VCAP::CloudController
 
     context 'when the isolation segment is set as the org default' do
       let(:assigner) { IsolationSegmentAssign.new }
-      let(:org) { FactoryBot.create(:organization) }
+      let(:org) { Organization.make }
 
       before do
         assigner.assign(isolation_segment, [org])
@@ -118,7 +118,7 @@ module VCAP::CloudController
 
     context 'when the isolation segment is assigned to an org' do
       let(:assigner) { IsolationSegmentAssign.new }
-      let(:org) { FactoryBot.create(:organization) }
+      let(:org) { Organization.make }
 
       before do
         assigner.assign(isolation_segment, [org])

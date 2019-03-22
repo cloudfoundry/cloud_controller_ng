@@ -4,7 +4,7 @@ module VCAP::CloudController
   RSpec.describe SpaceQuotaDefinitionAccess, type: :access do
     subject(:access) { SpaceQuotaDefinitionAccess.new(Security::AccessContext.new) }
     let(:user) { VCAP::CloudController::User.make }
-    let(:org) { FactoryBot.create(:organization) }
+    let(:org) { Organization.make }
     let(:scopes) { nil }
     let(:space) { Space.make(organization: org) }
     let(:object) { VCAP::CloudController::SpaceQuotaDefinition.make(organization: org) }
@@ -20,7 +20,7 @@ module VCAP::CloudController
       it_behaves_like :full_access
 
       context 'when the organization is suspended' do
-        let(:org) { FactoryBot.create(:organization, status: 'suspended') }
+        let(:org) { Organization.make(status: 'suspended') }
 
         it_behaves_like :read_only_access
       end
@@ -106,7 +106,7 @@ module VCAP::CloudController
 
     context 'user in a different organization (defensive)' do
       before do
-        different_organization = FactoryBot.create(:organization)
+        different_organization = VCAP::CloudController::Organization.make
         different_organization.add_user(user)
       end
 
@@ -115,7 +115,7 @@ module VCAP::CloudController
 
     context 'manager in a different organization (defensive)' do
       before do
-        different_organization = FactoryBot.create(:organization)
+        different_organization = VCAP::CloudController::Organization.make
         different_organization.add_manager(user)
       end
 

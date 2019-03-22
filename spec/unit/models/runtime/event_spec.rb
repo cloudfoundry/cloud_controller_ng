@@ -95,7 +95,7 @@ module VCAP::CloudController
       context 'when the space is deleted' do
         let(:space_guid) { 'space-guid-1234' }
 
-        let(:new_org) { FactoryBot.create(:organization) }
+        let(:new_org) { Organization.make }
         let(:new_space) { Space.make(guid: space_guid, organization: new_org) }
         let!(:new_event) { Event.make(space: new_space) }
 

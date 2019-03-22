@@ -22,7 +22,7 @@ module VCAP::CloudController
     end
 
     context 'when the segment is assigned as an orgs default' do
-      let(:org) { FactoryBot.create(:organization) }
+      let(:org) { Organization.make }
 
       before do
         assigner.assign(isolation_segment_model, [org])
@@ -38,7 +38,7 @@ module VCAP::CloudController
     end
 
     context 'when the segment is assigned as a spaces default' do
-      let(:org) { FactoryBot.create(:organization) }
+      let(:org) { Organization.make }
       let(:space) { Space.make(organization: org) }
 
       before do

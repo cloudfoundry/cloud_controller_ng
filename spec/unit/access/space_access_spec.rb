@@ -5,7 +5,7 @@ module VCAP::CloudController
     let(:queryer) { instance_spy(Permissions::Queryer) }
 
     subject(:access) { SpaceAccess.new(Security::AccessContext.new(queryer)) }
-    let(:org) { FactoryBot.create(:organization) }
+    let(:org) { VCAP::CloudController::Organization.make }
     let(:user) { VCAP::CloudController::User.make }
     let(:scopes) { nil }
 

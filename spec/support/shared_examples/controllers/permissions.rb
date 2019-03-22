@@ -1,6 +1,6 @@
 shared_context 'permissions' do
   before do
-    @org_a = FactoryBot.create(:organization)
+    @org_a = VCAP::CloudController::Organization.make
     @org_a_manager = VCAP::CloudController::User.make
     @org_a_member = VCAP::CloudController::User.make
     @org_a_billing_manager = VCAP::CloudController::User.make
@@ -21,7 +21,7 @@ shared_context 'permissions' do
     @space_a.add_developer(@space_a_developer)
     @space_a.add_auditor(@space_a_auditor)
 
-    @org_b = FactoryBot.create(:organization)
+    @org_b = VCAP::CloudController::Organization.make
     @org_b_manager = VCAP::CloudController::User.make
     @org_b_member = VCAP::CloudController::User.make
     @org_b_billing_manager = VCAP::CloudController::User.make

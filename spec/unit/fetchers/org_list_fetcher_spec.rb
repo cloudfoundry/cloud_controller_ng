@@ -4,11 +4,11 @@ require 'fetchers/org_list_fetcher'
 
 module VCAP::CloudController
   RSpec.describe OrgListFetcher do
-    let!(:org1) { FactoryBot.create(:organization, name: 'Marmot') }
-    let!(:org2) { FactoryBot.create(:organization, name: 'Rat') }
-    let!(:org3) { FactoryBot.create(:organization, name: 'Beaver') }
-    let!(:org4) { FactoryBot.create(:organization, name: 'Capybara') }
-    let!(:org5) { FactoryBot.create(:organization, name: 'Groundhog') }
+    let!(:org1) { Organization.make(name: 'Marmot') }
+    let!(:org2) { Organization.make(name: 'Rat') }
+    let!(:org3) { Organization.make(name: 'Beaver') }
+    let!(:org4) { Organization.make(name: 'Capybara') }
+    let!(:org5) { Organization.make(name: 'Groundhog') }
     let(:some_org_guids) { [org1.guid, org3.guid, org4.guid] }
 
     let(:fetcher) { OrgListFetcher.new }

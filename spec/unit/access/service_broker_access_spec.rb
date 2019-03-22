@@ -4,7 +4,7 @@ module VCAP::CloudController
   RSpec.describe ServiceBrokerAccess, type: :access do
     subject(:access) { ServiceBrokerAccess.new(Security::AccessContext.new) }
     let(:user) { VCAP::CloudController::User.make }
-    let(:org) { FactoryBot.create(:organization) }
+    let(:org) { VCAP::CloudController::Organization.make }
     let(:space) { VCAP::CloudController::Space.make(organization: org) }
     let(:object) { VCAP::CloudController::ServiceBroker.make }
     let(:broker_with_space) { VCAP::CloudController::ServiceBroker.make space: space }
@@ -90,7 +90,7 @@ module VCAP::CloudController
 
     context 'user in a different organization (defensive)' do
       before do
-        different_organization = FactoryBot.create(:organization)
+        different_organization = VCAP::CloudController::Organization.make
         different_organization.add_user(user)
       end
 
@@ -100,7 +100,7 @@ module VCAP::CloudController
 
     context 'manager in a different organization (defensive)' do
       before do
-        different_organization = FactoryBot.create(:organization)
+        different_organization = VCAP::CloudController::Organization.make
         different_organization.add_manager(user)
       end
 

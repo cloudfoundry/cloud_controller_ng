@@ -20,7 +20,7 @@ module VCAP::CloudController
       end
 
       context 'with app spaces' do
-        let(:org) { FactoryBot.create(:organization) }
+        let(:org) { Organization.make }
         let(:as) { Space.make(organization: org) }
         let(:api) {
           SecurityContext.set(user)
@@ -63,7 +63,7 @@ module VCAP::CloudController
       end
 
       context 'with app spaces' do
-        let(:org) { FactoryBot.create(:organization) }
+        let(:org) { Organization.make }
         let(:as1) { Space.make(organization: org) }
         let(:as2) { Space.make(organization: org) }
         let(:api) {

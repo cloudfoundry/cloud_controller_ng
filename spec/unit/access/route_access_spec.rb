@@ -7,7 +7,7 @@ module VCAP::CloudController
     subject(:access) { RouteAccess.new(Security::AccessContext.new(queryer)) }
 
     let(:user) { VCAP::CloudController::User.make }
-    let(:org) { FactoryBot.create(:organization) }
+    let(:org) { VCAP::CloudController::Organization.make }
     let(:space) { VCAP::CloudController::Space.make(organization: org) }
     let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: org) }
     let(:flag) { FeatureFlag.make(name: 'route_creation', enabled: false) }

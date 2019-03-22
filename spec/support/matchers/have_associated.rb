@@ -4,13 +4,7 @@ RSpec::Matchers.define :have_associated do |association, options={}|
   end
   match do |_|
     instance = options[:test_instance]
-    begin
-      instance ||= described_class.make
-    rescue RuntimeError => e
-      raise unless e.message.match?(/No blueprint for class/)
-
-      instance ||= FactoryBot.create(described_class.name.demodulize.underscore.to_sym)
-    end
+    instance ||= described_class.make
     associated_instance = get_associated_instance(instance, association, options)
 
     if association[-1] == 's'
@@ -27,15 +21,7 @@ RSpec::Matchers.define :have_associated do |association, options={}|
       options[:associated_instance].call(instance)
     else
       associated_class = options[:class] || "VCAP::CloudController::#{association.to_s.classify}".constantize
-      begin
-        result = associated_class.make
-      rescue RuntimeError => e
-        raise unless e.message.match?(/No blueprint for class/)
-
-        result = FactoryBot.create(associated_class.name.demodulize.underscore.to_sym)
-      end
-
-      result
+      associated_class.make
     end
   end
 end

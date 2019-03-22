@@ -321,7 +321,7 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
   end
 
   describe 'DELETE /v2/organizations/:guid/:role' do
-    let(:org) { FactoryBot.create(:organization) }
+    let(:org) { VCAP::CloudController::Organization.make }
 
     ORG_ROLES.each do |role|
       describe "DELETE /v2/organizations/:guid/#{role}s" do
@@ -424,7 +424,7 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
   end
 
   describe 'DELETE /v2/organizations/:guid/:role/:user_guid' do
-    let(:org) { FactoryBot.create(:organization) }
+    let(:org) { VCAP::CloudController::Organization.make }
 
     ORG_ROLES.each do |role|
       describe "DELETE /v2/organizations/:guid/#{role}s/:user_guid" do
@@ -453,7 +453,7 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
   end
 
   describe 'POST /v2/spaces' do
-    let(:org) { FactoryBot.create(:organization, user_guids: [user_id]) }
+    let(:org) { VCAP::CloudController::Organization.make(user_guids: [user_id]) }
 
     it 'creates the space roles' do
       post '/v2/spaces', {
@@ -495,7 +495,7 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
   end
 
   describe 'DELETE /v2/spaces/:guid' do
-    let(:org) { FactoryBot.create(:organization, user_guids: [user_id]) }
+    let(:org) { VCAP::CloudController::Organization.make(user_guids: [user_id]) }
 
     let(:worker) { Delayed::Worker.new }
 
@@ -623,7 +623,7 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
   end
 
   describe 'DELETE /v2/spaces/:guid/:role' do
-    let(:org) { FactoryBot.create(:organization) }
+    let(:org) { VCAP::CloudController::Organization.make }
     let(:space) {
       VCAP::CloudController::Space.make(
         organization: org,
@@ -652,7 +652,7 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
   end
 
   describe 'DELETE /v2/spaces/:guid/:role/:user_guid' do
-    let(:org) { FactoryBot.create(:organization) }
+    let(:org) { VCAP::CloudController::Organization.make }
     let(:space) {
       VCAP::CloudController::Space.make(
         organization: org,

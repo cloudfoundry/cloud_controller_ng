@@ -4,7 +4,7 @@ require 'fetchers/service_instance_fetcher'
 module VCAP::CloudController
   RSpec.describe ServiceInstanceFetcher do
     describe '#fetch' do
-      let(:org) { FactoryBot.create(:organization) }
+      let(:org) { Organization.make }
       let(:space) { Space.make(organization: org) }
       let(:service) { Service.make(:v2) }
       let(:plan) { ServicePlan.make(service: service) }

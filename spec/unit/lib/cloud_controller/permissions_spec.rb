@@ -4,7 +4,7 @@ module VCAP::CloudController
   RSpec.describe Permissions do
     let(:user) { User.make }
     let(:space) { Space.make(organization: org) }
-    let(:org) { FactoryBot.create(:organization) }
+    let(:org) { Organization.make }
     let(:space_guid) { space.guid }
     let(:org_guid)   { org.guid }
     let(:permissions) { Permissions.new(user) }
@@ -74,8 +74,8 @@ module VCAP::CloudController
         user = set_current_user_as_admin
         subject = Permissions.new(user)
 
-        org1_guid = FactoryBot.create(:organization).guid
-        org2_guid = FactoryBot.create(:organization).guid
+        org1_guid = Organization.make.guid
+        org2_guid = Organization.make.guid
 
         org_guids = subject.readable_org_guids
 
@@ -87,8 +87,8 @@ module VCAP::CloudController
         user = set_current_user_as_admin_read_only
         subject = Permissions.new(user)
 
-        org1_guid = FactoryBot.create(:organization).guid
-        org2_guid = FactoryBot.create(:organization).guid
+        org1_guid = Organization.make.guid
+        org2_guid = Organization.make.guid
 
         org_guids = subject.readable_org_guids
 
@@ -100,8 +100,8 @@ module VCAP::CloudController
         user = set_current_user_as_global_auditor
         subject = Permissions.new(user)
 
-        org1_guid = FactoryBot.create(:organization).guid
-        org2_guid = FactoryBot.create(:organization).guid
+        org1_guid = Organization.make.guid
+        org2_guid = Organization.make.guid
 
         org_guids = subject.readable_org_guids
 
@@ -257,9 +257,9 @@ module VCAP::CloudController
         user = set_current_user_as_admin
         subject = Permissions.new(user)
 
-        org1 = FactoryBot.create(:organization)
+        org1 = Organization.make
         space1 = Space.make(organization: org1)
-        org2 = FactoryBot.create(:organization)
+        org2 = Organization.make
         space2 = Space.make(organization: org2)
 
         space_guids = subject.readable_space_guids
@@ -272,9 +272,9 @@ module VCAP::CloudController
         user = set_current_user_as_admin_read_only
         subject = Permissions.new(user)
 
-        org1 = FactoryBot.create(:organization)
+        org1 = Organization.make
         space1 = Space.make(organization: org1)
-        org2 = FactoryBot.create(:organization)
+        org2 = Organization.make
         space2 = Space.make(organization: org2)
 
         space_guids = subject.readable_space_guids
@@ -287,9 +287,9 @@ module VCAP::CloudController
         user = set_current_user_as_global_auditor
         subject = Permissions.new(user)
 
-        org1 = FactoryBot.create(:organization)
+        org1 = Organization.make
         space1 = Space.make(organization: org1)
-        org2 = FactoryBot.create(:organization)
+        org2 = Organization.make
         space2 = Space.make(organization: org2)
 
         space_guids = subject.readable_space_guids
@@ -619,11 +619,11 @@ module VCAP::CloudController
         user = set_current_user_as_admin
         subject = Permissions.new(user)
 
-        org1 = FactoryBot.create(:organization)
+        org1 = Organization.make
         space1 = Space.make(organization: org1)
         route1 = Route.make(space: space1)
         route2 = Route.make(space: space1)
-        org2 = FactoryBot.create(:organization)
+        org2 = Organization.make
         space2 = Space.make(organization: org2)
         route3 = Route.make(space: space2)
 
@@ -638,11 +638,11 @@ module VCAP::CloudController
         user = set_current_user_as_admin
         subject = Permissions.new(user)
 
-        org1 = FactoryBot.create(:organization)
+        org1 = Organization.make
         space1 = Space.make(organization: org1)
         route1 = Route.make(space: space1)
         route2 = Route.make(space: space1)
-        org2 = FactoryBot.create(:organization)
+        org2 = Organization.make
         space2 = Space.make(organization: org2)
         route3 = Route.make(space: space2)
 
@@ -657,11 +657,11 @@ module VCAP::CloudController
         user = set_current_user_as_admin
         subject = Permissions.new(user)
 
-        org1 = FactoryBot.create(:organization)
+        org1 = Organization.make
         space1 = Space.make(organization: org1)
         route1 = Route.make(space: space1)
         route2 = Route.make(space: space1)
-        org2 = FactoryBot.create(:organization)
+        org2 = Organization.make
         space2 = Space.make(organization: org2)
         route3 = Route.make(space: space2)
 
@@ -673,22 +673,22 @@ module VCAP::CloudController
       end
 
       it 'returns route guids where the user has an appropriate org membership' do
-        manager_org = FactoryBot.create(:organization)
+        manager_org = Organization.make
         manager_space = Space.make(organization: manager_org)
         manager_route = Route.make(space: manager_space)
         manager_org.add_manager(user)
 
-        auditor_org = FactoryBot.create(:organization)
+        auditor_org = Organization.make
         auditor_space = Space.make(organization: auditor_org)
         auditor_route = Route.make(space: auditor_space)
         auditor_org.add_auditor(user)
 
-        billing_manager_org = FactoryBot.create(:organization)
+        billing_manager_org = Organization.make
         billing_manager_space = Space.make(organization: billing_manager_org)
         billing_manager_route = Route.make(space: billing_manager_space)
         billing_manager_org.add_billing_manager(user)
 
-        member_org = FactoryBot.create(:organization)
+        member_org = Organization.make
         member_space = Space.make(organization: member_org)
         member_route = Route.make(space: member_space)
         member_org.add_user(user)
@@ -701,7 +701,7 @@ module VCAP::CloudController
       end
 
       it 'returns route guids where the user has an appropriate space membership' do
-        org = FactoryBot.create(:organization)
+        org = Organization.make
         org.add_user(user)
 
         developer_space = Space.make(organization: org)
@@ -796,10 +796,10 @@ module VCAP::CloudController
         user = set_current_user_as_admin
         subject = Permissions.new(user)
 
-        org1 = FactoryBot.create(:organization)
+        org1 = Organization.make
         space1 = Space.make(organization: org1)
         app1 = AppModel.make(space: space1)
-        org2 = FactoryBot.create(:organization)
+        org2 = Organization.make
         space2 = Space.make(organization: org2)
         app2 = AppModel.make(space: space2)
 
@@ -813,10 +813,10 @@ module VCAP::CloudController
         user = set_current_user_as_admin_read_only
         subject = Permissions.new(user)
 
-        org1 = FactoryBot.create(:organization)
+        org1 = Organization.make
         space1 = Space.make(organization: org1)
         app1 = AppModel.make(space: space1)
-        org2 = FactoryBot.create(:organization)
+        org2 = Organization.make
         space2 = Space.make(organization: org2)
         app2 = AppModel.make(space: space2)
 
@@ -830,10 +830,10 @@ module VCAP::CloudController
         user = set_current_user_as_global_auditor
         subject = Permissions.new(user)
 
-        org1 = FactoryBot.create(:organization)
+        org1 = Organization.make
         space1 = Space.make(organization: org1)
         app1 = AppModel.make(space: space1)
-        org2 = FactoryBot.create(:organization)
+        org2 = Organization.make
         space2 = Space.make(organization: org2)
         app2 = AppModel.make(space: space2)
 
@@ -844,22 +844,22 @@ module VCAP::CloudController
       end
 
       it 'returns app guids where the user has an appropriate org membership' do
-        manager_org = FactoryBot.create(:organization)
+        manager_org = Organization.make
         manager_space = Space.make(organization: manager_org)
         manager_app = AppModel.make(space: manager_space)
         manager_org.add_manager(user)
 
-        auditor_org = FactoryBot.create(:organization)
+        auditor_org = Organization.make
         auditor_space = Space.make(organization: auditor_org)
         auditor_app = AppModel.make(space: auditor_space)
         auditor_org.add_auditor(user)
 
-        billing_manager_org = FactoryBot.create(:organization)
+        billing_manager_org = Organization.make
         billing_manager_space = Space.make(organization: billing_manager_org)
         billing_manager_app = AppModel.make(space: billing_manager_space)
         billing_manager_org.add_billing_manager(user)
 
-        member_org = FactoryBot.create(:organization)
+        member_org = Organization.make
         member_space = Space.make(organization: member_org)
         member_app = AppModel.make(space: member_space)
         member_org.add_user(user)
@@ -873,7 +873,7 @@ module VCAP::CloudController
       end
 
       it 'returns app guids where the user has an appropriate space membership' do
-        org = FactoryBot.create(:organization)
+        org = Organization.make
         org.add_user(user)
 
         developer_space = Space.make(organization: org)
@@ -899,11 +899,11 @@ module VCAP::CloudController
         user = set_current_user_as_admin
         subject = Permissions.new(user)
 
-        org1 = FactoryBot.create(:organization)
+        org1 = Organization.make
         space1 = Space.make(organization: org1)
         app1 = AppModel.make(space: space1)
         route_mapping1 = RouteMappingModel.make(app: app1)
-        org2 = FactoryBot.create(:organization)
+        org2 = Organization.make
         space2 = Space.make(organization: org2)
         app2 = AppModel.make(space: space2)
         route_mapping2 = RouteMappingModel.make(app: app2)
@@ -918,11 +918,11 @@ module VCAP::CloudController
         user = set_current_user_as_admin_read_only
         subject = Permissions.new(user)
 
-        org1 = FactoryBot.create(:organization)
+        org1 = Organization.make
         space1 = Space.make(organization: org1)
         app1 = AppModel.make(space: space1)
         route_mapping1 = RouteMappingModel.make(app: app1)
-        org2 = FactoryBot.create(:organization)
+        org2 = Organization.make
         space2 = Space.make(organization: org2)
         app2 = AppModel.make(space: space2)
         route_mapping2 = RouteMappingModel.make(app: app2)
@@ -937,11 +937,11 @@ module VCAP::CloudController
         user = set_current_user_as_global_auditor
         subject = Permissions.new(user)
 
-        org1 = FactoryBot.create(:organization)
+        org1 = Organization.make
         space1 = Space.make(organization: org1)
         app1 = AppModel.make(space: space1)
         route_mapping1 = RouteMappingModel.make(app: app1)
-        org2 = FactoryBot.create(:organization)
+        org2 = Organization.make
         space2 = Space.make(organization: org2)
         app2 = AppModel.make(space: space2)
         route_mapping2 = RouteMappingModel.make(app: app2)
@@ -953,25 +953,25 @@ module VCAP::CloudController
       end
 
       it 'returns app guids where the user has an appropriate org membership' do
-        manager_org = FactoryBot.create(:organization)
+        manager_org = Organization.make
         manager_space = Space.make(organization: manager_org)
         manager_app = AppModel.make(space: manager_space)
         manager_route_mapping = RouteMappingModel.make(app: manager_app)
         manager_org.add_manager(user)
 
-        auditor_org = FactoryBot.create(:organization)
+        auditor_org = Organization.make
         auditor_space = Space.make(organization: auditor_org)
         auditor_app = AppModel.make(space: auditor_space)
         auditor_route_mapping = RouteMappingModel.make(app: auditor_app)
         auditor_org.add_auditor(user)
 
-        billing_manager_org = FactoryBot.create(:organization)
+        billing_manager_org = Organization.make
         billing_manager_space = Space.make(organization: billing_manager_org)
         billing_manager_app = AppModel.make(space: billing_manager_space)
         billing_manager_route_mapping = RouteMappingModel.make(app: billing_manager_app)
         billing_manager_org.add_billing_manager(user)
 
-        member_org = FactoryBot.create(:organization)
+        member_org = Organization.make
         member_space = Space.make(organization: member_org)
         member_app = AppModel.make(space: member_space)
         member_route_mapping = RouteMappingModel.make(app: member_app)
@@ -986,7 +986,7 @@ module VCAP::CloudController
       end
 
       it 'returns app guids where the user has an appropriate space membership' do
-        org = FactoryBot.create(:organization)
+        org = Organization.make
         org.add_user(user)
 
         developer_space = Space.make(organization: org)

@@ -93,8 +93,8 @@ module VCAP::CloudController::Perm
 
         permissions = VCAP::CloudController::Perm::Permissions.new(perm_client: perm_client, user_id: user_id, issuer: issuer, roles: roles)
 
-        org1 = FactoryBot.create(:organization)
-        org2 = FactoryBot.create(:organization)
+        org1 = VCAP::CloudController::Organization.make
+        org2 = VCAP::CloudController::Organization.make
 
         org_guids = permissions.readable_org_guids
 
@@ -109,8 +109,8 @@ module VCAP::CloudController::Perm
 
         permissions = VCAP::CloudController::Perm::Permissions.new(perm_client: perm_client, user_id: user_id, issuer: issuer, roles: roles)
 
-        org1 = FactoryBot.create(:organization)
-        org2 = FactoryBot.create(:organization)
+        org1 = VCAP::CloudController::Organization.make
+        org2 = VCAP::CloudController::Organization.make
 
         org_guids = permissions.readable_org_guids
 
@@ -125,8 +125,8 @@ module VCAP::CloudController::Perm
 
         permissions = VCAP::CloudController::Perm::Permissions.new(perm_client: perm_client, user_id: user_id, issuer: issuer, roles: roles)
 
-        org1 = FactoryBot.create(:organization)
-        org2 = FactoryBot.create(:organization)
+        org1 = VCAP::CloudController::Organization.make
+        org2 = VCAP::CloudController::Organization.make
 
         org_guids = permissions.readable_org_guids
 
@@ -247,9 +247,9 @@ module VCAP::CloudController::Perm
 
         permissions = VCAP::CloudController::Perm::Permissions.new(perm_client: perm_client, user_id: user_id, issuer: issuer, roles: roles)
 
-        org1 = FactoryBot.create(:organization)
+        org1 = VCAP::CloudController::Organization.make
         space1 = VCAP::CloudController::Space.make(organization: org1)
-        org2 = FactoryBot.create(:organization)
+        org2 = VCAP::CloudController::Organization.make
         space2 = VCAP::CloudController::Space.make(organization: org2)
 
         space_guids = permissions.readable_space_guids
@@ -265,9 +265,9 @@ module VCAP::CloudController::Perm
 
         permissions = VCAP::CloudController::Perm::Permissions.new(perm_client: perm_client, user_id: user_id, issuer: issuer, roles: roles)
 
-        org1 = FactoryBot.create(:organization)
+        org1 = VCAP::CloudController::Organization.make
         space1 = VCAP::CloudController::Space.make(organization: org1)
-        org2 = FactoryBot.create(:organization)
+        org2 = VCAP::CloudController::Organization.make
         space2 = VCAP::CloudController::Space.make(organization: org2)
 
         space_guids = permissions.readable_space_guids
@@ -283,9 +283,9 @@ module VCAP::CloudController::Perm
 
         permissions = VCAP::CloudController::Perm::Permissions.new(perm_client: perm_client, user_id: user_id, issuer: issuer, roles: roles)
 
-        org1 = FactoryBot.create(:organization)
+        org1 = VCAP::CloudController::Organization.make
         space1 = VCAP::CloudController::Space.make(organization: org1)
-        org2 = FactoryBot.create(:organization)
+        org2 = VCAP::CloudController::Organization.make
         space2 = VCAP::CloudController::Space.make(organization: org2)
 
         space_guids = permissions.readable_space_guids
@@ -297,8 +297,8 @@ module VCAP::CloudController::Perm
       end
 
       it 'returns the list of space guids that the user can read via space roles and as an org manager without duplicates' do
-        org1 = FactoryBot.create(:organization)
-        org2 = FactoryBot.create(:organization)
+        org1 = VCAP::CloudController::Organization.make
+        org2 = VCAP::CloudController::Organization.make
         managed_org_guids = [org1.guid, org2.guid]
 
         space1 = VCAP::CloudController::Space.make(organization: org1)
@@ -590,10 +590,10 @@ module VCAP::CloudController::Perm
 
         permissions = VCAP::CloudController::Perm::Permissions.new(perm_client: perm_client, user_id: user_id, issuer: issuer, roles: roles)
 
-        org1 = FactoryBot.create(:organization)
+        org1 = VCAP::CloudController::Organization.make
         space1 = VCAP::CloudController::Space.make(organization: org1)
         route1 = VCAP::CloudController::Route.make(space: space1)
-        org2 = FactoryBot.create(:organization)
+        org2 = VCAP::CloudController::Organization.make
         space2 = VCAP::CloudController::Space.make(organization: org2)
         route2 = VCAP::CloudController::Route.make(space: space2)
 
@@ -610,10 +610,10 @@ module VCAP::CloudController::Perm
 
         permissions = VCAP::CloudController::Perm::Permissions.new(perm_client: perm_client, user_id: user_id, issuer: issuer, roles: roles)
 
-        org1 = FactoryBot.create(:organization)
+        org1 = VCAP::CloudController::Organization.make
         space1 = VCAP::CloudController::Space.make(organization: org1)
         route1 = VCAP::CloudController::Route.make(space: space1)
-        org2 = FactoryBot.create(:organization)
+        org2 = VCAP::CloudController::Organization.make
         space2 = VCAP::CloudController::Space.make(organization: org2)
         route2 = VCAP::CloudController::Route.make(space: space2)
 
@@ -630,10 +630,10 @@ module VCAP::CloudController::Perm
 
         permissions = VCAP::CloudController::Perm::Permissions.new(perm_client: perm_client, user_id: user_id, issuer: issuer, roles: roles)
 
-        org1 = FactoryBot.create(:organization)
+        org1 = VCAP::CloudController::Organization.make
         space1 = VCAP::CloudController::Space.make(organization: org1)
         route1 = VCAP::CloudController::Route.make(space: space1)
-        org2 = FactoryBot.create(:organization)
+        org2 = VCAP::CloudController::Organization.make
         space2 = VCAP::CloudController::Space.make(organization: org2)
         route2 = VCAP::CloudController::Route.make(space: space2)
 
@@ -646,8 +646,8 @@ module VCAP::CloudController::Perm
       end
 
       it 'returns the list of route guids that the user can read via org and space roles' do
-        org1 = FactoryBot.create(:organization)
-        org2 = FactoryBot.create(:organization)
+        org1 = VCAP::CloudController::Organization.make
+        org2 = VCAP::CloudController::Organization.make
         org_guids = [org1.guid, org2.guid]
 
         space1 = VCAP::CloudController::Space.make(organization: org1)
@@ -664,7 +664,7 @@ module VCAP::CloudController::Perm
           with(user_id: user_id, issuer: issuer, actions: org_actions).
           and_return(org_guids)
 
-        org3 = FactoryBot.create(:organization)
+        org3 = VCAP::CloudController::Organization.make
         space3 = VCAP::CloudController::Space.make(organization: org3)
         route4 = VCAP::CloudController::Route.make(space: space3)
         space4 = VCAP::CloudController::Space.make(organization: org3)
@@ -751,10 +751,10 @@ module VCAP::CloudController::Perm
 
         permissions = VCAP::CloudController::Perm::Permissions.new(perm_client: perm_client, user_id: user_id, issuer: issuer, roles: roles)
 
-        org1 = FactoryBot.create(:organization)
+        org1 = VCAP::CloudController::Organization.make
         space1 = VCAP::CloudController::Space.make(organization: org1)
         app1 = VCAP::CloudController::AppModel.make(space: space1)
-        org2 = FactoryBot.create(:organization)
+        org2 = VCAP::CloudController::Organization.make
         space2 = VCAP::CloudController::Space.make(organization: org2)
         app2 = VCAP::CloudController::AppModel.make(space: space2)
 
@@ -771,10 +771,10 @@ module VCAP::CloudController::Perm
 
         permissions = VCAP::CloudController::Perm::Permissions.new(perm_client: perm_client, user_id: user_id, issuer: issuer, roles: roles)
 
-        org1 = FactoryBot.create(:organization)
+        org1 = VCAP::CloudController::Organization.make
         space1 = VCAP::CloudController::Space.make(organization: org1)
         app1 = VCAP::CloudController::AppModel.make(space: space1)
-        org2 = FactoryBot.create(:organization)
+        org2 = VCAP::CloudController::Organization.make
         space2 = VCAP::CloudController::Space.make(organization: org2)
         app2 = VCAP::CloudController::AppModel.make(space: space2)
 
@@ -791,10 +791,10 @@ module VCAP::CloudController::Perm
 
         permissions = VCAP::CloudController::Perm::Permissions.new(perm_client: perm_client, user_id: user_id, issuer: issuer, roles: roles)
 
-        org1 = FactoryBot.create(:organization)
+        org1 = VCAP::CloudController::Organization.make
         space1 = VCAP::CloudController::Space.make(organization: org1)
         app1 = VCAP::CloudController::AppModel.make(space: space1)
-        org2 = FactoryBot.create(:organization)
+        org2 = VCAP::CloudController::Organization.make
         space2 = VCAP::CloudController::Space.make(organization: org2)
         app2 = VCAP::CloudController::AppModel.make(space: space2)
 
@@ -807,8 +807,8 @@ module VCAP::CloudController::Perm
       end
 
       it 'returns the list of app guids that the user can read via org and space roles' do
-        org1 = FactoryBot.create(:organization)
-        org2 = FactoryBot.create(:organization)
+        org1 = VCAP::CloudController::Organization.make
+        org2 = VCAP::CloudController::Organization.make
         org_guids = [org1.guid, org2.guid]
 
         space1 = VCAP::CloudController::Space.make(organization: org1)
@@ -825,7 +825,7 @@ module VCAP::CloudController::Perm
           with(user_id: user_id, issuer: issuer, actions: org_actions).
           and_return(org_guids)
 
-        org3 = FactoryBot.create(:organization)
+        org3 = VCAP::CloudController::Organization.make
         space3 = VCAP::CloudController::Space.make(organization: org3)
         app4 = VCAP::CloudController::AppModel.make(space: space3)
         space4 = VCAP::CloudController::Space.make(organization: org3)
@@ -857,11 +857,11 @@ module VCAP::CloudController::Perm
 
         permissions = VCAP::CloudController::Perm::Permissions.new(perm_client: perm_client, user_id: user_id, issuer: issuer, roles: roles)
 
-        org1 = FactoryBot.create(:organization)
+        org1 = VCAP::CloudController::Organization.make
         space1 = VCAP::CloudController::Space.make(organization: org1)
         app1 = VCAP::CloudController::AppModel.make(space: space1)
         route_mapping1 = VCAP::CloudController::RouteMappingModel.make(app: app1)
-        org2 = FactoryBot.create(:organization)
+        org2 = VCAP::CloudController::Organization.make
         space2 = VCAP::CloudController::Space.make(organization: org2)
         app2 = VCAP::CloudController::AppModel.make(space: space2)
         route_mapping2 = VCAP::CloudController::RouteMappingModel.make(app: app2)
@@ -879,11 +879,11 @@ module VCAP::CloudController::Perm
 
         permissions = VCAP::CloudController::Perm::Permissions.new(perm_client: perm_client, user_id: user_id, issuer: issuer, roles: roles)
 
-        org1 = FactoryBot.create(:organization)
+        org1 = VCAP::CloudController::Organization.make
         space1 = VCAP::CloudController::Space.make(organization: org1)
         app1 = VCAP::CloudController::AppModel.make(space: space1)
         route_mapping1 = VCAP::CloudController::RouteMappingModel.make(app: app1)
-        org2 = FactoryBot.create(:organization)
+        org2 = VCAP::CloudController::Organization.make
         space2 = VCAP::CloudController::Space.make(organization: org2)
         app2 = VCAP::CloudController::AppModel.make(space: space2)
         route_mapping2 = VCAP::CloudController::RouteMappingModel.make(app: app2)
@@ -901,11 +901,11 @@ module VCAP::CloudController::Perm
 
         permissions = VCAP::CloudController::Perm::Permissions.new(perm_client: perm_client, user_id: user_id, issuer: issuer, roles: roles)
 
-        org1 = FactoryBot.create(:organization)
+        org1 = VCAP::CloudController::Organization.make
         space1 = VCAP::CloudController::Space.make(organization: org1)
         app1 = VCAP::CloudController::AppModel.make(space: space1)
         route_mapping1 = VCAP::CloudController::RouteMappingModel.make(app: app1)
-        org2 = FactoryBot.create(:organization)
+        org2 = VCAP::CloudController::Organization.make
         space2 = VCAP::CloudController::Space.make(organization: org2)
         app2 = VCAP::CloudController::AppModel.make(space: space2)
         route_mapping2 = VCAP::CloudController::RouteMappingModel.make(app: app2)
@@ -919,8 +919,8 @@ module VCAP::CloudController::Perm
       end
 
       it 'returns the list of route mapping guids that the user can read via org and space roles' do
-        org1 = FactoryBot.create(:organization)
-        org2 = FactoryBot.create(:organization)
+        org1 = VCAP::CloudController::Organization.make
+        org2 = VCAP::CloudController::Organization.make
         org_guids = [org1.guid, org2.guid]
 
         space1 = VCAP::CloudController::Space.make(organization: org1)
@@ -940,7 +940,7 @@ module VCAP::CloudController::Perm
           with(user_id: user_id, issuer: issuer, actions: org_actions).
           and_return(org_guids)
 
-        org3 = FactoryBot.create(:organization)
+        org3 = VCAP::CloudController::Organization.make
         space3 = VCAP::CloudController::Space.make(organization: org3)
         app4 = VCAP::CloudController::AppModel.make(space: space3)
         route_mapping4 = VCAP::CloudController::RouteMappingModel.make(app: app4)
@@ -989,7 +989,7 @@ module VCAP::CloudController::Perm
 
     describe '#task_readable_space_guids' do
       it 'returns the list of space guids that the user has task.read access for either that space or the containing org' do
-        org = FactoryBot.create(:organization, guid: 'org-guid-1')
+        org = VCAP::CloudController::Organization.make(guid: 'org-guid-1')
         VCAP::CloudController::Space.make(guid: 'space-guid-3', organization: org)
 
         readable_resource_guids = ['org-guid-1/space-guid-1', 'org-guid-1/space-guid-2', 'org-guid-1/*']

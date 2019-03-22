@@ -13,9 +13,9 @@ module VCAP::CloudController
     let!(:isolation_segment_model_2) { FactoryBot.create(:isolation_segment, name: 'frank') }
     let!(:isolation_segment_model_3) { FactoryBot.create(:isolation_segment) }
 
-    let(:org1) { FactoryBot.create(:organization) }
-    let(:org2) { FactoryBot.create(:organization) }
-    let(:org3) { FactoryBot.create(:organization) }
+    let(:org1) { VCAP::CloudController::Organization.make }
+    let(:org2) { VCAP::CloudController::Organization.make }
+    let(:org3) { VCAP::CloudController::Organization.make }
 
     let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
 

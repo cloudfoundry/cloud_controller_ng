@@ -168,9 +168,9 @@ module VCAP::CloudController
         end
 
         context 'when filtering by org guid' do
-          let(:org1) { FactoryBot.create(:organization, guid: '1') }
-          let(:org2) { FactoryBot.create(:organization, guid: '2') }
-          let(:org3) { FactoryBot.create(:organization, guid: '3') }
+          let(:org1) { Organization.make(guid: '1') }
+          let(:org2) { Organization.make(guid: '2') }
+          let(:org3) { Organization.make(guid: '3') }
           let(:space1) { Space.make(organization: org1) }
           let(:space2) { Space.make(organization: org2) }
           let(:space3) { Space.make(organization: org3) }
@@ -618,7 +618,7 @@ module VCAP::CloudController
       end
 
       describe 'the space_guid parameter' do
-        let(:org) { FactoryBot.create(:organization) }
+        let(:org) { Organization.make }
         let(:space) { Space.make(organization: org) }
         let(:developer) { make_developer_for_space(space) }
         let(:instance) { UserProvidedServiceInstance.make(space: space) }

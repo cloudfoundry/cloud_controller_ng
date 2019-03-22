@@ -145,7 +145,7 @@ module VCAP::CloudController
 
     describe 'GET /v2/domains/:id' do
       let(:user) { User.make }
-      let(:organization) { FactoryBot.create(:organization) }
+      let(:organization) { Organization.make }
 
       before { set_current_user(user) }
 
@@ -274,7 +274,7 @@ module VCAP::CloudController
     describe 'POST /v2/domains' do
       context 'as an org manager' do
         let(:user) { User.make }
-        let(:organization) { FactoryBot.create(:organization) }
+        let(:organization) { Organization.make }
 
         let(:request_body) do
           MultiJson.dump({ name: 'blah.com', owning_organization_guid: organization.guid })

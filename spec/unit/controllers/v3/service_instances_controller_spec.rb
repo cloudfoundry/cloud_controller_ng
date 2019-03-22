@@ -484,7 +484,7 @@ RSpec.describe ServiceInstancesV3Controller, type: :controller do
     end
 
     context 'when the service instance plan is from a private space scoped broker' do
-      let(:target_org) { FactoryBot.create(:organization, name: 'target-org') }
+      let(:target_org) { VCAP::CloudController::Organization.make(name: 'target-org') }
       let(:target_space) { VCAP::CloudController::Space.make(name: 'target-space', organization: target_org) }
       let(:broker) { VCAP::CloudController::ServiceBroker.make(space: space) }
       let(:service) { VCAP::CloudController::Service.make(service_broker: broker, label: 'space-scoped-service') }

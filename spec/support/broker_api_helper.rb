@@ -84,7 +84,7 @@ module VCAP::CloudController::BrokerApiHelper
   end
 
   def setup_cc
-    org = FactoryBot.create(:organization)
+    org = VCAP::CloudController::Organization.make
     @org_guid = org.guid
     @space = VCAP::CloudController::Space.make(organization: org)
     @space_guid = @space.guid

@@ -7,8 +7,8 @@ module VCAP::CloudController
 
     let!(:isolation_segment_model) { FactoryBot.create(:isolation_segment) }
 
-    let(:org1) { FactoryBot.create(:organization) }
-    let(:org2) { FactoryBot.create(:organization) }
+    let(:org1) { VCAP::CloudController::Organization.make }
+    let(:org2) { VCAP::CloudController::Organization.make }
 
     let(:space1) { VCAP::CloudController::Space.make(organization: org1) }
     let(:space2) { VCAP::CloudController::Space.make(organization: org2) }

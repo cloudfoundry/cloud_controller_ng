@@ -272,7 +272,7 @@ module VCAP::CloudController
 
           PrivateDomain.create(
             name: config.get(:system_domain),
-            owning_organization: FactoryBot.create(:organization)
+            owning_organization: Organization.make
           )
           Seeds.create_seed_domains(config, system_org)
         end

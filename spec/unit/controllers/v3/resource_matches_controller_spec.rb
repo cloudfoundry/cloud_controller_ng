@@ -31,7 +31,7 @@ RSpec.describe ResourceMatchesController, type: :controller do
     end
 
     describe 'permissions by role' do
-      let(:org) { FactoryBot.create(:organization) }
+      let(:org) { VCAP::CloudController::Organization.make }
       let(:space) { VCAP::CloudController::Space.make(organization: org) }
 
       role_to_expected_http_response = {

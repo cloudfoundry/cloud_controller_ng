@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe VCAP::CloudController::OrganizationsController do
-    let(:org) { FactoryBot.create(:organization) }
+    let(:org) { Organization.make }
     let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
     let(:user_email) { Sham.email }
     let(:uaa_client) { instance_double(UaaClient) }
@@ -521,7 +521,7 @@ module VCAP::CloudController
     end
 
     describe 'PUT /v2/organizations/:guid' do
-      let(:org) { FactoryBot.create(:organization) }
+      let(:org) { Organization.make }
 
       before do
         set_current_user_as_admin(email: user_email)
@@ -731,7 +731,7 @@ module VCAP::CloudController
       context 'when the user is admin' do
         let(:mgr) { User.make(guid: 'mgr-lemon') }
         let(:user) { User.make(guid: 'user-lime') }
-        let(:org) { FactoryBot.create(:organization, manager_guids: [mgr.guid], user_guids: [mgr.guid, user.guid]) }
+        let(:org) { Organization.make(manager_guids: [mgr.guid], user_guids: [mgr.guid, user.guid]) }
         before do
           allow(uaa_client).to receive(:usernames_for_ids).and_return({})
         end
@@ -769,7 +769,7 @@ module VCAP::CloudController
 
       context 'for a suspended organization as manager' do
         let(:mgr) { User.make(guid: 'mgr-lemon') }
-        let(:org) { FactoryBot.create(:organization, manager_guids: [mgr.guid], user_guids: [mgr.guid]) }
+        let(:org) { Organization.make(manager_guids: [mgr.guid], user_guids: [mgr.guid]) }
 
         before do
           allow(uaa_client).to receive(:usernames_for_ids).and_return({})
@@ -807,7 +807,7 @@ module VCAP::CloudController
     end
 
     describe 'GET', '/v2/organizations/:guid/services' do
-      let(:other_org) { FactoryBot.create(:organization) }
+      let(:other_org) { Organization.make }
       let(:space_one) { Space.make(organization: org) }
       let(:user) { make_developer_for_space(space_one) }
 
@@ -969,7 +969,7 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/organizations/:guid/domains' do
-      let(:organization) { FactoryBot.create(:organization) }
+      let(:organization) { Organization.make }
       let(:manager) { make_manager_for_org(organization) }
 
       before do
@@ -987,7 +987,7 @@ module VCAP::CloudController
       end
 
       context 'space roles' do
-        let(:organization) { FactoryBot.create(:organization) }
+        let(:organization) { Organization.make }
         let(:space) { Space.make(organization: organization) }
 
         context 'space developers without org role' do
@@ -1023,7 +1023,7 @@ module VCAP::CloudController
       let(:mgr) { User.make }
       let(:user) { User.make }
       let(:org_users) { [user.guid] }
-      let(:org) { FactoryBot.create(:organization, manager_guids: org_managers, user_guids: org_users) }
+      let(:org) { Organization.make(manager_guids: org_managers, user_guids: org_users) }
       let(:org_managers) { [mgr.guid] }
       let(:org_space_empty) { Space.make(organization: org) }
       let(:org_space_full)  { Space.make(organization: org, manager_guids: [user.guid], developer_guids: [user.guid], auditor_guids: [user.guid]) }
@@ -1128,7 +1128,7 @@ module VCAP::CloudController
           end
 
           context 'multiple organizations' do
-            let(:org_2) { FactoryBot.create(:organization, user_guids: [user.guid]) }
+            let(:org_2) { Organization.make(user_guids: [user.guid]) }
             let(:org2_space) { Space.make(organization: org_2, developer_guids: [user.guid]) }
 
             it 'should remove all user roles from one organization, but no the other' do
@@ -1166,7 +1166,7 @@ module VCAP::CloudController
         end
 
         describe 'removing the last user' do
-          let(:org) { FactoryBot.create(:organization) }
+          let(:org) { Organization.make }
           let(:user) { User.make }
 
           before do
@@ -1218,8 +1218,8 @@ module VCAP::CloudController
 
       context 'PUT /v2/organizations/org_guid/private_domains/domain_guid' do
         context 'when PrivateDomain is shared' do
-          let(:org1) { FactoryBot.create(:organization) }
-          let(:org2) { FactoryBot.create(:organization) }
+          let(:org1) { Organization.make }
+          let(:org2) { Organization.make }
           let(:private_domain) { PrivateDomain.make(owning_organization: org1) }
           let(:user) { User.make }
           let(:manager) { User.make }
@@ -1262,7 +1262,7 @@ module VCAP::CloudController
     describe 'GET /v2/organizations/:guid/users' do
       let(:mgr) { User.make }
       let(:user) { User.make }
-      let(:org) { FactoryBot.create(:organization, manager_guids: [mgr.guid], user_guids: [mgr.guid, user.guid]) }
+      let(:org) { Organization.make(manager_guids: [mgr.guid], user_guids: [mgr.guid, user.guid]) }
 
       before do
         allow(uaa_client).to receive(:usernames_for_ids).and_return({})
@@ -1300,7 +1300,7 @@ module VCAP::CloudController
     end
 
     describe 'deleting an organization' do
-      let(:org) { FactoryBot.create(:organization) }
+      let(:org) { Organization.make }
 
       before do
         set_current_user_as_admin(email: user_email)
@@ -1549,7 +1549,7 @@ module VCAP::CloudController
       before { set_current_user_as_admin }
 
       context 'when PrivateDomain is owned by the organization' do
-        let(:organization) { FactoryBot.create(:organization) }
+        let(:organization) { Organization.make }
         let(:private_domain) { PrivateDomain.make(owning_organization: organization) }
 
         it 'fails' do

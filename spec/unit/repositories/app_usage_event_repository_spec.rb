@@ -307,7 +307,7 @@ module VCAP::CloudController
       end
 
       describe '#create_from_build' do
-        let(:org) { FactoryBot.create(:organization, guid: 'org-1') }
+        let(:org) { Organization.make(guid: 'org-1') }
         let(:space) { Space.make(guid: 'space-1', name: 'space-name', organization: org) }
         let(:app_model) { AppModel.make(guid: 'app-1', name: 'frank-app', space: space) }
         let(:package_state) { PackageModel::READY_STATE }

@@ -436,7 +436,7 @@ RSpec.describe PackagesController, type: :controller do
   end
 
   describe '#update' do
-    let!(:org) { FactoryBot.create(:organization, name: "Harold's Farm") }
+    let!(:org) { VCAP::CloudController::Organization.make(name: "Harold's Farm") }
     let!(:space) { VCAP::CloudController::Space.make(name: 'roosters', organization: org) }
     let(:app_model) { VCAP::CloudController::AppModel.make(name: 'needed to put the package in the space', space: space) }
     let(:package) { VCAP::CloudController::PackageModel.make(app: app_model) }

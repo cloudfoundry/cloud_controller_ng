@@ -7,7 +7,7 @@ module VCAP::CloudController
     let(:user1) { User.new(guid: '1') }
     let(:user2) { User.new(guid: '2') }
     let(:users) { [user1, user2] }
-    let(:org) { FactoryBot.create(:organization) }
+    let(:org) { Organization.make }
     let(:space) { Space.make(organization: org) }
 
     before do

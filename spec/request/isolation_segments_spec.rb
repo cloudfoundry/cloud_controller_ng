@@ -43,8 +43,8 @@ RSpec.describe 'IsolationSegmentModels' do
   end
 
   describe 'GET /v3/isolation_segments/:guid/relationships/organizations' do
-    let(:org1) { FactoryBot.create(:organization) }
-    let(:org2) { FactoryBot.create(:organization) }
+    let(:org1) { VCAP::CloudController::Organization.make }
+    let(:org2) { VCAP::CloudController::Organization.make }
     let(:isolation_segment_model) { FactoryBot.create(:isolation_segment) }
 
     before do
@@ -102,8 +102,8 @@ RSpec.describe 'IsolationSegmentModels' do
   end
 
   describe 'POST /v3/isolation_segments/:guid/relationships/organizations' do
-    let(:org1) { FactoryBot.create(:organization) }
-    let(:org2) { FactoryBot.create(:organization) }
+    let(:org1) { VCAP::CloudController::Organization.make }
+    let(:org2) { VCAP::CloudController::Organization.make }
     let(:isolation_segment) { FactoryBot.create(:isolation_segment) }
 
     it 'assigns the isolation segment to the organization' do
@@ -133,8 +133,8 @@ RSpec.describe 'IsolationSegmentModels' do
   end
 
   describe 'DELETE /v3/isolation_segments/:guid/relationships/organizations/:org_guid' do
-    let(:org1) { FactoryBot.create(:organization) }
-    let(:org2) { FactoryBot.create(:organization) }
+    let(:org1) { VCAP::CloudController::Organization.make }
+    let(:org2) { VCAP::CloudController::Organization.make }
     let(:isolation_segment) { FactoryBot.create(:isolation_segment) }
 
     before do
@@ -217,8 +217,8 @@ RSpec.describe 'IsolationSegmentModels' do
   end
 
   describe 'GET /v3/isolation_segments' do
-    let(:org1) { FactoryBot.create(:organization) }
-    let(:org2) { FactoryBot.create(:organization) }
+    let(:org1) { VCAP::CloudController::Organization.make }
+    let(:org2) { VCAP::CloudController::Organization.make }
 
     it 'returns the seeded isolation segment' do
       get '/v3/isolation_segments', nil, user_header

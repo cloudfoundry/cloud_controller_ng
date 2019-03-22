@@ -70,9 +70,9 @@ module VCAP::CloudController
       end
 
       describe 'organizations' do
-        let(:org) { FactoryBot.create(:organization) }
-        let(:org_1) { FactoryBot.create(:organization) }
-        let(:org_2) { FactoryBot.create(:organization) }
+        let(:org) { Organization.make }
+        let(:org_1) { Organization.make }
+        let(:org_2) { Organization.make }
 
         it 'allows one isolation segment to be referenced by multiple organizations' do
           assigner.assign(isolation_segment_model, [org_1, org_2])

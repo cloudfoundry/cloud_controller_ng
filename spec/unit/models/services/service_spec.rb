@@ -47,7 +47,7 @@ module VCAP::CloudController
     describe '#user_visibility_filter' do
       let(:private_service) { Service.make }
       let(:public_service) { Service.make }
-      let(:nonadmin_org) { FactoryBot.create(:organization) }
+      let(:nonadmin_org) { Organization.make }
       let(:admin_user) { User.make }
       let(:nonadmin_user) { User.make }
       let!(:private_plan) { ServicePlan.make service: private_service, public: false }
@@ -306,7 +306,7 @@ module VCAP::CloudController
         visible_private_plan = ServicePlan.make(public: false)
         visible_private_service = visible_private_plan.service
 
-        organization = FactoryBot.create(:organization)
+        organization = Organization.make
         ServicePlanVisibility.make(organization: organization, service_plan: visible_private_plan)
 
         visible = Service.organization_visible(organization).all
@@ -317,7 +317,7 @@ module VCAP::CloudController
     end
 
     describe '.space_or_org_visible_for_user' do
-      let(:org) { FactoryBot.create(:organization) }
+      let(:org) { Organization.make }
       let(:space) { Space.make(organization: org) }
       let(:dev) { make_developer_for_space(space) }
       let(:outside_dev) { User.make(admin: false, active: true) }

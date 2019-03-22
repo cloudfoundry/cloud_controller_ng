@@ -4,9 +4,9 @@ require 'isolation_segment_assign'
 RSpec.describe IsolationSegmentsController, type: :controller do
   let(:user) { set_current_user(VCAP::CloudController::User.make) }
   let(:isolation_segment_model) { FactoryBot.create(:isolation_segment) }
-  let(:org1) { FactoryBot.create(:organization) }
-  let(:org2) { FactoryBot.create(:organization) }
-  let(:org3) { FactoryBot.create(:organization) }
+  let(:org1) { VCAP::CloudController::Organization.make }
+  let(:org2) { VCAP::CloudController::Organization.make }
+  let(:org3) { VCAP::CloudController::Organization.make }
   let(:space) { VCAP::CloudController::Space.make(organization: org1) }
 
   let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
@@ -161,8 +161,8 @@ RSpec.describe IsolationSegmentsController, type: :controller do
 
   describe '#assign_allowed_organizations' do
     let(:isolation_segment_model) { FactoryBot.create(:isolation_segment) }
-    let(:org1) { FactoryBot.create(:organization) }
-    let(:org2) { FactoryBot.create(:organization) }
+    let(:org1) { VCAP::CloudController::Organization.make }
+    let(:org2) { VCAP::CloudController::Organization.make }
 
     let(:request_body) do
       {
@@ -273,8 +273,8 @@ RSpec.describe IsolationSegmentsController, type: :controller do
 
   describe '#unassign_allowed_organization' do
     let(:isolation_segment_model) { FactoryBot.create(:isolation_segment) }
-    let(:org) { FactoryBot.create(:organization) }
-    let(:org_2) { FactoryBot.create(:organization) }
+    let(:org) { VCAP::CloudController::Organization.make }
+    let(:org_2) { VCAP::CloudController::Organization.make }
 
     context 'when the user is an admin' do
       before do
@@ -549,8 +549,8 @@ RSpec.describe IsolationSegmentsController, type: :controller do
       let!(:isolation_segment1) { FactoryBot.create(:isolation_segment) }
       let!(:isolation_segment2) { FactoryBot.create(:isolation_segment) }
       let!(:isolation_segment3) { FactoryBot.create(:isolation_segment) }
-      let(:org1) { FactoryBot.create(:organization) }
-      let(:org2) { FactoryBot.create(:organization) }
+      let(:org1) { VCAP::CloudController::Organization.make }
+      let(:org2) { VCAP::CloudController::Organization.make }
 
       context 'and the user is registered to one or more orgs' do
         before do

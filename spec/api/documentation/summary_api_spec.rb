@@ -112,7 +112,7 @@ end
 
 RSpec.resource 'Organizations', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
-  let(:organization) { FactoryBot.create(:organization) }
+  let(:organization) { VCAP::CloudController::Organization.make }
   let!(:space) { VCAP::CloudController::Space.make(organization: organization) }
 
   authenticated_request
@@ -151,7 +151,7 @@ RSpec.resource 'Users', type: [:api, :legacy_api] do
     field :organizations, 'List of organizations that the user is a member of.'
 
     example 'Get User summary' do
-      organization = FactoryBot.create(:organization)
+      organization = VCAP::CloudController::Organization.make
       space        = VCAP::CloudController::Space.make(organization: organization)
       user.add_organization organization
       organization.add_manager user

@@ -3,8 +3,8 @@ require 'fetchers/space_list_fetcher'
 
 module VCAP::CloudController
   RSpec.describe SpaceListFetcher do
-    let(:org1) { FactoryBot.create(:organization) }
-    let(:org2) { FactoryBot.create(:organization) }
+    let(:org1) { Organization.make }
+    let(:org2) { Organization.make }
 
     let!(:space1) { Space.make(name: 'Lamb', organization: org1) }
     let!(:space2) { Space.make(name: 'Alpaca', organization: org2) }

@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 RSpec.describe OrganizationRoutes do
-  let(:organization) { FactoryBot.create(:organization) }
+  let(:organization) { VCAP::CloudController::Organization.make }
 
   subject(:organization_routes) { OrganizationRoutes.new(organization) }
 

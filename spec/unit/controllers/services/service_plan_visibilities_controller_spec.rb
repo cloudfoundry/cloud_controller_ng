@@ -56,7 +56,7 @@ module VCAP::CloudController
     end
 
     describe 'POST /v2/service_plan_visibilities' do
-      let!(:organization) { FactoryBot.create(:organization) }
+      let!(:organization) { Organization.make }
       let!(:service_plan) { ServicePlan.make }
 
       it 'creates the service plan visibility' do
@@ -92,8 +92,8 @@ module VCAP::CloudController
     end
 
     describe 'PUT /v2/service_plan_visibilities/:guid' do
-      let!(:organization) { FactoryBot.create(:organization) }
-      let!(:new_organization) { FactoryBot.create(:organization) }
+      let!(:organization) { Organization.make }
+      let!(:new_organization) { Organization.make }
       let!(:service_plan) { ServicePlan.make }
       let!(:visibility) { ServicePlanVisibility.make(organization_guid: organization.guid, service_plan_guid: service_plan.guid) }
 
@@ -124,7 +124,7 @@ module VCAP::CloudController
     end
 
     describe 'DELETE /v2/service_plan_visibilities/:guid' do
-      let!(:organization) { FactoryBot.create(:organization) }
+      let!(:organization) { Organization.make }
       let!(:service_plan) { ServicePlan.make }
       let!(:visibility) { ServicePlanVisibility.make(organization_guid: organization.guid, service_plan_guid: service_plan.guid) }
 

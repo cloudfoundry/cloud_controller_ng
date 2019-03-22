@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe VCAP::CloudController::SpacesController do
-    let(:organization_one) { FactoryBot.create(:organization) }
+    let(:organization_one) { Organization.make }
     let(:space_one) { Space.make(organization: organization_one) }
     let(:user_email) { Sham.email }
     let(:uaa_client) { instance_double(UaaClient) }
@@ -195,7 +195,7 @@ module VCAP::CloudController
       end
 
       describe 'apps assocations' do
-        let(:organization) { FactoryBot.create(:organization) }
+        let(:organization) { Organization.make }
         let(:domain) { PrivateDomain.make(owning_organization: organization) }
         let(:space) { Space.make(organization: organization) }
         let(:app_model) { AppModel.make(space: space) }
@@ -501,7 +501,7 @@ module VCAP::CloudController
 
         describe 'enumerating services bound to a service-broker' do
           let(:manager) { User.make(guid: 'manager-guid') }
-          let(:org) { FactoryBot.create(:organization, guid: 'organization', manager_guids: [manager.guid], user_guids: org_user_guids) }
+          let(:org) { Organization.make(guid: 'organization', manager_guids: [manager.guid], user_guids: org_user_guids) }
           let(:space) { Space.make(
             organization: org,
             guid: 'space-guid',
@@ -643,7 +643,7 @@ module VCAP::CloudController
     end
 
     describe 'GET', '/v2/spaces/:guid/services' do
-      let(:organization_two) { FactoryBot.create(:organization) }
+      let(:organization_two) { Organization.make }
       let(:space_one) { Space.make(organization: organization_one) }
       let(:space_two) { Space.make(organization: organization_two) }
       let(:user) { make_developer_for_space(space_one) }
@@ -917,7 +917,7 @@ module VCAP::CloudController
       end
 
       context 'when recursive is true' do
-        let!(:org) { FactoryBot.create(:organization) }
+        let!(:org) { Organization.make }
         let!(:space) { Space.make(organization: org) }
         let!(:space_guid) { space.guid }
         let!(:app_guid) { AppModel.make(space_guid: space_guid).guid }
@@ -1213,7 +1213,7 @@ module VCAP::CloudController
     describe 'GET /v2/spaces/:guid/users' do
       let(:mgr) { User.make }
       let(:user) { User.make }
-      let(:org) { FactoryBot.create(:organization, manager_guids: [mgr.guid], user_guids: [mgr.guid, user.guid]) }
+      let(:org) { Organization.make(manager_guids: [mgr.guid], user_guids: [mgr.guid, user.guid]) }
       let(:space) { Space.make(organization: org, manager_guids: [mgr.guid], developer_guids: [user.guid]) }
       before do
         allow(uaa_client).to receive(:usernames_for_ids).and_return({})
@@ -1235,7 +1235,7 @@ module VCAP::CloudController
     describe 'DELETE /v2/spaces/:guid/developers/:user_guid' do
       let(:mgr) { User.make }
       let(:developer) { User.make }
-      let(:org) { FactoryBot.create(:organization, manager_guids: [mgr.guid], user_guids: org_user_guids) }
+      let(:org) { Organization.make(manager_guids: [mgr.guid], user_guids: org_user_guids) }
       let(:space) { Space.make(
         organization: org,
         manager_guids: [mgr.guid],
@@ -1321,7 +1321,7 @@ module VCAP::CloudController
     describe 'DELETE /v2/spaces/:guid/managers/:user_guid' do
       let(:manager) { User.make }
       let(:developer) { User.make }
-      let(:org) { FactoryBot.create(:organization, manager_guids: [manager.guid], user_guids: org_user_guids) }
+      let(:org) { Organization.make(manager_guids: [manager.guid], user_guids: org_user_guids) }
       let(:space) { Space.make(
         organization: org,
         manager_guids: space_manager_guids,
@@ -1408,7 +1408,7 @@ module VCAP::CloudController
     describe 'DELETE /v2/spaces/:guid/auditors/:user_guid' do
       let(:manager) { User.make }
       let(:auditor) { User.make }
-      let(:org) { FactoryBot.create(:organization, manager_guids: [manager.guid], user_guids: org_user_guids) }
+      let(:org) { Organization.make(manager_guids: [manager.guid], user_guids: org_user_guids) }
       let(:space) { Space.make(
         organization: org,
         manager_guids: space_manager_guids,
@@ -1493,7 +1493,7 @@ module VCAP::CloudController
     end
 
     describe 'POST /v2/spaces' do
-      let(:org) { FactoryBot.create(:organization) }
+      let(:org) { Organization.make }
       let(:name) { 'MySpace' }
 
       context 'setting roles at space creation time' do
@@ -1572,7 +1572,7 @@ module VCAP::CloudController
     describe 'PUT /v2/spaces/:guid' do
       let(:user) { set_current_user(User.make) }
       let(:isolation_segment_model) { FactoryBot.create(:isolation_segment) }
-      let(:organization) { FactoryBot.create(:organization) }
+      let(:organization) { Organization.make }
       let(:space) { Space.make(organization: organization) }
       let(:assigner) { IsolationSegmentAssign.new }
 
@@ -1829,7 +1829,7 @@ module VCAP::CloudController
       let(:assigner) { IsolationSegmentAssign.new }
       let(:user) { set_current_user(User.make) }
       let(:isolation_segment_model) { FactoryBot.create(:isolation_segment) }
-      let(:organization) { FactoryBot.create(:organization) }
+      let(:organization) { Organization.make }
       let(:space) { Space.make(organization: organization) }
 
       before do
@@ -1920,7 +1920,7 @@ module VCAP::CloudController
 
     describe 'DELETE /v2/spaces/:guid/unmapped_routes' do
       let(:user) { set_current_user(User.make) }
-      let(:organization) { FactoryBot.create(:organization) }
+      let(:organization) { Organization.make }
       let(:space) { Space.make(organization: organization) }
       let(:process) { VCAP::CloudController::ProcessModelFactory.make(state: 'STARTED') }
 
@@ -2022,7 +2022,7 @@ module VCAP::CloudController
 
     describe 'security groups' do
       let(:user) { User.make }
-      let(:org) { FactoryBot.create(:organization, user_guids: [user.guid]) }
+      let(:org) { Organization.make(user_guids: [user.guid]) }
       let(:space) { Space.make(organization: org) }
       let(:security_group) { SecurityGroup.make }
 

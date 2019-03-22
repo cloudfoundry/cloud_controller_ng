@@ -4,7 +4,7 @@ RSpec.describe 'Spaces' do
   let(:user) { VCAP::CloudController::User.make }
   let(:user_header) { headers_for(user) }
   let(:admin_header) { admin_headers_for(user) }
-  let(:organization)       { FactoryBot.create(:organization, name: 'Boardgames') }
+  let(:organization)       { VCAP::CloudController::Organization.make name: 'Boardgames' }
   let!(:space1)            { VCAP::CloudController::Space.make name: 'Catan', organization: organization }
   let!(:space2)            { VCAP::CloudController::Space.make name: 'Ticket to Ride', organization: organization }
   let!(:space3)            { VCAP::CloudController::Space.make name: 'Agricola', organization: organization }

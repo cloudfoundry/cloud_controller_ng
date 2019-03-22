@@ -5,10 +5,10 @@ module VCAP::CloudController
     let(:user) { VCAP::CloudController::User.make }
     let(:user_header) { headers_for(user) }
     let(:admin_header) { admin_headers_for(user) }
-    let!(:organization1) { FactoryBot.create(:organization,  name: 'Apocalypse World') }
-    let!(:organization2) { FactoryBot.create(:organization,  name: 'Dungeon World') }
-    let!(:organization3) { FactoryBot.create(:organization,  name: 'The Sprawl') }
-    let!(:unaccesable_organization) { FactoryBot.create(:organization,  name: 'D&D') }
+    let!(:organization1) { Organization.make name: 'Apocalypse World' }
+    let!(:organization2) { Organization.make name: 'Dungeon World' }
+    let!(:organization3) { Organization.make name: 'The Sprawl' }
+    let!(:unaccesable_organization) { Organization.make name: 'D&D' }
 
     before do
       organization1.add_user(user)
@@ -119,22 +119,22 @@ module VCAP::CloudController
       end
 
       context 'label_selector' do
-        let!(:orgA) { FactoryBot.create(:organization, name: 'A') }
+        let!(:orgA) { Organization.make(name: 'A') }
         let!(:orgAFruit) { OrganizationLabelModel.make(key_name: 'fruit', value: 'strawberry', organization: orgA) }
         let!(:orgAAnimal) { OrganizationLabelModel.make(key_name: 'animal', value: 'horse', organization: orgA) }
 
-        let!(:orgB) { FactoryBot.create(:organization, name: 'B') }
+        let!(:orgB) { Organization.make(name: 'B') }
         let!(:orgBEnv) { OrganizationLabelModel.make(key_name: 'env', value: 'prod', organization: orgB) }
         let!(:orgBAnimal) { OrganizationLabelModel.make(key_name: 'animal', value: 'dog', organization: orgB) }
 
-        let!(:orgC) { FactoryBot.create(:organization, name: 'C') }
+        let!(:orgC) { Organization.make(name: 'C') }
         let!(:orgCEnv) { OrganizationLabelModel.make(key_name: 'env', value: 'prod', organization: orgC) }
         let!(:orgCAnimal) { OrganizationLabelModel.make(key_name: 'animal', value: 'horse', organization: orgC) }
 
-        let!(:orgD) { FactoryBot.create(:organization, name: 'D') }
+        let!(:orgD) { Organization.make(name: 'D') }
         let!(:orgDEnv) { OrganizationLabelModel.make(key_name: 'env', value: 'prod', organization: orgD) }
 
-        let!(:orgE) { FactoryBot.create(:organization, name: 'E') }
+        let!(:orgE) { Organization.make(name: 'E') }
         let!(:orgEEnv) { OrganizationLabelModel.make(key_name: 'env', value: 'staging', organization: orgE) }
         let!(:orgEAnimal) { OrganizationLabelModel.make(key_name: 'animal', value: 'dog', organization: orgE) }
 

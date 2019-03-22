@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe UserSummariesController do
     describe 'GET /users/:guid/summary' do
-      let(:org) { FactoryBot.create(:organization) }
+      let(:org) { Organization.make }
       let(:space) { Space.make(organization: org) }
       let(:user) { make_user_for_space(space) }
 

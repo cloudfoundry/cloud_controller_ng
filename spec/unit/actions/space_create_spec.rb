@@ -5,7 +5,7 @@ require 'models/runtime/space'
 module VCAP::CloudController
   RSpec.describe SpaceCreate do
     describe 'create' do
-      let(:org) { FactoryBot.create(:organization) }
+      let(:org) { VCAP::CloudController::Organization.make }
       let(:perm_client) { instance_spy(VCAP::CloudController::Perm::Client) }
       let(:relationships) { { organization: { data: { guid: org.guid } } } }
 

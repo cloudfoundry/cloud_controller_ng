@@ -2,7 +2,7 @@ require 'spec_helper'
 
 RSpec.describe OrganizationPresenter do
   describe '#to_hash' do
-    let(:org) { FactoryBot.create(:organization) }
+    let(:org) { VCAP::CloudController::Organization.make }
     before do
       VCAP::CloudController::Space.make(organization: org)
       user = VCAP::CloudController::User.make

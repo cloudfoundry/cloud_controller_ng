@@ -7,8 +7,8 @@ module VCAP::CloudController
     let(:assigner) { IsolationSegmentAssign.new }
     let(:isolation_segment_model) { FactoryBot.create(:isolation_segment) }
     let(:isolation_segment_model_2) { FactoryBot.create(:isolation_segment) }
-    let(:org) { FactoryBot.create(:organization) }
-    let(:org2) { FactoryBot.create(:organization) }
+    let(:org) { Organization.make }
+    let(:org2) { Organization.make }
 
     context 'when an Isolation Segment is not assigned to any Orgs' do
       it 'is idempotent' do

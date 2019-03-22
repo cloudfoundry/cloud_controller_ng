@@ -140,7 +140,7 @@ module VCAP::CloudController
           FeatureFlag.create(name: 'diego_docker', enabled: true)
         end
 
-        let(:organization) { FactoryBot.create(:organization) }
+        let(:organization) { Organization.make }
         let(:http_domain) { PrivateDomain.make(owning_organization: organization) }
         let(:space) { Space.make(organization: organization) }
         let(:route) { Route.make(domain: http_domain, space: space) }
@@ -938,7 +938,7 @@ module VCAP::CloudController
 
     describe 'GET /v2/routes/:guid' do
       let(:user) { User.make }
-      let(:organization) { FactoryBot.create(:organization) }
+      let(:organization) { Organization.make }
       let(:domain) { PrivateDomain.make(owning_organization: organization) }
       let(:space) { Space.make(organization: organization) }
       let(:route) { Route.make(domain: domain, space: space) }
@@ -972,13 +972,13 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/routes' do
-      let(:organization) { FactoryBot.create(:organization) }
+      let(:organization) { Organization.make }
       let(:domain) { PrivateDomain.make(owning_organization: organization) }
       let(:space) { Space.make(organization: organization) }
       let!(:first_route) { Route.make(domain: domain, space: space) }
       let!(:second_route) { Route.make(domain: domain, space: space) }
 
-      let(:other_org) { FactoryBot.create(:organization) }
+      let(:other_org) { Organization.make }
       let(:other_domain) { PrivateDomain.make(owning_organization: other_org) }
       let(:other_space) { Space.make(organization: other_org) }
       let!(:third_route_for_other_org) { Route.make(domain: other_domain, space: other_space) }
@@ -1025,7 +1025,7 @@ module VCAP::CloudController
           let(:third_route_info) { decoded_response.fetch('resources')[2] }
           let(:space1) { Space.make(organization: organization) }
 
-          let(:organization2) { FactoryBot.create(:organization) }
+          let(:organization2) { Organization.make }
           let(:domain2) { PrivateDomain.make(owning_organization: organization2) }
           let(:space2) { Space.make(organization: organization2) }
           let!(:route_for_organization2) { Route.make(domain: domain2, space: space2) }
@@ -1173,7 +1173,7 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/routes/ inline related resources' do
-      let(:organization) { FactoryBot.create(:organization) }
+      let(:organization) { Organization.make }
       let(:domain) { PrivateDomain.make(owning_organization: organization) }
       let(:space) { Space.make(organization: organization) }
       let(:route) { Route.make(domain: domain, space: space) }

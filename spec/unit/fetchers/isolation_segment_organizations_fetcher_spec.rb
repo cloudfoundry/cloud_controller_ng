@@ -9,10 +9,10 @@ module VCAP::CloudController
 
     let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
 
-    let(:org1) { FactoryBot.create(:organization) }
-    let(:org2) { FactoryBot.create(:organization) }
-    let(:org3) { FactoryBot.create(:organization) }
-    let(:org4) { FactoryBot.create(:organization) }
+    let(:org1) { VCAP::CloudController::Organization.make }
+    let(:org2) { VCAP::CloudController::Organization.make }
+    let(:org3) { VCAP::CloudController::Organization.make }
+    let(:org4) { VCAP::CloudController::Organization.make }
 
     before do
       assigner.assign(isolation_segment_model, [org1, org2, org3])

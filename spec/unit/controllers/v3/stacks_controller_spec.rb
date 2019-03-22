@@ -204,7 +204,7 @@ RSpec.describe StacksController, type: :controller do
 
         role_to_expected_http_response.each do |role, expected_return_value|
           context "as an #{role}" do
-            let(:org) { FactoryBot.create(:organization) }
+            let(:org) { VCAP::CloudController::Organization.make }
             let(:space) { VCAP::CloudController::Space.make(organization: org) }
 
             it "returns #{expected_return_value}" do
@@ -231,7 +231,7 @@ RSpec.describe StacksController, type: :controller do
 
         role_to_expected_http_response.each do |role, expected_return_value|
           context "as an #{role}" do
-            let(:org) { FactoryBot.create(:organization) }
+            let(:org) { VCAP::CloudController::Organization.make }
             let(:space) { VCAP::CloudController::Space.make(organization: org) }
 
             it "returns #{expected_return_value}" do
@@ -304,7 +304,7 @@ RSpec.describe StacksController, type: :controller do
   end
 
   describe '#update' do
-    let!(:org) { FactoryBot.create(:organization, name: "Harold's Farm") }
+    let!(:org) { VCAP::CloudController::Organization.make(name: "Harold's Farm") }
     let!(:space) { VCAP::CloudController::Space.make(name: 'roosters', organization: org) }
     let(:user) { VCAP::CloudController::User.make }
     let(:stack) { FactoryBot.create(:stack) }

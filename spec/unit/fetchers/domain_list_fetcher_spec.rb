@@ -8,9 +8,9 @@ module VCAP::CloudController
       before do
         Domain.dataset.destroy
       end
-      let!(:org1) { FactoryBot.create(:organization, guid: 'org1') }
-      let!(:org2) { FactoryBot.create(:organization, guid: 'org2') }
-      let!(:org3) { FactoryBot.create(:organization, guid: 'org3') }
+      let!(:org1) { Organization.make(guid: 'org1') }
+      let!(:org2) { Organization.make(guid: 'org2') }
+      let!(:org3) { Organization.make(guid: 'org3') }
       # org1 will share private domain(s) with org3
       let!(:public_domain1) { SharedDomain.make(guid: 'public_domain1') }
       let!(:public_domain2) { SharedDomain.make(guid: 'public_domain2') }

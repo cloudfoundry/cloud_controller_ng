@@ -4,7 +4,7 @@ require 'permissions_spec_helper'
 RSpec.describe SidecarsController, type: :controller do
   let!(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
   let(:user) { VCAP::CloudController::User.make }
-  let!(:org) { FactoryBot.create(:organization, name: 'Lyle\'s Farm') }
+  let!(:org) { VCAP::CloudController::Organization.make(name: "Lyle's Farm") }
   let!(:space) { VCAP::CloudController::Space.make(name: 'Cat', organization: org) }
 
   before do

@@ -10,8 +10,8 @@ module VCAP::CloudController
     subject(:org_delete) { OrganizationDelete.new(space_delete) }
 
     describe '#delete' do
-      let!(:org_1) { FactoryBot.create(:organization) }
-      let!(:org_2) { FactoryBot.create(:organization) }
+      let!(:org_1) { Organization.make }
+      let!(:org_2) { Organization.make }
       let!(:space) { Space.make(organization: org_1) }
       let!(:space_2) { Space.make(organization: org_1) }
       let!(:app) { AppModel.make(space_guid: space.guid) }

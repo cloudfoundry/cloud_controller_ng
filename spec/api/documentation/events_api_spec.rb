@@ -130,7 +130,7 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
     let(:test_user_email) { 'user@example.com' }
     let(:test_space) { VCAP::CloudController::Space.make }
     let(:test_route) { VCAP::CloudController::Route.make }
-    let(:test_organization) { FactoryBot.create(:organization) }
+    let(:test_organization) { VCAP::CloudController::Organization.make }
 
     let(:test_broker) { VCAP::CloudController::ServiceBroker.make }
     let(:test_service) { VCAP::CloudController::Service.make(service_broker: test_broker) }

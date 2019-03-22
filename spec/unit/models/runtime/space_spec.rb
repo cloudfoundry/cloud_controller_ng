@@ -67,7 +67,7 @@ module VCAP::CloudController
 
       context 'organization' do
         it 'fails when changing' do
-          expect { Space.make.organization = FactoryBot.create(:organization) }.to raise_error(CloudController::Errors::ApiError, /Cannot change organization/)
+          expect { Space.make.organization = Organization.make }.to raise_error(CloudController::Errors::ApiError, /Cannot change organization/)
         end
       end
     end
@@ -117,7 +117,7 @@ module VCAP::CloudController
 
       describe 'domains' do
         subject(:space) { Space.make(organization: organization) }
-        let(:organization) { FactoryBot.create(:organization) }
+        let(:organization) { Organization.make }
 
         context 'listing domains' do
           before do
@@ -136,17 +136,17 @@ module VCAP::CloudController
           end
 
           it "does nothing if the private domain already belongs to the space's org" do
-            org = FactoryBot.create(:organization)
+            org = Organization.make
             private_domain = PrivateDomain.make(owning_organization: org)
             space = Space.make(organization: org)
             expect { space.add_domain(private_domain) }.not_to change { space.domains }
           end
 
           it 'reports an error if the private domain belongs to another org' do
-            space_org = FactoryBot.create(:organization)
+            space_org = Organization.make
             space = Space.make(organization: space_org)
 
-            domain_org = FactoryBot.create(:organization)
+            domain_org = Organization.make
             private_domain = PrivateDomain.make(owning_organization: domain_org)
             expect { space.add_domain(private_domain) }.to raise_error(Domain::UnauthorizedAccessToPrivateDomain)
           end
@@ -375,7 +375,7 @@ module VCAP::CloudController
           context perm do
             it "should not get associated with a #{perm.singularize} that isn't a member of the org" do
               exception = Space.const_get("Invalid#{perm.camelize}Relation")
-              wrong_org = FactoryBot.create(:organization)
+              wrong_org = Organization.make
               user = make_user_for_org(wrong_org)
 
               expect {
@@ -541,7 +541,7 @@ module VCAP::CloudController
     end
 
     describe '#in_suspended_org?' do
-      let(:org) { FactoryBot.create(:organization) }
+      let(:org) { Organization.make }
       subject(:space) { Space.new(organization: org) }
 
       context 'when in a suspended organization' do
@@ -651,7 +651,7 @@ module VCAP::CloudController
     end
 
     describe '#instance_memory_limit' do
-      let(:org) { FactoryBot.create(:organization) }
+      let(:org) { Organization.make }
       let(:space_quota) { SpaceQuotaDefinition.make(instance_memory_limit: 50, organization: org) }
       let(:space) { Space.make(space_quota_definition: space_quota, organization: org) }
 
@@ -669,7 +669,7 @@ module VCAP::CloudController
     end
 
     describe '#app_task_limit' do
-      let(:org) { FactoryBot.create(:organization) }
+      let(:org) { Organization.make }
       let(:space_quota) { SpaceQuotaDefinition.make(app_task_limit: 1, organization: org) }
       let(:space) { Space.make(space_quota_definition: space_quota, organization: org) }
 
@@ -687,7 +687,7 @@ module VCAP::CloudController
     end
 
     describe '#meets_max_task_limit?' do
-      let(:org) { FactoryBot.create(:organization) }
+      let(:org) { Organization.make }
       let(:space_quota) { SpaceQuotaDefinition.make(app_task_limit: 1, organization: org) }
       let(:space) { Space.make(space_quota_definition: space_quota, organization: org) }
       let(:app_model) { AppModel.make(space_guid: space.guid) }

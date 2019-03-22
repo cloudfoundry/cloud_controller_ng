@@ -151,7 +151,7 @@ module VCAP::CloudController
     describe '#destroy' do
       context 'when there is an associated organization' do
         it 'raises an AssociationNotEmpty error' do
-          FactoryBot.create(:organization, quota_definition: quota_definition)
+          Organization.make(quota_definition: quota_definition)
 
           expect {
             quota_definition.destroy

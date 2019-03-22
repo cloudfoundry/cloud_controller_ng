@@ -25,7 +25,7 @@ module VCAP::CloudController
     describe 'Creating' do
       context 'as an org manager' do
         let(:user) { User.make }
-        let(:organization) { FactoryBot.create(:organization) }
+        let(:organization) { Organization.make }
 
         let(:request_body) do
           MultiJson.dump({ name: 'blah.com', owning_organization_guid: organization.guid })
@@ -102,7 +102,7 @@ module VCAP::CloudController
         let(:private_domain) { PrivateDomain.make }
 
         before do
-          FactoryBot.create(:organization).add_private_domain(private_domain)
+          Organization.make.add_private_domain(private_domain)
         end
 
         it 'returns links for shared organizations' do
@@ -117,7 +117,7 @@ module VCAP::CloudController
     end
 
     describe 'Validation messages' do
-      let(:organization) { FactoryBot.create(:organization) }
+      let(:organization) { Organization.make }
 
       it 'returns the OrgQuotaTotalPrivateDomainExceed message' do
         quota_definition = organization.quota_definition

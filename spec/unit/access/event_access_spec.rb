@@ -5,7 +5,7 @@ module VCAP::CloudController
     subject(:access) { EventAccess.new(Security::AccessContext.new) }
 
     let(:user) { VCAP::CloudController::User.make }
-    let(:org) { FactoryBot.create(:organization) }
+    let(:org) { VCAP::CloudController::Organization.make }
     let(:space) { VCAP::CloudController::Space.make(organization: org) }
     let!(:object) { VCAP::CloudController::Event.make(space: space) }
     let(:scopes) { nil }
@@ -59,7 +59,7 @@ module VCAP::CloudController
 
     context 'user in a different organization (defensive)' do
       before do
-        different_organization = FactoryBot.create(:organization)
+        different_organization = VCAP::CloudController::Organization.make
         different_organization.add_user(user)
       end
 
@@ -68,7 +68,7 @@ module VCAP::CloudController
 
     context 'manager in a different organization (defensive)' do
       before do
-        different_organization = FactoryBot.create(:organization)
+        different_organization = VCAP::CloudController::Organization.make
         different_organization.add_manager(user)
       end
 
@@ -147,7 +147,7 @@ module VCAP::CloudController
 
       context 'user in a different organization (defensive)' do
         before do
-          different_organization = FactoryBot.create(:organization)
+          different_organization = VCAP::CloudController::Organization.make
           different_organization.add_user(user)
           space.destroy
         end
@@ -157,7 +157,7 @@ module VCAP::CloudController
 
       context 'manager in a different organization (defensive)' do
         before do
-          different_organization = FactoryBot.create(:organization)
+          different_organization = VCAP::CloudController::Organization.make
           different_organization.add_manager(user)
           space.destroy
         end

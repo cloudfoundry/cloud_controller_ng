@@ -190,7 +190,7 @@ module VCAP::CloudController
           end
 
           let(:free_plan) { ServicePlan.make(:v2, free: true) }
-          let(:org) { FactoryBot.create(:organization, quota_definition: free_quota) }
+          let(:org) { Organization.make(quota_definition: free_quota) }
           let(:developer) { make_developer_for_space(space) }
 
           context 'when paid plans are disabled for the quota' do
