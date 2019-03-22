@@ -182,6 +182,7 @@ includes:
   - experimental_resources/domains/create
   - experimental_resources/domains/list
   - experimental_resources/resource_matches/header
+  - experimental_resources/resource_matches/object
   - experimental_resources/resource_matches/create
   - experimental_resources/revisions/header
   - experimental_resources/revisions/object

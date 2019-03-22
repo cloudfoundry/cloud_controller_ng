@@ -47,20 +47,14 @@ This endpoint returns a list of **cached** resources from the input list.
 
 #### Required Parameters
 
-Name          | Type                                           | Description
-------------- | ---------------------------------------------- | -----------
-**resources** | _array of [resource_object](#resource-object)_ | List of resources to check for in the resource cache
+Name          | Type                           | Description
+------------- | ------------------------------ | -----------
+**resources** | _array of [resource_object][]_ | List of resources to check for in the resource cache
 
 #### Permitted Roles
  |
 --- | ---
 All Roles |
 
-#### Resource Object
 
-Name               | Type      | Description
------------------- | --------- | -----------
-**checksum.value** | _string_  | **(Required)** SHA-1 hash of file
-**size_in_bytes**  | _integer_ | **(Required)** Size of file in bytes
-**path**           | _string_  | Path to the file, relative to app root
-**mode**           | _string_  | File mode, i.e. POSIX file permissions. Defaults to 0744
+[resource_object]: #the-resource-match-object
