@@ -3,7 +3,7 @@ require 'rspec_api_documentation/dsl'
 
 RSpec.resource 'Organization Quota Definitions', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
-  let(:guid) { FactoryBot.create(:quota_definition).guid }
+  let(:guid) { VCAP::CloudController::QuotaDefinition.make.guid }
 
   authenticated_request
 

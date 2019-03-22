@@ -8,7 +8,7 @@ RSpec.describe PaidServiceInstancePolicy do
   let(:service_instance) do
     VCAP::CloudController::ManagedServiceInstance.make_unsaved space: space, service_plan: @service_plan
   end
-  let(:quota) { FactoryBot.create(:quota_definition, non_basic_services_allowed: non_basic_services_allowed) }
+  let(:quota) { VCAP::CloudController::QuotaDefinition.make non_basic_services_allowed: non_basic_services_allowed }
   let(:error_name) { :random_error_name }
 
   let(:policy) { PaidServiceInstancePolicy.new(service_instance, quota, error_name) }

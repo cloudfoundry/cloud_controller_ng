@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 RSpec.describe MaxAppTasksPolicy do
-  let(:quota_definition) { FactoryBot.create(:quota_definition, app_task_limit: 1) }
+  let(:quota_definition) { VCAP::CloudController::QuotaDefinition.make(app_task_limit: 1) }
   let(:org) { space.organization }
   let(:space) { VCAP::CloudController::Space.make }
   let(:app) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
@@ -35,7 +35,7 @@ RSpec.describe MaxAppTasksPolicy do
   end
 
   context 'when app task limit is -1' do
-    let(:quota_definition) { FactoryBot.create(:quota_definition, app_task_limit: -1) }
+    let(:quota_definition) { VCAP::CloudController::QuotaDefinition.make(app_task_limit: -1) }
 
     it 'does not give error' do
       expect(validator).to validate_without_error(task)

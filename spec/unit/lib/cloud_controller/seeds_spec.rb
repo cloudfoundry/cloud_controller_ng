@@ -185,7 +185,7 @@ module VCAP::CloudController
 
         context 'when default quota definition exists' do
           before do
-            FactoryBot.create(:quota_definition, name: 'default')
+            QuotaDefinition.make(name: 'default')
           end
 
           it 'creates the system organization when the organization does not already exist' do
@@ -201,7 +201,7 @@ module VCAP::CloudController
           it 'warns when the system organization exists and has a different quota' do
             Seeds.create_seed_organizations(config)
             org = Organization.find(name: 'the-system_domain-org-name')
-            FactoryBot.create(:quota_definition, name: 'runaway')
+            QuotaDefinition.make(name: 'runaway')
             org.quota_definition = QuotaDefinition.find(name: 'runaway')
             org.save(validate: false) # See tracker story #61090364
 
@@ -240,7 +240,7 @@ module VCAP::CloudController
         Domain.dataset.destroy
         Organization.dataset.destroy
         QuotaDefinition.dataset.destroy
-        FactoryBot.create(:quota_definition, name: 'default')
+        QuotaDefinition.make(name: 'default')
         Seeds.create_seed_organizations(config)
       end
 

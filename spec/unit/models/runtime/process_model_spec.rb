@@ -353,7 +353,7 @@ module VCAP::CloudController
       describe 'quota' do
         subject(:process) { ProcessModelFactory.make }
         let(:quota) do
-          FactoryBot.create(:quota_definition, memory_limit: 128)
+          QuotaDefinition.make(memory_limit: 128)
         end
         let(:space_quota) do
           SpaceQuotaDefinition.make(memory_limit: 128, organization: org)
@@ -392,7 +392,7 @@ module VCAP::CloudController
           end
 
           it 'allows scaling down instances of an app from above quota to below quota' do
-            org.quota_definition = FactoryBot.create(:quota_definition, memory_limit: 72)
+            org.quota_definition = QuotaDefinition.make(memory_limit: 72)
             act_as_cf_admin { org.save }
 
             expect(process.reload).to_not be_valid
@@ -425,7 +425,7 @@ module VCAP::CloudController
           end
 
           it 'raises when scaling down number of instances but remaining above quota' do
-            org.quota_definition = FactoryBot.create(:quota_definition, memory_limit: 32)
+            org.quota_definition = QuotaDefinition.make(memory_limit: 32)
             act_as_cf_admin { org.save }
 
             process.reload
@@ -437,7 +437,7 @@ module VCAP::CloudController
           end
 
           it 'allows stopping an app that is above quota' do
-            org.quota_definition = FactoryBot.create(:quota_definition, memory_limit: 72)
+            org.quota_definition = QuotaDefinition.make(memory_limit: 72)
             act_as_cf_admin { org.save }
 
             expect(process.reload).to be_started
@@ -449,7 +449,7 @@ module VCAP::CloudController
           end
 
           it 'allows reducing memory from above quota to at/below quota' do
-            org.quota_definition = FactoryBot.create(:quota_definition, memory_limit: 64)
+            org.quota_definition = QuotaDefinition.make(memory_limit: 64)
             act_as_cf_admin { org.save }
 
             process.memory = 40

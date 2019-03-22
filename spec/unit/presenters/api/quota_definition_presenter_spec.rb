@@ -2,7 +2,7 @@ require 'spec_helper'
 
 RSpec.describe QuotaDefinitionPresenter do
   describe '#to_hash' do
-    let(:quota_definition) { FactoryBot.create(:quota_definition) }
+    let(:quota_definition) { VCAP::CloudController::QuotaDefinition.make }
     subject { QuotaDefinitionPresenter.new(quota_definition) }
 
     it 'creates a valid JSON' do

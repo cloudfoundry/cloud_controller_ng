@@ -443,7 +443,7 @@ module VCAP::CloudController
 
     context 'memory quota' do
       let(:quota) do
-        FactoryBot.create(:quota_definition, memory_limit: 500)
+        QuotaDefinition.make(memory_limit: 500)
       end
 
       it 'should return the memory available when no processes are running' do
@@ -492,7 +492,7 @@ module VCAP::CloudController
     end
 
     describe '#instance_memory_limit' do
-      let(:quota) { FactoryBot.create(:quota_definition, instance_memory_limit: 50) }
+      let(:quota) { QuotaDefinition.make(instance_memory_limit: 50) }
       let(:org) { Organization.make quota_definition: quota }
 
       it 'returns the instance memory limit from the quota' do
@@ -509,7 +509,7 @@ module VCAP::CloudController
     end
 
     describe '#app_task_limit' do
-      let(:quota) { FactoryBot.create(:quota_definition, app_task_limit: 2) }
+      let(:quota) { QuotaDefinition.make(app_task_limit: 2) }
       let(:org) { Organization.make quota_definition: quota }
 
       it 'returns the app task limit from the quota' do
@@ -528,7 +528,7 @@ module VCAP::CloudController
     describe '#meets_max_task_limit?' do
       let(:space) { Space.make }
       let(:org) { space.organization }
-      let(:quota) { FactoryBot.create(:quota_definition, app_task_limit: 2) }
+      let(:quota) { QuotaDefinition.make(app_task_limit: 2) }
       let(:app_model) { AppModel.make(space_guid: space.guid) }
 
       before do
@@ -892,7 +892,7 @@ module VCAP::CloudController
         let(:org) { Organization.make_unsaved(quota_definition: nil, quota_definition_guid: quota_definition_guid) }
 
         context "and it's valid" do
-          let(:my_quota)  { FactoryBot.create(:quota_definition) }
+          let(:my_quota)  { QuotaDefinition.make }
           let(:quota_definition_guid) { my_quota.guid }
 
           it 'uses what is provided' do

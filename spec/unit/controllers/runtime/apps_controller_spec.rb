@@ -1978,7 +1978,7 @@ module VCAP::CloudController
       end
 
       it 'returns organization quota memory exceeded message correctly' do
-        space.organization.quota_definition = FactoryBot.create(:quota_definition, memory_limit: 0)
+        space.organization.quota_definition = QuotaDefinition.make(memory_limit: 0)
         space.organization.save(validate: false)
 
         put "/v2/apps/#{process.app.guid}", MultiJson.dump(memory: 128)
@@ -1998,7 +1998,7 @@ module VCAP::CloudController
       end
 
       it 'validates space quota memory limit before organization quotas' do
-        space.organization.quota_definition = FactoryBot.create(:quota_definition, memory_limit: 0)
+        space.organization.quota_definition = QuotaDefinition.make(memory_limit: 0)
         space.organization.save(validate: false)
         space.space_quota_definition = SpaceQuotaDefinition.make(memory_limit: 0)
         space.save(validate: false)
@@ -2017,7 +2017,7 @@ module VCAP::CloudController
       end
 
       it 'returns instance memory limit exceeded error correctly' do
-        space.organization.quota_definition = FactoryBot.create(:quota_definition, instance_memory_limit: 100)
+        space.organization.quota_definition = QuotaDefinition.make(instance_memory_limit: 100)
         space.organization.save(validate: false)
 
         put "/v2/apps/#{process.app.guid}", MultiJson.dump(memory: 128)
@@ -2037,7 +2037,7 @@ module VCAP::CloudController
       end
 
       it 'returns app instance limit exceeded error correctly' do
-        space.organization.quota_definition = FactoryBot.create(:quota_definition, app_instance_limit: 4)
+        space.organization.quota_definition = QuotaDefinition.make(app_instance_limit: 4)
         space.organization.save(validate: false)
 
         put "/v2/apps/#{process.app.guid}", MultiJson.dump(instances: 5)
@@ -2047,7 +2047,7 @@ module VCAP::CloudController
       end
 
       it 'validates space quota instance memory limit before organization quotas' do
-        space.organization.quota_definition = FactoryBot.create(:quota_definition, instance_memory_limit: 100)
+        space.organization.quota_definition = QuotaDefinition.make(instance_memory_limit: 100)
         space.organization.save(validate: false)
         space.space_quota_definition = SpaceQuotaDefinition.make(instance_memory_limit: 100)
         space.save(validate: false)

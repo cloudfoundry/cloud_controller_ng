@@ -10,7 +10,7 @@ module CloudController::Presenters::V2
     let(:orphans) { 'orphans' }
     let(:relations_presenter) { instance_double(RelationsPresenter, to_hash: relations_hash) }
     let(:relations_hash) { { 'relationship_key' => 'relationship_value' } }
-    let(:quota_definition) { FactoryBot.create(:quota_definition) }
+    let(:quota_definition) { VCAP::CloudController::QuotaDefinition.make }
 
     describe '#entity_hash' do
       before do

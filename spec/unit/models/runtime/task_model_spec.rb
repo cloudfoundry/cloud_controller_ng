@@ -407,7 +407,7 @@ module VCAP::CloudController
           end
 
           describe 'when the quota has a memory_limit' do
-            let(:quota) { FactoryBot.create(:quota_definition, memory_limit: 20) }
+            let(:quota) { QuotaDefinition.make(memory_limit: 20) }
 
             it 'allows tasks that fit in the available space' do
               expect {
@@ -429,7 +429,7 @@ module VCAP::CloudController
 
             it 'does not raise errors when canceling task above quota' do
               task = TaskModel.make(memory_in_mb: 10, app: app)
-              org.update(quota_definition: FactoryBot.create(:quota_definition, memory_limit: 5))
+              org.update(quota_definition: QuotaDefinition.make(memory_limit: 5))
 
               task.update(state: TaskModel::CANCELING_STATE)
               expect(task.reload).to be_valid
@@ -437,7 +437,7 @@ module VCAP::CloudController
           end
 
           describe 'when the quota has an instance_memory_limit' do
-            let(:quota) { FactoryBot.create(:quota_definition, instance_memory_limit: 2) }
+            let(:quota) { QuotaDefinition.make(instance_memory_limit: 2) }
 
             it 'allows tasks that fit in the instance memory limit' do
               expect {
@@ -458,7 +458,7 @@ module VCAP::CloudController
             end
 
             context 'when the quota is unlimited' do
-              let(:quota) { FactoryBot.create(:quota_definition, instance_memory_limit: QuotaDefinition::UNLIMITED) }
+              let(:quota) { QuotaDefinition.make(instance_memory_limit: QuotaDefinition::UNLIMITED) }
 
               it 'allows tasks of all sizes' do
                 expect {
@@ -472,7 +472,7 @@ module VCAP::CloudController
           end
 
           describe 'when the quota has an app_task_limit' do
-            let(:quota) { FactoryBot.create(:quota_definition, app_task_limit: 1) }
+            let(:quota) { QuotaDefinition.make(app_task_limit: 1) }
 
             it 'allows tasks that is within app tasks limit' do
               expect { TaskModel.make(app: app) }.not_to raise_error

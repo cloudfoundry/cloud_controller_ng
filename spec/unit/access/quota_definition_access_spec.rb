@@ -6,7 +6,7 @@ module VCAP::CloudController
     let(:scopes) { ['cloud_controller.read', 'cloud_controller.write'] }
 
     let(:user) { VCAP::CloudController::User.make }
-    let(:object) { FactoryBot.create(:quota_definition) }
+    let(:object) { VCAP::CloudController::QuotaDefinition.make }
 
     before { set_current_user(user, scopes: scopes) }
 

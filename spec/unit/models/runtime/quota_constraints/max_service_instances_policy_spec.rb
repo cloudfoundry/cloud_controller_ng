@@ -8,7 +8,7 @@ RSpec.describe MaxServiceInstancePolicy do
     VCAP::CloudController::ManagedServiceInstance.make_unsaved space: space, service_plan: service_plan
   end
   let(:total_services) { 2 }
-  let(:quota) { FactoryBot.create(:quota_definition, total_services: total_services) }
+  let(:quota) { VCAP::CloudController::QuotaDefinition.make total_services: total_services }
   let(:existing_service_count) { 0 }
   let(:error_name) { :random_error_name }
 
