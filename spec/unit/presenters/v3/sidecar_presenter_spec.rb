@@ -5,7 +5,7 @@ module VCAP::CloudController::Presenters::V3
   RSpec.describe SidecarPresenter do
     let(:app_model) { VCAP::CloudController::AppModel.make }
     let(:sidecar) do
-      FactoryBot.create(:sidecar,
+      VCAP::CloudController::SidecarModel.make(
         app: app_model,
         name: 'my-sidecar',
         command: './start-me-up',

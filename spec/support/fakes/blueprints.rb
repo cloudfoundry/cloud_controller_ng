@@ -31,7 +31,6 @@ Sham.define do
 end
 
 module VCAP::CloudController
-
   %w/App Build Buildpack Deployment Droplet IsolationSegment Organization
      Package Process Revision Space Stack Task ServiceInstance /.each do |root|
     "VCAP::CloudController::#{root}LabelModel".constantize.blueprint do end
@@ -544,6 +543,12 @@ module VCAP::CloudController
   RevisionModel.blueprint do
     app { AppModel.make }
     description { 'Initial revision' }
+  end
+
+  SidecarModel.blueprint do
+    name { 'side_process' }
+    command { 'bundle exec rackup' }
+    app { AppModel.make }
   end
 
   TestModel.blueprint do

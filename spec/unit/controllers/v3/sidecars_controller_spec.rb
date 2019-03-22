@@ -98,7 +98,7 @@ RSpec.describe SidecarsController, type: :controller do
 
     describe 'when attempting to create a sidecar with duplicate name' do
       let(:sidecar_name) { 'my_sidecar' }
-      let!(:sidecar) { FactoryBot.create(:sidecar, name: 'my_sidecar', app: app_model) }
+      let!(:sidecar) { VCAP::CloudController::SidecarModel.make(name: 'my_sidecar', app: app_model) }
 
       it 'returns 422' do
         post :create, params: sidecar_params, as: :json

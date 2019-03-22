@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe SidecarModel do
-    let(:sidecar) { FactoryBot.create(:sidecar) }
+    let(:sidecar) { SidecarModel.make }
 
     describe '#process_types' do
       it 'returns the names of associated sidecar_process_types' do
@@ -15,7 +15,7 @@ module VCAP::CloudController
 
     describe 'validations' do
       let(:app_model) { AppModel.make }
-      let!(:sidecar) { FactoryBot.create(:sidecar, name: 'my_sidecar', app: app_model) }
+      let!(:sidecar) { SidecarModel.make(name: 'my_sidecar', app: app_model) }
 
       it 'validates unique sidecar name per app' do
         expect { SidecarModel.create(app: app_model, name: 'my_sidecar', command: 'some-command') }.
