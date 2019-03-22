@@ -4,7 +4,13 @@ require 'actions/task_create'
 module VCAP::CloudController
   RSpec.describe TaskCreate do
     subject(:task_create_action) { TaskCreate.new(config) }
-    let(:config) { Config.new({ maximum_app_disk_in_mb: 4096 }) }
+    let(:config) do
+      Config.new(
+        maximum_app_disk_in_mb: 4096,
+        default_app_memory: 1024,
+        default_app_disk_in_mb: 1024
+      )
+    end
 
     describe '#create' do
       let(:app) { FactoryBot.create(:app) }
@@ -168,10 +174,20 @@ module VCAP::CloudController
       end
 
       describe 'memory_in_mb' do
+        before { config.set(:default_app_memory, 200) }
+
         context 'when memory_in_mb is not specified' do
           let(:message) { TaskCreateMessage.new name: name, command: command }
 
-          before { config.set(:default_app_memory, 200) }
+          it 'sets memory_in_mb to configured :default_app_memory' do
+            task = task_create_action.create(app, message, user_audit_info)
+
+            expect(task.memory_in_mb).to eq(200)
+          end
+        end
+
+        context 'when memory_in_mb is specified as NULL' do
+          let(:message) { TaskCreateMessage.new name: name, command: command, memory_in_mb: nil }
 
           it 'sets memory_in_mb to configured :default_app_memory' do
             task = task_create_action.create(app, message, user_audit_info)
@@ -182,14 +198,22 @@ module VCAP::CloudController
       end
 
       describe 'disk_in_mb' do
+        before { config.set(:default_app_disk_in_mb, 200) }
+
         context 'when disk_in_mb is not specified' do
           let(:message) { TaskCreateMessage.new name: name, command: command }
 
-          before { config.set(:default_app_memory, 200) }
-
           it 'defaults disk_in_mb to configured :default_app_disk_in_mb' do
-            config.set(:default_app_disk_in_mb, 200)
+            task = task_create_action.create(app, message, user_audit_info)
 
+            expect(task.disk_in_mb).to eq(200)
+          end
+        end
+
+        context 'when disk_in_mb is specified as NULL' do
+          let(:message) { TaskCreateMessage.new name: name, command: command, disk_in_mb: nil }
+
+          it 'sets memory_in_mb to configured :default_app_disk_in_mb' do
             task = task_create_action.create(app, message, user_audit_info)
 
             expect(task.disk_in_mb).to eq(200)

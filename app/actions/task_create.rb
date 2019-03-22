@@ -70,13 +70,13 @@ module VCAP::CloudController
     end
 
     def memory_in_mb(message, template_process)
-      return message.memory_in_mb if message.requested?(:memory_in_mb)
+      return message.memory_in_mb if message.memory_in_mb
 
       template_process.present? ? template_process.memory : config.get(:default_app_memory)
     end
 
     def disk_in_mb(message, template_process)
-      return message.disk_in_mb if message.requested?(:disk_in_mb)
+      return message.disk_in_mb if message.disk_in_mb
 
       template_process.present? ? template_process.disk_quota : config.get(:default_app_disk_in_mb)
     end

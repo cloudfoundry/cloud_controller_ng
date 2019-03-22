@@ -54,6 +54,28 @@ RSpec.describe TasksController, type: :controller do
       expect(app_model.tasks.first).to eq(VCAP::CloudController::TaskModel.last)
     end
 
+    context 'when memory_in_mb and disk_in_mb is null' do
+      let(:request_body) do
+        {
+          name: 'mytask',
+          command: 'rake db:migrate && true',
+          memory_in_mb: nil,
+          disk_in_mb: nil,
+        }
+      end
+
+      it 'creates a task for the app using the default memory and disk' do
+        expect(app_model.tasks.count).to eq(0)
+
+        post :create, params: { app_guid: app_model.guid }.merge(request_body), as: :json
+
+        expect(app_model.reload.tasks.count).to eq(1)
+        task = app_model.tasks.first
+        expect(task.memory_in_mb).to eq(TestConfig.config_instance.get(:default_app_memory))
+        expect(task.disk_in_mb).to eq(TestConfig.config_instance.get(:default_app_disk_in_mb))
+      end
+    end
+
     context 'permissions' do
       context 'when the task_creation feature flag is disabled' do
         let(:tasks_enabled) { false }
