@@ -134,7 +134,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
     post '/v2/apps/' do
       include_context 'fields', required: true
       example 'Creating an App' do
-        space_guid = FactoryBot.create(:space).guid
+        space_guid = VCAP::CloudController::Space.make.guid
         ports      = [1024, 2000]
         client.post '/v2/apps', MultiJson.dump(required_fields.merge(space_guid: space_guid, diego: true, ports: ports), pretty: true), headers
         expect(status).to eq(201)
@@ -146,7 +146,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
       end
 
       example 'Creating a Docker App' do
-        space_guid = FactoryBot.create(:space).guid
+        space_guid = VCAP::CloudController::Space.make.guid
 
         data = required_fields.merge(space_guid: space_guid, name: 'docker_app', docker_image: 'cloudfoundry/diego-docker-app', diego: true)
         client.post '/v2/apps', MultiJson.dump(data, pretty: true), headers

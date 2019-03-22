@@ -97,7 +97,7 @@ module VCAP::CloudController
         )
       end
       let(:org) { FactoryBot.create(:organization, quota_definition: free_quota) }
-      let(:space) { FactoryBot.create(:space, organization: org) }
+      let(:space) { Space.make(organization: org) }
       let(:service_instance) { ManagedServiceInstance.make(
         space: space,
         service_plan: original_plan
@@ -346,7 +346,7 @@ module VCAP::CloudController
       context 'exceed quota' do
         it 'should raise quota error when quota is exceeded' do
           org = FactoryBot.create(:organization, quota_definition: free_quota)
-          space = FactoryBot.create(:space, organization: org)
+          space = Space.make(organization: org)
           ManagedServiceInstance.make(
             space: space,
             service_plan: free_plan
@@ -362,7 +362,7 @@ module VCAP::CloudController
 
         it 'should not raise error when quota is not exceeded' do
           org = FactoryBot.create(:organization, quota_definition: paid_quota)
-          space = FactoryBot.create(:space, organization: org)
+          space = Space.make(organization: org)
           expect do
             ManagedServiceInstance.make(
               space: space,
@@ -375,7 +375,7 @@ module VCAP::CloudController
       context 'create free services' do
         it 'should not raise error when created in free quota' do
           org = FactoryBot.create(:organization, quota_definition: free_quota)
-          space = FactoryBot.create(:space, organization: org)
+          space = Space.make(organization: org)
           expect do
             ManagedServiceInstance.make(
               space: space,
@@ -386,7 +386,7 @@ module VCAP::CloudController
 
         it 'should not raise error when created in paid quota' do
           org = FactoryBot.create(:organization, quota_definition: paid_quota)
-          space = FactoryBot.create(:space, organization: org)
+          space = Space.make(organization: org)
           expect do
             ManagedServiceInstance.make(
               space: space,
@@ -399,7 +399,7 @@ module VCAP::CloudController
       context 'create paid services' do
         it 'should raise error when created in free quota' do
           org = FactoryBot.create(:organization, quota_definition: free_quota)
-          space = FactoryBot.create(:space, organization: org)
+          space = Space.make(organization: org)
           expect do
             ManagedServiceInstance.make(
               space: space,
@@ -411,7 +411,7 @@ module VCAP::CloudController
 
         it 'should not raise error when created in paid quota' do
           org = FactoryBot.create(:organization, quota_definition: paid_quota)
-          space = FactoryBot.create(:space, organization: org)
+          space = Space.make(organization: org)
           expect do
             ManagedServiceInstance.make(
               space: space,

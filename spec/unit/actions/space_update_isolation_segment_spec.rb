@@ -6,7 +6,7 @@ module VCAP::CloudController
     subject(:space_update) { SpaceUpdateIsolationSegment.new(user_audit_info) }
 
     let(:org) { FactoryBot.create(:organization) }
-    let(:space) { FactoryBot.create(:space, organization: org) }
+    let(:space) { Space.make(organization: org) }
     let(:user_guid) { double(:user, guid: '1337') }
     let(:user_email) { 'cool_dude@hoopy_frood.com' }
     let(:user_audit_info) { UserAuditInfo.new(user_email: user_email, user_guid: user_guid) }

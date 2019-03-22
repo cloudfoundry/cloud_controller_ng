@@ -6,7 +6,7 @@ module VCAP::CloudController
     let(:service_instance_unshare) { ServiceInstanceUnshare.new }
     let(:service_instance) { ManagedServiceInstance.make }
     let(:user_audit_info) { UserAuditInfo.new(user_guid: 'user-guid-1', user_email: 'user@email.com') }
-    let(:target_space) { FactoryBot.create(:space) }
+    let(:target_space) { Space.make }
     let(:accepts_incomplete) { true }
 
     before do

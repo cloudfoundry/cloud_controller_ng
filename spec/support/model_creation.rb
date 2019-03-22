@@ -71,7 +71,7 @@ module ModelCreation
   end
 
   def make_space_for_user(user)
-    space = FactoryBot.create(:space)
+    space = VCAP::CloudController::Space.make
     space.organization.add_user(user)
     space.add_developer(user)
     space

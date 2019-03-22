@@ -162,7 +162,7 @@ module VCAP::CloudController
       end
 
       context 'when the app and route are in different spaces' do
-        let(:route) { Route.make(space: FactoryBot.create(:space)) }
+        let(:route) { Route.make(space: Space.make) }
 
         it 'raises SpaceMismatch' do
           expect {

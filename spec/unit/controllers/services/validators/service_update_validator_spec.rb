@@ -154,7 +154,7 @@ module VCAP::CloudController
         end
 
         context 'when the service instance is shared' do
-          let(:shared_space) { FactoryBot.create(:space) }
+          let(:shared_space) { Space.make }
 
           before do
             service_instance.add_shared_space(shared_space)

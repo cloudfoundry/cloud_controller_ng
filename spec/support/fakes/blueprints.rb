@@ -39,13 +39,13 @@ module VCAP::CloudController
 
   AppModel.blueprint do
     name       { Sham.name }
-    space      { FactoryBot.create(:space) }
+    space      { Space.make }
     buildpack_lifecycle_data { FactoryBot.create(:buildpack_lifecycle_data, app: object.save) }
   end
 
   AppModel.blueprint(:docker) do
     name { Sham.name }
-    space { FactoryBot.create(:space) }
+    space { Space.make }
     buildpack_lifecycle_data { nil.tap { |_| object.save } }
   end
 
@@ -190,7 +190,7 @@ module VCAP::CloudController
   end
 
   Route.blueprint do
-    space { FactoryBot.create(:space) }
+    space { Space.make }
 
     domain do
       PrivateDomain.make(
@@ -199,6 +199,11 @@ module VCAP::CloudController
     end
 
     host { Sham.host }
+  end
+
+  Space.blueprint do
+    name              { Sham.name }
+    organization      { FactoryBot.create(:organization) }
   end
 
   Service.blueprint do
@@ -224,14 +229,14 @@ module VCAP::CloudController
   ServiceInstance.blueprint do
     name              { Sham.name }
     credentials       { Sham.service_credentials }
-    space             { FactoryBot.create(:space) }
+    space             { Space.make }
   end
 
   ManagedServiceInstance.blueprint do
     is_gateway_service         { true }
     name                       { Sham.name }
     credentials                { Sham.service_credentials }
-    space                      { FactoryBot.create(:space) }
+    space                      { Space.make }
     service_plan               { ServicePlan.make }
     gateway_name               { Sham.guid }
   end
@@ -248,7 +253,7 @@ module VCAP::CloudController
     name              { Sham.name }
     credentials       { Sham.service_credentials }
     syslog_drain_url  { Sham.url }
-    space             { FactoryBot.create(:space) }
+    space             { Space.make }
     is_gateway_service { false }
   end
 
@@ -257,7 +262,7 @@ module VCAP::CloudController
     credentials       { Sham.service_credentials }
     route_service_url { Sham.url }
     syslog_drain_url  { Sham.url }
-    space             { FactoryBot.create(:space) }
+    space             { Space.make }
     is_gateway_service { false }
   end
 
@@ -389,7 +394,7 @@ module VCAP::CloudController
     actee      { Sham.guid }
     actee_type { Sham.name }
     actee_name { Sham.name }
-    space      { FactoryBot.create(:space) }
+    space      { Space.make }
   end
 
   AppEvent.blueprint do

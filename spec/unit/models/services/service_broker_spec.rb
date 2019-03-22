@@ -120,7 +120,7 @@ module VCAP::CloudController
 
     describe 'private?' do
       context 'when the broker has an associated space' do
-        let(:space) { FactoryBot.create(:space) }
+        let(:space) { Space.make }
         let(:broker) do
           ServiceBroker.new(
             name: name,

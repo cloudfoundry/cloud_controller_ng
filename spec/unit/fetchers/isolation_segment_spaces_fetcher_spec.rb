@@ -10,9 +10,9 @@ module VCAP::CloudController
     let(:org1) { FactoryBot.create(:organization) }
     let(:org2) { FactoryBot.create(:organization) }
 
-    let(:space1) { FactoryBot.create(:space, organization: org1) }
-    let(:space2) { FactoryBot.create(:space, organization: org2) }
-    let(:space3) { FactoryBot.create(:space, organization: org2) }
+    let(:space1) { VCAP::CloudController::Space.make(organization: org1) }
+    let(:space2) { VCAP::CloudController::Space.make(organization: org2) }
+    let(:space3) { VCAP::CloudController::Space.make(organization: org2) }
 
     let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
 

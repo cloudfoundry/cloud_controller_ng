@@ -4,7 +4,7 @@ require 'rspec_api_documentation/dsl'
 RSpec.resource 'Routes', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let(:space_quota) { VCAP::CloudController::SpaceQuotaDefinition.make }
-  let(:space) { FactoryBot.create(:space, organization: space_quota.organization, space_quota_definition: space_quota) }
+  let(:space) { VCAP::CloudController::Space.make(organization: space_quota.organization, space_quota_definition: space_quota) }
   let(:domain) { VCAP::CloudController::SharedDomain.make(router_group_guid: 'tcp-group') }
   let(:route_path) { '/apps/v1/path' }
   let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(:routing, space: space) }

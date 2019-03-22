@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe RouteValidator do
     let(:space_quota) { SpaceQuotaDefinition.make }
-    let(:space) { FactoryBot.create(:space, space_quota_definition: space_quota, organization: space_quota.organization) }
+    let(:space) { Space.make(space_quota_definition: space_quota, organization: space_quota.organization) }
     let(:route) { Route.new port: port, host: host, path: path, domain: domain, space: space }
     let(:validator) { RouteValidator.new(route) }
     let(:routing_api_client) { double('routing_api', router_group: router_group, enabled?: true) }
@@ -138,7 +138,7 @@ module VCAP::CloudController
 
           context 'in different domain' do
             let(:another_domain) { SharedDomain.make(router_group_guid: router_group_guid) }
-            let(:another_route) { Route.new(domain: another_domain, port: port, space: FactoryBot.create(:space)) }
+            let(:another_route) { Route.new(domain: another_domain, port: port, space: Space.make) }
 
             before do
               route.save
@@ -153,7 +153,7 @@ module VCAP::CloudController
 
         context 'when port is already taken in a different router group' do
           let(:domain_in_different_router_group) { SharedDomain.make(router_group_guid: 'different-router-group') }
-          let(:another_route) { Route.new(domain: domain_in_different_router_group, port: port, space: FactoryBot.create(:space)) }
+          let(:another_route) { Route.new(domain: domain_in_different_router_group, port: port, space: Space.make) }
 
           before do
             route.save

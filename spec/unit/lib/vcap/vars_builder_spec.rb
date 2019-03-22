@@ -6,7 +6,7 @@ module VCAP::CloudController
     describe 'vcap_application' do
       let(:v3_app_model) { AppModel.make(name: 'v3-app-name') }
       let(:v2_app) { ProcessModelFactory.make(memory: 259, disk_quota: 799, file_descriptors: 1234, name: 'v2-app-name') }
-      let(:space) { FactoryBot.create(:space) }
+      let(:space) { VCAP::CloudController::Space.make }
 
       describe 'building hash for a v2 app model' do
         context 'when a v3 app is associated' do

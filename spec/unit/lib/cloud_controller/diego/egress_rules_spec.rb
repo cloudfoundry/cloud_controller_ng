@@ -6,7 +6,7 @@ module VCAP::CloudController
       subject(:egress_rules) { EgressRules.new }
 
       describe '#staging_protobuf_rules' do
-        let(:space) { FactoryBot.create(:space) }
+        let(:space) { VCAP::CloudController::Space.make }
         let(:process) { VCAP::CloudController::ProcessModelFactory.make(space: space) }
 
         before do

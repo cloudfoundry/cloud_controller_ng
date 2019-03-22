@@ -25,7 +25,7 @@ module VCAP::CloudController
         end
 
         let(:process) { ProcessModelFactory.make(instances: 2, memory: 99, space: space) }
-        let(:space) { FactoryBot.create(:space) }
+        let(:space) { Space.make }
 
         it 'records the expected fields on the event and logs the event' do
           expected_request_field = {
@@ -115,7 +115,7 @@ module VCAP::CloudController
       end
 
       describe '#record_app_delete' do
-        let(:space) { FactoryBot.create(:space) }
+        let(:space) { Space.make }
         let(:process) { ProcessModelFactory.make(space: space) }
 
         it 'creates a new audit.app.delete-request event' do
@@ -147,7 +147,7 @@ module VCAP::CloudController
       end
 
       describe '#record_app_map_droplet' do
-        let(:space) { FactoryBot.create(:space) }
+        let(:space) { Space.make }
         let(:app) { AppModel.make(space: space) }
 
         it 'creates a new audit.app.droplet.mapped event' do
@@ -166,7 +166,7 @@ module VCAP::CloudController
       end
 
       describe '#record_app_apply_manifest' do
-        let(:space) { FactoryBot.create(:space) }
+        let(:space) { Space.make }
         let(:app) { AppModel.make(space: space) }
         let(:metadata) { { 'applications' => [{ 'name' => 'blah', 'instances' => 2 }] }.to_yaml }
 
@@ -417,7 +417,7 @@ module VCAP::CloudController
       end
 
       context 'obfuscation' do
-        let(:space) { FactoryBot.create(:space) }
+        let(:space) { Space.make }
 
         context 'v2' do
           let(:attrs) { { 'buildpack' => buildpack } }

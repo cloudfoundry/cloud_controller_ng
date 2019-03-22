@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 RSpec.describe 'Processes' do
-  let(:space) { FactoryBot.create(:space) }
+  let(:space) { VCAP::CloudController::Space.make }
   let(:app_model) { VCAP::CloudController::AppModel.make(space: space, name: 'my_app', droplet: droplet) }
   let(:droplet) { VCAP::CloudController::DropletModel.make }
   let(:developer) { make_developer_for_space(space) }
@@ -179,7 +179,7 @@ RSpec.describe 'Processes' do
       end
 
       context 'by space_guids' do
-        let(:other_space) { FactoryBot.create(:space, organization: space.organization) }
+        let(:other_space) { VCAP::CloudController::Space.make(organization: space.organization) }
         let(:other_app_model) { VCAP::CloudController::AppModel.make(space: other_space) }
         let!(:other_space_process) {
           VCAP::CloudController::ProcessModel.make(
@@ -220,7 +220,7 @@ RSpec.describe 'Processes' do
       end
 
       context 'by organization guids' do
-        let(:other_space) { FactoryBot.create(:space) }
+        let(:other_space) { VCAP::CloudController::Space.make }
         let!(:other_org) { other_space.organization }
         let!(:other_space_process) {
           VCAP::CloudController::ProcessModel.make(

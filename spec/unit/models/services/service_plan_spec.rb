@@ -28,7 +28,7 @@ module VCAP::CloudController
 
       context 'for plans belonging to private brokers' do
         it 'does not allow the plan to be public' do
-          space = FactoryBot.create(:space)
+          space = Space.make
           private_broker = ServiceBroker.make space: space
           service = Service.make service_broker: private_broker
 
@@ -85,7 +85,7 @@ module VCAP::CloudController
         end
 
         it 'defaults to false if a value is not supplied but a private broker is' do
-          space = FactoryBot.create(:space)
+          space = Space.make
           private_broker = ServiceBroker.make space_id: space.id, space_guid: space.guid
           service = Service.make service_broker: private_broker
 
@@ -167,8 +167,8 @@ module VCAP::CloudController
 
     describe '.plan_ids_from_private_brokers' do
       let(:organization) { FactoryBot.create(:organization) }
-      let(:space_1) { FactoryBot.create(:space, organization: organization, id: Space.count + 9998) }
-      let(:space_2) { FactoryBot.create(:space, organization: organization, id: Space.count + 9999) }
+      let(:space_1) { Space.make(organization: organization, id: Space.count + 9998) }
+      let(:space_2) { Space.make(organization: organization, id: Space.count + 9999) }
       let(:user) { User.make }
       let(:broker_1) { ServiceBroker.make(space: space_1) }
       let(:broker_2) { ServiceBroker.make(space: space_2) }
@@ -199,8 +199,8 @@ module VCAP::CloudController
     describe '.plan_ids_for_visible_service_instances' do
       context 'when the service plans have service instances associated with them' do
         let(:organization) { FactoryBot.create(:organization) }
-        let(:space) { FactoryBot.create(:space, organization: organization) }
-        let(:other_space) { FactoryBot.create(:space, organization: organization) }
+        let(:space) { Space.make(organization: organization) }
+        let(:other_space) { Space.make(organization: organization) }
         let(:user) { User.make }
         let(:broker) { ServiceBroker.make }
         let(:service) { Service.make(service_broker: broker) }
@@ -260,7 +260,7 @@ module VCAP::CloudController
         inactive_public_plan = ServicePlan.make(public: true, active: false)
 
         organization = FactoryBot.create(:organization)
-        space = FactoryBot.create(:space, organization: organization)
+        space = Space.make(organization: organization)
         ServicePlanVisibility.make(organization: organization, service_plan: visible_private_plan)
 
         space_scoped_broker1 = ServiceBroker.make(space: space)
@@ -268,7 +268,7 @@ module VCAP::CloudController
         space_scoped_broker1_plan = ServicePlan.make(service: space_scoped_broker1_service)
         space_scoped_broker1_plan_inactive = ServicePlan.make(service: space_scoped_broker1_service, active: false)
 
-        space_scoped_broker2 = ServiceBroker.make(space: FactoryBot.create(:space))
+        space_scoped_broker2 = ServiceBroker.make(space: Space.make)
         space_scoped_broker2_service = Service.make(service_broker: space_scoped_broker2)
         space_scoped_broker2_plan = ServicePlan.make(service: space_scoped_broker2_service)
 
@@ -289,7 +289,7 @@ module VCAP::CloudController
         visible_private_plan = ServicePlan.make(public: false)
 
         organization = FactoryBot.create(:organization)
-        space = FactoryBot.create(:space, organization: organization)
+        space = Space.make(organization: organization)
         ServicePlanVisibility.make(organization: organization, service_plan: visible_private_plan)
 
         visible = ServicePlan.space_visible(space).all
@@ -300,7 +300,7 @@ module VCAP::CloudController
       it 'returns false when not included in .space_visible set' do
         hidden_private_plan = ServicePlan.make(public: false)
         organization = FactoryBot.create(:organization)
-        space = FactoryBot.create(:space, organization: organization)
+        space = Space.make(organization: organization)
 
         visible = ServicePlan.space_visible(space).all
         expect(visible).to_not include(hidden_private_plan)
@@ -356,7 +356,7 @@ module VCAP::CloudController
 
     describe '#broker_private?' do
       it 'returns true if the plan belongs to a service that belongs to a private broker' do
-        space = FactoryBot.create(:space)
+        space = Space.make
         broker = ServiceBroker.make space: space
         service = Service.make service_broker: broker
         plan = ServicePlan.make service: service

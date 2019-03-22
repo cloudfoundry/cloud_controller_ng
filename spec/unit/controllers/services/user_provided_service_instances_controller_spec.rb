@@ -171,9 +171,9 @@ module VCAP::CloudController
           let(:org1) { FactoryBot.create(:organization, guid: '1') }
           let(:org2) { FactoryBot.create(:organization, guid: '2') }
           let(:org3) { FactoryBot.create(:organization, guid: '3') }
-          let(:space1) { FactoryBot.create(:space, organization: org1) }
-          let(:space2) { FactoryBot.create(:space, organization: org2) }
-          let(:space3) { FactoryBot.create(:space, organization: org3) }
+          let(:space1) { Space.make(organization: org1) }
+          let(:space2) { Space.make(organization: org2) }
+          let(:space3) { Space.make(organization: org3) }
 
           before { set_current_user_as_admin }
 
@@ -308,7 +308,7 @@ module VCAP::CloudController
     describe 'POST', '/v2/user_provided_service_instances' do
       let(:email) { 'email@example.com' }
       let(:developer) { make_developer_for_space(space) }
-      let(:space) { FactoryBot.create(:space) }
+      let(:space) { Space.make }
       let(:req) do
         {
           'name'              => 'my-upsi',
@@ -541,7 +541,7 @@ module VCAP::CloudController
     describe 'PUT', '/v2/user_provided_service_instances/:guid' do
       let(:email) { 'email@example.com' }
       let(:developer) { make_developer_for_space(space) }
-      let(:space) { FactoryBot.create(:space) }
+      let(:space) { Space.make }
       let(:req) do
         {
           'name'        => 'my-upsi',
@@ -619,12 +619,12 @@ module VCAP::CloudController
 
       describe 'the space_guid parameter' do
         let(:org) { FactoryBot.create(:organization) }
-        let(:space) { FactoryBot.create(:space, organization: org) }
+        let(:space) { Space.make(organization: org) }
         let(:developer) { make_developer_for_space(space) }
         let(:instance) { UserProvidedServiceInstance.make(space: space) }
 
         it 'prevents a developer from moving the service instance to a space for which he is also a space developer' do
-          space2 = FactoryBot.create(:space, organization: org)
+          space2 = Space.make(organization: org)
           space2.add_developer(developer)
 
           move_req = MultiJson.dump(
@@ -663,7 +663,7 @@ module VCAP::CloudController
     describe 'DELETE', '/v2/user_provided_service_instances/:guid' do
       let(:email) { 'email@example.com' }
       let(:developer) { make_developer_for_space(space) }
-      let(:space) { FactoryBot.create(:space) }
+      let(:space) { Space.make }
       let!(:service_instance) { UserProvidedServiceInstance.make(space: space) }
 
       before { set_current_user(developer, email: email) }
@@ -694,7 +694,7 @@ module VCAP::CloudController
     end
 
     describe 'PUT', '/v2/user_provided_service_instances/:guid/routes/:route_guid' do
-      let(:space) { FactoryBot.create(:space) }
+      let(:space) { Space.make }
       let(:developer) { make_developer_for_space(space) }
       let(:route) { VCAP::CloudController::Route.make(space: space) }
       let(:opts) { {} }
@@ -860,7 +860,7 @@ module VCAP::CloudController
       end
 
       context 'when the route and service_instance are not in the same space' do
-        let(:other_space) { FactoryBot.create(:space, organization: space.organization) }
+        let(:other_space) { Space.make(organization: space.organization) }
         let(:service_instance) { UserProvidedServiceInstance.make(:routing, space: other_space) }
 
         before do
@@ -878,7 +878,7 @@ module VCAP::CloudController
     end
 
     describe 'DELETE', '/v2/user_provided_service_instances/:service_instance_guid/routes/:route_guid' do
-      let(:space) { FactoryBot.create(:space) }
+      let(:space) { Space.make }
       let(:developer) { make_developer_for_space(space) }
       let(:service_instance) { UserProvidedServiceInstance.make(:routing, space: space) }
       let(:route) { Route.make(space: space) }

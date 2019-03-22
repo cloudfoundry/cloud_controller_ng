@@ -82,7 +82,7 @@ module VCAP::CloudController
         end
 
         describe 'plans from a private broker' do
-          let(:space) { FactoryBot.create(:space) }
+          let(:space) { Space.make }
           let(:organization) { space.organization }
           let!(:private_broker) { ServiceBroker.make(space_guid: space.guid) }
           let!(:service_from_a_private_broker) { Service.make(service_broker: private_broker) }
@@ -112,7 +112,7 @@ module VCAP::CloudController
           end
 
           it 'does not allow user to create a service instance for a private broker in a difference space as the broker' do
-            other_space = FactoryBot.create(:space, organization: organization)
+            other_space = Space.make organization: organization
             other_space.add_developer developer
 
             payload = MultiJson.dump(
@@ -130,7 +130,7 @@ module VCAP::CloudController
         describe 'plans with public:false' do
           let!(:unprivileged_organization) { FactoryBot.create(:organization) }
           let!(:private_plan) { ServicePlan.make(:v2, public: false) }
-          let!(:unprivileged_space) { FactoryBot.create(:space, organization: unprivileged_organization) }
+          let!(:unprivileged_space) { Space.make(organization: unprivileged_organization) }
           let!(:developer) { make_developer_for_space(unprivileged_space) }
           let(:broker) { private_plan.service_broker }
 
@@ -168,7 +168,7 @@ module VCAP::CloudController
                 )
               end
             end
-            let!(:privileged_space) { FactoryBot.create(:space, organization: privileged_organization) }
+            let!(:privileged_space) { Space.make(organization: privileged_organization) }
 
             before do
               developer.add_organization(privileged_organization)
@@ -273,7 +273,7 @@ module VCAP::CloudController
         let(:service_broker_url_with_accepts_incomplete) { "#{service_broker_url}?accepts_incomplete=true" }
         let(:service_broker) { ServiceBroker.make(broker_url: 'http://example.com', auth_username: 'auth_username', auth_password: 'auth_password') }
         let(:service) { Service.make(service_broker: service_broker) }
-        let(:space) { FactoryBot.create(:space) }
+        let(:space) { Space.make }
         let(:plan) { ServicePlan.make(:v2, service: service) }
         let(:developer) { make_developer_for_space(space) }
         let(:response_body) do
@@ -883,7 +883,7 @@ module VCAP::CloudController
           end
 
           context 'when a service instance has been shared into a target space' do
-            let(:source_space) { FactoryBot.create(:space, organization: space.organization) }
+            let(:source_space) { Space.make(organization: space.organization) }
             before do
               source_space.add_developer(developer)
 
@@ -1070,9 +1070,9 @@ module VCAP::CloudController
             let(:org1) { FactoryBot.create(:organization, guid: '1') }
             let(:org2) { FactoryBot.create(:organization, guid: '2') }
             let(:org3) { FactoryBot.create(:organization, guid: '3') }
-            let(:space1) { FactoryBot.create(:space, organization: org1) }
-            let(:space2) { FactoryBot.create(:space, organization: org2) }
-            let(:space3) { FactoryBot.create(:space, organization: org3) }
+            let(:space1) { Space.make(organization: org1) }
+            let(:space2) { Space.make(organization: org2) }
+            let(:space3) { Space.make(organization: org3) }
 
             context 'when the operator is ":"' do
               it 'successfully filters' do
@@ -1180,9 +1180,9 @@ module VCAP::CloudController
             let!(:org1) { FactoryBot.create(:organization, guid: '1') }
             let!(:org2) { FactoryBot.create(:organization, guid: '2') }
             let!(:org3) { FactoryBot.create(:organization, guid: '3') }
-            let!(:space1) { FactoryBot.create(:space, organization: org1) }
-            let!(:space2) { FactoryBot.create(:space, organization: org2) }
-            let!(:space3) { FactoryBot.create(:space, organization: org3) }
+            let!(:space1) { Space.make(organization: org1) }
+            let!(:space2) { Space.make(organization: org2) }
+            let!(:space3) { Space.make(organization: org3) }
 
             let!(:instance1) { ManagedServiceInstance.make(name: 'instance-1', space: space1) }
             let!(:instance2) { ManagedServiceInstance.make(name: 'instance-2', space: space1, gateway_name: "hall'") }
@@ -1271,9 +1271,9 @@ module VCAP::CloudController
             let!(:org1) { FactoryBot.create(:organization, guid: '1') }
             let!(:org2) { FactoryBot.create(:organization, guid: '2') }
             let!(:org3) { FactoryBot.create(:organization, guid: '3') }
-            let!(:space1) { FactoryBot.create(:space, organization: org1) }
-            let!(:space2) { FactoryBot.create(:space, organization: org2) }
-            let!(:space3) { FactoryBot.create(:space, organization: org3) }
+            let!(:space1) { Space.make(organization: org1) }
+            let!(:space2) { Space.make(organization: org2) }
+            let!(:space3) { Space.make(organization: org3) }
             context 'when the operator is ":"' do
               it 'successfully filters' do
                 instance1 = ManagedServiceInstance.make(name: 'instance-1', space: space1)
@@ -1388,8 +1388,8 @@ module VCAP::CloudController
         let(:service_instance) { ManagedServiceInstance.make(gateway_name: Sham.name) }
         let(:org1) { FactoryBot.create(:organization, guid: '1') }
         let(:org2) { FactoryBot.create(:organization, guid: '2') }
-        let(:space1) { FactoryBot.create(:space, organization: org1) }
-        let(:space2) { FactoryBot.create(:space, organization: org2) }
+        let(:space1) { Space.make(organization: org1) }
+        let(:space2) { Space.make(organization: org2) }
         let!(:instances) do
           [ManagedServiceInstance.make(name: 'instance-1', space: space1),
            ManagedServiceInstance.make(name: 'instance-2', space: space1),
@@ -1460,7 +1460,7 @@ module VCAP::CloudController
       let(:developer) { make_developer_for_space(space) }
 
       context 'with a managed service instance' do
-        let(:space) { FactoryBot.create(:space) }
+        let(:space) { Space.make }
         let(:service_instance) { ManagedServiceInstance.make(space: space) }
         let(:service_plan) { ServicePlan.make(active: false) }
 
@@ -1738,7 +1738,7 @@ module VCAP::CloudController
 
         context 'when the service instance is shared' do
           let(:service_instance) { ManagedServiceInstance.make }
-          let(:target_space) { FactoryBot.create(:space) }
+          let(:target_space) { Space.make }
           let(:target_space_developer) { make_developer_for_space(target_space) }
           let(:body) do
             {
@@ -2085,12 +2085,12 @@ module VCAP::CloudController
 
         describe 'the space_guid parameter' do
           let(:org) { FactoryBot.create(:organization) }
-          let(:space) { FactoryBot.create(:space, organization: org) }
+          let(:space) { Space.make(organization: org) }
           let(:developer) { make_developer_for_space(space) }
           let(:instance) { ManagedServiceInstance.make(space: space) }
 
           it 'prevents a developer from moving the service instance to a space for which he is also a space developer' do
-            space2 = FactoryBot.create(:space, organization: org)
+            space2 = Space.make(organization: org)
             space2.add_developer(developer)
 
             move_req = MultiJson.dump(
@@ -2473,12 +2473,12 @@ module VCAP::CloudController
 
         describe 'and the space_guid is provided' do
           let(:org) { FactoryBot.create(:organization) }
-          let(:space) { FactoryBot.create(:space, organization: org) }
+          let(:space) { Space.make(organization: org) }
           let(:developer) { make_developer_for_space(space) }
           let(:instance) { ManagedServiceInstance.make(space: space) }
 
           it 'prevents a developer from moving the service instance to a space for which he is also a space developer' do
-            space2 = FactoryBot.create(:space, organization: org)
+            space2 = Space.make(organization: org)
             space2.add_developer(developer)
 
             move_req = MultiJson.dump(
@@ -2774,8 +2774,8 @@ module VCAP::CloudController
         end
 
         context 'when the service instance has been shared' do
-          let(:originating_space) { FactoryBot.create(:space) }
-          let(:shared_to_space) { FactoryBot.create(:space) }
+          let(:originating_space) { Space.make }
+          let(:shared_to_space) { Space.make }
           let!(:service_instance) { ManagedServiceInstance.make(space: originating_space) }
 
           before do
@@ -3387,13 +3387,13 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/service_instances/:service_instance_guid/routes' do
-      let(:space)   { FactoryBot.create(:space) }
+      let(:space)   { Space.make }
       let(:manager) { make_manager_for_space(space) }
       let(:auditor) { make_auditor_for_space(space) }
       let(:developer) { make_developer_for_space(space) }
 
       context 'when the user is not a member of the space this instance exists in' do
-        let(:space_a)   { FactoryBot.create(:space) }
+        let(:space_a)   { Space.make }
         let(:instance)  { ManagedServiceInstance.make(space: space_a) }
 
         def verify_forbidden(user)
@@ -3476,7 +3476,7 @@ module VCAP::CloudController
     end
 
     describe 'PUT /v2/service_instances/:service_instance_guid/routes/:route_guid' do
-      let(:space) { FactoryBot.create(:space) }
+      let(:space) { Space.make }
       let(:developer) { make_developer_for_space(space) }
       let(:service_instance) { ManagedServiceInstance.make(:routing, space: space) }
       let(:route) { VCAP::CloudController::Route.make(space: space) }
@@ -3766,7 +3766,7 @@ module VCAP::CloudController
       end
 
       context 'when the route and service_instance are not in the same space' do
-        let(:other_space) { FactoryBot.create(:space, organization: space.organization) }
+        let(:other_space) { Space.make(organization: space.organization) }
         let(:service_instance) { ManagedServiceInstance.make(:routing, space: other_space) }
 
         before do
@@ -3862,7 +3862,7 @@ module VCAP::CloudController
     end
 
     describe 'DELETE /v2/service_instances/:service_instance_guid/routes/:route_guid' do
-      let(:space) { FactoryBot.create(:space) }
+      let(:space) { Space.make }
       let(:developer) { make_developer_for_space(space) }
       let(:service_instance) { ManagedServiceInstance.make(:routing, space: space) }
       let(:route) { Route.make(space: space) }
@@ -3954,7 +3954,7 @@ module VCAP::CloudController
 
     describe 'GET /v2/service_instances/:service_instance_guid/permissions' do
       let(:org) { FactoryBot.create(:organization) }
-      let(:space) { FactoryBot.create(:space, organization: org) }
+      let(:space) { Space.make(organization: org) }
       let(:instance) { ManagedServiceInstance.make(space: space) }
       let(:user) { User.make }
 
@@ -4063,7 +4063,7 @@ module VCAP::CloudController
 
     describe 'GET /v2/service_instances/:service_instance_guid/shared_from' do
       let(:org) { FactoryBot.create(:organization) }
-      let(:space) { FactoryBot.create(:space, organization: org) }
+      let(:space) { Space.make(organization: org) }
       let(:instance) { ManagedServiceInstance.make(space: space) }
 
       context 'when the service instance does not exist' do
@@ -4085,7 +4085,7 @@ module VCAP::CloudController
 
       context 'when the service instance is shared' do
         let(:other_org) { FactoryBot.create(:organization) }
-        let(:other_space) { FactoryBot.create(:space, organization: other_org) }
+        let(:other_space) { Space.make(organization: other_org) }
 
         before do
           instance.add_shared_space(other_space)
@@ -4180,7 +4180,7 @@ module VCAP::CloudController
 
     describe 'GET /v2/service_instances/:service_instance_guid/shared_to' do
       let(:org) { FactoryBot.create(:organization) }
-      let(:space) { FactoryBot.create(:space, organization: org) }
+      let(:space) { Space.make(organization: org) }
       let(:instance) { ManagedServiceInstance.make(space: space) }
 
       it 'returns the correct body' do
@@ -4199,8 +4199,8 @@ module VCAP::CloudController
       end
 
       context 'when the service instance is shared into multiple spaces' do
-        let(:space1) { FactoryBot.create(:space) }
-        let(:space2) { FactoryBot.create(:space) }
+        let(:space1) { Space.make }
+        let(:space2) { Space.make }
 
         before do
           instance.add_shared_space(space1)
@@ -4262,7 +4262,7 @@ module VCAP::CloudController
       describe 'permissions' do
         let(:user) { User.make }
         let(:target_org) { FactoryBot.create(:organization) }
-        let(:target_space) { FactoryBot.create(:space, organization: target_org) }
+        let(:target_space) { Space.make(organization: target_org) }
 
         before do
           instance.add_shared_space(target_space)
@@ -4344,7 +4344,7 @@ module VCAP::CloudController
 
         context 'when the user is not a member of either the shared_from or shared_to space/org' do
           let(:random_org) { FactoryBot.create(:organization) }
-          let(:random_space) { FactoryBot.create(:space, organization: random_org) }
+          let(:random_space) { Space.make(organization: random_org) }
 
           {
             'space_developer'     => 404,
@@ -4374,13 +4374,13 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/service_instances/:service_instance_guid/service_keys' do
-      let(:space)   { FactoryBot.create(:space) }
+      let(:space)   { Space.make }
       let(:manager) { make_manager_for_space(space) }
       let(:auditor) { make_auditor_for_space(space) }
       let(:developer) { make_developer_for_space(space) }
 
       context 'when the user is not a member of the space this instance exists in' do
-        let(:space_a)   { FactoryBot.create(:space) }
+        let(:space_a)   { Space.make }
         let(:instance)  { ManagedServiceInstance.make(space: space_a) }
 
         def verify_forbidden(user)
@@ -4488,7 +4488,7 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/service_instances/:service_instance_guid/parameters' do
-      let(:space) { FactoryBot.create(:space) }
+      let(:space) { Space.make }
       let(:service) { Service.make }
       let(:service_plan) { ServicePlan.make(service: service) }
       let(:instance) { ManagedServiceInstance.make(space: space, service_plan: service_plan) }
@@ -4674,7 +4674,7 @@ module VCAP::CloudController
         end
 
         context 'when the service instance is shared' do
-          let(:target_space) { FactoryBot.create(:space) }
+          let(:target_space) { Space.make }
 
           before do
             instance.add_shared_space(target_space)
@@ -4704,7 +4704,7 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/service_instances/:service_instance_guid/routes/:route_guid/parameters' do
-      let(:space) { FactoryBot.create(:space) }
+      let(:space) { Space.make }
       let(:service) { Service.make(:routing, bindings_retrievable: true) }
       let(:service_plan) { ServicePlan.make(service: service) }
       let(:instance) { ManagedServiceInstance.make(space: space, service_plan: service_plan) }
@@ -4834,7 +4834,7 @@ module VCAP::CloudController
           end
 
           context 'when the service instance is shared' do
-            let(:target_space) { FactoryBot.create(:space) }
+            let(:target_space) { Space.make }
 
             before do
               instance.add_shared_space(target_space)
@@ -4901,7 +4901,7 @@ module VCAP::CloudController
       let(:paid_plan) { ServicePlan.make(:v2) }
       let(:free_plan) { ServicePlan.make(:v2, free: true) }
       let(:org) { FactoryBot.create(:organization, quota_definition: paid_quota) }
-      let(:space) { FactoryBot.create(:space, organization: org) }
+      let(:space) { Space.make(organization: org) }
       let(:developer) { make_developer_for_space(space) }
 
       before { set_current_user(developer) }
@@ -5005,7 +5005,7 @@ module VCAP::CloudController
       context 'invalid space guid' do
         it 'returns a user friendly error' do
           org = FactoryBot.create(:organization)
-          space = FactoryBot.create(:space, organization: org)
+          space = Space.make(organization: org)
           plan = ServicePlan.make(:v2, free: true)
 
           body = {

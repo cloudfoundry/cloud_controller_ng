@@ -55,7 +55,7 @@ module VCAP::CloudController
 
     context 'list' do
       let(:user) { User.make }
-      let(:space) { FactoryBot.create(:space) }
+      let(:space) { VCAP::CloudController::Space.make }
       let(:organization) { space.organization }
       let!(:private_domain) { PrivateDomain.make(owning_organization: organization) }
 

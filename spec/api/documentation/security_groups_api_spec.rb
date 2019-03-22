@@ -71,9 +71,9 @@ RSpec.resource 'Security Groups', type: [:api, :legacy_api] do
       before do
         security_group.add_space associated_space
       end
-      let!(:associated_space) { FactoryBot.create(:space) }
+      let!(:associated_space) { VCAP::CloudController::Space.make }
       let(:associated_space_guid) { associated_space.guid }
-      let(:space) { FactoryBot.create(:space) }
+      let(:space) { VCAP::CloudController::Space.make }
       let(:space_guid) { space.guid }
 
       parameter :space_guid, 'The guid of the space'

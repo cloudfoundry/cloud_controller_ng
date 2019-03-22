@@ -6,7 +6,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     let!(:org) { FactoryBot.create(:organization, name: 'Eric\'s Farm') }
-    let!(:space) { FactoryBot.create(:space, name: 'Cat', organization: org) }
+    let!(:space) { VCAP::CloudController::Space.make(name: 'Cat', organization: org) }
 
     describe 'permissions by role' do
       before do
@@ -621,7 +621,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
         beet: 'golden',
       }
     end
-    let(:space) { FactoryBot.create(:space, organization: org) }
+    let(:space) { VCAP::CloudController::Space.make(organization: org) }
     let(:user) { VCAP::CloudController::User.make }
     let(:request_body) do
       {

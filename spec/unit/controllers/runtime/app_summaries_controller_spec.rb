@@ -9,7 +9,7 @@ module VCAP::CloudController
       @shared_domain = SharedDomain.make
       @shared_domain.save
 
-      @space    = FactoryBot.create(:space)
+      @space    = Space.make
       @route1   = Route.make(space: @space)
       @route2   = Route.make(space: @space)
       @services = []

@@ -3,7 +3,7 @@ require 'spec_helper'
 RSpec.describe 'Domains Request' do
   let(:user) { VCAP::CloudController::User.make }
   let(:user_header) { headers_for(user, email: user_email, user_name: user_name) }
-  let(:space) { FactoryBot.create(:space) }
+  let(:space) { VCAP::CloudController::Space.make }
   let(:stack) { FactoryBot.create(:stack) }
   let(:user_email) { Sham.email }
   let(:user_name) { 'some-username' }

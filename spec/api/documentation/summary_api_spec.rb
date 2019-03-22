@@ -4,7 +4,7 @@ require 'rspec_api_documentation/dsl'
 # rubocop:disable Metrics/LineLength
 RSpec.resource 'Apps', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
-  let(:space) { FactoryBot.create(:space) }
+  let(:space) { VCAP::CloudController::Space.make }
   let(:process) { VCAP::CloudController::ProcessModelFactory.make space: space }
   let(:user) { make_developer_for_space(process.space) }
   let(:shared_domain) { VCAP::CloudController::SharedDomain.make }
@@ -70,7 +70,7 @@ end
 
 RSpec.resource 'Spaces', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
-  let(:space) { FactoryBot.create(:space) }
+  let(:space) { VCAP::CloudController::Space.make }
   let(:process) { VCAP::CloudController::ProcessModelFactory.make(diego: false, space: space) }
   let(:user) { make_developer_for_space(process.space) }
   let(:shared_domain) { VCAP::CloudController::SharedDomain.make }
@@ -113,7 +113,7 @@ end
 RSpec.resource 'Organizations', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let(:organization) { FactoryBot.create(:organization) }
-  let!(:space) { FactoryBot.create(:space, organization: organization) }
+  let!(:space) { VCAP::CloudController::Space.make(organization: organization) }
 
   authenticated_request
 
@@ -152,7 +152,7 @@ RSpec.resource 'Users', type: [:api, :legacy_api] do
 
     example 'Get User summary' do
       organization = FactoryBot.create(:organization)
-      space        = FactoryBot.create(:space, organization: organization)
+      space        = VCAP::CloudController::Space.make(organization: organization)
       user.add_organization organization
       organization.add_manager user
       organization.add_billing_manager user

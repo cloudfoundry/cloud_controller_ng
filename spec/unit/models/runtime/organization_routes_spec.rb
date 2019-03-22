@@ -11,7 +11,7 @@ RSpec.describe OrganizationRoutes do
     end
 
     context 'when there are spaces' do
-      let!(:space) { FactoryBot.create(:space, organization: organization) }
+      let!(:space) { VCAP::CloudController::Space.make(organization: organization) }
 
       context 'and there no routes' do
         its(:count) { should eq 0 }
@@ -23,7 +23,7 @@ RSpec.describe OrganizationRoutes do
       end
 
       context 'and there are multiple routes' do
-        let(:space_2) { FactoryBot.create(:space, organization: organization) }
+        let(:space_2) { VCAP::CloudController::Space.make(organization: organization) }
         let!(:routes) do
           2.times { VCAP::CloudController::Route.make(space: space) }
           VCAP::CloudController::Route.make(space: space_2)

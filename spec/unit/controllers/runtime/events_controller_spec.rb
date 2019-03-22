@@ -22,8 +22,8 @@ module VCAP::CloudController
         @org_a = FactoryBot.create(:organization)
         @org_b = FactoryBot.create(:organization)
 
-        @space_a = FactoryBot.create(:space, organization: @org_a)
-        @space_b = FactoryBot.create(:space, organization: @org_b)
+        @space_a = Space.make organization: @org_a
+        @space_b = Space.make organization: @org_b
 
         @org_a.add_user(@user_a)
         @org_b.add_user(@user_b)

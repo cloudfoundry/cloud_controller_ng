@@ -84,8 +84,8 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/service_brokers' do
-      let(:space_a) { FactoryBot.create(:space) }
-      let(:space_b) { FactoryBot.create(:space) }
+      let(:space_a) { Space.make }
+      let(:space_b) { Space.make }
       let(:user) { User.make }
       let!(:public_broker) { ServiceBroker.make }
       let!(:space_a_broker) { ServiceBroker.make space: space_a }
@@ -245,7 +245,7 @@ module VCAP::CloudController
       end
 
       describe 'adding a broker to a space only' do
-        let(:space) { FactoryBot.create(:space) }
+        let(:space) { Space.make }
         let(:body) { body_hash.merge({ space_guid: space.guid }).to_json }
         let(:user) { User.make }
 
@@ -306,7 +306,7 @@ module VCAP::CloudController
 
       context 'when the user is a SpaceDeveloper' do
         let(:user) { User.make }
-        let(:space) { FactoryBot.create(:space) }
+        let(:space) { Space.make }
 
         before do
           space.organization.add_user user
@@ -835,7 +835,7 @@ module VCAP::CloudController
         end
 
         context 'when the user is a space developer' do
-          let(:space) { FactoryBot.create(:space, id: 1) }
+          let(:space) { Space.make(id: 1) }
           let(:broker) do ServiceBroker.make(
             guid: '123',
             name: 'My Custom Service',
@@ -884,7 +884,7 @@ module VCAP::CloudController
           end
 
           context 'when the user is a space developer in another space' do
-            let(:space_outer) { FactoryBot.create(:space, id: 2) }
+            let(:space_outer) { Space.make(id: 2) }
             let(:broker) do ServiceBroker.make(
               guid: '123',
               name: 'My Custom Service',

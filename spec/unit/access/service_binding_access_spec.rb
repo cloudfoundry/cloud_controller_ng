@@ -8,7 +8,7 @@ module VCAP::CloudController
     let(:user) { VCAP::CloudController::User.make }
     let(:service) { VCAP::CloudController::Service.make }
     let(:org) { FactoryBot.create(:organization) }
-    let(:space) { FactoryBot.create(:space, organization: org) }
+    let(:space) { VCAP::CloudController::Space.make(organization: org) }
     let(:app) { VCAP::CloudController::AppModel.make(space: space) }
     let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make }
 

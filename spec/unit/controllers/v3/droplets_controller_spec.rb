@@ -22,8 +22,8 @@ RSpec.describe DropletsController, type: :controller do
   end
 
   describe '#copy' do
-    let(:source_space) { FactoryBot.create(:space) }
-    let(:target_space) { FactoryBot.create(:space) }
+    let(:source_space) { VCAP::CloudController::Space.make }
+    let(:target_space) { VCAP::CloudController::Space.make }
     let(:target_app) { VCAP::CloudController::AppModel.make(space_guid: target_space.guid) }
     let(:source_app_guid) { VCAP::CloudController::AppModel.make(space_guid: source_space.guid).guid }
     let(:target_app_guid) { target_app.guid }

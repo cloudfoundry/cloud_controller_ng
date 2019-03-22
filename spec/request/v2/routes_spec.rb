@@ -2,7 +2,7 @@ require 'spec_helper'
 
 RSpec.describe 'Routes' do
   let(:user) { VCAP::CloudController::User.make }
-  let(:space) { FactoryBot.create(:space) }
+  let(:space) { VCAP::CloudController::Space.make }
 
   before do
     space.organization.add_user(user)

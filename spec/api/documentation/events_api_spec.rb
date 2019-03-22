@@ -128,7 +128,7 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
     let(:test_assignee) { VCAP::CloudController::User.make }
     let(:test_user) { VCAP::CloudController::User.make }
     let(:test_user_email) { 'user@example.com' }
-    let(:test_space) { FactoryBot.create(:space) }
+    let(:test_space) { VCAP::CloudController::Space.make }
     let(:test_route) { VCAP::CloudController::Route.make }
     let(:test_organization) { FactoryBot.create(:organization) }
 
@@ -1004,7 +1004,7 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
     end
 
     example 'List Service Instance Bind Route Events' do
-      space    = FactoryBot.create(:space)
+      space    = VCAP::CloudController::Space.make
       instance = VCAP::CloudController::ManagedServiceInstance.make(space: space)
       route    = VCAP::CloudController::Route.make(space: space)
 
@@ -1030,7 +1030,7 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
     end
 
     example 'List Service Instance Unbind Route Events' do
-      space    = FactoryBot.create(:space)
+      space    = VCAP::CloudController::Space.make
       instance = VCAP::CloudController::ManagedServiceInstance.make(space: space)
       route    = VCAP::CloudController::Route.make(space: space)
 
@@ -1126,7 +1126,7 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
     end
 
     example 'List Service Binding Create Events' do
-      space           = FactoryBot.create(:space)
+      space           = VCAP::CloudController::Space.make
       instance        = VCAP::CloudController::ManagedServiceInstance.make(space: space)
       process         = VCAP::CloudController::ProcessModelFactory.make(space: space)
       service_binding = VCAP::CloudController::ServiceBinding.make(service_instance: instance, app: process.app)
@@ -1152,7 +1152,7 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
     end
 
     example 'List Service Binding Delete Events' do
-      space           = FactoryBot.create(:space)
+      space           = VCAP::CloudController::Space.make
       instance        = VCAP::CloudController::ManagedServiceInstance.make(space: space)
       process         = VCAP::CloudController::ProcessModelFactory.make(space: space)
       service_binding = VCAP::CloudController::ServiceBinding.make(service_instance: instance, app: process.app)
@@ -1179,7 +1179,7 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
     end
 
     example 'List Service Key Create Events' do
-      space       = FactoryBot.create(:space)
+      space       = VCAP::CloudController::Space.make
       instance    = VCAP::CloudController::ManagedServiceInstance.make(space: space)
       service_key = VCAP::CloudController::ServiceKey.make(service_instance: instance)
 
@@ -1205,7 +1205,7 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
     end
 
     example 'List Service Key Delete Events' do
-      space       = FactoryBot.create(:space)
+      space       = VCAP::CloudController::Space.make
       instance    = VCAP::CloudController::ManagedServiceInstance.make(space: space)
       service_key = VCAP::CloudController::ServiceKey.make(service_instance: instance)
 

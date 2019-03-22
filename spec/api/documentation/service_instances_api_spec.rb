@@ -87,7 +87,7 @@ RSpec.resource 'Service Instances', type: [:api, :legacy_api] do
       end
 
       example 'Creating a Service Instance' do
-        space_guid   = FactoryBot.create(:space).guid
+        space_guid   = VCAP::CloudController::Space.make.guid
         request_hash = {
           space_guid:        space_guid,
           name:              'my-service-instance',

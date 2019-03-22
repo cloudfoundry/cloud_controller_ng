@@ -2,7 +2,7 @@ require 'spec_helper'
 
 RSpec.describe 'ServiceInstances' do
   let(:user) { VCAP::CloudController::User.make }
-  let(:space) { FactoryBot.create(:space) }
+  let(:space) { VCAP::CloudController::Space.make }
 
   before do
     space.organization.add_user(user)
@@ -449,7 +449,7 @@ RSpec.describe 'ServiceInstances' do
     let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
 
     before do
-      service_instance.add_shared_space(FactoryBot.create(:space))
+      service_instance.add_shared_space(VCAP::CloudController::Space.make)
     end
 
     it 'returns data about the source space and org' do
@@ -466,7 +466,7 @@ RSpec.describe 'ServiceInstances' do
     end
 
     context 'when the user is a member of the space where a service instance has been shared to' do
-      let(:other_space) { FactoryBot.create(:space) }
+      let(:other_space) { VCAP::CloudController::Space.make }
       let(:other_user) { make_developer_for_space(other_space) }
       let(:req_body) do
         {
@@ -503,8 +503,8 @@ RSpec.describe 'ServiceInstances' do
 
   describe 'GET /v2/service_instances/:service_instance_guid/shared_to' do
     let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
-    let(:space1) { FactoryBot.create(:space) }
-    let(:space2) { FactoryBot.create(:space) }
+    let(:space1) { VCAP::CloudController::Space.make }
+    let(:space2) { VCAP::CloudController::Space.make }
 
     before do
       service_instance.add_shared_space(space1)
@@ -543,7 +543,7 @@ RSpec.describe 'ServiceInstances' do
   end
 
   describe 'DELETE /v2/service_instance/:guid' do
-    let(:originating_space) { FactoryBot.create(:space) }
+    let(:originating_space) { VCAP::CloudController::Space.make }
     let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: originating_space) }
 
     context 'when the service instance has been shared' do

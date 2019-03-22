@@ -96,7 +96,7 @@ module VCAP::CloudController
       end
 
       describe 'GET /v2/route_mappings' do
-        let(:space) { FactoryBot.create(:space) }
+        let(:space) { Space.make }
         let(:developer) { make_developer_for_space(space) }
         let(:route) { Route.make(space: space) }
         let(:process) { ProcessModelFactory.make(space: space) }
@@ -135,7 +135,7 @@ module VCAP::CloudController
       end
 
       describe 'POST /v2/route_mappings' do
-        let(:space) { FactoryBot.create(:space) }
+        let(:space) { Space.make }
         let(:route) { Route.make(space: space) }
         let(:process) { ProcessModelFactory.make(space: space, ports: [8080, 9090]) }
         let(:developer) { make_developer_for_space(space) }
@@ -316,7 +316,7 @@ module VCAP::CloudController
           end
 
           context 'and developer of different space is specified' do
-            let(:space1) { FactoryBot.create(:space) }
+            let(:space1) { Space.make }
             let(:developer) { make_developer_for_space(space1) }
             let(:body) do
               {

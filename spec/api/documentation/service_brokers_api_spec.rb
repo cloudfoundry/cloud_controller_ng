@@ -6,7 +6,7 @@ RSpec.resource 'Service Brokers', type: [:api, :legacy_api] do
   let!(:service_brokers) { 3.times { VCAP::CloudController::ServiceBroker.make } }
   let(:service_broker) { VCAP::CloudController::ServiceBroker.first }
   let(:guid) { service_broker.guid }
-  let(:space) { FactoryBot.create(:space) }
+  let(:space) { VCAP::CloudController::Space.make }
   let(:broker_catalog) do
     {
       'services' => [

@@ -6,7 +6,7 @@ module VCAP::CloudController
 
     let(:user) { VCAP::CloudController::User.make }
     let(:org) { FactoryBot.create(:organization) }
-    let(:space) { FactoryBot.create(:space, organization: org) }
+    let(:space) { VCAP::CloudController::Space.make(organization: org) }
     let(:service) { VCAP::CloudController::Service.make }
     let(:service_plan_active) { true }
     let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service, active: service_plan_active) }

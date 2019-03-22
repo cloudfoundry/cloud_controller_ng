@@ -1,7 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe ProcessesController, type: :controller do
-  let(:space) { FactoryBot.create(:space) }
+  let(:space) { VCAP::CloudController::Space.make }
   let(:app) { VCAP::CloudController::AppModel.make(space: space) }
 
   describe '#index' do

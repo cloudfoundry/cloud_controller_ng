@@ -3,8 +3,8 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe IncludeAppSpaceDecorator do
     subject(:decorator) { IncludeAppSpaceDecorator }
-    let(:space1) { FactoryBot.create(:space, name: 'first-space') }
-    let(:space2) { FactoryBot.create(:space, name: 'second-space') }
+    let(:space1) { Space.make(name: 'first-space') }
+    let(:space2) { Space.make(name: 'second-space') }
     let(:apps) { [AppModel.make(space: space1), AppModel.make(space: space2), AppModel.make(space: space1)] }
 
     it 'decorates the given hash with spaces from apps' do

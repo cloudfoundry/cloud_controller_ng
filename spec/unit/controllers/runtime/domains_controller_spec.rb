@@ -150,7 +150,7 @@ module VCAP::CloudController
       before { set_current_user(user) }
 
       context 'a space auditor' do
-        let(:space) { FactoryBot.create(:space, organization: organization) }
+        let(:space) { Space.make organization: organization }
         let(:domain) { PrivateDomain.make(owning_organization: organization) }
 
         before do
@@ -206,7 +206,7 @@ module VCAP::CloudController
 
     describe 'GET /v2/domains' do
       let(:user) { User.make }
-      let(:space) { FactoryBot.create(:space) }
+      let(:space) { VCAP::CloudController::Space.make }
       let(:organization) { space.organization }
       let!(:private_domain) { PrivateDomain.make(owning_organization: organization) }
 
@@ -328,7 +328,7 @@ module VCAP::CloudController
 
     describe 'GET /v2/domains/:id/spaces' do
       let!(:private_domain) { PrivateDomain.make }
-      let!(:space) { FactoryBot.create(:space, organization: private_domain.owning_organization) }
+      let!(:space) { Space.make(organization: private_domain.owning_organization) }
 
       before { set_current_user_as_admin }
 

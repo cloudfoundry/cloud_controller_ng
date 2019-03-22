@@ -13,7 +13,7 @@ shared_context 'permissions' do
     @org_a.add_billing_manager(@org_a_billing_manager)
     @org_a.add_auditor(@org_a_auditor)
 
-    @space_a = FactoryBot.create(:space, organization: @org_a)
+    @space_a = VCAP::CloudController::Space.make(organization: @org_a)
     @space_a_manager = make_user_for_space(@space_a)
     @space_a_developer = make_user_for_space(@space_a)
     @space_a_auditor = make_user_for_space(@space_a)
@@ -34,7 +34,7 @@ shared_context 'permissions' do
     @org_b.add_billing_manager(@org_b_billing_manager)
     @org_b.add_auditor(@org_b_auditor)
 
-    @space_b = FactoryBot.create(:space, organization: @org_b)
+    @space_b = VCAP::CloudController::Space.make(organization: @org_b)
     @space_b_manager = make_user_for_space(@space_b)
     @space_b_developer = make_user_for_space(@space_b)
     @space_b_auditor = make_user_for_space(@space_b)

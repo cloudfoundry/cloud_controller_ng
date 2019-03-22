@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 RSpec.describe 'Resource Matches' do
-  let(:space) { FactoryBot.create(:space) }
+  let(:space) { VCAP::CloudController::Space.make }
   let(:developer) { make_developer_for_space(space) }
   let(:developer_headers) do
     headers_for(developer, user_name: 'roto')

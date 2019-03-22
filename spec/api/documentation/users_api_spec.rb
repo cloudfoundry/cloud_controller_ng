@@ -5,7 +5,7 @@ RSpec.resource 'Users', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
   let!(:user) { VCAP::CloudController::User.make(default_space: space) }
   let(:guid) { user.guid }
-  let(:space) { FactoryBot.create(:space) }
+  let(:space) { VCAP::CloudController::Space.make }
 
   authenticated_request
 
@@ -44,7 +44,7 @@ RSpec.resource 'Users', type: [:api, :legacy_api] do
       include_context 'updatable_fields'
 
       example 'Updating a User' do
-        new_space = FactoryBot.create(:space)
+        new_space = VCAP::CloudController::Space.make
         client.put "/v2/users/#{guid}", MultiJson.dump({ default_space_guid: new_space.guid }, pretty: true), headers
 
         expect(status).to eq 201
@@ -64,9 +64,9 @@ RSpec.resource 'Users', type: [:api, :legacy_api] do
         space.organization.add_user(user)
       end
 
-      let!(:associated_space) { FactoryBot.create(:space) }
+      let!(:associated_space) { VCAP::CloudController::Space.make }
       let(:associated_space_guid) { associated_space.guid }
-      let(:space) { FactoryBot.create(:space) }
+      let(:space) { VCAP::CloudController::Space.make }
       let(:space_guid) { space.guid }
 
       standard_model_list :space, VCAP::CloudController::SpacesController, outer_model: :user
@@ -87,9 +87,9 @@ RSpec.resource 'Users', type: [:api, :legacy_api] do
         managed_space.organization.add_user(user)
       end
 
-      let!(:associated_managed_space) { FactoryBot.create(:space) }
+      let!(:associated_managed_space) { VCAP::CloudController::Space.make }
       let(:associated_managed_space_guid) { associated_managed_space.guid }
-      let(:managed_space) { FactoryBot.create(:space) }
+      let(:managed_space) { VCAP::CloudController::Space.make }
       let(:managed_space_guid) { managed_space.guid }
 
       standard_model_list :space, VCAP::CloudController::SpacesController, outer_model: :user, path: :managed_spaces
@@ -110,9 +110,9 @@ RSpec.resource 'Users', type: [:api, :legacy_api] do
         audited_space.organization.add_user(user)
       end
 
-      let!(:associated_audited_space) { FactoryBot.create(:space) }
+      let!(:associated_audited_space) { VCAP::CloudController::Space.make }
       let(:associated_audited_space_guid) { associated_audited_space.guid }
-      let(:audited_space) { FactoryBot.create(:space) }
+      let(:audited_space) { VCAP::CloudController::Space.make }
       let(:audited_space_guid) { audited_space.guid }
 
       standard_model_list :space, VCAP::CloudController::SpacesController, outer_model: :user, path: :audited_spaces

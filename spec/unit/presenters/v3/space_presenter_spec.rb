@@ -3,7 +3,7 @@ require 'presenters/v3/space_presenter'
 
 module VCAP::CloudController::Presenters::V3
   RSpec.describe SpacePresenter do
-    let(:space) { FactoryBot.create(:space) }
+    let(:space) { VCAP::CloudController::Space.make }
     let!(:release_label) do
       VCAP::CloudController::SpaceLabelModel.make(
         key_name: 'release',

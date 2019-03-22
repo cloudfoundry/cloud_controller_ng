@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 RSpec.describe 'Route Mappings' do
-  let(:space) { FactoryBot.create(:space) }
+  let(:space) { VCAP::CloudController::Space.make }
   let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
   let(:process) { VCAP::CloudController::ProcessModel.make(:process, app: app_model, type: 'worker', ports: [8080]) }
   let(:route) { VCAP::CloudController::Route.make(space: space) }

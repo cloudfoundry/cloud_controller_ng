@@ -5,7 +5,7 @@ module VCAP::CloudController
     let(:service_instance_attrs)  do
       {
         name: 'my favorite service',
-        space: FactoryBot.create(:space)
+        space: VCAP::CloudController::Space.make
       }
     end
 
@@ -38,7 +38,7 @@ module VCAP::CloudController
       describe 'changing space' do
         it 'fails when existing service bindings are in a different space' do
           service_instance.add_service_binding(ServiceBinding.make(service_instance: service_instance))
-          expect { service_instance.space = FactoryBot.create(:space) }.to raise_error ServiceInstance::InvalidServiceBinding
+          expect { service_instance.space = Space.make }.to raise_error ServiceInstance::InvalidServiceBinding
         end
       end
     end
@@ -73,7 +73,7 @@ module VCAP::CloudController
       end
 
       describe 'when one service instance is renamed to an existing service instance name' do
-        let(:space) { FactoryBot.create(:space) }
+        let(:space) { VCAP::CloudController::Space.make }
         let(:service_instance_attrs_foo) { { name: 'foo', space: space } }
         let(:service_instance_attrs_bar) { { name: 'bar', space: space } }
 
@@ -127,8 +127,8 @@ module VCAP::CloudController
         end
 
         describe 'when a ManagedServiceInstance has been shared' do
-          let(:space) { FactoryBot.create(:space) }
-          let(:originating_space) { FactoryBot.create(:space) }
+          let(:space) { Space.make }
+          let(:originating_space) { Space.make }
           let(:service_instance) {
             ManagedServiceInstance.make(name: 'shared-service', space: originating_space)
           }
@@ -313,7 +313,7 @@ module VCAP::CloudController
     end
 
     describe '#in_suspended_org?' do
-      let(:space) { FactoryBot.create(:space) }
+      let(:space) { VCAP::CloudController::Space.make }
       subject(:service_instance) { VCAP::CloudController::ServiceInstance.new(space: space) }
 
       context 'when in a suspended organization' do
@@ -409,7 +409,7 @@ module VCAP::CloudController
       end
 
       context 'when the service instance is shared' do
-        let(:target_space)     { FactoryBot.create(:space) }
+        let(:target_space)     { VCAP::CloudController::Space.make }
         let(:target_space_dev) { make_developer_for_space(target_space) }
         let(:target_org_user) { make_user_for_org(target_space.organization) }
         let(:target_space_auditor) { make_auditor_for_space(target_space) }
@@ -467,7 +467,7 @@ module VCAP::CloudController
     describe '#shared?' do
       context 'when the service instance has shared spaces' do
         before do
-          service_instance.add_shared_space(FactoryBot.create(:space))
+          service_instance.add_shared_space(Space.make)
         end
 
         it 'returns true' do

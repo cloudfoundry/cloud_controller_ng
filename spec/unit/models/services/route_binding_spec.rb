@@ -30,7 +30,7 @@ module VCAP::CloudController
       end
 
       it 'requires a service instance to have route_forwarding enabled' do
-        space = FactoryBot.create(:space)
+        space = Space.make
         binding.route = Route.make space: space
         binding.service_instance = ManagedServiceInstance.make space: space
 
@@ -39,8 +39,8 @@ module VCAP::CloudController
       end
 
       it 'requires a service instance and route be in the same space' do
-        space = FactoryBot.create(:space)
-        other_space = FactoryBot.create(:space)
+        space = Space.make
+        other_space = Space.make
 
         service_instance = ManagedServiceInstance.make(:routing, space: space)
         route = Route.make space: other_space

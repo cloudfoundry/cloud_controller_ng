@@ -13,8 +13,8 @@ module VCAP::CloudController
 
     describe 'associations' do
       describe 'spaces' do
-        let(:space_1) { FactoryBot.create(:space) }
-        let(:space_2) { FactoryBot.create(:space) }
+        let(:space_1) { Space.make }
+        let(:space_2) { Space.make }
 
         context 'when the space is not part of an entitled organization' do
           it 'does not add the space' do

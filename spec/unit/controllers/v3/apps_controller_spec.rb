@@ -297,7 +297,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
   describe '#create' do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
-    let(:space) { FactoryBot.create(:space) }
+    let(:space) { VCAP::CloudController::Space.make }
     let(:request_body) do
       {
         name: 'some-name',

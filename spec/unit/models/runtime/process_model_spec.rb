@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe ProcessModel, type: :model do
     let(:org) { FactoryBot.create(:organization) }
-    let(:space) { FactoryBot.create(:space, organization: org) }
+    let(:space) { Space.make(organization: org) }
     let(:parent_app) { AppModel.make(space: space) }
 
     let(:domain) { PrivateDomain.make(owning_organization: org) }
@@ -153,7 +153,7 @@ module VCAP::CloudController
       describe 'org and space quota validator policies' do
         subject(:process) { ProcessModelFactory.make(app: parent_app) }
         let(:org) { FactoryBot.create(:organization) }
-        let(:space) { FactoryBot.create(:space, organization: org, space_quota_definition: SpaceQuotaDefinition.make(organization: org)) }
+        let(:space) { Space.make(organization: org, space_quota_definition: SpaceQuotaDefinition.make(organization: org)) }
 
         it 'validates org and space using MaxMemoryPolicy' do
           max_memory_policies = process.validation_policies.select { |policy| policy.instance_of? AppMaxMemoryPolicy }
@@ -368,7 +368,7 @@ module VCAP::CloudController
           end
 
           let(:org) { FactoryBot.create(:organization, quota_definition: quota) }
-          let(:space) { FactoryBot.create(:space, name: 'hi', organization: org, space_quota_definition: space_quota) }
+          let(:space) { Space.make(name: 'hi', organization: org, space_quota_definition: space_quota) }
           let(:parent_app) { AppModel.make(space: space) }
           subject!(:process) { ProcessModelFactory.make(app: parent_app, memory: 64, instances: 2, state: 'STARTED') }
 

@@ -6,9 +6,9 @@ RSpec.describe 'Service Instances' do
   let(:user) { VCAP::CloudController::User.make }
   let(:user_header) { headers_for(user) }
   let(:admin_header) { admin_headers_for(user, email: user_email, user_name: user_name) }
-  let(:space) { FactoryBot.create(:space) }
-  let(:another_space) { FactoryBot.create(:space) }
-  let(:target_space) { FactoryBot.create(:space) }
+  let(:space) { VCAP::CloudController::Space.make }
+  let(:another_space) { VCAP::CloudController::Space.make }
+  let(:target_space) { VCAP::CloudController::Space.make }
   let(:feature_flag) { VCAP::CloudController::FeatureFlag.make(name: 'service_instance_sharing', enabled: false, error_message: nil) }
   let!(:service_instance1) { VCAP::CloudController::ManagedServiceInstance.make(space: space, name: 'rabbitmq') }
   let!(:service_instance2) { VCAP::CloudController::ManagedServiceInstance.make(space: space, name: 'redis') }

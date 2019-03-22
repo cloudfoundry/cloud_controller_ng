@@ -10,7 +10,7 @@ module VCAP::CloudController
       let(:host) { 'some-host' }
       let(:space_quota_definition) { SpaceQuotaDefinition.make }
       let(:space) do
-        FactoryBot.create(:space, space_quota_definition: space_quota_definition,
+        Space.make(space_quota_definition: space_quota_definition,
                    organization: space_quota_definition.organization)
       end
       let(:domain) { SharedDomain.make }

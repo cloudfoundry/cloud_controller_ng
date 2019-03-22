@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe IsolationSegmentSelector do
     describe '.for_space' do
-      let(:space) { FactoryBot.create(:space) }
+      let(:space) { Space.make }
       let(:org) { space.organization }
       let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
       let(:isolation_segment_model) { FactoryBot.create(:isolation_segment) }

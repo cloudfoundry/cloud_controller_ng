@@ -3,7 +3,7 @@ require 'spec_helper'
 RSpec.describe MaxAppTasksPolicy do
   let(:quota_definition) { FactoryBot.create(:quota_definition, app_task_limit: 1) }
   let(:org) { space.organization }
-  let(:space) { FactoryBot.create(:space) }
+  let(:space) { VCAP::CloudController::Space.make }
   let(:app) { VCAP::CloudController::AppModel.make(space_guid: space.guid) }
   let(:task) { VCAP::CloudController::TaskModel.new(app: app) }
   let(:error_name) { :app_task_limit_error }

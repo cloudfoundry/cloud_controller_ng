@@ -5,7 +5,7 @@ RSpec.describe SidecarsController, type: :controller do
   let!(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
   let(:user) { VCAP::CloudController::User.make }
   let!(:org) { FactoryBot.create(:organization, name: 'Lyle\'s Farm') }
-  let!(:space) { FactoryBot.create(:space, name: 'Cat', organization: org) }
+  let!(:space) { VCAP::CloudController::Space.make(name: 'Cat', organization: org) }
 
   before do
     set_current_user(user)

@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 RSpec.describe SpaceRoutes do
-  let(:space) { FactoryBot.create(:space) }
+  let(:space) { VCAP::CloudController::Space.make }
 
   subject { SpaceRoutes.new(space) }
 
@@ -16,7 +16,7 @@ RSpec.describe SpaceRoutes do
     end
 
     context 'whyen there is a route belonging to different space' do
-      before { VCAP::CloudController::Route.make(space: FactoryBot.create(:space)) }
+      before { VCAP::CloudController::Route.make(space: VCAP::CloudController::Space.make) }
       its(:count) { should eq 0 }
     end
   end

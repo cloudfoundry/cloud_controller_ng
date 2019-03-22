@@ -135,7 +135,7 @@ module VCAP::CloudController
     end
 
     describe 'create app' do
-      let(:space) { FactoryBot.create(:space) }
+      let(:space) { Space.make }
       let(:space_guid) { space.guid.to_s }
       let(:initial_hash) do
         {
@@ -489,7 +489,7 @@ module VCAP::CloudController
     end
 
     describe 'docker image credentials' do
-      let(:space) { FactoryBot.create(:space) }
+      let(:space) { Space.make }
       let(:space_guid) { space.guid.to_s }
       let(:initial_hash) do
         {
@@ -2101,7 +2101,7 @@ module VCAP::CloudController
     end
 
     describe 'PUT /v2/apps/:app_guid/routes/:route_guid' do
-      let(:space) { FactoryBot.create(:space) }
+      let(:space) { Space.make }
       let(:process) { ProcessModelFactory.make(space: space) }
       let(:route) { Route.make(space: space) }
       let(:developer) { make_developer_for_space(space) }
@@ -2231,7 +2231,7 @@ module VCAP::CloudController
     end
 
     describe 'DELETE /v2/apps/:app_guid/routes/:route_guid' do
-      let(:space) { FactoryBot.create(:space) }
+      let(:space) { Space.make }
       let(:process) { ProcessModelFactory.make(space: space) }
       let(:route) { Route.make(space: space) }
       let!(:route_mapping) { RouteMappingModel.make(app: process.app, route: route, process_type: process.type) }
@@ -2292,7 +2292,7 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/apps/:app_guid/service_bindings' do
-      let(:space) { FactoryBot.create(:space) }
+      let(:space) { Space.make }
       let(:managed_service_instance) { ManagedServiceInstance.make(space: space) }
       let(:developer) { make_developer_for_space(space) }
       let(:process1) { ProcessModelFactory.make(space: space, name: 'process1') }
@@ -2371,7 +2371,7 @@ module VCAP::CloudController
     end
 
     describe 'DELETE /v2/apps/:app_guid/service_bindings/:service_binding_guid' do
-      let(:space) { FactoryBot.create(:space) }
+      let(:space) { Space.make }
       let(:process) { ProcessModelFactory.make(space: space) }
       let(:instance) { ManagedServiceInstance.make(space: space) }
       let!(:service_binding) { ServiceBinding.make(app: process.app, service_instance: instance) }
@@ -2426,7 +2426,7 @@ module VCAP::CloudController
 
     describe 'GET /v2/apps/:guid/permissions' do
       let(:process) { ProcessModelFactory.make(space: space) }
-      let(:space) { FactoryBot.create(:space) }
+      let(:space) { Space.make }
       let(:user) { User.make }
 
       before do

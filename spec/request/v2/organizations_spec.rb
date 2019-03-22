@@ -5,7 +5,7 @@ RSpec.describe 'Organizations' do
   let(:org) { FactoryBot.create(:organization) }
 
   describe 'GET /v2/organizations/:guid/services' do
-    let!(:space) { FactoryBot.create(:space, organization: org) }
+    let!(:space) { VCAP::CloudController::Space.make(organization: org) }
     let!(:service_1) { VCAP::CloudController::Service.make }
     let!(:service_plan_1) { VCAP::CloudController::ServicePlan.make(service: service_1) }
     let!(:service_2) { VCAP::CloudController::Service.make }

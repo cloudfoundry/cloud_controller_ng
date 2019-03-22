@@ -10,7 +10,7 @@ module VCAP::CloudController
 
           let(:org) { FactoryBot.create(:organization) }
           let(:space_quota) { SpaceQuotaDefinition.make(organization: org) }
-          let(:space) { FactoryBot.create(:space, organization: org, space_quota_definition: space_quota) }
+          let(:space) { Space.make(organization: org, space_quota_definition: space_quota) }
           let(:domain) { PrivateDomain.make(name: 'mydomain.com', owning_organization: org) }
           let(:process) { ProcessModelFactory.make(space: space, diego: true) }
           let(:route_without_service) { Route.make(host: 'host2', domain: domain, space: space, path: '/my%20path') }

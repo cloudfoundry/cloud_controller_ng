@@ -145,7 +145,7 @@ module VCAP::CloudController
     end
 
     describe 'assigning org roles' do
-      let(:space) { FactoryBot.create(:space) }
+      let(:space) { Space.make }
       let(:org) { space.organization }
       let(:user) { User.make }
       let(:other_user) { User.make }
@@ -302,7 +302,7 @@ module VCAP::CloudController
     end
 
     describe 'DELETE /v2/users/:guid/audited_organizations/:org_guid' do
-      let(:space) { FactoryBot.create(:space) }
+      let(:space) { Space.make }
       let(:org) { space.organization }
       let(:user) { User.make }
       let(:event_type) { 'audit.user.organization_auditor_remove' }
@@ -363,7 +363,7 @@ module VCAP::CloudController
     end
 
     describe 'DELETE /v2/users/:guid/audited_spaces/:space_guid' do
-      let(:space) { FactoryBot.create(:space) }
+      let(:space) { Space.make }
       let(:org) { space.organization }
       let(:user) { User.make }
       let(:event_type) { 'audit.user.space_auditor_remove' }
@@ -431,7 +431,7 @@ module VCAP::CloudController
     end
 
     describe 'DELETE /v2/users/:guid/billing_managed_organizations/:org_guid' do
-      let(:space) { FactoryBot.create(:space) }
+      let(:space) { Space.make }
       let(:user) { User.make }
       let(:billing_manager) { User.make }
       let(:org) { space.organization }
@@ -507,7 +507,7 @@ module VCAP::CloudController
     end
 
     describe 'DELETE /v2/users/:guid/managed_organizations/:org_guid' do
-      let(:space) { FactoryBot.create(:space) }
+      let(:space) { Space.make }
       let(:org) { space.organization }
       let(:org_manager) { User.make }
       let(:event_type) { 'audit.user.organization_manager_remove' }
@@ -584,7 +584,7 @@ module VCAP::CloudController
     end
 
     describe 'DELETE /v2/users/:guid/organizations/:org_guid' do
-      let(:space) { FactoryBot.create(:space) }
+      let(:space) { Space.make }
       let(:org) { space.organization }
       let(:user) { User.make }
       let(:event_type) { 'audit.user.organization_user_remove' }
@@ -696,7 +696,7 @@ module VCAP::CloudController
     end
 
     describe 'DELETE /v2/users/:guid/managed_spaces/:space_guid' do
-      let(:space) { FactoryBot.create(:space) }
+      let(:space) { Space.make }
       let(:org) { space.organization }
       let(:user) { User.make }
       let(:other_user) { User.make }
@@ -755,7 +755,7 @@ module VCAP::CloudController
     end
 
     describe 'DELETE /v2/users/:guid/spaces/:space_guid' do
-      let(:space) { FactoryBot.create(:space) }
+      let(:space) { Space.make }
       let(:org) { space.organization }
       let(:user) { User.make }
       let(:event_type) { 'audit.user.space_developer_remove' }
@@ -822,7 +822,7 @@ module VCAP::CloudController
 
     describe 'assigning space roles' do
       let(:other_user) { User.make }
-      let(:space) { FactoryBot.create(:space) }
+      let(:space) { Space.make }
       let(:org) { space.organization }
       let(:user) { User.make }
 

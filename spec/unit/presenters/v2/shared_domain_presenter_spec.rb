@@ -17,7 +17,7 @@ module CloudController::Presenters::V2
         allow(RelationsPresenter).to receive(:new).and_return(relations_presenter)
       end
 
-      let(:space) { FactoryBot.create(:space) }
+      let(:space) { VCAP::CloudController::Space.make }
       let(:domain) { VCAP::CloudController::SharedDomain.make(router_group_guid: 'tcp-group') }
       let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(:routing, space: space) }
 

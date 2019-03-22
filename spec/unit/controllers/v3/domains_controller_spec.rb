@@ -3,7 +3,7 @@ require 'permissions_spec_helper'
 
 RSpec.describe DomainsController, type: :controller do
   let(:user) { VCAP::CloudController::User.make }
-  let(:space) { FactoryBot.create(:space) }
+  let(:space) { VCAP::CloudController::Space.make }
   let(:org) { space.organization }
 
   describe '#index' do

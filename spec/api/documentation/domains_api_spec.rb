@@ -60,7 +60,7 @@ RSpec.resource 'Domains (deprecated)', type: [:api, :legacy_api] do
     describe 'Spaces' do
       let!(:domain) { VCAP::CloudController::PrivateDomain.make }
       before do
-        FactoryBot.create(:space, organization: domain.owning_organization)
+        VCAP::CloudController::Space.make(organization: domain.owning_organization)
       end
 
       standard_model_list :space, VCAP::CloudController::SpacesController, outer_model: :domain

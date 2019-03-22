@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe Membership do
     let(:user) { User.make }
-    let!(:space) { FactoryBot.create(:space, organization: organization) }
+    let!(:space) { Space.make(organization: organization) }
     let(:organization) { FactoryBot.create(:organization) }
 
     let(:membership) { Membership.new(user) }
@@ -517,10 +517,10 @@ module VCAP::CloudController
       context 'mix of org and space roles' do
         let(:org_managed) { FactoryBot.create(:organization) }
         let(:org_audited) { FactoryBot.create(:organization) }
-        let!(:space1_in_managed_org) { FactoryBot.create(:space, organization: org_managed) }
-        let!(:space2_in_managed_org) { FactoryBot.create(:space, organization: org_managed) }
-        let!(:space_in_audited_org) { FactoryBot.create(:space, organization: org_audited) }
-        let!(:some_other_space) { FactoryBot.create(:space) }
+        let!(:space1_in_managed_org) { Space.make(organization: org_managed) }
+        let!(:space2_in_managed_org) { Space.make(organization: org_managed) }
+        let!(:space_in_audited_org) { Space.make(organization: org_audited) }
+        let!(:some_other_space) { Space.make }
 
         before do
           org_managed.add_manager(user)

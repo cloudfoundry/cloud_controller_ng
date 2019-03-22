@@ -16,7 +16,7 @@ module CloudController::Presenters::V2
         allow(RelationsPresenter).to receive(:new).and_return(relations_presenter)
       end
 
-      let(:space) { FactoryBot.create(:space) }
+      let(:space) { VCAP::CloudController::Space.make }
       let(:stack) { FactoryBot.create(:stack) }
       let(:process) do
         VCAP::CloudController::ProcessModelFactory.make(

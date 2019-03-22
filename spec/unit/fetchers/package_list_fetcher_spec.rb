@@ -3,9 +3,9 @@ require 'fetchers/package_list_fetcher'
 
 module VCAP::CloudController
   RSpec.describe PackageListFetcher do
-    let(:space1) { FactoryBot.create(:space) }
-    let(:space2) { FactoryBot.create(:space) }
-    let(:space3) { FactoryBot.create(:space) }
+    let(:space1) { Space.make }
+    let(:space2) { Space.make }
+    let(:space3) { Space.make }
     let(:org_1_guid) { space1.organization.guid }
     let(:org_2_guid) { space2.organization.guid }
     let(:org_3_guid) { space3.organization.guid }

@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe CredhubCredentialPopulator do
     describe '#transform' do
-      let(:space) { FactoryBot.create(:space) }
+      let(:space) { Space.make }
       let(:developer) { make_developer_for_space(space) }
       let(:instance)  { ManagedServiceInstance.make(space: space) }
       let(:service_keys) { [

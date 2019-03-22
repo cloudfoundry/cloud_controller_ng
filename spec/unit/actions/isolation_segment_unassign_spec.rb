@@ -43,7 +43,7 @@ module VCAP::CloudController
       end
 
       context 'and the Organization has a space assigned' do
-        let!(:space) { FactoryBot.create(:space, organization: org) }
+        let!(:space) { Space.make(organization: org) }
 
         it 'allows the isolation segment to remove the organization' do
           subject.unassign(isolation_segment_model, org)

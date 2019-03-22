@@ -7,7 +7,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
   let(:org1) { FactoryBot.create(:organization) }
   let(:org2) { FactoryBot.create(:organization) }
   let(:org3) { FactoryBot.create(:organization) }
-  let(:space) { FactoryBot.create(:space, organization: org1) }
+  let(:space) { VCAP::CloudController::Space.make(organization: org1) }
 
   let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
 
@@ -87,9 +87,9 @@ RSpec.describe IsolationSegmentsController, type: :controller do
   end
 
   describe '#relationships_spaces' do
-    let(:space1) { FactoryBot.create(:space, organization: org1) }
-    let(:space2) { FactoryBot.create(:space, organization: org2) }
-    let(:space3) { FactoryBot.create(:space, organization: org1) }
+    let(:space1) { VCAP::CloudController::Space.make(organization: org1) }
+    let(:space2) { VCAP::CloudController::Space.make(organization: org2) }
+    let(:space3) { VCAP::CloudController::Space.make(organization: org1) }
 
     context 'when the segment has not been associated with spaces' do
       context 'when the user has read access for isolation segment' do
@@ -458,7 +458,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
       end
 
       context 'and the user is not registered to any space or org associated with the isolation segment' do
-        let(:other_space) { FactoryBot.create(:space) }
+        let(:other_space) { VCAP::CloudController::Space.make }
 
         before do
           allow_user_read_access_for(user, spaces: [other_space])
@@ -475,7 +475,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
   end
 
   describe '#index' do
-    let(:space) { FactoryBot.create(:space) }
+    let(:space) { VCAP::CloudController::Space.make }
 
     before do
       allow_user_read_access_for(user, spaces: [space])

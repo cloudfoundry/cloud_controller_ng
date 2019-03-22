@@ -571,7 +571,7 @@ module VCAP::CloudController
 
         describe 'creating service bindings' do
           let(:message) { AppManifestMessage.create_from_yml({ services: ['si-name'] }) } # why defined here?
-          let(:space) { FactoryBot.create(:space) }
+          let(:space) { Space.make }
           let(:app) { AppModel.make(space: space) }
 
           before do
@@ -621,7 +621,7 @@ module VCAP::CloudController
             end
 
             context 'when theres a service instance in another space' do
-              let(:new_space) { FactoryBot.create(:space) }
+              let(:new_space) { Space.make }
               let(:new_app) { AppModel.make(space: new_space) }
               let!(:service_instance_with_same_name_the_first_one) { ManagedServiceInstance.make(name: 'si-name', space: new_space) }
               let(:message) { AppManifestMessage.create_from_yml({ services: ['si-name'] }) }
@@ -637,7 +637,7 @@ module VCAP::CloudController
             end
 
             context 'when theres a service instance shared from another space' do
-              let(:new_space) { FactoryBot.create(:space) }
+              let(:new_space) { Space.make }
               let!(:shared_si) { ManagedServiceInstance.make(name: 'shared-si', space: new_space) }
               let(:message) { AppManifestMessage.create_from_yml({ services: ['shared-si'] }) }
 

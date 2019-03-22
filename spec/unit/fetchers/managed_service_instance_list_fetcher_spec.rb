@@ -9,9 +9,9 @@ module VCAP::CloudController
     let(:fetcher) { ManagedServiceInstanceListFetcher.new }
 
     describe '#fetch_all' do
-      let!(:service_instance_1) { ManagedServiceInstance.make(name: 'rabbitmq', space: FactoryBot.create(:space, guid: 'space-1')) }
-      let!(:service_instance_2) { ManagedServiceInstance.make(name: 'redis', space: FactoryBot.create(:space, guid: 'space-2')) }
-      let!(:service_instance_3) { ManagedServiceInstance.make(name: 'mysql', space: FactoryBot.create(:space, guid: 'space-3')) }
+      let!(:service_instance_1) { ManagedServiceInstance.make(name: 'rabbitmq', space: Space.make(guid: 'space-1')) }
+      let!(:service_instance_2) { ManagedServiceInstance.make(name: 'redis', space: Space.make(guid: 'space-2')) }
+      let!(:service_instance_3) { ManagedServiceInstance.make(name: 'mysql', space: Space.make(guid: 'space-3')) }
       let!(:user_provided_service_instance) { UserProvidedServiceInstance.make(name: 'my-thing') }
 
       it 'returns a Sequel::Dataset' do
@@ -46,7 +46,7 @@ module VCAP::CloudController
           end
 
           context 'when the space contains no service instances' do
-            let(:space) { FactoryBot.create(:space, guid: 'space-guid') }
+            let(:space) { Space.make(guid: 'space-guid') }
             let(:filters) { { space_guids: ['space-guid'] } }
 
             it 'returns an empty list' do
@@ -107,8 +107,8 @@ module VCAP::CloudController
       let!(:service_instance_3) { ManagedServiceInstance.make(name: 'mysql', space: space_2) }
       let!(:user_provided_service_instance) { UserProvidedServiceInstance.make(name: 'my-thing', space: space_1) }
 
-      let(:space_1) { FactoryBot.create(:space, guid: 'space-1') }
-      let(:space_2) { FactoryBot.create(:space, guid: 'space-2') }
+      let(:space_1) { Space.make(guid: 'space-1') }
+      let(:space_2) { Space.make(guid: 'space-2') }
 
       it 'returns only the managed service instances in the specified space' do
         results = fetcher.fetch(message: message, readable_space_guids: [space_1.guid]).all
@@ -136,7 +136,7 @@ module VCAP::CloudController
           end
 
           context 'when the space contains no service instances' do
-            let(:space) { FactoryBot.create(:space, guid: 'space-guid') }
+            let(:space) { Space.make(guid: 'space-guid') }
             let(:filters) { { space_guids: ['space-guid'] } }
 
             it 'returns an empty list' do
@@ -198,7 +198,7 @@ module VCAP::CloudController
       end
 
       context 'when managed service instances are shared' do
-        let(:shared_to_space) { FactoryBot.create(:space) }
+        let(:shared_to_space) { Space.make }
 
         before do
           service_instance_2.add_shared_space(shared_to_space)
@@ -212,7 +212,7 @@ module VCAP::CloudController
       end
 
       context 'when a space contains both shared and non-shared service instances' do
-        let(:shared_to_space) { FactoryBot.create(:space) }
+        let(:shared_to_space) { Space.make }
         let!(:service_instance_4) { ManagedServiceInstance.make(space: shared_to_space) }
 
         before do

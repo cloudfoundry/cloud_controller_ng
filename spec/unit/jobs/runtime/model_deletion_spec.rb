@@ -6,7 +6,7 @@ require 'models/runtime/space'
 module VCAP::CloudController
   module Jobs::Runtime
     RSpec.describe ModelDeletion, job_context: :worker do
-      let!(:space) { FactoryBot.create(:space) }
+      let!(:space) { Space.make }
       subject(:job) { ModelDeletion.new(Space, space.guid) }
 
       it { is_expected.to be_a_valid_job }

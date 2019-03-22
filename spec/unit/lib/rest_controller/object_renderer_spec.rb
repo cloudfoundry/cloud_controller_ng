@@ -66,7 +66,7 @@ module VCAP::CloudController::RestController
       context 'service_plan renderer' do
         let(:user) { VCAP::CloudController::User.make }
         let(:organization) { FactoryBot.create(:organization) }
-        let(:space) { FactoryBot.create(:space, organization: organization) }
+        let(:space) { VCAP::CloudController::Space.make(organization: organization) }
         let(:controller) { VCAP::CloudController::ServicePlansController }
         let(:opts) { {} }
         let(:broker) { VCAP::CloudController::ServiceBroker.make }

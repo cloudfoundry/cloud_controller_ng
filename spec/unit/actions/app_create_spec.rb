@@ -9,7 +9,7 @@ module VCAP::CloudController
     subject(:app_create) { AppCreate.new(user_audit_info) }
 
     describe '#create' do
-      let(:space) { FactoryBot.create(:space) }
+      let(:space) { Space.make }
       let(:space_guid) { space.guid }
       let(:environment_variables) { { BAKED: 'POTATO' } }
       let(:buildpack) { Buildpack.make }

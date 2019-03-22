@@ -2,7 +2,7 @@ require 'spec_helper'
 
 RSpec.describe MaxServiceInstancePolicy do
   let(:org) { FactoryBot.create(:organization, quota_definition: quota) }
-  let(:space) { FactoryBot.create(:space, organization: org) }
+  let(:space) { VCAP::CloudController::Space.make(organization: org) }
   let(:service_instance) do
     service_plan = VCAP::CloudController::ServicePlan.make
     VCAP::CloudController::ManagedServiceInstance.make_unsaved(space: space, service_plan: service_plan)

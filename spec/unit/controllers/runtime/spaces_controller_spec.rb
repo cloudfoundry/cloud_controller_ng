@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe VCAP::CloudController::SpacesController do
     let(:organization_one) { FactoryBot.create(:organization) }
-    let(:space_one) { FactoryBot.create(:space, organization: organization_one) }
+    let(:space_one) { Space.make(organization: organization_one) }
     let(:user_email) { Sham.email }
     let(:uaa_client) { instance_double(UaaClient) }
 
@@ -164,14 +164,14 @@ module VCAP::CloudController
 
       describe 'app_events associations' do
         it 'does not return app_events with inline-relations-depth=0' do
-          space = FactoryBot.create(:space)
+          space = Space.make
           get "/v2/spaces/#{space.guid}?inline-relations-depth=0"
           expect(entity).to have_key('app_events_url')
           expect(entity).to_not have_key('app_events')
         end
 
         it 'does not return app_events with inline-relations-depth=1 since app_events dataset is relatively expensive to query' do
-          space = FactoryBot.create(:space)
+          space = Space.make
           get "/v2/spaces/#{space.guid}?inline-relations-depth=1"
           expect(entity).to have_key('app_events_url')
           expect(entity).to_not have_key('app_events')
@@ -180,14 +180,14 @@ module VCAP::CloudController
 
       describe 'events associations' do
         it 'does not return events with inline-relations-depth=0' do
-          space = FactoryBot.create(:space)
+          space = Space.make
           get "/v2/spaces/#{space.guid}?inline-relations-depth=0"
           expect(entity).to have_key('events_url')
           expect(entity).to_not have_key('events')
         end
 
         it 'does not return events with inline-relations-depth=1 since events dataset is relatively expensive to query' do
-          space = FactoryBot.create(:space)
+          space = Space.make
           get "/v2/spaces/#{space.guid}?inline-relations-depth=1"
           expect(entity).to have_key('events_url')
           expect(entity).to_not have_key('events')
@@ -197,7 +197,7 @@ module VCAP::CloudController
       describe 'apps assocations' do
         let(:organization) { FactoryBot.create(:organization) }
         let(:domain) { PrivateDomain.make(owning_organization: organization) }
-        let(:space) { FactoryBot.create(:space, organization: organization) }
+        let(:space) { Space.make(organization: organization) }
         let(:app_model) { AppModel.make(space: space) }
         let!(:web_process_0) { ProcessModel.make(app: app_model, type: 'web', created_at: 2.days.ago) }
         let!(:web_process_1) { ProcessModel.make(app: app_model, type: 'web', created_at: 1.day.ago) }
@@ -301,7 +301,7 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/spaces/:guid/service_instances' do
-      let(:space) { FactoryBot.create(:space) }
+      let(:space) { Space.make }
       let(:developer) { make_developer_for_space(space) }
 
       before { set_current_user(developer) }
@@ -341,7 +341,7 @@ module VCAP::CloudController
 
       describe 'shared service instances' do
         context 'when a service instance has been shared from another space' do
-          let(:shared_service_instance) { ManagedServiceInstance.make(space: FactoryBot.create(:space)) }
+          let(:shared_service_instance) { ManagedServiceInstance.make(space: Space.make) }
 
           before do
             shared_service_instance.add_shared_space(space)
@@ -357,7 +357,7 @@ module VCAP::CloudController
 
         context 'when a service instance has been shared between two spaces that are not the queried space' do
           let(:other_space) { make_space_for_user(developer) }
-          let(:irrelevant_shared_service_instance) { ManagedServiceInstance.make(space: FactoryBot.create(:space)) }
+          let(:irrelevant_shared_service_instance) { ManagedServiceInstance.make(space: Space.make) }
 
           before do
             irrelevant_shared_service_instance.add_shared_space(other_space)
@@ -502,7 +502,7 @@ module VCAP::CloudController
         describe 'enumerating services bound to a service-broker' do
           let(:manager) { User.make(guid: 'manager-guid') }
           let(:org) { FactoryBot.create(:organization, guid: 'organization', manager_guids: [manager.guid], user_guids: org_user_guids) }
-          let(:space) { FactoryBot.create(:space,
+          let(:space) { Space.make(
             organization: org,
             guid: 'space-guid',
             manager_guids: space_manager_guids)
@@ -644,8 +644,8 @@ module VCAP::CloudController
 
     describe 'GET', '/v2/spaces/:guid/services' do
       let(:organization_two) { FactoryBot.create(:organization) }
-      let(:space_one) { FactoryBot.create(:space, organization: organization_one) }
-      let(:space_two) { FactoryBot.create(:space, organization: organization_two) }
+      let(:space_one) { Space.make(organization: organization_one) }
+      let(:space_two) { Space.make(organization: organization_two) }
       let(:user) { make_developer_for_space(space_one) }
 
       before do
@@ -810,7 +810,7 @@ module VCAP::CloudController
 
     describe 'audit events' do
       let(:user_email) { Sham.email }
-      let(:space) { FactoryBot.create(:space) }
+      let(:space) { Space.make }
 
       before { set_current_user_as_admin(email: user_email) }
 
@@ -856,7 +856,7 @@ module VCAP::CloudController
 
     describe 'DELETE /v2/spaces/:guid' do
       context 'when recursive is false' do
-        let(:space) { FactoryBot.create(:space) }
+        let(:space) { Space.make }
 
         before { set_current_user_as_admin }
 
@@ -918,7 +918,7 @@ module VCAP::CloudController
 
       context 'when recursive is true' do
         let!(:org) { FactoryBot.create(:organization) }
-        let!(:space) { FactoryBot.create(:space, organization: org) }
+        let!(:space) { Space.make(organization: org) }
         let!(:space_guid) { space.guid }
         let!(:app_guid) { AppModel.make(space_guid: space_guid).guid }
         let!(:route_guid) { Route.make(space_guid: space_guid).guid }
@@ -1065,7 +1065,7 @@ module VCAP::CloudController
           end
 
           context 'when user is an Org Manager' do
-            let!(:space) { FactoryBot.create(:space) }
+            let!(:space) { Space.make }
             let(:user) { make_manager_for_org(space.organization) }
             let!(:broker) { VCAP::CloudController::ServiceBroker.make(space_guid: space.guid) }
 
@@ -1214,7 +1214,7 @@ module VCAP::CloudController
       let(:mgr) { User.make }
       let(:user) { User.make }
       let(:org) { FactoryBot.create(:organization, manager_guids: [mgr.guid], user_guids: [mgr.guid, user.guid]) }
-      let(:space) { FactoryBot.create(:space, organization: org, manager_guids: [mgr.guid], developer_guids: [user.guid]) }
+      let(:space) { Space.make(organization: org, manager_guids: [mgr.guid], developer_guids: [user.guid]) }
       before do
         allow(uaa_client).to receive(:usernames_for_ids).and_return({})
       end
@@ -1236,7 +1236,7 @@ module VCAP::CloudController
       let(:mgr) { User.make }
       let(:developer) { User.make }
       let(:org) { FactoryBot.create(:organization, manager_guids: [mgr.guid], user_guids: org_user_guids) }
-      let(:space) { FactoryBot.create(:space,
+      let(:space) { Space.make(
         organization: org,
         manager_guids: [mgr.guid],
         developer_guids: space_dev_guids,
@@ -1322,7 +1322,7 @@ module VCAP::CloudController
       let(:manager) { User.make }
       let(:developer) { User.make }
       let(:org) { FactoryBot.create(:organization, manager_guids: [manager.guid], user_guids: org_user_guids) }
-      let(:space) { FactoryBot.create(:space,
+      let(:space) { Space.make(
         organization: org,
         manager_guids: space_manager_guids,
         developer_guids: space_dev_guids,
@@ -1409,7 +1409,7 @@ module VCAP::CloudController
       let(:manager) { User.make }
       let(:auditor) { User.make }
       let(:org) { FactoryBot.create(:organization, manager_guids: [manager.guid], user_guids: org_user_guids) }
-      let(:space) { FactoryBot.create(:space,
+      let(:space) { Space.make(
         organization: org,
         manager_guids: space_manager_guids,
         developer_guids: space_dev_guids,
@@ -1552,7 +1552,7 @@ module VCAP::CloudController
         end
 
         context 'with duplicate spaces due to race conditions' do
-          let!(:dupe_space) { FactoryBot.create(:space, organization: org, name: name) }
+          let!(:dupe_space) { Space.make(organization_guid: org.guid, name: name) }
 
           before do
             allow_any_instance_of(Space).to receive(:validate).and_return(true)
@@ -1573,7 +1573,7 @@ module VCAP::CloudController
       let(:user) { set_current_user(User.make) }
       let(:isolation_segment_model) { FactoryBot.create(:isolation_segment) }
       let(:organization) { FactoryBot.create(:organization) }
-      let(:space) { FactoryBot.create(:space, organization: organization) }
+      let(:space) { Space.make(organization: organization) }
       let(:assigner) { IsolationSegmentAssign.new }
 
       context 'associating an isolation_segment' do
@@ -1830,7 +1830,7 @@ module VCAP::CloudController
       let(:user) { set_current_user(User.make) }
       let(:isolation_segment_model) { FactoryBot.create(:isolation_segment) }
       let(:organization) { FactoryBot.create(:organization) }
-      let(:space) { FactoryBot.create(:space, organization: organization) }
+      let(:space) { Space.make(organization: organization) }
 
       before do
         assigner.assign(isolation_segment_model, [organization])
@@ -1921,7 +1921,7 @@ module VCAP::CloudController
     describe 'DELETE /v2/spaces/:guid/unmapped_routes' do
       let(:user) { set_current_user(User.make) }
       let(:organization) { FactoryBot.create(:organization) }
-      let(:space) { FactoryBot.create(:space, organization: organization) }
+      let(:space) { Space.make(organization: organization) }
       let(:process) { VCAP::CloudController::ProcessModelFactory.make(state: 'STARTED') }
 
       describe 'permissions' do
@@ -2023,7 +2023,7 @@ module VCAP::CloudController
     describe 'security groups' do
       let(:user) { User.make }
       let(:org) { FactoryBot.create(:organization, user_guids: [user.guid]) }
-      let(:space) { FactoryBot.create(:space, organization: org) }
+      let(:space) { Space.make(organization: org) }
       let(:security_group) { SecurityGroup.make }
 
       before do
@@ -2540,7 +2540,7 @@ module VCAP::CloudController
         plural_role = role.to_s.pluralize
         describe "PUT /v2/spaces/:guid/#{plural_role}/:user_guid" do
           let(:user) { User.make(username: 'larry_the_user') }
-          let(:space) { FactoryBot.create(:space) }
+          let(:space) { Space.make }
           let(:event_type) { "audit.user.space_#{role}_add" }
 
           before do
@@ -2587,7 +2587,7 @@ module VCAP::CloudController
         plural_role = role.to_s.pluralize
         describe "DELETE /v2/spaces/:guid/#{plural_role}/:user_guid" do
           let(:user) { User.make(username: 'larry_the_user') }
-          let(:space) { FactoryBot.create(:space) }
+          let(:space) { Space.make }
           let(:event_type) { "audit.user.space_#{role}_remove" }
 
           before do

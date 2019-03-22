@@ -21,7 +21,7 @@ module VCAP::CloudController
 
       context 'with app spaces' do
         let(:org) { FactoryBot.create(:organization) }
-        let(:as) { FactoryBot.create(:space, organization: org) }
+        let(:as) { Space.make(organization: org) }
         let(:api) {
           SecurityContext.set(user)
           LegacyApiBase.new(TestConfig.config_instance, logger, {}, {}, fake_req, nil, dependencies)
@@ -64,8 +64,8 @@ module VCAP::CloudController
 
       context 'with app spaces' do
         let(:org) { FactoryBot.create(:organization) }
-        let(:as1) { FactoryBot.create(:space, organization: org) }
-        let(:as2) { FactoryBot.create(:space, organization: org) }
+        let(:as1) { Space.make(organization: org) }
+        let(:as2) { Space.make(organization: org) }
         let(:api) {
           SecurityContext.set(user)
           LegacyApiBase.new(TestConfig.config_instance, logger, {}, {}, fake_req, nil, dependencies)

@@ -437,7 +437,7 @@ RSpec.describe PackagesController, type: :controller do
 
   describe '#update' do
     let!(:org) { FactoryBot.create(:organization, name: "Harold's Farm") }
-    let!(:space) { FactoryBot.create(:space, name: 'roosters', organization: org) }
+    let!(:space) { VCAP::CloudController::Space.make(name: 'roosters', organization: org) }
     let(:app_model) { VCAP::CloudController::AppModel.make(name: 'needed to put the package in the space', space: space) }
     let(:package) { VCAP::CloudController::PackageModel.make(app: app_model) }
 
@@ -809,9 +809,9 @@ RSpec.describe PackagesController, type: :controller do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
     let(:app_model) { VCAP::CloudController::AppModel.make }
     let(:space) { app_model.space }
-    let(:space1) { FactoryBot.create(:space) }
-    let(:space2) { FactoryBot.create(:space) }
-    let(:space3) { FactoryBot.create(:space) }
+    let(:space1) { VCAP::CloudController::Space.make }
+    let(:space2) { VCAP::CloudController::Space.make }
+    let(:space3) { VCAP::CloudController::Space.make }
     let(:user_spaces) { [space, space1, space2, space3] }
     let!(:user_package_1) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
     let!(:user_package_2) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }

@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 RSpec.describe 'Droplets' do
-  let(:space) { FactoryBot.create(:space) }
+  let(:space) { VCAP::CloudController::Space.make }
   let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid, name: 'my-app') }
   let(:other_app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid, name: 'my-app-3') }
   let(:developer) { make_developer_for_space(space) }
@@ -265,7 +265,7 @@ RSpec.describe 'Droplets' do
     end
 
     context 'faceted list' do
-      let(:space2) { FactoryBot.create(:space) }
+      let(:space2) { VCAP::CloudController::Space.make }
       let(:app_model2) { VCAP::CloudController::AppModel.make(space: space) }
       let(:app_model3) { VCAP::CloudController::AppModel.make(space: space2) }
       let!(:droplet3) { VCAP::CloudController::DropletModel.make(app: app_model2, state: VCAP::CloudController::DropletModel::FAILED_STATE) }

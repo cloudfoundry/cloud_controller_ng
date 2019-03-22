@@ -3,7 +3,7 @@ require 'rspec_api_documentation/dsl'
 
 RSpec.resource 'Spaces', type: [:api, :legacy_api] do
   let(:admin_auth_header) { admin_headers['HTTP_AUTHORIZATION'] }
-  let!(:space) { FactoryBot.create(:space) }
+  let!(:space) { VCAP::CloudController::Space.make }
   let(:guid) { space.guid }
 
   authenticated_request

@@ -132,7 +132,7 @@ module VCAP::CloudController
       end
 
       context 'and the segment is assigned to a space in the org' do
-        let!(:space) { FactoryBot.create(:space, organization: org, isolation_segment_guid: isolation_segment.guid) }
+        let!(:space) { Space.make(organization: org, isolation_segment_guid: isolation_segment.guid) }
 
         it 'does not allow updating the iso seg name' do
           message = IsolationSegmentUpdateMessage.new(name: 'New Name')

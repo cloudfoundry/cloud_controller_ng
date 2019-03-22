@@ -254,8 +254,8 @@ module VCAP::CloudController
       end
 
       context 'when the app and service instance are in different spaces' do
-        let(:app) { AppModel.make(space: FactoryBot.create(:space)) }
-        let(:service_instance) { ManagedServiceInstance.make(space: FactoryBot.create(:space)) }
+        let(:app) { AppModel.make(space: Space.make) }
+        let(:service_instance) { ManagedServiceInstance.make(space: Space.make) }
 
         context 'when the service instance has not been shared into the app space' do
           it 'raises a SpaceMismatch error' do

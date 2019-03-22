@@ -55,12 +55,12 @@ module VCAP::CloudController
       end
 
       it 'returns only the route_mappings in spaces requested' do
-        space1                   = FactoryBot.create(:space)
+        space1                   = Space.make
         app_in_space1            = AppModel.make(space: space1)
         route_mapping1_in_space1 = RouteMappingModel.make(app: app_in_space1)
         route_mapping2_in_space1 = RouteMappingModel.make(app: app_in_space1)
 
-        space2                   = FactoryBot.create(:space)
+        space2                   = Space.make
         app_in_space2            = AppModel.make(space: space2)
         route_mapping1_in_space2 = RouteMappingModel.make(app: app_in_space2)
 
@@ -72,7 +72,7 @@ module VCAP::CloudController
 
       context 'filter' do
         context 'app_guids' do
-          let(:space) { FactoryBot.create(:space) }
+          let(:space) { Space.make }
           let!(:route_mapping1) { RouteMappingModel.make(app: AppModel.make(space: space)) }
           let!(:route_mapping2) { RouteMappingModel.make(app: AppModel.make(space: space)) }
           let(:filters) { { app_guids: [route_mapping1.app.guid] } }
@@ -85,7 +85,7 @@ module VCAP::CloudController
         end
 
         context 'route_guids' do
-          let(:space) { FactoryBot.create(:space) }
+          let(:space) { Space.make }
           let!(:route_mapping1) { RouteMappingModel.make(app: AppModel.make(space: space)) }
           let!(:route_mapping2) { RouteMappingModel.make(app: AppModel.make(space: space)) }
           let(:filters) { { route_guids: [route_mapping1.route.guid] } }
@@ -120,7 +120,7 @@ module VCAP::CloudController
 
       context 'filter' do
         context 'app_guids' do
-          let(:space) { FactoryBot.create(:space) }
+          let(:space) { Space.make }
           let!(:route_mapping1) { RouteMappingModel.make(app: AppModel.make(space: space)) }
           let!(:route_mapping2) { RouteMappingModel.make(app: AppModel.make(space: space)) }
           let(:filters) { { app_guids: [route_mapping1.app.guid, route_mapping2.app.guid] } }
@@ -133,7 +133,7 @@ module VCAP::CloudController
         end
 
         context 'route_guids' do
-          let(:space) { FactoryBot.create(:space) }
+          let(:space) { Space.make }
           let!(:route_mapping1) { RouteMappingModel.make(app: AppModel.make(space: space)) }
           let!(:route_mapping2) { RouteMappingModel.make(app: AppModel.make(space: space)) }
           let(:filters) { { route_guids: [route_mapping1.route.guid, route_mapping2.route.guid] } }

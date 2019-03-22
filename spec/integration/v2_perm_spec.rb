@@ -625,7 +625,7 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
   describe 'DELETE /v2/spaces/:guid/:role' do
     let(:org) { FactoryBot.create(:organization) }
     let(:space) {
-      FactoryBot.create(:space,
+      VCAP::CloudController::Space.make(
         organization: org,
       )
     }
@@ -654,7 +654,7 @@ RSpec.describe 'Perm', type: :integration, skip: skip_perm_tests, perm: skip_per
   describe 'DELETE /v2/spaces/:guid/:role/:user_guid' do
     let(:org) { FactoryBot.create(:organization) }
     let(:space) {
-      FactoryBot.create(:space,
+      VCAP::CloudController::Space.make(
         organization: org,
       )
     }

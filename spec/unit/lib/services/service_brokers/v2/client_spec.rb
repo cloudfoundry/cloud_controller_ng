@@ -80,7 +80,7 @@ module VCAP::Services::ServiceBrokers::V2
 
     describe '#provision' do
       let(:plan) { VCAP::CloudController::ServicePlan.make }
-      let(:space) { FactoryBot.create(:space) }
+      let(:space) { VCAP::CloudController::Space.make }
       let(:service_instance_operation) { VCAP::CloudController::ServiceInstanceOperation.make }
       let(:instance) do
         VCAP::CloudController::ManagedServiceInstance.make(
@@ -357,7 +357,7 @@ module VCAP::Services::ServiceBrokers::V2
 
     describe '#fetch_service_instance_last_operation' do
       let(:plan) { VCAP::CloudController::ServicePlan.make }
-      let(:space) { FactoryBot.create(:space) }
+      let(:space) { VCAP::CloudController::Space.make }
       let(:instance) do
         VCAP::CloudController::ManagedServiceInstance.make(
           service_plan: plan,
@@ -497,7 +497,7 @@ module VCAP::Services::ServiceBrokers::V2
       let(:old_plan) { VCAP::CloudController::ServicePlan.make }
       let(:new_plan) { VCAP::CloudController::ServicePlan.make }
 
-      let(:space) { FactoryBot.create(:space) }
+      let(:space) { VCAP::CloudController::Space.make }
       let(:last_operation) do
         VCAP::CloudController::ServiceInstanceOperation.make(
           type:  'create',

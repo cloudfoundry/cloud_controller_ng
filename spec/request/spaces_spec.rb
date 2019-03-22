@@ -5,10 +5,10 @@ RSpec.describe 'Spaces' do
   let(:user_header) { headers_for(user) }
   let(:admin_header) { admin_headers_for(user) }
   let(:organization)       { FactoryBot.create(:organization, name: 'Boardgames') }
-  let!(:space1)            { FactoryBot.create(:space, name: 'Catan', organization: organization) }
-  let!(:space2)            { FactoryBot.create(:space, name: 'Ticket to Ride', organization: organization) }
-  let!(:space3)            { FactoryBot.create(:space, name: 'Agricola', organization: organization) }
-  let!(:unaccesable_space) { FactoryBot.create(:space, name: 'Ghost Stories', organization: organization) }
+  let!(:space1)            { VCAP::CloudController::Space.make name: 'Catan', organization: organization }
+  let!(:space2)            { VCAP::CloudController::Space.make name: 'Ticket to Ride', organization: organization }
+  let!(:space3)            { VCAP::CloudController::Space.make name: 'Agricola', organization: organization }
+  let!(:unaccesable_space) { VCAP::CloudController::Space.make name: 'Ghost Stories', organization: organization }
 
   before do
     organization.add_user(user)
@@ -181,22 +181,22 @@ RSpec.describe 'Spaces' do
     end
 
     context 'when a label_selector is provided' do
-      let!(:spaceA) { FactoryBot.create(:space, organization: organization) }
+      let!(:spaceA) { VCAP::CloudController::Space.make(organization: organization) }
       let!(:spaceAFruit) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'fruit', value: 'strawberry', space: spaceA) }
       let!(:spaceAAnimal) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'animal', value: 'horse', space: spaceA) }
 
-      let!(:spaceB) { FactoryBot.create(:space, organization: organization) }
+      let!(:spaceB) { VCAP::CloudController::Space.make(organization: organization) }
       let!(:spaceBEnv) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'env', value: 'prod', space: spaceB) }
       let!(:spaceBAnimal) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'animal', value: 'dog', space: spaceB) }
 
-      let!(:spaceC) { FactoryBot.create(:space, organization: organization) }
+      let!(:spaceC) { VCAP::CloudController::Space.make(organization: organization) }
       let!(:spaceCEnv) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'env', value: 'prod', space: spaceC) }
       let!(:spaceCAnimal) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'animal', value: 'horse', space: spaceC) }
 
-      let!(:spaceD) { FactoryBot.create(:space, organization: organization) }
+      let!(:spaceD) { VCAP::CloudController::Space.make(organization: organization) }
       let!(:spaceDEnv) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'env', value: 'prod', space: spaceD) }
 
-      let!(:spaceE) { FactoryBot.create(:space, organization: organization) }
+      let!(:spaceE) { VCAP::CloudController::Space.make(organization: organization) }
       let!(:spaceEEnv) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'env', value: 'staging', space: spaceE) }
       let!(:spaceEAnimal) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'animal', value: 'dog', space: spaceE) }
 

@@ -4,7 +4,7 @@ require 'messages/apps_list_message'
 module VCAP::CloudController
   RSpec.describe AppListFetcher do
     describe '#fetch' do
-      let(:space) { FactoryBot.create(:space) }
+      let(:space) { Space.make }
       let(:app) { AppModel.make(space_guid: space.guid) }
       let(:sad_app) { AppModel.make(space_guid: space.guid) }
       let(:org) { space.organization }
@@ -60,7 +60,7 @@ module VCAP::CloudController
       context 'when the organization guids are provided' do
         let(:filters) { { organization_guids: [org.guid] } }
         let(:sad_org) { FactoryBot.create(:organization) }
-        let(:sad_space) { FactoryBot.create(:space, organization: sad_org) }
+        let(:sad_space) { Space.make(organization_guid: sad_org.guid) }
         let(:sad_app) { AppModel.make(space_guid: sad_space.guid) }
         let(:space_guids) { [space.guid, sad_space.guid] }
 

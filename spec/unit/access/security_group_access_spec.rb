@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   RSpec.describe SecurityGroupAccess, type: :access do
     subject(:access) { SecurityGroupAccess.new(Security::AccessContext.new) }
-    let(:space) { FactoryBot.create(:space) }
+    let(:space) { Space.make }
     let(:user) { User.make }
     let(:object) { SecurityGroup.make(space_guids: [space.guid]) }
 

@@ -120,7 +120,7 @@ module VCAP::CloudController
       end
     end
 
-    let(:developer) { make_developer_for_space(FactoryBot.create(:space)) }
+    let(:developer) { make_developer_for_space(Space.make) }
 
     describe 'non public service plans' do
       let!(:private_plan) { ServicePlan.make(public: false) }
@@ -238,7 +238,7 @@ module VCAP::CloudController
 
           context 'and the user has a service instance associated with that plan' do
             let(:organization) { FactoryBot.create(:organization) }
-            let(:space) { FactoryBot.create(:space, organization: organization) }
+            let(:space) { Space.make(organization: organization) }
 
             before do
               space.organization.add_user(user)
@@ -312,7 +312,7 @@ module VCAP::CloudController
         context 'with private service brokers' do
           it 'returns service plans from private brokers that are in the same space as the user' do
             user = User.make
-            space = FactoryBot.create(:space)
+            space = Space.make
             space.organization.add_user user
             private_broker = ServiceBroker.make(space: space)
             service = Service.make(service_broker: private_broker)
@@ -334,7 +334,7 @@ module VCAP::CloudController
         context 'when a service instance is associated with an inactive plan' do
           it 'does not list the inactive service plan' do
             user = User.make
-            space = FactoryBot.create(:space)
+            space = Space.make
             service = Service.make
             service_plan = ServicePlan.make(service: service, public: true, active: true)
             ManagedServiceInstance.make(service_plan: service_plan)

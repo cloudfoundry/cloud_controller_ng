@@ -6,9 +6,9 @@ RSpec.describe PackagesController, type: :controller do # , isolation: :truncati
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
     let(:app_model) { VCAP::CloudController::AppModel.make }
     let(:space) { app_model.space }
-    let(:space1) { FactoryBot.create(:space) }
-    let(:space2) { FactoryBot.create(:space) }
-    let(:space3) { FactoryBot.create(:space) }
+    let(:space1) { VCAP::CloudController::Space.make }
+    let(:space2) { VCAP::CloudController::Space.make }
+    let(:space3) { VCAP::CloudController::Space.make }
     let(:user_spaces) { [space, space1, space2, space3] }
     let!(:user_package_1) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
     let!(:user_package_2) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
