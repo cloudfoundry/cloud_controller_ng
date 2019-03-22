@@ -15,7 +15,7 @@ module VCAP::CloudController
         SidecarModel.db.transaction do
           sidecar.save(raise_on_save_failure: false)
           message.process_types.each do |process_type|
-            SidecarProcessTypeModel.create(name: process_type, sidecar_guid: sidecar.guid)
+            SidecarProcessTypeModel.create(type: process_type, sidecar_guid: sidecar.guid)
           end
         end
 

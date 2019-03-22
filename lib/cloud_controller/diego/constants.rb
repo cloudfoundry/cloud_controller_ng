@@ -10,7 +10,6 @@ module VCAP::CloudController
     LEGACY_DOWNLOAD_USER = 'vcap'.freeze
 
     RUNNING_TRUSTED_SYSTEM_CERT_PATH = '/etc/cf-system-certificates'.freeze
-    DEFAULT_FILE_DESCRIPTOR_LIMIT    = 1024
     DEFAULT_LANG                     = 'en_US.UTF-8'.freeze
     DEFAULT_APP_PORT                 = 8080
     DEFAULT_SSH_PORT                 = 2222

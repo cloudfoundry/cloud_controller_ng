@@ -12,7 +12,7 @@ module VCAP::CloudController
       primary_key: :guid
 
     def process_types
-      sidecar_process_types.map(&:name).sort
+      sidecar_process_types.map(&:type).sort
     end
 
     def validate

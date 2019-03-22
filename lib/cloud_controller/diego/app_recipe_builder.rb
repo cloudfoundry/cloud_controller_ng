@@ -7,6 +7,7 @@ require 'cloud_controller/diego/process_guid'
 require 'cloud_controller/diego/ssh_key'
 require 'credhub/config_helpers'
 require 'models/helpers/health_check_types'
+require 'cloud_controller/diego/main_lrp_action_builder.rb'
 
 module VCAP::CloudController
   module Diego
@@ -47,7 +48,6 @@ module VCAP::CloudController
 
       def app_lrp_arguments
         desired_lrp_builder = LifecycleProtocol.protocol_for_type(process.app.lifecycle_type).desired_lrp_builder(config, process)
-
         ports  = desired_lrp_builder.ports.dup
         routes = generate_routes(routing_info)
 
@@ -85,7 +85,7 @@ module VCAP::CloudController
           trusted_system_certificates_path: RUNNING_TRUSTED_SYSTEM_CERT_PATH,
           network:                          generate_network,
           cpu_weight:                       TaskCpuWeightCalculator.new(memory_in_mb: process.memory).calculate,
-          action:                           generate_run_action(desired_lrp_builder),
+          action:                           MainLRPActionBuilder.build(process, desired_lrp_builder, ssh_key),
           monitor:                          generate_monitor_action(desired_lrp_builder),
           root_fs:                          desired_lrp_builder.root_fs,
           setup:                            desired_lrp_builder.setup,
@@ -159,59 +159,6 @@ module VCAP::CloudController
         proto_volume_mounts
       end
 
-      def generate_app_action(start_command, user, environment_variables)
-        launcher_args = ['app', start_command || '', process.execution_metadata]
-
-        action(::Diego::Bbs::Models::RunAction.new(
-                 user:            user,
-                 path:            '/tmp/lifecycle/launcher',
-                 args:            launcher_args,
-                 env:             environment_variables,
-                 log_source:      "APP/PROC/#{process.type.upcase}",
-                 resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: file_descriptor_limit),
-        ))
-      end
-
-      def generate_ssh_action(user, environment_variables)
-        action(::Diego::Bbs::Models::RunAction.new(
-                 user:            user,
-                 path:            '/tmp/lifecycle/diego-sshd',
-                 args:            [
-                   "-address=#{sprintf('0.0.0.0:%<port>d', port: DEFAULT_SSH_PORT)}",
-                   "-hostKey=#{ssh_key.private_key}",
-                   "-authorizedKey=#{ssh_key.authorized_key}",
-                   '-inheritDaemonEnv',
-                   '-logLevel=fatal',
-                 ],
-                 env:             environment_variables,
-                 resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: file_descriptor_limit),
-                 log_source:      SSHD_LOG_SOURCE,
-        ))
-      end
-
-      def generate_environment_variables(lrp_builder)
-        running_env_vars = Environment.new(process, EnvironmentVariableGroup.running.environment_json).as_json
-
-        env_vars = (running_env_vars + lrp_builder.platform_options).map do |i|
-          ::Diego::Bbs::Models::EnvironmentVariable.new(name: i['name'], value: i['value'])
-        end
-        lrp_builder.port_environment_variables + env_vars
-      end
-
-      def generate_run_action(lrp_builder)
-        environment_variables = generate_environment_variables(lrp_builder)
-
-        actions = []
-        actions << generate_app_action(
-          lrp_builder.start_command,
-          lrp_builder.action_user,
-          environment_variables
-        )
-
-        actions << generate_ssh_action(lrp_builder.action_user, environment_variables) if allow_ssh?
-        codependent(actions)
-      end
-
       def generate_healthcheck_definition(lrp_builder)
         return unless MONITORED_HEALTH_CHECK_TYPES.include?(process.health_check_type)
 
@@ -269,7 +216,7 @@ module VCAP::CloudController
           user:                lrp_builder.action_user,
           path:                '/tmp/lifecycle/healthcheck',
           args:                ["-port=#{port}"].concat(extra_args),
-          resource_limits:     ::Diego::Bbs::Models::ResourceLimits.new(nofile: file_descriptor_limit),
+          resource_limits:     ::Diego::Bbs::Models::ResourceLimits.new(nofile: process.file_descriptors),
           log_source:          HEALTH_LOG_SOURCE,
           suppress_log_output: true,
         )
@@ -277,10 +224,6 @@ module VCAP::CloudController
 
       def generate_network
         Protocol::ContainerNetworkInfo.new(process.app, Protocol::ContainerNetworkInfo::APP).to_bbs_network
-      end
-
-      def file_descriptor_limit
-        process.file_descriptors == 0 ? DEFAULT_FILE_DESCRIPTOR_LIMIT : process.file_descriptors
       end
     end
   end

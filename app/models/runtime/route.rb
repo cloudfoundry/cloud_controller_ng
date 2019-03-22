@@ -12,6 +12,7 @@ module VCAP::CloudController
 
     one_to_many :route_mappings, class: 'VCAP::CloudController::RouteMappingModel', key: :route_guid, primary_key: :guid
 
+    # TODO: apps are actually processes
     many_to_many :apps, class: 'VCAP::CloudController::ProcessModel',
                         join_table:              RouteMappingModel.table_name,
                         left_primary_key:        :guid, left_key: :route_guid,
