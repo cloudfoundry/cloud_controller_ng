@@ -13,7 +13,7 @@ module VCAP::CloudController
       let(:package) { PackageModel.make }
       let(:config) { TestConfig.config_instance }
       let(:build) { BuildModel.make(package_guid: package.guid) }
-      let!(:lifecycle_data_model) { FactoryBot.create(:buildpack_lifecycle_data, build: build) }
+      let!(:lifecycle_data_model) { BuildpackLifecycleDataModel.make(build: build) }
       let(:environment_variables) { { 'nightshade_vegetable' => 'potato' } }
 
       let(:buildpack_completion_handler) { instance_double(Diego::Buildpack::StagingCompletionHandler) }
@@ -84,7 +84,7 @@ module VCAP::CloudController
 
         context 'buildpack' do
           let(:build) { BuildModel.make }
-          let!(:lifecycle_data_model) { FactoryBot.create(:buildpack_lifecycle_data, build: build) }
+          let!(:lifecycle_data_model) { BuildpackLifecycleDataModel.make(build: build) }
 
           it 'delegates to a buildpack staging completion handler' do
             stager.staging_complete(build, staging_response)

@@ -171,7 +171,7 @@ module VCAP
             let(:config) { Config.new({ some: 'config' }) }
 
             it 'returns a TaskActionBuilder' do
-              task.app.update(buildpack_lifecycle_data: FactoryBot.create(:buildpack_lifecycle_data, stack: 'potato-stack'))
+              task.app.update(buildpack_lifecycle_data: BuildpackLifecycleDataModel.make(stack: 'potato-stack'))
 
               task_action_builder = instance_double(TaskActionBuilder)
               allow(TaskActionBuilder).to receive(:new).and_return task_action_builder

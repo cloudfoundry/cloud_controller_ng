@@ -256,7 +256,7 @@ module VCAP::CloudController
           let(:ports) { '8080' }
 
           before do
-            FactoryBot.create(:buildpack_lifecycle_data,
+            VCAP::CloudController::BuildpackLifecycleDataModel.make(
               app:        app_model,
               buildpacks: nil,
               stack:      'potato-stack',

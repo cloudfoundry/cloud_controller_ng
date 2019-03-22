@@ -40,7 +40,7 @@ module VCAP::CloudController
   AppModel.blueprint do
     name       { Sham.name }
     space      { Space.make }
-    buildpack_lifecycle_data { FactoryBot.create(:buildpack_lifecycle_data, app: object.save) }
+    buildpack_lifecycle_data { BuildpackLifecycleDataModel.make(app: object.save) }
   end
 
   AppModel.blueprint(:docker) do
@@ -83,7 +83,7 @@ module VCAP::CloudController
     app { AppModel.make(droplet_guid: guid) }
     droplet_hash { Sham.guid }
     sha256_checksum { Sham.guid }
-    buildpack_lifecycle_data { FactoryBot.create(:buildpack_lifecycle_data, droplet: object.save) }
+    buildpack_lifecycle_data { BuildpackLifecycleDataModel.make(droplet: object.save) }
   end
 
   DropletModel.blueprint(:docker) do
@@ -433,6 +433,11 @@ module VCAP::CloudController
 
   Buildpack.blueprint(:nil_stack) do
     stack { nil }
+  end
+
+  BuildpackLifecycleDataModel.blueprint do
+    buildpacks { nil }
+    stack { FactoryBot.create(:stack).name }
   end
 
   BuildpackLifecycleBuildpackModel.blueprint do

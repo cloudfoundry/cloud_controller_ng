@@ -76,7 +76,7 @@ module VCAP::CloudController
           let(:package) { PackageModel.make(app: app) }
           let!(:build) do
             BuildModel.make(app: app, package: package, state: BuildModel::STAGING_STATE).tap do |build|
-              FactoryBot.create(:buildpack_lifecycle_data, build: build)
+              BuildpackLifecycleDataModel.make(build: build)
             end
           end
           let(:staging_guid) { build.guid }

@@ -87,7 +87,7 @@ module VCAP::CloudController
     end
 
     describe '#create_buildpack_droplet' do
-      let!(:buildpack_lifecycle_data) { FactoryBot.create(:buildpack_lifecycle_data, build: build) }
+      let!(:buildpack_lifecycle_data) { BuildpackLifecycleDataModel.make(build: build) }
 
       it 'sets it on the droplet' do
         expect {

@@ -5,7 +5,7 @@ module VCAP::CloudController
     let(:package) { PackageModel.make(state: PackageModel::READY_STATE) }
     let(:build_model) { BuildModel.make(package: package) }
     let!(:lifecycle_data) do
-      FactoryBot.create(:buildpack_lifecycle_data,
+      BuildpackLifecycleDataModel.make(
         build: build_model,
         buildpacks: ['http://some-buildpack.com', 'http://another-buildpack.net']
       )

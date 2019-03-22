@@ -277,7 +277,7 @@ module VCAP::CloudController
         let!(:disabled_buildpack) { Buildpack.make(enabled: false, name: 'disabled-buildpack') }
         let!(:enabled_buildpack) { Buildpack.make(name: 'enabled-buildpack') }
         let!(:lifecycle_data_model) do
-          FactoryBot.create(:buildpack_lifecycle_data,
+          VCAP::CloudController::BuildpackLifecycleDataModel.make(
             app:        app,
             buildpacks: [disabled_buildpack.name, enabled_buildpack.name, 'http://custom-buildpack.example'],
             stack:      stack.name
@@ -362,7 +362,7 @@ module VCAP::CloudController
         context 'when custom buildpacks are enabled' do
           context 'when the custom buildpack is inherited from the app' do
             let!(:app_lifecycle_data_model) do
-              FactoryBot.create(:buildpack_lifecycle_data,
+              BuildpackLifecycleDataModel.make(
                 buildpacks: ['http://example.com/repo.git'],
                 app:       app
               )

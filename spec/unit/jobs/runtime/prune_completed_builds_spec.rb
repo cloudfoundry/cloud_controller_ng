@@ -80,7 +80,7 @@ module VCAP::CloudController
 
           50.times do
             b = BuildModel.make(state: BuildModel::STAGED_STATE, app: app)
-            FactoryBot.create(:buildpack_lifecycle_data, build: b)
+            BuildpackLifecycleDataModel.make(build: b)
           end
 
           expect {

@@ -65,7 +65,7 @@ module VCAP::CloudController
 
     describe '#lifecycle_type' do
       let(:droplet_model) { DropletModel.make }
-      let!(:lifecycle_data) { FactoryBot.create(:buildpack_lifecycle_data, droplet: droplet_model) }
+      let!(:lifecycle_data) { BuildpackLifecycleDataModel.make(droplet: droplet_model) }
 
       before do
         droplet_model.buildpack_lifecycle_data = lifecycle_data
@@ -87,7 +87,7 @@ module VCAP::CloudController
     describe '#lifecycle_data' do
       let(:droplet_model) { DropletModel.make }
       let!(:lifecycle_data) do
-        FactoryBot.create(:buildpack_lifecycle_data,
+        BuildpackLifecycleDataModel.make(
           droplet: droplet_model,
           buildpacks: ['http://some-buildpack.com', 'http://another-buildpack.net']
         )

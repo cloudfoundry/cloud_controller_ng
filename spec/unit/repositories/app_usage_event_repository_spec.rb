@@ -331,7 +331,7 @@ module VCAP::CloudController
           it 'sets the attributes based on the build' do
             build.update(
               droplet: DropletModel.make(buildpack_receipt_buildpack: 'le-buildpack'),
-              buildpack_lifecycle_data: FactoryBot.create(:buildpack_lifecycle_data)
+              buildpack_lifecycle_data: BuildpackLifecycleDataModel.make
             )
             event = repository.create_from_build(build, state)
 
@@ -363,7 +363,7 @@ module VCAP::CloudController
           context 'when the build does NOT have an associated droplet but does have lifecycle data' do
             before do
               build.update(
-                buildpack_lifecycle_data: FactoryBot.create(:buildpack_lifecycle_data, buildpacks: ['http://git.url.example.com'])
+                buildpack_lifecycle_data: BuildpackLifecycleDataModel.make(buildpacks: ['http://git.url.example.com'])
               )
             end
 
@@ -377,7 +377,7 @@ module VCAP::CloudController
             context 'when buildpack lifecycle info contains credentials in buildpack url' do
               before do
                 build.update(
-                  buildpack_lifecycle_data: FactoryBot.create(:buildpack_lifecycle_data, buildpacks: ['http://ping:pong@example.com'])
+                  buildpack_lifecycle_data: BuildpackLifecycleDataModel.make(buildpacks: ['http://ping:pong@example.com'])
                 )
               end
 
@@ -411,7 +411,7 @@ module VCAP::CloudController
             before do
               Buildpack.make(name: 'ruby_buildpack')
               build.update(
-                buildpack_lifecycle_data: FactoryBot.create(:buildpack_lifecycle_data, buildpacks: ['ruby_buildpack'])
+                buildpack_lifecycle_data: BuildpackLifecycleDataModel.make(buildpacks: ['ruby_buildpack'])
               )
             end
 

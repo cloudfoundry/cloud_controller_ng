@@ -227,7 +227,7 @@ module VCAP::CloudController
       let(:package) { PackageModel.make(state: 'READY', app_guid: staged_app.guid) }
       let!(:droplet) { DropletModel.make }
       let(:build) { BuildModel.make(package_guid: package.guid, app: staged_app) }
-      let!(:lifecycle_data) { FactoryBot.create(:buildpack_lifecycle_data, buildpacks: [buildpack_name], stack: 'cflinuxfs2', build: build) }
+      let!(:lifecycle_data) { BuildpackLifecycleDataModel.make(buildpacks: [buildpack_name], stack: 'cflinuxfs2', build: build) }
       let(:staging_guid) { build.guid }
       let(:buildpacks) do [
         {

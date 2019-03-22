@@ -25,9 +25,11 @@ RSpec::Matchers.define :export_attributes do |*attributes|
     begin
       instance = described_class.make
     rescue RuntimeError => e
-      raise unless e.message.match?(/No blueprint for class/)
-
-      instance = FactoryBot.create(described_class.name.demodulize.underscore.to_sym)
+      if e.message.match?(/No blueprint for class/)
+        instance = FactoryBot.create(described_class.name.demodulize.underscore.to_sym)
+      else
+        raise
+      end
     end
 
     instance.to_hash.keys.collect(&:to_sym).sort == attributes.sort
