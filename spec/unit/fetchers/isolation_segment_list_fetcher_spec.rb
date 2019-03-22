@@ -9,9 +9,9 @@ module VCAP::CloudController
     let(:message) { IsolationSegmentsListMessage.from_params(filters) }
     subject(:fetcher) { IsolationSegmentListFetcher.new(message: message) }
 
-    let!(:isolation_segment_model_1) { FactoryBot.create(:isolation_segment) }
-    let!(:isolation_segment_model_2) { FactoryBot.create(:isolation_segment, name: 'frank') }
-    let!(:isolation_segment_model_3) { FactoryBot.create(:isolation_segment) }
+    let!(:isolation_segment_model_1) { VCAP::CloudController::IsolationSegmentModel.make }
+    let!(:isolation_segment_model_2) { VCAP::CloudController::IsolationSegmentModel.make(name: 'frank') }
+    let!(:isolation_segment_model_3) { VCAP::CloudController::IsolationSegmentModel.make }
 
     let(:org1) { VCAP::CloudController::Organization.make }
     let(:org2) { VCAP::CloudController::Organization.make }

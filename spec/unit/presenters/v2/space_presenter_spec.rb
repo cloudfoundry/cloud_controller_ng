@@ -21,7 +21,7 @@ module CloudController::Presenters::V2
       let(:space_quota_definition) { VCAP::CloudController::SpaceQuotaDefinition.make(organization: organization) }
 
       context 'when a space is associated to an isolation segment' do
-        let(:isolation_segment_model) { FactoryBot.create(:isolation_segment) }
+        let(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
         let(:space) { VCAP::CloudController::Space.make(
           name: 'no_unicorns_no_rainbows',
           organization: organization,

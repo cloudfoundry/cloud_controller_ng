@@ -51,7 +51,7 @@ module VCAP::CloudController
           end
 
           context 'and the name is already taken' do
-            let(:isolation_segment_model) { FactoryBot.create(:isolation_segment) }
+            let(:isolation_segment_model) { IsolationSegmentModel.make }
 
             # this means that it will fail our deployment. To correct this issue we could
             # redeploy with what the old 'shared' isolation segment name

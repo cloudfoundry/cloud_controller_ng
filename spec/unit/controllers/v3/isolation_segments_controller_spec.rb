@@ -3,7 +3,7 @@ require 'isolation_segment_assign'
 
 RSpec.describe IsolationSegmentsController, type: :controller do
   let(:user) { set_current_user(VCAP::CloudController::User.make) }
-  let(:isolation_segment_model) { FactoryBot.create(:isolation_segment) }
+  let(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
   let(:org1) { VCAP::CloudController::Organization.make }
   let(:org2) { VCAP::CloudController::Organization.make }
   let(:org3) { VCAP::CloudController::Organization.make }
@@ -160,7 +160,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
   end
 
   describe '#assign_allowed_organizations' do
-    let(:isolation_segment_model) { FactoryBot.create(:isolation_segment) }
+    let(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
     let(:org1) { VCAP::CloudController::Organization.make }
     let(:org2) { VCAP::CloudController::Organization.make }
 
@@ -272,7 +272,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
   end
 
   describe '#unassign_allowed_organization' do
-    let(:isolation_segment_model) { FactoryBot.create(:isolation_segment) }
+    let(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
     let(:org) { VCAP::CloudController::Organization.make }
     let(:org_2) { VCAP::CloudController::Organization.make }
 
@@ -368,7 +368,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
 
       context 'when the requested name is a duplicate' do
         it 'returns a 422' do
-          FactoryBot.create(:isolation_segment, name: 'some-name')
+          VCAP::CloudController::IsolationSegmentModel.make(name: 'some-name')
           post :create, params: request_body
 
           expect(response.status).to eq 422
@@ -389,7 +389,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
   end
 
   describe '#show' do
-    let!(:isolation_segment) { FactoryBot.create(:isolation_segment, name: 'some-name') }
+    let!(:isolation_segment) { VCAP::CloudController::IsolationSegmentModel.make(name: 'some-name') }
 
     context 'when the user has global read access' do
       before do
@@ -531,8 +531,8 @@ RSpec.describe IsolationSegmentsController, type: :controller do
       end
 
       context 'when valid' do
-        let!(:isolation_segment_a) { FactoryBot.create(:isolation_segment, name: 'a-segment') }
-        let!(:isolation_segment_b) { FactoryBot.create(:isolation_segment, name: 'b-segment') }
+        let!(:isolation_segment_a) { VCAP::CloudController::IsolationSegmentModel.make(name: 'a-segment') }
+        let!(:isolation_segment_b) { VCAP::CloudController::IsolationSegmentModel.make(name: 'b-segment') }
 
         it 'returns a 200 and a list of the existing isolation segments' do
           get :index, params: { order_by: 'name' }, as: :json
@@ -546,9 +546,9 @@ RSpec.describe IsolationSegmentsController, type: :controller do
     end
 
     context 'when the user is not an admin' do
-      let!(:isolation_segment1) { FactoryBot.create(:isolation_segment) }
-      let!(:isolation_segment2) { FactoryBot.create(:isolation_segment) }
-      let!(:isolation_segment3) { FactoryBot.create(:isolation_segment) }
+      let!(:isolation_segment1) { VCAP::CloudController::IsolationSegmentModel.make }
+      let!(:isolation_segment2) { VCAP::CloudController::IsolationSegmentModel.make }
+      let!(:isolation_segment3) { VCAP::CloudController::IsolationSegmentModel.make }
       let(:org1) { VCAP::CloudController::Organization.make }
       let(:org2) { VCAP::CloudController::Organization.make }
 
@@ -583,8 +583,8 @@ RSpec.describe IsolationSegmentsController, type: :controller do
       end
 
       context 'when isolation segments have been created' do
-        let!(:isolation_segment1) { FactoryBot.create(:isolation_segment, name: 'segment1') }
-        let!(:isolation_segment2) { FactoryBot.create(:isolation_segment, name: 'segment2') }
+        let!(:isolation_segment1) { VCAP::CloudController::IsolationSegmentModel.make(name: 'segment1') }
+        let!(:isolation_segment2) { VCAP::CloudController::IsolationSegmentModel.make(name: 'segment2') }
 
         it 'returns a 200 and a list of the existing isolation segments' do
           get :index
@@ -610,7 +610,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
   end
 
   describe '#update' do
-    let(:isolation_segment_model) { FactoryBot.create(:isolation_segment, name: 'orig-name') }
+    let(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make(name: 'orig-name') }
     let(:new_name) { 'new-name' }
     let(:request_body) { { name: new_name } }
 
@@ -630,7 +630,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
         end
 
         context 'with a non-unique name' do
-          let(:another_segment) { FactoryBot.create(:isolation_segment, name: 'i_am_unique') }
+          let(:another_segment) { VCAP::CloudController::IsolationSegmentModel.make(name: 'i_am_unique') }
           let(:request_body) { { name: another_segment.name } }
 
           it 'returns a 422' do
@@ -641,7 +641,7 @@ RSpec.describe IsolationSegmentsController, type: :controller do
         end
 
         context 'with an empty name' do
-          let(:another_segment) { FactoryBot.create(:isolation_segment, name: 'name') }
+          let(:another_segment) { VCAP::CloudController::IsolationSegmentModel.make(name: 'name') }
           let(:request_body) { { name: '' } }
 
           it 'returns a 422' do
@@ -683,8 +683,8 @@ RSpec.describe IsolationSegmentsController, type: :controller do
   end
 
   describe '#destroy' do
-    let(:isolation_segment_model1) { FactoryBot.create(:isolation_segment) }
-    let(:isolation_segment_model2) { FactoryBot.create(:isolation_segment) }
+    let(:isolation_segment_model1) { VCAP::CloudController::IsolationSegmentModel.make }
+    let(:isolation_segment_model2) { VCAP::CloudController::IsolationSegmentModel.make }
 
     context 'when the user is admin' do
       before do

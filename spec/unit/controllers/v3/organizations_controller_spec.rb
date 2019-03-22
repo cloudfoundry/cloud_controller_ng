@@ -287,7 +287,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
 
     context 'when accessed as an isolation segment subresource' do
       let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
-      let(:isolation_segment_model) { FactoryBot.create(:isolation_segment) }
+      let(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
       let(:org1) { VCAP::CloudController::Organization.make }
       let(:org2) { VCAP::CloudController::Organization.make }
       let(:org3) { VCAP::CloudController::Organization.make }
@@ -373,7 +373,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
   describe '#show_default_isolation_segment' do
     let(:user) { VCAP::CloudController::User.make }
     let(:org) { VCAP::CloudController::Organization.make(name: 'Water') }
-    let(:isolation_segment) { FactoryBot.create(:isolation_segment, name: 'default_seg') }
+    let(:isolation_segment) { VCAP::CloudController::IsolationSegmentModel.make(name: 'default_seg') }
     let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
     let(:unassigner) { VCAP::CloudController::IsolationSegmentUnassign.new }
 
@@ -453,7 +453,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
   describe '#update_default_isolation_segment' do
     let(:user) { VCAP::CloudController::User.make }
     let(:org) { VCAP::CloudController::Organization.make(name: 'Water') }
-    let(:isolation_segment) { FactoryBot.create(:isolation_segment, name: 'default_seg') }
+    let(:isolation_segment) { VCAP::CloudController::IsolationSegmentModel.make(name: 'default_seg') }
     let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
     let(:unassigner) { VCAP::CloudController::IsolationSegmentUnassign.new }
     let(:request_body) do

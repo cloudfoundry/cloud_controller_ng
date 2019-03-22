@@ -175,8 +175,8 @@ module VCAP::CloudController
 
         describe 'isolation segments' do
           let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
-          let(:isolation_segment_model) { FactoryBot.create(:isolation_segment) }
-          let(:isolation_segment_model_2) { FactoryBot.create(:isolation_segment) }
+          let(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
+          let(:isolation_segment_model_2) { VCAP::CloudController::IsolationSegmentModel.make }
           let(:shared_isolation_segment) {
             VCAP::CloudController::IsolationSegmentModel.first(guid: VCAP::CloudController::IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID)
           }

@@ -4,7 +4,7 @@ require 'isolation_segment_assign'
 
 module VCAP::CloudController
   RSpec.describe IsolationSegmentDelete do
-    let(:isolation_segment_model) { FactoryBot.create(:isolation_segment) }
+    let(:isolation_segment_model) { IsolationSegmentModel.make }
     let(:shared_isolation_segment_model) { IsolationSegmentModel.first(guid: VCAP::CloudController::IsolationSegmentModel::SHARED_ISOLATION_SEGMENT_GUID) }
     let(:assigner) { IsolationSegmentAssign.new }
 

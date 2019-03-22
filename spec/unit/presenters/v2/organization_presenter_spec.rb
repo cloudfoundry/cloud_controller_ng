@@ -43,7 +43,7 @@ module CloudController::Presenters::V2
       end
 
       context 'with isolation segments assigned' do
-        let(:isolation_segment_model) { FactoryBot.create(:isolation_segment) }
+        let(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
         let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
 
         before do

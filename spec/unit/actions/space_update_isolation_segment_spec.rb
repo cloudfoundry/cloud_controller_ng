@@ -10,7 +10,7 @@ module VCAP::CloudController
     let(:user_guid) { double(:user, guid: '1337') }
     let(:user_email) { 'cool_dude@hoopy_frood.com' }
     let(:user_audit_info) { UserAuditInfo.new(user_email: user_email, user_guid: user_guid) }
-    let(:isolation_segment) { FactoryBot.create(:isolation_segment) }
+    let(:isolation_segment) { IsolationSegmentModel.make }
 
     describe '#update' do
       let(:message) do

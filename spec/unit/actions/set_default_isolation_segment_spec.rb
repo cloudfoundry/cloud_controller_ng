@@ -6,7 +6,7 @@ module VCAP::CloudController
     subject(:set_default_isolation_segment) { SetDefaultIsolationSegment.new }
 
     let(:org) { VCAP::CloudController::Organization.make }
-    let(:isolation_segment) { FactoryBot.create(:isolation_segment, name: 'JB') }
+    let(:isolation_segment) { VCAP::CloudController::IsolationSegmentModel.make(name: 'JB') }
     let(:isolation_segment_guid) { isolation_segment.guid }
     let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
     let(:message) do
@@ -68,7 +68,7 @@ module VCAP::CloudController
 
         context 'when the org already has an assigned isolation segment' do
           before do
-            other_iso_seg = FactoryBot.create(:isolation_segment)
+            other_iso_seg = IsolationSegmentModel.make
             assigner.assign(other_iso_seg, [org])
             org.update(default_isolation_segment_guid: other_iso_seg.guid)
             expect(org.default_isolation_segment_guid).to_not be_nil

@@ -5,7 +5,7 @@ module VCAP::CloudController
   RSpec.describe IsolationSegmentSpacesFetcher do
     subject(:fetcher) { IsolationSegmentSpacesFetcher.new(isolation_segment_model) }
 
-    let!(:isolation_segment_model) { FactoryBot.create(:isolation_segment) }
+    let!(:isolation_segment_model) { VCAP::CloudController::IsolationSegmentModel.make }
 
     let(:org1) { VCAP::CloudController::Organization.make }
     let(:org2) { VCAP::CloudController::Organization.make }

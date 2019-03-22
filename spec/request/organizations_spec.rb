@@ -149,7 +149,7 @@ module VCAP::CloudController
     end
 
     describe 'GET /v3/isolation_segments/:guid/organizations' do
-      let(:isolation_segment1) { FactoryBot.create(:isolation_segment, name: 'awesome_seg') }
+      let(:isolation_segment1) { VCAP::CloudController::IsolationSegmentModel.make(name: 'awesome_seg') }
       let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
 
       before do
@@ -213,7 +213,7 @@ module VCAP::CloudController
     end
 
     describe 'GET /v3/organizations/:guid/relationships/default_isolation_segment' do
-      let(:isolation_segment) { FactoryBot.create(:isolation_segment, name: 'default_seg') }
+      let(:isolation_segment) { VCAP::CloudController::IsolationSegmentModel.make(name: 'default_seg') }
       let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
 
       before do
@@ -244,7 +244,7 @@ module VCAP::CloudController
     end
 
     describe 'PATCH /v3/organizations/:guid/relationships/default_isolation_segment' do
-      let(:isolation_segment) { FactoryBot.create(:isolation_segment, name: 'default_seg') }
+      let(:isolation_segment) { VCAP::CloudController::IsolationSegmentModel.make(name: 'default_seg') }
       let(:update_request) do
         {
           data: { guid: isolation_segment.guid }

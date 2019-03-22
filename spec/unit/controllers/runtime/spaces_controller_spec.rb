@@ -1571,7 +1571,7 @@ module VCAP::CloudController
 
     describe 'PUT /v2/spaces/:guid' do
       let(:user) { set_current_user(User.make) }
-      let(:isolation_segment_model) { FactoryBot.create(:isolation_segment) }
+      let(:isolation_segment_model) { IsolationSegmentModel.make }
       let(:organization) { Organization.make }
       let(:space) { Space.make(organization: organization) }
       let(:assigner) { IsolationSegmentAssign.new }
@@ -1828,7 +1828,7 @@ module VCAP::CloudController
     describe 'DELETE /v2/spaces/:guid/isolation_segment' do
       let(:assigner) { IsolationSegmentAssign.new }
       let(:user) { set_current_user(User.make) }
-      let(:isolation_segment_model) { FactoryBot.create(:isolation_segment) }
+      let(:isolation_segment_model) { IsolationSegmentModel.make }
       let(:organization) { Organization.make }
       let(:space) { Space.make(organization: organization) }
 

@@ -5,8 +5,8 @@ require 'isolation_segment_unassign'
 
 module VCAP::CloudController
   RSpec.describe IsolationSegmentModel do
-    let(:isolation_segment_model) { FactoryBot.create(:isolation_segment) }
-    let(:isolation_segment_model_2) { FactoryBot.create(:isolation_segment) }
+    let(:isolation_segment_model) { IsolationSegmentModel.make }
+    let(:isolation_segment_model_2) { IsolationSegmentModel.make }
 
     let(:assigner) { IsolationSegmentAssign.new }
     let(:unassigner) { IsolationSegmentUnassign.new }
@@ -83,7 +83,7 @@ module VCAP::CloudController
         end
 
         it 'allows multiple isolation segments to be applied to one organization' do
-          isolation_segment_model_2 = FactoryBot.create(:isolation_segment)
+          isolation_segment_model_2 = IsolationSegmentModel.make
 
           assigner.assign(isolation_segment_model, [org_1])
           assigner.assign(isolation_segment_model_2, [org_1])
@@ -114,59 +114,59 @@ module VCAP::CloudController
     describe 'validations' do
       it 'requires a name' do
         expect {
-          FactoryBot.create(:isolation_segment, name: nil)
+          IsolationSegmentModel.make(name: nil)
         }.to raise_error(Sequel::ValidationFailed, 'Isolation Segment names can only contain non-blank unicode characters')
       end
 
       it 'requires a non blank name' do
         expect {
-          FactoryBot.create(:isolation_segment, name: '')
+          IsolationSegmentModel.make(name: '')
         }.to raise_error(Sequel::ValidationFailed, 'Isolation Segment names can only contain non-blank unicode characters')
       end
 
       it 'requires a unique name' do
-        FactoryBot.create(:isolation_segment, name: 'segment1')
+        IsolationSegmentModel.make(name: 'segment1')
 
         expect {
-          FactoryBot.create(:isolation_segment, name: 'segment1')
+          IsolationSegmentModel.make(name: 'segment1')
         }.to raise_error(Sequel::ValidationFailed, 'Isolation Segment names are case insensitive and must be unique')
       end
 
       it 'uniqueness is case insensitive' do
-        FactoryBot.create(:isolation_segment, name: 'lowercase')
+        IsolationSegmentModel.make(name: 'lowercase')
 
         expect {
-          FactoryBot.create(:isolation_segment, name: 'lowerCase')
+          IsolationSegmentModel.make(name: 'lowerCase')
         }.to raise_error(Sequel::ValidationFailed, 'Isolation Segment names are case insensitive and must be unique')
       end
 
       it 'should allow standard ascii characters' do
         expect {
-          FactoryBot.create(:isolation_segment, name: "A -_- word 2!?()\'\"&+.")
+          IsolationSegmentModel.make(name: "A -_- word 2!?()\'\"&+.")
         }.to_not raise_error
       end
 
       it 'should allow backslash characters' do
         expect {
-          FactoryBot.create(:isolation_segment, name: 'a \\ word')
+          IsolationSegmentModel.make(name: 'a \\ word')
         }.to_not raise_error
       end
 
       it 'should allow unicode characters' do
         expect {
-          FactoryBot.create(:isolation_segment, name: '防御力¡')
+          IsolationSegmentModel.make(name: '防御力¡')
         }.to_not raise_error
       end
 
       it 'should not allow newline characters' do
         expect {
-          FactoryBot.create(:isolation_segment, name: "a \n word")
+          IsolationSegmentModel.make(name: "a \n word")
         }.to raise_error(Sequel::ValidationFailed)
       end
 
       it 'should not allow escape characters' do
         expect {
-          FactoryBot.create(:isolation_segment, name: "a \e word")
+          IsolationSegmentModel.make(name: "a \e word")
         }.to raise_error(Sequel::ValidationFailed)
       end
     end
