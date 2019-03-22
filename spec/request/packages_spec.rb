@@ -695,7 +695,7 @@ RSpec.describe 'Packages' do
       })
     end
 
-    context 'with resources' do
+    context 'with v2 resources' do
       let(:packages_params) do
         {
           bits_name: 'application.zip',
@@ -703,6 +703,65 @@ RSpec.describe 'Packages' do
           resources: '[{"fn":"path/to/content.txt","size":123,"sha1":"b907173290db6a155949ab4dc9b2d019dea0c901"},
                       {"fn":"path/to/code.jar","size":123,"sha1":"ff84f89760317996b9dd180ab996b079f418396f"},
                       {"fn":"path/to/code.jar","size":123,"sha1":"ff84f89760317996b9dd180ab996b079f418396f","mode":"644"}]'
+        }
+      end
+
+      it 'uploads the bits for the package' do
+        expect(Delayed::Job.count).to eq 0
+
+        post "/v3/packages/#{guid}/upload", packages_params.to_json, user_header
+
+        expect(Delayed::Job.count).to eq 1
+
+        expected_response = {
+          'type'       => package_model.type,
+          'guid'       => guid,
+          'data'       => {
+            'checksum' => { 'type' => 'sha256', 'value' => nil },
+            'error' => nil
+          },
+          'state' => VCAP::CloudController::PackageModel::PENDING_STATE,
+          'metadata' => { 'labels' => {}, 'annotations' => {} },
+          'created_at' => iso8601,
+          'updated_at' => iso8601,
+          'links' => {
+            'self'   => { 'href' => "#{link_prefix}/v3/packages/#{guid}" },
+            'upload' => { 'href' => "#{link_prefix}/v3/packages/#{guid}/upload", 'method' => 'POST' },
+            'download' => { 'href' => "#{link_prefix}/v3/packages/#{guid}/download", 'method' => 'GET' },
+            'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+          }
+        }
+        parsed_response = MultiJson.load(last_response.body)
+        expect(last_response.status).to eq(200)
+        expect(parsed_response).to be_a_response_like(expected_response)
+
+        expected_metadata = { package_guid: package_model.guid }.to_json
+
+        event = VCAP::CloudController::Event.last
+        expect(event.values).to include({
+          type:              'audit.app.package.upload',
+          actor:             user.guid,
+          actor_type:        'user',
+          actor_name:        email,
+          actor_username:    user_name,
+          actee:             'woof',
+          actee_type:        'app',
+          actee_name:        'meow',
+          metadata:          expected_metadata,
+          space_guid:        space.guid,
+          organization_guid: space.organization.guid
+        })
+      end
+    end
+
+    context 'with v3 resources' do
+      let(:packages_params) do
+        {
+          bits_name: 'application.zip',
+          bits_path: "#{tmpdir}/application.zip",
+          resources: '[{"path":"path/to/content.txt","size_in_bytes":123,"checksum": { "value" : "b907173290db6a155949ab4dc9b2d019dea0c901" }},
+                      {"path":"path/to/code.jar","size_in_bytes":123,"checksum": { "value" : "ff84f89760317996b9dd180ab996b079f418396f" }},
+                      {"path":"path/to/code.jar","size_in_bytes":123,"checksum": { "value" : "ff84f89760317996b9dd180ab996b079f418396f" },"mode":"644"}]'
         }
       end
 

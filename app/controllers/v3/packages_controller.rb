@@ -44,7 +44,10 @@ class PackagesController < ApplicationController
 
     opts = hashed_params[:body].dup.symbolize_keys
     begin
-      opts[:resources] = MultiJson.load(opts[:resources]) if opts[:resources].present?
+      if opts[:resources].present?
+        opts[:resources] = MultiJson.load(opts[:resources])
+        opts[:resources] = V2V3ResourceTranslator.new(opts[:resources]).v2_fingerprints_body
+      end
     rescue MultiJson::ParseError
       unprocessable!('Resources must be valid JSON.')
     end

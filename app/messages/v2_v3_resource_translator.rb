@@ -9,6 +9,7 @@ module VCAP::CloudController
 
     def v2_fingerprints_body
       resources.map do |resource|
+        resource = resource.deep_symbolize_keys
         if v3?(resource)
           {
             sha1: resource[:checksum][:value],

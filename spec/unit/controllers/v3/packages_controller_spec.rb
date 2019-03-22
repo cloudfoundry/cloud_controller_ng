@@ -54,9 +54,10 @@ RSpec.describe PackagesController, type: :controller do
       end
 
       context 'with unsupported options' do
-        let(:new_options) do {
-          cached_resources: JSON.dump([{ 'fn' => 'lol', 'sha1' => 'abc', 'size' => 2048 }]),
-        }
+        let(:new_options) do
+          {
+            cached_resources: JSON.dump([{ 'fn' => 'lol', 'sha1' => 'abc', 'size' => 2048 }]),
+          }
         end
 
         it 'returns a 422 and the package' do
@@ -69,9 +70,10 @@ RSpec.describe PackagesController, type: :controller do
       end
 
       context 'with invalid json resources' do
-        let(:new_options) do {
-          resources: '[abcddf]',
-        }
+        let(:new_options) do
+          {
+            resources: '[abcddf]',
+          }
         end
 
         it 'returns a 422 and the package' do
@@ -83,24 +85,51 @@ RSpec.describe PackagesController, type: :controller do
       end
 
       context 'with correctly named cached resources' do
-        let(:new_options) do {
-          resources: JSON.dump([{ 'fn' => 'lol', 'sha1' => 'abc', 'size' => 2048 }]),
-        }
+        context 'v2 resource format' do
+          let(:new_options) do
+            {
+              resources: JSON.dump([{ 'fn' => 'lol', 'sha1' => 'abc', 'size' => 2048 }]),
+            }
+          end
+          let(:uploader) { instance_double(VCAP::CloudController::PackageUpload, upload_async: nil) }
+
+          before do
+            allow(VCAP::CloudController::PackageUpload).to receive(:new).and_return(uploader)
+          end
+
+          it 'returns a 201 and the package' do
+            post :upload, params: params.merge(new_options), as: :json
+
+            expect(response.status).to eq(200), response.body
+            expect(MultiJson.load(response.body)['guid']).to eq(package.guid)
+            expect(package.reload.state).to eq(VCAP::CloudController::PackageModel::CREATED_STATE)
+            expect(uploader).to have_received(:upload_async) do |args|
+              expect(args[:message].resources).to match_array([{ fn: 'lol', sha1: 'abc', size: 2048 }])
+            end
+          end
         end
-        let(:uploader) { instance_double(VCAP::CloudController::PackageUpload, upload_async: nil) }
 
-        before do
-          allow(VCAP::CloudController::PackageUpload).to receive(:new).and_return(uploader)
-        end
+        context 'v3 resource format' do
+          let(:new_options) do
+            {
+              resources: JSON.dump([{ 'path' => 'lol', 'checksum' => { 'value' => 'abc' }, 'size_in_bytes' => 2048, 'mode' => '645' }]),
+            }
+          end
+          let(:uploader) { instance_double(VCAP::CloudController::PackageUpload, upload_async: nil) }
 
-        it 'returns a 201 and the package' do
-          post :upload, params: params.merge(new_options), as: :json
+          before do
+            allow(VCAP::CloudController::PackageUpload).to receive(:new).and_return(uploader)
+          end
 
-          expect(response.status).to eq(200), response.body
-          expect(MultiJson.load(response.body)['guid']).to eq(package.guid)
-          expect(package.reload.state).to eq(VCAP::CloudController::PackageModel::CREATED_STATE)
-          expect(uploader).to have_received(:upload_async) do |args|
-            expect(args[:message].resources).to match_array([{ fn: 'lol', sha1: 'abc', size: 2048 }])
+          it 'returns a 201 and the package' do
+            post :upload, params: params.merge(new_options), as: :json
+
+            expect(response.status).to eq(200), response.body
+            expect(MultiJson.load(response.body)['guid']).to eq(package.guid)
+            expect(package.reload.state).to eq(VCAP::CloudController::PackageModel::CREATED_STATE)
+            expect(uploader).to have_received(:upload_async) do |args|
+              expect(args[:message].resources).to match_array([{ fn: 'lol', sha1: 'abc', size: 2048, mode: '645' }])
+            end
           end
         end
       end
@@ -856,7 +885,7 @@ RSpec.describe PackagesController, type: :controller do
         app = VCAP::CloudController::AppModel.make(space: space, guid: 'speshal-app-guid')
 
         get :index, params: { app_guid: app.guid, page: 1, per_page: 10, states: 'AWAITING_UPLOAD',
-                              space_guids: user_spaces.map(&:guid).join(',') }
+          space_guids: user_spaces.map(&:guid).join(',') }
 
         expect(response.status).to eq(400)
         expect(response.body).to include("Unknown query parameter(s): \'space_guids\'")
@@ -1156,13 +1185,14 @@ RSpec.describe PackagesController, type: :controller do
       context 'with metadata' do
         let(:metadata_request_body) { request_body.merge(metadata) }
         context 'when the label is invalid' do
-          let(:metadata) do {
-                metadata: {
-                    labels: {
-                      'cloudfoundry.org/release' => 'stable'
-                    }
+          let(:metadata) do
+            {
+              metadata: {
+                labels: {
+                  'cloudfoundry.org/release' => 'stable'
                 }
               }
+            }
           end
 
           it 'returns an UnprocessableEntity error' do
@@ -1175,13 +1205,14 @@ RSpec.describe PackagesController, type: :controller do
         end
 
         context 'when the annotation is invalid' do
-          let(:metadata) do {
-            metadata: {
-              annotations: {
-                '' => 'stable'
+          let(:metadata) do
+            {
+              metadata: {
+                annotations: {
+                  '' => 'stable'
+                }
               }
             }
-          }
           end
 
           it 'returns an UnprocessableEntity error' do
@@ -1194,16 +1225,17 @@ RSpec.describe PackagesController, type: :controller do
         end
 
         context 'when the metadata is valid' do
-          let(:metadata) do {
-            metadata: {
-              labels: {
-                'release' => 'stable'
-              },
-              annotations: {
-                'notes' => 'detailed information'
+          let(:metadata) do
+            {
+              metadata: {
+                labels: {
+                  'release' => 'stable'
+                },
+                annotations: {
+                  'notes' => 'detailed information'
+                }
               }
             }
-          }
           end
 
           it 'Returns a 201 and the app with metadata' do
