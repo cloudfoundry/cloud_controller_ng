@@ -8707,6 +8707,10 @@ Processes for an app are defined by the buildpack used to stage the app and can 
       </span><span class="p">}</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
   </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/spaces/ae0031f9-dd49-461c-a945-df40e77c39cb"</span><span class="w">
@@ -8753,6 +8757,16 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 <td><a href="#links"><em>links object</em></a></td>
 <td>Links to related resources.</td>
 </tr>
+<tr>
+<td><strong>metadata.labels</strong> <em>(experimental)</em></td>
+<td><a href="#labels"><em>label object</em></a></td>
+<td>Labels applied to the service instance.</td>
+</tr>
+<tr>
+<td><strong>metadata.annotations</strong> <em>(experimental)</em></td>
+<td><a href="#annotations"><em>annotation object</em></a></td>
+<td>Annotations applied to the service instance.</td>
+</tr>
 </tbody></table>
 
           <h3 id="list-service-instances">List service instances</h3>
@@ -8792,6 +8806,10 @@ Processes for an app are defined by the buildpack used to stage the app and can 
             </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ae0031f9-dd49-461c-a945-df40e77c39cb"</span><span class="w">
           </span><span class="p">}</span><span class="w">
         </span><span class="p">}</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">},</span><span class="w">
+        </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">}</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -8841,6 +8859,11 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 <td><em>integer</em></td>
 <td>Number of results per page. <br>Valid values are 1 through 5000.</td>
 </tr>
+<tr>
+<td><strong>label_selector</strong></td>
+<td><em>string</em></td>
+<td><strong>Experimental</strong> - A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements.</td>
+</tr>
 </tbody></table>
 
 <h4 id="permitted-roles">Permitted Roles</h4>
@@ -8876,6 +8899,10 @@ Processes for an app are defined by the buildpack used to stage the app and can 
       </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"b19f6525-cbd3-4155-b156-dc0c2a431b4c"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">],</span><span class="w">
+  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
   </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_instances/bdeg4371-cbd3-4155-b156-dc0c2a431b4c/relationships/shared_spaces"</span><span class="w">
@@ -8921,6 +8948,86 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 </tr>
 </tbody></table>
 
+          <h3 id="update-a-service-instance">Update a service instance</h3>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/service_instances/[guid]"</span> <span class="se">\</span>
+  -X PATCH <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+  -H <span class="s2">"Content-Type: application/json"</span> <span class="se">\</span>
+  -d <span class="s1">'{ "metadata": { "labels": { "key": "value" }, "annotations": {"note": "detailed information"}}}'</span>
+
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
+
+<span class="p">{</span><span class="w">
+  </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"85ccdcad-d725-4109-bca4-fd6ba062b5c8"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-11-17T13:54:21Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-11-17T13:54:21Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my_service_instance"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ae0031f9-dd49-461c-a945-df40e77c39cb"</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"key"</span><span class="p">:</span><span class="w"> </span><span class="s2">"value"</span><span class="w"> </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"note"</span><span class="p">:</span><span class="w"> </span><span class="s2">"detailed information"</span><span class="w"> </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/spaces/ae0031f9-dd49-461c-a945-df40e77c39cb"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+
+</span></code></pre>
+
+<h4 id="definition">Definition</h4>
+
+<p><code class="prettyprint">PATCH /v3/service_instances/:guid</code></p>
+
+<h4 id="optional-parameters">Optional Parameters</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>metadata.labels</strong> <em>(experimental)</em></td>
+<td><a href="#labels"><em>label object</em></a></td>
+<td>Labels applied to the service_instance.</td>
+</tr>
+<tr>
+<td><strong>metadata.annotations</strong> <em>(experimental)</em></td>
+<td><a href="#annotations"><em>annotation object</em></a></td>
+<td>Annotations applied to the service_instance.</td>
+</tr>
+</tbody></table>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+</tbody></table>
+
           <h3 id="share-a-service-instance-to-other-spaces">Share a service instance to other spaces</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
@@ -8949,6 +9056,10 @@ Processes for an app are defined by the buildpack used to stage the app and can 
       </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"b19f6525-cbd3-4155-b156-dc0c2a431b4c"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">],</span><span class="w">
+  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
   </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_instances/bdeg4371-cbd3-4155-b156-dc0c2a431b4c/relationships/shared_spaces"</span><span class="w">
