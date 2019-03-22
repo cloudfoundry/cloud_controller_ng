@@ -5,7 +5,7 @@ RSpec.describe 'Apps' do
   let(:user) { VCAP::CloudController::User.make }
   let(:user_header) { headers_for(user, email: user_email, user_name: user_name) }
   let(:space) { VCAP::CloudController::Space.make }
-  let(:stack) { FactoryBot.create(:stack) }
+  let(:stack) { VCAP::CloudController::Stack.make }
   let(:user_email) { Sham.email }
   let(:user_name) { 'some-username' }
 
@@ -207,7 +207,7 @@ RSpec.describe 'Apps' do
   describe 'GET /v3/apps' do
     it 'returns a paginated list of apps the user has access to' do
       buildpack = VCAP::CloudController::Buildpack.make(name: 'bp-name')
-      stack = FactoryBot.create(:stack, name: 'stack-name')
+      stack = VCAP::CloudController::Stack.make(name: 'stack-name')
 
       app_model1 = VCAP::CloudController::AppModel.make(name: 'name1', space: space, desired_state: 'STOPPED')
       app_model1.lifecycle_data.update(
@@ -685,7 +685,7 @@ RSpec.describe 'Apps' do
   describe 'GET /v3/apps/:guid' do
     it 'gets a specific app' do
       buildpack = VCAP::CloudController::Buildpack.make(name: 'bp-name')
-      stack = FactoryBot.create(:stack, name: 'stack-name')
+      stack = VCAP::CloudController::Stack.make(name: 'stack-name')
       app_model = VCAP::CloudController::AppModel.make(
         :buildpack,
           name: 'my_app',
@@ -1052,7 +1052,7 @@ RSpec.describe 'Apps' do
         key: 'please',
         value: 'delete this',
       )
-      stack = FactoryBot.create(:stack, name: 'redhat')
+      stack = VCAP::CloudController::Stack.make(name: 'redhat')
 
       update_request = {
           name: 'new-name',
@@ -1173,7 +1173,7 @@ RSpec.describe 'Apps' do
   end
 
   describe 'PUT /v3/apps/:guid/start' do
-    let(:stack) { FactoryBot.create(:stack, name: 'stack-name') }
+    let(:stack) { VCAP::CloudController::Stack.make(name: 'stack-name') }
     let(:app_model) {
       VCAP::CloudController::AppModel.make(
         :buildpack,
@@ -1278,7 +1278,7 @@ RSpec.describe 'Apps' do
 
   describe 'POST /v3/apps/:guid/actions/stop' do
     it 'stops the app' do
-      stack = FactoryBot.create(:stack, name: 'stack-name')
+      stack = VCAP::CloudController::Stack.make(name: 'stack-name')
       app_model = VCAP::CloudController::AppModel.make(
         :buildpack,
           name: 'app-name',
@@ -1356,7 +1356,7 @@ RSpec.describe 'Apps' do
 
   describe 'POST /v3/apps/:guid/actions/restart' do
     it 'restart the app' do
-      stack = FactoryBot.create(:stack, name: 'stack-name')
+      stack = VCAP::CloudController::Stack.make(name: 'stack-name')
       app_model = VCAP::CloudController::AppModel.make(
         :buildpack,
           name: 'app-name',
@@ -1525,7 +1525,7 @@ RSpec.describe 'Apps' do
   end
 
   describe 'PATCH /v3/apps/:guid/relationships/current_droplet' do
-    let(:stack) { FactoryBot.create(:stack, name: 'stack-name') }
+    let(:stack) { VCAP::CloudController::Stack.make(name: 'stack-name') }
     let(:app_model) do
       VCAP::CloudController::AppModel.make(
         :buildpack,

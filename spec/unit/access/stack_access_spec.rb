@@ -4,7 +4,7 @@ module VCAP::CloudController
   RSpec.describe StackAccess, type: :access do
     subject(:access) { StackAccess.new(Security::AccessContext.new) }
     let(:user) { VCAP::CloudController::User.make }
-    let(:object) { FactoryBot.create(:stack) }
+    let(:object) { VCAP::CloudController::Stack.make }
 
     before { set_current_user(user) }
 

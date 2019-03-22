@@ -8,14 +8,14 @@ module VCAP::CloudController
 
     describe 'Associations' do
       it 'has apps' do
-        stack = FactoryBot.create(:stack)
+        stack = Stack.make
         process1 = ProcessModelFactory.make(stack: stack)
         process2 = ProcessModelFactory.make(stack: stack)
         expect(stack.apps).to match_array([process1, process2])
       end
 
       it 'does not associate non-web v2 apps' do
-        stack = FactoryBot.create(:stack)
+        stack = Stack.make
         process1 = ProcessModelFactory.make(type: 'web', stack: stack)
         ProcessModelFactory.make(type: 'other', stack: stack)
         expect(stack.apps).to match_array([process1])
@@ -129,7 +129,7 @@ module VCAP::CloudController
         before { Stack.dataset.destroy }
 
         context 'when stack is found with default name' do
-          before { FactoryBot.create(:stack, name: 'default-stack-name') }
+          before { Stack.make(name: 'default-stack-name') }
 
           it 'returns found stack' do
             expect(Stack.default.name).to eq('default-stack-name')
@@ -147,7 +147,7 @@ module VCAP::CloudController
     end
 
     describe '#destroy' do
-      let(:stack) { FactoryBot.create(:stack) }
+      let(:stack) { Stack.make }
 
       it 'succeeds if there are no apps' do
         expect { stack.destroy }.not_to raise_error

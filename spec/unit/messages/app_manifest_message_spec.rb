@@ -1377,7 +1377,7 @@ module VCAP::CloudController
 
     describe '#app_update_message' do
       let(:buildpack) { VCAP::CloudController::Buildpack.make }
-      let(:stack) { FactoryBot.create(:stack) }
+      let(:stack) { VCAP::CloudController::Stack.make }
       let(:parsed_yaml) { { 'buildpack' => buildpack.name, 'stack' => stack.name } }
 
       context 'when neither buildpack or docker is specified' do

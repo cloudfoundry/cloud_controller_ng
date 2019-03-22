@@ -7,7 +7,7 @@ module VCAP::CloudController
     end
 
     let(:user) { make_user }
-    let(:stack) { FactoryBot.create(:stack) }
+    let(:stack) { Stack.make }
     let(:req_body) { MultiJson.dump({ name: 'dynamic_test_buildpack', stack: stack.name, position: 1 }) }
 
     before { set_current_user_as_admin }

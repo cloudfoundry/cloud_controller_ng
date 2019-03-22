@@ -1,7 +1,14 @@
 require 'models/runtime/isolation_segment_model'
-require_relative './sequences'
 
 FactoryBot.define do
+  sequence :name do |n|
+    "name-#{n}"
+  end
+
+  sequence :guid do
+    "guid-#{SecureRandom.uuid}"
+  end
+
   factory :isolation_segment, class: VCAP::CloudController::IsolationSegmentModel do
     name
     guid

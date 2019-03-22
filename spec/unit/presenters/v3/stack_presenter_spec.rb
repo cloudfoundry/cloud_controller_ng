@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'presenters/v3/stack_presenter'
 
 RSpec.describe VCAP::CloudController::Presenters::V3::StackPresenter do
-  let(:stack) { FactoryBot.create(:stack) }
+  let(:stack) { VCAP::CloudController::Stack.make }
 
   let!(:release_label) do
     VCAP::CloudController::StackLabelModel.make(

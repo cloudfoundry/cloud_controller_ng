@@ -34,8 +34,8 @@ RSpec.describe StacksController, type: :controller do
     end
 
     context 'when the user is logged in' do
-      let!(:stack1) { FactoryBot.create(:stack) }
-      let!(:stack2) { FactoryBot.create(:stack) }
+      let!(:stack1) { VCAP::CloudController::Stack.make }
+      let!(:stack2) { VCAP::CloudController::Stack.make }
 
       before do
         set_current_user(user)
@@ -101,7 +101,7 @@ RSpec.describe StacksController, type: :controller do
       end
 
       context 'when the stack exists' do
-        let!(:stack) { FactoryBot.create(:stack) }
+        let!(:stack) { VCAP::CloudController::Stack.make }
 
         it 'renders a single stack details' do
           get :show, params: { guid: stack.guid }
@@ -180,7 +180,7 @@ RSpec.describe StacksController, type: :controller do
 
   describe '#destroy' do
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
-    let(:stack) { FactoryBot.create(:stack) }
+    let(:stack) { VCAP::CloudController::Stack.make }
 
     describe 'permissions' do
       context 'when the user does not have the write scope' do
@@ -307,7 +307,7 @@ RSpec.describe StacksController, type: :controller do
     let!(:org) { VCAP::CloudController::Organization.make(name: "Harold's Farm") }
     let!(:space) { VCAP::CloudController::Space.make(name: 'roosters', organization: org) }
     let(:user) { VCAP::CloudController::User.make }
-    let(:stack) { FactoryBot.create(:stack) }
+    let(:stack) { VCAP::CloudController::Stack.make }
 
     let(:labels) do
       {

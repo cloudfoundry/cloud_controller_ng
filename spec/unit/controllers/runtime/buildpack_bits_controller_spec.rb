@@ -156,7 +156,7 @@ module VCAP::CloudController
         end
 
         it 'requires an existing stack to be the same as one in the manifest if it exists' do
-          FactoryBot.create(:stack, name: 'not-from-manifest')
+          Stack.make(name: 'not-from-manifest')
           test_buildpack.update(stack: 'not-from-manifest')
 
           put "/v2/buildpacks/#{test_buildpack.guid}/bits", { buildpack: valid_zip_manifest, buildpack_name: valid_zip_manifest.path }

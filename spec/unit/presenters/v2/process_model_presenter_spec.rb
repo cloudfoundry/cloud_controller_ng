@@ -17,7 +17,7 @@ module CloudController::Presenters::V2
       end
 
       let(:space) { VCAP::CloudController::Space.make }
-      let(:stack) { FactoryBot.create(:stack) }
+      let(:stack) { VCAP::CloudController::Stack.make }
       let(:process) do
         VCAP::CloudController::ProcessModelFactory.make(
           name:             'utako',

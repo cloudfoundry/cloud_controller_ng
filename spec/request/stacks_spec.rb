@@ -12,9 +12,9 @@ RSpec.describe 'Stacks Request' do
     end
 
     context 'When stacks exist' do
-      let!(:stack1) { FactoryBot.create(:stack) }
-      let!(:stack2) { FactoryBot.create(:stack) }
-      let!(:stack3) { FactoryBot.create(:stack) }
+      let!(:stack1) { VCAP::CloudController::Stack.make }
+      let!(:stack2) { VCAP::CloudController::Stack.make }
+      let!(:stack3) { VCAP::CloudController::Stack.make }
 
       it 'returns a paginated list of stacks' do
         get '/v3/stacks?page=1&per_page=2', nil, headers
@@ -178,7 +178,7 @@ RSpec.describe 'Stacks Request' do
     let(:user) { make_user }
     let(:headers) { headers_for(user) }
 
-    let!(:stack) { FactoryBot.create(:stack) }
+    let!(:stack) { VCAP::CloudController::Stack.make }
 
     it 'returns details of the requested stack' do
       get "/v3/stacks/#{stack.guid}", nil, headers
@@ -258,7 +258,7 @@ RSpec.describe 'Stacks Request' do
       let(:name) { 'the-name' }
 
       before do
-        FactoryBot.create(:stack, name: name)
+        VCAP::CloudController::Stack.make name: name
       end
 
       it 'responds with 422' do
@@ -271,7 +271,7 @@ RSpec.describe 'Stacks Request' do
 
   describe 'PATCH /v3/stacks/:guid' do
     let(:user) { make_user(admin: true) }
-    let(:stack) { FactoryBot.create(:stack) }
+    let(:stack) { VCAP::CloudController::Stack.make }
     let(:request_body) do
       {
         metadata: {
@@ -319,7 +319,7 @@ RSpec.describe 'Stacks Request' do
   describe 'DELETE /v3/stacks/:guid' do
     let(:user) { make_user(admin: true) }
     let(:headers) { admin_headers_for(user) }
-    let(:stack) { FactoryBot.create(:stack) }
+    let(:stack) { VCAP::CloudController::Stack.make }
 
     it 'destroys the stack' do
       delete "/v3/stacks/#{stack.guid}", {}, headers

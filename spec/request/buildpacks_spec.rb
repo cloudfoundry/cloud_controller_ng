@@ -41,9 +41,9 @@ RSpec.describe 'buildpacks' do
     end
 
     context 'When buildpacks exist' do
-      let!(:stack1) { FactoryBot.create(:stack) }
-      let!(:stack2) { FactoryBot.create(:stack) }
-      let!(:stack3) { FactoryBot.create(:stack) }
+      let!(:stack1) { VCAP::CloudController::Stack.make }
+      let!(:stack2) { VCAP::CloudController::Stack.make }
+      let!(:stack3) { VCAP::CloudController::Stack.make }
 
       let!(:buildpack1) { VCAP::CloudController::Buildpack.make(stack: stack1.name) }
       let!(:buildpack2) { VCAP::CloudController::Buildpack.make(stack: stack2.name) }
@@ -262,7 +262,7 @@ RSpec.describe 'buildpacks' do
       let(:headers) { admin_headers_for(user) }
 
       context 'when successful' do
-        let(:stack) { FactoryBot.create(:stack) }
+        let(:stack) { VCAP::CloudController::Stack.make }
         let(:params) do
           {
             name: 'the-r3al_Name',

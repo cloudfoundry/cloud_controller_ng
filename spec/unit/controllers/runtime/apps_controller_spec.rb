@@ -29,8 +29,8 @@ module VCAP::CloudController
     end
 
     describe 'querying by stack guid' do
-      let(:stack1) { FactoryBot.create(:stack) }
-      let(:stack2) { FactoryBot.create(:stack) }
+      let(:stack1) { Stack.make }
+      let(:stack2) { Stack.make }
       let(:process1) { ProcessModel.make }
       let(:process2) { ProcessModel.make }
 
@@ -350,7 +350,7 @@ module VCAP::CloudController
 
       context 'creating a buildpack app' do
         it 'creates the app correctly' do
-          stack   = FactoryBot.create(:stack, name: 'stack-name')
+          stack   = Stack.make(name: 'stack-name')
           request = {
             name:       'maria',
             space_guid: space.guid,
@@ -711,7 +711,7 @@ module VCAP::CloudController
       it 'updates the app' do
         v2_app = ProcessModel.make
         v3_app = v2_app.app
-        stack  = FactoryBot.create(:stack, name: 'stack-name')
+        stack  = Stack.make(name: 'stack-name')
 
         request = {
           name:             'maria',
@@ -786,7 +786,7 @@ module VCAP::CloudController
       end
 
       describe 'setting stack' do
-        let(:new_stack) { FactoryBot.create(:stack) }
+        let(:new_stack) { Stack.make }
 
         it 'changes the stack' do
           set_current_user(admin_user, admin: true)

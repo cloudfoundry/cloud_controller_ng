@@ -320,7 +320,7 @@ module VCAP::CloudController
             before do
               app.update(buildpack_lifecycle_data: BuildpackLifecycleDataModel.create(
                 buildpacks: ['http://example.com/repo.git'],
-                stack:     FactoryBot.create(:stack).name,
+                stack:     Stack.make.name,
               ))
             end
 

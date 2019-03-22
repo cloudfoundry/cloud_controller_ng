@@ -10,8 +10,8 @@ module VCAP::CloudController
         Stack.dataset.destroy
       end
 
-      let!(:stack1) { FactoryBot.create(:stack) }
-      let!(:stack2) { FactoryBot.create(:stack) }
+      let!(:stack1) { Stack.make }
+      let!(:stack2) { Stack.make }
 
       let(:message) { StacksListMessage.from_params(filters) }
       subject { fetcher.fetch_all(message) }

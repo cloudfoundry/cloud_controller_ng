@@ -18,7 +18,7 @@ module VCAP::CloudController
           },
         }
       end
-      let(:stack) { FactoryBot.create(:stack) }
+      let(:stack) { Stack.make }
       let(:message) { StackUpdateMessage.new(body) }
 
       it 'updates the stack metadata' do

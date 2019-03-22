@@ -112,7 +112,7 @@ module VCAP::CloudController
       end
 
       it 'has a stack from the parent app' do
-        stack      = FactoryBot.create(:stack)
+        stack      = Stack.make
         parent_app = AppModel.make(space: space)
         parent_app.lifecycle_data.update(stack: stack.name)
         process = ProcessModel.make
@@ -582,7 +582,7 @@ module VCAP::CloudController
 
     describe '#stack' do
       it 'gets stack from the parent app' do
-        desired_stack = FactoryBot.create(:stack)
+        desired_stack = Stack.make
         process = ProcessModel.make
 
         expect(process.stack).not_to eq(desired_stack)
