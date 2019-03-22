@@ -9,7 +9,7 @@ module VCAP::CloudController
 
     describe 'droplet' do
       context 'revision provided' do
-        let(:revision) { RevisionModel.create(droplet: droplet) }
+        let(:revision) { RevisionModel.make(droplet: droplet) }
         let(:message) {
           DeploymentCreateMessage.new({
             relationships: { app: { data: { guid: app.guid } } },
