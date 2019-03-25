@@ -1809,7 +1809,7 @@ information for your packages, droplets, processes, tasks, and more.</p>
     "lifecycle": {
       "type": "buildpack",
       "data": {
-        "buildpacks": ["java_buildpack"],
+        "buildpacks": ["java_buildpack"]
       }
     }
   }'</span>
@@ -7474,7 +7474,7 @@ the request in that case. Clients may need to follow the redirect without includ
   -X POST <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
   -F <span class="nv">bits</span><span class="o">=</span>@<span class="s2">"package.zip"</span> <span class="se">\</span>
-  -F <span class="nv">resources</span><span class="o">=</span><span class="s1">'[{"fn":"path/to/content.txt","size":123,"sha1":"b907173290db6a155949ab4dc9b2d019dea0c901"},{"fn":"path/to/code.jar","size":123,"sha1":"ff84f89760317996b9dd180ab996b079f418396f"},{"fn":"path/to/code.jar","size":123,"sha1":"ff84f89760317996b9dd180ab996b079f418396f","mode":"644"}]'</span>
+  -F <span class="nv">resources</span><span class="o">=</span><span class="s1">'[{"path":"path/to/content.txt","size_in_bytes":123,"checksum": {"value": "b907173290db6a155949ab4dc9b2d019dea0c901"}},{"path":"path/to/code.jar","size_in_bytes":123,"checksum": {"value": "ff84f89760317996b9dd180ab996b079f418396f"}},{"path":"path/to/code.jar","size_in_bytes":123,"checksum": {"value": "ff84f89760317996b9dd180ab996b079f418396f"},"mode":"644"}]'</span>
 </code></pre>
 <pre class="highlight plaintext"><code>Example Response
 </code></pre>
@@ -7518,27 +7518,13 @@ the request in that case. Clients may need to follow the redirect without includ
 
 </span></code></pre>
 
-<p>Upload file for a package of type <code class="prettyprint">bits</code>. The file must be sent as part of a multi-part form.</p>
+<p>This upload endpoint takes a multi-part form requests for packages of type <code class="prettyprint">bits</code>. The request requires either a <a href="https://en.wikipedia.org/wiki/Zip_(file_format)">.zip file</a> uploaded under the <code class="prettyprint">bits</code> field or a list of <a href="#the-resource-match-object">resource match objects</a> under the <code class="prettyprint">resources</code> field. These field may be used together.</p>
+
+<p>The <code class="prettyprint">resources</code> field in the request accepts the v2 resources object format.</p>
 
 <h4 id="definition">Definition</h4>
 
 <p><code class="prettyprint">POST /v3/packages/:guid/upload</code></p>
-
-<h4 id="required-parameters">Required Parameters</h4>
-
-<table><thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead><tbody>
-<tr>
-<td><strong>bits</strong></td>
-<td><em>form field</em></td>
-<td>A binary zip file containing the package bits.</td>
-</tr>
-</tbody></table>
 
 <h4 id="optional-parameters">Optional Parameters</h4>
 
@@ -7551,9 +7537,15 @@ the request in that case. Clients may need to follow the redirect without includ
 </tr>
 </thead><tbody>
 <tr>
+<td><strong>bits</strong></td>
+<td><em>form field</em></td>
+<td>A binary zip file containing the package bits.</td>
+<td></td>
+</tr>
+<tr>
 <td><strong>resources</strong></td>
 <td><em>form field</em></td>
-<td>Fingerprints of the application bits that have previously been pushed to Cloud Foundry. Each fingerprint must include the file path, sha1 hash, and file size in bytes. Each fingerprint may include the file mode, which must be an octal string with at least read and write permissions for owners. If a mode is not provided, the default mode of 0744 will be used. Fingerprinted bits MUST exist in the Cloud Foundry resource cache or the job will fail.</td>
+<td>Fingerprints of the application bits that have previously been pushed to Cloud Foundry, formatted as <a href="#the-resource-match-object">resource match objects</a>.</td>
 <td><code class="prettyprint">[]</code></td>
 </tr>
 </tbody></table>
@@ -13267,6 +13259,51 @@ even though they are not used when determining a resource match.</p>
 If the file size provided is outside this range,
 it will not be matched against.</p>
 
+          <h3 id="the-resource-match-object">The resource match object</h3>
+<pre class="highlight plaintext"><code>Example Resource Match object
+</code></pre>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"resources"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"checksum"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a9993e364706816aba3e25717850c26c9cd0d89d"</span><span class="w"> </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"size_in_bytes"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"path/to/file"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"mode"</span><span class="p">:</span><span class="w"> </span><span class="s2">"644"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+
+</span></code></pre>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>checksum.value</strong></td>
+<td><em>string</em></td>
+<td><strong>(Required)</strong> SHA-1 hash of file</td>
+</tr>
+<tr>
+<td><strong>size_in_bytes</strong></td>
+<td><em>integer</em></td>
+<td><strong>(Required)</strong> Size of file in bytes</td>
+</tr>
+<tr>
+<td><strong>path</strong></td>
+<td><em>string</em></td>
+<td>Path to the file, relative to app root</td>
+</tr>
+<tr>
+<td><strong>mode</strong></td>
+<td><em>string</em></td>
+<td>File mode, i.e. POSIX file permissions. Defaults to 0744</td>
+</tr>
+</tbody></table>
+
           <h3 id="create-a-resource-match">Create a resource match</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
@@ -13327,7 +13364,7 @@ it will not be matched against.</p>
 </thead><tbody>
 <tr>
 <td><strong>resources</strong></td>
-<td><em>array of <a href="#resource-object">resource_object</a></em></td>
+<td><em>array of <a href="#the-resource-match-object">resource_object</a></em></td>
 <td>List of resources to check for in the resource cache</td>
 </tr>
 </tbody></table>
@@ -13341,37 +13378,6 @@ it will not be matched against.</p>
 </thead><tbody>
 <tr>
 <td>All Roles</td>
-</tr>
-</tbody></table>
-
-<h4 id="resource-object">Resource Object</h4>
-
-<table><thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead><tbody>
-<tr>
-<td><strong>checksum.value</strong></td>
-<td><em>string</em></td>
-<td><strong>(Required)</strong> SHA-1 hash of file</td>
-</tr>
-<tr>
-<td><strong>size_in_bytes</strong></td>
-<td><em>integer</em></td>
-<td><strong>(Required)</strong> Size of file in bytes</td>
-</tr>
-<tr>
-<td><strong>path</strong></td>
-<td><em>string</em></td>
-<td>Path to the file, relative to app root</td>
-</tr>
-<tr>
-<td><strong>mode</strong></td>
-<td><em>string</em></td>
-<td>File mode, i.e. POSIX file permissions</td>
 </tr>
 </tbody></table>
 
