@@ -48,7 +48,12 @@ module VCAP
       env_hash[:limits][:fds] = @file_descriptors if @file_descriptors
       env_hash[:limits][:mem] = @memory_limit if @memory_limit
       env_hash[:limits][:disk] = @staging_disk_in_mb if @staging_disk_in_mb
-      env_hash[:application_id] = @process.guid if @process.guid
+      application_id = if @process.class == VCAP::CloudController::AppModel
+                         @process.guid
+                       else
+                         @process.app.guid
+                       end
+      env_hash[:application_id] = application_id if application_id
 
       unless @version.nil?
         env_hash[:version] = @version

@@ -91,7 +91,7 @@ RSpec.describe(OPI::Client) do
                     "space_name": "#{lrp.space.name}",
                     "space_id": "#{lrp.space.guid}",
                     "uris": [],
-                    "application_id": "#{lrp.guid}",
+                    "application_id": "#{app_model.guid}",
                     "version": "#{lrp.version}",
                     "application_version": "#{lrp.version}"
                   }}.delete(' ').delete("\n"),

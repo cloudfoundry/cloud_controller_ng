@@ -20,7 +20,7 @@ module VCAP::CloudController
                 disk: v2_app.disk_quota,
                 fds: v2_app.file_descriptors,
               },
-              application_id: process.guid,
+              application_id: v3_app_model.guid,
               application_version: process.version,
               application_name: v3_app_model.name,
               application_uris: process.uris,
