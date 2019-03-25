@@ -6,11 +6,23 @@ module VCAP::CloudController
     before { TestConfig.override(directories: { tmpdir: '/tmp/' }) }
 
     describe 'validations' do
-      let(:opts) { { bits_path: '/tmp/foobar' } }
+      context 'when there is a zip but no resources' do
+        let(:opts) { { bits_path: '/tmp/foobar' } }
 
-      it 'is valid' do
-        upload_message = PackageUploadMessage.new(opts)
-        expect(upload_message).to be_valid
+        it 'is valid' do
+          upload_message = PackageUploadMessage.new(opts)
+          expect(upload_message).to be_valid
+        end
+      end
+
+      context 'when no zip is uploaded' do
+        let(:opts) { { resources: [{ value: 'sbfkbjeb243' }] } }
+
+        it 'is valid' do
+          message = PackageUploadMessage.new(opts)
+
+          expect(message).to be_valid
+        end
       end
 
       context 'when the <ngnix_upload_module_dummy> param is set' do
@@ -42,15 +54,6 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the path is not provided' do
-        let(:opts) { {} }
-        it 'is not valid' do
-          upload_message = PackageUploadMessage.new(opts)
-          expect(upload_message).not_to be_valid
-          expect(upload_message.errors[:bits_path]).to include('An application zip file must be uploaded')
-        end
-      end
-
       context 'when unexpected keys are requested' do
         let(:opts) { { bits_path: '/tmp/bar', unexpected: 'foo' } }
 
@@ -70,6 +73,17 @@ module VCAP::CloudController
 
           expect(message).not_to be_valid
           expect(message.errors.full_messages[0]).to include('Bits path is invalid')
+        end
+      end
+
+      context 'when neither bits path or resources are given' do
+        let(:opts) { {} }
+
+        it 'is not valid' do
+          message = PackageUploadMessage.new(opts)
+
+          expect(message).not_to be_valid
+          expect(message.errors.full_messages[0]).to include('Upload must include either resources or bits')
         end
       end
     end

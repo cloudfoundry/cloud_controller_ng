@@ -8,7 +8,7 @@ module VCAP::CloudController
 
     validates_with NoAdditionalKeysValidator
 
-    validates :bits_path, presence: { presence: true, message: 'An application zip file must be uploaded' }
+    validate :bits_path_or_resources_presence
     validate :bits_path_in_tmpdir
     validate :missing_file_path
 
@@ -29,6 +29,12 @@ module VCAP::CloudController
     end
 
     private
+
+    def bits_path_or_resources_presence
+      unless bits_path || resources
+        errors.add(:base, 'Upload must include either resources or bits')
+      end
+    end
 
     def bits_path_in_tmpdir
       return unless bits_path

@@ -23,21 +23,18 @@ Content-Type: application/json
 <%= yield_content :single_bits_package %>
 ```
 
-Upload file for a package of type `bits`. The file must be sent as part of a multi-part form. The resources field in the request also accepts the v2 resources object format.
+This upload endpoint takes a multi-part form requests for packages of type `bits`. The request requires either a [.zip file](https://en.wikipedia.org/wiki/Zip_(file_format)) uploaded under the `bits` field or a list of [resource match objects][resource matches] under the `resources` field. These field may be used together.
+
+The `resources` field in the request accepts the v2 resources object format.
 
 #### Definition
 `POST /v3/packages/:guid/upload`
-
-#### Required Parameters
-
-Name | Type | Description
----- | ---- | -----------
-**bits** | _form field_ | A binary zip file containing the package bits.
 
 #### Optional Parameters
 
 Name | Type | Description | Default
 ---- | ---- | ----------- | -------
+**bits** | _form field_ | A binary zip file containing the package bits. |
 **resources** | _form field_ | Fingerprints of the application bits that have previously been pushed to Cloud Foundry, formatted as [resource match objects][resource matches].  | `[]`
 
 #### Permitted Roles
