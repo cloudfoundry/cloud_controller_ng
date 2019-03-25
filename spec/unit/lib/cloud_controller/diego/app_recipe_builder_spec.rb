@@ -31,8 +31,6 @@ module VCAP::CloudController
           ]
         end
 
-        let(:platform_options) { [] }
-
         let(:lifecycle_type) { nil }
         let(:app_model) { AppModel.make(lifecycle_type, guid: 'app-guid', droplet: DropletModel.make(state: 'STAGED'), enable_ssh: false) }
         let(:package) { PackageModel.make(lifecycle_type, app: app_model) }
@@ -246,7 +244,6 @@ module VCAP::CloudController
               privileged?:                  false,
               ports:                        lrp_builder_ports,
               port_environment_variables:   port_environment_variables,
-              platform_options:             platform_options,
               action_user:                  'lrp-action-user',
               image_layers:                 expected_image_layers,
               start_command:                command,
@@ -830,7 +827,6 @@ module VCAP::CloudController
               image_layers:                 [],
               ports:                        lrp_builder_ports,
               port_environment_variables:   port_environment_variables,
-              platform_options:             platform_options,
               action_user:                  'lrp-action-user',
               start_command:                command,
             )

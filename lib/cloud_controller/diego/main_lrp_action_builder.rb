@@ -25,7 +25,7 @@ module VCAP::CloudController
           lrp_builder.action_user,
           environment_variables
         )
-        actions << generate_sidecar_action(lrp_builder.action_user, environment_variables) if sidecar?
+        actions += generate_sidecar_actions(lrp_builder.action_user, environment_variables) if sidecar?
         actions << generate_ssh_action(lrp_builder.action_user, environment_variables) if allow_ssh?
         codependent(actions)
       end
@@ -70,17 +70,20 @@ module VCAP::CloudController
         [::Diego::Bbs::Models::EnvironmentVariable.new(name: 'VCAP_PLATFORM_OPTIONS', value: credhub_url)]
       end
 
-      def generate_sidecar_action(user, environment_variables)
-        sidecar = process.app.sidecars.detect { |sidecar| sidecar.process_types.include?(process.type) }
-        action(::Diego::Bbs::Models::RunAction.new(
-                 user:            user,
-                 path:            '/tmp/lifecycle/launcher',
-
-                 args: ['app', sidecar.command],
-                 env:             environment_variables,
-                 resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: process.file_descriptors),
-            # log_source:      SSHD_LOG_SOURCE,
-          ))
+      def generate_sidecar_actions(user, environment_variables)
+        process.app.sidecars.
+          select { |sidecar| sidecar.process_types.include?(process.type) }.
+          map { |sidecar| action(
+            ::Diego::Bbs::Models::RunAction.new(
+              user:            user,
+              path:            '/tmp/lifecycle/launcher',
+              args:            ['app', sidecar.command, process.execution_metadata],
+              env:             environment_variables,
+              resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: process.file_descriptors),
+              log_source:      "APP/PROC/#{process.type.upcase}/SIDECAR/#{sidecar.name.upcase}",
+            )
+          )
+        }
       end
 
       def generate_ssh_action(user, environment_variables)

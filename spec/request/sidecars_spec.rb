@@ -46,5 +46,13 @@ RSpec.describe 'Sidecars' do
       parsed_response = MultiJson.load(last_response.body)
       expect(parsed_response).to be_a_response_like(expected_response)
     end
+
+    describe 'deleting an app with a sidecar' do
+      it 'deletes the sidecar' do
+        post "/v3/apps/#{app_model.guid}/sidecars", sidecar_params.to_json, user_header
+        delete "/v3/apps/#{app_model.guid}", nil, user_header
+        expect(last_response.status).to eq(202)
+      end
+    end
   end
 end

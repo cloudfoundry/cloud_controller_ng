@@ -112,6 +112,18 @@ module VCAP::CloudController
           expect(app.exists?).to be_falsey
         end
 
+        it 'deletes associated sidecars' do
+          sidecar = SidecarModel.make(app: app)
+          sidecar_process_type = SidecarProcessTypeModel.make(sidecar: sidecar)
+
+          expect {
+            app_delete.delete(app_dataset)
+          }.to change { SidecarModel.count }.by(-1)
+          expect(sidecar.exists?).to be_falsey
+          expect(sidecar_process_type.exists?).to be_falsey
+          expect(app.exists?).to be_falsey
+        end
+
         it 'deletes associated deployments' do
           deployment = DeploymentModel.make(app: app)
 

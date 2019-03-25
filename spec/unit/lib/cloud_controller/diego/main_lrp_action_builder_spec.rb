@@ -5,9 +5,9 @@ module VCAP::CloudController
     RSpec.describe MainLRPActionBuilder do
       describe '.build' do
         let(:app_model) do
-          FactoryBot.create(:app, :buildpack,
-          droplet: DropletModel.make(state: 'STAGED'),
-          enable_ssh: false
+          AppModel.make(
+            droplet: DropletModel.make(state: 'STAGED'),
+            enable_ssh: false
           )
         end
 
@@ -30,19 +30,19 @@ module VCAP::CloudController
         let(:buildpack_lifecycle_data) { app_model.buildpack_lifecycle_data }
         let(:process) do
           process = ProcessModel.make(:process,
-          app:                  app_model,
-          state:                'STARTED',
-          diego:                true,
-          guid:                 'process-guid',
-          type:                 'web',
-          health_check_timeout: 12,
-          instances:            21,
-          memory:               128,
-          disk_quota:           256,
-          command:              command,
-          file_descriptors:     32,
-          health_check_type:    'port',
-          enable_ssh:           false,
+            app:                  app_model,
+            state:                'STARTED',
+            diego:                true,
+            guid:                 'process-guid',
+            type:                 'web',
+            health_check_timeout: 12,
+            instances:            21,
+            memory:               128,
+            disk_quota:           256,
+            command:              command,
+            file_descriptors:     32,
+            health_check_type:    'port',
+            enable_ssh:           false,
           )
           process.this.update(updated_at: Time.at(2))
           process.reload
@@ -112,25 +112,56 @@ module VCAP::CloudController
             run_actions = MainLRPActionBuilder.build(process, lrp_builder, ssh_key).
                           codependent_action.actions.map(&:run_action)
 
-            # log_source: 'CELL/SSHD',
             expect(run_actions).to include(
               ::Diego::Bbs::Models::RunAction.new(
                 user:            'lrp-action-user',
                 path:            '/tmp/lifecycle/launcher',
-                args:            ['app', 'athenz'],
+                args:            ['app', 'athenz', execution_metadata],
                 resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: expected_file_descriptor_limit),
                 env:             expected_action_environment_variables,
+                log_source:      'APP/PROC/WEB/SIDECAR/MY_SIDECAR',
               )
             )
           end
         end
 
         context 'when a process has multiple sidecars' do
+          let!(:sidecar1) { SidecarModel.make(app: app_model, name: 'my_sidecar1', command: 'athenz') }
+          let!(:sidecar2) { SidecarModel.make(app: app_model, name: 'my_sidecar2', command: 'newrelic') }
+          let!(:sidecar3) { SidecarModel.make(app: app_model, name: 'unused_sidecar', command: 'envoy') }
+          let!(:sidecar_process_type1) { SidecarProcessTypeModel.make(sidecar: sidecar1, type: 'web') }
+          let!(:sidecar_process_type2) { SidecarProcessTypeModel.make(sidecar: sidecar2, type: 'web') }
+          let!(:unused_process_type2a) { SidecarProcessTypeModel.make(sidecar: sidecar2, type: 'worker') }
+          let!(:irrelevant_sidecar_process_type) { SidecarProcessTypeModel.make(sidecar: sidecar3, type: 'worker') }
 
-        end
+          it 'includes the sidecar process as a codependent run action' do
+            run_actions = MainLRPActionBuilder.build(process, lrp_builder, ssh_key).
+                          codependent_action.actions.map(&:run_action)
 
-        context 'when a process has multiple sidecars' do
+            expect(run_actions).to include(
+              ::Diego::Bbs::Models::RunAction.new(
+                user:            'lrp-action-user',
+                path:            '/tmp/lifecycle/launcher',
+                args:            ['app', 'athenz', execution_metadata],
+                resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: expected_file_descriptor_limit),
+                env:             expected_action_environment_variables,
+                log_source:      'APP/PROC/WEB/SIDECAR/MY_SIDECAR1',
+              )
+            )
 
+            expect(run_actions).to include(
+              ::Diego::Bbs::Models::RunAction.new(
+                user:            'lrp-action-user',
+                path:            '/tmp/lifecycle/launcher',
+                args:            ['app', 'newrelic', execution_metadata],
+                resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: expected_file_descriptor_limit),
+                env:             expected_action_environment_variables,
+                log_source:      'APP/PROC/WEB/SIDECAR/MY_SIDECAR2',
+              )
+            )
+
+            expect(run_actions.size).to eq(3), 'should only have main, athenz, and newrelic actions'
+          end
         end
 
         describe 'ssh' do
