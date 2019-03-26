@@ -250,6 +250,93 @@ RSpec.describe 'Spaces' do
     end
   end
 
+  describe 'GET /v2/spaces/:guid/summary' do
+    let!(:space) { VCAP::CloudController::Space.make(organization: org) }
+    let!(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
+    let!(:process) { VCAP::CloudController::ProcessModelFactory.make(state: 'STARTED', app: app_model) }
+    let!(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+    let(:build_client) { instance_double(HTTPClient, post: nil) }
+
+    before do
+      space.organization.add_user(user)
+      space.add_developer(user)
+      allow_any_instance_of(::Diego::Client).to receive(:build_client).and_return(build_client)
+    end
+
+    it 'returns the space summary' do
+      get "/v2/spaces/#{space.guid}/summary", nil, headers_for(user)
+      expect(last_response).to have_status_code(200)
+
+      parsed_response = MultiJson.load(last_response.body)
+      expect(parsed_response).to be_a_response_like({
+        'guid' => space.guid,
+        'name' => space.name,
+        'apps' => [
+          {
+            'buildpack' => nil,
+            'command' => nil,
+            'console' => false,
+            'debug' => nil,
+            'detected_buildpack' => nil,
+            'detected_buildpack_guid' => nil,
+            'detected_start_command' => '',
+            'diego' => true,
+            'disk_quota' => 1024,
+            'docker_image' => nil,
+            'enable_ssh' => true,
+            'environment_json' => nil,
+            'guid' => process.guid,
+            'health_check_http_endpoint' => nil,
+            'health_check_timeout' => nil,
+            'health_check_type' => 'port',
+            'instances' => 1,
+            'memory' => 1024,
+            'name' => process.name,
+            'package_state' => 'STAGED',
+            'package_updated_at' => process.package_updated_at.to_time.utc.iso8601,
+            'ports' => nil,
+            'production' => false,
+            'routes' => [],
+            'running_instances' => -1,
+            'service_count' => 0,
+            'service_names' => [],
+            'space_guid' => space.guid,
+            'stack_guid' => process.stack_guid,
+            'staging_failed_description' => nil,
+            'staging_failed_reason' => nil,
+            'staging_task_id' => process.staging_task_id,
+            'state' => 'STARTED',
+            'urls' => [],
+            'version' => process.version
+          }
+        ],
+        'services' => [
+          {
+            'bound_app_count' => 0,
+            'dashboard_url' => nil,
+            'guid' => service_instance.guid,
+            'last_operation' => nil,
+            'name' => service_instance.name,
+            'service_broker_name' => service_instance.service_broker.name,
+            'service_plan' => {
+              'guid' => service_instance.service_plan.guid,
+              'name' => service_instance.service_plan.name,
+              'service' => {
+                'guid' => service_instance.service_plan.service.guid,
+                'label' => service_instance.service_plan.service.label,
+                'provider' => nil,
+                'version' => nil
+              }
+            },
+            'shared_from' => nil,
+            'shared_to' => [],
+            'type' => 'managed_service_instance'
+          }
+        ]
+      })
+    end
+  end
+
   describe 'DELETE /v2/spaces/:guid/unmapped_routes' do
     let(:space) { VCAP::CloudController::Space.make(organization: org) }
     let(:process) { VCAP::CloudController::ProcessModelFactory.make(state: 'STARTED') }
