@@ -209,6 +209,16 @@ module VCAP::CloudController
           expect(app.exists?).to be_falsey
         end
 
+        it 'deletes the associated sidecars' do
+          sidecar = SidecarModel.make(name: 'name', app: app)
+
+          expect {
+            app_delete.delete(app_dataset)
+          }.to change { SidecarModel.count }.by(-1)
+          expect(sidecar.exists?).to be_falsey
+          expect(app.exists?).to be_falsey
+        end
+
         describe 'deleting service bindings' do
           it 'deletes associated service bindings' do
             allow_any_instance_of(VCAP::Services::ServiceBrokers::V2::Client).to receive(:unbind).and_return({ async: false })

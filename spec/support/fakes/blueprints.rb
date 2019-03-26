@@ -569,4 +569,8 @@ module VCAP::CloudController
 
   RevisionProcessCommandModel.blueprint do
   end
+
+  SidecarProcessTypeModel.blueprint do
+    name { Sham.name }
+  end
 end

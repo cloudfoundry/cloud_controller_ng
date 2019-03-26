@@ -10,6 +10,7 @@ require 'actions/annotation_delete'
 require 'actions/revision_delete'
 require 'actions/process_delete'
 require 'actions/route_mapping_delete'
+require 'actions/sidecar_delete'
 require 'actions/staging_cancel'
 
 module VCAP::CloudController
@@ -75,6 +76,7 @@ module VCAP::CloudController
       LabelDelete.delete(app.labels)
       AnnotationDelete.delete(app.annotations)
       RevisionDelete.delete(app.revisions)
+      SidecarDelete.delete(app.sidecars)
       RouteMappingDelete.new(@user_audit_info).delete(route_mappings_to_delete(app))
       ProcessDelete.new(@user_audit_info).delete(app.processes)
       delete_buildpack_cache(app)
