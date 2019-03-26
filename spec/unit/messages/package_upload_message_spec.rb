@@ -86,6 +86,17 @@ module VCAP::CloudController
           expect(message.errors.full_messages[0]).to include('Upload must include either resources or bits')
         end
       end
+
+      context 'when no bits path is given and resources is empty' do
+        let(:opts) { { resources: [] } }
+
+        it 'is not valid' do
+          message = PackageUploadMessage.new(opts)
+
+          expect(message).not_to be_valid
+          expect(message.errors.full_messages[0]).to include('Upload must include either resources or bits')
+        end
+      end
     end
 
     describe '#bits_path=' do
