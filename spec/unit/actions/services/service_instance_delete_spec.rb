@@ -60,6 +60,24 @@ module VCAP::CloudController
         }.to change { RouteBinding.count }.by(-2)
       end
 
+      it 'deletes associated labels' do
+        labels = service_instance_dataset.map { |si| ServiceInstanceLabelModel.make(resource_guid: si.guid) }
+
+        expect {
+          service_instance_delete.delete(service_instance_dataset)
+        }.to change { ServiceInstanceLabelModel.count }.by(-labels.length)
+        expect(labels.none?(&:exists?)).to be_truthy
+      end
+
+      it 'deletes associated annotations' do
+        annotations = service_instance_dataset.map { |si| ServiceInstanceAnnotationModel.make(resource_guid: si.guid) }
+
+        expect {
+          service_instance_delete.delete(service_instance_dataset)
+        }.to change { ServiceInstanceAnnotationModel.count }.by(-annotations.length)
+        expect(annotations.none?(&:exists?)).to be_truthy
+      end
+
       it 'deletes user provided service instances' do
         user_provided_instance = UserProvidedServiceInstance.make
         errors, warnings = service_instance_delete.delete(service_instance_dataset)

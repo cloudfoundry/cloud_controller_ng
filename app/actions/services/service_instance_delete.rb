@@ -25,6 +25,7 @@ module VCAP::CloudController
 
         errors.concat delete_service_keys(service_instance)
         errors.concat delete_route_bindings(service_instance)
+        errors.concat delete_metadata(service_instance)
 
         if errors.empty?
           instance_errors = delete_service_instance(service_instance)
@@ -119,6 +120,17 @@ module VCAP::CloudController
       end
 
       [errors, warnings]
+    end
+
+    def delete_metadata(service_instance)
+      begin
+        LabelDelete.delete(service_instance.labels)
+        AnnotationDelete.delete(service_instance.annotations)
+      rescue => e
+        return [e]
+      end
+
+      []
     end
 
     def bindings_in_progress(service_instance)
