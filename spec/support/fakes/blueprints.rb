@@ -571,7 +571,7 @@ module VCAP::CloudController
   end
 
   SidecarModel.blueprint do
-    name { 'side_process' }
+    name { Sham.name }
     command { 'bundle exec rackup' }
     app
   end
@@ -579,5 +579,6 @@ module VCAP::CloudController
   SidecarProcessTypeModel.blueprint do
     type { 'worker' }
     sidecar
+    app_guid { sidecar.app_guid }
   end
 end

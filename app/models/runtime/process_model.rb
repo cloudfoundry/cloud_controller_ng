@@ -114,6 +114,14 @@ module VCAP::CloudController
       distinct:     true,
       order:        Sequel.asc(:id)
 
+    many_to_many :sidecars,
+      class:             'VCAP::CloudController::SidecarModel',
+      join_table: SidecarProcessTypeModel.table_name,
+      left_primary_key: [:app_guid, :type], left_key: [:app_guid, :type],
+      right_primary_key: :guid, right_key: :sidecar_guid,
+      distinct:     true,
+      order:        Sequel.asc(:id)
+
     one_to_many :route_mappings, class: 'VCAP::CloudController::RouteMappingModel', primary_key: [:app_guid, :type], key: [:app_guid, :process_type]
 
     add_association_dependencies events: :delete

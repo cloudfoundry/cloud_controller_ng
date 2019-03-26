@@ -6,8 +6,8 @@ module VCAP::CloudController
 
     describe '#process_types' do
       it 'returns the names of associated sidecar_process_types' do
-        SidecarProcessTypeModel.create(type: 'web', sidecar_guid: sidecar.guid)
-        SidecarProcessTypeModel.create(type: 'other worker', sidecar_guid: sidecar.guid)
+        SidecarProcessTypeModel.make(type: 'web', sidecar: sidecar)
+        SidecarProcessTypeModel.make(type: 'other worker', sidecar: sidecar)
 
         expect(sidecar.process_types).to eq ['web', 'other worker'].sort
       end

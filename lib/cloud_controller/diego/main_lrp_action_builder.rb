@@ -25,7 +25,7 @@ module VCAP::CloudController
           lrp_builder.action_user,
           environment_variables
         )
-        actions += generate_sidecar_actions(lrp_builder.action_user, environment_variables) if sidecar?
+        actions += generate_sidecar_actions(lrp_builder.action_user, environment_variables) if process.sidecars.present?
         actions << generate_ssh_action(lrp_builder.action_user, environment_variables) if allow_ssh?
         codependent(actions)
       end
@@ -56,10 +56,6 @@ module VCAP::CloudController
           ))
       end
 
-      def sidecar?
-        process.app.sidecars.detect { |sidecar| sidecar.process_types.include?(process.type) }.present?
-      end
-
       def allow_ssh?
         process.enable_ssh
       end
@@ -71,8 +67,7 @@ module VCAP::CloudController
       end
 
       def generate_sidecar_actions(user, environment_variables)
-        process.app.sidecars.
-          select { |sidecar| sidecar.process_types.include?(process.type) }.
+        process.sidecars.
           map { |sidecar| action(
             ::Diego::Bbs::Models::RunAction.new(
               user:            user,

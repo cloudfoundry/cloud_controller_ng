@@ -80,7 +80,6 @@ module VCAP::CloudController
       SidecarDelete.delete(app.sidecars)
       RouteMappingDelete.new(@user_audit_info).delete(route_mappings_to_delete(app))
       ProcessDelete.new(@user_audit_info).delete(app.processes)
-      SidecarDelete.new(@user_audit_info).delete(app.sidecars)
 
       delete_buildpack_cache(app)
     end

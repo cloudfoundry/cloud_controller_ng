@@ -132,6 +132,19 @@ module VCAP::CloudController
           expect(process.routes.size).to eq 1
         end
       end
+
+      it 'has sidecars' do
+        process = ProcessModelFactory.make
+        sidecar1  = SidecarModel.make(app: process.app)
+        sidecar2  = SidecarModel.make(app: process.app)
+        other_sidecar = SidecarModel.make(app: process.app)
+
+        SidecarProcessTypeModel.make(sidecar: sidecar1, type: process.type)
+        SidecarProcessTypeModel.make(sidecar: sidecar2, type: process.type)
+        SidecarProcessTypeModel.make(sidecar: other_sidecar, type: 'worker')
+
+        expect(process.reload.sidecars).to match_array([sidecar1, sidecar2])
+      end
     end
 
     describe 'Validations' do

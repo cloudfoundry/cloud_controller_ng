@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 module VCAP::CloudController
   class SidecarDelete
     class << self

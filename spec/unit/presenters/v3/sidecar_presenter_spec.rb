@@ -11,8 +11,12 @@ module VCAP::CloudController::Presenters::V3
         command: './start-me-up',
       )
     end
-    let!(:web_sidecar_process_type) { VCAP::CloudController::SidecarProcessTypeModel.create(type: 'web', sidecar_guid: sidecar.guid) }
-    let!(:worker_sidecar_process_type) { VCAP::CloudController::SidecarProcessTypeModel.create(type: 'worker', sidecar_guid: sidecar.guid) }
+    let!(:web_sidecar_process_type) {
+      VCAP::CloudController::SidecarProcessTypeModel.create(type: 'web', sidecar_guid: sidecar.guid, app_guid: sidecar.app_guid)
+    }
+    let!(:worker_sidecar_process_type) {
+      VCAP::CloudController::SidecarProcessTypeModel.create(type: 'worker', sidecar_guid: sidecar.guid, app_guid: sidecar.app_guid)
+    }
 
     describe '#to_hash' do
       it 'presents the sidecar as json' do
