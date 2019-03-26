@@ -3,7 +3,12 @@ require 'presenters/v3/organization_presenter'
 
 module VCAP::CloudController::Presenters::V3
   RSpec.describe OrganizationPresenter do
-    let(:organization) { VCAP::CloudController::Organization.make }
+    let(:organization_quota) do
+      VCAP::CloudController::QuotaDefinition.make(guid: 'quota-guid')
+    end
+    let(:organization) do
+      VCAP::CloudController::Organization.make(quota_definition: organization_quota)
+    end
     let!(:release_label) do
       VCAP::CloudController::OrganizationLabelModel.make(
         key_name: 'release',
@@ -47,6 +52,7 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:links][:self][:href]).to match(%r{/v3/organizations/#{organization.guid}$})
         expect(result[:metadata][:labels]).to eq('release' => 'stable', 'maine.gov/potato' => 'mashed')
         expect(result[:metadata][:annotations]).to eq('city' => 'Monticello', 'state' => 'Indiana')
+        expect(result[:relationships][:quota][:data][:guid]).to eq('quota-guid')
       end
     end
   end

@@ -51,6 +51,7 @@ module VCAP::CloudController
             'links' => {
               'self' => { 'href' => "#{link_prefix}/v3/organizations/#{created_org.guid}" }
             },
+            'relationships' => { 'quota' => { 'data' => { 'guid' => created_org.quota_definition.guid } } },
             'metadata' => {
               'labels' => { 'freaky' => 'friday' },
               'annotations' => { 'make' => 'subaru', 'model' => 'xv crosstrek', 'color' => 'orange' }
@@ -88,6 +89,7 @@ module VCAP::CloudController
                 'name' => 'Apocalypse World',
                 'created_at' => iso8601,
                 'updated_at' => iso8601,
+                'relationships' => { 'quota' => { 'data' => { 'guid' => organization1.quota_definition.guid } } },
                 'links' => {
                   'self' => {
                     'href' => "#{link_prefix}/v3/organizations/#{organization1.guid}"
@@ -103,6 +105,7 @@ module VCAP::CloudController
                 'name' => 'Dungeon World',
                 'created_at' => iso8601,
                 'updated_at' => iso8601,
+                'relationships' => { 'quota' => { 'data' => { 'guid' => organization2.quota_definition.guid } } },
                 'links' => {
                   'self' => {
                     'href' => "#{link_prefix}/v3/organizations/#{organization2.guid}"
@@ -181,6 +184,7 @@ module VCAP::CloudController
                 'name' => 'Dungeon World',
                 'created_at' => iso8601,
                 'updated_at' => iso8601,
+                'relationships' => { 'quota' => { 'data' => { 'guid' => organization2.quota_definition.guid } } },
                 'links' => {
                   'self' => {
                     'href' => "#{link_prefix}/v3/organizations/#{organization2.guid}"
@@ -196,6 +200,7 @@ module VCAP::CloudController
                 'name' => 'The Sprawl',
                 'created_at' => iso8601,
                 'updated_at' => iso8601,
+                'relationships' => { 'quota' => { 'data' => { 'guid' => organization3.quota_definition.guid } } },
                 'links' => {
                   'self' => {
                     'href' => "#{link_prefix}/v3/organizations/#{organization3.guid}"
@@ -309,6 +314,7 @@ module VCAP::CloudController
         expected_response = {
           'name' => 'New Name World',
           'guid' => organization1.guid,
+          'relationships' => { 'quota' => { 'data' => { 'guid' => organization1.quota_definition.guid } } },
           'links' => { 'self' => { 'href' => "http://api2.vcap.me/v3/organizations/#{organization1.guid}" } },
           'created_at' => iso8601,
           'updated_at' => iso8601,
@@ -346,6 +352,7 @@ module VCAP::CloudController
           expected_response = {
             'name' => organization1.name,
             'guid' => organization1.guid,
+            'relationships' => { 'quota' => { 'data' => { 'guid' => organization1.quota_definition.guid } } },
             'links' => { 'self' => { 'href' => "http://api2.vcap.me/v3/organizations/#{organization1.guid}" } },
             'created_at' => iso8601,
             'updated_at' => iso8601,

@@ -11,6 +11,13 @@ module VCAP::CloudController::Presenters::V3
         created_at: organization.created_at,
         updated_at: organization.updated_at,
         name: organization.name,
+        relationships: {
+          quota: {
+            data: {
+              guid: organization.quota_definition.guid
+            }
+          }
+        },
         links: build_links,
         metadata: {
           labels: hashified_labels(organization.labels),
