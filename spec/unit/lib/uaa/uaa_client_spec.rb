@@ -9,16 +9,42 @@ module VCAP::CloudController
 
     subject(:uaa_client) { UaaClient.new(uaa_target: url, client_id: client_id, secret: secret, ca_file: 'path/to/ca/file') }
     let(:auth_header) { 'bearer STUFF' }
-    let(:token_info) { double(CF::UAA::TokenInfo, auth_header: auth_header) }
+    let(:token_info) { double(CF::UAA::TokenInfo, auth_header: auth_header, info: {}) }
     let(:token_issuer) { double(CF::UAA::TokenIssuer, client_credentials_grant: token_info) }
 
     before do
+      UaaTokenCache.clear!
       allow(CF::UAA::TokenIssuer).to receive(:new).with(url, client_id, secret, expected_uaa_options).and_return(token_issuer)
     end
 
     describe 'configuration' do
       it 'uses default http timeout value' do
         expect(uaa_client.http_timeout).to eq(TestConfig.config_instance.get(:uaa, :client_timeout))
+      end
+    end
+
+    describe '#auth_header' do
+      before do
+        Timecop.freeze
+      end
+
+      after do
+        Timecop.return
+      end
+
+      let(:token_info) { double(CF::UAA::TokenInfo, auth_header: auth_header, info: { 'expires_in' => 2400 }) }
+
+      it 'returns the token_info\'s auth_header' do
+        expect(uaa_client.auth_header).to eq 'bearer STUFF'
+      end
+
+      it 'fetches a new token after the cached token expires' do
+        expect(uaa_client.auth_header).to eq 'bearer STUFF'
+        Timecop.travel(2399.seconds.from_now)
+        allow(token_info).to receive(:auth_header).and_return('bearer OTHERTOKEN')
+        expect(uaa_client.auth_header).to eq 'bearer STUFF'
+        Timecop.travel(2.seconds.from_now)
+        expect(uaa_client.auth_header).to eq 'bearer OTHERTOKEN'
       end
     end
 
@@ -165,6 +191,50 @@ module VCAP::CloudController
         it 'logs the error' do
           uaa_client.usernames_for_ids([userid_1])
           expect(mock_logger).to have_received(:error).with("Failed to retrieve usernames from UAA: #{uaa_error.inspect}")
+        end
+      end
+
+      context 'with invalid tokens' do
+        before do
+          response_body = {
+            'resources' => [
+              { 'id' => '111', 'origin' => 'uaa', 'username' => 'user_1' },
+              { 'id' => '222', 'origin' => 'uaa', 'username' => 'user_2' }
+            ],
+            'schemas' => ['urn:scim:schemas:core:1.0'],
+            'startindex' => 1,
+            'itemsperpage' => 100,
+            'totalresults' => 2 }
+
+          WebMock::API.stub_request(:get, "#{url}/ids/Users").
+            with(query: { 'filter' => 'id eq "111" or id eq "222"' }).
+            to_return(
+              status: 200,
+              headers: { 'content-type' => 'application/json' },
+              body: response_body.to_json)
+        end
+
+        context 'when token is invalid or expired one time' do
+          before do
+            expect(uaa_client.scim).to receive(:query).once.and_raise(CF::UAA::InvalidToken)
+            expect(uaa_client.scim).to receive(:query).once.and_call_original
+          end
+
+          it 'retries once and then succeeds' do
+            mapping = uaa_client.usernames_for_ids([userid_1, userid_2])
+            expect(mapping[userid_1]).to eq('user_1')
+            expect(mapping[userid_2]).to eq('user_2')
+          end
+        end
+
+        context 'when token is invalid or expired twice' do
+          before do
+            expect(uaa_client.scim).to receive(:query).twice.and_raise(CF::UAA::InvalidToken)
+          end
+
+          it 'retries once and then returns no usernames' do
+            expect(uaa_client.usernames_for_ids([userid_1, userid_2])).to eq({})
+          end
         end
       end
     end

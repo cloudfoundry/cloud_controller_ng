@@ -6,16 +6,24 @@ module VCAP::CloudController
       @default_http_timeout ||= VCAP::CloudController::Config.config.get(:uaa, :client_timeout)
     end
 
+    def auth_header
+      token = UaaTokenCache.get_token(client_id)
+      return token if token
+
+      UaaTokenCache.set_token(client_id, token_info.auth_header, expires_in: token_info.info['expires_in'])
+      token_info.auth_header
+    end
+
     def initialize(uaa_target:, client_id:, secret:, ca_file:)
       @uaa_target = uaa_target
-      @client_id  = client_id
-      @secret     = secret
-      @ca_file    = ca_file
+      @client_id = client_id
+      @secret = secret
+      @ca_file = ca_file
       @http_timeout = self.class.default_http_timeout
     end
 
     def scim
-      @scim ||= CF::UAA::Scim.new(uaa_target, token_info.auth_header, uaa_connection_opts)
+      @scim ||= CF::UAA::Scim.new(uaa_target, auth_header, uaa_connection_opts)
     end
 
     def get_clients(client_ids)
@@ -36,14 +44,14 @@ module VCAP::CloudController
     end
 
     def usernames_for_ids(user_ids)
-      return {} unless user_ids.present?
-
-      filter_string = user_ids.map { |user_id| %(id eq "#{user_id}") }.join(' or ')
-      results       = scim.query(:user_id, filter: filter_string)
-
-      results['resources'].each_with_object({}) do |resource, results_hash|
-        results_hash[resource['id']] = resource['username']
-        results_hash
+      fetch_usernames(user_ids)
+    rescue CF::UAA::InvalidToken
+      UaaTokenCache.clear_token(client_id)
+      begin
+        fetch_usernames(user_ids)
+      rescue UaaUnavailable, CF::UAA::UAAError => e
+        logger.error("Failed to retrieve usernames from UAA: #{e.inspect}")
+        {}
       end
     rescue UaaUnavailable, CF::UAA::UAAError => e
       logger.error("Failed to retrieve usernames from UAA: #{e.inspect}")
@@ -53,7 +61,7 @@ module VCAP::CloudController
     def id_for_username(username, origin: nil)
       filter_string = %(username eq "#{username}")
       filter_string = %/origin eq "#{origin}" and #{filter_string}/ if origin.present?
-      results       = scim.query(:user_id, includeInactive: true, filter: filter_string)
+      results = scim.query(:user_id, includeInactive: true, filter: filter_string)
 
       user = results['resources'].first
       user && user['id']
@@ -63,7 +71,7 @@ module VCAP::CloudController
 
     def origins_for_username(username)
       filter_string = %(username eq "#{username}")
-      results       = scim.query(:user_id, includeInactive: true, filter: filter_string)
+      results = scim.query(:user_id, includeInactive: true, filter: filter_string)
 
       results['resources'].map { |resource| resource['origin'] }
     rescue UaaUnavailable, CF::UAA::UAAError => e
@@ -77,6 +85,18 @@ module VCAP::CloudController
 
     private
 
+    def fetch_usernames(user_ids)
+      return {} unless user_ids.present?
+
+      filter_string = user_ids.map { |user_id| %(id eq "#{user_id}") }.join(' or ')
+      results = scim.query(:user_id, filter: filter_string)
+
+      results['resources'].each_with_object({}) do |resource, results_hash|
+        results_hash[resource['id']] = resource['username']
+        results_hash
+      end
+    end
+
     def token_issuer
       CF::UAA::TokenIssuer.new(uaa_target, client_id, secret, uaa_connection_opts)
     end
@@ -84,8 +104,8 @@ module VCAP::CloudController
     def uaa_connection_opts
       {
         skip_ssl_validation: false,
-        ssl_ca_file:         ca_file,
-        http_timeout:        http_timeout
+        ssl_ca_file: ca_file,
+        http_timeout: http_timeout
       }
     end
 

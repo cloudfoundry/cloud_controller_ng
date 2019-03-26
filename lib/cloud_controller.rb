@@ -101,6 +101,7 @@ require 'cloud_controller/science/experiment'
 
 require 'cloud_controller/uaa/errors'
 require 'cloud_controller/uaa/uaa_client'
+require 'cloud_controller/uaa/uaa_token_cache'
 
 require 'cloud_controller/bits_expiration'
 
