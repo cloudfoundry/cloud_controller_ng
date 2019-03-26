@@ -18,9 +18,9 @@ module VCAP::CloudController
 
       def validate_update_of_service_parameters(service_instance, parameters)
         return unless parameters
-        return if SecurityContext.current_user.admin
+        return if SecurityContext.admin?
 
-        if ServicePlan.user_visible(SecurityContext.current_user, SecurityContext.current_user.admin).filter(guid: service_instance.service_plan.guid).count == 0
+        if ServicePlan.user_visible(SecurityContext.current_user).filter(guid: service_instance.service_plan.guid).count == 0
           raise CloudController::Errors::ApiError.new_from_details('ServiceInstanceWithInaccessiblePlanNotUpdateable', 'parameters')
         end
       end
