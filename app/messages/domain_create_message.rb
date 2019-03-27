@@ -14,8 +14,15 @@ module VCAP::CloudController
     register_allowed_keys [
       :name,
       :internal,
+      :relationships
     ]
+
+    def self.relationships_requested?
+      @relationships_requested ||= proc { |a| a.requested?(:relationships) }
+    end
+
     validates_with NoAdditionalKeysValidator
+    validates_with RelationshipValidator, if: relationships_requested?
 
     validates :name,
       presence: true,
@@ -43,15 +50,40 @@ module VCAP::CloudController
 
     validate :alpha_numeric
 
+    validate :mutually_exclusive_organization_and_internal
+
     validates :internal,
       allow_nil: true,
       boolean: true
+
+    delegate :organization_guid, to: :relationships_message
+
+    def relationships_message
+      @relationships_message ||= Relationships.new(relationships.deep_symbolize_keys)
+    end
+
+    class Relationships < BaseMessage
+      register_allowed_keys [:organization]
+
+      validates_with NoAdditionalKeysValidator
+      validates_with ToOneRelationshipValidator, attributes: [:organization]
+
+      def organization_guid
+        HashUtils.dig(organization, :data, :guid)
+      end
+    end
 
     private
 
     def alpha_numeric
       if /[^a-z0-9\-\.]/i.match?(name.to_s)
         errors.add(:name, 'must consist of alphanumeric characters and hyphens')
+      end
+    end
+
+    def mutually_exclusive_organization_and_internal
+      if requested?(:internal) && requested?(:relationships)
+        errors.add(:base, 'Can not associate an internal domain with an organization')
       end
     end
   end

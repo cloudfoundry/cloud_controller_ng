@@ -2,34 +2,46 @@ require 'repositories/deployment_event_repository'
 
 module VCAP::CloudController
   class DomainCreate
-    class Error < StandardError; end
+    class Error < StandardError
+    end
 
     INTERNAL_DEFAULT = false
 
     def create(message:)
-      domain = SharedDomain.new(
-        name: message.name,
-        internal: message.internal.nil? ? INTERNAL_DEFAULT : message.internal,
-      )
+      domain = if message.requested?(:relationships)
+                 PrivateDomain.new(
+                   name: message.name,
+                   owning_organization_guid: message.organization_guid
+                 )
+               else
+                 SharedDomain.new(
+                   name: message.name,
+                   internal: message.internal.nil? ? INTERNAL_DEFAULT : message.internal,
+                 )
+               end
 
-      SharedDomain.db.transaction do
+      Domain.db.transaction do
         domain.save
       end
 
       domain
     rescue Sequel::ValidationFailed => e
-      validation_error!(message.name, e)
+      validation_error!(message, e)
     end
 
     private
 
-    def validation_error!(name, error)
-      if error.errors.on(:name)&.any? { |e| e.match?(/is already reserved by/) }
-        error!(error.message)
+    def validation_error!(message, error)
+      if error.errors.on(:name)&.any? { |e| [:unique].include?(e) }
+        error!("The domain name \"#{message.name}\" is already in use")
       end
 
-      if error.errors.on(:name)&.any? { |e| [:unique].include?(e) }
-        error!("The domain name \"#{name}\" is already in use")
+      if error.errors.on(:name)&.any? { |e| [:reserved].include?(e) }
+        error!("The \"#{message.name}\" domain is reserved and cannot be used for org-scoped domains.")
+      end
+
+      if error.errors.on(:organization)&.any? { |e| [:total_private_domains_exceeded].include?(e) }
+        error!("The number of private domains exceeds the quota for organization with guid \"#{message.organization_guid}\"")
       end
 
       error!(error.message)

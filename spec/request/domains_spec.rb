@@ -101,55 +101,205 @@ RSpec.describe 'Domains Request' do
     context 'when authenticated and admin' do
       let(:user) { VCAP::CloudController::User.make }
       let(:headers) { admin_headers_for(user) }
+      context 'when creating a shared domain' do
+        context 'when provided valid arguments' do
+          let(:params) do
+            {
+              name: 'my-domain.biz',
+              internal: true,
+            }
+          end
 
-      context 'when provided valid arguments' do
-        let(:params) do
-          {
-            name: 'my-domain.biz',
-            internal: true,
-          }
-        end
+          it 'returns 201' do
+            post '/v3/domains', params.to_json, headers
 
-        it 'returns 201' do
-          post '/v3/domains', params.to_json, headers
+            expect(last_response.status).to eq(201)
 
-          expect(last_response.status).to eq(201)
+            domain = VCAP::CloudController::Domain.last
 
-          domain = VCAP::CloudController::Domain.last
-
-          expected_response = {
-            'name' => params[:name],
-            'internal' => params[:internal],
-            'guid' => domain.guid,
-            'created_at' => iso8601,
-            'updated_at' => iso8601,
-            'links' => {
-              'self' => {
-                'href' => "#{link_prefix}/v3/domains/#{domain.guid}"
+            expected_response = {
+              'name' => params[:name],
+              'internal' => params[:internal],
+              'guid' => domain.guid,
+              'created_at' => iso8601,
+              'updated_at' => iso8601,
+              'links' => {
+                'self' => {
+                  'href' => "#{link_prefix}/v3/domains/#{domain.guid}"
+                }
               }
             }
-          }
-          expect(parsed_response).to be_a_response_like(expected_response)
+            expect(parsed_response).to be_a_response_like(expected_response)
+          end
+        end
+
+        context 'when provided invalid arguments' do
+          let(:params) do
+            {
+              name: "#{'f' * 63}$"
+            }
+          end
+
+          it 'returns 422' do
+            post '/v3/domains', params.to_json, headers
+
+            expect(last_response.status).to eq(422)
+
+            expected_err = ['Name does not comply with RFC 1035 standards',
+                            'Name must contain at least one "."',
+                            'Name subdomains must each be at most 63 characters',
+                            'Name must consist of alphanumeric characters and hyphens']
+            expect(parsed_response['errors'][0]['detail']).to eq expected_err.join(', ')
+          end
         end
       end
 
-      context 'when provided invalid arguments' do
-        let(:params) do
-          {
-            name: "#{'f' * 63}$"
-          }
+      context 'when creating a private domain' do
+        context 'when params are valid' do
+          let(:params) do
+            {
+              name: 'my-domain.biz',
+              relationships: {
+                organization: {
+                  data: {
+                    guid: org.guid
+                  }
+                }
+              },
+            }
+          end
+
+          it 'returns a 201 and creates a private domain' do
+            post '/v3/domains', params.to_json, headers
+
+            expect(last_response.status).to eq(201)
+
+            domain = VCAP::CloudController::PrivateDomain.last
+
+            expected_response = {
+              'name' => params[:name],
+              'internal' => false,
+              'guid' => domain.guid,
+              'relationships' => {
+                'organization' => {
+                  'data' => {
+                    'guid' => org.guid
+                  }
+                }
+              },
+              'created_at' => iso8601,
+              'updated_at' => iso8601,
+              'links' => {
+                'self' => {
+                  'href' => "#{link_prefix}/v3/domains/#{domain.guid}"
+                }
+              }
+            }
+            expect(parsed_response).to be_a_response_like(expected_response)
+          end
         end
 
-        it 'returns 422' do
-          post '/v3/domains', params.to_json, headers
+        context 'when the params are invalid' do
+          context 'creating a sub domain of a domain scoped to another organization' do
+            let(:organization_to_scope_to) { VCAP::CloudController::Organization.make }
+            let(:existing_scoped_domain) { VCAP::CloudController::PrivateDomain.make }
 
-          expect(last_response.status).to eq(422)
+            let(:params) do
+              {
+                name: "foo.#{existing_scoped_domain.name}",
+                relationships: {
+                  organization: {
+                    data: {
+                      guid: organization_to_scope_to.guid
+                    }
+                  }
+                }
+              }
+            end
 
-          expected_err = ['Name does not comply with RFC 1035 standards',
-                          'Name must contain at least one "."',
-                          'Name subdomains must each be at most 63 characters',
-                          'Name must consist of alphanumeric characters and hyphens']
-          expect(parsed_response['errors'][0]['detail']).to eq expected_err.join(', ')
+            it 'returns a 422 and an error' do
+              post '/v3/domains', params.to_json, headers
+
+              expect(last_response.status).to eq(422)
+
+              expect(parsed_response['errors'][0]['detail']).to eq "The domain name \"#{params[:name]}\""\
+" cannot be created because \"#{existing_scoped_domain.name}\" is already reserved by another domain"
+            end
+          end
+
+          context 'when the org doesnt exist' do
+            let(:params) do
+              {
+                name: 'my-domain.biz',
+                relationships: {
+                  organization: {
+                    data: {
+                      guid: 'non-existent-guid'
+                    }
+                  }
+                }
+              }
+            end
+
+            it 'returns a 422 and a helpful error message' do
+              post '/v3/domains', params.to_json, headers
+
+              expect(last_response.status).to eq(422)
+
+              expect(parsed_response['errors'][0]['detail']).to eq 'Organization with guid \'non-existent-guid\' does not exist or you do not have access to it.'
+            end
+          end
+
+          context 'when the org has exceeded its private domains quota' do
+            let(:params) do
+              {
+                name: 'my-domain.biz',
+                relationships: {
+                  organization: {
+                    data: {
+                      guid: org.guid
+                    }
+                  }
+                }
+              }
+            end
+            it 'returns a 422 and a helpful error message' do
+              org.update(quota_definition: VCAP::CloudController::QuotaDefinition.make(total_private_domains: 0))
+
+              post '/v3/domains', params.to_json, headers
+
+              expect(last_response.status).to eq(422)
+
+              expect(parsed_response['errors'][0]['detail']).to eq "The number of private domains exceeds the quota for organization with guid \"#{org.guid}\""
+            end
+          end
+        end
+
+        context 'when the domain is in the list of reserved private domains' do
+          let(:params) do
+            {
+              name: 'com.ac',
+              relationships: {
+                organization: {
+                  data: {
+                    guid: org.guid
+                  }
+                }
+              }
+            }
+          end
+
+          before(:each) do
+            TestConfig.override({ reserved_private_domains: File.join(Paths::FIXTURES, 'config/reserved_private_domains.dat') })
+          end
+
+          it 'returns a 422 with a error message about reserved domains' do
+            post '/v3/domains', params.to_json, headers
+
+            expect(last_response.status).to eq(422)
+
+            expect(parsed_response['errors'][0]['detail']).to eq 'The "com.ac" domain is reserved and cannot be used for org-scoped domains.'
+          end
         end
       end
 

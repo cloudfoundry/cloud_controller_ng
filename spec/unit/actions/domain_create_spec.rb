@@ -9,58 +9,8 @@ module VCAP::CloudController
     let(:name) { 'example.com' }
 
     describe '#create' do
-      context 'provided every valid field' do
-        let(:internal) { true }
-
-        let(:message) do
-          DomainCreateMessage.new({
-            name: name,
-            internal: internal,
-          })
-        end
-
-        it 'creates a domain with all the provided fields' do
-          domain = nil
-
-          expect {
-            domain = subject.create(message: message)
-          }.to change { Domain.count }.by(1)
-
-          expect(domain.name).to eq(name)
-          expect(domain.internal).to eq(internal)
-          expect(domain.guid).to_not be_nil
-        end
-      end
-
-      context 'provided minimal message' do
-        let(:message) { DomainCreateMessage.new({ name: name }) }
-
-        it 'creates a domain with default values' do
-          domain = nil
-
-          expect {
-            domain = subject.create(message: message)
-          }.to change { Domain.count }.by(1)
-
-          expect(domain.name).to eq(name)
-          expect(domain.internal).to eq(false)
-          expect(domain.guid).to_not be_nil
-        end
-      end
-
-      context 'provided an already existing domain name' do
-        let(:existing_domain) { SharedDomain.make }
-        let(:message) { DomainCreateMessage.new({ name: existing_domain.name }) }
-
-        it 'returns an error' do
-          expect {
-            subject.create(message: message)
-          }.to raise_error(DomainCreate::Error, %{The domain name "#{existing_domain.name}" is already in use})
-        end
-      end
-
-      context 'provided an overlapping domain name' do
-        context 'with an existing scoped domain as a sub domain' do
+      context 'when there is a sequel validation error' do
+        context 'when the validation error is non-specific' do
           let(:private_domain) { PrivateDomain.make }
           let(:domain) { "sub.#{private_domain.name}" }
           let(:message) { DomainCreateMessage.new({ name: domain }) }
@@ -72,17 +22,76 @@ module VCAP::CloudController
           end
         end
 
-        context 'with an existing route' do
+        context 'when the error is a uniqueness error' do
           let(:existing_domain) { SharedDomain.make }
-          let(:route) { Route.make(domain: existing_domain) }
-          let(:domain) { route.fqdn }
-          let(:message) { DomainCreateMessage.new({ name: domain }) }
+          let(:message) { DomainCreateMessage.new({ name: existing_domain.name }) }
 
-          it 'returns an error' do
+          it 'returns an informative error message' do
             expect {
               subject.create(message: message)
-            }.to raise_error(DomainCreate::Error, %{The domain name "#{domain}" cannot be created because "#{route.fqdn}" is already reserved by a route})
+            }.to raise_error(DomainCreate::Error, %{The domain name "#{existing_domain.name}" is already in use})
           end
+        end
+
+        context 'when the error is a quota error' do
+          let(:org) { Organization.make(quota_definition: VCAP::CloudController::QuotaDefinition.make(total_private_domains: 0)) }
+          let(:message) { DomainCreateMessage.new({ name: 'foo.com', relationships: { organization: { data: { guid: org.guid } } } }) }
+
+          it 'returns an informative error message' do
+            expect {
+              subject.create(message: message)
+            }.to raise_error(DomainCreate::Error, "The number of private domains exceeds the quota for organization with guid \"#{org.guid}\"")
+          end
+        end
+      end
+
+      context 'when creating a shared domain' do
+        context 'provided every valid field' do
+          let(:internal) { true }
+
+          let(:message) do
+            DomainCreateMessage.new({
+              name: name,
+              internal: internal,
+            })
+          end
+
+          it 'creates a domain with all the provided fields' do
+            domain = nil
+
+            expect {
+              domain = subject.create(message: message)
+            }.to change { SharedDomain.count }.by(1)
+
+            expect(domain.name).to eq(name)
+            expect(domain.internal).to eq(internal)
+            expect(domain.guid).to_not be_nil
+          end
+        end
+      end
+
+      context 'when creating a private domain' do
+        let(:organization) { Organization.make }
+
+        let(:message) do
+          DomainCreateMessage.new({
+            name: name,
+            relationships: {
+              organization: {
+                data: { guid: organization.guid }
+              },
+            },
+          })
+        end
+
+        it 'creates a private domain' do
+          expect {
+            subject.create(message: message)
+          }.to change { PrivateDomain.count }.by(1)
+
+          domain = PrivateDomain.last
+          expect(domain.name).to eq name
+          expect(domain.owning_organization_guid).to eq organization.guid
         end
       end
     end

@@ -117,6 +117,109 @@ module VCAP::CloudController
           end
         end
       end
+
+      context 'relationships' do
+        context 'relationships is not a hash' do
+          let(:params) { { relationships: 'banana' } }
+
+          it 'is not valid' do
+            expect(subject).to be_invalid
+            expect(subject.errors[:relationships]).to include "'relationships' is not a hash"
+          end
+        end
+
+        context 'when org is missing' do
+          let(:params) do
+            {
+              name: 'name.com',
+              relationships: {}
+            }
+          end
+
+          it 'is not valid' do
+            expect(subject).not_to be_valid
+            expect(subject.errors_on(:relationships).any? { |e| e.include?('Organization must be structured like') }).to be(true)
+          end
+        end
+
+        context 'when org has an invalid guid' do
+          let(:params) do
+            {
+              name: 'name.com',
+              relationships: { organization: { data: { guid: 32 } } },
+            }
+          end
+
+          it 'is not valid' do
+            expect(subject).not_to be_valid
+            expect(subject.errors_on(:relationships).any? { |e| e.include?('Organization guid') }).to be(true)
+          end
+        end
+
+        context 'when org is malformed' do
+          let(:params) do
+            {
+              name: 'name.com',
+              relationships: { organization: 'asdf' }
+            }
+          end
+
+          it 'is not valid' do
+            expect(subject).not_to be_valid
+            expect(subject.errors_on(:relationships).any? { |e| e.include?('Organization must be structured like') }).to be(true)
+          end
+        end
+
+        context 'when additional keys are present' do
+          let(:params) do
+            {
+              name: 'name.com',
+              relationships: {
+                organization: { data: { guid: 'guid' } },
+                other: 'stuff'
+              }
+            }
+          end
+
+          it 'is not valid' do
+            expect(subject).not_to be_valid
+            expect(subject.errors[:relationships]).to include("Unknown field(s): 'other'")
+          end
+        end
+
+        context 'when passed a valid relationship' do
+          let(:params) do
+            {
+              name: 'name.com',
+              relationships: {
+                organization: { data: { guid: 'guid' } }
+              }
+            }
+          end
+
+          it 'makes the guid accessible' do
+            expect(subject).to be_valid
+            expect(subject.relationships_message.organization_guid).to eq('guid')
+          end
+        end
+      end
+
+      context 'relationships with internal' do
+        let(:params) do
+          {
+            name: 'name.com',
+            relationships: {
+              organization: { data: { guid: 'guid' } }
+            },
+            internal: true
+          }
+        end
+
+        it 'should be invalid' do
+          expect(subject).to_not be_valid
+          expect(subject.errors[:base]).to include('Can not associate an internal domain with an organization')
+        end
+      end
     end
   end
 end
