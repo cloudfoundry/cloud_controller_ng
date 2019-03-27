@@ -36,7 +36,7 @@ module VCAP::CloudController
         end
       end
       context 'when the message contains annotations' do
-        it 'can parse labels' do
+        it 'can parse annotations' do
           params =
             {
               "metadata": {

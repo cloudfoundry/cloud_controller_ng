@@ -4,6 +4,7 @@ require 'messages/manifest_process_update_message'
 require 'messages/manifest_buildpack_message'
 require 'messages/manifest_service_binding_create_message'
 require 'messages/manifest_routes_update_message'
+require 'messages/validators/metadata_validator'
 require 'cloud_controller/app_manifest/byte_converter'
 require 'models/helpers/health_check_types'
 require 'presenters/helpers/censorship'
@@ -22,6 +23,7 @@ module VCAP::CloudController
       :health_check_timeout,
       :health_check_type,
       :instances,
+      :metadata,
       :memory,
       :no_route,
       :processes,
@@ -104,7 +106,8 @@ module VCAP::CloudController
       lifecycle_data = requested?(:docker) ? docker_lifecycle_data : buildpacks_lifecycle_data
 
       {
-          lifecycle: lifecycle_data
+        lifecycle: lifecycle_data,
+         metadata: requested?(:metadata) ? metadata : nil
       }.compact
     end
 
@@ -297,8 +300,10 @@ module VCAP::CloudController
         end
       end
 
-      app_update_message.errors[:command].each do |error_message|
-        errors.add(:command, error_message)
+      %i/command metadata/.each do |error_type|
+        app_update_message.errors[error_type].each do |error_message|
+          errors.add(error_type, error_message)
+        end
       end
     end
 

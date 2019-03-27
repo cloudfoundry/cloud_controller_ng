@@ -39,6 +39,18 @@ RSpec.describe 'App Manifests' do
               'k2' => 'pears',
               'k3' => 'watermelon'
             },
+            'metadata' => {
+              'annotations' => {
+                'potato' => 'idaho',
+                'juice' => 'newton',
+                'berry' => nil,
+              },
+              'labels' => {
+                'potato' => 'yam',
+                'downton' => nil,
+                'myspace.com/songs' => 'missing',
+              },
+            },
             'routes' => [
               { 'route' => "https://#{route.host}.#{route.domain.name}" },
               { 'route' => "https://#{second_route.host}.#{second_route.domain.name}/path" }
@@ -53,6 +65,10 @@ RSpec.describe 'App Manifests' do
 
     before do
       stub_bind(service_instance)
+      VCAP::CloudController::LabelsUpdate.update(app_model, { 'potato' => 'french',
+        'downton' => 'abbey road', }, VCAP::CloudController::AppLabelModel)
+      VCAP::CloudController::AnnotationsUpdate.update(app_model, { 'potato' => 'baked',
+        'berry' => 'white', }, VCAP::CloudController::AppAnnotationModel)
     end
 
     it 'applies the manifest' do
@@ -90,6 +106,10 @@ RSpec.describe 'App Manifests' do
 
       expect(app_model.service_bindings.length).to eq 1
       expect(app_model.service_bindings.first.service_instance).to eq service_instance
+      expect(app_model.labels.map { |label| { key: label.key_name, value: label.value } }).
+        to match_array([{ key: 'potato', value: 'yam' }, { key: 'songs', value: 'missing' }])
+      expect(app_model.annotations.map { |a| { key: a.key, value: a.value } }).
+        to match_array([{ key: 'potato', value: 'idaho' }, { key: 'juice', value: 'newton' }])
     end
 
     context 'yaml anchors' do

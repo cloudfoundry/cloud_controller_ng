@@ -577,6 +577,136 @@ module VCAP::CloudController
         end
       end
 
+      describe 'metadata' do
+        context 'when metadata is not a hash' do
+          let(:params) do
+            {
+              metadata: 'im a non-hash'
+            }
+          end
+          it 'is not valid' do
+            message = AppManifestMessage.create_from_yml(params)
+            expect(message).to_not be_valid
+            expect(message.errors.count).to eq(1)
+            expect(message.errors.full_messages).to include('Metadata must be a hash')
+          end
+        end
+
+        context 'when metadata.labels is not a hash' do
+          let(:params) do
+            {
+              metadata: {
+                labels: 'im a non-hash'
+              }
+            }
+          end
+          it 'is not valid' do
+            message = AppManifestMessage.create_from_yml(params)
+            expect(message).to_not be_valid
+            expect(message.errors.count).to eq(1)
+            expect(message.errors_on(:metadata)).to include("'labels' is not a hash")
+          end
+        end
+
+        context 'when metadata.labels has invalid keys' do
+          let(:params) do
+            {
+              metadata: {
+                labels: { nil => 'value', '' => 'value', '-x' => 'value' }
+              }
+            }
+          end
+          it 'is not valid' do
+            message = AppManifestMessage.create_from_yml(params)
+            expect(message).to_not be_valid
+            expect(message.errors.count).to eq(3)
+            expect(message.errors_on(:metadata)).to match_array([
+              'key error: label key cannot be empty string',
+              'key error: label key cannot be empty string',
+              "key error: label '-x' starts or ends with invalid characters",
+            ])
+          end
+        end
+
+        context 'when metadata.labels has invalid values' do
+          let(:params) do
+            {
+              metadata: {
+                labels: {
+                  'k1' => 'no spaces or ! allowed',
+                  'k2' => '-must be bounded by alnums-',
+                  'k3' => 'oversize-' + 'x' * 70
+                }
+              }
+            }
+          end
+          it 'is not valid' do
+            message = AppManifestMessage.create_from_yml(params)
+            expect(message).to_not be_valid
+            expect(message.errors.count).to eq(3)
+            expect(message.errors_on(:metadata)).to match_array([
+              "value error: label 'no spaces or ! allowed' contains invalid characters",
+              "value error: label '-must be bounded by alnums-' contains invalid characters",
+              "value error: label 'oversize...' is greater than 63 characters"
+            ])
+          end
+        end
+
+        context 'when metadata.annotations is not a hash' do
+          let(:params) do
+            {
+              metadata: {
+                annotations: 'im a non-hash'
+              }
+            }
+          end
+          it 'is not valid' do
+            message = AppManifestMessage.create_from_yml(params)
+            expect(message).to_not be_valid
+            expect(message.errors.count).to eq(1)
+            expect(message.errors_on(:metadata)).to include("'annotations' is not a hash")
+          end
+        end
+
+        context 'when metadata.annotations has invalid keys' do
+          let(:params) do
+            {
+              metadata: {
+                annotations: { 'too large: ' + 'x' * 1000 => 'value' }
+              }
+            }
+          end
+          it 'is not valid' do
+            message = AppManifestMessage.create_from_yml(params)
+            expect(message).to_not be_valid
+            expect(message.errors.count).to eq(1)
+            expect(message.errors_on(:metadata)).to match_array([
+              "key error: annotation 'too larg...' is greater than 1000 characters",
+            ])
+          end
+        end
+
+        context 'when metadata.annotations has invalid values' do
+          let(:params) do
+            {
+              metadata: {
+                annotations: {
+                  'too large value' => 'oversize-' + 'x' * 5000
+                }
+              }
+            }
+          end
+          it 'is not valid' do
+            message = AppManifestMessage.create_from_yml(params)
+            expect(message).to_not be_valid
+            expect(message.errors.count).to eq(1)
+            expect(message.errors_on(:metadata)).to match_array([
+              "value error: annotation 'oversize...' is greater than 5000 characters"
+            ])
+          end
+        end
+      end
+
       describe 'combination errors' do
         context 'when docker and buildpack is provided' do
           before do
