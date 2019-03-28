@@ -21,6 +21,11 @@ applications:
   - my-service1
   - my-service2
   stack: cflinuxfs2
+  metadata:
+    annotations:
+      contact: "bob@example.com jane@example.com"
+    labels:
+      sensitive: true
   processes:
   - type: web
     command: start-web.sh
@@ -53,6 +58,8 @@ Field | Description
 **routes** | An array of route hashes declaring HTTP and TCP routes to be mapped to the app. Each route is created if it does not already exist. Example route hash entry: `- route: www.example.com/path`
 **services** | An array of service-instance names to bind to the app.
 **stack** | The root filesystem to use with the buildpack, for example `cflinuxfs2`.
+**metadata.labels** _(experimental)_ | [Labels](#labels) applied to the app.
+**metadata.annotations** _(experimental)_ | [Annotations](#annotations) applied to the app.
 **buildpack**  | **DEPRECATED in favor of the `buildpacks` field above.** <br> a) Blank OR `default` OR `null` will automatically select the appropriate default buildpack according to the coding language. <br>b) A URL pointing to a buildpack. <br>c) Name of an installed buildpack.
 
 
