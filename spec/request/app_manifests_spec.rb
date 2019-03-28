@@ -428,6 +428,9 @@ RSpec.describe 'App Manifests' do
       )
     end
 
+    let!(:app_label) { VCAP::CloudController::AppLabelModel.make(resource_guid: app_model.guid, key_name: 'potato', value: 'idaho') }
+    let!(:app_annotation) { VCAP::CloudController::AppAnnotationModel.make(resource_guid: app_model.guid, key: 'style', value: 'mashed') }
+
     context 'for a buildpack' do
       let!(:buildpack) { VCAP::CloudController::Buildpack.make }
       let!(:buildpack2) { VCAP::CloudController::Buildpack.make }
@@ -448,6 +451,7 @@ RSpec.describe 'App Manifests' do
                 { 'route' => "#{route.host}.#{route.domain.name}" },
                 { 'route' => "#{second_route.host}.#{second_route.domain.name}/path" }
               ],
+              'metadata' => { 'labels' => { 'potato' => 'idaho' }, 'annotations' => { 'style' => 'mashed' } },
               'processes' => [
                 {
                   'type' => process.type,
@@ -525,6 +529,7 @@ RSpec.describe 'App Manifests' do
                 { 'route' => "#{route.host}.#{route.domain.name}" },
                 { 'route' => "#{second_route.host}.#{second_route.domain.name}/path" }
               ],
+              'metadata' => { 'labels' => { 'potato' => 'idaho' }, 'annotations' => { 'style' => 'mashed' } },
               'processes' => [
                 {
                   'type' => process.type,

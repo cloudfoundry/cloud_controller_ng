@@ -89,8 +89,12 @@ module VCAP::CloudController::Presenters::V3
           )
         end
 
-        it 'presents the deployment as json, with routes, service instances, and processes in alphabetical order' do
+        let!(:app_label) { VCAP::CloudController::AppLabelModel.make(resource_guid: app.guid, key_name: 'potato', value: 'idaho') }
+        let!(:app_annotation) { VCAP::CloudController::AppAnnotationModel.make(resource_guid: app.guid, key: 'style', value: 'mashed') }
+
+        it 'presents the app manifest' do
           result = AppManifestPresenter.new(app, service_bindings, routes).to_hash
+
           application = result[:applications].first
           expect(application[:name]).to eq(app.name)
           expect(application[:services]).to eq([
@@ -102,6 +106,7 @@ module VCAP::CloudController::Presenters::V3
             { route: route2.uri }
           ])
           expect(application[:env]).to match({ 'one' => 'potato', 'two' => 'tomato' })
+          expect(application[:metadata]).to match({ labels: { 'potato' => 'idaho' }, annotations: { 'style' => 'mashed' } })
           expect(application[:processes]).to eq([
             {
               'type' => process1.type,
@@ -239,6 +244,48 @@ module VCAP::CloudController::Presenters::V3
               application = result[:applications].first
 
               expect(application[:docker]).to be_nil
+            end
+          end
+        end
+
+        context 'metadata' do
+          context 'when there is no metadata' do
+            before do
+              app_label.destroy
+              app_annotation.destroy
+            end
+
+            it 'does not present the metadata hash' do
+              result = AppManifestPresenter.new(app, service_bindings, routes).to_hash
+
+              application = result[:applications].first
+              expect(application[:metadata]).to be_nil
+            end
+          end
+
+          context 'when there are labels but no annotations' do
+            before do
+              app_annotation.destroy
+            end
+
+            it 'presents labels and does not present the annotations hash' do
+              result = AppManifestPresenter.new(app, service_bindings, routes).to_hash
+
+              application = result[:applications].first
+              expect(application[:metadata]).to match({ labels: { 'potato' => 'idaho' } })
+            end
+          end
+
+          context 'when there are annotations but no labels' do
+            before do
+              app_label.destroy
+            end
+
+            it 'presents annotations and does not present the labels hash' do
+              result = AppManifestPresenter.new(app, service_bindings, routes).to_hash
+
+              application = result[:applications].first
+              expect(application[:metadata]).to match({ annotations: { 'style' => 'mashed' } })
             end
           end
         end

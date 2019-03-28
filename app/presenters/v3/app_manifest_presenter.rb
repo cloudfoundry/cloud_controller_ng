@@ -3,6 +3,7 @@ require 'presenters/v3/app_manifest_presenters/docker_presenter'
 require 'presenters/v3/app_manifest_presenters/buildpack_presenter'
 require 'presenters/v3/app_manifest_presenters/services_properties_presenter'
 require 'presenters/v3/app_manifest_presenters/route_properties_presenter'
+require 'presenters/v3/app_manifest_presenters/metadata_presenter'
 require 'presenters/v3/app_manifest_presenters/process_properties_presenter'
 
 module VCAP::CloudController
@@ -15,6 +16,7 @@ module VCAP::CloudController
           AppManifestPresenters::BuildpackPresenter.new,
           AppManifestPresenters::ServicesPropertiesPresenter.new,
           AppManifestPresenters::RoutePropertiesPresenter.new,
+          AppManifestPresenters::MetadataPresenter.new,
           AppManifestPresenters::ProcessPropertiesPresenter.new,
         ].freeze
 
