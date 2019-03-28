@@ -9,10 +9,13 @@ RSpec.describe SidecarsController, type: :controller do
 
   before do
     set_current_user(user)
-    set_current_user_as_role(role: :space_developer, org: org, user: user, space: space)
   end
 
   describe '#create' do
+    before do
+      set_current_user_as_role(role: :space_developer, org: org, user: user, space: space)
+    end
+
     let(:sidecar_name) { 'sidecar_one' }
     let(:sidecar_params) {
       {
@@ -114,6 +117,35 @@ RSpec.describe SidecarsController, type: :controller do
         post :create, params: sidecar_params, as: :json
         expect(response.status).to eq 404
       end
+    end
+  end
+
+  describe '#show' do
+    let(:sidecar) { VCAP::CloudController::SidecarModel.make(app: app_model, name: 'sidecar', command: 'smarch') }
+
+    context 'the sidecar is not found' do
+      it 'returns a 404' do
+        get :show, params: { guid: 'nope' }, as: :json
+
+        expect(response.status).to eq 404
+      end
+    end
+
+    it_behaves_like 'permissions endpoint' do
+      let(:roles_to_http_responses) do
+        {
+          'admin'               => 200,
+          'space_developer'     => 200,
+          'global_auditor'      => 200,
+          'space_manager'       => 200,
+          'space_auditor'       => 200,
+          'org_manager'         => 200,
+          'admin_read_only'     => 200,
+          'org_auditor'         => 404,
+          'org_billing_manager' => 404,
+        }
+      end
+      let(:api_call) { lambda { get :show, params: { guid: sidecar.guid }, as: :json } }
     end
   end
 end

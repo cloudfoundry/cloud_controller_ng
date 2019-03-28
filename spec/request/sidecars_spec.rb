@@ -55,4 +55,34 @@ RSpec.describe 'Sidecars' do
       end
     end
   end
+
+  describe 'GET /v3/sidecars/:guid' do
+    let(:sidecar) { VCAP::CloudController::SidecarModel.make(app: app_model, name: 'sidecar', command: 'smarch') }
+    let!(:sidecar_spider) { VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar, type: 'spider') }
+    let!(:sidecar_web) { VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar, type: 'web') }
+
+    it 'gets the sidecar' do
+      get "/v3/sidecars/#{sidecar.guid}", nil, user_header
+
+      expected_response = {
+        'guid' => sidecar.guid,
+        'name' => 'sidecar',
+        'command' => 'smarch',
+        'process_types' => ['spider', 'web'],
+        'created_at' => iso8601,
+        'updated_at' => iso8601,
+        'relationships' => {
+          'app' => {
+            'data' => {
+              'guid' => app_model.guid
+            }
+          }
+        }
+      }
+
+      expect(last_response.status).to eq(200), last_response.body
+      parsed_response = MultiJson.load(last_response.body)
+      expect(parsed_response).to be_a_response_like(expected_response)
+    end
+  end
 end
