@@ -18,13 +18,14 @@ RSpec.describe 'Space Manifests' do
   describe 'POST /v3/spaces/:guid/actions/apply_manifest' do
     let(:buildpack) { VCAP::CloudController::Buildpack.make }
     let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
-    let(:app_model) { VCAP::CloudController::AppModel.make(name: 'blah', space: space) }
-
-    let!(:process) { VCAP::CloudController::ProcessModel.make(app: app_model) }
+    let(:app1_model) { VCAP::CloudController::AppModel.make(name: 'Tryggvi', space: space) }
+    let!(:process1) { VCAP::CloudController::ProcessModel.make(app: app1_model) }
+    let(:app2_model) { VCAP::CloudController::AppModel.make(name: 'Sigurlaug', space: space) }
+    let!(:process2) { VCAP::CloudController::ProcessModel.make(app: app2_model) }
     let(:yml_manifest) do
       {
         'applications' => [
-          { 'name' => app_model.name,
+          { 'name' => app1_model.name,
             'instances' => 4,
             'memory' => '2048MB',
             'disk_quota' => '1.5GB',
@@ -45,7 +46,53 @@ RSpec.describe 'Space Manifests' do
             ],
             'services' => [
               service_instance.name
-            ]
+            ],
+            'metadata' => {
+              'annotations' => {
+                'potato' => 'idaho',
+                'juice' => 'newton',
+                'berry' => nil,
+              },
+              'labels' => {
+                'potato' => 'yam',
+                'downton' => nil,
+                'myspace.com/songs' => 'missing',
+              },
+            },
+          },
+          { 'name' => app2_model.name,
+            'instances' => 3,
+            'memory' => '2048MB',
+            'disk_quota' => '1.5GB',
+            'buildpack' => buildpack.name,
+            'stack' => buildpack.stack,
+            'command' => 'newer-command',
+            'health_check_type' => 'http',
+            'health_check_http_endpoint' => '/health',
+            'timeout' => 42,
+            'env' => {
+              'k1' => 'cucumber',
+              'k2' => 'radish',
+              'k3' => 'fleas'
+            },
+            'routes' => [
+              { 'route' => "https://#{route.host}.#{route.domain.name}" },
+              { 'route' => "https://#{second_route.host}.#{second_route.domain.name}/path" }
+            ],
+            'services' => [
+              service_instance.name
+            ],
+            'metadata' => {
+              'annotations' => {
+                'potato' => 'idaho',
+                'juice' => 'newton',
+                'berry' => nil,
+              },
+              'labels' => {
+                'potato' => 'yam',
+                'downton' => nil,
+              },
+            },
           }
         ]
       }.to_yaml
@@ -53,10 +100,14 @@ RSpec.describe 'Space Manifests' do
 
     before do
       stub_bind(service_instance)
+      VCAP::CloudController::LabelsUpdate.update(app1_model, { 'potato' => 'french',
+        'downton' => 'abbey road', }, VCAP::CloudController::AppLabelModel)
+      VCAP::CloudController::AnnotationsUpdate.update(app1_model, { 'potato' => 'baked',
+        'berry' => 'white', }, VCAP::CloudController::AppAnnotationModel)
     end
 
     it 'applies the manifest' do
-      web_process = app_model.web_processes.first
+      web_process = app1_model.web_processes.first
       expect(web_process.instances).to eq(1)
 
       post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
@@ -77,26 +128,48 @@ RSpec.describe 'Space Manifests' do
       expect(web_process.health_check_http_endpoint).to eq('/health')
       expect(web_process.health_check_timeout).to eq(42)
 
-      app_model.reload
-      lifecycle_data = app_model.lifecycle_data
+      app1_model.reload
+      lifecycle_data = app1_model.lifecycle_data
       expect(lifecycle_data.buildpacks).to include(buildpack.name)
       expect(lifecycle_data.stack).to eq(buildpack.stack)
-      expect(app_model.environment_variables).to match(
+      expect(app1_model.environment_variables).to match(
         'k1' => 'mangos',
         'k2' => 'pears',
         'k3' => 'watermelon'
       )
-      expect(app_model.routes).to match_array([route, second_route])
+      expect(app1_model.routes).to match_array([route, second_route])
 
-      expect(app_model.service_bindings.length).to eq 1
-      expect(app_model.service_bindings.first.service_instance).to eq service_instance
+      expect(app1_model.service_bindings.length).to eq 1
+      expect(app1_model.service_bindings.first.service_instance).to eq service_instance
+      expect(app1_model.labels.map { |label| { key: label.key_name, value: label.value } }).
+        to match_array([{ key: 'potato', value: 'yam' }, { key: 'songs', value: 'missing' }])
+      expect(app1_model.annotations.map { |a| { key: a.key, value: a.value } }).
+        to match_array([{ key: 'potato', value: 'idaho' }, { key: 'juice', value: 'newton' }])
+
+      app2_model.reload
+      lifecycle_data = app2_model.lifecycle_data
+      expect(lifecycle_data.buildpacks).to include(buildpack.name)
+      expect(lifecycle_data.stack).to eq(buildpack.stack)
+      expect(app2_model.environment_variables).to match(
+        'k1' => 'cucumber',
+        'k2' => 'radish',
+        'k3' => 'fleas'
+      )
+      expect(app2_model.routes).to match_array([route, second_route])
+
+      expect(app2_model.service_bindings.length).to eq 1
+      expect(app2_model.service_bindings.first.service_instance).to eq service_instance
+      expect(app2_model.labels.map { |label| { key: label.key_name, value: label.value } }).
+        to match_array([{ key: 'potato', value: 'yam' },])
+      expect(app2_model.annotations.map { |a| { key: a.key, value: a.value } }).
+        to match_array([{ key: 'potato', value: 'idaho' }, { key: 'juice', value: 'newton' },])
     end
 
     context 'when one of the apps does not exist' do
       let!(:yml_manifest) do
         {
             'applications' => [
-              { 'name' => app_model.name,
+              { 'name' => app1_model.name,
                 'instances' => 4,
                 'memory' => '2048MB',
                 'disk_quota' => '1.5GB',
@@ -181,12 +254,12 @@ RSpec.describe 'Space Manifests' do
     end
 
     describe 'audit events' do
-      let!(:process) { nil }
+      let!(:process1) { nil }
 
       let(:yml_manifest) do
         {
           'applications' => [
-            { 'name' => app_model.name,
+            { 'name' => app1_model.name,
               'instances' => 4,
               'memory' => '2048MB',
               'disk_quota' => '1.5GB',

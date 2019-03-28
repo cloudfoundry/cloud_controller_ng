@@ -506,6 +506,66 @@ RSpec.describe SpaceManifestsController, type: :controller do
       end
     end
 
+    context 'when the request body includes metadata' do
+      let(:request_body) do
+        { 'applications' =>
+          [{ 'name' => 'blah',
+            'metadata' => {
+              'labels' => {
+                'potato' => 'idaho',
+                'myspace.com/songs' => 'missing',
+              },
+              'annotations' => {
+                'potato' => 'yam',
+                'juice' => 'newton',
+              },
+            },
+          },
+           { 'name' => 'choo',
+             'metadata' => {
+               'labels' => {
+                 'potato' => 'idaho',
+                 'myspace.com/songs' => nil,
+               },
+               'annotations' => {
+                 'potato' => nil,
+                 'juice' => 'newton',
+               },
+             },
+           }
+          ] }
+      end
+
+      it 'applies the metadata' do
+        post :apply_manifest, params: { guid: space.guid }.merge(request_body), as: :yaml
+
+        expect(response.status).to eq(202)
+        app_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppApplyManifest%'"))
+        expect(app_apply_manifest_jobs.count).to eq 1
+
+        expect(VCAP::CloudController::Jobs::SpaceApplyManifestActionJob).to have_received(:new) do |aspace, app_guid_message_hash, action|
+          expect(aspace.guid).to eq space.guid
+          app_update_message = app_guid_message_hash.entries.first[1].app_update_message
+          expect(app_update_message.labels).to eq({
+            potato: 'idaho',
+            'myspace.com/songs': 'missing' })
+          expect(app_update_message.annotations).to eq({
+            potato: 'yam',
+            juice: 'newton', })
+
+          app_update_message = app_guid_message_hash.entries[1][1].app_update_message
+          expect(app_update_message.labels).to eq({
+            potato: 'idaho',
+            'myspace.com/songs': nil })
+          expect(app_update_message.annotations).to eq({
+            potato: nil,
+            juice: 'newton', })
+
+          expect(action).to eq app_apply_manifest_action
+        end
+      end
+    end
+
     context 'when the request body includes an environment variable' do
       let(:request_body) do
         { 'applications' =>
