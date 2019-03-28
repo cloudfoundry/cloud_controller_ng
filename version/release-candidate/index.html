@@ -11439,6 +11439,11 @@ excluded in the response based on the user&rsquo;s role.</p>
   <span class="pi">-</span> <span class="s">my-service1</span>
   <span class="pi">-</span> <span class="s">my-service2</span>
   <span class="s">stack</span><span class="pi">:</span> <span class="s">cflinuxfs2</span>
+  <span class="s">metadata</span><span class="pi">:</span>
+    <span class="s">annotations</span><span class="pi">:</span>
+      <span class="s">contact</span><span class="pi">:</span> <span class="s2">"</span><span class="s">bob@example.com</span><span class="nv"> </span><span class="s">jane@example.com"</span>
+    <span class="s">labels</span><span class="pi">:</span>
+      <span class="s">sensitive</span><span class="pi">:</span> <span class="s">true</span>
   <span class="s">processes</span><span class="pi">:</span>
   <span class="pi">-</span> <span class="s">type</span><span class="pi">:</span> <span class="s">web</span>
     <span class="s">command</span><span class="pi">:</span> <span class="s">start-web.sh</span>
@@ -11499,6 +11504,14 @@ excluded in the response based on the user&rsquo;s role.</p>
 <tr>
 <td><strong>stack</strong></td>
 <td>The root filesystem to use with the buildpack, for example <code class="prettyprint">cflinuxfs2</code>.</td>
+</tr>
+<tr>
+<td><strong>metadata.labels</strong> <em>(experimental)</em></td>
+<td><a href="#labels">Labels</a> applied to the app.</td>
+</tr>
+<tr>
+<td><strong>metadata.annotations</strong> <em>(experimental)</em></td>
+<td><a href="#annotations">Annotations</a> applied to the app.</td>
 </tr>
 <tr>
 <td><strong>buildpack</strong></td>
@@ -15029,6 +15042,11 @@ Deployed revisions are revisions that are linked to started processes in the app
   <span class="pi">-</span> <span class="s">my-service1</span>
   <span class="pi">-</span> <span class="s">my-service2</span>
   <span class="s">stack</span><span class="pi">:</span> <span class="s">cflinuxfs2</span>
+  <span class="s">metadata</span><span class="pi">:</span>
+    <span class="s">annotations</span><span class="pi">:</span>
+      <span class="s">contact</span><span class="pi">:</span> <span class="s2">"</span><span class="s">bob@example.com</span><span class="nv"> </span><span class="s">jane@example.com"</span>
+    <span class="s">labels</span><span class="pi">:</span>
+      <span class="s">sensitive</span><span class="pi">:</span> <span class="s">true</span>
   <span class="s">processes</span><span class="pi">:</span>
   <span class="pi">-</span> <span class="s">type</span><span class="pi">:</span> <span class="s">web</span>
     <span class="s">command</span><span class="pi">:</span> <span class="s">start-web.sh</span>
@@ -15110,6 +15128,14 @@ Deployed revisions are revisions that are linked to started processes in the app
 <tr>
 <td><strong>stack</strong></td>
 <td>The root filesystem to use with the buildpack, for example <code class="prettyprint">cflinuxfs2</code>.</td>
+</tr>
+<tr>
+<td><strong>metadata.labels</strong> <em>(experimental)</em></td>
+<td><a href="#labels">Labels</a> applied to the app.</td>
+</tr>
+<tr>
+<td><strong>metadata.annotations</strong> <em>(experimental)</em></td>
+<td><a href="#annotations">Annotations</a> applied to the app.</td>
 </tr>
 <tr>
 <td><strong>buildpack</strong></td>
