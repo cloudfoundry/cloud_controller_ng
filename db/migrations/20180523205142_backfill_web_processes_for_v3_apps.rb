@@ -17,6 +17,7 @@ Sequel.migration do
         diego: true,
         health_check_type: 'port',
         enable_ssh: nil,
+        created_at: Sequel::CURRENT_TIMESTAMP
       }
 
       self[:processes].insert(process_hash)
