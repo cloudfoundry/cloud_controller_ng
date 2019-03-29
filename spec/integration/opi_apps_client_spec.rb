@@ -92,7 +92,7 @@ RSpec.describe(OPI::Client, opi: skip_opi_tests) do
 
       it 'returns the correct process' do
         actual_process = client.get_app(process)
-        expect(actual_process.process_guid).to eq('jeff')
+        expect(actual_process.process_guid).to eq('guid_1234-0.1.0')
       end
     end
 
