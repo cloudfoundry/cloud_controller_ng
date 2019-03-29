@@ -12,6 +12,7 @@ RSpec.describe(OPI::Client, opi: skip_opi_tests) do
   subject(:client) { described_class.new(opi_url) }
   let(:app) {
     double(
+      guid: 'guid_1234',
       service_bindings: []
     )
   }
