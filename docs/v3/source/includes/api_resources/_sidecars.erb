@@ -1,0 +1,17 @@
+<% content_for :sidecar do  %>
+{
+  "guid": "885735b5-aea4-4cf5-8e44-961af0e41920",
+  "name": "auth-sidecar",
+  "command": "bundle exec rackup",
+  "process_types": ["web", "worker"],
+  "relationships": {
+    "app": {
+      "data": {
+        "guid": "1cb006ee-fb05-47e1-b541-c34179ddc446"
+      }
+    }
+  },
+  "created_at": "2017-02-01T01:33:58Z",
+  "updated_at": "2017-02-01T01:33:58Z"
+}
+<% end %>

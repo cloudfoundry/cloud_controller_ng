@@ -27,6 +27,7 @@ includes:
   - api_resources/route_mappings
   - api_resources/service_bindings
   - api_resources/service_instances
+  - api_resources/sidecars
   - api_resources/spaces
   - api_resources/stacks
   - api_resources/tasks
@@ -204,6 +205,9 @@ includes:
   - experimental_resources/service_bindings/get
   - experimental_resources/service_bindings/list
   - experimental_resources/service_bindings/delete
+  - experimental_resources/sidecars/header
+  - experimental_resources/sidecars/object
+  - experimental_resources/sidecars/get
   - experimental_resources/space_manifest/header
   - experimental_resources/space_manifest/object
   - experimental_resources/space_manifest/apply

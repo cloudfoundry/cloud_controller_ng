@@ -1,0 +1,18 @@
+### The sidecar object
+
+```
+Example Sidecar object
+```
+```json
+<%= yield_content :sidecar %>
+```
+
+Name | Type | Description
+---- | ---- | -----------
+**guid** | _uuid_ | Unique identifier for the sidecar.
+**name** | _string_ | Human-readable name for the sidecar.
+**command** | _string_ | The command used to start the sidecar.
+**process_types** | _array of strings_  | A list of process types the sidecar applies to.
+**app** | [_to-one relationship_](#to-one-relationships) | The app the sidecare is associated with.
+**created_at** | _datetime_ | The time with zone when the object was created.
+**updated_at** | _datetime_ | The time with zone when the object was last updated.
