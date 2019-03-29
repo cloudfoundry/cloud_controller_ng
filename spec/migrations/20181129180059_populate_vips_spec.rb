@@ -18,11 +18,11 @@ RSpec.describe 'populate VIPS for preexisting routes', isolation: :truncation do
     let(:internal_domain) { VCAP::CloudController::SharedDomain.make(name: 'apps.internal', internal: true) }
     let(:external_domain) { VCAP::CloudController::SharedDomain.make(name: 'apps.external', internal: false) }
     # these are set to silly values so we know the migration works
-    let!(:internal_route_1) { VCAP::CloudController::Route.make(host: 'meow', domain: internal_domain, vip_offset: 123) }
-    let!(:internal_route_2) { VCAP::CloudController::Route.make(host: 'woof', domain: internal_domain, vip_offset: 456) }
-    let!(:internal_route_3) { VCAP::CloudController::Route.make(host: 'quack', domain: internal_domain, vip_offset: 789) }
+    let!(:internal_route_1) { VCAP::CloudController::Route.make(id: 101, host: 'meow', domain: internal_domain, vip_offset: 123) }
+    let!(:internal_route_2) { VCAP::CloudController::Route.make(id: 102, host: 'woof', domain: internal_domain, vip_offset: 456) }
+    let!(:internal_route_3) { VCAP::CloudController::Route.make(id: 103, host: 'quack', domain: internal_domain, vip_offset: 789) }
 
-    let!(:external_route) { VCAP::CloudController::Route.make(host: 'moo', domain: external_domain, vip_offset: nil) }
+    let!(:external_route) { VCAP::CloudController::Route.make(id: 104, host: 'moo', domain: external_domain, vip_offset: nil) }
 
     it 'populates the routes vip_offset for internal routes only' do
       run_migration
