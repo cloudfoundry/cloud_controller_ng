@@ -139,6 +139,7 @@
 
 
           
+          
 
 
           
@@ -13210,6 +13211,12 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 <td>Whether the domain is used for internal (container-to-container) traffic.</td>
 <td>false</td>
 </tr>
+<tr>
+<td><strong>organization</strong></td>
+<td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
+<td>A relationship to the organization the domain will be scoped to.</td>
+<td></td>
+</tr>
 </tbody></table>
 
 <h4 id="permitted-roles">Permitted Roles</h4>
@@ -15016,6 +15023,141 @@ Deployed revisions are revisions that are linked to started processes in the app
 </tr>
 <tr>
 <td>Admin</td>
+</tr>
+</tbody></table>
+
+          <h2 id="sidecars">Sidecars</h2>
+
+<p>Sidecars represent processes
+running alongside
+an app.</p>
+
+          <h3 id="the-sidecar-object">The sidecar object</h3>
+<pre class="highlight plaintext"><code>Example Sidecar object
+</code></pre>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"885735b5-aea4-4cf5-8e44-961af0e41920"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"auth-sidecar"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"command"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bundle exec rackup"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"process_types"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"web"</span><span class="p">,</span><span class="w"> </span><span class="s2">"worker"</span><span class="p">],</span><span class="w">
+  </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1cb006ee-fb05-47e1-b541-c34179ddc446"</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-02-01T01:33:58Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-02-01T01:33:58Z"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+
+</span></code></pre>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>guid</strong></td>
+<td><em>uuid</em></td>
+<td>Unique identifier for the sidecar.</td>
+</tr>
+<tr>
+<td><strong>name</strong></td>
+<td><em>string</em></td>
+<td>Human-readable name for the sidecar.</td>
+</tr>
+<tr>
+<td><strong>command</strong></td>
+<td><em>string</em></td>
+<td>The command used to start the sidecar.</td>
+</tr>
+<tr>
+<td><strong>process_types</strong></td>
+<td><em>array of strings</em></td>
+<td>A list of process types the sidecar applies to.</td>
+</tr>
+<tr>
+<td><strong>app</strong></td>
+<td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
+<td>The app the sidecare is associated with.</td>
+</tr>
+<tr>
+<td><strong>created_at</strong></td>
+<td><em>datetime</em></td>
+<td>The time with zone when the object was created.</td>
+</tr>
+<tr>
+<td><strong>updated_at</strong></td>
+<td><em>datetime</em></td>
+<td>The time with zone when the object was last updated.</td>
+</tr>
+</tbody></table>
+
+          <h3 id="get-a-sidecar">Get a sidecar</h3>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/sidecars/[sidecar_guid]"</span> <span class="se">\</span>
+  -X GET <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
+
+<span class="p">{</span><span class="w">
+  </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"885735b5-aea4-4cf5-8e44-961af0e41920"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"auth-sidecar"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"command"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bundle exec rackup"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"process_types"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"web"</span><span class="p">,</span><span class="w"> </span><span class="s2">"worker"</span><span class="p">],</span><span class="w">
+  </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1cb006ee-fb05-47e1-b541-c34179ddc446"</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-02-01T01:33:58Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-02-01T01:33:58Z"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+
+</span></code></pre>
+
+<h4 id="definition">Definition</h4>
+
+<p><code class="prettyprint">GET /v3/sidecars/:sidecar_guid</code></p>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Space Manager</td>
+</tr>
+<tr>
+<td>Space Auditor</td>
+</tr>
+<tr>
+<td>Org Manager</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+<tr>
+<td>Admin Read-Only</td>
+</tr>
+<tr>
+<td>Global Auditor</td>
 </tr>
 </tbody></table>
 
