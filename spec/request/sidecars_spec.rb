@@ -85,4 +85,93 @@ RSpec.describe 'Sidecars' do
       expect(parsed_response).to be_a_response_like(expected_response)
     end
   end
+
+  describe 'GET /v3/processes/:guid/sidecars' do
+    let!(:sidecar1a) { VCAP::CloudController::SidecarModel.make(app: app_model, name: 'sidecar1a', command: 'missile1a') }
+    let!(:sidecar_worker1a) { VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar1a, type: 'worker') }
+    let!(:sidecar_web1a) { VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar1a, type: 'web') }
+
+    let!(:sidecar1b) { VCAP::CloudController::SidecarModel.make(app: app_model, name: 'sidecar1b', command: 'missile1b') }
+    let!(:sidecar_worker1b) { VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar1b, type: 'worker') }
+    let!(:sidecar_web1b) { VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar1b, type: 'web') }
+
+    let!(:sidecar1c) { VCAP::CloudController::SidecarModel.make(app: app_model, name: 'sidecar1c', command: 'missile1c') }
+    let!(:sidecar_worker1c) { VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar1c, type: 'worker') }
+    let!(:sidecar_web1c) { VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar1c, type: 'web') }
+
+    let!(:sidecar1d) { VCAP::CloudController::SidecarModel.make(app: app_model, name: 'sidecar1d', command: 'missile1d') }
+    let!(:sidecar_worker1d) { VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar1d, type: 'fish') }
+    let!(:sidecar_web1d) { VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar1d, type: 'cows') }
+
+    let!(:process1) { VCAP::CloudController::ProcessModel.make(
+      :process,
+      app:        app_model,
+      type:       'web',
+      command:    'rackup',
+    )
+    }
+
+    let!(:app_model2) { VCAP::CloudController::AppModel.make(space: app_model.space, name: 'app2') }
+    let!(:sidecar_for_app2) { VCAP::CloudController::SidecarModel.make(app: app_model2, name: 'sidecar2', command: 'missile2') }
+    let!(:sidecar_worker2) { VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar_for_app2, type: 'worker') }
+    let!(:sidecar_web2) { VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar_for_app2, type: 'web') }
+    let!(:process2) { VCAP::CloudController::ProcessModel.make(
+      :process,
+      app:        app_model2,
+      type:       'web',
+      command:    'rackup',
+    )
+    }
+
+    it "retrieves the process' sidecars" do
+      get "/v3/processes/#{process1.guid}/sidecars?per_page=2", nil, user_header
+
+      expected_response = {
+        'pagination' => {
+          'total_results' => 3,
+          'total_pages'   => 2,
+          'first'         => { 'href' => "#{link_prefix}/v3/processes/#{process1.guid}/sidecars?page=1&per_page=2" },
+          'last'          => { 'href' => "#{link_prefix}/v3/processes/#{process1.guid}/sidecars?page=2&per_page=2" },
+          'next'          => { 'href' => "#{link_prefix}/v3/processes/#{process1.guid}/sidecars?page=2&per_page=2" },
+          'previous'      => nil,
+        },
+        'resources' => [
+          {
+            'guid' => sidecar1a.guid,
+            'name' => 'sidecar1a',
+            'command' => 'missile1a',
+            'process_types' => ['web', 'worker'],
+            'relationships' => {
+              'app' => {
+                'data' => {
+                  'guid' => app_model.guid,
+                },
+              },
+            },
+            'created_at' => iso8601,
+            'updated_at' => iso8601,
+          },
+          {
+            'guid' => sidecar1b.guid,
+            'name' => 'sidecar1b',
+            'command' => 'missile1b',
+            'process_types' => ['web', 'worker'],
+            'relationships' => {
+              'app' => {
+                'data' => {
+                  'guid' => app_model.guid,
+                },
+              },
+            },
+            'created_at' => iso8601,
+            'updated_at' => iso8601,
+          },
+        ]
+      }
+
+      expect(last_response.status).to eq(200), last_response.body
+      parsed_response = MultiJson.load(last_response.body)
+      expect(parsed_response).to be_a_response_like(expected_response)
+    end
+  end
 end
