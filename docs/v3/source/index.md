@@ -207,7 +207,9 @@ includes:
   - experimental_resources/service_bindings/delete
   - experimental_resources/sidecars/header
   - experimental_resources/sidecars/object
+  - experimental_resources/sidecars/create_from_app
   - experimental_resources/sidecars/get
+  - experimental_resources/sidecars/list_for_process
   - experimental_resources/space_manifest/header
   - experimental_resources/space_manifest/object
   - experimental_resources/space_manifest/apply

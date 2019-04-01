@@ -15,3 +15,54 @@
   "updated_at": "2017-02-01T01:33:58Z"
 }
 <% end %>
+
+<% content_for :paginated_list_of_sidecars do |base_url| %>
+{
+  "pagination": {
+    "total_results": 3,
+    "total_pages": 2,
+    "first": {
+      "href": "https://api.example.org<%= base_url %>?page=1&per_page=2"
+    },
+    "last": {
+      "href": "https://api.example.org<%= base_url %>?page=2&per_page=2"
+    },
+    "next": {
+      "href": "https://api.example.org<%= base_url %>?page=2&per_page=2"
+    },
+    "previous": null
+  },
+  "resources": [
+    {
+      "guid": "885735b5-aea4-4cf5-8e44-961af0e41920",
+      "name": "auth-sidecar",
+      "command": "bundle exec rackup",
+      "process_types": ["web", "worker"],
+      "relationships": {
+        "app": {
+          "data": {
+            "guid": "1cb006ee-fb05-47e1-b541-c34179ddc446"
+          }
+        }
+      },
+      "created_at": "2017-02-01T01:33:58Z",
+      "updated_at": "2017-02-01T01:33:58Z"
+    },
+    {
+      "guid": "885735b5-aea4-4cf5-8e44-961af0e41921",
+      "name": "echo-sidecar",
+      "command": "start-echo-server",
+      "process_types": ["web"],
+      "relationships": {
+        "app": {
+          "data": {
+            "guid": "1cb006ee-fb05-47e1-b541-c34179ddc446"
+          }
+        }
+      },
+      "created_at": "2017-02-01T01:33:59Z",
+      "updated_at": "2017-02-01T01:33:59Z"
+    }
+  ]
+}
+<% end %>

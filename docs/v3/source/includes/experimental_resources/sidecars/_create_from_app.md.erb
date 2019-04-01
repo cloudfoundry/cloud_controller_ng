@@ -1,0 +1,45 @@
+### Create a sidecar associated with an app
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/sidecars" \
+  -X POST \
+  -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
+  -d '{
+    "name": "auth-sidecar",
+    "command": "bundle exec rackup",
+    "process_types": ["web", "worker"]
+  }'
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 201 Created
+Content-Type: application/json
+
+<%= yield_content :sidecar %>
+```
+
+#### Definition
+`POST /v3/apps/:app_guid/sidecars`
+
+#### Required Parameters
+
+Name | Type | Description
+---- | ---- | -----------
+**name** | _string_ | Human-readable name for the sidecar.
+**command** | _string_ | The command used to start the sidecar.
+**process_types** | _array of strings_  | A list of process types the sidecar applies to.
+
+#### Permitted Roles
+ |
+--- | ---
+Space Developer |
+Admin |
