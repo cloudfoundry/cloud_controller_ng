@@ -8,19 +8,16 @@ require 'presenters/v3/sidecar_presenter'
 class SidecarsController < ApplicationController
   include SubResource
 
-  def index
-    unprocessable!('No process_guid specified') unless process_nested?
-    message = SidecarsListMessage.from_params(query_params)
-    invalid_param!(message.errors.full_messages) unless message.valid?
+  def index_by_app
+    app, space, org = AppFetcher.new.fetch(hashed_params[:app_guid])
+    resource_not_found!(:app) unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
+    validate_and_present_for_list(app.sidecars_dataset)
+  end
 
+  def index_by_process
     process, space, org = ProcessFetcher.fetch(process_guid: hashed_params[:process_guid])
-    process_not_found! unless process && permission_queryer.can_read_from_space?(space.guid, org.guid)
-
-    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
-      presenter: Presenters::V3::SidecarPresenter,
-      paginated_result: SequelPaginator.new.get_page(process.sidecars_dataset, message.try(:pagination_options)),
-      path: base_url(resource: 'sidecars'),
-    )
+    resource_not_found!(:process) unless process && permission_queryer.can_read_from_space?(space.guid, org.guid)
+    validate_and_present_for_list(process.sidecars_dataset)
   end
 
   def create
@@ -49,7 +46,14 @@ class SidecarsController < ApplicationController
 
   private
 
-  def process_not_found!
-    resource_not_found!(:process)
+  def validate_and_present_for_list(dataset)
+    message = SidecarsListMessage.from_params(query_params)
+    invalid_param!(message.errors.full_messages) unless message.valid?
+
+    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
+      presenter: Presenters::V3::SidecarPresenter,
+      paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
+      path: base_url(resource: 'sidecars'),
+      )
   end
 end

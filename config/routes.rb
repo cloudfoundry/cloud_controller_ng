@@ -33,7 +33,8 @@ Rails.application.routes.draw do
   # app sidecars
   post '/apps/:guid/sidecars', to: 'sidecars#create'
   get '/sidecars/:guid', to: 'sidecars#show'
-  get '/processes/:process_guid/sidecars', to: 'sidecars#index'
+  get '/processes/:process_guid/sidecars', to: 'sidecars#index_by_process'
+  get '/apps/:app_guid/sidecars', to: 'sidecars#index_by_app'
 
   # revisions
   get '/revisions/:revision_guid/environment_variables', to: 'revisions#show_environment_variables'

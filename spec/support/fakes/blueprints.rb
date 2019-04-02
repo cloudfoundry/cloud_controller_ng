@@ -545,12 +545,6 @@ module VCAP::CloudController
     description { 'Initial revision' }
   end
 
-  SidecarModel.blueprint do
-    name { 'side_process' }
-    command { 'bundle exec rackup' }
-    app { AppModel.make }
-  end
-
   TestModel.blueprint do
     required_attr true
   end
@@ -573,7 +567,7 @@ module VCAP::CloudController
   SidecarModel.blueprint do
     name { Sham.name }
     command { 'bundle exec rackup' }
-    app
+    app { AppModel.make }
   end
 
   SidecarProcessTypeModel.blueprint do

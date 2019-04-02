@@ -11,7 +11,7 @@ RSpec.describe SidecarsController, type: :controller do
     set_current_user(user)
   end
 
-  describe '#index' do
+  describe 'index' do
     let!(:process1) {
       VCAP::CloudController::ProcessModel.make(
         :process,
@@ -20,36 +20,64 @@ RSpec.describe SidecarsController, type: :controller do
       )
     }
 
-    context 'when not accessed as a process subresource' do
+    context 'when not accessed as an app or process subresource' do
       before do
         set_current_user_as_role(role: :space_developer, org: org, user: user, space: space)
       end
 
       it 'fails to map a route' do
         expect {
-          get :index
-        }.to raise_error(ActionController::UrlGenerationError, /No route matches \{:action=>"index", :controller=>"sidecars"\}/)
+          get :index_by_process
+        }.to raise_error(ActionController::UrlGenerationError, /No route matches \{:action=>"index_by_process", :controller=>"sidecars"\}/)
       end
     end
 
-    # Happy-path tests are in the request spec
+    context 'when accessed as an app subresource' do
+      before do
+        set_current_user_as_role(role: :space_developer, org: org, user: user, space: space)
+      end
 
-    context 'permissions' do
+      it 'works' do
+        get :index_by_app, params: { app_guid: app_model.guid }
+        expect(response.status).to eq(200), response.body
+      end
+    end
+
+    context 'permissions for index_by_process' do
       it_behaves_like 'permissions endpoint' do
         let(:roles_to_http_responses) do
           {
-        'admin' => 200,
-        'admin_read_only' => 200,
-        'global_auditor' => 200,
-        'space_developer' => 200,
-        'space_manager' => 200,
-        'space_auditor' => 200,
-        'org_manager' => 200,
-        'org_auditor' => 404,
-        'org_billing_manager' => 404,
-      }
+            'admin' => 200,
+            'admin_read_only' => 200,
+            'global_auditor' => 200,
+            'space_developer' => 200,
+            'space_manager' => 200,
+            'space_auditor' => 200,
+            'org_manager' => 200,
+            'org_auditor' => 404,
+            'org_billing_manager' => 404,
+          }
         end
-        let(:api_call) { lambda { get :index, params: { process_guid: process1.guid } } }
+        let(:api_call) { lambda { get :index_by_process, params: { process_guid: process1.guid } } }
+      end
+    end
+
+    context 'permissions for index_by_app' do
+      it_behaves_like 'permissions endpoint' do
+        let(:roles_to_http_responses) do
+          {
+            'admin' => 200,
+            'admin_read_only' => 200,
+            'global_auditor' => 200,
+            'space_developer' => 200,
+            'space_manager' => 200,
+            'space_auditor' => 200,
+            'org_manager' => 200,
+            'org_auditor' => 404,
+            'org_billing_manager' => 404,
+          }
+        end
+        let(:api_call) { lambda { get :index_by_app, params: { app_guid: app_model.guid } } }
       end
     end
   end

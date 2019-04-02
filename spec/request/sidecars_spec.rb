@@ -174,4 +174,69 @@ RSpec.describe 'Sidecars' do
       expect(parsed_response).to be_a_response_like(expected_response)
     end
   end
+
+  describe 'GET /v3/apps/:guid/sidecars' do
+    let!(:sidecar1) { VCAP::CloudController::SidecarModel.make(name: 'sidecar1', app: app_model) }
+    let!(:sidecar1_processes) { VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar1, type: 'one') }
+    let!(:sidecar2) { VCAP::CloudController::SidecarModel.make(name: 'sidecar2', app: app_model) }
+    let!(:sidecar2_processes) { VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar2, type: 'two') }
+    let!(:sidecar3) { VCAP::CloudController::SidecarModel.make(name: 'sidecar3', app: app_model) }
+    let!(:sidecar3_processes) { VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar3, type: 'three') }
+
+    it 'lists the sidecars for an app' do
+      get "/v3/apps/#{app_model.guid}/sidecars?per_page=2", nil, user_header
+      expect(last_response.status).to eq(200), last_response.body
+
+      expect(parsed_response).to be_a_response_like(
+        {
+          'pagination' => {
+            'total_results' => 3,
+            'total_pages' => 2,
+            'first' => {
+              'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/sidecars?page=1&per_page=2"
+            },
+            'last' => {
+              'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/sidecars?page=2&per_page=2"
+            },
+            'next' => {
+              'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/sidecars?page=2&per_page=2"
+            },
+            'previous' => nil
+          },
+          'resources' => [
+            {
+              'guid' => sidecar1.guid,
+              'name' => 'sidecar1',
+              'command' => 'bundle exec rackup',
+              'process_types' => ['one'],
+              'created_at' => iso8601,
+              'updated_at' => iso8601,
+              'relationships' => {
+                'app' => {
+                  'data' => {
+                    'guid' => app_model.guid
+                  }
+                }
+              }
+            },
+            {
+              'guid' => sidecar2.guid,
+              'name' => 'sidecar2',
+              'command' => 'bundle exec rackup',
+              'process_types' => ['two'],
+              'created_at' => iso8601,
+              'updated_at' => iso8601,
+              'relationships' => {
+                'app' => {
+                  'data' => {
+                    'guid' => app_model.guid
+                  }
+                }
+              }
+            },
+          ]
+        }
+    )
+    end
+  end
 end
