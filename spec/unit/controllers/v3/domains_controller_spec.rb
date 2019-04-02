@@ -157,52 +157,232 @@ RSpec.describe DomainsController, type: :controller do
       end
     end
 
-    it_behaves_like 'permissions endpoint' do
-      let(:roles_to_http_responses) do
-        {
-          'admin' => 201,
-          'admin_read_only' => 403,
-          'global_auditor' => 403,
-          'space_developer' => 403,
-          'space_manager' => 403,
-          'space_auditor' => 403,
-          'org_manager' => 403,
-          'org_auditor' => 403,
-          'org_billing_manager' => 403,
-        }
+    describe 'permissions' do
+      context 'when creating an unscoped domain' do
+        it_behaves_like 'permissions endpoint' do
+          let(:roles_to_http_responses) do
+            {
+              'admin' => 201,
+              'admin_read_only' => 403,
+              'global_auditor' => 403,
+              'space_developer' => 403,
+              'space_manager' => 403,
+              'space_auditor' => 403,
+              'org_manager' => 403,
+              'org_auditor' => 403,
+              'org_billing_manager' => 403,
+            }
+          end
+          let(:api_call) { lambda { post :create, params: request_body, as: :json } }
+        end
       end
-      let(:api_call) { lambda { post :create, params: request_body, as: :json } }
+
+      context 'when creating a scoped domain' do
+        it_behaves_like 'permissions endpoint' do
+          let(:roles_to_http_responses) do
+            {
+              'admin' => 201,
+              'admin_read_only' => 403,
+              'global_auditor' => 403,
+              'space_developer' => 403,
+              'space_manager' => 403,
+              'space_auditor' => 403,
+              'org_manager' => 201,
+              'org_auditor' => 403,
+              'org_billing_manager' => 403,
+            }
+          end
+
+          let(:request_body) do
+            {
+              "name": 'my-domain.biz',
+              "relationships": {
+                "organization": {
+                  "data": {
+                    "guid": org.guid
+                  }
+                }
+              }
+            }
+          end
+          let(:api_call) { lambda { post :create, params: request_body, as: :json } }
+        end
+
+        context "when org manager can't write to the org" do
+          let(:space1) { VCAP::CloudController::Space.make }
+          let(:org1) { space1.organization }
+          before do
+            set_current_user_as_role(role: 'org_manager', org: org, user: user)
+          end
+          let(:request_body) do
+            {
+              "name": 'my-domain.biz',
+              "relationships": {
+                "organization": {
+                  "data": {
+                    "guid": org1.guid
+                  }
+                }
+              }
+            }
+          end
+
+          it 'errors' do
+            post :create, params: request_body, as: :json
+            expect(response.status).to eq(422)
+            expect(parsed_body['errors'][0]['detail']).to eq("Organization with guid '#{org1.guid}' does not exist or you do not have access to it.")
+          end
+        end
+
+        context "when org does not exist" do
+          let(:space1) { VCAP::CloudController::Space.make }
+          let(:org1) { space1.organization }
+          before do
+            set_current_user_as_role(role: 'org_manager', org: org, user: user)
+          end
+          let(:request_body) do
+            {
+              "name": 'my-domain.biz',
+              "relationships": {
+                "organization": {
+                  "data": {
+                    "guid": "NonExistentOrg"
+                  }
+                }
+              }
+            }
+          end
+
+          it 'errors' do
+            post :create, params: request_body, as: :json
+            expect(response.status).to eq(422)
+            expect(parsed_body['errors'][0]['detail']).to eq("Organization with guid 'NonExistentOrg' does not exist or you do not have access to it.")
+          end
+        end
+
+        context "when private_domain_creation feature flag is disabled" do
+          context "when user is  an admin" do
+           before do
+             set_current_user_as_role(role: 'admin', org: org, user: user)
+             VCAP::CloudController::FeatureFlag.make(name: 'private_domain_creation', enabled: false, error_message: nil)
+           end
+
+           let(:request_body) do
+             {
+               "name": 'my-domain.biz',
+               "relationships": {
+                 "organization": {
+                   "data": {
+                     "guid": org.guid
+                   }
+                 }
+               }
+             }
+           end
+
+           it 'returns 201 created' do
+             post :create, params: request_body, as: :json
+
+             expect(response.status).to eq(201)
+           end
+          end
+          context "when user is not an admin" do
+            before do
+              set_current_user_as_role(role: 'org_manager', org: org, user: user)
+              VCAP::CloudController::FeatureFlag.make(name: 'private_domain_creation', enabled: false, error_message: nil)
+            end
+
+            let(:request_body) do
+              {
+                "name": 'my-domain.biz',
+                "relationships": {
+                  "organization": {
+                    "data": {
+                      "guid": org.guid
+                    }
+                  }
+                }
+              }
+            end
+
+            it 'raises 403' do
+              post :create, params: request_body, as: :json
+
+              expect(response.status).to eq(403)
+              expect(parsed_body['errors'][0]['detail']).to eq('Feature Disabled: private_domain_creation')
+            end
+          end
+
+        end
+
+        context "when org is suspended" do
+          let(:org1) { VCAP::CloudController::Organization.make }
+          context "when user is an admin" do
+            before do
+              set_current_user_as_role(role: 'admin', org: org1, user: user)
+              org1.status = 'suspended'
+              org1.save
+            end
+
+            let(:request_body) do
+              {
+                "name": 'my-domain.biz',
+                "relationships": {
+                  "organization": {
+                    "data": {
+                      "guid": org1.guid
+                    }
+                  }
+                }
+              }
+            end
+
+            it 'returns 201 created' do
+              post :create, params: request_body, as: :json
+
+              expect(response.status).to eq(201)
+            end
+          end
+
+          context "when user is not an admin" do
+            before do
+              set_current_user_as_role(role: 'org_manager', org: org1, user: user)
+              org1.status = 'suspended'
+              org1.save
+            end
+
+            let(:request_body) do
+              {
+                "name": 'my-domain.biz',
+                "relationships": {
+                  "organization": {
+                    "data": {
+                      "guid": org1.guid
+                    }
+                  }
+                }
+              }
+            end
+
+            it 'raises 422' do
+              post :create, params: request_body, as: :json
+
+              expect(response.status).to eq(422)
+              expect(parsed_body['errors'][0]['detail']).to eq("Organization with guid '#{org1.guid}' does not exist or you do not have access to it.")
+            end
+          end
+
+        end
+
+
+      end
+
+      it 'returns 401 for Unauthenticated requests' do
+        post :create, params: request_body, as: :json
+        expect(response.status).to eq(401)
+      end
     end
 
-    it 'returns 401 for Unauthenticated requests' do
-      post :create, params: request_body, as: :json
-      expect(response.status).to eq(401)
-    end
   end
 end
 
-__END__
-
-TODO: Keep this for writing new list-domain tests
-      let(:space1) { Space.make(guid: 'space1', org: org1 )}
-      let(:space2) { Space.make(guid: 'space2', org: org2 )}
-      let(:space3) { Space.make(guid: 'space3', org: org2 )}
-      let(:public_domain1) { SharedDomain.make(guid: 'public_domain1') }
-      let(:public_domain2) { SharedDomain.make(guid: 'public_domain2') }
-      let(:private_domain1) { PrivateDomain.make(guid: 'private_domain1', owning_organization: org1)}
-      let(:private_domain2) { PrivateDomain.make(guid: 'private_domain2', owning_organization: org1)}
-      let(:admin_user){ User.make }
-      let(:user1){ User.make }
-      let(:billing_manager1){ User.make }
-      let(:user2){ User.make }
-      let(:user3){ User.make }
-      let(:logged_out_user){ User.make }
-      let(:billing_manager3){ User.make }
-      before do
-        # org.add_user(admin_user)
-        org1.add_user(user1)
-        org2.add_user(user2)
-        org3.add_user(user3)
-        org1.add_billing_manager(billing_manager1)
-        org3.add_billing_manager(billing_manager3)
-      end

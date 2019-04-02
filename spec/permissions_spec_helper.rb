@@ -42,7 +42,7 @@ RSpec.shared_examples 'permissions endpoint' do
         set_current_user_as_role(role: role, org: org, space: space, user: user, scopes: %w(cloud_controller.read cloud_controller.write))
         api_call.call
 
-        expect(response.status).to eq(expected_return_value), "role #{role}: expected  #{expected_return_value}, got: #{response.status}"
+        expect(response.status).to eq(expected_return_value), "role #{role}: expected #{expected_return_value}, got: #{response.status}"
       end
     end
   end

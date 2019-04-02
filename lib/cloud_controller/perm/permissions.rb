@@ -58,6 +58,12 @@ module VCAP
           end
         end
 
+        def can_create_private_domain?
+          can_write_globally? || resource_identifiers_for_action([
+            ORG_MANAGER_ACTION
+          ]).any?
+        end
+
         def can_read_from_org?(org_id)
           can_read_globally? ||
           has_any_permission?([

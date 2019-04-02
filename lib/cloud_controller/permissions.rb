@@ -91,6 +91,10 @@ class VCAP::CloudController::Permissions
     end
   end
 
+  def can_create_private_domain?
+     can_write_globally? || membership.org_guids_for_roles(ROLES_FOR_ORG_WRITING).any?
+  end
+
   def can_read_from_org?(org_guid)
     can_read_globally? || membership.has_any_roles?(ROLES_FOR_ORG_READING, nil, org_guid)
   end
