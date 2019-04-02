@@ -73,6 +73,22 @@ module VCAP::CloudController
         })
       end
 
+      context 'when there is no user_audit_info for the revision' do
+        let(:user_audit_info) { nil }
+        it 'should not create a user audit event' do
+          RevisionCreate.create(
+            app: app,
+            droplet_guid: app.droplet_guid,
+            environment_variables: { 'key' => 'value' },
+            description: 'foo sorta',
+            commands_by_process_type: { 'web' => 'run my app' },
+            user_audit_info: user_audit_info,
+          )
+          event = VCAP::CloudController::Event.find(type: 'audit.app.revision.create')
+          expect(event).to be_nil
+        end
+      end
+
       context 'when there are multiple revisions for an app' do
         it 'increments the version by 1' do
           RevisionModel.make(app: app, version: 1, created_at: 4.days.ago)

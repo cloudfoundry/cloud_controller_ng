@@ -22,7 +22,7 @@ module VCAP::CloudController
           commands_by_process_type.
             each { |process_type, command| revision.add_command_for_process_type(process_type, command) }
 
-          record_audit_event(revision, user_audit_info)
+          record_audit_event(revision, user_audit_info) if user_audit_info
 
           revision
         end
