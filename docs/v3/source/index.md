@@ -211,6 +211,7 @@ includes:
   - experimental_resources/sidecars/get
   - experimental_resources/sidecars/list_for_app
   - experimental_resources/sidecars/list_for_process
+  - experimental_resources/sidecars/delete
   - experimental_resources/space_manifest/header
   - experimental_resources/space_manifest/object
   - experimental_resources/space_manifest/apply

@@ -219,4 +219,47 @@ RSpec.describe SidecarsController, type: :controller do
       let(:api_call) { lambda { get :show, params: { guid: sidecar.guid }, as: :json } }
     end
   end
+
+  describe '#delete' do
+
+    let!(:sidecar) { VCAP::CloudController::SidecarModel.make(app: app_model, name: 'sidecar', command: 'smarch') }
+
+    context 'as a space developer' do
+      before do
+        set_current_user_as_role(role: :space_developer, org: org, user: user, space: space)
+      end
+
+      it 'deletes the sidecar' do
+        expect {
+          delete :destroy, params: { guid: sidecar.guid }, as: :json
+        }.to change { VCAP::CloudController::SidecarModel.count }.by(-1)
+      end
+
+      context 'the sidecar is not found' do
+        it 'returns a 404' do
+          delete :destroy, params: { guid: 'nope' }, as: :json
+
+          expect(response.status).to eq 404
+        end
+      end
+    end
+
+    it_behaves_like 'permissions endpoint' do
+      let(:roles_to_http_responses) do
+        {
+          'admin'               => 204,
+          'space_developer'     => 204,
+          'global_auditor'      => 403,
+          'space_manager'       => 403,
+          'space_auditor'       => 403,
+          'org_manager'         => 403,
+          'admin_read_only'     => 403,
+          'org_auditor'         => 404,
+          'org_billing_manager' => 404,
+        }
+      end
+      let(:api_call) { lambda { delete :destroy, params: { guid: sidecar.guid }, as: :json } }
+    end
+
+  end
 end

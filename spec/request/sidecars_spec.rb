@@ -86,7 +86,7 @@ RSpec.describe 'Sidecars' do
     end
   end
 
-  describe 'GET /v3/processes/:guid/sidecars' do
+  describe 'GET /v3/processes/:process_guid/sidecars' do
     let!(:sidecar1a) { VCAP::CloudController::SidecarModel.make(app: app_model, name: 'sidecar1a', command: 'missile1a') }
     let!(:sidecar_worker1a) { VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar1a, type: 'worker') }
     let!(:sidecar_web1a) { VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar1a, type: 'web') }
@@ -175,7 +175,7 @@ RSpec.describe 'Sidecars' do
     end
   end
 
-  describe 'GET /v3/apps/:guid/sidecars' do
+  describe 'GET /v3/apps/:app_guid/sidecars' do
     let!(:sidecar1) { VCAP::CloudController::SidecarModel.make(name: 'sidecar1', app: app_model) }
     let!(:sidecar1_processes) { VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar1, type: 'one') }
     let!(:sidecar2) { VCAP::CloudController::SidecarModel.make(name: 'sidecar2', app: app_model) }
@@ -237,6 +237,19 @@ RSpec.describe 'Sidecars' do
           ]
         }
     )
+    end
+  end
+
+  describe 'DELETE /v3/sidecars/:guid' do
+    let(:sidecar) { VCAP::CloudController::SidecarModel.make(app: app_model, name: 'sidecar', command: 'smarch') }
+    let!(:sidecar_spider) { VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar, type: 'spider') }
+    let!(:sidecar_web) { VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar, type: 'web') }
+
+    it 'deletes the sidecar' do
+      delete "/v3/sidecars/#{sidecar.guid}", nil, user_header
+      expect(last_response.status).to eq(204), last_response.body
+      expect(app_model.reload.sidecars.size).to eq(0)
+
     end
   end
 end

@@ -35,6 +35,7 @@ Rails.application.routes.draw do
   get '/sidecars/:guid', to: 'sidecars#show'
   get '/processes/:process_guid/sidecars', to: 'sidecars#index_by_process'
   get '/apps/:app_guid/sidecars', to: 'sidecars#index_by_app'
+  delete '/sidecars/:guid', to: 'sidecars#destroy'
 
   # revisions
   get '/revisions/:revision_guid/environment_variables', to: 'revisions#show_environment_variables'

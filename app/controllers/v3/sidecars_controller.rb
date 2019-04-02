@@ -44,6 +44,17 @@ class SidecarsController < ApplicationController
     render status: 200, json: Presenters::V3::SidecarPresenter.new(sidecar)
   end
 
+  def destroy
+    sidecar = SidecarModel.find(guid: hashed_params[:guid])
+    resource_not_found!(:sidecar) unless sidecar
+    space = sidecar.app.space
+    resource_not_found!(:sidecar) unless permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
+    unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
+
+    SidecarDelete.delete(sidecar)
+    head :no_content
+  end
+
   private
 
   def validate_and_present_for_list(dataset)
