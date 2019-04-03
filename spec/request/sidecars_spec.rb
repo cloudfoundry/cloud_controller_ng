@@ -2,8 +2,8 @@ require 'spec_helper'
 
 RSpec.describe 'Sidecars' do
   let(:app_model) { VCAP::CloudController::AppModel.make }
-  let(:user_header) { headers_for(user) }
   let(:user) { VCAP::CloudController::User.make }
+  let(:user_header) { headers_for(user) }
 
   before do
     app_model.space.organization.add_user(user)
@@ -52,6 +52,174 @@ RSpec.describe 'Sidecars' do
         post "/v3/apps/#{app_model.guid}/sidecars", sidecar_params.to_json, user_header
         delete "/v3/apps/#{app_model.guid}", nil, user_header
         expect(last_response.status).to eq(202)
+      end
+    end
+
+    describe 'long name' do
+      let(:sidecar_params) {
+        {
+          name: 'a' * 256,
+          command: 'bundle exec rackup',
+          process_types: ['web', 'other_worker']
+        }
+      }
+
+      it 'returns an error' do
+        post "/v3/apps/#{app_model.guid}/sidecars", sidecar_params.to_json, user_header
+        expect(last_response.status).to eq(422)
+        expect(parsed_response['errors'][0]['detail']).to eq 'Name is too long (maximum is 255 characters)'
+      end
+    end
+
+    describe 'empty process_types' do
+      let(:sidecar_params) {
+        {
+          name: 'my_sidecar',
+          command: 'bundle exec rackup',
+          process_types: []
+        }
+      }
+
+      it 'returns an error' do
+        post "/v3/apps/#{app_model.guid}/sidecars", sidecar_params.to_json, user_header
+        expect(last_response.status).to eq(422)
+        expect(parsed_response['errors'][0]['detail']).to eq 'Process types must have at least 1 process_type'
+      end
+    end
+  end
+
+  describe 'PATCH /v3/apps/:guid/sidecars' do
+    let!(:sidecar) { VCAP::CloudController::SidecarModel.make(name: 'My sidecar', command: 'rackdown', app: app_model) }
+    let!(:sidecar_process_type) do
+      VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar, type: 'other_worker', app_guid: app_model.guid)
+    end
+
+    let(:sidecar_params) {
+      {
+        name:          'my_sidecar_2',
+        command:       'rackup',
+        process_types: ['sidecar_process']
+      }
+    }
+
+    it 'updates sidecar' do
+      expected_response = {
+        'guid' => sidecar.guid,
+        'name' => 'my_sidecar_2',
+        'command' => 'rackup',
+        'process_types' => ['sidecar_process'],
+        'created_at' => iso8601,
+        'updated_at' => iso8601,
+        'relationships' => {
+          'app' => {
+            'data' => {
+              'guid' => app_model.guid
+            }
+          }
+        }
+      }
+      patch "/v3/sidecars/#{sidecar.guid}", sidecar_params.to_json, user_header
+
+      expect(last_response.status).to eq(200)
+      parsed_response = MultiJson.load(last_response.body)
+      expect(parsed_response).to be_a_response_like(expected_response)
+    end
+
+    describe 'partial updates' do
+      let(:sidecar_params) {
+        { command: 'bundle exec rackup' }
+      }
+      it 'partially updates the sidecar' do
+        expected_response = {
+          'guid' => sidecar.guid,
+          'name' => 'My sidecar',
+          'command' => 'bundle exec rackup',
+          'process_types' => ['other_worker'],
+          'created_at' => iso8601,
+          'updated_at' => iso8601,
+          'relationships' => {
+            'app' => {
+              'data' => {
+                'guid' => app_model.guid
+              }
+            }
+          }
+        }
+
+        patch "/v3/sidecars/#{sidecar.guid}", sidecar_params.to_json, user_header
+
+        expect(last_response.status).to eq(200)
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response).to be_a_response_like(expected_response)
+      end
+    end
+
+    describe 'duplicate name' do
+      let!(:other_sidecar) { VCAP::CloudController::SidecarModel.make(name: 'other sidecar', command: 'rackdown', app: app_model) }
+
+      let(:sidecar_params) {
+        { name: 'My sidecar' }
+      }
+
+      it 'returns an error' do
+        patch "/v3/sidecars/#{other_sidecar.guid}", sidecar_params.to_json, user_header
+        expect(last_response.status).to eq(422)
+        expect(parsed_response['errors'][0]['detail']).to eq "Sidecar with name 'My sidecar' already exists for given app"
+      end
+    end
+
+    describe 'long commands' do
+      let(:sidecar_params) {
+        { command: 'b' * 4097 }
+      }
+
+      it 'returns an error' do
+        patch "/v3/sidecars/#{sidecar.guid}", sidecar_params.to_json, user_header
+        expect(last_response.status).to eq(422)
+        expect(parsed_response['errors'][0]['detail']).to eq 'Command is too long (maximum is 4096 characters)'
+      end
+    end
+
+    describe 'long name' do
+      let(:sidecar_params) {
+        { name: 'b' * 256 }
+      }
+
+      it 'returns an error' do
+        patch "/v3/sidecars/#{sidecar.guid}", sidecar_params.to_json, user_header
+        expect(last_response.status).to eq(422)
+        expect(parsed_response['errors'][0]['detail']).to eq 'Name is too long (maximum is 255 characters)'
+      end
+    end
+
+    describe 'long process types' do
+      let(:sidecar_params) {
+        { process_types: ['b' * 256] }
+      }
+
+      it 'returns an error' do
+        patch "/v3/sidecars/#{sidecar.guid}", sidecar_params.to_json, user_header
+        expect(last_response.status).to eq(422)
+        expect(parsed_response['errors'][0]['detail']).to eq 'Process type is too long (maximum is 255 characters)'
+      end
+    end
+
+    describe 'empty process_types' do
+      let(:sidecar_params) {
+        { process_types: [] }
+      }
+
+      it 'returns an error' do
+        patch "/v3/sidecars/#{sidecar.guid}", sidecar_params.to_json, user_header
+        expect(last_response.status).to eq(422)
+        expect(parsed_response['errors'][0]['detail']).to eq 'Process types must have at least 1 process_type'
+      end
+    end
+
+    describe 'when the sidecar is not found' do
+      it 'returns 404' do
+        patch '/v3/sidecars/doesntexist', sidecar_params.to_json, user_header
+        expect(last_response.status).to eq(404)
       end
     end
   end

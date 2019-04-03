@@ -16,6 +16,10 @@ module VCAP::CloudController
     end
 
     def validate
+      super
+      validates_presence [:name, :command]
+      validates_max_length 255, :name, message: Sequel.lit('Name is too long (maximum is 255 characters)')
+      validates_max_length 4096, :command, message: Sequel.lit('Command is too long (maximum is 4096 characters)')
       validates_unique [:app_guid, :name], message: Sequel.lit("Sidecar with name '#{name}' already exists for given app")
     end
   end

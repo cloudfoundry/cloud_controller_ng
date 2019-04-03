@@ -1,7 +1,7 @@
 Cloud Foundry API Docs
 ======================
 
-Built with [Slate](http://tripit.github.io/slate).
+Built with [Slate](https://github.com/lord/slate).
 
 Getting Started
 ---------------

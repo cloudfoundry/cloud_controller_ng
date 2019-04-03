@@ -1,8 +1,10 @@
 require 'controllers/v3/mixins/sub_resource'
 require 'fetchers/process_fetcher'
 require 'messages/sidecar_create_message'
+require 'messages/sidecar_update_message'
 require 'messages/sidecars_list_message'
 require 'actions/sidecar_create'
+require 'actions/sidecar_update'
 require 'presenters/v3/sidecar_presenter'
 
 class SidecarsController < ApplicationController
@@ -20,6 +22,15 @@ class SidecarsController < ApplicationController
     validate_and_present_for_list(process.sidecars_dataset)
   end
 
+  def show
+    sidecar = SidecarModel.find(guid: hashed_params[:guid])
+    resource_not_found!(:sidecar) unless sidecar
+    app = sidecar.app
+    resource_not_found!(:sidecar) unless permission_queryer.can_read_from_space?(app.space.guid, app.space.organization.guid)
+
+    render status: 200, json: Presenters::V3::SidecarPresenter.new(sidecar)
+  end
+
   def create
     app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
     resource_not_found!(:app) unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
@@ -35,13 +46,22 @@ class SidecarsController < ApplicationController
     unprocessable!(e.message)
   end
 
-  def show
-    sidecar = SidecarModel.find(guid: hashed_params[:guid])
+  def update
+    sidecar = SidecarModel.find(guid: params[:guid])
+
     resource_not_found!(:sidecar) unless sidecar
-    app = sidecar.app
-    resource_not_found!(:sidecar) unless permission_queryer.can_read_from_space?(app.space.guid, app.space.organization.guid)
+    space = sidecar.app.space
+    resource_not_found!(:sidecar) unless permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
+    unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
+
+    message = SidecarUpdateMessage.new(hashed_params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    sidecar = SidecarUpdate.update(sidecar, message)
 
     render status: 200, json: Presenters::V3::SidecarPresenter.new(sidecar)
+  rescue SidecarUpdate::InvalidSidecar => e
+    unprocessable!(e.message)
   end
 
   def destroy

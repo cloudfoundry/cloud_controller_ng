@@ -41,14 +41,6 @@ module VCAP::CloudController
         expect(message.errors.full_messages).to include("Command can't be blank")
       end
 
-      it 'validates command is less than or equal to 4096 characters' do
-        body[:command] = 'a' * 4097
-        message = SidecarCreateMessage.new(body)
-
-        expect(message).to_not be_valid
-        expect(message.errors.full_messages).to include('Command is too long (maximum is 4096 characters)')
-      end
-
       it 'validates that there is at least one process_type' do
         body[:process_types] = []
         message = SidecarCreateMessage.new(body)

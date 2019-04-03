@@ -139,16 +139,16 @@ RSpec.describe SidecarsController, type: :controller do
 
     describe 'permissions by role' do
       role_to_expected_http_response = {
-          'admin'               => 201,
-          'space_developer'     => 201,
-          'global_auditor'      => 403,
-          'space_manager'       => 403,
-          'space_auditor'       => 403,
-          'org_manager'         => 403,
-          'admin_read_only'     => 403,
-          'org_auditor'         => 404,
-          'org_billing_manager' => 404,
-          'org_user'            => 404,
+        'admin'               => 201,
+        'space_developer'     => 201,
+        'global_auditor'      => 403,
+        'space_manager'       => 403,
+        'space_auditor'       => 403,
+        'org_manager'         => 403,
+        'admin_read_only'     => 403,
+        'org_auditor'         => 404,
+        'org_billing_manager' => 404,
+        'org_user'            => 404,
       }.freeze
 
       role_to_expected_http_response.each do |role, expected_return_value|
@@ -187,6 +187,49 @@ RSpec.describe SidecarsController, type: :controller do
         sidecar_params[:guid] = '1234'
         post :create, params: sidecar_params, as: :json
         expect(response.status).to eq 404
+      end
+    end
+  end
+
+  describe '#update' do
+    let(:sidecar) { VCAP::CloudController::SidecarModel.make(app: app_model) }
+    let(:sidecar_params) {
+      {
+        guid: sidecar.guid,
+        name: 'my_sidecar',
+        command: 'bundle exec rackup',
+        process_types: ['web', 'other_worker']
+      }
+    }
+
+    describe 'permissions by role' do
+      let(:new_user) { VCAP::CloudController::User.make }
+
+      role_to_expected_http_response = {
+        'admin'               => 200,
+        'space_developer'     => 200,
+        'global_auditor'      => 403,
+        'space_manager'       => 403,
+        'space_auditor'       => 403,
+        'org_manager'         => 403,
+        'admin_read_only'     => 403,
+        'org_auditor'         => 404,
+        'org_billing_manager' => 404,
+        'org_user'            => 404,
+      }
+
+      role_to_expected_http_response.each do |role, expected_return_value|
+        context "as an #{role}" do
+          before do
+            set_current_user(new_user)
+          end
+
+          it "returns #{expected_return_value}" do
+            set_current_user_as_role(role: role, org: org, user: new_user, space: space)
+            patch :update, params: sidecar_params, as: :json
+            expect(response.status).to eq expected_return_value
+          end
+        end
       end
     end
   end

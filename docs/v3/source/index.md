@@ -209,6 +209,7 @@ includes:
   - experimental_resources/sidecars/object
   - experimental_resources/sidecars/create_from_app
   - experimental_resources/sidecars/get
+  - experimental_resources/sidecars/update
   - experimental_resources/sidecars/list_for_app
   - experimental_resources/sidecars/list_for_process
   - experimental_resources/sidecars/delete
