@@ -40,10 +40,11 @@ Name     | Type     | Description
 Name         | Type      | Description                                                               | Default
 -----------  | --------  | ------------------------------------------------------------------------  | -------
 **internal** | _boolean_ | Whether the domain is used for internal (container-to-container) traffic. | false
-**organization** | [_to-one relationship_](#to-one-relationships) | A relationship to the organization the domain will be scoped to. |
+**organization** | [_to-one relationship_](#to-one-relationships) | A relationship to the organization the domain will be scoped to. <br>_Note: can not be used with the internal param_ |
 
 #### Permitted Roles
 
-      |
+Role | Notes
 ----- | ---
 Admin |
+Org Manager | When an `organization` relationship is provided.
