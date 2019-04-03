@@ -86,15 +86,88 @@ RSpec.describe 'Domains Request' do
     end
 
     context 'when authenticated but not admin' do
-      let(:user) { VCAP::CloudController::User.make }
-      let(:headers) { headers_for(user) }
+      let(:params) do
+        {
+          name: 'my-domain.biz',
+          relationships: {
+            organization: {
+              data: {
+                guid: org.guid
+              }
+            }
+          },
+        }
+      end
 
-      it 'returns 403' do
-        params = {}
+      context 'when org manager' do
+        before do
+          set_current_user_as_role(role: 'org_manager', org: org, user: user)
+        end
 
-        post '/v3/domains', params, headers
+        let(:headers) { headers_for(user) }
 
-        expect(last_response.status).to eq(403)
+        context 'when the feature flag is enabled' do
+          it 'returns a 201 and creates a private domain' do
+            post '/v3/domains', params.to_json, headers
+
+            expect(last_response.status).to eq(201)
+
+            domain = VCAP::CloudController::PrivateDomain.last
+
+            expected_response = {
+              'name' => params[:name],
+              'internal' => false,
+              'guid' => domain.guid,
+              'relationships' => {
+                'organization' => {
+                  'data' => {
+                    'guid' => org.guid
+                  }
+                }
+              },
+              'created_at' => iso8601,
+              'updated_at' => iso8601,
+              'links' => {
+                'self' => {
+                  'href' => "#{link_prefix}/v3/domains/#{domain.guid}"
+                }
+              }
+            }
+            expect(parsed_response).to be_a_response_like(expected_response)
+          end
+        end
+
+        context 'when the org is suspended' do
+          before do
+            org.status = 'suspended'
+            org.save
+          end
+          it 'returns a 403' do
+            post '/v3/domains', params.to_json, headers
+
+            expect(last_response.status).to eq(403)
+          end
+        end
+
+        context 'when the feature flag is disabled' do
+          let!(:feature_flag) { VCAP::CloudController::FeatureFlag.make(name: 'private_domain_creation', enabled: false) }
+          it 'returns a 403' do
+            post '/v3/domains', params.to_json, headers
+
+            expect(last_response.status).to eq(403)
+          end
+        end
+      end
+
+      context 'when not an org manager' do
+        let(:user) { VCAP::CloudController::User.make }
+        let(:headers) { headers_for(user) }
+
+        it 'returns 403' do
+          post '/v3/domains', params.to_json, headers
+
+          expect(last_response.status).to eq(403)
+        end
       end
     end
 

@@ -90,6 +90,7 @@ RSpec.describe DomainsController, type: :controller do
   end
 
   describe '#create' do
+    let(:queryer) { instance_double(VCAP::CloudController::Permissions::Queryer) }
     let(:request_body) do
       {
         "name": 'my-domain.biz',
@@ -229,12 +230,12 @@ RSpec.describe DomainsController, type: :controller do
 
           it 'errors' do
             post :create, params: request_body, as: :json
-            expect(response.status).to eq(422)
-            expect(parsed_body['errors'][0]['detail']).to eq("Organization with guid '#{org1.guid}' does not exist or you do not have access to it.")
+            expect(response.status).to eq(403)
+            expect(parsed_body['errors'][0]['detail']).to eq('You are not authorized to perform the requested action')
           end
         end
 
-        context "when org does not exist" do
+        context 'when org does not exist' do
           let(:space1) { VCAP::CloudController::Space.make }
           let(:org1) { space1.organization }
           before do
@@ -246,7 +247,7 @@ RSpec.describe DomainsController, type: :controller do
               "relationships": {
                 "organization": {
                   "data": {
-                    "guid": "NonExistentOrg"
+                    "guid": 'NonExistentOrg'
                   }
                 }
               }
@@ -260,49 +261,54 @@ RSpec.describe DomainsController, type: :controller do
           end
         end
 
-        context "when private_domain_creation feature flag is disabled" do
-          context "when user is  an admin" do
-           before do
-             set_current_user_as_role(role: 'admin', org: org, user: user)
-             VCAP::CloudController::FeatureFlag.make(name: 'private_domain_creation', enabled: false, error_message: nil)
-           end
-
-           let(:request_body) do
-             {
-               "name": 'my-domain.biz',
-               "relationships": {
-                 "organization": {
-                   "data": {
-                     "guid": org.guid
-                   }
-                 }
-               }
-             }
-           end
-
-           it 'returns 201 created' do
-             post :create, params: request_body, as: :json
-
-             expect(response.status).to eq(201)
-           end
+        context 'when private_domain_creation feature flag is disabled' do
+          before do
+            allow(controller).to receive(:validate_token!).and_return(true)
+            allow(controller).to receive(:check_read_permissions!).and_return(true)
+            allow(controller).to receive(:check_write_permissions!).and_return(true)
           end
-          context "when user is not an admin" do
-            before do
-              set_current_user_as_role(role: 'org_manager', org: org, user: user)
-              VCAP::CloudController::FeatureFlag.make(name: 'private_domain_creation', enabled: false, error_message: nil)
-            end
 
-            let(:request_body) do
-              {
-                "name": 'my-domain.biz',
-                "relationships": {
-                  "organization": {
-                    "data": {
-                      "guid": org.guid
-                    }
+          let(:request_body) do
+            {
+              "name": 'my-domain.biz',
+              "relationships": {
+                "organization": {
+                  "data": {
+                    "guid": org.guid
                   }
                 }
               }
+            }
+          end
+
+          context 'when user is an admin' do
+            before do
+              expect(queryer).to receive(:can_write_to_org?).with(org.guid).and_return(true)
+              expect(queryer).to receive(:can_write_globally?).and_return(true)
+
+              allow(VCAP::CloudController::Permissions::Queryer).to receive(:build).and_return(queryer)
+            end
+
+            it 'returns 201 created' do
+              post :create, params: request_body, as: :json
+
+              expect(response.status).to eq(201)
+            end
+          end
+
+          context 'when user is not an admin' do
+            before do
+              expect(queryer).to receive(:can_write_to_org?).with(org.guid).and_return(true)
+              expect(queryer).to receive(:can_write_globally?).and_return(false)
+
+              allow(VCAP::CloudController::Permissions::Queryer).to receive(:build).and_return(queryer)
+
+              allow(VCAP::CloudController::FeatureFlag).to receive(:find).and_return(instance_double(
+                                                                                       VCAP::CloudController::FeatureFlag,
+                enabled: false,
+                error_message: 'private_domain_creation',
+                name: 'private_domain_create'
+              ))
             end
 
             it 'raises 403' do
@@ -312,12 +318,11 @@ RSpec.describe DomainsController, type: :controller do
               expect(parsed_body['errors'][0]['detail']).to eq('Feature Disabled: private_domain_creation')
             end
           end
-
         end
 
-        context "when org is suspended" do
+        context 'when org is suspended' do
           let(:org1) { VCAP::CloudController::Organization.make }
-          context "when user is an admin" do
+          context 'when user is an admin' do
             before do
               set_current_user_as_role(role: 'admin', org: org1, user: user)
               org1.status = 'suspended'
@@ -344,7 +349,7 @@ RSpec.describe DomainsController, type: :controller do
             end
           end
 
-          context "when user is not an admin" do
+          context 'when user is not an admin' do
             before do
               set_current_user_as_role(role: 'org_manager', org: org1, user: user)
               org1.status = 'suspended'
@@ -364,17 +369,14 @@ RSpec.describe DomainsController, type: :controller do
               }
             end
 
-            it 'raises 422' do
+            it 'raises 403' do
               post :create, params: request_body, as: :json
 
-              expect(response.status).to eq(422)
-              expect(parsed_body['errors'][0]['detail']).to eq("Organization with guid '#{org1.guid}' does not exist or you do not have access to it.")
+              expect(response.status).to eq(403)
+              expect(parsed_body['errors'][0]['detail']).to eq('You are not authorized to perform the requested action')
             end
           end
-
         end
-
-
       end
 
       it 'returns 401 for Unauthenticated requests' do
@@ -382,7 +384,5 @@ RSpec.describe DomainsController, type: :controller do
         expect(response.status).to eq(401)
       end
     end
-
   end
 end
-

@@ -60,15 +60,6 @@ class VCAP::CloudController::Permissions::Queryer
     end
   end
 
-  def can_create_private_domain?
-    science 'can_create_private_domain' do |e|
-      e.use { db_permissions.can_create_private_domain? }
-      e.try { perm_permissions.can_create_private_domain? }
-
-      e.run_if { !db_permissions.can_write_globally?  }
-    end
-  end
-
   def readable_org_guids_for_domains
     science 'readable_org_guids_for_domains' do |e|
       e.use do
