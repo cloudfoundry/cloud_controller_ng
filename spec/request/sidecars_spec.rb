@@ -249,7 +249,6 @@ RSpec.describe 'Sidecars' do
       delete "/v3/sidecars/#{sidecar.guid}", nil, user_header
       expect(last_response.status).to eq(204), last_response.body
       expect(app_model.reload.sidecars.size).to eq(0)
-
     end
   end
 end

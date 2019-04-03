@@ -221,7 +221,6 @@ RSpec.describe SidecarsController, type: :controller do
   end
 
   describe '#delete' do
-
     let!(:sidecar) { VCAP::CloudController::SidecarModel.make(app: app_model, name: 'sidecar', command: 'smarch') }
 
     context 'as a space developer' do
@@ -260,6 +259,5 @@ RSpec.describe SidecarsController, type: :controller do
       end
       let(:api_call) { lambda { delete :destroy, params: { guid: sidecar.guid }, as: :json } }
     end
-
   end
 end
