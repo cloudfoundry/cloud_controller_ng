@@ -41,7 +41,7 @@ module VCAP::CloudController
       end
 
       if error.errors.on(:organization)&.any? { |e| [:total_private_domains_exceeded].include?(e) }
-        error!("The number of private domains exceeds the quota for organization with guid \"#{message.organization_guid}\"")
+        error!("The number of private domains exceeds the quota for organization \"#{Organization.find(guid: message.organization_guid).name}\"")
       end
 
       error!(error.message)

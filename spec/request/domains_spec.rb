@@ -343,7 +343,7 @@ RSpec.describe 'Domains Request' do
 
               expect(last_response.status).to eq(422)
 
-              expect(parsed_response['errors'][0]['detail']).to eq "The number of private domains exceeds the quota for organization with guid \"#{org.guid}\""
+              expect(parsed_response['errors'][0]['detail']).to eq "The number of private domains exceeds the quota for organization \"#{org.name}\""
             end
           end
         end

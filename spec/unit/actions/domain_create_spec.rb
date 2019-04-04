@@ -40,7 +40,7 @@ module VCAP::CloudController
           it 'returns an informative error message' do
             expect {
               subject.create(message: message)
-            }.to raise_error(DomainCreate::Error, "The number of private domains exceeds the quota for organization with guid \"#{org.guid}\"")
+            }.to raise_error(DomainCreate::Error, "The number of private domains exceeds the quota for organization \"#{org.name}\"")
           end
         end
       end
