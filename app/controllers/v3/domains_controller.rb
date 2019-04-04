@@ -2,14 +2,14 @@ require 'messages/domain_create_message'
 require 'messages/domains_list_message'
 require 'presenters/v3/domain_presenter'
 require 'actions/domain_create'
-require 'fetchers/domain_list_fetcher'
+require 'fetchers/domain_fetcher'
 
 class DomainsController < ApplicationController
   def index
     message = DomainsListMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
     guids = permission_queryer.readable_org_guids_for_domains
-    dataset = DomainListFetcher.new.fetch(guids)
+    dataset = DomainFetcher.fetch_all(guids)
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::DomainPresenter,
       paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
