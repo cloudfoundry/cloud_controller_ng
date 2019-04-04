@@ -483,5 +483,32 @@ module VCAP::CloudController
         expect(app_model.deploying?).to be(true)
       end
     end
+
+    describe 'encryption' do
+      context 'when not saving any encrypted fields, with db keys' do
+        it 'still updates the encryption-key value' do
+          TestConfig.override({ database_encryption: { current_key_label: nil, keys: {} } })
+          app = AppModel.create(name: 'jimmy')
+          expect(app.encryption_key_label).to be_nil
+
+          app.environment_variables = { building: 'house' }
+          app.save
+          app.reload
+          expect(app.encryption_key_label).to be_nil
+
+          TestConfig.override({ database_encryption: { current_key_label: 'k2', keys: { k1: 'moose' } } })
+          app.environment_variables = app.environment_variables.merge({ 'building' => 'outhouse' })
+          app.save
+          app.reload
+          expect(app.encryption_key_label).to eq('k2')
+
+          app2 = AppModel.create(name: 'bob', environment_variables: { building: 'mansion' })
+          expect(app2.encryption_key_label).to eq('k2')
+
+          app3 = AppModel.create(name: 'randombuilder')
+          expect(app3.encryption_key_label).to eq('k2')
+        end
+      end
+    end
   end
 end
