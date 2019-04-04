@@ -13215,7 +13215,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 <tr>
 <td><strong>organization</strong></td>
 <td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
-<td>A relationship to the organization the domain will be scoped to.</td>
+<td>A relationship to the organization the domain will be scoped to. <br><em>Note: can not be used with the internal param</em></td>
 <td></td>
 </tr>
 </tbody></table>
@@ -13224,11 +13224,17 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 
 <table><thead>
 <tr>
-<th></th>
+<th>Role</th>
+<th>Notes</th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
+<td></td>
+</tr>
+<tr>
+<td>Org Manager</td>
+<td>When an <code class="prettyprint">organization</code> relationship is provided.</td>
 </tr>
 </tbody></table>
 
@@ -15243,6 +15249,88 @@ an app.</p>
 </tr>
 </tbody></table>
 
+          <h3 id="update-a-sidecar">Update a sidecar</h3>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/sidecars/[sidecar-guid]"</span> <span class="se">\</span>
+  -X PATCH <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+  -H <span class="s2">"Content-Type: application/json"</span> <span class="se">\</span>
+  -d <span class="s1">'{
+    "name": "auth-sidecar",
+    "command": "bundle exec rackup",
+    "process_types": ["web", "worker"]
+  }'</span>
+
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
+
+<span class="p">{</span><span class="w">
+  </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"885735b5-aea4-4cf5-8e44-961af0e41920"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"auth-sidecar"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"command"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bundle exec rackup"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"process_types"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"web"</span><span class="p">,</span><span class="w"> </span><span class="s2">"worker"</span><span class="p">],</span><span class="w">
+  </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1cb006ee-fb05-47e1-b541-c34179ddc446"</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-02-01T01:33:58Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-02-01T01:33:58Z"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+
+</span></code></pre>
+
+<h4 id="definition">Definition</h4>
+
+<p><code class="prettyprint">PATCH /v3/revisions/:sidecar-guid</code></p>
+
+<h4 id="optional-parameters">Optional Parameters</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>name</strong></td>
+<td><em>string</em></td>
+<td>Human-readable name for the sidecar.</td>
+</tr>
+<tr>
+<td><strong>command</strong></td>
+<td><em>string</em></td>
+<td>The command used to start the sidecar.</td>
+</tr>
+<tr>
+<td><strong>process_types</strong></td>
+<td><em>array of strings</em></td>
+<td>A list of process types the sidecar applies to.</td>
+</tr>
+</tbody></table>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+</tbody></table>
+
           <h3 id="list-sidecars-for-app">List sidecars for app</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
@@ -15490,6 +15578,37 @@ an app.</p>
 </tr>
 <tr>
 <td>Global Auditor</td>
+</tr>
+</tbody></table>
+
+          <h3 id="delete-an-sidecar">Delete an sidecar</h3>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/sidecars/[guid]"</span> <span class="se">\</span>
+  -X DELETE <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">204</span> <span class="ne">No Content</span>
+</code></pre>
+
+<h4 id="definition">Definition</h4>
+
+<p><code class="prettyprint">DELETE /v3/sidecars/:guid</code></p>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Admin</td>
 </tr>
 </tbody></table>
 
