@@ -34,6 +34,15 @@ module VCAP::CloudController
         process_scale.scale
       end
 
+      message.sidecar_update_messages.each do |sidecar_update_message|
+        sidecar = find_sidecar(app, sidecar_update_message.name)
+        if sidecar
+          SidecarUpdate.update(sidecar, sidecar_update_message)
+        else
+          SidecarCreate.create(app.guid, sidecar_update_message)
+        end
+      end
+
       app_update_message = message.app_update_message
       lifecycle = AppLifecycleProvider.provide_for_update(app_update_message, app)
       AppUpdate.new(@user_audit_info, manifest_triggered: true).update(app, app_update_message, lifecycle)
@@ -57,6 +66,10 @@ module VCAP::CloudController
         type: process_type,
         command: manifest_process_update_msg.command
       })
+    end
+
+    def find_sidecar(app, sidecar_name)
+      app.sidecars_dataset.where(name: sidecar_name).last
     end
 
     def update_routes(app, message)

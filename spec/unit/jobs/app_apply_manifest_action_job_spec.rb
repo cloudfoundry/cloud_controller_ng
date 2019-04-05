@@ -63,6 +63,24 @@ module VCAP::CloudController
         end
       end
 
+      context 'when a SidecarCreate::InvalidSidecar error occurs' do
+        it 'wraps the error in an ApiError' do
+          allow(apply_manifest_action).to receive(:apply).and_raise(SidecarCreate::InvalidSidecar, 'command presence, command is not present')
+          expect {
+            job.perform
+          }.to raise_error(CloudController::Errors::ApiError, /command presence, command is not present/)
+        end
+      end
+
+      context 'when a SidecarUpdate::InvalidSidecar error occurs' do
+        it 'wraps the error in an ApiError' do
+          allow(apply_manifest_action).to receive(:apply).and_raise(SidecarUpdate::InvalidSidecar, 'Invalid field on sidecar')
+          expect {
+            job.perform
+          }.to raise_error(CloudController::Errors::ApiError, /Invalid field on sidecar/)
+        end
+      end
+
       context 'when an AppPatchEnvironmentVariables::InvalidApp error occurs' do
         it 'wraps the error in an ApiError' do
           allow(apply_manifest_action).to receive(:apply).and_raise(AppPatchEnvironmentVariables::InvalidApp, 'Invalid env varz')

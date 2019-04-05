@@ -37,6 +37,9 @@ module VCAP::CloudController
 
           allow(ManifestRouteUpdate).to receive(:update)
 
+          allow(SidecarUpdate).to receive(:update)
+          allow(SidecarCreate).to receive(:create)
+
           allow(RouteMappingDelete).
             to receive(:new).and_return(route_mapping_delete)
           allow(route_mapping_delete).to receive(:delete)
@@ -446,6 +449,34 @@ module VCAP::CloudController
               expect(ProcessUpdate).to have_received(:new).with(user_audit_info, manifest_triggered: true)
               expect(process_update).to have_received(:update).with(process, manifest_process_update_message, ManifestStrategy)
             end
+          end
+        end
+
+        describe 'updating sidecars' do
+          let(:app) { AppModel.make }
+          let!(:sidecar) { SidecarModel.make(name: 'existing-sidecar', app: app) }
+          let(:message) { AppManifestMessage.create_from_yml({ name: 'blah',
+            'sidecars' => [
+              {
+                'process_types' => ['web'],
+                'name' => 'my-sidecar',
+                'command' => 'rackup',
+              },
+              {
+                'process_types' => ['web'],
+                'name' => 'existing-sidecar',
+                'command' => 'rackup',
+              }
+            ]
+          })
+          }
+
+          it 'returns the app' do
+            expect(
+              app_apply_manifest.apply(app.guid, message)
+            ).to eq(app)
+            expect(SidecarUpdate).to have_received(:update).with(sidecar, message.sidecar_update_messages.last)
+            expect(SidecarCreate).to have_received(:create).with(app.guid, message.sidecar_update_messages.first)
           end
         end
 

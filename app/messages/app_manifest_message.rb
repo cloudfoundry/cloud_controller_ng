@@ -30,6 +30,7 @@ module VCAP::CloudController
       :random_route,
       :routes,
       :services,
+      :sidecars,
       :stack,
       :timeout,
     ]
@@ -52,17 +53,18 @@ module VCAP::CloudController
     end
 
     validate :validate_top_level_web_process!
-    validate :validate_processes!, if: proc { |record| record.requested?(:processes) }
+    validate :validate_processes!, if: ->(record) { record.requested?(:processes) }
+    validate :validate_sidecars!,  if: ->(record) { record.requested?(:sidecars) }
     validate :validate_manifest_process_scale_messages!
     validate :validate_manifest_process_update_messages!
     validate :validate_app_update_message!
     validate :validate_buildpack_and_buildpacks_combination!
     validate :validate_docker_enabled!
     validate :validate_docker_buildpacks_combination!
-    validate :validate_service_bindings_message!, if: proc { |record| record.requested?(:services) }
-    validate :validate_env_update_message!, if: proc { |record| record.requested?(:env) }
-    validate :validate_manifest_singular_buildpack_message!, if: proc { |record| record.requested?(:buildpack) }
-    validate :validate_manifest_routes_update_message!, if: proc { |record|
+    validate :validate_service_bindings_message!, if: ->(record) { record.requested?(:services) }
+    validate :validate_env_update_message!,       if: ->(record) { record.requested?(:env) }
+    validate :validate_manifest_singular_buildpack_message!, if: ->(record) { record.requested?(:buildpack) }
+    validate :validate_manifest_routes_update_message!,      if: ->(record) {
       record.requested?(:routes) ||
       record.requested?(:no_route) ||
       record.requested?(:random_route)
@@ -79,6 +81,10 @@ module VCAP::CloudController
 
     def manifest_process_update_messages
       @manifest_process_update_messages ||= process_update_attribute_mappings.map { |mapping| ManifestProcessUpdateMessage.new(mapping) }
+    end
+
+    def sidecar_update_messages
+      @sidecar_update_messages ||= Array(sidecars).map { |mapping| SidecarUpdateMessage.new(mapping) }
     end
 
     def app_update_message
@@ -349,6 +355,21 @@ module VCAP::CloudController
         disk_error = validate_byte_format(process[:disk_quota], 'Disk quota')
         add_process_error!(memory_error, type) if memory_error
         add_process_error!(disk_error, type) if disk_error
+      end
+    end
+
+    def validate_sidecars!
+      unless sidecars.is_a?(Array)
+        return errors.add(:base, 'Sidecars must be an array of sidecar configurations')
+      end
+
+      errors.add(:base, 'All sidecars must specify a name') if sidecars.any? { |s| !s.key?(:name) }
+
+      sidecar_update_messages.each do |sidecar_update_message|
+        sidecar_update_message.validate
+        sidecar_update_message.errors.full_messages.each do |message|
+          errors.add(:sidecar, message.downcase)
+        end
       end
     end
 

@@ -112,6 +112,100 @@ RSpec.describe 'App Manifests' do
         to match_array([{ key: 'potato', value: 'idaho' }, { key: 'juice', value: 'newton' }])
     end
 
+    context 'sidecars' do
+      let(:yml_manifest) do
+        {
+          'applications' => [
+            {
+              'name' => 'blah',
+              'sidecars' => sidecars_attributes
+            }
+          ]
+        }.to_yaml
+      end
+
+      let(:sidecars_attributes) do
+        [
+          {
+            'process_types' => ['worker'],
+            'command'       => 'bundle exec sidecar_for_web_only',
+            'name'          => 'my-sidecar'
+          }
+        ]
+      end
+
+      it 'creates new sidecars' do
+        expect {
+          post "/v3/apps/#{app_model.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
+          Delayed::Worker.new.work_off
+        }.to change { VCAP::CloudController::SidecarModel.count }.from(0).to(1)
+
+        expect(last_response.status).to eq(202)
+        sidecar = VCAP::CloudController::SidecarModel.last
+        expect(sidecar.name).to          eq('my-sidecar')
+        expect(sidecar.command).to       eq('bundle exec sidecar_for_web_only')
+        expect(sidecar.process_types).to eq(['worker'])
+      end
+
+      context 'when a sidecar already exists' do
+        let!(:sidecar) { VCAP::CloudController::SidecarModel.make(name: 'my-sidecar', app: app_model, command: 'rackup') }
+        let!(:sidecar_process_type) { VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar, type: 'web', app_guid: app_model.guid) }
+
+        it 'updates based on name' do
+          expect {
+            post "/v3/apps/#{app_model.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
+            Delayed::Worker.new.work_off
+          }.not_to change { VCAP::CloudController::SidecarModel.count }
+
+          expect(last_response.status).to eq(202)
+          sidecar.reload
+          expect(sidecar.name).to          eq('my-sidecar')
+          expect(sidecar.command).to       eq('bundle exec sidecar_for_web_only')
+          expect(sidecar.process_types).to eq(['worker'])
+        end
+
+        context 'and we only want to change 1 of its optionally changable parameters' do
+          let(:sidecars_attributes) do
+            [
+              {
+                'process_types' => ['worker'],
+                'name'          => 'my-sidecar'
+              }
+            ]
+          end
+
+          it 'updates based on name' do
+            expect {
+              post "/v3/apps/#{app_model.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
+              Delayed::Worker.new.work_off
+            }.not_to change { VCAP::CloudController::SidecarModel.count }
+
+            expect(last_response.status).to eq(202)
+            sidecar.reload
+            expect(sidecar.name).to          eq('my-sidecar')
+            expect(sidecar.command).to       eq('rackup')
+            expect(sidecar.process_types).to eq(['worker'])
+          end
+        end
+
+        context 'when sidecar name is not provided' do
+          let(:sidecars_attributes) do
+            [
+              {
+                'process_types' => ['worker'],
+                'command'       => 'bundle exec sidecar_for_web_only',
+              }
+            ]
+          end
+
+          it 'returns 422' do
+            post "/v3/apps/#{app_model.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
+            expect(last_response.status).to eq(422)
+          end
+        end
+      end
+    end
+
     context 'yaml anchors' do
       let(:yml_manifest) do
         <<~YML

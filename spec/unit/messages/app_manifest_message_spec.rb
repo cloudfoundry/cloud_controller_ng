@@ -576,6 +576,49 @@ module VCAP::CloudController
         end
       end
 
+      describe 'sidecars' do
+        context 'when sidecars is not an array' do
+          let(:params) { { sidecars: 'string' } }
+
+          it 'is not valid' do
+            message = AppManifestMessage.create_from_yml(params)
+            expect(message).not_to be_valid
+            expect(message.errors.count).to eq(1)
+            expect(message.errors.full_messages).to include('Sidecars must be an array of sidecar configurations')
+          end
+        end
+
+        context 'when sidecars name is empty string' do
+          let(:params) do
+            {
+              sidecars: [{ name: '', command: 'rackup', process_types: ['web'] }]
+            }
+          end
+
+          it 'is not valid' do
+            message = AppManifestMessage.create_from_yml(params)
+            expect(message).not_to be_valid
+            expect(message.errors.count).to eq(1)
+            expect(message.errors.full_messages).to include('Sidecar name can\'t be blank')
+          end
+        end
+
+        context 'when sidecars name is not supplied' do
+          let(:params) do
+            {
+              sidecars: [{ command: 'rackup', process_types: ['web'] }]
+            }
+          end
+
+          it 'is not valid' do
+            message = AppManifestMessage.create_from_yml(params)
+            expect(message).not_to be_valid
+            expect(message.errors.count).to eq(1)
+            expect(message.errors.full_messages).to include('All sidecars must specify a name')
+          end
+        end
+      end
+
       describe 'metadata' do
         context 'when metadata is not a hash' do
           let(:params) do
@@ -1004,7 +1047,7 @@ module VCAP::CloudController
       end
     end
 
-    describe '#process_scale_message' do
+    describe '#manifest_process_scale_messages' do
       context 'from app-level attributes' do
         let(:parsed_yaml) { { 'disk_quota' => '1000GB', 'memory' => '200GB', instances: 5 } }
 
@@ -1176,7 +1219,7 @@ module VCAP::CloudController
       end
     end
 
-    describe '#process_update_message' do
+    describe '#manifest_process_update_messages' do
       context 'from app-level attributes' do
         let(:parsed_yaml) do
           {
@@ -1323,7 +1366,7 @@ module VCAP::CloudController
           end
         end
 
-        context 'when no parameters is specified' do
+        context 'when no parameters are specified' do
           let(:parsed_yaml) do
             {}
           end
@@ -1500,6 +1543,46 @@ module VCAP::CloudController
               end
             end
           end
+        end
+      end
+    end
+
+    describe '#sidecar_update_messages' do
+      context 'when new sidecars are specified' do
+        let(:parsed_yaml) do
+          {
+            'name' => 'dora',
+            'sidecars' => [{
+              'name' => 'my_sidecar',
+              'command' => 'rackup sidecar',
+              'process_types' => ['web'],
+            },
+            {
+              'name' => 'my_second_sidecar',
+              'command' => 'rackup sidecar',
+              'process_types' => ['web'],
+            }]
+          }
+        end
+
+        it 'returns sidecar update messages' do
+          message = AppManifestMessage.create_from_yml(parsed_yaml)
+          expect(message).to be_valid
+          expect(message.sidecar_update_messages.length).to eq(2)
+          expect(message.sidecar_update_messages.map(&:name)).to eq(['my_sidecar', 'my_second_sidecar'])
+        end
+      end
+
+      context 'when no sidecars are specified' do
+        let(:parsed_yaml) do
+          {
+            'name' => 'dora'
+          }
+        end
+        it 'returns an empty array' do
+          message = AppManifestMessage.create_from_yml(parsed_yaml)
+          expect(message).to be_valid
+          expect(message.sidecar_update_messages).to eq([])
         end
       end
     end

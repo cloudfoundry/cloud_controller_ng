@@ -571,7 +571,7 @@ module VCAP::CloudController
   end
 
   SidecarProcessTypeModel.blueprint do
-    type { 'worker' }
+    type { 'web' }
     sidecar
     app_guid { sidecar.app_guid }
   end

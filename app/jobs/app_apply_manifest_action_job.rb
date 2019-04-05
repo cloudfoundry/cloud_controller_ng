@@ -16,6 +16,8 @@ module VCAP::CloudController
              AppUpdate::InvalidApp,
              ProcessScale::InvalidProcess,
              ProcessUpdate::InvalidProcess,
+             SidecarCreate::InvalidSidecar,
+             SidecarUpdate::InvalidSidecar,
              ManifestRouteUpdate::InvalidRoute,
              Route::InvalidOrganizationRelation,
              RouteMappingCreate::SpaceMismatch,

@@ -1,6 +1,7 @@
 module VCAP::CloudController
   class SidecarCreate
-    class InvalidSidecar < StandardError; end
+    class InvalidSidecar < StandardError
+    end
 
     class << self
       def create(app_guid, message)
