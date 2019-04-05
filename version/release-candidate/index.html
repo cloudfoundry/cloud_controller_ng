@@ -11463,6 +11463,14 @@ excluded in the response based on the user&rsquo;s role.</p>
     <span class="s">instances</span><span class="pi">:</span> <span class="s">2</span>
     <span class="s">memory</span><span class="pi">:</span> <span class="s">256M</span>
     <span class="s">timeout</span><span class="pi">:</span> <span class="s">15</span>
+  <span class="s">sidecars</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="s">name</span><span class="pi">:</span> <span class="s">authenticator</span>
+    <span class="s">process_types</span><span class="pi">:</span> <span class="pi">[</span> <span class="s1">'</span><span class="s">web'</span><span class="pi">,</span> <span class="s1">'</span><span class="s">worker'</span> <span class="pi">]</span>
+    <span class="s">command</span><span class="pi">:</span> <span class="s">bundle exec run-authenticator</span>
+  <span class="pi">-</span> <span class="s">name</span><span class="pi">:</span> <span class="s">upcaser</span>
+    <span class="s">process_types</span><span class="pi">:</span> <span class="pi">[</span> <span class="s1">'</span><span class="s">worker'</span> <span class="pi">]</span>
+    <span class="s">command</span><span class="pi">:</span> <span class="s">./tr-server</span>
+
 </code></pre>
 
 <h4 id="app-level-configuration">App-level configuration</h4>
@@ -11489,7 +11497,7 @@ excluded in the response based on the user&rsquo;s role.</p>
 </tr>
 <tr>
 <td><strong>processes</strong></td>
-<td>List of configuration for individual process types. See <a href="#process-level-configuration"><em>Process-level configuration</em></a>.</td>
+<td>List of configurations for individual process types. See <a href="#process-level-configuration"><em>Process-level configuration</em></a>.</td>
 </tr>
 <tr>
 <td><strong>random-route</strong></td>
@@ -11502,6 +11510,10 @@ excluded in the response based on the user&rsquo;s role.</p>
 <tr>
 <td><strong>services</strong></td>
 <td>An array of service-instance names to bind to the app.</td>
+</tr>
+<tr>
+<td><strong>sidecars</strong></td>
+<td>An array of configurations for individual sidecars. See <a href="#sidecar-level-configuration"><em>Sidecar-level configuration</em></a>.</td>
 </tr>
 <tr>
 <td><strong>stack</strong></td>
@@ -11570,6 +11582,30 @@ excluded in the response based on the user&rsquo;s role.</p>
 <tr>
 <td><strong>timeout</strong></td>
 <td>Time in seconds at which the health-check will report failure.</td>
+</tr>
+</tbody></table>
+
+<h4 id="sidecar-level-configuration">Sidecar-level configuration</h4>
+
+<p>This configuration is for the individual sidecar.  Each sidecar is created if it does not already exist.</p>
+
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>name</strong></td>
+<td><strong>(Required)</strong> Sidecar name.  The identifier for the sidecars to be configured.</td>
+</tr>
+<tr>
+<td><strong>command</strong></td>
+<td>The command used to start the sidecar.</td>
+</tr>
+<tr>
+<td><strong>process_types</strong></td>
+<td>List of processes to associate sidecar with.</td>
 </tr>
 </tbody></table>
 
@@ -13144,6 +13180,11 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 <td><strong>internal</strong></td>
 <td><em>boolean</em></td>
 <td>Whether the domain is used for internal (container-to-container) traffic.</td>
+</tr>
+<tr>
+<td><strong>organization</strong></td>
+<td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
+<td>The organization that will own the domain.</td>
 </tr>
 <tr>
 <td><strong>links</strong></td>
@@ -15688,6 +15729,13 @@ an app.</p>
   <span class="pi">-</span> <span class="s">type</span><span class="pi">:</span> <span class="s">web</span>
     <span class="s">instances</span><span class="pi">:</span> <span class="s">1</span>
     <span class="s">memory</span><span class="pi">:</span> <span class="s">256M</span>
+  <span class="s">sidecars</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="s">name</span><span class="pi">:</span> <span class="s">authenticator</span>
+    <span class="s">process_types</span><span class="pi">:</span> <span class="pi">[</span> <span class="s1">'</span><span class="s">web'</span><span class="pi">,</span> <span class="s1">'</span><span class="s">worker'</span> <span class="pi">]</span>
+    <span class="s">command</span><span class="pi">:</span> <span class="s">bundle exec run-authenticator</span>
+  <span class="pi">-</span> <span class="s">name</span><span class="pi">:</span> <span class="s">upcaser</span>
+    <span class="s">process_types</span><span class="pi">:</span> <span class="pi">[</span> <span class="s1">'</span><span class="s">worker'</span> <span class="pi">]</span>
+    <span class="s">command</span><span class="pi">:</span> <span class="s">./tr-server</span>
 </code></pre>
 
 <h4 id="space-level-configuration">Space-level configuration</h4>
@@ -15728,7 +15776,7 @@ an app.</p>
 </tr>
 <tr>
 <td><strong>processes</strong></td>
-<td>List of configuration for individual process types. See <a href="#process-level-configuration"><em>Process-level configuration</em></a>.</td>
+<td>List of configurations for individual process types. See <a href="#process-level-configuration"><em>Process-level configuration</em></a>.</td>
 </tr>
 <tr>
 <td><strong>random-route</strong></td>
@@ -15741,6 +15789,10 @@ an app.</p>
 <tr>
 <td><strong>services</strong></td>
 <td>An array of service-instance names to bind to the app.</td>
+</tr>
+<tr>
+<td><strong>sidecars</strong></td>
+<td>An array of configurations for individual sidecars. See <a href="#sidecar-level-configuration"><em>Sidecar-level configuration</em></a>.</td>
 </tr>
 <tr>
 <td><strong>stack</strong></td>
@@ -15809,6 +15861,30 @@ an app.</p>
 <tr>
 <td><strong>timeout</strong></td>
 <td>Time in seconds at which the health-check will report failure.</td>
+</tr>
+</tbody></table>
+
+<h4 id="sidecar-level-configuration">Sidecar-level configuration</h4>
+
+<p>This configuration is for the individual sidecar.  Each sidecar is created if it does not already exist.</p>
+
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>name</strong></td>
+<td><strong>(Required)</strong> Sidecar name.  The identifier for the sidecars to be configured.</td>
+</tr>
+<tr>
+<td><strong>command</strong></td>
+<td>The command used to start the sidecar.</td>
+</tr>
+<tr>
+<td><strong>process_types</strong></td>
+<td>List of processes to associate sidecar with.</td>
 </tr>
 </tbody></table>
 
