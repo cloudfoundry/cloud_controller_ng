@@ -6,7 +6,6 @@ module VCAP::CloudController
       #
       readable_orgs_filter = Domain.dataset.db[:organizations].where(guid: readable_org_guids).select(:id)
 
-
       readable_shared_private_domains_filter = Domain.dataset.db[:organizations_private_domains].where(
         organization_id: readable_orgs_filter
       ).select(:private_domain_id)
@@ -24,8 +23,6 @@ module VCAP::CloudController
 
     def self.fetch(readable_org_guids, domain_guid)
       fetch_all(readable_org_guids).where(guid: domain_guid).first
-
     end
   end
 end
-

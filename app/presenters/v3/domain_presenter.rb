@@ -6,11 +6,9 @@ module VCAP::CloudController::Presenters::V3
     include VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers
 
     def to_hash
-      if domain.shared?
-        to_base_hash
-      else
-        to_base_hash.merge(org_relationship)
-      end
+      hash = domain.shared? ? to_base_hash.merge(empty_org_relationship) : to_base_hash.merge(org_relationship)
+
+      @decorators.reduce(hash) { |memo, d| d.decorate(memo, [domain]) }
     end
 
     private
@@ -26,6 +24,19 @@ module VCAP::CloudController::Presenters::V3
       }
     end
 
+    def empty_org_relationship
+      {
+        relationships: {
+          organization: {
+            data: nil
+          },
+          shared_organizations: {
+            data: []
+          },
+        },
+      }
+    end
+
     def org_relationship
       {
         relationships: {
@@ -34,8 +45,16 @@ module VCAP::CloudController::Presenters::V3
               guid: domain.owning_organization.guid
             },
           },
+          shared_organizations: {
+            data: shared_org_guids
+          },
         },
       }
+    end
+
+    def shared_org_guids
+      org_guids = domain.shared_organizations.map(&:guid)
+      org_guids.map { |org_guid| { guid: org_guid } }
     end
 
     def domain

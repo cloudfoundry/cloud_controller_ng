@@ -1,0 +1,37 @@
+### Get a domain
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/domains/[guid]" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :single_domain %>
+```
+
+#### Definition
+`GET /v3/domains/:guid`
+
+#### Permitted Roles
+
+ |
+--- | ---
+Space Developer |
+Space Manager |
+Space Auditor |
+Org Manager |
+Admin |
+Admin Read-Only |
+Global Auditor |

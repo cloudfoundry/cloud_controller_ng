@@ -6,11 +6,12 @@
     "name": "test-domain.com",
     "internal": false,
     "relationships": {
-      "organization": {
-        "data": null
+      "organizations": {
+        "data": { "guid": "owning_org_guid" }
       },
       "shared_organizations": {
-        "data": []
+        "data": [{"guid": "shared_org_guid1"},
+                 {"guid": "shared_org_guid2"}]
       }
     },
     "links": {

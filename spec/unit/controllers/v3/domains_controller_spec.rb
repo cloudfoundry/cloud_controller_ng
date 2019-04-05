@@ -2,6 +2,7 @@ require 'rails_helper'
 require 'permissions_spec_helper'
 
 RSpec.describe DomainsController, type: :controller do
+  let(:queryer) { instance_double(VCAP::CloudController::Permissions::Queryer) }
   let(:user) { VCAP::CloudController::User.make }
   let(:space) { VCAP::CloudController::Space.make }
   let(:org) { space.organization }
@@ -89,8 +90,114 @@ RSpec.describe DomainsController, type: :controller do
     end
   end
 
+  describe '#show' do
+    describe 'for no logged in user' do
+      it 'returns 401 for Unauthenticated requests' do
+        get :show, params: { guid: 'guid' }, as: :json
+        expect(response.status).to eq(401)
+      end
+    end
+
+    describe 'for a valid user' do
+      context 'when the domain exists' do
+        describe 'when the domain is shared' do
+          it_behaves_like 'permissions endpoint' do
+            let(:domain) { VCAP::CloudController::SharedDomain.make }
+            let(:roles_to_http_responses) do
+              {
+                'admin' => 200,
+                'admin_read_only' => 200,
+                'global_auditor' => 200,
+                'space_developer' => 200,
+                'space_manager' => 200,
+                'space_auditor' => 200,
+                'org_manager' => 200,
+                'org_auditor' => 200,
+                'org_billing_manager' => 200,
+              }
+            end
+            let(:api_call) { lambda { get :show, params: { guid: domain.guid }, as: :json } }
+          end
+        end
+
+        describe 'when the domain is private' do
+          let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: org) }
+
+          it_behaves_like 'permissions endpoint' do
+            let(:roles_to_http_responses) do
+              {
+                'admin' => 200,
+                'admin_read_only' => 200,
+                'global_auditor' => 200,
+                'space_developer' => 200,
+                'space_manager' => 200,
+                'space_auditor' => 200,
+                'org_manager' => 200,
+                'org_auditor' => 200,
+                'org_billing_manager' => 404,
+              }
+            end
+            let(:api_call) { lambda { get :show, params: { guid: domain.guid }, as: :json } }
+          end
+
+          # user is non-admin
+          # domain is not shared to users' orgs
+          context 'when the user does not have roles in the organization the domain is scoped to' do
+            let(:org1) { VCAP::CloudController::Organization.make }
+
+            before do
+              set_current_user_as_role(role: 'org_manager', org: org1)
+            end
+
+            it 'returns 404' do
+              get :show, params: { guid: domain.guid }, as: :json
+
+              expect(response.status).to eq(404)
+              expect(response.body).to include('ResourceNotFound')
+            end
+          end
+
+          context 'when the user has role in organization shared with another organization domain is scoped to' do
+            let(:org1) { VCAP::CloudController::Organization.make }
+
+            before do
+              set_current_user_as_role(role: 'org_manager', org: org1)
+              org1.add_private_domain(domain)
+
+              visible_org_guids = [org1.guid]
+              expect(queryer).to receive(:readable_org_guids_for_domains).and_return(visible_org_guids)
+              allow(VCAP::CloudController::Permissions::Queryer).to receive(:build).and_return(queryer)
+
+              decorator = instance_double(VCAP::CloudController::FilterSharedOrganizationsByUserPermissionsDecorator)
+              expect(VCAP::CloudController::FilterSharedOrganizationsByUserPermissionsDecorator).to receive(:new).with(visible_org_guids).and_return(decorator)
+
+              presenter = instance_double(VCAP::CloudController::Presenters::V3::DomainPresenter, to_hash: { domain: 'great' })
+              expect(VCAP::CloudController::Presenters::V3::DomainPresenter).to receive(:new).with(domain, decorators: [decorator]).and_return(presenter)
+            end
+
+            it 'returns 200 and returns domain' do
+              get :show, params: { guid: domain.guid }, as: :json
+              expect(response.status).to eq(200)
+              expect(parsed_body).to eq({ 'domain' => 'great' })
+            end
+          end
+        end
+      end
+
+      context 'when the domain does not exist' do
+        before do
+          set_current_user_as_role(role: 'admin', user: user)
+        end
+        it 'returns 404' do
+          get :show, params: { guid: 'not-real-domain' }, as: :json
+          expect(response.status).to eq 404
+          expect(response.body).to include('ResourceNotFound')
+        end
+      end
+    end
+  end
+
   describe '#create' do
-    let(:queryer) { instance_double(VCAP::CloudController::Permissions::Queryer) }
     let(:request_body) do
       {
         "name": 'my-domain.biz',

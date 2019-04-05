@@ -4,7 +4,6 @@ RSpec.describe 'Domains Request' do
   let(:user) { VCAP::CloudController::User.make }
   let(:user_header) { headers_for(user, email: user_email, user_name: user_name) }
   let(:space) { VCAP::CloudController::Space.make }
-  let(:stack) { VCAP::CloudController::Stack.make }
   let(:user_email) { Sham.email }
   let(:user_name) { 'some-username' }
   let(:org) { space.organization }
@@ -48,6 +47,14 @@ RSpec.describe 'Domains Request' do
               'updated_at' => iso8601,
               'name' => 'my-domain.edu',
               'internal' => false,
+              'relationships' => {
+                'organization' => {
+                  'data' => nil
+                },
+                'shared_organizations' => {
+                  'data' => []
+                }
+              },
               'links' => {
                 'self' => { 'href' => "#{link_prefix}/v3/domains/shared_domain" }
               }
@@ -60,8 +67,13 @@ RSpec.describe 'Domains Request' do
               'internal' => false,
               'relationships' => {
                 'organization' => {
-                  'data' => { 'guid' => org.guid }
+                  'data' => {
+                    'guid' => org.guid
+                  }
                 },
+                'shared_organizations' => {
+                  'data' => []
+                }
               },
               'links' => {
                 'self' => { 'href' => "#{link_prefix}/v3/domains/private_domain" }
@@ -123,6 +135,9 @@ RSpec.describe 'Domains Request' do
                   'data' => {
                     'guid' => org.guid
                   }
+                },
+                'shared_organizations' => {
+                  'data' => []
                 }
               },
               'created_at' => iso8601,
@@ -196,6 +211,14 @@ RSpec.describe 'Domains Request' do
               'guid' => domain.guid,
               'created_at' => iso8601,
               'updated_at' => iso8601,
+              'relationships' => {
+                'organization' => {
+                  'data' => nil
+                },
+                'shared_organizations' => {
+                  'data' => [],
+                }
+              },
               'links' => {
                 'self' => {
                   'href' => "#{link_prefix}/v3/domains/#{domain.guid}"
@@ -258,6 +281,9 @@ RSpec.describe 'Domains Request' do
                   'data' => {
                     'guid' => org.guid
                   }
+                },
+                'shared_organizations' => {
+                  'data' => [],
                 }
               },
               'created_at' => iso8601,
@@ -475,6 +501,134 @@ RSpec.describe 'Domains Request' do
             expect(parsed_response['errors'][0]['detail']).to eq(
               %{The domain name "#{domain}" cannot be created because "#{existing_domain.name}" is already reserved by another domain}
             )
+          end
+        end
+      end
+    end
+  end
+
+  describe 'GET /v3/domains/:guid' do
+    context 'when authenticated' do
+      context 'when the domain is shared and exists' do
+        let(:shared_domain) { VCAP::CloudController::SharedDomain.make }
+
+        it 'returns 200 and the domain' do
+          params = {}
+          get "/v3/domains/#{shared_domain.guid}", params, user_header
+
+          expect(last_response.status).to eq(200)
+          expect(parsed_response).to be_a_response_like(
+            {
+              'guid' => shared_domain.guid,
+              'created_at' => iso8601,
+              'updated_at' => iso8601,
+              'name' => shared_domain.name,
+              'internal' => shared_domain.internal,
+              'relationships' => {
+                'organization' => {
+                  'data' => nil },
+                'shared_organizations' => {
+                  'data' => [] } },
+              'links' => {
+                'self' => { 'href' => "#{link_prefix}/v3/domains/#{shared_domain.guid}" }
+              }
+            }
+          )
+        end
+      end
+
+      context 'when the domain is private' do
+        context 'domain scoped to an org the user can read' do
+          let(:private_domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: org) }
+
+          context 'domain not shared with any other org' do
+            it 'returns 200 and the domain without any shared orgs' do
+              params = {}
+              get "/v3/domains/#{private_domain.guid}", params, user_header
+
+              expect(last_response.status).to eq(200)
+              expect(parsed_response).to be_a_response_like(
+                {
+                  'guid' => private_domain.guid,
+                  'created_at' => iso8601,
+                  'updated_at' => iso8601,
+                  'name' => private_domain.name,
+                  'internal' => private_domain.internal,
+                  'relationships' => {
+                    'organization' => {
+                      'data' => { 'guid' => org.guid.to_s } },
+                    'shared_organizations' => { 'data' => [] } },
+                  'links' => {
+                    'self' => { 'href' => "#{link_prefix}/v3/domains/#{private_domain.guid}" }
+                  }
+                }
+              )
+            end
+          end
+
+          context 'domain shared with org that user has read permissions for' do
+            let(:org2) { VCAP::CloudController::Organization.make }
+
+            before do
+              set_current_user_as_role(org: org2, user: user, role: 'org_manager')
+              org2.add_private_domain(private_domain)
+            end
+
+            it 'returns 200 and the domain with the shared org' do
+              params = {}
+              get "/v3/domains/#{private_domain.guid}", params, user_header
+
+              expect(last_response.status).to eq(200)
+              expect(parsed_response).to be_a_response_like(
+                {
+                  'guid' => private_domain.guid,
+                  'created_at' => iso8601,
+                  'updated_at' => iso8601,
+                  'name' => private_domain.name,
+                  'internal' => private_domain.internal,
+                  'relationships' => {
+                    'organization' => {
+                      'data' => { 'guid' => org.guid } },
+                    'shared_organizations' => { 'data' => [
+                      { 'guid' => org2.guid }
+                    ] } },
+                  'links' => {
+                    'self' => { 'href' => "#{link_prefix}/v3/domains/#{private_domain.guid}" }
+                  }
+                }
+              )
+            end
+          end
+
+          context 'domain shared with org that user does not have read permissions for' do
+            let(:org2) { VCAP::CloudController::Organization.make }
+
+            before do
+              org2.add_private_domain(private_domain)
+            end
+
+            it 'returns 200 and the domain without any shared orgs' do
+              params = {}
+              get "/v3/domains/#{private_domain.guid}", params, user_header
+
+              expect(last_response.status).to eq(200)
+              expect(parsed_response).to be_a_response_like(
+                {
+                  'guid' => private_domain.guid,
+                  'created_at' => iso8601,
+                  'updated_at' => iso8601,
+                  'name' => private_domain.name,
+                  'internal' => private_domain.internal,
+                  'relationships' => {
+                    'organization' => {
+                      'data' => { 'guid' => org.guid } },
+                    'shared_organizations' => { 'data' => [] } },
+                  'links' => {
+                    'self' => { 'href' => "#{link_prefix}/v3/domains/#{private_domain.guid}" }
+                  }
+                }
+              )
+            end
           end
         end
       end
