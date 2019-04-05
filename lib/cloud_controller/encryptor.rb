@@ -98,6 +98,13 @@ module VCAP::CloudController
     module FieldEncryptor
       extend ActiveSupport::Concern
 
+      def before_create
+        if Encryptor.encrypted_classes.include?(self.class.name) && Encryptor.current_encryption_key_label.present?
+          self.encryption_key_label = Encryptor.current_encryption_key_label
+        end
+        super
+      end
+
       private
 
       def encryption_key_changed?
@@ -186,13 +193,6 @@ module VCAP::CloudController
           end
           alias_method "#{field_name}_without_encryption=", "#{field_name}="
           alias_method "#{field_name}=", "#{field_name}_with_encryption="
-
-          define_method :before_create do
-            if Encryptor.current_encryption_key_label.present?
-              self.encryption_key_label = Encryptor.current_encryption_key_label
-            end
-            super()
-          end
         end
       end
     end

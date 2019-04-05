@@ -208,69 +208,6 @@ module VCAP::CloudController
           let(:encrypted_attr) { :volume_mounts }
         end
       end
-
-      context 'when the config changes from legacy' do
-        let(:service_instance) { ManagedServiceInstance.make }
-        before do
-          TestConfig.override({ database_encryption: { current_key_label: '', keys: {} } })
-        end
-
-        context 'when saving encrypted values' do
-          let(:credentials) do
-            { 'uri' => 'fake-service://fake-user:fake-password@fake-host:3306/fake-dbname',
-              'username' => 'fake-user',
-              'password' => 'fake-password',
-              'host' => 'fake-host',
-              'port' => 3306,
-              'database' => 'fake-dbname' }
-          end
-          let(:volume_mounts) { 'abc' }
-          it 'encrypts things correctly' do
-            sb = ServiceBinding.make(service_instance: service_instance, credentials: credentials,
-              volume_mounts: volume_mounts)
-            creds_raw_1 = sb.credentials_without_encryption
-            creds_cooked_1 = sb.credentials
-            vm_raw_1 = sb.volume_mounts_without_encryption
-            vm_cooked_1 = sb.volume_mounts_with_encryption
-            orig_username = creds_cooked_1['username'].dup
-            creds_cooked_1['username'] += 'bob'
-            sb.credentials = creds_cooked_1
-            sb.save
-            sb.reload
-            creds_raw_2 = sb.credentials_without_encryption
-            creds_cooked_2 = sb.credentials
-            vm_raw_2 = sb.volume_mounts_without_encryption
-            vm_cooked_2 = sb.volume_mounts_with_encryption
-            expect(creds_raw_2).not_to eq(creds_raw_1)
-            expect(creds_cooked_2['username']).to eq(orig_username + 'bob')
-            expect(vm_raw_2).to eq(vm_raw_1)
-            expect(vm_cooked_2).to eq(vm_cooked_1)
-
-            expect(sb.encryption_key_label).to be_empty
-
-            # Now verify when the config is changed that both fields are updated with the new config
-            TestConfig.override({ database_encryption: { current_key_label: 'k1', keys: { k1: 'moose' } } })
-
-            sb.reload
-            creds = sb.credentials
-            password = creds['password'].dup
-            creds['password'] += '...secret'
-            creds_raw_2a = sb.credentials_without_encryption
-            vm_raw_2a = sb.volume_mounts_without_encryption
-            sb.credentials = creds
-            sb.save
-            sb.reload
-            creds_raw_2b = sb.credentials_without_encryption
-            creds_cooked_2b = sb.credentials
-            vm_raw_2b = sb.volume_mounts_without_encryption
-            expect(creds_raw_2b).not_to eq(creds_raw_2a)
-            expect(creds_cooked_2b['password']).to eq(password + '...secret')
-            expect(vm_raw_2b).not_to eq(vm_raw_2a)
-
-            expect(sb.encryption_key_label).to eq('k1')
-          end
-        end
-      end
     end
 
     describe '#in_suspended_org?' do
