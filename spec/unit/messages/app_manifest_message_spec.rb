@@ -1557,11 +1557,11 @@ module VCAP::CloudController
               'command' => 'rackup sidecar',
               'process_types' => ['web'],
             },
-            {
-              'name' => 'my_second_sidecar',
-              'command' => 'rackup sidecar',
-              'process_types' => ['web'],
-            }]
+                           {
+                             'name' => 'my_second_sidecar',
+                             'command' => 'rackup sidecar',
+                             'process_types' => ['web'],
+                           }]
           }
         end
 
