@@ -55,9 +55,20 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the service binding has an operation in progress' do
+      context 'when the service binding has create operation in progress' do
         before do
-          service_binding.service_binding_operation = ServiceBindingOperation.make(state: 'in progress')
+          service_binding.service_binding_operation = ServiceBindingOperation.make(state: 'in progress', type: 'create')
+        end
+
+        it 'deletes the binding' do
+          service_binding_delete.foreground_delete_request(service_binding)
+          expect(service_binding.exists?).to be_falsey
+        end
+      end
+
+      context 'when the service binding has anything other than create operation in progress' do
+        before do
+          service_binding.service_binding_operation = ServiceBindingOperation.make(state: 'in progress', type: 'delete')
         end
 
         it 'raises an error' do

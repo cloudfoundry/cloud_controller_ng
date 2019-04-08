@@ -29,7 +29,10 @@ module VCAP::CloudController
       warnings_accumulator = []
       errors = each_with_error_aggregation(bindings_to_delete) do |service_binding|
         raise_if_instance_locked(service_binding.service_instance)
-        raise_if_binding_locked(service_binding)
+
+        if service_binding.operation_in_progress? && service_binding.service_binding_operation.type != 'create'
+          raise CloudController::Errors::ApiError.new_from_details('AsyncServiceBindingOperationInProgress', service_binding.app.name, service_binding.service_instance.name)
+        end
 
         broker_response = remove_from_broker(service_binding)
         if broker_response[:async] && @accepts_incomplete

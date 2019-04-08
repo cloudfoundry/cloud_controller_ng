@@ -308,16 +308,18 @@ module VCAP::CloudController::BrokerApiHelper
 
   def async_bind_service(opts={})
     opts[:accepts_incomplete] = 'true'
+    opts[:status] = opts[:status] || 202
     bind_service(opts)
   end
 
   def async_unbind_service(opts={})
     opts[:accepts_incomplete] = 'true'
+    opts[:status] = opts[:status] || 202
     unbind_service(opts)
   end
 
   def unbind_service(opts={})
-    status = opts[:status] || 204
+    status = opts[:status] || 200
     res_body = opts[:response_body] || {}
     stub_request(:delete, %r{/v2/service_instances/#{@service_instance_guid}/service_bindings/[[:alnum:]-]+}).
       to_return(status: status, body: res_body.to_json)

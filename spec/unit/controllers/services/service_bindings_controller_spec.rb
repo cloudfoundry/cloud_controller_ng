@@ -1123,11 +1123,10 @@ module VCAP::CloudController
             service_binding.save
           end
 
-          it 'should not be able to delete binding' do
+          it 'should be able to trigger delete binding' do
             delete "/v2/service_bindings/#{service_binding.guid}"
-            expect(last_response).to have_status_code 409
-            expect(last_response.body).to match 'AsyncServiceBindingOperationInProgress'
-            expect(ServiceBinding.find(guid: service_binding.guid)).not_to be_nil
+            expect(last_response).to have_status_code 204
+            expect(ServiceBinding.find(guid: service_binding.guid)).to be_nil
           end
         end
 

@@ -22,6 +22,8 @@ module VCAP::CloudController
           service_binding = ServiceBinding.first(guid: service_binding_guid)
           return if service_binding.nil? # assume the binding has been purged
 
+          @intended_operation = service_binding.last_operation
+
           client = VCAP::Services::ServiceClientProvider.provide(instance: service_binding.service_instance)
           last_operation_result = client.fetch_service_binding_last_operation(service_binding)
           raise "Invalid response from client: #{last_operation_result}" unless valid_client_response?(last_operation_result)
@@ -62,17 +64,26 @@ module VCAP::CloudController
               return { finished: true }
             end
 
-            service_binding.update({
-              'credentials'      => binding_response[:credentials],
-              'syslog_drain_url' => binding_response[:syslog_drain_url],
-              'volume_mounts' => binding_response[:volume_mounts],
-            })
-            record_event(service_binding, request_attrs)
-            service_binding.last_operation.update(last_operation_result[:last_operation])
+            ServiceBinding.db.transaction do
+              service_binding.lock!
+              return { finished: false } if @intended_operation != service_binding.last_operation
+
+              service_binding.update({
+                'credentials'      => binding_response[:credentials],
+                'syslog_drain_url' => binding_response[:syslog_drain_url],
+                'volume_mounts' => binding_response[:volume_mounts],
+              })
+              record_event(service_binding, request_attrs)
+              service_binding.last_operation.update(last_operation_result[:last_operation])
+            end
             return { finished: true }
           end
 
-          service_binding.last_operation.update(last_operation_result[:last_operation])
+          ServiceBinding.db.transaction do
+            service_binding.lock!
+            service_binding.last_operation.update(last_operation_result[:last_operation])
+          end
+
           { finished: false }
         end
 
@@ -83,7 +94,10 @@ module VCAP::CloudController
             return { finished: true }
           end
 
-          service_binding.last_operation.update(last_operation_result[:last_operation])
+          ServiceBinding.db.transaction do
+            service_binding.lock!
+            service_binding.last_operation.update(last_operation_result[:last_operation])
+          end
           { finished: false }
         end
 
