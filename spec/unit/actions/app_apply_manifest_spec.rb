@@ -475,8 +475,8 @@ module VCAP::CloudController
             expect(
               app_apply_manifest.apply(app.guid, message)
             ).to eq(app)
-            expect(SidecarUpdate).to have_received(:update).with(sidecar, message.sidecar_update_messages.last)
-            expect(SidecarCreate).to have_received(:create).with(app.guid, message.sidecar_update_messages.first)
+            expect(SidecarUpdate).to have_received(:update).with(sidecar, message.sidecar_create_messages.last)
+            expect(SidecarCreate).to have_received(:create).with(app.guid, message.sidecar_create_messages.first)
           end
         end
 

@@ -83,8 +83,8 @@ module VCAP::CloudController
       @manifest_process_update_messages ||= process_update_attribute_mappings.map { |mapping| ManifestProcessUpdateMessage.new(mapping) }
     end
 
-    def sidecar_update_messages
-      @sidecar_update_messages ||= Array(sidecars).map { |mapping| SidecarUpdateMessage.new(mapping) }
+    def sidecar_create_messages
+      @sidecar_create_messages ||= Array(sidecars).map { |mapping| SidecarCreateMessage.new(mapping) }
     end
 
     def app_update_message
@@ -363,12 +363,11 @@ module VCAP::CloudController
         return errors.add(:base, 'Sidecars must be an array of sidecar configurations')
       end
 
-      errors.add(:base, 'All sidecars must specify a name') if sidecars.any? { |s| !s.key?(:name) }
-
-      sidecar_update_messages.each do |sidecar_update_message|
-        sidecar_update_message.validate
-        sidecar_update_message.errors.full_messages.each do |message|
-          errors.add(:sidecar, message.downcase)
+      sidecar_create_messages.each do |sidecar_create_message|
+        sidecar_create_message.validate
+        sidecar_create_message.errors.full_messages.each do |message|
+          error = sidecar_create_message.name.present? ? %("#{sidecar_create_message.name}": #{message}) : message.downcase
+          errors.add(:sidecar, error)
         end
       end
     end

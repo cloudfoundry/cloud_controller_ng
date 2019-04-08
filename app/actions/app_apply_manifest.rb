@@ -34,12 +34,12 @@ module VCAP::CloudController
         process_scale.scale
       end
 
-      message.sidecar_update_messages.each do |sidecar_update_message|
-        sidecar = find_sidecar(app, sidecar_update_message.name)
+      message.sidecar_create_messages.each do |sidecar_create_message|
+        sidecar = find_sidecar(app, sidecar_create_message.name)
         if sidecar
-          SidecarUpdate.update(sidecar, sidecar_update_message)
+          SidecarUpdate.update(sidecar, sidecar_create_message)
         else
-          SidecarCreate.create(app.guid, sidecar_update_message)
+          SidecarCreate.create(app.guid, sidecar_create_message)
         end
       end
 

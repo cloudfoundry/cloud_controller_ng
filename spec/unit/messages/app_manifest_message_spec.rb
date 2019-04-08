@@ -603,6 +603,21 @@ module VCAP::CloudController
           end
         end
 
+        context 'when sidecars command is empty string' do
+          let(:params) do
+            {
+              sidecars: [{ name: 'my_sidecar', command: '', process_types: ['web'] }]
+            }
+          end
+
+          it 'is not valid' do
+            message = AppManifestMessage.create_from_yml(params)
+            expect(message).not_to be_valid
+            expect(message.errors.count).to eq(1)
+            expect(message.errors.full_messages).to include('Sidecar "my_sidecar": Command can\'t be blank')
+          end
+        end
+
         context 'when sidecars name is not supplied' do
           let(:params) do
             {
@@ -613,8 +628,9 @@ module VCAP::CloudController
           it 'is not valid' do
             message = AppManifestMessage.create_from_yml(params)
             expect(message).not_to be_valid
-            expect(message.errors.count).to eq(1)
-            expect(message.errors.full_messages).to include('All sidecars must specify a name')
+            expect(message.errors.count).to eq(2)
+            expect(message.errors.full_messages).to include('Sidecar name can\'t be blank')
+            expect(message.errors.full_messages).to include('Sidecar name must be a string')
           end
         end
       end
@@ -1547,7 +1563,7 @@ module VCAP::CloudController
       end
     end
 
-    describe '#sidecar_update_messages' do
+    describe '#sidecar_create_messages' do
       context 'when new sidecars are specified' do
         let(:parsed_yaml) do
           {
@@ -1568,8 +1584,8 @@ module VCAP::CloudController
         it 'returns sidecar update messages' do
           message = AppManifestMessage.create_from_yml(parsed_yaml)
           expect(message).to be_valid
-          expect(message.sidecar_update_messages.length).to eq(2)
-          expect(message.sidecar_update_messages.map(&:name)).to eq(['my_sidecar', 'my_second_sidecar'])
+          expect(message.sidecar_create_messages.length).to eq(2)
+          expect(message.sidecar_create_messages.map(&:name)).to eq(['my_sidecar', 'my_second_sidecar'])
         end
       end
 
@@ -1582,7 +1598,7 @@ module VCAP::CloudController
         it 'returns an empty array' do
           message = AppManifestMessage.create_from_yml(parsed_yaml)
           expect(message).to be_valid
-          expect(message.sidecar_update_messages).to eq([])
+          expect(message.sidecar_create_messages).to eq([])
         end
       end
     end
