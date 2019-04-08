@@ -83,9 +83,10 @@ module VCAP::Services
               @logger.warn("Already deleted: #{unvalidated_response.uri}")
               SuccessValidator.new { |res| {} }
             when 422
-              FailWhenValidator.new('error',
-                                    { 'AsyncRequired' => Errors::AsyncRequired },
-                                      FailingValidator.new(Errors::ServiceBrokerBadResponse))
+              FailWhenValidator.new('error', {
+                'AsyncRequired' => Errors::AsyncRequired,
+                'ConcurrencyError' => Errors::ConcurrencyError
+              }, FailingValidator.new(Errors::ServiceBrokerBadResponse))
             else
               FailingValidator.new(Errors::ServiceBrokerBadResponse)
             end

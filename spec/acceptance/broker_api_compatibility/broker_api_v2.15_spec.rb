@@ -408,7 +408,7 @@ RSpec.describe 'Service Broker API integration' do
       end
     end
 
-    describe 'cancel create async operation' do
+    describe 'cancel service instance create async operation' do
       before do
         setup_broker(default_catalog)
         @broker = VCAP::CloudController::ServiceBroker.find guid: @broker_guid
@@ -497,6 +497,77 @@ RSpec.describe 'Service Broker API integration' do
         parsed_body = MultiJson.load(last_response.body)
         maintenance_info = parsed_body['entity']['maintenance_info']
         expect(maintenance_info).to eq({ 'version' => '2.0' })
+      end
+    end
+
+    describe 'cancel service binding create async operation' do
+      before do
+        setup_broker(default_catalog(bindings_retrievable: true))
+        @broker = VCAP::CloudController::ServiceBroker.find guid: @broker_guid
+        provision_service
+      end
+
+      context 'when binding is in progress' do
+        let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.find(guid: @service_instance_guid) }
+
+        before do
+          create_app
+          async_bind_service
+          expect(a_request(:put, bind_url(service_instance, accepts_incomplete: true))).to have_been_made
+        end
+
+        context 'broker responds synchronously to the unbind request' do
+          it 'deletes the binding' do
+            service_binding = VCAP::CloudController::ServiceBinding.find(guid: @binding_guid)
+            expect(unbind_service).to have_status_code(204)
+
+            expect(a_request(:delete, unbind_url(service_binding))).to have_been_made
+
+            expect(VCAP::CloudController::Event.order(:id).all.map(&:type)).to end_with(
+              'audit.service_binding.start_create',
+              'audit.service_binding.delete'
+            )
+
+            expect { service_binding.reload }.to raise_error(Sequel::Error)
+          end
+        end
+
+        context 'broker rejects the unbind request' do
+          it 'raise concurrency error' do
+            service_binding = VCAP::CloudController::ServiceBinding.find(guid: @binding_guid)
+            expect(unbind_service(status: 422, response_body: { "error": 'ConcurrencyError' })).to have_status_code(409)
+
+            expect(a_request(:delete, unbind_url(service_binding))).to have_been_made
+
+            expect(VCAP::CloudController::Event.order(:id).all.map(&:type)).to end_with(
+              'audit.service_binding.start_create',
+            )
+
+            expect(service_binding.reload).not_to be_nil
+          end
+        end
+
+        it 'unbind request should cancel the bind and delete the binding asynchronously' do
+          stub_async_last_operation
+          service_binding = VCAP::CloudController::ServiceBinding.find(guid: @binding_guid)
+          expect(async_unbind_service).to have_status_code(202)
+
+          expect(a_request(:delete, unbind_url(service_binding, accepts_incomplete: true))).to have_been_made
+
+          expect(service_binding.reload).not_to be_nil
+
+          Timecop.freeze(Time.now) do
+            Delayed::Worker.new.work_off
+            expect(a_request(:get, %r{#{service_binding_url(service_binding)}/last_operation})).to have_been_made
+          end
+
+          expect(VCAP::CloudController::Event.order(:id).all.map(&:type)).to end_with(
+            'audit.service_binding.start_create',
+            'audit.service_binding.start_delete',
+            'audit.service_binding.delete'
+          )
+          expect { service_binding.reload }.to raise_error(Sequel::Error)
+        end
       end
     end
   end

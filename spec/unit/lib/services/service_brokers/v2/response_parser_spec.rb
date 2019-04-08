@@ -855,6 +855,7 @@ module VCAP::Services
         test_case(:unbind, 422, broker_partial_json,                                            error: Errors::ServiceBrokerBadResponse)
         test_case(:unbind, 422, broker_malformed_json,                                          error: Errors::ServiceBrokerBadResponse)
         test_case(:unbind, 422, { error: 'AsyncRequired' }.to_json,                             error: Errors::AsyncRequired)
+        test_case(:unbind, 422, { error: 'ConcurrencyError' }.to_json,                          error: Errors::ConcurrencyError)
         test_common_error_cases(:unbind)
         test_case(:update, 200, broker_partial_json,                                            error: Errors::ServiceBrokerResponseMalformed, description: invalid_json_error(broker_partial_json, instance_uri))
         test_case(:update, 200, broker_malformed_json,                                          error: Errors::ServiceBrokerResponseMalformed, expect_warning: true, description: invalid_json_error(broker_malformed_json, instance_uri))

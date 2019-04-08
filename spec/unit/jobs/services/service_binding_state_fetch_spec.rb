@@ -360,6 +360,31 @@ module VCAP::CloudController
                   expect(event.metadata['request']).to have_key('some_attr')
                 end
               end
+
+              context 'when during client call(to fetch last operation) the last operation on the service_binding was replaced' do
+                before do
+                  allow(client).to receive(:fetch_service_binding_last_operation) do
+                    service_binding.save_with_new_operation(
+                      {
+                        type: 'delete',
+                        state: 'in progress'
+                      }
+                    )
+
+                    last_operation_response
+                  end
+                end
+
+                it 'does not do anything' do
+                  run_job(job)
+
+                  reloaded_service_binding = ServiceBinding.first(guid: service_binding.guid)
+                  expect(reloaded_service_binding).not_to be_nil
+                  expect(Event.find(type: 'audit.service_instance.delete')).not_to be
+
+                  expect(reloaded_service_binding.last_operation.state).not_to eq(state)
+                end
+              end
             end
 
             context 'when the last_operation state is in progress' do
