@@ -17,6 +17,7 @@ class DomainsController < ApplicationController
       paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
       path: '/v3/domains',
       message: message,
+      extra_presenter_args: { visible_org_guids: org_guids }
     )
   end
 

@@ -20,7 +20,16 @@ RSpec.describe 'Domains Request' do
     let!(:shared_domain) { VCAP::CloudController::SharedDomain.make(name: 'my-domain.edu', guid: 'shared_domain') }
     let!(:private_domain) { VCAP::CloudController::PrivateDomain.make(name: 'my-private-domain.edu', owning_organization: org, guid: 'private_domain') }
 
-    it 'lists all domains' do
+    let(:org2) { VCAP::CloudController::Organization.make }
+    let(:org3) { VCAP::CloudController::Organization.make }
+
+    before do
+      set_current_user_as_role(org: org2, user: user, role: 'org_manager')
+      org2.add_private_domain(private_domain)
+      org3.add_private_domain(private_domain)
+    end
+
+    it 'lists all domains with filtered shared_orgs' do
       get '/v3/domains', nil, headers
 
       expect(last_response.status).to eq(200)
@@ -72,7 +81,7 @@ RSpec.describe 'Domains Request' do
                   }
                 },
                 'shared_organizations' => {
-                  'data' => []
+                  'data' => [{ 'guid' => org2.guid }]
                 }
               },
               'links' => {
