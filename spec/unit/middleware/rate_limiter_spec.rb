@@ -72,12 +72,12 @@ module CloudFoundry
             Timecop.freeze do
               valid_until = Time.now + interval.minutes
               _, response_headers, _ = middleware.call(user_1_env)
-              expect(response_headers['X-RateLimit-Reset']).to eq(valid_until.utc.to_i.to_s)
+              expect(response_headers['X-RateLimit-Reset'].to_i).to be_within(1).of(valid_until.utc.to_i)
 
               Timecop.travel(Time.now + 30.minutes)
 
               _, response_headers, _ = middleware.call(user_1_env)
-              expect(response_headers['X-RateLimit-Reset']).to eq(valid_until.utc.to_i.to_s)
+              expect(response_headers['X-RateLimit-Reset'].to_i).to be_within(1).of(valid_until.utc.to_i)
             end
           end
 
@@ -85,13 +85,13 @@ module CloudFoundry
             Timecop.freeze do
               valid_until = Time.now + interval.minutes
               _, response_headers, _ = middleware.call(user_1_env)
-              expect(response_headers['X-RateLimit-Reset']).to eq(valid_until.utc.to_i.to_s)
+              expect(response_headers['X-RateLimit-Reset'].to_i).to be_within(1).of(valid_until.utc.to_i)
 
               Timecop.travel(Time.now + 1.minutes)
               valid_until_2 = Time.now + interval.minutes
 
               _, response_headers, _ = middleware.call(user_2_env)
-              expect(response_headers['X-RateLimit-Reset']).to eq(valid_until_2.utc.to_i.to_s)
+              expect(response_headers['X-RateLimit-Reset'].to_i).to be_within(1).of(valid_until_2.utc.to_i)
             end
           end
 
@@ -99,12 +99,12 @@ module CloudFoundry
             Timecop.freeze do
               valid_until = Time.now + interval.minutes
               _, response_headers, _ = middleware.call(user_1_env)
-              expect(response_headers['X-RateLimit-Reset']).to eq(valid_until.utc.to_i.to_s)
+              expect(response_headers['X-RateLimit-Reset'].to_i).to be_within(1).of(valid_until.utc.to_i)
 
               Timecop.travel(Time.now + 91.minutes)
               valid_until = Time.now + 60.minutes
               _, response_headers, _ = middleware.call(user_1_env)
-              expect(response_headers['X-RateLimit-Reset'].to_i).to be_between(valid_until.utc.to_i, valid_until.utc.to_i + 1)
+              expect(response_headers['X-RateLimit-Reset'].to_i).to be_within(1).of(valid_until.utc.to_i)
             end
           end
         end
