@@ -282,7 +282,13 @@ module VCAP::CloudController
             end
           end
 
-          xcontext 'when the ports array is empty'
+          context 'when the ports array is empty' do
+            let(:ports) { [] }
+
+            it 'returns an array of the default' do
+              expect(builder.ports).to eq([DEFAULT_APP_PORT])
+            end
+          end
         end
 
         describe '#port_environment_variables' do
