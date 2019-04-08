@@ -5,11 +5,21 @@ require 'presenters/helpers/censorship'
 module VCAP::CloudController::Presenters
   module V3
     RSpec.describe PaginatedListPresenter do
-      subject(:presenter) { PaginatedListPresenter.new(presenter: MonkeyPresenter, paginated_result: paginated_result, path: path, message: message) }
+      subject(:presenter) do
+        PaginatedListPresenter.new(
+          presenter: MonkeyPresenter,
+          paginated_result: paginated_result,
+          path: path,
+          message: message,
+          extra_presenter_args: extra_presenter_args,
+        )
+      end
+
       let(:set) { [Monkey.new('bobo'), Monkey.new('george')] }
       let(:message) { double('message', pagination_options: pagination_options, to_param_hash: {}) }
       let(:pagination_options) { VCAP::CloudController::PaginationOptions.new(per_page: 50, page: 1, order_by: 'monkeys', order_direction: 'asc') }
       let(:paginated_result) { VCAP::CloudController::PaginatedResult.new(set, 2, pagination_options) }
+      let(:extra_presenter_args) { {} }
 
       class Monkey
         attr_reader :name
@@ -20,6 +30,17 @@ module VCAP::CloudController::Presenters
       end
 
       class MonkeyPresenter < BasePresenter
+        def initialize(
+          resource,
+            show_secrets: false,
+            censored_message: Censorship::REDACTED_CREDENTIAL,
+            banana: false
+        )
+          @banana = banana
+
+          super(resource, show_secrets: show_secrets, censored_message: censored_message)
+        end
+
         def to_hash
           {
             name: @resource.name,
@@ -52,6 +73,17 @@ module VCAP::CloudController::Presenters
           presenter.to_hash
           expect(MonkeyPresenter).to have_received(:new).
             with(anything, show_secrets: false, censored_message: Censorship::PRIVATE_DATA_HIDDEN_LIST).exactly(set.count).times
+        end
+
+        context 'when provided extra presenter args' do
+          let(:extra_presenter_args) { { banana: true } }
+
+          it 'passes those args to the sub presenter' do
+            allow(MonkeyPresenter).to receive(:new).and_call_original
+            presenter.to_hash
+            expect(MonkeyPresenter).to have_received(:new).
+              with(anything, show_secrets: false, censored_message: Censorship::PRIVATE_DATA_HIDDEN_LIST, banana: true).exactly(set.count).times
+          end
         end
 
         context 'when show_secrets is true' do
@@ -153,7 +185,7 @@ module VCAP::CloudController::Presenters
           single_page_paginated_result = VCAP::CloudController::PaginatedResult.new([], 0, pagination_options)
           result = PaginatedListPresenter.new(presenter: MonkeyPresenter, paginated_result: single_page_paginated_result, path: path).present_pagination_hash
 
-          last_url  = result[:last][:href]
+          last_url = result[:last][:href]
           first_url = result[:first][:href]
           expect(last_url).to eq("#{link_prefix}/v3/cloudfoundry/is-great?page=1&per_page=#{per_page}")
           expect(first_url).to eq("#{link_prefix}/v3/cloudfoundry/is-great?page=1&per_page=#{per_page}")
@@ -233,9 +265,9 @@ module VCAP::CloudController::Presenters
             it 'sets the pagination options' do
               result = presenter.present_pagination_hash
 
-              first_page    = result[:first][:href]
-              last_page     = result[:last][:href]
-              next_page     = result[:next][:href]
+              first_page = result[:first][:href]
+              last_page = result[:last][:href]
+              next_page = result[:next][:href]
               previous_page = result[:previous][:href]
 
               expect(first_page).to eq("#{link_prefix}/v3/cloudfoundry/is-great?order_by=%2B#{order_by}&page=1&per_page=#{per_page}")
@@ -250,9 +282,9 @@ module VCAP::CloudController::Presenters
               it 'sets the pagination options' do
                 result = presenter.present_pagination_hash
 
-                first_page    = result[:first][:href]
-                last_page     = result[:last][:href]
-                next_page     = result[:next][:href]
+                first_page = result[:first][:href]
+                last_page = result[:last][:href]
+                next_page = result[:next][:href]
                 previous_page = result[:previous][:href]
 
                 expect(first_page).to eq("#{link_prefix}/v3/cloudfoundry/is-great?order_by=-#{order_by}&page=1&per_page=#{per_page}")

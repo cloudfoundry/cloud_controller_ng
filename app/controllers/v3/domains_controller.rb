@@ -1,6 +1,5 @@
 require 'messages/domain_create_message'
 require 'messages/domains_list_message'
-require 'decorators/filter_shared_organizations_by_user_permissions_decorator'
 require 'presenters/v3/domain_presenter'
 require 'actions/domain_create'
 require 'fetchers/domain_fetcher'
@@ -46,9 +45,8 @@ class DomainsController < ApplicationController
     )
 
     domain_not_found! unless domain
-    decorator = FilterSharedOrganizationsByUserPermissionsDecorator.new(readable_org_guids)
 
-    render status: :ok, json: Presenters::V3::DomainPresenter.new(domain, decorators: [decorator])
+    render status: :ok, json: Presenters::V3::DomainPresenter.new(domain, visible_org_guids: readable_org_guids)
   end
 
   private

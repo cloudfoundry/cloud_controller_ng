@@ -5,13 +5,14 @@ module VCAP::CloudController
   module Presenters
     module V3
       class PaginatedListPresenter
-        def initialize(presenter:, paginated_result:, path:, message: nil, show_secrets: false, decorators: [])
+        def initialize(presenter:, paginated_result:, path:, message: nil, show_secrets: false, decorators: [], extra_presenter_args: {})
           @presenter = presenter
           @paginated_result = paginated_result
           @path         = path
           @message      = message
           @show_secrets = show_secrets
           @decorators = decorators
+          @extra_presenter_args = extra_presenter_args
         end
 
         def to_hash
@@ -56,7 +57,7 @@ module VCAP::CloudController
 
         def presented_resources
           @paginated_result.records.map do |resource|
-            @presenter.new(resource, show_secrets: @show_secrets, censored_message: Censorship::PRIVATE_DATA_HIDDEN_LIST).to_hash
+            @presenter.new(resource, show_secrets: @show_secrets, censored_message: Censorship::PRIVATE_DATA_HIDDEN_LIST, **@extra_presenter_args).to_hash
           end
         end
       end

@@ -168,11 +168,8 @@ RSpec.describe DomainsController, type: :controller do
               expect(queryer).to receive(:readable_org_guids_for_domains).and_return(visible_org_guids)
               allow(VCAP::CloudController::Permissions::Queryer).to receive(:build).and_return(queryer)
 
-              decorator = instance_double(VCAP::CloudController::FilterSharedOrganizationsByUserPermissionsDecorator)
-              expect(VCAP::CloudController::FilterSharedOrganizationsByUserPermissionsDecorator).to receive(:new).with(visible_org_guids).and_return(decorator)
-
               presenter = instance_double(VCAP::CloudController::Presenters::V3::DomainPresenter, to_hash: { domain: 'great' })
-              expect(VCAP::CloudController::Presenters::V3::DomainPresenter).to receive(:new).with(domain, decorators: [decorator]).and_return(presenter)
+              expect(VCAP::CloudController::Presenters::V3::DomainPresenter).to receive(:new).with(domain, visible_org_guids: visible_org_guids).and_return(presenter)
             end
 
             it 'returns 200 and returns domain' do
