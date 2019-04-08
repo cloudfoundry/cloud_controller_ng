@@ -40,6 +40,6 @@ applications:
 #### Permitted Roles
  |
 --- | ---
-Space Developer |
 Admin |
 Admin Read-Only |
+Space Developer |

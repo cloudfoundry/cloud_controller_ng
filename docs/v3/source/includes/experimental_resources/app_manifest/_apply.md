@@ -30,5 +30,5 @@ Location: https://api.example.org/v3/jobs/[guid]
 #### Permitted Roles
  |
 --- | ---
-Space Developer |
 Admin |
+Space Developer |

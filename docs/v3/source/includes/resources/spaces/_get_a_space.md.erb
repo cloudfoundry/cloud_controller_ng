@@ -15,7 +15,8 @@ Example Response
 ```
 
 ```http
-HTTP/1.1 200 OK
+HTTP/1.1 200 OKAdmin|
+
 Content-Type: application/json
 
 <%= yield_content :space, '/v3/spaces/:guid' %>
@@ -29,10 +30,10 @@ This endpoint retrieves the specified space object.
 #### Permitted Roles
  |
 --- | ---
-Admin	|
-Space Developer	|
-Read-Only Admin	|
-Global Auditor	|
-Space Manager	|
-Space Auditor	|
-Org Manager	|
+Admin |
+Admin Read-Only |
+Global Auditor |
+Org Manager |
+Space Auditor |
+Space Developer |
+Space Manager |

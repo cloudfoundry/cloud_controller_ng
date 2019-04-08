@@ -29,5 +29,5 @@ This allows a user to stop a single misbehaving instance of a process.
 #### Permitted Roles
  |
 --- | ---
-Space Developer |
 Admin |
+Space Developer |

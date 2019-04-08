@@ -24,5 +24,5 @@ HTTP/1.1 204 No Content
 #### Permitted Roles
  |
 --- | ---
-Space Developer |
 Admin |
+Space Developer |
