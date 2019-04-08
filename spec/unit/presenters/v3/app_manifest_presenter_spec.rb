@@ -92,6 +92,13 @@ module VCAP::CloudController::Presenters::V3
         let!(:app_label) { VCAP::CloudController::AppLabelModel.make(resource_guid: app.guid, key_name: 'potato', value: 'idaho') }
         let!(:app_annotation) { VCAP::CloudController::AppAnnotationModel.make(resource_guid: app.guid, key: 'style', value: 'mashed') }
 
+        let!(:sidecar1) { VCAP::CloudController::SidecarModel.make(name: 'authenticator', command: './authenticator', app: app) }
+        let!(:sidecar2) { VCAP::CloudController:: SidecarModel.make(name: 'my_sidecar', command: 'rackup', app: app) }
+
+        let!(:sidecar_process_type1) { VCAP::CloudController::SidecarProcessTypeModel.make(type: 'worker', sidecar: sidecar1, app_guid: app.guid) }
+        let!(:sidecar_process_type2) { VCAP::CloudController::SidecarProcessTypeModel.make(type: 'web', sidecar: sidecar1, app_guid: app.guid) }
+        let!(:sidecar_process_type3) { VCAP::CloudController::SidecarProcessTypeModel.make(type: 'other_worker', sidecar: sidecar2, app_guid: app.guid) }
+
         it 'presents the app manifest' do
           result = AppManifestPresenter.new(app, service_bindings, routes).to_hash
 
@@ -126,6 +133,20 @@ module VCAP::CloudController::Presenters::V3
               'health-check-type' => process2.health_check_type,
             }
           ])
+          expect(application[:sidecars]).to eq(
+            [
+              {
+                'name'          => 'authenticator',
+                'process_types' => ['web', 'worker'],
+                'command'       => './authenticator',
+              },
+              {
+                'name'          => 'my_sidecar',
+                'process_types' => ['other_worker'],
+                'command'       => 'rackup',
+              }
+            ]
+          )
         end
 
         context 'when a process is missing attributes' do

@@ -501,6 +501,13 @@ RSpec.describe 'App Manifests' do
     let!(:app_label) { VCAP::CloudController::AppLabelModel.make(resource_guid: app_model.guid, key_name: 'potato', value: 'idaho') }
     let!(:app_annotation) { VCAP::CloudController::AppAnnotationModel.make(resource_guid: app_model.guid, key: 'style', value: 'mashed') }
 
+    let!(:sidecar1) { VCAP::CloudController::SidecarModel.make(name: 'authenticator', command: './authenticator', app: app_model) }
+    let!(:sidecar2) { VCAP::CloudController:: SidecarModel.make(name: 'my_sidecar', command: 'rackup', app: app_model) }
+
+    let!(:sidecar_process_type1) { VCAP::CloudController::SidecarProcessTypeModel.make(type: 'worker', sidecar: sidecar1, app_guid: app_model.guid) }
+    let!(:sidecar_process_type2) { VCAP::CloudController::SidecarProcessTypeModel.make(type: 'web', sidecar: sidecar1, app_guid: app_model.guid) }
+    let!(:sidecar_process_type3) { VCAP::CloudController::SidecarProcessTypeModel.make(type: 'other_worker', sidecar: sidecar2, app_guid: app_model.guid) }
+
     context 'for a buildpack' do
       let!(:buildpack) { VCAP::CloudController::Buildpack.make }
       let!(:buildpack2) { VCAP::CloudController::Buildpack.make }
@@ -540,6 +547,18 @@ RSpec.describe 'App Manifests' do
                   'health-check-http-endpoint' => worker_process.health_check_http_endpoint,
                   'timeout' => worker_process.health_check_timeout,
                 },
+              ],
+              'sidecars' => [
+                {
+                  'name'          => 'authenticator',
+                  'process_types' => ['web', 'worker'],
+                  'command'       => './authenticator',
+                },
+                {
+                  'name'          => 'my_sidecar',
+                  'process_types' => ['other_worker'],
+                  'command'       => 'rackup',
+                }
               ]
             }
           ]
@@ -618,6 +637,18 @@ RSpec.describe 'App Manifests' do
                   'health-check-http-endpoint' => worker_process.health_check_http_endpoint,
                   'timeout' => worker_process.health_check_timeout,
                 },
+              ],
+              'sidecars' => [
+                {
+                  'name'          => 'authenticator',
+                  'process_types' => ['web', 'worker'],
+                  'command'       => './authenticator',
+                },
+                {
+                  'name'          => 'my_sidecar',
+                  'process_types' => ['other_worker'],
+                  'command'       => 'rackup',
+                }
               ]
             }
           ]

@@ -5,6 +5,7 @@ require 'presenters/v3/app_manifest_presenters/services_properties_presenter'
 require 'presenters/v3/app_manifest_presenters/route_properties_presenter'
 require 'presenters/v3/app_manifest_presenters/metadata_presenter'
 require 'presenters/v3/app_manifest_presenters/process_properties_presenter'
+require 'presenters/v3/app_manifest_presenters/sidecar_properties_presenter'
 
 module VCAP::CloudController
   module Presenters
@@ -18,6 +19,7 @@ module VCAP::CloudController
           AppManifestPresenters::RoutePropertiesPresenter.new,
           AppManifestPresenters::MetadataPresenter.new,
           AppManifestPresenters::ProcessPropertiesPresenter.new,
+          AppManifestPresenters::SidecarPropertiesPresenter.new,
         ].freeze
 
         def initialize(app, service_bindings, routes)
