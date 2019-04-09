@@ -2,7 +2,7 @@ module VCAP::Services::ServiceBrokers::V2
   class CatalogPlan
     include CatalogValidationHelper
 
-    attr_reader :broker_provided_id, :name, :description, :metadata, :maximum_polling_duration
+    attr_reader :broker_provided_id, :name, :description, :metadata, :maximum_polling_duration, :maintenance_info
     attr_reader :catalog_service, :errors, :free, :bindable, :schemas, :plan_updateable
 
     def initialize(catalog_service, attrs)
@@ -16,6 +16,7 @@ module VCAP::Services::ServiceBrokers::V2
       @bindable           = attrs['bindable']
       @plan_updateable    = attrs['plan_updateable']
       @maximum_polling_duration = attrs['maximum_polling_duration']
+      @maintenance_info = attrs['maintenance_info']
       build_schemas(attrs['schemas'])
     end
 
@@ -50,6 +51,7 @@ module VCAP::Services::ServiceBrokers::V2
       validate_bool!(:bindable, bindable) if bindable
       validate_bool!(:plan_updateable, plan_updateable) if plan_updateable
       validate_integer!(:maximum_polling_duration, maximum_polling_duration) if maximum_polling_duration
+      validate_hash!(:maintenance_info, @maintenance_info) if @maintenance_info
       validate_hash!(:schemas, @schemas_data) if @schemas_data
     end
 
@@ -69,6 +71,7 @@ module VCAP::Services::ServiceBrokers::V2
         bindable:                   'Plan bindable',
         plan_updateable:            'Plan updateable',
         schemas:                    'Plan schemas',
+        maintenance_info:           'Maintenance info',
         maximum_polling_duration:   'Maximum polling duration',
       }.fetch(name) { raise NotImplementedError }
     end

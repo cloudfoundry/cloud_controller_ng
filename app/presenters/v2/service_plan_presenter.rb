@@ -9,6 +9,11 @@ module CloudController
         def entity_hash(controller, plan, opts, depth, parents, orphans=nil)
           entity = DefaultPresenter.new.entity_hash(controller, plan, opts, depth, parents, orphans)
 
+          entity['maintenance_info'] = {}
+          if plan.maintenance_info
+            entity['maintenance_info'] = JSON.parse(plan.maintenance_info)
+          end
+
           schemas = present_schemas(plan)
           entity.merge!(schemas)
           entity.delete('create_instance_schema')

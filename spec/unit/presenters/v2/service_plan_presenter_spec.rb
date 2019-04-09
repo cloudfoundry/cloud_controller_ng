@@ -19,7 +19,8 @@ module CloudController::Presenters::V2
       let(:service_plan) do
         VCAP::CloudController::ServicePlan.make(create_instance_schema: create_instance_schema,
                                                 update_instance_schema: update_instance_schema,
-                                                create_binding_schema: create_binding_schema)
+                                                create_binding_schema: create_binding_schema,
+                                                maintenance_info: '{ "version":  "2.0" }')
       end
 
       let(:create_instance_schema) { nil }
@@ -39,6 +40,7 @@ module CloudController::Presenters::V2
            'description' => service_plan.description,
            'extra' => nil,
            'free' => false,
+           'maintenance_info' => { 'version' => '2.0' },
            'maximum_polling_duration' => nil,
            'name' => service_plan.name,
            'public' => true,

@@ -14,7 +14,8 @@ module VCAP::Services::ServiceBrokers::V2
         'bindable'    => opts[:bindable],
         'schemas'     => opts[:schemas] || {},
         'plan_updateable' => opts[:plan_updateable],
-        'maximum_polling_duration' => opts[:maximum_polling_duration]
+        'maximum_polling_duration' => opts[:maximum_polling_duration],
+        'maintenance_info' => opts[:maintenance_info] || {}
       }
     end
     let(:catalog_service) { instance_double(VCAP::Services::ServiceBrokers::V2::CatalogService) }
@@ -33,6 +34,7 @@ module VCAP::Services::ServiceBrokers::V2
         expect(plan.bindable).to be true
         expect(plan.plan_updateable).to be true
         expect(plan.maximum_polling_duration).to be 3600
+        expect(plan.maintenance_info).to eq({})
         expect(plan.errors).to be_empty
       end
 
@@ -137,6 +139,13 @@ module VCAP::Services::ServiceBrokers::V2
 
         expect(plan).to_not be_valid
         expect(plan.errors.messages.first).to include 'Plan schemas must be a hash, but has value "true"'
+      end
+
+      it 'validates that @maintenance_info is a hash' do
+        plan_attrs['maintenance_info'] = 'true'
+
+        expect(plan).to_not be_valid
+        expect(plan.errors.messages.first).to include 'Maintenance info must be a hash, but has value "true"'
       end
 
       it 'validates that @maximum_polling_duration is an integer' do
