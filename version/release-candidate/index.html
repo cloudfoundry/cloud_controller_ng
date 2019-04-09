@@ -13056,11 +13056,12 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
     </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"test-domain.com"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"internal"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
     </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"organization"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+      </span><span class="nt">"organizations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"owning_org_guid"</span><span class="w"> </span><span class="p">}</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="nt">"shared_organizations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="w">
+        </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"shared_org_guid1"</span><span class="p">},</span><span class="w">
+                 </span><span class="p">{</span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"shared_org_guid2"</span><span class="p">}]</span><span class="w">
       </span><span class="p">}</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -13140,11 +13141,12 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
     </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"test-domain.com"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"internal"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
     </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"organization"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+      </span><span class="nt">"organizations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"owning_org_guid"</span><span class="w"> </span><span class="p">}</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="nt">"shared_organizations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="w">
+        </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"shared_org_guid1"</span><span class="p">},</span><span class="w">
+                 </span><span class="p">{</span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"shared_org_guid2"</span><span class="p">}]</span><span class="w">
       </span><span class="p">}</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -13215,6 +13217,76 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 <tr>
 <td>Org Manager</td>
 <td>When an <code class="prettyprint">organization</code> relationship is provided.</td>
+</tr>
+</tbody></table>
+
+          <h3 id="get-a-domain">Get a domain</h3>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/domains/[guid]"</span> <span class="se">\</span>
+  -X GET <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
+
+<span class="w">  </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3a5d3d89-3f89-4f05-8188-8a2b298c79d5"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-03-08T01:06:19Z"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-03-08T01:06:19Z"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"test-domain.com"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"internal"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"organizations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"owning_org_guid"</span><span class="w"> </span><span class="p">}</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"shared_organizations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"shared_org_guid1"</span><span class="p">},</span><span class="w">
+                 </span><span class="p">{</span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"shared_org_guid2"</span><span class="p">}]</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/domains/3a5d3d89-3f89-4f05-8188-8a2b298c79d5"</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+
+</span></code></pre>
+
+<h4 id="definition">Definition</h4>
+
+<p><code class="prettyprint">GET /v3/domains/:guid</code></p>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Space Manager</td>
+</tr>
+<tr>
+<td>Space Auditor</td>
+</tr>
+<tr>
+<td>Org Manager</td>
+</tr>
+<tr>
+<td>Admin</td>
+</tr>
+<tr>
+<td>Admin Read-Only</td>
+</tr>
+<tr>
+<td>Global Auditor</td>
 </tr>
 </tbody></table>
 
