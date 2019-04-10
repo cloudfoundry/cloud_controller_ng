@@ -38,6 +38,10 @@ module VCAP::CloudController
       rescue Sequel::UniqueConstraintViolation
         User.find(guid: user_guid.to_s)
       end
+
+      def logger
+        @logger ||= Steno.logger('security_context_configurer')
+      end
     end
   end
 end

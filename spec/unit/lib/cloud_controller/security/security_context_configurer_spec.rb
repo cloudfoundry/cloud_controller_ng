@@ -9,8 +9,8 @@ module VCAP::CloudController
 
       describe '#configure' do
         let(:auth_token) { 'auth-token' }
-        let(:token_information) { { 'user_id' => user_guid } }
-        let(:user_guid) { 'user-id-1' }
+        let(:token_information) { { 'user_id' => user_id } }
+        let(:user_id) { 'user-id-1' }
 
         before do
           allow(token_decoder).to receive(:decode_token).with(auth_token).and_return(token_information)
@@ -37,10 +37,10 @@ module VCAP::CloudController
         end
 
         context 'when a user_id is present' do
-          let(:token_information) { { 'user_id' => user_guid, 'client_id' => 'foobar' } }
+          let(:token_information) { { 'user_id' => user_id, 'client_id' => 'foobar' } }
 
           context 'when the specified user already exists' do
-            let!(:user) { User.make(guid: user_guid) }
+            let!(:user) { User.make(guid: user_id) }
 
             it 'sets that user on security context' do
               configurer.configure(auth_token)
@@ -53,31 +53,71 @@ module VCAP::CloudController
               expect {
                 configurer.configure(auth_token)
               }.to change { User.count }.by(1)
-              expect(SecurityContext.current_user.guid).to eq(user_guid)
+              expect(SecurityContext.current_user.guid).to eq(user_id)
               expect(SecurityContext.current_user).to be_active
             end
           end
 
           context 'when the specified user is created after verifying it does not exist' do
             it 'finds the created user' do
-              User.make(guid: user_guid)
+              User.make(guid: user_id)
               allow(User).to receive(:find) do
                 allow(User).to receive(:find).and_call_original
                 nil
               end
               configurer.configure(auth_token)
-              expect(SecurityContext.current_user.guid).to eq(user_guid)
+              expect(SecurityContext.current_user.guid).to eq(user_id)
             end
           end
         end
 
         context 'when only a client_id is present' do
-          let(:token_information) { { 'client_id' => user_guid } }
-          let!(:user) { User.make(guid: user_guid) }
+          let(:token_information) { { 'client_id' => user_id } }
+          let!(:user) { User.make(guid: user_id) }
+          let(:uaa_client) { double(UaaClient) }
+          before do
+            allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).
+              and_return(uaa_client)
+          end
 
           it 'uses the client_id to set the user_id' do
             configurer.configure(auth_token)
             expect(SecurityContext.current_user).to eq(user)
+          end
+
+          it 'doesnt needlessly ask the uaa client for users' do
+            expect(uaa_client).not_to receive(:usernames_for_ids)
+            configurer.configure(auth_token)
+          end
+
+          context 'when the client_id is a guid' do
+            let(:user_id) { 'ab0a3e8f-9d53-426e-b73d-e035edbc0c03' }
+
+            context 'when the client_id is also a valid uaa user_id' do
+              before do
+                expect(uaa_client).to receive(:usernames_for_ids).
+                  and_return({ user_id => 'org-manager' })
+              end
+
+              it 'sets invalid token' do
+                configurer.configure(auth_token)
+                expect(SecurityContext.current_user).to be_nil
+                expect(SecurityContext.token).to eq(:invalid_token)
+                expect(SecurityContext.auth_token).to eq(auth_token)
+              end
+            end
+
+            context 'when the client_id is not also a uaa user_id' do
+              before do
+                expect(uaa_client).to receive(:usernames_for_ids).
+                  and_return({})
+              end
+
+              it 'uses the client_id to set the user_id' do
+                configurer.configure(auth_token)
+                expect(SecurityContext.current_user).to eq(user)
+              end
+            end
           end
         end
 
