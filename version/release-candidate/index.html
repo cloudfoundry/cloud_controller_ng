@@ -15095,9 +15095,44 @@ Deployed revisions are revisions that are linked to started processes in the app
 
           <h2 id="sidecars">Sidecars</h2>
 
-<p>Sidecars represent processes
-running alongside
-an app.</p>
+<p>Sidecars are additional operating system processes that are run in the same container as a <a href="#processes">process</a>.</p>
+
+<h4 id="use-cases-for-sidecars">Use cases for sidecars</h4>
+
+<p>Sidecars are useful for any app processes that need to communicate with another within the same container or are otherwise dependent on each other. Some use cases are:</p>
+
+<ul>
+<li>Two or more processes that require access to a shared file</li>
+<li>An Application Performance Monitoring (APM) tool that attaches to a dependent app&rsquo;s processes</li>
+<li>Two or more processes that communicate via a local socket</li>
+</ul>
+
+<h4 id="steps-to-create-a-sidecar">Steps to create a sidecar</h4>
+
+<p>The recommended way to create sidecars for your app is with an <a href="#app-manifest">App Manifest</a>.</p>
+<pre class="highlight yaml"><code> <span class="s">sidecars</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="s">name</span><span class="pi">:</span> <span class="s">authenticator</span>
+    <span class="s">process_types</span><span class="pi">:</span> <span class="pi">[</span> <span class="s1">'</span><span class="s">web'</span><span class="pi">,</span> <span class="s1">'</span><span class="s">worker'</span> <span class="pi">]</span>
+    <span class="s">command</span><span class="pi">:</span> <span class="s">bundle exec run-authenticator</span>
+  <span class="pi">-</span> <span class="s">name</span><span class="pi">:</span> <span class="s">performance monitor</span>
+      <span class="s">process_types</span><span class="pi">:</span> <span class="pi">[</span> <span class="s1">'</span><span class="s">web'</span> <span class="pi">]</span>
+      <span class="s">command</span><span class="pi">:</span> <span class="s">bundle exec run-performance-monitor</span>
+</code></pre>
+
+<ul>
+<li><strong>name</strong> is a user defined identifier (unique per app)</li>
+<li><strong>process_types</strong> is a list of app processes the sidecar will attach to. You can attach multiple sidecars to each process type your app uses</li>
+<li><strong>command</strong> is the command used to start the sidecar</li>
+</ul>
+
+<h4 id="current-limitations">Current Limitations</h4>
+
+<ul>
+<li>Start and stop order of app processes and their sidecars is undefined</li>
+<li>App processes and Sidecar processes are codependent: if either crashes or exits, the other will as well </li>
+<li>Sidecars are currently not independently scalable (memory / disk) and share resources with the main app process and other sidecars within that container</li>
+<li>Sidecars only support PID based health checks; HTTP health-checks for sidecars are not currently supported</li>
+</ul>
 
           <h3 id="the-sidecar-object">The sidecar object</h3>
 <pre class="highlight plaintext"><code>Example Sidecar object
