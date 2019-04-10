@@ -17,6 +17,7 @@ module VCAP::CloudController
       end
 
       private
+
       UUID_REGEX = /\A[\da-f]{8}-([\da-f]{4}-){3}[\da-f]{12}\z/i.freeze
 
       def decode_token(header_token)
@@ -39,7 +40,7 @@ module VCAP::CloudController
       end
 
       def is_uuid_shaped?(id)
-        return true if id =~ UUID_REGEX
+        id =~ UUID_REGEX
       end
 
       def is_shadowing_user?(client_id)
