@@ -455,7 +455,7 @@ module VCAP::CloudController
             message = AppManifestMessage.create_from_yml(params)
             expect(message).to_not be_valid
             expect(message.errors.count).to eq(1)
-            expect(message.errors.full_messages).to include('Services must be a list of service instance names')
+            expect(message.errors.full_messages).to include('Services must be a list of service instances')
           end
         end
       end

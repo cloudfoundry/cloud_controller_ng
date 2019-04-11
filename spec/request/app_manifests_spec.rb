@@ -21,6 +21,7 @@ RSpec.describe 'App Manifests' do
   describe 'POST /v3/apps/:guid/actions/apply_manifest' do
     let(:buildpack) { VCAP::CloudController::Buildpack.make }
     let(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+    let(:client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client, bind: {}) }
     let(:yml_manifest) do
       {
         'applications' => [
@@ -208,6 +209,46 @@ RSpec.describe 'App Manifests' do
         web_process = app_model.web_processes.first
         expect(web_process.memory).to eq(321)
         expect(web_process.disk_quota).to eq(321)
+      end
+    end
+
+    context 'service bindings' do
+      let(:yml_manifest) do
+        {
+          'applications' => [
+            {
+              'name' => 'blah',
+              'services' =>
+                [
+                  {
+                    'name' => service_instance.name,
+                    'parameters' => {
+                      'foo' => 'bar'
+                    }
+                  }
+                ]
+            }
+          ]
+        }.to_yaml
+      end
+
+      before do
+        allow(VCAP::Services::ServiceClientProvider).to receive(:provide).and_return(client)
+        allow(client).to receive(:bind).and_return({ async: false, binding: {}, operation: nil })
+      end
+
+      it 'creates the service bindings with the parameters' do
+        expect {
+          post "/v3/apps/#{app_model.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
+          Delayed::Worker.new.work_off
+        }.to change { VCAP::CloudController::ServiceBinding.count }.from(0).to(1)
+
+        expect(last_response.status).to eq(202)
+
+        service_binding = VCAP::CloudController::ServiceBinding.last
+        expect(client).
+          to have_received(:bind).with(an_instance_of(VCAP::CloudController::ServiceBinding), arbitrary_parameters: { foo: 'bar' }, accepts_incomplete: anything)
+        expect(service_binding.service_instance_name).to eq(service_instance.name)
       end
     end
 

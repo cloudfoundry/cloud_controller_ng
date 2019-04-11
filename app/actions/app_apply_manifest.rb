@@ -51,7 +51,7 @@ module VCAP::CloudController
 
       AppPatchEnvironmentVariables.new(@user_audit_info, manifest_triggered: true).patch(app, message.app_update_environment_variables_message)
 
-      create_service_bindings(message.services, app) if message.services.present?
+      create_service_bindings(message.manifest_service_bindings_message, app) if message.services.present?
       app
     end
 
@@ -96,17 +96,17 @@ module VCAP::CloudController
       end
     end
 
-    def create_service_bindings(services, app)
+    def create_service_bindings(manifest_service_bindings_message, app)
       action = ServiceBindingCreate.new(@user_audit_info, manifest_triggered: true)
-      services.each do |name|
-        service_instance = app.space.find_visible_service_instance_by_name(name)
-        service_instance_not_found!(name) unless service_instance
+      manifest_service_bindings_message.manifest_service_bindings.each do |manifest_service_binding|
+        service_instance = app.space.find_visible_service_instance_by_name(manifest_service_binding.name)
+        service_instance_not_found!(manifest_service_binding.name) unless service_instance
         next if binding_exists?(service_instance, app)
 
         action.create(
           app,
           service_instance,
-          ServiceBindingCreateMessage.new(type: SERVICE_BINDING_TYPE),
+          ServiceBindingCreateMessage.new(type: SERVICE_BINDING_TYPE, data: { parameters: manifest_service_binding.parameters }),
           volume_services_enabled?,
           false
         )

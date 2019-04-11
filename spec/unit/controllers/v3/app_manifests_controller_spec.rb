@@ -467,6 +467,65 @@ RSpec.describe AppManifestsController, type: :controller do
       end
     end
 
+    context 'when the request body includes service-bindings as an array of strings' do
+      let(:service_binder) { instance_double(ServiceBindingCreate, :create) }
+      let(:request_body) do
+        { 'applications' =>
+          [{ 'name' => 'blah', 'services' => %w/shell exxon/ }]
+        }
+      end
+
+      it 'binds the named services to the app' do
+        post :apply_manifest, params: { guid: app_model.guid }.merge(request_body), as: :yaml
+
+        expect(response.status).to eq(202)
+        app_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppApplyManifest%'"))
+        expect(app_apply_manifest_jobs.count).to eq 1
+
+        expect(VCAP::CloudController::Jobs::AppApplyManifestActionJob).to have_received(:new) do |app_guid, message, action|
+          expect(app_guid).to eq app_model.guid
+          expect(message.services).to match_array(%w/shell exxon/)
+          expect(action).to eq app_apply_manifest_action
+        end
+      end
+    end
+
+    context 'when the request body includes service-bindings as an array of hashes' do
+      let(:service_binder) { instance_double(ServiceBindingCreate, :create) }
+      let(:request_body) do
+        { 'applications' =>
+          [{ 'name' => 'blah', 'services' =>  [
+            {
+              'name' => 'has_parameters',
+              'parameters' => {
+                'foo' => 'bar'
+              }
+            },
+            {
+              name: 'no_parameters'
+            }
+          ] }]
+        }
+      end
+
+      it 'binds the named services to the app' do
+        post :apply_manifest, params: { guid: app_model.guid }.merge(request_body), as: :yaml
+
+        expect(response.status).to eq(202)
+        app_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppApplyManifest%'"))
+        expect(app_apply_manifest_jobs.count).to eq 1
+
+        expect(VCAP::CloudController::Jobs::AppApplyManifestActionJob).to have_received(:new) do |app_guid, message, action|
+          expect(app_guid).to eq app_model.guid
+          expect(message.services).to match_array([
+            { name: 'has_parameters', parameters: { foo: 'bar' } },
+            { name: 'no_parameters' }
+          ])
+          expect(action).to eq app_apply_manifest_action
+        end
+      end
+    end
+
     it 'successfully scales the app in a background job' do
       post :apply_manifest, params: { guid: app_model.guid }.merge(request_body), as: :yaml
 

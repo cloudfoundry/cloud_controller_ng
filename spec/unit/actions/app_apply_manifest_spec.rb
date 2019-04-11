@@ -601,7 +601,7 @@ module VCAP::CloudController
         end
 
         describe 'creating service bindings' do
-          let(:message) { AppManifestMessage.create_from_yml({ services: ['si-name'] }) } # why defined here?
+          let(:message) { AppManifestMessage.create_from_yml({ services: ['si-name', { name: 'name', parameters: { 'foo' => 'bar' } }] }) } # why defined here?
           let(:space) { Space.make }
           let(:app) { AppModel.make(space: space) }
 
@@ -609,8 +609,8 @@ module VCAP::CloudController
             TestConfig.override(volume_services_enabled: false)
           end
 
-          context 'valid request' do
-            let(:message) { AppManifestMessage.create_from_yml({ services: ['si-name', 'si2-name'] }) }
+          context 'valid request with list of services' do
+            let(:message) { AppManifestMessage.create_from_yml({ services: ['si-name', { 'name' => 'si2-name', parameters: { 'foo' => 'bar' } }] }) }
             let!(:service_instance) { ManagedServiceInstance.make(name: 'si-name', space: space) }
             let!(:service_instance_2) { ManagedServiceInstance.make(name: 'si2-name', space: space) }
 
@@ -696,12 +696,30 @@ module VCAP::CloudController
             end
           end
 
-          context 'when the service instance does not exist' do
-            let(:message) { AppManifestMessage.create_from_yml({ command: 'new-command', services: ['si-name', 'si-name-2'] }) }
-            it 'bubbles up the error' do
-              expect {
-                app_apply_manifest.apply(app.guid, message)
-              }.to raise_error(CloudController::Errors::NotFound, "Service instance 'si-name' not found")
+          context 'valid request with services that have parameters' do
+            let(:message) { AppManifestMessage.create_from_yml({ services: [
+              'name' => 'si-name',
+              'parameters' => {
+                'gud' => 'service'
+              }
+            ] })
+            }
+            let!(:service_instance) { ManagedServiceInstance.make(name: 'si-name', space: space) }
+            let(:service_binding_create_message) { instance_double(ServiceBindingCreateMessage) }
+
+            before do
+              allow(ServiceBindingCreateMessage).to receive(:new).and_return(service_binding_create_message)
+            end
+
+            it 'calls ServiceBindingCreate with the correct arguments' do
+              app_apply_manifest.apply(app.guid, message)
+              expect(ServiceBindingCreate).to have_received(:new).with(user_audit_info, manifest_triggered: true)
+              expect(ServiceBindingCreateMessage).to have_received(:new).with(
+                type: AppApplyManifest::SERVICE_BINDING_TYPE,
+                data: { parameters: { gud: 'service' } }
+              )
+              expect(service_binding_create).to have_received(:create).
+                with(app, service_instance, service_binding_create_message, false, false)
             end
           end
         end
@@ -751,6 +769,12 @@ module VCAP::CloudController
               expect(process2.memory).to eq(256)
             end
           end
+        end
+
+        context 'when creating a service binding with parameters' do
+          let(:message) { AppManifestMessage.create_from_yml({ services: ['si-name', { name: 'name', parameters: { 'foo' => 'bar' } }] }) } # why defined here?
+          let(:space) { Space.make }
+          let(:app) { AppModel.make(space: space) }
         end
       end
     end
