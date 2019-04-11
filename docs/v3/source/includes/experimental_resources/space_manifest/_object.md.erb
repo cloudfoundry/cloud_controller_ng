@@ -21,6 +21,10 @@ applications:
   services:
   - my-service1
   - my-service2
+  - name: my-service-with-arbitrary-params
+    parameters:
+      key1: value1
+      key2: value2
   stack: cflinuxfs2
   metadata:
     annotations:
@@ -74,18 +78,18 @@ Field | Description
 **buildpacks**  | Must be an Array. <br>a) An empty array, which will automatically select the appropriate default buildpack according to the coding language. <br>b) An array of one or more URLs pointing to buildpacks. <br>c) An array of one or more installed buildpack names. <br>Replaces the legacy `buildpack` field.
 **env** | A key-value hash of environment variables to be used for the app when running.
 **no-route** | Boolean value. When set to `true`, any routes specified with the `routes` attribute will be ignored and any existing routes will be removed; ignored if `false`.
-**processes** | List of configurations for individual process types. See [_Process-level configuration_](#process-level-configuration).
+**processes** | List of configurations for individual process types. See [_Process-level configuration_](#space-manifest-process-level-configuration).
 **random-route** | Boolean value. Creates a random route for the app if `true`; ignored if `false`, if `routes` is specified, if the app already has routes, or if `no-route` is specified.
 **routes** | An array of route hashes declaring HTTP and TCP routes to be mapped to the app. Each route is created if it does not already exist. Example route hash entry: `- route: www.example.com/path`
-**services** | An array of service-instance names to bind to the app.
-**sidecars** | An array of configurations for individual sidecars. See [_Sidecar-level configuration_](#sidecar-level-configuration).
+**services** | An array of service-instances to bind to the app. See [_Service-level configuration_](#space-manifest-service-level-configuration).
+**sidecars** | An array of configurations for individual sidecars. See [_Sidecar-level configuration_](#space-manifest-sidecar-level-configuration).
 **stack** | The root filesystem to use with the buildpack, for example `cflinuxfs2`.
 **metadata.labels** _(experimental)_ | [Labels](#labels) applied to the app.
 **metadata.annotations** _(experimental)_ | [Annotations](#annotations) applied to the app.
 **buildpack**  | **DEPRECATED in favor of the `buildpacks` field above.** <br> a) Blank OR `default` OR `null` will automatically select the appropriate default buildpack according to the coding language. <br>b) A URL pointing to a buildpack. <br>c) Name of an installed buildpack.
 
 
-#### Process-level configuration
+#### <a name="space-manifest-process-level-configuration"></a> Process-level configuration
 This configuration is for the individual process. Each process is created if it does not already exist.
 
 > **Note:** With the exception of "type", process-level fields can also be provided at the top-level and will apply to the "web" process only. <br/><br/> If there is a process with "type: web" defined in the processes section, then all top level process configuration will be ignored.
@@ -102,8 +106,17 @@ Field | Description
 **memory** | The memory limit for all instances of the web process. <br>This attribute requires a unit of measurement: `B`, `K`, `KB`, `M`, `MB`, `G`, `GB`, `T`, or `TB` in upper case or lower case.
 **timeout** | Time in seconds at which the health-check will report failure.
 
+####  <a name="space-manifest-service-level-configuration"></a> Service-level configuration
+This configuration is _creating_ new service bindings between the app and a service instance. The `services` field can
+take either an array of service instance name strings or an array of the following service-level fields.
 
-#### Sidecar-level configuration
+Field | Description
+---- | -----------
+**name** | **(Required)** Service instance name.  The name of the service instance to be bound to.
+**parameters** | A map of arbitrary key/value pairs to send to the service broker during binding.
+
+
+####  <a name="space-manifest-sidecar-level-configuration"></a> Sidecar-level configuration
 This configuration is for the individual sidecar.  Each sidecar is created if it does not already exist.
 
 Field | Description
