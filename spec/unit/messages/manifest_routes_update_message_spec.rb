@@ -53,16 +53,29 @@ module VCAP::CloudController
           }
         end
 
-        let(:routes) do
-          [
-            { 'route' => 'existing.example.com' },
-            { 'route' => 'new.example.com' },
-          ]
+        context 'when we provide zero routes' do
+          let(:routes) { [] }
+
+          it 'is not valid' do
+            msg = ManifestRoutesUpdateMessage.new(body)
+            expect(msg.valid?).to eq(false)
+            expect(msg.errors.full_messages).to include('Cannot use the combination of properties: no-route, routes')
+          end
         end
 
-        it 'is valid' do
-          msg = ManifestRoutesUpdateMessage.new(body)
-          expect(msg.valid?).to eq(true)
+        context 'when we provide one or more routes' do
+          let(:routes) do
+            [
+              { 'route' => 'existing.example.com' },
+              { 'route' => 'new.example.com' },
+            ]
+          end
+
+          it 'is not valid' do
+            msg = ManifestRoutesUpdateMessage.new(body)
+            expect(msg.valid?).to eq(false)
+            expect(msg.errors.full_messages).to include('Cannot use the combination of properties: no-route, routes')
+          end
         end
       end
 

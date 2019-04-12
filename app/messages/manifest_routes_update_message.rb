@@ -26,6 +26,7 @@ module VCAP::CloudController
     validate :routes_are_uris, if: proc { |record| record.requested?(:routes) }
     validate :no_route_is_boolean
     validate :random_route_is_boolean
+    validate :no_route_and_routes_conflict
 
     def manifest_routes
       @manifest_routes ||= routes.map { |route| ManifestRoute.parse(route[:route]) }
@@ -48,6 +49,12 @@ module VCAP::CloudController
 
       unless [true, false].include?(no_route)
         errors.add(:base, 'No-route must be a boolean')
+      end
+    end
+
+    def no_route_and_routes_conflict
+      if no_route && requested?(:routes)
+        errors.add(:base, 'Cannot use the combination of properties: no-route, routes')
       end
     end
 
