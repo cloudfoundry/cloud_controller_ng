@@ -61,6 +61,7 @@ module VCAP::CloudController
         'dashboard_url' => dashboard_url,
         'shared_from' => nil,
         'shared_to' => [],
+        'service_broker_name' => service_broker.name,
         'service_plan' => {
           'guid' => service_plan.guid,
           'name' => service_plan.name,
