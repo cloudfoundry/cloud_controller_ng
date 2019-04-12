@@ -826,6 +826,7 @@ module VCAP::Services
         test_case(:deprovision, 422, broker_partial_json,                                       error: Errors::ServiceBrokerBadResponse)
         test_case(:deprovision, 422, broker_malformed_json,                                     error: Errors::ServiceBrokerBadResponse)
         test_case(:deprovision, 422, { error: 'AsyncRequired' }.to_json,                        error: Errors::AsyncRequired)
+        test_case(:deprovision, 422, { error: 'ConcurrencyError' }.to_json,                     error: Errors::ConcurrencyError)
         test_common_error_cases(:deprovision)
 
         test_case(:unbind, 200, broker_partial_json,                                            error: Errors::ServiceBrokerResponseMalformed, description: invalid_json_error(broker_partial_json, binding_uri))

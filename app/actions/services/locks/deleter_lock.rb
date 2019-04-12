@@ -17,14 +17,21 @@ module VCAP::CloudController
         service_instance.lock!
         service_instance.last_operation.lock! if service_instance.last_operation
 
-        raise_if_instance_locked(service_instance)
+        try_to_cancel_last_operation!
 
         service_instance.save_with_new_operation({}, { type: @type, state: 'in progress' })
+
         @needs_unlock = true
       end
     end
 
     def unlock_and_fail!
+      if @cancelled_operation
+        service_instance.update_last_operation(@cancelled_operation.to_hash)
+        @needs_unlock = false
+        return
+      end
+
       service_instance.save_and_update_operation(
         last_operation: {
           type: @type,
@@ -41,7 +48,7 @@ module VCAP::CloudController
       @needs_unlock = false
     end
 
-    def enqueue_unlock!(attributes_to_update, job)
+    def enqueue_and_unlock!(attributes_to_update, job)
       service_instance.save_and_update_operation(attributes_to_update)
       enqueuer = Jobs::Enqueuer.new(job, queue: 'cc-generic')
       enqueuer.enqueue
@@ -50,6 +57,20 @@ module VCAP::CloudController
 
     def needs_unlock?
       @needs_unlock
+    end
+
+    private
+
+    def try_to_cancel_last_operation!
+      if cancellable_operation?(service_instance.last_operation)
+        @cancelled_operation = service_instance.last_operation
+      else
+        raise_if_instance_locked(service_instance)
+      end
+    end
+
+    def cancellable_operation?(operation)
+      operation && operation.state == 'in progress' && operation.type == 'create'
     end
   end
 end

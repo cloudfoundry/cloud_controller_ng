@@ -12,7 +12,7 @@ RSpec.describe 'Broker API Versions' do
       'broker_api_v2.6_spec.rb' => 'a1608878f601819c90b44be5f317ec44',
       'broker_api_v2.7_spec.rb' => '6db4cba42ac923ddf748b4f53914d057',
       'broker_api_v2.8_spec.rb' => '2b1b662b4874f5bac4481de7cf15b363',
-      'broker_api_v2.9_spec.rb' => 'c297d302b57dd5b1aba9c92f0c9c4c4f',
+      'broker_api_v2.9_spec.rb' => '0df16ae4742381714ea5664b3796b61a',
       'broker_api_v2.10_spec.rb' => '27e81c4c540e39a4e4eac70c8efb14ba',
       'broker_api_v2.11_spec.rb' => '99e61dc50ceb635b09b3bd16901a4fa6',
       'broker_api_v2.12_spec.rb' => '4023dffdcaae014556dcdba9f7d206bb',

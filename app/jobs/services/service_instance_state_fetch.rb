@@ -21,6 +21,8 @@ module VCAP::CloudController
           service_instance = ManagedServiceInstance.first(guid: service_instance_guid)
           return if service_instance.nil?
 
+          @intended_operation = service_instance.last_operation
+
           client = VCAP::Services::ServiceClientProvider.provide(instance: service_instance)
 
           last_operation_result = client.fetch_service_instance_last_operation(service_instance)
@@ -50,6 +52,8 @@ module VCAP::CloudController
         def update_with_attributes(last_operation, service_instance)
           ServiceInstance.db.transaction do
             service_instance.lock!
+            return unless @intended_operation == service_instance.last_operation
+
             service_instance.save_and_update_operation(
               last_operation: last_operation.slice(:state, :description)
             )

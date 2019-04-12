@@ -407,6 +407,76 @@ RSpec.describe 'Service Broker API integration' do
         end
       end
     end
+
+    describe 'cancel create async operation' do
+      before do
+        setup_broker(default_catalog)
+        @broker = VCAP::CloudController::ServiceBroker.find guid: @broker_guid
+      end
+
+      context 'when provisioning a service instance' do
+        it 'delete request should cancel the creation and delete the instance synchronously' do
+          async_provision_service
+          expect(
+            a_request(:put, provision_url_for_broker(@broker, accepts_incomplete: true))
+          ).to have_been_made
+          service_instance = VCAP::CloudController::ManagedServiceInstance.find(guid: @service_instance_guid)
+
+          expect(delete_service).to have_status_code(204)
+
+          expect(
+            a_request(:delete, deprovision_url(service_instance))
+          ).to have_been_made
+
+          expect(VCAP::CloudController::Event.order(:id).all.map(&:type)).to end_with(
+            'audit.service_instance.start_create',
+            'audit.service_instance.delete'
+          )
+
+          expect { service_instance.reload }.to raise_error(Sequel::Error)
+        end
+
+        it 'should not delete the instance if the broker rejects the request' do
+          async_provision_service
+          expect(
+            a_request(:put, provision_url_for_broker(@broker, accepts_incomplete: true))
+          ).to have_been_made
+          service_instance = VCAP::CloudController::ManagedServiceInstance.find(guid: @service_instance_guid)
+
+          expect(delete_service(status: 422, broker_response_body: %({"error": "ConcurrencyError"}))).to have_status_code(409)
+
+          expect { service_instance.reload }.not_to raise_error
+        end
+
+        it 'delete request should cancel the creation and delete the instance asynchronously' do
+          async_provision_service
+          expect(
+            a_request(:put, provision_url_for_broker(@broker, accepts_incomplete: true))
+          ).to have_been_made
+          service_instance = VCAP::CloudController::ManagedServiceInstance.find(guid: @service_instance_guid)
+
+          expect(async_delete_service).to have_status_code(202)
+          expect(
+            a_request(:delete, deprovision_url(service_instance, accepts_incomplete: true))
+          ).to have_been_made
+          expect { service_instance.reload }.not_to raise_error
+
+          Timecop.freeze(Time.now) do
+            stub_async_last_operation
+            Delayed::Worker.new.work_off
+            expect(a_request(:get, %r{#{service_instance_url(service_instance)}/last_operation})).to have_been_made
+          end
+
+          expect(VCAP::CloudController::Event.order(:id).all.map(&:type)).to end_with(
+            'audit.service_instance.start_create',
+            'audit.service_instance.start_delete',
+            'audit.service_instance.delete'
+          )
+
+          expect { service_instance.reload }.to raise_error(Sequel::Error)
+        end
+      end
+    end
   end
 end
 

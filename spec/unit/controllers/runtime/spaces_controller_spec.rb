@@ -1133,7 +1133,7 @@ module VCAP::CloudController
           end
 
           context 'when an instance has an operation in progress' do
-            let(:last_operation) { ServiceInstanceOperation.make(state: 'in progress') }
+            let(:last_operation) { ServiceInstanceOperation.make(type: 'update', state: 'in progress') }
 
             before do
               service_instance_1.service_instance_operation = last_operation

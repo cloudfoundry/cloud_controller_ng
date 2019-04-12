@@ -15,6 +15,12 @@ module VCAP::CloudController
         errors_accumulator, warnings_accumulator = errors_and_warnings
 
         if service_instance.operation_in_progress?
+          if service_instance.last_operation.type == 'create'
+            instance_errors = delete_one(service_instance)
+            errors_accumulator.concat(instance_errors)
+            next
+          end
+
           errors_accumulator << CloudController::Errors::ApiError.new_from_details('AsyncServiceInstanceOperationInProgress', service_instance.name)
           next
         end
@@ -28,7 +34,7 @@ module VCAP::CloudController
         errors.concat delete_metadata(service_instance)
 
         if errors.empty?
-          instance_errors = delete_service_instance(service_instance)
+          instance_errors = delete_one(service_instance)
           errors_accumulator.concat(instance_errors)
         else
           errors_accumulator << recursive_delete_error(service_instance, errors)
@@ -66,7 +72,7 @@ module VCAP::CloudController
       errors
     end
 
-    def delete_service_instance(service_instance)
+    def delete_one(service_instance)
       errors = []
 
       if !service_instance.exists?
@@ -88,7 +94,7 @@ module VCAP::CloudController
           lock.unlock_and_destroy!
           log_audit_event(service_instance)
         else
-          lock.enqueue_unlock!(attributes_to_update, build_fetch_job(service_instance))
+          lock.enqueue_and_unlock!(attributes_to_update, build_fetch_job(service_instance))
           @event_repository.record_service_instance_event(:start_delete, service_instance, {})
         end
       rescue => e

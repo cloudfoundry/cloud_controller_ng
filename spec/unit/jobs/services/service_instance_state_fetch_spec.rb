@@ -127,7 +127,8 @@ module VCAP::CloudController
 
           describe 'updating the service instance description' do
             it 'saves the description provided by the broker' do
-              expect { run_job(job) }.to change { service_instance.last_operation.reload.description }.from('description goes here').to('description')
+              expect { run_job(job) }.to change { service_instance.last_operation.reload.description }.
+                from('description goes here').to('description')
             end
 
             context 'when the broker returns a long text description (mysql)' do
@@ -149,7 +150,8 @@ module VCAP::CloudController
               end
 
               it 'does not update the field' do
-                expect { run_job(job) }.not_to change { service_instance.last_operation.reload.description }.from('description goes here')
+                expect { run_job(job) }.not_to change { service_instance.last_operation.reload.description }.
+                  from('description goes here')
               end
             end
           end
@@ -173,6 +175,32 @@ module VCAP::CloudController
 
                 event = Event.find(type: 'audit.service_instance.delete')
                 expect(event).to be
+              end
+
+              context 'when during client call the last operation was replaced' do
+                before do
+                  allow(client).to receive(:fetch_service_instance_last_operation) do
+                    service_instance.save_with_new_operation(
+                      {},
+                      {
+                        type: 'something else',
+                        state: 'in progress'
+                      }
+                    )
+
+                    last_operation_response
+                  end
+                end
+
+                it 'did not do anything' do
+                  run_job(job)
+
+                  expect(ManagedServiceInstance.first(guid: service_instance.guid)).not_to be_nil
+                  expect(Event.find(type: 'audit.service_instance.delete')).not_to be
+
+                  db_service_instance = ManagedServiceInstance.first(guid: service_instance.guid)
+                  expect(db_service_instance.last_operation.state).not_to eq(state)
+                end
               end
             end
 
