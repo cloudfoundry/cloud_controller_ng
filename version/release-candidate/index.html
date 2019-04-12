@@ -11363,6 +11363,10 @@ excluded in the response based on the user&rsquo;s role.</p>
   <span class="s">services</span><span class="pi">:</span>
   <span class="pi">-</span> <span class="s">my-service1</span>
   <span class="pi">-</span> <span class="s">my-service2</span>
+  <span class="pi">-</span> <span class="s">name</span><span class="pi">:</span> <span class="s">my-service-with-arbitrary-params</span>
+    <span class="s">parameters</span><span class="pi">:</span>
+      <span class="s">key1</span><span class="pi">:</span> <span class="s">value1</span>
+      <span class="s">key2</span><span class="pi">:</span> <span class="s">value2</span>
   <span class="s">stack</span><span class="pi">:</span> <span class="s">cflinuxfs2</span>
   <span class="s">metadata</span><span class="pi">:</span>
     <span class="s">annotations</span><span class="pi">:</span>
@@ -11420,7 +11424,7 @@ excluded in the response based on the user&rsquo;s role.</p>
 </tr>
 <tr>
 <td><strong>processes</strong></td>
-<td>List of configurations for individual process types. See <a href="#process-level-configuration"><em>Process-level configuration</em></a>.</td>
+<td>List of configurations for individual process types. See <a href="#app-manifest-process-level-configuration"><em>Process-level configuration</em></a>.</td>
 </tr>
 <tr>
 <td><strong>random-route</strong></td>
@@ -11432,11 +11436,11 @@ excluded in the response based on the user&rsquo;s role.</p>
 </tr>
 <tr>
 <td><strong>services</strong></td>
-<td>An array of service-instance names to bind to the app.</td>
+<td>An array of service-instances to bind to the app. See <a href="#app-manifest-service-level-configuration"><em>Service-level configuration</em></a>.</td>
 </tr>
 <tr>
 <td><strong>sidecars</strong></td>
-<td>An array of configurations for individual sidecars. See <a href="#sidecar-level-configuration"><em>Sidecar-level configuration</em></a>.</td>
+<td>An array of configurations for individual sidecars. See <a href="#app-manifest-sidecar-level-configuration"><em>Sidecar-level configuration</em></a>.</td>
 </tr>
 <tr>
 <td><strong>stack</strong></td>
@@ -11456,7 +11460,7 @@ excluded in the response based on the user&rsquo;s role.</p>
 </tr>
 </tbody></table>
 
-<h4 id="process-level-configuration">Process-level configuration</h4>
+<h4 id="process-level-configuration"><a name="app-manifest-process-level-configuration"></a> Process-level configuration</h4>
 
 <p>This configuration is for the individual process. Each process is created if it does not already exist.</p>
 
@@ -11508,7 +11512,28 @@ excluded in the response based on the user&rsquo;s role.</p>
 </tr>
 </tbody></table>
 
-<h4 id="sidecar-level-configuration">Sidecar-level configuration</h4>
+<h4 id="service-level-configuration"><a name="app-manifest-service-level-configuration"></a> Service-level configuration</h4>
+
+<p>This configuration is <em>creating</em> new service bindings between the app and a service instance. The <code class="prettyprint">services</code> field can
+take either an array of service instance name strings or an array of the following service-level fields.</p>
+
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>name</strong></td>
+<td><strong>(Required)</strong> Service instance name.  The name of the service instance to be bound to.</td>
+</tr>
+<tr>
+<td><strong>parameters</strong></td>
+<td>A map of arbitrary key/value pairs to send to the service broker during binding.</td>
+</tr>
+</tbody></table>
+
+<h4 id="sidecar-level-configuration"><a name="app-manifest-sidecar-level-configuration"></a> Sidecar-level configuration</h4>
 
 <p>This configuration is for the individual sidecar.  Each sidecar is created if it does not already exist.</p>
 
@@ -13264,29 +13289,41 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 
 <table><thead>
 <tr>
-<th></th>
+<th>Roles</th>
+<th>Notes</th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Space Developer</td>
+<td></td>
 </tr>
 <tr>
 <td>Space Manager</td>
+<td></td>
 </tr>
 <tr>
 <td>Space Auditor</td>
+<td></td>
 </tr>
 <tr>
 <td>Org Manager</td>
+<td></td>
+</tr>
+<tr>
+<td>Org Billing Manager</td>
+<td>Can only view shared domains.</td>
 </tr>
 <tr>
 <td>Admin</td>
+<td></td>
 </tr>
 <tr>
 <td>Admin Read-Only</td>
+<td></td>
 </tr>
 <tr>
 <td>Global Auditor</td>
+<td></td>
 </tr>
 </tbody></table>
 
@@ -15729,6 +15766,10 @@ Deployed revisions are revisions that are linked to started processes in the app
   <span class="s">services</span><span class="pi">:</span>
   <span class="pi">-</span> <span class="s">my-service1</span>
   <span class="pi">-</span> <span class="s">my-service2</span>
+  <span class="pi">-</span> <span class="s">name</span><span class="pi">:</span> <span class="s">my-service-with-arbitrary-params</span>
+    <span class="s">parameters</span><span class="pi">:</span>
+      <span class="s">key1</span><span class="pi">:</span> <span class="s">value1</span>
+      <span class="s">key2</span><span class="pi">:</span> <span class="s">value2</span>
   <span class="s">stack</span><span class="pi">:</span> <span class="s">cflinuxfs2</span>
   <span class="s">metadata</span><span class="pi">:</span>
     <span class="s">annotations</span><span class="pi">:</span>
@@ -15806,7 +15847,7 @@ Deployed revisions are revisions that are linked to started processes in the app
 </tr>
 <tr>
 <td><strong>processes</strong></td>
-<td>List of configurations for individual process types. See <a href="#process-level-configuration"><em>Process-level configuration</em></a>.</td>
+<td>List of configurations for individual process types. See <a href="#space-manifest-process-level-configuration"><em>Process-level configuration</em></a>.</td>
 </tr>
 <tr>
 <td><strong>random-route</strong></td>
@@ -15818,11 +15859,11 @@ Deployed revisions are revisions that are linked to started processes in the app
 </tr>
 <tr>
 <td><strong>services</strong></td>
-<td>An array of service-instance names to bind to the app.</td>
+<td>An array of service-instances to bind to the app. See <a href="#space-manifest-service-level-configuration"><em>Service-level configuration</em></a>.</td>
 </tr>
 <tr>
 <td><strong>sidecars</strong></td>
-<td>An array of configurations for individual sidecars. See <a href="#sidecar-level-configuration"><em>Sidecar-level configuration</em></a>.</td>
+<td>An array of configurations for individual sidecars. See <a href="#space-manifest-sidecar-level-configuration"><em>Sidecar-level configuration</em></a>.</td>
 </tr>
 <tr>
 <td><strong>stack</strong></td>
@@ -15842,7 +15883,7 @@ Deployed revisions are revisions that are linked to started processes in the app
 </tr>
 </tbody></table>
 
-<h4 id="process-level-configuration">Process-level configuration</h4>
+<h4 id="process-level-configuration"><a name="space-manifest-process-level-configuration"></a> Process-level configuration</h4>
 
 <p>This configuration is for the individual process. Each process is created if it does not already exist.</p>
 
@@ -15894,7 +15935,28 @@ Deployed revisions are revisions that are linked to started processes in the app
 </tr>
 </tbody></table>
 
-<h4 id="sidecar-level-configuration">Sidecar-level configuration</h4>
+<h4 id="service-level-configuration"><a name="space-manifest-service-level-configuration"></a> Service-level configuration</h4>
+
+<p>This configuration is <em>creating</em> new service bindings between the app and a service instance. The <code class="prettyprint">services</code> field can
+take either an array of service instance name strings or an array of the following service-level fields.</p>
+
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>name</strong></td>
+<td><strong>(Required)</strong> Service instance name.  The name of the service instance to be bound to.</td>
+</tr>
+<tr>
+<td><strong>parameters</strong></td>
+<td>A map of arbitrary key/value pairs to send to the service broker during binding.</td>
+</tr>
+</tbody></table>
+
+<h4 id="sidecar-level-configuration"><a name="space-manifest-sidecar-level-configuration"></a> Sidecar-level configuration</h4>
 
 <p>This configuration is for the individual sidecar.  Each sidecar is created if it does not already exist.</p>
 
