@@ -34,4 +34,5 @@ The recommended way to create sidecars for your app is with an [App Manifest](#a
 - App processes and Sidecar processes are codependent: if either crashes or exits, the other will as well 
 - Sidecars are currently not independently scalable (memory / disk) and share resources with the main app process and other sidecars within that container
 - Sidecars only support PID based health checks; HTTP health-checks for sidecars are not currently supported
+- This has only been tested on Linux based systems
 
