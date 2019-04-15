@@ -589,6 +589,20 @@ module VCAP::Services::ServiceBrokers::V2
         end
       end
 
+      context 'when the caller passes maintenance_info' do
+        it 'includes the maintenance_info in the request to the broker' do
+          client.update(instance, old_plan, maintenance_info: { version: '2.0' })
+
+          expect(http_client).to have_received(:patch).with(
+            anything,
+            hash_including({
+              maintenance_info: { version: '2.0' },
+              previous_values: {}
+            })
+          )
+        end
+      end
+
       context 'when the caller passes the accepts_incomplete flag' do
         let(:path) { "/v2/service_instances/#{instance.guid}?accepts_incomplete=true" }
 

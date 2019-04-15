@@ -19,6 +19,7 @@ module VCAP::CloudController
       attribute :name, String
       attribute :parameters, Hash, default: nil
       attribute :tags, [String], default: []
+      attribute :maintenance_info, Hash, default: nil, exclude_in: [:create]
       to_one :space
       to_one :service_plan
       to_many :service_bindings, route_for: [:get], exclude_in: [:create, :update]

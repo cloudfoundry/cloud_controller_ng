@@ -254,7 +254,7 @@ module VCAP::CloudController::BrokerApiHelper
     )
   end
 
-  def async_update_service(status: 202, operation_data: nil, dashboard_url: nil)
+  def async_update_service(status: 202, operation_data: nil, dashboard_url: nil, maintenance_info: nil)
     broker_update_response_body = {}
 
     if operation_data
@@ -268,9 +268,8 @@ module VCAP::CloudController::BrokerApiHelper
     stub_request(:patch, %r{broker-url/v2/service_instances/[[:alnum:]-]+}).
       to_return(status: status, body: broker_update_response_body.to_json)
 
-    body = {
-      service_plan_guid: @large_plan_guid
-    }
+    body = { service_plan_guid: @large_plan_guid }
+    body = { maintenance_info: maintenance_info } if maintenance_info
 
     put("/v2/service_instances/#{@service_instance_guid}?accepts_incomplete=true",
         body.to_json,

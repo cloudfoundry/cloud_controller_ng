@@ -34,6 +34,7 @@ module VCAP::CloudController
           service_key_guids: { type: '[string]' },
           tags: { type: '[string]' },
           parameters: { type: 'hash' },
+          maintenance_info: { type: 'hash' },
         })
       end
     end

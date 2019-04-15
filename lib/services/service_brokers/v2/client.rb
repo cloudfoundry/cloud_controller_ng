@@ -163,7 +163,7 @@ module VCAP::Services::ServiceBrokers::V2
       }
     end
 
-    def update(instance, plan, accepts_incomplete: false, arbitrary_parameters: nil, previous_values: {})
+    def update(instance, plan, accepts_incomplete: false, arbitrary_parameters: nil, previous_values: {}, maintenance_info: nil)
       path = service_instance_resource_path(instance, accepts_incomplete: accepts_incomplete)
 
       body = {
@@ -172,8 +172,9 @@ module VCAP::Services::ServiceBrokers::V2
         previous_values: previous_values,
         context:         context_hash_with_instance_name(instance)
       }
-      body[:parameters] = arbitrary_parameters if arbitrary_parameters
-      response          = @http_client.patch(path, body)
+      body[:parameters]       = arbitrary_parameters if arbitrary_parameters
+      body[:maintenance_info] = maintenance_info if maintenance_info
+      response                = @http_client.patch(path, body)
 
       parsed_response     = @response_parser.parse_update(path, response)
       last_operation_hash = parsed_response['last_operation'] || {}

@@ -237,7 +237,7 @@ module VCAP::Services::ServiceBrokers
           expect(plan.description).to eq(plan_description)
           expect(plan.plan_updateable).to eq(true)
           expect(plan.maximum_polling_duration).to eq(3600)
-          expect(JSON.parse(plan.maintenance_info)).to eq(plan_maintenance_info)
+          expect(plan.parsed_maintenance_info).to eq(plan_maintenance_info)
           expect(JSON.parse(plan.extra)).to eq({ 'cost' => '0.0' })
           expect(plan.create_instance_schema).to eq('{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}')
           expect(plan.update_instance_schema).to eq('{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}')
@@ -623,7 +623,7 @@ module VCAP::Services::ServiceBrokers
             expect(plan.bindable).to be true
             expect(plan.plan_updateable).to be true
             expect(plan.maximum_polling_duration).to eq(3600)
-            expect(JSON.parse(plan.maintenance_info)).to eq(plan_maintenance_info)
+            expect(plan.parsed_maintenance_info).to eq(plan_maintenance_info)
             expect(plan.create_instance_schema).to eq('{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}')
             expect(plan.update_instance_schema).to eq('{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}')
             expect(plan.create_binding_schema).to eq('{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}')

@@ -38,6 +38,7 @@ module VCAP::CloudController
     def update_broker_needed?(attrs, old_service_plan_guid, service_instance)
       return true if attrs['parameters']
       return true if attrs['name'] && service_instance.service.allow_context_updates
+      return true if attrs['maintenance_info']
       return false if !attrs['service_plan_guid']
 
       attrs['service_plan_guid'] != old_service_plan_guid
@@ -74,7 +75,8 @@ module VCAP::CloudController
         service_plan,
         accepts_incomplete: accepts_incomplete,
         arbitrary_parameters: request_attrs['parameters'],
-        previous_values: previous_values
+        previous_values: previous_values,
+        maintenance_info: request_attrs['maintenance_info'],
       )
 
       service_instance.last_operation.update_attributes(response[:last_operation])

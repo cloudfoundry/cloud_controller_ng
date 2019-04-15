@@ -487,6 +487,7 @@ RSpec.describe 'Service Broker API integration' do
 
       before do
         setup_broker(catalog)
+        @broker = VCAP::CloudController::ServiceBroker.find guid: @broker_guid
       end
 
       it 'is saved with the service plan' do
@@ -497,6 +498,33 @@ RSpec.describe 'Service Broker API integration' do
         parsed_body = MultiJson.load(last_response.body)
         maintenance_info = parsed_body['entity']['maintenance_info']
         expect(maintenance_info).to eq({ 'version' => '2.0' })
+      end
+
+      context 'when updating the service with the provided maintanance_info' do
+        before do
+          provision_service
+        end
+
+        it 'should forward the maintanance info to the broker' do
+          response = async_update_service(maintenance_info: { 'version' => '2.0' })
+          expect(response).to have_status_code(202)
+          expect(
+            a_request(:patch, update_url_for_broker(@broker, accepts_incomplete: true)).with(
+              body: hash_including(maintenance_info: { version: '2.0' })
+            )
+          ).to have_been_made
+        end
+
+        context 'when the maintenance_info does not match the one from the service plan' do
+          it 'should forward the maintanance info to the broker' do
+            response = async_update_service(maintenance_info: { 'version' => '1.0' })
+            expect(response).to have_status_code(422)
+            expect(JSON.parse(response.body)['error_code']).to eq('CF-MaintenanceInfoMismatch')
+            expect(
+              a_request(:patch, update_url_for_broker(@broker, accepts_incomplete: true))
+            ).to_not have_been_made
+          end
+        end
       end
     end
   end

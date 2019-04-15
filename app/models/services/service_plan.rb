@@ -143,6 +143,10 @@ module VCAP::CloudController
       visible_plans.include?(self)
     end
 
+    def parsed_maintenance_info
+      JSON.parse(maintenance_info)
+    end
+
     private
 
     def before_validation

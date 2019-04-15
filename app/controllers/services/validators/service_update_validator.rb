@@ -11,6 +11,7 @@ module VCAP::CloudController
         validate_changing_plan(service_plan, service, service_instance, update_attrs['service_plan_guid'])
         check_plan_still_valid(service_instance, service_plan, update_attrs['service_plan_guid'])
         validate_update_of_service_parameters(service_instance, update_attrs['parameters'])
+        validate_maintenance_info_update(service_plan, update_attrs['maintenance_info'])
         true
       end
 
@@ -30,6 +31,14 @@ module VCAP::CloudController
 
         if update_attrs['name'] != service_instance.name
           raise CloudController::Errors::ApiError.new_from_details('SharedServiceInstanceCannotBeRenamed')
+        end
+      end
+
+      def validate_maintenance_info_update(service_plan, maintenance_info)
+        return unless maintenance_info
+
+        if service_plan.maintenance_info.nil? || maintenance_info != service_plan.parsed_maintenance_info
+          raise CloudController::Errors::ApiError.new_from_details('MaintenanceInfoMismatch')
         end
       end
 
