@@ -6,7 +6,7 @@ module VCAP::CloudController
       let(:service_broker_url) { "http://example.com/v2/service_instances/#{service_instance.guid}" }
       let(:service_broker) { ServiceBroker.make(broker_url: 'http://example.com', auth_username: 'auth_username', auth_password: 'auth_password') }
       let(:service) { Service.make(plan_updateable: true, service_broker: service_broker) }
-      let(:old_service_plan) { ServicePlan.make(:v2, service: service, free: true) }
+      let(:old_service_plan) { ServicePlan.make(:v2, service: service, free: true, maintenance_info: '{ "version": "2.0" }') }
       let(:new_service_plan) { ServicePlan.make(:v2, service: service) }
       let(:service_instance) { ManagedServiceInstance.make(service_plan: old_service_plan) }
       let(:space) { service_instance.space }
@@ -17,7 +17,7 @@ module VCAP::CloudController
           space: space,
           service_plan: old_service_plan,
           service: service,
-          update_attrs: update_attrs
+          update_attrs: update_attrs,
         }
       end
 
@@ -28,6 +28,14 @@ module VCAP::CloudController
 
         context 'and when plan update requested on a service that allows update' do
           let(:update_attrs) { { 'service_plan_guid' => new_service_plan.guid } }
+
+          it 'returns true' do
+            expect(ServiceUpdateValidator.validate!(service_instance, args)).to eq(true)
+          end
+        end
+
+        context 'and when maintenance_info update requested' do
+          let(:update_attrs) { { 'maintenance_info' => { 'version' => '2.0' } } }
 
           it 'returns true' do
             expect(ServiceUpdateValidator.validate!(service_instance, args)).to eq(true)
@@ -221,6 +229,35 @@ module VCAP::CloudController
             it 'succeeds' do
               expect(ServiceUpdateValidator.validate!(service_instance, args)).to eq(true)
             end
+          end
+        end
+
+        context 'when mismatching maintenance_info update requested' do
+          let(:update_attrs) { { 'maintenance_info' => { 'version' => '1.0' } } }
+
+          it 'errors' do
+            expect {
+              ServiceUpdateValidator.validate!(service_instance, args)
+            }.to raise_error(
+              CloudController::Errors::ApiError,
+              'The maintenance requested is not available for this service instance. ' \
+              'Please confirm your maintenance_info is available for the service plan'
+            )
+          end
+        end
+
+        context 'when maintenance_info is absent on service_plan and maintenance_info update requested' do
+          let(:update_attrs) { { 'maintenance_info' => { 'version' => '2.0' } } }
+          let(:old_service_plan) { ServicePlan.make(:v2, service: service, free: true) }
+
+          it 'errors' do
+            expect {
+              ServiceUpdateValidator.validate!(service_instance, args)
+            }.to raise_error(
+              CloudController::Errors::ApiError,
+              'The maintenance requested is not available for this service instance. ' \
+              'Please confirm your maintenance_info is available for the service plan'
+            )
           end
         end
 

@@ -11,7 +11,7 @@ module CloudController
 
           entity['maintenance_info'] = {}
           if plan.maintenance_info
-            entity['maintenance_info'] = JSON.parse(plan.maintenance_info)
+            entity['maintenance_info'] = plan.parsed_maintenance_info
           end
 
           schemas = present_schemas(plan)

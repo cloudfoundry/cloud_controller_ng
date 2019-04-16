@@ -58,7 +58,7 @@ class FakeServiceBrokerV2Client
     }
   end
 
-  def update(_instance, _plan, accepts_incomplete: false, arbitrary_parameters: nil, previous_values: {})
+  def update(_instance, _plan, accepts_incomplete: false, arbitrary_parameters: nil, previous_values: {}, maintenance_info: nil)
     [{
       last_operation: {
         type:        'update',
