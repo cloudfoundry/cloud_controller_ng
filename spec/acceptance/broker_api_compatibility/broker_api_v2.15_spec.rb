@@ -477,6 +477,28 @@ RSpec.describe 'Service Broker API integration' do
         end
       end
     end
+
+    context 'when the broker provides maintenance_info' do
+      let(:catalog) do
+        catalog = default_catalog
+        catalog[:services].first[:plans].first[:maintenance_info] = { 'version' => '2.0' }
+        catalog
+      end
+
+      before do
+        setup_broker(catalog)
+      end
+
+      it 'is saved with the service plan' do
+        get("/v2/service_plans/#{@plan_guid}",
+            {}.to_json,
+            json_headers(admin_headers))
+
+        parsed_body = MultiJson.load(last_response.body)
+        maintenance_info = parsed_body['entity']['maintenance_info']
+        expect(maintenance_info).to eq({ 'version' => '2.0' })
+      end
+    end
   end
 end
 

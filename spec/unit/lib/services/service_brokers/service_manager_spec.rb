@@ -19,6 +19,9 @@ module VCAP::Services::ServiceBrokers
     let(:plan_id) { Sham.guid }
     let(:plan_name) { Sham.name }
     let(:plan_description) { Sham.description }
+    let(:plan_maintenance_info) do
+      { 'version' => '2.0' }
+    end
     let(:service_metadata_hash) do
       { 'metadata' => { 'foo' => 'bar' } }
     end
@@ -81,6 +84,7 @@ module VCAP::Services::ServiceBrokers
                 'free'        => false,
                 'bindable'    => true,
                 'maximum_polling_duration' => 3600,
+                'maintenance_info' => plan_maintenance_info,
               }.merge(plan_metadata_hash).merge(plan_schemas_hash)
             ]
           }.merge(service_metadata_hash)
@@ -188,6 +192,7 @@ module VCAP::Services::ServiceBrokers
           'description' => service_plan.description,
           'plan_updateable' => service_plan.plan_updateable,
           'maximum_polling_duration' => service_plan.maximum_polling_duration,
+          'maintenance_info' => service_plan.maintenance_info,
           'service_guid' => service_plan.service.guid,
           'extra' => '{"cost":"0.0"}',
           'unique_id' => service_plan.unique_id,
@@ -232,6 +237,7 @@ module VCAP::Services::ServiceBrokers
           expect(plan.description).to eq(plan_description)
           expect(plan.plan_updateable).to eq(true)
           expect(plan.maximum_polling_duration).to eq(3600)
+          expect(JSON.parse(plan.maintenance_info)).to eq(plan_maintenance_info)
           expect(JSON.parse(plan.extra)).to eq({ 'cost' => '0.0' })
           expect(plan.create_instance_schema).to eq('{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}')
           expect(plan.update_instance_schema).to eq('{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}')
@@ -587,6 +593,8 @@ module VCAP::Services::ServiceBrokers
               unique_id: plan_id,
               free: true,
               bindable: false,
+              maximum_polling_duration: 0,
+              maintenance_info: nil,
               create_instance_schema: nil,
               update_instance_schema: nil
             )
@@ -598,6 +606,8 @@ module VCAP::Services::ServiceBrokers
             expect(plan.free).to be true
             expect(plan.bindable).to be false
             expect(plan.plan_updateable).to be_nil
+            expect(plan.maximum_polling_duration).to be_zero
+            expect(plan.maintenance_info).to be_nil
             expect(plan.create_instance_schema).to be_nil
             expect(plan.update_instance_schema).to be_nil
             expect(plan.create_binding_schema).to be_nil
@@ -612,6 +622,8 @@ module VCAP::Services::ServiceBrokers
             expect(plan.free).to be false
             expect(plan.bindable).to be true
             expect(plan.plan_updateable).to be true
+            expect(plan.maximum_polling_duration).to eq(3600)
+            expect(JSON.parse(plan.maintenance_info)).to eq(plan_maintenance_info)
             expect(plan.create_instance_schema).to eq('{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}')
             expect(plan.update_instance_schema).to eq('{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}')
             expect(plan.create_binding_schema).to eq('{"$schema":"http://json-schema.org/draft-04/schema","type":"object"}')

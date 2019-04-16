@@ -625,7 +625,8 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
         plan_updateable:        true,
         create_instance_schema: '{}',
         update_instance_schema: '{}',
-        create_binding_schema:  '{}'
+        create_binding_schema:  '{}',
+        maintenance_info: '{}'
       )
       service_event_repository.with_service_plan_event(new_plan) do
         new_plan.save
@@ -655,7 +656,8 @@ RSpec.resource 'Events', type: [:api, :legacy_api] do
           'maximum_polling_duration'   => new_plan.maximum_polling_duration,
           'create_instance_schema'     => new_plan.create_instance_schema,
           'update_instance_schema'     => new_plan.update_instance_schema,
-          'create_binding_schema'      => new_plan.create_binding_schema
+          'create_binding_schema'      => new_plan.create_binding_schema,
+          'maintenance_info'           => new_plan.maintenance_info,
         }
       }
     end

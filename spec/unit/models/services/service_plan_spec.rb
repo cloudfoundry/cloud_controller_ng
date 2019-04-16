@@ -51,6 +51,7 @@ module VCAP::CloudController
                                          :bindable,
                                          :plan_updateable,
                                          :maximum_polling_duration,
+                                         :maintenance_info,
                                          :active,
                                          :create_instance_schema,
                                          :update_instance_schema,
@@ -68,6 +69,7 @@ module VCAP::CloudController
                                          :bindable,
                                          :plan_updateable,
                                          :maximum_polling_duration,
+                                         :maintenance_info,
                                          :create_instance_schema,
                                          :update_instance_schema,
                                          :create_binding_schema
