@@ -78,6 +78,7 @@ init_block = proc do
   require 'rspec/collection_matchers'
   require 'rspec/its'
   require 'rspec/wait'
+  require 'rspec/json_expectations'
 end
 
 each_run_block = proc do
@@ -105,6 +106,7 @@ each_run_block = proc do
 
     rspec_config.include ServiceBrokerHelpers
     rspec_config.include UserHelpers
+    rspec_config.include UserHeaderHelpers
     rspec_config.include ControllerHelpers, type: :v2_controller, file_path: EscapedPath.join(%w(spec unit controllers))
     rspec_config.include ControllerHelpers, type: :api
     rspec_config.include ControllerHelpers, file_path: EscapedPath.join(%w(spec acceptance))

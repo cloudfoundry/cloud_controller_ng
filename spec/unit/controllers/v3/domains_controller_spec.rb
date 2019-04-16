@@ -9,14 +9,7 @@ RSpec.describe DomainsController, type: :controller do
 
   describe '#index' do
     before do
-      VCAP::CloudController::Domain.dataset.destroy
-    end
-
-    describe 'for no logged in user' do
-      it 'returns 401 for Unauthenticated requests' do
-        get :index
-        expect(response.status).to eq(401)
-      end
+      VCAP::CloudController::Domain.dataset.destroy # this will clean up the seeded test domains
     end
 
     describe 'for a valid user' do
@@ -25,6 +18,7 @@ RSpec.describe DomainsController, type: :controller do
       let(:expected_guids) do
         Hash.new([private_domain1.guid, public_domain2.guid]).tap do |h|
           h['org_billing_manager'] = [public_domain2.guid]
+          h['space_manager'] = [private_domain1.guid, public_domain2.guid]
         end
       end
 
@@ -39,6 +33,7 @@ RSpec.describe DomainsController, type: :controller do
           'org_manager' => 200,
           'org_auditor' => 200,
           'org_billing_manager' => 200,
+          'no_role' => 404, # anand added this, figure it out
         }.freeze
         roles_to_expected_http_response.each do |role, expected_return_value|
           context "as a #{role}" do
@@ -58,34 +53,6 @@ RSpec.describe DomainsController, type: :controller do
             end
           end
         end
-
-        it 'handles the org billing manager correctly' do
-          set_current_user_as_role(
-            role: 'org_billing_manager',
-            org: org,
-            space: space,
-            user: user,
-            scopes: %w(cloud_controller.read cloud_controller.write)
-          )
-          get :index
-          expect(response.status).to eq(200)
-          response_guids = parsed_body['resources'].map { |r| r['guid'] }
-          expect(response_guids).to match_array([public_domain2.guid])
-        end
-      end
-
-      it 'handles the space manager correctly' do
-        set_current_user_as_role(
-          role: 'space_manager',
-          org: org,
-          space: space,
-          user: user,
-          scopes: %w(cloud_controller.read cloud_controller.write)
-        )
-        get :index
-        expect(response.status).to eq(200)
-        response_guids = parsed_body['resources'].map { |r| r['guid'] }
-        expect(response_guids).to match_array([private_domain1.guid, public_domain2.guid])
       end
     end
   end
@@ -408,7 +375,7 @@ RSpec.describe DomainsController, type: :controller do
               allow(VCAP::CloudController::Permissions::Queryer).to receive(:build).and_return(queryer)
 
               allow(VCAP::CloudController::FeatureFlag).to receive(:find).and_return(instance_double(
-                                                                                       VCAP::CloudController::FeatureFlag,
+                VCAP::CloudController::FeatureFlag,
                 enabled: false,
                 error_message: 'private_domain_creation',
                 name: 'private_domain_create'
