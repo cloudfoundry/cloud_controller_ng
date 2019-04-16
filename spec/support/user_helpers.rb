@@ -1,5 +1,5 @@
 module UserHelpers
-  def set_current_user(user, opts = {})
+  def set_current_user(user, opts={})
     token_decoder = VCAP::CloudController::UaaTokenDecoder.new(TestConfig.config_instance.get(:uaa))
     header_token = user ? "bearer #{user_token(user, opts)}" : nil
     token_information = opts[:token] || token_decoder.decode_token(header_token)
@@ -70,48 +70,48 @@ module UserHelpers
     end
 
     case role.to_s
-      when 'admin'
-        set_current_user_as_admin(user: current_user, scopes: scopes || [])
-      when 'admin_read_only'
-        set_current_user_as_admin_read_only(user: current_user, scopes: scopes || [])
-      when 'global_auditor'
-        set_current_user_as_global_auditor(user: current_user, scopes: scopes || [])
-      when 'space_developer'
-        space.add_developer(current_user)
-        set_current_user_as_reader_and_writer(user: current_user)
-      when 'space_auditor'
-        space.add_auditor(current_user)
-        set_current_user_as_reader_and_writer(user: current_user)
-      when 'space_manager'
-        space.add_manager(current_user)
-        set_current_user_as_reader_and_writer(user: current_user)
-      when 'org_user'
-        nil
-      when 'org_auditor'
-        org.add_auditor(current_user)
-        set_current_user_as_reader_and_writer(user: current_user)
-      when 'org_billing_manager'
-        org.add_billing_manager(current_user)
-        set_current_user_as_reader_and_writer(user: current_user)
-      when 'org_manager'
-        org.add_manager(current_user)
-        set_current_user_as_reader_and_writer(user: current_user)
-      when 'unauthenticated'
-        set_current_user_as_unauthenticated
-      when 'reader_and_writer'
-        set_current_user_as_reader_and_writer(user: current_user)
-      when 'reader'
-        set_current_user_as_reader(user: current_user)
-      when 'writer'
-        set_current_user_as_writer(user: current_user)
-      when 'no_role'
-        nil
-      else
-        fail("Unknown role '#{role}'")
+    when 'admin'
+      set_current_user_as_admin(user: current_user, scopes: scopes || [])
+    when 'admin_read_only'
+      set_current_user_as_admin_read_only(user: current_user, scopes: scopes || [])
+    when 'global_auditor'
+      set_current_user_as_global_auditor(user: current_user, scopes: scopes || [])
+    when 'space_developer'
+      space.add_developer(current_user)
+      set_current_user_as_reader_and_writer(user: current_user)
+    when 'space_auditor'
+      space.add_auditor(current_user)
+      set_current_user_as_reader_and_writer(user: current_user)
+    when 'space_manager'
+      space.add_manager(current_user)
+      set_current_user_as_reader_and_writer(user: current_user)
+    when 'org_user'
+      nil
+    when 'org_auditor'
+      org.add_auditor(current_user)
+      set_current_user_as_reader_and_writer(user: current_user)
+    when 'org_billing_manager'
+      org.add_billing_manager(current_user)
+      set_current_user_as_reader_and_writer(user: current_user)
+    when 'org_manager'
+      org.add_manager(current_user)
+      set_current_user_as_reader_and_writer(user: current_user)
+    when 'unauthenticated'
+      set_current_user_as_unauthenticated
+    when 'reader_and_writer'
+      set_current_user_as_reader_and_writer(user: current_user)
+    when 'reader'
+      set_current_user_as_reader(user: current_user)
+    when 'writer'
+      set_current_user_as_writer(user: current_user)
+    when 'no_role'
+      nil
+    else
+      fail("Unknown role '#{role}'")
     end
   end
 
-  def user_token(user, opts = {})
+  def user_token(user, opts={})
     token_coder = CF::UAA::TokenCoder.new(audience_ids: TestConfig.config[:uaa][:resource_id],
       skey: TestConfig.config[:uaa][:symmetric_secret],
       pkey: nil)

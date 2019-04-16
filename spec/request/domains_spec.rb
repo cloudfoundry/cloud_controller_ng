@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'request_spec_shared_examples'
 
-RSpec.describe 'Domains Request', type: :request do
+RSpec.describe 'Domains Request' do
   let(:user) { VCAP::CloudController::User.make }
   let(:space) { VCAP::CloudController::Space.make }
   let(:org) { space.organization }
@@ -324,6 +324,7 @@ RSpec.describe 'Domains Request', type: :request do
               post '/v3/domains', private_domain_params.to_json, headers
 
               expect(last_response.status).to eq(403)
+              expect(parsed_response['errors'][0]['detail']).to eq('You are not authorized to perform the requested action')
             end
           end
 
@@ -338,13 +339,14 @@ RSpec.describe 'Domains Request', type: :request do
         end
 
         context 'when the feature flag is disabled' do
-          let!(:feature_flag) { VCAP::CloudController::FeatureFlag.make(name: 'private_domain_creation', enabled: false) }
+          let!(:feature_flag) { VCAP::CloudController::FeatureFlag.make(name: 'private_domain_creation', enabled: false, error_message: 'my name is bob') }
 
           context 'when the user is not an admin' do
             it 'returns a 403' do
               post '/v3/domains', private_domain_params.to_json, headers
 
               expect(last_response.status).to eq(403)
+              expect(parsed_response['errors'][0]['detail']).to eq('Feature Disabled: my name is bob')
             end
           end
 
