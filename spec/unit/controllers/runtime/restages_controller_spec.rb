@@ -194,6 +194,18 @@ module VCAP::CloudController
             expect(last_response.body).to include('bits have not been uploaded')
           end
         end
+
+        context 'when the revisions enabled feature flag is true' do
+          before do
+            process.app.update(revisions_enabled: true)
+          end
+
+          it 'does not create a revision' do
+            restage_request
+            expect(last_response.status).to eq(201)
+            expect(process.app.revisions.length).to eq(0)
+          end
+        end
       end
     end
   end

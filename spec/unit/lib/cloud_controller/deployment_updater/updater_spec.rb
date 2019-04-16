@@ -7,7 +7,7 @@ module VCAP::CloudController
     let(:a_day_ago) { Time.now - 1.day }
     let(:an_hour_ago) { Time.now - 1.hour }
     let(:app) { AppModel.make(droplet: droplet, revisions_enabled: true) }
-    let(:droplet) { nil }
+    let(:droplet) { DropletModel.make }
     let!(:web_process) do
       ProcessModel.make(
         instances: current_web_instances,

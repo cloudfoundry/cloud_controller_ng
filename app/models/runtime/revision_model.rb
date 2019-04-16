@@ -32,6 +32,11 @@ module VCAP::CloudController
     set_field_as_encrypted :environment_variables, column: :encrypted_environment_variables
     serializes_via_json :environment_variables
 
+    def validate
+      super
+      validates_presence [:app_guid, :droplet_guid]
+    end
+
     def add_command_for_process_type(type, command)
       add_process_command(process_type: type, process_command: command)
     end

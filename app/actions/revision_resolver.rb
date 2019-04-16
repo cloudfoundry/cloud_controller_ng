@@ -4,7 +4,7 @@ module VCAP::CloudController
   class RevisionResolver
     class << self
       def update_app_revision(app, user_audit_info)
-        return nil unless app.revisions_enabled
+        return nil unless app.revisions_enabled && app.droplet_guid.present?
 
         latest_revision = app.latest_revision
         if latest_revision.nil?

@@ -542,6 +542,7 @@ module VCAP::CloudController
 
   RevisionModel.blueprint do
     app { AppModel.make }
+    droplet { DropletModel.make(app: object.app) }
     description { 'Initial revision' }
   end
 

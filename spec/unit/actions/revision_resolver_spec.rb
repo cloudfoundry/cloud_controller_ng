@@ -26,7 +26,16 @@ module VCAP::CloudController
           app.update(revisions_enabled: false)
         end
 
-        it 'return nil' do
+        it 'returns nil' do
+          expect {
+            expect(RevisionResolver.update_app_revision(app, user_audit_info)).to be_nil
+          }.not_to change { RevisionModel.count }
+        end
+      end
+
+      context 'when app has no droplet' do
+        it 'returns nil' do
+          app.update(droplet_guid: nil)
           expect {
             expect(RevisionResolver.update_app_revision(app, user_audit_info)).to be_nil
           }.not_to change { RevisionModel.count }

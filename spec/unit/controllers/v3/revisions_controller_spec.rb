@@ -7,7 +7,7 @@ RSpec.describe RevisionsController, type: :controller do
     let!(:app_model) { VCAP::CloudController::AppModel.make(droplet: droplet) }
     let!(:space) { app_model.space }
     let(:user) { VCAP::CloudController::User.make }
-    let(:revision) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 808, droplet_guid: droplet.guid) }
+    let!(:revision) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 808, droplet: droplet) }
 
     before do
       set_current_user(user)

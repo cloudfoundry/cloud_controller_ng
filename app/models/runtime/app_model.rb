@@ -61,6 +61,7 @@ module VCAP::CloudController
     end
 
     def validate
+      super
       validates_presence :name
       validates_format APP_NAME_REGEX, :name
       validate_environment_variables
