@@ -260,13 +260,10 @@ RSpec.describe 'Domains Request' do
       let(:expected_codes_and_responses) do
         h = Hash.new(
           code: 403,
-          response_objects: []
         )
         h['admin'] = {
           code: 201,
-          response_objects: [
-            domain_json
-          ]
+          response_object: domain_json
         }
         h.freeze
       end
@@ -289,28 +286,28 @@ RSpec.describe 'Domains Request' do
 
       let(:private_domain_params) { params.merge(org_relationship) }
 
-      let(:api_call) { lambda { |user_headers| post '/v3/domains', private_domain_params.to_json, user_headers } }
-      let(:expected_codes_and_responses) do
-        h = Hash.new(
-          code: 403,
-          response_objects: []
-        )
-        h['admin'] = {
-          code: 201,
-          response_objects: [
-            domain_json.merge(org_relationship)
-          ]
-        }
-        h['org_manager'] = {
-          code: 201,
-          response_objects: [
-            domain_json.merge(org_relationship)
-          ]
-        }
-        h.freeze
-      end
+      describe 'valid private domains' do
+        let(:api_call) { lambda { |user_headers| post '/v3/domains', private_domain_params.to_json, user_headers } }
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        let(:expected_codes_and_responses) do
+          h = Hash.new(
+            code: 403,
+          )
+          h['admin'] = {
+            code: 201,
+            response_object: domain_json.merge(org_relationship)
+
+          }
+          h['org_manager'] = {
+            code: 201,
+            response_object: domain_json.merge(org_relationship)
+
+          }
+          h.freeze
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
 
       describe 'invalid private domains' do
         let(:headers) { set_user_with_header_as_role(role: 'org_manager', org: org) }
@@ -581,7 +578,7 @@ RSpec.describe 'Domains Request' do
       let(:expected_codes_and_responses) do
         h = Hash.new(
           code: 200,
-          response_objects: [shared_domain_json]
+          response_object: shared_domain_json
         )
         h.freeze
       end
@@ -619,7 +616,7 @@ RSpec.describe 'Domains Request' do
         let(:expected_codes_and_responses) do
           h = Hash.new(
             code: 200,
-            response_objects: [private_domain_json]
+            response_object: private_domain_json
           )
           h['org_billing_manager'] = {
             code: 404,
@@ -643,7 +640,6 @@ RSpec.describe 'Domains Request' do
         before do
           non_visible_org.add_private_domain(private_domain)
           user_visible_org.add_private_domain(private_domain)
-          user_visible_org.add_billing_manager(user)
         end
 
         let(:private_domain_json) {
@@ -660,11 +656,7 @@ RSpec.describe 'Domains Request' do
                 }
               },
               shared_organizations: {
-                data: [
-                  {
-                    guid: user_visible_org.guid
-                  }
-                ]
+                data: shared_organizations,
               }
             },
             links: {
@@ -673,22 +665,61 @@ RSpec.describe 'Domains Request' do
           }
         }
 
-        let(:expected_codes_and_responses) do
-          h = Hash.new(
-            code: 200,
-            response_objects: [private_domain_json]
-          )
-          h['org_billing_manager'] = {
-            code: 404,
-          }
-          h['no_role'] = {
-            code: 404,
-          }
-          h.freeze
+        let(:api_call) { lambda { |user_headers| get "/v3/domains/#{private_domain.guid}", nil, user_headers } }
+
+        context 'when the user is a billing manager in the shared organization' do
+          let(:shared_organizations) { [] }
+
+          before do
+            user_visible_org.add_billing_manager(user)
+          end
+
+          let(:expected_codes_and_responses) do
+            h = Hash.new(
+              code: 200,
+              response_object: private_domain_json
+            )
+            h['org_billing_manager'] = {
+              code: 404,
+            }
+            h['no_role'] = {
+              code: 404,
+            }
+            h.freeze
+          end
+
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
         end
 
-        let(:api_call) { lambda { |user_headers| get "/v3/domains/#{private_domain.guid}", nil, user_headers } }
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        context 'when the user is a manager in the shared organization' do
+          let(:shared_organizations) { [{ guid: user_visible_org.guid }] }
+
+          before do
+            user_visible_org.add_manager(user)
+          end
+
+          let(:expected_codes_and_responses) do
+            Hash.new(
+              code: 200,
+              response_object: private_domain_json
+            ).freeze
+          end
+
+          it_behaves_like 'permissions for single object endpoint', LOCAL_ROLES
+        end
+
+        context 'when the user can read globally' do
+          let(:shared_organizations) { [{ guid: non_visible_org.guid }, { guid: user_visible_org.guid }] }
+
+          let(:expected_codes_and_responses) do
+            Hash.new(
+              code: 200,
+              response_object: private_domain_json
+            ).freeze
+          end
+
+          it_behaves_like 'permissions for single object endpoint', GLOBAL_SCOPES
+        end
       end
     end
   end
