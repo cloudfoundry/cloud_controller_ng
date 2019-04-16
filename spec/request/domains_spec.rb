@@ -273,6 +273,9 @@ RSpec.describe 'Domains Request' do
     end
 
     describe 'when creating a private domain' do
+      let(:shared_org1) { VCAP::CloudController::Organization.make(guid: 'shared-org1') }
+      let(:shared_org2) { VCAP::CloudController::Organization.make(guid: 'shared-org2') }
+
       let(:domain_json) do
         {
           guid: UUID_REGEX,
@@ -282,10 +285,16 @@ RSpec.describe 'Domains Request' do
           internal: false,
           relationships: {
             organization: {
-              data: { guid: org.guid }
+              data: {
+                guid: org.guid
+              }
             },
             shared_organizations: {
-              data: []
+              data: [
+                { guid: shared_org1.guid },
+                { guid: shared_org2.guid }
+              ]
+
             }
           },
           links: {
@@ -301,10 +310,22 @@ RSpec.describe 'Domains Request' do
             data: {
               guid: org.guid
             }
+          },
+          shared_organizations: {
+            data: [
+              { guid: shared_org1.guid },
+              { guid: shared_org2.guid }
+            ]
+
           }
         }
       }
       }
+
+      before do
+        shared_org1.add_manager(user)
+        shared_org2.add_manager(user)
+      end
 
       describe 'valid private domains' do
         let(:api_call) { lambda { |user_headers| post '/v3/domains', private_domain_params.to_json, user_headers } }
@@ -330,7 +351,7 @@ RSpec.describe 'Domains Request' do
       end
 
       describe 'invalid private domains' do
-        let(:headers) { set_user_with_header_as_role(role: 'org_manager', org: org) }
+        let(:headers) { set_user_with_header_as_role(user: user, role: 'org_manager', org: org) }
         context 'when the org is suspended' do
           before do
             org.status = 'suspended'
@@ -423,6 +444,116 @@ RSpec.describe 'Domains Request' do
             expect(last_response.status).to eq(422)
 
             expect(parsed_response['errors'][0]['detail']).to eq 'The "com.ac" domain is reserved and cannot be used for org-scoped domains.'
+          end
+        end
+
+        context 'when one of the shared orgs does not exist' do
+          let(:missing_shared_org_relationship) do
+            {
+              relationships: {
+                organization: {
+                  data: {
+                    guid: org.guid
+                  }
+                },
+                shared_organizations: {
+                  data: [
+                    { guid: 'doesnt-exist' }
+                  ]
+                }
+              }
+            }.merge(params)
+          end
+
+          it 'returns a 422 with a helpful error message' do
+            post '/v3/domains', missing_shared_org_relationship.to_json, headers
+
+            expect(last_response.status).to eq(422)
+
+            expect(parsed_response['errors'][0]['detail']).to eq "Organization with guid 'doesnt-exist' does not exist, or you do not have access to it."
+          end
+        end
+
+        context 'when the user does not have proper permissions in one of the shared orgs' do
+          let(:shared_org3) { VCAP::CloudController::Organization.make(guid: 'shared-org3') }
+
+          let(:unwriteable_shared_org) do
+            {
+              relationships: {
+                organization: {
+                  data: {
+                    guid: org.guid
+                  }
+                },
+                shared_organizations: {
+                  data: [
+                    { guid: shared_org3.guid },
+                    { guid: shared_org1.guid }
+                  ]
+                }
+              }
+            }.merge(params)
+          end
+
+          before do
+            shared_org3.add_user(user)
+          end
+
+          it 'returns a 422 with a helpful error message' do
+            post '/v3/domains', unwriteable_shared_org.to_json, headers
+
+            expect(last_response.status).to eq(422)
+
+            expect(parsed_response['errors'][0]['detail']).to eq "You do not have sufficient permissions for organization '#{shared_org3.name}' to share domain."
+          end
+        end
+
+        context 'when the owning org is listed as a shared org' do
+          let(:sharing_to_owning_org_relationship) do
+            {
+              relationships: {
+                organization: {
+                  data: {
+                    guid: org.guid
+                  }
+                },
+                shared_organizations: {
+                  data: [
+                    { guid: org.guid }
+                  ]
+                }
+              }
+            }.merge(params)
+          end
+
+          it 'returns a 422 with a helpful error message' do
+            post '/v3/domains', sharing_to_owning_org_relationship.to_json, headers
+
+            expect(last_response.status).to eq(422)
+
+            expect(parsed_response['errors'][0]['detail']).to eq 'Domain cannot be shared with owning organization.'
+          end
+        end
+
+        context 'when creating without an owning org' do
+          let(:sharing_without_owning_org_relationship) do
+            {
+              relationships: {
+                shared_organizations: {
+                  data: [
+                    { guid: org.guid }
+                  ]
+                }
+              }
+            }.merge(params)
+          end
+
+          it 'returns a 422 with a helpful error message' do
+            post '/v3/domains', sharing_without_owning_org_relationship.to_json, headers
+
+            expect(last_response.status).to eq(422)
+
+            expect(parsed_response['errors'][0]['detail']).to eq 'Relationships cannot contain shared_organizations without an owning organization.'
           end
         end
       end

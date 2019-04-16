@@ -126,6 +126,11 @@ module VCAP::CloudController::Validators
         return
       end
 
+      if record.relationships.empty?
+        record.errors[:relationships].concat ["'relationships' must include one or more valid relationships"]
+        return
+      end
+
       rel = record.relationships_message
 
       if !rel.valid?
@@ -187,12 +192,12 @@ module VCAP::CloudController::Validators
 
   class ToManyRelationshipValidator < ActiveModel::EachValidator
     def error_message(attribute)
-      "must be structured like this: \"#{attribute}: [{\"guid\": \"valid-guid\"},{\"guid\": \"valid-guid\"}]\""
+      "must be structured like this: \"#{attribute}: {\"data\": [{\"guid\": \"valid-guid\"},{\"guid\": \"valid-guid\"}]}\""
     end
 
     def validate_each(record, attribute, value)
       if has_correct_structure?(value)
-        validate_guids(record, attribute, value)
+        validate_guids(record, attribute, value[:data])
       else
         record.errors.add(attribute, error_message(attribute))
       end
@@ -206,8 +211,12 @@ module VCAP::CloudController::Validators
       end
     end
 
+    def properly_formatted_data(data)
+      (data.is_a?(Array) && data.all? { |hsh| is_a_guid_hash?(hsh) })
+    end
+
     def has_correct_structure?(value)
-      (value.is_a?(Array) && value.all? { |hsh| is_a_guid_hash?(hsh) })
+      (value.is_a?(Hash) && value.dig(:data) && properly_formatted_data(value[:data]))
     end
 
     def is_a_guid_hash?(hsh)

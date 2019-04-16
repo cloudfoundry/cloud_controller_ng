@@ -391,13 +391,16 @@ module VCAP::CloudController::Validators
       end
 
       it 'ensures that the data has the correct structure' do
-        valid       = to_many_class.new({ field: [{ guid: '1234' }, { guid: '1234' }, { guid: '1234' }, { guid: '1234' }] })
-        invalid_one = to_many_class.new({ field: { guid: '1234' } })
-        invalid_two = to_many_class.new({ field: [{ guid: 1234 }, { guid: 1234 }] })
+        valid = to_many_class.new({ field: {
+          data: [{ guid: '1234' }, { guid: '1234' }, { guid: '1234' }, { guid: '1234' }] } })
+        invalid_one = to_many_class.new({ field: { data: { guid: '1234' } } })
+        invalid_two = to_many_class.new({ field: { data: [{ guid: 1234 }, { guid: 1234 }] } })
+        invalid_three = to_many_class.new({ field: [{ guid: '1234' }, { guid: '1234' }, { guid: '1234' }, { guid: '1234' }] })
 
         expect(valid).to be_valid
         expect(invalid_one).not_to be_valid
         expect(invalid_two).not_to be_valid
+        expect(invalid_three).not_to be_valid
       end
     end
   end

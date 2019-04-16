@@ -57,20 +57,11 @@ module VCAP::CloudController
       boolean: true
 
     delegate :organization_guid, to: :relationships_message
+    delegate :shared_organizations_guids, to: :relationships_message
 
     def relationships_message
-      @relationships_message ||= Relationships.new(relationships.deep_symbolize_keys)
-    end
-
-    class Relationships < BaseMessage
-      register_allowed_keys [:organization]
-
-      validates_with NoAdditionalKeysValidator
-      validates_with ToOneRelationshipValidator, attributes: [:organization]
-
-      def organization_guid
-        HashUtils.dig(organization, :data, :guid)
-      end
+      # need the & instaed of doing if requested(rel..) because we can't delegate if rl_msg nil
+      @relationships_message ||= Relationships.new(relationships&.deep_symbolize_keys)
     end
 
     private
@@ -84,6 +75,39 @@ module VCAP::CloudController
     def mutually_exclusive_organization_and_internal
       if requested?(:internal) && requested?(:relationships)
         errors.add(:base, 'Can not associate an internal domain with an organization')
+      end
+    end
+
+    class Relationships < BaseMessage
+      def self.shared_organizations_requested?
+        @shared_organizations_requested ||= proc { |a| a.requested?(:shared_organizations) }
+      end
+
+      def self.organization_requested?
+        @organization_requested ||= proc { |a| a.requested?(:organization) }
+      end
+
+      register_allowed_keys [:organization, :shared_organizations]
+
+      validates_with NoAdditionalKeysValidator
+      validates :organization, allow_nil: true, to_one_relationship: true
+      validates :shared_organizations, allow_nil: true, to_many_relationship: true
+
+      validate :valid_organization_if_shared_organizations, if: shared_organizations_requested?
+
+      def organization_guid
+        HashUtils.dig(organization, :data, :guid)
+      end
+
+      def shared_organizations_guids
+        shared_orgs = HashUtils.dig(shared_organizations, :data)
+        shared_orgs ? shared_orgs.map { |hsh| hsh[:guid] } : []
+      end
+
+      def valid_organization_if_shared_organizations
+        if !requested?(:organization)
+          errors.add(:base, 'cannot contain shared_organizations without an owning organization.')
+        end
       end
     end
   end

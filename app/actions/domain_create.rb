@@ -7,7 +7,7 @@ module VCAP::CloudController
 
     INTERNAL_DEFAULT = false
 
-    def create(message:)
+    def create(message:, shared_organizations: [])
       domain = if message.requested?(:relationships)
                  PrivateDomain.new(
                    name: message.name,
@@ -22,6 +22,10 @@ module VCAP::CloudController
 
       Domain.db.transaction do
         domain.save
+
+        shared_organizations.each do |shared_org|
+          domain.add_shared_organization(shared_org)
+        end
       end
 
       domain

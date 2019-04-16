@@ -177,7 +177,7 @@ module VCAP::CloudController
             message = AppCreateMessage.new(params)
 
             expect(message).not_to be_valid
-            expect(message.errors_on(:relationships)).to include("Space can't be blank")
+            expect(message.errors_on(:relationships)).to include("'relationships' must include one or more valid relationships")
           end
         end
 

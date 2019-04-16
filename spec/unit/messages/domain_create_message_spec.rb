@@ -138,7 +138,7 @@ module VCAP::CloudController
 
           it 'is not valid' do
             expect(subject).not_to be_valid
-            expect(subject.errors_on(:relationships).any? { |e| e.include?('Organization must be structured like') }).to be(true)
+            expect(subject.errors_on(:relationships)).to include("'relationships' must include one or more valid relationships")
           end
         end
 
@@ -170,6 +170,25 @@ module VCAP::CloudController
           end
         end
 
+        context 'when the shared orgs is not a hash' do
+          let(:params) do
+            {
+              name: 'my-domain.com',
+              relationships: {
+                organization: { data: { guid: 'guid' } },
+                shared_organizations: 3
+              }
+            }
+          end
+
+          it 'is invalid' do
+            expect(subject).not_to be_valid
+            expect(subject.errors[:relationships]).to include(
+              'Shared organizations must be structured like this: "shared_organizations: {"data": [{"guid": "valid-guid"},{"guid": "valid-guid"}]}"'
+            )
+          end
+        end
+
         context 'when additional keys are present' do
           let(:params) do
             {
@@ -187,19 +206,46 @@ module VCAP::CloudController
           end
         end
 
+        context 'when shared orgs are present without org' do
+          let(:params) do
+            {
+              name: 'name.com',
+              relationships: {
+                shared_organizations: {
+                  data: [
+                    { guid: 'guid1' },
+                    { guid: 'guid2' }
+                  ]
+                }
+              }
+            }
+          end
+
+          it 'is not valid' do
+            expect(subject).not_to be_valid
+            expect(subject.errors[:relationships]).to include('cannot contain shared_organizations without an owning organization.')
+          end
+        end
+
         context 'when passed a valid relationship' do
           let(:params) do
             {
               name: 'name.com',
               relationships: {
-                organization: { data: { guid: 'guid' } }
+                organization: { data: { guid: 'guid' } },
+                shared_organizations: {
+                  data: [
+                    { guid: 'guid1' },
+                    { guid: 'guid2' }
+                  ]
+                }
               }
             }
           end
 
           it 'makes the guid accessible' do
             expect(subject).to be_valid
-            expect(subject.relationships_message.organization_guid).to eq('guid')
+            expect(subject.organization_guid).to eq('guid')
           end
         end
       end
@@ -218,6 +264,47 @@ module VCAP::CloudController
         it 'should be invalid' do
           expect(subject).to_not be_valid
           expect(subject.errors[:base]).to include('Can not associate an internal domain with an organization')
+        end
+      end
+    end
+
+    describe 'accessor methods' do
+      let(:params) do
+        {
+          name: 'name.com',
+          relationships: {
+            organization: { data: { guid: 'guid' } },
+            shared_organizations: {
+              data: [
+                { guid: 'guid1' },
+                { guid: 'guid2' }
+              ]
+            }
+          }
+        }
+      end
+
+      context 'organization_guid' do
+        it 'makes the guid accessible' do
+          expect(subject).to be_valid
+          expect(subject.organization_guid).to eq('guid')
+        end
+      end
+
+      context 'shared_organizations_guids' do
+        it 'makes the guid accessible' do
+          expect(subject).to be_valid
+          expect(subject.shared_organizations_guids).to eq(%w(guid1 guid2))
+        end
+      end
+
+      context 'when relationships is empty' do
+        let(:params) { { name: 'name.com' } }
+
+        it 'does not error' do
+          expect(subject).to be_valid
+          expect(subject.shared_organizations_guids).to eq([])
+          expect(subject.organization_guid).to be_nil
         end
       end
     end

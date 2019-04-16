@@ -72,6 +72,8 @@ module VCAP::CloudController
 
       context 'when creating a private domain' do
         let(:organization) { Organization.make }
+        let(:shared_org1) { Organization.make }
+        let(:shared_org2) { Organization.make }
 
         let(:message) do
           DomainCreateMessage.new({
@@ -80,18 +82,25 @@ module VCAP::CloudController
               organization: {
                 data: { guid: organization.guid }
               },
+              shared_organizations: {
+                data: [
+                  { guid: shared_org1.guid },
+                  { guid: shared_org2.guid }
+                ]
+              }
             },
           })
         end
 
         it 'creates a private domain' do
           expect {
-            subject.create(message: message)
+            subject.create(message: message, shared_organizations: [shared_org1, shared_org2])
           }.to change { PrivateDomain.count }.by(1)
 
           domain = PrivateDomain.last
           expect(domain.name).to eq name
           expect(domain.owning_organization_guid).to eq organization.guid
+          expect(domain.shared_organizations).to contain_exactly(shared_org1, shared_org2)
         end
       end
     end
