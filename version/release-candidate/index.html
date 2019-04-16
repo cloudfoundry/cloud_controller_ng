@@ -11420,11 +11420,11 @@ excluded in the response based on the user&rsquo;s role.</p>
 </tr>
 <tr>
 <td><strong>no-route</strong></td>
-<td>Boolean value. When set to <code class="prettyprint">true</code>, any routes specified with the <code class="prettyprint">routes</code> attribute will be ignored and any existing routes will be removed; ignored if <code class="prettyprint">false</code>.</td>
+<td>Boolean value. Removes the app&rsquo;s routes if <code class="prettyprint">true</code>; ignored if <code class="prettyprint">false</code>. Cannot be used in conjunction with the <code class="prettyprint">routes</code> attribute when set to <code class="prettyprint">true</code>.</td>
 </tr>
 <tr>
 <td><strong>processes</strong></td>
-<td>List of configurations for individual process types. See <a href="#app-manifest-process-level-configuration"><em>Process-level configuration</em></a>.</td>
+<td>List of configurations for individual process types. See <a href="#process-level-configuration"><em>Process-level configuration</em></a>.</td>
 </tr>
 <tr>
 <td><strong>random-route</strong></td>
@@ -13082,11 +13082,11 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
     </span><span class="nt">"internal"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
     </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"organizations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"owning_org_guid"</span><span class="w"> </span><span class="p">}</span><span class="w">
+        </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3a3f3d89-3f89-4f05-8188-751b298c79d5"</span><span class="w"> </span><span class="p">}</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="nt">"shared_organizations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"shared_org_guid1"</span><span class="p">},</span><span class="w">
-                 </span><span class="p">{</span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"shared_org_guid2"</span><span class="p">}]</span><span class="w">
+        </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"404f3d89-3f89-6z72-8188-751b298d88d5"</span><span class="p">},</span><span class="w">
+                 </span><span class="p">{</span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"416d3d89-3f89-8h67-2189-123b298d3592"</span><span class="p">}]</span><span class="w">
       </span><span class="p">}</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -13167,11 +13167,11 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
     </span><span class="nt">"internal"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
     </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"organizations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"owning_org_guid"</span><span class="w"> </span><span class="p">}</span><span class="w">
+        </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3a3f3d89-3f89-4f05-8188-751b298c79d5"</span><span class="w"> </span><span class="p">}</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="nt">"shared_organizations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"shared_org_guid1"</span><span class="p">},</span><span class="w">
-                 </span><span class="p">{</span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"shared_org_guid2"</span><span class="p">}]</span><span class="w">
+        </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"404f3d89-3f89-6z72-8188-751b298d88d5"</span><span class="p">},</span><span class="w">
+                 </span><span class="p">{</span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"416d3d89-3f89-8h67-2189-123b298d3592"</span><span class="p">}]</span><span class="w">
       </span><span class="p">}</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -13265,11 +13265,11 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
     </span><span class="nt">"internal"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
     </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"organizations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"owning_org_guid"</span><span class="w"> </span><span class="p">}</span><span class="w">
+        </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3a3f3d89-3f89-4f05-8188-751b298c79d5"</span><span class="w"> </span><span class="p">}</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="nt">"shared_organizations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"shared_org_guid1"</span><span class="p">},</span><span class="w">
-                 </span><span class="p">{</span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"shared_org_guid2"</span><span class="p">}]</span><span class="w">
+        </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"404f3d89-3f89-6z72-8188-751b298d88d5"</span><span class="p">},</span><span class="w">
+                 </span><span class="p">{</span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"416d3d89-3f89-8h67-2189-123b298d3592"</span><span class="p">}]</span><span class="w">
       </span><span class="p">}</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -13306,12 +13306,16 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 <td></td>
 </tr>
 <tr>
+<td>Org Auditor</td>
+<td></td>
+</tr>
+<tr>
 <td>Org Manager</td>
 <td></td>
 </tr>
 <tr>
 <td>Org Billing Manager</td>
-<td>Can only view shared domains.</td>
+<td>Can only view shared domains without an organization relationship.</td>
 </tr>
 <tr>
 <td>Admin</td>
@@ -15169,6 +15173,7 @@ Deployed revisions are revisions that are linked to started processes in the app
 <li>App processes and Sidecar processes are codependent: if either crashes or exits, the other will as well </li>
 <li>Sidecars are currently not independently scalable (memory / disk) and share resources with the main app process and other sidecars within that container</li>
 <li>Sidecars only support PID based health checks; HTTP health-checks for sidecars are not currently supported</li>
+<li>This has only been tested on Linux based systems</li>
 </ul>
 
           <h3 id="the-sidecar-object">The sidecar object</h3>
@@ -15843,7 +15848,7 @@ Deployed revisions are revisions that are linked to started processes in the app
 </tr>
 <tr>
 <td><strong>no-route</strong></td>
-<td>Boolean value. When set to <code class="prettyprint">true</code>, any routes specified with the <code class="prettyprint">routes</code> attribute will be ignored and any existing routes will be removed; ignored if <code class="prettyprint">false</code>.</td>
+<td>Boolean value. Removes the app&rsquo;s routes if <code class="prettyprint">true</code>; ignored if <code class="prettyprint">false</code>. Cannot be used in conjunction with the <code class="prettyprint">routes</code> attribute when set to <code class="prettyprint">true</code>.</td>
 </tr>
 <tr>
 <td><strong>processes</strong></td>
