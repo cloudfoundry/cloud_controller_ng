@@ -109,6 +109,39 @@ module VCAP::CloudController
         expect(app.lifecycle_type).to eq(BuildpackLifecycleDataModel::LIFECYCLE_TYPE)
         expect(app.lifecycle_data.stack).to eq('stack-name')
         expect(app.lifecycle_data.buildpacks).to eq(['http://example.com/buildpack'])
+        expect(app.revisions.count).to eq(0)
+      end
+
+      context 'with revisions enabled' do
+        let!(:process) { ProcessModel.make }
+        let!(:app) { process.app }
+        let!(:package) { PackageModel.make(app: app, package_hash: 'some-hash', state: PackageModel::READY_STATE) }
+        let!(:droplet) do
+          DropletModel.make(
+            app: app,
+            state: DropletModel::STAGED_STATE,
+            package: package,
+            process_types: {
+              'web' => 'webby'
+            },
+          )
+        end
+
+        before do
+          allow(process).to receive(:staged?).and_return(true)
+          app.update(droplet_guid: droplet.guid)
+        end
+
+        it 'does not create a revision' do
+          app.update(revisions_enabled: true)
+
+          request_attrs = {
+            'state' => ProcessModel::STARTED,
+          }
+
+          app_update.update(app, process, request_attrs)
+          expect(app.reload.revisions.count).to eq(0)
+        end
       end
 
       context 'no valid package or droplet' do

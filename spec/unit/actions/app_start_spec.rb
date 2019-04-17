@@ -166,6 +166,28 @@ module VCAP::CloudController
           expect(web_process.reload.revision).to eq(revisionA)
           expect(worker_process.reload.revision).to eq(revisionA)
         end
+
+        it 'does not create a new revision if create_revision: false' do
+          app.update(revisions_enabled: true)
+          app.update(droplet: dropletB)
+          expect do
+            AppStart.start(app: app, user_audit_info: user_audit_info, create_revision: false)
+          end.to change { RevisionModel.count }.by(0)
+          expect(RevisionModel.last.version).to eq(revisionA.version)
+          expect(web_process.reload.revision).to eq(revisionA)
+          expect(worker_process.reload.revision).to eq(revisionA)
+        end
+
+        it 'start_without_event does not create a new revision if create_revision: false' do
+          app.update(revisions_enabled: true)
+          app.update(droplet: dropletB)
+          expect do
+            AppStart.start_without_event(app, create_revision: false)
+          end.to change { RevisionModel.count }.by(0)
+          expect(RevisionModel.last.version).to eq(revisionA.version)
+          expect(web_process.reload.revision).to eq(revisionA)
+          expect(worker_process.reload.revision).to eq(revisionA)
+        end
       end
 
       describe '#start_without_event' do

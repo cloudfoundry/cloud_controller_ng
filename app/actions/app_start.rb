@@ -5,12 +5,14 @@ module VCAP::CloudController
     class InvalidApp < StandardError; end
 
     class << self
-      def start(app:, user_audit_info:, record_event: true)
+      def start(app:, user_audit_info:, create_revision: true, record_event: true)
         app.db.transaction do
           app.lock!
           process_attributes = { state: ProcessModel::STARTED }
 
-          RevisionResolver.update_app_revision(app, user_audit_info) if app.desired_state != ProcessModel::STARTED
+          if create_revision && app.desired_state != ProcessModel::STARTED
+            RevisionResolver.update_app_revision(app, user_audit_info)
+          end
 
           app.update(desired_state: ProcessModel::STARTED)
           app.processes.each do |process|
@@ -23,8 +25,8 @@ module VCAP::CloudController
         raise InvalidApp.new(e.message)
       end
 
-      def start_without_event(app)
-        start(app: app, user_audit_info: nil, record_event: false)
+      def start_without_event(app, create_revision: true)
+        start(app: app, user_audit_info: nil, record_event: false, create_revision: create_revision)
       end
 
       private
