@@ -27,6 +27,12 @@ Location: https://api.example.org/v3/jobs/[guid]
 #### Definition
 `POST /v3/spaces/:guid/actions/apply_manifest`
 
+#### Query Parameters
+
+Name | Type | Description
+---- | ---- | ------------
+**no_route** | _boolean_ | Unmaps all existing routes and blocks route creation for apps in the manifest.
+
 #### Permitted Roles
  |
 --- | ---
