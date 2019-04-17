@@ -78,7 +78,6 @@ init_block = proc do
   require 'rspec/collection_matchers'
   require 'rspec/its'
   require 'rspec/wait'
-  require 'rspec/json_expectations'
 end
 
 each_run_block = proc do

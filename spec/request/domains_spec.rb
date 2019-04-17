@@ -234,29 +234,30 @@ RSpec.describe 'Domains Request' do
   describe 'POST /v3/domains' do
     let(:params) { { name: 'my-domain.com' } }
 
-    let(:domain_json) do
-      {
-        guid: UUID_REGEX,
-        created_at: iso8601,
-        updated_at: iso8601,
-        name: params[:name],
-        internal: false,
-        relationships: {
-          organization: {
-            data: nil
-          },
-          shared_organizations: {
-            data: []
-          }
-        },
-        links: {
-          self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{UUID_REGEX}) }
-        }
-      }
-    end
-
     describe 'when creating a shared domain' do
       let(:api_call) { lambda { |user_headers| post '/v3/domains', params.to_json, user_headers } }
+
+      let(:domain_json) do
+        {
+          guid: UUID_REGEX,
+          created_at: iso8601,
+          updated_at: iso8601,
+          name: params[:name],
+          internal: false,
+          relationships: {
+            organization: {
+              data: nil
+            },
+            shared_organizations: {
+              data: []
+            }
+          },
+          links: {
+            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{UUID_REGEX}) }
+          }
+        }
+      end
+
       let(:expected_codes_and_responses) do
         h = Hash.new(
           code: 403,
@@ -272,19 +273,38 @@ RSpec.describe 'Domains Request' do
     end
 
     describe 'when creating a private domain' do
-      let(:org_relationship) do
+      let(:domain_json) do
         {
+          guid: UUID_REGEX,
+          created_at: iso8601,
+          updated_at: iso8601,
+          name: params[:name],
+          internal: false,
           relationships: {
             organization: {
-              data: {
-                guid: org.guid
-              }
+              data: { guid: org.guid }
+            },
+            shared_organizations: {
+              data: []
             }
+          },
+          links: {
+            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{UUID_REGEX}) }
           }
         }
       end
 
-      let(:private_domain_params) { params.merge(org_relationship) }
+      let(:private_domain_params) { {
+        name: 'my-domain.com',
+        relationships: {
+          organization: {
+            data: {
+              guid: org.guid
+            }
+          }
+        }
+      }
+      }
 
       describe 'valid private domains' do
         let(:api_call) { lambda { |user_headers| post '/v3/domains', private_domain_params.to_json, user_headers } }
@@ -295,12 +315,12 @@ RSpec.describe 'Domains Request' do
           )
           h['admin'] = {
             code: 201,
-            response_object: domain_json.merge(org_relationship)
+            response_object: domain_json
 
           }
           h['org_manager'] = {
             code: 201,
-            response_object: domain_json.merge(org_relationship)
+            response_object: domain_json
 
           }
           h.freeze
@@ -667,31 +687,7 @@ RSpec.describe 'Domains Request' do
 
         let(:api_call) { lambda { |user_headers| get "/v3/domains/#{private_domain.guid}", nil, user_headers } }
 
-        context 'when the user is a billing manager in the shared organization' do
-          let(:shared_organizations) { [] }
-
-          before do
-            user_visible_org.add_billing_manager(user)
-          end
-
-          let(:expected_codes_and_responses) do
-            h = Hash.new(
-              code: 200,
-              response_object: private_domain_json
-            )
-            h['org_billing_manager'] = {
-              code: 404,
-            }
-            h['no_role'] = {
-              code: 404,
-            }
-            h.freeze
-          end
-
-          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
-        end
-
-        context 'when the user is a manager in the shared organization' do
+        context 'when the user can read in the shared organization' do
           let(:shared_organizations) { [{ guid: user_visible_org.guid }] }
 
           before do

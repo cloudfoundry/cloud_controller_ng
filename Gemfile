@@ -81,7 +81,6 @@ group :test do
   gem 'rspec-collection_matchers'
   gem 'rspec-instafail'
   gem 'rspec-its'
-  gem 'rspec-json_expectations'
   gem 'rspec-rails', '~> 3.8.0'
   gem 'rspec-wait'
   gem 'rspec_api_documentation'
