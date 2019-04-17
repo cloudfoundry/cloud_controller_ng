@@ -516,7 +516,7 @@ RSpec.describe 'Service Broker API integration' do
         end
 
         context 'when the maintenance_info does not match the one from the service plan' do
-          it 'should forward the maintanance info to the broker' do
+          it 'should not forward the maintanance info to the broker' do
             response = async_update_service(maintenance_info: { 'version' => '1.0' })
             expect(response).to have_status_code(422)
             expect(JSON.parse(response.body)['error_code']).to eq('CF-MaintenanceInfoMismatch')
