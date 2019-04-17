@@ -313,7 +313,7 @@ RSpec.describe 'App Manifests' do
           {
             'applications' => [
               { 'name' => 'blah',
-                'no-route' => true,
+                'no_route' => true,
               }
             ]
           }.to_yaml
@@ -342,12 +342,11 @@ RSpec.describe 'App Manifests' do
       end
     end
 
-    describe 'no-route' do
+    describe 'no_route' do
       let(:yml_manifest) do
         {
           'applications' => [
             { 'name' => 'blah',
-              'no-route' => true,
             }
           ]
         }.to_yaml
@@ -363,7 +362,7 @@ RSpec.describe 'App Manifests' do
       it 'deletes the existing route' do
         expect(app_model.routes).to match_array([route])
 
-        post "/v3/apps/#{app_model.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
+        post "/v3/apps/#{app_model.guid}/actions/apply_manifest?no_route=true", yml_manifest, yml_headers(user_header)
 
         expect(last_response.status).to eq(202)
         job_guid = VCAP::CloudController::PollableJobModel.last.guid

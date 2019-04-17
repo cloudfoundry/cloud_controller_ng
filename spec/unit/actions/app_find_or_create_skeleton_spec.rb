@@ -10,7 +10,7 @@ module VCAP::CloudController
     subject(:action) { AppFindOrCreateSkeleton.new(user_audit_info) }
 
     context 'when the app exists' do
-      let(:message) { NamedAppManifestMessage.create_from_yml({ name: name }) }
+      let(:message) { NamedAppManifestMessage.create_from_yml({ name: name }, {}) }
       let!(:app) { AppModel.make(name: name, space: space) }
 
       it 'returns the existing app' do
@@ -20,7 +20,7 @@ module VCAP::CloudController
 
     context 'when the app does not exist' do
       context 'when the app is a buildpack app' do
-        let(:message) { NamedAppManifestMessage.create_from_yml({ name: name }) }
+        let(:message) { NamedAppManifestMessage.create_from_yml({ name: name }, {}) }
 
         it 'creates the app' do
           app = nil
@@ -34,7 +34,7 @@ module VCAP::CloudController
       end
 
       context 'when the app is a docker app' do
-        let(:message) { NamedAppManifestMessage.create_from_yml({ name: name, docker: { image: 'my/image' } }) }
+        let(:message) { NamedAppManifestMessage.create_from_yml({ name: name, docker: { image: 'my/image' } }, {}) }
 
         it 'creates the app' do
           app = nil

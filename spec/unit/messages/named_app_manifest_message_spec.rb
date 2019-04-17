@@ -8,7 +8,7 @@ module VCAP::CloudController
         let(:params) { { name: 'hawaiian', instances: 3, memory: '2G' } }
 
         it 'is valid' do
-          message = NamedAppManifestMessage.create_from_yml(params)
+          message = NamedAppManifestMessage.create_from_yml(params, {})
 
           expect(message).to be_valid
         end
@@ -17,7 +17,7 @@ module VCAP::CloudController
       context 'when name is not specified' do
         let(:params) { { instances: 3, memory: '2G' } }
         it 'is not valid' do
-          message = NamedAppManifestMessage.create_from_yml(params)
+          message = NamedAppManifestMessage.create_from_yml(params, {})
 
           expect(message).to_not be_valid
           expect(message.errors.full_messages[0]).to match(/^Name must not be empty/)

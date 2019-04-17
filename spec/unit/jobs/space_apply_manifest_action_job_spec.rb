@@ -11,8 +11,8 @@ module VCAP::CloudController
       let(:app2) { AppModel.make(name: 'cut', space: space) }
       let(:app_guid_message_hash) do
         {
-          app1.guid => NamedAppManifestMessage.create_from_yml({ name: app1.name, instances: 4, routes: [{ route: 'foo.example.com' }] }),
-          app2.guid => NamedAppManifestMessage.create_from_yml({ name: app2.name, instances: 5 }),
+          app1.guid => NamedAppManifestMessage.create_from_yml({ name: app1.name, instances: 4, routes: [{ route: 'foo.example.com' }] }, {}),
+          app2.guid => NamedAppManifestMessage.create_from_yml({ name: app2.name, instances: 5 }, {}),
         }
       end
 

@@ -10,7 +10,7 @@ class AppManifestsController < ApplicationController
   before_action :validate_content_type!, only: :apply_manifest
 
   def apply_manifest
-    message = AppManifestMessage.create_from_yml(parsed_app_manifest_params)
+    message = AppManifestMessage.create_from_yml(parsed_app_manifest_params, hashed_params)
     compound_error!(message.errors.full_messages) unless message.valid?
 
     app, space, org = AppFetcher.new.fetch(hashed_params[:guid])
