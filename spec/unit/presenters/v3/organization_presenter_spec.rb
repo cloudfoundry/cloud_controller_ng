@@ -50,6 +50,7 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:updated_at]).to eq(organization.updated_at)
         expect(result[:name]).to eq(organization.name)
         expect(result[:links][:self][:href]).to match(%r{/v3/organizations/#{organization.guid}$})
+        expect(result[:links][:domains][:href]).to match(%r{/v3/organizations/#{organization.guid}/domains$})
         expect(result[:metadata][:labels]).to eq('release' => 'stable', 'maine.gov/potato' => 'mashed')
         expect(result[:metadata][:annotations]).to eq('city' => 'Monticello', 'state' => 'Indiana')
         expect(result[:relationships][:quota][:data][:guid]).to eq('quota-guid')
