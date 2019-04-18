@@ -1,8 +1,8 @@
 default: "default-stack-name"
 
 stacks:
-  - name: "cflinuxfs2"
-    description: "cflinuxfs2"
+  - name: "cflinuxfs3"
+    description: "cflinuxfs3"
   - name: "default-stack-name"
     description: "default-stack-description"
   - name: "cider"

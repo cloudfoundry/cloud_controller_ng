@@ -383,7 +383,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
     context 'when the request body includes a stack' do
       let(:request_body) do
         { 'applications' =>
-          [{ 'name' => 'blah', 'stack' => 'cflinuxfs2' }] }
+          [{ 'name' => 'blah', 'stack' => 'cflinuxfs3' }] }
       end
 
       it 'sets the stack' do
@@ -395,7 +395,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
 
         expect(VCAP::CloudController::Jobs::SpaceApplyManifestActionJob).to have_received(:new) do |aspace, app_guid_message_hash, action|
           expect(aspace).to eq space
-          expect(app_guid_message_hash.entries.first[1].stack).to eq 'cflinuxfs2'
+          expect(app_guid_message_hash.entries.first[1].stack).to eq 'cflinuxfs3'
           expect(action).to eq app_apply_manifest_action
         end
       end

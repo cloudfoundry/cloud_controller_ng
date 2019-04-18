@@ -179,7 +179,7 @@ module VCAP::CloudController
         end
 
         describe 'updating stack' do
-          let(:message) { AppManifestMessage.create_from_yml({ name: 'stack-test', stack: 'cflinuxfs2' }, {}) }
+          let(:message) { AppManifestMessage.create_from_yml({ name: 'stack-test', stack: 'cflinuxfs3' }, {}) }
           let(:app_update_message) { message.app_update_message }
           let(:app) { AppModel.make }
 

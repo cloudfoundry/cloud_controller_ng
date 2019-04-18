@@ -214,13 +214,13 @@ module VCAP::CloudController
 
       describe 'stack' do
         context 'when providing a valid stack name' do
-          let(:params_from_yaml) { { stack: 'cflinuxfs2' } }
+          let(:params_from_yaml) { { stack: 'cflinuxfs3' } }
 
           it 'is valid' do
             message = AppManifestMessage.create_from_yml(params_from_yaml, params)
 
             expect(message).to be_valid
-            expect(message.stack).to eq('cflinuxfs2')
+            expect(message.stack).to eq('cflinuxfs3')
           end
         end
 

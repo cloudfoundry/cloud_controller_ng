@@ -23,7 +23,7 @@ Content-Type: application/x-yaml
 ---
 applications:
 - name: my-app
-  stack: cflinuxfs2
+  stack: cflinuxfs3
   routes:
   - route: my-app.example.com
   processes:

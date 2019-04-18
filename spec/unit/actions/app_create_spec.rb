@@ -15,7 +15,7 @@ module VCAP::CloudController
       let(:buildpack) { Buildpack.make }
       let(:buildpack_identifier) { buildpack.name }
       let(:relationships) { { space: { data: { guid: space_guid } } } }
-      let(:lifecycle_request) { { type: 'buildpack', data: { buildpacks: [buildpack_identifier], stack: 'cflinuxfs2' } } }
+      let(:lifecycle_request) { { type: 'buildpack', data: { buildpacks: [buildpack_identifier], stack: 'cflinuxfs3' } } }
       let(:lifecycle) { AppBuildpackLifecycle.new(message) }
       let(:message) do
         AppCreateMessage.new(

@@ -891,7 +891,7 @@ RSpec.describe 'Apps' do
     }
     let(:body) do
       { lifecycle: { type: 'buildpack', data: { buildpacks: ['http://github.com/myorg/awesome-buildpack'],
-                                                stack: 'cflinuxfs2' } } }
+                                                stack: 'cflinuxfs3' } } }
     end
     let(:staging_message) { VCAP::CloudController::BuildCreateMessage.new(body) }
     let(:per_page) { 2 }
@@ -932,7 +932,7 @@ RSpec.describe 'Apps' do
                                                                   'type' => 'buildpack',
                                                                   'data' => {
                                                                       'buildpacks' => ['http://github.com/myorg/awesome-buildpack'],
-                                                                      'stack' => 'cflinuxfs2',
+                                                                      'stack' => 'cflinuxfs3',
                                                                   },
                                                               },
                                                               'package' => { 'guid' => package.guid, },
@@ -957,7 +957,7 @@ RSpec.describe 'Apps' do
                                                                   'type' => 'buildpack',
                                                                   'data' => {
                                                                       'buildpacks' => ['http://github.com/myorg/awesome-buildpack'],
-                                                                      'stack' => 'cflinuxfs2',
+                                                                      'stack' => 'cflinuxfs3',
                                                                   },
                                                               },
                                                               'package' => { 'guid' => package.guid, },

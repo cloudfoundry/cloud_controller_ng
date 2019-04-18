@@ -265,7 +265,7 @@ RSpec.describe AppManifestsController, type: :controller do
     context 'when the request body includes a stack' do
       let(:request_body) do
         { 'applications' =>
-          [{ 'name' => 'blah', 'stack' => 'cflinuxfs2' }] }
+          [{ 'name' => 'blah', 'stack' => 'cflinuxfs3' }] }
       end
 
       it 'sets the stack' do
@@ -277,7 +277,7 @@ RSpec.describe AppManifestsController, type: :controller do
 
         expect(VCAP::CloudController::Jobs::AppApplyManifestActionJob).to have_received(:new) do |app_guid, message, action|
           expect(app_guid).to eq app_model.guid
-          expect(message.stack).to eq 'cflinuxfs2'
+          expect(message.stack).to eq 'cflinuxfs3'
           expect(action).to eq app_apply_manifest_action
         end
       end

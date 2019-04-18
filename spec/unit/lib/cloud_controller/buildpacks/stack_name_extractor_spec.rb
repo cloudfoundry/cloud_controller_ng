@@ -70,7 +70,7 @@ module VCAP::CloudController::Buildpacks
         before do
           alphachars = [*'A'..'Z']
           megabyte_string = (0...(1024 * 1024)).map { alphachars.sample }.join
-          zip_with_manifest_content("---\nstack: cflinuxfs2\nabsurdly_long_value: " + megabyte_string)
+          zip_with_manifest_content("---\nstack: cflinuxfs3\nabsurdly_long_value: " + megabyte_string)
         end
 
         it 'raises an error' do

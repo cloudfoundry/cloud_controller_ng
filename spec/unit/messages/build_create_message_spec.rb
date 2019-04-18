@@ -18,7 +18,7 @@ module VCAP::CloudController
         let(:params) do
           {
             unexpected: 'meow',
-            lifecycle: { type: 'buildpack', data: { buildpack: 'java', stack: 'cflinuxfs2' } }
+            lifecycle: { type: 'buildpack', data: { buildpack: 'java', stack: 'cflinuxfs3' } }
           }
         end
 
@@ -48,7 +48,7 @@ module VCAP::CloudController
           let(:params) do
             {
               package: { guid: 1 },
-              lifecycle: { type: 'buildpack', data: { buildpack: 'java', stack: 'cflinuxfs2' } }
+              lifecycle: { type: 'buildpack', data: { buildpack: 'java', stack: 'cflinuxfs3' } }
             }
           end
 
@@ -76,13 +76,13 @@ module VCAP::CloudController
 
         context 'when lifecycle is provided' do
           it 'is valid' do
-            params[:lifecycle] = { type: 'buildpack', data: { buildpacks: ['java'], stack: 'cflinuxfs2' } }
+            params[:lifecycle] = { type: 'buildpack', data: { buildpacks: ['java'], stack: 'cflinuxfs3' } }
             message = BuildCreateMessage.new(params)
             expect(message).to be_valid
           end
 
           it 'must provide type' do
-            params[:lifecycle] = { data: { buildpacks: ['java'], stack: 'cflinuxfs2' } }
+            params[:lifecycle] = { data: { buildpacks: ['java'], stack: 'cflinuxfs3' } }
 
             message = BuildCreateMessage.new(params)
             expect(message).not_to be_valid

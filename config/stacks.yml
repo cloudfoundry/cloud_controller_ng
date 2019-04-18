@@ -1,5 +1,5 @@
-default: "cflinuxfs2"
+default: "cflinuxfs3"
 
 stacks:
-  - name: "cflinuxfs2"
-    description: "test cflinuxfs2 entry"
+  - name: "cflinuxfs3"
+    description: "test cflinuxfs3 entry"

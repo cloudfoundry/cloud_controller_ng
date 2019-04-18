@@ -33,7 +33,7 @@ RSpec.describe 'Builds' do
           type: 'buildpack',
           data: {
             buildpacks: ['http://github.com/myorg/awesome-buildpack'],
-            stack: 'cflinuxfs2'
+            stack: 'cflinuxfs3'
           },
         },
         package: {
@@ -85,7 +85,7 @@ RSpec.describe 'Builds' do
             'type' => 'buildpack',
             'data' => {
               'buildpacks' => ['http://github.com/myorg/awesome-buildpack'],
-              'stack' => 'cflinuxfs2'
+              'stack' => 'cflinuxfs3'
             },
           },
           'package' => {
@@ -155,7 +155,7 @@ RSpec.describe 'Builds' do
     }
     let(:body) do
       { lifecycle: { type: 'buildpack', data: { buildpacks: ['http://github.com/myorg/awesome-buildpack'],
-                                                stack: 'cflinuxfs2' } } }
+                                                stack: 'cflinuxfs3' } } }
     end
     let(:staging_message) { VCAP::CloudController::BuildCreateMessage.new(body) }
 
@@ -202,7 +202,7 @@ RSpec.describe 'Builds' do
                 'type' => 'buildpack',
                 'data' => {
                   'buildpacks' => ['http://github.com/myorg/awesome-buildpack'],
-                  'stack' => 'cflinuxfs2',
+                  'stack' => 'cflinuxfs3',
                 },
               },
               'package' => { 'guid' => package.guid, },
@@ -227,7 +227,7 @@ RSpec.describe 'Builds' do
                 'type' => 'buildpack',
                 'data' => {
                   'buildpacks' => ['http://github.com/myorg/awesome-buildpack'],
-                  'stack' => 'cflinuxfs2',
+                  'stack' => 'cflinuxfs3',
                 },
               },
               'package' => { 'guid' => package.guid, },
@@ -277,7 +277,7 @@ RSpec.describe 'Builds' do
     }
     let(:body) do
       { lifecycle: { type: 'buildpack', data: { buildpacks: ['http://github.com/myorg/awesome-buildpack'],
-                                                stack: 'cflinuxfs2' } } }
+                                                stack: 'cflinuxfs3' } } }
     end
     let(:staging_message) { VCAP::CloudController::BuildCreateMessage.new(body) }
 
@@ -302,7 +302,7 @@ RSpec.describe 'Builds' do
             'type' => 'buildpack',
             'data' => {
               'buildpacks' => ['http://github.com/myorg/awesome-buildpack'],
-              'stack' => 'cflinuxfs2',
+              'stack' => 'cflinuxfs3',
             },
           },
           'package' => {
