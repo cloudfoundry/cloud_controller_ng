@@ -30,7 +30,7 @@ RSpec::Matchers.define :match_json_response do |expected, problem_keys=[]|
         else
           expected_value.each_with_index do |nested_expected_value, index|
             if nested_expected_value.is_a?(Hash)
-              expect(actual[expected_key][index]).to be_a_response_like(nested_expected_value, @problem_keys)
+              expect(actual[expected_key][index]).to match_json_response(nested_expected_value, @problem_keys)
             else
               expect(actual[expected_key][index]).to eq(nested_expected_value)
             end
