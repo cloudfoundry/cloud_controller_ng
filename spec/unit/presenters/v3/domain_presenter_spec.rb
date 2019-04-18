@@ -27,6 +27,7 @@ module VCAP::CloudController::Presenters::V3
           expect(subject[:relationships][:organization][:data]).to be_nil
           expect(subject[:relationships][:shared_organizations][:data]).to eq([])
           expect(subject[:links][:self][:href]).to eq("#{link_prefix}/v3/domains/#{domain.guid}")
+          expect(subject[:links][:organization]).to be_nil
         end
       end
 
@@ -50,6 +51,7 @@ module VCAP::CloudController::Presenters::V3
             data: { guid: domain.owning_organization.guid }
           })
           expect(subject[:links][:self][:href]).to eq("#{link_prefix}/v3/domains/#{domain.guid}")
+          expect(subject[:links][:organization][:href]).to eq("#{link_prefix}/v3/organizations/#{domain.owning_organization.guid}")
         end
 
         context 'and has no shared organizations' do

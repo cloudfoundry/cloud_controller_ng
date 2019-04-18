@@ -48,7 +48,8 @@ RSpec.describe 'Domains Request' do
             }
           },
           links: {
-            self: { href: "#{link_prefix}/v3/domains/#{visible_owned_private_domain.guid}" }
+            self: { href: "#{link_prefix}/v3/domains/#{visible_owned_private_domain.guid}" },
+            organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}) }
           }
         }
       end
@@ -69,7 +70,8 @@ RSpec.describe 'Domains Request' do
             }
           },
           links: {
-            self: { href: "#{link_prefix}/v3/domains/#{visible_shared_private_domain.guid}" }
+            self: { href: "#{link_prefix}/v3/domains/#{visible_shared_private_domain.guid}" },
+            organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{non_visible_org.guid}) }
           }
         }
       end
@@ -90,7 +92,8 @@ RSpec.describe 'Domains Request' do
             }
           },
           links: {
-            self: { href: "#{link_prefix}/v3/domains/#{not_visible_private_domain.guid}" }
+            self: { href: "#{link_prefix}/v3/domains/#{not_visible_private_domain.guid}" },
+            organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{non_visible_org.guid}) }
           }
         }
       end
@@ -298,7 +301,8 @@ RSpec.describe 'Domains Request' do
             }
           },
           links: {
-            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{UUID_REGEX}) }
+            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{UUID_REGEX}) },
+            organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}) }
           }
         }
       end
@@ -759,7 +763,8 @@ RSpec.describe 'Domains Request' do
               }
             },
             links: {
-              self: { href: "#{link_prefix}/v3/domains/#{private_domain.guid}" }
+              self: { href: "#{link_prefix}/v3/domains/#{private_domain.guid}" },
+              organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}) }
             }
           }
         }
@@ -811,7 +816,8 @@ RSpec.describe 'Domains Request' do
               }
             },
             links: {
-              self: { href: "#{link_prefix}/v3/domains/#{private_domain.guid}" }
+              self: { href: "#{link_prefix}/v3/domains/#{private_domain.guid}" },
+              organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}) }
             }
           }
         }

@@ -55,12 +55,18 @@ module VCAP::CloudController::Presenters::V3
 
     def build_links
       url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
-
-      {
+      links = {
         self: {
           href: url_builder.build_url(path: "/v3/domains/#{domain.guid}")
         },
       }
+
+      if domain.owning_organization
+        links[:organization] = {
+          href: url_builder.build_url(path: "/v3/organizations/#{domain.owning_organization.guid}")
+        }
+      end
+      links
     end
   end
 end
