@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'request_spec_shared_examples'
 
 module VCAP::CloudController
   RSpec.describe 'Organizations' do
@@ -14,6 +15,7 @@ module VCAP::CloudController
       organization1.add_user(user)
       organization2.add_user(user)
       organization3.add_user(user)
+      VCAP::CloudController::Domain.dataset.destroy # this will clean up the seeded test domains
     end
 
     describe 'POST /v3/organizations' do
@@ -245,6 +247,120 @@ module VCAP::CloudController
 
         expect(last_response.status).to eq(200)
         expect(parsed_response).to be_a_response_like(expected_response)
+      end
+    end
+
+    describe 'GET /v3/organizations/:guid/domains' do
+      let(:space) { Space.make }
+      let(:org) { space.organization }
+      let!(:shared_domain) { VCAP::CloudController::SharedDomain.make(guid: 'shared-guid') }
+      let!(:owned_private_domain) { VCAP::CloudController::PrivateDomain.make(owning_organization_guid: org.guid, guid: 'owned-private') }
+      let!(:shared_private_domain) { VCAP::CloudController::PrivateDomain.make(owning_organization_guid: organization1.guid, guid: 'shared-private') }
+
+      let(:shared_domain_json) do
+        {
+          guid: shared_domain.guid,
+          created_at: iso8601,
+          updated_at: iso8601,
+          name: shared_domain.name,
+          internal: false,
+          relationships: {
+            organization: {
+              data: nil
+            },
+            shared_organizations: {
+              data: []
+            }
+          },
+          links: {
+            self: { href: "#{link_prefix}/v3/domains/#{shared_domain.guid}" }
+          }
+        }
+      end
+      let(:owned_private_domain_json) do
+        {
+          guid: owned_private_domain.guid,
+          created_at: iso8601,
+          updated_at: iso8601,
+          name: owned_private_domain.name,
+          internal: false,
+          relationships: {
+            organization: {
+              data: { guid: org.guid }
+            },
+            shared_organizations: {
+              data: []
+            }
+          },
+          links: {
+            self: { href: "#{link_prefix}/v3/domains/#{owned_private_domain.guid}" },
+            organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}) }
+          }
+        }
+      end
+      let(:shared_private_domain_json) do
+        {
+          guid: shared_private_domain.guid,
+          created_at: iso8601,
+          updated_at: iso8601,
+          name: shared_private_domain.name,
+          internal: false,
+          relationships: {
+            organization: {
+              data: { guid: organization1.guid }
+            },
+            shared_organizations: {
+              data: [{ guid: org.guid }]
+            }
+          },
+          links: {
+            self: { href: "#{link_prefix}/v3/domains/#{shared_private_domain.guid}" },
+            organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{organization1.guid}) }
+          }
+        }
+      end
+
+      before do
+        org.add_private_domain(shared_private_domain)
+      end
+
+      let(:api_call) { lambda { |user_headers| get "/v3/organizations/#{org.guid}/domains", nil, user_headers } }
+      let(:expected_codes_and_responses) do
+        h = Hash.new(
+          code: 200,
+          response_objects: [
+            shared_domain_json,
+            owned_private_domain_json,
+            shared_private_domain_json,
+          ]
+        )
+        h['org_billing_manager'] = {
+          code: 200,
+          response_objects: [
+            shared_domain_json
+          ]
+        }
+        h['no_role'] = {
+          code: 404,
+          response_objects: []
+        }
+        h.freeze
+      end
+
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+
+      describe 'when the user is not logged in' do
+        it 'returns 401 for Unauthenticated requests' do
+          get "/v3/organizations/#{organization1.guid}/domains"
+          expect(last_response.status).to eq(401)
+        end
+      end
+
+      describe 'when the org doesnt exist' do
+        it 'returns 404 for Unauthenticated requests' do
+          get '/v3/organizations/esdgth/domains', nil, user_header
+          expect(last_response.status).to eq(404)
+        end
       end
     end
 
