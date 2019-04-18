@@ -88,6 +88,11 @@
   http_code: 429
   message: "Rate Limit Exceeded"
 
+10014:
+  name: IPBasedRateLimitExceeded
+  http_code: 429
+  message: "Rate Limit Exceeded: please log in again"
+
 20001:
   name: UserInvalid
   http_code: 400
@@ -512,7 +517,7 @@
   name: ServiceInstanceAlreadyBoundToSameRoute
   http_code: 400
   message: "The route and service instance are already bound."
-  
+
 130009:
   name: InternalDomainCannotBeDeleted
   http_code: 422
@@ -522,7 +527,7 @@
   name: RouteServiceCannotBeBoundToInternalRoute
   http_code: 400
   message: "Route services cannot be bound to internal routes."
-  
+
 140001:
   name: LegacyApiWithoutDefaultSpace
   http_code: 400

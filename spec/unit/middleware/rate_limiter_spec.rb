@@ -363,6 +363,25 @@ module CloudFoundry
             )
           end
         end
+
+        context 'when the user is unauthenticated' do
+          let(:path_info) { '/v3/foo' }
+          let(:unauthenticated_env) { { 'some' => 'env', 'PATH_INFO' => path_info } }
+
+          it 'suggests they log in' do
+            10.times do
+              middleware.call(unauthenticated_env)
+            end
+            _, response_headers, body = middleware.call(unauthenticated_env)
+            expect(response_headers['X-RateLimit-Remaining']).to eq('0')
+            json_body = JSON.parse(body.first)
+            expect(json_body['errors'].first).to include(
+              'code' => 10014,
+              'detail' => 'Rate Limit Exceeded: please log in again',
+              'title' => 'CF-IPBasedRateLimitExceeded',
+            )
+          end
+        end
       end
 
       context 'with multiple servers' do
