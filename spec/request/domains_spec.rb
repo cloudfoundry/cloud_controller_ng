@@ -161,7 +161,7 @@ RSpec.describe 'Domains Request' do
             user_visible_org.add_billing_manager(user)
           end
 
-          let(:shared_visible_orgs) { [] }
+          let(:shared_visible_orgs) { [{ guid: user_visible_org.guid }] }
 
           let(:api_call) { lambda { |user_headers| get '/v3/domains', nil, user_headers } }
 

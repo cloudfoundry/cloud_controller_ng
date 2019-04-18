@@ -17,7 +17,7 @@ class DomainsController < ApplicationController
       paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
       path: '/v3/domains',
       message: message,
-      extra_presenter_args: { visible_org_guids: org_guids }
+      extra_presenter_args: { visible_org_guids: permission_queryer.readable_org_guids }
     )
   end
 
@@ -49,7 +49,7 @@ class DomainsController < ApplicationController
 
     domain_not_found! unless domain
 
-    render status: :ok, json: Presenters::V3::DomainPresenter.new(domain, visible_org_guids: readable_org_guids)
+    render status: :ok, json: Presenters::V3::DomainPresenter.new(domain, visible_org_guids: permission_queryer.readable_org_guids)
   end
 
   private
