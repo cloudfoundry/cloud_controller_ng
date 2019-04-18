@@ -72,7 +72,6 @@ module VCAP::CloudController
       end
     end
 
-    validates :no_route_flag, inclusion: { in: [true, false], message: 'must be a boolean' }, allow_nil: true
     validate :validate_top_level_web_process!
     validate :validate_processes!, if: ->(record) { record.requested?(:processes) }
     validate :validate_sidecars!,  if: ->(record) { record.requested?(:sidecars) }

@@ -1759,7 +1759,7 @@ module VCAP::CloudController
         it 'should be invalid' do
           message = AppManifestMessage.create_from_yml(parsed_yaml, params)
           expect(message).to_not be_valid
-          expect(message.errors[:no_route_flag]).to include('must be a boolean')
+          expect(message.errors[:base]).to include('No-route must be a boolean')
         end
       end
 
