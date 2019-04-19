@@ -27,10 +27,18 @@ RSpec.describe 'Domains Request' do
       # (visible_shared_private_domain) | (non_visible_org)  | (org)
       # (not_visible_private_domain)    | (non_visible_org)  | ()
       # (shared_domain)                 | ()                 | ()
-      let!(:visible_owned_private_domain) { VCAP::CloudController::PrivateDomain.make(guid: 'domain1', owning_organization: org) }
-      let!(:visible_shared_private_domain) { VCAP::CloudController::PrivateDomain.make(guid: 'domain2', owning_organization: non_visible_org) }
-      let!(:not_visible_private_domain) { VCAP::CloudController::PrivateDomain.make(guid: 'domain3', owning_organization: non_visible_org) }
-      let!(:shared_domain) { VCAP::CloudController::SharedDomain.make(guid: 'domain4') }
+      let!(:visible_owned_private_domain) {
+        VCAP::CloudController::PrivateDomain.make(guid: 'domain1', name: 'domain1.com', owning_organization: org)
+      }
+      let!(:visible_shared_private_domain) {
+        VCAP::CloudController::PrivateDomain.make(guid: 'domain2', name: 'domain2.com', owning_organization: non_visible_org)
+      }
+      let!(:not_visible_private_domain) {
+        VCAP::CloudController::PrivateDomain.make(guid: 'domain3', name: 'domain3.com', owning_organization: non_visible_org)
+      }
+      let!(:shared_domain) {
+        VCAP::CloudController::SharedDomain.make(guid: 'domain4', name: 'domain4.com')
+      }
 
       let(:visible_owned_private_domain_json) do
         {
@@ -230,6 +238,33 @@ RSpec.describe 'Domains Request' do
 
           it_behaves_like 'permissions for list endpoint', LOCAL_ROLES
         end
+      end
+
+      describe 'when filtering by name' do
+        let(:shared_visible_orgs) { [{ guid: user_visible_org.guid }] }
+
+        let(:api_call) { lambda { |user_headers| get "/v3/domains?names=#{visible_shared_private_domain.name}", nil, user_headers } }
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(
+            code: 200,
+            response_objects: [
+              visible_shared_private_domain_json,
+            ]
+          )
+          # because the user is a manager in the shared org, they have access to see the domain
+          h['org_billing_manager'] = {
+            code: 200,
+            response_objects: []
+          }
+          h['no_role'] = {
+            code: 200,
+            response_objects: []
+          }
+          h.freeze
+        end
+
+        it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
       end
     end
   end

@@ -105,7 +105,7 @@ class OrganizationsV3Controller < ApplicationController
 
     message = ListMessage.from_params(hashed_params, [])
 
-    domains = DomainFetcher.fetch_all(domain_readable_org_guids([org.guid]))
+    domains = DomainFetcher.fetch_all_for_orgs(domain_readable_org_guids([org.guid]))
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::DomainPresenter,

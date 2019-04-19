@@ -21,8 +21,13 @@ module VCAP::CloudController
         expect(message).to be_valid
       end
 
-      it 'does not accept any params' do
-        message = DomainsListMessage.from_params({ foobar: 'pants' })
+      it 'accepts a names param' do
+        message = DomainsListMessage.from_params({ 'names' => 'test.com,foo.com' })
+        expect(message).to be_valid
+      end
+
+      it 'does not accept any other params' do
+        message = DomainsListMessage.from_params({ 'foobar' => 'pants' })
 
         expect(message).not_to be_valid
         expect(message.errors[:base]).to include("Unknown query parameter(s): 'foobar'")

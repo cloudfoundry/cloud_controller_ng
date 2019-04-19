@@ -1,5 +1,6 @@
 require 'messages/domain_create_message'
 require 'messages/domains_list_message'
+require 'messages/domain_show_message'
 require 'presenters/v3/domain_presenter'
 require 'actions/domain_create'
 require 'fetchers/domain_fetcher'
@@ -10,7 +11,7 @@ class DomainsController < ApplicationController
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     org_guids = permission_queryer.readable_org_guids_for_domains
-    dataset = DomainFetcher.fetch_all(org_guids)
+    dataset = DomainFetcher.fetch(message, org_guids)
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::DomainPresenter,
@@ -41,11 +42,14 @@ class DomainsController < ApplicationController
   end
 
   def show
+    message = DomainShowMessage.new({ guid: hashed_params['guid'] })
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
     readable_org_guids = permission_queryer.readable_org_guids_for_domains
     domain = DomainFetcher.fetch(
-      readable_org_guids,
-      hashed_params['guid']
-    )
+      message,
+      readable_org_guids
+    ).first
 
     domain_not_found! unless domain
 
