@@ -3,6 +3,9 @@ require 'messages/validators'
 
 module VCAP::CloudController
   class BuildpackUpdateMessage < MetadataBaseMessage
+    MAX_BUILDPACK_NAME_LENGTH = 250
+    MAX_STACK_LENGTH = 250
+
     register_allowed_keys [:name, :stack, :position, :enabled, :locked]
     validates_with NoAdditionalKeysValidator
 
@@ -20,13 +23,13 @@ module VCAP::CloudController
 
     validates :name,
       string: true,
-      length: { maximum: 250 },
+      length: { maximum: MAX_BUILDPACK_NAME_LENGTH },
       format: /\A[-\w]+\z/,
       allow_nil: true
 
     validates :stack,
       string: true,
-      length: { maximum: 250 },
+      length: { maximum: MAX_STACK_LENGTH },
       allow_nil: true
 
     validates :position,
