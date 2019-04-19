@@ -202,8 +202,10 @@ module VCAP::CloudController
 
           it 'does not create a revision' do
             restage_request
-            expect(last_response.status).to eq(201)
+            expect(last_response.status).to eq(400)
             expect(process.app.revisions.length).to eq(0)
+            expect(decoded_response['code']).to eq(320006)
+            expect(decoded_response['description']).to match(/V2 restaging is disabled when your app has revisions enabled/)
           end
         end
       end

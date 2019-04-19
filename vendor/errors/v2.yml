@@ -1083,6 +1083,11 @@
   http_code: 403
   message: "You cannot select the backend on which to run this application"
 
+320006:
+  name: RevisionsEnabled
+  http_code: 400
+  message: "V2 restaging is disabled when your app has revisions enabled"
+
 330000:
   name: FeatureFlagNotFound
   http_code: 404
