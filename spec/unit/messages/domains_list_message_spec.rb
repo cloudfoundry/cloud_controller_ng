@@ -26,6 +26,11 @@ module VCAP::CloudController
         expect(message).to be_valid
       end
 
+      it 'accepts an organization_guids param' do
+        message = DomainsListMessage.from_params({ 'organization_guids' => 'guid1,guid2' })
+        expect(message).to be_valid
+      end
+
       it 'does not accept any other params' do
         message = DomainsListMessage.from_params({ 'foobar' => 'pants' })
 

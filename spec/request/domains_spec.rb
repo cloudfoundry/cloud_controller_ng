@@ -266,6 +266,47 @@ RSpec.describe 'Domains Request' do
 
         it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
       end
+
+      describe 'when filtering by owning organization guid' do
+        let(:api_call) { lambda { |user_headers| get "/v3/domains?organization_guids=#{visible_shared_private_domain.owning_organization_guid}", nil, user_headers } }
+
+        context 'when the user can read globally' do
+          let(:expected_codes_and_responses) do
+            h = Hash.new(
+              code: 200,
+              response_objects: [
+                visible_shared_private_domain_json,
+                not_visible_private_domain_json
+              ]
+            ).freeze
+          end
+
+          it_behaves_like 'permissions for list endpoint', GLOBAL_SCOPES
+        end
+
+        context 'when the user cannot read globally' do
+          let(:expected_codes_and_responses) do
+            h = Hash.new(
+              code: 200,
+              response_objects: [
+                visible_shared_private_domain_json,
+              ]
+            )
+            # because the user is a manager in the shared org, they have access to see the domain
+            h['org_billing_manager'] = {
+              code: 200,
+              response_objects: []
+            }
+            h['no_role'] = {
+              code: 200,
+              response_objects: []
+            }
+            h.freeze
+          end
+
+          it_behaves_like 'permissions for list endpoint', LOCAL_ROLES
+        end
+      end
     end
   end
 
