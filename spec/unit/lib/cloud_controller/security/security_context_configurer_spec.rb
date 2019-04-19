@@ -39,12 +39,26 @@ module VCAP::CloudController
         context 'when a user_id is present' do
           let(:token_information) { { 'user_id' => user_id, 'client_id' => 'foobar' } }
 
-          context 'when the specified user already exists' do
-            let!(:user) { User.make(guid: user_id) }
+          context 'when the specified user already exists (without information about client-ness)' do
+            let!(:user) { User.make(guid: user_id, is_oauth_client: nil) }
 
             it 'sets that user on security context' do
               configurer.configure(auth_token)
-              expect(SecurityContext.current_user).to eq(user)
+              expect(SecurityContext.current_user.id).to eq(user.id)
+              expect(SecurityContext.current_user.guid).to eq(user.guid)
+              expect(SecurityContext.current_user.is_oauth_client?).to be_falsey
+              expect(SecurityContext.current_user.is_oauth_client?).not_to be_nil
+            end
+          end
+
+          context 'when the specified user already exists as a client' do
+            let!(:user) { User.make(guid: user_id, is_oauth_client: true) }
+
+            it 'sets invalid token' do
+              configurer.configure(auth_token)
+              expect(SecurityContext.current_user).to be_nil
+              expect(SecurityContext.token).to eq(:invalid_token)
+              expect(SecurityContext.auth_token).to eq(auth_token)
             end
           end
 
@@ -55,6 +69,8 @@ module VCAP::CloudController
               }.to change { User.count }.by(1)
               expect(SecurityContext.current_user.guid).to eq(user_id)
               expect(SecurityContext.current_user).to be_active
+              expect(SecurityContext.current_user.is_oauth_client?).to be_falsey
+              expect(SecurityContext.current_user.is_oauth_client?).not_to eq(nil)
             end
           end
 
@@ -80,9 +96,15 @@ module VCAP::CloudController
               and_return(uaa_client)
           end
 
+          it 'records that the user is a client' do
+            configurer.configure(auth_token)
+            expect(SecurityContext.current_user.is_oauth_client?).to be_truthy
+          end
+
           it 'uses the client_id to set the user_id' do
             configurer.configure(auth_token)
-            expect(SecurityContext.current_user).to eq(user)
+            expect(SecurityContext.current_user.guid).to eq(user.guid)
+            expect(SecurityContext.current_user.guid).to eq(token_information['client_id'])
           end
 
           it 'doesnt needlessly ask the uaa client for users' do
@@ -115,7 +137,21 @@ module VCAP::CloudController
 
               it 'uses the client_id to set the user_id' do
                 configurer.configure(auth_token)
-                expect(SecurityContext.current_user).to eq(user)
+                expect(SecurityContext.current_user.guid).to eq(user.guid)
+              end
+            end
+
+            context 'theres a user with the same id' do
+              let!(:user) { User.make(guid: user_id, is_oauth_client: false) }
+              before do
+                expect(uaa_client).not_to receive(:usernames_for_ids)
+              end
+
+              it 'sets invalid token without talking to uaa' do
+                configurer.configure(auth_token)
+                expect(SecurityContext.current_user).to be_nil
+                expect(SecurityContext.token).to eq(:invalid_token)
+                expect(SecurityContext.auth_token).to eq(auth_token)
               end
             end
           end

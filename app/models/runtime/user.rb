@@ -97,6 +97,10 @@ module VCAP::CloudController
       active
     end
 
+    def is_oauth_client?
+      is_oauth_client
+    end
+
     def remove_spaces(space)
       remove_space space
       remove_managed_space space
