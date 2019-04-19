@@ -46,6 +46,7 @@ module VCAP::CloudController
 
           serial([
             ::Diego::Bbs::Models::DownloadAction.new({
+              artifact: 'droplet',
               from: @droplet_uri,
               to: '.',
               cache_key: "droplets-#{@process_guid}",
