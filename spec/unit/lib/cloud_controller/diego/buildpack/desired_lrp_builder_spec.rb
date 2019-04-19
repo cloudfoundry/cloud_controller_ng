@@ -103,6 +103,7 @@ module VCAP::CloudController
                   actions: [
                     ::Diego::Bbs::Models::Action.new(
                       download_action: ::Diego::Bbs::Models::DownloadAction.new(
+                        artifact: 'droplet',
                         to: '.',
                         user: 'vcap',
                         from: 'http://droplet-uri.com:1234?token=&@home--->',
@@ -131,6 +132,7 @@ module VCAP::CloudController
                       actions: [
                         ::Diego::Bbs::Models::Action.new(
                           download_action: ::Diego::Bbs::Models::DownloadAction.new(
+                            artifact: 'droplet',
                             to: '.',
                             user: 'vcap',
                             from: 'http://droplet-uri.com:1234?token=&@home--->',
