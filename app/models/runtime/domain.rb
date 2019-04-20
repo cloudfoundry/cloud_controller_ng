@@ -123,6 +123,10 @@ module VCAP::CloudController
       owning_organization_id.nil?
     end
 
+    def private?
+      !shared?
+    end
+
     def owned_by?(org)
       owning_organization_id == org.id
     end

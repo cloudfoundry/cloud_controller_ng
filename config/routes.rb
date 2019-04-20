@@ -88,6 +88,7 @@ Rails.application.routes.draw do
   post '/domains', to: 'domains#create'
   get '/domains', to: 'domains#index'
   get '/domains/:guid', to: 'domains#show'
+  post '/domains/:guid/relationships/shared_organizations', to: 'domains#update_shared_orgs'
 
   # droplets
   post '/packages/:package_guid/droplets', to: 'droplets#create'

@@ -56,6 +56,13 @@ class DomainsController < ApplicationController
     render status: :ok, json: Presenters::V3::DomainPresenter.new(domain, visible_org_guids: permission_queryer.readable_org_guids)
   end
 
+  def update_shared_orgs
+    domain = Domain.find(guid: hashed_params[:guid])
+    domain_not_found! unless domain
+    unprocessable!('Domains can not be shared with other organizations unless they are scoped to an organization.') unless domain.private?
+    render status: :ok, json: {}
+  end
+
   private
 
   def check_create_scoped_domain_permissions!(message)

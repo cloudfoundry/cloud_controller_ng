@@ -767,6 +767,45 @@ RSpec.describe 'Domains Request' do
     end
   end
 
+  describe 'POST /v3/domains/:guid/relationships/shared_organizations' do
+    let(:params) { { data: [] } }
+    let(:domain) {VCAP::CloudController::Domain.make()}
+    let(:user_header) { admin_headers_for(user) }
+    describe 'when updating shared orgs for a shared domain' do
+      let(:shared_domain) {VCAP::CloudController::SharedDomain.make()}
+
+      it 'returns a 422' do
+        post "/v3/domains/#{shared_domain.guid}/relationships/shared_organizations", params.to_json, user_header
+        expect(last_response.status).to eq(422)
+        expect(parsed_response['errors'][0]['detail']).to eq('Domains can not be shared with other organizations unless they are scoped to an organization.')
+      end
+    end
+
+    describe 'when the user is not logged in' do
+      it 'returns 401 for Unauthenticated requests' do
+        post "/v3/domains/#{domain.guid}/relationships/shared_organizations", params.to_json, base_json_headers
+        expect(last_response.status).to eq(401)
+      end
+    end
+
+    context 'when the user does not have the required scopes' do
+      let(:user_header) { headers_for(user, scopes: ['cloud_controller.read']) }
+
+      it 'returns a 403' do
+        post "/v3/domains/#{domain.guid}/relationships/shared_organizations", params.to_json, user_header
+        expect(last_response.status).to eq(403)
+      end
+    end
+
+    context 'when the domain with specified guid does not exist' do
+      it 'returns a 404' do
+        post "/v3/domains/domain-does-not-exist/relationships/shared_organizations", params.to_json, user_header
+        expect(last_response.status).to eq(404)
+      end
+
+    end
+  end
+
   describe 'GET /v3/domains/:guid' do
     context 'when the domain does not exist' do
       let(:user_header) { headers_for(user) }
