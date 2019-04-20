@@ -108,9 +108,9 @@ module VCAP::CloudController
     end
 
     describe '.rollback_app_revision' do
-      let(:revision) do
+      let(:initial_revision) do
         RevisionModel.make(
-          version: 2,
+          version: 1,
           droplet: droplet,
           app: app,
           environment_variables: { 'BISH': 'BASH', 'FOO': 'BAR' }
@@ -118,7 +118,7 @@ module VCAP::CloudController
       end
       let!(:revision_web_process_command) do
         RevisionProcessCommandModel.make(
-          revision: revision,
+          revision: initial_revision,
           process_type: ProcessTypes::WEB,
           process_command: 'foo rackup stuff',
         )
@@ -126,7 +126,7 @@ module VCAP::CloudController
 
       let!(:revision_worker_process_command) do
         RevisionProcessCommandModel.make(
-          revision: revision,
+          revision: initial_revision,
           process_type: 'worker',
           process_command: 'on the railroad',
         )
@@ -139,30 +139,62 @@ module VCAP::CloudController
 
         it 'return nil' do
           expect {
-            expect(RevisionResolver.rollback_app_revision(revision, user_audit_info)).to be_nil
+            expect(RevisionResolver.rollback_app_revision(initial_revision, user_audit_info)).to be_nil
           }.not_to change { RevisionModel.count }
         end
       end
 
-      it 'creates a new rollback revision' do
-        rollback_revision = RevisionResolver.rollback_app_revision(revision, user_audit_info)
+      context 'when revisions are enabled' do
+        let!(:latest_revision) {
+          RevisionModel.make(
+            app: app,
+            droplet: app.droplet,
+            environment_variables: { 'foo' => 'bar' },
+            description: ['latest revision'],
+            version: 2
+          )
+        }
+        let!(:latest_process_commands) {
+          RevisionProcessCommandModel.make(
+            revision_guid: latest_revision.guid,
+            process_type: 'web',
+            process_command: 'bundle exec earlier_app',
+          )
+        }
+        context 'rolling back' do
+          it 'creates a new rollback revision' do
+            rollback_revision = RevisionResolver.rollback_app_revision(initial_revision, user_audit_info)
 
-        expect(rollback_revision.description).to eq('Rolled back to revision 2.')
-        expect(rollback_revision.app).to eq(revision.app)
-        expect(rollback_revision.droplet).to eq(revision.droplet)
-        expect(rollback_revision.environment_variables).to eq(revision.environment_variables)
-        expect(rollback_revision.commands_by_process_type).to eq(revision.commands_by_process_type)
-        expect(rollback_revision.process_commands).not_to eq(revision.process_commands)
-      end
+            expect(rollback_revision.description).to include('Rolled back to revision 1.')
+            expect(rollback_revision.app).to eq(initial_revision.app)
+            expect(rollback_revision.droplet).to eq(initial_revision.droplet)
+            expect(rollback_revision.environment_variables).to eq(initial_revision.environment_variables)
+            expect(rollback_revision.commands_by_process_type).to eq(initial_revision.commands_by_process_type)
+            expect(rollback_revision.process_commands).not_to eq(initial_revision.process_commands)
+          end
 
-      it 'does not copy metadata to the new rollback revision' do
-        RevisionAnnotationModel.make(revision: revision, key: 'foo', value: 'bar')
-        RevisionLabelModel.make(revision: revision, key_name: 'baz', value: 'qux')
+          it 'does not copy metadata to the new rollback revision' do
+            RevisionAnnotationModel.make(revision: initial_revision, key: 'foo', value: 'bar')
+            RevisionLabelModel.make(revision: initial_revision, key_name: 'baz', value: 'qux')
 
-        rollback_revision = RevisionResolver.rollback_app_revision(revision, user_audit_info)
+            rollback_revision = RevisionResolver.rollback_app_revision(initial_revision, user_audit_info)
 
-        expect(rollback_revision.annotations).to be_empty
-        expect(rollback_revision.labels).to be_empty
+            expect(rollback_revision.annotations).to be_empty
+            expect(rollback_revision.labels).to be_empty
+          end
+        end
+
+        context 'and rolling back to a revision that has the same configuration as the deployed revision' do
+          it 'gives an error and does not create a revision' do
+            RevisionResolver.rollback_app_revision(initial_revision, user_audit_info)
+
+            expect {
+              expect {
+                RevisionResolver.rollback_app_revision(initial_revision, user_audit_info)
+              }.to raise_error(RevisionResolver::NoUpdateRollback, 'Unable to rollback. The code and configuration you are rolling back to is the same as the deployed revision.')
+            }.not_to change { RevisionModel.count }
+          end
+        end
       end
     end
   end

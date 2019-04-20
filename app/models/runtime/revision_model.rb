@@ -50,36 +50,5 @@ module VCAP::CloudController
       droplet.process_types.keys.
         map { |k| [k, process_commands_dataset.first(process_type: k)&.process_command] }.to_h
     end
-
-    def out_of_date_reasons
-      reasons = []
-
-      if droplet_guid != app.droplet_guid
-        reasons.push('New droplet deployed.')
-      end
-
-      if environment_variables != app.environment_variables
-        reasons.push('New environment variables deployed.')
-      end
-
-      commands_differences = HashDiff.diff(commands_by_process_type, app.commands_by_process_type)
-
-      reasons.push(*commands_differences.map do |change_type, process_type, *command_change|
-        if change_type == '+'
-          "New process type '#{process_type}' added."
-        elsif change_type == '-'
-          "Process type '#{process_type}' removed."
-        elsif command_change[0].nil?
-          "Custom start command added for '#{process_type}' process."
-        elsif command_change[1].nil?
-          "Custom start command removed for '#{process_type}' process."
-        else
-          "Custom start command updated for '#{process_type}' process."
-        end
-      end
-      )
-
-      reasons.sort
-    end
   end
 end
