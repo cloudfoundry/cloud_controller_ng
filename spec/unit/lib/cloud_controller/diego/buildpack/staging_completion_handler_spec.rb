@@ -181,6 +181,35 @@ module VCAP::CloudController
                       expect(droplet.buildpack_receipt_buildpack_guid).to eq(buildpack.guid)
                       expect(droplet.buildpack_receipt_detect_output).to eq('INTERCAL')
                     end
+
+                    context 'when revisions are enabled' do
+                      let(:old_droplet) { DropletModel.make(app: app, created_at: 5.days.ago) }
+
+                      before do
+                        app.update(revisions_enabled: true)
+                        RevisionModel.make(app_guid: app.guid, droplet_guid: old_droplet.guid)
+                      end
+
+                      it 'creates a revision and assigns it to the processes' do
+                        expect { subject.staging_complete(success_response, true) }.to change { app.reload.revisions.count }.from(1).to(2)
+                        web_process.reload
+                        expect(web_process.revision).to eq(app.latest_revision)
+                        expect(web_process.actual_droplet).to eq(app.droplet)
+                      end
+                    end
+
+                    context 'when revisions are NOT enabled' do
+                      before do
+                        app.update(revisions_enabled: false)
+                      end
+
+                      it 'creates a revision and assigns it to the processes' do
+                        expect { subject.staging_complete(success_response, true) }.not_to change { app.reload.revisions.count }.from(0)
+                        web_process.reload
+                        expect(web_process.revision).to be_nil
+                        expect(web_process.actual_droplet).to eq(app.droplet)
+                      end
+                    end
                   end
 
                   context 'when the app does not have a start command' do

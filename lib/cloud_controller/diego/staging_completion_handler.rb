@@ -135,14 +135,15 @@ module VCAP::CloudController
           app.lock!
 
           app.update(droplet: droplet)
+          revision = RevisionResolver.update_app_revision(app, nil)
 
           app.processes.each do |process|
             process.lock!
+            process.update(revision: revision) if revision
             Repositories::AppUsageEventRepository.new.create_from_process(process, 'BUILDPACK_SET')
           end
         end
-
-        @runners.runner_for_process(web_process).start
+        @runners.runner_for_process(web_process.reload).start
       end
 
       def error_parser
