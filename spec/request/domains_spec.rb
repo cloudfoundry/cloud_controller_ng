@@ -769,10 +769,10 @@ RSpec.describe 'Domains Request' do
 
   describe 'POST /v3/domains/:guid/relationships/shared_organizations' do
     let(:params) { { data: [] } }
-    let(:domain) {VCAP::CloudController::Domain.make()}
+    let(:private_domain) { VCAP::CloudController::PrivateDomain.make }
     let(:user_header) { admin_headers_for(user) }
     describe 'when updating shared orgs for a shared domain' do
-      let(:shared_domain) {VCAP::CloudController::SharedDomain.make()}
+      let(:shared_domain) { VCAP::CloudController::SharedDomain.make }
 
       it 'returns a 422' do
         post "/v3/domains/#{shared_domain.guid}/relationships/shared_organizations", params.to_json, user_header
@@ -783,7 +783,7 @@ RSpec.describe 'Domains Request' do
 
     describe 'when the user is not logged in' do
       it 'returns 401 for Unauthenticated requests' do
-        post "/v3/domains/#{domain.guid}/relationships/shared_organizations", params.to_json, base_json_headers
+        post "/v3/domains/#{private_domain.guid}/relationships/shared_organizations", params.to_json, base_json_headers
         expect(last_response.status).to eq(401)
       end
     end
@@ -792,17 +792,83 @@ RSpec.describe 'Domains Request' do
       let(:user_header) { headers_for(user, scopes: ['cloud_controller.read']) }
 
       it 'returns a 403' do
-        post "/v3/domains/#{domain.guid}/relationships/shared_organizations", params.to_json, user_header
+        post "/v3/domains/#{private_domain.guid}/relationships/shared_organizations", params.to_json, user_header
         expect(last_response.status).to eq(403)
       end
     end
 
     context 'when the domain with specified guid does not exist' do
       it 'returns a 404' do
-        post "/v3/domains/domain-does-not-exist/relationships/shared_organizations", params.to_json, user_header
+        post '/v3/domains/domain-does-not-exist/relationships/shared_organizations', params.to_json, user_header
         expect(last_response.status).to eq(404)
       end
+    end
 
+    context 'when sharing with owning org' do
+      let(:params) { { data: [{ guid: private_domain.owning_organization_guid }] } }
+
+      it 'returns a 422' do
+        post "/v3/domains/#{private_domain.guid}/relationships/shared_organizations", params.to_json, user_header
+        expect(last_response.status).to eq(422)
+      end
+    end
+
+    context 'when sharing with invalid org' do
+      let(:params) { { data: [{ guid: 'not-an-org' }] } }
+
+      it 'returns a 422' do
+        post "/v3/domains/#{private_domain.guid}/relationships/shared_organizations", params.to_json, user_header
+        expect(last_response.status).to eq(422)
+      end
+    end
+
+    describe 'when sharing orgs with a private domain' do
+      let(:shared_org1) { VCAP::CloudController::Organization.make(guid: 'shared-org1') }
+
+      let(:domain_shared_orgs) do
+        {
+          data: [{ guid: shared_org1.guid }, { guid: org.guid }]
+        }
+      end
+
+      let(:private_domain_params) { {
+        data: [{ guid: shared_org1.guid }, { guid: org.guid }]
+      }
+      }
+
+      before do
+        shared_org1.add_private_domain(private_domain)
+        shared_org1.add_manager(user)
+      end
+
+      describe 'valid private domains' do
+        let(:api_call) { lambda { |user_headers| post "/v3/domains/#{private_domain.guid}/relationships/shared_organizations", private_domain_params.to_json, user_headers } }
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(
+            code: 422,
+          )
+          h['admin'] = {
+            code: 200,
+            response_object: domain_shared_orgs
+
+          }
+          h['org_manager'] = {
+            code: 200,
+            response_object: domain_shared_orgs
+
+          }
+          h['admin_read_only'] = {
+            code: 403
+          }
+          h['global_auditor'] = {
+            code: 403
+          }
+          h.freeze
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
     end
   end
 

@@ -1,0 +1,45 @@
+### Share a domain
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/domains/[guid]/relationships/shared_organizations" \
+  -X POST \
+  -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
+  -d '{
+    "data": [
+      {"guid": "404f3d89-3f89-6z72-8188-751b298d88d5"},
+      {"guid": "416d3d89-3f89-8h67-2189-123b298d3592"}
+    ]
+  }'
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 Created
+Content-Type: application/json
+
+<%= yield_content :shared_orgs %>
+```
+
+#### Definition
+`POST /v3/domains/:guid/relationships/shared_organizations`
+
+#### Required Parameters
+
+Name     | Type     | Description
+-------  | -------  | -----------
+**data** | _array of [relationship objects](#relationships)_ | The organization guids with which to share the domain.
+
+#### Permitted Roles
+
+Role | Notes
+----- | ---
+Admin |
+Org Manager |

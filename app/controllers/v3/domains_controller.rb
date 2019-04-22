@@ -1,8 +1,11 @@
 require 'messages/domain_create_message'
 require 'messages/domains_list_message'
 require 'messages/domain_show_message'
+require 'messages/domain_update_shared_orgs_message'
 require 'presenters/v3/domain_presenter'
+require 'presenters/v3/domain_shared_orgs_presenter'
 require 'actions/domain_create'
+require 'actions/domain_update_shared_orgs'
 require 'fetchers/domain_fetcher'
 
 class DomainsController < ApplicationController
@@ -29,7 +32,7 @@ class DomainsController < ApplicationController
     shared_org_objects = []
     if create_scoped_domain_request?(message)
       check_create_scoped_domain_permissions!(message)
-      shared_org_objects = verify_shared_organizations_guids!(message)
+      shared_org_objects = verify_shared_organizations_guids!(message, message.organization_guid)
     else
       unauthorized! unless permission_queryer.can_write_globally?
     end
@@ -59,8 +62,15 @@ class DomainsController < ApplicationController
   def update_shared_orgs
     domain = Domain.find(guid: hashed_params[:guid])
     domain_not_found! unless domain
+
+    message = DomainUpdateSharedOrgsMessage.new(hashed_params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
+    shared_orgs = verify_shared_organizations_guids!(message, domain.owning_organization_guid)
+
+    DomainUpdateSharedOrgs.update(domain: domain, shared_organizations: shared_orgs)
+
     unprocessable!('Domains can not be shared with other organizations unless they are scoped to an organization.') unless domain.private?
-    render status: :ok, json: {}
+    render status: :ok, json: Presenters::V3::DomainSharedOrgsPresenter.new(domain, visible_org_guids: permission_queryer.readable_org_guids)
   end
 
   private
@@ -73,7 +83,7 @@ class DomainsController < ApplicationController
     FeatureFlag.raise_unless_enabled!(:private_domain_creation) unless permission_queryer.can_write_globally?
   end
 
-  def verify_shared_organizations_guids!(message)
+  def verify_shared_organizations_guids!(message, owning_org_guid)
     organizations = Organization.where(guid: message.shared_organizations_guids).all
 
     unless organizations.length == message.shared_organizations_guids.length
@@ -85,7 +95,7 @@ class DomainsController < ApplicationController
       unprocessable!("You do not have sufficient permissions for organization '#{org.name}' to share domain.") unless permission_queryer.can_write_to_org?(org.guid)
     end
 
-    unprocessable!('Domain cannot be shared with owning organization.') if message.shared_organizations_guids.include?(message.organization_guid)
+    unprocessable!('Domain cannot be shared with owning organization.') if message.shared_organizations_guids.include?(owning_org_guid)
 
     organizations
   end
