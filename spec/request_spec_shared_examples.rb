@@ -27,7 +27,7 @@ RSpec.shared_examples 'permissions for list endpoint' do |roles|
         expect(last_response.status).to eq(expected_response_code), "role #{role}: expected #{expected_response_code}, got: #{last_response.status}"
         if (200...300).cover? expected_response_code
           expected_response_objects = expected_codes_and_responses[role][:response_objects]
-          expect({ resources: parsed_response['resources'] }).to match_json_response({ resources: expected_response_objects })
+          expect({ resources: parsed_response['resources'] }.deep_symbolize_keys).to match({ resources: expected_response_objects })
         end
       end
     end
@@ -45,7 +45,7 @@ RSpec.shared_examples 'permissions for single object endpoint' do |roles|
         expect(last_response.status).to eq(expected_response_code), "role #{role}: expected #{expected_response_code}, got: #{last_response.status}"
         if (200...300).cover? expected_response_code
           expected_response_object = expected_codes_and_responses[role][:response_object]
-          expect(parsed_response).to match_json_response(expected_response_object)
+          expect(parsed_response.deep_symbolize_keys).to match(expected_response_object)
         end
       end
     end

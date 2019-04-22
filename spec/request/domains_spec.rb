@@ -9,7 +9,6 @@ RSpec.describe 'Domains Request' do
   before do
     VCAP::CloudController::Domain.dataset.destroy # this will clean up the seeded test domains
   end
-
   describe 'GET /v3/domains' do
     describe 'when the user is not logged in' do
       it 'returns 401 for Unauthenticated requests' do
@@ -19,8 +18,8 @@ RSpec.describe 'Domains Request' do
     end
 
     describe 'when the user is logged in' do
-      let!(:non_visible_org) { VCAP::CloudController::Organization.make }
-      let!(:user_visible_org) { VCAP::CloudController::Organization.make }
+      let!(:non_visible_org) { VCAP::CloudController::Organization.make(guid: 'non-visible') }
+      let!(:user_visible_org) { VCAP::CloudController::Organization.make(guid: 'visible') }
 
       # (domain)                        | (owning org)       | (visible orgs shared to)
       # (visible_owned_private_domain)  | (org)              | (non_visible_org, user_visible_org)
@@ -52,7 +51,7 @@ RSpec.describe 'Domains Request' do
               data: { guid: org.guid }
             },
             shared_organizations: {
-              data: shared_visible_orgs,
+              data: contain_exactly(*shared_visible_orgs),
             }
           },
           links: {
@@ -369,11 +368,10 @@ RSpec.describe 'Domains Request' do
               }
             },
             shared_organizations: {
-              data: [
+              data: contain_exactly(
                 { guid: shared_org1.guid },
                 { guid: shared_org2.guid }
-              ]
-
+              )
             }
           },
           links: {
@@ -888,7 +886,7 @@ RSpec.describe 'Domains Request' do
                 }
               },
               shared_organizations: {
-                data: shared_organizations,
+                data: contain_exactly(*shared_organizations),
               }
             },
             links: {
