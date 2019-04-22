@@ -57,6 +57,8 @@ Content-Type: application/json
 <%= yield_content :single_deployment %>
 ```
 
+When you create a new deployment you can either provide a specific droplet or revision to deploy. If no revision or droplet is provided, the droplet associated with the [app](#apps) is deployed.
+
 #### Definition
 `POST /v3/deployments`
 
