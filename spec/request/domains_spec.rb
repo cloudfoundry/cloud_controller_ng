@@ -272,7 +272,7 @@ RSpec.describe 'Domains Request' do
 
         context 'when the user can read globally' do
           let(:expected_codes_and_responses) do
-            h = Hash.new(
+            Hash.new(
               code: 200,
               response_objects: [
                 visible_shared_private_domain_json,

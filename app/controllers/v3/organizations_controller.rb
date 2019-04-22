@@ -103,9 +103,8 @@ class OrganizationsV3Controller < ApplicationController
     org = fetch_org(hashed_params[:guid])
     org_not_found! unless org && permission_queryer.can_read_from_org?(org.guid)
 
-    message = ListMessage.from_params(hashed_params, [])
-
-    domains = DomainFetcher.fetch_all_for_orgs(domain_readable_org_guids([org.guid]))
+    message = DomainsListMessage.from_params(hashed_params.except(:guid))
+    domains = DomainFetcher.fetch(message, domain_readable_org_guids([org.guid]))
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::DomainPresenter,

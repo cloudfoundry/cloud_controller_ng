@@ -329,30 +329,74 @@ module VCAP::CloudController
         org.add_private_domain(shared_private_domain)
       end
 
-      let(:api_call) { lambda { |user_headers| get "/v3/organizations/#{org.guid}/domains", nil, user_headers } }
-      let(:expected_codes_and_responses) do
-        h = Hash.new(
-          code: 200,
-          response_objects: [
-            shared_domain_json,
-            owned_private_domain_json,
-            shared_private_domain_json,
-          ]
-        )
-        h['org_billing_manager'] = {
-          code: 200,
-          response_objects: [
-            shared_domain_json
-          ]
-        }
-        h['no_role'] = {
-          code: 404,
-          response_objects: []
-        }
-        h.freeze
+      context 'without filters' do
+        let(:api_call) { lambda { |user_headers| get "/v3/organizations/#{org.guid}/domains", nil, user_headers } }
+        let(:expected_codes_and_responses) do
+          h = Hash.new(
+            code: 200,
+            response_objects: [
+              shared_domain_json,
+              owned_private_domain_json,
+              shared_private_domain_json,
+            ]
+          )
+          h['org_billing_manager'] = {
+            code: 200,
+            response_objects: [
+              shared_domain_json
+            ]
+          }
+          h['no_role'] = {
+            code: 404,
+            response_objects: []
+          }
+          h.freeze
+        end
+
+        it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
       end
 
-      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+      describe 'when filtering by name' do
+        let(:api_call) { lambda { |user_headers| get "/v3/organizations/#{org.guid}/domains?names=#{shared_domain.name}", nil, user_headers } }
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(
+            code: 200,
+            response_objects: [
+              shared_domain_json,
+            ]
+          )
+          h['no_role'] = {
+            code: 404,
+          }
+          h.freeze
+        end
+
+        it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+      end
+
+      describe 'when filtering by organization_guid' do
+        let(:api_call) { lambda { |user_headers| get "/v3/organizations/#{org.guid}/domains?organization_guids=#{org.guid}", nil, user_headers } }
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(
+            code: 200,
+            response_objects: [
+              owned_private_domain_json,
+            ]
+          )
+          h['org_billing_manager'] = {
+            code: 200,
+            response_objects: [],
+          }
+          h['no_role'] = {
+            code: 404,
+          }
+          h.freeze
+        end
+
+        it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+      end
 
       describe 'when the user is not logged in' do
         it 'returns 401 for Unauthenticated requests' do

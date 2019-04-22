@@ -71,7 +71,7 @@ module VCAP::CloudController
       end
 
       context 'when fetching a single domain by guid' do
-        let (:message) {
+        let(:message) {
           DomainShowMessage.new({ guid: domain_guid_filter })
         }
 
@@ -135,7 +135,7 @@ module VCAP::CloudController
       end
 
       context 'when fetching domains by name' do
-        let (:message) {
+        let(:message) {
           DomainsListMessage.from_params({ names: domain_name_filter })
         }
 
@@ -163,7 +163,7 @@ module VCAP::CloudController
       end
 
       context 'when fetching domains by org_guids' do
-        let (:message) {
+        let(:message) {
           DomainsListMessage.from_params({ organization_guids: organization_guid_filter })
         }
 
