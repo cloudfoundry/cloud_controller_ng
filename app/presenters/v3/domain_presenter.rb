@@ -65,7 +65,11 @@ module VCAP::CloudController::Presenters::V3
         links[:organization] = {
           href: url_builder.build_url(path: "/v3/organizations/#{domain.owning_organization.guid}")
         }
+        links[:shared_organizations] = {
+          href: url_builder.build_url(path: "/v3/domains/#{domain.guid}/relationships/shared_organizations")
+        }
       end
+
       links
     end
   end

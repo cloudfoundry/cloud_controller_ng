@@ -299,7 +299,8 @@ module VCAP::CloudController
           },
           links: {
             self: { href: "#{link_prefix}/v3/domains/#{owned_private_domain.guid}" },
-            organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}) }
+            organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}) },
+            shared_organizations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{owned_private_domain.guid}\/relationships\/shared_organizations) }
           }
         }
       end
@@ -320,7 +321,8 @@ module VCAP::CloudController
           },
           links: {
             self: { href: "#{link_prefix}/v3/domains/#{shared_private_domain.guid}" },
-            organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{organization1.guid}) }
+            organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{organization1.guid}) },
+            shared_organizations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{shared_private_domain.guid}\/relationships\/shared_organizations) }
           }
         }
       end
