@@ -12,7 +12,6 @@ module CloudController
       let(:connection_options) do
         {
           blobstore_host: blobstore_host,
-          blobstore_external_port: external_port,
           blobstore_tls_port: tls_port,
           user:           username,
           password:       password,

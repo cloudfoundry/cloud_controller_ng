@@ -115,6 +115,7 @@ module VCAP::CloudController
     let(:timeout_in_seconds) { 120 }
     let(:cc_addr) { '1.2.3.4' }
     let(:cc_port) { 5678 }
+    let(:tls_port) { 5679 }
     let(:staging_user) { 'user' }
     let(:staging_password) { 'pass[%3a]word' }
     let(:blobstore) do
@@ -130,7 +131,7 @@ module VCAP::CloudController
     let(:original_staging_config) do
       {
         external_host: cc_addr,
-        external_port: cc_port,
+        tls_port: tls_port,
         staging:       {
           auth: {
             user:     staging_user,

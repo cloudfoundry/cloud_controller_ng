@@ -363,7 +363,6 @@ module VCAP::CloudController
 
         let(:config) do
           Config.new({
-            external_port: external_port,
             tls_port: tls_port,
             internal_service_hostname: internal_service_hostname,
             internal_api: {
@@ -379,7 +378,6 @@ module VCAP::CloudController
         end
         let(:isolation_segment) { 'potato-segment' }
         let(:internal_service_hostname) { 'internal.awesome.sauce' }
-        let(:external_port) { '7772' }
         let(:tls_port) { '7777' }
         let(:user) { 'user' }
         let(:password) { 'password' }

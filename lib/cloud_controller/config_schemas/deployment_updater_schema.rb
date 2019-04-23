@@ -6,6 +6,7 @@ module VCAP::CloudController
       # rubocop:disable Metrics/BlockLength
       define_schema do
         {
+
           logging: {
             level: String, # debug, info, etc.
             file: String, # Log file to use

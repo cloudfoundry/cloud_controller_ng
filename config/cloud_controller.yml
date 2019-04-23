@@ -243,7 +243,7 @@ rate_limiter:
 
 diego:
   file_server_url: http://file-server.service.cf.internal:8080
-  cc_uploader_url: http://cc-uploader.service.cf.internal:9090
+  cc_uploader_url: https://cc-uploader.service.cf.internal:9091
   use_privileged_containers_for_running: false
   use_privileged_containers_for_staging: false
   enable_declarative_asset_downloads: false

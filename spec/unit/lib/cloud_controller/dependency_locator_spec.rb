@@ -166,7 +166,6 @@ RSpec.describe CloudController::DependencyLocator do
       {
         internal_service_hostname: internal_service_hostname,
         external_host:             'external.host',
-        external_port:             8282,
         tls_port:                  8283,
         staging:                   {
           auth: {
@@ -184,7 +183,7 @@ RSpec.describe CloudController::DependencyLocator do
     it 'creates blobstore_url_generator with the internal_service_hostname, port, and blobstores' do
       connection_options = {
         blobstore_host: 'internal.service.hostname',
-        blobstore_external_port: 8282,
+        blobstore_external_port: 8181,
         blobstore_tls_port: 8283,
         user: 'username',
         password: 'password',
@@ -192,10 +191,10 @@ RSpec.describe CloudController::DependencyLocator do
       }
       expect(CloudController::Blobstore::UrlGenerator).to receive(:new).
         with(hash_including(connection_options),
-             kind_of(CloudController::Blobstore::Client),
-             kind_of(CloudController::Blobstore::Client),
-             kind_of(CloudController::Blobstore::Client),
-             kind_of(CloudController::Blobstore::Client)
+          kind_of(CloudController::Blobstore::Client),
+          kind_of(CloudController::Blobstore::Client),
+          kind_of(CloudController::Blobstore::Client),
+          kind_of(CloudController::Blobstore::Client)
         )
       locator.blobstore_url_generator
     end
@@ -205,7 +204,6 @@ RSpec.describe CloudController::DependencyLocator do
     let(:my_config) do
       {
         internal_service_hostname: 'internal.service.hostname',
-        external_port:             8282,
         tls_port:                  8283,
       }
     end
@@ -217,9 +215,10 @@ RSpec.describe CloudController::DependencyLocator do
     it 'creates droplet_url_generator with the internal_service_hostname, ports, and diego flag' do
       expect(VCAP::CloudController::Diego::Buildpack::DropletUrlGenerator).to receive(:new).with(
         internal_service_hostname: 'internal.service.hostname',
-        external_port: 8282,
+        external_port: nil,
         tls_port: 8283,
         mtls: true)
+      TestConfig.config.delete(:external_port)
       locator.droplet_url_generator
     end
   end

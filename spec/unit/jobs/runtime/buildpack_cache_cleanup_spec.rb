@@ -14,7 +14,7 @@ module VCAP::CloudController
       let(:blobstore_config) do
         {
           external_host: cc_addr,
-          external_port: cc_port,
+          tls_port: cc_port,
           droplets: {
             droplet_directory_key: 'cc-droplets',
             fog_connection: {

@@ -27,7 +27,7 @@ module VCAP::CloudController
           },
           bulk_api: {},
           external_domain: 'host',
-          external_port: 1234,
+          tls_port: 1234,
           staging: {
               auth: {
                   user: 'user',
@@ -261,7 +261,7 @@ module VCAP::CloudController
           },
           bulk_api: {},
           external_host: 'host',
-          external_port: 1234,
+          tls_port: 1234,
           staging: {
             auth: {
               user: 'user',

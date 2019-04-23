@@ -6,7 +6,6 @@ module CloudController
       let(:blobstore_options) do
         {
           blobstore_host: 'api.example.com',
-          blobstore_external_port: 9292,
           blobstore_tls_port: 9293,
           user:           'username',
           password:       'password',
