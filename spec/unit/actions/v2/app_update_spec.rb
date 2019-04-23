@@ -132,7 +132,7 @@ module VCAP::CloudController
           app.update(droplet_guid: droplet.guid)
         end
 
-        it 'does not create a revision' do
+        it 'creates a revision' do
           app.update(revisions_enabled: true)
 
           request_attrs = {
@@ -140,7 +140,8 @@ module VCAP::CloudController
           }
 
           app_update.update(app, process, request_attrs)
-          expect(app.reload.revisions.count).to eq(0)
+          expect(app.reload.revisions.count).to eq(1)
+          expect(app.latest_revision.droplet_guid).to eq(droplet.guid)
         end
       end
 
