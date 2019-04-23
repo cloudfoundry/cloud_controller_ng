@@ -1,14 +1,6 @@
 require 'hashdiff'
 
 RSpec::Matchers.define :match_json_response do |expected|
-  define_method :truncate do |value, max_length|
-    val = value
-    if val.size > max_length - 3
-      val = val[0...max_length] + '...'
-    end
-    val
-  end
-
   match do |actual|
     actual = actual.deep_symbolize_keys
     expect(actual).to match(expected)
@@ -25,22 +17,29 @@ RSpec::Matchers.define :match_json_response do |expected|
         diffs.each do |comparator, key, expected_value, actual_value|
           case comparator
           when '-'
-            summary << "- #{key}: #{truncate(expected_value, 80)}"
+            summary << "- #{key}: #{expected_value}"
           when '+'
-            summary << "+ #{key}: #{truncate(expected_value, 80)}"
+            summary << "+ #{key}: #{expected_value}"
           when '~'
             next if expected_value.is_a?(Regexp) && expected_value.match(actual_value) rescue false
+            next if expected_value.matches?(actual_value) rescue false
+
             summary << "! #{key}:"
             if expected_value.is_a?(Regexp)
               expected_value = expected_value.inspect
             end
-            summary << "  - #{truncate(expected_value, 80)}"
-            summary << "  + #{truncate(actual_value, 80)}"
+
+            if expected_value.respond_to?(:failure_message)
+              expected_value.failure_message.split("\n").each { |l| summary << l }
+            else
+              summary << "  - #{expected_value}"
+              summary << "  + #{actual_value}"
+            end
           end
         end
       end
     rescue => ex
-      exception = "Error in hashdiff: #{ex} \n #{ex.backtrace[0..5]}"
+      exception = "Error in hashdiff: #{ex} \n #{ex.backtrace[0..5].join("\n")}"
     end
 
     result = []

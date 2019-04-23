@@ -95,7 +95,10 @@ each_run_block = proc do
     rspec_config.expose_dsl_globally = false
     rspec_config.backtrace_exclusion_patterns = [%r{/gems/}, %r{/bin/rspec}]
 
-    rspec_config.expect_with(:rspec) { |config| config.syntax = :expect }
+    rspec_config.expect_with(:rspec) do |config|
+      config.syntax = :expect
+      config.max_formatted_output_length = 1000
+    end
     rspec_config.extend DeprecationHelpers
     rspec_config.include Rack::Test::Methods
     rspec_config.include ModelCreation

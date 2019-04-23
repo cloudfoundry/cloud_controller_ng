@@ -95,7 +95,24 @@ RSpec.describe 'match_json_response matcher' do
     expect {
       expect({ 'a' => [{ 'a' => { 'a' => [{ 'a' => 1 }, { 'b' => 2 }] } }] }).to match_json_response({ a: [{ a: { a: [{ a: 1 }, { b: 1 }] } }] })
     }.to raise_expectation_not_met_with_key_change(expected: '- a[0].a.a[1]: {:b=>1}',
-                                                   actual:   '+ a[0].a.a[1]: {:b=>2}')
+      actual: '+ a[0].a.a[1]: {:b=>2}')
+  end
+
+  it 'outputs submatcher error message when it errors' do
+    expect {
+      expect({ 'a' => ['a', 'b'] }).to match_json_response({ a: contain_exactly('a', 'j') })
+    }.to raise_expectation_not_met_with_summary_parts(
+      'expected collection contained:  ["a", "j"]',
+      'actual collection contained:    ["a", "b"]',
+      'the missing elements were:      ["j"]',
+      'the extra elements were:        ["b"]',
+    )
+  end
+
+  it 'does not display the submatchers when another field errors' do
+    expect {
+      expect({ 'a' => ['a', 'b'], 'b' => 1 }).to match_json_response({ a: contain_exactly('a', 'b'), b: 2 })
+    }.to raise_error(RSpec::Expectations::ExpectationNotMetError) { |error| expect(error.message).to_not match(/!\s*a:/) }
   end
 
   def raise_expectation_not_met_with_summary(ptn)
@@ -108,7 +125,7 @@ RSpec.describe 'match_json_response matcher' do
   end
 
   def raise_expectation_not_met_with_summary_parts(*parts)
-    ptn = Regexp.new(parts.map { |part| Regexp.escape(part) }.join('\n\s+'))
+    ptn = Regexp.new(parts.map { |part| Regexp.escape(part) }.join('\n\s*'))
     raise_error(RSpec::Expectations::ExpectationNotMetError, ptn)
   end
 end
