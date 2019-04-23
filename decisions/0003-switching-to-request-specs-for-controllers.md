@@ -23,6 +23,8 @@ Additionally, writing controller specs is a discouraged pattern:
 
 From [RSpec — Controller or Request Specs?][] 
 
+**Warning**: Request specs in the `cloud_controller_ng` codebase are not actually Rspec/Rails request specs (which would be [declared with `type: :request`](https://relishapp.com/rspec/rspec-rails/docs/request-specs/request-spec)), but use [Rack Test](https://github.com/rack-test/rack-test).  Rack Test has similar looking helper methods for making requests (e.g. `get`, `post`, etc), but these take different arguments than the equivalent Rspec methods.
+
 Decision
 --------
 
@@ -37,3 +39,6 @@ Consequences
 
 
 [RSpec — Controller or Request Specs?]: https://medium.com/just-tech/rspec-controller-or-request-specs-d93ef563ef11
+
+
+
