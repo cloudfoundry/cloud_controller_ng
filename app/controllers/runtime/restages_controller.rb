@@ -25,8 +25,6 @@ module VCAP::CloudController
     def restage(guid)
       process = find_guid_and_validate_access(:read_for_update, guid)
 
-      raise CloudController::Errors::ApiError.new_from_details('RevisionsEnabled') if process.app.revisions_enabled
-
       validate_process!(process)
 
       model.db.transaction do
@@ -35,7 +33,7 @@ module VCAP::CloudController
 
         V2::AppStop.stop(process.app, StagingCancel.new(@stagers))
         process.app.update(droplet_guid: nil)
-        AppStart.start_without_event(process.app)
+        AppStart.start_without_event(process.app, create_revision: false)
       end
       V2::AppStage.new(stagers: @stagers).stage(process)
 
