@@ -16,5 +16,5 @@ Name           | Type                     | Description
 **name**       | _string_                 | The name of the domain.<br>Must be between 3 ~ 253 characters and follow [RFC 1035](https://tools.ietf.org/html/rfc1035).
 **internal**   | _boolean_                | Whether the domain is used for internal (container-to-container) traffic.
 **organization** | [_to-one relationship_](#to-one-relationships) | The organization the domain is scoped to. If set, the domain will only be available in that organization. Otherwise, the domain will be globally available.
-**shared_organizations** | [_to-many relationship_](#to-many-relationships) | The organizations to share a private domain with.
+**shared_organizations** | [_to-many relationship_](#to-many-relationships) | Organizations the domain is shared with. If set, the domain will be available in these organizations in addition to the organization the domain is scoped to.
 **links**      | [_links object_](#links) | Links to related resources.
