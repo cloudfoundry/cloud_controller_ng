@@ -776,6 +776,7 @@ RSpec.describe 'Domains Request' do
     let(:private_domain) { VCAP::CloudController::PrivateDomain.make }
     let(:user_header) { admin_headers_for(user) }
     describe 'when updating shared orgs for a shared domain' do
+      let(:params) { { data: [{ guid: org.guid }] } }
       let(:shared_domain) { VCAP::CloudController::SharedDomain.make }
 
       it 'returns a 422' do
