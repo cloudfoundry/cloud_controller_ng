@@ -21,7 +21,7 @@ Content-Type: application/json
 <%= yield_content :paginated_list_of_domains, '/v3/organizations/:org_guid/domains' %>
 ```
 
-Retrieve all domains associated with a specific organization the user has access to.
+Retrieve all domains available in an organization for the current user. This will return user-visible domains without an organization relationship AND domains scoped or shared with the organization.
 
 #### Definition
 `GET /v3/organizations/:org_guid/domains`
