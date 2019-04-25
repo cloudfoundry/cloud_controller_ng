@@ -499,7 +499,10 @@ The `web` `PROCESS_TYPE` must be specified by either the buildpack or the Procfi
 
 ## Relationships
 
-Relationships represent associations between resources. Relationships can be used to create, read, update, and delete associations through the relationship sub resource.
+Relationships represent associations between resources. They can be used to create, read, update, and delete these associations.
+
+Relationships do not affect the fundamental properties of a resource, but may affect their behavior and permissions logic.
+Relationships are tied to the lifecycles of the associated resources and will be removed if either of the associated resources are deleted.
 
 Not all resources implement every relationship operation listed below. See the docs for each resource to see how it interacts with its relationships.
 
