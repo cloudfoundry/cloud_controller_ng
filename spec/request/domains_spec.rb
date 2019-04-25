@@ -773,7 +773,7 @@ RSpec.describe 'Domains Request' do
 
   describe 'POST /v3/domains/:guid/relationships/shared_organizations' do
     let(:params) { { data: [] } }
-    let(:private_domain) { VCAP::CloudController::PrivateDomain.make }
+    let(:private_domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: org) }
     let(:user_header) { admin_headers_for(user) }
     describe 'when updating shared orgs for a shared domain' do
       let(:params) { { data: [{ guid: org.guid }] } }
@@ -832,12 +832,12 @@ RSpec.describe 'Domains Request' do
 
       let(:domain_shared_orgs) do
         {
-          data: [{ guid: shared_org1.guid }, { guid: org.guid }]
+          data: [{ guid: shared_org1.guid }]
         }
       end
 
       let(:private_domain_params) { {
-        data: [{ guid: shared_org1.guid }, { guid: org.guid }]
+        data: [{ guid: shared_org1.guid }]
       }
       }
 
@@ -851,7 +851,7 @@ RSpec.describe 'Domains Request' do
 
         let(:expected_codes_and_responses) do
           h = Hash.new(
-            code: 422,
+            code: 403,
           )
           h['admin'] = {
             code: 200,
@@ -862,12 +862,6 @@ RSpec.describe 'Domains Request' do
             code: 200,
             response_object: domain_shared_orgs
 
-          }
-          h['admin_read_only'] = {
-            code: 403
-          }
-          h['global_auditor'] = {
-            code: 403
           }
           h.freeze
         end

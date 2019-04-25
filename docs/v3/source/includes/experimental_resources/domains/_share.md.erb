@@ -1,5 +1,7 @@
 ### Share a domain
 
+This endpoint shares a private domain to organizations specified by a list of organization guids. This will allow any of the organizations to use the private domain.
+
 ```
 Example Request
 ```
@@ -35,7 +37,7 @@ Content-Type: application/json
 
 Name     | Type     | Description
 -------  | -------  | -----------
-**data** | _array of [relationship objects](#relationships)_ | The organization guids with which to share the domain.
+**data** | _[to-many relationship](#to-many-relationships)_ | The organization guids with which to share the domain.
 
 #### Permitted Roles
 

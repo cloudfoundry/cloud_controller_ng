@@ -63,6 +63,8 @@ class DomainsController < ApplicationController
     domain = Domain.find(guid: hashed_params[:guid])
     domain_not_found! unless domain
 
+    unauthorized! unless permission_queryer.can_write_to_org?(domain.owning_organization_guid)
+
     message = DomainUpdateSharedOrgsMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
     shared_orgs = verify_shared_organizations_guids!(message, domain.owning_organization_guid)
