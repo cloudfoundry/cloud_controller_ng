@@ -20,7 +20,7 @@ RSpec.shared_examples 'permissions for list endpoint' do |roles|
   roles.each do |role|
     describe "as an #{role}" do
       it 'returns the correct response status and resources' do
-        headers = set_user_with_header_as_role(role: role, org: org, space: space, user: user)
+        headers = set_user_with_header_as_role(role: role, org: org, space: space, user: user, scopes: expected_codes_and_responses[role][:scopes])
         api_call.call(headers)
 
         expected_response_code = expected_codes_and_responses[role][:code]
@@ -38,14 +38,33 @@ RSpec.shared_examples 'permissions for single object endpoint' do |roles|
   roles.each do |role|
     describe "as an #{role}" do
       it 'returns the correct response status and resources' do
-        headers = set_user_with_header_as_role(role: role, org: org, space: space, user: user)
+        headers = set_user_with_header_as_role(role: role, org: org, space: space, user: user, scopes: expected_codes_and_responses[role][:scopes])
         api_call.call(headers)
 
         expected_response_code = expected_codes_and_responses[role][:code]
-        expect(last_response.status).to eq(expected_response_code), "role #{role}: expected #{expected_response_code}, got: #{last_response.status}"
+        expect(last_response.status).to eq(expected_response_code),
+          "role #{role}: expected #{expected_response_code}, got: #{last_response.status}\nResponse Body: #{last_response.body[0..2000]}"
         if (200...300).cover? expected_response_code
           expected_response_object = expected_codes_and_responses[role][:response_object]
           expect(parsed_response).to match_json_response(expected_response_object)
+        end
+      end
+    end
+  end
+end
+
+RSpec.shared_examples 'permissions for delete endpoint' do |roles|
+  roles.each do |role|
+    describe "as an #{role}" do
+      it 'returns the correct response status and resources' do
+        headers = set_user_with_header_as_role(role: role, org: org, space: space, user: user, scopes: expected_codes_and_responses[role][:scopes])
+        api_call.call(headers)
+
+        expected_response_code = expected_codes_and_responses[role][:code]
+        expect(last_response.status).to eq(expected_response_code),
+          "role #{role}: expected #{expected_response_code}, got: #{last_response.status}\nResponse Body: #{last_response.body[0..2000]}"
+        if (200...300).cover? expected_response_code
+          db_check.call
         end
       end
     end

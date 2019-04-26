@@ -2,10 +2,12 @@ require 'messages/domain_create_message'
 require 'messages/domains_list_message'
 require 'messages/domain_show_message'
 require 'messages/domain_update_shared_orgs_message'
+require 'messages/domain_delete_shared_org_message'
 require 'presenters/v3/domain_presenter'
 require 'presenters/v3/domain_shared_orgs_presenter'
 require 'actions/domain_create'
 require 'actions/domain_update_shared_orgs'
+require 'actions/domain_delete_shared_org'
 require 'fetchers/domain_fetcher'
 
 class DomainsController < ApplicationController
@@ -75,6 +77,28 @@ class DomainsController < ApplicationController
     render status: :ok, json: Presenters::V3::DomainSharedOrgsPresenter.new(domain, visible_org_guids: permission_queryer.readable_org_guids)
   end
 
+  def delete_shared_org
+    message = DomainDeleteSharedOrgMessage.new(guid: hashed_params[:guid], org_guid: hashed_params[:org_guid])
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    readable_org_guids = permission_queryer.readable_org_guids_for_domains
+    domain = DomainFetcher.fetch(
+      message,
+      readable_org_guids
+    ).first
+
+    domain_not_found! unless domain
+    unauthorized! unless permission_queryer.can_write_to_org?(domain.owning_organization_guid) || permission_queryer.can_write_to_org?(message.org_guid)
+
+    shared_org = Organization.find(guid: message.org_guid)
+    unprocessable_org!(message.org_guid) unless shared_org
+
+    DomainDeleteSharedOrg.delete(domain: domain, shared_organization: shared_org)
+    head :no_content
+  rescue DomainDeleteSharedOrg::Error
+    unprocessable_unshare!(shared_org.guid)
+  end
+
   private
 
   def check_create_scoped_domain_permissions!(message)
@@ -108,6 +132,10 @@ class DomainsController < ApplicationController
 
   def unprocessable_org!(org_guid)
     unprocessable!("Organization with guid '#{org_guid}' does not exist or you do not have access to it.")
+  end
+
+  def unprocessable_unshare!(org_guid)
+    unprocessable!("Unable to unshare domain from organization with guid '#{org_guid}'. Ensure the domain is shared to this organization.")
   end
 
   def domain_not_found!

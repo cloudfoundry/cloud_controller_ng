@@ -9,6 +9,7 @@ RSpec.describe 'Domains Request' do
   before do
     VCAP::CloudController::Domain.dataset.destroy # this will clean up the seeded test domains
   end
+
   describe 'GET /v3/domains' do
     describe 'when the user is not logged in' do
       it 'returns 401 for Unauthenticated requests' do
@@ -698,10 +699,12 @@ RSpec.describe 'Domains Request' do
 
           expect(last_response.status).to eq(422)
 
-          expected_err = ['Name does not comply with RFC 1035 standards',
-                          'Name must contain at least one "."',
-                          'Name subdomains must each be at most 63 characters',
-                          'Name must consist of alphanumeric characters and hyphens']
+          expected_err = [
+            'Name does not comply with RFC 1035 standards',
+            'Name must contain at least one "."',
+            'Name subdomains must each be at most 63 characters',
+            'Name must consist of alphanumeric characters and hyphens'
+          ]
           expect(parsed_response['errors'][0]['detail']).to eq expected_err.join(', ')
         end
       end
@@ -867,6 +870,142 @@ RSpec.describe 'Domains Request' do
         end
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
+    end
+  end
+
+  describe 'DELETE /v3/domains/:guid/relationships/shared_organizations/:org_guid' do
+    let(:shared_org1) { VCAP::CloudController::Organization.make(guid: 'shared-org1') }
+    let(:private_domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: org) }
+    let(:user_header) { admin_headers_for(user) }
+
+    describe 'when unsharing a shared domain' do
+      let(:shared_domain) { VCAP::CloudController::SharedDomain.make }
+
+      it 'returns a 422' do
+        delete "/v3/domains/#{shared_domain.guid}/relationships/shared_organizations/#{shared_org1.guid}", nil, user_header
+        expect(last_response.status).to eq(422)
+        expect(parsed_response['errors'][0]['detail']).to eq(
+          "Unable to unshare domain from organization with guid '#{shared_org1.guid}'. Ensure the domain is shared to this organization.")
+      end
+    end
+
+    describe 'when the user is not logged in' do
+      it 'returns 401 for Unauthenticated requests' do
+        delete "/v3/domains/#{private_domain.guid}/relationships/shared_organizations/#{shared_org1.guid}", nil, base_json_headers
+        expect(last_response.status).to eq(401)
+      end
+    end
+
+    context 'when the user does not have the required scopes' do
+      let(:user_header) { headers_for(user, scopes: ['cloud_controller.read']) }
+
+      it 'returns a 403' do
+        delete "/v3/domains/#{private_domain.guid}/relationships/shared_organizations/#{shared_org1.guid}", nil, user_header
+        expect(last_response.status).to eq(403)
+      end
+    end
+
+    context 'when the domain with specified guid does not exist' do
+      it 'returns a 404' do
+        delete "/v3/domains/domain-does-not-exist/relationships/shared_organizations/#{shared_org1.guid}", nil, user_header
+        expect(last_response.status).to eq(404)
+      end
+    end
+
+    context 'when unsharing from non-shared org' do
+      let(:org2) { VCAP::CloudController::Organization.make }
+
+      it 'returns a 422' do
+        delete "/v3/domains/#{private_domain.guid}/relationships/shared_organizations/#{org2.guid}", nil, user_header
+        expect(last_response.status).to eq(422)
+        expect(parsed_response['errors'][0]['detail']).to eq(
+          "Unable to unshare domain from organization with guid '#{org2.guid}'. Ensure the domain is shared to this organization.")
+      end
+    end
+
+    context 'when unsharing from owning org' do
+      it 'returns a 422' do
+        delete "/v3/domains/#{private_domain.guid}/relationships/shared_organizations/#{private_domain.owning_organization_guid}", nil, user_header
+        expect(last_response.status).to eq(422)
+        expect(parsed_response['errors'][0]['detail']).to eq(
+          "Unable to unshare domain from organization with guid '#{private_domain.owning_organization_guid}'. Ensure the domain is shared to this organization.")
+      end
+    end
+
+    context 'when unsharing from invalid org' do
+      it 'returns a 422' do
+        delete "/v3/domains/#{private_domain.guid}/relationships/shared_organizations/invalid_org", nil, user_header
+        expect(last_response.status).to eq(422)
+        expect(parsed_response['errors'][0]['detail']).to eq("Organization with guid 'invalid_org' does not exist or you do not have access to it.")
+      end
+    end
+
+    describe 'when unsharing orgs for a private domain' do
+      let(:api_call) { lambda { |user_headers| delete "/v3/domains/#{private_domain.guid}/relationships/shared_organizations/#{shared_org1.guid}", nil, user_headers } }
+      let(:db_check) { lambda do
+        domain = VCAP::CloudController::Domain.find(guid: private_domain.guid)
+        expect(domain.shared_organizations).not_to include(shared_org1)
+      end
+      }
+
+      before do
+        org.add_private_domain(private_domain)
+        private_domain.add_shared_organization(shared_org1)
+      end
+
+      context 'when the user is an org manager in the shared org' do
+        before do
+          shared_org1.add_manager(user)
+        end
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(
+            code: 204,
+          )
+
+          h['admin_read_only'] = {
+            scopes: ['cloud_controller.write'],
+            code: 204
+          }
+
+          h['global_auditor'] = {
+            scopes: ['cloud_controller.write'],
+            code: 204
+          }
+
+          h.freeze
+        end
+
+        it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
+      end
+
+      context 'when the user is a billing manager is the shared org' do
+        before do
+          shared_org1.add_billing_manager(user)
+        end
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(
+            code: 403,
+            response_object: { errors: [{ detail: "You do not have sufficient permissions for organization with guid '#{shared_org1.guid}' to unshare the domain." }] }
+          )
+          h['admin'] = {
+            code: 204
+          }
+          h['org_manager'] = {
+            code: 204
+          }
+          h['org_billing_manager'] = {
+            code: 404
+          }
+          h['no_role'] = {
+            code: 404
+          }
+          h.freeze
+        end
+
+        it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
       end
     end
   end

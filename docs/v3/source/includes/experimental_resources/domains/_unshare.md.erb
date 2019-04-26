@@ -1,0 +1,32 @@
+### Unshare a domain
+
+This endpoint removes an organization from the list of organizations a private domain is shared with. This prevents the organization from using the private domain.
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/domains/[domain_guid]/relationships/shared_organizations/[org_guid]" \
+  -X DELETE \
+  -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 204 No Content
+```
+
+#### Definition
+`DELETE /v3/domains/:guid/relationships/shared_organizations/:org_guid`
+
+#### Permitted Roles
+
+Role | Notes |
+----- | ---
+Admin |
+Org Manager | _Can be in either the domain's owning organization or the organization it has been shared to_
