@@ -79,13 +79,13 @@ module VCAP::CloudController::Presenters::V3
           end
 
           it 'presents the shared orgs that are visible to a user' do
-            expect(subject[:relationships]).to eq({
+            expect(subject[:relationships]).to match({
               organization: { data: { guid: 'org' } },
               shared_organizations: {
-                data: [
+                data: contain_exactly(
                   { guid: 'org2' },
                   { guid: 'org3' }
-                ]
+                ),
               }
             })
           end
