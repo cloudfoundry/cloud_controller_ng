@@ -117,6 +117,132 @@ module VCAP::CloudController
             end
           end
 
+          context 'when it contains leading spaces' do
+            let(:rule) { build_transport_rule('protocol' => protocol, 'destination' => ' 0.0.0.0/0') }
+
+            it 'is not valid' do
+              expect(subject).not_to be_valid
+              expect(subject.errors[:rules].length).to eq 1
+              expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid destination'
+            end
+          end
+
+          context 'when it contains trailing spaces' do
+            let(:rule) { build_transport_rule('protocol' => protocol, 'destination' => '0.0.0.0/0 ') }
+
+            it 'is not valid' do
+              expect(subject).not_to be_valid
+              expect(subject.errors[:rules].length).to eq 1
+              expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid destination'
+            end
+          end
+
+          context 'when it contains spaces in the list' do
+            let(:rule) { build_transport_rule('protocol' => protocol, 'destination' => '0.0.0.0 - 0.0.0.4') }
+
+            it 'is not valid' do
+              expect(subject).not_to be_valid
+              expect(subject.errors[:rules].length).to eq 1
+              expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid destination'
+            end
+          end
+
+          context 'when it contains a non valid prefix mask' do
+            let(:rule) { build_transport_rule('protocol' => protocol, 'destination' => '0.0.0.0/33') }
+
+            it 'is not valid' do
+              expect(subject).not_to be_valid
+              expect(subject.errors[:rules].length).to eq 1
+              expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid destination'
+            end
+          end
+
+          context 'when it contains a non IP address' do
+            let(:rule) { build_transport_rule('protocol' => protocol, 'destination' => '0.257.0.0/20') }
+
+            it 'is not valid' do
+              expect(subject).not_to be_valid
+              expect(subject.errors[:rules].length).to eq 1
+              expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid destination'
+            end
+          end
+
+          context 'when it is missing' do
+            let(:rule) do
+              default_rule = build_transport_rule
+              default_rule.delete('destination')
+              default_rule
+            end
+
+            it 'is not valid' do
+              expect(subject).not_to be_valid
+              expect(subject.errors[:rules].length).to eq 1
+              expect(subject.errors[:rules][0]).to start_with 'rule number 1 missing required field \'destination\''
+            end
+          end
+
+          context 'when the range has more than 2 endpoints' do
+            let(:rule) { build_transport_rule('protocol' => protocol, 'destination' => '1.1.1.1-2.2.2.2-3.3.3.3') }
+
+            it 'is not valid' do
+              expect(subject).not_to be_valid
+              expect(subject.errors[:rules].length).to eq 1
+              expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid destination'
+            end
+          end
+
+          context 'when the range is backwards' do
+            let(:rule) { build_transport_rule('protocol' => protocol, 'destination' => '2.2.2.2-1.1.1.1') }
+
+            it 'is not valid' do
+              expect(subject).not_to be_valid
+              expect(subject.errors[:rules].length).to eq 1
+              expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid destination'
+            end
+          end
+
+          context 'when the range has CIDR blocks' do
+            let(:rule) { build_transport_rule('protocol' => protocol, 'destination' => '1.1.1.1-2.2.2.2/30') }
+
+            it 'is not valid' do
+              expect(subject).not_to be_valid
+              expect(subject.errors[:rules].length).to eq 1
+              expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid destination'
+            end
+          end
+        end
+      end
+
+      context 'validates ports' do
+        context 'good' do
+          context 'when it is a valid CIDR' do
+            let(:rule) { build_transport_rule('protocol' => protocol, 'destination' => '0.0.0.0/0') }
+
+            it 'is valid' do
+              expect(subject).to be_valid
+            end
+          end
+
+          context 'when it is a valid range' do
+            let(:rule) { build_transport_rule('protocol' => protocol, 'destination' => '1.1.1.1.-2.2.2.2') }
+
+            it 'is valid' do
+              expect(subject).to be_valid
+            end
+          end
+        end
+
+        context 'bad' do
+          context 'when it contains non-CIDR characters' do
+            let(:rule) { build_transport_rule('protocol' => protocol, 'destination' => 'asdf') }
+
+            it 'is not valid' do
+              expect(subject).not_to be_valid
+              expect(subject.errors[:rules].length).to eq 1
+              expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid destination'
+            end
+          end
+
           context 'when it contains a non valid prefix mask' do
             let(:rule) { build_transport_rule('protocol' => protocol, 'destination' => '0.0.0.0/33') }
 

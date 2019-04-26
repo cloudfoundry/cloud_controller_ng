@@ -31,7 +31,7 @@ module CloudController
     end
 
     def self.validate_destination(destination)
-      return false if destination.empty?
+      return false if destination.empty? || /\s/ =~ destination
 
       address_list = destination.split('-')
 
