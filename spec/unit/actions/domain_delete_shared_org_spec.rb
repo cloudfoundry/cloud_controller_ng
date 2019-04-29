@@ -14,7 +14,10 @@ module VCAP::CloudController
         it 'raises an error' do
           expect {
             subject.delete(domain: domain, shared_organization: shared_org1)
-          }.to raise_error(DomainDeleteSharedOrg::Error)
+          }.to raise_error(
+            DomainDeleteSharedOrg::Error,
+            "Unable to unshare domain from organization with guid '#{shared_org1.guid}'. Ensure the domain is shared to this organization."
+          )
         end
       end
 
@@ -25,7 +28,10 @@ module VCAP::CloudController
         it 'raises an error' do
           expect {
             subject.delete(domain: domain, shared_organization: shared_org1)
-          }.to raise_error(DomainDeleteSharedOrg::Error)
+          }.to raise_error(
+            DomainDeleteSharedOrg::Error,
+            "Unable to unshare domain from organization with guid '#{shared_org1.guid}'. Ensure the domain is shared to this organization."
+          )
         end
       end
 
@@ -36,7 +42,10 @@ module VCAP::CloudController
         it 'deletes shared orgs for private domain' do
           expect {
             subject.delete(domain: domain, shared_organization: shared_org1)
-          }.to raise_error(DomainDeleteSharedOrg::Error)
+          }.to raise_error(
+            DomainDeleteSharedOrg::Error,
+            "Unable to unshare domain from organization with guid '#{shared_org1.guid}'. Ensure the domain is shared to this organization."
+          )
         end
       end
 
@@ -52,6 +61,22 @@ module VCAP::CloudController
           subject.delete(domain: domain, shared_organization: shared_org1)
           domain.reload
           expect(domain.shared_organizations.length).to be(0)
+        end
+      end
+
+      context 'when unsharing a private domain with routes in the org' do
+        let(:domain) { PrivateDomain.make }
+        let(:space) { Space.make }
+        let(:route) { Route.make(space: space, domain: domain) }
+
+        before do
+          domain.add_shared_organization(space.organization)
+        end
+
+        it 'deletes shared orgs for private domain' do
+          expect {
+            subject.delete(domain: domain, shared_organization: route.space.organization)
+          }.to raise_error(DomainDeleteSharedOrg::Error, 'This domain has associated routes in this organization. Delete the routes before unsharing.')
         end
       end
     end

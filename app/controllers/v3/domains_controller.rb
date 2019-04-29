@@ -95,8 +95,8 @@ class DomainsController < ApplicationController
 
     DomainDeleteSharedOrg.delete(domain: domain, shared_organization: shared_org)
     head :no_content
-  rescue DomainDeleteSharedOrg::Error
-    unprocessable_unshare!(shared_org.guid)
+  rescue DomainDeleteSharedOrg::Error => e
+    unprocessable!(e.message)
   end
 
   private
@@ -132,10 +132,6 @@ class DomainsController < ApplicationController
 
   def unprocessable_org!(org_guid)
     unprocessable!("Organization with guid '#{org_guid}' does not exist or you do not have access to it.")
-  end
-
-  def unprocessable_unshare!(org_guid)
-    unprocessable!("Unable to unshare domain from organization with guid '#{org_guid}'. Ensure the domain is shared to this organization.")
   end
 
   def domain_not_found!

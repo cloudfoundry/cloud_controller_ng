@@ -933,6 +933,21 @@ RSpec.describe 'Domains Request' do
       end
     end
 
+    describe 'when the org has routes using the domain' do
+      let(:route_space) { VCAP::CloudController::Space.make(organization: shared_org1) }
+      let(:route) { VCAP::CloudController::Route.make(domain: private_domain, space: route_space) }
+
+      before do
+        private_domain.add_shared_organization(shared_org1)
+      end
+
+      it 'returns a 422' do
+        delete "/v3/domains/#{private_domain.guid}/relationships/shared_organizations/#{route.space.organization_guid}", nil, user_header
+        expect(last_response.status).to eq(422)
+        expect(parsed_response['errors'][0]['detail']).to eq('This domain has associated routes in this organization. Delete the routes before unsharing.')
+      end
+    end
+
     context 'when unsharing from invalid org' do
       it 'returns a 422' do
         delete "/v3/domains/#{private_domain.guid}/relationships/shared_organizations/invalid_org", nil, user_header
