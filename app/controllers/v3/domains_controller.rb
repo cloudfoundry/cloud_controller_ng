@@ -50,25 +50,21 @@ class DomainsController < ApplicationController
     message = DomainShowMessage.new({ guid: hashed_params['guid'] })
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    readable_org_guids = permission_queryer.readable_org_guids_for_domains
-    domain = DomainFetcher.fetch(
-      message,
-      readable_org_guids
-    ).first
-
+    domain = find_domain(message)
     domain_not_found! unless domain
 
     render status: :ok, json: Presenters::V3::DomainPresenter.new(domain, visible_org_guids: permission_queryer.readable_org_guids)
   end
 
   def update_shared_orgs
-    domain = Domain.find(guid: hashed_params[:guid])
+    message = DomainUpdateSharedOrgsMessage.new(guid: hashed_params['guid'], data: hashed_params[:body][:data])
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    domain = find_domain(message)
     domain_not_found! unless domain
 
     unauthorized! unless permission_queryer.can_write_to_org?(domain.owning_organization_guid)
 
-    message = DomainUpdateSharedOrgsMessage.new(hashed_params[:body])
-    unprocessable!(message.errors.full_messages) unless message.valid?
     shared_orgs = verify_shared_organizations_guids!(message, domain.owning_organization_guid)
 
     unprocessable!('Domains can not be shared with other organizations unless they are scoped to an organization.') unless domain.private?
@@ -81,13 +77,9 @@ class DomainsController < ApplicationController
     message = DomainDeleteSharedOrgMessage.new(guid: hashed_params[:guid], org_guid: hashed_params[:org_guid])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    readable_org_guids = permission_queryer.readable_org_guids_for_domains
-    domain = DomainFetcher.fetch(
-      message,
-      readable_org_guids
-    ).first
-
+    domain = find_domain(message)
     domain_not_found! unless domain
+
     unauthorized! unless permission_queryer.can_write_to_org?(domain.owning_organization_guid) || permission_queryer.can_write_to_org?(message.org_guid)
 
     shared_org = Organization.find(guid: message.org_guid)
@@ -100,6 +92,16 @@ class DomainsController < ApplicationController
   end
 
   private
+
+  def find_domain(message)
+    readable_org_guids = permission_queryer.readable_org_guids_for_domains
+    domain = DomainFetcher.fetch(
+      message,
+      readable_org_guids
+    ).first
+
+    domain
+  end
 
   def check_create_scoped_domain_permissions!(message)
     unprocessable_org!(message.organization_guid) unless Organization.find(guid: message.organization_guid)

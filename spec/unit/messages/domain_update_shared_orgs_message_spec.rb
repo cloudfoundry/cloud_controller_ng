@@ -7,11 +7,14 @@ module VCAP::CloudController
 
     describe 'validations' do
       context 'when valid params are given' do
-        let(:params) { { data: [{ guid: 'guid1' }, { guid: 'guid2' }] } }
+        let(:params) { { guid: 'domain-guid', data: [{ guid: 'org-guid1' }, { guid: 'org-guid2' }] } }
 
         it 'is valid' do
           expect(subject).to be_valid
         end
+
+        its(:guid) { should eq('domain-guid') }
+        its(:shared_organizations_guids) { should eq(%w[org-guid1 org-guid2]) }
       end
 
       context 'when no params are given' do

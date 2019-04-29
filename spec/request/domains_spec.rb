@@ -778,6 +778,7 @@ RSpec.describe 'Domains Request' do
     let(:params) { { data: [] } }
     let(:private_domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: org) }
     let(:user_header) { admin_headers_for(user) }
+
     describe 'when updating shared orgs for a shared domain' do
       let(:params) { { data: [{ guid: org.guid }] } }
       let(:shared_domain) { VCAP::CloudController::SharedDomain.make }
@@ -871,6 +872,50 @@ RSpec.describe 'Domains Request' do
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
+    end
+
+    describe 'when the user does not have read permissions for the domain' do
+      let(:org1) { VCAP::CloudController::Organization.make(guid: 'org1') }
+      let(:org2) { VCAP::CloudController::Organization.make(guid: 'org2') }
+      let!(:shared_domain) { VCAP::CloudController::SharedDomain.make }
+      let(:unreadable_domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: org1) }
+
+      let(:domain_shared_orgs) do
+        {
+          data: [{ guid: org2.guid }]
+        }
+      end
+
+      let(:unreadable_domain_params) do
+        {
+          data: [{ guid: org2.guid }]
+        }
+      end
+
+      before do
+        org2.add_manager(user)
+      end
+
+      let(:api_call) { lambda { |user_headers| post "/v3/domains/#{unreadable_domain.guid}/relationships/shared_organizations", unreadable_domain_params.to_json, user_headers } }
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(
+          code: 404
+        )
+        h['admin'] = {
+          code: 200,
+          response_object: domain_shared_orgs
+        }
+        h['admin_read_only'] = {
+          code: 403
+        }
+        h['global_auditor'] = {
+          code: 403
+        }
+        h.freeze
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
   end
 
