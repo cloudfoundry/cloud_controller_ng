@@ -450,4 +450,27 @@ RSpec.describe(OPI::Client) do
       expect(response.status).to equal(200)
     end
   end
+
+  context 'stop an app instance' do
+    let(:opi_url) { 'http://opi.service.cf.internal:8077' }
+    let(:guid) { 'd082417c-c5aa-488c-aaf8-845a580eb11f' }
+    let(:version) { 'e2fe80f5-fd0c-4699-a4d1-ae06bc48a923' }
+    let(:index) { 1 }
+    subject(:client) { described_class.new(opi_url) }
+
+    before do
+      stub_request(:put, "#{opi_url}/apps/#{guid}/#{version}/stop/#{index}").
+        to_return(status: 200)
+    end
+
+    it 'executes an HTTP request' do
+      client.stop_index("#{guid}-#{version}", index)
+      expect(WebMock).to have_requested(:put, "#{opi_url}/apps/#{guid}/#{version}/stop/#{index}")
+    end
+
+    it 'returns status OK' do
+      response = client.stop_index("#{guid}-#{version}", index)
+      expect(response.status).to equal(200)
+    end
+  end
 end

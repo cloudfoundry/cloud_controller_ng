@@ -56,6 +56,13 @@ module OPI
       @client.put(path)
     end
 
+    def stop_index(versioned_guid, index)
+      guid = VCAP::CloudController::Diego::ProcessGuid.cc_process_guid(versioned_guid)
+      version = VCAP::CloudController::Diego::ProcessGuid.cc_process_version(versioned_guid)
+      path = "/apps/#{guid}/#{version}/stop/#{index}"
+      @client.put(path)
+    end
+
     def bump_freshness; end
 
     private
