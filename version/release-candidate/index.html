@@ -870,7 +870,10 @@ The <code class="prettyprint">web</code> <code class="prettyprint">PROCESS_TYPE<
 
 <h2 id="relationships">Relationships</h2>
 
-<p>Relationships represent associations between resources. Relationships can be used to create, read, update, and delete associations through the relationship sub resource.</p>
+<p>Relationships represent associations between resources. They can be used to create, read, update, and delete these associations.</p>
+
+<p>Relationships do not affect the fundamental properties of a resource, but may affect their behavior and permissions logic.
+Relationships are tied to the lifecycles of the associated resources and will be removed if either of the associated resources are deleted.</p>
 
 <p>Not all resources implement every relationship operation listed below. See the docs for each resource to see how it interacts with its relationships.</p>
 
@@ -13616,6 +13619,8 @@ applications without incurring downtime. This is different from the traditional 
 </tbody></table>
 
           <h3 id="share-a-domain">Share a domain</h3>
+
+<p>This endpoint shares a private domain to organizations specified by a list of organization guids. This will allow any of the organizations to use the private domain.</p>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/domains/[guid]/relationships/shared_organizations"</span> <span class="se">\</span>
@@ -13658,7 +13663,7 @@ applications without incurring downtime. This is different from the traditional 
 </thead><tbody>
 <tr>
 <td><strong>data</strong></td>
-<td><em>array of <a href="#relationships">relationship objects</a></em></td>
+<td><em><a href="#to-many-relationships">to-many relationship</a></em></td>
 <td>The organization guids with which to share the domain.</td>
 </tr>
 </tbody></table>
@@ -13678,6 +13683,43 @@ applications without incurring downtime. This is different from the traditional 
 <tr>
 <td>Org Manager</td>
 <td></td>
+</tr>
+</tbody></table>
+
+          <h3 id="unshare-a-domain">Unshare a domain</h3>
+
+<p>This endpoint removes an organization from the list of organizations a private domain is shared with. This prevents the organization from using the private domain.</p>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/domains/[domain_guid]/relationships/shared_organizations/[org_guid]"</span> <span class="se">\</span>
+  -X DELETE <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+  -H <span class="s2">"Content-type: application/json"</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">204</span> <span class="ne">No Content</span>
+</code></pre>
+
+<h4 id="definition">Definition</h4>
+
+<p><code class="prettyprint">DELETE /v3/domains/:guid/relationships/shared_organizations/:org_guid</code></p>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th>Role</th>
+<th>Notes</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Admin</td>
+<td></td>
+</tr>
+<tr>
+<td>Org Manager</td>
+<td><em>Can be in either the domain&rsquo;s owning organization or the organization it has been shared to</em></td>
 </tr>
 </tbody></table>
 
