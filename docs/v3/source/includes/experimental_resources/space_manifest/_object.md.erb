@@ -76,6 +76,7 @@ This configuration is specified at the top-level and applies to all of the app's
 Field | Description
 ---- | -----------
 **buildpacks**  | Must be an Array. <br>a) An empty array, which will automatically select the appropriate default buildpack according to the coding language. <br>b) An array of one or more URLs pointing to buildpacks. <br>c) An array of one or more installed buildpack names. <br>Replaces the legacy `buildpack` field.
+**docker** | If present, the created app will have lifecycle type docker. The value of this key is ignored by the API but may be used by clients to source the registry address of the image and credentials, if needed. The [generate manifest endpoint](#generate-an-app-manifest) will return the registry address of the image and username provided with this key.
 **env** | A key-value hash of environment variables to be used for the app when running.
 **no-route** | Boolean value. Removes the app's routes if `true`; ignored if `false`. Cannot be used in conjunction with the `routes` attribute when set to `true`.
 **processes** | List of configurations for individual process types. See [_Process-level configuration_](#space-manifest-process-level-configuration).
