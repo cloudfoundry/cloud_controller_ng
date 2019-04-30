@@ -1718,5 +1718,29 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe '#get_health_check_timeout' do
+      before do
+        TestConfig.override({ default_health_check_timeout: 60 })
+      end
+
+      subject(:process) { ProcessModel.make(app: parent_app, health_check_timeout: health_check_timeout) }
+
+      context 'when there is an individual timeout' do
+        let(:health_check_timeout) { 10 }
+
+        it 'returns the individual timeout' do
+          expect(process.get_health_check_timeout).to eq(10)
+        end
+      end
+
+      context 'when there is no individual timeout' do
+        let(:health_check_timeout) { nil }
+
+        it 'returns the config default' do
+          expect(process.get_health_check_timeout).to eq(60)
+        end
+      end
+    end
   end
 end

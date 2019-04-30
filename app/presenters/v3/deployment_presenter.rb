@@ -4,11 +4,11 @@ require 'presenters/mixins/metadata_presentation_helpers'
 module VCAP::CloudController::Presenters::V3
   class DeploymentPresenter < BasePresenter
     include VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers
-
+    FAILING_STATE = 'FAILING'.freeze
     def to_hash
       {
         guid: deployment.guid,
-        state: deployment.state,
+        state: state,
         droplet: {
           guid: deployment.droplet_guid
         },
@@ -35,6 +35,10 @@ module VCAP::CloudController::Presenters::V3
     end
 
     private
+
+    def state
+      deployment.failing? ? FAILING_STATE : deployment.state
+    end
 
     def deployment
       @resource

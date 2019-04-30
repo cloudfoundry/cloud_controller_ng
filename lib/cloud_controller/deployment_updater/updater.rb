@@ -74,6 +74,8 @@ module VCAP::CloudController
             return
           end
 
+          deployment.update(last_healthy_at: Time.now)
+
           scale_down_oldest_web_process_with_instances
           deploying_web_process.update(instances: deploying_web_process.instances + 1)
         end

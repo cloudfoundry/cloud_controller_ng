@@ -4,7 +4,7 @@ module VCAP::CloudController
   RSpec.describe DeploymentModel do
     let(:app) { AppModel.make(name: 'rolling-app') }
     let(:droplet) { DropletModel.make(app: app) }
-    let(:deploying_web_process) { ProcessModel.make }
+    let(:deploying_web_process) { ProcessModel.make(health_check_timeout: 180) }
 
     let(:deployment) { DeploymentModel.make(app: app, droplet: droplet, deploying_web_process: deploying_web_process) }
 
@@ -75,6 +75,61 @@ module VCAP::CloudController
         deployment.state = 'CANCELED'
 
         expect(deployment.deploying?).to be(false)
+      end
+    end
+
+    describe '#failing?' do
+      let(:deployment) { DeploymentModel.make(app: app,
+                                              droplet: droplet,
+                                              state: state,
+                                              deploying_web_process: deploying_web_process,
+                                              last_healthy_at: last_healthy_at)
+      }
+      let(:last_healthy_at) { nil }
+      let(:state) { DeploymentModel::DEPLOYING_STATE }
+
+      it 'returns false if last_healthy_at is nil' do
+        expect(deployment.failing?).to eq false
+      end
+
+      context 'when last_healthy_at is more recent than 2x the processes timeout ago' do
+        let(:last_healthy_at) { 359.seconds.ago }
+
+        it 'returns false' do
+          expect(deployment.failing?).to eq false
+        end
+      end
+
+      context 'when last_healthy_at is longer than 2x the processes timeout ago' do
+        let(:last_healthy_at) { 361.seconds.ago }
+
+        it 'returns true' do
+          expect(deployment.failing?).to eq true
+        end
+
+        context 'when the deployment is not deploying' do
+          let(:state) { DeploymentModel::DEPLOYED_STATE }
+
+          it 'returns false' do
+            expect(deployment.failing?).to eq false
+          end
+        end
+      end
+
+      context 'when last_healthy_at is 2x the processes timeout ago' do
+        let(:last_healthy_at) { 360.seconds.ago }
+
+        it 'returns true' do
+          expect(deployment.failing?).to eq true
+        end
+
+        context 'when the deployment is not deploying' do
+          let(:state) { DeploymentModel::DEPLOYED_STATE }
+
+          it 'returns false' do
+            expect(deployment.failing?).to eq false
+          end
+        end
       end
     end
   end

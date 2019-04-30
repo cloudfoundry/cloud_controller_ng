@@ -48,6 +48,7 @@ module VCAP::CloudController
             expect(deployment.droplet_guid).to eq(next_droplet.guid)
             expect(deployment.previous_droplet).to eq(original_droplet)
             expect(deployment.original_web_process_instance_count).to eq(3)
+            expect(deployment.last_healthy_at).to eq(deployment.created_at)
           end
 
           context 'when revisions are enabled' do
