@@ -14,7 +14,7 @@ module VCAP::CloudController
         apply_manifest_action.apply(resource_guid, apply_manifest_message)
       rescue AppPatchEnvironmentVariables::InvalidApp,
              AppUpdate::InvalidApp,
-             ProcessScale::InvalidProcess,
+             AppApplyManifest::InvalidManifest,
              ProcessUpdate::InvalidProcess,
              SidecarCreate::InvalidSidecar,
              SidecarUpdate::InvalidSidecar,
@@ -22,7 +22,10 @@ module VCAP::CloudController
              Route::InvalidOrganizationRelation,
              RouteMappingCreate::SpaceMismatch,
              ServiceBindingCreate::InvalidServiceBinding => e
-        raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', e.message)
+
+        error = CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', e.message)
+        error.set_backtrace(e.backtrace)
+        raise error
       end
 
       def job_name_in_configuration

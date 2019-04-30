@@ -53,90 +53,71 @@ module VCAP::CloudController
           allow(app_patch_env).to receive(:patch)
         end
 
-        describe 'scaling instances' do
-          let(:message) { AppManifestMessage.create_from_yml({ name: 'blah', instances: 4 }, {}) }
-          let(:manifest_process_scale_message) { message.manifest_process_scale_messages.first }
-          let(:process) { ProcessModel.make(instances: 1) }
-          let(:app) { process.app }
+        describe 'scaling a process' do
+          describe 'scaling instances' do
+            let(:message) { AppManifestMessage.create_from_yml({ name: 'blah', instances: 4 }, {}) }
+            let(:manifest_process_scale_message) { message.manifest_process_scale_messages.first }
+            let(:process) { ProcessModel.make(instances: 1) }
+            let(:app) { process.app }
 
-          context 'when the request is valid' do
-            it 'returns the app' do
-              expect(
+            context 'when the request is valid' do
+              it 'returns the app' do
+                expect(
+                  app_apply_manifest.apply(app.guid, message)
+                ).to eq(app)
+              end
+
+              it 'calls ProcessScale with the correct arguments' do
                 app_apply_manifest.apply(app.guid, message)
-              ).to eq(app)
-            end
-
-            it 'calls ProcessScale with the correct arguments' do
-              app_apply_manifest.apply(app.guid, message)
-              expect(ProcessScale).to have_received(:new).with(user_audit_info, process, an_instance_of(ProcessScaleMessage), manifest_triggered: true)
-              expect(process_scale).to have_received(:scale)
+                expect(ProcessScale).to have_received(:new).with(user_audit_info, process, an_instance_of(ProcessScaleMessage), manifest_triggered: true)
+                expect(process_scale).to have_received(:scale)
+              end
             end
           end
 
-          context 'when process scale raises an exception' do
+          describe 'scaling memory' do
+            let(:message) { AppManifestMessage.create_from_yml({ name: 'blah', memory: '256MB' }, {}) }
+            let(:manifest_process_scale_message) { message.manifest_process_scale_messages.first }
+            let(:process) { ProcessModel.make(memory: 512) }
+            let(:app) { process.app }
+
+            context 'when the request is valid' do
+              it 'returns the app' do
+                expect(
+                  app_apply_manifest.apply(app.guid, message)
+                ).to eq(app)
+              end
+
+              it 'calls ProcessScale with the correct arguments' do
+                app_apply_manifest.apply(app.guid, message)
+                expect(ProcessScale).to have_received(:new).with(user_audit_info, process, instance_of(ProcessScaleMessage), manifest_triggered: true)
+                expect(process_scale).to have_received(:scale)
+              end
+            end
+          end
+
+          context 'when process scale raises an ProcessScale::InvalidProcess error' do
             let(:manifest_process_scale_message) { instance_double(ManifestProcessScaleMessage, { type: process.type, to_process_scale_message: nil, requested?: false }) }
             let(:message) do
               instance_double(AppManifestMessage,
-                manifest_process_scale_messages: [manifest_process_scale_message],
-                manifest_process_update_messages: [],
-                audit_hash: {}
+                              manifest_process_scale_messages: [manifest_process_scale_message],
+                              manifest_process_update_messages: [],
+                              audit_hash: {}
               )
             end
+            let(:process) { ProcessModel.make(instances: 1) }
+            let(:app) { process.app }
 
             before do
               allow(process_scale).
                 to receive(:scale).and_raise(ProcessScale::InvalidProcess.new('instances less_than_zero'))
             end
 
-            it 'bubbles up the error' do
+            it 'translates the error into an InvalidManifest error' do
               expect(process.instances).to eq(1)
               expect {
                 app_apply_manifest.apply(app.guid, message)
-              }.to raise_error(ProcessScale::InvalidProcess, 'instances less_than_zero')
-            end
-          end
-        end
-
-        describe 'scaling memory' do
-          let(:message) { AppManifestMessage.create_from_yml({ name: 'blah', memory: '256MB' }, {}) }
-          let(:manifest_process_scale_message) { message.manifest_process_scale_messages.first }
-          let(:process) { ProcessModel.make(memory: 512) }
-          let(:app) { process.app }
-
-          context 'when the request is valid' do
-            it 'returns the app' do
-              expect(
-                app_apply_manifest.apply(app.guid, message)
-              ).to eq(app)
-            end
-
-            it 'calls ProcessScale with the correct arguments' do
-              app_apply_manifest.apply(app.guid, message)
-              expect(ProcessScale).to have_received(:new).with(user_audit_info, process, instance_of(ProcessScaleMessage), manifest_triggered: true)
-              expect(process_scale).to have_received(:scale)
-            end
-          end
-
-          context 'when process scale raises an exception' do
-            let(:manifest_process_scale_message) { instance_double(ManifestProcessScaleMessage, { type: process.type, to_process_scale_message: nil, requested?: true }) }
-            let(:message) do
-              instance_double(AppManifestMessage,
-                manifest_process_scale_messages: [manifest_process_scale_message],
-                manifest_process_update_messages: [],
-                audit_hash: {}
-              )
-            end
-
-            before do
-              allow(process_scale).
-                to receive(:scale).and_raise(ProcessScale::InvalidProcess.new('memory must use a supported unit'))
-            end
-
-            it 'bubbles up the error' do
-              expect(process.memory).to eq(512)
-              expect {
-                app_apply_manifest.apply(app.guid, message)
-              }.to raise_error(ProcessScale::InvalidProcess, 'memory must use a supported unit')
+              }.to raise_error(AppApplyManifest::InvalidManifest, 'instances less_than_zero')
             end
           end
         end

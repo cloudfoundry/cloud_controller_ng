@@ -19,7 +19,7 @@ module VCAP::CloudController
         expect(job.job_name_in_configuration).to equal(:apply_manifest_job)
       end
 
-      it 'calls the delete action' do
+      it 'calls the apply action' do
         job.perform
 
         expect(apply_manifest_action).to have_received(:apply).with(app.guid, parsed_app_manifest)
@@ -35,12 +35,12 @@ module VCAP::CloudController
         end
       end
 
-      context 'when a ProcessScale::InvalidProcess error occurs' do
+      context 'when an AppApplyManifest::InvalidManifest error occurs' do
         it 'wraps the error in an ApiError' do
-          allow(apply_manifest_action).to receive(:apply).and_raise(ProcessScale::InvalidProcess, 'maximum instance count exceeded')
+          allow(apply_manifest_action).to receive(:apply).and_raise(AppApplyManifest::InvalidManifest, 'some sub-action failed!')
           expect {
             job.perform
-          }.to raise_error(CloudController::Errors::ApiError, /maximum instance count exceeded/)
+          }.to raise_error(CloudController::Errors::ApiError, /some sub-action failed!/)
         end
       end
 

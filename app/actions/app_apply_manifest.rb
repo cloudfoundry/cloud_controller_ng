@@ -9,6 +9,8 @@ require 'cloud_controller/random_route_generator'
 
 module VCAP::CloudController
   class AppApplyManifest
+    class InvalidManifest < StandardError; end
+
     SERVICE_BINDING_TYPE = 'app'.freeze
 
     def initialize(user_audit_info)
@@ -53,6 +55,10 @@ module VCAP::CloudController
 
       create_service_bindings(message.manifest_service_bindings_message, app) if message.services.present?
       app
+    rescue ProcessScale::InvalidProcess => e
+      error = InvalidManifest.new(e.message)
+      error.set_backtrace(e.backtrace)
+      raise error
     end
 
     private
