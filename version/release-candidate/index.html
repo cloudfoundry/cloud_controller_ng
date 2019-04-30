@@ -13620,7 +13620,7 @@ applications without incurring downtime. This is different from the traditional 
 
           <h3 id="share-a-domain">Share a domain</h3>
 
-<p>This endpoint shares a private domain to organizations specified by a list of organization guids. This will allow any of the organizations to use the private domain.</p>
+<p>This endpoint shares a organization-scoped domain to organizations specified by a list of organization guids. This will allow any of the organizations to use the organization-scoped domain.</p>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/domains/[guid]/relationships/shared_organizations"</span> <span class="se">\</span>
@@ -13688,7 +13688,7 @@ applications without incurring downtime. This is different from the traditional 
 
           <h3 id="unshare-a-domain">Unshare a domain</h3>
 
-<p>This endpoint removes an organization from the list of organizations a private domain is shared with. This prevents the organization from using the private domain.</p>
+<p>This endpoint removes an organization from the list of organizations a organization-scoped domain is shared with. This prevents the organization from using the organization-scoped domain.</p>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/domains/[domain_guid]/relationships/shared_organizations/[org_guid]"</span> <span class="se">\</span>
@@ -16160,6 +16160,10 @@ Deployed revisions are revisions that are linked to started processes in the app
 <tr>
 <td><strong>buildpacks</strong></td>
 <td>Must be an Array. <br>a) An empty array, which will automatically select the appropriate default buildpack according to the coding language. <br>b) An array of one or more URLs pointing to buildpacks. <br>c) An array of one or more installed buildpack names. <br>Replaces the legacy <code class="prettyprint">buildpack</code> field.</td>
+</tr>
+<tr>
+<td><strong>docker</strong></td>
+<td>If present, the created app will have lifecycle type docker. The value of this key is ignored by the API but may be used by clients to source the registry address of the image and credentials, if needed. The <a href="#generate-an-app-manifest">generate manifest endpoint</a> will return the registry address of the image and username provided with this key.</td>
 </tr>
 <tr>
 <td><strong>env</strong></td>
