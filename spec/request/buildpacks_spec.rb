@@ -452,7 +452,7 @@ RSpec.describe 'buildpacks' do
     end
   end
 
-  describe 'POST /v3/buildpacks/guid/upload' do
+  describe 'POST /v3/buildpacks/:guid/upload' do
     let(:buildpack) { VCAP::CloudController::Buildpack.make }
 
     before do

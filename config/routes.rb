@@ -88,6 +88,7 @@ Rails.application.routes.draw do
   post '/domains', to: 'domains#create'
   get '/domains', to: 'domains#index'
   get '/domains/:guid', to: 'domains#show'
+  delete '/domains/:guid', to: 'domains#destroy'
   post '/domains/:guid/relationships/shared_organizations', to: 'domains#update_shared_orgs'
   delete '/domains/:guid/relationships/shared_organizations/:org_guid', to: 'domains#delete_shared_org'
 

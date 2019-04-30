@@ -1,0 +1,30 @@
+### Delete a domain
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/domains/[guid]" \
+  -X DELETE \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 202 Accepted
+Location: https://api.example.org/v3/jobs/[guid]
+```
+
+#### Definition
+`DELETE /v3/domains/:guid`
+
+#### Permitted Roles
+
+Role | Notes
+----- | ---
+Admin |
+Org Manager | If domain is scoped to organization managed by the org manager.

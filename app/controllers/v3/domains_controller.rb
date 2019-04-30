@@ -6,6 +6,7 @@ require 'messages/domain_delete_shared_org_message'
 require 'presenters/v3/domain_presenter'
 require 'presenters/v3/domain_shared_orgs_presenter'
 require 'actions/domain_create'
+require 'actions/domain_delete'
 require 'actions/domain_update_shared_orgs'
 require 'actions/domain_delete_shared_org'
 require 'fetchers/domain_fetcher'
@@ -54,6 +55,24 @@ class DomainsController < ApplicationController
     domain_not_found! unless domain
 
     render status: :ok, json: Presenters::V3::DomainPresenter.new(domain, visible_org_guids: permission_queryer.readable_org_guids)
+  end
+
+  def destroy
+    message = DomainShowMessage.new({ guid: hashed_params['guid'] })
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    domain = find_domain(message)
+    domain_not_found! unless domain
+
+    unauthorized! unless permission_queryer.can_write_to_org?(domain.owning_organization_guid)
+
+    unprocessable!('This domain is shared with other organizations. Unshare before deleting.') unless domain.shared_organizations.empty?
+
+    delete_action = DomainDelete.new
+    deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(Domain, domain.guid, delete_action)
+    pollable_job = Jobs::Enqueuer.new(deletion_job, queue: 'cc-generic').enqueue_pollable
+    url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
+    head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job.guid}")
   end
 
   def update_shared_orgs

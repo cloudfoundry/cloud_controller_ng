@@ -919,6 +919,96 @@ RSpec.describe 'Domains Request' do
     end
   end
 
+  describe 'DELETE /v3/domains/:guid' do
+    describe 'when deleting a shared domain' do
+      let(:shared_domain) { VCAP::CloudController::SharedDomain.make }
+      let(:api_call) { lambda { |user_headers| delete "/v3/domains/#{shared_domain.guid}", nil, user_headers } }
+      let(:db_check) do
+        lambda do
+          expect(last_response.headers['Location']).to match(%r(http.+/v3/jobs/[a-fA-F0-9-]+))
+
+          execute_all_jobs(expected_successes: 1, expected_failures: 0)
+          get "/v3/domains/#{shared_domain.guid}", {}, admin_headers
+          expect(last_response.status).to eq(404)
+        end
+      end
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(
+          code: 403,
+        )
+
+        h['admin'] = {
+          code: 202
+        }
+
+        h.freeze
+      end
+
+      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
+    end
+
+    describe 'when deleting a private domain' do
+      let(:private_domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: org) }
+      let(:api_call) { lambda { |user_headers| delete "/v3/domains/#{private_domain.guid}", nil, user_headers } }
+
+      let(:db_check) do
+        lambda do
+          expect(last_response.headers['Location']).to match(%r(http.+/v3/jobs/[a-fA-F0-9-]+))
+
+          execute_all_jobs(expected_successes: 1, expected_failures: 0)
+          get "/v3/domains/#{private_domain.guid}", {}, admin_headers
+          expect(last_response.status).to eq(404)
+        end
+      end
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 403)
+        h['admin'] = { code: 202 }
+        h['org_manager'] = { code: 202 }
+        h['org_billing_manager'] = { code: 404 }
+        h['no_role'] = { code: 404 }
+
+        h.freeze
+      end
+
+      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
+    end
+
+    describe 'when deleting a shared private domain as an org manager of the shared organization' do
+      let(:shared_org1) { VCAP::CloudController::Organization.make(guid: 'shared-org1') }
+      let(:private_domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: org) }
+      let(:user_header) { headers_for(user) }
+
+      before do
+        private_domain.add_shared_organization(shared_org1)
+        shared_org1.add_manager(user)
+      end
+
+      it 'returns a 403' do
+        delete "/v3/domains/#{private_domain.guid}", nil, user_header
+        expect(last_response.status).to eq(403)
+      end
+    end
+
+    describe 'when deleting a shared private domain' do
+      let(:shared_org1) { VCAP::CloudController::Organization.make(guid: 'shared-org1') }
+      let(:private_domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: org) }
+      let(:user_header) { admin_headers_for(user) }
+
+      before do
+        private_domain.add_shared_organization(shared_org1)
+      end
+
+      it 'returns a 422' do
+        delete "/v3/domains/#{private_domain.guid}", nil, user_header
+        expect(last_response.status).to eq(422)
+        expect(parsed_response['errors'][0]['detail']).to eq(
+          'This domain is shared with other organizations. Unshare before deleting.')
+      end
+    end
+  end
+
   describe 'DELETE /v3/domains/:guid/relationships/shared_organizations/:org_guid' do
     let(:shared_org1) { VCAP::CloudController::Organization.make(guid: 'shared-org1') }
     let(:private_domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: org) }
