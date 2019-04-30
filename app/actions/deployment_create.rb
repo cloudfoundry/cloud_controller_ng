@@ -48,6 +48,10 @@ module VCAP::CloudController
         record_audit_event(deployment, target_state.droplet, user_audit_info, message)
 
         deployment
+      rescue RevisionResolver::NoUpdateRollback => e
+        error = DeploymentCreate::Error.new(e.message)
+        error.set_backtrace(e.backtrace)
+        raise error
       end
 
       def create_deployment_process(app, deployment_guid, revision)

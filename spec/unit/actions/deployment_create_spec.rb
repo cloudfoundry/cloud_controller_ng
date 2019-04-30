@@ -637,7 +637,7 @@ module VCAP::CloudController
           }.to raise_error(DeploymentCreate::Error, /Unable to deploy this revision, the droplet for this revision no longer exists./)
         end
 
-        context 'when trying to roll back to a revision where the code and cofig has not changed' do
+        context 'when trying to roll back to a revision where the code and config has not changed' do
           let!(:initial_revision) do
             RevisionModel.make(
               app_guid: app.guid,
@@ -654,11 +654,11 @@ module VCAP::CloudController
             })
           }
 
-          it 'will give us a helpful error and not let us roll back' do
+          it 'will raise a DeploymentCreate::Error with the correct message' do
             expect {
               expect {
                 DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
-              }.to raise_error(RevisionResolver::NoUpdateRollback, 'Unable to rollback. The code and configuration you are rolling back to is the same as the deployed revision.')
+              }.to raise_error(DeploymentCreate::Error, 'Unable to rollback. The code and configuration you are rolling back to is the same as the deployed revision.')
             }.not_to change { RevisionModel.count }
           end
         end
