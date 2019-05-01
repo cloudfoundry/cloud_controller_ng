@@ -15,8 +15,7 @@ module VCAP::CloudController
           expect {
             subject.delete(domain: domain, shared_organization: shared_org1)
           }.to raise_error(
-            DomainDeleteSharedOrg::Error,
-            "Unable to unshare domain from organization with guid '#{shared_org1.guid}'. Ensure the domain is shared to this organization."
+            DomainDeleteSharedOrg::OrgError
           )
         end
       end
@@ -29,8 +28,7 @@ module VCAP::CloudController
           expect {
             subject.delete(domain: domain, shared_organization: shared_org1)
           }.to raise_error(
-            DomainDeleteSharedOrg::Error,
-            "Unable to unshare domain from organization with guid '#{shared_org1.guid}'. Ensure the domain is shared to this organization."
+            DomainDeleteSharedOrg::OrgError
           )
         end
       end
@@ -43,8 +41,7 @@ module VCAP::CloudController
           expect {
             subject.delete(domain: domain, shared_organization: shared_org1)
           }.to raise_error(
-            DomainDeleteSharedOrg::Error,
-            "Unable to unshare domain from organization with guid '#{shared_org1.guid}'. Ensure the domain is shared to this organization."
+            DomainDeleteSharedOrg::OrgError
           )
         end
       end
@@ -76,7 +73,7 @@ module VCAP::CloudController
         it 'deletes shared orgs for private domain' do
           expect {
             subject.delete(domain: domain, shared_organization: route.space.organization)
-          }.to raise_error(DomainDeleteSharedOrg::Error, 'This domain has associated routes in this organization. Delete the routes before unsharing.')
+          }.to raise_error(DomainDeleteSharedOrg::RouteError)
         end
       end
     end

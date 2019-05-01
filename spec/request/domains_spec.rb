@@ -1014,61 +1014,83 @@ RSpec.describe 'Domains Request' do
     let(:private_domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: org) }
     let(:user_header) { admin_headers_for(user) }
 
-    describe 'when unsharing a shared domain' do
-      let(:shared_domain) { VCAP::CloudController::SharedDomain.make }
+    context 'when there are non role related permissions issues' do
+      context 'when the user is not logged in' do
+        it 'returns 401 for Unauthenticated requests' do
+          delete "/v3/domains/#{private_domain.guid}/relationships/shared_organizations/#{shared_org1.guid}", nil, base_json_headers
+          expect(last_response.status).to eq(401)
+        end
+      end
 
-      it 'returns a 422' do
-        delete "/v3/domains/#{shared_domain.guid}/relationships/shared_organizations/#{shared_org1.guid}", nil, user_header
-        expect(last_response.status).to eq(422)
-        expect(parsed_response['errors'][0]['detail']).to eq(
-          "Unable to unshare domain from organization with guid '#{shared_org1.guid}'. Ensure the domain is shared to this organization.")
+      context 'when the user does not have the required scopes' do
+        let(:user_header) { headers_for(user, scopes: ['cloud_controller.read']) }
+
+        it 'returns a 403' do
+          delete "/v3/domains/#{private_domain.guid}/relationships/shared_organizations/#{shared_org1.guid}", nil, user_header
+          expect(last_response.status).to eq(403)
+        end
       end
     end
 
-    describe 'when the user is not logged in' do
-      it 'returns 401 for Unauthenticated requests' do
-        delete "/v3/domains/#{private_domain.guid}/relationships/shared_organizations/#{shared_org1.guid}", nil, base_json_headers
-        expect(last_response.status).to eq(401)
+    context 'when the org is invalid' do
+      context 'when unsharing from invalid org' do
+        it 'returns a 422' do
+          delete "/v3/domains/#{private_domain.guid}/relationships/shared_organizations/invalid_org", nil, user_header
+          expect(last_response.status).to eq(422)
+          expect(parsed_response['errors'][0]['detail']).to eq("Organization with guid 'invalid_org' does not exist or you do not have access to it.")
+        end
+      end
+
+      context 'when unsharing from non-shared org' do
+        let(:org2) { VCAP::CloudController::Organization.make }
+
+        it 'returns a 422' do
+          delete "/v3/domains/#{private_domain.guid}/relationships/shared_organizations/#{org2.guid}", nil, user_header
+          expect(last_response.status).to eq(422)
+          expect(parsed_response['errors'][0]['detail']).to eq(
+            "Unable to unshare domain from organization with name '#{org2.name}'. Ensure the domain is shared to this organization.")
+        end
+      end
+
+      context 'when unsharing from owning org' do
+        it 'returns a 422' do
+          delete "/v3/domains/#{private_domain.guid}/relationships/shared_organizations/#{private_domain.owning_organization_guid}", nil, user_header
+          expect(last_response.status).to eq(422)
+          expect(parsed_response['errors'][0]['detail']).to eq(
+            "Unable to unshare domain from organization with name '#{org.name}'. Ensure the domain is shared to this organization.")
+        end
       end
     end
 
-    context 'when the user does not have the required scopes' do
-      let(:user_header) { headers_for(user, scopes: ['cloud_controller.read']) }
+    context 'when the domain is invalid' do
+      context 'when the domain with specified guid does not exist' do
+        it 'returns a 404' do
+          delete "/v3/domains/domain-does-not-exist/relationships/shared_organizations/#{shared_org1.guid}", nil, user_header
+          expect(last_response.status).to eq(404)
+        end
+      end
 
-      it 'returns a 403' do
-        delete "/v3/domains/#{private_domain.guid}/relationships/shared_organizations/#{shared_org1.guid}", nil, user_header
-        expect(last_response.status).to eq(403)
+      context "when domain exists but user doesn't have read permissions for it" do
+        let(:user_headers) { set_user_with_header_as_role(role: 'org_billing_manager', org: org) }
+        it 'returns a 404' do
+          delete "/v3/domains/#{private_domain.guid}/relationships/shared_organizations/#{shared_org1.guid}", nil, user_headers
+          expect(last_response.status).to eq(404)
+        end
+      end
+
+      context 'when unsharing a shared domain' do
+        let(:shared_domain) { VCAP::CloudController::SharedDomain.make }
+
+        it 'returns a 422' do
+          delete "/v3/domains/#{shared_domain.guid}/relationships/shared_organizations/#{shared_org1.guid}", nil, user_header
+          expect(last_response.status).to eq(422)
+          expect(parsed_response['errors'][0]['detail']).to eq(
+            "Unable to unshare domain from organization with name '#{shared_org1.name}'. Ensure the domain is shared to this organization.")
+        end
       end
     end
 
-    context 'when the domain with specified guid does not exist' do
-      it 'returns a 404' do
-        delete "/v3/domains/domain-does-not-exist/relationships/shared_organizations/#{shared_org1.guid}", nil, user_header
-        expect(last_response.status).to eq(404)
-      end
-    end
-
-    context 'when unsharing from non-shared org' do
-      let(:org2) { VCAP::CloudController::Organization.make }
-
-      it 'returns a 422' do
-        delete "/v3/domains/#{private_domain.guid}/relationships/shared_organizations/#{org2.guid}", nil, user_header
-        expect(last_response.status).to eq(422)
-        expect(parsed_response['errors'][0]['detail']).to eq(
-          "Unable to unshare domain from organization with guid '#{org2.guid}'. Ensure the domain is shared to this organization.")
-      end
-    end
-
-    context 'when unsharing from owning org' do
-      it 'returns a 422' do
-        delete "/v3/domains/#{private_domain.guid}/relationships/shared_organizations/#{private_domain.owning_organization_guid}", nil, user_header
-        expect(last_response.status).to eq(422)
-        expect(parsed_response['errors'][0]['detail']).to eq(
-          "Unable to unshare domain from organization with guid '#{private_domain.owning_organization_guid}'. Ensure the domain is shared to this organization.")
-      end
-    end
-
-    describe 'when the org has routes using the domain' do
+    context 'when the org has routes using the domain' do
       let(:route_space) { VCAP::CloudController::Space.make(organization: shared_org1) }
       let(:route) { VCAP::CloudController::Route.make(domain: private_domain, space: route_space) }
 
@@ -1083,11 +1105,16 @@ RSpec.describe 'Domains Request' do
       end
     end
 
-    context 'when unsharing from invalid org' do
+    context 'when user can write to source org but has no permissions in shared org' do
+      before do
+        org.add_manager(user)
+        shared_org1.add_private_domain(private_domain)
+      end
+
       it 'returns a 422' do
-        delete "/v3/domains/#{private_domain.guid}/relationships/shared_organizations/invalid_org", nil, user_header
+        delete "/v3/domains/#{private_domain.guid}/relationships/shared_organizations/#{shared_org1.guid}", nil, headers_for(user)
         expect(last_response.status).to eq(422)
-        expect(parsed_response['errors'][0]['detail']).to eq("Organization with guid 'invalid_org' does not exist or you do not have access to it.")
+        expect(parsed_response['errors'][0]['detail']).to eq("Organization with guid '#{shared_org1.guid}' does not exist or you do not have access to it.")
       end
     end
 
@@ -1100,7 +1127,6 @@ RSpec.describe 'Domains Request' do
       }
 
       before do
-        org.add_private_domain(private_domain)
         private_domain.add_shared_organization(shared_org1)
       end
 

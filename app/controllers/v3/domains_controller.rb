@@ -102,12 +102,14 @@ class DomainsController < ApplicationController
     unauthorized! unless permission_queryer.can_write_to_org?(domain.owning_organization_guid) || permission_queryer.can_write_to_org?(message.org_guid)
 
     shared_org = Organization.find(guid: message.org_guid)
-    unprocessable_org!(message.org_guid) unless shared_org
+    unprocessable_org!(message.org_guid) unless shared_org && permission_queryer.can_read_from_org?(shared_org.guid)
 
     DomainDeleteSharedOrg.delete(domain: domain, shared_organization: shared_org)
     head :no_content
-  rescue DomainDeleteSharedOrg::Error => e
-    unprocessable!(e.message)
+  rescue DomainDeleteSharedOrg::OrgError
+    unprocessable!("Unable to unshare domain from organization with name '#{shared_org.name}'. Ensure the domain is shared to this organization.")
+  rescue DomainDeleteSharedOrg::RouteError
+    unprocessable!('This domain has associated routes in this organization. Delete the routes before unsharing.')
   end
 
   private
