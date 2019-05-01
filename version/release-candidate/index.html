@@ -13618,6 +13618,41 @@ applications without incurring downtime. This is different from the traditional 
 </tr>
 </tbody></table>
 
+          <h3 id="delete-a-domain">Delete a domain</h3>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/domains/[guid]"</span> <span class="se">\</span>
+  -X DELETE <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">202</span> <span class="ne">Accepted</span>
+<span class="na">Location</span><span class="p">:</span> <span class="s">https://api.example.org/v3/jobs/[guid]</span>
+</code></pre>
+
+<h4 id="definition">Definition</h4>
+
+<p><code class="prettyprint">DELETE /v3/domains/:guid</code></p>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th>Role</th>
+<th>Notes</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Admin</td>
+<td></td>
+</tr>
+<tr>
+<td>Org Manager</td>
+<td>If domain is scoped to organization managed by the org manager.</td>
+</tr>
+</tbody></table>
+
           <h3 id="share-a-domain">Share a domain</h3>
 
 <p>This endpoint shares a organization-scoped domain to organizations specified by a list of organization guids. This will allow any of the organizations to use the organization-scoped domain.</p>
@@ -16037,7 +16072,7 @@ Deployed revisions are revisions that are linked to started processes in the app
 </tr>
 </tbody></table>
 
-          <h3 id="delete-an-sidecar">Delete an sidecar</h3>
+          <h3 id="delete-a-sidecar">Delete a sidecar</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/sidecars/[guid]"</span> <span class="se">\</span>
