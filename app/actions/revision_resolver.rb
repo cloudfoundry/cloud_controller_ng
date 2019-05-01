@@ -25,7 +25,7 @@ module VCAP::CloudController
             app: app,
             droplet_guid: app.droplet_guid,
             environment_variables: app.environment_variables,
-            description: reasons.join(' '),
+            description: formatted_revision_reasons(reasons),
             commands_by_process_type: app.commands_by_process_type,
             user_audit_info: user_audit_info,
           )
@@ -34,19 +34,21 @@ module VCAP::CloudController
         end
       end
 
-      def rollback_app_revision(revision, user_audit_info)
-        return nil unless revision.app.revisions_enabled
+      def rollback_app_revision(app, revision, user_audit_info)
+        return nil unless app.revisions_enabled
 
-        reasons = revision_reasons(revision.app.latest_revision, revision)
+        reasons = revision_reasons(app.latest_revision, revision)
         if reasons.empty?
           raise NoUpdateRollback.new('Unable to rollback. The code and configuration you are rolling back to is the same as the deployed revision.')
         end
 
+        reasons.push("Rolled back to revision #{revision.version}.")
+
         RevisionCreate.create(
-          app: revision.app,
+          app: app,
           droplet_guid: revision.droplet_guid,
           environment_variables: revision.environment_variables,
-          description: reasons.push("Rolled back to revision #{revision.version}."),
+          description: formatted_revision_reasons(reasons),
           commands_by_process_type: revision.commands_by_process_type,
           user_audit_info: user_audit_info,
         )
@@ -81,6 +83,10 @@ module VCAP::CloudController
         )
 
         reasons.sort
+      end
+
+      def formatted_revision_reasons(reasons)
+        reasons.join(' ')
       end
     end
   end

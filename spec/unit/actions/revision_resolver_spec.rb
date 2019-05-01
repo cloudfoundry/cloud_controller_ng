@@ -139,7 +139,7 @@ module VCAP::CloudController
 
         it 'return nil' do
           expect {
-            expect(RevisionResolver.rollback_app_revision(initial_revision, user_audit_info)).to be_nil
+            expect(RevisionResolver.rollback_app_revision(app, initial_revision, user_audit_info)).to be_nil
           }.not_to change { RevisionModel.count }
         end
       end
@@ -163,7 +163,7 @@ module VCAP::CloudController
         }
         context 'rolling back' do
           it 'creates a new rollback revision' do
-            rollback_revision = RevisionResolver.rollback_app_revision(initial_revision, user_audit_info)
+            rollback_revision = RevisionResolver.rollback_app_revision(app, initial_revision, user_audit_info)
 
             expect(rollback_revision.description).to include('Rolled back to revision 1.')
             expect(rollback_revision.app).to eq(initial_revision.app)
@@ -177,7 +177,7 @@ module VCAP::CloudController
             RevisionAnnotationModel.make(revision: initial_revision, key: 'foo', value: 'bar')
             RevisionLabelModel.make(revision: initial_revision, key_name: 'baz', value: 'qux')
 
-            rollback_revision = RevisionResolver.rollback_app_revision(initial_revision, user_audit_info)
+            rollback_revision = RevisionResolver.rollback_app_revision(app, initial_revision, user_audit_info)
 
             expect(rollback_revision.annotations).to be_empty
             expect(rollback_revision.labels).to be_empty
@@ -186,11 +186,11 @@ module VCAP::CloudController
 
         context 'and rolling back to a revision that has the same configuration as the deployed revision' do
           it 'gives an error and does not create a revision' do
-            RevisionResolver.rollback_app_revision(initial_revision, user_audit_info)
+            RevisionResolver.rollback_app_revision(app, initial_revision, user_audit_info)
 
             expect {
               expect {
-                RevisionResolver.rollback_app_revision(initial_revision, user_audit_info)
+                RevisionResolver.rollback_app_revision(app, initial_revision, user_audit_info)
               }.to raise_error(RevisionResolver::NoUpdateRollback, 'Unable to rollback. The code and configuration you are rolling back to is the same as the deployed revision.')
             }.not_to change { RevisionModel.count }
           end

@@ -14,7 +14,7 @@ module VCAP::CloudController
         target_state.apply_to_app(app, user_audit_info)
 
         revision = if target_state.rollback_target_revision
-                     RevisionResolver.rollback_app_revision(target_state.rollback_target_revision, user_audit_info)
+                     RevisionResolver.rollback_app_revision(app, target_state.rollback_target_revision, user_audit_info)
                    else
                      RevisionResolver.update_app_revision(app, user_audit_info)
                    end
