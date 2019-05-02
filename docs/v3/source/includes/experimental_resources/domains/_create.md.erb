@@ -37,11 +37,13 @@ Name     | Type     | Description
 
 #### Optional Parameters
 
-Name         | Type      | Description                                                               | Default
------------  | --------  | ------------------------------------------------------------------------  | -------
-**internal** | _boolean_ | Whether the domain is used for internal (container-to-container) traffic. | false
-**organization** | [_to-one relationship_](#to-one-relationships) | A relationship to the organization the domain will be scoped to. <br>_Note: can not be used with the internal param_ |
-**shared_organizations** | [_to-many relationship_](#to-many-relationships) | A relationship to organizations the domain will be shared with. <br>_Note: can not be used without an organization relationship_ |
+| Name                                      | Type                                             | Description                                                                                                                      | Default |
+| -----------                               | --------                                         | ------------------------------------------------------------------------                                                         | ------- |
+| **internal**                              | _boolean_                                        | Whether the domain is used for internal (container-to-container) traffic.                                                        | false   |
+| **organization**                          | [_to-one relationship_](#to-one-relationships)   | A relationship to the organization the domain will be scoped to. <br>_Note: can not be used with the internal param_             |         |
+| **shared_organizations**                  | [_to-many relationship_](#to-many-relationships) | A relationship to organizations the domain will be shared with. <br>_Note: can not be used without an organization relationship_ |         |
+| **metadata.labels** _(experimental)_      | [_label object_](#labels)                        | Labels applied to the domain.                                                                                                    |         |
+| **metadata.annotations** _(experimental)_ | [_annotation object_](#annotations)              | Annotations applied to the domain.                                                                                               |         |
 
 #### Permitted Roles
 

@@ -5,6 +5,10 @@
     "updated_at": "2019-03-08T01:06:19Z",
     "name": "test-domain.com",
     "internal": false,
+    "metadata": {
+      "labels": <%= metadata.fetch(:labels, {}).to_json(space: ' ', object_nl: ' ')%>,
+      "annotations": <%= metadata.fetch(:annotations, {}).to_json(space: ' ', object_nl: ' ')%>
+    },
     "relationships": {
       "organizations": {
         "data": { "guid": "3a3f3d89-3f89-4f05-8188-751b298c79d5" }
@@ -53,6 +57,10 @@
         "updated_at": "2019-03-08T01:06:19Z",
         "name": "test-domain.com",
         "internal": false,
+        "metadata": {
+          "labels": {},
+          "annotations": {}
+        },
         "relationships": {
           "organization": {
             "data": null

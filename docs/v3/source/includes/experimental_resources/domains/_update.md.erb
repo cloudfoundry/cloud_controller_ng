@@ -1,0 +1,46 @@
+### Update a domain
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/domains/[guid]" \
+  -X PATCH \
+  -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
+  -d '{
+    "metadata": {
+      "labels": {"key": "value"},
+      "annotations": {"note": "detailed information"}
+    }
+  }'
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :single_domain, labels: { "key" => "value" }, "annotations": {"note" => "detailed information"} %>
+```
+
+#### Definition
+`PATCH /v3/domains/:guid`
+
+#### Optional Parameters
+
+| Name                                      | Type                                | Description                                                              | Default |
+| -----------                               | --------                            | ------------------------------------------------------------------------ | ------- |
+| **metadata.labels** _(experimental)_      | [_label object_](#labels)           | Labels applied to the domain.                                            |         |
+| **metadata.annotations** _(experimental)_ | [_annotation object_](#annotations) | Annotations applied to the domain.                                       |         |
+
+#### Permitted Roles
+
+Role | Notes
+----- | ---
+Admin |
+Org Manager | If domain is scoped to organization managed by the org manager.

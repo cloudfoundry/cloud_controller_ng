@@ -185,6 +185,7 @@ includes:
   - experimental_resources/domains/get
   - experimental_resources/domains/list
   - experimental_resources/domains/list_domains_for_an_org
+  - experimental_resources/domains/update
   - experimental_resources/domains/delete
   - experimental_resources/domains/share
   - experimental_resources/domains/unshare
