@@ -425,6 +425,22 @@ module VCAP::CloudController
       let(:org) { space.organization }
       let(:api_call) { lambda { |user_headers| get "/v3/organizations/#{org.guid}/domains/default", nil, user_headers } }
 
+      context 'when the user is not logged in' do
+        it 'returns 401 for Unauthenticated requests' do
+          get "/v3/organizations/#{org.guid}/domains/default", nil, base_json_headers
+          expect(last_response.status).to eq(401)
+        end
+      end
+
+      context 'when the user does not have the required scopes' do
+        let(:user_header) { headers_for(user, scopes: []) }
+
+        it 'returns a 403' do
+          get "/v3/organizations/#{org.guid}/domains/default", nil, user_header
+          expect(last_response.status).to eq(403)
+        end
+      end
+
       context 'when domains exist' do
         let(:expected_codes_and_responses) do
           h = Hash.new(
