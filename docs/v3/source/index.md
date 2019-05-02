@@ -57,6 +57,14 @@ includes:
   - resources/builds/list
   - resources/builds/list_for_app
   - resources/builds/update
+  - resources/buildpacks/header
+  - resources/buildpacks/object
+  - resources/buildpacks/create
+  - resources/buildpacks/get
+  - resources/buildpacks/list
+  - resources/buildpacks/update
+  - resources/buildpacks/delete
+  - resources/buildpacks/upload_bits
   - resources/droplets/header
   - resources/droplets/object
   - resources/droplets/get
@@ -164,14 +172,6 @@ includes:
   - experimental_resources/app_restart/create
   - experimental_resources/app_ssh_enabled/header
   - experimental_resources/app_ssh_enabled/get
-  - experimental_resources/buildpacks/header
-  - experimental_resources/buildpacks/object
-  - experimental_resources/buildpacks/create  
-  - experimental_resources/buildpacks/get
-  - experimental_resources/buildpacks/list
-  - experimental_resources/buildpacks/update
-  - experimental_resources/buildpacks/delete
-  - experimental_resources/buildpacks/upload_bits
   - experimental_resources/deployments/header
   - experimental_resources/deployments/object
   - experimental_resources/deployments/create

@@ -10,8 +10,7 @@ class RootController < ActionController::Base
             href: build_api_uri(path: '/apps')
           },
           buildpacks: {
-            href: build_api_uri(path: '/buildpacks'),
-            experimental: true,
+            href: build_api_uri(path: '/buildpacks')
           },
           builds: {
             href: build_api_uri(path: '/builds')
