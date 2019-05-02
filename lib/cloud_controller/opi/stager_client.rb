@@ -2,6 +2,7 @@ require 'httpclient'
 require 'uri'
 require 'cloud_controller/diego/staging_request'
 require 'cloud_controller/opi/helpers'
+require 'cloud_controller/opi/env_hash'
 
 module OPI
   class StagerClient
@@ -37,7 +38,7 @@ module OPI
 
       {
           app_guid: staging_details.package.app_guid,
-          environment: action_builder.task_environment_variables,
+          environment: build_env(staging_details.environment_variables) + action_builder.task_environment_variables,
           completion_callback: staging_completion_callback(staging_details),
           lifecycle_data: {
               droplet_upload_uri: droplet_upload_uri,
@@ -55,6 +56,11 @@ module OPI
       host_port = "#{@config.get(:internal_service_hostname)}:#{port}"
       path      = "/internal/v3/staging/#{staging_details.staging_guid}/build_completed?start=#{staging_details.start_after_staging}"
       "#{scheme}://#{auth}@#{host_port}#{path}"
+    end
+
+    def build_env(environment)
+      env = OPI::EnvHash.muse(environment)
+      env.map { |i| ::Diego::Bbs::Models::EnvironmentVariable.new(name: i['name'], value: i['value']) }
     end
 
     def logger

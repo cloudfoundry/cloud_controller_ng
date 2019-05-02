@@ -53,6 +53,28 @@ RSpec.describe(OPI::StagerClient) do
       )
     end
 
+    context 'when staging details includes env vars' do
+      before do
+        staging_details.environment_variables = { 'GOPACKAGE': 'github.com/some/go/pkg' }
+      end
+
+      it 'should include the staging details env vars in the request' do
+        stager_client.stage('guid', staging_details)
+        expect(WebMock).to have_requested(:post, "#{eirini_url}/stage/guid").with(body: {
+          app_guid: 'thor',
+          environment: [{ name: 'GOPACKAGE', value: 'github.com/some/go/pkg' },
+                        { name: 'VCAP_APPLICATION', value: '{"wow":"pants"}' },
+                        { name: 'MEMORY_LIMIT', value: '256m' },
+                        { name: 'VCAP_SERVICES', value: '{}' }],
+           completion_callback: 'https://internal_user:internal_password@api.internal.cf:8182/internal/v3/staging//build_completed?start=',
+          lifecycle_data: { droplet_upload_uri: 'http://cc-uploader.service.cf.internal:9091/v1/droplet/guid?cc-droplet-upload-uri=http://upload.me',
+                            app_bits_download_uri: 'http://download.me',
+                            buildpacks: [{ name: 'ruby', key: 'idk', url: 'www.com', skip_detect: false }]
+        } }.to_json
+        )
+      end
+    end
+
     context 'when the response contains an error' do
       before do
         stub_request(:post, "#{eirini_url}/stage/guid").
