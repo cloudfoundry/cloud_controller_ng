@@ -330,7 +330,31 @@ RSpec.describe 'Domains Request' do
   end
 
   describe 'POST /v3/domains' do
-    let(:params) { { name: 'my-domain.com' } }
+    let(:params) do
+      {
+        name: 'my-domain.com',
+        metadata: {
+          labels: { 'key' => 'value' },
+          annotations: { 'key2' => 'value2' }
+        }
+      }
+    end
+
+    context 'when metadata is invalid' do
+      let(:user_header) { admin_headers_for(user) }
+
+      it 'returns a 422' do
+        post '/v3/domains', {
+          metadata: {
+            labels: { '': 'invalid' },
+            annotations: { "#{'a' * 1001}": 'value2' }
+          }
+        }.to_json, user_header
+
+        expect(last_response.status).to eq(422)
+        expect(parsed_response['errors'][0]['detail']).to match('Metadata key error: label key cannot be empty string, Metadata key error: annotation')
+      end
+    end
 
     describe 'when creating a shared domain' do
       let(:api_call) { lambda { |user_headers| post '/v3/domains', params.to_json, user_headers } }
@@ -343,8 +367,8 @@ RSpec.describe 'Domains Request' do
           name: params[:name],
           internal: false,
           metadata: {
-            labels: {},
-            annotations: {}
+            labels: { key: 'value' },
+            annotations: { key2: 'value2' }
           },
           relationships: {
             organization: {
@@ -386,8 +410,8 @@ RSpec.describe 'Domains Request' do
           name: params[:name],
           internal: false,
           metadata: {
-            labels: {},
-            annotations: {}
+            labels: { key: 'value' },
+            annotations: { key2: 'value2' }
           },
           relationships: {
             organization: {
@@ -410,24 +434,29 @@ RSpec.describe 'Domains Request' do
         }
       end
 
-      let(:private_domain_params) { {
-        name: 'my-domain.com',
-        relationships: {
-          organization: {
-            data: {
-              guid: org.guid
+      let(:private_domain_params) do
+        {
+          name: 'my-domain.com',
+          relationships: {
+            organization: {
+              data: {
+                guid: org.guid
+              }
+            },
+            shared_organizations: {
+              data: [
+                { guid: shared_org1.guid },
+                { guid: shared_org2.guid }
+              ]
+
             }
           },
-          shared_organizations: {
-            data: [
-              { guid: shared_org1.guid },
-              { guid: shared_org2.guid }
-            ]
-
+          metadata: {
+            labels: { 'key' => 'value' },
+            annotations: { 'key2' => 'value2' }
           }
         }
-      }
-      }
+      end
 
       before do
         shared_org1.add_manager(user)

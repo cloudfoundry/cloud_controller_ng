@@ -23,6 +23,8 @@ module VCAP::CloudController
       Domain.db.transaction do
         domain.save
 
+        MetadataUpdate.update(domain, message)
+
         shared_organizations.each do |shared_org|
           domain.add_shared_organization(shared_org)
         end

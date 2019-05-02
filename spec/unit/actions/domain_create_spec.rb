@@ -7,6 +7,17 @@ module VCAP::CloudController
     subject { DomainCreate.new }
 
     let(:name) { 'example.com' }
+    let(:metadata) do
+      {
+        labels: {
+          release: 'stable',
+          'seriouseats.com/potato' => 'mashed'
+        },
+        annotations: {
+          anno: 'tations'
+        }
+      }
+    end
 
     describe '#create' do
       context 'when there is a sequel validation error' do
@@ -53,6 +64,7 @@ module VCAP::CloudController
             DomainCreateMessage.new({
               name: name,
               internal: internal,
+              metadata: metadata
             })
           end
 
@@ -66,6 +78,12 @@ module VCAP::CloudController
             expect(domain.name).to eq(name)
             expect(domain.internal).to eq(internal)
             expect(domain.guid).to_not be_nil
+            expect(domain.labels.map { |label| { prefix: label.key_prefix, key: label.key_name, value: label.value } }).
+              to match_array([{ prefix: nil, key: 'release', value: 'stable' },
+                              { prefix: 'seriouseats.com', key: 'potato', value: 'mashed' },
+              ])
+            expect(domain.annotations.map { |a| { key: a.key, value: a.value } }).
+              to match_array([{ key: 'anno', value: 'tations' }])
           end
         end
       end
@@ -89,6 +107,7 @@ module VCAP::CloudController
                 ]
               }
             },
+            metadata: metadata
           })
         end
 
@@ -101,6 +120,12 @@ module VCAP::CloudController
           expect(domain.name).to eq name
           expect(domain.owning_organization_guid).to eq organization.guid
           expect(domain.shared_organizations).to contain_exactly(shared_org1, shared_org2)
+          expect(domain.labels.map { |label| { prefix: label.key_prefix, key: label.key_name, value: label.value } }).
+            to match_array([{ prefix: nil, key: 'release', value: 'stable' },
+                            { prefix: 'seriouseats.com', key: 'potato', value: 'mashed' },
+            ])
+          expect(domain.annotations.map { |a| { key: a.key, value: a.value } }).
+            to match_array([{ key: 'anno', value: 'tations' }])
         end
       end
     end
