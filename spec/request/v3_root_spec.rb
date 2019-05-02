@@ -14,8 +14,7 @@ RSpec.describe 'v3 root' do
             'href' => "#{link_prefix}/v3/apps"
           },
           'buildpacks' => {
-            'href' => "#{link_prefix}/v3/buildpacks",
-            'experimental' => true,
+            'href' => "#{link_prefix}/v3/buildpacks"
           },
           'builds' => {
             'href' => "#{link_prefix}/v3/builds"

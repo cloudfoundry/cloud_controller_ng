@@ -21,7 +21,6 @@ RSpec.describe RootController, type: :controller do
       hash = MultiJson.load(response.body)
       expected_uri = "#{TestConfig.config[:external_protocol]}://#{TestConfig.config[:external_domain]}/v3/buildpacks"
       expect(hash['links']['buildpacks']['href']).to eq(expected_uri)
-      expect(hash['links']['buildpacks']['experimental']).to eq(true)
     end
 
     it 'returns a link to builds' do
