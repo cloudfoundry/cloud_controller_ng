@@ -23,6 +23,10 @@ module VCAP::CloudController::Presenters::V3
         updated_at: domain.updated_at,
         name: domain.name,
         internal: domain.internal,
+        metadata: {
+          labels: hashified_labels(domain.labels),
+          annotations: hashified_annotations(domain.annotations),
+        },
         relationships: {
           organization: {
             data: owning_org_guid

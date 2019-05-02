@@ -274,6 +274,10 @@ module VCAP::CloudController
           updated_at: iso8601,
           name: shared_domain.name,
           internal: false,
+          metadata: {
+            labels: {},
+            annotations: {}
+          },
           relationships: {
             organization: {
               data: nil
@@ -294,6 +298,10 @@ module VCAP::CloudController
           updated_at: iso8601,
           name: owned_private_domain.name,
           internal: false,
+          metadata: {
+            labels: {},
+            annotations: {}
+          },
           relationships: {
             organization: {
               data: { guid: org.guid }
@@ -316,6 +324,10 @@ module VCAP::CloudController
           updated_at: iso8601,
           name: shared_private_domain.name,
           internal: false,
+          metadata: {
+            labels: {},
+            annotations: {}
+          },
           relationships: {
             organization: {
               data: { guid: organization1.guid }
@@ -477,6 +489,10 @@ module VCAP::CloudController
               updated_at: iso8601,
               name: shared_private_domain.name,
               internal: false,
+              metadata: {
+                labels: {},
+                annotations: {}
+              },
               relationships: {
                 organization: {
                   data: { guid: organization1.guid }
@@ -508,6 +524,10 @@ module VCAP::CloudController
               updated_at: iso8601,
               name: shared_domain.name,
               internal: false,
+              metadata: {
+                labels: {},
+                annotations: {}
+              },
               relationships: {
                 organization: {
                   data: nil

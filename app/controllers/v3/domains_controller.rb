@@ -1,12 +1,14 @@
 require 'messages/domain_create_message'
 require 'messages/domains_list_message'
 require 'messages/domain_show_message'
+require 'messages/domain_update_message'
 require 'messages/domain_update_shared_orgs_message'
 require 'messages/domain_delete_shared_org_message'
 require 'presenters/v3/domain_presenter'
 require 'presenters/v3/domain_shared_orgs_presenter'
 require 'actions/domain_create'
 require 'actions/domain_delete'
+require 'actions/domain_update'
 require 'actions/domain_update_shared_orgs'
 require 'actions/domain_delete_shared_org'
 require 'fetchers/domain_fetcher'
@@ -53,6 +55,20 @@ class DomainsController < ApplicationController
 
     domain = find_domain(message)
     domain_not_found! unless domain
+
+    render status: :ok, json: Presenters::V3::DomainPresenter.new(domain, visible_org_guids: permission_queryer.readable_org_guids)
+  end
+
+  def update
+    message = DomainUpdateMessage.new(hashed_params[:body].merge({ guid: hashed_params['guid'] }))
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    domain = find_domain(message)
+    domain_not_found! unless domain
+
+    unauthorized! unless permission_queryer.can_write_to_org?(domain.owning_organization_guid)
+
+    domain = DomainUpdate.new.update(domain: domain, message: message)
 
     render status: :ok, json: Presenters::V3::DomainPresenter.new(domain, visible_org_guids: permission_queryer.readable_org_guids)
   end

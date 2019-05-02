@@ -75,9 +75,18 @@ module VCAP::CloudController
       shared_organizations: :nullify,
     )
 
+    one_to_many :labels, class: 'VCAP::CloudController::DomainLabelModel', key: :resource_guid, primary_key: :guid
+    one_to_many :annotations, class: 'VCAP::CloudController::DomainAnnotationModel', key: :resource_guid, primary_key: :guid
+
     export_attributes :name, :owning_organization_guid, :shared_organizations
     import_attributes :name, :owning_organization_guid
     strip_attributes :name
+
+    def before_destroy
+      LabelDelete.delete(labels)
+      AnnotationDelete.delete(annotations)
+      super
+    end
 
     def validate
       validates_presence :name

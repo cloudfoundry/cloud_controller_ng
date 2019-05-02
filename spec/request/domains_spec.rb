@@ -47,6 +47,10 @@ RSpec.describe 'Domains Request' do
           updated_at: iso8601,
           name: visible_owned_private_domain.name,
           internal: false,
+          metadata: {
+            labels: {},
+            annotations: {}
+          },
           relationships: {
             organization: {
               data: { guid: org.guid }
@@ -70,6 +74,10 @@ RSpec.describe 'Domains Request' do
           updated_at: iso8601,
           name: visible_shared_private_domain.name,
           internal: false,
+          metadata: {
+            labels: {},
+            annotations: {}
+          },
           relationships: {
             organization: {
               data: { guid: non_visible_org.guid }
@@ -93,6 +101,10 @@ RSpec.describe 'Domains Request' do
           updated_at: iso8601,
           name: not_visible_private_domain.name,
           internal: false,
+          metadata: {
+            labels: {},
+            annotations: {}
+          },
           relationships: {
             organization: {
               data: { guid: non_visible_org.guid }
@@ -116,6 +128,10 @@ RSpec.describe 'Domains Request' do
           updated_at: iso8601,
           name: shared_domain.name,
           internal: false,
+          metadata: {
+            labels: {},
+            annotations: {}
+          },
           relationships: {
             organization: {
               data: nil
@@ -326,6 +342,10 @@ RSpec.describe 'Domains Request' do
           updated_at: iso8601,
           name: params[:name],
           internal: false,
+          metadata: {
+            labels: {},
+            annotations: {}
+          },
           relationships: {
             organization: {
               data: nil
@@ -365,6 +385,10 @@ RSpec.describe 'Domains Request' do
           updated_at: iso8601,
           name: params[:name],
           internal: false,
+          metadata: {
+            labels: {},
+            annotations: {}
+          },
           relationships: {
             organization: {
               data: {
@@ -1207,6 +1231,10 @@ RSpec.describe 'Domains Request' do
           updated_at: iso8601,
           name: shared_domain.name,
           internal: false,
+          metadata: {
+            labels: {},
+            annotations: {}
+          },
           relationships: {
             organization: {
               data: nil
@@ -1245,6 +1273,10 @@ RSpec.describe 'Domains Request' do
             updated_at: iso8601,
             name: private_domain.name,
             internal: false,
+            metadata: {
+              labels: {},
+              annotations: {}
+            },
             relationships: {
               organization: {
                 data: {
@@ -1299,6 +1331,10 @@ RSpec.describe 'Domains Request' do
             updated_at: iso8601,
             name: private_domain.name,
             internal: false,
+            metadata: {
+              labels: {},
+              annotations: {}
+            },
             relationships: {
               organization: {
                 data: {
@@ -1349,6 +1385,198 @@ RSpec.describe 'Domains Request' do
           it_behaves_like 'permissions for single object endpoint', GLOBAL_SCOPES
         end
       end
+    end
+  end
+
+  describe 'PATCH /v3/domains/:guid' do
+    context 'when the domain does not exist' do
+      let(:user_header) { headers_for(user) }
+
+      it 'returns not found' do
+        patch '/v3/domains/does-not-exist', nil, user_header
+
+        expect(last_response.status).to eq(404)
+      end
+    end
+
+    context 'when metadata is invalid' do
+      let(:domain) { VCAP::CloudController::SharedDomain.make }
+      let(:user_header) { admin_headers_for(user) }
+
+      it 'returns a 422' do
+        patch "/v3/domains/#{domain.guid}", {
+          metadata: {
+            labels: { '': 'invalid' },
+            annotations: { "#{'a' * 1001}": 'value2' }
+          }
+        }.to_json, user_header
+
+        expect(last_response.status).to eq(422)
+        expect(parsed_response['errors'][0]['detail']).to match('Metadata key error: label key cannot be empty string, Metadata key error: annotation')
+      end
+    end
+
+    context 'updating an existing unscoped domain' do
+      let(:domain) { VCAP::CloudController::SharedDomain.make }
+
+      let(:domain_json) do
+        {
+          guid: domain.guid,
+          created_at: iso8601,
+          updated_at: iso8601,
+          name: domain.name,
+          internal: false,
+          relationships: {
+            organization: {
+              data: nil
+            },
+            shared_organizations: {
+              data: []
+            }
+          },
+          metadata: {
+            labels: { key: 'value' },
+            annotations: { key2: 'value2' }
+          },
+          links: {
+            self: { href: "#{link_prefix}/v3/domains/#{domain.guid}" }
+          }
+        }
+      end
+
+      let(:api_call) do
+        lambda do |user_headers|
+          patch "/v3/domains/#{domain.guid}", {
+            metadata: {
+              labels: { key: 'value' },
+              annotations: { key2: 'value2' }
+            }
+          }.to_json, user_headers
+        end
+      end
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 403)
+
+        h['admin'] = { code: 200, response_object: domain_json }
+
+        h.freeze
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+    end
+
+    context 'updating an existing scoped domain' do
+      let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: org) }
+
+      let(:domain_json) do
+        {
+          guid: domain.guid,
+          created_at: iso8601,
+          updated_at: iso8601,
+          name: domain.name,
+          internal: false,
+          relationships: {
+            organization: {
+              data: { guid: org.guid }
+            },
+            shared_organizations: {
+              data: []
+            }
+          },
+          metadata: {
+            labels: { key: 'value' },
+            annotations: { key2: 'value2' }
+          },
+          links: {
+            self: { href: "#{link_prefix}/v3/domains/#{domain.guid}" },
+            organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}) },
+            shared_organizations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{domain.guid}\/relationships\/shared_organizations) }
+          }
+        }
+      end
+
+      let(:api_call) do
+        lambda do |user_headers|
+          patch "/v3/domains/#{domain.guid}", {
+            metadata: {
+              labels: { key: 'value' },
+              annotations: { key2: 'value2' }
+            }
+          }.to_json, user_headers
+        end
+      end
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 403)
+
+        h['admin'] = { code: 200, response_object: domain_json }
+        h['org_manager'] = { code: 200, response_object: domain_json }
+        h['org_billing_manager'] = { code: 404 }
+        h['no_role'] = { code: 404 }
+
+        h.freeze
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+    end
+
+    context 'updating an existing, shared scoped domain' do
+      let(:domain) { VCAP::CloudController::PrivateDomain.make }
+
+      let(:domain_json) do
+        {
+          guid: domain.guid,
+          created_at: iso8601,
+          updated_at: iso8601,
+          name: domain.name,
+          internal: false,
+          relationships: {
+            organization: {
+              data: { guid: domain.owning_organization_guid }
+            },
+            shared_organizations: {
+              data: [{ guid: org.guid }]
+            }
+          },
+          metadata: {
+            labels: { key: 'value' },
+            annotations: { key2: 'value2' }
+          },
+          links: {
+            self: { href: "#{link_prefix}/v3/domains/#{domain.guid}" },
+            organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{domain.owning_organization_guid}) },
+            shared_organizations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{domain.guid}\/relationships\/shared_organizations) }
+          }
+        }
+      end
+
+      let(:api_call) do
+        lambda do |user_headers|
+          patch "/v3/domains/#{domain.guid}", {
+            metadata: {
+              labels: { key: 'value' },
+              annotations: { key2: 'value2' }
+            }
+          }.to_json, user_headers
+        end
+      end
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 403)
+
+        h['admin'] = { code: 200, response_object: domain_json }
+        h['org_billing_manager'] = { code: 404 }
+        h['no_role'] = { code: 404 }
+
+        h.freeze
+      end
+
+      before do
+        domain.add_shared_organization(org)
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
   end
 end

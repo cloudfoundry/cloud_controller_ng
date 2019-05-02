@@ -14,7 +14,24 @@ module VCAP::CloudController::Presenters::V3
         let(:domain) do
           VCAP::CloudController::SharedDomain.make(
             name: 'my.domain.com',
-            internal: true,
+            internal: true
+          )
+        end
+
+        let!(:domain_label) do
+          VCAP::CloudController::DomainLabelModel.make(
+            resource_guid: domain.guid,
+            key_prefix: 'maine.gov',
+            key_name: 'potato',
+            value: 'mashed'
+          )
+        end
+
+        let!(:domain_annotation) do
+          VCAP::CloudController::DomainAnnotationModel.make(
+            resource_guid: domain.guid,
+            key: 'contacts',
+            value: 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)',
           )
         end
 
@@ -24,6 +41,8 @@ module VCAP::CloudController::Presenters::V3
           expect(subject[:updated_at]).to be_a(Time)
           expect(subject[:name]).to eq(domain.name)
           expect(subject[:internal]).to eq(domain.internal)
+          expect(subject[:metadata][:labels]).to eq({ 'maine.gov/potato' => 'mashed' })
+          expect(subject[:metadata][:annotations]).to eq({ 'contacts' => 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)' })
           expect(subject[:relationships][:organization][:data]).to be_nil
           expect(subject[:relationships][:shared_organizations][:data]).to eq([])
           expect(subject[:links][:self][:href]).to eq("#{link_prefix}/v3/domains/#{domain.guid}")
@@ -42,12 +61,31 @@ module VCAP::CloudController::Presenters::V3
           )
         end
 
+        let!(:domain_label) do
+          VCAP::CloudController::DomainLabelModel.make(
+            resource_guid: domain.guid,
+            key_prefix: 'maine.gov',
+            key_name: 'potato',
+            value: 'mashed'
+          )
+        end
+
+        let!(:domain_annotation) do
+          VCAP::CloudController::DomainAnnotationModel.make(
+            resource_guid: domain.guid,
+            key: 'contacts',
+            value: 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)',
+          )
+        end
+
         it 'presents the base domain properties as json' do
           expect(subject[:guid]).to eq(domain.guid)
           expect(subject[:created_at]).to be_a(Time)
           expect(subject[:updated_at]).to be_a(Time)
           expect(subject[:name]).to eq(domain.name)
           expect(subject[:internal]).to eq(domain.internal)
+          expect(subject[:metadata][:labels]).to eq({ 'maine.gov/potato' => 'mashed' })
+          expect(subject[:metadata][:annotations]).to eq({ 'contacts' => 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)' })
           expect(subject[:relationships][:organization]).to eq({
             data: { guid: domain.owning_organization.guid }
           })

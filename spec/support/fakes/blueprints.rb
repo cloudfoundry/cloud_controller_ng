@@ -31,7 +31,7 @@ Sham.define do
 end
 
 module VCAP::CloudController
-  %w/App Build Buildpack Deployment Droplet IsolationSegment Organization
+  %w/App Build Buildpack Deployment Domain Droplet IsolationSegment Organization
      Package Process Revision Space Stack Task ServiceInstance /.each do |root|
     "VCAP::CloudController::#{root}LabelModel".constantize.blueprint do end
     "VCAP::CloudController::#{root}AnnotationModel".constantize.blueprint do end
