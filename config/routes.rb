@@ -127,6 +127,7 @@ Rails.application.routes.draw do
   get '/organizations/:guid', to: 'organizations_v3#show'
   patch '/organizations/:guid', to: 'organizations_v3#update'
   get '/organizations/:guid/domains', to: 'organizations_v3#index_org_domains'
+  get '/organizations/:guid/domains/default', to: 'organizations_v3#show_default_domain'
   get '/organizations', to: 'organizations_v3#index'
   get '/isolation_segments/:isolation_segment_guid/organizations', to: 'organizations_v3#index'
   get '/organizations/:guid/relationships/default_isolation_segment', to: 'organizations_v3#show_default_isolation_segment'

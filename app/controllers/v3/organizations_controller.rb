@@ -115,6 +115,20 @@ class OrganizationsV3Controller < ApplicationController
     )
   end
 
+  def show_default_domain
+    org = fetch_org(hashed_params[:guid])
+    org_not_found! unless org && permission_queryer.can_read_from_org?(org.guid)
+    domain = SharedDomain.first
+
+    domain_not_found! unless domain || permission_queryer.readable_org_guids_for_domains.include?(org.guid)
+
+    domain ||= org.private_domains.first
+
+    domain_not_found! unless domain
+
+    render status: :ok, json: Presenters::V3::DomainPresenter.new(domain, visible_org_guids: permission_queryer.readable_org_guids)
+  end
+
   private
 
   def domain_readable_org_guids(org_guids)
@@ -134,6 +148,10 @@ class OrganizationsV3Controller < ApplicationController
 
   def org_not_found!
     resource_not_found!(:organization)
+  end
+
+  def domain_not_found!
+    resource_not_found!(:domain)
   end
 
   def isolation_segment_not_found!

@@ -95,6 +95,7 @@ includes:
   - resources/organizations/update
   - resources/organizations/assign_default_isolation_segment
   - resources/organizations/get_default_isolation_segment
+  - resources/organizations/get_default_domain
   - resources/packages/header
   - resources/packages/object
   - resources/packages/create

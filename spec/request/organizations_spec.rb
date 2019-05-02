@@ -415,6 +415,108 @@ module VCAP::CloudController
       end
     end
 
+    describe 'GET /v3/organizations/:guid/domains/default' do
+      let(:space) { Space.make }
+      let(:org) { space.organization }
+      let(:api_call) { lambda { |user_headers| get "/v3/organizations/#{org.guid}/domains/default", nil, user_headers } }
+
+      context 'when domains exist' do
+        let(:expected_codes_and_responses) do
+          h = Hash.new(
+            code: 200,
+            response_object: domain_json
+          )
+          h['no_role'] = { code: 404 }
+          h.freeze
+        end
+
+        let(:shared_private_domain) { VCAP::CloudController::PrivateDomain.make(owning_organization_guid: organization1.guid) }
+        let(:owned_private_domain) { VCAP::CloudController::PrivateDomain.make(owning_organization_guid: org.guid) }
+
+        before do
+          org.add_private_domain(shared_private_domain)
+          owned_private_domain # trigger the let in order (after shared_private_domain)
+        end
+
+        context 'when at least one scoped domain exists' do
+          let(:expected_codes_and_responses) do
+            h = Hash.new(
+              code: 200,
+              response_object: domain_json
+            )
+            h['org_billing_manager'] = { code: 404 }
+            h['no_role'] = { code: 404 }
+            h.freeze
+          end
+
+          let(:domain_json) do
+            {
+              guid: shared_private_domain.guid,
+              created_at: iso8601,
+              updated_at: iso8601,
+              name: shared_private_domain.name,
+              internal: false,
+              relationships: {
+                organization: {
+                  data: { guid: organization1.guid }
+                },
+                shared_organizations: {
+                  data: [
+                    { guid: org.guid }
+                  ]
+                }
+              },
+              links: {
+                self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{UUID_REGEX}) },
+                organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{organization1.guid}) },
+                shared_organizations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{shared_private_domain.guid}/relationships/shared_organizations) }
+              }
+            }
+          end
+
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        end
+
+        context 'when at least one unscoped domain exists' do
+          let!(:shared_domain) { VCAP::CloudController::SharedDomain.make }
+
+          let(:domain_json) do
+            {
+              guid: shared_domain.guid,
+              created_at: iso8601,
+              updated_at: iso8601,
+              name: shared_domain.name,
+              internal: false,
+              relationships: {
+                organization: {
+                  data: nil
+                },
+                shared_organizations: {
+                  data: []
+                }
+              },
+              links: {
+                self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{UUID_REGEX}) }
+              }
+            }
+          end
+
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        end
+      end
+
+      context 'when no domains exist' do
+        let(:expected_codes_and_responses) do
+          h = Hash.new(
+            code: 404,
+          )
+          h.freeze
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
+    end
+
     describe 'PATCH /v3/organizations/:guid/relationships/default_isolation_segment' do
       let(:isolation_segment) { VCAP::CloudController::IsolationSegmentModel.make(name: 'default_seg') }
       let(:update_request) do
