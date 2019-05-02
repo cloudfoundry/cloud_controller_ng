@@ -37,7 +37,8 @@ module VCAP::CloudController::Presenters::V3
 
       {
         self: { href: url_builder.build_url(path: "/v3/organizations/#{organization.guid}") },
-        domains: { href: url_builder.build_url(path: "/v3/organizations/#{organization.guid}/domains") }
+        domains: { href: url_builder.build_url(path: "/v3/organizations/#{organization.guid}/domains") },
+        default_domain: { href: url_builder.build_url(path: "/v3/organizations/#{organization.guid}/domains/default") }
       }
     end
   end
