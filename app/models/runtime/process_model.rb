@@ -229,10 +229,6 @@ module VCAP::CloudController
       end
     end
 
-    def get_health_check_timeout
-      health_check_timeout || CloudController::DependencyLocator.instance.config.get(:default_health_check_timeout)
-    end
-
     def validation_policies
       [
         MaxDiskQuotaPolicy.new(self, max_app_disk_in_mb),
