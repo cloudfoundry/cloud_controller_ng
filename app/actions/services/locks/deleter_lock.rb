@@ -26,8 +26,8 @@ module VCAP::CloudController
     end
 
     def unlock_and_fail!
-      if @cancelled_operation
-        service_instance.update_last_operation(@cancelled_operation.to_hash)
+      if @canceled_operation
+        service_instance.update_last_operation(@canceled_operation.to_hash)
         @needs_unlock = false
         return
       end
@@ -63,7 +63,7 @@ module VCAP::CloudController
 
     def try_to_cancel_last_operation!
       if cancellable_operation?(service_instance.last_operation)
-        @cancelled_operation = service_instance.last_operation
+        @canceled_operation = service_instance.last_operation
       else
         raise_if_instance_locked(service_instance)
       end

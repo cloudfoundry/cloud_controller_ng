@@ -8,8 +8,8 @@ module VCAP::CloudController
         def dispatch
           logger = Steno.logger('cc.deployment_updater.update')
           logger.info('run-deployment-update')
-
-          deployments_to_scale = DeploymentModel.where(state: DeploymentModel::DEPLOYING_STATE).all
+          scaling_states = [DeploymentModel::DEPLOYING_STATE, DeploymentModel::FAILING_STATE]
+          deployments_to_scale = DeploymentModel.where(state: scaling_states).all
           deployments_to_cancel = DeploymentModel.where(state: DeploymentModel::CANCELING_STATE).all
 
           begin

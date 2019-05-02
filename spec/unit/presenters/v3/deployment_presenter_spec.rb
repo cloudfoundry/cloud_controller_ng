@@ -86,49 +86,6 @@ module VCAP::CloudController::Presenters::V3
           expect(result[:new_processes]).to eq([{ guid: 'deploying-process-guid', type: 'web-deployment-guid-type' }])
         end
       end
-
-      describe 'failing state' do
-        before do
-          TestConfig.override({ default_health_check_timeout: 60 })
-        end
-
-        let!(:deployment) do
-          VCAP::CloudController::DeploymentModelTestFactory.make(
-            app: app,
-            state: VCAP::CloudController::DeploymentModel::DEPLOYING_STATE,
-            droplet: droplet,
-            previous_droplet: previous_droplet,
-            deploying_web_process: process,
-            revision_guid: 'totes-a-guid',
-            revision_version: 96,
-            last_healthy_at: last_healthy_at
-          )
-        end
-
-        context 'when the app has not yet started' do
-          let(:last_healthy_at) { nil }
-          it 'returns the deployment state' do
-            result = DeploymentPresenter.new(deployment).to_hash
-            expect(result[:state]).to eq(VCAP::CloudController::DeploymentModel::DEPLOYING_STATE)
-          end
-        end
-
-        context 'when the last successful healthcheck is within 2x the timeout' do
-          let(:last_healthy_at) { 30.seconds.ago }
-          it 'returns the deployment state' do
-            result = DeploymentPresenter.new(deployment).to_hash
-            expect(result[:state]).to eq(VCAP::CloudController::DeploymentModel::DEPLOYING_STATE)
-          end
-        end
-
-        context 'when the last successful healthcheck has been longer than 2x the timeout' do
-          let(:last_healthy_at) { 121.seconds.ago }
-          it 'reports the deployment is failing' do
-            result = DeploymentPresenter.new(deployment).to_hash
-            expect(result[:state]).to eq(DeploymentPresenter::FAILING_STATE)
-          end
-        end
-      end
     end
   end
 end

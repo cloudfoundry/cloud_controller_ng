@@ -4,6 +4,8 @@ module VCAP::CloudController
       DEPLOYING_STATE = 'DEPLOYING'.freeze,
       DEPLOYED_STATE = 'DEPLOYED'.freeze,
       CANCELING_STATE = 'CANCELING'.freeze,
+      FAILING_STATE = 'FAILING'.freeze,
+      FAILED_STATE = 'FAILED'.freeze,
       CANCELED_STATE = 'CANCELED'.freeze
     ].freeze
 
@@ -50,9 +52,7 @@ module VCAP::CloudController
       state == DEPLOYING_STATE
     end
 
-    def failing?
-      return false if last_healthy_at.nil?
-
+    def should_fail?
       timeout = deploying_web_process.health_check_timeout || Config.config.get(:default_health_check_timeout)
       state == DEPLOYING_STATE && last_healthy_at < (Time.now - 2 * timeout.seconds)
     end

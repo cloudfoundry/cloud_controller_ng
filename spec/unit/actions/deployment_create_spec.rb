@@ -354,7 +354,7 @@ module VCAP::CloudController
             let!(:existing_deployment) do
               DeploymentModel.make(
                 app: app,
-                state: DeploymentModel::DEPLOYING_STATE,
+                state: existing_state,
                 droplet: nil,
                 previous_droplet: original_droplet,
                 original_web_process_instance_count: originally_desired_instance_count,
@@ -366,24 +366,51 @@ module VCAP::CloudController
               web_process.save
             end
 
-            it 'creates a new deployment with the instance count from the existing deployment' do
-              deployment = nil
+            context 'when the existing deployment is DEPLOYING' do
+              let(:existing_state) { DeploymentModel::DEPLOYING_STATE }
 
-              expect {
-                deployment = DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
-              }.to change { DeploymentModel.count }.by(1)
+              it 'creates a new deployment with the instance count from the existing deployment' do
+                deployment = nil
 
-              expect(deployment.state).to eq(DeploymentModel::DEPLOYING_STATE)
-              expect(deployment.app_guid).to eq(app.guid)
-              expect(deployment.droplet_guid).to eq(next_droplet.guid)
-              expect(deployment.previous_droplet).to eq(original_droplet)
-              expect(deployment.original_web_process_instance_count).to eq(originally_desired_instance_count)
+                expect {
+                  deployment = DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+                }.to change { DeploymentModel.count }.by(1)
+
+                expect(deployment.state).to eq(DeploymentModel::DEPLOYING_STATE)
+                expect(deployment.app_guid).to eq(app.guid)
+                expect(deployment.droplet_guid).to eq(next_droplet.guid)
+                expect(deployment.previous_droplet).to eq(original_droplet)
+                expect(deployment.original_web_process_instance_count).to eq(originally_desired_instance_count)
+              end
+
+              it 'sets the existing deployment to DEPLOYED' do
+                DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+
+                expect(existing_deployment.reload.state).to eq(DeploymentModel::DEPLOYED_STATE)
+              end
             end
 
-            it 'sets the existing deployment to DEPLOYED' do
-              DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+            context 'when the existing deployment is FAILING' do
+              let(:existing_state) { DeploymentModel::FAILING_STATE }
 
-              expect(existing_deployment.reload.state).to eq(DeploymentModel::DEPLOYED_STATE)
+              it 'creates a new deployment with the instance count from the existing deployment' do
+                deployment = nil
+
+                expect {
+                  deployment = DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+                }.to change { DeploymentModel.count }.by(1)
+
+                expect(deployment.state).to eq(DeploymentModel::DEPLOYING_STATE)
+                expect(deployment.app_guid).to eq(app.guid)
+                expect(deployment.droplet_guid).to eq(next_droplet.guid)
+                expect(deployment.previous_droplet).to eq(original_droplet)
+                expect(deployment.original_web_process_instance_count).to eq(originally_desired_instance_count)
+              end
+
+              it 'sets the existing deployment to FAILED' do
+                DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+                expect(existing_deployment.reload.state).to eq(DeploymentModel::FAILED_STATE)
+              end
             end
           end
 

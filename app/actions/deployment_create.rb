@@ -19,7 +19,7 @@ module VCAP::CloudController
                      RevisionResolver.update_app_revision(app, user_audit_info)
                    end
 
-        previous_deployment = DeploymentModel.find(app: app, state: DeploymentModel::DEPLOYING_STATE)
+        previous_deployment = DeploymentModel.find(app: app, state: [DeploymentModel::DEPLOYING_STATE, DeploymentModel::FAILING_STATE])
         deployment = DeploymentModel.create(
           app: app,
           state: DeploymentModel::DEPLOYING_STATE,
@@ -33,8 +33,8 @@ module VCAP::CloudController
 
         DeploymentModel.db.transaction do
           if previous_deployment
-            previous_deployment.update(state: DeploymentModel::DEPLOYED_STATE)
-            previous_deployment.save
+            new_state = previous_deployment.deploying? ? DeploymentModel::DEPLOYED_STATE : DeploymentModel::FAILED_STATE
+            previous_deployment.update(state: new_state)
           end
 
           process = create_deployment_process(app, deployment.guid, revision)

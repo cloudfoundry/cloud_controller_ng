@@ -372,6 +372,36 @@ RSpec.describe 'Deployments' do
         })
       end
     end
+
+    context 'when the app has an existing FAILING deployment' do
+      let(:deployment) {
+        VCAP::CloudController::DeploymentModel.make(
+          app: app_model,
+          droplet: droplet,
+          state: VCAP::CloudController::DeploymentModel::FAILING_STATE
+        )
+      }
+      let(:create_request) do
+        {
+          relationships: {
+            app: {
+              data: {
+                guid: app_model.guid
+              }
+            },
+          }
+        }
+      end
+
+      context 'when we redeploy the app with a new deployment' do
+        it 'the deployment state of the "FAILING" deployment will be changed to "FAILED"' do
+          expect(deployment.state).to eq('FAILING')
+          post '/v3/deployments', create_request.to_json, user_header
+          expect(last_response.status).to eq(201)
+          expect(deployment.reload.state).to eq('FAILED')
+        end
+      end
+    end
   end
 
   describe 'PATCH /v3/deployments' do
@@ -713,6 +743,10 @@ RSpec.describe 'Deployments' do
         expect(deployment.reload.state).to eq('CANCELING')
 
         expect(app_model.reload.droplet).to eq(old_droplet)
+
+        require 'cloud_controller/deployment_updater/scheduler'
+        VCAP::CloudController::DeploymentUpdater::Updater.new(deployment, Steno.logger('blah')).cancel
+        expect(deployment.reload.state).to eq('CANCELED')
       end
     end
   end
