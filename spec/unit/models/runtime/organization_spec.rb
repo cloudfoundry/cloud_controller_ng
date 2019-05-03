@@ -956,12 +956,20 @@ module VCAP::CloudController
           expect(org.default_domain).to eq(private_domain1)
         end
 
-        context 'when there is a shared domain' do
-          let!(:shared_domain1) { SharedDomain.make }
-          let!(:shared_domain2) { SharedDomain.make }
+        context 'when there is an internal shared domain' do
+          let!(:internal_domain) { SharedDomain.make(internal: true) }
 
-          it 'returns the first shared domain' do
-            expect(org.default_domain).to eq(shared_domain1)
+          it 'returns the first private domain' do
+            expect(org.default_domain).to eq(private_domain1)
+          end
+
+          context 'when there is a shared domain' do
+            let!(:shared_domain1) { SharedDomain.make }
+            let!(:shared_domain2) { SharedDomain.make }
+
+            it 'returns the first shared domain' do
+              expect(org.default_domain).to eq(shared_domain1)
+            end
           end
         end
       end

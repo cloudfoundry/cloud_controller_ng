@@ -454,6 +454,7 @@ module VCAP::CloudController
       end
 
       context 'when domains exist' do
+        let!(:internal_domain) { VCAP::CloudController::SharedDomain.make(internal: true) } # used to ensure internal domains do not get returned in any case
         let(:expected_codes_and_responses) do
           h = Hash.new(
             code: 200,
@@ -514,7 +515,7 @@ module VCAP::CloudController
           it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
         end
 
-        context 'when at least one unscoped domain exists' do
+        context 'when at least one non internal unscoped domain exists' do
           let!(:shared_domain) { VCAP::CloudController::SharedDomain.make }
 
           let(:domain_json) do
@@ -544,6 +545,17 @@ module VCAP::CloudController
 
           it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
         end
+      end
+
+      context 'when only internal domains exist' do
+        let(:expected_codes_and_responses) do
+          h = Hash.new(
+            code: 404,
+          )
+          h.freeze
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
 
       context 'when no domains exist' do
