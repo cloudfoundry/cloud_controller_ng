@@ -484,6 +484,29 @@ module VCAP::CloudController
       end
     end
 
+    describe '#failing?' do
+      it 'returns false when the app has no deployments' do
+        expect(app_model.failing?).to be(false)
+      end
+
+      it 'returns false when the app has no deployments that are being failing' do
+        VCAP::CloudController::DeploymentModel.make(state: 'DEPLOYING', app: app_model)
+        VCAP::CloudController::DeploymentModel.make(state: 'CANCELING', app: app_model)
+        VCAP::CloudController::DeploymentModel.make(state: 'CANCELED', app: app_model)
+
+        expect(app_model.failing?).to be(false)
+      end
+
+      it 'returns true when the app has a deployment that is being failing' do
+        VCAP::CloudController::DeploymentModel.make(state: 'FAILING', app: app_model)
+        VCAP::CloudController::DeploymentModel.make(state: 'CANCELING', app: app_model)
+        VCAP::CloudController::DeploymentModel.make(state: 'DEPLOYING', app: app_model)
+        VCAP::CloudController::DeploymentModel.make(state: 'CANCELED', app: app_model)
+
+        expect(app_model.failing?).to be(true)
+      end
+    end
+
     describe 'encryption' do
       context 'when not saving any encrypted fields, with db keys' do
         it 'still updates the encryption-key value' do

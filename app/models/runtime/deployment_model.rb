@@ -52,6 +52,10 @@ module VCAP::CloudController
       state == DEPLOYING_STATE
     end
 
+    def failing?
+      state == FAILING_STATE
+    end
+
     def should_fail?
       timeout = deploying_web_process.health_check_timeout || Config.config.get(:default_health_check_timeout)
       state == DEPLOYING_STATE && last_healthy_at < (Time.now - 2 * timeout.seconds)

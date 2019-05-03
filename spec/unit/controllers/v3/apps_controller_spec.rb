@@ -2208,16 +2208,32 @@ RSpec.describe AppsV3Controller, type: :controller do
     end
 
     context 'when the app has a Deployment in flight' do
-      before do
-        VCAP::CloudController::DeploymentModel.make(app: app_model, state: 'DEPLOYING')
+      context 'when the deployment is deploying' do
+        before do
+          VCAP::CloudController::DeploymentModel.make(app: app_model, state: 'DEPLOYING')
+        end
+
+        it 'returns an UnprocessableEntity error' do
+          put :assign_current_droplet, params: { guid: app_model.guid }.merge(request_body), as: :json
+
+          expect(response.status).to eq 422
+          expect(response.body).to include 'UnprocessableEntity'
+          expect(response.body).to include 'Unable to assign current droplet while the app has a deployment in progress. Wait for the deployment to complete or cancel it.'
+        end
       end
 
-      it 'returns an UnprocessableEntity error' do
-        put :assign_current_droplet, params: { guid: app_model.guid }.merge(request_body), as: :json
+      context 'when the deployment is failing' do
+        before do
+          VCAP::CloudController::DeploymentModel.make(app: app_model, state: 'FAILING')
+        end
 
-        expect(response.status).to eq 422
-        expect(response.body).to include 'UnprocessableEntity'
-        expect(response.body).to include 'Unable to assign current droplet while the app has a deployment in progress. Wait for the deployment to complete or cancel it.'
+        it 'returns an UnprocessableEntity error' do
+          put :assign_current_droplet, params: { guid: app_model.guid }.merge(request_body), as: :json
+
+          expect(response.status).to eq 422
+          expect(response.body).to include 'UnprocessableEntity'
+          expect(response.body).to include 'Unable to assign current droplet while the app has a deployment in progress. Wait for the deployment to complete or cancel it.'
+        end
       end
     end
 

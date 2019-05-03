@@ -77,14 +77,20 @@ module VCAP::CloudController
         expect(deployment.deploying?).to be(false)
       end
     end
-    #
-    # describe '#failing?' do
-    #   it 'returns true if the deployment is failing' do
-    #     deployment.state = 'FAILING'
 
-    #     expect(deployment.failing?).to be(true)
-    #   end
-    # end
+    describe '#failing?' do
+      it 'returns true if the deployment is failing' do
+        deployment.state = 'FAILING'
+
+        expect(deployment.failing?).to be(true)
+      end
+
+      it 'returns true if the deployment is failing' do
+        deployment.state = 'DEPLOYING'
+
+        expect(deployment.failing?).to be(false)
+      end
+    end
 
     describe '#should_fail?' do
       let(:deployment) { DeploymentModel.make(app: app,
