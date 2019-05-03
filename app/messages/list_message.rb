@@ -84,10 +84,6 @@ module VCAP::CloudController
       message
     end
 
-    def self.label_selector_requested?
-      @label_selector_requested ||= proc { |a| a.requested?(:label_selector) }
-    end
-
     attr_accessor :requirements
 
     def self.parse_label_selector(label_selector)

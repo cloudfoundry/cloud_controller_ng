@@ -1,8 +1,7 @@
-require 'messages/list_message'
-require 'messages/validators/label_selector_requirement_validator'
+require 'messages/metadata_list_message'
 
 module VCAP::CloudController
-  class DropletsListMessage < ListMessage
+  class DropletsListMessage < MetadataListMessage
     register_allowed_keys [
       :app_guid,
       :app_guids,
@@ -12,11 +11,9 @@ module VCAP::CloudController
       :package_guid,
       :space_guids,
       :states,
-      :label_selector,
     ]
 
     validates_with NoAdditionalParamsValidator
-    validates_with LabelSelectorRequirementValidator, if: label_selector_requested?
 
     validates :app_guids, array: true, allow_nil: true
     validates :states, array: true, allow_nil: true

@@ -1,12 +1,10 @@
-require 'messages/list_message'
-require 'messages/validators/label_selector_requirement_validator'
+require 'messages/metadata_list_message'
 
 module VCAP::CloudController
-  class BuildpacksListMessage < ListMessage
+  class BuildpacksListMessage < MetadataListMessage
     register_allowed_keys [
       :stacks,
       :names,
-      :label_selector,
       :page,
       :per_page,
     ]
@@ -15,7 +13,6 @@ module VCAP::CloudController
     validates :stacks, array: true, allow_nil: true
 
     validates_with NoAdditionalParamsValidator
-    validates_with LabelSelectorRequirementValidator, if: label_selector_requested?
 
     def self.from_params(params)
       super(params, %w(names stacks))

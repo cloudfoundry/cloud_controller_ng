@@ -1,8 +1,7 @@
-require 'messages/list_message'
-require 'messages/validators/label_selector_requirement_validator'
+require 'messages/metadata_list_message'
 
 module VCAP::CloudController
-  class TasksListMessage < ListMessage
+  class TasksListMessage < MetadataListMessage
     register_allowed_keys [
       :names,
       :states,
@@ -12,7 +11,6 @@ module VCAP::CloudController
       :space_guids,
       :app_guid,
       :sequence_ids,
-      :label_selector
     ]
 
     validates_with NoAdditionalParamsValidator # from BaseMessage
@@ -26,7 +24,6 @@ module VCAP::CloudController
     validate :app_nested_request, if: -> { app_guid.present? }
     validate :non_app_nested_request, if: -> { !app_guid.present? }
     validates :sequence_ids, array: true, allow_nil: true
-    validates_with LabelSelectorRequirementValidator, if: label_selector_requested?
 
     def to_param_hash
       super(exclude: [:app_guid])

@@ -1,17 +1,14 @@
-require 'messages/list_message'
-require 'messages/validators/label_selector_requirement_validator'
+require 'messages/metadata_list_message'
 
 module VCAP::CloudController
-  class OrgsListMessage < ListMessage
+  class OrgsListMessage < MetadataListMessage
     register_allowed_keys [
       :names,
       :guids,
       :isolation_segment_guid,
-      :label_selector,
     ]
 
     validates_with NoAdditionalParamsValidator
-    validates_with LabelSelectorRequirementValidator, if: label_selector_requested?
 
     validates :names, array: true, allow_nil: true
     validates :guids, array: true, allow_nil: true
