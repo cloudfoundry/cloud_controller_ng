@@ -40,6 +40,15 @@ module VCAP::CloudController
           dataset = dataset.where(owning_organization: Organization.where(guid: message.organization_guids))
         end
 
+        if message.requested?(:label_selector)
+          dataset = LabelSelectorQueryGenerator.add_selector_queries(
+            label_klass: DomainLabelModel,
+            resource_dataset: dataset,
+            requirements: message.requirements,
+            resource_klass: Domain,
+          )
+        end
+
         dataset
       end
     end

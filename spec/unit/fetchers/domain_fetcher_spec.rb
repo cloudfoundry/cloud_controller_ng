@@ -145,7 +145,7 @@ module VCAP::CloudController
           let!(:public_domain2) { SharedDomain.make(guid: 'named-domain-2', name: 'named-domain-2.com') }
           let!(:domain_name_filter) { public_domain2.name }
 
-          it 'returns only public_domain1' do
+          it 'returns only public_domain2' do
             results = DomainFetcher.fetch(message, [org1.guid]).all
             expect(results.length).to eq(1)
             expect(results[0].guid).to eq('named-domain-2')
@@ -187,6 +187,46 @@ module VCAP::CloudController
           it 'returns no domains' do
             results = DomainFetcher.fetch(message, []).all
             expect(results.length).to eq(0)
+          end
+        end
+      end
+
+      context 'when fetching domains by label selector' do
+        let!(:org1) { Organization.make(guid: 'org1') }
+        let!(:public_domain1) { SharedDomain.make(guid: 'named-domain-1', name: 'named-domain-1.com') }
+        let!(:public_domain2) { SharedDomain.make(guid: 'named-domain-2', name: 'named-domain-2.com') }
+        let!(:domain_label) do
+          VCAP::CloudController::DomainLabelModel.make(resource_guid: public_domain1.guid, key_name: 'dog', value: 'scooby-doo')
+        end
+
+        let!(:sad_domain_label) do
+          VCAP::CloudController::DomainLabelModel.make(resource_guid: public_domain2.guid, key_name: 'dog', value: 'poodle')
+        end
+
+        let(:results) { DomainFetcher.fetch(message, [org1.guid]).all }
+
+        context 'only the label_selector is present' do
+          let(:message) {
+            DomainsListMessage.from_params({ 'label_selector' => 'dog in (chihuahua,scooby-doo)' })
+          }
+          it 'returns only public_domain1' do
+            expect(results.length).to eq(1)
+            expect(results[0]).to eq(public_domain1)
+          end
+        end
+
+        context 'and other filters are present' do
+          let(:message) {
+            DomainsListMessage.from_params({ 'names' => 'dom.com', 'label_selector' => 'dog in (chihuahua,scooby-doo)' })
+          }
+
+          let!(:happiest_domain) { SharedDomain.make(name: 'dom.com') }
+          let!(:happiest_domain_label) do
+            VCAP::CloudController::DomainLabelModel.make(resource_guid: happiest_domain.guid, key_name: 'dog', value: 'scooby-doo')
+          end
+
+          it 'returns the desired app' do
+            expect(results).to contain_exactly(happiest_domain)
           end
         end
       end

@@ -327,6 +327,169 @@ RSpec.describe 'Domains Request' do
         end
       end
     end
+
+    describe 'labels' do
+      let!(:domain1) { VCAP::CloudController::PrivateDomain.make(name: 'dom1.com', owning_organization: org) }
+      let!(:domain1_label) { VCAP::CloudController::DomainLabelModel.make(resource_guid: domain1.guid, key_name: 'animal', value: 'dog') }
+
+      let!(:domain2) { VCAP::CloudController::PrivateDomain.make(name: 'dom2.com', owning_organization: org) }
+      let!(:domain2_label) { VCAP::CloudController::DomainLabelModel.make(resource_guid: domain2.guid, key_name: 'animal', value: 'cow') }
+      let!(:domain2__exclusive_label) { VCAP::CloudController::DomainLabelModel.make(resource_guid: domain2.guid, key_name: 'santa', value: 'claus') }
+
+      let(:admin_header) { headers_for(user, scopes: %w(cloud_controller.admin)) }
+
+      it 'returns a 200 and the filtered apps for "in" label selector' do
+        get '/v3/domains?label_selector=animal in (dog)', nil, admin_header
+
+        parsed_response = MultiJson.load(last_response.body)
+
+        expected_pagination = {
+          'total_results' => 1,
+          'total_pages' => 1,
+          'first' => { 'href' => "#{link_prefix}/v3/domains?label_selector=animal+in+%28dog%29&page=1&per_page=50" },
+          'last' => { 'href' => "#{link_prefix}/v3/domains?label_selector=animal+in+%28dog%29&page=1&per_page=50" },
+          'next' => nil,
+          'previous' => nil
+        }
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(domain1.guid)
+        expect(parsed_response['pagination']).to eq(expected_pagination)
+      end
+
+      it 'returns a 200 and the filtered domains for "notin" label selector' do
+        get '/v3/domains?label_selector=animal notin (dog)', nil, admin_header
+
+        parsed_response = MultiJson.load(last_response.body)
+
+        expected_pagination = {
+          'total_results' => 1,
+          'total_pages' => 1,
+          'first' => { 'href' => "#{link_prefix}/v3/domains?label_selector=animal+notin+%28dog%29&page=1&per_page=50" },
+          'last' => { 'href' => "#{link_prefix}/v3/domains?label_selector=animal+notin+%28dog%29&page=1&per_page=50" },
+          'next' => nil,
+          'previous' => nil
+        }
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(domain2.guid)
+        expect(parsed_response['pagination']).to eq(expected_pagination)
+      end
+
+      it 'returns a 200 and the filtered domains for "=" label selector' do
+        get '/v3/domains?label_selector=animal=dog', nil, admin_header
+
+        parsed_response = MultiJson.load(last_response.body)
+
+        expected_pagination = {
+          'total_results' => 1,
+          'total_pages' => 1,
+          'first' => { 'href' => "#{link_prefix}/v3/domains?label_selector=animal%3Ddog&page=1&per_page=50" },
+          'last' => { 'href' => "#{link_prefix}/v3/domains?label_selector=animal%3Ddog&page=1&per_page=50" },
+          'next' => nil,
+          'previous' => nil
+        }
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(domain1.guid)
+        expect(parsed_response['pagination']).to eq(expected_pagination)
+      end
+
+      it 'returns a 200 and the filtered domains for "==" label selector' do
+        get '/v3/domains?label_selector=animal==dog', nil, admin_header
+
+        parsed_response = MultiJson.load(last_response.body)
+
+        expected_pagination = {
+          'total_results' => 1,
+          'total_pages' => 1,
+          'first' => { 'href' => "#{link_prefix}/v3/domains?label_selector=animal%3D%3Ddog&page=1&per_page=50" },
+          'last' => { 'href' => "#{link_prefix}/v3/domains?label_selector=animal%3D%3Ddog&page=1&per_page=50" },
+          'next' => nil,
+          'previous' => nil
+        }
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(domain1.guid)
+        expect(parsed_response['pagination']).to eq(expected_pagination)
+      end
+
+      it 'returns a 200 and the filtered domains for "!=" label selector' do
+        get '/v3/domains?label_selector=animal!=dog', nil, admin_header
+
+        parsed_response = MultiJson.load(last_response.body)
+
+        expected_pagination = {
+          'total_results' => 1,
+          'total_pages' => 1,
+          'first' => { 'href' => "#{link_prefix}/v3/domains?label_selector=animal%21%3Ddog&page=1&per_page=50" },
+          'last' => { 'href' => "#{link_prefix}/v3/domains?label_selector=animal%21%3Ddog&page=1&per_page=50" },
+          'next' => nil,
+          'previous' => nil
+        }
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(domain2.guid)
+        expect(parsed_response['pagination']).to eq(expected_pagination)
+      end
+
+      it 'returns a 200 and the filtered domains for "=" label selector' do
+        get '/v3/domains?label_selector=animal=cow,santa=claus', nil, admin_header
+
+        parsed_response = MultiJson.load(last_response.body)
+
+        expected_pagination = {
+          'total_results' => 1,
+          'total_pages' => 1,
+          'first' => { 'href' => "#{link_prefix}/v3/domains?label_selector=animal%3Dcow%2Csanta%3Dclaus&page=1&per_page=50" },
+          'last' => { 'href' => "#{link_prefix}/v3/domains?label_selector=animal%3Dcow%2Csanta%3Dclaus&page=1&per_page=50" },
+          'next' => nil,
+          'previous' => nil
+        }
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(domain2.guid)
+        expect(parsed_response['pagination']).to eq(expected_pagination)
+      end
+
+      it 'returns a 200 and the filtered domains for existence label selector' do
+        get '/v3/domains?label_selector=santa', nil, admin_header
+
+        parsed_response = MultiJson.load(last_response.body)
+
+        expected_pagination = {
+          'total_results' => 1,
+          'total_pages' => 1,
+          'first' => { 'href' => "#{link_prefix}/v3/domains?label_selector=santa&page=1&per_page=50" },
+          'last' => { 'href' => "#{link_prefix}/v3/domains?label_selector=santa&page=1&per_page=50" },
+          'next' => nil,
+          'previous' => nil
+        }
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(domain2.guid)
+        expect(parsed_response['pagination']).to eq(expected_pagination)
+      end
+
+      it 'returns a 200 and the filtered domains for non-existence label selector' do
+        get '/v3/domains?label_selector=!santa', nil, admin_header
+
+        parsed_response = MultiJson.load(last_response.body)
+
+        expected_pagination = {
+          'total_results' => 1,
+          'total_pages' => 1,
+          'first' => { 'href' => "#{link_prefix}/v3/domains?label_selector=%21santa&page=1&per_page=50" },
+          'last' => { 'href' => "#{link_prefix}/v3/domains?label_selector=%21santa&page=1&per_page=50" },
+          'next' => nil,
+          'previous' => nil
+        }
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(domain1.guid)
+        expect(parsed_response['pagination']).to eq(expected_pagination)
+      end
+    end
   end
 
   describe 'POST /v3/domains' do

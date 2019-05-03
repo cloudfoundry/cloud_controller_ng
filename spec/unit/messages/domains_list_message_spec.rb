@@ -5,13 +5,14 @@ module VCAP::CloudController
   RSpec.describe DomainsListMessage do
     describe '.from_params' do
       let(:params) do
-        {}
+        { 'label_selector' => 'animal in (cat,dog)' }
       end
 
       it 'returns the correct DomainsListMessage' do
         message = DomainsListMessage.from_params(params)
 
         expect(message).to be_a(DomainsListMessage)
+        expect(message.label_selector).to eq('animal in (cat,dog)')
       end
     end
 
@@ -36,6 +37,15 @@ module VCAP::CloudController
 
         expect(message).not_to be_valid
         expect(message.errors[:base]).to include("Unknown query parameter(s): 'foobar'")
+      end
+
+      describe 'validations' do
+        it 'validates requirements' do
+          message = DomainsListMessage.from_params('label_selector' => '')
+
+          expect_any_instance_of(Validators::LabelSelectorRequirementValidator).to receive(:validate).with(message).and_call_original
+          message.valid?
+        end
       end
     end
   end
