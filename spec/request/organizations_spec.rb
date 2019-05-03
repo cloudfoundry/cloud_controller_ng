@@ -263,159 +263,6 @@ module VCAP::CloudController
     describe 'GET /v3/organizations/:guid/domains' do
       let(:space) { Space.make }
       let(:org) { space.organization }
-      let!(:shared_domain) { VCAP::CloudController::SharedDomain.make(guid: 'shared-guid') }
-      let!(:owned_private_domain) { VCAP::CloudController::PrivateDomain.make(owning_organization_guid: org.guid, guid: 'owned-private') }
-      let!(:shared_private_domain) { VCAP::CloudController::PrivateDomain.make(owning_organization_guid: organization1.guid, guid: 'shared-private') }
-
-      let(:shared_domain_json) do
-        {
-          guid: shared_domain.guid,
-          created_at: iso8601,
-          updated_at: iso8601,
-          name: shared_domain.name,
-          internal: false,
-          metadata: {
-            labels: {},
-            annotations: {}
-          },
-          relationships: {
-            organization: {
-              data: nil
-            },
-            shared_organizations: {
-              data: []
-            }
-          },
-          links: {
-            self: { href: "#{link_prefix}/v3/domains/#{shared_domain.guid}" }
-          }
-        }
-      end
-      let(:owned_private_domain_json) do
-        {
-          guid: owned_private_domain.guid,
-          created_at: iso8601,
-          updated_at: iso8601,
-          name: owned_private_domain.name,
-          internal: false,
-          metadata: {
-            labels: {},
-            annotations: {}
-          },
-          relationships: {
-            organization: {
-              data: { guid: org.guid }
-            },
-            shared_organizations: {
-              data: []
-            }
-          },
-          links: {
-            self: { href: "#{link_prefix}/v3/domains/#{owned_private_domain.guid}" },
-            organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}) },
-            shared_organizations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{owned_private_domain.guid}\/relationships\/shared_organizations) }
-          }
-        }
-      end
-      let(:shared_private_domain_json) do
-        {
-          guid: shared_private_domain.guid,
-          created_at: iso8601,
-          updated_at: iso8601,
-          name: shared_private_domain.name,
-          internal: false,
-          metadata: {
-            labels: {},
-            annotations: {}
-          },
-          relationships: {
-            organization: {
-              data: { guid: organization1.guid }
-            },
-            shared_organizations: {
-              data: [{ guid: org.guid }]
-            }
-          },
-          links: {
-            self: { href: "#{link_prefix}/v3/domains/#{shared_private_domain.guid}" },
-            organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{organization1.guid}) },
-            shared_organizations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{shared_private_domain.guid}\/relationships\/shared_organizations) }
-          }
-        }
-      end
-
-      before do
-        org.add_private_domain(shared_private_domain)
-      end
-
-      context 'without filters' do
-        let(:api_call) { lambda { |user_headers| get "/v3/organizations/#{org.guid}/domains", nil, user_headers } }
-        let(:expected_codes_and_responses) do
-          h = Hash.new(
-            code: 200,
-            response_objects: [
-              shared_domain_json,
-              owned_private_domain_json,
-              shared_private_domain_json,
-            ]
-          )
-          h['org_billing_manager'] = {
-            code: 200,
-            response_objects: [
-              shared_domain_json
-            ]
-          }
-          h['no_role'] = {
-            code: 404,
-            response_objects: []
-          }
-          h.freeze
-        end
-
-        it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
-      end
-
-      describe 'when filtering by name' do
-        let(:api_call) { lambda { |user_headers| get "/v3/organizations/#{org.guid}/domains?names=#{shared_domain.name}", nil, user_headers } }
-
-        let(:expected_codes_and_responses) do
-          h = Hash.new(
-            code: 200,
-            response_objects: [
-              shared_domain_json,
-            ]
-          )
-          h['no_role'] = {
-            code: 404,
-          }
-          h.freeze
-        end
-
-        it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
-      end
-
-      describe 'when filtering by organization_guid' do
-        let(:api_call) { lambda { |user_headers| get "/v3/organizations/#{org.guid}/domains?organization_guids=#{org.guid}", nil, user_headers } }
-
-        let(:expected_codes_and_responses) do
-          h = Hash.new(
-            code: 200,
-            response_objects: [
-              owned_private_domain_json,
-            ]
-          )
-          h['org_billing_manager'] = {
-            code: 200,
-            response_objects: [],
-          }
-          h['no_role'] = {
-            code: 404,
-          }
-          h.freeze
-        end
-
-        it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
-      end
 
       describe 'when the user is not logged in' do
         it 'returns 401 for Unauthenticated requests' do
@@ -424,10 +271,332 @@ module VCAP::CloudController
         end
       end
 
-      describe 'when the org doesnt exist' do
-        it 'returns 404 for Unauthenticated requests' do
-          get '/v3/organizations/esdgth/domains', nil, user_header
-          expect(last_response.status).to eq(404)
+      describe 'when the user is logged in' do
+        let!(:shared_domain) { VCAP::CloudController::SharedDomain.make(guid: 'shared-guid') }
+        let!(:owned_private_domain) { VCAP::CloudController::PrivateDomain.make(owning_organization_guid: org.guid, guid: 'owned-private') }
+        let!(:shared_private_domain) { VCAP::CloudController::PrivateDomain.make(owning_organization_guid: organization1.guid, guid: 'shared-private') }
+
+        let(:shared_domain_json) do
+          {
+            guid: shared_domain.guid,
+            created_at: iso8601,
+            updated_at: iso8601,
+            name: shared_domain.name,
+            internal: false,
+            metadata: {
+              labels: {},
+              annotations: {}
+            },
+            relationships: {
+              organization: {
+                data: nil
+              },
+              shared_organizations: {
+                data: []
+              }
+            },
+            links: {
+              self: { href: "#{link_prefix}/v3/domains/#{shared_domain.guid}" }
+            }
+          }
+        end
+        let(:owned_private_domain_json) do
+          {
+            guid: owned_private_domain.guid,
+            created_at: iso8601,
+            updated_at: iso8601,
+            name: owned_private_domain.name,
+            internal: false,
+            metadata: {
+              labels: {},
+              annotations: {}
+            },
+            relationships: {
+              organization: {
+                data: { guid: org.guid }
+              },
+              shared_organizations: {
+                data: []
+              }
+            },
+            links: {
+              self: { href: "#{link_prefix}/v3/domains/#{owned_private_domain.guid}" },
+              organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}) },
+              shared_organizations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{owned_private_domain.guid}\/relationships\/shared_organizations) }
+            }
+          }
+        end
+        let(:shared_private_domain_json) do
+          {
+            guid: shared_private_domain.guid,
+            created_at: iso8601,
+            updated_at: iso8601,
+            name: shared_private_domain.name,
+            internal: false,
+            metadata: {
+              labels: {},
+              annotations: {}
+            },
+            relationships: {
+              organization: {
+                data: { guid: organization1.guid }
+              },
+              shared_organizations: {
+                data: [{ guid: org.guid }]
+              }
+            },
+            links: {
+              self: { href: "#{link_prefix}/v3/domains/#{shared_private_domain.guid}" },
+              organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{organization1.guid}) },
+              shared_organizations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{shared_private_domain.guid}\/relationships\/shared_organizations) }
+            }
+          }
+        end
+
+        before do
+          org.add_private_domain(shared_private_domain)
+        end
+
+        describe 'when the org doesnt exist' do
+          it 'returns 404 for Unauthenticated requests' do
+            get '/v3/organizations/esdgth/domains', nil, user_header
+            expect(last_response.status).to eq(404)
+          end
+        end
+
+        context 'without filters' do
+          let(:api_call) { lambda { |user_headers| get "/v3/organizations/#{org.guid}/domains", nil, user_headers } }
+          let(:expected_codes_and_responses) do
+            h = Hash.new(
+              code: 200,
+              response_objects: [
+                shared_domain_json,
+                owned_private_domain_json,
+                shared_private_domain_json,
+              ]
+            )
+            h['org_billing_manager'] = {
+              code: 200,
+              response_objects: [
+                shared_domain_json
+              ]
+            }
+            h['no_role'] = {
+              code: 404,
+              response_objects: []
+            }
+            h.freeze
+          end
+
+          it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+        end
+
+        describe 'when filtering by name' do
+          let(:api_call) { lambda { |user_headers| get "/v3/organizations/#{org.guid}/domains?names=#{shared_domain.name}", nil, user_headers } }
+
+          let(:expected_codes_and_responses) do
+            h = Hash.new(
+              code: 200,
+              response_objects: [
+                shared_domain_json,
+              ]
+            )
+            h['no_role'] = {
+              code: 404,
+            }
+            h.freeze
+          end
+
+          it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+        end
+
+        describe 'when filtering by organization_guid' do
+          let(:api_call) { lambda { |user_headers| get "/v3/organizations/#{org.guid}/domains?organization_guids=#{org.guid}", nil, user_headers } }
+
+          let(:expected_codes_and_responses) do
+            h = Hash.new(
+              code: 200,
+              response_objects: [
+                owned_private_domain_json,
+              ]
+            )
+            h['org_billing_manager'] = {
+              code: 200,
+              response_objects: [],
+            }
+            h['no_role'] = {
+              code: 404,
+            }
+            h.freeze
+          end
+
+          it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+        end
+      end
+
+      describe 'when filtering by labels' do
+        let!(:domain1) { VCAP::CloudController::PrivateDomain.make(name: 'dom1.com', owning_organization: org) }
+        let!(:domain1_label) { VCAP::CloudController::DomainLabelModel.make(resource_guid: domain1.guid, key_name: 'animal', value: 'dog') }
+
+        let!(:domain2) { VCAP::CloudController::PrivateDomain.make(name: 'dom2.com', owning_organization: org) }
+        let!(:domain2_label) { VCAP::CloudController::DomainLabelModel.make(resource_guid: domain2.guid, key_name: 'animal', value: 'cow') }
+        let!(:domain2__exclusive_label) { VCAP::CloudController::DomainLabelModel.make(resource_guid: domain2.guid, key_name: 'santa', value: 'claus') }
+
+        let(:base_link) { "/v3/organizations/#{org.guid}/domains" }
+        let(:base_pagination_link) { "#{link_prefix}#{base_link}" }
+
+        let(:admin_header) { headers_for(user, scopes: %w(cloud_controller.admin)) }
+
+        it 'returns a 200 and the filtered apps for "in" label selector' do
+          get "#{base_link}?label_selector=animal in (dog)", nil, admin_header
+
+          parsed_response = MultiJson.load(last_response.body)
+
+          expected_pagination = {
+            'total_results' => 1,
+            'total_pages' => 1,
+            'first' => { 'href' => "#{base_pagination_link}?label_selector=animal+in+%28dog%29&page=1&per_page=50" },
+            'last' => { 'href' => "#{base_pagination_link}?label_selector=animal+in+%28dog%29&page=1&per_page=50" },
+            'next' => nil,
+            'previous' => nil
+          }
+
+          expect(last_response.status).to eq(200)
+          expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(domain1.guid)
+          expect(parsed_response['pagination']).to eq(expected_pagination)
+        end
+
+        it 'returns a 200 and the filtered domains for "notin" label selector' do
+          get "#{base_link}?label_selector=animal notin (dog)", nil, admin_header
+
+          parsed_response = MultiJson.load(last_response.body)
+
+          expected_pagination = {
+            'total_results' => 1,
+            'total_pages' => 1,
+            'first' => { 'href' => "#{base_pagination_link}?label_selector=animal+notin+%28dog%29&page=1&per_page=50" },
+            'last' => { 'href' => "#{base_pagination_link}?label_selector=animal+notin+%28dog%29&page=1&per_page=50" },
+            'next' => nil,
+            'previous' => nil
+          }
+
+          expect(last_response.status).to eq(200)
+          expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(domain2.guid)
+          expect(parsed_response['pagination']).to eq(expected_pagination)
+        end
+
+        it 'returns a 200 and the filtered domains for "=" label selector' do
+          get "#{base_link}?label_selector=animal=dog", nil, admin_header
+
+          parsed_response = MultiJson.load(last_response.body)
+
+          expected_pagination = {
+            'total_results' => 1,
+            'total_pages' => 1,
+            'first' => { 'href' => "#{base_pagination_link}?label_selector=animal%3Ddog&page=1&per_page=50" },
+            'last' => { 'href' => "#{base_pagination_link}?label_selector=animal%3Ddog&page=1&per_page=50" },
+            'next' => nil,
+            'previous' => nil
+          }
+
+          expect(last_response.status).to eq(200)
+          expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(domain1.guid)
+          expect(parsed_response['pagination']).to eq(expected_pagination)
+        end
+
+        it 'returns a 200 and the filtered domains for "==" label selector' do
+          get "#{base_link}?label_selector=animal==dog", nil, admin_header
+
+          parsed_response = MultiJson.load(last_response.body)
+
+          expected_pagination = {
+            'total_results' => 1,
+            'total_pages' => 1,
+            'first' => { 'href' => "#{base_pagination_link}?label_selector=animal%3D%3Ddog&page=1&per_page=50" },
+            'last' => { 'href' => "#{base_pagination_link}?label_selector=animal%3D%3Ddog&page=1&per_page=50" },
+            'next' => nil,
+            'previous' => nil
+          }
+
+          expect(last_response.status).to eq(200)
+          expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(domain1.guid)
+          expect(parsed_response['pagination']).to eq(expected_pagination)
+        end
+
+        it 'returns a 200 and the filtered domains for "!=" label selector' do
+          get "#{base_link}?label_selector=animal!=dog", nil, admin_header
+
+          parsed_response = MultiJson.load(last_response.body)
+
+          expected_pagination = {
+            'total_results' => 1,
+            'total_pages' => 1,
+            'first' => { 'href' => "#{base_pagination_link}?label_selector=animal%21%3Ddog&page=1&per_page=50" },
+            'last' => { 'href' => "#{base_pagination_link}?label_selector=animal%21%3Ddog&page=1&per_page=50" },
+            'next' => nil,
+            'previous' => nil
+          }
+
+          expect(last_response.status).to eq(200)
+          expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(domain2.guid)
+          expect(parsed_response['pagination']).to eq(expected_pagination)
+        end
+
+        it 'returns a 200 and the filtered domains for "=" label selector' do
+          get "#{base_link}?label_selector=animal=cow,santa=claus", nil, admin_header
+
+          parsed_response = MultiJson.load(last_response.body)
+
+          expected_pagination = {
+            'total_results' => 1,
+            'total_pages' => 1,
+            'first' => { 'href' => "#{base_pagination_link}?label_selector=animal%3Dcow%2Csanta%3Dclaus&page=1&per_page=50" },
+            'last' => { 'href' => "#{base_pagination_link}?label_selector=animal%3Dcow%2Csanta%3Dclaus&page=1&per_page=50" },
+            'next' => nil,
+            'previous' => nil
+          }
+
+          expect(last_response.status).to eq(200)
+          expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(domain2.guid)
+          expect(parsed_response['pagination']).to eq(expected_pagination)
+        end
+
+        it 'returns a 200 and the filtered domains for existence label selector' do
+          get "#{base_link}?label_selector=santa", nil, admin_header
+
+          parsed_response = MultiJson.load(last_response.body)
+
+          expected_pagination = {
+            'total_results' => 1,
+            'total_pages' => 1,
+            'first' => { 'href' => "#{base_pagination_link}?label_selector=santa&page=1&per_page=50" },
+            'last' => { 'href' => "#{base_pagination_link}?label_selector=santa&page=1&per_page=50" },
+            'next' => nil,
+            'previous' => nil
+          }
+
+          expect(last_response.status).to eq(200)
+          expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(domain2.guid)
+          expect(parsed_response['pagination']).to eq(expected_pagination)
+        end
+
+        it 'returns a 200 and the filtered domains for non-existence label selector' do
+          get "#{base_link}?label_selector=!santa", nil, admin_header
+
+          parsed_response = MultiJson.load(last_response.body)
+
+          expected_pagination = {
+            'total_results' => 1,
+            'total_pages' => 1,
+            'first' => { 'href' => "#{base_pagination_link}?label_selector=%21santa&page=1&per_page=50" },
+            'last' => { 'href' => "#{base_pagination_link}?label_selector=%21santa&page=1&per_page=50" },
+            'next' => nil,
+            'previous' => nil
+          }
+
+          expect(last_response.status).to eq(200)
+          expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(domain1.guid)
+          expect(parsed_response['pagination']).to eq(expected_pagination)
         end
       end
     end

@@ -103,14 +103,14 @@ class OrganizationsV3Controller < ApplicationController
     org = fetch_org(hashed_params[:guid])
     org_not_found! unless org && permission_queryer.can_read_from_org?(org.guid)
 
-    message = DomainsListMessage.from_params(hashed_params.except(:guid))
+    message = DomainsListMessage.from_params(query_params.except(:guid))
     domains = DomainFetcher.fetch(message, domain_readable_org_guids([org.guid]))
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::DomainPresenter,
       paginated_result: SequelPaginator.new.get_page(domains, message.try(:pagination_options)),
       path: "/v3/organizations/#{org.guid}/domains",
-      message: nil,
+      message: message,
       extra_presenter_args: { visible_org_guids: permission_queryer.readable_org_guids }
     )
   end
