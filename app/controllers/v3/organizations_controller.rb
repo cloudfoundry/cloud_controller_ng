@@ -118,13 +118,10 @@ class OrganizationsV3Controller < ApplicationController
   def show_default_domain
     org = fetch_org(hashed_params[:guid])
     org_not_found! unless org && permission_queryer.can_read_from_org?(org.guid)
-    domain = SharedDomain.first
-
-    domain_not_found! unless domain || permission_queryer.readable_org_guids_for_domains.include?(org.guid)
-
-    domain ||= org.private_domains.first
+    domain = org.default_domain
 
     domain_not_found! unless domain
+    domain_not_found! if domain.private? && !permission_queryer.readable_org_guids_for_domains.include?(org.guid)
 
     render status: :ok, json: Presenters::V3::DomainPresenter.new(domain, visible_org_guids: permission_queryer.readable_org_guids)
   end

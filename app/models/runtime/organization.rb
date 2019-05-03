@@ -239,6 +239,10 @@ module VCAP::CloudController
       user.present? && users_dataset.where(user_id: user.id).present?
     end
 
+    def default_domain
+      SharedDomain.first || private_domains.first
+    end
+
     private
 
     def validate_default_isolation_segment

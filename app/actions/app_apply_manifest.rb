@@ -10,6 +10,7 @@ require 'cloud_controller/random_route_generator'
 module VCAP::CloudController
   class AppApplyManifest
     class InvalidManifest < StandardError; end
+    class NoDefaultDomain < StandardError; end
 
     SERVICE_BINDING_TYPE = 'app'.freeze
 
@@ -94,8 +95,10 @@ module VCAP::CloudController
 
       if update_message.random_route && existing_routes.empty?
         random_host = "#{app.name}-#{RandomRouteGenerator.new.route}"
-        domain = SharedDomain.first.name
-        route = "#{random_host}.#{domain}"
+        domain_name = app.organization.default_domain&.name
+        raise NoDefaultDomain.new('No domains available for random route') unless domain_name
+
+        route = "#{random_host}.#{domain_name}"
 
         random_route_message = ManifestRoutesUpdateMessage.new(routes: [{ route: route }])
         ManifestRouteUpdate.update(app.guid, random_route_message, @user_audit_info)

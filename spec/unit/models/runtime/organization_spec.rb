@@ -935,5 +935,42 @@ module VCAP::CloudController
         expect(org.has_user?(nil)).to be false
       end
     end
+
+    describe '#default_domain' do
+      let(:org) { Organization.make }
+
+      before do
+        Domain.dataset.destroy
+      end
+
+      context 'when there is a private domain' do
+        let(:private_domain1) { PrivateDomain.make(owning_organization: org) }
+        let(:private_domain2) { PrivateDomain.make }
+
+        before do
+          private_domain1
+          org.add_private_domain(private_domain2)
+        end
+
+        it 'returns the first private domain' do
+          expect(org.default_domain).to eq(private_domain1)
+        end
+
+        context 'when there is a shared domain' do
+          let!(:shared_domain1) { SharedDomain.make }
+          let!(:shared_domain2) { SharedDomain.make }
+
+          it 'returns the first shared domain' do
+            expect(org.default_domain).to eq(shared_domain1)
+          end
+        end
+      end
+
+      context 'when there are no domains' do
+        it 'returns nil' do
+          expect(org.default_domain).to be_nil
+        end
+      end
+    end
   end
 end

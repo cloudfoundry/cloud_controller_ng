@@ -15,6 +15,7 @@ module VCAP::CloudController
       rescue AppPatchEnvironmentVariables::InvalidApp,
              AppUpdate::InvalidApp,
              AppApplyManifest::InvalidManifest,
+             AppApplyManifest::NoDefaultDomain,
              ProcessUpdate::InvalidProcess,
              SidecarCreate::InvalidSidecar,
              SidecarUpdate::InvalidSidecar,

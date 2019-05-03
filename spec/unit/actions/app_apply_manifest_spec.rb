@@ -500,6 +500,36 @@ module VCAP::CloudController
                 expect(audit_info).to eq(user_audit_info)
               end
             end
+
+            context 'when there is no unscoped domain' do
+              let(:domain) { PrivateDomain.make(owning_organization: app.organization) }
+
+              before do
+                Domain.dataset.destroy
+                domain # ensure domain is created after the dataset is truncated
+              end
+
+              it 'provides a random route within a domain scoped to the apps organization' do
+                app_apply_manifest.apply(app.guid, message)
+                expect(ManifestRouteUpdate).to have_received(:update) do |guid, msg, audit_info|
+                  expect(guid).to eq(app.guid)
+                  expect(msg.routes.first[:route]).to eq("#{app.name}-spiffy/donut.#{domain.name}")
+                  expect(audit_info).to eq(user_audit_info)
+                end
+              end
+            end
+
+            context 'when there is no domains' do
+              before do
+                Domain.dataset.destroy
+              end
+
+              it 'fails with a NoDefaultDomain error' do
+                expect {
+                  app_apply_manifest.apply(app.guid, message)
+                }.to raise_error(AppApplyManifest::NoDefaultDomain, 'No domains available for random route')
+              end
+            end
           end
 
           context 'when the app has existing routes' do
