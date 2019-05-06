@@ -240,7 +240,7 @@ module VCAP::CloudController
     end
 
     def default_domain
-      SharedDomain.where(internal: false, router_group_guid: nil).first || private_domains.first
+      SharedDomain.where(internal: false, router_group_guid: nil).order(Sequel.asc(:id)).first || private_domains.first
     end
 
     private
