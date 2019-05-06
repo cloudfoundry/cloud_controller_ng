@@ -104,6 +104,13 @@ RSpec.describe RootController, type: :controller do
       expect(hash['links']['routes']['experimental']).to eq(true)
     end
 
+    it 'returns a link to service brokers' do
+      get :v3_root
+      hash = MultiJson.load(response.body)
+      expected_uri = "#{TestConfig.config[:external_protocol]}://#{TestConfig.config[:external_domain]}/v3/service_brokers"
+      expect(hash['links']['service_brokers']['href']).to eq(expected_uri)
+    end
+
     it 'returns a link to service instances' do
       get :v3_root
       hash = MultiJson.load(response.body)

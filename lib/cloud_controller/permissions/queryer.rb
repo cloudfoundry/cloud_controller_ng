@@ -188,6 +188,10 @@ class VCAP::CloudController::Permissions::Queryer
     end
   end
 
+  def space_developer_space_guids
+    db_permissions.space_developer_space_guids
+  end
+
   def readable_route_mapping_guids
     science 'readable_route_mapping_guids' do |e|
       e.use { db_permissions.readable_route_mapping_guids }

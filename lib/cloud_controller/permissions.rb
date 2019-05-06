@@ -126,6 +126,14 @@ class VCAP::CloudController::Permissions
     VCAP::CloudController::Route.user_visible(@user, can_read_globally?).map(&:guid)
   end
 
+  def space_developer_space_guids
+    if can_read_globally?
+      VCAP::CloudController::Space.select(:guid).all.map(&:guid)
+    else
+      membership.space_guids_for_roles(ROLES_FOR_SPACE_SECRETS_READING)
+    end
+  end
+
   def can_read_route?(space_guid, org_guid)
     return true if can_read_globally?
 
