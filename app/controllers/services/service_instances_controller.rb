@@ -94,7 +94,7 @@ module VCAP::CloudController
 
       invalid_service_instance!(service_instance) unless service_instance.valid?
 
-      if service_plan.broker_private?
+      if service_plan.broker_space_scoped?
         space_not_authorized! unless service_plan.service_broker.space == space
       else
         org_not_authorized! unless plan_visible_to_org?(organization, service_plan)

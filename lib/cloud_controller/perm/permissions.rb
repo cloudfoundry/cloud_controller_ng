@@ -111,6 +111,14 @@ module VCAP
           ])
         end
 
+        def readable_secret_space_guids
+          if can_read_secrets_globally?
+            VCAP::CloudController::Space.select(:guid).all.map(&:guid)
+          else
+            space_guids_for_actions([SPACE_DEVELOPER_ACTION], [])
+          end
+        end
+
         def can_write_to_space?(space_id)
           can_write_globally? || has_any_permission?([
             { action: SPACE_DEVELOPER_ACTION, resource: space_id },

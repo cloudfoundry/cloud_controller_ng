@@ -326,6 +326,82 @@ module VCAP::CloudController::Perm
       end
     end
 
+    describe '#readable_secret_space_guids' do
+      let(:permissions) do
+        VCAP::CloudController::Perm::Permissions.new(
+          perm_client: perm_client,
+          user_id: user_id,
+          issuer: issuer,
+          roles: roles,
+        )
+      end
+
+      let!(:org1) { VCAP::CloudController::Organization.make }
+      let!(:space1) { VCAP::CloudController::Space.make(organization: org1) }
+      let!(:org2) { VCAP::CloudController::Organization.make }
+      let!(:space2) { VCAP::CloudController::Space.make(organization: org2) }
+
+      let(:needed_space_actions) { %w(space.developer) }
+
+      before do
+        allow(roles).to receive(:admin?).and_return(false)
+        allow(roles).to receive(:admin_read_only?).and_return(false)
+        allow(roles).to receive(:global_auditor?).and_return(false)
+
+        allow(perm_client).to receive(:list_unique_resource_patterns).
+          with(user_id: user_id, issuer: issuer, actions: []).
+          and_return([])
+      end
+
+      it 'returns space_guids that user has a space.developer permission for' do
+        returned_space_guids = ['some-space-id-1', 'some-space-id-2']
+
+        allow(perm_client).to receive(:list_unique_resource_patterns).
+          with(user_id: user_id, issuer: issuer, actions: needed_space_actions).
+          and_return(returned_space_guids)
+
+        space_guids = permissions.readable_secret_space_guids
+
+        expect(space_guids).to eq(returned_space_guids)
+      end
+
+      it 'returns all space guids for admins' do
+        allow(roles).to receive(:admin?).and_return(true)
+
+        space_guids = permissions.readable_secret_space_guids
+
+        expect(space_guids).to include(space1.guid)
+        expect(space_guids).to include(space2.guid)
+
+        expect(perm_client).not_to receive(:list_unique_resource_patterns)
+      end
+
+      it 'returns all space guids for read-only admins' do
+        allow(roles).to receive(:admin_read_only?).and_return(true)
+
+        space_guids = permissions.readable_secret_space_guids
+
+        expect(space_guids).to include(space1.guid)
+        expect(space_guids).to include(space2.guid)
+
+        expect(perm_client).not_to receive(:list_unique_resource_patterns)
+      end
+
+      it 'does not return any space_guids for global_auditor' do
+        allow(roles).to receive(:global_auditor?).and_return(true)
+
+        allow(perm_client).to receive(:list_unique_resource_patterns).
+          with(user_id: user_id, issuer: issuer, actions: needed_space_actions).
+          and_return([])
+
+        space_guids = permissions.readable_secret_space_guids
+
+        expect(space_guids).to be_empty
+
+        expect(perm_client).not_to receive(:list_unique_resource_patterns)
+      end
+    end
+
     describe '#can_read_from_space?' do
       before do
         allow(roles).to receive(:admin?).and_return(false)

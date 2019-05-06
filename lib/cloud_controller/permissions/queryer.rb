@@ -188,8 +188,24 @@ class VCAP::CloudController::Permissions::Queryer
     end
   end
 
-  def space_developer_space_guids
-    db_permissions.space_developer_space_guids
+  def readable_secret_space_guids
+    science 'readable_secret_space_guids' do |e|
+      e.use { db_permissions.readable_secret_space_guids }
+      e.try { perm_permissions.readable_secret_space_guids }
+
+      e.compare { |a, b| compare_arrays(a, b) }
+
+      e.run_if { !db_permissions.can_read_globally? }
+    end
+  end
+
+  def can_read_service_broker?(service_broker)
+    can_read_globally? || can_read_space_scoped_broker?(service_broker)
+  end
+
+  def can_read_space_scoped_broker?(service_broker)
+    service_broker.space_scoped? &&
+      can_read_secrets_in_space?(service_broker.space_guid, service_broker.space.organization_guid)
   end
 
   def readable_route_mapping_guids

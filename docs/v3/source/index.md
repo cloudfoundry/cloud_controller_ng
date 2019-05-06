@@ -233,6 +233,7 @@ includes:
   - experimental_resources/service_brokers/header
   - experimental_resources/service_brokers/object
   - experimental_resources/service_brokers/list
+  - experimental_resources/service_brokers/get
   - experimental_resources/sidecars/header
   - experimental_resources/sidecars/object
   - experimental_resources/sidecars/create_from_app

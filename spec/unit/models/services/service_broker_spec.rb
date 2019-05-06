@@ -118,7 +118,7 @@ module VCAP::CloudController
       end
     end
 
-    describe 'private?' do
+    describe 'space_scoped?' do
       context 'when the broker has an associated space' do
         let(:space) { Space.make }
         let(:broker) do
@@ -132,12 +132,12 @@ module VCAP::CloudController
         end
 
         it 'is true' do
-          expect(broker.private?).to be_truthy
+          expect(broker.space_scoped?).to be_truthy
         end
       end
 
       it 'is false if the broker does not have a space id' do
-        expect(broker.private?).to be_falsey
+        expect(broker.space_scoped?).to be_falsey
       end
     end
   end
