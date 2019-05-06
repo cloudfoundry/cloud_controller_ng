@@ -624,6 +624,7 @@ module VCAP::CloudController
 
       context 'when domains exist' do
         let!(:internal_domain) { VCAP::CloudController::SharedDomain.make(internal: true) } # used to ensure internal domains do not get returned in any case
+        let!(:tcp_domain) { VCAP::CloudController::SharedDomain.make(router_group_guid: 'default-tcp') }
         let(:expected_codes_and_responses) do
           h = Hash.new(
             code: 200,
@@ -717,6 +718,21 @@ module VCAP::CloudController
       end
 
       context 'when only internal domains exist' do
+        let!(:internal_domain) { VCAP::CloudController::SharedDomain.make(internal: true) } # used to ensure internal domains do not get returned in any case
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(
+            code: 404,
+          )
+          h.freeze
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
+
+      context 'when only tcp domains exist' do
+        let!(:tcp_domain) { VCAP::CloudController::SharedDomain.make(router_group_guid: 'default-tcp') }
+
         let(:expected_codes_and_responses) do
           h = Hash.new(
             code: 404,
