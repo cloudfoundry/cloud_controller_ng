@@ -361,9 +361,11 @@ module VCAP::CloudController
 
         context 'when all its instances are running' do
           it 'updates last_healthy_at'  do
-            subject.scale
-            expect(deployment.reload.last_healthy_at).to be > previous_last_healthy_at
-            expect(deployment.state).to eq(DeploymentModel::DEPLOYING_STATE)
+            Timecop.travel(deployment.last_healthy_at + 10.seconds) do
+              subject.scale
+              expect(deployment.reload.last_healthy_at).to be > previous_last_healthy_at
+              expect(deployment.state).to eq(DeploymentModel::DEPLOYING_STATE)
+            end
           end
         end
 
