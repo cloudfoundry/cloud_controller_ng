@@ -35,8 +35,8 @@ class DomainsController < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     shared_org_objects = []
-    if create_scoped_domain_request?(message)
-      check_create_scoped_domain_permissions!(message)
+    if create_private_domain_request?(message)
+      check_create_private_domain_permissions!(message)
       shared_org_objects = verify_shared_organizations_guids!(message, message.organization_guid)
     else
       unauthorized! unless permission_queryer.can_write_globally?
@@ -140,7 +140,7 @@ class DomainsController < ApplicationController
     domain
   end
 
-  def check_create_scoped_domain_permissions!(message)
+  def check_create_private_domain_permissions!(message)
     unprocessable_org!(message.organization_guid) unless Organization.find(guid: message.organization_guid)
 
     unauthorized! unless permission_queryer.can_write_to_org?(message.organization_guid)
@@ -165,7 +165,7 @@ class DomainsController < ApplicationController
     organizations
   end
 
-  def create_scoped_domain_request?(message)
+  def create_private_domain_request?(message)
     message.requested?(:relationships)
   end
 

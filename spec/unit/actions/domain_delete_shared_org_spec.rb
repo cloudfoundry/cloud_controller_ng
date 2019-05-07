@@ -7,7 +7,7 @@ module VCAP::CloudController
     subject { DomainDeleteSharedOrg }
 
     describe '#delete' do
-      context 'when the domain is unscoped' do
+      context 'when deleting a shared domain' do
         let(:domain) { SharedDomain.make }
         let(:shared_org1) { Organization.make }
 

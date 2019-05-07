@@ -642,7 +642,7 @@ module VCAP::CloudController
           owned_private_domain # trigger the let in order (after shared_private_domain)
         end
 
-        context 'when at least one scoped domain exists' do
+        context 'when at least one private domain exists' do
           let(:expected_codes_and_responses) do
             h = Hash.new(
               code: 200,
@@ -685,7 +685,7 @@ module VCAP::CloudController
           it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
         end
 
-        context 'when at least one non internal unscoped domain exists' do
+        context 'when at least one non-internal shared domain exists' do
           let!(:shared_domain) { VCAP::CloudController::SharedDomain.make }
 
           let(:domain_json) do

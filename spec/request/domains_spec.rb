@@ -876,13 +876,13 @@ RSpec.describe 'Domains Request' do
 
     context 'when the params are invalid' do
       let(:headers) { set_user_with_header_as_role(role: 'admin') }
-      context 'creating a sub domain of a domain scoped to another organization' do
+      context 'creating a sub domain of a domain owned by another organization' do
         let(:organization_to_scope_to) { VCAP::CloudController::Organization.make }
-        let(:existing_scoped_domain) { VCAP::CloudController::PrivateDomain.make }
+        let(:existing_private_domain) { VCAP::CloudController::PrivateDomain.make }
 
         let(:params) do
           {
-            name: "foo.#{existing_scoped_domain.name}",
+            name: "foo.#{existing_private_domain.name}",
             relationships: {
               organization: {
                 data: {
@@ -899,7 +899,7 @@ RSpec.describe 'Domains Request' do
           expect(last_response.status).to eq(422)
 
           expect(parsed_response['errors'][0]['detail']).to eq "The domain name \"#{params[:name]}\""\
-" cannot be created because \"#{existing_scoped_domain.name}\" is already reserved by another domain"
+" cannot be created because \"#{existing_private_domain.name}\" is already reserved by another domain"
         end
       end
 
@@ -1608,7 +1608,7 @@ RSpec.describe 'Domains Request' do
       end
     end
 
-    context 'updating an existing unscoped domain' do
+    context 'updating an existing shared domain' do
       let(:domain) { VCAP::CloudController::SharedDomain.make }
 
       let(:domain_json) do
@@ -1658,7 +1658,7 @@ RSpec.describe 'Domains Request' do
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
 
-    context 'updating an existing scoped domain' do
+    context 'updating an existing private domain' do
       let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: org) }
 
       let(:domain_json) do
@@ -1713,7 +1713,7 @@ RSpec.describe 'Domains Request' do
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
 
-    context 'updating an existing, shared scoped domain' do
+    context 'updating an existing, shared private domain' do
       let(:domain) { VCAP::CloudController::PrivateDomain.make }
 
       let(:domain_json) do

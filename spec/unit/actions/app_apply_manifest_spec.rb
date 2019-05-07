@@ -501,7 +501,7 @@ module VCAP::CloudController
               end
             end
 
-            context 'when there is no unscoped domain' do
+            context 'when there is no shared domain' do
               let(:domain) { PrivateDomain.make(owning_organization: app.organization) }
 
               before do
