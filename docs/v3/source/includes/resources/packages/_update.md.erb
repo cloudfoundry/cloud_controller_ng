@@ -21,7 +21,7 @@ Example Response
 HTTP/1.1 200 OK
 Content-Type: application/json
 
-<%= yield_content :single_bits_package, labels: { "key" => "value" }, "annotations": {"note" => "detailed information"} %>
+<%= yield_content :single_bits_package, metadata: { labels: { "key" => "value" }, "annotations": {"note" => "detailed information"} } %>
 ```
 
 #### Definition

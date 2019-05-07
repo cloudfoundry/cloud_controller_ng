@@ -25,7 +25,7 @@
 }
 <% end %>
 
-<% content_for :single_bits_package do | metadata={} | %>
+<% content_for :single_bits_package do | metadata:{}, state:"PROCESSING_UPLOAD" | %>
 {
   "guid": "44f7c078-0934-470f-9883-4fcddc5b8f13",
   "type": "bits",
@@ -36,7 +36,7 @@
     },
     "error": null
   },
-  "state": "PROCESSING_UPLOAD",
+  "state": "<%= state %>",
   "created_at": "2015-11-13T17:02:56Z",
   "updated_at": "2016-06-08T16:41:26Z",
   "metadata": {
