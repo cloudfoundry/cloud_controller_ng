@@ -15,9 +15,7 @@ module VCAP::CloudController
           logger.info('Cleaning up old AppUsageEvent rows')
 
           repository = Repositories::AppUsageEventRepository.new
-          deleted_count = repository.delete_events_older_than(cutoff_age_in_days)
-
-          logger.info("Cleaned up #{deleted_count} AppUsageEvent rows")
+          repository.delete_events_older_than(cutoff_age_in_days)
         end
 
         def job_name_in_configuration

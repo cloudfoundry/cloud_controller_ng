@@ -1,3 +1,5 @@
+require 'database/old_record_cleanup'
+
 module VCAP::CloudController
   module Repositories
     class ServiceUsageEventRepository
@@ -89,8 +91,7 @@ module VCAP::CloudController
       end
 
       def delete_events_older_than(cutoff_age_in_days)
-        old_service_usage_events = ServiceUsageEvent.dataset.where(Sequel.lit("created_at < CURRENT_TIMESTAMP - INTERVAL '?' DAY", cutoff_age_in_days.to_i))
-        old_service_usage_events.delete
+        Database::OldRecordCleanup.new(ServiceUsageEvent, cutoff_age_in_days).delete
       end
     end
   end
