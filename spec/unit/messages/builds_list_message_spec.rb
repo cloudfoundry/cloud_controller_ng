@@ -8,6 +8,7 @@ module VCAP::CloudController
         {
           'states'    => 'state1,state2',
           'app_guids' => 'appguid1,appguid2',
+          'package_guids' => 'packageguid1,packageguid2',
           'page'      => 1,
           'per_page'  => 5,
           'order_by'  => 'created_at',
@@ -21,6 +22,7 @@ module VCAP::CloudController
         expect(message).to be_a(BuildsListMessage)
         expect(message.states).to eq(['state1', 'state2'])
         expect(message.app_guids).to eq(['appguid1', 'appguid2'])
+        expect(message.package_guids).to eq(['packageguid1', 'packageguid2'])
         expect(message.page).to eq(1)
         expect(message.per_page).to eq(5)
         expect(message.order_by).to eq('created_at')
@@ -32,6 +34,7 @@ module VCAP::CloudController
 
         expect(message.requested?(:states)).to be true
         expect(message.requested?(:app_guids)).to be true
+        expect(message.requested?(:package_guids)).to be true
         expect(message.requested?(:page)).to be true
         expect(message.requested?(:per_page)).to be true
         expect(message.requested?(:order_by)).to be true
@@ -42,6 +45,7 @@ module VCAP::CloudController
       it 'accepts a set of fields' do
         message = BuildsListMessage.from_params({
           app_guids: [],
+          package_guids: [],
           states:    [],
           page:      1,
           per_page:  5,
@@ -90,6 +94,12 @@ module VCAP::CloudController
           message = BuildsListMessage.from_params app_guids: 'tricked you, not an array'
           expect(message).to be_invalid
           expect(message.errors[:app_guids].length).to eq 1
+        end
+
+        it 'validates package_guids is an array' do
+          message = BuildsListMessage.from_params package_guids: 'also not an array'
+          expect(message).to be_invalid
+          expect(message.errors[:package_guids].length).to eq 1
         end
 
         it 'validates states is an array' do

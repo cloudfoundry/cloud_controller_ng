@@ -10,13 +10,17 @@ module VCAP::CloudController
     let(:org_1_guid) { space1.organization.guid }
     let(:org_2_guid) { space2.organization.guid }
     let(:org_3_guid) { space3.organization.guid }
+
     let(:app_in_space1) { AppModel.make(space_guid: space1.guid, guid: 'app1') }
     let(:app2_in_space1) { AppModel.make(space_guid: space1.guid, guid: 'app2') }
     let(:app3_in_space2) { AppModel.make(space_guid: space2.guid, guid: 'app3') }
     let(:app4_in_space3) { AppModel.make(space_guid: space3.guid, guid: 'app4') }
 
-    let!(:staged_build_for_app1_space1) { BuildModel.make(app_guid: app_in_space1.guid, state: BuildModel::STAGED_STATE) }
-    let!(:failed_build_for_app1_space1) { BuildModel.make(app_guid: app_in_space1.guid, state: BuildModel::FAILED_STATE) }
+    let(:package_for_app_1) { PackageModel.make(app: app_in_space1) }
+    let(:package2_in_space_1) { PackageModel.make(app: app_in_space1) }
+
+    let!(:staged_build_for_app1_space1) { BuildModel.make(app_guid: app_in_space1.guid, package_guid: package_for_app_1.guid, state: BuildModel::STAGED_STATE) }
+    let!(:failed_build_for_app1_space1) { BuildModel.make(app_guid: app_in_space1.guid, package_guid: package2_in_space_1.guid, state: BuildModel::FAILED_STATE) }
 
     let!(:staged_build_for_app2_space1) { BuildModel.make(app_guid: app2_in_space1.guid, state: BuildModel::STAGED_STATE) }
 
@@ -46,6 +50,15 @@ module VCAP::CloudController
         it 'returns all of the builds with the requested app guids' do
           results = fetcher.fetch_all.all
           expect(results).to match_array([staged_build_for_app1_space1, failed_build_for_app1_space1])
+        end
+      end
+
+      context 'filtering package guids' do
+        let(:filters) { { package_guids: [package_for_app_1.guid] } }
+
+        it 'returns all of the builds with the requested package guids' do
+          results = fetcher.fetch_all.all
+          expect(results).to match_array([staged_build_for_app1_space1])
         end
       end
 
@@ -107,6 +120,24 @@ module VCAP::CloudController
           it 'returns all the builds associated with the requested app guid' do
             results = fetcher.fetch_for_spaces(space_guids: [space1.guid, space3.guid])
             expect(results.all).to match_array([staged_build_for_app1_space1, failed_build_for_app1_space1])
+          end
+        end
+
+        context 'filtering package guids' do
+          let(:filters) { { package_guids: [package_for_app_1.guid, package2_in_space_1.guid] } }
+
+          it 'returns all the builds associated with the requested package guid' do
+            results = fetcher.fetch_for_spaces(space_guids: [space1.guid, space3.guid])
+            expect(results.all).to match_array([staged_build_for_app1_space1, failed_build_for_app1_space1])
+          end
+        end
+
+        context 'when using multiple filters' do
+          let(:filters) { { package_guids: [package_for_app_1.guid, package2_in_space_1.guid], states: BuildModel::STAGED_STATE } }
+
+          it 'returns all the STAGED builds associated with the requested package guids' do
+            results = fetcher.fetch_for_spaces(space_guids: [space1.guid, space3.guid])
+            expect(results.all).to match_array([staged_build_for_app1_space1])
           end
         end
       end

@@ -8,6 +8,7 @@ RSpec.describe 'Builds' do
   let(:user_name) { 'bob the builder' }
   let(:parsed_response) { MultiJson.load(last_response.body) }
   let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid, name: 'my-app') }
+  let(:second_app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid, name: 'my-second-app') }
 
   describe 'POST /v3/builds' do
     let(:package) do
@@ -132,7 +133,7 @@ RSpec.describe 'Builds' do
     end
     let!(:second_build) do
       VCAP::CloudController::BuildModel.make(
-        package: package,
+        package: second_package,
         app: app_model,
         created_at: build.created_at - 1.day,
         created_by_user_name: 'bob the builder',
@@ -141,6 +142,7 @@ RSpec.describe 'Builds' do
       )
     end
     let(:package) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
+    let(:second_package) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
     let(:droplet) { VCAP::CloudController::DropletModel.make(
       state: VCAP::CloudController::DropletModel::STAGED_STATE,
       package_guid: package.guid,
@@ -149,7 +151,7 @@ RSpec.describe 'Builds' do
     }
     let(:second_droplet) { VCAP::CloudController::DropletModel.make(
       state: VCAP::CloudController::DropletModel::STAGED_STATE,
-      package_guid: package.guid,
+      package_guid: second_package.guid,
       build: second_build,
     )
     }
@@ -161,7 +163,7 @@ RSpec.describe 'Builds' do
 
     before do
       VCAP::CloudController::BuildpackLifecycle.new(package, staging_message).create_lifecycle_data_model(build)
-      VCAP::CloudController::BuildpackLifecycle.new(package, staging_message).create_lifecycle_data_model(second_build)
+      VCAP::CloudController::BuildpackLifecycle.new(second_package, staging_message).create_lifecycle_data_model(second_build)
       build.update(state: droplet.state, error_description: droplet.error_description)
       second_build.update(state: second_droplet.state, error_description: second_droplet.error_description)
     end
@@ -230,7 +232,7 @@ RSpec.describe 'Builds' do
                   'stack' => 'cflinuxfs3',
                 },
               },
-              'package' => { 'guid' => package.guid, },
+              'package' => { 'guid' => second_package.guid, },
               'droplet' => {
                 'guid' => second_droplet.guid,
                 'href' => "#{link_prefix}/v3/droplets/#{second_droplet.guid}",
@@ -254,6 +256,23 @@ RSpec.describe 'Builds' do
         expect(last_response.status).to eq(200)
         expect(parsed_response['resources'].count).to eq(1)
         expect(parsed_response['resources'][0]['guid']).to eq(build.guid)
+      end
+
+      it 'filters on package_guid' do
+        get "/v3/builds?package_guids=#{second_package.guid}", {}, developer_headers
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['resources'].count).to eq(1)
+        expect(parsed_response['resources'][0]['guid']).to eq(second_build.guid)
+      end
+
+      it 'accepts 2 package guids' do
+        get "/v3/builds?package_guids=#{package.guid},#{second_package.guid}", {}, developer_headers
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['resources'].count).to eq(2)
+        expect(parsed_response['resources'][0]['guid']).to eq(build.guid)
+        expect(parsed_response['resources'][1]['guid']).to eq(second_build.guid)
       end
     end
   end

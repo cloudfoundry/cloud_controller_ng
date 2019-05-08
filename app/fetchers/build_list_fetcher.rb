@@ -29,8 +29,12 @@ module VCAP::CloudController
         )
       end
 
-      if message.requested? :states
+      if message.requested?(:states)
         dataset = dataset.where(state: message.states)
+      end
+
+      if message.requested?(:package_guids)
+        dataset = dataset.where(package_guid: message.package_guids)
       end
 
       dataset.where(app: filter_app_dataset(app_dataset))
