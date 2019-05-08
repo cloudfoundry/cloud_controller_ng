@@ -11,7 +11,7 @@ module VCAP::CloudController
     ]
 
     validates_with NoAdditionalParamsValidator
-    validates_with IncludeParamValidator, valid_values: ['space']
+    validates_with IncludeParamValidator, valid_values: ['space', 'org']
 
     validates :names, array: true, allow_nil: true
     validates :guids, array: true, allow_nil: true
@@ -23,7 +23,7 @@ module VCAP::CloudController
     end
 
     def self.from_params(params)
-      super(params, %w(names guids organization_guids space_guids))
+      super(params, %w(names guids organization_guids space_guids include))
     end
   end
 end

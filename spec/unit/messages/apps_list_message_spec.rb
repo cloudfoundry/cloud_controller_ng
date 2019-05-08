@@ -13,7 +13,7 @@ module VCAP::CloudController
           'page' => 1,
           'per_page' => 5,
           'order_by' => 'created_at',
-          'include' => 'space',
+          'include' => 'space,org',
           'label_selector' => 'foo in (stuff,things)',
         }
       end
@@ -29,7 +29,7 @@ module VCAP::CloudController
         expect(message.page).to eq(1)
         expect(message.per_page).to eq(5)
         expect(message.order_by).to eq('created_at')
-        expect(message.include).to eq('space')
+        expect(message.include).to eq(['space', 'org'])
         expect(message.label_selector).to eq('foo in (stuff,things)')
         expect(message.requirements.first.key).to eq('foo')
         expect(message.requirements.first.operator).to eq(:in)
@@ -61,7 +61,7 @@ module VCAP::CloudController
           page: 1,
           per_page: 5,
           order_by: 'created_at',
-          include: 'space',
+          include: ['space', 'org'],
           label_selector: 'foo in (stuff,things)'
         }
       end
@@ -83,7 +83,7 @@ module VCAP::CloudController
                                 page: 1,
                                 per_page: 5,
                                 order_by: 'created_at',
-                                include: 'space',
+                                include: ['space', 'org'],
                                 label_selector: 'foo in (stuff,things)'
                               })
         }.not_to raise_error
@@ -101,10 +101,14 @@ module VCAP::CloudController
         expect(message.errors[:base]).to include("Unknown query parameter(s): 'foobar'")
       end
 
-      it 'does not accept include that is not space' do
-        message = AppsListMessage.from_params({ include: 'space' })
+      it 'does not accept invalid includes' do
+        message = AppsListMessage.from_params({ 'include' => 'space' })
         expect(message).to be_valid
-        message = AppsListMessage.from_params({ include: 'greg\'s buildpack' })
+        message = AppsListMessage.from_params({ 'include' => 'org' })
+        expect(message).to be_valid
+        message = AppsListMessage.from_params({ 'include' => 'space,org' })
+        expect(message).to be_valid
+        message = AppsListMessage.from_params({ 'include' => 'greg\'s buildpack' })
         expect(message).not_to be_valid
       end
 
@@ -145,6 +149,22 @@ module VCAP::CloudController
 
           expect_any_instance_of(Validators::LabelSelectorRequirementValidator).to receive(:validate).with(message).and_call_original
           message.valid?
+        end
+
+        it 'validates possible includes' do
+          message = AppsListMessage.from_params 'include' => 'org,space'
+          expect(message).to be_valid
+          message = AppsListMessage.from_params 'include' => 'borg,spaceship'
+          expect(message).to be_invalid
+          message = AppsListMessage.from_params 'include' => 'org,spaceship'
+          expect(message).to be_invalid
+        end
+
+        it 'invalidates duplicates in the includes field' do
+          message = AppsListMessage.from_params 'include' => 'org,org'
+          expect(message).to be_invalid
+          expect(message.errors[:base].length).to eq 1
+          expect(message.errors[:base][0]).to match(/Duplicate included resource: 'org'/)
         end
       end
     end

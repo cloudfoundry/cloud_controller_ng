@@ -57,13 +57,37 @@ RSpec.describe AppsV3Controller, type: :controller do
       end
     end
 
-    context 'include space' do
+    context 'include' do
       it 'decorates the response with spaces' do
         get :index, params: { include: 'space' }
 
-        space_guids = parsed_body['included']['spaces'].map { |s| s['guid'] }
         expect(response.status).to eq(200)
+        space_guids = parsed_body['included']['spaces'].map { |s| s['guid'] }
         expect(space_guids).to match_array([app_model_1.space_guid])
+      end
+
+      it 'decorates the response with orgs' do
+        get :index, params: { include: 'org' }
+
+        expect(response.status).to eq(200), response.body
+        org_guids = parsed_body['included']['organizations'].map { |o| o['guid'] }
+        expect(org_guids).to match_array([app_model_1.space.organization_guid])
+      end
+
+      it 'decorates the response with spaces and orgs' do
+        get :index, params: { include: 'space,org' }
+
+        expect(response.status).to eq(200)
+        org_guids = parsed_body['included']['organizations'].map { |o| o['guid'] }
+        expect(org_guids).to match_array([app_model_1.space.organization_guid])
+        space_guids = parsed_body['included']['spaces'].map { |s| s['guid'] }
+        expect(space_guids).to match_array([app_model_1.space_guid])
+      end
+
+      it 'flags unsupported includes that contain supported ones' do
+        get :index, params: { include: 'org,spaceship,borgs,space' }
+
+        expect(response.status).to eq(400)
       end
 
       it 'does not include spaces if no one asks for them' do

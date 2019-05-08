@@ -10,6 +10,7 @@ require 'actions/app_start'
 require 'actions/app_stop'
 require 'actions/app_assign_droplet'
 require 'decorators/include_app_space_decorator'
+require 'decorators/include_app_organization_decorator'
 require 'messages/apps_list_message'
 require 'messages/app_show_message'
 require 'messages/app_update_message'
@@ -42,7 +43,8 @@ class AppsV3Controller < ApplicationController
               end
 
     decorators = []
-    decorators << IncludeAppSpaceDecorator if message.include == 'space'
+    decorators << IncludeAppSpaceDecorator if message.include&.include?('space')
+    decorators << IncludeAppOrganizationDecorator if message.include&.include?('org')
 
     render status: :ok,
            json: Presenters::V3::PaginatedListPresenter.new(
@@ -64,7 +66,7 @@ class AppsV3Controller < ApplicationController
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
 
     decorators = []
-    decorators << IncludeAppSpaceDecorator if message.include == 'space'
+    decorators << IncludeAppSpaceDecorator if message.include&.include?('space')
 
     render status: :ok, json: Presenters::V3::AppPresenter.new(
       app,

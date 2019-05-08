@@ -88,10 +88,18 @@ module VCAP::CloudController
 
     class IncludeParamValidator < ActiveModel::Validator
       def validate(record)
-        valid_values = options[:valid_values]
-
-        if record.requested?(:include) && !valid_values.member?(record.include)
-          record.errors[:base] << "Invalid included resource: '#{record.include}'"
+        if record.requested?(:include)
+          key_counts = Hash.new(0)
+          record.include.each do |include_candidate|
+            if !options[:valid_values].member?(include_candidate)
+              record.errors[:base] << "Invalid included resource: '#{include_candidate}'"
+            else
+              key_counts[include_candidate] += 1
+              if key_counts[include_candidate] == 2
+                record.errors[:base] << "Duplicate included resource: '#{include_candidate}'"
+              end
+            end
+          end
         end
       end
     end

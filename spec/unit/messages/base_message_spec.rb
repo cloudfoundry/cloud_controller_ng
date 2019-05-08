@@ -200,13 +200,13 @@ module VCAP::CloudController
       end
 
       it 'is valid with an allowed include value' do
-        message = fake_class.new({ include: 'bar' })
+        message = fake_class.new({ include: ['bar'] })
 
         expect(message).to be_valid
       end
 
       it 'is NOT valid with not allowed include value' do
-        message = fake_class.new({ include: 'stuff' })
+        message = fake_class.new({ include: ['stuff'] })
 
         expect(message).to be_invalid
         expect(message.errors.full_messages[0]).to include("Invalid included resource: 'stuff'")
