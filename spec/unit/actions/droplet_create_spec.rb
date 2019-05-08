@@ -4,7 +4,10 @@ require 'actions/droplet_create'
 module VCAP::CloudController
   RSpec.describe DropletCreate do
     subject(:droplet_create) { DropletCreate.new }
-    let(:app) { AppModel.make }
+    let!(:app) { AppModel.make }
+    let!(:buildpack_data) { BuildpackLifecycleDataModel.make(app: app) }
+
+    let(:docker_app) { AppModel.make(:docker) }
     let(:package) { PackageModel.make app: app }
     let(:build) do
       BuildModel.make(
@@ -14,6 +17,60 @@ module VCAP::CloudController
         created_by_user_email: 'bob@loblaw.com',
         created_by_user_name: 'bobert'
       )
+    end
+
+    describe '#create' do
+      context 'when no process_types are specified' do
+        let(:message) { DropletCreateMessage.new({
+          relationships: { app: { data: { guid: app.guid } } },
+        })
+        }
+        it 'creates a droplet for app including the default process_types' do
+          expect {
+            droplet_create.create(app, message)
+          }.to change { DropletModel.count }.by(1)
+
+          droplet = DropletModel.last
+
+          expect(droplet.state).to eq(DropletModel::AWAITING_UPLOAD_STATE)
+          expect(droplet.app).to eq(app)
+          expect(droplet.process_types).to eq({ 'web' => '' })
+          expect(droplet.package_guid).to be_nil
+          expect(droplet.build).to be_nil
+          expect(droplet.buildpack_lifecycle_data.buildpacks).to eq(app.buildpack_lifecycle_data.buildpacks)
+          expect(droplet.buildpack_lifecycle_data.stack).to eq(app.buildpack_lifecycle_data.stack)
+        end
+      end
+
+      context 'when process_types are specified' do
+        let(:message) { DropletCreateMessage.new({
+          relationships: { app: { data: { guid: app.guid } } },
+          process_types: { "web": 'ptype' },
+        })
+        }
+
+        it 'creates a droplet for app with given process_types' do
+          expect {
+            droplet_create.create(app, message)
+          }.to change { DropletModel.count }.by(1)
+
+          droplet = DropletModel.last
+
+          expect(droplet.state).to eq(DropletModel::AWAITING_UPLOAD_STATE)
+          expect(droplet.app).to eq(app)
+          expect(droplet.process_types).to eq({ 'web' => 'ptype' })
+          expect(droplet.package_guid).to be_nil
+          expect(droplet.build).to be_nil
+          expect(droplet.buildpack_lifecycle_data.buildpacks).to eq(app.buildpack_lifecycle_data.buildpacks)
+          expect(droplet.buildpack_lifecycle_data.stack).to eq(app.buildpack_lifecycle_data.stack)
+        end
+
+        it 'fails when app has docker lifecycle' do
+          expect {
+            droplet_create.create(docker_app, message)
+          }.to raise_error(DropletCreate::Error, 'Droplet creation is not available for apps with docker lifecycles.')
+        end
+      end
     end
 
     describe '#create_docker_droplet' do

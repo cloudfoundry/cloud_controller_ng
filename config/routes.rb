@@ -94,8 +94,7 @@ Rails.application.routes.draw do
   patch '/domains/:guid', to: 'domains#update'
 
   # droplets
-  post '/packages/:package_guid/droplets', to: 'droplets#create'
-  post '/droplets', to: 'droplets#copy'
+  post '/droplets', to: 'droplets#create'
   get '/droplets', to: 'droplets#index'
   get '/droplets/:guid', to: 'droplets#show'
   delete '/droplets/:guid', to: 'droplets#destroy'

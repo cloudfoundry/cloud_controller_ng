@@ -8,6 +8,7 @@ module VCAP::CloudController
       FAILED_STATE          = 'FAILED'.freeze,
       STAGED_STATE          = 'STAGED'.freeze,
       EXPIRED_STATE         = 'EXPIRED'.freeze,
+      AWAITING_UPLOAD_STATE = 'AWAITING_UPLOAD'.freeze,
       PROCESSING_UPLOAD_STATE = 'PROCESSING_UPLOAD'.freeze,
     ].freeze
     FINAL_STATES = [

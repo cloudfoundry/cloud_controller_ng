@@ -43,7 +43,6 @@ module VCAP::CloudController
 
           {
             self: { href: url_builder.build_url(path: "/v3/droplets/#{droplet.guid}") },
-            package: nil,
             app: { href: url_builder.build_url(path: "/v3/apps/#{droplet.app_guid}") },
             assign_current_droplet: { href: url_builder.build_url(path: "/v3/apps/#{droplet.app_guid}/relationships/current_droplet"), method: 'PATCH' },
           }.tap do |links|

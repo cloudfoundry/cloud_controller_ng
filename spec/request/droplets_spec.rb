@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'request_spec_shared_examples'
 
 RSpec.describe 'Droplets' do
   let(:space) { VCAP::CloudController::Space.make }
@@ -9,6 +10,147 @@ RSpec.describe 'Droplets' do
   let(:user_name) { 'sundance kid' }
 
   let(:parsed_response) { MultiJson.load(last_response.body) }
+
+  describe 'POST /v3/droplets' do
+    let(:user) { VCAP::CloudController::User.make }
+    let(:space) { VCAP::CloudController::Space.make }
+    let(:org) { space.organization }
+    let(:params) do
+      {
+        process_types: {
+          web: 'please_run_my_process.sh'
+        },
+        relationships: {
+          app: {
+            data: { guid: app_model.guid }
+          }
+        }
+      }
+    end
+
+    describe 'when creating a droplet' do
+      let(:api_call) { lambda { |user_headers| post '/v3/droplets', params.to_json, user_headers } }
+
+      let(:droplet_json) do
+        {
+          guid: UUID_REGEX,
+          state: 'AWAITING_UPLOAD',
+          error: nil,
+          lifecycle: {
+            type: 'buildpack',
+            data: {}
+          },
+          execution_metadata: '',
+          process_types: {
+            web: 'please_run_my_process.sh'
+          },
+          checksum: nil,
+          buildpacks: [],
+          stack: app_model.buildpack_lifecycle_data.stack,
+          image: nil,
+          created_at: iso8601,
+          updated_at: iso8601,
+          metadata: {
+            labels: {},
+            annotations: {}
+          },
+          links: {
+            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/droplets\/#{UUID_REGEX}) },
+            app: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/apps\/#{UUID_REGEX}) },
+            assign_current_droplet: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/apps\/#{UUID_REGEX}\/relationships\/current_droplet), method: 'PATCH' },
+          }
+        }
+      end
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(
+          code: 403
+        )
+        h['org_auditor'] = {
+          code: 422
+        }
+        h['org_billing_manager'] = {
+          code: 422
+        }
+        h['no_role'] = {
+          code: 422
+        }
+        h['admin'] = {
+          code: 201,
+          response_object: droplet_json
+        }
+        h['space_developer'] = {
+          code: 201,
+          response_object: droplet_json
+        }
+        h.freeze
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+    end
+
+    describe 'when the user is not logged in' do
+      it 'returns 401 for Unauthenticated requests' do
+        post '/v3/droplets', params.to_json, base_json_headers
+        expect(last_response.status).to eq(401)
+      end
+    end
+
+    context 'when the user does not have the required scopes' do
+      let(:user_header) { headers_for(user, scopes: ['cloud_controller.read']) }
+
+      it 'returns a 403' do
+        post '/v3/droplets', params.to_json, user_header
+        expect(last_response.status).to eq(403)
+      end
+    end
+
+    context 'when params are invalid' do
+      let(:invalid_params) do
+        {
+          process_types: 867,
+          relationships: {
+            app: {
+              data: { guid: app_model.guid }
+            }
+          }
+        }
+      end
+      it 'returns a 422 with an appropriate error message' do
+        post '/v3/droplets', invalid_params.to_json, developer_headers
+        expect(last_response.status).to eq(422)
+        expect(last_response).to have_error_message(/must be a hash/)
+      end
+    end
+    context 'when app does not exist' do
+      let(:nonexistent_app_params) do
+        {
+          relationships: {
+            app: {
+              data: { guid: 'not-app-guid' }
+            }
+          }
+        }
+      end
+      it 'returns a 422 with an appropriate error message' do
+        post '/v3/droplets', nonexistent_app_params.to_json, developer_headers
+        expect(last_response.status).to eq(422)
+        expect(last_response).to have_error_message(/App with guid "not-app-guid" does not exist, or you do not have access to it./)
+      end
+    end
+
+    context 'when user cannot see the app' do
+      let(:other_user) { VCAP::CloudController::User.make }
+
+      before { set_current_user(other_user) }
+
+      it 'returns a 422 with an appropriate error message' do
+        post '/v3/droplets', params.to_json, headers_for(other_user)
+        expect(last_response.status).to eq(422)
+        expect(last_response).to have_error_message("App with guid \"#{app_model.guid}\" does not exist, or you do not have access to it.")
+      end
+    end
+  end
 
   describe 'GET /v3/droplets/:guid' do
     let(:guid) { droplet_model.guid }
@@ -883,7 +1025,6 @@ RSpec.describe 'Droplets' do
         'updated_at'         => iso8601,
         'links'              => {
           'self'                   => { 'href' => "#{link_prefix}/v3/droplets/#{copied_droplet.guid}" },
-          'package'                => nil,
           'app'                    => { 'href' => "#{link_prefix}/v3/apps/#{new_app.guid}" },
           'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{new_app.guid}/relationships/current_droplet", 'method' => 'PATCH' },
         },

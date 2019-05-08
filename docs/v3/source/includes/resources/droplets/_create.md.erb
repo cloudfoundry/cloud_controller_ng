@@ -1,0 +1,57 @@
+### Create a droplet (experimental)
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/droplets" \
+  -X POST \
+  -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
+  -d '{
+    "relationships": {
+      "app": {
+        "data": {
+          "guid": "[app-guid]"
+        }
+      }
+    },
+    "process_types": {
+      "rake": "bundle exec rake",
+      "web": "bundle exec rackup config.ru -p $PORT"
+    }
+  }'
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 201 Created
+Content-Type: application/json
+
+<%= yield_content :single_created_droplet_without_package %>
+```
+
+#### Definition
+`POST /v3/droplets`
+
+#### Required Parameters
+
+| Name    | Type                                           | Description               |
+| ----    | ----                                           | -----------               |
+| **app** | [_to-one relationship_](#to-one-relationships) | A relationship to an app. |
+
+#### Optional Parameters
+
+| Name              | Type     | Description                                                                   | Default    |
+| -----------       | -------- | ----------------------------------------------------------------------------- | -------    |
+| **process_types** | _hash_   | Process names and start commands for the droplet.                             | {"web": "} |
+
+#### Permitted Roles
+|                 |     |
+| ---             | --- |
+| Admin           |     |
+| Space Developer |     |

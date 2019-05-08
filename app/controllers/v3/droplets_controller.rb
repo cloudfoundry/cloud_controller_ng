@@ -7,12 +7,21 @@ require 'actions/droplet_copy'
 require 'actions/droplet_update'
 require 'messages/droplets_list_message'
 require 'messages/droplet_copy_message'
+require 'messages/droplet_create_message'
 require 'messages/droplet_update_message'
 require 'cloud_controller/membership'
 require 'controllers/v3/mixins/app_sub_resource'
 
 class DropletsController < ApplicationController
   include AppSubResource
+
+  def create
+    droplet = hashed_params[:source_guid] ? create_copy : create_fresh
+
+    render status: :created, json: Presenters::V3::DropletPresenter.new(droplet)
+  rescue DropletCopy::InvalidCopyError => e
+    unprocessable!(e.message)
+  end
 
   def index
     message = DropletsListMessage.from_params(subresource_query_params)
@@ -74,7 +83,7 @@ class DropletsController < ApplicationController
     render status: :ok, json: Presenters::V3::DropletPresenter.new(droplet)
   end
 
-  def copy
+  def create_copy
     message = DropletCopyMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
@@ -85,17 +94,28 @@ class DropletsController < ApplicationController
     app_not_found! unless destination_app && permission_queryer.can_read_from_space?(destination_app.space.guid, destination_app.organization.guid)
     unauthorized! unless permission_queryer.can_write_to_space?(destination_app.space.guid)
 
-    droplet = DropletCopy.new(source_droplet).copy(destination_app, user_audit_info)
+    DropletCopy.new(source_droplet).copy(destination_app, user_audit_info)
+  end
 
-    render status: :created, json: Presenters::V3::DropletPresenter.new(droplet)
-  rescue DropletCopy::InvalidCopyError => e
-    unprocessable!(e.message)
+  def create_fresh
+    message = DropletCreateMessage.new(hashed_params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    app = AppModel.where(guid: message.app_guid).eager(:space, :organization).first
+    unprocessable_app!(message.app_guid) unless app && permission_queryer.can_read_from_space?(app.space.guid, app.organization.guid)
+    unauthorized! unless permission_queryer.can_write_to_space?(app.space.guid)
+
+    DropletCreate.new.create(app, message)
   end
 
   private
 
   def stagers
     CloudController::DependencyLocator.instance.stagers
+  end
+
+  def unprocessable_app!(app_guid)
+    unprocessable!("App with guid \"#{app_guid}\" does not exist, or you do not have access to it.")
   end
 
   def droplet_not_found!

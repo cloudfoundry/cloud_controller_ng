@@ -67,6 +67,7 @@ includes:
   - resources/buildpacks/upload_bits
   - resources/droplets/header
   - resources/droplets/object
+  - resources/droplets/create
   - resources/droplets/get
   - resources/droplets/list
   - resources/droplets/list_for_package
