@@ -88,7 +88,6 @@ RSpec.describe AppsV3Controller, type: :controller do
         get :index, params: { include: 'org,spaceship,borgs,space' }
 
         expect(response.status).to eq(400)
-
       end
 
       it 'does not include spaces if no one asks for them' do

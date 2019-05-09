@@ -29,7 +29,7 @@ module VCAP::CloudController
         expect(message.page).to eq(1)
         expect(message.per_page).to eq(5)
         expect(message.order_by).to eq('created_at')
-        expect(message.include).to eq(["space", "org"])
+        expect(message.include).to eq(['space', 'org'])
         expect(message.label_selector).to eq('foo in (stuff,things)')
         expect(message.requirements.first.key).to eq('foo')
         expect(message.requirements.first.operator).to eq(:in)
@@ -102,13 +102,13 @@ module VCAP::CloudController
       end
 
       it 'does not accept include that is not space' do
-        message = AppsListMessage.from_params({ include: 'space' })
+        message = AppsListMessage.from_params({ 'include' => 'space' })
         expect(message).to be_valid
-        message = AppsListMessage.from_params({ include: 'org' })
+        message = AppsListMessage.from_params({ 'include' => 'org' })
         expect(message).to be_valid
-        message = AppsListMessage.from_params({ include: 'space,org' })
+        message = AppsListMessage.from_params({ 'include' => 'space,org' })
         expect(message).to be_valid
-        message = AppsListMessage.from_params({ include: 'greg\'s buildpack' })
+        message = AppsListMessage.from_params({ 'include' => 'greg\'s buildpack' })
         expect(message).not_to be_valid
       end
 

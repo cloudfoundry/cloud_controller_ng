@@ -1,4 +1,3 @@
-
 require 'mappers/order_by_mapper'
 require 'presenters/helpers/censorship'
 

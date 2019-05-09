@@ -684,20 +684,20 @@ RSpec.describe 'Apps' do
 
     context 'including orgs and spaces' do
       it 'presents the apps listed with the orgs and spaces included' do
-        app_model1 = VCAP::CloudController::AppModel.make(:docker, name: 'name1', guid: "app1-guid", space: space)
+        app_model1 = VCAP::CloudController::AppModel.make(:docker, name: 'name1', guid: 'app1-guid', space: space)
 
         org1 = space.organization
-        org2 = VCAP::CloudController::Organization.make(name: "org2", guid:"org2-guid")
-        space2 = VCAP::CloudController::Space.make(name: "space2", guid: "space2-guid", organization: org2)
+        org2 = VCAP::CloudController::Organization.make(name: 'org2', guid: 'org2-guid')
+        space2 = VCAP::CloudController::Space.make(name: 'space2', guid: 'space2-guid', organization: org2)
 
-        unused_org = VCAP::CloudController::Organization.make(name: "unused_org", guid:"unused_org-guid")
+        unused_org = VCAP::CloudController::Organization.make(name: 'unused_org', guid: 'unused_org-guid')
 
-        VCAP::CloudController::Space.make(name: "unused_space", guid: "unused_space-guid", organization: unused_org)
+        VCAP::CloudController::Space.make(name: 'unused_space', guid: 'unused_space-guid', organization: unused_org)
 
         app_model2 = VCAP::CloudController::AppModel.make(
           :docker,
           name: 'name2',
-          guid: "app2-guid",
+          guid: 'app2-guid',
           space: space2
         )
 
@@ -809,28 +809,28 @@ RSpec.describe 'Apps' do
                 },
                 'relationships' => { 'quota' => { 'data' => { 'guid' => org1.quota_definition.guid } } },
               },
-                {
-                  'guid' => org2.guid,
-                  'created_at' => iso8601,
-                  'updated_at' => iso8601,
-                  'name' => org2.name,
-                  'metadata' => {
-                    'labels' => {},
-                    'annotations' => {},
-                  },
-                  'links' => {
-                    'self' => {
-                      'href' => "#{link_prefix}/v3/organizations/#{org2.guid}",
-                    },
-                    'default_domain' => {
-                      'href' => "#{link_prefix}/v3/organizations/#{org2.guid}/domains/default",
-                    },
-                    'domains' => {
-                      'href' => "#{link_prefix}/v3/organizations/#{org2.guid}/domains",
-                    },
-                  },
-                  'relationships' => { 'quota' => { 'data' => { 'guid' => org2.quota_definition.guid } } },
-                }
+                                  {
+                                    'guid' => org2.guid,
+                                    'created_at' => iso8601,
+                                    'updated_at' => iso8601,
+                                    'name' => org2.name,
+                                    'metadata' => {
+                                      'labels' => {},
+                                      'annotations' => {},
+                                    },
+                                    'links' => {
+                                      'self' => {
+                                        'href' => "#{link_prefix}/v3/organizations/#{org2.guid}",
+                                      },
+                                      'default_domain' => {
+                                        'href' => "#{link_prefix}/v3/organizations/#{org2.guid}/domains/default",
+                                      },
+                                      'domains' => {
+                                        'href' => "#{link_prefix}/v3/organizations/#{org2.guid}/domains",
+                                      },
+                                    },
+                                    'relationships' => { 'quota' => { 'data' => { 'guid' => org2.quota_definition.guid } } },
+                                  }
               ],
               'spaces' => [
                 {
@@ -856,7 +856,7 @@ RSpec.describe 'Apps' do
                       'href' => "#{link_prefix}/v3/organizations/#{space.organization.guid}"
                     }
                   }
-                },{
+                }, {
                 'guid' => space2.guid,
                 'created_at' => iso8601,
                 'updated_at' => iso8601,
