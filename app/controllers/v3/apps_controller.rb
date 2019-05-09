@@ -57,7 +57,7 @@ class AppsV3Controller < ApplicationController
   end
 
   def show
-    message = AppShowMessage.new(query_params)
+    message = AppShowMessage.from_params(query_params)
 
     invalid_param!(message.errors.full_messages) unless message.valid?
 

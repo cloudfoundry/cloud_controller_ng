@@ -7,11 +7,8 @@ module VCAP::CloudController
     validates_with NoAdditionalParamsValidator
     validates_with IncludeParamValidator, valid_values: ['space']
 
-    def initialize(params)
-      super
-      if self.requested?(:include)
-        self.include = self.include.split(',')
-      end
+    def self.from_params(params)
+      super(params, %w(include))
     end
   end
 end
