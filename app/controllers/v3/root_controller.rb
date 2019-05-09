@@ -1,70 +1,42 @@
 class RootController < ActionController::Base
   def v3_root
-    render :ok, json: MultiJson.dump(
-      {
-        links: {
-          self:  {
-            href: build_api_uri
-          },
-          apps: {
-            href: build_api_uri(path: '/apps')
-          },
-          buildpacks: {
-            href: build_api_uri(path: '/buildpacks')
-          },
-          builds: {
-            href: build_api_uri(path: '/builds')
-          },
-          deployments: {
-            href: build_api_uri(path: '/deployments'),
-            experimental: true,
-          },
-          domains: {
-            href: build_api_uri(path: '/domains'),
-            experimental: true,
-          },
-          droplets: {
-            href: build_api_uri(path: '/droplets')
-          },
-          feature_flags: {
-            href: build_api_uri(path: '/feature_flags')
-          },
-          isolation_segments: {
-            href: build_api_uri(path: '/isolation_segments')
-          },
-          organizations: {
-            href: build_api_uri(path: '/organizations')
-          },
-          packages: {
-            href: build_api_uri(path: '/packages')
-          },
-          processes: {
-            href: build_api_uri(path: '/processes')
-          },
-          resource_matches: {
-            href: build_api_uri(path: '/resource_matches'),
-            experimental: true,
-          },
-          service_instances: {
-            href: build_api_uri(path: '/service_instances')
-          },
-          spaces: {
-            href: build_api_uri(path: '/spaces')
-          },
-          stacks: {
-            href: build_api_uri(path: '/stacks')
-          },
-          tasks: {
-            href: build_api_uri(path: '/tasks')
-          },
-        }
-      }, pretty: true)
+    links = {
+      self: {
+        href: build_api_uri
+      }
+    }
+
+    links.merge!(create_link(:apps))
+    links.merge!(create_link(:buildpacks))
+    links.merge!(create_link(:builds))
+    links.merge!(create_link(:deployments, experimental: true))
+    links.merge!(create_link(:domains, experimental: true))
+    links.merge!(create_link(:droplets))
+    links.merge!(create_link(:feature_flags))
+    links.merge!(create_link(:isolation_segments))
+    links.merge!(create_link(:organizations))
+    links.merge!(create_link(:packages))
+    links.merge!(create_link(:processes))
+    links.merge!(create_link(:resource_matches, experimental: true))
+    links.merge!(create_link(:routes, experimental: true))
+    links.merge!(create_link(:service_instances))
+    links.merge!(create_link(:spaces))
+    links.merge!(create_link(:stacks))
+    links.merge!(create_link(:tasks))
+
+    render :ok, json: MultiJson.dump({ links: links }, pretty: true)
   end
 
   private
 
+  def create_link(key, experimental: false)
+    obj = { key => { href: build_api_uri(path: "/#{key}") } }
+    obj[key][:experimental] = true if experimental
+    obj
+  end
+
   def build_api_uri(path: nil)
-    my_uri        = URI::HTTP.build(host: VCAP::CloudController::Config.config.get(:external_domain), path: "/v3#{path}")
+    my_uri = URI::HTTP.build(host: VCAP::CloudController::Config.config.get(:external_domain), path: "/v3#{path}")
     my_uri.scheme = VCAP::CloudController::Config.config.get(:external_protocol)
     my_uri.to_s
   end
