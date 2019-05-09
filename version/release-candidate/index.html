@@ -1782,7 +1782,7 @@ information for your packages, droplets, processes, tasks, and more.</p>
 <tr>
 <td><strong>include</strong></td>
 <td><em>string</em></td>
-<td><strong>Experimental</strong> - Optionally include a list of unique related resources in the response. <br>Valid value is <code class="prettyprint">space</code></td>
+<td><strong>Experimental</strong> - Optionally include a list of unique related resources in the response. <br>Valid value are <code class="prettyprint">space</code> and <code class="prettyprint">org</code>, and can be compounded by a <code class="prettyprint">,</code></td>
 </tr>
 <tr>
 <td><strong>label_selector</strong></td>
@@ -3010,6 +3010,11 @@ resource can be created to initiate the staging process. A successful build resu
 <td><strong>app_guids</strong></td>
 <td><em>list of strings</em></td>
 <td>Comma-delimited list of app guids to filter by.</td>
+</tr>
+<tr>
+<td><strong>package_guids</strong></td>
+<td><em>list of strings</em></td>
+<td>Comma-delimited list of package guids to filter by.</td>
 </tr>
 <tr>
 <td><strong>page</strong></td>
@@ -13934,7 +13939,7 @@ applications without incurring downtime. This is different from the traditional 
 
           <h3 id="share-a-domain">Share a domain</h3>
 
-<p>This endpoint shares a organization-scoped domain to organizations specified by a list of organization guids. This will allow any of the organizations to use the organization-scoped domain.</p>
+<p>This endpoint shares an organization-scoped domain to other organizations specified by a list of organization guids. This will allow any of the other organizations to use the organization-scoped domain.</p>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/domains/[guid]/relationships/shared_organizations"</span> <span class="se">\</span>
