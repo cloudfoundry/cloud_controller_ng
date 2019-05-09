@@ -144,6 +144,9 @@ Rails.application.routes.draw do
   delete '/route_mappings/:route_mapping_guid', to: 'route_mappings#destroy'
   get '/apps/:app_guid/route_mappings', to: 'route_mappings#index'
 
+  # routes
+  post '/routes', to: 'routes#create'
+
   # service_bindings
   post '/service_bindings', to: 'service_bindings#create'
   get '/service_bindings/:guid', to: 'service_bindings#show'

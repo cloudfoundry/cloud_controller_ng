@@ -152,7 +152,7 @@ module VCAP::CloudController
 
           it 'is not valid' do
             expect(subject).not_to be_valid
-            expect(subject.errors_on(:relationships).any? { |e| e.include?('Organization guid') }).to be(true)
+            expect(subject.errors_on(:relationships)).to include(include('Organization guid'))
           end
         end
 
@@ -166,7 +166,7 @@ module VCAP::CloudController
 
           it 'is not valid' do
             expect(subject).not_to be_valid
-            expect(subject.errors_on(:relationships).any? { |e| e.include?('Organization must be structured like') }).to be(true)
+            expect(subject.errors_on(:relationships)).to include(include('Organization must be structured like'))
           end
         end
 
