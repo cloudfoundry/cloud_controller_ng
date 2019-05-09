@@ -102,6 +102,7 @@
 
 
 
+
           
 
 
@@ -1782,7 +1783,7 @@ information for your packages, droplets, processes, tasks, and more.</p>
 <tr>
 <td><strong>include</strong></td>
 <td><em>string</em></td>
-<td><strong>Experimental</strong> - Optionally include a list of unique related resources in the response. <br>Valid value are <code class="prettyprint">space</code> and <code class="prettyprint">org</code>, and can be compounded by a <code class="prettyprint">,</code></td>
+<td><strong>Experimental</strong> - Optionally include a list of unique related resources in the response. <br>Valid values are <code class="prettyprint">space</code> and <code class="prettyprint">org</code>, and are separated by a <code class="prettyprint">,</code></td>
 </tr>
 <tr>
 <td><strong>label_selector</strong></td>
@@ -4116,6 +4117,137 @@ Their values will be <code class="prettyprint">null</code> by default and will c
 <td><strong>image</strong></td>
 <td><em>string</em></td>
 <td>Docker image name.</td>
+</tr>
+</tbody></table>
+
+          <h3 id="create-a-droplet-experimental">Create a droplet (experimental)</h3>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/droplets"</span> <span class="se">\</span>
+  -X POST <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+  -H <span class="s2">"Content-type: application/json"</span> <span class="se">\</span>
+  -d <span class="s1">'{
+    "relationships": {
+      "app": {
+        "data": {
+          "guid": "[app-guid]"
+        }
+      }
+    },
+    "process_types": {
+      "rake": "bundle exec rake",
+      "web": "bundle exec rackup config.ru -p $PORT"
+    }
+  }'</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">201</span> <span class="ne">Created</span>
+<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
+
+<span class="p">{</span><span class="w">
+  </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"585bc3c1-3743-497d-88b0-403ad6b56d16"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"AWAITING_UPLOAD"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"error"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"lifecycle"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"buildpack"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"execution_metadata"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"process_types"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"rake"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bundle exec rake"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"web"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bundle exec rackup config.ru -p $PORT"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"checksum"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"sha256"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"buildpacks"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ruby_buildpack"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"detect_output"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ruby 1.6.14"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1.1.1."</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"buildpack_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ruby"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">],</span><span class="w">
+  </span><span class="nt">"stack"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cflinuxfs3"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"image"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-28T23:39:34Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-28T23:39:47Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/droplets/585bc3c1-3743-497d-88b0-403ad6b56d16"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"assign_current_droplet"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/7b34f1cf-7e73-428a-bb5a-8a17a8058396/relationships/current_droplet"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"PATCH"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+
+</span></code></pre>
+
+<h4 id="definition">Definition</h4>
+
+<p><code class="prettyprint">POST /v3/droplets</code></p>
+
+<h4 id="required-parameters">Required Parameters</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>app</strong></td>
+<td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
+<td>A relationship to an app.</td>
+</tr>
+</tbody></table>
+
+<h4 id="optional-parameters">Optional Parameters</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>process_types</strong></td>
+<td><em>hash</em></td>
+<td>Process names and start commands for the droplet.</td>
+<td>{&ldquo;web&rdquo;: &ldquo;}</td>
+</tr>
+</tbody></table>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Admin</td>
+<td></td>
+</tr>
+<tr>
+<td>Space Developer</td>
+<td></td>
 </tr>
 </tbody></table>
 
