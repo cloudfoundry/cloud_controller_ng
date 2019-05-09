@@ -11,7 +11,7 @@ RSpec.describe Database::BatchDelete do
     end
 
     it 'deletes in batches' do
-      timestamp = VCAP::CloudController::Event.db.fetch('SELECT CURRENT_TIMESTAMP').first[:now] - 5.days
+      timestamp = VCAP::CloudController::Event.db.fetch('SELECT CURRENT_TIMESTAMP as now').first[:now] - 5.days
       dataset = VCAP::CloudController::Event.where(Sequel.lit('created_at < ?', timestamp))
       batch_delete = Database::BatchDelete.new(dataset, 1)
       expect(batch_delete).to receive(:delete_batch).exactly(4).times.and_call_original
