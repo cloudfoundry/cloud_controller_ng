@@ -5,6 +5,7 @@ RSpec.describe 'Domains Request' do
   let(:user) { VCAP::CloudController::User.make }
   let(:space) { VCAP::CloudController::Space.make }
   let(:org) { space.organization }
+  let(:admin_header) { headers_for(user, scopes: %w(cloud_controller.admin)) }
 
   before do
     VCAP::CloudController::Domain.dataset.destroy # this will clean up the seeded test domains
@@ -261,8 +262,8 @@ RSpec.describe 'Domains Request' do
 
       describe 'when filtering by name' do
         let(:shared_visible_orgs) { [{ guid: user_visible_org.guid }] }
-
-        let(:api_call) { lambda { |user_headers| get "/v3/domains?names=#{visible_shared_private_domain.name}", nil, user_headers } }
+        let(:endpoint) { "/v3/domains?names=#{visible_shared_private_domain.name}" }
+        let(:api_call) { lambda { |user_headers| get endpoint, nil, user_headers } }
 
         let(:expected_codes_and_responses) do
           h = Hash.new(
@@ -284,10 +285,29 @@ RSpec.describe 'Domains Request' do
         end
 
         it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+
+        context 'pagination' do
+          let(:pagination_hsh) do
+            {
+              'total_results' => 1,
+              'total_pages' => 1,
+              'first' => { 'href' => "#{link_prefix}#{endpoint}&page=1&per_page=50" },
+              'last' => { 'href' => "#{link_prefix}#{endpoint}&page=1&per_page=50" },
+              'next' => nil,
+              'previous' => nil
+            }
+          end
+
+          it 'paginates the results' do
+            get endpoint, nil, admin_header
+            expect(pagination_hsh).to eq(parsed_response['pagination'])
+          end
+        end
       end
 
       describe 'when filtering by owning organization guid' do
-        let(:api_call) { lambda { |user_headers| get "/v3/domains?organization_guids=#{visible_shared_private_domain.owning_organization_guid}", nil, user_headers } }
+        let(:endpoint) { "/v3/domains?organization_guids=#{visible_shared_private_domain.owning_organization_guid}" }
+        let(:api_call) { lambda { |user_headers| get endpoint, nil, user_headers } }
 
         context 'when the user can read globally' do
           let(:expected_codes_and_responses) do
@@ -325,6 +345,24 @@ RSpec.describe 'Domains Request' do
 
           it_behaves_like 'permissions for list endpoint', LOCAL_ROLES
         end
+
+        context 'pagination' do
+          let(:pagination_hsh) do
+            {
+              'total_results' => 2,
+              'total_pages' => 1,
+              'first' => { 'href' => "#{link_prefix}#{endpoint}&page=1&per_page=50" },
+              'last' => { 'href' => "#{link_prefix}#{endpoint}&page=1&per_page=50" },
+              'next' => nil,
+              'previous' => nil
+            }
+          end
+
+          it 'paginates the results' do
+            get endpoint, nil, admin_header
+            expect(pagination_hsh).to eq(parsed_response['pagination'])
+          end
+        end
       end
     end
 
@@ -335,8 +373,6 @@ RSpec.describe 'Domains Request' do
       let!(:domain2) { VCAP::CloudController::PrivateDomain.make(name: 'dom2.com', owning_organization: org) }
       let!(:domain2_label) { VCAP::CloudController::DomainLabelModel.make(resource_guid: domain2.guid, key_name: 'animal', value: 'cow') }
       let!(:domain2__exclusive_label) { VCAP::CloudController::DomainLabelModel.make(resource_guid: domain2.guid, key_name: 'santa', value: 'claus') }
-
-      let(:admin_header) { headers_for(user, scopes: %w(cloud_controller.admin)) }
 
       it 'returns a 200 and the filtered apps for "in" label selector' do
         get '/v3/domains?label_selector=animal in (dog)', nil, admin_header
