@@ -6,9 +6,9 @@ RSpec.describe 'Routes Request' do
   let(:admin_header) { admin_headers_for(user) }
   let(:space) { VCAP::CloudController::Space.make }
   let(:org) { space.organization }
-  let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: space.organization) }
 
   describe 'GET /v3/routes/:guid' do
+    let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: space.organization) }
     let(:route) { VCAP::CloudController::Route.make(space: space, domain: domain) }
     let(:api_call) { lambda { |user_headers| get "/v3/routes/#{route.guid}", nil, user_headers } }
     let(:route_json) do
@@ -82,112 +82,205 @@ RSpec.describe 'Routes Request' do
   end
 
   describe 'POST /v3/routes' do
-    describe 'when creating a route without a host' do
-      let(:params) do
-        {
-          relationships: {
-            space: {
-              data: { guid: space.guid }
-            },
-            domain: {
-              data: { guid: domain.guid }
-            },
-          }
-        }
-      end
+    context 'when creating a route in a scoped domain' do
+      let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: space.organization) }
 
-      let(:route_json) do
-        {
-          guid: UUID_REGEX,
-          host: '',
-          created_at: iso8601,
-          updated_at: iso8601,
-          relationships: {
-            space: {
-              data: { guid: space.guid }
-            },
-            domain: {
-              data: { guid: domain.guid }
-            },
-          },
-          links: {
-            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },
-            space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
-            domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{domain.guid}) },
+      describe 'when creating a route without a host' do
+        let(:params) do
+          {
+            relationships: {
+              space: {
+                data: { guid: space.guid }
+              },
+              domain: {
+                data: { guid: domain.guid }
+              },
+            }
           }
-        }
-      end
-
-      describe 'valid routes' do
-        let(:api_call) { lambda { |user_headers| post '/v3/routes', params.to_json, user_headers } }
-
-        let(:expected_codes_and_responses) do
-          h = Hash.new(
-            code: 403,
-          )
-          h['admin'] = {
-            code: 201,
-            response_object: route_json
-          }
-          h.freeze
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        let(:route_json) do
+          {
+            guid: UUID_REGEX,
+            host: '',
+            created_at: iso8601,
+            updated_at: iso8601,
+            relationships: {
+              space: {
+                data: { guid: space.guid }
+              },
+              domain: {
+                data: { guid: domain.guid }
+              },
+            },
+            links: {
+              self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },
+              space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
+              domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{domain.guid}) },
+            }
+          }
+        end
+
+        describe 'valid routes' do
+          let(:api_call) { lambda { |user_headers| post '/v3/routes', params.to_json, user_headers } }
+
+          let(:expected_codes_and_responses) do
+            h = Hash.new(
+              code: 403,
+            )
+            h['admin'] = {
+              code: 201,
+              response_object: route_json
+            }
+            h.freeze
+          end
+
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        end
+      end
+
+      describe 'when creating a route with a host' do
+        let(:params) do
+          {
+            host: 'some-host',
+            relationships: {
+              space: {
+                data: { guid: space.guid }
+              },
+              domain: {
+                data: { guid: domain.guid }
+              },
+            }
+          }
+        end
+
+        let(:route_json) do
+          {
+            guid: UUID_REGEX,
+            host: 'some-host',
+            created_at: iso8601,
+            updated_at: iso8601,
+            relationships: {
+              space: {
+                data: { guid: space.guid }
+              },
+              domain: {
+                data: { guid: domain.guid }
+              },
+            },
+            links: {
+              self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },
+              space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
+              domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{domain.guid}) },
+            }
+          }
+        end
+
+        describe 'valid routes' do
+          let(:api_call) { lambda { |user_headers| post '/v3/routes', params.to_json, user_headers } }
+
+          let(:expected_codes_and_responses) do
+            h = Hash.new(
+              code: 403,
+            )
+            h['admin'] = {
+              code: 201,
+              response_object: route_json
+            }
+            h.freeze
+          end
+
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        end
       end
     end
 
-    describe 'when creating a route with a host' do
-      let(:params) do
-        {
-          host: 'some-host',
-          relationships: {
-            space: {
-              data: { guid: space.guid }
-            },
-            domain: {
-              data: { guid: domain.guid }
-            },
-          }
-        }
-      end
+    context 'when creating a route in a unscoped domain' do
+      let(:domain) { VCAP::CloudController::SharedDomain.make }
 
-      let(:route_json) do
-        {
-          guid: UUID_REGEX,
-          host: 'some-host',
-          created_at: iso8601,
-          updated_at: iso8601,
-          relationships: {
-            space: {
-              data: { guid: space.guid }
-            },
-            domain: {
-              data: { guid: domain.guid }
-            },
-          },
-          links: {
-            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },
-            space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
-            domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{domain.guid}) },
+      describe 'when creating a route without a host' do
+        let(:params) do
+          {
+            relationships: {
+              space: {
+                data: { guid: space.guid }
+              },
+              domain: {
+                data: { guid: domain.guid }
+              },
+            }
           }
-        }
-      end
-
-      describe 'valid routes' do
-        let(:api_call) { lambda { |user_headers| post '/v3/routes', params.to_json, user_headers } }
-
-        let(:expected_codes_and_responses) do
-          h = Hash.new(
-            code: 403,
-          )
-          h['admin'] = {
-            code: 201,
-            response_object: route_json
-          }
-          h.freeze
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        describe 'valid routes' do
+          let(:expected_codes_and_responses) do
+            h = Hash.new(
+              code: 422,
+            )
+            h.freeze
+          end
+
+          it 'fails with a helpful message' do
+            post '/v3/routes', params.to_json, admin_header
+            expect(last_response.status).to eq(422)
+            expect(last_response).to have_error_message('Missing host. Routes in shared domains must have a host defined.')
+          end
+        end
+      end
+
+      describe 'when creating a route with a host' do
+        let(:params) do
+          {
+            host: 'some-host',
+            relationships: {
+              space: {
+                data: { guid: space.guid }
+              },
+              domain: {
+                data: { guid: domain.guid }
+              },
+            }
+          }
+        end
+
+        let(:route_json) do
+          {
+            guid: UUID_REGEX,
+            host: 'some-host',
+            created_at: iso8601,
+            updated_at: iso8601,
+            relationships: {
+              space: {
+                data: { guid: space.guid }
+              },
+              domain: {
+                data: { guid: domain.guid }
+              },
+            },
+            links: {
+              self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },
+              space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
+              domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{domain.guid}) },
+            }
+          }
+        end
+
+        describe 'valid routes' do
+          let(:api_call) { lambda { |user_headers| post '/v3/routes', params.to_json, user_headers } }
+
+          let(:expected_codes_and_responses) do
+            h = Hash.new(
+              code: 403,
+            )
+            h['admin'] = {
+              code: 201,
+              response_object: route_json
+            }
+            h.freeze
+          end
+
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        end
       end
     end
 
@@ -208,6 +301,8 @@ RSpec.describe 'Routes Request' do
     end
 
     context 'when the space does not exist' do
+      let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: space.organization) }
+
       let(:params_with_invalid_space) do
         {
           relationships: {
@@ -274,6 +369,7 @@ RSpec.describe 'Routes Request' do
     end
 
     context 'when the host-less route has already been created for this domain' do
+      let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: space.organization) }
       let!(:existing_route) { VCAP::CloudController::Route.make(host: '', space: space, domain: domain) }
 
       let(:params_for_duplicate_route) do
@@ -297,6 +393,7 @@ RSpec.describe 'Routes Request' do
     end
 
     context 'when the space quota for routes is maxed out' do
+      let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: space.organization) }
       let!(:space_quota_definition) { VCAP::CloudController::SpaceQuotaDefinition.make(total_routes: 0, organization: org) }
       let!(:space_with_quota) { VCAP::CloudController::Space.make(space_quota_definition: space_quota_definition, organization: org) }
 

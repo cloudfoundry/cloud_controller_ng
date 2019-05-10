@@ -38,6 +38,10 @@ module VCAP::CloudController
         error!("Routes quota exceeded for organization '#{space.organization.name}'.")
       end
 
+      if error.errors.on(:host)&.include?('is required for shared-domains')
+        error!('Missing host. Routes in shared domains must have a host defined.')
+      end
+
       error!(error.message)
     end
 

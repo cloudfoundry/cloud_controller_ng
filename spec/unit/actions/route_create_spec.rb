@@ -87,7 +87,7 @@ module VCAP::CloudController
         let!(:space_quota_definition) { SpaceQuotaDefinition.make(total_routes: 0, organization: org) }
         let!(:space_with_quota) do
           Space.make(space_quota_definition: space_quota_definition,
-            organization: org)
+                     organization: org)
         end
 
         let(:message) do
@@ -157,11 +157,32 @@ module VCAP::CloudController
 
         it 'raises an error with a helpful message' do
           expect {
-              subject.create(message: message, space: space, domain: domain_with_long_name)
+            subject.create(message: message, space: space, domain: domain_with_long_name)
           }.to raise_error(RouteCreate::Error, 'host combined with domain name must be no more than 253 characters')
         end
       end
 
+      context 'when the domain is unscoped' do
+        let(:shared_domain) { SharedDomain.make }
+
+        it 'requires host not to be empty' do
+          message = RouteCreateMessage.new({
+            host: '',
+            relationships: {
+              space: {
+                data: { guid: space.guid }
+              },
+              domain: {
+                data: { guid: shared_domain.guid }
+              },
+            },
+          })
+
+          expect {
+            subject.create(message: message, space: space, domain: shared_domain)
+          }.to raise_error(RouteCreate::Error, 'Missing host. Routes in shared domains must have a host defined.')
+        end
+      end
     end
   end
 end
