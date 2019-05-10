@@ -2,9 +2,23 @@ require 'messages/base_message'
 
 module VCAP::CloudController
   class RouteCreateMessage < BaseMessage
+    MAXIMUM_DOMAIN_LABEL_LENGTH = 63
+
     register_allowed_keys [
+      :host,
       :relationships
     ]
+
+    validates :host,
+      allow_nil: true,
+      string: true,
+      length: {
+        maximum: MAXIMUM_DOMAIN_LABEL_LENGTH
+      },
+      format: {
+        with: /\A([\w\-]+|\*)?\z/,
+        message: 'must be either "*" or contain only alphanumeric characters, "_", or "-"',
+      }
 
     validates :relationships, presence: true
 

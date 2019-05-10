@@ -5,7 +5,7 @@ module VCAP::CloudController
 
     def create(message:, space:, domain:)
       route = Route.new(
-        host: '',
+        host: message.host || '',
         space_guid: message.space_guid,
         domain_guid: message.domain_guid
       )

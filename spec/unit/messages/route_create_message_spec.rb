@@ -9,6 +9,7 @@ module VCAP::CloudController
       context 'when valid params are given' do
         let(:params) do
           {
+            host: 'some-host',
             relationships: {
               space: { data: { guid: 'space-guid' } },
               domain: { data: { guid: 'domain-guid' } },
@@ -44,6 +45,84 @@ module VCAP::CloudController
         it 'is not valid' do
           expect(subject).not_to be_valid
           expect(subject.errors.full_messages[0]).to include("Unknown field(s): 'unexpected'")
+        end
+      end
+
+      context 'host' do
+        context 'when not provided' do
+          let(:params) do
+            {
+              relationships: {
+                space: { data: { guid: 'space-guid' } },
+                domain: { data: { guid: 'domain-guid' } },
+              }
+            }
+          end
+
+          it 'is valid' do
+            expect(subject).to be_valid
+          end
+        end
+
+        context 'when not a string' do
+          let(:params) do
+            { host: 5 }
+          end
+
+          it 'is not valid' do
+            expect(subject).not_to be_valid
+            expect(subject.errors[:host]).to include('must be a string')
+          end
+        end
+
+        context 'when an empty string' do
+          let(:params) do
+            {
+              host: '',
+              relationships: {
+                space: { data: { guid: 'space-guid' } },
+                domain: { data: { guid: 'domain-guid' } },
+              }
+            }
+          end
+
+          it 'is valid' do
+            expect(subject).to be_valid
+          end
+        end
+
+        context 'when it is too long' do
+          let(:params) { { host: 'B' * (RouteCreateMessage::MAXIMUM_DOMAIN_LABEL_LENGTH + 1) } }
+
+          it 'is not valid' do
+            expect(subject).to be_invalid
+            expect(subject.errors[:host]).to include "is too long (maximum is #{RouteCreateMessage::MAXIMUM_DOMAIN_LABEL_LENGTH} characters)"
+          end
+        end
+
+        context 'when it contains non-alphanumeric characters other than - and _' do
+          let(:params) { { host: 'somethingwitha.' } }
+
+          it 'is not valid' do
+            expect(subject).to be_invalid
+            expect(subject.errors[:host]).to match ['must be either "*" or contain only alphanumeric characters, "_", or "-"']
+          end
+        end
+
+        context 'when its a wildcard' do
+          let(:params) do
+            {
+              host: '*',
+              relationships: {
+                space: { data: { guid: 'space-guid' } },
+                domain: { data: { guid: 'domain-guid' } },
+              }
+            }
+          end
+
+          it 'is valid' do
+            expect(subject).to be_valid
+          end
         end
       end
 

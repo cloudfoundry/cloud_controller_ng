@@ -137,6 +137,31 @@ module VCAP::CloudController
           }.to raise_error(RouteCreate::Error, "Routes quota exceeded for organization '#{org_with_quota.name}'.")
         end
       end
+
+      context 'when the FQDN is too long' do
+        let(:domain_with_long_name) { Domain.make(owning_organization: org, name: "#{'a' * 60}.#{'b' * 60}.#{'c' * 60}.#{'d' * 60}.com") }
+
+        let(:message) do
+          RouteCreateMessage.new({
+            host: 'h' * 60,
+            relationships: {
+              space: {
+                data: { guid: space.guid }
+              },
+              domain: {
+                data: { guid: domain_with_long_name.guid }
+              },
+            },
+          })
+        end
+
+        it 'raises an error with a helpful message' do
+          expect {
+              subject.create(message: message, space: space, domain: domain_with_long_name)
+          }.to raise_error(RouteCreate::Error, 'host combined with domain name must be no more than 253 characters')
+        end
+      end
+
     end
   end
 end

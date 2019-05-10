@@ -14,6 +14,7 @@ RSpec.describe 'Routes Request' do
     let(:route_json) do
       {
         guid: UUID_REGEX,
+        host: route.host,
         created_at: iso8601,
         updated_at: iso8601,
         relationships: {
@@ -81,23 +82,79 @@ RSpec.describe 'Routes Request' do
   end
 
   describe 'POST /v3/routes' do
-    let(:params) do
-      {
-        relationships: {
-          space: {
-            data: { guid: space.guid }
-          },
-          domain: {
-            data: { guid: domain.guid }
-          },
+    describe 'when creating a route without a host' do
+      let(:params) do
+        {
+          relationships: {
+            space: {
+              data: { guid: space.guid }
+            },
+            domain: {
+              data: { guid: domain.guid }
+            },
+          }
         }
-      }
-    end
+      end
 
-    describe 'when creating a route' do
       let(:route_json) do
         {
           guid: UUID_REGEX,
+          host: '',
+          created_at: iso8601,
+          updated_at: iso8601,
+          relationships: {
+            space: {
+              data: { guid: space.guid }
+            },
+            domain: {
+              data: { guid: domain.guid }
+            },
+          },
+          links: {
+            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },
+            space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
+            domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{domain.guid}) },
+          }
+        }
+      end
+
+      describe 'valid routes' do
+        let(:api_call) { lambda { |user_headers| post '/v3/routes', params.to_json, user_headers } }
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(
+            code: 403,
+          )
+          h['admin'] = {
+            code: 201,
+            response_object: route_json
+          }
+          h.freeze
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
+    end
+
+    describe 'when creating a route with a host' do
+      let(:params) do
+        {
+          host: 'some-host',
+          relationships: {
+            space: {
+              data: { guid: space.guid }
+            },
+            domain: {
+              data: { guid: domain.guid }
+            },
+          }
+        }
+      end
+
+      let(:route_json) do
+        {
+          guid: UUID_REGEX,
+          host: 'some-host',
           created_at: iso8601,
           updated_at: iso8601,
           relationships: {
@@ -136,7 +193,7 @@ RSpec.describe 'Routes Request' do
 
     describe 'when the user is not logged in' do
       it 'returns 401 for Unauthenticated requests' do
-        post '/v3/routes', params.to_json, base_json_headers
+        post '/v3/routes', {}.to_json, base_json_headers
         expect(last_response.status).to eq(401)
       end
     end
@@ -145,7 +202,7 @@ RSpec.describe 'Routes Request' do
       let(:user_header) { headers_for(user, scopes: ['cloud_controller.read']) }
 
       it 'returns a 403' do
-        post '/v3/routes', params.to_json, user_header
+        post '/v3/routes', {}.to_json, user_header
         expect(last_response.status).to eq(403)
       end
     end
