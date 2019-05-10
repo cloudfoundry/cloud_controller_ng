@@ -1,0 +1,50 @@
+### Create a route
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/routes" \
+  -X POST \
+  -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
+  -d '{
+    "relationships": {
+      "domain": {
+        "data": { "guid": "domain-guid" }
+      },
+      "space": {
+        "data": { "guid": "space-guid" }
+      }
+    }
+  }'
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 201 Created
+Content-Type: application/json
+
+<%= yield_content :single_route %>
+```
+
+#### Definition
+`POST /v3/routes`
+
+#### Required Parameters
+
+Name         | Type     | Description
+------------ | -------  | -----------
+| **space**  | [_to-one relationship_](#to-one-relationships) | A relationship to the space containing the route. Routes can only be mapped to destinations in that space. |
+| **domain** | [_to-one relationship_](#to-one-relationships) | A relationship to the domain of the route.                                                                 |
+
+#### Permitted Roles
+
+Role  | Notes
+----- | ---
+Admin |
+

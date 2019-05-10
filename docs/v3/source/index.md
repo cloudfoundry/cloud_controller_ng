@@ -25,6 +25,7 @@ includes:
   - api_resources/resource_matches
   - api_resources/revisions
   - api_resources/route_mappings
+  - api_resources/routes
   - api_resources/service_bindings
   - api_resources/service_instances
   - api_resources/sidecars
@@ -207,6 +208,9 @@ includes:
   - experimental_resources/route_mappings/list_for_app
   - experimental_resources/route_mappings/update
   - experimental_resources/route_mappings/delete
+  - experimental_resources/routes/header
+  - experimental_resources/routes/object
+  - experimental_resources/routes/create
   - experimental_resources/service_bindings/header
   - experimental_resources/service_bindings/object
   - experimental_resources/service_bindings/create
