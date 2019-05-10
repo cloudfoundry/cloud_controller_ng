@@ -5,7 +5,7 @@ RSpec.describe 'Apps' do
   let(:user) { VCAP::CloudController::User.make }
   let(:user_header) { headers_for(user, email: user_email, user_name: user_name) }
   let(:admin_header) { admin_headers_for(user) }
-  let(:space) { VCAP::CloudController::Space.make }
+  let(:space) { VCAP::CloudController::Space.make(organization: VCAP::CloudController::Organization.make(created_at: 3.days.ago)) }
   let(:stack) { VCAP::CloudController::Stack.make }
   let(:user_email) { Sham.email }
   let(:user_name) { 'some-username' }
@@ -687,7 +687,7 @@ RSpec.describe 'Apps' do
         app_model1 = VCAP::CloudController::AppModel.make(:docker, name: 'name1', guid: 'app1-guid', space: space)
 
         org1 = space.organization
-        org2 = VCAP::CloudController::Organization.make(name: 'org2', guid: 'org2-guid')
+        org2 = VCAP::CloudController::Organization.make(name: 'org2', guid: 'org2-guid', created_at: 1.day.ago)
         space2 = VCAP::CloudController::Space.make(name: 'space2', guid: 'space2-guid', organization: org2)
 
         unused_org = VCAP::CloudController::Organization.make(name: 'unused_org', guid: 'unused_org-guid')
@@ -705,184 +705,62 @@ RSpec.describe 'Apps' do
         expect(last_response.status).to eq(200)
 
         parsed_response = MultiJson.load(last_response.body)
-        expect(parsed_response).to be_a_response_like(
-          {
-            'pagination' => {
-              'total_results' => 2,
-              'total_pages' => 1,
-              'first' => { 'href' => "#{link_prefix}/v3/apps?include=space%2Corg&page=1&per_page=2" },
-              'last' => { 'href' => "#{link_prefix}/v3/apps?include=space%2Corg&page=1&per_page=2" },
-              'next' => nil,
-              'previous' => nil,
-            },
-            'resources' => [
-              {
-                'guid' => app_model1.guid,
-                'name' => 'name1',
-                'state' => 'STOPPED',
-                'lifecycle' => {
-                  'type' => 'docker',
-                  'data' => {}
-                },
-                'relationships' => {
-                  'space' => {
-                    'data' => {
-                      'guid' => space.guid
-                    }
-                  }
-                },
-                'created_at' => iso8601,
-                'updated_at' => iso8601,
-                'metadata' => { 'labels' => {}, 'annotations' => {} },
-                'links' => {
-                  'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}" },
-                  'processes' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/processes" },
-                  'packages' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/packages" },
-                  'environment_variables' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/environment_variables" },
-                  'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
-                  'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/droplets/current" },
-                  'droplets' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/droplets" },
-                  'tasks' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/tasks" },
-                  'route_mappings' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/route_mappings" },
-                  'start' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/actions/start", 'method' => 'POST' },
-                  'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/actions/stop", 'method' => 'POST' },
-                  'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/revisions" },
-                  'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/revisions/deployed" },
-                }
-              },
-              {
-                'guid' => app_model2.guid,
-                'name' => 'name2',
-                'state' => 'STOPPED',
-                'lifecycle' => {
-                  'type' => 'docker',
-                  'data' => {}
-                },
-                'relationships' => {
-                  'space' => {
-                    'data' => {
-                      'guid' => space2.guid
-                    }
-                  }
-                },
-                'created_at' => iso8601,
-                'updated_at' => iso8601,
-                'metadata' => { 'labels' => {}, 'annotations' => {} },
-                'links' => {
-                  'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}" },
-                  'processes' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/processes" },
-                  'packages' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/packages" },
-                  'environment_variables' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/environment_variables" },
-                  'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space2.guid}" },
-                  'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/droplets/current" },
-                  'droplets' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/droplets" },
-                  'tasks' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/tasks" },
-                  'route_mappings' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/route_mappings" },
-                  'start' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/actions/start", 'method' => 'POST' },
-                  'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/actions/stop", 'method' => 'POST' },
-                  'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/revisions" },
-                  'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/revisions/deployed" },
-                }
-              }
-            ],
-            'included' => {
 
-              'organizations' => [{
-                'guid' => org1.guid,
-                'created_at' => iso8601,
-                'updated_at' => iso8601,
-                'name' => org1.name,
-                'metadata' => {
-                  'labels' => {},
-                  'annotations' => {},
-                },
-                'links' => {
-                  'self' => {
-                    'href' => "#{link_prefix}/v3/organizations/#{org1.guid}",
-                  },
-                  'default_domain' => {
-                    'href' => "#{link_prefix}/v3/organizations/#{org1.guid}/domains/default",
-                  },
-                  'domains' => {
-                    'href' => "#{link_prefix}/v3/organizations/#{org1.guid}/domains",
-                  },
-                },
-                'relationships' => { 'quota' => { 'data' => { 'guid' => org1.quota_definition.guid } } },
+        expect(parsed_response['included']['organizations'][0]).to be_a_response_like({
+          'guid' => org1.guid,
+          'created_at' => iso8601,
+          'updated_at' => iso8601,
+          'name' => org1.name,
+          'metadata' => {
+            'labels' => {},
+            'annotations' => {},
+          },
+          'links' => {
+            'self' => {
+              'href' => "#{link_prefix}/v3/organizations/#{org1.guid}",
+            },
+            'default_domain' => {
+              'href' => "#{link_prefix}/v3/organizations/#{org1.guid}/domains/default",
+            },
+            'domains' => {
+              'href' => "#{link_prefix}/v3/organizations/#{org1.guid}/domains",
+            },
+          },
+          'relationships' => { 'quota' => { 'data' => { 'guid' => org1.quota_definition.guid } } },
+        })
+        expect(parsed_response['included']['organizations'][1]).to be_a_response_like({
+            'guid' => org2.guid,
+            'created_at' => iso8601,
+            'updated_at' => iso8601,
+            'name' => org2.name,
+            'metadata' => {
+              'labels' => {},
+              'annotations' => {},
+            },
+            'links' => {
+              'self' => {
+                'href' => "#{link_prefix}/v3/organizations/#{org2.guid}",
               },
-                                  {
-                                    'guid' => org2.guid,
-                                    'created_at' => iso8601,
-                                    'updated_at' => iso8601,
-                                    'name' => org2.name,
-                                    'metadata' => {
-                                      'labels' => {},
-                                      'annotations' => {},
-                                    },
-                                    'links' => {
-                                      'self' => {
-                                        'href' => "#{link_prefix}/v3/organizations/#{org2.guid}",
-                                      },
-                                      'default_domain' => {
-                                        'href' => "#{link_prefix}/v3/organizations/#{org2.guid}/domains/default",
-                                      },
-                                      'domains' => {
-                                        'href' => "#{link_prefix}/v3/organizations/#{org2.guid}/domains",
-                                      },
-                                    },
-                                    'relationships' => { 'quota' => { 'data' => { 'guid' => org2.quota_definition.guid } } },
-                                  }
-              ],
-              'spaces' => [
-                {
-                  'guid' => space.guid,
-                  'created_at' => iso8601,
-                  'updated_at' => iso8601,
-                  'name' => space.name,
-                  'relationships' => {
-                    'organization' => {
-                      'data' => {
-                        'guid' => space.organization.guid }
-                    }
-                  },
-                  'metadata' => {
-                    'labels' => {},
-                    'annotations' => {},
-                  },
-                  'links' => {
-                    'self' => {
-                      'href' => "#{link_prefix}/v3/spaces/#{space.guid}",
-                    },
-                    'organization' => {
-                      'href' => "#{link_prefix}/v3/organizations/#{space.organization.guid}"
-                    }
-                  }
-                }, {
-                'guid' => space2.guid,
-                'created_at' => iso8601,
-                'updated_at' => iso8601,
-                'name' => space2.name,
-                'relationships' => {
-                  'organization' => {
-                    'data' => {
-                      'guid' => org2.guid }
-                  }
-                },
-                'metadata' => {
-                  'labels' => {},
-                  'annotations' => {},
-                },
-                'links' => {
-                  'self' => {
-                    'href' => "#{link_prefix}/v3/spaces/#{space2.guid}",
-                  },
-                  'organization' => {
-                    'href' => "#{link_prefix}/v3/organizations/#{org2.guid}"
-                  }
-                }
-              }
-              ],
-            }
+              'default_domain' => {
+                'href' => "#{link_prefix}/v3/organizations/#{org2.guid}/domains/default",
+              },
+              'domains' => {
+                'href' => "#{link_prefix}/v3/organizations/#{org2.guid}/domains",
+              },
+            },
+            'relationships' => { 'quota' => { 'data' => { 'guid' => org2.quota_definition.guid } } },
           })
+      end
+
+      it 'flags unsupported includes that contain supported ones' do
+        get '/v3/apps?per_page=2&include=org,spaceship,borgs,space', nil, admin_header
+        expect(last_response.status).to eq(400)
+      end
+
+      it 'does not include spaces if no one asks for them' do
+        get '/v3/apps', nil, admin_header
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response).to_not have_key('included')
       end
     end
   end
