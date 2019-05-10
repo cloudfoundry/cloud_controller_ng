@@ -284,10 +284,11 @@ module VCAP::CloudController
             expect(lrp.max_pids).to eq(100)
             expect(lrp.memory_mb).to eq(128)
             expect(lrp.metrics_guid).to eq(process.app.guid)
-            expect(lrp.metric_tags.keys.size).to eq(4)
+            expect(lrp.metric_tags.keys.size).to eq(5)
 
             expect(lrp.metric_tags['source_id'].static).to eq(process.app.guid)
             expect(lrp.metric_tags['process_id'].static).to eq(process.guid)
+            expect(lrp.metric_tags['process_type'].static).to eq(process.type)
             expect(lrp.metric_tags['process_instance_id'].dynamic).to eq(:INSTANCE_GUID)
             expect(lrp.metric_tags['instance_id'].dynamic).to eq(:INDEX)
 
@@ -856,10 +857,11 @@ module VCAP::CloudController
             expect(lrp.max_pids).to eq(100)
             expect(lrp.memory_mb).to eq(128)
             expect(lrp.metrics_guid).to eq(process.app.guid)
-            expect(lrp.metric_tags.keys.size).to eq(4)
+            expect(lrp.metric_tags.keys.size).to eq(5)
 
             expect(lrp.metric_tags['source_id'].static).to eq(process.app.guid)
             expect(lrp.metric_tags['process_id'].static).to eq(process.guid)
+            expect(lrp.metric_tags['process_type'].static).to eq(process.type)
             expect(lrp.metric_tags['process_instance_id'].dynamic).to eq(:INSTANCE_GUID)
             expect(lrp.metric_tags['instance_id'].dynamic).to eq(:INDEX)
 

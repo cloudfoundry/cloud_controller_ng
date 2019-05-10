@@ -75,6 +75,7 @@ module VCAP::CloudController
           metric_tags:                      {
             'source_id' => METRIC_TAG_VALUE.new(static: process.app.guid),
             'process_id' => METRIC_TAG_VALUE.new(static: process.guid),
+            'process_type' => METRIC_TAG_VALUE.new(static: process.type),
             'process_instance_id' => METRIC_TAG_VALUE.new(dynamic: METRIC_TAG_VALUE::DynamicValue::INSTANCE_GUID),
             'instance_id' => METRIC_TAG_VALUE.new(dynamic: METRIC_TAG_VALUE::DynamicValue::INDEX),
           },
