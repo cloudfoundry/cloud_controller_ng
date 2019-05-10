@@ -146,6 +146,7 @@ Rails.application.routes.draw do
 
   # routes
   post '/routes', to: 'routes#create'
+  get '/routes/:guid', to: 'routes#show'
 
   # service_bindings
   post '/service_bindings', to: 'service_bindings#create'

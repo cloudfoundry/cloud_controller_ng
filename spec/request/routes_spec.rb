@@ -8,6 +8,78 @@ RSpec.describe 'Routes Request' do
   let(:org) { space.organization }
   let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: space.organization) }
 
+  describe 'GET /v3/routes/:guid' do
+    let(:route) { VCAP::CloudController::Route.make(space: space, domain: domain) }
+    let(:api_call) { lambda { |user_headers| get "/v3/routes/#{route.guid}", nil, user_headers } }
+    let(:route_json) do
+      {
+        guid: UUID_REGEX,
+        created_at: iso8601,
+        updated_at: iso8601,
+        relationships: {
+          space: {
+            data: { guid: route.space.guid }
+          },
+          domain: {
+            data: { guid: route.domain.guid }
+          }
+        },
+        links: {
+          self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },
+          space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{route.space.guid}) },
+          domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{route.domain.guid}) }
+        }
+      }
+    end
+
+    context 'when the user is a member in the routes org' do
+      let(:expected_codes_and_responses) do
+        h = Hash.new(
+          code: 200,
+          response_object: route_json
+        )
+
+        h['org_billing_manager'] = { code: 404 }
+        h['no_role'] = { code: 404 }
+        h
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+    end
+
+    context 'when the user is not a member in the routes org' do
+      let(:other_space) { VCAP::CloudController::Space.make }
+      let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: other_space.organization) }
+      let(:route) { VCAP::CloudController::Route.make(space: other_space, domain: domain) }
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 404)
+        h['admin'] = {
+          code: 200,
+          response_object: route_json
+        }
+        h['admin_read_only'] = {
+          code: 200,
+          response_object: route_json
+        }
+        h['global_auditor'] = {
+          code: 200,
+          response_object: route_json
+        }
+        h
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+    end
+
+    describe 'when the user is not logged in' do
+      it 'returns 401 for Unauthenticated requests' do
+        get "/v3/routes/#{route.guid}", nil, base_json_headers
+        expect(last_response.status).to eq(401)
+      end
+    end
+  end
+
   describe 'POST /v3/routes' do
     let(:params) do
       {

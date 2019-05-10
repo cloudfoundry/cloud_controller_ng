@@ -211,6 +211,7 @@ includes:
   - experimental_resources/routes/header
   - experimental_resources/routes/object
   - experimental_resources/routes/create
+  - experimental_resources/routes/get
   - experimental_resources/service_bindings/header
   - experimental_resources/service_bindings/object
   - experimental_resources/service_bindings/create

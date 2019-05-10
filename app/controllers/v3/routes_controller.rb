@@ -1,8 +1,19 @@
 require 'messages/route_create_message'
+require 'messages/route_show_message'
 require 'presenters/v3/route_presenter'
 require 'actions/route_create'
 
 class RoutesController < ApplicationController
+  def show
+    message = RouteShowMessage.new({ guid: hashed_params['guid'] })
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    route = Route.find(guid: message.guid)
+    route_not_found! unless route && permission_queryer.can_read_route?(route.space.guid, route.organization.guid)
+
+    render status: :ok, json: Presenters::V3::RoutePresenter.new(route)
+  end
+
   def create
     unauthorized! unless permission_queryer.can_write_globally?
 
@@ -22,6 +33,10 @@ class RoutesController < ApplicationController
   end
 
   private
+
+  def route_not_found!
+    resource_not_found!(:route)
+  end
 
   def unprocessable_space!
     unprocessable!('Invalid space. Ensure that the space exists and you have access to it.')
