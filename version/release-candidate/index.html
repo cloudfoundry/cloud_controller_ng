@@ -1781,14 +1781,14 @@ information for your packages, droplets, processes, tasks, and more.</p>
 <td>Value to sort by. Defaults to ascending. Prepend with <code class="prettyprint">-</code> to sort descending. <br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code>, <code class="prettyprint">name</code>.</td>
 </tr>
 <tr>
-<td><strong>include</strong></td>
-<td><em>string</em></td>
-<td><strong>Experimental</strong> - Optionally include a list of unique related resources in the response. <br>Valid values are <code class="prettyprint">space</code> and <code class="prettyprint">org</code>, and are separated by a <code class="prettyprint">,</code></td>
-</tr>
-<tr>
 <td><strong>label_selector</strong></td>
 <td><em>string</em></td>
 <td><strong>Experimental</strong> - A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements.</td>
+</tr>
+<tr>
+<td><strong>include</strong></td>
+<td><em>string</em></td>
+<td><strong>Experimental</strong> - Optionally include a list of unique related resources in the response. <br>Valid values are <code class="prettyprint">space</code> and <code class="prettyprint">org</code>, and are separated by a <code class="prettyprint">,</code></td>
 </tr>
 </tbody></table>
 
@@ -10431,6 +10431,11 @@ Content-Type: application/json
 <td><strong>label_selector</strong></td>
 <td><em>string</em></td>
 <td><strong>Experimental</strong> - A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements.</td>
+</tr>
+<tr>
+<td><strong>include</strong></td>
+<td><em>string</em></td>
+<td><strong>Experimental</strong> - Optionally include a list of unique related resources in the response. <br>Valid value is <code class="prettyprint">org</code>.</td>
 </tr>
 </tbody></table>
 
