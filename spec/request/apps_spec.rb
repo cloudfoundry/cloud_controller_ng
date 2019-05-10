@@ -684,7 +684,7 @@ RSpec.describe 'Apps' do
 
     context 'including orgs and spaces' do
       it 'presents the apps listed with the orgs and spaces included' do
-        app_model1 = VCAP::CloudController::AppModel.make(:docker, name: 'name1', guid: 'app1-guid', space: space)
+        VCAP::CloudController::AppModel.make(:docker, name: 'name1', guid: 'app1-guid', space: space)
 
         org1 = space.organization
         org2 = VCAP::CloudController::Organization.make(name: 'org2', guid: 'org2-guid', created_at: 1.day.ago)
@@ -694,7 +694,7 @@ RSpec.describe 'Apps' do
 
         VCAP::CloudController::Space.make(name: 'unused_space', guid: 'unused_space-guid', organization: unused_org)
 
-        app_model2 = VCAP::CloudController::AppModel.make(
+        VCAP::CloudController::AppModel.make(
           :docker,
           name: 'name2',
           guid: 'app2-guid',
