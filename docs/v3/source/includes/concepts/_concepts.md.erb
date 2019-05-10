@@ -319,6 +319,14 @@ Label values must adhere to the following restrictions:
 
 #### Selectors
 
+```
+Example label selector
+```
+
+```bash
+cf curl /v3/apps?label_selector=env=dev,%21chargeback-code,tier%20in%20%28backend,worker%29
+```
+
 Selectors allow users to filter and group API resources by the labels applied to them. A selector consists of one or
 more `requirements` in a comma-delimited list.
 
@@ -340,6 +348,8 @@ equality      | _key_`=`_value_ or _key_`==`_value_  | Returns all resources tha
 inequality    | _key_`!=`_value_                     | Returns all resources that either have not been assigned a label with the given _key_ or have a label with the given _key_ but a different _value_
 set inclusion | _key_ `in` (_value1_,_value2_...)    | Returns all resources that have been assigned a label with the given _key_ with one of the specified _value(s)_
 set exclusion | _key_ `notin` (_value1_,_value2_...) | Returns all resources that either have not been assigned a label with the given _key_ or have a label with the given _key_ but none of the specified _value(s)_
+
+See [the metadata documentation](https://docs.cloudfoundry.org/adminguide/metadata.html#query) for more information.
 
 ### Updating Labels and Annotations
 
