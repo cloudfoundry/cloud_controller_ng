@@ -767,16 +767,17 @@ RSpec.describe 'Apps' do
   end
 
   describe 'GET /v3/apps/:guid' do
-    let!(:buildpack) {VCAP::CloudController::Buildpack.make(name: 'bp-name')}
-    let!(:stack) {VCAP::CloudController::Stack.make(name: 'stack-name')}
-    let!(:app_model) {VCAP::CloudController::AppModel.make(
+    let!(:buildpack) { VCAP::CloudController::Buildpack.make(name: 'bp-name') }
+    let!(:stack) { VCAP::CloudController::Stack.make(name: 'stack-name') }
+    let!(:app_model) { VCAP::CloudController::AppModel.make(
       :buildpack,
       name: 'my_app',
       space: space,
       desired_state: 'STARTED',
-      environment_variables: {'unicorn' => 'horn'},
+      environment_variables: { 'unicorn' => 'horn' },
       droplet_guid: 'a-droplet-guid'
-    )}
+    )
+    }
 
     before do
       app_model.lifecycle_data.buildpacks = [buildpack.name]
@@ -785,7 +786,6 @@ RSpec.describe 'Apps' do
       app_model.add_process(VCAP::CloudController::ProcessModel.make(instances: 1))
       app_model.add_process(VCAP::CloudController::ProcessModel.make(instances: 2))
     end
-
 
     it 'gets a specific app' do
       get "/v3/apps/#{app_model.guid}", nil, user_header
@@ -937,7 +937,6 @@ RSpec.describe 'Apps' do
           },
           'relationships' => { 'quota' => { 'data' => { 'guid' => org.quota_definition.guid } } },
         }
-
       )
     end
   end
