@@ -68,6 +68,7 @@ class AppsV3Controller < ApplicationController
 
     decorators = []
     decorators << IncludeAppSpaceDecorator if message.include&.include?('space')
+    decorators << IncludeAppOrganizationDecorator if message.include&.include?('org')
 
     render status: :ok, json: Presenters::V3::AppPresenter.new(
       app,
