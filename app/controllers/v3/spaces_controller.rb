@@ -11,6 +11,22 @@ require 'fetchers/space_list_fetcher'
 require 'fetchers/space_fetcher'
 
 class SpacesV3Controller < ApplicationController
+  def index
+    message = SpacesListMessage.from_params(query_params)
+    invalid_param!(message.errors.full_messages) unless message.valid?
+
+    decorators = []
+    decorators << IncludeSpaceOrganizationDecorator if message.include&.include?('org')
+
+    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
+      presenter: Presenters::V3::SpacePresenter,
+      paginated_result: SequelPaginator.new.get_page(readable_spaces(message: message), message.try(:pagination_options)),
+      path: '/v3/spaces',
+      message: message,
+      decorators: decorators
+    )
+  end
+
   def show
     space = SpaceFetcher.new.fetch(hashed_params[:guid])
 
@@ -34,18 +50,6 @@ class SpacesV3Controller < ApplicationController
     render status: 201, json: Presenters::V3::SpacePresenter.new(space)
   rescue SpaceCreate::Error, AnnotationsUpdate::TooManyAnnotations => e
     unprocessable!(e.message)
-  end
-
-  def index
-    message = SpacesListMessage.from_params(query_params)
-    invalid_param!(message.errors.full_messages) unless message.valid?
-
-    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
-      presenter: Presenters::V3::SpacePresenter,
-      paginated_result: SequelPaginator.new.get_page(readable_spaces(message: message), message.try(:pagination_options)),
-      path: '/v3/spaces',
-      message: message
-    )
   end
 
   def update

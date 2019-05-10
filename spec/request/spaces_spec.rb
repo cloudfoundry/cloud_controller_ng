@@ -4,7 +4,7 @@ RSpec.describe 'Spaces' do
   let(:user) { VCAP::CloudController::User.make }
   let(:user_header) { headers_for(user) }
   let(:admin_header) { admin_headers_for(user) }
-  let(:organization)       { VCAP::CloudController::Organization.make name: 'Boardgames' }
+  let(:organization)       { VCAP::CloudController::Organization.make name: 'Boardgames', created_at: 2.days.ago }
   let!(:space1)            { VCAP::CloudController::Space.make name: 'Catan', organization: organization }
   let!(:space2)            { VCAP::CloudController::Space.make name: 'Ticket to Ride', organization: organization }
   let!(:space3)            { VCAP::CloudController::Space.make name: 'Agricola', organization: organization }
@@ -206,6 +206,80 @@ RSpec.describe 'Spaces' do
 
         parsed_response = MultiJson.load(last_response.body)
         expect(parsed_response['resources'].map { |space| space['guid'] }).to contain_exactly(spaceB.guid, spaceC.guid)
+      end
+    end
+
+    context('including org') do
+      # space with org1
+      let!(:other_org_space) { VCAP::CloudController::Space.make name: 'Agricola', organization: org2 }
+      let!(:org2)              { VCAP::CloudController::Organization.make name: 'Videogames', created_at: 1.days.ago }
+
+      it 'can includes all orgs for spaces' do
+        get '/v3/spaces?include=org', nil, admin_header
+        expect(last_response.status).to eq(200)
+        parsed_response = MultiJson.load(last_response.body)
+
+        orgs = parsed_response['included']['organizations']
+        expect(orgs).to be_present
+        expect(orgs.length).to eq 2
+        org1 = space1.organization
+
+        expect(orgs.map { |org| org['guid'] }).to eq [org1.guid, org2.guid]
+        expect(orgs[0]).to be_a_response_like({
+          'guid' => org1.guid,
+          'created_at' => iso8601,
+          'updated_at' => iso8601,
+          'name' => org1.name,
+          'metadata' => {
+            'labels' => {},
+            'annotations' => {},
+          },
+          'links' => {
+            'self' => {
+              'href' => "#{link_prefix}/v3/organizations/#{org1.guid}",
+            },
+            'default_domain' => {
+              'href' => "#{link_prefix}/v3/organizations/#{org1.guid}/domains/default",
+            },
+            'domains' => {
+              'href' => "#{link_prefix}/v3/organizations/#{org1.guid}/domains",
+            },
+          },
+          'relationships' => { 'quota' => { 'data' => { 'guid' => org1.quota_definition.guid } } },
+        })
+        expect(orgs[1]).to be_a_response_like({
+          'guid' => org2.guid,
+          'created_at' => iso8601,
+          'updated_at' => iso8601,
+          'name' => org2.name,
+          'metadata' => {
+            'labels' => {},
+            'annotations' => {},
+          },
+          'links' => {
+            'self' => {
+              'href' => "#{link_prefix}/v3/organizations/#{org2.guid}",
+            },
+            'default_domain' => {
+              'href' => "#{link_prefix}/v3/organizations/#{org2.guid}/domains/default",
+            },
+            'domains' => {
+              'href' => "#{link_prefix}/v3/organizations/#{org2.guid}/domains",
+            },
+          },
+          'relationships' => { 'quota' => { 'data' => { 'guid' => org2.quota_definition.guid } } },
+        })
+      end
+
+      it 'flags unsupported includes that contain supported ones' do
+        get '/v3/spaces?include=org,not_supported', nil, admin_header
+        expect(last_response.status).to eq(400)
+      end
+
+      it 'does not include spaces if no one asks for them' do
+        get '/v3/spaces', nil, admin_header
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response).to_not have_key('included')
       end
     end
   end

@@ -10,7 +10,8 @@ module VCAP::CloudController
           'per_page' => 5,
           'names' => 'foo,bar',
           'organization_guids' => 'org1-guid,org2-guid',
-          'guids' => 'space1-guid,space2-guid'
+          'guids' => 'space1-guid,space2-guid',
+          'include' => 'org'
         }
       end
 
@@ -24,6 +25,7 @@ module VCAP::CloudController
         expect(message.names).to eql(['foo', 'bar'])
         expect(message.organization_guids).to eql(['org1-guid', 'org2-guid'])
         expect(message.guids).to eql(['space1-guid', 'space2-guid'])
+        expect(message.include).to eql(['org'])
       end
 
       it 'converts requested keys to symbols' do
@@ -61,6 +63,15 @@ module VCAP::CloudController
 
         expect_any_instance_of(Validators::LabelSelectorRequirementValidator).to receive(:validate).with(message).and_call_original
         message.valid?
+      end
+
+      it 'validates possible includes' do
+        message = SpacesListMessage.from_params 'include' => 'org'
+        expect(message).to be_valid
+        message = SpacesListMessage.from_params 'include' => 'spaceship'
+        expect(message).to be_invalid
+        message = SpacesListMessage.from_params 'include' => 'org,spaceship'
+        expect(message).to be_invalid
       end
     end
   end

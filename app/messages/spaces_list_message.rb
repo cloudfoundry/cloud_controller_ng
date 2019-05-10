@@ -6,16 +6,18 @@ module VCAP::CloudController
       :names,
       :organization_guids,
       :guids,
+      :include,
     ]
 
     validates_with NoAdditionalParamsValidator
+    validates_with IncludeParamValidator, valid_values: ['org']
 
     validates :names, array: true, allow_nil: true
     validates :organization_guids, array: true, allow_nil: true
     validates :guids, array: true, allow_nil: true
 
     def self.from_params(params)
-      super(params, %w(names organization_guids guids))
+      super(params, %w(names organization_guids guids include))
     end
 
     def valid_order_by_values
