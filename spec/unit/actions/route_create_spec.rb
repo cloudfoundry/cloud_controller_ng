@@ -183,6 +183,97 @@ module VCAP::CloudController
           }.to raise_error(RouteCreate::Error, 'Missing host. Routes in shared domains must have a host defined.')
         end
       end
+
+      context 'when a route already exists' do
+        it 'prevents conflict with hostless route on a matching domain' do
+          Route.make(domain: domain, host: '', space: space)
+
+          message = RouteCreateMessage.new({
+            host: '',
+            relationships: {
+              space: {
+                data: { guid: space.guid }
+              },
+              domain: {
+                data: { guid: domain.guid }
+              },
+            },
+          })
+
+          expect {
+            subject.create(message: message, space: space, domain: domain)
+          }.to raise_error(RouteCreate::Error, "Route already exists for domain '#{domain.name}'.")
+        end
+
+        it 'prevents conflict with matching route' do
+          Route.make(domain: domain, host: 'a-host', space: space)
+
+          message = RouteCreateMessage.new({
+            host: 'a-host',
+            relationships: {
+              space: {
+                data: { guid: space.guid }
+              },
+              domain: {
+                data: { guid: domain.guid }
+              },
+            },
+          })
+
+          expect {
+            subject.create(message: message, space: space, domain: domain)
+          }.to raise_error(RouteCreate::Error, "Route already exists with host 'a-host' for domain '#{domain.name}'.")
+        end
+      end
+
+      context 'when the domain is internal' do
+        let(:internal_domain) { SharedDomain.make(internal: true) }
+
+        it 'requires host not to be a wildcard' do
+          message = RouteCreateMessage.new({
+            host: '*',
+            relationships: {
+              space: {
+                data: { guid: space.guid }
+              },
+              domain: {
+                data: { guid: internal_domain.guid }
+              },
+            },
+          })
+
+          expect {
+            subject.create(message: message, space: space, domain: internal_domain)
+          }.to raise_error(RouteCreate::Error, 'Wildcard hosts are not supported for internal domains.')
+        end
+      end
+
+      context 'when using a reserved system hostname' do
+        let(:system_domain) { SharedDomain.make }
+
+        before do
+          VCAP::CloudController::Config.config.set(:system_domain, system_domain.name)
+          VCAP::CloudController::Config.config.set(:system_hostnames, ['host'])
+        end
+
+        it 'prevents conflict with the system domain' do
+          message = RouteCreateMessage.new({
+            host: 'host',
+            relationships: {
+              space: {
+                data: { guid: space.guid }
+              },
+              domain: {
+                data: { guid: system_domain.guid }
+              },
+            },
+          })
+
+          expect {
+            subject.create(message: message, space: space, domain: system_domain)
+          }.to raise_error(RouteCreate::Error, 'Route conflicts with a reserved system route.')
+        end
+      end
     end
   end
 end

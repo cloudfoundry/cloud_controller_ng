@@ -195,7 +195,7 @@ RSpec.describe 'Routes Request' do
       end
     end
 
-    context 'when creating a route in a unscoped domain' do
+    context 'when creating a route in an unscoped domain' do
       let(:domain) { VCAP::CloudController::SharedDomain.make }
 
       describe 'when creating a route without a host' do
@@ -212,19 +212,10 @@ RSpec.describe 'Routes Request' do
           }
         end
 
-        describe 'valid routes' do
-          let(:expected_codes_and_responses) do
-            h = Hash.new(
-              code: 422,
-            )
-            h.freeze
-          end
-
-          it 'fails with a helpful message' do
-            post '/v3/routes', params.to_json, admin_header
-            expect(last_response.status).to eq(422)
-            expect(last_response).to have_error_message('Missing host. Routes in shared domains must have a host defined.')
-          end
+        it 'fails with a helpful message' do
+          post '/v3/routes', params.to_json, admin_header
+          expect(last_response.status).to eq(422)
+          expect(last_response).to have_error_message('Missing host. Routes in shared domains must have a host defined.')
         end
       end
 
@@ -284,7 +275,88 @@ RSpec.describe 'Routes Request' do
       end
     end
 
-    describe 'when the user is not logged in' do
+    context 'when creating a route in an internal domain' do
+      let(:domain) { VCAP::CloudController::SharedDomain.make(internal: true) }
+
+      describe 'when creating a route with a wildcard host' do
+        let(:params) do
+          {
+            host: '*',
+            relationships: {
+              space: {
+                data: { guid: space.guid }
+              },
+              domain: {
+                data: { guid: domain.guid }
+              },
+            }
+          }
+        end
+
+        it 'fails with a helpful message' do
+          post '/v3/routes', params.to_json, admin_header
+          expect(last_response.status).to eq(422)
+          expect(last_response).to have_error_message('Wildcard hosts are not supported for internal domains.')
+        end
+      end
+
+      describe 'when creating a route with a host' do
+        let(:params) do
+          {
+            host: 'some-host',
+            relationships: {
+              space: {
+                data: { guid: space.guid }
+              },
+              domain: {
+                data: { guid: domain.guid }
+              },
+            }
+          }
+        end
+
+        let(:route_json) do
+          {
+            guid: UUID_REGEX,
+            host: 'some-host',
+            created_at: iso8601,
+            updated_at: iso8601,
+            relationships: {
+              space: {
+                data: { guid: space.guid }
+              },
+              domain: {
+                data: { guid: domain.guid }
+              },
+            },
+            links: {
+              self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },
+              space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
+              domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{domain.guid}) },
+            }
+          }
+        end
+
+        describe 'valid routes' do
+          let(:api_call) { lambda { |user_headers| post '/v3/routes', params.to_json, user_headers } }
+
+          let(:expected_codes_and_responses) do
+            h = Hash.new(
+              code: 403,
+            )
+            h['admin'] = {
+              code: 201,
+              response_object: route_json
+            }
+            h.freeze
+          end
+
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        end
+      end
+    end
+
+    context 'when the user is not logged in' do
       it 'returns 401 for Unauthenticated requests' do
         post '/v3/routes', {}.to_json, base_json_headers
         expect(last_response.status).to eq(401)
@@ -390,6 +462,143 @@ RSpec.describe 'Routes Request' do
         expect(last_response.status).to eq(422)
         expect(last_response).to have_error_message("Route already exists for domain '#{domain.name}'.")
       end
+    end
+
+    context 'when there is already a route with the host/domain combination' do
+      let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: space.organization) }
+      let!(:existing_route) { VCAP::CloudController::Route.make(host: 'my-host', space: space, domain: domain) }
+
+      let(:params_for_duplicate_route) do
+        {
+          host: existing_route.host,
+          relationships: {
+            space: {
+              data: { guid: space.guid }
+            },
+            domain: {
+              data: { guid: domain.guid }
+            },
+          }
+        }
+      end
+
+      it 'returns a 422 with a helpful error message' do
+        post '/v3/routes', params_for_duplicate_route.to_json, admin_header
+        expect(last_response.status).to eq(422)
+        expect(last_response).to have_error_message("Route already exists with host '#{existing_route.host}' for domain '#{domain.name}'.")
+      end
+    end
+
+    context 'when there is already a domain matching the host/domain combination' do
+      let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: space.organization) }
+      let!(:existing_domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: space.organization, name: "#{params[:host]}.#{domain.name}") }
+
+      let(:params) do
+        {
+          host: 'some-host',
+          relationships: {
+            space: {
+              data: { guid: space.guid }
+            },
+            domain: {
+              data: { guid: domain.guid }
+            },
+          }
+        }
+      end
+
+      it 'returns a 422 with a helpful error message' do
+        post '/v3/routes', params.to_json, admin_header
+        expect(last_response.status).to eq(422)
+        expect(last_response).to have_error_message("Route conflicts with domain '#{existing_domain.name}'.")
+      end
+    end
+
+    context 'when using a reserved system hostname with the system domain' do
+      let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: space.organization) }
+
+      let(:params) do
+        {
+          host: 'host',
+          relationships: {
+            space: {
+              data: { guid: space.guid }
+            },
+            domain: {
+              data: { guid: domain.guid }
+            },
+          }
+        }
+      end
+
+      before do
+        VCAP::CloudController::Config.config.set(:system_domain, domain.name)
+        VCAP::CloudController::Config.config.set(:system_hostnames, [params[:host]])
+      end
+
+      it 'returns a 422 with a helpful error message' do
+        post '/v3/routes', params.to_json, admin_header
+        expect(last_response.status).to eq(422)
+        expect(last_response).to have_error_message('Route conflicts with a reserved system route.')
+      end
+    end
+
+    context 'when using a non-reserved hostname with the system domain' do
+      let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: space.organization) }
+      let(:api_call) { lambda { |user_headers| post '/v3/routes', params.to_json, user_headers } }
+
+      let(:params) do
+        {
+          host: 'host',
+          relationships: {
+            space: {
+              data: { guid: space.guid }
+            },
+            domain: {
+              data: { guid: domain.guid }
+            },
+          }
+        }
+      end
+
+      let(:route_json) do
+        {
+          guid: UUID_REGEX,
+          host: params[:host],
+          created_at: iso8601,
+          updated_at: iso8601,
+          relationships: {
+            space: {
+              data: { guid: space.guid }
+            },
+            domain: {
+              data: { guid: domain.guid }
+            }
+          },
+          links: {
+            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },
+            space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
+            domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{domain.guid}) }
+          }
+        }
+      end
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(
+          code: 403,
+        )
+        h['admin'] = {
+          code: 201,
+          response_object: route_json
+        }
+        h.freeze
+      end
+
+      before do
+        VCAP::CloudController::Config.config.set(:system_domain, domain.name)
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
 
     context 'when the space quota for routes is maxed out' do
