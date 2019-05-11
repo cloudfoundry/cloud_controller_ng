@@ -4,6 +4,7 @@ require 'messages/space_create_message'
 require 'messages/space_update_message'
 require 'messages/space_update_isolation_segment_message'
 require 'messages/spaces_list_message'
+require 'messages/space_show_message'
 require 'actions/space_update_isolation_segment'
 require 'actions/space_create'
 require 'actions/space_update'
@@ -29,10 +30,15 @@ class SpacesV3Controller < ApplicationController
 
   def show
     space = SpaceFetcher.new.fetch(hashed_params[:guid])
+    message = SpaceShowMessage.from_params(query_params)
 
     space_not_found! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
+    invalid_param!(message.errors.full_messages) unless message.valid?
 
-    render status: :ok, json: Presenters::V3::SpacePresenter.new(space)
+    decorators = []
+    decorators << IncludeSpaceOrganizationDecorator if message.include&.include?('org')
+
+    render status: :ok, json: Presenters::V3::SpacePresenter.new(space, decorators: decorators)
   end
 
   def create

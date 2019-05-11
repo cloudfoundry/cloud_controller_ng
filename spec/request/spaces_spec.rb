@@ -102,6 +102,40 @@ RSpec.describe 'Spaces' do
         }
       )
     end
+
+    it 'returns the requested space including org info' do
+      get "/v3/spaces/#{space1.guid}?include=org", nil, user_header
+      expect(last_response.status).to eq(200)
+
+      parsed_response = MultiJson.load(last_response.body)
+      orgs = parsed_response['included']['organizations']
+
+      expect(orgs).to be_present
+      expect(orgs[0]).to be_a_response_like(
+        {
+          'guid' => organization.guid,
+          'created_at' => iso8601,
+          'updated_at' => iso8601,
+          'name' => organization.name,
+          'metadata' => {
+            'labels' => {},
+            'annotations' => {},
+          },
+          'links' => {
+            'self' => {
+              'href' => "#{link_prefix}/v3/organizations/#{organization.guid}",
+            },
+            'default_domain' => {
+              'href' => "#{link_prefix}/v3/organizations/#{organization.guid}/domains/default",
+            },
+            'domains' => {
+              'href' => "#{link_prefix}/v3/organizations/#{organization.guid}/domains",
+            },
+          },
+          'relationships' => { 'quota' => { 'data' => { 'guid' => organization.quota_definition.guid } } },
+        }
+      )
+    end
   end
 
   describe 'GET /v3/spaces' do

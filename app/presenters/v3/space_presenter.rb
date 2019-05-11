@@ -6,7 +6,7 @@ module VCAP::CloudController::Presenters::V3
     include VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers
 
     def to_hash
-      {
+      hash = {
         guid: space.guid,
         created_at: space.created_at,
         updated_at: space.updated_at,
@@ -24,6 +24,8 @@ module VCAP::CloudController::Presenters::V3
           annotations: hashified_annotations(space.annotations),
         }
       }
+
+      @decorators.reduce(hash) { |memo, d| d.decorate(memo, [space]) }
     end
 
     private
