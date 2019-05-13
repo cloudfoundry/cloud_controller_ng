@@ -10,6 +10,7 @@ curl "https://api.example.org/v3/routes" \
   -H "Authorization: bearer [token]" \
   -H "Content-type: application/json" \
   -d '{
+    "host": "a-hostname",
     "relationships": {
       "domain": {
         "data": { "guid": "domain-guid" }
@@ -41,6 +42,12 @@ Name         | Type     | Description
 ------------ | -------  | -----------
 | **space**  | [_to-one relationship_](#to-one-relationships) | A relationship to the space containing the route. Routes can only be mapped to destinations in that space. |
 | **domain** | [_to-one relationship_](#to-one-relationships) | A relationship to the domain of the route.                                                                 |
+
+#### Optional Parameters
+
+Name         | Type     | Description
+------------ | -------  | -----------
+| host       | _string_ | The host component for the route. |
 
 #### Permitted Roles
 
