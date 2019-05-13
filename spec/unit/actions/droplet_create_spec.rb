@@ -37,8 +37,8 @@ module VCAP::CloudController
           expect(droplet.process_types).to eq({ 'web' => '' })
           expect(droplet.package_guid).to be_nil
           expect(droplet.build).to be_nil
-          expect(droplet.buildpack_lifecycle_data.buildpacks).to eq(app.buildpack_lifecycle_data.buildpacks)
-          expect(droplet.buildpack_lifecycle_data.stack).to eq(app.buildpack_lifecycle_data.stack)
+          expect(droplet.buildpack_lifecycle_data.buildpacks).to be_empty
+          expect(droplet.buildpack_lifecycle_data.stack).to be_nil
         end
       end
 
@@ -61,8 +61,8 @@ module VCAP::CloudController
           expect(droplet.process_types).to eq({ 'web' => 'ptype' })
           expect(droplet.package_guid).to be_nil
           expect(droplet.build).to be_nil
-          expect(droplet.buildpack_lifecycle_data.buildpacks).to eq(app.buildpack_lifecycle_data.buildpacks)
-          expect(droplet.buildpack_lifecycle_data.stack).to eq(app.buildpack_lifecycle_data.stack)
+          expect(droplet.buildpack_lifecycle_data.buildpacks).to be_empty
+          expect(droplet.buildpack_lifecycle_data.stack).to be_nil
         end
 
         it 'fails when app has docker lifecycle' do

@@ -46,7 +46,7 @@ RSpec.describe 'Droplets' do
           },
           checksum: nil,
           buildpacks: [],
-          stack: app_model.buildpack_lifecycle_data.stack,
+          stack: nil,
           image: nil,
           created_at: iso8601,
           updated_at: iso8601,

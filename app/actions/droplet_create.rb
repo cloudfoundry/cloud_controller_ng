@@ -11,18 +11,20 @@ module VCAP::CloudController
         return
       end
 
-      buildpack_lifecycle_data = VCAP::CloudController::BuildpackLifecycleDataModel.make(
-        buildpacks: app.buildpack_lifecycle_data.buildpacks,
-        stack: app.buildpack_lifecycle_data.stack
-      )
       droplet = DropletModel.new(
         app_guid:                 app.guid,
         state:                    DropletModel::AWAITING_UPLOAD_STATE,
         process_types:            message.process_types || DEFAULT_PROCESS_TYPES,
         execution_metadata:       '',
       )
-      droplet.save
-      droplet.buildpack_lifecycle_data = buildpack_lifecycle_data
+
+      DropletModel.db.transaction do
+        droplet.save
+        VCAP::CloudController::BuildpackLifecycleDataModel.create(
+          droplet: droplet
+        )
+      end
+
       droplet
     end
 
