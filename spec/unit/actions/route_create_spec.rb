@@ -205,7 +205,7 @@ module VCAP::CloudController
           }.to raise_error(RouteCreate::Error, "Route already exists for domain '#{domain.name}'.")
         end
 
-        it 'prevents conflict with matching route' do
+        it 'prevents conflict with matching route on host' do
           Route.make(domain: domain, host: 'a-host', space: space)
 
           message = RouteCreateMessage.new({
@@ -223,6 +223,27 @@ module VCAP::CloudController
           expect {
             subject.create(message: message, space: space, domain: domain)
           }.to raise_error(RouteCreate::Error, "Route already exists with host 'a-host' for domain '#{domain.name}'.")
+        end
+
+        it 'prevents conflict with matching route on path' do
+          Route.make(domain: domain, host: 'a-host', path: '/a-path', space: space)
+
+          message = RouteCreateMessage.new({
+            host: 'a-host',
+            path: '/a-path',
+            relationships: {
+              space: {
+                data: { guid: space.guid }
+              },
+              domain: {
+                data: { guid: domain.guid }
+              },
+            },
+          })
+
+          expect {
+            subject.create(message: message, space: space, domain: domain)
+          }.to raise_error(RouteCreate::Error, "Route already exists with host 'a-host' and path '/a-path' for domain '#{domain.name}'.")
         end
       end
 
@@ -245,6 +266,25 @@ module VCAP::CloudController
           expect {
             subject.create(message: message, space: space, domain: internal_domain)
           }.to raise_error(RouteCreate::Error, 'Wildcard hosts are not supported for internal domains.')
+        end
+
+        it 'disallows paths' do
+          message = RouteCreateMessage.new({
+            host: 'a',
+            path: '/path',
+            relationships: {
+              space: {
+                data: { guid: space.guid }
+              },
+              domain: {
+                data: { guid: internal_domain.guid }
+              },
+            },
+          })
+
+          expect {
+            subject.create(message: message, space: space, domain: internal_domain)
+          }.to raise_error(RouteCreate::Error, 'Paths are not supported for internal domains.')
         end
       end
 

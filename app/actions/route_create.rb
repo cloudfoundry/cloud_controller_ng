@@ -6,6 +6,7 @@ module VCAP::CloudController
     def create(message:, space:, domain:)
       route = Route.new(
         host: message.host || '',
+        path: message.path || '',
         space_guid: message.space_guid,
         domain_guid: message.domain_guid
       )
@@ -16,22 +17,14 @@ module VCAP::CloudController
 
       route
     rescue Sequel::ValidationFailed => e
-      validation_error!(e, route.host, space, domain)
+      validation_error!(e, route.host, route.path, space, domain)
     end
 
     private
 
-    def validation_error!(error, host, space, domain)
+    def validation_error!(error, host, path, space, domain)
       if error.errors.on(:domain)&.include?(:invalid_relation)
         error!("Invalid domain. Domain '#{domain.name}' is not available in organization '#{space.organization.name}'.")
-      end
-
-      if error.errors.on([:host, :domain_id])&.include?(:unique)
-        if host.empty?
-          error!("Route already exists for domain '#{domain.name}'.")
-        else
-          error!("Route already exists with host '#{host}' for domain '#{domain.name}'.")
-        end
       end
 
       if error.errors.on(:space)&.include?(:total_routes_exceeded)
@@ -42,6 +35,13 @@ module VCAP::CloudController
         error!("Routes quota exceeded for organization '#{space.organization.name}'.")
       end
 
+      validation_error_host!(error, host, domain)
+      validation_error_path!(error, host, path, domain)
+
+      error!(error.message)
+    end
+
+    def validation_error_host!(error, host, domain)
       if error.errors.on(:host)&.include?(:domain_conflict)
         error!("Route conflicts with domain '#{host}.#{domain.name}'.")
       end
@@ -58,7 +58,27 @@ module VCAP::CloudController
         error!('Missing host. Routes in shared domains must have a host defined.')
       end
 
-      error!(error.message)
+      if error.errors.on([:host, :domain_id])&.include?(:unique)
+        if host.empty?
+          error!("Route already exists for domain '#{domain.name}'.")
+        else
+          error!("Route already exists with host '#{host}' for domain '#{domain.name}'.")
+        end
+      end
+    end
+
+    def validation_error_path!(error, host, path, domain)
+      if error.errors.on(:path)&.include?(:path_not_supported_for_internal_domain)
+        error!('Paths are not supported for internal domains.')
+      end
+
+      if error.errors.on([:host, :domain_id, :path])&.include?(:unique)
+        if host.empty?
+          error!("Route already exists with path '#{path}' for domain '#{domain.name}'.")
+        else
+          error!("Route already exists with host '#{host}' and path '#{path}' for domain '#{domain.name}'.")
+        end
+      end
     end
 
     def error!(message)

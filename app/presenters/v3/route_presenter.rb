@@ -17,6 +17,7 @@ module VCAP::CloudController::Presenters::V3
         created_at: route.created_at,
         updated_at: route.updated_at,
         host: route.host,
+        path: route.path,
         relationships: {
           space: {
             data: { guid: route.space.guid }

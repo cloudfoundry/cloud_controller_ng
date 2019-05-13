@@ -10,6 +10,7 @@ module VCAP::CloudController
         let(:params) do
           {
             host: 'some-host',
+            path: '/some-path',
             relationships: {
               space: { data: { guid: 'space-guid' } },
               domain: { data: { guid: 'domain-guid' } },
@@ -122,6 +123,86 @@ module VCAP::CloudController
 
           it 'is valid' do
             expect(subject).to be_valid
+          end
+        end
+      end
+
+      context 'path' do
+        context 'when not provided' do
+          let(:params) do
+            {
+              relationships: {
+                space: { data: { guid: 'space-guid' } },
+                domain: { data: { guid: 'domain-guid' } },
+              }
+            }
+          end
+
+          it 'is valid' do
+            expect(subject).to be_valid
+          end
+        end
+
+        context 'when not a string' do
+          let(:params) do
+            { path: 5 }
+          end
+
+          it 'is not valid' do
+            expect(subject).not_to be_valid
+            expect(subject.errors[:path]).to include('must be a string')
+          end
+        end
+
+        context 'when an empty string' do
+          let(:params) do
+            {
+              path: '',
+              relationships: {
+                space: { data: { guid: 'space-guid' } },
+                domain: { data: { guid: 'domain-guid' } },
+              }
+            }
+          end
+
+          it 'is valid' do
+            expect(subject).to be_valid
+          end
+        end
+
+        context 'when it is too long' do
+          let(:params) { { path: 'B' * (RouteCreateMessage::MAXIMUM_PATH_LENGTH + 1) } }
+
+          it 'is not valid' do
+            expect(subject).to be_invalid
+            expect(subject.errors[:path]).to include "is too long (maximum is #{RouteCreateMessage::MAXIMUM_PATH_LENGTH} characters)"
+          end
+        end
+
+        context 'when it contains a ?' do
+          let(:params) { { path: '/pathwith?' } }
+
+          it 'is not valid' do
+            expect(subject).to be_invalid
+            expect(subject.errors[:path]).to match ['cannot contain ?']
+          end
+        end
+
+        context 'when is exactly /' do
+          let(:params) { { path: '/' } }
+
+          it 'is not valid' do
+            expect(subject).to be_invalid
+            expect(subject.errors[:path]).to match ['cannot be exactly /']
+          end
+        end
+
+        context 'when it doesn not begin with a /' do
+          let(:params) { { path: 'some-path/' } }
+
+          it 'is not valid' do
+            expect(subject).to be_invalid
+            expect(subject.errors[:path]).to match ['must begin with /']
           end
         end
       end

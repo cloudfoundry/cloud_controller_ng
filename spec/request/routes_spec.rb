@@ -15,6 +15,7 @@ RSpec.describe 'Routes Request' do
       {
         guid: UUID_REGEX,
         host: route.host,
+        path: route.path,
         created_at: iso8601,
         updated_at: iso8601,
         relationships: {
@@ -103,6 +104,7 @@ RSpec.describe 'Routes Request' do
           {
             guid: UUID_REGEX,
             host: '',
+            path: '',
             created_at: iso8601,
             updated_at: iso8601,
             relationships: {
@@ -147,6 +149,7 @@ RSpec.describe 'Routes Request' do
         let(:params) do
           {
             host: 'some-host',
+            path: '/some-path',
             relationships: {
               space: {
                 data: { guid: space.guid }
@@ -162,6 +165,7 @@ RSpec.describe 'Routes Request' do
           {
             guid: UUID_REGEX,
             host: 'some-host',
+            path: '/some-path',
             created_at: iso8601,
             updated_at: iso8601,
             relationships: {
@@ -221,6 +225,7 @@ RSpec.describe 'Routes Request' do
           {
             guid: UUID_REGEX,
             host: '*',
+            path: '',
             created_at: iso8601,
             updated_at: iso8601,
             relationships: {
@@ -305,6 +310,7 @@ RSpec.describe 'Routes Request' do
           {
             guid: UUID_REGEX,
             host: 'some-host',
+            path: '',
             created_at: iso8601,
             updated_at: iso8601,
             relationships: {
@@ -364,6 +370,7 @@ RSpec.describe 'Routes Request' do
           {
             guid: UUID_REGEX,
             host: '*',
+            path: '',
             created_at: iso8601,
             updated_at: iso8601,
             relationships: {
@@ -430,6 +437,7 @@ RSpec.describe 'Routes Request' do
         {
           guid: UUID_REGEX,
           host: 'some-host',
+          path: '',
           created_at: iso8601,
           updated_at: iso8601,
           relationships: {
@@ -496,6 +504,29 @@ RSpec.describe 'Routes Request' do
         end
       end
 
+      describe 'when creating a route with a path' do
+        let(:params) do
+          {
+            host: 'host',
+            path: '/apath',
+            relationships: {
+              space: {
+                data: { guid: space.guid }
+              },
+              domain: {
+                data: { guid: domain.guid }
+              },
+            }
+          }
+        end
+
+        it 'fails with a helpful message' do
+          post '/v3/routes', params.to_json, admin_header
+          expect(last_response.status).to eq(422)
+          expect(last_response).to have_error_message('Paths are not supported for internal domains.')
+        end
+      end
+
       describe 'when creating a route with a host' do
         let(:params) do
           {
@@ -515,6 +546,7 @@ RSpec.describe 'Routes Request' do
           {
             guid: UUID_REGEX,
             host: 'some-host',
+            path: '',
             created_at: iso8601,
             updated_at: iso8601,
             relationships: {
@@ -664,6 +696,32 @@ RSpec.describe 'Routes Request' do
       end
     end
 
+    context 'when there is already a route with the host/domain/path combination' do
+      let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: space.organization) }
+      let!(:existing_route) { VCAP::CloudController::Route.make(host: 'my-host', path: '/existing', space: space, domain: domain) }
+
+      let(:params_for_duplicate_route) do
+        {
+          host: existing_route.host,
+          path: existing_route.path,
+          relationships: {
+            space: {
+              data: { guid: space.guid }
+            },
+            domain: {
+              data: { guid: domain.guid }
+            },
+          }
+        }
+      end
+
+      it 'returns a 422 with a helpful error message' do
+        post '/v3/routes', params_for_duplicate_route.to_json, admin_header
+        expect(last_response.status).to eq(422)
+        expect(last_response).to have_error_message("Route already exists with host '#{existing_route.host}' and path '#{existing_route.path}' for domain '#{domain.name}'.")
+      end
+    end
+
     context 'when there is already a route with the host/domain combination' do
       let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: space.organization) }
       let!(:existing_route) { VCAP::CloudController::Route.make(host: 'my-host', space: space, domain: domain) }
@@ -671,6 +729,7 @@ RSpec.describe 'Routes Request' do
       let(:params_for_duplicate_route) do
         {
           host: existing_route.host,
+          path: existing_route.path,
           relationships: {
             space: {
               data: { guid: space.guid }
@@ -765,6 +824,7 @@ RSpec.describe 'Routes Request' do
         {
           guid: UUID_REGEX,
           host: params[:host],
+          path: '',
           created_at: iso8601,
           updated_at: iso8601,
           relationships: {
