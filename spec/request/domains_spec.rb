@@ -692,6 +692,7 @@ RSpec.describe 'Domains Request' do
             org.status = 'suspended'
             org.save
           end
+
           context 'when the user is not an admin' do
             it 'returns a 403' do
               post '/v3/domains', private_domain_params.to_json, headers

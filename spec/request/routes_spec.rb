@@ -132,6 +132,10 @@ RSpec.describe 'Routes Request' do
               code: 201,
               response_object: route_json
             }
+            h['space_developer'] = {
+              code: 201,
+              response_object: route_json
+            }
             h.freeze
           end
 
@@ -184,6 +188,69 @@ RSpec.describe 'Routes Request' do
               code: 403,
             )
             h['admin'] = {
+              code: 201,
+              response_object: route_json
+            }
+            h['space_developer'] = {
+              code: 201,
+              response_object: route_json
+            }
+            h.freeze
+          end
+
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        end
+      end
+
+      describe 'when creating a route with a wildcard host' do
+        let(:params) do
+          {
+            host: '*',
+            relationships: {
+              space: {
+                data: { guid: space.guid }
+              },
+              domain: {
+                data: { guid: domain.guid }
+              },
+            }
+          }
+        end
+
+        let(:route_json) do
+          {
+            guid: UUID_REGEX,
+            host: '*',
+            created_at: iso8601,
+            updated_at: iso8601,
+            relationships: {
+              space: {
+                data: { guid: space.guid }
+              },
+              domain: {
+                data: { guid: domain.guid }
+              },
+            },
+            links: {
+              self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },
+              space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
+              domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{domain.guid}) },
+            }
+          }
+        end
+
+        describe 'valid routes' do
+          let(:api_call) { lambda { |user_headers| post '/v3/routes', params.to_json, user_headers } }
+
+          let(:expected_codes_and_responses) do
+            h = Hash.new(
+              code: 403,
+            )
+            h['admin'] = {
+              code: 201,
+              response_object: route_json
+            }
+            h['space_developer'] = {
               code: 201,
               response_object: route_json
             }
@@ -267,11 +334,140 @@ RSpec.describe 'Routes Request' do
               code: 201,
               response_object: route_json
             }
+            h['space_developer'] = {
+              code: 201,
+              response_object: route_json
+            }
             h.freeze
           end
 
           it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
         end
+      end
+
+      describe 'when creating a route with a wildcard host' do
+        let(:params) do
+          {
+            host: '*',
+            relationships: {
+              space: {
+                data: { guid: space.guid }
+              },
+              domain: {
+                data: { guid: domain.guid }
+              },
+            }
+          }
+        end
+
+        let(:route_json) do
+          {
+            guid: UUID_REGEX,
+            host: '*',
+            created_at: iso8601,
+            updated_at: iso8601,
+            relationships: {
+              space: {
+                data: { guid: space.guid }
+              },
+              domain: {
+                data: { guid: domain.guid }
+              },
+            },
+            links: {
+              self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },
+              space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
+              domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{domain.guid}) },
+            }
+          }
+        end
+
+        describe 'valid routes' do
+          let(:api_call) { lambda { |user_headers| post '/v3/routes', params.to_json, user_headers } }
+
+          let(:expected_codes_and_responses) do
+            h = Hash.new(
+              code: 403,
+            )
+            h['admin'] = {
+              code: 201,
+              response_object: route_json
+            }
+            h['space_developer'] = {
+              code: 422,
+              response_object: { fasd: 'afsd' }
+            }
+            h.freeze
+          end
+
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        end
+      end
+    end
+
+    context 'when creating a route in an suspended org' do
+      before do
+        org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+      end
+
+      let(:domain) { VCAP::CloudController::SharedDomain.make }
+
+      let(:params) do
+        {
+          host: 'some-host',
+          relationships: {
+            space: {
+              data: { guid: space.guid }
+            },
+            domain: {
+              data: { guid: domain.guid }
+            },
+          }
+        }
+      end
+
+      let(:route_json) do
+        {
+          guid: UUID_REGEX,
+          host: 'some-host',
+          created_at: iso8601,
+          updated_at: iso8601,
+          relationships: {
+            space: {
+              data: { guid: space.guid }
+            },
+            domain: {
+              data: { guid: domain.guid }
+            },
+          },
+          links: {
+            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },
+            space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
+            domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{domain.guid}) },
+          }
+        }
+      end
+
+      describe 'valid routes' do
+        let(:api_call) { lambda { |user_headers| post '/v3/routes', params.to_json, user_headers } }
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(
+            code: 403,
+          )
+          h['admin'] = {
+            code: 201,
+            response_object: route_json
+          }
+          h['space_developer'] = {
+            code: 403,
+            # code: 422,
+            # response_object: { tater: 'tots' }
+          }
+          h.freeze
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
     end
 
@@ -345,6 +541,10 @@ RSpec.describe 'Routes Request' do
               code: 403,
             )
             h['admin'] = {
+              code: 201,
+              response_object: route_json
+            }
+            h['space_developer'] = {
               code: 201,
               response_object: route_json
             }
@@ -591,6 +791,10 @@ RSpec.describe 'Routes Request' do
           code: 201,
           response_object: route_json
         }
+        h['space_developer'] = {
+          code: 201,
+          response_object: route_json
+        }
         h.freeze
       end
 
@@ -651,6 +855,44 @@ RSpec.describe 'Routes Request' do
         post '/v3/routes', params_for_org_with_quota.to_json, admin_header
         expect(last_response.status).to eq(422)
         expect(last_response).to have_error_message("Routes quota exceeded for organization '#{org_with_quota.name}'.")
+      end
+    end
+
+    context 'when the feature flag is disabled' do
+      let(:headers) { set_user_with_header_as_role(user: user, role: 'space_developer', org: org, space: space) }
+      let!(:feature_flag) { VCAP::CloudController::FeatureFlag.make(name: 'route_creation', enabled: false, error_message: 'my name is bob') }
+      let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: space.organization) }
+      let(:params) do
+        {
+          host: 'some-host',
+          relationships: {
+            space: {
+              data: { guid: space.guid }
+            },
+            domain: {
+              data: { guid: domain.guid }
+            },
+          }
+        }
+      end
+
+      context 'when the user is not an admin' do
+        it 'returns a 403' do
+          post '/v3/routes', params.to_json, headers
+
+          expect(last_response.status).to eq(403)
+          expect(parsed_response['errors'][0]['detail']).to eq('Feature Disabled: my name is bob')
+        end
+      end
+
+      context 'when the user is an admin' do
+        let(:headers) { set_user_with_header_as_role(role: 'admin') }
+
+        it 'allows creation' do
+          post '/v3/routes', params.to_json, headers
+
+          expect(last_response.status).to eq(201)
+        end
       end
     end
   end

@@ -33,6 +33,10 @@ module VCAP::CloudController
       @relationships_message ||= Relationships.new(relationships&.deep_symbolize_keys)
     end
 
+    def wildcard?
+      host == '*'
+    end
+
     class Relationships < BaseMessage
       register_allowed_keys [:space, :domain]
 

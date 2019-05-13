@@ -15,15 +15,18 @@ class RoutesController < ApplicationController
   end
 
   def create
-    unauthorized! unless permission_queryer.can_write_globally?
+    FeatureFlag.raise_unless_enabled!(:route_creation) unless permission_queryer.can_write_globally?
 
     message = RouteCreateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     space = Space.find(guid: message.space_guid)
     domain = Domain.find(guid: message.domain_guid)
+
     unprocessable_space! unless space
     unprocessable_domain! unless domain
+    unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
+    unprocessable_wildcard! if domain.shared? && message.wildcard? && !permission_queryer.can_write_globally?
 
     route = RouteCreate.new.create(message: message, space: space, domain: domain)
 
@@ -36,6 +39,10 @@ class RoutesController < ApplicationController
 
   def route_not_found!
     resource_not_found!(:route)
+  end
+
+  def unprocessable_wildcard!
+    unprocessable!('You do not have sufficient permissions to create a route with a wildcard host on a domain not scoped to an organization.')
   end
 
   def unprocessable_space!
