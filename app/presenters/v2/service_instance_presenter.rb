@@ -23,9 +23,10 @@ module CloudController
             end
           end
 
-          if obj.service_plan_id
+          if managed_service_instance(obj)
             # TODO: add eager loading to other endpoints and remove this database query
             service_plan = obj.service_plan || VCAP::CloudController::ServicePlan.find(id: obj.service_plan_id)
+            obj_hash['maintenance_info'] = parse_maintenance_info(obj.maintenance_info)
             obj_hash['service_plan_guid'] = service_plan.guid
             obj_hash['service_guid'] = service_plan.service.guid
             rel_hash['service_url'] = "/v2/services/#{service_plan.service.guid}"
@@ -35,6 +36,20 @@ module CloudController
           end
 
           obj_hash.merge!(rel_hash)
+        end
+
+        private
+
+        def managed_service_instance(service_instance)
+          service_instance.service_plan_id
+        end
+
+        def parse_maintenance_info(maintenance_info)
+          return maintenance_info if maintenance_info.is_a?(Hash)
+
+          JSON.parse(maintenance_info)
+        rescue JSON::ParserError
+          {}
         end
       end
     end

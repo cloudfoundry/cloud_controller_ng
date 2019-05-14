@@ -8,14 +8,16 @@ module VCAP::CloudController
 
     export_attributes :name, :credentials, :service_plan_guid,
       :space_guid, :gateway_data, :dashboard_url, :type, :last_operation,
-      :tags
+      :tags, :maintenance_info
 
     import_attributes :name, :service_plan_guid,
-      :space_guid, :gateway_data
+      :space_guid, :gateway_data, :maintenance_info
 
     strip_attributes :name
 
     plugin :after_initialize
+
+    serialize_attributes :json, :maintenance_info
 
     add_association_dependencies service_instance_operation: :destroy
 

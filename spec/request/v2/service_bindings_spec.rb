@@ -216,6 +216,7 @@ RSpec.describe 'ServiceBindings' do
                       'type' => 'managed_service_instance',
                       'last_operation' => nil,
                       'tags' => [],
+                      'maintenance_info' => {},
                       'space_url' => "/v2/spaces/#{space.guid}",
                       'service_url' => "/v2/services/#{service_instance.service.guid}",
                       'service_plan_url' => "/v2/service_plans/#{service_instance.service_plan.guid}",

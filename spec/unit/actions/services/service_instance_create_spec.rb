@@ -37,6 +37,7 @@ module VCAP::CloudController
         expect(service_instance.credentials).to eq({})
         expect(service_instance.space.guid).to eq(space.guid)
         expect(service_instance.service_plan.guid).to eq(service_plan.guid)
+        expect(service_instance.maintenance_info).to be_nil
       end
 
       it 'creates a new service instance operation' do
@@ -63,7 +64,7 @@ module VCAP::CloudController
             'space_guid' => space.guid,
             'service_plan_guid' => service_plan.guid,
             'name' => 'my-instance',
-            'parameters' => parameters
+            'parameters' => parameters,
           }
         end
 
@@ -109,6 +110,24 @@ module VCAP::CloudController
           create_action.create(request_attrs, false) rescue nil
 
           expect(logger).to have_received(:error).with /Failed to save/
+        end
+      end
+
+      context 'when the service plan contains maintenance_info' do
+        let(:service_plan) { ServicePlan.make(maintenance_info: '{"version": "2.0"}') }
+        let(:request_attrs) do
+          {
+            'space_guid' => space.guid,
+            'service_plan_guid' => service_plan.guid,
+            'name' => 'my-instance',
+          }
+        end
+
+        it 'should store it for the service instance' do
+          create_action.create(request_attrs, false)
+          service_instance = ManagedServiceInstance.last
+
+          expect(service_instance.maintenance_info).to eq('{"version": "2.0"}')
         end
       end
     end

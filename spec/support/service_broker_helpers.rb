@@ -101,8 +101,9 @@ module ServiceBrokerHelpers
     /#{build_broker_url(broker)}#{path}#{query_params}/
   end
 
-  def update_url(service_instance)
-    service_instance_url(service_instance, '')
+  def update_url(service_instance, accepts_incomplete: nil)
+    query = 'accepts_incomplete=true' if accepts_incomplete
+    service_instance_url(service_instance, query)
   end
 
   def bind_url(service_instance, accepts_incomplete: nil)

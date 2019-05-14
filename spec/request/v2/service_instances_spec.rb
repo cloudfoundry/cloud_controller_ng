@@ -56,6 +56,7 @@ RSpec.describe 'ServiceInstances' do
               'created_at'  => iso8601
             },
             'tags'                            => ['no-sql', 'georeplicated'],
+            'maintenance_info'                => {},
             'space_url'                       => "/v2/spaces/#{space.guid}",
             'service_url'                     => "/v2/services/#{service_instance.service.guid}",
             'service_plan_url'                => "/v2/service_plans/#{service_plan.guid}",
@@ -121,6 +122,7 @@ RSpec.describe 'ServiceInstances' do
               'created_at'  => iso8601
             },
             'tags'                            => ['no-sql', 'georeplicated'],
+            'maintenance_info'                => {},
             'space_url'                       => "/v2/spaces/#{space.guid}",
             'service_url'                     => "/v2/services/#{service_instance.service.guid}",
             'service_plan_url'                => "/v2/service_plans/#{new_service_plan.guid}",
@@ -143,6 +145,7 @@ RSpec.describe 'ServiceInstances' do
     before do
       service_instance.dashboard_url   = 'someurl.com'
       service_instance.service_plan_id = service_plan.id
+      service_instance.maintenance_info = { 'version': '2.0' }
       service_instance.save
     end
 
@@ -176,6 +179,7 @@ RSpec.describe 'ServiceInstances' do
                 'type'                            => service_instance.type,
                 'last_operation'                  => service_instance.last_operation,
                 'tags'                            => service_instance.tags,
+                'maintenance_info'                => { 'version' => '2.0' },
                 'space_url'                       => "/v2/spaces/#{space.guid}",
                 'service_url'                     => "/v2/services/#{service_instance.service.guid}",
                 'service_plan_url'                => "/v2/service_plans/#{service_plan.guid}",
@@ -222,6 +226,7 @@ RSpec.describe 'ServiceInstances' do
                 'type'                            => service_instance.type,
                 'last_operation'                  => service_instance.last_operation,
                 'tags'                            => service_instance.tags,
+                'maintenance_info'                => { 'version' => '2.0' },
                 'space_url'                       => "/v2/spaces/#{space.guid}",
                 'service_url'                     => "/v2/services/#{service_instance.service.guid}",
                 'service_bindings_url'            => "/v2/service_instances/#{service_instance.guid}/service_bindings",
@@ -266,6 +271,7 @@ RSpec.describe 'ServiceInstances' do
                 'type'                            => service_instance.type,
                 'last_operation'                  => service_instance.last_operation,
                 'tags'                            => service_instance.tags,
+                'maintenance_info'                => { 'version' => '2.0' },
                 'space_url'                       => "/v2/spaces/#{space.guid}",
                 'service_url'                     => "/v2/services/#{service_instance.service.guid}",
                 'service_bindings_url'            => "/v2/service_instances/#{service_instance.guid}/service_bindings",

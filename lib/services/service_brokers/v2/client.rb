@@ -197,7 +197,9 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       if state == 'in progress'
-        attributes[:last_operation][:proposed_changes] = { service_plan_guid: plan.guid }
+        proposed_changes = { service_plan_guid: plan.guid }
+        proposed_changes[:maintenance_info] = maintenance_info if maintenance_info
+        attributes[:last_operation][:proposed_changes] = proposed_changes
       end
 
       [attributes, nil]

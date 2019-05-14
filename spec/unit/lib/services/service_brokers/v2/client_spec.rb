@@ -590,8 +590,10 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       context 'when the caller passes maintenance_info' do
+        let(:maintenance_info) { { version: '2.0' } }
+
         it 'includes the maintenance_info in the request to the broker' do
-          client.update(instance, old_plan, maintenance_info: { version: '2.0' })
+          client.update(instance, old_plan, maintenance_info: maintenance_info)
 
           expect(http_client).to have_received(:patch).with(
             anything,
@@ -600,6 +602,21 @@ module VCAP::Services::ServiceBrokers::V2
               previous_values: {}
             })
           )
+        end
+
+        context 'when the broker responds asynchronously' do
+          let(:code) { 202 }
+          let(:message) { 'Accepted' }
+          let(:response_data) do
+            {}
+          end
+
+          it 'returns maintenance_info as a proposed changed' do
+            client           = Client.new(client_attrs.merge(accepts_incomplete: true))
+            attributes, _, _ = client.update(instance, old_plan, maintenance_info: maintenance_info, accepts_incomplete: true)
+
+            expect(attributes[:last_operation][:proposed_changes]).to eq({ service_plan_guid: old_plan.guid, maintenance_info: maintenance_info })
+          end
         end
       end
 
@@ -643,6 +660,7 @@ module VCAP::Services::ServiceBrokers::V2
             expect(attributes[:last_operation][:type]).to eq('update')
             expect(attributes[:last_operation][:state]).to eq('in progress')
             expect(attributes[:last_operation][:description]).to eq('')
+            expect(attributes[:last_operation][:proposed_changes]).to eq({ service_plan_guid: new_plan.guid })
             expect(error).to be_nil
           end
 

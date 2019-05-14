@@ -524,6 +524,25 @@ curl "https://api.[your-domain.com]/v2/service_instances/0d632575-bb06-4ea5-bb19
               </ul>
             </td>
           </tr>
+
+
+          <tr class="">
+            <td class="experimental">
+              <span class="name">maintenance_info</span>
+            </td>
+            <td>
+              <span class="description">A maintenance information associated with the service instance. May be an empty object. </span>
+            </td>
+            <td>
+              <ul class="valid_values">
+              </ul>
+            </td>
+            <td>
+              <ul class="example_values">
+                <li>{"version":"2.1"}</li>
+              </ul>
+            </td>
+          </tr>
         </tbody>
       </table>
 
@@ -557,6 +576,7 @@ curl "https://api.[your-domain.com]/v2/service_instances/0d632575-bb06-4ea5-bb19
       "accounting",
       "mongodb"
     ],
+    "maintenance_info": {},
     "space_url": "/v2/spaces/38511660-89d9-4a6e-a889-c32c7e94f139",
     "service_url": "/v2/services/a14baddf-1ccc-5299-0152-ab9s49de4422",
     "service_plan_url": "/v2/service_plans/779d2df0-9cdd-48e8-9781-ea05301cedb1",
