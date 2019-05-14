@@ -13,6 +13,7 @@ module VCAP::CloudController
           tls_port: Integer,
           external_protocol: String,
           internal_service_hostname: String,
+          disable_private_domain_cross_space_context_path_route_sharing: bool,
 
           default_health_check_timeout: Integer,
           maximum_health_check_timeout: Integer,

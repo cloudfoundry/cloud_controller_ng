@@ -244,11 +244,17 @@ module VCAP::CloudController
     end
 
     def validate_host_and_domain_in_different_space
-      return unless space && domain && domain.shared?
+      return unless space
+      return unless domain
+      return if domain.private? && private_domain_cross_space_context_path_route_sharing_enabled?
 
       validates_unique [:domain_id, :host], message: :host_and_domain_taken_different_space do |ds|
         ds.where(port: 0).exclude(space: space)
       end
+    end
+
+    def private_domain_cross_space_context_path_route_sharing_enabled?
+      !Config.config.get(:disable_private_domain_cross_space_context_path_route_sharing)
     end
 
     def validate_host

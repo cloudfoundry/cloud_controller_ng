@@ -168,6 +168,100 @@ module VCAP::CloudController
         end
       end
 
+      context 'creating context path routes across spaces' do
+        let(:org1) { Organization.make(name: 'org1') }
+        let(:space1a) { Space.make(name: 'space1a', organization: org1) }
+        let(:space1b) { Space.make(name: 'space1b', organization: org1) }
+        let(:domain) { PrivateDomain.make(name: 'tld.org', owning_organization: org1) }
+        let(:org2) { Organization.make(name: 'org2') }
+        let(:space2) { Space.make(name: 'space2', organization: org2) }
+        let(:disable_context_route_sharing) { false }
+        let(:host2) { 'host-' + SecureRandom.uuid }
+
+        before do
+          TestConfig.override(disable_private_domain_cross_space_context_path_route_sharing: disable_context_route_sharing)
+        end
+
+        context 'when the route matches host and domain' do
+          let!(:first_route) { Route.make(host: 'host', domain: domain, space: space1a) }
+
+          it 'cannot create the duplicate (no path) route in the same-org space' do
+            expect {
+              Route.make(host: 'host', domain: domain, space: space1b)
+            }.to raise_error(Sequel::ValidationFailed, /host and domain_id and path unique/)
+          end
+
+          context 'when private domain context path route sharing is disabled' do
+            let(:disable_context_route_sharing) { true }
+
+            it 'cannot create a pathful route in the same-org space' do
+              expect {
+                Route.make(host: 'host', domain: domain, space: space1b, path: '/apples/kumquats')
+              }.to raise_error(Sequel::ValidationFailed, /domain_id and host host_and_domain_taken_different_space/)
+            end
+          end
+
+          context 'when private domain context path route sharing is NOT disabled' do
+            it 'CAN create a pathful route in the same-org space' do
+              r = Route.make(host: 'host', domain: domain, space: space1b, path: '/apples/kumquats')
+              expect(r).to be_valid
+            end
+          end
+        end
+
+        context 'when the route does not match host and domain' do
+          it 'can create a no-path route in the same-org space' do
+            r = Route.make(host: 'host-' + SecureRandom.uuid, domain: domain, space: space1b)
+            expect(r).to be_valid
+          end
+        end
+
+        context 'the first route does have a path' do
+          let!(:first_route) { Route.make(host: 'host', domain: domain, space: space1a, path: '/my-path') }
+
+          context 'when private domain context path route sharing is NOT disabled' do
+            it 'succeeds' do
+              r = Route.make(host: 'host', domain: domain, space: space1b)
+              expect(r).to be_valid
+            end
+          end
+
+          context 'when private domain context path route sharing is disabled' do
+            let(:disable_context_route_sharing) { true }
+
+            it 'fails' do
+              expect {
+                Route.make(host: 'host', domain: domain, space: space1b)
+              }.to raise_error(Sequel::ValidationFailed, /domain_id and host host_and_domain_taken_different_space/)
+            end
+          end
+        end
+
+        context 'when sharing private domains to other orgs' do
+          let!(:first_route) { Route.make(host: 'host', domain: domain, space: space1a, path: '/mangos') }
+          before do
+            domain.add_shared_organization(org2)
+          end
+
+          context 'when private domain context path route sharing is NOT disabled' do
+            it 'succeeds' do
+              r = Route.make(host: 'host', domain: domain, space: space2, path: '/grapes')
+              expect(r).to be_valid
+            end
+          end
+
+          context 'when private domain context path route sharing is disabled' do
+            let(:disable_context_route_sharing) { true }
+
+            it 'fails' do
+              expect {
+                Route.make(host: 'host', domain: domain, space: space2, path: '/grapes')
+              }.to raise_error(Sequel::ValidationFailed, /domain_id and host host_and_domain_taken_different_space/)
+            end
+          end
+        end
+      end
+
       context 'changing domain' do
         context 'when shared' do
           it "succeeds if it's the same domain" do
