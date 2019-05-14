@@ -21,7 +21,10 @@ module VCAP::CloudController
 
       if update_broker_needed?(request_attrs, cached_service_instance['service_plan_guid'], service_instance)
         handle_broker_update(cached_service_instance, lock, previous_values, request_attrs, service_instance)
-        update_deferred_attrs(service_instance, service_plan_guid: request_attrs.fetch('service_plan_guid', false))
+        update_deferred_attrs(service_instance,
+                              service_plan_guid: request_attrs.fetch('service_plan_guid', false),
+                              maintenance_info: request_attrs.fetch('maintenance_info', false)
+                             )
       else
         lock.synchronous_unlock!
       end
@@ -76,7 +79,7 @@ module VCAP::CloudController
         accepts_incomplete: accepts_incomplete,
         arbitrary_parameters: request_attrs['parameters'],
         previous_values: previous_values,
-        maintenance_info: request_attrs['maintenance_info'],
+        maintenance_info: request_attrs['maintenance_info'] || service_plan.maintenance_info,
       )
 
       service_instance.last_operation.update_attributes(response[:last_operation])
@@ -88,9 +91,16 @@ module VCAP::CloudController
       err
     end
 
-    def update_deferred_attrs(service_instance, service_plan_guid:)
-      if service_plan_guid && !service_instance.operation_in_progress?
-        service_instance.update_service_instance(service_plan: ServicePlan.find(guid: service_plan_guid))
+    def update_deferred_attrs(service_instance, service_plan_guid:, maintenance_info:)
+      unless service_instance.operation_in_progress?
+        attrs_to_update = {}
+        if service_plan_guid
+          service_plan = ServicePlan.find(guid: service_plan_guid)
+          attrs_to_update[:service_plan] = service_plan
+          attrs_to_update[:maintenance_info] = service_plan.maintenance_info
+        end
+        attrs_to_update[:maintenance_info] = maintenance_info if maintenance_info
+        service_instance.update_service_instance(attrs_to_update)
       end
     end
 
