@@ -41,6 +41,17 @@ module VCAP::CloudController
         MAX_DOMAIN_NAME_LENGTH = DomainCreateMessage::MAXIMUM_FQDN_DOMAIN_LENGTH
         MAX_SUBDOMAIN_LENGTH = DomainCreateMessage::MAXIMUM_DOMAIN_LABEL_LENGTH
 
+        context 'when a valid long multi-subdomain name is given' do
+          let(:params) do
+            {
+              name: 'a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a'
+            }
+          end
+
+          it 'is valid' do
+            expect(subject).to be_valid
+          end
+        end
         context 'when not a string' do
           let(:params) do
             { name: 5 }

@@ -44,7 +44,7 @@ module VCAP::CloudController
 
     validates :name,
       format: {
-        with: /\A((.{0,63})\.)?+(.{0,63})\Z/,
+        with: /\A^([^\.]{0,63}\.)*[^\.]{0,63}$\Z/,
         message: 'subdomains must each be at most 63 characters',
       }
 
