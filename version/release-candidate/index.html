@@ -15506,6 +15506,7 @@ Deployed revisions are revisions that are linked to started processes in the app
 <pre class="highlight json"><code><span class="w">  </span><span class="p">{</span><span class="w">
      </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cbad697f-cac1-48f4-9017-ac08f39dfb31"</span><span class="p">,</span><span class="w">
      </span><span class="nt">"host"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a-hostname"</span><span class="p">,</span><span class="w">
+     </span><span class="nt">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/some_path"</span><span class="p">,</span><span class="w">
      </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
      </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
      </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -15553,6 +15554,11 @@ Deployed revisions are revisions that are linked to started processes in the app
 <td>The hostname for the route.<br>Must be under 63 character long and only contain letters, numbers, dashes (-) or underscores(_).</td>
 </tr>
 <tr>
+<td><strong>path</strong></td>
+<td><em>string</em></td>
+<td>The path for the route.<br>Must be under 128 character long and not contain question marks (?), begin with a slash (/) and not be exactly a slash (/). Must conform to path components from <a href="https://tools.ietf.org/html/rfc2396">RFC 2396</a>.</td>
+</tr>
+<tr>
 <td><strong>created_at</strong></td>
 <td><em>datetime</em></td>
 <td>The time with zone when the object was created.</td>
@@ -15588,6 +15594,7 @@ Deployed revisions are revisions that are linked to started processes in the app
   -H <span class="s2">"Content-type: application/json"</span> <span class="se">\</span>
   -d <span class="s1">'{
     "host": "a-hostname",
+    "path": "/some_path",
     "relationships": {
       "domain": {
         "data": { "guid": "domain-guid" }
@@ -15606,6 +15613,7 @@ Deployed revisions are revisions that are linked to started processes in the app
 <span class="w">  </span><span class="p">{</span><span class="w">
      </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cbad697f-cac1-48f4-9017-ac08f39dfb31"</span><span class="p">,</span><span class="w">
      </span><span class="nt">"host"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a-hostname"</span><span class="p">,</span><span class="w">
+     </span><span class="nt">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/some_path"</span><span class="p">,</span><span class="w">
      </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
      </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
      </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -15674,6 +15682,11 @@ Deployed revisions are revisions that are linked to started processes in the app
 <td><em>string</em></td>
 <td>The host component for the route.</td>
 </tr>
+<tr>
+<td>path</td>
+<td><em>string</em></td>
+<td>The path component for the route.</td>
+</tr>
 </tbody></table>
 
 <h4 id="permitted-roles">Permitted Roles</h4>
@@ -15686,6 +15699,10 @@ Deployed revisions are revisions that are linked to started processes in the app
 </thead><tbody>
 <tr>
 <td>Admin</td>
+<td></td>
+</tr>
+<tr>
+<td>Space Developer</td>
 <td></td>
 </tr>
 </tbody></table>
@@ -15705,6 +15722,7 @@ Deployed revisions are revisions that are linked to started processes in the app
 <span class="w">  </span><span class="p">{</span><span class="w">
      </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cbad697f-cac1-48f4-9017-ac08f39dfb31"</span><span class="p">,</span><span class="w">
      </span><span class="nt">"host"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a-hostname"</span><span class="p">,</span><span class="w">
+     </span><span class="nt">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/some_path"</span><span class="p">,</span><span class="w">
      </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
      </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
      </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
