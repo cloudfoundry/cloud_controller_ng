@@ -4,7 +4,11 @@ module UserHeaderHelpers
   end
 
   def set_user_with_header(user, opts={})
-    opts = { email: Sham.email, https: false }.merge(opts)
+    opts = {
+      email: Sham.email,
+      user_name: Sham.name,
+      https: false
+    }.merge(opts)
 
     headers = {}
     headers['HTTP_AUTHORIZATION'] = "bearer #{generate_user_token(user, opts)}"
@@ -64,7 +68,7 @@ module UserHeaderHelpers
   end
 
   # rubocop:disable all
-  def set_user_with_header_as_role(role:, org: nil, space: nil, user: nil, scopes: nil)
+  def set_user_with_header_as_role(role:, org: nil, space: nil, user: nil, scopes: nil, user_name: nil, email: nil)
     # rubocop:enable all
     current_user = user || VCAP::CloudController::User.make
 
@@ -75,41 +79,41 @@ module UserHeaderHelpers
 
     case role.to_s
     when 'admin'
-      set_user_with_header_as_admin(user: current_user, scopes: scopes || [])
+      set_user_with_header_as_admin(user: current_user, scopes: scopes || [], user_name: user_name, email: email)
     when 'admin_read_only'
-      set_user_with_header_as_admin_read_only(user: current_user, scopes: scopes || [])
+      set_user_with_header_as_admin_read_only(user: current_user, scopes: scopes || [], user_name: user_name, email: email)
     when 'global_auditor'
-      set_user_with_header_as_global_auditor(user: current_user, scopes: scopes || [])
+      set_user_with_header_as_global_auditor(user: current_user, scopes: scopes || [], user_name: user_name, email: email)
     when 'space_developer'
       space.add_developer(current_user)
-      set_user_with_header_as_reader_and_writer(user: current_user)
+      set_user_with_header_as_reader_and_writer(user: current_user, user_name: user_name, email: email)
     when 'space_auditor'
       space.add_auditor(current_user)
-      set_user_with_header_as_reader_and_writer(user: current_user)
+      set_user_with_header_as_reader_and_writer(user: current_user, user_name: user_name, email: email)
     when 'space_manager'
       space.add_manager(current_user)
-      set_user_with_header_as_reader_and_writer(user: current_user)
+      set_user_with_header_as_reader_and_writer(user: current_user, user_name: user_name, email: email)
     when 'org_user'
-      set_user_with_header(user)
+      set_user_with_header(user, user_name: user_name, email: email)
     when 'org_auditor'
       org.add_auditor(current_user)
-      set_user_with_header_as_reader_and_writer(user: current_user)
+      set_user_with_header_as_reader_and_writer(user: current_user, user_name: user_name, email: email)
     when 'org_billing_manager'
       org.add_billing_manager(current_user)
-      set_user_with_header_as_reader_and_writer(user: current_user)
+      set_user_with_header_as_reader_and_writer(user: current_user, user_name: user_name, email: email)
     when 'org_manager'
       org.add_manager(current_user)
-      set_user_with_header_as_reader_and_writer(user: current_user)
+      set_user_with_header_as_reader_and_writer(user: current_user, user_name: user_name, email: email)
     when 'unauthenticated'
       set_user_with_header_as_unauthenticated
     when 'reader_and_writer'
-      set_user_with_header_as_reader_and_writer(user: current_user)
+      set_user_with_header_as_reader_and_writer(user: current_user, user_name: user_name, email: email)
     when 'reader'
-      set_user_with_header_as_reader(user: current_user)
+      set_user_with_header_as_reader(user: current_user, user_name: user_name, email: email)
     when 'writer'
-      set_user_with_header_as_writer(user: current_user)
+      set_user_with_header_as_writer(user: current_user, user_name: user_name, email: email)
     when 'no_role' # not a real role - added for testing
-      set_user_with_header(user)
+      set_user_with_header(user, user_name: user_name, email: email)
     else
       fail("Unknown role '#{role}'")
     end

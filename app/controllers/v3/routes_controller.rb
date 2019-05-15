@@ -28,7 +28,7 @@ class RoutesController < ApplicationController
     unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
     unprocessable_wildcard! if domain.shared? && message.wildcard? && !permission_queryer.can_write_globally?
 
-    route = RouteCreate.new.create(message: message, space: space, domain: domain)
+    route = RouteCreate.new(user_audit_info).create(message: message, space: space, domain: domain)
 
     render status: :created, json: Presenters::V3::RoutePresenter.new(route)
   rescue RouteCreate::Error => e

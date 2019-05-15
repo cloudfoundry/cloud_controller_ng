@@ -3,6 +3,10 @@ module VCAP::CloudController
     class Error < StandardError
     end
 
+    def initialize(user_audit_info)
+      @user_audit_info = user_audit_info
+    end
+
     def create(message:, space:, domain:)
       route = Route.new(
         host: message.host || '',
@@ -14,7 +18,12 @@ module VCAP::CloudController
       Route.db.transaction do
         route.save
       end
-
+      Repositories::RouteEventRepository.new.record_route_create(
+        route,
+        @user_audit_info,
+        message.audit_hash,
+        manifest_triggered: false,
+      )
       route
     rescue Sequel::ValidationFailed => e
       validation_error!(e, route.host, route.path, space, domain)

@@ -4,7 +4,9 @@ require 'messages/route_create_message'
 
 module VCAP::CloudController
   RSpec.describe RouteCreate do
-    subject { RouteCreate.new }
+    let(:user_audit_info) { UserAuditInfo.new(user_email: 'amelia@cats.com', user_guid: 'gooid') }
+
+    subject { RouteCreate.new(user_audit_info) }
 
     describe '#create' do
       let(:space) { VCAP::CloudController::Space.make }
@@ -33,6 +35,17 @@ module VCAP::CloudController
           route = Route.last
           expect(route.space.guid).to eq space.guid
           expect(route.domain.guid).to eq domain.guid
+        end
+
+        it 'creates an audit event' do
+          expect_any_instance_of(Repositories::RouteEventRepository).
+            to receive(:record_route_create).with(instance_of(Route),
+              user_audit_info,
+              message.audit_hash,
+              manifest_triggered: false
+            )
+
+          subject.create(message: message, space: space, domain: domain)
         end
       end
 
