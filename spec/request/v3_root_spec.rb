@@ -53,6 +53,9 @@ RSpec.describe 'v3 root' do
             'href' => "#{link_prefix}/v3/routes",
             'experimental' => true
           },
+          'service_brokers' => {
+            'href' => "#{link_prefix}/v3/service_brokers"
+          },
           'service_instances' => {
             'href' => "#{link_prefix}/v3/service_instances"
           },
