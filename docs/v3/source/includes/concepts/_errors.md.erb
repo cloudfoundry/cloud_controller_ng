@@ -1,0 +1,27 @@
+## Errors
+
+```
+Example Error
+```
+```json
+{
+  "errors": [
+    {
+      "code": 10008,
+      "title": "CF-UnprocessableEntity",
+      "detail": "something went wrong"
+    }
+  ]
+}
+```
+
+An error response will always return a list of error objects in the `errors` field.
+
+#### The error object
+
+Name | Type | Description
+---- | ---- | -----------
+**code** | _integer_ | A numeric code for this error.
+**title** | _string_ | Short description of the error.
+**detail** | _string_ | Detailed description of the error.
+

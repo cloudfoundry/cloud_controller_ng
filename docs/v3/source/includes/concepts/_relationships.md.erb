@@ -1,0 +1,176 @@
+## Relationships
+
+Relationships represent associations between resources. They can be used to create, read, update, and delete these associations.
+
+Relationships do not affect the fundamental properties of a resource, but may affect their behavior and permissions logic.
+Relationships are tied to the lifecycles of the associated resources and will be removed if either of the associated resources are deleted.
+
+Not all resources implement every relationship operation listed below. See the docs for each resource to see how it interacts with its relationships.
+
+#### The relationship object
+
+The relationship object is a key-value pair that uniquely identifies a resource. In practice this is almost always the `guid` of a resource.
+
+Name | Type | Description
+---- | ---- | -----------
+**guid** | _string_ | The unique identifier for the related resource.
+
+### To-One relationships
+
+```
+Example to-one relationship
+```
+```json
+{
+  "data": {
+    "guid": "[related-resource-guid]"
+  }
+}
+```
+
+Some relationships relate a resource to exactly one other resource. For example an app can belong to only one space.
+
+#### To-One relationship object
+
+Name | Type | Description
+---- | ---- | -----------
+**data** | _[relationship object](#the-relationship-object)_ | A single relationship
+
+```
+Setting the to-one relationship while creating an object
+```
+```shell
+curl "https://api.example.org/v3/books" \
+  -X POST \
+  -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
+  -d '{
+    "color": "yellow",
+    "relationships": {
+      "publisher": {
+        "data": {
+          "guid": "publisher-guid"
+        }
+      }
+    }
+  }'
+```
+
+```
+Modifying the to-one relationship
+```
+```shell
+curl "https://api.example.org/v3/books/[guid]/relationships/publisher" \
+  -X PATCH \
+  -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
+  -d '{
+    "data": {
+      "guid": "publisher-guid"
+    }
+  }'
+```
+
+```
+Removing the to-one relationship
+```
+```shell
+curl "https://api.example.org/v3/books/[guid]/relationships/publisher" \
+  -X PATCH \
+  -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
+  -d '{ "data": null }'
+```
+
+```
+Viewing the to-one relationship
+```
+```shell
+curl "https://api.example.org/v3/books/[guid]/relationships/publisher" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+### To-Many relationships
+
+```
+Example to-many relationship
+```
+```json
+{
+  "data": [
+    { "guid": "[related-resource-guid-1]" },
+    { "guid": "[related-resource-guid-2]" }
+  ]
+}
+```
+
+Some relationships relate an resource to several other resources. For example an Isolation Segment can be entitled to multiple organizations.
+
+#### To-Many relationship object
+
+Name | Type | Description
+---- | ---- | -----------
+**data** | _array of [relationship objects](#the-relationship-object)_ | An array of multiple relationships.
+
+```
+Adding related to-many resources
+```
+```shell
+curl "https://api.example.org/v3/books/[guid]/relationships/authors" \
+  -X POST \
+  -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
+  -d '{
+    "data": [
+      { "guid":"author-guid-1" },
+      { "guid":"author-guid-2" }
+    ]
+  }'
+```
+
+```
+Replacing all to-many relationships
+```
+```shell
+curl "https://api.example.org/v3/books/[guid]/relationships/authors" \
+  -X PATCH \
+  -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
+  -d '{
+    "data": [
+      { "guid":"author-guid-3" },
+      { "guid":"author-guid-4" }
+    ]
+  }'
+```
+
+```
+Removing all to-many relationships
+```
+```shell
+curl "https://api.example.org/v3/books/[guid]/relationships/authors" \
+  -X PATCH \
+  -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
+  -d '{ "data": [] }'
+```
+
+```
+Removing specific to-many relationships
+```
+```shell
+curl "https://api.example.org/v3/books/[guid]/relationships/authors/[author-guid]" \
+  -X DELETE \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Viewing the to-many relationships
+```
+```shell
+curl "https://api.example.org/v3/books/[guid]/relationships/authors" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+

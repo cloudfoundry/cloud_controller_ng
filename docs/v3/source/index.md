@@ -35,7 +35,17 @@ includes:
   - api_resources/tasks
   - introduction/introduction
   - concepts/concepts
+  - concepts/api_resource
+  - concepts/authentication
+  - concepts/authorization
+  - concepts/errors
   - concepts/includes
+  - concepts/lifecycles
+  - concepts/metadata
+  - concepts/pagination
+  - concepts/procfiles
+  - concepts/relationships
+  - concepts/status_codes
   - workflows/workflows
   - resources/header
   - resources/apps/header

@@ -1,0 +1,53 @@
+## Pagination
+
+Any request that can return multiple resources will be paginated and contain a `pagination` object and list of `resources`.
+Requests for multiple resources can use `page`, `per_page`, and `order_by` in addition to filters specific to the endpoint.
+
+#### The pagination object
+```
+Example Paginated Response
+```
+
+```json
+{
+  "pagination": {
+    "total_results": 3,
+    "total_pages": 3,
+    "first": {
+      "href": "https://api.example.org/v3/people?page=1&per_page=1"
+    },
+    "last": {
+      "href": "https://api.example.org/v3/people?page=3&per_page=1"
+    },
+    "next": {
+      "href": "https://api.example.org/v3/people?page=2&per_page=1"
+    },
+    "previous": null
+  },
+  "resources": [
+    {
+      "guid": "fd35633f-5c5c-4e4e-a5a9-0722c970a9d2",
+      "created_at": "2016-03-18T23:26:46Z",
+      "updated_at": "2016-10-17T20:00:42Z",
+
+      "name": "Bob",
+
+      "links": {
+        "self": {
+          "href": "https://api.example.org/v3/people/fd35633f-5c5c-4e4e-a5a9-0722c970a9d2"
+        }
+      }
+    }
+  ]
+}
+```
+
+Name | Type | Description
+---- | ---- | -----------
+**total_results** | _integer_ | Total number of resources for all pages.
+**total_pages** | _integer_ | Total number of pages.
+**first** | [_link object_](#the-link-object) | Link to the first page.
+**last** | [_link object_](#the-link-object) | Link to the last page.
+**next** | [_link object_](#the-link-object) | Link to the next page.
+**previous** | [_link object_](#the-link-object) | Link to the previous page.
+
