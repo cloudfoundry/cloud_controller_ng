@@ -3,6 +3,7 @@ require 'request_spec_shared_examples'
 
 RSpec.describe 'Droplets' do
   let(:space) { VCAP::CloudController::Space.make }
+  let(:org) { space.organization }
   let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid, name: 'my-app') }
   let(:other_app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid, name: 'my-app-3') }
   let(:developer) { make_developer_for_space(space) }
@@ -29,64 +30,76 @@ RSpec.describe 'Droplets' do
     end
 
     describe 'when creating a droplet' do
-      let(:api_call) { lambda { |user_headers| post '/v3/droplets', params.to_json, user_headers } }
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+        let(:api_call) { lambda { |user_headers| post '/v3/droplets', params.to_json, user_headers } }
 
-      let(:droplet_json) do
-        {
-          guid: UUID_REGEX,
-          state: 'AWAITING_UPLOAD',
-          error: nil,
-          lifecycle: {
-            type: 'buildpack',
-            data: {}
-          },
-          execution_metadata: '',
-          process_types: {
-            web: 'please_run_my_process.sh'
-          },
-          checksum: nil,
-          buildpacks: [],
-          stack: nil,
-          image: nil,
-          created_at: iso8601,
-          updated_at: iso8601,
-          metadata: {
-            labels: {},
-            annotations: {}
-          },
-          links: {
-            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/droplets\/#{UUID_REGEX}) },
-            app: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/apps\/#{UUID_REGEX}) },
-            assign_current_droplet: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/apps\/#{UUID_REGEX}\/relationships\/current_droplet), method: 'PATCH' },
+        let(:droplet_json) do
+          {
+            guid: UUID_REGEX,
+            state: 'AWAITING_UPLOAD',
+            error: nil,
+            lifecycle: {
+              type: 'buildpack',
+              data: {}
+            },
+            execution_metadata: '',
+            process_types: {
+              web: 'please_run_my_process.sh'
+            },
+            checksum: nil,
+            buildpacks: [],
+            stack: nil,
+            image: nil,
+            created_at: iso8601,
+            updated_at: iso8601,
+            metadata: {
+              labels: {},
+              annotations: {}
+            },
+            links: {
+              self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/droplets\/#{UUID_REGEX}) },
+              app: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/apps\/#{UUID_REGEX}) },
+              assign_current_droplet: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/apps\/#{UUID_REGEX}\/relationships\/current_droplet), method: 'PATCH' },
+            }
           }
-        }
-      end
+        end
 
-      let(:expected_codes_and_responses) do
-        h = Hash.new(
-          code: 403
-        )
-        h['org_auditor'] = {
-          code: 422
-        }
-        h['org_billing_manager'] = {
-          code: 422
-        }
-        h['no_role'] = {
-          code: 422
-        }
-        h['admin'] = {
-          code: 201,
-          response_object: droplet_json
-        }
-        h['space_developer'] = {
-          code: 201,
-          response_object: droplet_json
-        }
-        h.freeze
-      end
+        let(:expected_codes_and_responses) do
+          h = Hash.new(
+            code: 403
+          )
+          h['org_auditor'] = {
+            code: 422
+          }
+          h['org_billing_manager'] = {
+            code: 422
+          }
+          h['no_role'] = {
+            code: 422
+          }
+          h['admin'] = {
+            code: 201,
+            response_object: droplet_json
+          }
+          h['space_developer'] = {
+            code: 201,
+            response_object: droplet_json
+          }
+          h.freeze
+        end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        let(:expected_event_hash) do
+          {
+            type: 'audit.app.droplet.create',
+            actee: app_model.guid,
+            actee_type: 'app',
+            actee_name: app_model.name,
+            metadata: { droplet_guid: parsed_response['guid'] }.to_json,
+            space_guid: space.guid,
+            organization_guid: org.guid,
+          }
+        end
+      end
     end
 
     describe 'when the user is not logged in' do

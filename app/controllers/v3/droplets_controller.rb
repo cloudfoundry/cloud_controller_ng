@@ -105,7 +105,7 @@ class DropletsController < ApplicationController
     unprocessable_app!(message.app_guid) unless app && permission_queryer.can_read_from_space?(app.space.guid, app.organization.guid)
     unauthorized! unless permission_queryer.can_write_to_space?(app.space.guid)
 
-    DropletCreate.new.create(app, message)
+    DropletCreate.new.create(app, message, user_audit_info)
   end
 
   private

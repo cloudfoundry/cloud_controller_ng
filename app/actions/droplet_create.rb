@@ -5,7 +5,7 @@ module VCAP::CloudController
 
     DEFAULT_PROCESS_TYPES = { 'web' => '' }.freeze
 
-    def create(app, message)
+    def create(app, message, user_audit_info)
       if !app.buildpack_lifecycle_data
         error!('Droplet creation is not available for apps with docker lifecycles.')
         return
@@ -24,6 +24,14 @@ module VCAP::CloudController
           droplet: droplet
         )
       end
+
+      Repositories::DropletEventRepository.record_create(
+        droplet,
+        user_audit_info,
+        app.name,
+        app.space.guid,
+        app.organization.guid
+      )
 
       droplet
     end

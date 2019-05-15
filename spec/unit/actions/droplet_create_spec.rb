@@ -3,6 +3,7 @@ require 'actions/droplet_create'
 
 module VCAP::CloudController
   RSpec.describe DropletCreate do
+    let(:user_audit_info) { UserAuditInfo.new(user_email: 'amelia@cats.com', user_guid: 'gooid') }
     subject(:droplet_create) { DropletCreate.new }
     let!(:app) { AppModel.make }
     let!(:buildpack_data) { BuildpackLifecycleDataModel.make(app: app) }
@@ -27,7 +28,7 @@ module VCAP::CloudController
         }
         it 'creates a droplet for app including the default process_types' do
           expect {
-            droplet_create.create(app, message)
+            droplet_create.create(app, message, user_audit_info)
           }.to change { DropletModel.count }.by(1)
 
           droplet = DropletModel.last
@@ -40,6 +41,17 @@ module VCAP::CloudController
           expect(droplet.buildpack_lifecycle_data.buildpacks).to be_empty
           expect(droplet.buildpack_lifecycle_data.stack).to be_nil
         end
+        it 'creates an audit event' do
+          expect(Repositories::DropletEventRepository).
+            to receive(:record_create).with(instance_of(DropletModel),
+              user_audit_info,
+              app.name,
+              app.space.guid,
+              app.organization.guid
+            )
+
+          subject.create(app, message, user_audit_info)
+        end
       end
 
       context 'when process_types are specified' do
@@ -51,7 +63,7 @@ module VCAP::CloudController
 
         it 'creates a droplet for app with given process_types' do
           expect {
-            droplet_create.create(app, message)
+            droplet_create.create(app, message, user_audit_info)
           }.to change { DropletModel.count }.by(1)
 
           droplet = DropletModel.last
@@ -67,7 +79,7 @@ module VCAP::CloudController
 
         it 'fails when app has docker lifecycle' do
           expect {
-            droplet_create.create(docker_app, message)
+            droplet_create.create(docker_app, message, user_audit_info)
           }.to raise_error(DropletCreate::Error, 'Droplet creation is not available for apps with docker lifecycles.')
         end
       end
