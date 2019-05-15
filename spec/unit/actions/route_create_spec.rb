@@ -197,6 +197,106 @@ module VCAP::CloudController
         end
       end
 
+      context 'when a path is invalid' do
+        it 'raises an error with a helpful message' do
+          message = RouteCreateMessage.new({
+            host: '',
+            path: '/\/\invalid-path',
+            relationships: {
+              space: {
+                data: { guid: space.guid }
+              },
+              domain: {
+                data: { guid: domain.guid }
+              },
+            },
+          })
+          expect {
+            subject.create(message: message, space: space, domain: domain)
+          }.to raise_error(RouteCreate::Error, 'Path is invalid.')
+        end
+      end
+
+      context 'when a path is a single /' do
+        it 'raises an error with a helpful message' do
+          message = RouteCreateMessage.new({
+            host: '',
+            path: '/',
+            relationships: {
+              space: {
+                data: { guid: space.guid }
+              },
+              domain: {
+                data: { guid: domain.guid }
+              },
+            },
+          })
+          expect {
+            subject.create(message: message, space: space, domain: domain)
+          }.to raise_error(RouteCreate::Error, "Path cannot be a single '/'.")
+        end
+      end
+
+      context 'when a path is missing a beginning slash' do
+        it 'raises an error with a helpful message' do
+          message = RouteCreateMessage.new({
+            host: '',
+            path: 'whereistheslash',
+            relationships: {
+              space: {
+                data: { guid: space.guid }
+              },
+              domain: {
+                data: { guid: domain.guid }
+              },
+            },
+          })
+          expect {
+            subject.create(message: message, space: space, domain: domain)
+          }.to raise_error(RouteCreate::Error, "Path is missing the beginning '/'.")
+        end
+      end
+
+      context 'when a path is too long' do
+        it 'raises an error with a helpful message' do
+          message = RouteCreateMessage.new({
+            host: '',
+            path: '/pathtoolong' * 5000,
+            relationships: {
+              space: {
+                data: { guid: space.guid }
+              },
+              domain: {
+                data: { guid: domain.guid }
+              },
+            },
+          })
+          expect {
+            subject.create(message: message, space: space, domain: domain)
+          }.to raise_error(RouteCreate::Error, 'Path exceeds 128 characters.')
+        end
+      end
+
+      context 'when a path contains a ?' do
+        it 'raises an error with a helpful message' do
+          message = RouteCreateMessage.new({
+            host: '',
+            path: '/hmm?',
+            relationships: {
+              space: {
+                data: { guid: space.guid }
+              },
+              domain: {
+                data: { guid: domain.guid }
+              },
+            },
+          })
+          expect {
+            subject.create(message: message, space: space, domain: domain)
+          }.to raise_error(RouteCreate::Error, "Path cannot contain '?'.")
+        end
+      end
+
       context 'when a route already exists' do
         it 'prevents conflict with hostless route on a matching domain' do
           Route.make(domain: domain, host: '', space: space)

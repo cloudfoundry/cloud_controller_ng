@@ -85,6 +85,25 @@ module VCAP::CloudController
         error!('Paths are not supported for internal domains.')
       end
 
+      if error.errors.on(:path)&.include?(:invalid_path)
+        error!('Path is invalid.')
+      end
+
+      if error.errors.on(:path)&.include?(:path_exceeds_valid_length)
+        error!('Path exceeds 128 characters.')
+      end
+
+      if error.errors.on(:path)&.include?(:single_slash)
+        error!("Path cannot be a single '/'.")
+      end
+
+      if error.errors.on(:path)&.include?(:missing_beginning_slash)
+        error!("Path is missing the beginning '/'.")
+      end
+
+      if error.errors.on(:path)&.include?(:path_contains_question)
+        error!("Path cannot contain '?'.")
+      end
       if error.errors.on([:host, :domain_id, :path])&.include?(:unique)
         if host.empty?
           error!("Route already exists with path '#{path}' for domain '#{domain.name}'.")
