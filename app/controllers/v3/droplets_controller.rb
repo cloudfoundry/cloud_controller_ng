@@ -19,7 +19,7 @@ class DropletsController < ApplicationController
     droplet = hashed_params[:source_guid] ? create_copy : create_fresh
 
     render status: :created, json: Presenters::V3::DropletPresenter.new(droplet)
-  rescue DropletCopy::InvalidCopyError => e
+  rescue DropletCopy::InvalidCopyError, DropletCreate::Error => e
     unprocessable!(e.message)
   end
 
@@ -101,8 +101,8 @@ class DropletsController < ApplicationController
     message = DropletCreateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    app = AppModel.where(guid: message.app_guid).eager(:space, :organization).first
-    unprocessable_app!(message.app_guid) unless app && permission_queryer.can_read_from_space?(app.space.guid, app.organization.guid)
+    app = AppModel.where(guid: message.relationships_message.app_guid).eager(:space, :organization).first
+    unprocessable_app!(message.relationships_message.app_guid) unless app && permission_queryer.can_read_from_space?(app.space.guid, app.organization.guid)
     unauthorized! unless permission_queryer.can_write_to_space?(app.space.guid)
 
     DropletCreate.new.create(app, message, user_audit_info)

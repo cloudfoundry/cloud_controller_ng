@@ -14,8 +14,7 @@ RSpec.describe 'Droplets' do
 
   describe 'POST /v3/droplets' do
     let(:user) { VCAP::CloudController::User.make }
-    let(:space) { VCAP::CloudController::Space.make }
-    let(:org) { space.organization }
+
     let(:params) do
       {
         process_types: {
@@ -135,6 +134,7 @@ RSpec.describe 'Droplets' do
         expect(last_response).to have_error_message(/must be a hash/)
       end
     end
+
     context 'when app does not exist' do
       let(:nonexistent_app_params) do
         {
@@ -163,12 +163,31 @@ RSpec.describe 'Droplets' do
         expect(last_response).to have_error_message("App with guid \"#{app_model.guid}\" does not exist, or you do not have access to it.")
       end
     end
+
+    context 'when the app has a docker lifecycle' do
+      let!(:docker_app) { VCAP::CloudController::AppModel.make(:docker, space: space) }
+
+      let(:docker_app_params) do
+        {
+          relationships: {
+            app: {
+              data: { guid: docker_app.guid }
+            }
+          }
+        }
+      end
+
+      it 'returns a 422 with an appropriate error message' do
+        post '/v3/droplets', docker_app_params.to_json, developer_headers
+        expect(last_response.status).to eq(422)
+        expect(last_response).to have_error_message('Droplet creation is not available for apps with docker lifecycles.')
+      end
+    end
   end
 
   describe 'GET /v3/droplets/:guid' do
     let(:guid) { droplet_model.guid }
     let(:package_model) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
-
     let(:app_guid) { droplet_model.app_guid }
 
     context 'when the droplet has a buildpack lifecycle' do

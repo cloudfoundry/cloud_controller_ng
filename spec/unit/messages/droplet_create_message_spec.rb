@@ -16,7 +16,7 @@ module VCAP::CloudController
       message = DropletCreateMessage.new(body)
 
       expect(message).to be_a(DropletCreateMessage)
-      expect(message.app_guid).to eq('some-app-guid')
+      expect(message.relationships_message.app_guid).to eq('some-app-guid')
       expect(message.process_types).to eq(web: 'web-type')
     end
 
@@ -44,30 +44,30 @@ module VCAP::CloudController
         end
       end
 
-      describe 'app' do
+      describe 'relationships' do
         it 'is not valid when app is missing' do
           message = DropletCreateMessage.new({ relationships: {} })
           expect(message).not_to be_valid
-          expect(message.errors_on(:app)).to include('must be a hash')
+          expect(message.errors_on(:relationships)).to include(a_string_including('must include one or more valid relationships'))
         end
 
         it 'is not valid when app is not a hash' do
           message = DropletCreateMessage.new({ relationships: { app: 'hello' } })
           expect(message).not_to be_valid
-          expect(message.errors_on(:app)).to include('must be a hash')
+          expect(message.errors_on(:relationships)).to include(a_string_including('must be structured like'))
         end
 
         it 'is not valid when app_guid has an invalid guid' do
           message = DropletCreateMessage.new({ relationships: { app: { data: { guid: 876 } } } })
-          expect(message.app_guid).not_to be_nil
+          expect(message.relationships_message.app_guid).not_to be_nil
           expect(message).not_to be_valid
-          expect(message.errors_on(:app_guid)).to_not be_empty
+          expect(message.errors_on(:relationships)).to_not be_empty
         end
 
         it 'is valid when there is a valid app guid' do
           guid = SecureRandom.uuid
           message = DropletCreateMessage.new({ relationships: { app: { data: { guid: guid } } } })
-          expect(message.app_guid).to eq(guid)
+          expect(message.relationships_message.app_guid).to eq(guid)
           expect(message).to be_valid
         end
       end

@@ -34,21 +34,22 @@ Content-Type: application/json
 
 <%= yield_content :single_created_droplet_without_package %>
 ```
+This endpoint is only for creating a droplet without a package. To create a droplet based on a package, see [Create a build](#create-a-build).
 
 #### Definition
 `POST /v3/droplets`
 
 #### Required Parameters
 
-| Name    | Type                                           | Description               |
-| ----    | ----                                           | -----------               |
-| **app** | [_to-one relationship_](#to-one-relationships) | A relationship to an app. |
+| Name    | Type                                           | Description                |
+| ----    | ----                                           | -----------                |
+| **app** | [_to-one relationship_](#to-one-relationships) | App to create droplet for. |
 
 #### Optional Parameters
 
-| Name              | Type     | Description                                                                   | Default    |
-| -----------       | -------- | ----------------------------------------------------------------------------- | -------    |
-| **process_types** | _hash_   | Process names and start commands for the droplet.                             | {"web": "} |
+| Name              | Type     | Description                                                                   | Default       |
+| -----------       | -------- | ----------------------------------------------------------------------------- | -------       |
+| **process_types** | _hash_   | Process names and start commands for the droplet.                             | `{"web": ""}` |
 
 #### Permitted Roles
 |                 |     |
