@@ -1,0 +1,178 @@
+## Include
+
+The `include` parameter allows clients to fetch resources and ensure that information about the parent object(s) is part of the response.
+For example, a response to `/v3/spaces/:guid?include=org` will contain detailed information about the space and its parent org.
+
+Developers may choose to use the `include` feature to reduce the number of API calls. The include
+query param can be used with a single resource or a list of resources.
+
+### Resources
+
+The following resources can take an `include` parameter:
+
+Resource | Allowed values
+-------- | --------------
+**apps** | `org`, `space`
+**apps/[:guid]** | `org`, `space`
+**spaces** | `org`
+**spaces/[:guid]** | `org`
+
+### Sample requests
+
+
+```
+Example request to apps resource to include parent orgs and spaces
+```
+
+```shell
+curl "https://api.example.org/v3/apps?include=org,space" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example response
+```
+
+```java
+{
+   "pagination": {
+      "total_results": 2
+      // rest of pagination omitted
+   },
+   "resources": [
+      {
+         "guid": "42ad8d5a-8124-4fc7-baf2-3f39bfe1c170",
+         "name": "app1"
+         // rest omitted
+      },
+      {
+         "guid": "b90f287b-fcdd-4cbb-9523-1a8dbd2a9837",
+         "name": "app2"
+         // rest omitted
+      }
+   ],
+   "included": {
+      "spaces": [
+         {
+            "guid": "134f95ad-b5eb-4b55-9ce0-b906c513d54b",
+            "name": "space1"
+            // rest of info on space1 omitted
+         },
+         {
+            "guid": "00b76d5c-5176-4cbc-be5d-0bd76363dca9",
+            "name": "space2"
+            // rest of info on space2 omitted
+         }
+      ],
+      "organizations": [
+         {
+            "guid": "b2075a71-28b6-411a-a896-56f75d892f58",
+            "name": "org1"
+            // rest of info on org1 omitted
+         },
+         {
+            "guid": "b56fbd01-296b-442b-8faf-a559aebf985e",
+            "name": "org2"
+            // rest of info on org2 omitted
+         }
+      ]
+   }
+}
+```
+
+```
+Example request for a single app instance to include its parent space
+```
+
+```shell
+curl "https://api.example.org/v3/apps/[guid]?include=space" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example response
+```
+
+```java
+{
+   "guid": "b90f287b-fcdd-4cbb-9523-1a8dbd2a9837",
+   "name": "staticfile",
+   // ...
+   "included": {
+      "spaces": [
+         {
+            "guid": "00b76d5c-5176-4cbc-be5d-0bd76363dca9",
+            "name": "space1a"
+           // ...
+         }
+      ]
+   }
+}
+```
+
+```
+Example request for all spaces including their parent orgs
+```
+
+```shell
+curl "https://api.example.org/v3/spaces?include=org" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+```
+	Example Response
+```
+```java
+{
+   "pagination": {
+      "total_results": 4,
+      "total_pages": 1,
+     // ...
+   },
+   "resources": [
+      {
+         "guid": "134f95ad-b5eb-4b55-9ce0-b906c513d54b",
+         "name": "space"
+         // ...
+      },
+      {
+         "guid": "00b76d5c-5176-4cbc-be5d-0bd76363dca9",
+         "name": "space1a"
+        // ...
+      },
+      {
+         "guid": "615e724a-dfae-4846-836b-8c413f6192cd",
+         "name": "space1b"
+         // ...
+      },
+      {
+         "guid": "5801b8dd-5ca6-41bb-ba23-690e703c631a",
+         "name": "space2a"
+		// ...
+      }
+   ],
+   "included": {
+      "organizations": [
+         {
+            "guid": "b2075a71-28b6-411a-a896-56f75d892f58",
+            "name": "org"
+            // ...
+         },
+         {
+            "guid": "b56fbd01-296b-442b-8faf-a559aebf985e",
+            "name": "org1"
+            // ...
+         },
+         {
+            "guid": "c4bf7e09-57e7-453c-8b8e-fbebc986201e",
+            "name": "org2"
+            // ...
+         }
+      ]
+   }
+}
+```
+
+
