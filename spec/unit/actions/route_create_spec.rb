@@ -171,7 +171,7 @@ module VCAP::CloudController
         it 'raises an error with a helpful message' do
           expect {
             subject.create(message: message, space: space, domain: domain_with_long_name)
-          }.to raise_error(RouteCreate::Error, 'host combined with domain name must be no more than 253 characters')
+          }.to raise_error(RouteCreate::Error, 'Host combined with domain name must be no more than 253 characters.')
         end
       end
 

@@ -67,6 +67,10 @@ module VCAP::CloudController
         error!('Missing host. Routes in shared domains must have a host defined.')
       end
 
+      if error.errors.on(:host)&.include?('combined with domain name must be no more than 253 characters')
+        error!('Host combined with domain name must be no more than 253 characters.')
+      end
+
       if error.errors.on([:host, :domain_id])&.include?(:unique)
         if host.empty?
           error!("Route already exists for domain '#{domain.name}'.")
