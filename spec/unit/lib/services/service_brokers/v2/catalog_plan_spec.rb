@@ -15,7 +15,7 @@ module VCAP::Services::ServiceBrokers::V2
         'schemas'     => opts[:schemas] || {},
         'plan_updateable' => opts[:plan_updateable],
         'maximum_polling_duration' => opts[:maximum_polling_duration],
-        'maintenance_info' => opts[:maintenance_info] || {}
+        'maintenance_info' => opts[:maintenance_info] || nil
       }
     end
     let(:catalog_service) { instance_double(VCAP::Services::ServiceBrokers::V2::CatalogService) }
@@ -34,7 +34,7 @@ module VCAP::Services::ServiceBrokers::V2
         expect(plan.bindable).to be true
         expect(plan.plan_updateable).to be true
         expect(plan.maximum_polling_duration).to be 3600
-        expect(plan.maintenance_info).to eq({})
+        expect(plan.maintenance_info).to be nil
         expect(plan.errors).to be_empty
       end
 
@@ -46,6 +46,20 @@ module VCAP::Services::ServiceBrokers::V2
 
       it 'defaults schemas to an empty hash' do
         expect(plan.schemas).to be {}
+      end
+
+      it 'allows a valid maintenance_info object' do
+        plan_attrs['maintenance_info'] = { 'version' => '1.2.3-alpha1' }
+
+        expect(plan).to be_valid
+        expect(plan.errors.messages).to be_empty
+      end
+
+      it 'allows @maintenance_info object to contain fields other than version' do
+        plan_attrs['maintenance_info'] = { 'version' => '1.2.3', 'foo' => 'bar' }
+
+        expect(plan).to be_valid
+        expect(plan.errors.messages).to be_empty
       end
     end
 
@@ -146,6 +160,34 @@ module VCAP::Services::ServiceBrokers::V2
 
         expect(plan).to_not be_valid
         expect(plan.errors.messages.first).to include 'Maintenance info must be a hash, but has value "true"'
+      end
+
+      it 'validates that @maintenance_info has a version' do
+        plan_attrs['maintenance_info'] = {}
+
+        expect(plan).to_not be_valid
+        expect(plan.errors.messages.first).to include 'Maintenance info version is required'
+      end
+
+      it 'validates that @maintenance_info version is a string' do
+        plan_attrs['maintenance_info'] = { 'version' => 42 }
+
+        expect(plan).to_not be_valid
+        expect(plan.errors.messages.first).to include 'Maintenance info version must be a string, but has value 42'
+      end
+
+      it 'validates that @maintenance_info version is semver compliant' do
+        plan_attrs['maintenance_info'] = { 'version' => '1beta' }
+
+        expect(plan).to_not be_valid
+        expect(plan.errors.messages.first).to include 'Maintenance info version must be a Semantic Version, but has value "1beta"'
+      end
+
+      it 'validates that @maintenance_info object serializes to 2000 characters or fewer' do
+        plan_attrs['maintenance_info'] = { 'version' => '2' * 2000 }
+
+        expect(plan).to_not be_valid
+        expect(plan.errors.messages.first).to include 'Maintenance info must serialize to 2000 characters or fewer in JSON, but serializes to 2014 characters'
       end
 
       it 'validates that @maximum_polling_duration is an integer' do
