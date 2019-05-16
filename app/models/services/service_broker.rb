@@ -28,7 +28,7 @@ module VCAP::CloudController
       @client ||= VCAP::Services::ServiceBrokers::V2::Client.new(url: broker_url, auth_username: auth_username, auth_password: auth_password)
     end
 
-    def private?
+    def space_scoped?
       !!space_id
     end
 

@@ -26,7 +26,7 @@ module VCAP::CloudController
     private
 
     def validate_plan_is_not_private
-      if service_plan&.broker_private?
+      if service_plan&.broker_space_scoped?
         errors.add(:service_plan, 'is from a private broker')
       end
     end

@@ -920,5 +920,9 @@ module VCAP::CloudController
         expect(perm_permissions).to have_received(:can_read_task?).with(space_guid: 'my-space-guid', org_guid: 'my-org-guid')
       end
     end
+
+    describe '#readable_secret_space_guids' do
+      it_behaves_like 'readable guids', 'secret_space'
+    end
   end
 end

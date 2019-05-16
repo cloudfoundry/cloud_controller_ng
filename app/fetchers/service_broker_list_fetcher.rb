@@ -29,10 +29,7 @@ module VCAP::CloudController
     end
 
     def spaces_from(space_guids)
-      spaces = space_guids.map do |space_guid|
-        Space.where(guid: space_guid).first
-      end
-      spaces.compact
+      Space.where(guid: space_guids)
     end
   end
 end

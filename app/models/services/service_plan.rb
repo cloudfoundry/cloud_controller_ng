@@ -134,8 +134,8 @@ module VCAP::CloudController
       service.service_broker if service
     end
 
-    def broker_private?
-      service_broker.private? if service_broker
+    def broker_space_scoped?
+      service_broker.space_scoped? if service_broker
     end
 
     def visible_in_space?(space)
@@ -151,7 +151,7 @@ module VCAP::CloudController
 
     def before_validation
       generate_unique_id if new?
-      self.public = !broker_private? if self.public.nil?
+      self.public = !broker_space_scoped? if self.public.nil?
       super
     end
 
@@ -160,7 +160,7 @@ module VCAP::CloudController
     end
 
     def validate_private_broker_plan_not_public
-      if broker_private? && self.public
+      if broker_space_scoped? && self.public
         errors.add(:public, 'may not be true for plans belonging to private service brokers')
       end
     end

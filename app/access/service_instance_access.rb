@@ -123,7 +123,9 @@ module VCAP::CloudController
     end
 
     def purge?(service_instance)
-      admin_user? || (service_instance.space&.has_developer?(context.user) && service_instance.service_broker.private?)
+      admin_user? ||
+        (service_instance.space&.has_developer?(context.user) &&
+         service_instance.service_broker.space_scoped?)
     end
 
     def purge_with_token?(instance)

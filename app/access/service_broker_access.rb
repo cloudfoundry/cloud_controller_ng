@@ -64,7 +64,7 @@ module VCAP::CloudController
       FeatureFlag.raise_unless_enabled!(:space_scoped_private_broker_creation)
 
       unless service_broker.nil?
-        return validate_object_access(service_broker)
+        return ServiceBrokerAccess.validate_object_access(context, service_broker)
       end
     end
 
@@ -72,7 +72,7 @@ module VCAP::CloudController
       return true if admin_user?
 
       unless service_broker.nil?
-        return validate_object_access(service_broker)
+        return ServiceBrokerAccess.validate_object_access(context, service_broker)
       end
 
       false
@@ -82,16 +82,14 @@ module VCAP::CloudController
       return true if admin_user?
 
       unless service_broker.nil?
-        return validate_object_access(service_broker)
+        return ServiceBrokerAccess.validate_object_access(context, service_broker)
       end
 
       false
     end
 
-    private
-
-    def validate_object_access(service_broker)
-      if service_broker.private?
+    def self.validate_object_access(context, service_broker)
+      if service_broker.space_scoped?
         service_broker.space.has_developer?(context.user)
       else
         false
