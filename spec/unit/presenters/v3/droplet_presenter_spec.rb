@@ -6,14 +6,14 @@ module VCAP::CloudController::Presenters::V3
     let(:droplet) do
       VCAP::CloudController::DropletModel.make(
         :buildpack,
-        state:              VCAP::CloudController::DropletModel::STAGED_STATE,
-        error_id:           'FAILED',
-        error_description:  'things went all sorts of bad',
-        process_types:      { 'web' => 'npm start', 'worker' => 'start worker' },
+        state: VCAP::CloudController::DropletModel::STAGED_STATE,
+        error_id: 'FAILED',
+        error_description: 'things went all sorts of bad',
+        process_types: { 'web' => 'npm start', 'worker' => 'start worker' },
         execution_metadata: 'black-box-string',
-        package_guid:       'abcdefabcdef12345',
-        droplet_hash:       'droplet-sha1-checksum',
-        sha256_checksum:    'droplet-sha256-checksum',
+        package_guid: 'abcdefabcdef12345',
+        droplet_hash: 'droplet-sha1-checksum',
+        sha256_checksum: 'droplet-sha256-checksum',
       )
     end
 
@@ -25,18 +25,18 @@ module VCAP::CloudController::Presenters::V3
 
       context 'buildpack lifecycle' do
         before do
-          droplet.lifecycle_data.buildpacks       = [buildpack, buildpack2]
-          droplet.lifecycle_data.stack            = 'the-happiest-stack'
-          droplet.buildpack_receipt_buildpack     = buildpack_receipt_buildpack
+          droplet.lifecycle_data.buildpacks = [buildpack, buildpack2]
+          droplet.lifecycle_data.stack = 'the-happiest-stack'
+          droplet.buildpack_receipt_buildpack = buildpack_receipt_buildpack
           droplet.buildpack_receipt_detect_output = 'the-happiest-buildpack-detect-output'
           droplet.save
         end
 
         it 'presents the droplet as a hash' do
           links = {
-            self:                   { href: "#{link_prefix}/v3/droplets/#{droplet.guid}" },
-            package:                { href: "#{link_prefix}/v3/packages/#{droplet.package_guid}" },
-            app:                    { href: "#{link_prefix}/v3/apps/#{droplet.app_guid}" },
+            self: { href: "#{link_prefix}/v3/droplets/#{droplet.guid}" },
+            package: { href: "#{link_prefix}/v3/packages/#{droplet.package_guid}" },
+            app: { href: "#{link_prefix}/v3/apps/#{droplet.app_guid}" },
             assign_current_droplet: { href: "#{link_prefix}/v3/apps/#{droplet.app_guid}/relationships/current_droplet", method: 'PATCH' }
           }
 
@@ -77,15 +77,15 @@ module VCAP::CloudController::Presenters::V3
 
           it 'obfuscates the username and password' do
             expect(result[:buildpacks]).to match_array([{ name: 'shaq',
-                                                          detect_output: nil,
-                                                          buildpack_name: nil,
-                                                          version: nil
+              detect_output: nil,
+              buildpack_name: nil,
+              version: nil
             },
-                                                        { name: 'https://***:***@neopets.com',
-                                                          detect_output: 'the-happiest-buildpack-detect-output',
-                                                          buildpack_name: nil,
-                                                          version: nil
-                                                        }])
+              { name: 'https://***:***@neopets.com',
+                detect_output: 'the-happiest-buildpack-detect-output',
+                buildpack_name: nil,
+                version: nil
+              }])
           end
         end
 
@@ -152,18 +152,18 @@ module VCAP::CloudController::Presenters::V3
         end
 
         before do
-          droplet.lifecycle_data.buildpacks       = lifecycle_buildpacks
-          droplet.lifecycle_data.stack            = 'the-happiest-stack'
-          droplet.buildpack_receipt_buildpack     = buildpack_receipt_buildpack
+          droplet.lifecycle_data.buildpacks = lifecycle_buildpacks
+          droplet.lifecycle_data.stack = 'the-happiest-stack'
+          droplet.buildpack_receipt_buildpack = buildpack_receipt_buildpack
           droplet.buildpack_receipt_detect_output = buildpack_receipt_detect_output
           droplet.save
         end
 
         it 'presents the droplet as a hash and presents new buildpack info' do
           links = {
-            self:                   { href: "#{link_prefix}/v3/droplets/#{droplet.guid}" },
-            package:                { href: "#{link_prefix}/v3/packages/#{droplet.package_guid}" },
-            app:                    { href: "#{link_prefix}/v3/apps/#{droplet.app_guid}" },
+            self: { href: "#{link_prefix}/v3/droplets/#{droplet.guid}" },
+            package: { href: "#{link_prefix}/v3/packages/#{droplet.package_guid}" },
+            app: { href: "#{link_prefix}/v3/apps/#{droplet.app_guid}" },
             assign_current_droplet: { href: "#{link_prefix}/v3/apps/#{droplet.app_guid}/relationships/current_droplet", method: 'PATCH' }
           }
 
@@ -184,7 +184,7 @@ module VCAP::CloudController::Presenters::V3
             },
             { name: 'chris-cross',
               detect_output: 'black cow',
-              buildpack_name:  'sailing',
+              buildpack_name: 'sailing',
               version: nil
             }])
 
@@ -251,6 +251,29 @@ module VCAP::CloudController::Presenters::V3
           expect(result[:guid]).to eq(droplet.guid)
           expect(result[:metadata][:labels]).to eq('release' => 'stable', 'maine.gov/potato' => 'mashed')
           expect(result[:metadata][:annotations]).to eq('contacts' => 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)')
+        end
+      end
+
+      context 'when the droplet is AWAITING_UPLOAD' do
+        before do
+          droplet.state = VCAP::CloudController::DropletModel::AWAITING_UPLOAD_STATE
+          droplet.save
+        end
+
+        it 'adds the upload link' do
+          links = {
+            self: { href: "#{link_prefix}/v3/droplets/#{droplet.guid}" },
+            package: { href: "#{link_prefix}/v3/packages/#{droplet.package_guid}" },
+            app: { href: "#{link_prefix}/v3/apps/#{droplet.app_guid}" },
+            assign_current_droplet: { href: "#{link_prefix}/v3/apps/#{droplet.app_guid}/relationships/current_droplet", method: 'PATCH' },
+            upload: { href: "#{link_prefix}/v3/droplets/#{droplet.guid}/upload", method: 'POST' }
+          }
+
+          expect(result[:guid]).to eq(droplet.guid)
+          expect(result[:state]).to eq('AWAITING_UPLOAD')
+          expect(result[:created_at]).to be_a(Time)
+          expect(result[:updated_at]).to be_a(Time)
+          expect(result[:links]).to eq(links)
         end
       end
     end

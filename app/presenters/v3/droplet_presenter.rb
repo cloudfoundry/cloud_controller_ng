@@ -47,6 +47,7 @@ module VCAP::CloudController
             assign_current_droplet: { href: url_builder.build_url(path: "/v3/apps/#{droplet.app_guid}/relationships/current_droplet"), method: 'PATCH' },
           }.tap do |links|
             links[:package] = { href: url_builder.build_url(path: "/v3/packages/#{droplet.package_guid}") } if droplet.package_guid.present?
+            links[:upload] = { href: url_builder.build_url(path: "/v3/droplets/#{droplet.guid}/upload"), method: 'POST' } if droplet.state == DropletModel::AWAITING_UPLOAD_STATE
           end
         end
 
