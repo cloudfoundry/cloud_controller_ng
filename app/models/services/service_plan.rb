@@ -4,6 +4,8 @@ module VCAP::CloudController
     one_to_many :service_instances
     one_to_many :service_plan_visibilities
 
+    plugin :serialization
+
     add_association_dependencies service_plan_visibilities: :destroy
 
     export_attributes :name,
@@ -38,6 +40,8 @@ module VCAP::CloudController
                       :create_instance_schema,
                       :update_instance_schema,
                       :create_binding_schema
+
+    serialize_attributes :json, :maintenance_info
 
     strip_attributes :name
 
@@ -141,10 +145,6 @@ module VCAP::CloudController
     def visible_in_space?(space)
       visible_plans = ServicePlan.space_visible(space)
       visible_plans.include?(self)
-    end
-
-    def parsed_maintenance_info
-      JSON.parse(maintenance_info)
     end
 
     private

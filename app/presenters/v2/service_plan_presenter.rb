@@ -1,18 +1,18 @@
+require 'presenters/mixins/services_presentation_helpers'
+
 module CloudController
   module Presenters
     module V2
       class ServicePlanPresenter < BasePresenter
         extend PresenterProvider
+        include VCAP::CloudController::Presenters::Mixins::ServicesPresentationHelpers
 
         present_for_class 'VCAP::CloudController::ServicePlan'
 
         def entity_hash(controller, plan, opts, depth, parents, orphans=nil)
           entity = DefaultPresenter.new.entity_hash(controller, plan, opts, depth, parents, orphans)
 
-          entity['maintenance_info'] = {}
-          if plan.maintenance_info
-            entity['maintenance_info'] = plan.parsed_maintenance_info
-          end
+          entity['maintenance_info'] = parse_maintenance_info(plan.maintenance_info)
 
           schemas = present_schemas(plan)
           entity.merge!(schemas)
