@@ -186,7 +186,7 @@ issue on our API repo <a href="https://github.com/cloudfoundry/cloud_controller_
 
           <h1 id="concepts">Concepts</h1>
 
-<h2 id="api-resource">API Resource</h2>
+          <h2 id="api-resource">API Resource</h2>
 
 <p>A resource represents an individual object within the system, such as an app or a service. It is represented as a JSON object.</p>
 
@@ -275,7 +275,7 @@ issue on our API repo <a href="https://github.com/cloudfoundry/cloud_controller_
 </tr>
 </tbody></table>
 
-<h2 id="authentication">Authentication</h2>
+          <h2 id="authentication">Authentication</h2>
 
 <p>The Cloud Foundry V3 API is secured using OAuth 2. Clients are expected to present a valid bearer token via HTTP header: <code class="prettyprint">Authorization: bearer &lt;token&gt;</code></p>
 
@@ -285,7 +285,7 @@ issue on our API repo <a href="https://github.com/cloudfoundry/cloud_controller_
 Use the cf cli to obtain a bearer token: cf oauth-token
 </aside>
 
-<h2 id="authorization">Authorization</h2>
+          <h2 id="authorization">Authorization</h2>
 
 <p>Access to resources is determined by combining scopes in the OAuth2 Token with User Roles that are managed by the API. User Roles are currently managed by the <a href="http://apidocs.cloudfoundry.org/">V2 API</a>.</p>
 
@@ -369,7 +369,7 @@ Use the cf cli to obtain a bearer token: cf oauth-token
 </tr>
 </tbody></table>
 
-<h2 id="errors">Errors</h2>
+          <h2 id="errors">Errors</h2>
 <pre class="highlight plaintext"><code>Example Error
 </code></pre>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
@@ -411,7 +411,178 @@ Use the cf cli to obtain a bearer token: cf oauth-token
 </tr>
 </tbody></table>
 
-<h2 id="lifecycles">Lifecycles</h2>
+          <h2 id="include">Include</h2>
+
+<p>The <code class="prettyprint">include</code> parameter allows clients to fetch resources and ensure that information about the parent object(s) is part of the response.
+For example, a response to <code class="prettyprint">/v3/spaces/:guid?include=org</code> will contain detailed information about the space and its parent org.</p>
+
+<p>Developers may choose to use the <code class="prettyprint">include</code> feature to reduce the number of API calls. The include
+query param can be used with a single resource or a list of resources.</p>
+
+<h3 id="resources">Resources</h3>
+
+<p>The following resources can take an <code class="prettyprint">include</code> parameter:</p>
+
+<table><thead>
+<tr>
+<th>Resource</th>
+<th>Allowed values</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>apps</strong></td>
+<td><code class="prettyprint">org</code>, <code class="prettyprint">space</code></td>
+</tr>
+<tr>
+<td><strong>apps/[:guid]</strong></td>
+<td><code class="prettyprint">org</code>, <code class="prettyprint">space</code></td>
+</tr>
+<tr>
+<td><strong>spaces</strong></td>
+<td><code class="prettyprint">org</code></td>
+</tr>
+<tr>
+<td><strong>spaces/[:guid]</strong></td>
+<td><code class="prettyprint">org</code></td>
+</tr>
+</tbody></table>
+
+<h3 id="sample-requests">Sample requests</h3>
+<pre class="highlight plaintext"><code>Example request to apps resource to include parent orgs and spaces
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps?include=org,space"</span> <span class="se">\</span>
+  -X GET <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example response
+</code></pre>
+<pre class="highlight java"><code><span class="o">{</span>
+   <span class="s">"pagination"</span><span class="o">:</span> <span class="o">{</span>
+      <span class="s">"total_results"</span><span class="o">:</span> <span class="mi">2</span>
+      <span class="c1">// rest of pagination omitted</span>
+   <span class="o">},</span>
+   <span class="s">"resources"</span><span class="o">:</span> <span class="o">[</span>
+      <span class="o">{</span>
+         <span class="s">"guid"</span><span class="o">:</span> <span class="s">"42ad8d5a-8124-4fc7-baf2-3f39bfe1c170"</span><span class="o">,</span>
+         <span class="s">"name"</span><span class="o">:</span> <span class="s">"app1"</span>
+         <span class="c1">// rest omitted</span>
+      <span class="o">},</span>
+      <span class="o">{</span>
+         <span class="s">"guid"</span><span class="o">:</span> <span class="s">"b90f287b-fcdd-4cbb-9523-1a8dbd2a9837"</span><span class="o">,</span>
+         <span class="s">"name"</span><span class="o">:</span> <span class="s">"app2"</span>
+         <span class="c1">// rest omitted</span>
+      <span class="o">}</span>
+   <span class="o">],</span>
+   <span class="s">"included"</span><span class="o">:</span> <span class="o">{</span>
+      <span class="s">"spaces"</span><span class="o">:</span> <span class="o">[</span>
+         <span class="o">{</span>
+            <span class="s">"guid"</span><span class="o">:</span> <span class="s">"134f95ad-b5eb-4b55-9ce0-b906c513d54b"</span><span class="o">,</span>
+            <span class="s">"name"</span><span class="o">:</span> <span class="s">"space1"</span>
+            <span class="c1">// rest of info on space1 omitted</span>
+         <span class="o">},</span>
+         <span class="o">{</span>
+            <span class="s">"guid"</span><span class="o">:</span> <span class="s">"00b76d5c-5176-4cbc-be5d-0bd76363dca9"</span><span class="o">,</span>
+            <span class="s">"name"</span><span class="o">:</span> <span class="s">"space2"</span>
+            <span class="c1">// rest of info on space2 omitted</span>
+         <span class="o">}</span>
+      <span class="o">],</span>
+      <span class="s">"organizations"</span><span class="o">:</span> <span class="o">[</span>
+         <span class="o">{</span>
+            <span class="s">"guid"</span><span class="o">:</span> <span class="s">"b2075a71-28b6-411a-a896-56f75d892f58"</span><span class="o">,</span>
+            <span class="s">"name"</span><span class="o">:</span> <span class="s">"org1"</span>
+            <span class="c1">// rest of info on org1 omitted</span>
+         <span class="o">},</span>
+         <span class="o">{</span>
+            <span class="s">"guid"</span><span class="o">:</span> <span class="s">"b56fbd01-296b-442b-8faf-a559aebf985e"</span><span class="o">,</span>
+            <span class="s">"name"</span><span class="o">:</span> <span class="s">"org2"</span>
+            <span class="c1">// rest of info on org2 omitted</span>
+         <span class="o">}</span>
+      <span class="o">]</span>
+   <span class="o">}</span>
+<span class="o">}</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example request for a single app instance to include its parent space
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]?include=space"</span> <span class="se">\</span>
+  -X GET <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example response
+</code></pre>
+<pre class="highlight java"><code><span class="o">{</span>
+   <span class="s">"guid"</span><span class="o">:</span> <span class="s">"b90f287b-fcdd-4cbb-9523-1a8dbd2a9837"</span><span class="o">,</span>
+   <span class="s">"name"</span><span class="o">:</span> <span class="s">"staticfile"</span><span class="o">,</span>
+   <span class="c1">// ...</span>
+   <span class="s">"included"</span><span class="o">:</span> <span class="o">{</span>
+      <span class="s">"spaces"</span><span class="o">:</span> <span class="o">[</span>
+         <span class="o">{</span>
+            <span class="s">"guid"</span><span class="o">:</span> <span class="s">"00b76d5c-5176-4cbc-be5d-0bd76363dca9"</span><span class="o">,</span>
+            <span class="s">"name"</span><span class="o">:</span> <span class="s">"space1a"</span>
+           <span class="c1">// ...</span>
+         <span class="o">}</span>
+      <span class="o">]</span>
+   <span class="o">}</span>
+<span class="o">}</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example request for all spaces including their parent orgs
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/spaces?include=org"</span> <span class="se">\</span>
+  -X GET <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
+</code></pre>
+<pre class="highlight plaintext"><code>    Example Response
+</code></pre>
+<pre class="highlight java"><code><span class="o">{</span>
+   <span class="s">"pagination"</span><span class="o">:</span> <span class="o">{</span>
+      <span class="s">"total_results"</span><span class="o">:</span> <span class="mi">4</span><span class="o">,</span>
+      <span class="s">"total_pages"</span><span class="o">:</span> <span class="mi">1</span><span class="o">,</span>
+     <span class="c1">// ...</span>
+   <span class="o">},</span>
+   <span class="s">"resources"</span><span class="o">:</span> <span class="o">[</span>
+      <span class="o">{</span>
+         <span class="s">"guid"</span><span class="o">:</span> <span class="s">"134f95ad-b5eb-4b55-9ce0-b906c513d54b"</span><span class="o">,</span>
+         <span class="s">"name"</span><span class="o">:</span> <span class="s">"space"</span>
+         <span class="c1">// ...</span>
+      <span class="o">},</span>
+      <span class="o">{</span>
+         <span class="s">"guid"</span><span class="o">:</span> <span class="s">"00b76d5c-5176-4cbc-be5d-0bd76363dca9"</span><span class="o">,</span>
+         <span class="s">"name"</span><span class="o">:</span> <span class="s">"space1a"</span>
+        <span class="c1">// ...</span>
+      <span class="o">},</span>
+      <span class="o">{</span>
+         <span class="s">"guid"</span><span class="o">:</span> <span class="s">"615e724a-dfae-4846-836b-8c413f6192cd"</span><span class="o">,</span>
+         <span class="s">"name"</span><span class="o">:</span> <span class="s">"space1b"</span>
+         <span class="c1">// ...</span>
+      <span class="o">},</span>
+      <span class="o">{</span>
+         <span class="s">"guid"</span><span class="o">:</span> <span class="s">"5801b8dd-5ca6-41bb-ba23-690e703c631a"</span><span class="o">,</span>
+         <span class="s">"name"</span><span class="o">:</span> <span class="s">"space2a"</span>
+        <span class="c1">// ...</span>
+      <span class="o">}</span>
+   <span class="o">],</span>
+   <span class="s">"included"</span><span class="o">:</span> <span class="o">{</span>
+      <span class="s">"organizations"</span><span class="o">:</span> <span class="o">[</span>
+         <span class="o">{</span>
+            <span class="s">"guid"</span><span class="o">:</span> <span class="s">"b2075a71-28b6-411a-a896-56f75d892f58"</span><span class="o">,</span>
+            <span class="s">"name"</span><span class="o">:</span> <span class="s">"org"</span>
+            <span class="c1">// ...</span>
+         <span class="o">},</span>
+         <span class="o">{</span>
+            <span class="s">"guid"</span><span class="o">:</span> <span class="s">"b56fbd01-296b-442b-8faf-a559aebf985e"</span><span class="o">,</span>
+            <span class="s">"name"</span><span class="o">:</span> <span class="s">"org1"</span>
+            <span class="c1">// ...</span>
+         <span class="o">},</span>
+         <span class="o">{</span>
+            <span class="s">"guid"</span><span class="o">:</span> <span class="s">"c4bf7e09-57e7-453c-8b8e-fbebc986201e"</span><span class="o">,</span>
+            <span class="s">"name"</span><span class="o">:</span> <span class="s">"org2"</span>
+            <span class="c1">// ...</span>
+         <span class="o">}</span>
+      <span class="o">]</span>
+   <span class="o">}</span>
+<span class="o">}</span>
+</code></pre>
+
+          <h2 id="lifecycles">Lifecycles</h2>
 
 <p>Lifecycles inform the platform of how to build droplets and run apps. For example the
 <code class="prettyprint">buildpack</code> lifecycle will use a droplet and a rootfs to run the app, while a <code class="prettyprint">docker</code> lifecycle will
@@ -514,7 +685,7 @@ and the docker image is executed inside of it.</p>
 </tr>
 </tbody></table>
 
-<h2 id="metadata">Metadata</h2>
+          <h2 id="metadata">Metadata</h2>
 
 <p>Metadata allows you to tag <a href="#api-resource">API Resources</a> with information that does not directly affect its functionality.</p>
 
@@ -767,7 +938,7 @@ When patching metadata, CAPI endpoints do a deep merge, only updating labels or 
 </span><span class="p">}</span><span class="w">
 </span></code></pre>
 
-<h2 id="pagination">Pagination</h2>
+          <h2 id="pagination">Pagination</h2>
 
 <p>Any request that can return multiple resources will be paginated and contain a <code class="prettyprint">pagination</code> object and list of <code class="prettyprint">resources</code>.
 Requests for multiple resources can use <code class="prettyprint">page</code>, <code class="prettyprint">per_page</code>, and <code class="prettyprint">order_by</code> in addition to filters specific to the endpoint.</p>
@@ -847,7 +1018,7 @@ Requests for multiple resources can use <code class="prettyprint">page</code>, <
 </tr>
 </tbody></table>
 
-<h2 id="procfiles">Procfiles</h2>
+          <h2 id="procfiles">Procfiles</h2>
 <pre class="highlight plaintext"><code>Example Ruby Procfile
 </code></pre>
 <pre class="highlight yaml"><code><span class="s">web</span><span class="pi">:</span> <span class="s">bundle exec rackup config.ru -p $PORT</span>
@@ -880,7 +1051,7 @@ If a Procfile is provided that also contains a <code class="prettyprint">worker<
 <p><code class="prettyprint">web</code> is a <a href="#web-process-type">special process type</a> that is required for all applications.
 The <code class="prettyprint">web</code> <code class="prettyprint">PROCESS_TYPE</code> must be specified by either the buildpack or the Procfile.</p>
 
-<h2 id="relationships">Relationships</h2>
+          <h2 id="relationships">Relationships</h2>
 
 <p>Relationships represent associations between resources. They can be used to create, read, update, and delete these associations.</p>
 
@@ -1053,7 +1224,7 @@ Relationships are tied to the lifecycles of the associated resources and will be
   -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
 
-<h2 id="status-codes">Status Codes</h2>
+          <h2 id="status-codes">Status Codes</h2>
 
 <p>Cloud Foundry V3 API uses a subset of HTTP response codes to indicate the success or failure of an API request.
 In general, codes in the 2xx range indicate success, codes in the 4xx range indicate an error that can potentially be fixed by correcting the request, and codes in the 5xx range indicate an error on the server side.</p>
