@@ -24,8 +24,7 @@ RSpec.describe 'v3 root' do
             'experimental' => true
           },
           'domains' => {
-            'href' => "#{link_prefix}/v3/domains",
-            'experimental' => true
+            'href' => "#{link_prefix}/v3/domains"
           },
           'droplets' => {
             'href' => "#{link_prefix}/v3/droplets"

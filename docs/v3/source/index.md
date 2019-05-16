@@ -78,6 +78,16 @@ includes:
   - resources/buildpacks/update
   - resources/buildpacks/delete
   - resources/buildpacks/upload_bits
+  - resources/domains/header
+  - resources/domains/object
+  - resources/domains/create
+  - resources/domains/get
+  - resources/domains/list
+  - resources/domains/list_domains_for_an_org
+  - resources/domains/update
+  - resources/domains/delete
+  - resources/domains/share
+  - resources/domains/unshare
   - resources/droplets/header
   - resources/droplets/object
   - resources/droplets/create
@@ -194,16 +204,6 @@ includes:
   - experimental_resources/deployments/list
   - experimental_resources/deployments/update
   - experimental_resources/deployments/cancel
-  - experimental_resources/domains/header
-  - experimental_resources/domains/object
-  - experimental_resources/domains/create
-  - experimental_resources/domains/get
-  - experimental_resources/domains/list
-  - experimental_resources/domains/list_domains_for_an_org
-  - experimental_resources/domains/update
-  - experimental_resources/domains/delete
-  - experimental_resources/domains/share
-  - experimental_resources/domains/unshare
   - experimental_resources/resource_matches/header
   - experimental_resources/resource_matches/object
   - experimental_resources/resource_matches/create

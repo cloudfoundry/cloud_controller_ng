@@ -10,7 +10,7 @@ class RootController < ActionController::Base
     links.merge!(create_link(:buildpacks))
     links.merge!(create_link(:builds))
     links.merge!(create_link(:deployments, experimental: true))
-    links.merge!(create_link(:domains, experimental: true))
+    links.merge!(create_link(:domains))
     links.merge!(create_link(:droplets))
     links.merge!(create_link(:feature_flags))
     links.merge!(create_link(:isolation_segments))
