@@ -1049,7 +1049,7 @@ module VCAP::CloudController
         end
 
         context 'when the broker returns "maintenance_info" in the catalog' do
-          let(:plan) { ServicePlan.make(:v2, service: service, maintenance_info: '{"version": "2.0"}') }
+          let(:plan) { ServicePlan.make(:v2, service: service, maintenance_info: { 'version': '2.0' }) }
 
           it 'should store it on a service instance level' do
             create_managed_service_instance
@@ -2520,7 +2520,7 @@ module VCAP::CloudController
         end
 
         context 'when maintenance_info is NOT provided in the request, but it exists for the new plan' do
-          let(:new_service_plan) { ServicePlan.make(:v2, service: service, maintenance_info: '{"version": "1.0"}') }
+          let(:new_service_plan) { ServicePlan.make(:v2, service: service, maintenance_info: { 'version': '1.0' }) }
           let(:status) { 202 }
 
           context 'when the delayed job finishes successfully' do
@@ -2571,7 +2571,7 @@ module VCAP::CloudController
           { maintenance_info: { version: '2.0' } }.to_json
         end
         let(:old_maintenance_info) { { 'version' => '1.0' } }
-        let(:service_plan) { ServicePlan.make(:v2, service: service, maintenance_info: '{"version": "2.0"}') }
+        let(:service_plan) { ServicePlan.make(:v2, service: service, maintenance_info: { 'version': '2.0' }) }
         let(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan, maintenance_info: old_maintenance_info) }
 
         context 'when the broker responds synchronously' do

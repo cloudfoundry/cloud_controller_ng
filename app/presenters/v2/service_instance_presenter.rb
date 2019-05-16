@@ -1,11 +1,13 @@
 require 'presenters/v2/base_presenter'
 require 'presenters/v2/presenter_provider'
+require 'presenters/mixins/services_presentation_helpers'
 
 module CloudController
   module Presenters
     module V2
       class ServiceInstancePresenter < BasePresenter
         extend PresenterProvider
+        include VCAP::CloudController::Presenters::Mixins::ServicesPresentationHelpers
 
         present_for_class 'VCAP::CloudController::ServiceInstance'
         present_for_class 'VCAP::CloudController::ManagedServiceInstance'
@@ -42,14 +44,6 @@ module CloudController
 
         def managed_service_instance(service_instance)
           service_instance.service_plan_id
-        end
-
-        def parse_maintenance_info(maintenance_info)
-          return maintenance_info if maintenance_info.is_a?(Hash)
-
-          JSON.parse(maintenance_info)
-        rescue JSON::ParserError
-          {}
         end
       end
     end

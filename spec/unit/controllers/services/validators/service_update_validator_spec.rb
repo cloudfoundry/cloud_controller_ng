@@ -6,7 +6,7 @@ module VCAP::CloudController
       let(:service_broker_url) { "http://example.com/v2/service_instances/#{service_instance.guid}" }
       let(:service_broker) { ServiceBroker.make(broker_url: 'http://example.com', auth_username: 'auth_username', auth_password: 'auth_password') }
       let(:service) { Service.make(plan_updateable: true, service_broker: service_broker) }
-      let(:old_service_plan) { ServicePlan.make(:v2, service: service, free: true, maintenance_info: '{ "version": "2.0" }') }
+      let(:old_service_plan) { ServicePlan.make(:v2, service: service, free: true, maintenance_info: { 'version': '2.0' }) }
       let(:new_service_plan) { ServicePlan.make(:v2, service: service) }
       let(:service_instance) { ManagedServiceInstance.make(service_plan: old_service_plan) }
       let(:space) { service_instance.space }

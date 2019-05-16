@@ -11,14 +11,16 @@ RSpec.describe 'ServicePlans' do
 
   describe 'GET /v2/service_plans' do
     let(:service) { VCAP::CloudController::Service.make }
-    let!(:service_plan) { VCAP::CloudController::ServicePlan.make(
-      service: service,
-      maintenance_info: '{ "version":  "2.0" }')
-    }
+    let!(:service_plan) do
+      VCAP::CloudController::ServicePlan.make(
+        service: service,
+        maintenance_info: { 'version': '2.0' },
+      )
+    end
 
     it 'lists service plans' do
       get '/v2/service_plans', nil, headers_for(user)
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_status_code(200)
 
       parsed_response = MultiJson.load(last_response.body)
       expect(parsed_response).to be_a_response_like(
@@ -75,14 +77,16 @@ RSpec.describe 'ServicePlans' do
 
   describe 'GET /v2/service_plans/:guid' do
     let(:service) { VCAP::CloudController::Service.make }
-    let!(:service_plan) { VCAP::CloudController::ServicePlan.make(
-      service: service,
-      maintenance_info: '{ "version":  "2.0" }')
-    }
+    let!(:service_plan) do
+      VCAP::CloudController::ServicePlan.make(
+        service: service,
+        maintenance_info: { 'version': '2.0' },
+      )
+    end
 
     it 'lists service plans' do
       get "/v2/service_plans/#{service_plan.guid}", nil, headers_for(user)
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_status_code(200)
 
       parsed_response = MultiJson.load(last_response.body)
       expect(parsed_response).to be_a_response_like(
