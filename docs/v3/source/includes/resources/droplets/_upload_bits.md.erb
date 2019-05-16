@@ -1,0 +1,41 @@
+### Upload droplet bits (experimental)
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/droplets/[guid]/upload" \
+  -X POST \
+  -H "Authorization: bearer [token]" \
+  -F bits=@"droplet.tgz"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 202 OK
+Content-Type: application/json
+Location: https://api.example.org/v3/jobs/[guid]
+
+<%= yield_content :single_uploading_droplet_without_package %>
+```
+
+Upload a gzip compressed tarball file containing a Cloud Foundry compatible droplet. The file must be sent as part of a multi-part form.
+
+#### Definition
+`POST /v3/droplets/:guid/upload`
+
+#### Required Parameters
+
+Name | Type | Description
+---- | ---- | -----------
+**bits** | _form field_ | A gzip compressed tarball file with `.tgz` extension containing the droplet bits.
+
+#### Permitted Roles
+      |
+----- | ---
+Admin |
+Space Developer |     |

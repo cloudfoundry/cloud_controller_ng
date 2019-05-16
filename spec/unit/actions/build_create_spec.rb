@@ -290,7 +290,7 @@ module VCAP::CloudController
           }
         end
 
-        it 'raises an InvalidBuildpack exception' do
+        it 'raises an exception' do
           expect {
             action.create_and_stage(package: package, lifecycle: lifecycle)
           }.to raise_error(CloudController::Errors::ApiError, /'#{disabled_buildpack.name}' are disabled/)

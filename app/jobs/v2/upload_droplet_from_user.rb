@@ -11,17 +11,10 @@ module VCAP::CloudController
         end
 
         def perform
-          Jobs::V3::DropletUpload.new(@local_path, @droplet_guid).perform
+          Jobs::V3::DropletUpload.new(@local_path, @droplet_guid, skip_state_transition: false).perform
 
           if (droplet = DropletModel.where(guid: @droplet_guid).eager(:app).first)
-            droplet.db.transaction do
-              droplet.lock!
-
-              if droplet.processing_upload?
-                droplet.update(state: DropletModel::STAGED_STATE)
-                droplet.app.update(droplet: droplet)
-              end
-            end
+            droplet.app.update(droplet: droplet) if droplet.staged?
           end
         end
       end

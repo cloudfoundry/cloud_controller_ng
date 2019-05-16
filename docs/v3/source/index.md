@@ -88,6 +88,7 @@ includes:
   - resources/droplets/update
   - resources/droplets/delete
   - resources/droplets/copy
+  - resources/droplets/upload_bits
   - resources/feature_flags/header
   - resources/feature_flags/object
   - resources/feature_flags/flags

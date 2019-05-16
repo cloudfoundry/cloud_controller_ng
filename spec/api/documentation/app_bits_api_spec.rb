@@ -137,7 +137,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
       droplet_file.write('droplet contents')
       droplet_file.close
 
-      VCAP::CloudController::Jobs::V3::DropletUpload.new(droplet_file.path, process.desired_droplet.guid).perform
+      VCAP::CloudController::Jobs::V3::DropletUpload.new(droplet_file.path, process.desired_droplet.guid, skip_state_transition: false).perform
     end
 
     example 'Downloads the staged droplet for an App' do

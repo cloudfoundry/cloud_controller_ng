@@ -22,7 +22,7 @@ module V3ErrorsHelper
     raise CloudController::Errors::ApiError.new_from_details('NotAuthorized')
   end
 
-  def resources_not_found!(message)
+  def resource_not_found_with_message!(message)
     raise CloudController::Errors::ApiError.new_from_details('ResourceNotFound', message)
   end
 

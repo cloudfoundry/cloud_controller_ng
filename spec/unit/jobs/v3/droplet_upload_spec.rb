@@ -3,7 +3,7 @@ require 'spec_helper'
 module VCAP::CloudController
   module Jobs::V3
     RSpec.describe DropletUpload, job_context: :api do
-      let(:droplet) { DropletModel.make(droplet_hash: nil, sha256_checksum: nil) }
+      let(:droplet) { DropletModel.make(state: 'STAGING', droplet_hash: nil, sha256_checksum: nil) }
       let(:file_content) { 'some_file_content' }
       let(:local_file) do
         Tempfile.new('local_file').tap do |f|
@@ -16,8 +16,11 @@ module VCAP::CloudController
         allow(CloudController::DependencyLocator.instance).to receive(:droplet_blobstore).and_return(blobstore)
         blobstore
       end
+      let(:skip_state_transition) { false }
 
-      subject(:job) { DropletUpload.new(local_file.path, droplet.guid) }
+      subject(:job) do
+        DropletUpload.new(local_file.path, droplet.guid, skip_state_transition: skip_state_transition)
+      end
 
       it { is_expected.to be_a_valid_job }
 
@@ -29,6 +32,23 @@ module VCAP::CloudController
           job.perform
           expect(droplet.refresh.droplet_hash).to eq(sha1_digest)
           expect(droplet.refresh.sha256_checksum).to eq(sha256_digest)
+        end
+
+        context 'when skip_stage_transition is set' do
+          let(:skip_state_transition) { true }
+
+          it 'does not mark the droplet as staged' do
+            expect { job.perform }.not_to change { droplet.refresh.state }
+          end
+        end
+
+        context 'when skip_stage_transition is not set' do
+          let(:skip_state_transition) { false }
+
+          it 'marks the droplet as staged' do
+            job.perform
+            expect(droplet.refresh.state).to eq('STAGED')
+          end
         end
 
         it 'uploads the droplet to the blobstore' do
@@ -50,7 +70,9 @@ module VCAP::CloudController
         end
 
         context 'when the droplet record no longer exists' do
-          subject(:job) { DropletUpload.new(local_file.path, 'bad-guid') }
+          subject(:job) do
+            DropletUpload.new(local_file.path, 'bad-guid', skip_state_transition: skip_state_transition)
+          end
 
           it 'should not try to upload the droplet' do
             digest = Digester.new.digest_file(local_file)
@@ -76,7 +98,7 @@ module VCAP::CloudController
                 Time.now.utc
               end
             end
-            DropletUpload.new(local_file.path, droplet.guid)
+            DropletUpload.new(local_file.path, droplet.guid, skip_state_transition: skip_state_transition)
           end
 
           before do

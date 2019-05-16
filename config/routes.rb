@@ -101,6 +101,7 @@ Rails.application.routes.draw do
   get '/apps/:app_guid/droplets', to: 'droplets#index'
   get '/packages/:package_guid/droplets', to: 'droplets#index'
   patch '/droplets/:guid', to: 'droplets#update'
+  post '/droplets/:guid/upload', to: 'droplets#upload'
 
   # errors
   match '404', to: 'errors#not_found', via: :all

@@ -4,6 +4,7 @@ require 'request_spec_shared_examples'
 RSpec.describe 'Droplets' do
   let(:space) { VCAP::CloudController::Space.make }
   let(:org) { space.organization }
+  let(:user) { VCAP::CloudController::User.make }
   let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid, name: 'my-app') }
   let(:other_app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid, name: 'my-app-3') }
   let(:developer) { make_developer_for_space(space) }
@@ -193,15 +194,15 @@ RSpec.describe 'Droplets' do
     context 'when the droplet has a buildpack lifecycle' do
       let!(:droplet_model) do
         VCAP::CloudController::DropletModel.make(
-          state:                        VCAP::CloudController::DropletModel::STAGED_STATE,
-          app_guid:                     app_model.guid,
-          package_guid:                 package_model.guid,
-          buildpack_receipt_buildpack:  'http://buildpack.git.url.com',
-          error_description:            'example error',
-          execution_metadata:           'some-data',
-          droplet_hash:                 'shalalala',
-          sha256_checksum:              'droplet-checksum-sha256',
-          process_types:                { 'web' => 'start-command' },
+          state: VCAP::CloudController::DropletModel::STAGED_STATE,
+          app_guid: app_model.guid,
+          package_guid: package_model.guid,
+          buildpack_receipt_buildpack: 'http://buildpack.git.url.com',
+          error_description: 'example error',
+          execution_metadata: 'some-data',
+          droplet_hash: 'shalalala',
+          sha256_checksum: 'droplet-checksum-sha256',
+          process_types: { 'web' => 'start-command' },
         )
       end
 
@@ -216,25 +217,25 @@ RSpec.describe 'Droplets' do
 
         expect(last_response.status).to eq(200)
         expect(parsed_response).to be_a_response_like({
-          'guid'               => droplet_model.guid,
-          'state'              => VCAP::CloudController::DropletModel::STAGED_STATE,
-          'error'              => 'example error',
-          'lifecycle'          => {
+          'guid' => droplet_model.guid,
+          'state' => VCAP::CloudController::DropletModel::STAGED_STATE,
+          'error' => 'example error',
+          'lifecycle' => {
             'type' => 'buildpack',
             'data' => {}
           },
-          'checksum'           => { 'type' => 'sha256', 'value' => 'droplet-checksum-sha256' },
-          'buildpacks'         => [{ 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil, 'version' => '0.3', 'buildpack_name' => 'git' }],
-          'stack'              => 'stack-name',
+          'checksum' => { 'type' => 'sha256', 'value' => 'droplet-checksum-sha256' },
+          'buildpacks' => [{ 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil, 'version' => '0.3', 'buildpack_name' => 'git' }],
+          'stack' => 'stack-name',
           'execution_metadata' => 'some-data',
-          'process_types'      => { 'web' => 'start-command' },
-          'image'              => nil,
-          'created_at'         => iso8601,
-          'updated_at'         => iso8601,
-          'links'              => {
-            'self'                   => { 'href' => "#{link_prefix}/v3/droplets/#{guid}" },
-            'package'                => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
-            'app'                    => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}" },
+          'process_types' => { 'web' => 'start-command' },
+          'image' => nil,
+          'created_at' => iso8601,
+          'updated_at' => iso8601,
+          'links' => {
+            'self' => { 'href' => "#{link_prefix}/v3/droplets/#{guid}" },
+            'package' => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
+            'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}" },
             'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/relationships/current_droplet", 'method' => 'PATCH' },
           },
           'metadata' => {
@@ -263,12 +264,12 @@ RSpec.describe 'Droplets' do
       let!(:droplet_model) do
         VCAP::CloudController::DropletModel.make(
           :docker,
-          state:                VCAP::CloudController::DropletModel::STAGED_STATE,
-          app_guid:             app_model.guid,
-          package_guid:         package_model.guid,
-          error_description:    'example error',
-          execution_metadata:   'some-data',
-          process_types:        { 'web' => 'start-command' },
+          state: VCAP::CloudController::DropletModel::STAGED_STATE,
+          app_guid: app_model.guid,
+          package_guid: package_model.guid,
+          error_description: 'example error',
+          execution_metadata: 'some-data',
+          process_types: { 'web' => 'start-command' },
           docker_receipt_image: 'docker/foobar:baz'
         )
       end
@@ -280,25 +281,25 @@ RSpec.describe 'Droplets' do
 
         expect(last_response.status).to eq(200)
         expect(parsed_response).to be_a_response_like({
-          'guid'               => droplet_model.guid,
-          'state'              => VCAP::CloudController::DropletModel::STAGED_STATE,
-          'error'              => 'example error',
-          'lifecycle'          => {
+          'guid' => droplet_model.guid,
+          'state' => VCAP::CloudController::DropletModel::STAGED_STATE,
+          'error' => 'example error',
+          'lifecycle' => {
             'type' => 'docker',
             'data' => {}
           },
-          'checksum'           => nil,
-          'buildpacks'         => nil,
-          'stack'              => nil,
+          'checksum' => nil,
+          'buildpacks' => nil,
+          'stack' => nil,
           'execution_metadata' => 'some-data',
-          'process_types'      => { 'web' => 'start-command' },
-          'image'              => 'docker/foobar:baz',
-          'created_at'         => iso8601,
-          'updated_at'         => iso8601,
-          'links'              => {
-            'self'                   => { 'href' => "#{link_prefix}/v3/droplets/#{guid}" },
-            'package'                => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
-            'app'                    => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}" },
+          'process_types' => { 'web' => 'start-command' },
+          'image' => 'docker/foobar:baz',
+          'created_at' => iso8601,
+          'updated_at' => iso8601,
+          'links' => {
+            'self' => { 'href' => "#{link_prefix}/v3/droplets/#{guid}" },
+            'package' => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
+            'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}" },
             'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/relationships/current_droplet", 'method' => 'PATCH' },
           },
           'metadata' => {
@@ -315,36 +316,36 @@ RSpec.describe 'Droplets' do
     let(:package_model) do
       VCAP::CloudController::PackageModel.make(
         app_guid: app_model.guid,
-        type:     VCAP::CloudController::PackageModel::BITS_TYPE
+        type: VCAP::CloudController::PackageModel::BITS_TYPE
       )
     end
 
     let!(:droplet1) do
       VCAP::CloudController::DropletModel.make(
-        app_guid:                         app_model.guid,
-        created_at:                       Time.at(1),
-        package_guid:                     package_model.guid,
-        droplet_hash:                     nil,
-        sha256_checksum:                  nil,
-        buildpack_receipt_buildpack:      buildpack.name,
+        app_guid: app_model.guid,
+        created_at: Time.at(1),
+        package_guid: package_model.guid,
+        droplet_hash: nil,
+        sha256_checksum: nil,
+        buildpack_receipt_buildpack: buildpack.name,
         buildpack_receipt_buildpack_guid: buildpack.guid,
-        staging_disk_in_mb:               235,
-        error_description:                'example-error',
-        state:                            VCAP::CloudController::DropletModel::FAILED_STATE
+        staging_disk_in_mb: 235,
+        error_description: 'example-error',
+        state: VCAP::CloudController::DropletModel::FAILED_STATE
       )
     end
     let!(:droplet2) do
       VCAP::CloudController::DropletModel.make(
-        app_guid:                     app_model.guid,
-        created_at:                   Time.at(2),
-        package_guid:                 package_model.guid,
-        droplet_hash:                 'my-hash',
-        sha256_checksum:              'droplet-checksum-sha256',
-        buildpack_receipt_buildpack:  'http://buildpack.git.url.com',
-        state:                        VCAP::CloudController::DropletModel::STAGED_STATE,
-        process_types:                { 'web' => 'started' },
-        execution_metadata:           'black-box-secrets',
-        error_description:            'example-error'
+        app_guid: app_model.guid,
+        created_at: Time.at(2),
+        package_guid: package_model.guid,
+        droplet_hash: 'my-hash',
+        sha256_checksum: 'droplet-checksum-sha256',
+        buildpack_receipt_buildpack: 'http://buildpack.git.url.com',
+        state: VCAP::CloudController::DropletModel::STAGED_STATE,
+        process_types: { 'web' => 'started' },
+        execution_metadata: 'black-box-secrets',
+        error_description: 'example-error'
       )
     end
 
@@ -364,33 +365,33 @@ RSpec.describe 'Droplets' do
       expect(parsed_response).to be_a_response_like({
         'pagination' => {
           'total_results' => 2,
-          'total_pages'   => 1,
-          'first'         => { 'href' => "#{link_prefix}/v3/droplets?order_by=#{order_by}&page=1&per_page=2" },
-          'last'          => { 'href' => "#{link_prefix}/v3/droplets?order_by=#{order_by}&page=1&per_page=2" },
-          'next'          => nil,
-          'previous'      => nil,
+          'total_pages' => 1,
+          'first' => { 'href' => "#{link_prefix}/v3/droplets?order_by=#{order_by}&page=1&per_page=2" },
+          'last' => { 'href' => "#{link_prefix}/v3/droplets?order_by=#{order_by}&page=1&per_page=2" },
+          'next' => nil,
+          'previous' => nil,
         },
         'resources' => [
           {
-            'guid'               => droplet2.guid,
-            'state'              => VCAP::CloudController::DropletModel::STAGED_STATE,
-            'error'              => 'example-error',
-            'lifecycle'          => {
+            'guid' => droplet2.guid,
+            'state' => VCAP::CloudController::DropletModel::STAGED_STATE,
+            'error' => 'example-error',
+            'lifecycle' => {
               'type' => 'buildpack',
               'data' => {}
             },
             'image' => nil,
-            'checksum'           => { 'type' => 'sha256', 'value' => 'droplet-checksum-sha256' },
-            'buildpacks'         => [{ 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil, 'buildpack_name' => nil, 'version' => nil }],
-            'stack'              => 'stack-2',
+            'checksum' => { 'type' => 'sha256', 'value' => 'droplet-checksum-sha256' },
+            'buildpacks' => [{ 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil, 'buildpack_name' => nil, 'version' => nil }],
+            'stack' => 'stack-2',
             'execution_metadata' => '[PRIVATE DATA HIDDEN IN LISTS]',
-            'process_types'      => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
-            'created_at'         => iso8601,
-            'updated_at'         => iso8601,
-            'links'              => {
-              'self'                   => { 'href' => "#{link_prefix}/v3/droplets/#{droplet2.guid}" },
-              'package'                => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
-              'app'                    => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+            'process_types' => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
+            'created_at' => iso8601,
+            'updated_at' => iso8601,
+            'links' => {
+              'self' => { 'href' => "#{link_prefix}/v3/droplets/#{droplet2.guid}" },
+              'package' => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
+              'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
               'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/relationships/current_droplet", 'method' => 'PATCH' },
             },
             'metadata' => {
@@ -399,25 +400,25 @@ RSpec.describe 'Droplets' do
             },
           },
           {
-            'guid'               => droplet1.guid,
-            'state'              => VCAP::CloudController::DropletModel::FAILED_STATE,
-            'error'              => 'example-error',
-            'lifecycle'          => {
+            'guid' => droplet1.guid,
+            'state' => VCAP::CloudController::DropletModel::FAILED_STATE,
+            'error' => 'example-error',
+            'lifecycle' => {
               'type' => 'buildpack',
               'data' => {}
             },
             'image' => nil,
-            'checksum'           => nil,
-            'buildpacks'         => [{ 'name' => buildpack.name, 'detect_output' => nil, 'buildpack_name' => nil, 'version' => nil }],
-            'stack'              => 'stack-1',
+            'checksum' => nil,
+            'buildpacks' => [{ 'name' => buildpack.name, 'detect_output' => nil, 'buildpack_name' => nil, 'version' => nil }],
+            'stack' => 'stack-1',
             'execution_metadata' => '[PRIVATE DATA HIDDEN IN LISTS]',
-            'process_types'      => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
-            'created_at'         => iso8601,
-            'updated_at'         => iso8601,
-            'links'              => {
-              'self'                   => { 'href' => "#{link_prefix}/v3/droplets/#{droplet1.guid}" },
-              'package'                => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
-              'app'                    => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+            'process_types' => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
+            'created_at' => iso8601,
+            'updated_at' => iso8601,
+            'links' => {
+              'self' => { 'href' => "#{link_prefix}/v3/droplets/#{droplet1.guid}" },
+              'package' => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
+              'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
               'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/relationships/current_droplet", 'method' => 'PATCH' },
             },
             'metadata' => {
@@ -452,11 +453,11 @@ RSpec.describe 'Droplets' do
         expect(parsed_response['pagination']).to be_a_response_like(
           {
             'total_results' => 3,
-            'total_pages'   => 1,
-            'first'         => { 'href' => "#{link_prefix}/v3/droplets?page=1&per_page=50&states=STAGED%2CFAILED" },
-            'last'          => { 'href' => "#{link_prefix}/v3/droplets?page=1&per_page=50&states=STAGED%2CFAILED" },
-            'next'          => nil,
-            'previous'      => nil,
+            'total_pages' => 1,
+            'first' => { 'href' => "#{link_prefix}/v3/droplets?page=1&per_page=50&states=STAGED%2CFAILED" },
+            'last' => { 'href' => "#{link_prefix}/v3/droplets?page=1&per_page=50&states=STAGED%2CFAILED" },
+            'next' => nil,
+            'previous' => nil,
           })
 
         returned_guids = parsed_response['resources'].map { |i| i['guid'] }
@@ -471,11 +472,11 @@ RSpec.describe 'Droplets' do
         expect(parsed_response['pagination']).to be_a_response_like(
           {
             'total_results' => 2,
-            'total_pages'   => 1,
-            'first'         => { 'href' => "#{link_prefix}/v3/droplets?app_guids=#{app_model.guid}&page=1&per_page=50" },
-            'last'          => { 'href' => "#{link_prefix}/v3/droplets?app_guids=#{app_model.guid}&page=1&per_page=50" },
-            'next'          => nil,
-            'previous'      => nil,
+            'total_pages' => 1,
+            'first' => { 'href' => "#{link_prefix}/v3/droplets?app_guids=#{app_model.guid}&page=1&per_page=50" },
+            'last' => { 'href' => "#{link_prefix}/v3/droplets?app_guids=#{app_model.guid}&page=1&per_page=50" },
+            'next' => nil,
+            'previous' => nil,
           })
 
         returned_guids = parsed_response['resources'].map { |i| i['guid'] }
@@ -489,11 +490,11 @@ RSpec.describe 'Droplets' do
         expect(parsed_response['pagination']).to be_a_response_like(
           {
             'total_results' => 2,
-            'total_pages'   => 1,
-            'first'         => { 'href' => "#{link_prefix}/v3/droplets?guids=#{droplet1.guid}%2C#{droplet3.guid}&page=1&per_page=50" },
-            'last'          => { 'href' => "#{link_prefix}/v3/droplets?guids=#{droplet1.guid}%2C#{droplet3.guid}&page=1&per_page=50" },
-            'next'          => nil,
-            'previous'      => nil,
+            'total_pages' => 1,
+            'first' => { 'href' => "#{link_prefix}/v3/droplets?guids=#{droplet1.guid}%2C#{droplet3.guid}&page=1&per_page=50" },
+            'last' => { 'href' => "#{link_prefix}/v3/droplets?guids=#{droplet1.guid}%2C#{droplet3.guid}&page=1&per_page=50" },
+            'next' => nil,
+            'previous' => nil,
           })
 
         returned_guids = parsed_response['resources'].map { |i| i['guid'] }
@@ -510,11 +511,11 @@ RSpec.describe 'Droplets' do
         expect(parsed_response['pagination']).to be_a_response_like(
           {
             'total_results' => 3,
-            'total_pages'   => 1,
-            'first'         => { 'href' => "#{link_prefix}/v3/droplets?organization_guids=#{organization1.guid}&page=1&per_page=50" },
-            'last'          => { 'href' => "#{link_prefix}/v3/droplets?organization_guids=#{organization1.guid}&page=1&per_page=50" },
-            'next'          => nil,
-            'previous'      => nil,
+            'total_pages' => 1,
+            'first' => { 'href' => "#{link_prefix}/v3/droplets?organization_guids=#{organization1.guid}&page=1&per_page=50" },
+            'last' => { 'href' => "#{link_prefix}/v3/droplets?organization_guids=#{organization1.guid}&page=1&per_page=50" },
+            'next' => nil,
+            'previous' => nil,
           })
 
         returned_guids = parsed_response['resources'].map { |i| i['guid'] }
@@ -528,11 +529,11 @@ RSpec.describe 'Droplets' do
         expect(parsed_response['pagination']).to be_a_response_like(
           {
             'total_results' => 3,
-            'total_pages'   => 1,
-            'first'         => { 'href' => "#{link_prefix}/v3/droplets?page=1&per_page=50&space_guids=#{space.guid}%2C#{space2.guid}" },
-            'last'          => { 'href' => "#{link_prefix}/v3/droplets?page=1&per_page=50&space_guids=#{space.guid}%2C#{space2.guid}" },
-            'next'          => nil,
-            'previous'      => nil,
+            'total_pages' => 1,
+            'first' => { 'href' => "#{link_prefix}/v3/droplets?page=1&per_page=50&space_guids=#{space.guid}%2C#{space2.guid}" },
+            'last' => { 'href' => "#{link_prefix}/v3/droplets?page=1&per_page=50&space_guids=#{space.guid}%2C#{space2.guid}" },
+            'next' => nil,
+            'previous' => nil,
           })
 
         returned_guids = parsed_response['resources'].map { |i| i['guid'] }
@@ -590,59 +591,59 @@ RSpec.describe 'Droplets' do
     let(:package_model) do
       VCAP::CloudController::PackageModel.make(
         app_guid: app_model.guid,
-        type:     VCAP::CloudController::PackageModel::BITS_TYPE
+        type: VCAP::CloudController::PackageModel::BITS_TYPE
       )
     end
 
     let!(:droplet1) do
       VCAP::CloudController::DropletModel.make(
-        app_guid:                         app_model.guid,
-        created_at:                       Time.at(1),
-        package_guid:                     package_model.guid,
-        droplet_hash:                     nil,
-        sha256_checksum:                  nil,
-        buildpack_receipt_buildpack:      buildpack.name,
+        app_guid: app_model.guid,
+        created_at: Time.at(1),
+        package_guid: package_model.guid,
+        droplet_hash: nil,
+        sha256_checksum: nil,
+        buildpack_receipt_buildpack: buildpack.name,
         buildpack_receipt_buildpack_guid: buildpack.guid,
-        staging_disk_in_mb:               235,
-        error_description:                'example-error',
-        state:                            VCAP::CloudController::DropletModel::FAILED_STATE,
+        staging_disk_in_mb: 235,
+        error_description: 'example-error',
+        state: VCAP::CloudController::DropletModel::FAILED_STATE,
       )
     end
     let!(:droplet1Label) { VCAP::CloudController::DropletLabelModel.make(key_name: 'fruit', value: 'strawberry', droplet: droplet1) }
     let!(:droplet2) do
       VCAP::CloudController::DropletModel.make(
-        app_guid:                     app_model.guid,
-        created_at:                   Time.at(2),
-        package_guid:                 package_model.guid,
-        droplet_hash:                 'my-hash',
-        sha256_checksum:              'droplet-checksum-sha256',
-        buildpack_receipt_buildpack:  'http://buildpack.git.url.com',
-        state:                        VCAP::CloudController::DropletModel::STAGED_STATE,
-        process_types:                { 'web' => 'started' },
-        execution_metadata:           'black-box-secrets',
-        error_description:            'example-error',
+        app_guid: app_model.guid,
+        created_at: Time.at(2),
+        package_guid: package_model.guid,
+        droplet_hash: 'my-hash',
+        sha256_checksum: 'droplet-checksum-sha256',
+        buildpack_receipt_buildpack: 'http://buildpack.git.url.com',
+        state: VCAP::CloudController::DropletModel::STAGED_STATE,
+        process_types: { 'web' => 'started' },
+        execution_metadata: 'black-box-secrets',
+        error_description: 'example-error',
       )
     end
     let!(:droplet2Label) { VCAP::CloudController::DropletLabelModel.make(key_name: 'seed', value: 'strawberry', droplet: droplet2) }
     let!(:droplet3) do
       VCAP::CloudController::DropletModel.make(
-        app_guid:                     other_app_model.guid,
-        created_at:                   Time.at(2),
-        package_guid:                 other_package_model.guid,
-        droplet_hash:                 'my-hash-3',
-        sha256_checksum:              'droplet-checksum-sha256-3',
-        buildpack_receipt_buildpack:  'http://buildpack.git.url.com',
-        state:                        VCAP::CloudController::DropletModel::STAGED_STATE,
-        process_types:                { 'web' => 'started' },
-        execution_metadata:           'black-box-secrets-3',
-        error_description:            'example-error',
+        app_guid: other_app_model.guid,
+        created_at: Time.at(2),
+        package_guid: other_package_model.guid,
+        droplet_hash: 'my-hash-3',
+        sha256_checksum: 'droplet-checksum-sha256-3',
+        buildpack_receipt_buildpack: 'http://buildpack.git.url.com',
+        state: VCAP::CloudController::DropletModel::STAGED_STATE,
+        process_types: { 'web' => 'started' },
+        execution_metadata: 'black-box-secrets-3',
+        error_description: 'example-error',
       )
     end
     let!(:droplet3Label) { VCAP::CloudController::DropletLabelModel.make(key_name: 'fruit', value: 'mango', droplet: droplet3) }
     let(:other_package_model) do
       VCAP::CloudController::PackageModel.make(
         app_guid: other_app_model.guid,
-        type:     VCAP::CloudController::PackageModel::BITS_TYPE
+        type: VCAP::CloudController::PackageModel::BITS_TYPE
       )
     end
 
@@ -686,11 +687,11 @@ RSpec.describe 'Droplets' do
           expect(parsed_response['pagination']).to be_a_response_like(
             {
               'total_results' => 1,
-              'total_pages'   => 1,
-              'first'         => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets?current=true&page=1&per_page=50" },
-              'last'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets?current=true&page=1&per_page=50" },
-              'next'          => nil,
-              'previous'      => nil,
+              'total_pages' => 1,
+              'first' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets?current=true&page=1&per_page=50" },
+              'last' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets?current=true&page=1&per_page=50" },
+              'next' => nil,
+              'previous' => nil,
             })
 
           returned_guids = parsed_response['resources'].map { |i| i['guid'] }
@@ -710,11 +711,11 @@ RSpec.describe 'Droplets' do
           expect(parsed_response['pagination']).to be_a_response_like(
             {
               'total_results' => 0,
-              'total_pages'   => 1,
-              'first'         => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets?current=true&page=1&per_page=50" },
-              'last'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets?current=true&page=1&per_page=50" },
-              'next'          => nil,
-              'previous'      => nil,
+              'total_pages' => 1,
+              'first' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets?current=true&page=1&per_page=50" },
+              'last' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets?current=true&page=1&per_page=50" },
+              'next' => nil,
+              'previous' => nil,
             })
 
           expect(parsed_response['resources']).to match_array([])
@@ -729,11 +730,11 @@ RSpec.describe 'Droplets' do
       expect(parsed_response['pagination']).to be_a_response_like(
         {
           'total_results' => 1,
-          'total_pages'   => 1,
-          'first'         => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets?page=1&per_page=50&states=STAGED" },
-          'last'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets?page=1&per_page=50&states=STAGED" },
-          'next'          => nil,
-          'previous'      => nil,
+          'total_pages' => 1,
+          'first' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets?page=1&per_page=50&states=STAGED" },
+          'last' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets?page=1&per_page=50&states=STAGED" },
+          'next' => nil,
+          'previous' => nil,
         })
 
       returned_guids = parsed_response['resources'].map { |i| i['guid'] }
@@ -749,33 +750,33 @@ RSpec.describe 'Droplets' do
       expect(parsed_response).to be_a_response_like({
         'pagination' => {
           'total_results' => 2,
-          'total_pages'   => 1,
-          'first'         => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets?order_by=#{order_by}&page=1&per_page=2" },
-          'last'          => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets?order_by=#{order_by}&page=1&per_page=2" },
-          'next'          => nil,
-          'previous'      => nil,
+          'total_pages' => 1,
+          'first' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets?order_by=#{order_by}&page=1&per_page=2" },
+          'last' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets?order_by=#{order_by}&page=1&per_page=2" },
+          'next' => nil,
+          'previous' => nil,
         },
         'resources' => [
           {
-            'guid'               => droplet2.guid,
-            'state'              => VCAP::CloudController::DropletModel::STAGED_STATE,
-            'error'              => 'example-error',
-            'lifecycle'          => {
+            'guid' => droplet2.guid,
+            'state' => VCAP::CloudController::DropletModel::STAGED_STATE,
+            'error' => 'example-error',
+            'lifecycle' => {
               'type' => 'buildpack',
               'data' => {}
             },
             'image' => nil,
-            'checksum'           => { 'type' => 'sha256', 'value' => 'droplet-checksum-sha256' },
-            'buildpacks'         => [{ 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil, 'buildpack_name' => nil, 'version' => nil }],
-            'stack'              => 'stack-2',
+            'checksum' => { 'type' => 'sha256', 'value' => 'droplet-checksum-sha256' },
+            'buildpacks' => [{ 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil, 'buildpack_name' => nil, 'version' => nil }],
+            'stack' => 'stack-2',
             'execution_metadata' => '[PRIVATE DATA HIDDEN IN LISTS]',
-            'process_types'      => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
-            'created_at'         => iso8601,
-            'updated_at'         => iso8601,
-            'links'              => {
-              'self'                   => { 'href' => "#{link_prefix}/v3/droplets/#{droplet2.guid}" },
-              'package'                => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
-              'app'                    => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+            'process_types' => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
+            'created_at' => iso8601,
+            'updated_at' => iso8601,
+            'links' => {
+              'self' => { 'href' => "#{link_prefix}/v3/droplets/#{droplet2.guid}" },
+              'package' => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
+              'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
               'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/relationships/current_droplet", 'method' => 'PATCH' },
             },
             'metadata' => {
@@ -786,25 +787,25 @@ RSpec.describe 'Droplets' do
             },
           },
           {
-            'guid'               => droplet1.guid,
-            'state'              => VCAP::CloudController::DropletModel::FAILED_STATE,
-            'error'              => 'example-error',
-            'lifecycle'          => {
+            'guid' => droplet1.guid,
+            'state' => VCAP::CloudController::DropletModel::FAILED_STATE,
+            'error' => 'example-error',
+            'lifecycle' => {
               'type' => 'buildpack',
               'data' => {}
             },
             'image' => nil,
-            'checksum'           => nil,
-            'buildpacks'         => [{ 'name' => buildpack.name, 'detect_output' => nil, 'buildpack_name' => nil, 'version' => nil }],
-            'stack'              => 'stack-1',
+            'checksum' => nil,
+            'buildpacks' => [{ 'name' => buildpack.name, 'detect_output' => nil, 'buildpack_name' => nil, 'version' => nil }],
+            'stack' => 'stack-1',
             'execution_metadata' => '[PRIVATE DATA HIDDEN IN LISTS]',
-            'process_types'      => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
-            'created_at'         => iso8601,
-            'updated_at'         => iso8601,
-            'links'              => {
-              'self'                   => { 'href' => "#{link_prefix}/v3/droplets/#{droplet1.guid}" },
-              'package'                => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
-              'app'                    => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+            'process_types' => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
+            'created_at' => iso8601,
+            'updated_at' => iso8601,
+            'links' => {
+              'self' => { 'href' => "#{link_prefix}/v3/droplets/#{droplet1.guid}" },
+              'package' => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
+              'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
               'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/relationships/current_droplet", 'method' => 'PATCH' },
             },
             'metadata' => {
@@ -824,57 +825,57 @@ RSpec.describe 'Droplets' do
     let(:package_model) do
       VCAP::CloudController::PackageModel.make(
         app_guid: app_model.guid,
-        type:     VCAP::CloudController::PackageModel::BITS_TYPE
+        type: VCAP::CloudController::PackageModel::BITS_TYPE
       )
     end
     let(:other_package_model) do
       VCAP::CloudController::PackageModel.make(
         app_guid: other_app_model.guid,
-        type:     VCAP::CloudController::PackageModel::BITS_TYPE
+        type: VCAP::CloudController::PackageModel::BITS_TYPE
       )
     end
 
     let!(:droplet1) do
       VCAP::CloudController::DropletModel.make(
-        app_guid:                         app_model.guid,
-        created_at:                       Time.at(1),
-        package_guid:                     package_model.guid,
-        droplet_hash:                     nil,
-        sha256_checksum:                  nil,
-        buildpack_receipt_buildpack:      buildpack.name,
+        app_guid: app_model.guid,
+        created_at: Time.at(1),
+        package_guid: package_model.guid,
+        droplet_hash: nil,
+        sha256_checksum: nil,
+        buildpack_receipt_buildpack: buildpack.name,
         buildpack_receipt_buildpack_guid: buildpack.guid,
-        error_description:                'example-error',
-        state:                            VCAP::CloudController::DropletModel::FAILED_STATE,
+        error_description: 'example-error',
+        state: VCAP::CloudController::DropletModel::FAILED_STATE,
       )
     end
 
     let!(:droplet2) do
       VCAP::CloudController::DropletModel.make(
-        app_guid:                     app_model.guid,
-        created_at:                   Time.at(2),
-        package_guid:                 package_model.guid,
-        droplet_hash:                 'my-hash',
-        sha256_checksum:              'droplet-checksum-sha256',
-        buildpack_receipt_buildpack:  'http://buildpack.git.url.com',
-        state:                        VCAP::CloudController::DropletModel::STAGED_STATE,
-        process_types:                { 'web' => 'started' },
-        execution_metadata:           'black-box-secrets',
-        error_description:            'example-error'
+        app_guid: app_model.guid,
+        created_at: Time.at(2),
+        package_guid: package_model.guid,
+        droplet_hash: 'my-hash',
+        sha256_checksum: 'droplet-checksum-sha256',
+        buildpack_receipt_buildpack: 'http://buildpack.git.url.com',
+        state: VCAP::CloudController::DropletModel::STAGED_STATE,
+        process_types: { 'web' => 'started' },
+        execution_metadata: 'black-box-secrets',
+        error_description: 'example-error'
       )
     end
 
     let!(:droplet3) do
       VCAP::CloudController::DropletModel.make(
-        app_guid:                     other_app_model.guid,
-        created_at:                   Time.at(2),
-        package_guid:                 other_package_model.guid,
-        droplet_hash:                 'my-hash-3',
-        sha256_checksum:              'droplet-checksum-sha256-3',
-        buildpack_receipt_buildpack:  'http://buildpack.git.url.com',
-        state:                        VCAP::CloudController::DropletModel::STAGED_STATE,
-        process_types:                { 'web' => 'started' },
-        execution_metadata:           'black-box-secrets-3',
-        error_description:            'example-error',
+        app_guid: other_app_model.guid,
+        created_at: Time.at(2),
+        package_guid: other_package_model.guid,
+        droplet_hash: 'my-hash-3',
+        sha256_checksum: 'droplet-checksum-sha256-3',
+        buildpack_receipt_buildpack: 'http://buildpack.git.url.com',
+        state: VCAP::CloudController::DropletModel::STAGED_STATE,
+        process_types: { 'web' => 'started' },
+        execution_metadata: 'black-box-secrets-3',
+        error_description: 'example-error',
       )
     end
     let!(:droplet1Label) { VCAP::CloudController::DropletLabelModel.make(key_name: 'fruit', value: 'strawberry', droplet: droplet1) }
@@ -914,11 +915,11 @@ RSpec.describe 'Droplets' do
       expect(parsed_response['pagination']).to be_a_response_like(
         {
           'total_results' => 1,
-          'total_pages'   => 1,
-          'first'         => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}/droplets?page=1&per_page=50&states=STAGED" },
-          'last'          => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}/droplets?page=1&per_page=50&states=STAGED" },
-          'next'          => nil,
-          'previous'      => nil,
+          'total_pages' => 1,
+          'first' => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}/droplets?page=1&per_page=50&states=STAGED" },
+          'last' => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}/droplets?page=1&per_page=50&states=STAGED" },
+          'next' => nil,
+          'previous' => nil,
         })
 
       returned_guids = parsed_response['resources'].map { |i| i['guid'] }
@@ -934,33 +935,33 @@ RSpec.describe 'Droplets' do
       expect(parsed_response).to be_a_response_like({
         'pagination' => {
           'total_results' => 2,
-          'total_pages'   => 1,
-          'first'         => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}/droplets?order_by=#{order_by}&page=1&per_page=2" },
-          'last'          => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}/droplets?order_by=#{order_by}&page=1&per_page=2" },
-          'next'          => nil,
-          'previous'      => nil,
+          'total_pages' => 1,
+          'first' => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}/droplets?order_by=#{order_by}&page=1&per_page=2" },
+          'last' => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}/droplets?order_by=#{order_by}&page=1&per_page=2" },
+          'next' => nil,
+          'previous' => nil,
         },
         'resources' => [
           {
-            'guid'               => droplet2.guid,
-            'state'              => VCAP::CloudController::DropletModel::STAGED_STATE,
-            'error'              => 'example-error',
-            'lifecycle'          => {
+            'guid' => droplet2.guid,
+            'state' => VCAP::CloudController::DropletModel::STAGED_STATE,
+            'error' => 'example-error',
+            'lifecycle' => {
               'type' => 'buildpack',
               'data' => {}
             },
             'image' => nil,
-            'checksum'           => { 'type' => 'sha256', 'value' => 'droplet-checksum-sha256' },
-            'buildpacks'         => [{ 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil, 'buildpack_name' => nil, 'version' => nil }],
-            'stack'              => 'stack-2',
+            'checksum' => { 'type' => 'sha256', 'value' => 'droplet-checksum-sha256' },
+            'buildpacks' => [{ 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil, 'buildpack_name' => nil, 'version' => nil }],
+            'stack' => 'stack-2',
             'execution_metadata' => '[PRIVATE DATA HIDDEN IN LISTS]',
-            'process_types'      => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
-            'created_at'         => iso8601,
-            'updated_at'         => iso8601,
-            'links'              => {
-              'self'                   => { 'href' => "#{link_prefix}/v3/droplets/#{droplet2.guid}" },
-              'package'                => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
-              'app'                    => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+            'process_types' => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
+            'created_at' => iso8601,
+            'updated_at' => iso8601,
+            'links' => {
+              'self' => { 'href' => "#{link_prefix}/v3/droplets/#{droplet2.guid}" },
+              'package' => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
+              'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
               'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/relationships/current_droplet", 'method' => 'PATCH' },
             },
             'metadata' => {
@@ -971,25 +972,25 @@ RSpec.describe 'Droplets' do
             },
           },
           {
-            'guid'               => droplet1.guid,
-            'state'              => VCAP::CloudController::DropletModel::FAILED_STATE,
-            'error'              => 'example-error',
-            'lifecycle'          => {
+            'guid' => droplet1.guid,
+            'state' => VCAP::CloudController::DropletModel::FAILED_STATE,
+            'error' => 'example-error',
+            'lifecycle' => {
               'type' => 'buildpack',
               'data' => {}
             },
             'image' => nil,
-            'checksum'           => nil,
-            'buildpacks'         => [{ 'name' => buildpack.name, 'detect_output' => nil, 'buildpack_name' => nil, 'version' => nil }],
-            'stack'              => 'stack-1',
+            'checksum' => nil,
+            'buildpacks' => [{ 'name' => buildpack.name, 'detect_output' => nil, 'buildpack_name' => nil, 'version' => nil }],
+            'stack' => 'stack-1',
             'execution_metadata' => '[PRIVATE DATA HIDDEN IN LISTS]',
-            'process_types'      => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
-            'created_at'         => iso8601,
-            'updated_at'         => iso8601,
-            'links'              => {
-              'self'                   => { 'href' => "#{link_prefix}/v3/droplets/#{droplet1.guid}" },
-              'package'                => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
-              'app'                    => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+            'process_types' => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
+            'created_at' => iso8601,
+            'updated_at' => iso8601,
+            'links' => {
+              'self' => { 'href' => "#{link_prefix}/v3/droplets/#{droplet1.guid}" },
+              'package' => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
+              'app' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
               'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/relationships/current_droplet", 'method' => 'PATCH' },
             },
             'metadata' => {
@@ -1009,15 +1010,15 @@ RSpec.describe 'Droplets' do
     let(:package_model) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
     let!(:og_droplet) do
       VCAP::CloudController::DropletModel.make(
-        state:                        VCAP::CloudController::DropletModel::STAGED_STATE,
-        app_guid:                     app_model.guid,
-        package_guid:                 package_model.guid,
-        buildpack_receipt_buildpack:  'http://buildpack.git.url.com',
-        error_description:            nil,
-        execution_metadata:           'some-data',
-        droplet_hash:                 'shalalala',
-        sha256_checksum:              'droplet-checksum-sha256',
-        process_types:                { 'web' => 'start-command' },
+        state: VCAP::CloudController::DropletModel::STAGED_STATE,
+        app_guid: app_model.guid,
+        package_guid: package_model.guid,
+        buildpack_receipt_buildpack: 'http://buildpack.git.url.com',
+        error_description: nil,
+        execution_metadata: 'some-data',
+        droplet_hash: 'shalalala',
+        sha256_checksum: 'droplet-checksum-sha256',
+        process_types: { 'web' => 'start-command' },
       )
     end
     let(:app_guid) { droplet_model.app_guid }
@@ -1036,28 +1037,28 @@ RSpec.describe 'Droplets' do
       post "/v3/droplets?source_guid=#{og_droplet.guid}", copy_request_json, developer_headers
 
       parsed_response = MultiJson.load(last_response.body)
-      copied_droplet  = VCAP::CloudController::DropletModel.last
+      copied_droplet = VCAP::CloudController::DropletModel.last
 
       expect(last_response.status).to eq(201), "Expected 201, got status: #{last_response.status} with body: #{parsed_response}"
       expect(parsed_response).to be_a_response_like({
-        'guid'               => copied_droplet.guid,
-        'state'              => VCAP::CloudController::DropletModel::COPYING_STATE,
-        'error'              => nil,
-        'lifecycle'          => {
+        'guid' => copied_droplet.guid,
+        'state' => VCAP::CloudController::DropletModel::COPYING_STATE,
+        'error' => nil,
+        'lifecycle' => {
           'type' => 'buildpack',
           'data' => {}
         },
-        'checksum'           => nil,
-        'buildpacks'         => [{ 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil, 'buildpack_name' => nil, 'version' => nil }],
-        'stack'              => 'stack-name',
+        'checksum' => nil,
+        'buildpacks' => [{ 'name' => 'http://buildpack.git.url.com', 'detect_output' => nil, 'buildpack_name' => nil, 'version' => nil }],
+        'stack' => 'stack-name',
         'execution_metadata' => 'some-data',
-        'image'              => nil,
-        'process_types'      => { 'web' => 'start-command' },
-        'created_at'         => iso8601,
-        'updated_at'         => iso8601,
-        'links'              => {
-          'self'                   => { 'href' => "#{link_prefix}/v3/droplets/#{copied_droplet.guid}" },
-          'app'                    => { 'href' => "#{link_prefix}/v3/apps/#{new_app.guid}" },
+        'image' => nil,
+        'process_types' => { 'web' => 'start-command' },
+        'created_at' => iso8601,
+        'updated_at' => iso8601,
+        'links' => {
+          'self' => { 'href' => "#{link_prefix}/v3/droplets/#{copied_droplet.guid}" },
+          'app' => { 'href' => "#{link_prefix}/v3/apps/#{new_app.guid}" },
           'assign_current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{new_app.guid}/relationships/current_droplet", 'method' => 'PATCH' },
         },
         'metadata' => {
@@ -1068,32 +1069,152 @@ RSpec.describe 'Droplets' do
     end
   end
 
+  describe 'POST /v3/droplets/:guid/upload' do
+    let(:droplet) do
+      VCAP::CloudController::DropletModel.make(
+        app: app_model,
+        state: VCAP::CloudController::DropletModel::AWAITING_UPLOAD_STATE
+      )
+    end
+
+    let(:api_call) { lambda { |user_headers| post "/v3/droplets/#{droplet.guid}/upload", params.to_json, user_headers } }
+
+    let(:params) do
+      { bits_name: 'my-droplet.tgz', bits_path: '/tmp/uploads/my-droplet.tgz' }
+    end
+
+    let(:droplet_json) do
+      {
+        guid: UUID_REGEX,
+        state: 'PROCESSING_UPLOAD',
+        error: nil,
+        lifecycle: {
+          type: 'buildpack',
+          data: {}
+        },
+        execution_metadata: droplet.execution_metadata,
+        process_types: droplet.process_types,
+        checksum: {
+          type: 'sha256',
+          value: droplet.sha256_checksum
+        },
+        buildpacks: [],
+        stack: droplet.buildpack_lifecycle_data.stack,
+        image: nil,
+        created_at: iso8601,
+        updated_at: iso8601,
+        metadata: {
+          labels: {},
+          annotations: {}
+        },
+        links: {
+          self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/droplets\/#{droplet.guid}) },
+          app: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/apps\/#{UUID_REGEX}) },
+          assign_current_droplet: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/apps\/#{UUID_REGEX}\/relationships\/current_droplet), method: 'PATCH' },
+        }
+      }
+    end
+
+    let(:expected_codes_and_responses) do
+      h = Hash.new(
+        code: 403,
+      )
+      h['admin'] = {
+        code: 202,
+        response_object: droplet_json
+      }
+      h['space_developer'] = {
+        code: 202,
+        response_object: droplet_json
+      }
+      h.freeze
+    end
+
+    before do
+      # VCAP::CloudController::DropletUploadMessage validations will try to
+      # stat the file, which in this case would fail since this file doesn't
+      # exist. In order to be able to run validations we stub File.stat so that
+      # the size check always passes.
+      allow(File).to receive(:stat).and_return(instance_double(File::Stat, size: 12))
+    end
+
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+    it 'enqueues a processing job' do
+      post "/v3/droplets/#{droplet.guid}/upload", params.to_json, developer_headers
+
+      expect(last_response.status).to eq(202)
+
+      get last_response.headers['Location'], nil, admin_headers
+
+      expect(last_response.status).to eq(200)
+    end
+
+    context 'when the droplet is not found' do
+      it 'returns 404 with a helpful error message' do
+        post '/v3/droplets/bad-droplet-guid/upload', params.to_json, developer_headers
+
+        expect(last_response.status).to eq(404)
+        expect(last_response).to have_error_message("Droplet with guid 'bad-droplet-guid' does not exist, or you do not have access to it.")
+      end
+    end
+
+    context 'when the droplet is not AWAITING_UPLOAD' do
+      let(:staged_droplet) do
+        VCAP::CloudController::DropletModel.make(
+          app: app_model,
+          state: VCAP::CloudController::DropletModel::STAGED_STATE
+        )
+      end
+
+      it 'returns 422 with a helpful error message' do
+        post "/v3/droplets/#{staged_droplet.guid}/upload", params.to_json, developer_headers
+
+        expect(last_response.status).to eq(422)
+        expect(last_response).to have_error_message('Droplet may be uploaded only once. Create a new droplet to upload bits.')
+      end
+    end
+
+    context 'when the bits are not called "bits"' do
+      let(:invalid_params) do
+        { bots_name: 'bots.tgz', bots_path: '/tmp/uploads/bots.tgz' }
+      end
+
+      it 'returns 422 with a helpful error message' do
+        post "/v3/droplets/#{droplet.guid}/upload", invalid_params.to_json, developer_headers
+
+        expect(last_response.status).to eq(422)
+        expect(last_response).to have_error_message(/Uploaded droplet file is invalid:.* A droplet tgz file must be uploaded as 'bits'/)
+      end
+    end
+  end
+
   describe 'PATCH v3/droplets/:guid' do
     let(:package_model) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
     let!(:og_droplet) do
       VCAP::CloudController::DropletModel.make(
-        state:                        VCAP::CloudController::DropletModel::STAGED_STATE,
-        app_guid:                     app_model.guid,
-        package_guid:                 package_model.guid,
-        buildpack_receipt_buildpack:  'http://buildpack.git.url.com',
-        error_description:            nil,
-        execution_metadata:           'some-data',
-        droplet_hash:                 'shalalala',
-        sha256_checksum:              'droplet-checksum-sha256',
-        process_types:                { 'web' => 'start-command' },
+        state: VCAP::CloudController::DropletModel::STAGED_STATE,
+        app_guid: app_model.guid,
+        package_guid: package_model.guid,
+        buildpack_receipt_buildpack: 'http://buildpack.git.url.com',
+        error_description: nil,
+        execution_metadata: 'some-data',
+        droplet_hash: 'shalalala',
+        sha256_checksum: 'droplet-checksum-sha256',
+        process_types: { 'web' => 'start-command' },
       )
     end
     let(:update_request) do
       {
         metadata: {
           labels: {
-                  'release' => 'stable',
-                  'code.cloudfoundry.org/cloud_controller_ng' => 'awesome',
-                  'delete-me' => nil,
+            'release' => 'stable',
+            'code.cloudfoundry.org/cloud_controller_ng' => 'awesome',
+            'delete-me' => nil,
           },
           annotations: {
             'potato' => 'sieglinde',
-            'key' =>  ''
+            'key' => ''
           }
         }
       }
@@ -1116,7 +1237,7 @@ RSpec.describe 'Droplets' do
         },
         'annotations' => {
           'potato' => 'sieglinde',
-          'key' =>  ''
+          'key' => ''
         }
       )
     end

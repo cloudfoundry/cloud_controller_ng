@@ -5,10 +5,12 @@ require 'fetchers/droplet_list_fetcher'
 require 'actions/droplet_delete'
 require 'actions/droplet_copy'
 require 'actions/droplet_update'
+require 'actions/droplet_upload'
 require 'messages/droplets_list_message'
 require 'messages/droplet_copy_message'
 require 'messages/droplet_create_message'
 require 'messages/droplet_update_message'
+require 'messages/droplet_upload_message'
 require 'cloud_controller/membership'
 require 'controllers/v3/mixins/app_sub_resource'
 
@@ -108,7 +110,36 @@ class DropletsController < ApplicationController
     DropletCreate.new.create(app, message, user_audit_info)
   end
 
+  def upload
+    message = DropletUploadMessage.create_from_params(hashed_params[:body])
+    combine_messages(message.errors.full_messages) unless message.valid?
+
+    droplet = DropletModel.where(guid: hashed_params[:guid]).eager(:space).first
+    resource_not_found_with_message!("Droplet with guid '#{hashed_params[:guid]}' does not exist, or you do not have access to it.") unless droplet
+
+    unauthorized! unless permission_queryer.can_write_to_space?(droplet.space.guid)
+
+    unless droplet.state == DropletModel::AWAITING_UPLOAD_STATE
+      unprocessable!('Droplet may be uploaded only once. Create a new droplet to upload bits.')
+    end
+
+    pollable_job = DropletUpload.new.upload_async(
+      message: message,
+      droplet: droplet,
+      config: configuration
+    )
+
+    url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
+    response.set_header('Location', url_builder.build_url(path: "/v3/jobs/#{pollable_job.guid}"))
+
+    render status: :accepted, json: Presenters::V3::DropletPresenter.new(droplet)
+  end
+
   private
+
+  def combine_messages(messages)
+    unprocessable!("Uploaded droplet file is invalid: #{messages.join(', ')}")
+  end
 
   def stagers
     CloudController::DependencyLocator.instance.stagers

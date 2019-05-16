@@ -472,7 +472,7 @@ module VCAP::CloudController
         zipname = File.join(tmpdir, 'test.zip')
         TestZip.create(zipname, 10, 1024)
         file_contents = File.read(zipname)
-        Jobs::V3::DropletUpload.new(zipname, droplet.guid).perform
+        Jobs::V3::DropletUpload.new(zipname, droplet.guid, skip_state_transition: false).perform
         FileUtils.rm_rf(tmpdir)
         file_contents
       end

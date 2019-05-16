@@ -48,7 +48,7 @@ module VCAP::CloudController
         droplet_file.write('droplet contents')
         droplet_file.close
 
-        Jobs::V3::DropletUpload.new(droplet_file.path, droplet.guid).perform
+        Jobs::V3::DropletUpload.new(droplet_file.path, droplet.guid, skip_state_transition: false).perform
       end
 
       describe 'blobstore_url_generator' do
@@ -159,7 +159,7 @@ module VCAP::CloudController
         droplet_file.write('droplet contents')
         droplet_file.close
 
-        Jobs::V3::DropletUpload.new(droplet_file.path, target_droplet.guid).perform
+        Jobs::V3::DropletUpload.new(droplet_file.path, target_droplet.guid, skip_state_transition: false).perform
       end
 
       context 'when using with a revision' do

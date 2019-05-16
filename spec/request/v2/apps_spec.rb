@@ -1298,7 +1298,7 @@ RSpec.describe 'Apps' do
       droplet_file.write('droplet contents')
       droplet_file.close
 
-      VCAP::CloudController::Jobs::V3::DropletUpload.new(droplet_file.path, process.desired_droplet.guid).perform
+      VCAP::CloudController::Jobs::V3::DropletUpload.new(droplet_file.path, process.desired_droplet.guid, skip_state_transition: false).perform
     end
 
     it 'redirects to a blobstore to download the droplet' do

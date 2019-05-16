@@ -3,10 +3,12 @@ module VCAP::CloudController
     module V3
       class DropletUpload
         attr_reader :max_attempts, :droplet_guid
+        alias_method :resource_guid, :droplet_guid
 
-        def initialize(local_path, droplet_guid)
+        def initialize(local_path, droplet_guid, skip_state_transition:)
           @local_path   = local_path
           @droplet_guid = droplet_guid
+          @skip_state_transition = skip_state_transition
           @max_attempts = 3
         end
 
@@ -22,7 +24,10 @@ module VCAP::CloudController
               File.join(@droplet_guid, sha1_digest)
             )
 
-            droplet.update(droplet_hash: sha1_digest, sha256_checksum: sha256_digest)
+            droplet.mark_as_staged unless @skip_state_transition
+            droplet.droplet_hash = sha1_digest
+            droplet.sha256_checksum = sha256_digest
+            droplet.save
           end
 
           FileUtils.rm_f(@local_path)
@@ -40,6 +45,14 @@ module VCAP::CloudController
 
         def job_name_in_configuration
           :droplet_upload
+        end
+
+        def display_name
+          'droplet.upload'
+        end
+
+        def resource_type
+          'droplet'
         end
 
         def blobstore

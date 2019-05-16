@@ -12,7 +12,10 @@ module VCAP::CloudController
 
       describe '#perform' do
         before do
-          allow_any_instance_of(Jobs::V3::DropletUpload).to receive(:perform)
+          allow_any_instance_of(Jobs::V3::DropletUpload).to receive(:perform) do
+            droplet.mark_as_staged
+            droplet.save
+          end
         end
 
         it 'delegates to the V3::DropletUpload job to put the file in the blobstore' do
@@ -34,6 +37,7 @@ module VCAP::CloudController
 
         context 'when the droplet is gone' do
           before do
+            allow_any_instance_of(Jobs::V3::DropletUpload).to receive(:perform)
             droplet.destroy
           end
 
@@ -44,7 +48,9 @@ module VCAP::CloudController
 
         context 'when the droplet has changed to another state' do
           before do
-            droplet.update(state: DropletModel::FAILED_STATE)
+            allow_any_instance_of(Jobs::V3::DropletUpload).to receive(:perform) do
+              droplet.update(state: DropletModel::FAILED_STATE)
+            end
           end
 
           it 'does not mark the droplet as staged' do

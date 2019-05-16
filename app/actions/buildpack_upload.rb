@@ -1,8 +1,5 @@
 module VCAP::CloudController
   class BuildpackUpload
-    class InvalidBuildpack < StandardError
-    end
-
     def upload_async(message:, buildpack:, config:)
       logger.info("uploading buildpacks bits for buildpack #{buildpack.guid}")
 

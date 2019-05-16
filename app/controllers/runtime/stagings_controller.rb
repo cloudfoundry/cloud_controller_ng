@@ -117,7 +117,7 @@ module VCAP::CloudController
 
       logger.info 'v3-droplet.begin-upload', droplet_guid: droplet.guid
 
-      droplet_upload_job = Jobs::V3::DropletUpload.new(upload_path, droplet.guid)
+      droplet_upload_job = Jobs::V3::DropletUpload.new(upload_path, droplet.guid, skip_state_transition: true)
 
       Jobs::Enqueuer.new(droplet_upload_job, queue: Jobs::LocalQueue.new(config)).enqueue
     end
