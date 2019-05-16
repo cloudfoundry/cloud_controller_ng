@@ -225,6 +225,7 @@ includes:
   - experimental_resources/routes/object
   - experimental_resources/routes/create
   - experimental_resources/routes/get
+  - experimental_resources/routes/list
   - experimental_resources/service_bindings/header
   - experimental_resources/service_bindings/object
   - experimental_resources/service_bindings/create
@@ -233,8 +234,8 @@ includes:
   - experimental_resources/service_bindings/delete
   - experimental_resources/service_brokers/header
   - experimental_resources/service_brokers/object
-  - experimental_resources/service_brokers/list
   - experimental_resources/service_brokers/get
+  - experimental_resources/service_brokers/list
   - experimental_resources/sidecars/header
   - experimental_resources/sidecars/object
   - experimental_resources/sidecars/create_from_app

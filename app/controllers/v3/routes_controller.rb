@@ -1,9 +1,25 @@
 require 'messages/route_create_message'
 require 'messages/route_show_message'
+require 'messages/routes_list_message'
 require 'presenters/v3/route_presenter'
+require 'presenters/v3/paginated_list_presenter'
 require 'actions/route_create'
 
 class RoutesController < ApplicationController
+  def index
+    message = RoutesListMessage.from_params(query_params)
+    invalid_param!(message.errors.full_messages) unless message.valid?
+
+    dataset = Route.where(guid: permission_queryer.readable_route_guids)
+
+    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
+      presenter: Presenters::V3::RoutePresenter,
+      paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
+      path: '/v3/routes',
+      message: message,
+    )
+  end
+
   def show
     message = RouteShowMessage.new({ guid: hashed_params['guid'] })
     unprocessable!(message.errors.full_messages) unless message.valid?

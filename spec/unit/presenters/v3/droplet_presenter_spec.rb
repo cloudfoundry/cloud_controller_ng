@@ -76,16 +76,20 @@ module VCAP::CloudController::Presenters::V3
           let(:buildpack_receipt_buildpack) { 'https://amelia:meow@neopets.com' }
 
           it 'obfuscates the username and password' do
-            expect(result[:buildpacks]).to match_array([{ name: 'shaq',
-              detect_output: nil,
-              buildpack_name: nil,
-              version: nil
-            },
-              { name: 'https://***:***@neopets.com',
+            expect(result[:buildpacks]).to match_array([
+              {
+                name: 'shaq',
+                detect_output: nil,
+                buildpack_name: nil,
+                version: nil
+              },
+              {
+                name: 'https://***:***@neopets.com',
                 detect_output: 'the-happiest-buildpack-detect-output',
                 buildpack_name: nil,
                 version: nil
-              }])
+              }
+            ])
           end
         end
 

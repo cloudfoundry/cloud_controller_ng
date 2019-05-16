@@ -7,6 +7,93 @@ RSpec.describe 'Routes Request' do
   let(:space) { VCAP::CloudController::Space.make }
   let(:org) { space.organization }
 
+  describe 'GET /v3/routes' do
+    let(:other_space) { VCAP::CloudController::Space.make }
+    let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: space.organization) }
+    let(:route_in_org) { VCAP::CloudController::Route.make(space: space, domain: domain) }
+    let(:route_in_other_org) { VCAP::CloudController::Route.make(space: other_space) }
+    let(:api_call) { lambda { |user_headers| get '/v3/routes', nil, user_headers } }
+    let(:route_in_org_json) do
+      {
+        guid: UUID_REGEX,
+        host: route_in_org.host,
+        path: route_in_org.path,
+        created_at: iso8601,
+        updated_at: iso8601,
+        relationships: {
+          space: {
+            data: { guid: route_in_org.space.guid }
+          },
+          domain: {
+            data: { guid: route_in_org.domain.guid }
+          }
+        },
+        links: {
+          self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },
+          space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{route_in_org.space.guid}) },
+          domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{route_in_org.domain.guid}) }
+        }
+      }
+    end
+
+    let(:route_in_other_org_json) do
+      {
+        guid: UUID_REGEX,
+        host: route_in_other_org.host,
+        path: route_in_other_org.path,
+        created_at: iso8601,
+        updated_at: iso8601,
+        relationships: {
+          space: {
+            data: { guid: route_in_other_org.space.guid }
+          },
+          domain: {
+            data: { guid: route_in_other_org.domain.guid }
+          }
+        },
+        links: {
+          self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },
+          space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{route_in_other_org.space.guid}) },
+          domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{route_in_other_org.domain.guid}) }
+        }
+      }
+    end
+
+    context 'when the user is a member in the routes org' do
+      let(:expected_codes_and_responses) do
+        h = Hash.new(
+          code: 200,
+          response_objects: [route_in_org_json]
+        )
+
+        h['admin'] = { code: 200, response_objects: [route_in_org_json, route_in_other_org_json] }
+        h['admin_read_only'] = { code: 200, response_objects: [route_in_org_json, route_in_other_org_json] }
+        h['global_auditor'] = { code: 200, response_objects: [route_in_org_json, route_in_other_org_json] }
+
+        h['org_billing_manager'] = { code: 200, response_objects: [] }
+        h['no_role'] = { code: 200, response_objects: [] }
+        h
+      end
+
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+    end
+
+    context 'when the request is invalid' do
+      it 'returns 400 with a meaningful error' do
+        get '/v3/routes?page=potato', nil, admin_header
+        expect(last_response.status).to eq(400)
+        expect(last_response).to have_error_message('The query parameter is invalid: Page must be a positive integer')
+      end
+    end
+
+    context 'when the user is not logged in' do
+      it 'returns 401 for Unauthenticated requests' do
+        get '/v3/routes', nil, base_json_headers
+        expect(last_response.status).to eq(401)
+      end
+    end
+  end
+
   describe 'GET /v3/routes/:guid' do
     let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: space.organization) }
     let(:route) { VCAP::CloudController::Route.make(space: space, domain: domain) }

@@ -28,6 +28,15 @@ RSpec.shared_examples 'permissions for list endpoint' do |roles|
         if (200...300).cover? expected_response_code
           expected_response_objects = expected_codes_and_responses[role][:response_objects]
           expect({ resources: parsed_response['resources'] }).to match_json_response({ resources: expected_response_objects })
+
+          expect(parsed_response['pagination']).to match_json_response({
+            total_results: an_instance_of(Integer),
+            total_pages: an_instance_of(Integer),
+            first: { href: /#{link_prefix}.+page=\d+&per_page=\d+/ },
+            last: { href: /#{link_prefix}.+page=\d+&per_page=\d+/ },
+            next: anything,
+            previous: anything
+          })
         end
       end
     end

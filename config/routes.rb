@@ -146,6 +146,7 @@ Rails.application.routes.draw do
   get '/apps/:app_guid/route_mappings', to: 'route_mappings#index'
 
   # routes
+  get '/routes', to: 'routes#index'
   post '/routes', to: 'routes#create'
   get '/routes/:guid', to: 'routes#show'
 
