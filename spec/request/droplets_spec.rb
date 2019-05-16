@@ -1138,7 +1138,19 @@ RSpec.describe 'Droplets' do
       allow(File).to receive(:stat).and_return(instance_double(File::Stat, size: 12))
     end
 
-    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+      let(:expected_event_hash) do
+        {
+          type: 'audit.app.droplet.upload',
+          actee: app_model.guid,
+          actee_type: 'app',
+          actee_name: app_model.name,
+          metadata: { droplet_guid: parsed_response['guid'] }.to_json,
+          space_guid: space.guid,
+          organization_guid: org.guid,
+        }
+      end
+    end
 
     it 'enqueues a processing job' do
       post "/v3/droplets/#{droplet.guid}/upload", params.to_json, developer_headers

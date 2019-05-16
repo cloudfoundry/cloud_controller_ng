@@ -114,7 +114,7 @@ class DropletsController < ApplicationController
     message = DropletUploadMessage.create_from_params(hashed_params[:body])
     combine_messages(message.errors.full_messages) unless message.valid?
 
-    droplet = DropletModel.where(guid: hashed_params[:guid]).eager(:space).first
+    droplet = DropletModel.where(guid: hashed_params[:guid]).eager(:app, :space).first
     resource_not_found_with_message!("Droplet with guid '#{hashed_params[:guid]}' does not exist, or you do not have access to it.") unless droplet
 
     unauthorized! unless permission_queryer.can_write_to_space?(droplet.space.guid)
@@ -126,7 +126,8 @@ class DropletsController < ApplicationController
     pollable_job = DropletUpload.new.upload_async(
       message: message,
       droplet: droplet,
-      config: configuration
+      config: configuration,
+      user_audit_info: user_audit_info
     )
 
     url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new

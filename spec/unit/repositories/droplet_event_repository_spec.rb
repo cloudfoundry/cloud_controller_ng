@@ -95,6 +95,26 @@ module VCAP::CloudController
           expect(event.actee_type).to eq('app')
           expect(event.actee_name).to eq('popsicle')
           expect(event.space_guid).to eq(app.space.guid)
+          expect(event.organization_guid).to eq(app.organization.guid)
+          expect(event.metadata['droplet_guid']).to eq(droplet.guid)
+        end
+      end
+
+      describe '#record_upload' do
+        it 'creates a new audit.app.droplet.upload event' do
+          event = DropletEventRepository.record_upload(droplet, user_audit_info, app.name, package.space.guid, package.space.organization.guid)
+          event.reload
+
+          expect(event.type).to eq('audit.app.droplet.upload')
+          expect(event.actor).to eq(user.guid)
+          expect(event.actor_type).to eq('user')
+          expect(event.actor_name).to eq(email)
+          expect(event.actor_username).to eq(user_name)
+          expect(event.actee).to eq(droplet.app_guid)
+          expect(event.actee_type).to eq('app')
+          expect(event.actee_name).to eq('popsicle')
+          expect(event.space_guid).to eq(app.space.guid)
+          expect(event.organization_guid).to eq(app.organization.guid)
           expect(event.metadata['droplet_guid']).to eq(droplet.guid)
         end
       end

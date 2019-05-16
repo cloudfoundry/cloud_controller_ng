@@ -116,6 +116,27 @@ module VCAP::CloudController
           organization_guid: org_guid
         )
       end
+
+      def self.record_upload(droplet, user_audit_info, v3_app_name, space_guid, org_guid)
+        VCAP::Loggregator.emit(droplet.app_guid, "Uploading droplet for app with guid #{droplet.app_guid}")
+
+        metadata = { droplet_guid: droplet.guid }
+
+        Event.create(
+          type:              'audit.app.droplet.upload',
+          actor:             user_audit_info.user_guid,
+          actor_type:        'user',
+          actor_name:        user_audit_info.user_email,
+          actor_username:    user_audit_info.user_name,
+          actee:             droplet.app_guid,
+          actee_type:        'app',
+          actee_name:        v3_app_name,
+          timestamp:         Sequel::CURRENT_TIMESTAMP,
+          metadata:          metadata,
+          space_guid:        space_guid,
+          organization_guid: org_guid
+        )
+      end
     end
   end
 end
