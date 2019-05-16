@@ -65,6 +65,10 @@ RSpec.describe 'V3 service brokers' do
             it 'contains no relationships' do
               expect(returned_service_broker.fetch('relationships').length).to eq(0)
             end
+
+            it 'contains no space in links' do
+              expect(returned_service_broker['links']).not_to have_key('space')
+            end
           end
 
           context 'when the broker is space scoped' do
@@ -80,6 +84,12 @@ RSpec.describe 'V3 service brokers' do
               expect(returned_service_broker['relationships']).to have_key('space')
               expect(returned_service_broker['relationships']['space']).to have_key('data')
               expect(returned_service_broker['relationships']['space']['data'].fetch('guid')).to eq(space.guid)
+            end
+
+            it 'there is a links field with key called space' do
+              expect(returned_service_broker).to have_key('links')
+              expect(returned_service_broker['links']).to have_key('space')
+              expect(returned_service_broker['links']['space'].fetch('href')).to include("/v3/spaces/#{space.guid}")
             end
           end
         end
@@ -158,6 +168,10 @@ RSpec.describe 'V3 service brokers' do
             it 'contains no relationships' do
               expect(returned_service_broker.fetch('relationships').length).to eq(0)
             end
+
+            it 'contains no space in links' do
+              expect(returned_service_broker['links']).not_to have_key('space')
+            end
           end
 
           context 'when the broker is space scoped' do
@@ -173,6 +187,12 @@ RSpec.describe 'V3 service brokers' do
               expect(returned_service_broker['relationships']).to have_key('space')
               expect(returned_service_broker['relationships']['space']).to have_key('data')
               expect(returned_service_broker['relationships']['space']['data'].fetch('guid')).to eq(space.guid)
+            end
+
+            it 'there is a links field with key called space' do
+              expect(returned_service_broker).to have_key('links')
+              expect(returned_service_broker['links']).to have_key('space')
+              expect(returned_service_broker['links']['space'].fetch('href')).to include("/v3/spaces/#{space.guid}")
             end
           end
         end

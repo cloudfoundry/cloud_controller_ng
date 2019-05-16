@@ -47,6 +47,10 @@ module VCAP::CloudController::Presenters::V3
           }
           expect(result[:relationships]).to eq(relationships)
         end
+
+        it 'includes a space link in the JSON' do
+          expect(result[:links][:space][:href]).to eq("#{link_prefix}/v3/spaces/#{space.guid}")
+        end
       end
     end
   end

@@ -40,12 +40,17 @@ module VCAP::CloudController
 
         def build_links
           url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
-
-          { self:
-            {
+          links = {
+            self: {
               href: url_builder.build_url(path: "/v3/service_brokers/#{broker.guid}")
             }
           }
+
+          if broker.space_guid
+            links[:space] = { href: url_builder.build_url(path: "/v3/spaces/#{broker.space_guid}") }
+          end
+
+          links
         end
       end
     end
