@@ -47,7 +47,7 @@ module VCAP::CloudController
 
           it 'marks the droplet as staged' do
             job.perform
-            expect(droplet.refresh.state).to eq('STAGED')
+            expect(droplet.refresh.state).to eq(DropletModel::STAGED_STATE)
           end
         end
 
@@ -115,6 +115,14 @@ module VCAP::CloudController
             it 'does not record the droplet checksums' do
               expect(droplet.refresh.droplet_hash).to be_nil
               expect(droplet.refresh.sha256_checksum).to be_nil
+            end
+
+            it 'marks the droplet state as FAILED' do
+              expect(droplet.refresh.state).to eq(DropletModel::FAILED_STATE)
+            end
+
+            it 'sets an error description on the droplet model' do
+              expect(droplet.refresh.error_description).to eq('Something Terrible Happened')
             end
 
             it 'records the failure' do

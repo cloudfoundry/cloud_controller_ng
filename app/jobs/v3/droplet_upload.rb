@@ -31,6 +31,16 @@ module VCAP::CloudController
           end
 
           FileUtils.rm_f(@local_path)
+        rescue => e
+          if droplet
+            droplet.db.transaction do
+              droplet.lock!
+              droplet.error_description = e.message
+              droplet.state = DropletModel::FAILED_STATE
+              droplet.save
+            end
+          end
+          raise
         end
 
         def error(job, _)
