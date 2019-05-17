@@ -377,7 +377,7 @@ module CloudFoundry
             json_body = JSON.parse(body.first)
             expect(json_body['errors'].first).to include(
               'code' => 10014,
-              'detail' => 'Rate Limit Exceeded: please log in again',
+              'detail' => 'Rate Limit Exceeded: Unauthenticated requests from this IP address have exceeded the limit. Please log in.',
               'title' => 'CF-IPBasedRateLimitExceeded',
             )
           end

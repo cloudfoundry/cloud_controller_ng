@@ -91,7 +91,7 @@
 10014:
   name: IPBasedRateLimitExceeded
   http_code: 429
-  message: "Rate Limit Exceeded: please log in again"
+  message: "Rate Limit Exceeded: Unauthenticated requests from this IP address have exceeded the limit. Please log in."
 
 20001:
   name: UserInvalid
