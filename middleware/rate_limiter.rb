@@ -78,14 +78,15 @@ module CloudFoundry
       def too_many_requests!(env, rate_limit_headers)
         rate_limit_headers['Retry-After']    = rate_limit_headers['X-RateLimit-Reset']
         rate_limit_headers['Content-Type']   = 'text/plain; charset=utf-8'
-        message                              = rate_limit_error(env['PATH_INFO']).to_json
+        message                              = rate_limit_error(env).to_json
         rate_limit_headers['Content-Length'] = message.length.to_s
         [429, rate_limit_headers, [message]]
       end
 
-      def rate_limit_error(path)
-        api_error = CloudController::Errors::ApiError.new_from_details('RateLimitExceeded')
-        version   = path[0..2]
+      def rate_limit_error(env)
+        error_name = user_token?(env) ? 'RateLimitExceeded' : 'IPBasedRateLimitExceeded'
+        api_error = CloudController::Errors::ApiError.new_from_details(error_name)
+        version   = env['PATH_INFO'][0..2]
         if version == '/v2'
           ErrorPresenter.new(api_error, Rails.env.test?, V2ErrorHasher.new(api_error)).to_hash
         elsif version == '/v3'
