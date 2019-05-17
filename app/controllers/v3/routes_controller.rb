@@ -4,13 +4,14 @@ require 'messages/routes_list_message'
 require 'presenters/v3/route_presenter'
 require 'presenters/v3/paginated_list_presenter'
 require 'actions/route_create'
+require 'fetchers/route_fetcher'
 
 class RoutesController < ApplicationController
   def index
     message = RoutesListMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
 
-    dataset = Route.where(guid: permission_queryer.readable_route_guids)
+    dataset = RouteFetcher.fetch(message, permission_queryer.readable_route_guids)
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::RoutePresenter,

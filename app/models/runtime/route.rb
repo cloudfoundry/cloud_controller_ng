@@ -9,6 +9,7 @@ module VCAP::CloudController
 
     many_to_one :domain
     many_to_one :space, after_set: :validate_changed_space
+    one_through_one :organization, join_table: Space.table_name, left_key: :id, left_primary_key: :space_id, right_primary_key: :id, right_key: :organization_id
 
     one_to_many :route_mappings, class: 'VCAP::CloudController::RouteMappingModel', key: :route_guid, primary_key: :guid
 

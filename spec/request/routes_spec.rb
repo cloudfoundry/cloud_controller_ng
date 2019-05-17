@@ -10,8 +10,12 @@ RSpec.describe 'Routes Request' do
   describe 'GET /v3/routes' do
     let(:other_space) { VCAP::CloudController::Space.make }
     let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: space.organization) }
-    let(:route_in_org) { VCAP::CloudController::Route.make(space: space, domain: domain) }
-    let(:route_in_other_org) { VCAP::CloudController::Route.make(space: other_space) }
+    let!(:route_in_org) do
+      VCAP::CloudController::Route.make(space: space, domain: domain, host: 'host-1', path: '/path1')
+    end
+    let!(:route_in_other_org) do
+      VCAP::CloudController::Route.make(space: other_space, host: 'host-2', path: '/path2')
+    end
     let(:api_call) { lambda { |user_headers| get '/v3/routes', nil, user_headers } }
     let(:route_in_org_json) do
       {
@@ -76,6 +80,54 @@ RSpec.describe 'Routes Request' do
       end
 
       it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+    end
+
+    describe 'hosts filter' do
+      it 'returns routes filtered by host' do
+        get '/v3/routes?hosts=host-1', nil, admin_header
+        expect(last_response.status).to eq(200)
+        expect({
+          resources: parsed_response['resources']
+        }).to match_json_response({
+          resources: [route_in_org_json]
+        })
+      end
+    end
+
+    describe 'paths filter' do
+      it 'returns routes filtered by path' do
+        get '/v3/routes?paths=%2Fpath1', nil, admin_header
+        expect(last_response.status).to eq(200)
+        expect({
+          resources: parsed_response['resources']
+        }).to match_json_response({
+          resources: [route_in_org_json]
+        })
+      end
+    end
+
+    describe 'organization_guids filter' do
+      it 'returns routes filtered by organization_guid' do
+        get "/v3/routes?organization_guids=#{other_space.organization.guid}", nil, admin_header
+        expect(last_response.status).to eq(200)
+        expect({
+          resources: parsed_response['resources']
+        }).to match_json_response({
+          resources: [route_in_other_org_json]
+        })
+      end
+    end
+
+    describe 'domain_guids filter' do
+      it 'returns routes filtered by domain_guid' do
+        get "/v3/routes?domain_guids=#{route_in_other_org.domain.guid}", nil, admin_header
+        expect(last_response.status).to eq(200)
+        expect({
+          resources: parsed_response['resources']
+        }).to match_json_response({
+          resources: [route_in_other_org_json]
+        })
+      end
     end
 
     context 'when the request is invalid' do
