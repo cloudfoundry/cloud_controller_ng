@@ -34,12 +34,10 @@ module VCAP::CloudController::Presenters::V3
           end
 
           it 'presents the shared orgs that are visible to a user' do
-            expect(subject).to eq({
-                data: [
+            expect(subject[:data]).to contain_exactly(
                   { guid: 'org2' },
                   { guid: 'org3' }
-                ]
-            })
+            )
           end
         end
 
