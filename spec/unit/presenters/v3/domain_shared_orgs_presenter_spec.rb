@@ -35,7 +35,7 @@ module VCAP::CloudController::Presenters::V3
 
           it 'presents the shared orgs that are visible to a user' do
             expect(subject[:data]).to contain_exactly(
-                  { guid: 'org2' },
+              { guid: 'org2' },
                   { guid: 'org3' }
             )
           end
