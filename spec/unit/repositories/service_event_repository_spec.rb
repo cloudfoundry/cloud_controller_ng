@@ -8,8 +8,9 @@ module VCAP::CloudController
       let(:user_name) { 'arthur' }
       let(:logger) { double(:logger, error: nil) }
       let(:repository) { ServiceEventRepository.new(UserAuditInfo.new(user_guid: user.guid, user_name: user_name, user_email: email)) }
+
       before do
-        allow(repository).to receive(:logger).and_return(logger)
+        allow(Steno).to receive(:logger).with('cc.event_repository').and_return(logger)
       end
 
       describe 'record_service_plan_visibility_event' do
