@@ -46,8 +46,14 @@ module VCAP::CloudController
           'command', 'console', 'debug', 'health_check_type', 'health_check_timeout', 'health_check_http_endpoint',
           'diego', 'ports', 'route_guids')
 
-        if !mass_assign.empty? && process.web? && process.app.deploying?
-          raise CloudController::Errors::ApiError.new_from_details('ScaleDisabledDuringDeployment')
+        if is_web_process_deploying(mass_assign, process)
+          if request_attrs['state'] == 'STOPPED'
+            raise CloudController::Errors::ApiError.new_from_details('StopDisabledDuringDeployment')
+          elsif ['memory', 'instances', 'disk_quota'].any? { |scaling_attr| request_attrs.key?(scaling_attr) }
+            raise CloudController::Errors::ApiError.new_from_details('ScaleDisabledDuringDeployment')
+          else
+            raise CloudController::Errors::ApiError.new_from_details('ProcessUpdateDisabledDuringDeployment')
+          end
         end
 
         process.set(mass_assign)
@@ -158,6 +164,10 @@ module VCAP::CloudController
 
       def custom_buildpacks_disabled?
         VCAP::CloudController::Config.config.get(:disable_custom_buildpacks)
+      end
+
+      def is_web_process_deploying(mass_assign, process)
+        !mass_assign.empty? && process.web? && process.app.deploying?
       end
 
       def staging_necessary?(process, request_attrs)

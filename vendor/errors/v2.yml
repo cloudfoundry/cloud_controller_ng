@@ -1253,3 +1253,8 @@
   name: AnnotationLimitExceeded
   http_code: 422
   message: "Failed to add %d annotations because it would exceed maximum of %d"
+
+390024:
+  name: StopDisabledDuringDeployment
+  http_code: 422
+  message: "Cannot stop the app while it is deploying, please cancel the deployment before stopping the app."

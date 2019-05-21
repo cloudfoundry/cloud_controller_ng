@@ -55,6 +55,49 @@ module VCAP::CloudController
             let(:process) { ProcessModel.make(type: 'web') }
 
             it 'raises an error and does NOT update the web process' do
+              request_attrs = {
+                'command' => 'java'
+              }
+              expect {
+                app_update.update(app, process, request_attrs)
+              }.to raise_error(/update this process while a deployment is in flight/)
+            end
+
+            it 'raises an error when stopping a deploying app' do
+              request_attrs = {
+                'state' => 'STOPPED'
+              }
+
+              expect {
+                app_update.update(app, process, request_attrs)
+              }.to raise_error(/Cannot stop the app while it is deploying, please cancel the deployment before stopping the app/)
+            end
+
+            it 'raises an error when scaling instances on a deploying app' do
+              request_attrs = {
+                'instances' => '2'
+              }
+
+              expect {
+                app_update.update(app, process, request_attrs)
+              }.to raise_error(/scale this process while a deployment is in flight/)
+            end
+
+            it 'raises an error when scaling memory on a deploying app' do
+              request_attrs = {
+                'memory' => '1025'
+              }
+
+              expect {
+                app_update.update(app, process, request_attrs)
+              }.to raise_error(/scale this process while a deployment is in flight/)
+            end
+
+            it 'raises an error when scaling disk on a deploying app' do
+              request_attrs = {
+                'disk_quota' => '256'
+              }
+
               expect {
                 app_update.update(app, process, request_attrs)
               }.to raise_error(/scale this process while a deployment is in flight/)
