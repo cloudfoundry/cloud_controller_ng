@@ -1420,7 +1420,7 @@ information for your packages, droplets, processes, tasks, and more.</p>
 <td>The time with zone when the object was last updated.</td>
 </tr>
 <tr>
-<td><strong>space</strong> <em>(experimental)</em></td>
+<td><strong>relationships.space</strong> <em>(experimental)</em></td>
 <td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
 <td>The space the app is contained in.</td>
 </tr>
@@ -1554,7 +1554,7 @@ information for your packages, droplets, processes, tasks, and more.</p>
 <td>Name of the app.</td>
 </tr>
 <tr>
-<td><strong>space</strong></td>
+<td><strong>relationships.space</strong></td>
 <td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
 <td>A relationship to a space.</td>
 </tr>
@@ -6164,7 +6164,7 @@ environment variables listed on the source droplet.</p>
 </tr>
 </thead><tbody>
 <tr>
-<td><strong>app</strong></td>
+<td><strong>relationships.app</strong></td>
 <td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
 <td>A relationship to the destination app.</td>
 </tr>
@@ -7541,7 +7541,7 @@ In the case where the specified isolation segment is the system-wide shared segm
 <td>Unique identifier for the organization.</td>
 </tr>
 <tr>
-<td><strong>quota</strong> <em>(experimental)</em></td>
+<td><strong>relationships.quota</strong> <em>(experimental)</em></td>
 <td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
 <td>The quota applied to the organization.</td>
 </tr>
@@ -8715,7 +8715,7 @@ Only isolation segments that are entitled to the organization are eligible to be
 <td>Type of the package. Valid values are <code class="prettyprint">bits</code>, <code class="prettyprint">docker</code>.</td>
 </tr>
 <tr>
-<td><strong>app</strong></td>
+<td><strong>relationships.app</strong></td>
 <td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
 <td>A relationship to an app.</td>
 </tr>
@@ -9385,7 +9385,7 @@ Only isolation segments that are entitled to the organization are eligible to be
 </tr>
 </thead><tbody>
 <tr>
-<td><strong>app</strong></td>
+<td><strong>relationships.app</strong></td>
 <td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
 <td>A relationship to the destination app.</td>
 </tr>
@@ -9650,7 +9650,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 <td>The health check to perform on the process.</td>
 </tr>
 <tr>
-<td><strong>revision</strong> <em>(experimental)</em></td>
+<td><strong>relationships.revision</strong> <em>(experimental)</em></td>
 <td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
 <td>The app revision the process is currently running.</td>
 </tr>
@@ -10723,7 +10723,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 <td>The time with zone when the object was last updated.</td>
 </tr>
 <tr>
-<td><strong>space</strong></td>
+<td><strong>relationships.space</strong></td>
 <td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
 <td>The space the service instance is contained in.</td>
 </tr>
@@ -11170,7 +11170,7 @@ In order to share into a space the requesting user must be a space developer in 
 <td>The time with zone when the object was last updated.</td>
 </tr>
 <tr>
-<td><strong>organization</strong></td>
+<td><strong>relationships.organization</strong></td>
 <td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
 <td>The organization the space is contained in.</td>
 </tr>
@@ -11261,7 +11261,7 @@ In order to share into a space the requesting user must be a space developer in 
 <td>Space name</td>
 </tr>
 <tr>
-<td><strong>organization</strong></td>
+<td><strong>relationships.organization</strong></td>
 <td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
 <td>A relationship to an organization.</td>
 </tr>
@@ -13905,7 +13905,7 @@ applications without incurring downtime. This is different from the traditional 
 <td>Unique identifier for the deployment.</td>
 </tr>
 <tr>
-<td><strong>app</strong></td>
+<td><strong>relationships.app</strong></td>
 <td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
 <td>The app the deployment is updating.</td>
 </tr>
@@ -14061,7 +14061,7 @@ applications without incurring downtime. This is different from the traditional 
 </tr>
 </thead><tbody>
 <tr>
-<td><strong>app</strong></td>
+<td><strong>relationships.app</strong></td>
 <td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
 <td>The app to deploy a droplet for.</td>
 </tr>
@@ -15274,12 +15274,12 @@ Deployed revisions are revisions that are linked to started processes in the app
 </tr>
 </thead><tbody>
 <tr>
-<td><strong>app</strong></td>
+<td><strong>relationships.app</strong></td>
 <td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
 <td>A relationship to an app.</td>
 </tr>
 <tr>
-<td><strong>route</strong></td>
+<td><strong>relationships.route</strong></td>
 <td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
 <td>A relationship to a route.</td>
 </tr>
@@ -15296,7 +15296,7 @@ Deployed revisions are revisions that are linked to started processes in the app
 </tr>
 </thead><tbody>
 <tr>
-<td><strong>process</strong></td>
+<td><strong>relationships.process</strong></td>
 <td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
 <td>A relationship to a process. This relationship is specified by <code class="prettyprint">type</code> instead of <code class="prettyprint">guid</code>.</td>
 <td></td>
@@ -16350,12 +16350,12 @@ Deployed revisions are revisions that are linked to started processes in the app
 <td>Service binding type. Valid value is <code class="prettyprint">app</code>.</td>
 </tr>
 <tr>
-<td><strong>app</strong></td>
+<td><strong>relationships.app</strong></td>
 <td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
 <td>A relationship to an app.</td>
 </tr>
 <tr>
-<td><strong>service_instance</strong></td>
+<td><strong>relationships.service_instance</strong></td>
 <td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
 <td>A relationship to a service_instance.</td>
 </tr>
@@ -16990,7 +16990,7 @@ Deployed revisions are revisions that are linked to started processes in the app
 <td>A list of process types the sidecar applies to.</td>
 </tr>
 <tr>
-<td><strong>app</strong></td>
+<td><strong>relationships.app</strong></td>
 <td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
 <td>The app the sidecare is associated with.</td>
 </tr>
