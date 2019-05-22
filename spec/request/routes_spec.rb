@@ -118,6 +118,18 @@ RSpec.describe 'Routes Request' do
       end
     end
 
+    describe 'space_guids filter' do
+      it 'returns routes filtered by space_guid' do
+        get "/v3/routes?space_guids=#{other_space.guid}", nil, admin_header
+        expect(last_response.status).to eq(200)
+        expect({
+          resources: parsed_response['resources']
+        }).to match_json_response({
+          resources: [route_in_other_org_json]
+        })
+      end
+    end
+
     describe 'domain_guids filter' do
       it 'returns routes filtered by domain_guid' do
         get "/v3/routes?domain_guids=#{route_in_other_org.domain.guid}", nil, admin_header

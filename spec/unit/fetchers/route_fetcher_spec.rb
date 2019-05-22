@@ -63,6 +63,27 @@ module VCAP::CloudController
         end
       end
 
+      context 'when fetching routes by space_guids' do
+        context 'when there is a matching route' do
+          let(:routes_filter) { { space_guids: space1.guid } }
+
+          it 'only returns the matching route' do
+            results = RouteFetcher.fetch(message, [route2.guid, route3.guid]).all
+            expect(results.length).to eq(1)
+            expect(results[0].guid).to eq(route2.guid)
+          end
+        end
+
+        context 'when there is no matching route' do
+          let(:routes_filter) { { space_guids: '???' } }
+
+          it 'returns no routes' do
+            results = RouteFetcher.fetch(message, [route2.guid, route3.guid]).all
+            expect(results.length).to eq(0)
+          end
+        end
+      end
+
       context 'when fetching routes by organization_guids' do
         context 'when there is a matching route' do
           let(:routes_filter) { { organization_guids: space1.organization.guid } }

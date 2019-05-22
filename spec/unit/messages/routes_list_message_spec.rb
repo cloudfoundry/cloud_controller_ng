@@ -15,6 +15,12 @@ module VCAP::CloudController
         expect(message.hosts).to eq(['host1', 'host2'])
       end
 
+      it 'accepts a hosts param' do
+        message = RoutesListMessage.from_params({ 'space_guids' => 'guid1,guid2' })
+        expect(message).to be_valid
+        expect(message.space_guids).to eq(['guid1', 'guid2'])
+      end
+
       it 'accepts a paths param' do
         message = RoutesListMessage.from_params({ 'paths' => '/path1,/path2' })
         expect(message).to be_valid
