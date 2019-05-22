@@ -9,7 +9,7 @@ Example Droplet object
 
 Name | Type | Description
 ---- | ---- | -----------
-**state** | _string_ | State of the droplet. Valid states are `STAGED`, `COPYING`, `FAILED`, or `EXPIRED`.
+**state** | _string_ | State of the droplet. Valid states are `AWAITING_UPLOAD`, `PROCESSING_UPLOAD`, `STAGED`, `COPYING`, `FAILED`, or `EXPIRED`.
 **error** | _string_ | A string describing the last error during the droplet lifecycle.
 **lifecycle** | [_lifecycle object_](#the-lifecycle-object) | An object describing the lifecycle that was configured or discovered from the app. **lifecycle.data** will always be an empty hash for a droplet object.
 **guid** | _uuid_ | Unique identifier for the droplet.
