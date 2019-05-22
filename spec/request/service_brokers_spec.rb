@@ -316,6 +316,58 @@ RSpec.describe 'V3 service brokers' do
         end
       end
     end
+
+    describe 'registering a global service broker' do
+      before(:each) do
+        catalog = FakeServiceBrokerV2Client.new.catalog
+
+        stub_request(:get, 'http://example.org/broker-url/v2/catalog').
+          to_return(status: 200, body: catalog.to_json, headers: {})
+
+        post('/v3/service_brokers', {
+          name: 'broker name',
+          url: 'http://example.org/broker-url',
+          username: 'admin',
+          password: 'welcome',
+        }.to_json, admin_headers)
+      end
+
+      it 'returns 201 Created' do
+        expect(last_response).to have_status_code(201)
+      end
+
+      it 'creates a service broker entity' do
+        expect(VCAP::CloudController::ServiceBroker.count).to eq(1)
+
+        service_broker = VCAP::CloudController::ServiceBroker.last
+        expect(service_broker).to include(
+          'name' => 'broker name',
+          'broker_url' => 'http://example.org/broker-url',
+          'auth_username' => 'admin',
+          'space_guid' => nil,
+        )
+        expect(service_broker.auth_password).to eq('welcome') # password not exported in to_hash
+      end
+
+      it 'synchronizes services and plans' do
+        service_broker = VCAP::CloudController::ServiceBroker.last
+        service = VCAP::CloudController::Service.where(service_broker_id: service_broker.id).first
+        expect(service).to include(
+          'label' => 'service_name',
+        )
+        plan = VCAP::CloudController::ServicePlan.where(service_id: service.id).first
+        expect(plan).to include(
+          'name' => 'fake_plan_name',
+        )
+      end
+
+      it 'reports service events' do
+        events = VCAP::CloudController::Event.all
+        expect(events).to have(2).items
+        expect(events[0]).to include('type' => 'audit.service.create', 'actor_name' => 'broker name')
+        expect(events[1]).to include('type' => 'audit.service_plan.create', 'actor_name' => 'broker name')
+      end
+    end
   end
 
   context 'as a non-admin user who is a space developer' do
@@ -378,6 +430,19 @@ RSpec.describe 'V3 service brokers' do
         expect(parsed_body.fetch('resources').first.fetch('guid')).to eq(broker_with_space.guid)
       end
     end
+
+    describe 'registering a global service broker' do
+      it 'fails authorization' do
+        response = post('/v3/service_brokers', {
+          name: 'broker name',
+          url: 'http://example.org/broker-url',
+          username: 'admin',
+          password: 'welcome',
+        }.to_json, headers_for(user))
+
+        expect(response).to have_status_code(403)
+      end
+    end
   end
 
   context 'as a non-admin user who is an org/space auditor/manager/billing manager' do
@@ -429,6 +494,19 @@ RSpec.describe 'V3 service brokers' do
 
         parsed_body = JSON.parse(last_response.body)
         expect(parsed_body.fetch('resources').length).to eq(0)
+      end
+    end
+
+    describe 'registering a global service broker' do
+      it 'fails authorization' do
+        response = post('/v3/service_brokers', {
+          name: 'broker name',
+          url: 'http://example.org/broker-url',
+          username: 'admin',
+          password: 'welcome',
+        }.to_json, headers_for(user))
+
+        expect(response).to have_status_code(403)
       end
     end
   end

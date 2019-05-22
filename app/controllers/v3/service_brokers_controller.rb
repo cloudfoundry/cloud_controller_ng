@@ -1,6 +1,7 @@
 require 'messages/service_brokers_list_message'
 require 'presenters/v3/service_broker_presenter'
 require 'fetchers/service_broker_list_fetcher'
+require 'actions/v3/service_broker_create'
 
 class ServiceBrokersController < ApplicationController
   def index
@@ -31,6 +32,19 @@ class ServiceBrokersController < ApplicationController
     presenter = Presenters::V3::ServiceBrokerPresenter.new(service_broker)
 
     render status: :ok, json: presenter.to_json
+  end
+
+  def create
+    unauthorized! unless permission_queryer.can_write_service_broker?
+
+    service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository::WithBrokerActor.new
+    service_manager = VCAP::Services::ServiceBrokers::ServiceManager.new(service_event_repository)
+    service_broker_create = VCAP::CloudController::V3::ServiceBrokerCreate.new(service_event_repository, service_manager)
+
+    credentials = params[:body].permit(:name, :url, :username, :password)
+    service_broker_create.create(credentials)
+
+    render status: :created, json: {}
   end
 
   private
