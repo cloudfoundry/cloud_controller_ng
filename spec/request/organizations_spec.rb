@@ -410,6 +410,25 @@ module VCAP::CloudController
           it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
         end
 
+        describe 'when filtering by guid' do
+          let(:api_call) { lambda { |user_headers| get "/v3/organizations/#{org.guid}/domains?guids=#{shared_domain.guid}", nil, user_headers } }
+
+          let(:expected_codes_and_responses) do
+            h = Hash.new(
+              code: 200,
+              response_objects: [
+                shared_domain_json,
+              ]
+            )
+            h['no_role'] = {
+              code: 404,
+            }
+            h.freeze
+          end
+
+          it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+        end
+
         describe 'when filtering by organization_guid' do
           let(:api_call) { lambda { |user_headers| get "/v3/organizations/#{org.guid}/domains?organization_guids=#{org.guid}", nil, user_headers } }
 

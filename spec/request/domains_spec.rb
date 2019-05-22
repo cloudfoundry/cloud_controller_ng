@@ -305,6 +305,51 @@ RSpec.describe 'Domains Request' do
         end
       end
 
+      describe 'when filtering by guid' do
+        let(:shared_visible_orgs) { [{ guid: user_visible_org.guid }] }
+        let(:endpoint) { "/v3/domains?guids=#{visible_shared_private_domain.guid}" }
+        let(:api_call) { lambda { |user_headers| get endpoint, nil, user_headers } }
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(
+            code: 200,
+            response_objects: [
+              visible_shared_private_domain_json,
+            ]
+          )
+          # because the user is a manager in the shared org, they have access to see the domain
+          h['org_billing_manager'] = {
+            code: 200,
+            response_objects: []
+          }
+          h['no_role'] = {
+            code: 200,
+            response_objects: []
+          }
+          h.freeze
+        end
+
+        it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+
+        context 'pagination' do
+          let(:pagination_hsh) do
+            {
+              'total_results' => 1,
+              'total_pages' => 1,
+              'first' => { 'href' => "#{link_prefix}#{endpoint}&page=1&per_page=50" },
+              'last' => { 'href' => "#{link_prefix}#{endpoint}&page=1&per_page=50" },
+              'next' => nil,
+              'previous' => nil
+            }
+          end
+
+          it 'paginates the results' do
+            get endpoint, nil, admin_header
+            expect(pagination_hsh).to eq(parsed_response['pagination'])
+          end
+        end
+      end
+
       describe 'when filtering by owning organization guid' do
         let(:endpoint) { "/v3/domains?organization_guids=#{visible_shared_private_domain.owning_organization_guid}" }
         let(:api_call) { lambda { |user_headers| get endpoint, nil, user_headers } }

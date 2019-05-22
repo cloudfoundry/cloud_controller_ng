@@ -162,6 +162,34 @@ module VCAP::CloudController
         end
       end
 
+      context 'when fetching domains by guid' do
+        let(:message) {
+          DomainsListMessage.from_params({ guids: domain_guid_filter })
+        }
+
+        context 'when the matching domain is shared' do
+          let!(:org1) { Organization.make(guid: 'org1') }
+          let!(:shared_domain1) { SharedDomain.make(guid: 'guid-1') }
+          let!(:shared_domain2) { SharedDomain.make(guid: 'guid-2') }
+          let!(:domain_guid_filter) { shared_domain2.guid }
+
+          it 'only returns the matching domain' do
+            results = DomainFetcher.fetch(message, [org1.guid]).all
+            expect(results.length).to eq(1)
+            expect(results[0].guid).to eq('guid-2')
+          end
+        end
+
+        context 'when there is no visible domain with given guid' do
+          let!(:domain_guid_filter) { 'not-visible-domain.com' }
+
+          it 'returns no domains' do
+            results = DomainFetcher.fetch(message, []).all
+            expect(results.length).to eq(0)
+          end
+        end
+      end
+
       context 'when fetching domains by org_guids' do
         let(:message) {
           DomainsListMessage.from_params({ organization_guids: organization_guid_filter })
