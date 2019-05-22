@@ -1,7 +1,12 @@
 module VCAP::CloudController
   class UsersController < RestController::ModelController
     def self.dependencies
-      [:username_populating_collection_renderer, :username_populating_object_renderer, :user_event_repository]
+      [
+        :username_populating_collection_renderer,
+        :uaa_client,
+        :username_populating_object_renderer,
+        :user_event_repository
+      ]
     end
 
     define_attributes do
@@ -40,6 +45,7 @@ module VCAP::CloudController
     def inject_dependencies(dependencies)
       super
       @object_renderer = dependencies[:username_populating_object_renderer]
+      @uaa_client = dependencies.fetch(:uaa_client)
       @collection_renderer = dependencies[:username_populating_collection_renderer]
       @user_event_repository = dependencies.fetch(:user_event_repository)
     end
@@ -107,7 +113,7 @@ module VCAP::CloudController
     def remove_related(related_guid, name, user_guid, find_model=model)
       response = super(related_guid, name, user_guid, find_model)
       user = User.first(guid: user_guid)
-      user.username = '' unless user.username
+      user.username = @uaa_client.usernames_for_ids([user.guid])[user.guid] || ''
 
       if find_model == Space
         @user_event_repository.record_space_role_remove(
@@ -131,7 +137,7 @@ module VCAP::CloudController
     def add_space_role(user_guid, relationship, space_guid)
       response = add_related(user_guid, relationship, space_guid, User)
       user = User.first(guid: user_guid)
-      user.username = ''
+      user.username = @uaa_client.usernames_for_ids([user.guid])[user.guid] || ''
 
       role = if relationship.eql?(:audited_spaces)
                'auditor'
@@ -149,7 +155,7 @@ module VCAP::CloudController
     def add_organization_role(user_guid, relationship, org_guid)
       response = add_related(user_guid, relationship, org_guid, User)
       user = User.first(guid: user_guid)
-      user.username = ''
+      user.username = @uaa_client.usernames_for_ids([user.guid])[user.guid] || ''
 
       role = if relationship.eql?(:billing_managed_organizations)
                'billing_manager'

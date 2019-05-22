@@ -2,6 +2,12 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe VCAP::CloudController::UsersController do
+    let(:uaa_client) { instance_double(UaaClient) }
+
+    before do
+      allow(UaaClient).to receive(:new).and_return(uaa_client)
+    end
+
     describe 'Query Parameters' do
       it { expect(VCAP::CloudController::UsersController).to be_queryable_by(:space_guid) }
       it { expect(VCAP::CloudController::UsersController).to be_queryable_by(:organization_guid) }
@@ -63,7 +69,7 @@ module VCAP::CloudController
       include_context 'permissions'
       before do
         @obj_a = member_a
-        allow_any_instance_of(UaaClient).to receive(:usernames_for_ids).and_return({})
+        allow(uaa_client).to receive(:usernames_for_ids).and_return({})
       end
 
       context 'normal user' do
@@ -96,7 +102,7 @@ module VCAP::CloudController
       before { set_current_user(greg, admin: true) }
 
       before do
-        allow_any_instance_of(UaaClient).to receive(:usernames_for_ids).and_return({
+        allow(uaa_client).to receive(:usernames_for_ids).and_return({
           greg.guid => 'Greg',
           timothy.guid => 'Timothy'
         })
@@ -115,7 +121,7 @@ module VCAP::CloudController
 
       before do
         set_current_user(greg, admin: true)
-        allow_any_instance_of(UaaClient).to receive(:usernames_for_ids).and_return({
+        allow(uaa_client).to receive(:usernames_for_ids).and_return({
           greg.guid => 'Greg',
         })
       end
@@ -135,7 +141,7 @@ module VCAP::CloudController
 
       it 'allows the user' do
         get "/v2/users/#{user.guid}/organizations"
-        expect(last_response.status).to eq(200)
+        expect(last_response.status).to eq(200), last_response.body
       end
 
       it 'disallows a different user' do
@@ -148,10 +154,10 @@ module VCAP::CloudController
       let(:space) { Space.make }
       let(:org) { space.organization }
       let(:user) { User.make }
-      let(:other_user) { User.make }
+      let(:other_user) { User.make(username: 'other_user') }
 
       before do
-        allow_any_instance_of(UaaClient).to receive(:usernames_for_ids).and_return({ other_user.guid => other_user.username })
+        allow(uaa_client).to receive(:usernames_for_ids).and_return({ other_user.guid => other_user.username })
       end
 
       describe 'PUT /v2/users/:guid/audited_organizations/:org_guid' do
@@ -173,6 +179,7 @@ module VCAP::CloudController
 
             event = Event.find(type: event_type, actee: other_user.guid)
             expect(event).not_to be_nil
+            expect(event.actee_name).to eq('other_user')
           end
         end
 
@@ -210,6 +217,7 @@ module VCAP::CloudController
 
             event = Event.find(type: event_type, actee: other_user.guid)
             expect(event).not_to be_nil
+            expect(event.actee_name).to eq('other_user')
           end
         end
 
@@ -247,6 +255,7 @@ module VCAP::CloudController
 
             event = Event.find(type: event_type, actee: other_user.guid)
             expect(event).not_to be_nil
+            expect(event.actee_name).to eq('other_user')
           end
         end
 
@@ -310,6 +319,7 @@ module VCAP::CloudController
       before do
         set_current_user(user)
         org.add_auditor(user)
+        allow(uaa_client).to receive(:usernames_for_ids).and_return({ user.guid => user.username })
       end
 
       context 'when acting on behalf of the current user' do
@@ -346,6 +356,7 @@ module VCAP::CloudController
           before do
             org.add_manager(user)
             org.add_auditor(other_user)
+            allow(uaa_client).to receive(:usernames_for_ids).and_return({ other_user.guid => other_user.username })
           end
 
           it 'succeeds' do
@@ -367,12 +378,17 @@ module VCAP::CloudController
       let(:org) { space.organization }
       let(:user) { User.make }
       let(:event_type) { 'audit.user.space_auditor_remove' }
+      let(:other_user) { User.make }
 
       before do
         set_current_user(user)
         org.add_user(user)
         org.add_auditor(user)
         space.add_auditor(user)
+        allow(uaa_client).to receive(:usernames_for_ids).and_return({
+          user.guid => user.username,
+          other_user.guid => other_user.username
+        })
       end
 
       context 'when acting on behalf of the current user' do
@@ -389,8 +405,6 @@ module VCAP::CloudController
       end
 
       context 'when acting on another user' do
-        let(:other_user) { User.make }
-
         before do
           org.add_user(other_user)
           org.add_auditor(other_user)
@@ -406,8 +420,6 @@ module VCAP::CloudController
 
       context 'as a manager' do
         context 'when acting on another user' do
-          let(:other_user) { User.make }
-
           before do
             org.add_manager(user)
             space.add_manager(user)
@@ -440,6 +452,7 @@ module VCAP::CloudController
       before do
         org.add_user user
         org.add_billing_manager billing_manager
+        allow(uaa_client).to receive(:usernames_for_ids).and_return({})
         org.save
       end
 
@@ -509,21 +522,27 @@ module VCAP::CloudController
     describe 'DELETE /v2/users/:guid/managed_organizations/:org_guid' do
       let(:space) { Space.make }
       let(:org) { space.organization }
-      let(:org_manager) { User.make }
+      let(:org_manager) { User.make(username: 'org manager') }
       let(:event_type) { 'audit.user.organization_manager_remove' }
 
       before do
         org.add_user org_manager
         org.add_manager org_manager
+        allow(uaa_client).to receive(:usernames_for_ids).and_return({
+          org_manager.guid => org_manager.username
+        })
       end
 
       describe 'removing the last org manager' do
         context 'as an admin' do
-          let(:admin) { User.make }
+          let(:admin) { User.make(username: 'admin') }
 
           before do
             set_current_user admin
             set_current_user_as_admin
+            allow(uaa_client).to receive(:usernames_for_ids).and_return({
+              org_manager.guid => org_manager.username
+            })
           end
 
           it 'is allowed' do
@@ -535,6 +554,7 @@ module VCAP::CloudController
             delete "/v2/users/#{org_manager.guid}/managed_organizations/#{org.guid}"
             event = Event.find(type: event_type, actee: org_manager.guid)
             expect(event).not_to be_nil
+            expect(event.actee_name).to eq('org manager')
           end
         end
 
@@ -592,6 +612,7 @@ module VCAP::CloudController
       before do
         set_current_user(user)
         org.add_user(user)
+        allow(uaa_client).to receive(:usernames_for_ids).and_return({ user.guid => user.username })
       end
 
       context 'as an org user' do
@@ -679,6 +700,7 @@ module VCAP::CloudController
           before do
             org.add_user other_user
             set_current_user_as_admin
+            allow(uaa_client).to receive(:usernames_for_ids).and_return({ other_user.guid => other_user.username })
           end
 
           it 'succeeds' do
@@ -699,11 +721,12 @@ module VCAP::CloudController
       let(:space) { Space.make }
       let(:org) { space.organization }
       let(:user) { User.make }
-      let(:other_user) { User.make }
+      let(:other_user) { User.make(username: 'other_user') }
       let(:event_type) { 'audit.user.space_manager_remove' }
 
       before do
         set_current_user(user)
+        allow(uaa_client).to receive(:usernames_for_ids).and_return({ other_user.guid => other_user.username })
       end
 
       context 'as a manager' do
@@ -759,11 +782,15 @@ module VCAP::CloudController
       let(:org) { space.organization }
       let(:user) { User.make }
       let(:event_type) { 'audit.user.space_developer_remove' }
+      let(:other_user) { User.make(username: 'other user') }
 
       before do
         set_current_user(user)
         org.add_user(user)
         space.add_developer(user)
+        allow(uaa_client).to receive(:usernames_for_ids).and_return({
+          other_user.guid => other_user.username
+        })
       end
 
       context 'when acting on behalf of the current user' do
@@ -781,8 +808,6 @@ module VCAP::CloudController
       end
 
       context 'when acting on another user' do
-        let(:other_user) { User.make }
-
         before do
           org.add_user(other_user)
           space.add_developer(other_user)
@@ -797,8 +822,6 @@ module VCAP::CloudController
 
       context 'as a manager' do
         context 'when acting on another user' do
-          let(:other_user) { User.make }
-
           before do
             org.add_manager(user)
             space.add_manager(user)
@@ -815,19 +838,20 @@ module VCAP::CloudController
             delete "/v2/users/#{other_user.guid}/spaces/#{space.guid}"
             event = Event.find(type: event_type, actee: other_user.guid)
             expect(event).not_to be_nil
+            expect(event.actee_name).to eq(other_user.username)
           end
         end
       end
     end
 
     describe 'assigning space roles' do
-      let(:other_user) { User.make }
+      let(:other_user) { User.make(username: 'other_user') }
       let(:space) { Space.make }
       let(:org) { space.organization }
       let(:user) { User.make }
 
       before do
-        allow_any_instance_of(UaaClient).to receive(:usernames_for_ids).and_return({ other_user.guid => other_user.username })
+        allow(uaa_client).to receive(:usernames_for_ids).and_return({ other_user.guid => other_user.username })
       end
 
       describe 'PUT /v2/users/:guid/audited_spaces/:space_guid' do
@@ -845,6 +869,7 @@ module VCAP::CloudController
               'admin' => false,
               'active' => false,
               'default_space_guid' => nil,
+              'username' => 'other_user',
               'spaces_url' => "/v2/users/#{other_user.guid}/spaces",
               'organizations_url' => "/v2/users/#{other_user.guid}/organizations",
               'managed_organizations_url' => "/v2/users/#{other_user.guid}/managed_organizations",
@@ -886,6 +911,7 @@ module VCAP::CloudController
             put "/v2/users/#{other_user.guid}/audited_spaces/#{space.guid}"
             event = Event.find(type: event_type, actee: other_user.guid)
             expect(event).not_to be_nil
+            expect(event.actee_name).to eq('other_user')
           end
         end
       end
@@ -905,6 +931,7 @@ module VCAP::CloudController
               'admin' => false,
               'active' => false,
               'default_space_guid' => nil,
+              'username' => other_user.username,
               'spaces_url' => "/v2/users/#{other_user.guid}/spaces",
               'organizations_url' => "/v2/users/#{other_user.guid}/organizations",
               'managed_organizations_url' => "/v2/users/#{other_user.guid}/managed_organizations",
@@ -947,6 +974,7 @@ module VCAP::CloudController
             put "/v2/users/#{other_user.guid}/managed_spaces/#{space.guid}"
             event = Event.find(type: event_type, actee: other_user.guid)
             expect(event).not_to be_nil
+            expect(event.actee_name).to eq('other_user')
           end
         end
       end
@@ -966,6 +994,7 @@ module VCAP::CloudController
               'admin' => false,
               'active' => false,
               'default_space_guid' => nil,
+              'username'   => 'other_user',
               'spaces_url' => "/v2/users/#{other_user.guid}/spaces",
               'organizations_url' => "/v2/users/#{other_user.guid}/organizations",
               'managed_organizations_url' => "/v2/users/#{other_user.guid}/managed_organizations",
@@ -1008,6 +1037,7 @@ module VCAP::CloudController
             put "/v2/users/#{other_user.guid}/spaces/#{space.guid}"
             event = Event.find(type: event_type, actee: other_user.guid)
             expect(event).not_to be_nil
+            expect(event.actee_name).to eq('other_user')
           end
         end
       end

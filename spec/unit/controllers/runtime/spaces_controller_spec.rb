@@ -2576,6 +2576,7 @@ module VCAP::CloudController
             expect(event).not_to be_nil
             expect(event.space_guid).to eq(space.guid)
             expect(event.actor_name).to eq(SecurityContext.current_user_email)
+            expect(event.actee_name).to eq('larry_the_user')
             expect(event.organization_guid).to eq(space.organization.guid)
           end
         end

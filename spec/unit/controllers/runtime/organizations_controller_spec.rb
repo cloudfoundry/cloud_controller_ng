@@ -2118,6 +2118,7 @@ module VCAP::CloudController
 
           before do
             set_current_user(user)
+            allow(uaa_client).to receive(:usernames_for_ids).and_return({ other_user.guid => other_user.username })
           end
 
           context 'as an admin' do
@@ -2137,6 +2138,7 @@ module VCAP::CloudController
               event = Event.find(type: event_type, actee: other_user.guid)
               expect(event).to_not be_nil
               expect(event.organization_guid).to eq(org.guid)
+              expect(event.actee_name).to eq('joe_the_user')
             end
           end
 
