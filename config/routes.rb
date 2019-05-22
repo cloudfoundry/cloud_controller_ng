@@ -149,6 +149,7 @@ Rails.application.routes.draw do
   get '/routes', to: 'routes#index'
   post '/routes', to: 'routes#create'
   get '/routes/:guid', to: 'routes#show'
+  delete '/routes/:guid', to: 'routes#destroy'
 
   # service_bindings
   post '/service_bindings', to: 'service_bindings#create'

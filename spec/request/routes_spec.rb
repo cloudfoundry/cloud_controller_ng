@@ -1123,4 +1123,41 @@ RSpec.describe 'Routes Request' do
       end
     end
   end
+
+  describe 'DELETE /v3/routes/:guid' do
+    let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: space.organization) }
+    let(:route) { VCAP::CloudController::Route.make(space: space, domain: domain) }
+    let(:api_call) { lambda { |user_headers| delete "/v3/routes/#{route.guid}", nil, user_headers } }
+    let(:db_check) do
+      lambda do
+        expect(last_response.headers['Location']).to match(%r(http.+/v3/jobs/[a-fA-F0-9-]+))
+
+        execute_all_jobs(expected_successes: 1, expected_failures: 0)
+        get "/v3/routes/#{route.guid}", {}, admin_headers
+        expect(last_response.status).to eq(404)
+      end
+    end
+
+    context 'when the user is a member in the routes org' do
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 403)
+
+        h['org_billing_manager'] = { code: 404 }
+        h['no_role'] = { code: 404 }
+
+        h['admin'] = { code: 202 }
+        h['space_developer'] = { code: 202 }
+        h
+      end
+
+      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
+    end
+
+    describe 'when the user is not logged in' do
+      it 'returns 401 for Unauthenticated requests' do
+        delete "/v3/routes/#{route.guid}", nil, base_json_headers
+        expect(last_response.status).to eq(401)
+      end
+    end
+  end
 end

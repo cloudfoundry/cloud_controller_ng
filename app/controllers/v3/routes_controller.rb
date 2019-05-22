@@ -4,6 +4,7 @@ require 'messages/routes_list_message'
 require 'presenters/v3/route_presenter'
 require 'presenters/v3/paginated_list_presenter'
 require 'actions/route_create'
+require 'actions/route_delete'
 require 'fetchers/route_fetcher'
 
 class RoutesController < ApplicationController
@@ -50,6 +51,22 @@ class RoutesController < ApplicationController
     render status: :created, json: Presenters::V3::RoutePresenter.new(route)
   rescue RouteCreate::Error => e
     unprocessable!(e)
+  end
+
+  def destroy
+    message = RouteShowMessage.new({ guid: hashed_params['guid'] })
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    route = Route.find(guid: message.guid)
+    route_not_found! unless route && permission_queryer.can_read_route?(route.space.guid, route.organization.guid)
+    unauthorized! unless permission_queryer.can_write_to_space?(route.space.guid)
+
+    delete_action = RouteDeleteAction.new
+    deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(Route, route.guid, delete_action)
+    pollable_job = Jobs::Enqueuer.new(deletion_job, queue: 'cc-generic').enqueue_pollable
+
+    url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
+    head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job.guid}")
   end
 
   private
