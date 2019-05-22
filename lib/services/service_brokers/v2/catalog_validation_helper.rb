@@ -1,3 +1,5 @@
+require 'vcap/semver_validator'
+
 module VCAP::Services::ServiceBrokers::V2
   module CatalogValidationHelper
     def validate_description!(name, input, opts={})
@@ -72,7 +74,7 @@ module VCAP::Services::ServiceBrokers::V2
     def validate_semver!(name, input, opts={})
       validate_string!(name, input, opts)
 
-      unless Gem::Version.correct?(input)
+      unless VCAP::SemverValidator.valid?(input)
         errors.add("#{human_readable_attr_name(name)} must be a Semantic Version, but has value #{input.inspect}")
       end
     end

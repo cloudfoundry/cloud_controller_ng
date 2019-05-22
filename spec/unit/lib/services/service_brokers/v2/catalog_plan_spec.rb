@@ -184,7 +184,8 @@ module VCAP::Services::ServiceBrokers::V2
       end
 
       it 'validates that @maintenance_info object serializes to 2000 characters or fewer' do
-        plan_attrs['maintenance_info'] = { 'version' => '2' * 2000 }
+        very_long_semantic_version = '2' * 1000 + '.' + '1' * 499 + '.' + '3' * 499
+        plan_attrs['maintenance_info'] = { 'version' => very_long_semantic_version }
 
         expect(plan).to_not be_valid
         expect(plan.errors.messages.first).to include 'Maintenance info must serialize to 2000 characters or fewer in JSON, but serializes to 2014 characters'
