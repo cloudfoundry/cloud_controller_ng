@@ -62,7 +62,7 @@ We do not recommend using internal API endpoints for anything other than their i
 
 **Intended Consumer:** Diego running task or process
 
-**Auth Mechanism:** None
+**Auth Mechanism:** None (redirects to MTLS endpoint if CC is configured for MTLS)
 
 ### GET /internal/v4/droplets/:guid/:droplet_checksum/download
 **Description:** Permalink for downloading a droplet.
@@ -81,7 +81,7 @@ We do not recommend using internal API endpoints for anything other than their i
 ### GET /internal/v4/log_access/:app_guid
 **Description:** Check if a user has access to the log stream for an app
 
-**Intended Consumer:** Loggregator
+**Intended Consumer:** Loggregator (`scheduler` and `syslog-binding-cache`)
 
 **Auth Mechanism:** OAuth
 
@@ -102,7 +102,7 @@ We do not recommend using internal API endpoints for anything other than their i
 ### POST /internal/v4/tasks/:task_guid/completed
 **Description:** Marks task as complete
 
-**Intended Consumer:** Diego running task
+**Intended Consumer:** Application task running on Diego cell
 
 **Auth Mechanism:** MTLS
 
