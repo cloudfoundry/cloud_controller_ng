@@ -50,7 +50,7 @@ module VCAP::CloudController
       {
         memory: app_mem,
         apps: app_num,
-        services: default_space.service_instances.count
+        services: default_space.service_instances_dataset.count
       }
     end
 

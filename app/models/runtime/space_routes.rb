@@ -4,6 +4,6 @@ class SpaceRoutes
   end
 
   def count
-    @space.routes.count
+    @space.routes_dataset.count
   end
 end

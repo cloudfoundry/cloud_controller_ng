@@ -145,7 +145,7 @@ module VCAP::Services::ServiceBrokers
         plan_to_deactivate.active = false
         plan_to_deactivate.save
 
-        deactivated_plans_warning.add(plan_to_deactivate) if plan_to_deactivate.service_instances.count >= 1
+        deactivated_plans_warning.add(plan_to_deactivate) if plan_to_deactivate.service_instances_dataset.count >= 1
       end
 
       @warnings << deactivated_plans_warning.message if deactivated_plans_warning.message
@@ -155,7 +155,7 @@ module VCAP::Services::ServiceBrokers
       plan_ids_in_broker_catalog = catalog.plans.map(&:broker_provided_id)
       plans_in_db_not_in_catalog = catalog.service_broker.service_plans.reject { |p| plan_ids_in_broker_catalog.include?(p.broker_provided_id) }
       plans_in_db_not_in_catalog.each do |plan_to_deactivate|
-        if plan_to_deactivate.service_instances.count < 1
+        if plan_to_deactivate.service_instances_dataset.count < 1
           plan_to_deactivate.destroy
           @services_event_repository.record_service_plan_event(:delete, plan_to_deactivate)
         end
@@ -165,7 +165,7 @@ module VCAP::Services::ServiceBrokers
     def delete_services(catalog)
       services_in_db_not_in_catalog = catalog.service_broker.services_dataset.where(Sequel.lit('unique_id NOT in ?', catalog.services.map(&:broker_provided_id)))
       services_in_db_not_in_catalog.each do |service|
-        if service.service_plans.count < 1
+        if service.service_plans_dataset.count < 1
           service.destroy
           @services_event_repository.record_service_event(:delete, service)
         end

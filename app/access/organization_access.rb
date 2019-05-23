@@ -91,27 +91,27 @@ module VCAP::CloudController
     end
 
     def validate_remove_billing_manager_by_guid!(org)
-      return if org.billing_managers.count > 1
+      return if org.billing_managers_dataset.count > 1
 
       raise CloudController::Errors::ApiError.new_from_details('LastBillingManagerInOrg')
     end
 
     def validate_remove_manager_by_guid!(org)
-      return if org.managers.count > 1
+      return if org.managers_dataset.count > 1
 
       raise CloudController::Errors::ApiError.new_from_details('LastManagerInOrg')
     end
 
     def validate_remove_user_by_guid!(org, user_guid)
-      if org.managers.count == 1 && org.managers[0].guid == user_guid
+      if org.managers_dataset.count == 1 && org.managers.first.guid == user_guid
         raise CloudController::Errors::ApiError.new_from_details('LastManagerInOrg')
       end
 
-      if org.billing_managers.count == 1 && org.billing_managers[0].guid == user_guid
+      if org.billing_managers_dataset.count == 1 && org.billing_managers.first.guid == user_guid
         raise CloudController::Errors::ApiError.new_from_details('LastBillingManagerInOrg')
       end
 
-      if org.users.count == 1 && org.users[0].guid == user_guid && org.managers.count <= 1 && org.billing_managers.count <= 1
+      if org.users_dataset.count == 1 && org.users.first.guid == user_guid && org.managers_dataset.count <= 1 && org.billing_managers_dataset.count <= 1
         raise CloudController::Errors::ApiError.new_from_details('LastUserInOrg')
       end
     end
