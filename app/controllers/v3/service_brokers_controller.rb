@@ -1,7 +1,7 @@
 require 'messages/service_brokers_list_message'
 require 'presenters/v3/service_broker_presenter'
 require 'fetchers/service_broker_list_fetcher'
-require 'actions/v3/service_broker_create'
+require 'actions/service_broker_create'
 
 class ServiceBrokersController < ApplicationController
   def index
@@ -42,8 +42,9 @@ class ServiceBrokersController < ApplicationController
     service_broker_create = VCAP::CloudController::V3::ServiceBrokerCreate.new(service_event_repository, service_manager)
 
     credentials = params[:body].permit(:name, :url, :username, :password)
-    service_broker_create.create(credentials)
+    result = service_broker_create.create(credentials)
 
+    add_warning_headers(result[:warnings])
     render status: :created, json: {}
   end
 

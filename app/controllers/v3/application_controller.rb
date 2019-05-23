@@ -109,6 +109,15 @@ class ApplicationController < ActionController::Base
     )
   end
 
+  def add_warning_headers(warnings)
+    return if warnings.nil?
+    raise ArgumentError.new('warnings should be an array') unless warnings.is_a?(Array)
+
+    warnings.each do |warning|
+      response.add_header('X-Cf-Warnings', CGI.escape(warning))
+    end
+  end
+
   private
 
   ###

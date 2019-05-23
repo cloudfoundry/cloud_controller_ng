@@ -71,6 +71,21 @@ RSpec.describe ApplicationController, type: :controller do
     def yaml_rejection
       render status: 200, body: params[:body]
     end
+
+    def warnings_is_nil
+      add_warning_headers(nil)
+      render status: 200, json: {}
+    end
+
+    def multiple_warnings
+      add_warning_headers(['warning,a', 'wa,rning b', '!@#$%^&*(),:|{}+=-<>'])
+      render status: 200, json: {}
+    end
+
+    def warnings_incorrect_type
+      add_warning_headers('value of incorrect type')
+      render status: 200, json: {}
+    end
   end
 
   let(:perm_client) { instance_double(VCAP::CloudController::Perm::Client) }
@@ -291,6 +306,36 @@ RSpec.describe ApplicationController, type: :controller do
       get :not_found
       expect(response.status).to eq(404)
       expect(response).to have_error_message('Unknown request')
+    end
+  end
+
+  describe '#add_warning_headers' do
+    let!(:user) { set_current_user(VCAP::CloudController::User.make) }
+
+    it 'does nothing when warnings is nil' do
+      routes.draw { get 'warnings_is_nil' => 'anonymous#warnings_is_nil' }
+      get :warnings_is_nil
+      expect(response.status).to eq(200)
+      expect(response.headers['X-Cf-Warnings']).to be(nil)
+    end
+
+    it 'throws argument error when warnings is not an array' do
+      routes.draw { get 'warnings_incorrect_type' => 'anonymous#warnings_incorrect_type' }
+      expect do
+        get :warnings_incorrect_type
+      end.to raise_error(ArgumentError)
+    end
+
+    it 'does nothing when warnings is nil' do
+      routes.draw { get 'multiple_warnings' => 'anonymous#multiple_warnings' }
+      get :multiple_warnings
+      expect(response.status).to eq(200)
+      warnings = response.headers['X-Cf-Warnings'].split(',').map { |w| CGI.unescape(w) }
+      expect(warnings).to eq([
+        'warning,a',
+        'wa,rning b',
+        '!@#$%^&*(),:|{}+=-<>',
+      ])
     end
   end
 end
