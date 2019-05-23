@@ -3,17 +3,32 @@ require 'actions/route_delete'
 
 module VCAP::CloudController
   RSpec.describe RouteDeleteAction do
-    subject(:route_delete) { RouteDeleteAction.new }
-    let(:space) { VCAP::CloudController::Space.make }
+    let(:user_audit_info) { instance_double(UserAuditInfo) }
+    let(:route_event_repo) { instance_double(Repositories::RouteEventRepository) }
+    let(:space) { Space.make }
+
+    subject(:route_delete) { RouteDeleteAction.new(user_audit_info) }
 
     describe '#delete' do
       let!(:route) { Route.make }
+
+      before do
+        allow(Repositories::RouteEventRepository).to receive(:new).and_return(route_event_repo)
+        allow(route_event_repo).to receive(:record_route_delete_request)
+      end
 
       it 'deletes the route record' do
         expect {
           route_delete.delete([route])
         }.to change { Route.count }.by(-1)
         expect { route.refresh }.to raise_error Sequel::Error, 'Record not found'
+      end
+
+      describe 'audit events' do
+        it 'records an audit event' do
+          route_delete.delete([route])
+          expect(route_event_repo).to have_received(:record_route_delete_request).with(route, user_audit_info, true)
+        end
       end
 
       describe 'recursive deletion' do

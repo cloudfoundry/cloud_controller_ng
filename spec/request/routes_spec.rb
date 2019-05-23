@@ -1150,6 +1150,18 @@ RSpec.describe 'Routes Request' do
         h
       end
 
+      let(:expected_event_hash) do
+        {
+          type: 'audit.route.delete-request',
+          actee: parsed_response['guid'],
+          actee_type: 'route',
+          actee_name: 'some-host',
+          metadata: { request: params }.to_json,
+          space_guid: space.guid,
+          organization_guid: org.guid,
+        }
+      end
+
       it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
     end
 
