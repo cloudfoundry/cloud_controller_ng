@@ -208,6 +208,10 @@ class VCAP::CloudController::Permissions::Queryer
       can_read_secrets_in_space?(service_broker.space_guid, service_broker.space.organization_guid)
   end
 
+  def can_write_service_broker?
+    can_write_globally?
+  end
+
   def readable_route_mapping_guids
     science 'readable_route_mapping_guids' do |e|
       e.use { db_permissions.readable_route_mapping_guids }
