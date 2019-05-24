@@ -3,20 +3,16 @@ require 'uri'
 require 'cloud_controller/diego/staging_request'
 require 'cloud_controller/opi/helpers'
 require 'cloud_controller/opi/env_hash'
+require 'cloud_controller/opi/base_client'
 
 module OPI
-  class StagerClient
-    def initialize(opi_url, config)
-      @client = HTTPClient.new(base_url: URI(opi_url))
-      @config = config
-    end
-
+  class StagerClient < BaseClient
     def stage(staging_guid, staging_details)
       logger.info('stage.request', staging_guid: staging_guid)
       staging_request = to_request(staging_guid, staging_details)
 
       payload = MultiJson.dump(staging_request)
-      response = @client.post("/stage/#{staging_guid}", body: payload)
+      response = client.post("/stage/#{staging_guid}", body: payload)
       if response.status_code != 202
         response_json = OPI.recursive_ostruct(JSON.parse(response.body))
         logger.info('stage.response', staging_guid: staging_guid, error: response_json.message)
@@ -30,10 +26,10 @@ module OPI
 
     def to_request(staging_guid, staging_details)
       lifecycle_type = staging_details.lifecycle.type
-      action_builder = VCAP::CloudController::Diego::LifecycleProtocol.protocol_for_type(lifecycle_type).staging_action_builder(@config, staging_details)
+      action_builder = VCAP::CloudController::Diego::LifecycleProtocol.protocol_for_type(lifecycle_type).staging_action_builder(config, staging_details)
       lifecycle_data = action_builder.lifecycle_data
 
-      cc_uploader_url = @config.get(:opi, :cc_uploader_url)
+      cc_uploader_url = config.get(:opi, :cc_uploader_url)
       droplet_upload_uri = "#{cc_uploader_url}/v1/droplet/#{staging_guid}?cc-droplet-upload-uri=#{lifecycle_data[:droplet_upload_uri]}"
 
       {
@@ -49,11 +45,11 @@ module OPI
     end
 
     def staging_completion_callback(staging_details)
-      port   = @config.get(:tls_port)
+      port   = config.get(:tls_port)
       scheme = 'https'
 
-      auth      = "#{@config.get(:internal_api, :auth_user)}:#{CGI.escape(@config.get(:internal_api, :auth_password))}"
-      host_port = "#{@config.get(:internal_service_hostname)}:#{port}"
+      auth      = "#{config.get(:internal_api, :auth_user)}:#{CGI.escape(config.get(:internal_api, :auth_password))}"
+      host_port = "#{config.get(:internal_service_hostname)}:#{port}"
       path      = "/internal/v3/staging/#{staging_details.staging_guid}/build_completed?start=#{staging_details.start_after_staging}"
       "#{scheme}://#{auth}@#{host_port}#{path}"
     end

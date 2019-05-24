@@ -623,7 +623,7 @@ RSpec.describe CloudController::DependencyLocator do
       end
 
       it 'uses the configured opi url' do
-        expect(::OPI::Client).to receive(:new).with('http://custom-opi-url.service.cf.internal')
+        expect(::OPI::Client).to receive(:new).with(locator.config)
         locator.bbs_apps_client
       end
     end
@@ -661,7 +661,7 @@ RSpec.describe CloudController::DependencyLocator do
       end
 
       it 'uses the configured opi url' do
-        expect(::OPI::InstancesClient).to receive(:new).with('http://custom-opi-url.service.cf.internal')
+        expect(::OPI::InstancesClient).to receive(:new).with(locator.config)
         locator.bbs_instances_client
       end
     end

@@ -5,23 +5,20 @@ require_relative '../../vcap/vars_builder'
 require 'json'
 require 'ostruct'
 require 'cloud_controller/opi/helpers'
+require 'cloud_controller/opi/base_client'
 
 module OPI
-  class Client
-    def initialize(opi_url)
-      @client = HTTPClient.new(base_url: URI(opi_url))
-    end
-
+  class Client < BaseClient
     def desire_app(process)
       process_guid = process_guid(process)
       path = "/apps/#{process_guid}"
-      @client.put(path, body: desire_body(process))
+      client.put(path, body: desire_body(process))
     end
 
     def fetch_scheduling_infos
       path = '/apps'
 
-      resp = @client.get(path)
+      resp = client.get(path)
       resp_json = JSON.parse(resp.body)
       resp_json['desired_lrp_scheduling_infos'].map { |h| OPI.recursive_ostruct(h) }
     end
@@ -29,7 +26,7 @@ module OPI
     def update_app(process, _)
       path = "/apps/#{process.guid}-#{process.version}"
 
-      response = @client.post(path, body: update_body(process))
+      response = client.post(path, body: update_body(process))
       if response.status_code != 200
         response_json = OPI.recursive_ostruct(JSON.parse(response.body))
         raise CloudController::Errors::ApiError.new_from_details('RunnerError', response_json.error.message)
@@ -40,7 +37,7 @@ module OPI
     def get_app(process)
       path = "/apps/#{process.guid}/#{process.version}"
 
-      response = @client.get(path)
+      response = client.get(path)
       if response.status_code == 404
         return nil
       end
@@ -53,14 +50,14 @@ module OPI
       guid = VCAP::CloudController::Diego::ProcessGuid.cc_process_guid(versioned_guid)
       version = VCAP::CloudController::Diego::ProcessGuid.cc_process_version(versioned_guid)
       path = "/apps/#{guid}/#{version}/stop"
-      @client.put(path)
+      client.put(path)
     end
 
     def stop_index(versioned_guid, index)
       guid = VCAP::CloudController::Diego::ProcessGuid.cc_process_guid(versioned_guid)
       version = VCAP::CloudController::Diego::ProcessGuid.cc_process_version(versioned_guid)
       path = "/apps/#{guid}/#{version}/stop/#{index}"
-      @client.put(path)
+      client.put(path)
     end
 
     def bump_freshness; end

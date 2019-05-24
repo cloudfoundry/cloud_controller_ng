@@ -8,7 +8,14 @@ require 'cloud_controller/opi/instances_client'
 skip_opi_tests = ENV['CF_RUN_OPI_SPECS'] != 'true'
 RSpec.describe(OPI::InstancesClient, opi: skip_opi_tests) do
   let(:opi_url) { 'http://localhost:8085' }
-  subject(:client) { described_class.new(opi_url) }
+  let(:config) do
+    TestConfig.override(
+      opi: {
+        url: opi_url
+      },
+    )
+  end
+  subject(:client) { described_class.new(config) }
   let(:process) { double(guid: 'jeff', version: '0.1.0') }
 
   before :all do

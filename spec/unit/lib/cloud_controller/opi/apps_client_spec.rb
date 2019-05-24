@@ -2,9 +2,17 @@ require 'spec_helper'
 require 'cloud_controller/opi/apps_client'
 
 RSpec.describe(OPI::Client) do
+  let(:opi_url) { 'http://opi.service.cf.internal:8077' }
+  let(:config) do
+    TestConfig.override(
+      opi: {
+        url: opi_url
+      },
+    )
+  end
+
   describe 'can desire an app' do
-    subject(:client) { described_class.new(opi_url) }
-    let(:opi_url) { 'http://opi.service.cf.internal:8077' }
+    subject(:client) { described_class.new(config) }
     let(:img_url) { 'http://example.org/image1234' }
     let(:droplet) { VCAP::CloudController::DropletModel.make(
       docker_receipt_image: 'http://example.org/image1234',
@@ -233,8 +241,6 @@ RSpec.describe(OPI::Client) do
   end
 
   describe 'can fetch scheduling infos' do
-    let(:opi_url) { 'http://opi.service.cf.internal:8077' }
-
     let(:expected_body) { { desired_lrp_scheduling_infos: [
       { desired_lrp_key: { process_guid: 'guid_1234', annotation: '1111111111111.1' } },
       { desired_lrp_key: { process_guid: 'guid_5678', annotation: '222222222222222.2' } }
@@ -242,7 +248,7 @@ RSpec.describe(OPI::Client) do
     }
 
     subject(:client) {
-      described_class.new(opi_url)
+      described_class.new(config)
     }
 
     context 'when request executes successfully' do
@@ -265,7 +271,7 @@ RSpec.describe(OPI::Client) do
 
   describe '#update_app' do
     let(:opi_url) { 'http://opi.service.cf.internal:8077' }
-    subject(:client) { described_class.new(opi_url) }
+    subject(:client) { described_class.new(config) }
 
     let(:existing_lrp) { double }
     let(:process) {
@@ -382,8 +388,7 @@ RSpec.describe(OPI::Client) do
   end
 
   describe '#get_app' do
-    let(:opi_url) { 'http://opi.service.cf.internal:8077' }
-    subject(:client) { described_class.new(opi_url) }
+    subject(:client) { described_class.new(config) }
     let(:process) { double(guid: 'guid-1234', version: 'version-1234') }
 
     context 'when the app exists' do
@@ -430,10 +435,9 @@ RSpec.describe(OPI::Client) do
   end
 
   context 'stop an app' do
-    let(:opi_url) { 'http://opi.service.cf.internal:8077' }
     let(:guid) { 'd082417c-c5aa-488c-aaf8-845a580eb11f' }
     let(:version) { 'e2fe80f5-fd0c-4699-a4d1-ae06bc48a923' }
-    subject(:client) { described_class.new(opi_url) }
+    subject(:client) { described_class.new(config) }
 
     before do
       stub_request(:put, "#{opi_url}/apps/#{guid}/#{version}/stop").
@@ -452,11 +456,10 @@ RSpec.describe(OPI::Client) do
   end
 
   context 'stop an app instance' do
-    let(:opi_url) { 'http://opi.service.cf.internal:8077' }
     let(:guid) { 'd082417c-c5aa-488c-aaf8-845a580eb11f' }
     let(:version) { 'e2fe80f5-fd0c-4699-a4d1-ae06bc48a923' }
     let(:index) { 1 }
-    subject(:client) { described_class.new(opi_url) }
+    subject(:client) { described_class.new(config) }
 
     before do
       stub_request(:put, "#{opi_url}/apps/#{guid}/#{version}/stop/#{index}").
