@@ -2,8 +2,16 @@ require 'spec_helper'
 require 'cloud_controller/opi/instances_client'
 
 RSpec.describe(OPI::InstancesClient) do
-  subject(:client) { described_class.new(opi_url) }
+  subject(:client) { described_class.new(config) }
   let(:opi_url) { 'http://opi.service.cf.internal:8077' }
+  let(:config) do
+    TestConfig.override(
+      opi: {
+        url: opi_url
+      },
+    )
+  end
+
   let(:process) { double(guid: 'my-process-guid', version: 'my-version-guid') }
 
   context 'when request executes successfully' do

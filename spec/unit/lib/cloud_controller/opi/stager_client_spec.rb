@@ -2,7 +2,20 @@ require 'spec_helper'
 require 'cloud_controller/opi/stager_client'
 
 RSpec.describe(OPI::StagerClient) do
-  let(:config) { TestConfig.config_instance }
+  let(:config) do
+    TestConfig.override(
+      opi: {
+        url: eirini_url,
+        cc_uploader_url: 'http://cc-uploader.service.cf.internal:9091'
+      },
+      tls_port: 8182,
+      internal_api: {
+        auth_user: 'internal_user',
+        auth_password: 'internal_password'
+      },
+      internal_service_hostname: 'api.internal.cf'
+    )
+  end
   let(:eirini_url) { 'http://eirini.loves.heimdall:777' }
 
   let(:staging_details) { stub_staging_details }
@@ -28,7 +41,7 @@ RSpec.describe(OPI::StagerClient) do
     )
   end
 
-  subject(:stager_client) { described_class.new(eirini_url, config) }
+  subject(:stager_client) { described_class.new(config) }
 
   context 'when staging an app' do
     before do

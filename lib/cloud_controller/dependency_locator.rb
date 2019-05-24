@@ -376,7 +376,7 @@ module CloudController
     end
 
     def build_opi_stager_client
-      ::OPI::StagerClient.new(config.get(:opi, :url), config)
+      ::OPI::StagerClient.new(config)
     end
 
     def build_bbs_stager_client
@@ -402,7 +402,7 @@ module CloudController
     end
 
     def build_opi_apps_client
-      ::OPI::Client.new(config.get(:opi, :url))
+      ::OPI::Client.new(config)
     end
 
     def build_bbs_apps_client
@@ -422,7 +422,7 @@ module CloudController
     end
 
     def build_opi_instances_client
-      ::OPI::InstancesClient.new(config.get(:opi, :url))
+      ::OPI::InstancesClient.new(config)
     end
 
     def build_bbs_instances_client

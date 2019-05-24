@@ -9,7 +9,14 @@ require 'models/runtime/droplet_model'
 skip_opi_tests = ENV['CF_RUN_OPI_SPECS'] != 'true'
 RSpec.describe(OPI::Client, opi: skip_opi_tests) do
   let(:opi_url) { 'http://localhost:8085' }
-  subject(:client) { described_class.new(opi_url) }
+  let(:config) do
+    TestConfig.override(
+      opi: {
+        url: opi_url
+      }
+    )
+  end
+  subject(:client) { described_class.new(config) }
   let(:app) {
     double(
       guid: 'guid_1234',

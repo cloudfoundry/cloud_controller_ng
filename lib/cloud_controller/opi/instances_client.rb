@@ -2,9 +2,10 @@ require 'httpclient'
 require 'json'
 require 'cloud_controller/errors/instances_unavailable'
 require 'cloud_controller/errors/no_running_instances'
+require 'cloud_controller/opi/base_client'
 
 module OPI
-  class InstancesClient
+  class InstancesClient < BaseClient
     ActualLRPKey = Struct.new(:index, :process_guid)
     ActualLRPNetInfo = Struct.new(:address, :ports)
     PortMapping = Struct.new(:container_port, :host_port)
@@ -36,15 +37,11 @@ module OPI
       end
     end
 
-    def initialize(opi_url)
-      @client = HTTPClient.new(base_url: URI(opi_url))
-    end
-
     def lrp_instances(process)
       path = "/apps/#{process.guid}/#{process.version}/instances"
       begin
         retries ||= 0
-        resp = @client.get(path)
+        resp = client.get(path)
         resp_json = JSON.parse(resp.body)
         handle_error(resp_json)
       rescue CloudController::Errors::NoRunningInstances => e
