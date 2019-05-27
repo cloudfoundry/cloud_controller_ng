@@ -123,6 +123,7 @@ module VCAP::CloudController
             'service_plan'    => {
               'guid'    => svc.service_plan.guid,
               'name'    => svc.service_plan.name,
+              'maintenance_info' => {},
               'service' => {
                 'guid'     => svc.service_plan.service.guid,
                 'label'    => svc.service_plan.service.label,

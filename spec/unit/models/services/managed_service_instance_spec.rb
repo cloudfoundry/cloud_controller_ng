@@ -279,11 +279,13 @@ module VCAP::CloudController
     describe '#as_summary_json' do
       let(:service_broker) { ServiceBroker.make(name: 'some_broker') }
       let(:service) { Service.make(label: 'YourSQL', guid: '9876XZ', service_broker: service_broker) }
-      let(:service_plan) { ServicePlan.make(name: 'Gold Plan', guid: '12763abc', service: service) }
+      let(:maintenance_info) { nil }
+      let(:service_plan) { ServicePlan.make(name: 'Gold Plan', guid: '12763abc', service: service, maintenance_info: maintenance_info) }
+      let(:service_instance_maintenance_info) { nil }
       let(:developer) { make_developer_for_space(service_instance.space) }
       let(:manager) { make_manager_for_space(service_instance.space) }
 
-      subject(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan) }
+      subject(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan, maintenance_info: service_instance_maintenance_info) }
 
       it 'returns detailed summary' do
         last_operation = ServiceInstanceOperation.make(
@@ -301,9 +303,11 @@ module VCAP::CloudController
           'bound_app_count' => 0,
           'dashboard_url' => 'http://dashboard.example.com',
           'service_broker_name' => service_broker.name,
+          'maintenance_info' => {},
           'service_plan' => {
             'guid' => '12763abc',
             'name' => 'Gold Plan',
+            'maintenance_info' => {},
             'service' => {
               'guid' => '9876XZ',
               'label' => 'YourSQL',
@@ -320,6 +324,17 @@ module VCAP::CloudController
             'type' => 'create',
           }
         )
+      end
+
+      context 'when maintenence info is present' do
+        let(:maintenance_info) { { 'version': '2.0.0' } }
+        let(:service_instance_maintenance_info) { { 'version': '1.0.0' } }
+
+        it 'returns the maintenanca_info on service instance and plan' do
+          service_instance_summary = service_instance.as_summary_json
+          expect(service_instance_summary['maintenance_info']).to eq({ 'version' => '1.0.0' })
+          expect(service_instance_summary['service_plan']['maintenance_info']).to eq({ 'version' => '2.0.0' })
+        end
       end
 
       context 'when the last_operation does not exist' do
