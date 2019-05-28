@@ -27,6 +27,7 @@ module VCAP::CloudController
           host: route.fqdn,
           path: '',
           internal: false,
+          vip: nil
         )
       end
 
@@ -40,6 +41,7 @@ module VCAP::CloudController
             host: route.fqdn,
             path: '/some/path',
             internal: false,
+            vip: route.vip
           )
         end
       end
@@ -54,6 +56,7 @@ module VCAP::CloudController
             host: route.fqdn,
             path: '',
             internal: true,
+            vip: '127.128.0.1'
           )
         end
       end
@@ -68,6 +71,7 @@ module VCAP::CloudController
             host: route.fqdn,
             path: '',
             internal: false,
+            vip: route.vip
           )
         end
       end
