@@ -160,6 +160,8 @@ module VCAP::CloudController
       # Set an upper limit just to be safe.
       @thin_server.timeout = @config.get(:request_timeout_in_seconds)
       @thin_server.threaded = true
+      @thin_server.threadpool_size = @config.get(:threadpool_size)
+      logger.info("Starting thin server with #{EventMachine.threadpool_size} threads")
       @thin_server.start!
     end
 
