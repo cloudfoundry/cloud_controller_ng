@@ -409,3 +409,5 @@ locket:
   ca_file: 'spec/fixtures/certs/bbs_ca.crt'
   cert_file: 'spec/fixtures/certs/bbs_client.crt'
   key_file: 'spec/fixtures/certs/bbs_client.key'
+
+threadpool_size: 20

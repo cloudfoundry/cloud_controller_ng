@@ -278,3 +278,5 @@ bits_service:
   private_endpoint: http://bits-service.service.cf.internal
   username: admin
   password: admin
+
+threadpool_size: 20

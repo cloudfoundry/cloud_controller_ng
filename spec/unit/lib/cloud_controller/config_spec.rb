@@ -148,6 +148,10 @@ module VCAP::CloudController
               expect(config[:request_timeout_in_seconds]).to eq(600)
             end
 
+            it 'preserves the threadpool_size value from the file' do
+              expect(config[:threadpool_size]).to eq(20)
+            end
+
             it 'preserves the value of the staging auth user/password' do
               expect(config[:staging][:auth][:user]).to eq('bob')
               expect(config[:staging][:auth][:password]).to eq('laura')
