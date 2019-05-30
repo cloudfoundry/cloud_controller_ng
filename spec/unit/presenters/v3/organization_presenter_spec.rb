@@ -49,6 +49,7 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:created_at]).to eq(organization.created_at)
         expect(result[:updated_at]).to eq(organization.updated_at)
         expect(result[:name]).to eq(organization.name)
+        expect(result[:status]).to eq(VCAP::CloudController::Organization::ACTIVE)
         expect(result[:links][:self][:href]).to match(%r{/v3/organizations/#{organization.guid}$})
         expect(result[:links][:domains][:href]).to match(%r{/v3/organizations/#{organization.guid}/domains$})
         expect(result[:links][:default_domain][:href]).to match(%r{/v3/organizations/#{organization.guid}/domains/default$})

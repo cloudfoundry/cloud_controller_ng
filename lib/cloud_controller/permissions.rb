@@ -88,7 +88,10 @@ class VCAP::CloudController::Permissions
   end
 
   def can_write_to_org?(org_guid)
-    can_write_globally? || membership.has_any_roles?(ROLES_FOR_ORG_WRITING, nil, org_guid)
+    return true if can_write_globally?
+    return false unless membership.has_any_roles?(ROLES_FOR_ORG_WRITING, nil, org_guid)
+
+    VCAP::CloudController::Organization.find(guid: org_guid)&.active?
   end
 
   def readable_space_guids
@@ -109,11 +112,17 @@ class VCAP::CloudController::Permissions
   end
 
   def can_write_to_space?(space_guid)
-    can_write_globally? || membership.has_any_roles?(ROLES_FOR_SPACE_WRITING, space_guid)
+    return true if can_write_globally?
+    return false unless membership.has_any_roles?(ROLES_FOR_SPACE_WRITING, space_guid)
+
+    VCAP::CloudController::Space.find(guid: space_guid)&.organization&.active?
   end
 
   def can_update_space?(space_guid)
-    can_write_globally? || membership.has_any_roles?(ROLES_FOR_SPACE_UPDATING, space_guid)
+    return true if can_write_globally?
+    return false unless membership.has_any_roles?(ROLES_FOR_SPACE_UPDATING, space_guid)
+
+    VCAP::CloudController::Space.find(guid: space_guid)&.organization&.active?
   end
 
   def can_read_from_isolation_segment?(isolation_segment)

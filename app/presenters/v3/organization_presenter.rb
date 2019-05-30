@@ -11,6 +11,7 @@ module VCAP::CloudController::Presenters::V3
         created_at: organization.created_at,
         updated_at: organization.updated_at,
         name: organization.name,
+        status: organization.status,
         relationships: {
           quota: {
             data: {

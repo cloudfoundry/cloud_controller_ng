@@ -75,34 +75,27 @@ module VCAP::CloudController
         when SPACE_DEVELOPER
           @space_developer ||=
             @user.spaces_dataset.
-            association_join(:organization).
-            where(organization__status: Organization::ACTIVE).map(&:guid)
+            association_join(:organization).map(&:guid)
         when SPACE_MANAGER
           @space_manager ||=
             @user.managed_spaces_dataset.
-            association_join(:organization).
-            where(organization__status: Organization::ACTIVE).map(&:guid)
+            association_join(:organization).map(&:guid)
         when SPACE_AUDITOR
           @space_auditor ||=
             @user.audited_spaces_dataset.
-            association_join(:organization).
-            where(organization__status: Organization::ACTIVE).map(&:guid)
+            association_join(:organization).map(&:guid)
         when ORG_MEMBER
           @org_member ||=
-            @user.organizations_dataset.
-            where(status: Organization::ACTIVE).map(&:guid)
+            @user.organizations_dataset.map(&:guid)
         when ORG_MANAGER
           @org_manager ||=
-            @user.managed_organizations_dataset.
-            where(status: Organization::ACTIVE).map(&:guid)
+            @user.managed_organizations_dataset.map(&:guid)
         when ORG_AUDITOR
           @org_auditor ||=
-            @user.audited_organizations_dataset.
-            where(status: Organization::ACTIVE).map(&:guid)
+            @user.audited_organizations_dataset.map(&:guid)
         when ORG_BILLING_MANAGER
           @org_billing_manager ||=
-            @user.billing_managed_organizations_dataset.
-            where(status: Organization::ACTIVE).map(&:guid)
+            @user.billing_managed_organizations_dataset.map(&:guid)
         end
       end.flatten.compact
     end

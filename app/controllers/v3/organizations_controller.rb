@@ -135,7 +135,7 @@ class OrganizationsV3Controller < ApplicationController
   def fetch_editable_org(guid)
     org = fetch_org(guid)
     org_not_found! unless org && permission_queryer.can_read_from_org?(org.guid)
-    unauthorized! unless roles.admin? || org.managers.include?(current_user)
+    unauthorized! unless roles.admin? || (org.managers.include?(current_user) && org.active?)
     org
   end
 

@@ -50,6 +50,7 @@ module VCAP::CloudController
             'created_at' => iso8601,
             'updated_at' => iso8601,
             'name' => 'org1',
+            'status' => 'active',
             'links' => {
               'self' => { 'href' => "#{link_prefix}/v3/organizations/#{created_org.guid}" },
               'domains' => { 'href' => "http://api2.vcap.me/v3/organizations/#{created_org.guid}/domains" },
@@ -91,6 +92,7 @@ module VCAP::CloudController
               {
                 'guid' => organization1.guid,
                 'name' => 'Apocalypse World',
+                'status' => 'active',
                 'created_at' => iso8601,
                 'updated_at' => iso8601,
                 'relationships' => { 'quota' => { 'data' => { 'guid' => organization1.quota_definition.guid } } },
@@ -109,6 +111,7 @@ module VCAP::CloudController
               {
                 'guid' => organization2.guid,
                 'name' => 'Dungeon World',
+                'status' => 'active',
                 'created_at' => iso8601,
                 'updated_at' => iso8601,
                 'relationships' => { 'quota' => { 'data' => { 'guid' => organization2.quota_definition.guid } } },
@@ -190,6 +193,7 @@ module VCAP::CloudController
               {
                 'guid' => organization2.guid,
                 'name' => 'Dungeon World',
+                'status' => 'active',
                 'created_at' => iso8601,
                 'updated_at' => iso8601,
                 'relationships' => { 'quota' => { 'data' => { 'guid' => organization2.quota_definition.guid } } },
@@ -208,6 +212,7 @@ module VCAP::CloudController
               {
                 'guid' => organization3.guid,
                 'name' => 'The Sprawl',
+                'status' => 'active',
                 'created_at' => iso8601,
                 'updated_at' => iso8601,
                 'relationships' => { 'quota' => { 'data' => { 'guid' => organization3.quota_definition.guid } } },
@@ -840,6 +845,7 @@ module VCAP::CloudController
         expected_response = {
           'name' => 'New Name World',
           'guid' => organization1.guid,
+          'status' => 'active',
           'relationships' => { 'quota' => { 'data' => { 'guid' => organization1.quota_definition.guid } } },
           'links' => {
             'self' => { 'href' => "http://api2.vcap.me/v3/organizations/#{organization1.guid}" },
@@ -882,6 +888,7 @@ module VCAP::CloudController
           expected_response = {
             'name' => organization1.name,
             'guid' => organization1.guid,
+            'status' => 'active',
             'relationships' => { 'quota' => { 'data' => { 'guid' => organization1.quota_definition.guid } } },
             'links' => {
               'self' => { 'href' => "http://api2.vcap.me/v3/organizations/#{organization1.guid}" },

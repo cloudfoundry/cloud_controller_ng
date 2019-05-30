@@ -712,6 +712,7 @@ RSpec.describe 'Apps' do
           'created_at' => iso8601,
           'updated_at' => iso8601,
           'name' => org1.name,
+          'status' => 'active',
           'metadata' => {
             'labels' => {},
             'annotations' => {},
@@ -734,6 +735,7 @@ RSpec.describe 'Apps' do
             'created_at' => iso8601,
             'updated_at' => iso8601,
             'name' => org2.name,
+          'status' => 'active',
             'metadata' => {
               'labels' => {},
               'annotations' => {},
@@ -920,6 +922,7 @@ RSpec.describe 'Apps' do
           'created_at' => iso8601,
           'updated_at' => iso8601,
           'name' => org.name,
+          'status' => 'active',
           'metadata' => {
             'labels' => {},
             'annotations' => {},

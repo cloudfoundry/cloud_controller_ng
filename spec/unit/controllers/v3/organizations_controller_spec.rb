@@ -37,9 +37,33 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
             if expected_return_value == 200
               expect(parsed_body['guid']).to eq(org.guid)
               expect(parsed_body['name']).to eq('Eric\'s Farm')
+              expect(parsed_body['status']).to eq('active')
               expect(parsed_body['created_at']).to match(iso8601)
               expect(parsed_body['updated_at']).to match(iso8601)
               expect(parsed_body['links']['self']['href']).to match(%r{/v3/organizations/#{org.guid}$})
+            end
+          end
+        end
+      end
+
+      context 'when the org is suspended' do
+        before do
+          org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+        end
+        role_to_expected_http_response.each do |role, expected_return_value|
+          context "as an #{role}" do
+            it "returns #{expected_return_value}" do
+              set_current_user_as_role(role: role, org: org, space: space, user: user)
+
+              get :show, params: { guid: org.guid }, as: :json
+
+              expect(response.status).to eq(expected_return_value),
+                "Expected #{expected_return_value}, but got #{response.status}. Response: #{response.body}"
+              if expected_return_value == 200
+                expect(parsed_body['guid']).to eq(org.guid)
+                expect(parsed_body['name']).to eq('Eric\'s Farm')
+                expect(parsed_body['status']).to eq('suspended')
+              end
             end
           end
         end
@@ -607,6 +631,30 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
         end
       end
     end
+
+    context 'when the org is suspended' do
+      let(:org) { VCAP::CloudController::Organization.make(name: 'Water') }
+      let(:space) { VCAP::CloudController::Space.make(organization: org) }
+      before do
+        org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+      end
+      it_behaves_like 'permissions endpoint' do
+        let(:roles_to_http_responses) do
+          {
+            'admin' => 200,
+            'admin_read_only' => 403,
+            'global_auditor' => 403,
+            'space_developer' => 403,
+            'space_manager' => 403,
+            'space_auditor' => 403,
+            'org_manager' => 403,
+            'org_auditor' => 403,
+            'org_billing_manager' => 403,
+          }
+        end
+        let(:api_call) { lambda { patch :update_default_isolation_segment, params: { guid: org.guid }.merge(request_body), as: :json } }
+      end
+    end
   end
 
   describe '#patch' do
@@ -811,6 +859,28 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
           }
         end
         let(:api_call) { lambda { patch :update, params: { guid: org.guid }.merge(request_body), as: :json } }
+      end
+
+      context 'when the org is suspended' do
+        before do
+          org.update(status: VCAP::CloudController::Organization::SUSPENDED)
+        end
+        it_behaves_like 'permissions endpoint' do
+          let(:roles_to_http_responses) do
+            {
+              'admin' => 200,
+              'admin_read_only' => 403,
+              'global_auditor' => 403,
+              'space_developer' => 403,
+              'space_manager' => 403,
+              'space_auditor' => 403,
+              'org_manager' => 403,
+              'org_auditor' => 403,
+              'org_billing_manager' => 403,
+            }
+          end
+          let(:api_call) { lambda { patch :update, params: { guid: org.guid }.merge(request_body), as: :json } }
+        end
       end
     end
 

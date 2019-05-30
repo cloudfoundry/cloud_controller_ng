@@ -249,6 +249,14 @@ module VCAP::CloudController
           org.add_billing_manager(user)
           expect(permissions.can_write_to_org?(org_guid)).to be false
         end
+
+        context 'the org is suspended' do
+          it 'returns false for org manager' do
+            org.add_manager(user)
+            org.update(status: Organization::SUSPENDED)
+            expect(permissions.can_write_to_org?(org_guid)).to be_falsey
+          end
+        end
       end
     end
 
@@ -518,6 +526,15 @@ module VCAP::CloudController
           expect(permissions.can_write_to_space?(space_guid)).to be true
         end
 
+        context "and the space's org is suspended" do
+          it 'returns false for the space developer' do
+            org.add_user(user)
+            space.add_developer(user)
+            org.update(status: Organization::SUSPENDED)
+            expect(permissions.can_write_to_space?(space_guid)).to be_falsey
+          end
+        end
+
         it 'returns false for space manager' do
           org.add_user(user)
           space.add_manager(user)
@@ -573,6 +590,15 @@ module VCAP::CloudController
           org.add_user(user)
           space.add_manager(user)
           expect(permissions.can_update_space?(space_guid)).to be true
+        end
+
+        context "and the space's org is suspended" do
+          it 'returns false for the space manager' do
+            org.add_user(user)
+            space.add_developer(user)
+            org.update(status: Organization::SUSPENDED)
+            expect(permissions.can_write_to_space?(space_guid)).to be_falsey
+          end
         end
 
         it 'returns false for space developer' do

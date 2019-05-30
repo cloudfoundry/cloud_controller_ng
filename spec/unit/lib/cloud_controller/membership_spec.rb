@@ -137,13 +137,13 @@ module VCAP::CloudController
             space.save
           end
 
-          it 'returns false' do
+          it 'returns true' do
             result = membership.has_any_roles?([
               Membership::SPACE_DEVELOPER,
               Membership::SPACE_MANAGER,
               Membership::SPACE_AUDITOR],
               space.guid)
-            expect(result).to be_falsey
+            expect(result).to be_truthy
           end
         end
       end
@@ -309,14 +309,14 @@ module VCAP::CloudController
             space.save
           end
 
-          it 'returns false' do
+          it 'returns true' do
             result = membership.has_any_roles?([
               Membership::ORG_MEMBER,
               Membership::ORG_MANAGER,
               Membership::ORG_AUDITOR,
               Membership::ORG_BILLING_MANAGER],
               nil, organization.guid)
-            expect(result).to be_falsey
+            expect(result).to be_truthy
           end
         end
       end
