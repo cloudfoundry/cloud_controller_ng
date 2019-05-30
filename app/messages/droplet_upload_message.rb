@@ -58,7 +58,7 @@ module VCAP::CloudController
     def is_not_empty
       return unless bits_path
 
-      errors.add(:base, "#{bits_name} may not be empty") unless File.stat(bits_path).size > 0
+      errors.add(:base, "#{bits_name} cannot be empty") unless File.stat(bits_path).size > 0
     end
   end
 end

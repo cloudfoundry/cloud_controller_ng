@@ -107,7 +107,7 @@ module VCAP::CloudController
         it 'is not valid' do
           upload_message = DropletUploadMessage.new(opts)
           expect(upload_message).not_to be_valid
-          expect(upload_message.errors.full_messages[0]).to include('droplet.tgz may not be empty')
+          expect(upload_message.errors.full_messages[0]).to include('droplet.tgz cannot be empty')
         end
       end
     end
