@@ -154,6 +154,49 @@ module UserHelpers
     nil
   end
 
+  def client_token(cloud_controller_user, opts={})
+    token_coder = CF::UAA::TokenCoder.new(audience_ids: TestConfig.config[:uaa][:resource_id],
+      skey: TestConfig.config[:uaa][:symmetric_secret],
+      pkey: nil)
+
+    if cloud_controller_user
+      scopes = opts[:scopes]
+      if scopes.nil?
+        scopes = %w(cloud_controller.read cloud_controller.write)
+      end
+
+      if opts[:admin]
+        scopes << 'cloud_controller.admin'
+      end
+
+      if opts[:admin_read_only]
+        scopes << 'cloud_controller.admin_read_only'
+      end
+
+      if opts[:global_auditor]
+        scopes << 'cloud_controller.global_auditor'
+      end
+
+      encoding_opts = {
+        client_id: cloud_controller_user ? cloud_controller_user.guid : (rand * 1_000_000_000).ceil,
+        email: opts[:email],
+        scope: scopes,
+        jti: 'some-valid-jti',
+        iss: opts[:iss] || UAAIssuer::ISSUER
+      }
+
+      encoding_opts[:user_name] = opts[:user_name] if opts[:user_name]
+
+      encoding_opts[:exp] = 0 if opts[:expired]
+
+      user_token = token_coder.encode(encoding_opts)
+
+      return user_token
+    end
+
+    nil
+  end
+
   def allow_user_secret_access(user, space:)
     allow(permissions_double(user)).to receive(:can_read_secrets_in_space?).with(space.guid, space.organization_guid).and_return(true)
   end

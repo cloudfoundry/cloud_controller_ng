@@ -51,7 +51,9 @@ module ControllerHelpers
              https: false }.merge(opts)
 
     headers = {}
-    headers['HTTP_AUTHORIZATION'] = "bearer #{user_token(user, opts)}"
+    token = opts[:client] ? client_token(user, opts) : user_token(user, opts)
+    headers['HTTP_AUTHORIZATION'] = "bearer #{token}"
+
     headers['HTTP_X_FORWARDED_PROTO'] = 'https' if opts[:https]
     json_headers(headers)
   end

@@ -29,12 +29,27 @@ module CloudFoundry
           expect(VCAP::CloudController::SecurityContext.auth_token).to eq('auth-token')
         end
 
-        it 'sets user name and guid on the env' do
-          middleware.call(env)
+        context 'when given a UAA user token' do
+          it 'sets user name and guid on the env' do
+            middleware.call(env)
 
-          expect(app).to have_received(:call) do |passed_env|
-            expect(passed_env['cf.user_guid']).to eq('user-id-1')
-            expect(passed_env['cf.user_name']).to eq('mrpotato')
+            expect(app).to have_received(:call) do |passed_env|
+              expect(passed_env['cf.user_guid']).to eq('user-id-1')
+              expect(passed_env['cf.user_name']).to eq('mrpotato')
+            end
+          end
+        end
+
+        context 'when given a UAA client token' do
+          let(:token_information) { { 'client_id' => 'client-id-1', 'user_name' => 'mrpotato' } }
+
+          it 'sets client id as the user guid on the env' do
+            middleware.call(env)
+
+            expect(app).to have_received(:call) do |passed_env|
+              expect(passed_env['cf.user_guid']).to eq('client-id-1')
+              expect(passed_env['cf.user_name']).to eq('mrpotato')
+            end
           end
         end
 

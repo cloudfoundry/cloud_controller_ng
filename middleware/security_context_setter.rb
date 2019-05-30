@@ -12,7 +12,7 @@ module CloudFoundry
         @security_context_configurer.configure(header_token)
 
         if VCAP::CloudController::SecurityContext.valid_token?
-          env['cf.user_guid'] = VCAP::CloudController::SecurityContext.token['user_id']
+          env['cf.user_guid'] = id_from_token
           env['cf.user_name'] = VCAP::CloudController::SecurityContext.token['user_name']
         end
 
@@ -23,6 +23,10 @@ module CloudFoundry
       end
 
       private
+
+      def id_from_token
+        VCAP::CloudController::SecurityContext.token['user_id'] || VCAP::CloudController::SecurityContext.token['client_id']
+      end
 
       def error_message(env)
         api_error = CloudController::Errors::ApiError.new_from_details('UaaUnavailable')
