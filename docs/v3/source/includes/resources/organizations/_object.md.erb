@@ -11,7 +11,7 @@ Name | Type | Description
 ---- | ---- | -----------
 **name** | _string_ | Name of the organization.
 **guid** | _uuid_ | Unique identifier for the organization.
-**status** | _string_ | Valid values are `active` and `suspended`. Suspended organizations, along with their spaces, may not be modified by non-admins.
+**status** _(experimental)_ | _string_ | Valid values are `active` and `suspended`. Suspended organizations, along with their spaces, may not be modified by non-admins.
 **relationships.quota** _(experimental)_ | [_to-one relationship_](#to-one-relationships) | The quota applied to the organization.
 **created_at** | _datetime_ | The time with zone when the object was created.
 **updated_at** | _datetime_ | The time with zone when the object was last updated.
