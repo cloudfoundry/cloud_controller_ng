@@ -22,8 +22,10 @@ module VCAP::CloudController
         arbitrary_parameters: arbitrary_params
       )
 
+      service_instance_attributes = broker_response[:instance].merge({ maintenance_info: service_instance.service_plan.maintenance_info })
+
       begin
-        service_instance.save_with_new_operation(broker_response[:instance], broker_response[:last_operation])
+        service_instance.save_with_new_operation(service_instance_attributes, broker_response[:last_operation])
       rescue => e
         cleanup_instance_without_db(e, service_instance)
       end

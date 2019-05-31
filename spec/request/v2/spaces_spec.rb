@@ -212,6 +212,7 @@ RSpec.describe 'Spaces' do
             'type' => 'managed_service_instance',
             'last_operation' => nil,
             'tags' => [],
+            'maintenance_info' => {},
             'service_guid' => shared_service_instance.service_plan.service_guid,
             'space_url' => "/v2/spaces/#{originating_space.guid}",
             'service_plan_url' => "/v2/service_plans/#{shared_service_instance.service_plan_guid}",

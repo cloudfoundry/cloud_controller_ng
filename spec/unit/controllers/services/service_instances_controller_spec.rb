@@ -1032,6 +1032,7 @@ module VCAP::CloudController
             end
           end
         end
+
         context 'when broker returns a null dashboard_url value' do
           let(:response_body) do
             {
@@ -1044,6 +1045,18 @@ module VCAP::CloudController
 
             expect(last_response).to have_status_code(201)
             expect(decoded_response['entity']['dashboard_url']).to be_nil
+          end
+        end
+
+        context 'when the broker returns "maintenance_info" in the catalog' do
+          let(:plan) { ServicePlan.make(:v2, service: service, maintenance_info: { 'version': '2.0' }) }
+
+          it 'should store it on a service instance level' do
+            create_managed_service_instance
+
+            expect(last_response).to have_status_code(201)
+            maintenance_info = decoded_response['entity']['maintenance_info']
+            expect(maintenance_info).to eq({ 'version' => '2.0' })
           end
         end
       end
@@ -2505,6 +2518,29 @@ module VCAP::CloudController
             expect(instance.last_operation.state).to eq 'succeeded'
           end
         end
+
+        context 'when maintenance_info is NOT provided in the request, but it exists for the new plan' do
+          let(:new_service_plan) { ServicePlan.make(:v2, service: service, maintenance_info: { 'version': '1.0' }) }
+          let(:status) { 202 }
+
+          context 'when the delayed job finishes successfully' do
+            before do
+              put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body
+
+              stub_request(:get, last_operation_state_url(service_instance)).
+                to_return(status: 200, body: {
+                state: 'succeeded',
+                description: 'Done'
+              }.to_json)
+
+              Delayed::Job.last.invoke_job
+            end
+
+            it 'stores the new plan maintenance_info for the instance' do
+              expect(service_instance.reload.maintenance_info).to eq(new_service_plan.maintenance_info)
+            end
+          end
+        end
       end
 
       context 'when accepts_incomplete is not true or false strings' do
@@ -2527,6 +2563,61 @@ module VCAP::CloudController
           put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", '{}'
           expect(last_response.status).to eq(400)
           expect(last_response.body).to match /paid service plans are not allowed/
+        end
+      end
+
+      context 'when maintenance_info is provided' do
+        let(:body) do
+          { maintenance_info: { version: '2.0' } }.to_json
+        end
+        let(:old_maintenance_info) { { 'version' => '1.0' } }
+        let(:service_plan) { ServicePlan.make(:v2, service: service, maintenance_info: { 'version': '2.0' }) }
+        let(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan, maintenance_info: old_maintenance_info) }
+
+        context 'when the broker responds synchronously' do
+          let(:status) { 200 }
+
+          before do
+            stub_request(:patch, service_broker_url).
+              with(basic_auth: basic_auth(service_instance: service_instance)).
+              to_return(status: status, body: response_body)
+          end
+
+          it 'updates the service instance model with the new value' do
+            put "/v2/service_instances/#{service_instance.guid}", body
+
+            expect(last_response).to have_status_code 201
+            expect(service_instance.reload.maintenance_info).to eq({ 'version' => '2.0' })
+          end
+        end
+
+        context 'when the broker responds asynchronously' do
+          before do
+            stub_request(:patch, "#{service_broker_url}?accepts_incomplete=true").
+              to_return(status: 202, body: response_body)
+
+            put "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true", body
+          end
+
+          it 'keeps the old maintenance_info in the model' do
+            expect(service_instance.reload.maintenance_info).to eq(old_maintenance_info)
+          end
+
+          context 'when the delayed job finishes successfully' do
+            before do
+              stub_request(:get, last_operation_state_url(service_instance)).
+                to_return(status: 200, body: {
+                state: 'succeeded',
+                description: 'Done'
+              }.to_json)
+              Delayed::Job.last.invoke_job
+            end
+
+            it 'updates the maintenance_info for the instance' do
+              expect(service_instance.reload.maintenance_info).to eq({ 'version' => '2.0' })
+              expect(a_request(:patch, /#{service_broker_url}/)).to have_been_made.times(1)
+            end
+          end
         end
       end
     end
@@ -4900,6 +4991,7 @@ module VCAP::CloudController
         end
       end
     end
+
     describe 'Validation messages' do
       let(:paid_quota) { QuotaDefinition.make(total_services: 1) }
       let(:free_quota_with_no_services) do

@@ -7,12 +7,14 @@ module VCAP::CloudController
     module Services
       RSpec.describe ServiceInstanceStateFetch, job_context: :worker do
         let(:proposed_service_plan) { ServicePlan.make }
+        let(:proposed_maintenance_info) { { 'version' => '2.0' } }
         let(:maximum_polling_duration_for_plan) {}
         let(:service_plan) { ServicePlan.make(maximum_polling_duration: maximum_polling_duration_for_plan) }
         let(:service_instance) do
           operation = ServiceInstanceOperation.make(proposed_changes: {
             name: 'new-fake-name',
             service_plan_guid: proposed_service_plan.guid,
+            maintenance_info: proposed_maintenance_info,
           })
           operation.save
           service_instance = ManagedServiceInstance.make(service_plan: service_plan)
@@ -229,6 +231,7 @@ module VCAP::CloudController
               run_job(job)
 
               db_service_instance = ManagedServiceInstance.first(guid: service_instance.guid)
+              expect(db_service_instance.maintenance_info).to eq(proposed_maintenance_info)
               expect(db_service_instance.service_plan).to eq(proposed_service_plan)
               expect(db_service_instance.name).to eq('new-fake-name')
             end

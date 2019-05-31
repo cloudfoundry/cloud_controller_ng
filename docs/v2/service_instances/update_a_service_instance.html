@@ -200,13 +200,13 @@
                 </ul>
               </td>
             </tr>
-            <tr class=" ">
-              <td class=" ">
-                <span class="name">maintenance_info (experimental)</span>
+            <tr class="">
+              <td class="experimental">
+                <span class="name">maintenance_info</span>
               </td>
               <td>
-                <span class="description">This field can be used to perform maintenance on a service instance (for example, to upgrade the version of a service's software).</br>
-                NOTE: The `maintenance_info` object provided in the request must be supported by the service instance's plan.</span>
+                <span class="description"> A maintenance information for the service instance to pass along to the service broker.</br>
+                NOTE: The maintenance_info object provided in the request must be supported by the service instance's plan. Must be a JSON object.</span>
               </td>
               <td>
                 <span class="default"></span>
@@ -568,6 +568,23 @@ Cookie: </pre>
                   </ul>
                 </td>
               </tr>
+              <tr class="">
+                <td class="experimental">
+                  <span class="name">maintenance_info</span>
+                </td>
+                <td>
+                  <span class="description">A maintenance information for the service instance.</span>
+                </td>
+                <td>
+                  <ul class="valid_values">
+                  </ul>
+                </td>
+                <td>
+                  <ul class="example_values">
+                    <li>{"version": "2.0"}</li>
+                  </ul>
+                </td>
+              </tr>
             </tbody>
           </table>
 
@@ -598,6 +615,9 @@ Cookie: </pre>
     "tags": [
 
     ],
+    "maintenance_info": {
+        "version": "2.1"
+    },
     "space_url": "/v2/spaces/da37b4b7-2439-4b30-9eb3-bded0dbf690f",
     "service_plan_url": "/v2/service_plans/4ec73bf4-9f3a-44c7-bbac-61ee9cb5a511",
     "service_bindings_url": "/v2/service_instances/a34f1423-4b84-4727-ab49-3f1522c4cb16/service_bindings",

@@ -132,8 +132,8 @@ module VCAP::CloudController
     end
 
     describe 'Serialization' do
-      it { is_expected.to export_attributes :name, :credentials, :service_plan_guid, :space_guid, :gateway_data, :dashboard_url, :type, :last_operation, :tags }
-      it { is_expected.to import_attributes :name, :service_plan_guid, :space_guid, :gateway_data }
+      it { is_expected.to export_attributes :name, :credentials, :service_plan_guid, :space_guid, :gateway_data, :dashboard_url, :type, :last_operation, :tags, :maintenance_info }
+      it { is_expected.to import_attributes :name, :service_plan_guid, :space_guid, :gateway_data, :maintenance_info }
     end
 
     describe '#create' do
@@ -632,6 +632,17 @@ module VCAP::CloudController
         })
 
         expect(service_instance.to_hash['last_operation']['updated_at']).to be
+      end
+    end
+
+    describe 'maintenance_info' do
+      let(:expected_value) { { version: '1.0' }.stringify_keys }
+      let(:maintenance_info) { { maintenance_info: expected_value } }
+
+      it 'should serialize and deserialize it as a JSON' do
+        service_instance.update_service_instance(maintenance_info)
+        service_instance.reload
+        expect(service_instance.maintenance_info).to eq(expected_value)
       end
     end
   end
