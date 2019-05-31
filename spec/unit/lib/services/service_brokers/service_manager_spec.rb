@@ -781,6 +781,27 @@ module VCAP::Services::ServiceBrokers
               expect(plan.public).to be true
             end
           end
+
+          context 'when the plan has maintenance_info' do
+            before do
+              plan.update(maintenance_info: { 'version': '1.1' })
+            end
+
+            context 'when maintenance_info was deleted from the catalog for the plan' do
+              before do
+                catalog_hash['services'].first['plans'].first.delete('maintenance_info')
+              end
+
+              it 'should remove the maintenance_info information for the updated plan' do
+                expect(plan.maintenance_info).to eq({ 'version': '1.1' })
+
+                service_manager.sync_services_and_plans(catalog)
+                plan.reload
+
+                expect(plan.maintenance_info).to be_nil
+              end
+            end
+          end
         end
 
         context 'and a plan exists that has been removed from the broker catalog' do

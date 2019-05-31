@@ -481,7 +481,7 @@ RSpec.describe 'Service Broker API integration' do
     context 'when the broker provides maintenance_info' do
       let(:catalog) do
         catalog = default_catalog
-        catalog[:services].first[:plans].first[:maintenance_info] = { 'version' => '2.0' }
+        catalog[:services].first[:plans].first[:maintenance_info] = { 'version' => '2.0.0' }
         catalog
       end
 
@@ -497,7 +497,7 @@ RSpec.describe 'Service Broker API integration' do
 
         parsed_body = MultiJson.load(last_response.body)
         maintenance_info = parsed_body['entity']['maintenance_info']
-        expect(maintenance_info).to eq({ 'version' => '2.0' })
+        expect(maintenance_info).to eq({ 'version' => '2.0.0' })
       end
 
       context 'when updating the service with the provided maintanance_info' do
@@ -506,18 +506,18 @@ RSpec.describe 'Service Broker API integration' do
         end
 
         it 'should forward the maintanance info to the broker' do
-          response = async_update_service(maintenance_info: { 'version' => '2.0' })
+          response = async_update_service(maintenance_info: { 'version' => '2.0.0' })
           expect(response).to have_status_code(202)
           expect(
             a_request(:patch, update_url_for_broker(@broker, accepts_incomplete: true)).with(
-              body: hash_including(maintenance_info: { version: '2.0' })
+              body: hash_including(maintenance_info: { version: '2.0.0' })
             )
           ).to have_been_made
         end
 
         context 'when the maintenance_info does not match the one from the service plan' do
           it 'should not forward the maintanance info to the broker' do
-            response = async_update_service(maintenance_info: { 'version' => '1.0' })
+            response = async_update_service(maintenance_info: { 'version' => '1.0.0' })
             expect(response).to have_status_code(422)
             expect(JSON.parse(response.body)['error_code']).to eq('CF-MaintenanceInfoMismatch')
             expect(

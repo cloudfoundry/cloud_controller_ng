@@ -1,3 +1,5 @@
+require 'vcap/semver_validator'
+
 module VCAP::Services::ServiceBrokers::V2
   module CatalogValidationHelper
     def validate_description!(name, input, opts={})
@@ -66,6 +68,21 @@ module VCAP::Services::ServiceBrokers::V2
         errors_count = errors.messages.count
         send(validation)
         break if errors_count != errors.messages.count
+      end
+    end
+
+    def validate_semver!(name, input, opts={})
+      validate_string!(name, input, opts)
+
+      unless VCAP::SemverValidator.valid?(input)
+        errors.add("#{human_readable_attr_name(name)} must be a Semantic Version, but has value #{input.inspect}")
+      end
+    end
+
+    def validate_length_as_json!(name, input, limit)
+      length = input.to_json.length
+      if length > limit
+        errors.add("#{human_readable_attr_name(name)} must serialize to #{limit} characters or fewer in JSON, but serializes to #{length} characters")
       end
     end
 

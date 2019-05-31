@@ -51,8 +51,15 @@ module VCAP::Services::ServiceBrokers::V2
       validate_bool!(:bindable, bindable) if bindable
       validate_bool!(:plan_updateable, plan_updateable) if plan_updateable
       validate_integer!(:maximum_polling_duration, maximum_polling_duration) if maximum_polling_duration
-      validate_hash!(:maintenance_info, @maintenance_info) if @maintenance_info
       validate_hash!(:schemas, @schemas_data) if @schemas_data
+
+      validate_maintenance_info! if @maintenance_info
+    end
+
+    def validate_maintenance_info!
+      validate_hash!(:maintenance_info, @maintenance_info)
+      validate_semver!(:maintenance_info_version, @maintenance_info['version'], required: true)
+      validate_length_as_json!(:maintenance_info, @maintenance_info, 2000)
     end
 
     def validate_schemas!
@@ -72,6 +79,7 @@ module VCAP::Services::ServiceBrokers::V2
         plan_updateable:            'Plan updateable',
         schemas:                    'Plan schemas',
         maintenance_info:           'Maintenance info',
+        maintenance_info_version:   'Maintenance info version',
         maximum_polling_duration:   'Maximum polling duration',
       }.fetch(name) { raise NotImplementedError }
     end

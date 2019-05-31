@@ -64,9 +64,11 @@ module VCAP::CloudController
         'shared_from' => nil,
         'shared_to' => [],
         'service_broker_name' => service_broker.name,
+        'maintenance_info' => maintenance_info || {},
         'service_plan' => {
           'guid' => service_plan.guid,
           'name' => service_plan.name,
+          'maintenance_info' => service_plan.maintenance_info || {},
           'service' => {
             'guid' => service.guid,
             'label' => service.label,

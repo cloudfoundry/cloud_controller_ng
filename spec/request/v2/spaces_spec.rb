@@ -255,7 +255,8 @@ RSpec.describe 'Spaces' do
     let!(:space) { VCAP::CloudController::Space.make(organization: org) }
     let!(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
     let!(:process) { VCAP::CloudController::ProcessModelFactory.make(state: 'STARTED', app: app_model) }
-    let!(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+    let!(:service_plan) { VCAP::CloudController::ServicePlan.make(maintenance_info: { 'version': '2.0.0' }) }
+    let!(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space, service_plan: service_plan, maintenance_info: { 'version': '1.0.0' }) }
     let(:build_client) { instance_double(HTTPClient, post: nil) }
 
     before do
@@ -319,12 +320,14 @@ RSpec.describe 'Spaces' do
             'last_operation' => nil,
             'name' => service_instance.name,
             'service_broker_name' => service_instance.service_broker.name,
+            'maintenance_info' => service_instance.maintenance_info,
             'service_plan' => {
-              'guid' => service_instance.service_plan.guid,
-              'name' => service_instance.service_plan.name,
+              'guid' => service_plan.guid,
+              'name' => service_plan.name,
+              'maintenance_info' => service_plan.maintenance_info,
               'service' => {
-                'guid' => service_instance.service_plan.service.guid,
-                'label' => service_instance.service_plan.service.label,
+                'guid' => service_plan.service.guid,
+                'label' => service_plan.service.label,
                 'provider' => nil,
                 'version' => nil
               }
