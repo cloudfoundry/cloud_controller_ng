@@ -5114,7 +5114,7 @@ Their values will be <code class="prettyprint">null</code> by default and will c
 </tr>
 </tbody></table>
 
-          <h3 id="create-a-droplet-experimental">Create a droplet (experimental)</h3>
+          <h3 id="create-a-droplet">Create a droplet</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/droplets"</span> <span class="se">\</span>
@@ -6196,7 +6196,7 @@ environment variables listed on the source droplet.</p>
 </tr>
 </tbody></table>
 
-          <h3 id="upload-droplet-bits-experimental">Upload droplet bits (experimental)</h3>
+          <h3 id="upload-droplet-bits">Upload droplet bits</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/droplets/[guid]/upload"</span> <span class="se">\</span>
@@ -7550,6 +7550,11 @@ In the case where the specified isolation segment is the system-wide shared segm
 <td><strong>guid</strong></td>
 <td><em>uuid</em></td>
 <td>Unique identifier for the organization.</td>
+</tr>
+<tr>
+<td><strong>status</strong></td>
+<td><em>string</em></td>
+<td>Valid values are <code class="prettyprint">active</code> and <code class="prettyprint">suspended</code>. Suspended organizations, along with their spaces, may not be modified by non-admins.</td>
 </tr>
 <tr>
 <td><strong>relationships.quota</strong> <em>(experimental)</em></td>
