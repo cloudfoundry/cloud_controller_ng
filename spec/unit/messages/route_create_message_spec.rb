@@ -14,6 +14,10 @@ module VCAP::CloudController
             relationships: {
               space: { data: { guid: 'space-guid' } },
               domain: { data: { guid: 'domain-guid' } },
+            },
+            metadata: {
+              labels: { potato: 'yam' },
+              annotations: { style: 'mashed' }
             }
           }
         end

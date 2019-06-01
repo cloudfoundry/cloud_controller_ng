@@ -32,6 +32,10 @@ RSpec.describe 'Routes Request' do
             data: { guid: route_in_org.domain.guid }
           }
         },
+        metadata: {
+          labels: {},
+          annotations: {}
+        },
         links: {
           self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },
           space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{route_in_org.space.guid}) },
@@ -54,6 +58,10 @@ RSpec.describe 'Routes Request' do
           domain: {
             data: { guid: route_in_other_org.domain.guid }
           }
+        },
+        metadata: {
+          labels: {},
+          annotations: {}
         },
         links: {
           self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },
@@ -177,6 +185,10 @@ RSpec.describe 'Routes Request' do
             data: { guid: route.domain.guid }
           }
         },
+        metadata: {
+          labels: {},
+          annotations: {}
+        },
         links: {
           self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },
           space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{route.space.guid}) },
@@ -270,7 +282,11 @@ RSpec.describe 'Routes Request' do
               self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },
               space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
               domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{domain.guid}) },
-            }
+            },
+            metadata: {
+              labels: {},
+              annotations: {}
+            },
           }
         end
 
@@ -331,7 +347,11 @@ RSpec.describe 'Routes Request' do
               self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },
               space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
               domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{domain.guid}) },
-            }
+            },
+            metadata: {
+              labels: {},
+              annotations: {}
+            },
           }
         end
 
@@ -403,7 +423,11 @@ RSpec.describe 'Routes Request' do
               self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },
               space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
               domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{domain.guid}) },
-            }
+            },
+            metadata: {
+              labels: {},
+              annotations: {}
+            },
           }
         end
 
@@ -488,7 +512,11 @@ RSpec.describe 'Routes Request' do
               self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },
               space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
               domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{domain.guid}) },
-            }
+            },
+            metadata: {
+              labels: {},
+              annotations: {}
+            },
           }
         end
 
@@ -548,7 +576,11 @@ RSpec.describe 'Routes Request' do
               self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },
               space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
               domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{domain.guid}) },
-            }
+            },
+            metadata: {
+              labels: {},
+              annotations: {}
+            },
           }
         end
 
@@ -610,6 +642,10 @@ RSpec.describe 'Routes Request' do
             domain: {
               data: { guid: domain.guid }
             },
+          },
+          metadata: {
+            labels: {},
+            annotations: {}
           },
           links: {
             self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },
@@ -724,6 +760,10 @@ RSpec.describe 'Routes Request' do
               self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },
               space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
               domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{domain.guid}) },
+            },
+            metadata: {
+              labels: {},
+              annotations: {}
             }
           }
         end
@@ -921,6 +961,10 @@ RSpec.describe 'Routes Request' do
             domain: {
               data: { guid: domain.guid }
             },
+          },
+          metadata: {
+            labels: { potato: 'yam' },
+            annotations: { style: 'mashed' }
           }
         }
       end
@@ -939,6 +983,10 @@ RSpec.describe 'Routes Request' do
             domain: {
               data: { guid: domain.guid }
             }
+          },
+          metadata: {
+            labels: { potato: 'yam' },
+            annotations: { style: 'mashed' }
           },
           links: {
             self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },

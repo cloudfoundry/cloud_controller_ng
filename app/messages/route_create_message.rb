@@ -1,7 +1,7 @@
-require 'messages/base_message'
+require 'messages/metadata_base_message'
 
 module VCAP::CloudController
-  class RouteCreateMessage < BaseMessage
+  class RouteCreateMessage < MetadataBaseMessage
     MAXIMUM_DOMAIN_LABEL_LENGTH = 63
     MAXIMUM_PATH_LENGTH = 128
 

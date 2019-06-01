@@ -1,8 +1,11 @@
 require 'presenters/v3/base_presenter'
+require 'presenters/mixins/metadata_presentation_helpers'
 require 'presenters/helpers/censorship'
 
 module VCAP::CloudController::Presenters::V3
   class RoutePresenter < BasePresenter
+    include VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers
+
     def initialize(
       resource,
         show_secrets: false,
@@ -18,6 +21,10 @@ module VCAP::CloudController::Presenters::V3
         updated_at: route.updated_at,
         host: route.host,
         path: route.path,
+        metadata: {
+          labels: hashified_labels(route.labels),
+          annotations: hashified_annotations(route.annotations),
+        },
         relationships: {
           space: {
             data: { guid: route.space.guid }

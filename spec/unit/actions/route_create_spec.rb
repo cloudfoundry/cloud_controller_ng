@@ -49,6 +49,62 @@ module VCAP::CloudController
         end
       end
 
+      context 'when given metadata' do
+        let(:message_with_label) do
+          RouteCreateMessage.new({
+            relationships: {
+              space: {
+                data: { guid: space.guid }
+              },
+              domain: {
+                data: { guid: domain.guid }
+              },
+            },
+            metadata: {
+              labels: { 'la' => 'bel' }
+            }
+          })
+        end
+
+        let(:message_with_annotation) do
+          RouteCreateMessage.new({
+            relationships: {
+              space: {
+                data: { guid: space.guid }
+              },
+              domain: {
+                data: { guid: domain.guid }
+              },
+            },
+            metadata: {
+              annotations: { 'anno' => 'tation' }
+            }
+          })
+        end
+
+        it 'creates a route and associated labels' do
+          expect {
+            subject.create(message: message_with_label, space: space, domain: domain)
+          }.to change { RouteLabelModel.count }.by(1)
+
+          route = Route.last
+          expect(route.labels.length).to eq(1)
+          expect(route.labels[0].key_name).to eq('la')
+          expect(route.labels[0].value).to eq('bel')
+        end
+
+        it 'creates a route and associated annotations' do
+          expect {
+            subject.create(message: message_with_annotation, space: space, domain: domain)
+          }.to change { RouteAnnotationModel.count }.by(1)
+
+          route = Route.last
+          expect(route.annotations.length).to eq(1)
+          expect(route.annotations[0].key).to eq('anno')
+          expect(route.annotations[0].value).to eq('tation')
+        end
+      end
+
       context 'when the domain has an owning org that is different from the space\'s parent org' do
         let(:other_org) { VCAP::CloudController::Organization.make }
         let(:inaccessible_domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: other_org) }

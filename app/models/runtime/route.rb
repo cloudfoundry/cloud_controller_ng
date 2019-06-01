@@ -12,6 +12,8 @@ module VCAP::CloudController
     one_through_one :organization, join_table: Space.table_name, left_key: :id, left_primary_key: :space_id, right_primary_key: :id, right_key: :organization_id
 
     one_to_many :route_mappings, class: 'VCAP::CloudController::RouteMappingModel', key: :route_guid, primary_key: :guid
+    one_to_many :labels, class: 'VCAP::CloudController::RouteLabelModel', key: :resource_guid, primary_key: :guid
+    one_to_many :annotations, class: 'VCAP::CloudController::RouteAnnotationModel', key: :resource_guid, primary_key: :guid
 
     # TODO: apps are actually processes
     many_to_many :apps, class: 'VCAP::CloudController::ProcessModel',

@@ -17,7 +17,10 @@ module VCAP::CloudController
 
       Route.db.transaction do
         route.save
+
+        MetadataUpdate.update(route, message)
       end
+
       Repositories::RouteEventRepository.new.record_route_create(
         route,
         @user_audit_info,
