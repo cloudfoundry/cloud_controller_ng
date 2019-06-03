@@ -38,6 +38,20 @@ RSpec.describe 'V3 service brokers' do
     }
   end
 
+  let(:valid_service_broker_create_body) do
+    {
+      name: 'broker name',
+      url: 'http://example.org/broker-url',
+      credentials: {
+        type: 'basic',
+        data: {
+          username: 'admin',
+          password: 'welcome',
+        }
+      }
+    }
+  end
+
   context 'as an admin user' do
     describe 'getting a single service broker' do
       context 'when there are no service brokers' do
@@ -355,13 +369,10 @@ RSpec.describe 'V3 service brokers' do
     end
 
     describe 'registering a global service broker' do
+      let(:request_body) { valid_service_broker_create_body }
+
       subject do
-        post('/v3/service_brokers', {
-          name: 'broker name',
-          url: 'http://example.org/broker-url',
-          username: 'admin',
-          password: 'welcome',
-        }.to_json, admin_headers)
+        post('/v3/service_brokers', request_body.to_json, admin_headers)
       end
 
       before do
@@ -451,6 +462,22 @@ RSpec.describe 'V3 service brokers' do
           end
         end
       end
+
+      context 'when user provides a malformed request' do
+        let(:request_body) do
+          {
+            whatever: 'oopsie'
+          }
+        end
+
+        it 'responds with a helpful error message' do
+          subject
+
+          expect(last_response).to have_status_code(422)
+          expect(last_response.body).to include('UnprocessableEntity')
+          expect(last_response.body).to include('Name must be a string')
+        end
+      end
     end
   end
 
@@ -517,12 +544,7 @@ RSpec.describe 'V3 service brokers' do
 
     describe 'registering a global service broker' do
       it 'fails authorization' do
-        response = post('/v3/service_brokers', {
-          name: 'broker name',
-          url: 'http://example.org/broker-url',
-          username: 'admin',
-          password: 'welcome',
-        }.to_json, headers_for(user))
+        response = post('/v3/service_brokers', valid_service_broker_create_body.to_json, headers_for(user))
 
         expect(response).to have_status_code(403)
       end
@@ -583,12 +605,7 @@ RSpec.describe 'V3 service brokers' do
 
     describe 'registering a global service broker' do
       it 'fails authorization' do
-        response = post('/v3/service_brokers', {
-          name: 'broker name',
-          url: 'http://example.org/broker-url',
-          username: 'admin',
-          password: 'welcome',
-        }.to_json, headers_for(user))
+        response = post('/v3/service_brokers', valid_service_broker_create_body.to_json, headers_for(user))
 
         expect(response).to have_status_code(403)
       end

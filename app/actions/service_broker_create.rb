@@ -6,12 +6,12 @@ module VCAP::CloudController
         @service_manager = service_manager
       end
 
-      def create(credentials)
+      def create(message)
         broker = VCAP::CloudController::ServiceBroker.create(
-          name: credentials[:name],
-          broker_url: credentials[:url],
-          auth_username: credentials[:username],
-          auth_password: credentials[:password],
+          name: message.name,
+          broker_url: message.url,
+          auth_username: message.credentials_data.username,
+          auth_password: message.credentials_data.password,
         )
 
         registration = VCAP::Services::ServiceBrokers::ServiceBrokerRegistration.new(
