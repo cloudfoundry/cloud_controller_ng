@@ -378,31 +378,6 @@ RSpec.describe 'Routes Request' do
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
 
-    context 'when the user is not a member in the routes org' do
-      let(:other_space) { VCAP::CloudController::Space.make }
-      let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: other_space.organization) }
-      let(:route) { VCAP::CloudController::Route.make(space: other_space, domain: domain) }
-
-      let(:expected_codes_and_responses) do
-        h = Hash.new(code: 404)
-        h['admin'] = {
-          code: 200,
-          response_object: route_json
-        }
-        h['admin_read_only'] = {
-          code: 200,
-          response_object: route_json
-        }
-        h['global_auditor'] = {
-          code: 200,
-          response_object: route_json
-        }
-        h
-      end
-
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
-    end
-
     describe 'when the user is not logged in' do
       it 'returns 401 for Unauthenticated requests' do
         get "/v3/routes/#{route.guid}", nil, base_json_headers
@@ -1567,6 +1542,272 @@ RSpec.describe 'Routes Request' do
       it 'returns 401 for Unauthenticated requests' do
         delete "/v3/routes/#{route.guid}", nil, base_json_headers
         expect(last_response.status).to eq(401)
+      end
+    end
+  end
+
+  describe 'GET /v3/routes/:guid/destinations' do
+    let(:route) { VCAP::CloudController::Route.make(space: space) }
+    let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
+    let!(:destination) { VCAP::CloudController::RouteMappingModel.make(app: app_model, route: route, process_type: 'web') }
+    let(:api_call) { lambda { |user_headers| get "/v3/routes/#{route.guid}/destinations", nil, user_headers } }
+    let(:response_json) do
+      {
+        destinations: [
+          {
+            guid: destination.guid,
+            app: {
+              guid: app_model.guid,
+              process: {
+                type: 'web'
+              }
+            }
+          }
+        ],
+        links: {
+          self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{route.guid}\/destinations) },
+          route: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{route.guid}) }
+        }
+      }
+    end
+
+    context 'when the user is a member in the routes org' do
+      let(:expected_codes_and_responses) do
+        h = Hash.new(
+          code: 200,
+          response_object: response_json
+        )
+
+        h['org_billing_manager'] = { code: 404 }
+        h['no_role'] = { code: 404 }
+        h
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+    end
+
+    context 'when the route does not exist' do
+      let(:user_header) { headers_for(user) }
+
+      it 'returns not found' do
+        get '/v3/routes/does-not-exist/destinations', nil, user_header
+        expect(last_response.status).to eq(404)
+      end
+    end
+
+    context 'when the user is not logged in' do
+      it 'returns 401 for Unauthenticated requests' do
+        get '/v3/routes/guid/destinations'
+        expect(last_response.status).to eq(401)
+      end
+    end
+
+    context 'when the user does not have the required scopes' do
+      let(:user_header) { headers_for(user, scopes: []) }
+
+      it 'returns a 403' do
+        get "/v3/routes/#{route.guid}/destinations", nil, user_header
+        expect(last_response.status).to eq(403)
+      end
+    end
+  end
+
+  describe 'POST /v3/routes/:guid/destinations' do
+    let(:route) { VCAP::CloudController::Route.make(space: space) }
+    let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
+    let(:user_header) { headers_for(user) }
+    let!(:existing_destination) do
+      VCAP::CloudController::RouteMappingModel.make(
+        app: app_model,
+        route: route,
+        process_type: 'worker',
+        app_port: VCAP::CloudController::ProcessModel::DEFAULT_HTTP_PORT
+      )
+    end
+    let(:params) do
+      {
+        destinations: [
+          {
+            app: {
+              guid: app_model.guid,
+              process: {
+                type: 'web'
+              }
+            }
+          },
+          {
+            app: {
+              guid: app_model.guid,
+              process: {
+                type: existing_destination.process_type
+              }
+            }
+          }
+        ]
+      }
+    end
+
+    context 'permissions' do
+      let(:api_call) { lambda { |user_headers| post "/v3/routes/#{route.guid}/destinations", params.to_json, user_headers } }
+
+      let(:response_json) do
+        {
+          destinations: [
+            {
+              guid: existing_destination.guid,
+              app: {
+                guid: app_model.guid,
+                process: {
+                  type: existing_destination.process_type
+                }
+              }
+            },
+            {
+              guid: UUID_REGEX,
+              app: {
+                guid: app_model.guid,
+                process: {
+                  type: 'web'
+                }
+              }
+            }
+          ],
+          links: {
+            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{route.guid}\/destinations) },
+            route: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{route.guid}) }
+          }
+        }
+      end
+      let(:expected_codes_and_responses) do
+        h = Hash.new(
+          code: 403,
+        )
+
+        h['admin'] = { code: 200, response_object: response_json }
+        h['space_developer'] = { code: 200, response_object: response_json }
+        h['org_billing_manager'] = { code: 404 }
+        h['no_role'] = { code: 404 }
+        h
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+      context 'when the user is not logged in' do
+        it 'returns 401 for Unauthenticated requests' do
+          post "/v3/routes/#{route.guid}/destinations", params.to_json
+          expect(last_response.status).to eq(401)
+        end
+      end
+
+      context 'when the user does not have the required scopes' do
+        let(:user_header) { headers_for(user, scopes: ['cloud_controller.read']) }
+
+        it 'returns a 403' do
+          post "/v3/routes/#{route.guid}/destinations", params.to_json, user_header
+          expect(last_response.status).to eq(403)
+        end
+      end
+    end
+
+    describe 'when the user has permissions to the route' do
+      before do
+        set_current_user_as_role(user: user, role: 'space_developer', org: space.organization, space: space)
+      end
+
+      context 'when the route does not exist' do
+        it 'returns not found' do
+          post '/v3/routes/does-not-exist/destinations', params.to_json, user_header
+          expect(last_response.status).to eq(404)
+        end
+      end
+
+      context 'when the org is suspended' do
+        before do
+          space.organization.status = 'suspended'
+          space.organization.save
+        end
+        it 'returns a 403' do
+          post "/v3/routes/#{route.guid}/destinations", params.to_json, user_header
+          expect(last_response.status).to eq(403)
+        end
+      end
+
+      context 'when the app is invalid' do
+        context 'when an app is outside the route space' do
+          let(:app_model) { VCAP::CloudController::AppModel.make }
+          let(:params) do
+            {
+              destinations: [
+                {
+                  app: {
+                    guid: app_model.guid,
+                    process: {
+                      type: 'web'
+                    }
+                  }
+                }
+              ]
+            }
+          end
+
+          before do
+            set_current_user_as_role(user: user, role: 'space_developer', org: app_model.space.organization, space: app_model.space)
+          end
+
+          it 'returns a 403' do
+            post "/v3/routes/#{route.guid}/destinations", params.to_json, user_header
+            expect(last_response.status).to eq(422)
+          end
+        end
+
+        context 'when the app does not exist' do
+          let(:params) do
+            {
+              destinations: [
+                {
+                  app: {
+                    guid: 'whoops',
+                    process: {
+                      type: 'web'
+                    }
+                  }
+                }
+              ]
+            }
+          end
+
+          it 'returns a 422' do
+            post "/v3/routes/#{route.guid}/destinations", params.to_json, user_header
+            expect(last_response.status).to eq(422)
+
+            expect(parsed_response['errors'][0]['detail']).to match('App(s) with guid(s) "whoops" do not exist or you do not have access.')
+          end
+        end
+
+        context 'when the user can not read the app' do
+          let(:non_visible_space) { VCAP::CloudController::Space.make }
+          let(:app_model) { VCAP::CloudController::AppModel.make(space: non_visible_space) }
+          let(:params) do
+            {
+              destinations: [
+                {
+                  app: {
+                    guid: app_model.guid,
+                    process: {
+                      type: 'web'
+                    }
+                  }
+                }
+              ]
+            }
+          end
+
+          it 'returns a ' do
+            post "/v3/routes/#{route.guid}/destinations", params.to_json, user_header
+            expect(last_response.status).to eq(422)
+            expect(parsed_response['errors'][0]['detail']).to match("App(s) with guid(s) \"#{app_model.guid}\" do not exist or you do not have access.")
+          end
+        end
       end
     end
   end

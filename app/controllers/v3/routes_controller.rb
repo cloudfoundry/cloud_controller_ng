@@ -2,7 +2,10 @@ require 'messages/route_create_message'
 require 'messages/routes_list_message'
 require 'messages/route_show_message'
 require 'messages/route_update_message'
+require 'messages/route_add_destinations_message'
+require 'actions/add_route_destinations'
 require 'presenters/v3/route_presenter'
+require 'presenters/v3/route_destinations_presenter'
 require 'presenters/v3/paginated_list_presenter'
 require 'actions/route_create'
 require 'actions/route_delete'
@@ -86,6 +89,36 @@ class RoutesController < ApplicationController
     head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job.guid}")
   end
 
+  def index_destinations
+    message = RouteShowMessage.new({ guid: hashed_params['guid'] })
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    route = Route.find(guid: message.guid)
+    route_not_found! unless route && permission_queryer.can_read_route?(route.space.guid, route.organization.guid)
+
+    render status: :ok, json: Presenters::V3::RouteDestinationsPresenter.new(route)
+  end
+
+  def insert_destinations
+    message = RouteAddDestinationsMessage.new(hashed_params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    route = Route.find(guid: hashed_params[:guid])
+    route_not_found! unless route && permission_queryer.can_read_route?(route.space.guid, route.organization.guid)
+
+    unauthorized! unless permission_queryer.can_write_to_space?(route.space.guid)
+
+    desired_app_guids = message.destinations.map { |dst| HashUtils.dig(dst, :app, :guid) }.compact
+
+    apps_hash = AppModel.where(guid: desired_app_guids).inject({}) {| apps_hsh, app | apps_hsh[app.guid] = app; apps_hsh }
+    validate_app_guids!(apps_hash, desired_app_guids)
+    validate_app_spaces!(apps_hash, route)
+
+    route = AddRouteDestinations.add(message, route, apps_hash)
+
+    render status: :ok, json: Presenters::V3::RouteDestinationsPresenter.new(route)
+  end
+
   private
 
   def route_not_found!
@@ -102,5 +135,19 @@ class RoutesController < ApplicationController
 
   def unprocessable_domain!
     unprocessable!('Invalid domain. Ensure that the domain exists and you have access to it.')
+  end
+
+  def validate_app_guids!(apps_hash, desired_app_guids)
+    existing_app_guids = apps_hash.keys
+
+    missing_app_guids = desired_app_guids - (existing_app_guids & permission_queryer.readable_app_guids)
+
+    unprocessable!("App(s) with guid(s) \"#{missing_app_guids.join('","')}\" do not exist or you do not have access.") unless missing_app_guids.empty?
+  end
+
+  def validate_app_spaces!(apps_hash, route)
+    if apps_hash.values.any? { |app| app.space != route.space }
+      unprocessable!('Routes cannot be mapped to destinations in different spaces.')
+    end
   end
 end
