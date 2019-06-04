@@ -17,6 +17,7 @@ module VCAP::CloudController
               vip: route.vip
             )
           end
+          logger.debug("Upsert route with GUID: #{route.guid} and vip: #{route.vip}")
         end
 
         def map_route(route_mapping)
