@@ -15,7 +15,7 @@ module VCAP::CloudController
           rescue AppAssignDroplet::Error => e
             raise SetCurrentDropletError.new(e)
           end
-
+          record_audit_event(deployment, user_audit_info)
           deployment.update(state: DeploymentModel::CANCELING_STATE)
         end
       end
@@ -30,6 +30,18 @@ module VCAP::CloudController
 
       def reject_invalid_states!(deployment)
         raise InvalidState.new("Cannot cancel a #{deployment.state} deployment")
+      end
+
+      def record_audit_event(deployment, user_audit_info)
+        app = deployment.app
+        Repositories::DeploymentEventRepository.record_cancel(
+          deployment,
+          deployment.droplet,
+          user_audit_info,
+          app.name,
+          app.space_guid,
+          app.space.organization_guid,
+        )
       end
     end
   end

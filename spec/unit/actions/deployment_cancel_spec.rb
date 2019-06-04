@@ -42,6 +42,27 @@ module VCAP::CloudController
           expect(app.reload.droplet).to eq(old_droplet)
         end
 
+        it 'records an audit event for the cancelled deployment' do
+          DeploymentCancel.cancel(deployment: deployment, user_audit_info: user_audit_info)
+
+          event = VCAP::CloudController::Event.find(type: 'audit.app.deployment.cancel')
+          expect(event).not_to be_nil
+          expect(event.actor).to eq('1234')
+          expect(event.actor_type).to eq('user')
+          expect(event.actor_name).to eq('eric@example.com')
+          expect(event.actor_username).to eq('eric')
+          expect(event.actee).to eq(app.guid)
+          expect(event.actee_type).to eq('app')
+          expect(event.actee_name).to eq(app.name)
+          expect(event.timestamp).to be
+          expect(event.space_guid).to eq(app.space_guid)
+          expect(event.organization_guid).to eq(app.space.organization.guid)
+          expect(event.metadata).to eq({
+            'droplet_guid' => new_droplet.guid,
+            'deployment_guid' => deployment.guid
+          })
+        end
+
         context 'when setting the current droplet errors' do
           before do
             app_assign_droplet = instance_double(AppAssignDroplet)
