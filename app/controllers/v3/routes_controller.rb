@@ -1,10 +1,12 @@
 require 'messages/route_create_message'
-require 'messages/route_show_message'
 require 'messages/routes_list_message'
+require 'messages/route_show_message'
+require 'messages/route_update_message'
 require 'presenters/v3/route_presenter'
 require 'presenters/v3/paginated_list_presenter'
 require 'actions/route_create'
 require 'actions/route_delete'
+require 'actions/route_update'
 require 'fetchers/route_fetcher'
 
 class RoutesController < ApplicationController
@@ -51,6 +53,21 @@ class RoutesController < ApplicationController
     render status: :created, json: Presenters::V3::RoutePresenter.new(route)
   rescue RouteCreate::Error => e
     unprocessable!(e)
+  end
+
+  def update
+    route = Route.find(guid: hashed_params[:guid])
+    route_not_found! unless route
+
+    message = RouteUpdateMessage.new(hashed_params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    route_not_found! unless route && permission_queryer.can_read_route?(route.space.guid, route.organization.guid)
+    unauthorized! unless permission_queryer.can_write_to_space?(route.space.guid)
+
+    route = VCAP::CloudController::RouteUpdate.new.update(route: route, message: message)
+
+    render status: :ok, json: Presenters::V3::RoutePresenter.new(route)
   end
 
   def destroy

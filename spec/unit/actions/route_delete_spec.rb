@@ -37,7 +37,22 @@ module VCAP::CloudController
         let(:service_instance) { ManagedServiceInstance.make(:routing, space: space) }
         let!(:route_binding) { RouteBinding.make(route: route, service_instance: service_instance) }
         let!(:route_mapping) { RouteMappingModel.make(app: app, route: route, app_port: 8080) }
+        let!(:route_label) do
+          VCAP::CloudController::RouteLabelModel.make(
+            resource_guid: route.guid,
+            key_prefix: 'pfx.com',
+            key_name: 'potato',
+            value: 'baked'
+          )
+        end
 
+        let!(:route_annotation) do
+          VCAP::CloudController::RouteAnnotationModel.make(
+            resource_guid: route.guid,
+            key: 'contacts',
+            value: 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)'
+          )
+        end
         before do
           stub_unbind(route_binding)
         end
@@ -56,6 +71,22 @@ module VCAP::CloudController
             route_delete.delete([route])
           }.to change { RouteBinding.count }.by(-1)
           expect(route_binding.exists?).to be_falsey
+          expect(route.exists?).to be_falsey
+        end
+
+        it 'deletes associated metadata labels' do
+          expect {
+            route_delete.delete([route])
+          }.to change { RouteLabelModel.count }.by(-1)
+          expect(RouteLabelModel.count).to eq 0
+          expect(route.exists?).to be_falsey
+        end
+
+        it 'deletes associated metadata labels' do
+          expect {
+            route_delete.delete([route])
+          }.to change { RouteAnnotationModel.count }.by(-1)
+          expect(RouteAnnotationModel.count).to eq 0
           expect(route.exists?).to be_falsey
         end
       end

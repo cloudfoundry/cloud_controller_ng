@@ -198,6 +198,8 @@ module VCAP::CloudController
 
     def before_destroy
       destroy_route_bindings
+      LabelDelete.delete(labels)
+      AnnotationDelete.delete(annotations)
       super
     end
 
