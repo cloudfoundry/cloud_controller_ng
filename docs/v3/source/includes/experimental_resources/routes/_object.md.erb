@@ -8,13 +8,15 @@ Example Route object
 <%= yield_content :single_route %>
 ```
 
-| Name           | Type                                           | Description                                                                                                                     |
-| -------------- | ------------------------                       | ------------------------------------------------------                                                                          |
-| **guid**       | _uuid_                                         | Unique identifier for the route.                                                                                               |
-| **host**       | _string_                                       | The hostname for the route.<br>Must be under 63 character long and only contain letters, numbers, dashes (-) or underscores(_). |
-| **path**       | _string_                                       | The path for the route.<br>Must be under 128 character long and not contain question marks (?), begin with a slash (/) and not be exactly a slash (/). Must conform to path components from [RFC 2396](https://tools.ietf.org/html/rfc2396). |
-| **created_at** | _datetime_                                     | The time with zone when the object was created.                                                                                 |
-| **updated_at** | _datetime_                                     | The time with zone when the object was last updated.                                                                            |
-| **space**      | [_to-one relationship_](#to-one-relationships) | A relationship to the space containing the route. Routes can only be mapped to destinations in that space.                      |
-| **domain**     | [_to-one relationship_](#to-one-relationships) | A relationship to the domain of the route.                                                                                      |
-| **links**      | [_links object_](#links)                       | Links to related resources.                                                                                                     |
+| Name                                      | Type                                           | Description                                                                                                                     |
+| --------------                            | ------------------------                       | ------------------------------------------------------                                                                          |
+| **guid**                                  | _uuid_                                         | Unique identifier for the route.                                                                                               |
+| **host**                                  | _string_                                       | The hostname for the route.<br>Must be under 63 character long and only contain letters, numbers, dashes (-) or underscores(_). |
+| **path**                                  | _string_                                       | The path for the route.<br>Must be under 128 character long and not contain question marks (?), begin with a slash (/) and not be exactly a slash (/). Must conform to path components from [RFC 2396](https://tools.ietf.org/html/rfc2396). |
+| **created_at**                            | _datetime_                                     | The time with zone when the object was created.                                                                                 |
+| **updated_at**                            | _datetime_                                     | The time with zone when the object was last updated.                                                                            |
+| **space**                                 | [_to-one relationship_](#to-one-relationships) | A relationship to the space containing the route. Routes can only be mapped to destinations in that space.                      |
+| **domain**                                | [_to-one relationship_](#to-one-relationships) | A relationship to the domain of the route.                                                                                      |
+| **links**                                 | [_links object_](#links)                       | Links to related resources.                                                                                                     |
+| **metadata.labels** _(experimental)_      | [_label object_](#labels)                        | Labels applied to the route.                                                                                                                                 |
+| **metadata.annotations** _(experimental)_ | [_annotation object_](#annotations)              | Annotations applied to the route.
