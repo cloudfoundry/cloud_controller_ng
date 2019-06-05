@@ -11,15 +11,15 @@ RSpec.describe 'Routes Request' do
     let(:other_space) { VCAP::CloudController::Space.make }
     let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: space.organization) }
     let!(:route_in_org) do
-      VCAP::CloudController::Route.make(space: space, domain: domain, host: 'host-1', path: '/path1')
+      VCAP::CloudController::Route.make(space: space, domain: domain, host: 'host-1', path: '/path1', guid: 'route-in-org-guid')
     end
     let!(:route_in_other_org) do
-      VCAP::CloudController::Route.make(space: other_space, host: 'host-2', path: '/path2')
+      VCAP::CloudController::Route.make(space: other_space, host: 'host-2', path: '/path2', guid: 'route-in-other-org-guid')
     end
     let(:api_call) { lambda { |user_headers| get '/v3/routes', nil, user_headers } }
     let(:route_in_org_json) do
       {
-        guid: UUID_REGEX,
+        guid: route_in_org.guid,
         host: route_in_org.host,
         path: route_in_org.path,
         created_at: iso8601,
@@ -37,7 +37,7 @@ RSpec.describe 'Routes Request' do
           annotations: {}
         },
         links: {
-          self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },
+          self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{route_in_org.guid}) },
           space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{route_in_org.space.guid}) },
           domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{route_in_org.domain.guid}) }
         }
@@ -46,7 +46,7 @@ RSpec.describe 'Routes Request' do
 
     let(:route_in_other_org_json) do
       {
-        guid: UUID_REGEX,
+        guid: route_in_other_org.guid,
         host: route_in_other_org.host,
         path: route_in_other_org.path,
         created_at: iso8601,
@@ -64,7 +64,7 @@ RSpec.describe 'Routes Request' do
           annotations: {}
         },
         links: {
-          self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },
+          self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{route_in_other_org.guid}) },
           space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{route_in_other_org.space.guid}) },
           domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{route_in_other_org.domain.guid}) }
         }
@@ -147,6 +147,169 @@ RSpec.describe 'Routes Request' do
         }).to match_json_response({
           resources: [route_in_other_org_json]
         })
+      end
+    end
+
+    describe 'labels' do
+      let!(:domain1) { VCAP::CloudController::PrivateDomain.make(name: 'dom1.com', owning_organization: org) }
+      let!(:route1) { VCAP::CloudController::Route.make(space: space, domain: domain1, guid: 'guid-1') }
+      let!(:route1_label) { VCAP::CloudController::RouteLabelModel.make(resource_guid: route1.guid, key_name: 'animal', value: 'dog') }
+
+      let!(:domain2) { VCAP::CloudController::PrivateDomain.make(name: 'dom2.com', owning_organization: org) }
+      let!(:route2) { VCAP::CloudController::Route.make(space: space, domain: domain2, guid: 'guid-2') }
+      let!(:route2_label) { VCAP::CloudController::RouteLabelModel.make(resource_guid: route2.guid, key_name: 'animal', value: 'cow') }
+      let!(:route2__exclusive_label) { VCAP::CloudController::RouteLabelModel.make(resource_guid: route2.guid, key_name: 'santa', value: 'claus') }
+
+      it 'returns a 200 and the filtered routes for "in" label selector' do
+        get '/v3/routes?label_selector=animal in (dog)', nil, admin_header
+
+        parsed_response = MultiJson.load(last_response.body)
+
+        expected_pagination = {
+          'total_results' => 1,
+          'total_pages' => 1,
+          'first' => { 'href' => "#{link_prefix}/v3/routes?label_selector=animal+in+%28dog%29&page=1&per_page=50" },
+          'last' => { 'href' => "#{link_prefix}/v3/routes?label_selector=animal+in+%28dog%29&page=1&per_page=50" },
+          'next' => nil,
+          'previous' => nil
+        }
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(route1.guid)
+        expect(parsed_response['pagination']).to eq(expected_pagination)
+      end
+
+      it 'returns a 200 and the filtered routes for "notin" label selector' do
+        get '/v3/routes?label_selector=animal notin (dog)', nil, admin_header
+
+        parsed_response = MultiJson.load(last_response.body)
+
+        expected_pagination = {
+          'total_results' => 3,
+          'total_pages' => 1,
+          'first' => { 'href' => "#{link_prefix}/v3/routes?label_selector=animal+notin+%28dog%29&page=1&per_page=50" },
+          'last' => { 'href' => "#{link_prefix}/v3/routes?label_selector=animal+notin+%28dog%29&page=1&per_page=50" },
+          'next' => nil,
+          'previous' => nil
+        }
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(route2.guid, route_in_org.guid, route_in_other_org.guid)
+        expect(parsed_response['pagination']).to eq(expected_pagination)
+      end
+
+      it 'returns a 200 and the filtered routes for "=" label selector' do
+        get '/v3/routes?label_selector=animal=dog', nil, admin_header
+
+        parsed_response = MultiJson.load(last_response.body)
+
+        expected_pagination = {
+          'total_results' => 1,
+          'total_pages' => 1,
+          'first' => { 'href' => "#{link_prefix}/v3/routes?label_selector=animal%3Ddog&page=1&per_page=50" },
+          'last' => { 'href' => "#{link_prefix}/v3/routes?label_selector=animal%3Ddog&page=1&per_page=50" },
+          'next' => nil,
+          'previous' => nil
+        }
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(route1.guid)
+        expect(parsed_response['pagination']).to eq(expected_pagination)
+      end
+
+      it 'returns a 200 and the filtered domains for "==" label selector' do
+        get '/v3/routes?label_selector=animal==dog', nil, admin_header
+
+        parsed_response = MultiJson.load(last_response.body)
+
+        expected_pagination = {
+          'total_results' => 1,
+          'total_pages' => 1,
+          'first' => { 'href' => "#{link_prefix}/v3/routes?label_selector=animal%3D%3Ddog&page=1&per_page=50" },
+          'last' => { 'href' => "#{link_prefix}/v3/routes?label_selector=animal%3D%3Ddog&page=1&per_page=50" },
+          'next' => nil,
+          'previous' => nil
+        }
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(route1.guid)
+        expect(parsed_response['pagination']).to eq(expected_pagination)
+      end
+
+      it 'returns a 200 and the filtered routes for "!=" label selector' do
+        get '/v3/routes?label_selector=animal!=dog', nil, admin_header
+
+        parsed_response = MultiJson.load(last_response.body)
+
+        expected_pagination = {
+          'total_results' => 3,
+          'total_pages' => 1,
+          'first' => { 'href' => "#{link_prefix}/v3/routes?label_selector=animal%21%3Ddog&page=1&per_page=50" },
+          'last' => { 'href' => "#{link_prefix}/v3/routes?label_selector=animal%21%3Ddog&page=1&per_page=50" },
+          'next' => nil,
+          'previous' => nil
+        }
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(route2.guid, route_in_org.guid, route_in_other_org.guid)
+        expect(parsed_response['pagination']).to eq(expected_pagination)
+      end
+
+      it 'returns a 200 and the filtered routes for "=" label selector' do
+        get '/v3/routes?label_selector=animal=cow,santa=claus', nil, admin_header
+
+        parsed_response = MultiJson.load(last_response.body)
+
+        expected_pagination = {
+          'total_results' => 1,
+          'total_pages' => 1,
+          'first' => { 'href' => "#{link_prefix}/v3/routes?label_selector=animal%3Dcow%2Csanta%3Dclaus&page=1&per_page=50" },
+          'last' => { 'href' => "#{link_prefix}/v3/routes?label_selector=animal%3Dcow%2Csanta%3Dclaus&page=1&per_page=50" },
+          'next' => nil,
+          'previous' => nil
+        }
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(route2.guid)
+        expect(parsed_response['pagination']).to eq(expected_pagination)
+      end
+
+      it 'returns a 200 and the filtered routes for existence label selector' do
+        get '/v3/routes?label_selector=santa', nil, admin_header
+
+        parsed_response = MultiJson.load(last_response.body)
+
+        expected_pagination = {
+          'total_results' => 1,
+          'total_pages' => 1,
+          'first' => { 'href' => "#{link_prefix}/v3/routes?label_selector=santa&page=1&per_page=50" },
+          'last' => { 'href' => "#{link_prefix}/v3/routes?label_selector=santa&page=1&per_page=50" },
+          'next' => nil,
+          'previous' => nil
+        }
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(route2.guid)
+        expect(parsed_response['pagination']).to eq(expected_pagination)
+      end
+
+      it 'returns a 200 and the filtered routes for non-existence label selector' do
+        get '/v3/routes?label_selector=!santa', nil, admin_header
+
+        parsed_response = MultiJson.load(last_response.body)
+
+        expected_pagination = {
+          'total_results' => 3,
+          'total_pages' => 1,
+          'first' => { 'href' => "#{link_prefix}/v3/routes?label_selector=%21santa&page=1&per_page=50" },
+          'last' => { 'href' => "#{link_prefix}/v3/routes?label_selector=%21santa&page=1&per_page=50" },
+          'next' => nil,
+          'previous' => nil
+        }
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(route1.guid, route_in_org.guid, route_in_other_org.guid)
+        expect(parsed_response['pagination']).to eq(expected_pagination)
       end
     end
 

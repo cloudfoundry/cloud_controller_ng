@@ -125,6 +125,45 @@ module VCAP::CloudController
           end
         end
       end
+
+      context 'when fetching routes by label selector' do
+        let!(:route_label) do
+          VCAP::CloudController::RouteLabelModel.make(resource_guid: route1.guid, key_name: 'dog', value: 'scooby-doo')
+        end
+
+        let!(:sad_route_label) do
+          VCAP::CloudController::RouteLabelModel.make(resource_guid: route2.guid, key_name: 'dog', value: 'poodle')
+        end
+
+        let!(:happiest_route_label) do
+          VCAP::CloudController::RouteLabelModel.make(resource_guid: route3.guid, key_name: 'dog', value: 'chihuahua')
+        end
+
+        let(:results) { RouteFetcher.fetch(message, [route1.guid, route3.guid]).all }
+
+        context 'only the label_selector is present' do
+          let(:results) { RouteFetcher.fetch(message, [route1.guid]).all }
+
+          let(:message) {
+            RoutesListMessage.from_params({ 'label_selector' => 'dog in (chihuahua,scooby-doo)' })
+          }
+          it 'returns only the route whose label matches' do
+            expect(results.length).to eq(1)
+            expect(results[0]).to eq(route1)
+          end
+        end
+
+        context 'and other filters are present' do
+          let(:message) {
+            RoutesListMessage.from_params({ paths: '/path1', hosts: 'host2', 'label_selector' => 'dog in (chihuahua,scooby-doo)' })
+          }
+
+          it 'returns the desired app' do
+            expect(results.length).to eq(1)
+            expect(results[0]).to eq(route3)
+          end
+        end
+      end
     end
   end
 end

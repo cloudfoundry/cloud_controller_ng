@@ -3,6 +3,18 @@ require 'messages/routes_list_message'
 
 module VCAP::CloudController
   RSpec.describe RoutesListMessage do
+    describe '.from_params' do
+      let(:params) do
+        { 'label_selector' => 'animal in (cat,dog)' }
+      end
+
+      it 'returns the correct RoutesListMessage' do
+        message = RoutesListMessage.from_params(params)
+
+        expect(message).to be_a(RoutesListMessage)
+        expect(message.label_selector).to eq('animal in (cat,dog)')
+      end
+    end
     describe 'fields' do
       it 'accepts an empty set' do
         message = RoutesListMessage.from_params({})

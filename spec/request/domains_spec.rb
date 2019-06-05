@@ -419,7 +419,7 @@ RSpec.describe 'Domains Request' do
       let!(:domain2_label) { VCAP::CloudController::DomainLabelModel.make(resource_guid: domain2.guid, key_name: 'animal', value: 'cow') }
       let!(:domain2__exclusive_label) { VCAP::CloudController::DomainLabelModel.make(resource_guid: domain2.guid, key_name: 'santa', value: 'claus') }
 
-      it 'returns a 200 and the filtered apps for "in" label selector' do
+      it 'returns a 200 and the filtered domains for "in" label selector' do
         get '/v3/domains?label_selector=animal in (dog)', nil, admin_header
 
         parsed_response = MultiJson.load(last_response.body)

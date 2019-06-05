@@ -7,7 +7,8 @@ module VCAP::CloudController
       :space_guids,
       :organization_guids,
       :domain_guids,
-      :paths
+      :paths,
+      :label_selector,
     ]
 
     validates_with NoAdditionalParamsValidator
