@@ -18,16 +18,28 @@ module VCAP::CloudController
           broker,
           service_manager,
           service_event_repository,
-          true, # TODO: get it from config
-          true, # TODO: get it from config
+          route_services_enabled?,
+          volume_services_enabled?,
         )
 
         registration.create
+
+        {
+          warnings: registration.warnings
+        }
       end
 
       private
 
       attr_reader :service_event_repository, :service_manager
+
+      def route_services_enabled?
+        VCAP::CloudController::Config.config.get(:route_services_enabled)
+      end
+
+      def volume_services_enabled?
+        VCAP::CloudController::Config.config.get(:volume_services_enabled)
+      end
     end
   end
 end

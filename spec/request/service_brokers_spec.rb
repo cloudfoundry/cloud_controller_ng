@@ -1,6 +1,43 @@
 require 'spec_helper'
 
 RSpec.describe 'V3 service brokers' do
+  def catalog
+    {
+      'services' => [
+        {
+          'id' => 'service_id-1',
+          'name' => 'service_name-1',
+          'description' => 'some description 1',
+          'bindable' => true,
+          'plans' => [
+            {
+              'id' => 'fake_plan_id-1',
+              'name' => 'plan_name-1',
+              'description' => 'fake_plan_description 1',
+              'schemas' => nil
+            }
+          ]
+        },
+
+        {
+          'id' => 'service_id-2',
+          'name' => 'route_volume_service_name-2',
+          'requires' => ['volume_mount', 'route_forwarding'],
+          'description' => 'some description 2',
+          'bindable' => true,
+          'plans' => [
+            {
+              'id' => 'fake_plan_id-2',
+              'name' => 'plan_name-2',
+              'description' => 'fake_plan_description 2',
+              'schemas' => nil
+            }
+          ]
+        },
+      ]
+    }
+  end
+
   context 'as an admin user' do
     describe 'getting a single service broker' do
       context 'when there are no service brokers' do
@@ -318,12 +355,7 @@ RSpec.describe 'V3 service brokers' do
     end
 
     describe 'registering a global service broker' do
-      before(:each) do
-        catalog = FakeServiceBrokerV2Client.new.catalog
-
-        stub_request(:get, 'http://example.org/broker-url/v2/catalog').
-          to_return(status: 200, body: catalog.to_json, headers: {})
-
+      subject do
         post('/v3/service_brokers', {
           name: 'broker name',
           url: 'http://example.org/broker-url',
@@ -332,40 +364,92 @@ RSpec.describe 'V3 service brokers' do
         }.to_json, admin_headers)
       end
 
-      it 'returns 201 Created' do
-        expect(last_response).to have_status_code(201)
+      before do
+        stub_request(:get, 'http://example.org/broker-url/v2/catalog').
+          to_return(status: 200, body: catalog.to_json, headers: {})
       end
 
-      it 'creates a service broker entity' do
-        expect(VCAP::CloudController::ServiceBroker.count).to eq(1)
+      context 'when route and volume mount services are enabled' do
+        before do
+          TestConfig.config[:route_services_enabled] = true
+          TestConfig.config[:volume_services_enabled] = true
+          subject
+        end
 
-        service_broker = VCAP::CloudController::ServiceBroker.last
-        expect(service_broker).to include(
-          'name' => 'broker name',
-          'broker_url' => 'http://example.org/broker-url',
-          'auth_username' => 'admin',
-          'space_guid' => nil,
-        )
-        expect(service_broker.auth_password).to eq('welcome') # password not exported in to_hash
+        it 'returns 201 Created' do
+          expect(last_response).to have_status_code(201)
+        end
+
+        it 'creates a service broker entity' do
+          expect(VCAP::CloudController::ServiceBroker.count).to eq(1)
+
+          service_broker = VCAP::CloudController::ServiceBroker.last
+          expect(service_broker).to include(
+            'name' => 'broker name',
+            'broker_url' => 'http://example.org/broker-url',
+            'auth_username' => 'admin',
+            'space_guid' => nil,
+                                    )
+          expect(service_broker.auth_password).to eq('welcome') # password not exported in to_hash
+        end
+
+        it 'synchronizes services and plans' do
+          service_broker = VCAP::CloudController::ServiceBroker.last
+
+          services = VCAP::CloudController::Service.where(service_broker_id: service_broker.id)
+          expect(services.count).to eq(2)
+
+          service = services.first
+          expect(service).to include('label' => 'service_name-1')
+          plan = VCAP::CloudController::ServicePlan.where(service_id: service.id).first
+          expect(plan).to include('name' => 'plan_name-1')
+        end
+
+        it 'reports service events' do
+          events = VCAP::CloudController::Event.all
+          expect(events).to have(4).items
+          expect(events[0]).to include('type' => 'audit.service.create', 'actor_name' => 'broker name')
+          expect(events[1]).to include('type' => 'audit.service.create', 'actor_name' => 'broker name')
+          expect(events[2]).to include('type' => 'audit.service_plan.create', 'actor_name' => 'broker name')
+          expect(events[3]).to include('type' => 'audit.service_plan.create', 'actor_name' => 'broker name')
+        end
       end
 
-      it 'synchronizes services and plans' do
-        service_broker = VCAP::CloudController::ServiceBroker.last
-        service = VCAP::CloudController::Service.where(service_broker_id: service_broker.id).first
-        expect(service).to include(
-          'label' => 'service_name',
-        )
-        plan = VCAP::CloudController::ServicePlan.where(service_id: service.id).first
-        expect(plan).to include(
-          'name' => 'fake_plan_name',
-        )
-      end
+      context 'when route and volume mount services are disabled' do
+        before do
+          TestConfig.config[:route_services_enabled] = false
+          TestConfig.config[:volume_services_enabled] = false
+          subject
+        end
 
-      it 'reports service events' do
-        events = VCAP::CloudController::Event.all
-        expect(events).to have(2).items
-        expect(events[0]).to include('type' => 'audit.service.create', 'actor_name' => 'broker name')
-        expect(events[1]).to include('type' => 'audit.service_plan.create', 'actor_name' => 'broker name')
+        context 'and service broker catalog requires route and volume mount services' do
+          it 'returns 201 Created' do
+            expect(last_response).to have_status_code(201)
+          end
+
+          it 'creates a service broker entity and synchronizes services and plans' do
+            service_broker = VCAP::CloudController::ServiceBroker.last
+            expect(VCAP::CloudController::ServiceBroker.count).to eq(1)
+
+            services = VCAP::CloudController::Service.where(service_broker_id: service_broker.id)
+            expect(services.count).to eq(2)
+
+            plans = services.flat_map(&:service_plans)
+            expect(plans.count).to eq(2)
+          end
+
+          it 'returns warning in the header' do
+            service = VCAP::CloudController::Service.find(label: 'route_volume_service_name-2')
+            warnings = last_response.headers['X-Cf-Warnings'].split(',').map { |w| CGI.unescape(w) }
+            expect(warnings).
+              to eq([
+                "Service #{service.label} is declared to be a route service but support for route services is disabled." \
+                ' Users will be prevented from binding instances of this service with routes.',
+                "Service #{service.label} is declared to be a volume mount service but support for volume mount services is disabled." \
+                ' Users will be prevented from binding instances of this service with apps.'
+              ])
+          end
+        end
       end
     end
   end
