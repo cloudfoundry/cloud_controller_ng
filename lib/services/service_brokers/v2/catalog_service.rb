@@ -71,9 +71,14 @@ module VCAP::Services::ServiceBrokers::V2
       validate_tags!(:tags, tags)
       validate_array_of_strings!(:requires, requires)
 
-      validate_hash!(:metadata, metadata) if metadata
+      validate_metadata! if metadata
       validate_dashboard_client!
       validate_requires
+    end
+
+    def validate_metadata!
+      validate_hash!(:metadata, metadata)
+      validate_bool!(:metadata_shareable, metadata['shareable']) if metadata.is_a?(Hash)
     end
 
     def validate_plans
@@ -174,6 +179,7 @@ module VCAP::Services::ServiceBrokers::V2
         plan_updateable: 'Service "plan_updateable" field',
         tags: 'Service tags',
         metadata: 'Service metadata',
+        metadata_shareable: 'Service metadata shareable',
         plans: 'Service plans list',
         requires: 'Service "requires" field',
         dashboard_client: 'Service dashboard client attributes',
