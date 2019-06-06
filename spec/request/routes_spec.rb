@@ -22,6 +22,7 @@ RSpec.describe 'Routes Request' do
         guid: route_in_org.guid,
         host: route_in_org.host,
         path: route_in_org.path,
+        url: "#{route_in_org.host}.#{route_in_org.domain.name}#{route_in_org.path}",
         created_at: iso8601,
         updated_at: iso8601,
         relationships: {
@@ -49,6 +50,7 @@ RSpec.describe 'Routes Request' do
         guid: route_in_other_org.guid,
         host: route_in_other_org.host,
         path: route_in_other_org.path,
+        url: "#{route_in_other_org.host}.#{route_in_other_org.domain.name}#{route_in_other_org.path}",
         created_at: iso8601,
         updated_at: iso8601,
         relationships: {
@@ -338,6 +340,7 @@ RSpec.describe 'Routes Request' do
         guid: UUID_REGEX,
         host: route.host,
         path: route.path,
+        url: "#{route.host}.#{route.domain.name}#{route.path}",
         created_at: iso8601,
         updated_at: iso8601,
         relationships: {
@@ -431,6 +434,7 @@ RSpec.describe 'Routes Request' do
             guid: UUID_REGEX,
             host: '',
             path: '',
+            url: domain.name,
             created_at: iso8601,
             updated_at: iso8601,
             relationships: {
@@ -500,6 +504,7 @@ RSpec.describe 'Routes Request' do
             guid: UUID_REGEX,
             host: 'some-host',
             path: '/some-path',
+            url: "some-host.#{domain.name}/some-path",
             created_at: iso8601,
             updated_at: iso8601,
             relationships: {
@@ -576,6 +581,7 @@ RSpec.describe 'Routes Request' do
             guid: UUID_REGEX,
             host: '*',
             path: '',
+            url: "*.#{domain.name}",
             created_at: iso8601,
             updated_at: iso8601,
             relationships: {
@@ -665,6 +671,7 @@ RSpec.describe 'Routes Request' do
             guid: UUID_REGEX,
             host: 'some-host',
             path: '',
+            url: "some-host.#{domain.name}",
             created_at: iso8601,
             updated_at: iso8601,
             relationships: {
@@ -729,6 +736,7 @@ RSpec.describe 'Routes Request' do
             guid: UUID_REGEX,
             host: '*',
             path: '',
+            url: "*.#{domain.name}",
             created_at: iso8601,
             updated_at: iso8601,
             relationships: {
@@ -800,6 +808,7 @@ RSpec.describe 'Routes Request' do
           guid: UUID_REGEX,
           host: 'some-host',
           path: '',
+          url: "some-host.#{domain.name}",
           created_at: iso8601,
           updated_at: iso8601,
           relationships: {
@@ -913,6 +922,7 @@ RSpec.describe 'Routes Request' do
             guid: UUID_REGEX,
             host: 'some-host',
             path: '',
+            url: "some-host.#{domain.name}",
             created_at: iso8601,
             updated_at: iso8601,
             relationships: {
@@ -1137,6 +1147,7 @@ RSpec.describe 'Routes Request' do
           guid: UUID_REGEX,
           host: params[:host],
           path: '',
+          url: "#{params[:host]}.#{domain.name}",
           created_at: iso8601,
           updated_at: iso8601,
           relationships: {
@@ -1359,6 +1370,7 @@ RSpec.describe 'Routes Request' do
         guid: UUID_REGEX,
         host: '',
         path: '',
+        url: domain.name,
         created_at: iso8601,
         updated_at: iso8601,
         relationships: {
@@ -1413,6 +1425,7 @@ RSpec.describe 'Routes Request' do
           guid: UUID_REGEX,
           host: '',
           path: '',
+          url: domain.name,
           created_at: iso8601,
           updated_at: iso8601,
           relationships: {
