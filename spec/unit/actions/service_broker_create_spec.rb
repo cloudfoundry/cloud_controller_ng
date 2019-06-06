@@ -7,13 +7,23 @@ module VCAP::CloudController
     let(:service_manager) { double }
     let(:registration) { instance_double(VCAP::Services::ServiceBrokers::ServiceBrokerRegistration) }
     let(:warnings) { [] }
-    let(:result) { V3::ServiceBrokerCreate.new(service_event_repository, service_manager).create(
-      name: 'broker name',
-      url: 'http://example.org/broker-url',
-      username: 'broker username',
-      password: 'broker password',
-    )
-    }
+
+    let(:message) do
+      ServiceBrokerCreateMessage.new(
+        name: 'broker name',
+        url: 'http://example.org/broker-url',
+        credentials: {
+          type: 'basic',
+          data: {
+            username: 'broker username',
+            password: 'broker password',
+          }
+        }
+      )
+    end
+
+    let(:result) { V3::ServiceBrokerCreate.new(service_event_repository, service_manager).create(message) }
+
     let(:service_broker) { ServiceBroker.last }
 
     before do

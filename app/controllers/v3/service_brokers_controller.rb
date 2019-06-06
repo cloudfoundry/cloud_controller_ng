@@ -1,4 +1,5 @@
 require 'messages/service_brokers_list_message'
+require 'messages/service_broker_create_message'
 require 'presenters/v3/service_broker_presenter'
 require 'fetchers/service_broker_list_fetcher'
 require 'actions/service_broker_create'
@@ -35,14 +36,15 @@ class ServiceBrokersController < ApplicationController
   end
 
   def create
+    message = ServiceBrokerCreateMessage.new(hashed_params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
     unauthorized! unless permission_queryer.can_write_service_broker?
 
     service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository::WithBrokerActor.new
     service_manager = VCAP::Services::ServiceBrokers::ServiceManager.new(service_event_repository)
     service_broker_create = VCAP::CloudController::V3::ServiceBrokerCreate.new(service_event_repository, service_manager)
 
-    credentials = params[:body].permit(:name, :url, :username, :password)
-    result = service_broker_create.create(credentials)
+    result = service_broker_create.create(message)
 
     add_warning_headers(result[:warnings])
     render status: :created, json: {}
