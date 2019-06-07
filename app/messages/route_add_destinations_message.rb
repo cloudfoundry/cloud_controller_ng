@@ -4,7 +4,6 @@ module VCAP::CloudController
 
     validates_with NoAdditionalKeysValidator
 
-    validates :destinations, array: true, allow_nil: false, presence: true
     validate :destinations_valid?
 
     private

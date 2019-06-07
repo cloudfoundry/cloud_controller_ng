@@ -110,7 +110,7 @@ class RoutesController < ApplicationController
 
     desired_app_guids = message.destinations.map { |dst| HashUtils.dig(dst, :app, :guid) }.compact
 
-    apps_hash = AppModel.where(guid: desired_app_guids).inject({}) {| apps_hsh, app | apps_hsh[app.guid] = app; apps_hsh }
+    apps_hash = AppModel.where(guid: desired_app_guids).each_with_object({}) { |app, apps_hsh| apps_hsh[app.guid] = app; }
     validate_app_guids!(apps_hash, desired_app_guids)
     validate_app_spaces!(apps_hash, route)
 
