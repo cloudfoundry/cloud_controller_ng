@@ -23,9 +23,7 @@ module VCAP::CloudController
       private
 
       def valid_state?(deployment)
-        [
-          DeploymentModel::DEPLOYING_STATE,
-        ].include?(deployment.state)
+        DeploymentModel::CANCELABLE_STATES.include?(deployment.state)
       end
 
       def reject_invalid_states!(deployment)

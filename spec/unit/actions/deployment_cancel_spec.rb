@@ -126,6 +126,64 @@ module VCAP::CloudController
           }.to raise_error(DeploymentCancel::InvalidState, 'Cannot cancel a CANCELING deployment')
         end
       end
+
+      context 'when the deployment is in the FAILING state' do
+        let(:state) { DeploymentModel::FAILING_STATE }
+
+        it 'sets the deployments state to CANCELING' do
+          expect(deployment.state).to_not eq('CANCELING')
+          DeploymentCancel.cancel(deployment: deployment, user_audit_info: user_audit_info)
+          expect(deployment.reload.state).to eq('CANCELING')
+        end
+
+        it "resets the app's current droplet to the previous droplet from the deploy" do
+          DeploymentCancel.cancel(deployment: deployment, user_audit_info: user_audit_info)
+          expect(app.reload.droplet).to eq(old_droplet)
+        end
+
+        context 'when setting the current droplet errors' do
+          before do
+            app_assign_droplet = instance_double(AppAssignDroplet)
+            allow(app_assign_droplet).to receive(:assign).and_raise(AppAssignDroplet::Error.new('ahhhh!'))
+            allow(AppAssignDroplet).to receive(:new).and_return(app_assign_droplet)
+          end
+
+          it 'raises the error' do
+            expect {
+              DeploymentCancel.cancel(deployment: deployment, user_audit_info: user_audit_info)
+            }.to raise_error(DeploymentCancel::SetCurrentDropletError, 'ahhhh!')
+          end
+        end
+
+        context 'when the previous droplet of the deployment is nil' do
+          let(:old_droplet) { nil }
+
+          it 'raises the error' do
+            expect {
+              DeploymentCancel.cancel(deployment: deployment, user_audit_info: user_audit_info)
+            }.to raise_error(DeploymentCancel::SetCurrentDropletError, /Unable to assign current droplet\./)
+          end
+        end
+
+        context 'when the previous droplet no longer exists' do
+          it 'raises the error' do
+            old_droplet.destroy
+            expect {
+              DeploymentCancel.cancel(deployment: deployment, user_audit_info: user_audit_info)
+            }.to raise_error(DeploymentCancel::SetCurrentDropletError, /Unable to assign current droplet\./)
+          end
+        end
+      end
+
+      context 'when the deployment is in the FAILED state' do
+        let(:state) { DeploymentModel::FAILED_STATE }
+
+        it 'raises an error' do
+          expect {
+            DeploymentCancel.cancel(deployment: deployment, user_audit_info: user_audit_info)
+          }.to raise_error(DeploymentCancel::InvalidState, 'Cannot cancel a FAILED deployment')
+        end
+      end
     end
   end
 end

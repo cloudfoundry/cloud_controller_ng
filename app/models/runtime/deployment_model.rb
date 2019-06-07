@@ -9,6 +9,8 @@ module VCAP::CloudController
       CANCELED_STATE = 'CANCELED'.freeze
     ].freeze
 
+    CANCELABLE_STATES = [DEPLOYING_STATE, FAILING_STATE].freeze
+
     many_to_one :app,
       class: 'VCAP::CloudController::AppModel',
       primary_key: :guid,
