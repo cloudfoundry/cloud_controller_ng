@@ -15794,6 +15794,7 @@ Deployed revisions are revisions that are linked to started processes in the app
     </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cbad697f-cac1-48f4-9017-ac08f39dfb31"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"host"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a-hostname"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/some_path"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a-hostname.a-domain.com/some_path"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -15848,6 +15849,11 @@ Deployed revisions are revisions that are linked to started processes in the app
 <td><strong>path</strong></td>
 <td><em>string</em></td>
 <td>The path for the route.<br>Must be under 128 character long and not contain question marks (?), begin with a slash (/) and not be exactly a slash (/). Must conform to path components from <a href="https://tools.ietf.org/html/rfc2396">RFC 2396</a>.</td>
+</tr>
+<tr>
+<td><strong>url</strong></td>
+<td><em>string</em></td>
+<td>The URL for the route. Combination of host, domain name, and path.</td>
 </tr>
 <tr>
 <td><strong>created_at</strong></td>
@@ -15915,6 +15921,7 @@ Deployed revisions are revisions that are linked to started processes in the app
     </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cbad697f-cac1-48f4-9017-ac08f39dfb31"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"host"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a-hostname"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/some_path"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a-hostname.a-domain.com/some_path"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -16028,6 +16035,7 @@ Deployed revisions are revisions that are linked to started processes in the app
     </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cbad697f-cac1-48f4-9017-ac08f39dfb31"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"host"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a-hostname"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/some_path"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a-hostname.a-domain.com/some_path"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -16139,6 +16147,7 @@ Deployed revisions are revisions that are linked to started processes in the app
         </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cbad697f-cac1-48f4-9017-ac08f39dfb31"</span><span class="p">,</span><span class="w">
         </span><span class="nt">"host"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a-hostname"</span><span class="p">,</span><span class="w">
         </span><span class="nt">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/some_path"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a-hostname.a-domain.com/some_path"</span><span class="p">,</span><span class="w">
         </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
         </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
         </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -16271,6 +16280,7 @@ Deployed revisions are revisions that are linked to started processes in the app
     </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cbad697f-cac1-48f4-9017-ac08f39dfb31"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"host"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a-hostname"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/some_path"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a-hostname.a-domain.com/some_path"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
