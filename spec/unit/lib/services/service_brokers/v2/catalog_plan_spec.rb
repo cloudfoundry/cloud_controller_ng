@@ -54,13 +54,6 @@ module VCAP::Services::ServiceBrokers::V2
         expect(plan).to be_valid
         expect(plan.errors.messages).to be_empty
       end
-
-      it 'allows @maintenance_info object to contain fields other than version' do
-        plan_attrs['maintenance_info'] = { 'version' => '1.2.3', 'foo' => 'bar' }
-
-        expect(plan).to be_valid
-        expect(plan.errors.messages).to be_empty
-      end
     end
 
     describe 'validations' do
@@ -167,6 +160,13 @@ module VCAP::Services::ServiceBrokers::V2
 
         expect(plan).to_not be_valid
         expect(plan.errors.messages.first).to include 'Maintenance info version is required'
+      end
+
+      it 'validates that @maintenance_info object contains only the version' do
+        plan_attrs['maintenance_info'] = { 'version' => '1.2.3', 'foo' => 'bar', 'baz' => 'qux' }
+
+        expect(plan).to_not be_valid
+        expect(plan.errors.messages.first).to include 'Maintenance info contains invalid key(s): foo, baz'
       end
 
       it 'validates that @maintenance_info version is a string' do

@@ -2,6 +2,8 @@ module VCAP::Services::ServiceBrokers::V2
   class CatalogPlan
     include CatalogValidationHelper
 
+    ALLOWED_MAINTENANCE_INFO_KEYS = ['version'].freeze
+
     attr_reader :broker_provided_id, :name, :description, :metadata, :maximum_polling_duration, :maintenance_info
     attr_reader :catalog_service, :errors, :free, :bindable, :schemas, :plan_updateable
 
@@ -60,6 +62,15 @@ module VCAP::Services::ServiceBrokers::V2
       validate_hash!(:maintenance_info, @maintenance_info)
       validate_semver!(:maintenance_info_version, @maintenance_info['version'], required: true)
       validate_length_as_json!(:maintenance_info, @maintenance_info, 2000)
+      validate_maintenance_info_keys! if @maintenance_info.is_a?(Hash)
+    end
+
+    def validate_maintenance_info_keys!
+      disallowed_attrs = @maintenance_info.slice!(*ALLOWED_MAINTENANCE_INFO_KEYS)
+      extra_keys       = disallowed_attrs.keys
+      if extra_keys.any?
+        errors.add(%(#{human_readable_attr_name(:maintenance_info)} contains invalid key(s): #{extra_keys.join(', ')}))
+      end
     end
 
     def validate_schemas!
