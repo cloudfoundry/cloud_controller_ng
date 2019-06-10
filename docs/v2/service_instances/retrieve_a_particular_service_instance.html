@@ -539,7 +539,7 @@ curl "https://api.[your-domain.com]/v2/service_instances/0d632575-bb06-4ea5-bb19
             </td>
             <td>
               <ul class="example_values">
-                <li>{"version":"2.1"}</li>
+                <li>{"version":"2.1.0", "description": "OS image update.\nExpect downtime."}</li>
               </ul>
             </td>
           </tr>
@@ -576,7 +576,10 @@ curl "https://api.[your-domain.com]/v2/service_instances/0d632575-bb06-4ea5-bb19
       "accounting",
       "mongodb"
     ],
-    "maintenance_info": {},
+    "maintenance_info": {
+      "version": "2.1.1",
+      "description": "OS image update.\nExpect downtime."
+    },
     "space_url": "/v2/spaces/38511660-89d9-4a6e-a889-c32c7e94f139",
     "service_url": "/v2/services/a14baddf-1ccc-5299-0152-ab9s49de4422",
     "service_plan_url": "/v2/service_plans/779d2df0-9cdd-48e8-9781-ea05301cedb1",

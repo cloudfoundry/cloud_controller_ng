@@ -48,7 +48,14 @@ module VCAP::Services::ServiceBrokers::V2
         expect(plan.schemas).to be {}
       end
 
-      it 'allows a valid maintenance_info object' do
+      it 'allows a full maintenance_info object' do
+        plan_attrs['maintenance_info'] = { 'version' => '1.2.3-alpha1', 'description' => 'OS update.' }
+
+        expect(plan).to be_valid
+        expect(plan.errors.messages).to be_empty
+      end
+
+      it 'allows a maintenance_info object with required version only' do
         plan_attrs['maintenance_info'] = { 'version' => '1.2.3-alpha1' }
 
         expect(plan).to be_valid
@@ -174,6 +181,13 @@ module VCAP::Services::ServiceBrokers::V2
 
         expect(plan).to_not be_valid
         expect(plan.errors.messages.first).to include 'Maintenance info version must be a string, but has value 42'
+      end
+
+      it 'validates that @maintenance_info description is a string' do
+        plan_attrs['maintenance_info'] = { 'version' => '1.0.0', 'description' => true }
+
+        expect(plan).to_not be_valid
+        expect(plan.errors.messages.first).to include 'Maintenance info description must be a string, but has value true'
       end
 
       it 'validates that @maintenance_info version is semver compliant' do

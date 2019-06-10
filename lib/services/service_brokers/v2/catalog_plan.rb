@@ -2,7 +2,7 @@ module VCAP::Services::ServiceBrokers::V2
   class CatalogPlan
     include CatalogValidationHelper
 
-    ALLOWED_MAINTENANCE_INFO_KEYS = ['version'].freeze
+    ALLOWED_MAINTENANCE_INFO_KEYS = ['version', 'description'].freeze
 
     attr_reader :broker_provided_id, :name, :description, :metadata, :maximum_polling_duration, :maintenance_info
     attr_reader :catalog_service, :errors, :free, :bindable, :schemas, :plan_updateable
@@ -61,6 +61,7 @@ module VCAP::Services::ServiceBrokers::V2
     def validate_maintenance_info!
       validate_hash!(:maintenance_info, @maintenance_info)
       validate_semver!(:maintenance_info_version, @maintenance_info['version'], required: true)
+      validate_string!(:maintenance_info_description, @maintenance_info['description'])
       validate_length_as_json!(:maintenance_info, @maintenance_info, 2000)
       validate_maintenance_info_keys! if @maintenance_info.is_a?(Hash)
     end
@@ -81,17 +82,18 @@ module VCAP::Services::ServiceBrokers::V2
 
     def human_readable_attr_name(name)
       {
-        broker_provided_id:         'Plan id',
-        name:                       'Plan name',
-        description:                'Plan description',
-        metadata:                   'Plan metadata',
-        free:                       'Plan free',
-        bindable:                   'Plan bindable',
-        plan_updateable:            'Plan updateable',
-        schemas:                    'Plan schemas',
-        maintenance_info:           'Maintenance info',
-        maintenance_info_version:   'Maintenance info version',
-        maximum_polling_duration:   'Maximum polling duration',
+        broker_provided_id:           'Plan id',
+        name:                         'Plan name',
+        description:                  'Plan description',
+        metadata:                     'Plan metadata',
+        free:                         'Plan free',
+        bindable:                     'Plan bindable',
+        plan_updateable:              'Plan updateable',
+        schemas:                      'Plan schemas',
+        maximum_polling_duration:     'Maximum polling duration',
+        maintenance_info:             'Maintenance info',
+        maintenance_info_version:     'Maintenance info version',
+        maintenance_info_description: 'Maintenance info description',
       }.fetch(name) { raise NotImplementedError }
     end
   end
