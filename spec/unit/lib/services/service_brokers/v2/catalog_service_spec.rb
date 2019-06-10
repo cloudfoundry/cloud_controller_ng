@@ -198,12 +198,32 @@ module VCAP::Services::ServiceBrokers::V2
         expect(service.errors.messages).to include 'Service "requires" field contains unsupported value "foo"'
       end
 
+      it 'allows @metadata to be nil' do
+        attrs = build_valid_service_attrs(metadata: nil)
+        service = CatalogService.new(instance_double(VCAP::CloudController::ServiceBroker), attrs)
+        expect(service).to be_valid
+      end
+
       it 'validates that @metadata is a hash' do
         attrs = build_valid_service_attrs(metadata: ['list', 'of', 'strings'])
         service = CatalogService.new(instance_double(VCAP::CloudController::ServiceBroker), attrs)
         expect(service).not_to be_valid
 
         expect(service.errors.messages).to include 'Service metadata must be a hash, but has value ["list", "of", "strings"]'
+      end
+
+      it 'validates that @metadata.shareable is a boolean when present' do
+        attrs = build_valid_service_attrs(metadata: { 'shareable' => 'oopsie' })
+        service = CatalogService.new(instance_double(VCAP::CloudController::ServiceBroker), attrs)
+        expect(service).not_to be_valid
+
+        expect(service.errors.messages).to include 'Service metadata shareable must be a boolean, but has value "oopsie"'
+      end
+
+      it 'allows @metadata.shareable when it is a boolean' do
+        attrs = build_valid_service_attrs(metadata: { 'shareable' => true })
+        service = CatalogService.new(instance_double(VCAP::CloudController::ServiceBroker), attrs)
+        expect(service).to be_valid
       end
 
       it 'validates that the plans list is present' do
