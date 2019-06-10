@@ -20,6 +20,19 @@ module VCAP::CloudController
                    end
 
         previous_deployment = DeploymentModel.find(app: app, state: [DeploymentModel::DEPLOYING_STATE, DeploymentModel::FAILING_STATE])
+
+        if app.stopped?
+          return deployment_for_stopped_app(
+            app,
+            message,
+            previous_deployment,
+            previous_droplet,
+            revision,
+            target_state,
+            user_audit_info
+          )
+        end
+
         deployment = DeploymentModel.create(
           app: app,
           state: DeploymentModel::DEPLOYING_STATE,
@@ -111,6 +124,26 @@ module VCAP::CloudController
       end
 
       private
+
+      def deployment_for_stopped_app(app, message, previous_deployment, previous_droplet, revision, target_state, user_audit_info)
+        # Do not create a revision here because AppStart will not handle the rollback case
+        AppStart.start(app: app, user_audit_info: user_audit_info, create_revision: false)
+        deployment = DeploymentModel.create(
+          app: app,
+          state: DeploymentModel::DEPLOYED_STATE,
+          droplet: target_state.droplet,
+          previous_droplet: previous_droplet,
+          original_web_process_instance_count: desired_instances(app.oldest_web_process, previous_deployment),
+          revision_guid: revision&.guid,
+          revision_version: revision&.version
+        )
+
+        MetadataUpdate.update(deployment, message)
+
+        record_audit_event(deployment, target_state.droplet, user_audit_info, message)
+
+        deployment
+      end
 
       def desired_instances(original_web_process, previous_deployment)
         if previous_deployment

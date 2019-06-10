@@ -202,19 +202,6 @@ RSpec.describe DeploymentsController, type: :controller do
         end
       end
 
-      context 'when the app is stopped' do
-        before do
-          app.update(desired_state: VCAP::CloudController::ProcessModel::STOPPED)
-          app.save
-        end
-
-        it 'returns 422 with an error message' do
-          post :create, params: request_body, as: :json
-          expect(response.status).to eq 422
-          expect(response.body).to include('Cannot create a deployment for a STOPPED app.')
-        end
-      end
-
       context 'when a revision is provided' do
         let(:newer_droplet) { VCAP::CloudController::DropletModel.make(app: app, process_types: { 'web' => 'rackup' }) }
         let!(:earlier_revision) do

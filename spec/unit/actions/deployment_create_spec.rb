@@ -4,7 +4,7 @@ require 'messages/deployment_create_message'
 
 module VCAP::CloudController
   RSpec.describe DeploymentCreate do
-    let(:app) { AppModel.make }
+    let(:app) { AppModel.make(desired_state: ProcessModel::STARTED) }
     let!(:web_process) { ProcessModel.make(app: app, instances: 3) }
     let(:original_droplet) { DropletModel.make(app: app, process_types: { 'web' => 'asdf' }) }
     let(:next_droplet) { DropletModel.make(app: app, process_types: { 'web' => '1234' }) }
@@ -437,6 +437,88 @@ module VCAP::CloudController
               expect(deployment.annotations.map(&:value)).to contain_exactly('Bummer-boy', 'Bums you out')
             end
           end
+
+          context 'when the app is stopped' do
+            before do
+              app.update(desired_state: ProcessModel::STOPPED)
+              app.save
+            end
+
+            it 'sets the current droplet of the app to be the provided droplet' do
+              DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+
+              expect(app.droplet).to eq(next_droplet)
+            end
+
+            it 'starts the app' do
+              DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+
+              expect(app.reload.desired_state).to eq(ProcessModel::STARTED)
+            end
+
+            it 'creates a deployment with the provided droplet in DEPLOYED state' do
+              deployment = nil
+
+              expect {
+                deployment = DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+              }.to change { DeploymentModel.count }.by(1)
+
+              expect(deployment.state).to eq(DeploymentModel::DEPLOYED_STATE)
+              expect(deployment.app_guid).to eq(app.guid)
+              expect(deployment.droplet_guid).to eq(next_droplet.guid)
+              expect(deployment.previous_droplet).to eq(original_droplet)
+              expect(deployment.original_web_process_instance_count).to eq(3)
+              expect(deployment.last_healthy_at).to eq(deployment.created_at)
+            end
+
+            it 'records an audit event for the deployment' do
+              deployment = DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+
+              event = VCAP::CloudController::Event.find(type: 'audit.app.deployment.create')
+              expect(event).not_to be_nil
+              expect(event.actor).to eq('123')
+              expect(event.actor_type).to eq('user')
+              expect(event.actor_name).to eq('connor@example.com')
+              expect(event.actor_username).to eq('braa')
+              expect(event.actee).to eq(app.guid)
+              expect(event.actee_type).to eq('app')
+              expect(event.actee_name).to eq(app.name)
+              expect(event.timestamp).to be
+              expect(event.space_guid).to eq(app.space_guid)
+              expect(event.organization_guid).to eq(app.space.organization.guid)
+              expect(event.metadata).to eq({
+                'droplet_guid' => next_droplet.guid,
+                'deployment_guid' => deployment.guid,
+                'type' =>  nil,
+                'revision_guid' => nil,
+                'request' => message.audit_hash
+              })
+            end
+
+            context 'when the message specifies metadata' do
+              let(:message) do
+                DeploymentCreateMessage.new({
+                  'metadata' => {
+                    labels: {
+                      release: 'stable',
+                      'seriouseats.com/potato': 'mashed'
+                    },
+                    annotations: {
+                      superhero: 'Bummer-boy',
+                      superpower: 'Bums you out',
+                    }
+                  },
+                })
+              end
+
+              it 'saves the metadata to the new deployment' do
+                deployment = DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+
+                expect(deployment.labels.map(&:value)).to contain_exactly('stable', 'mashed')
+                expect(deployment.annotations.map(&:value)).to contain_exactly('Bummer-boy', 'Bums you out')
+              end
+            end
+          end
         end
 
         context 'when the same droplet is provided (zdt-restart)' do
@@ -513,6 +595,82 @@ module VCAP::CloudController
               }.to change { RevisionModel.count }.by(2)
 
               expect(app.reload.newest_web_process.command).to eq 'something else'
+            end
+          end
+
+          context 'when the app is stopped' do
+            before do
+              app.update(desired_state: ProcessModel::STOPPED)
+              app.save
+            end
+
+            it 'starts the app' do
+              DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+
+              expect(app.reload.desired_state).to eq(ProcessModel::STARTED)
+            end
+
+            it 'creates a deployment with the provided droplet in DEPLOYED state' do
+              deployment = nil
+
+              expect {
+                deployment = DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+              }.to change { DeploymentModel.count }.by(1)
+
+              expect(deployment.state).to eq(DeploymentModel::DEPLOYED_STATE)
+              expect(deployment.app_guid).to eq(app.guid)
+              expect(deployment.droplet_guid).to eq(next_droplet.guid)
+              expect(deployment.previous_droplet).to eq(original_droplet)
+              expect(deployment.original_web_process_instance_count).to eq(3)
+              expect(deployment.last_healthy_at).to eq(deployment.created_at)
+            end
+
+            it 'records an audit event for the deployment' do
+              deployment = DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+
+              event = VCAP::CloudController::Event.find(type: 'audit.app.deployment.create')
+              expect(event).not_to be_nil
+              expect(event.actor).to eq('123')
+              expect(event.actor_type).to eq('user')
+              expect(event.actor_name).to eq('connor@example.com')
+              expect(event.actor_username).to eq('braa')
+              expect(event.actee).to eq(app.guid)
+              expect(event.actee_type).to eq('app')
+              expect(event.actee_name).to eq(app.name)
+              expect(event.timestamp).to be
+              expect(event.space_guid).to eq(app.space_guid)
+              expect(event.organization_guid).to eq(app.space.organization.guid)
+              expect(event.metadata).to eq({
+                'droplet_guid' => next_droplet.guid,
+                'deployment_guid' => deployment.guid,
+                'type' =>  nil,
+                'revision_guid' => nil,
+                'request' => message.audit_hash
+              })
+            end
+
+            context 'when the message specifies metadata' do
+              let(:message) do
+                DeploymentCreateMessage.new({
+                  'metadata' => {
+                    labels: {
+                      release: 'stable',
+                      'seriouseats.com/potato': 'mashed'
+                    },
+                    annotations: {
+                      superhero: 'Bummer-boy',
+                      superpower: 'Bums you out',
+                    }
+                  },
+                })
+              end
+
+              it 'saves the metadata to the new deployment' do
+                deployment = DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+
+                expect(deployment.labels.map(&:value)).to contain_exactly('stable', 'mashed')
+                expect(deployment.annotations.map(&:value)).to contain_exactly('Bummer-boy', 'Bums you out')
+              end
             end
           end
         end
@@ -688,6 +846,89 @@ module VCAP::CloudController
                 DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
               }.to raise_error(DeploymentCreate::Error, 'Unable to rollback. The code and configuration you are rolling back to is the same as the deployed revision.')
             }.not_to change { RevisionModel.count }
+          end
+        end
+
+        context 'when the app is stopped' do
+          before do
+            app.update(desired_state: ProcessModel::STOPPED)
+            app.save
+          end
+
+          it 'sets the current droplet of the app to be the droplet associated with the revision' do
+            DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+
+            expect(app.droplet).to eq(rollback_droplet)
+          end
+
+          it 'starts the app' do
+            DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+
+            expect(app.reload.desired_state).to eq(ProcessModel::STARTED)
+          end
+
+          it 'creates a deployment with the provided droplet in DEPLOYED state' do
+            deployment = nil
+
+            expect {
+              deployment = DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+            }.to change { DeploymentModel.count }.by(1)
+
+            expect(deployment.state).to eq(DeploymentModel::DEPLOYED_STATE)
+            expect(deployment.app_guid).to eq(app.guid)
+            expect(deployment.droplet_guid).to eq(rollback_droplet.guid)
+            expect(deployment.previous_droplet).to eq(original_droplet)
+            expect(deployment.original_web_process_instance_count).to eq(3)
+            expect(deployment.last_healthy_at).to eq(deployment.created_at)
+          end
+
+          it 'records an audit event for the deployment' do
+            deployment = DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+
+            revision = RevisionModel.last
+            event = VCAP::CloudController::Event.find(type: 'audit.app.deployment.create')
+            expect(event).not_to be_nil
+            expect(event.actor).to eq('123')
+            expect(event.actor_type).to eq('user')
+            expect(event.actor_name).to eq('connor@example.com')
+            expect(event.actor_username).to eq('braa')
+            expect(event.actee).to eq(app.guid)
+            expect(event.actee_type).to eq('app')
+            expect(event.actee_name).to eq(app.name)
+            expect(event.timestamp).to be
+            expect(event.space_guid).to eq(app.space_guid)
+            expect(event.organization_guid).to eq(app.space.organization.guid)
+            expect(event.metadata).to eq({
+              'droplet_guid' => rollback_droplet.guid,
+              'deployment_guid' => deployment.guid,
+              'type' =>  'rollback',
+              'revision_guid' => revision.guid,
+              'request' => message.audit_hash
+            })
+          end
+
+          context 'when the message specifies metadata' do
+            let(:message) do
+              DeploymentCreateMessage.new({
+                'metadata' => {
+                  labels: {
+                    release: 'stable',
+                    'seriouseats.com/potato': 'mashed'
+                  },
+                  annotations: {
+                    superhero: 'Bummer-boy',
+                    superpower: 'Bums you out',
+                  }
+                },
+              })
+            end
+
+            it 'saves the metadata to the new deployment' do
+              deployment = DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+
+              expect(deployment.labels.map(&:value)).to contain_exactly('stable', 'mashed')
+              expect(deployment.annotations.map(&:value)).to contain_exactly('Bummer-boy', 'Bums you out')
+            end
           end
         end
       end

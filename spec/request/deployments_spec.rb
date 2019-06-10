@@ -402,6 +402,75 @@ RSpec.describe 'Deployments' do
         end
       end
     end
+
+    context 'when the app is stopped' do
+      let(:other_droplet) { VCAP::CloudController::DropletModel.make(app: app_model, process_types: { web: 'start-me-up' }) }
+      let(:create_request) do
+        {
+          droplet: {
+            guid: other_droplet.guid
+          },
+          relationships: {
+            app: {
+              data: {
+                guid: app_model.guid
+              }
+            },
+          }
+        }
+      end
+
+      before do
+        app_model.update(desired_state: VCAP::CloudController::ProcessModel::STOPPED)
+        app_model.save
+      end
+
+      it 'creates a deployment object in state DEPLOYED' do
+        post '/v3/deployments', create_request.to_json, user_header
+        expect(last_response.status).to eq(201)
+        parsed_response = MultiJson.load(last_response.body)
+
+        deployment = VCAP::CloudController::DeploymentModel.last
+
+        expect(parsed_response).to be_a_response_like({
+          'guid' => deployment.guid,
+          'state' => 'DEPLOYED',
+          'droplet' => {
+            'guid' => other_droplet.guid
+          },
+          'revision' => nil,
+          'previous_droplet' => {
+            'guid' => droplet.guid
+          },
+          'new_processes' => [],
+          'created_at' => iso8601,
+          'updated_at' => iso8601,
+          'metadata' => metadata,
+          'relationships' => {
+            'app' => {
+              'data' => {
+                'guid' => app_model.guid
+              }
+            }
+          },
+          'links' => {
+            'self' => {
+              'href' => "#{link_prefix}/v3/deployments/#{deployment.guid}"
+            },
+            'app' => {
+              'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
+            }
+          }
+        })
+      end
+
+      it 'starts the app' do
+        post '/v3/deployments', create_request.to_json, user_header
+        expect(last_response.status).to eq(201)
+
+        expect(app_model.reload.desired_state).to eq(VCAP::CloudController::ProcessModel::STARTED)
+      end
+    end
   end
 
   describe 'PATCH /v3/deployments' do
