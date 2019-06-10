@@ -13,9 +13,11 @@ module VCAP::CloudController
               guid: route.guid,
               host: route.fqdn,
               path: route.path,
-              internal: route.internal?
+              internal: route.internal?,
+              vip: route.vip
             )
           end
+          logger.debug("Upsert route with GUID: #{route.guid} and vip: #{route.vip}")
         end
 
         def map_route(route_mapping)

@@ -19,7 +19,7 @@ module VCAP::CloudController
         let(:route) { Route.make(domain: istio_domain, host: 'some-host', path: '/some/path') }
         let!(:route_mapping) { RouteMappingModel.make(route: route, app: app, process_type: 'web', app_port: 9191) }
 
-        let(:internal_route) { Route.make(domain: internal_istio_domain, host: 'internal-host') }
+        let(:internal_route) { Route.make(domain: internal_istio_domain, host: 'internal-host', vip_offset: 1) }
         let!(:internal_route_mapping) { RouteMappingModel.make(route: internal_route, app: app, process_type: 'web', app_port: 9191) }
 
         let(:legacy_domain) { SharedDomain.make }
@@ -46,12 +46,14 @@ module VCAP::CloudController
                 guid: route.guid,
                 host: route.fqdn,
                 path: route.path,
-                internal: false
+                internal: false,
+                vip: nil
               }, {
                 guid: internal_route.guid,
                 host: internal_route.fqdn,
                 path: '',
-                internal: true
+                internal: true,
+                vip: internal_route.vip
               }],
               route_mappings: [{
                 capi_process_guid: web_process_model.guid,
@@ -85,12 +87,14 @@ module VCAP::CloudController
                     guid: route.guid,
                     host: route.fqdn,
                     path: route.path,
-                    internal: false
+                    internal: false,
+                    vip: nil
                   }, {
                     guid: internal_route.guid,
                     host: internal_route.fqdn,
                     path: '',
-                    internal: true
+                    internal: true,
+                    vip: internal_route.vip
                   }],
                   route_mappings: [{
                     capi_process_guid: web_process_model.guid,
@@ -135,8 +139,8 @@ module VCAP::CloudController
 
           expect(Copilot::Adapter).to have_received(:bulk_sync) do |args|
             expect(args[:routes]).to match_array([
-              { guid: route_1.guid, host: route_1.fqdn, path: route_1.path, internal: false },
-              { guid: route_2.guid, host: route_2.fqdn, path: route_2.path, internal: false }
+              { guid: route_1.guid, host: route_1.fqdn, path: route_1.path, internal: false, vip: nil },
+              { guid: route_2.guid, host: route_2.fqdn, path: route_2.path, internal: false, vip: nil }
             ])
             expect(args[:route_mappings]).to match_array([
               {

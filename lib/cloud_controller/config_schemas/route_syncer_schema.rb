@@ -36,6 +36,8 @@ module VCAP::CloudController
             optional(:pbkdf2_hmac_iterations) => Integer
           },
 
+          internal_route_vip_range: String,
+
           copilot: {
             sync_frequency_in_seconds: Integer,
             enabled: bool,

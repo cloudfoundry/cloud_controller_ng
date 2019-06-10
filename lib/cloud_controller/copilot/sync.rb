@@ -12,7 +12,7 @@ module VCAP::CloudController
         web_processes = batch(processes_batch_query)
 
         Adapter.bulk_sync(
-          routes: routes.map { |r| { guid: r.guid, host: r.fqdn, path: r.path, internal: r.internal? } },
+          routes: routes.map { |r| { guid: r.guid, host: r.fqdn, path: r.path, internal: r.internal?, vip: r.vip } },
           route_mappings: route_mappings.reject { |rm| rm.process.nil? }.map do |rm|
             {
               capi_process_guid: rm.process.guid,

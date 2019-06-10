@@ -14,6 +14,7 @@ module VCAP::CloudController
     before do
       allow(CloudController::DependencyLocator.instance).to receive(:copilot_client).and_return(copilot_client)
       allow(Steno).to receive(:logger).and_return(fake_logger)
+      allow(fake_logger).to receive(:debug)
       TestConfig.override(copilot: { enabled: true, temporary_istio_domains: [istio_domain.name, internal_istio_domain.name] })
     end
 
@@ -27,7 +28,9 @@ module VCAP::CloudController
           host: route.fqdn,
           path: '',
           internal: false,
+          vip: nil
         )
+        expect(fake_logger).to have_received(:debug).with("Upsert route with GUID: #{route.guid} and vip: #{route.vip}")
       end
 
       context 'when the route has a path' do
@@ -40,7 +43,9 @@ module VCAP::CloudController
             host: route.fqdn,
             path: '/some/path',
             internal: false,
+            vip: route.vip
           )
+          expect(fake_logger).to have_received(:debug).with("Upsert route with GUID: #{route.guid} and vip: #{route.vip}")
         end
       end
 
@@ -54,7 +59,9 @@ module VCAP::CloudController
             host: route.fqdn,
             path: '',
             internal: true,
+            vip: '127.128.0.1'
           )
+          expect(fake_logger).to have_received(:debug).with("Upsert route with GUID: #{route.guid} and vip: #{route.vip}")
         end
       end
 
@@ -68,6 +75,7 @@ module VCAP::CloudController
             host: route.fqdn,
             path: '',
             internal: false,
+            vip: route.vip
           )
         end
       end
