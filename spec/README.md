@@ -20,6 +20,9 @@ These tests run against a full Cloud Foundry deployment. These are similar in st
 
 High-level API specs for the Cloud Controller API. The full JSON response should be tested here. They should fully integrate through the Cloud Controller, but stub external integrations. These should generally just cover the happy path; edge cases, conditionals, and more specific behaviors should be tested in lower level unit tests. If you are testing an if statement here, you are doing it wrong. Go home!
 
+**Update:** We are currently experimenting with writing Request specs _instead_ of Controller specs. This means that newer Request specs may fulfilling some of the Controller spec responsibilities such as validating permissions, status codes, and response bodies.
+See [this ADR](https://github.com/cloudfoundry/cloud_controller_ng/blob/master/decisions/0003-switching-to-request-specs-for-controllers.md) for more information on this experiment.
+
 ### Unit
 
 Unit tests form the bulk of the CC's tests. Despite their name, they often integrate with one of the supported databases. They also may test multiple classes/modules.
