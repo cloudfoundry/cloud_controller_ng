@@ -478,6 +478,22 @@ RSpec.describe 'V3 service brokers' do
           expect(last_response.body).to include('Name must be a string')
         end
       end
+
+      context 'when fetching broker catalog fails' do
+        before do
+          stub_request(:get, 'http://example.org/broker-url/v2/catalog').
+            to_return(status: 418, body: {}.to_json)
+          subject
+        end
+
+        it 'returns 502' do
+          expect(last_response).to have_status_code(502)
+        end
+
+        it 'should not save the broker model in the database' do
+          expect(VCAP::CloudController::ServiceBroker.count).to eq(0)
+        end
+      end
     end
   end
 

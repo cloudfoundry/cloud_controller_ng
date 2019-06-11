@@ -24,26 +24,12 @@ module VCAP::CloudController
 
     let(:result) { V3::ServiceBrokerCreate.new(service_event_repository, service_manager).create(message) }
 
-    let(:service_broker) { ServiceBroker.last }
-
     before do
       allow(VCAP::Services::ServiceBrokers::ServiceBrokerRegistration).to receive(:new).
         and_return(registration)
 
       allow(registration).to receive(:create)
       allow(registration).to receive(:warnings).and_return(warnings)
-    end
-
-    it 'creates a service broker and returns empty warnings' do
-      result
-
-      expect(service_broker).to include(
-        'name' => 'broker name',
-        'broker_url' => 'http://example.org/broker-url',
-        'auth_username' => 'broker username'
-                                )
-      expect(service_broker.auth_password).to eq('broker password')
-      expect(result).to eq(warnings: [])
     end
 
     context 'when route and volume service is enabled' do
@@ -54,8 +40,18 @@ module VCAP::CloudController
       end
 
       it 'delegates to ServiceBrokerRegistration with correct params' do
-        expect(VCAP::Services::ServiceBrokers::ServiceBrokerRegistration).to have_received(:new).
-          with(service_broker, service_manager, service_event_repository, true, true)
+        result
+
+        expect(VCAP::Services::ServiceBrokers::ServiceBrokerRegistration).to have_received(:new) do |broker, manager, repo, route_services_enabled, volume_services_enabled|
+          expect(broker.broker_url).to eq(message.url)
+          expect(broker.name).to eq(message.name)
+          expect(broker.auth_username).to eq(message.credentials_data.username)
+          expect(broker.auth_password).to eq(message.credentials_data.password)
+          expect(manager).to eq(service_manager)
+          expect(repo).to eq(service_event_repository)
+          expect(route_services_enabled).to be_truthy
+          expect(volume_services_enabled).to be_truthy
+        end
         expect(registration).to have_received(:create)
       end
     end
@@ -68,8 +64,10 @@ module VCAP::CloudController
       end
 
       it 'delegates to ServiceBrokerRegistration with correct params' do
-        expect(VCAP::Services::ServiceBrokers::ServiceBrokerRegistration).to have_received(:new).
-          with(service_broker, service_manager, service_event_repository, false, false)
+        expect(VCAP::Services::ServiceBrokers::ServiceBrokerRegistration).to have_received(:new) do |_, _, _, route_services_enabled, volume_services_enabled|
+          expect(route_services_enabled).to be_falsey
+          expect(volume_services_enabled).to be_falsey
+        end
         expect(registration).to have_received(:create)
       end
     end
@@ -79,6 +77,14 @@ module VCAP::CloudController
 
       it 'returns warnings in the result' do
         expect(result).to eq(warnings: warnings)
+      end
+    end
+
+    context 'when there are no warnings on registration' do
+      let(:warnings) { [] }
+
+      it 'returns warnings in the result' do
+        expect(result).to eq(warnings: [])
       end
     end
   end

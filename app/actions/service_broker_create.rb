@@ -7,7 +7,7 @@ module VCAP::CloudController
       end
 
       def create(message)
-        broker = VCAP::CloudController::ServiceBroker.create(
+        broker = VCAP::CloudController::ServiceBroker.new(
           name: message.name,
           broker_url: message.url,
           auth_username: message.credentials_data.username,
