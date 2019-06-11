@@ -42,6 +42,7 @@ module VCAP::CloudController
       it 'populates the start time to now' do
         now = Time.now.utc
         Timecop.freeze now do
+          diagnostics.request_received(request)
           expect(current_request[:start_time]).to be_within(0.01).of(now.to_f)
         end
       end
