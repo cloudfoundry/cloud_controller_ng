@@ -2591,6 +2591,17 @@ module VCAP::CloudController
           end
         end
 
+        context 'when the maintenance was already performed' do
+          let(:old_maintenance_info) { { 'version' => '2.0' } }
+
+          it 'does not call the broker and returns 201' do
+            put "/v2/service_instances/#{service_instance.guid}", body
+
+            expect(a_request(:patch, /#{service_broker_url}/)).not_to have_been_made
+            expect(last_response).to have_status_code 201
+          end
+        end
+
         context 'when the broker responds asynchronously' do
           before do
             stub_request(:patch, "#{service_broker_url}?accepts_incomplete=true").

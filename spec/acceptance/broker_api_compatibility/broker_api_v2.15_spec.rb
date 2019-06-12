@@ -501,8 +501,15 @@ RSpec.describe 'Service Broker API integration' do
       end
 
       context 'when updating the service with the provided maintanance_info' do
+        let(:service_instance) do
+          VCAP::CloudController::ManagedServiceInstance.make(
+            space_guid: @space_guid,
+            service_plan_guid: @plan_guid,
+            maintenance_info: { 'version' => '1.0.0' })
+        end
+
         before do
-          provision_service
+          @service_instance_guid = service_instance.guid
         end
 
         it 'should forward the maintanance info to the broker' do

@@ -41,7 +41,7 @@ module VCAP::CloudController
     def update_broker_needed?(attrs, old_service_plan_guid, service_instance)
       return true if attrs['parameters']
       return true if attrs['name'] && service_instance.service.allow_context_updates
-      return true if attrs['maintenance_info']
+      return true if attrs['maintenance_info'] && attrs['maintenance_info']['version'] != service_instance.maintenance_info['version']
       return false if !attrs['service_plan_guid']
 
       attrs['service_plan_guid'] != old_service_plan_guid
@@ -71,15 +71,20 @@ module VCAP::CloudController
                        service_instance.service_plan
                      end
 
-      client = VCAP::Services::ServiceClientProvider.provide({ instance: service_instance })
+      maintenance_info = if request_attrs.key?('service_plan_guid')
+                           service_plan.maintenance_info
+                         else
+                           request_attrs['maintenance_info']
+                         end
 
+      client = VCAP::Services::ServiceClientProvider.provide({ instance: service_instance })
       response, err = client.update(
         service_instance,
         service_plan,
         accepts_incomplete: accepts_incomplete,
         arbitrary_parameters: request_attrs['parameters'],
         previous_values: previous_values,
-        maintenance_info: request_attrs['maintenance_info'] || service_plan.maintenance_info,
+        maintenance_info: maintenance_info,
       )
 
       service_instance.last_operation.update_attributes(response[:last_operation])
@@ -98,8 +103,9 @@ module VCAP::CloudController
           service_plan = ServicePlan.find(guid: service_plan_guid)
           attrs_to_update[:service_plan] = service_plan
           attrs_to_update[:maintenance_info] = service_plan.maintenance_info
+        elsif maintenance_info
+          attrs_to_update[:maintenance_info] = maintenance_info
         end
-        attrs_to_update[:maintenance_info] = maintenance_info if maintenance_info
         service_instance.update_service_instance(attrs_to_update)
       end
     end
