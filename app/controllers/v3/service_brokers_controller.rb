@@ -48,6 +48,8 @@ class ServiceBrokersController < ApplicationController
 
     add_warning_headers(result[:warnings])
     render status: :created, json: {}
+  rescue VCAP::CloudController::V3::ServiceBrokerCreate::InvalidServiceBroker => e
+    unprocessable!(e.message)
   end
 
   private

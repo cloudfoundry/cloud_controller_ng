@@ -1,6 +1,8 @@
 module VCAP::CloudController
   module V3
     class ServiceBrokerCreate
+      class InvalidServiceBroker < StandardError; end
+
       def initialize(service_event_repository, service_manager)
         @service_event_repository = service_event_repository
         @service_manager = service_manager
@@ -22,7 +24,9 @@ module VCAP::CloudController
           volume_services_enabled?,
         )
 
-        registration.create
+        unless registration.create
+          raise InvalidServiceBroker.new(broker.errors.full_messages.join(','))
+        end
 
         {
           warnings: registration.warnings

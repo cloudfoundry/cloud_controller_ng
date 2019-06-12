@@ -10,7 +10,7 @@ module VCAP::CloudController
         CloudController::Errors::ApiError.new_from_details('ServiceBrokerUrlTaken', broker.broker_url)
       elsif errors.on(:broker_url) && errors.on(:broker_url).include?(:basic_auth)
         CloudController::Errors::ApiError.new_from_details('ServiceBrokerUrlBasicAuthNotSupported', broker.broker_url)
-      elsif errors.on(:name) && errors.on(:name).include?(:unique)
+      elsif errors.on(:name) && errors.on(:name).any? { |m| m.include?('unique') }
         CloudController::Errors::ApiError.new_from_details('ServiceBrokerNameTaken', broker.name)
       elsif errors.on(:services)
         CloudController::Errors::ApiError.new_from_details('ServiceBrokerInvalid', errors.on(:services))

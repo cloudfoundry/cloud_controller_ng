@@ -479,6 +479,19 @@ RSpec.describe 'V3 service brokers' do
         end
       end
 
+      context 'when a broker with the same name exists' do
+        before do
+          VCAP::CloudController::ServiceBroker.make(name: request_body[:name])
+          subject
+        end
+
+        it 'should return 422 and meaningful error' do
+          expect(last_response).to have_status_code(422)
+          expect(last_response.body).to include('UnprocessableEntity')
+          expect(last_response.body).to include('Name must be unique')
+        end
+      end
+
       context 'when fetching broker catalog fails' do
         before do
           stub_request(:get, 'http://example.org/broker-url/v2/catalog').

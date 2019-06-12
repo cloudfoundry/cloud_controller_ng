@@ -33,7 +33,7 @@ module VCAP::CloudController
       it { is_expected.to validate_presence :broker_url }
       it { is_expected.to validate_presence :auth_username }
       it { is_expected.to validate_presence :auth_password }
-      it { is_expected.to validate_uniqueness :name }
+      it { is_expected.to validate_uniqueness :name, message: Sequel.lit('Name must be unique') }
 
       it 'validates the url is a valid http/https url' do
         expect(broker).to be_valid

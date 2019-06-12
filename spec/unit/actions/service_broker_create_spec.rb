@@ -27,64 +27,83 @@ module VCAP::CloudController
     before do
       allow(VCAP::Services::ServiceBrokers::ServiceBrokerRegistration).to receive(:new).
         and_return(registration)
-
-      allow(registration).to receive(:create)
-      allow(registration).to receive(:warnings).and_return(warnings)
     end
 
-    context 'when route and volume service is enabled' do
+    context 'when there are no errors on registration' do
       before do
-        TestConfig.config[:route_services_enabled] = true
-        TestConfig.config[:volume_services_enabled] = true
-        result
+        allow(registration).to receive(:create).and_return(registration)
+        allow(registration).to receive(:warnings).and_return(warnings)
       end
 
-      it 'delegates to ServiceBrokerRegistration with correct params' do
-        result
-
-        expect(VCAP::Services::ServiceBrokers::ServiceBrokerRegistration).to have_received(:new) do |broker, manager, repo, route_services_enabled, volume_services_enabled|
-          expect(broker.broker_url).to eq(message.url)
-          expect(broker.name).to eq(message.name)
-          expect(broker.auth_username).to eq(message.credentials_data.username)
-          expect(broker.auth_password).to eq(message.credentials_data.password)
-          expect(manager).to eq(service_manager)
-          expect(repo).to eq(service_event_repository)
-          expect(route_services_enabled).to be_truthy
-          expect(volume_services_enabled).to be_truthy
+      context 'when route and volume service is enabled' do
+        before do
+          TestConfig.config[:route_services_enabled] = true
+          TestConfig.config[:volume_services_enabled] = true
+          result
         end
-        expect(registration).to have_received(:create)
+
+        it 'delegates to ServiceBrokerRegistration with correct params' do
+          result
+
+          expect(VCAP::Services::ServiceBrokers::ServiceBrokerRegistration).to have_received(:new) do |broker, manager, repo, route_services_enabled, volume_services_enabled|
+            expect(broker.broker_url).to eq(message.url)
+            expect(broker.name).to eq(message.name)
+            expect(broker.auth_username).to eq(message.credentials_data.username)
+            expect(broker.auth_password).to eq(message.credentials_data.password)
+            expect(manager).to eq(service_manager)
+            expect(repo).to eq(service_event_repository)
+            expect(route_services_enabled).to be_truthy
+            expect(volume_services_enabled).to be_truthy
+          end
+          expect(registration).to have_received(:create)
+        end
+      end
+
+      context 'when route and volume service is disabled' do
+        before do
+          TestConfig.config[:route_services_enabled] = false
+          TestConfig.config[:volume_services_enabled] = false
+          result
+        end
+
+        it 'delegates to ServiceBrokerRegistration with correct params' do
+          expect(VCAP::Services::ServiceBrokers::ServiceBrokerRegistration).to have_received(:new) do |_, _, _, route_services_enabled, volume_services_enabled|
+            expect(route_services_enabled).to be_falsey
+            expect(volume_services_enabled).to be_falsey
+          end
+          expect(registration).to have_received(:create)
+        end
+      end
+
+      context 'when there are warnings on registration' do
+        let(:warnings) { %w(warning-1 warning-2) }
+
+        it 'returns warnings in the result' do
+          expect(result).to eq(warnings: warnings)
+        end
+      end
+
+      context 'when there are no warnings on registration' do
+        let(:warnings) { [] }
+
+        it 'returns warnings in the result' do
+          expect(result).to eq(warnings: [])
+        end
       end
     end
 
-    context 'when route and volume service is disabled' do
+    context 'when there are errors on registration' do
       before do
-        TestConfig.config[:route_services_enabled] = false
-        TestConfig.config[:volume_services_enabled] = false
-        result
-      end
-
-      it 'delegates to ServiceBrokerRegistration with correct params' do
-        expect(VCAP::Services::ServiceBrokers::ServiceBrokerRegistration).to have_received(:new) do |_, _, _, route_services_enabled, volume_services_enabled|
-          expect(route_services_enabled).to be_falsey
-          expect(volume_services_enabled).to be_falsey
+        allow(VCAP::Services::ServiceBrokers::ServiceBrokerRegistration).to receive(:new) do |broker|
+          broker.errors[:name] = [:unique]
+          registration
         end
-        expect(registration).to have_received(:create)
+
+        allow(registration).to receive(:create).and_return(nil)
       end
-    end
 
-    context 'when there are warnings on registration' do
-      let(:warnings) { %w(warning-1 warning-2) }
-
-      it 'returns warnings in the result' do
-        expect(result).to eq(warnings: warnings)
-      end
-    end
-
-    context 'when there are no warnings on registration' do
-      let(:warnings) { [] }
-
-      it 'returns warnings in the result' do
-        expect(result).to eq(warnings: [])
+      it 'throws an InvalidServiceBroker exception' do
+        expect { result }.to raise_error(V3::ServiceBrokerCreate::InvalidServiceBroker)
       end
     end
   end
