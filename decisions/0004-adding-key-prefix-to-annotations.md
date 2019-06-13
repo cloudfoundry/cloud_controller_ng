@@ -6,7 +6,7 @@ Date: 2019-06-11
 Status
 ------
 
-Proposed
+Accepted
 
 
 Context
