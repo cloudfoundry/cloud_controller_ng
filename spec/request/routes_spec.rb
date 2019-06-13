@@ -92,63 +92,218 @@ RSpec.describe 'Routes Request' do
       it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
     end
 
-    describe 'hosts filter' do
-      it 'returns routes filtered by host' do
-        get '/v3/routes?hosts=host-1', nil, admin_header
-        expect(last_response.status).to eq(200)
-        expect({
-          resources: parsed_response['resources']
-        }).to match_json_response({
-          resources: [route_in_org_json]
-        })
+    describe 'filters' do
+      let!(:route_without_host_and_with_path) do
+        VCAP::CloudController::Route.make(space: space, host: '', domain: domain, path: '/path1', guid: 'route-without-host')
       end
-    end
-
-    describe 'paths filter' do
-      it 'returns routes filtered by path' do
-        get '/v3/routes?paths=%2Fpath1', nil, admin_header
-        expect(last_response.status).to eq(200)
-        expect({
-          resources: parsed_response['resources']
-        }).to match_json_response({
-          resources: [route_in_org_json]
-        })
+      let!(:route_without_host_and_with_path2) do
+        VCAP::CloudController::Route.make(space: space, host: '', domain: domain, path: '/path2', guid: 'route-without-host2')
       end
-    end
-
-    describe 'organization_guids filter' do
-      it 'returns routes filtered by organization_guid' do
-        get "/v3/routes?organization_guids=#{other_space.organization.guid}", nil, admin_header
-        expect(last_response.status).to eq(200)
-        expect({
-          resources: parsed_response['resources']
-        }).to match_json_response({
-          resources: [route_in_other_org_json]
-        })
+      let(:route_without_host_and_with_path_json) do
+        {
+          guid: 'route-without-host',
+          created_at: iso8601,
+          updated_at: iso8601,
+          host: '',
+          path: '/path1',
+          url: "#{domain.name}/path1",
+          metadata: {
+            labels: {},
+            annotations: {}
+          },
+          relationships: {
+            space: {
+              data: {
+                guid: space.guid
+              }
+            },
+            domain: {
+              data: {
+                guid: domain.guid
+              }
+            }
+          },
+          links: {
+            self: {
+              href: 'http://api2.vcap.me/v3/routes/route-without-host'
+            },
+            space: {
+              href: "http://api2.vcap.me/v3/spaces/#{space.guid}"
+            },
+            domain: {
+              href: "http://api2.vcap.me/v3/domains/#{domain.guid}"
+            }
+          }
+        }
       end
-    end
-
-    describe 'space_guids filter' do
-      it 'returns routes filtered by space_guid' do
-        get "/v3/routes?space_guids=#{other_space.guid}", nil, admin_header
-        expect(last_response.status).to eq(200)
-        expect({
-          resources: parsed_response['resources']
-        }).to match_json_response({
-          resources: [route_in_other_org_json]
-        })
+      let(:route_without_host_and_with_path2_json) do
+        {
+          guid: 'route-without-host2',
+          created_at: iso8601,
+          updated_at: iso8601,
+          host: '',
+          path: '/path2',
+          url: "#{domain.name}/path2",
+          metadata: {
+            labels: {},
+            annotations: {}
+          },
+          relationships: {
+            space: {
+              data: {
+                guid: space.guid
+              }
+            },
+            domain: {
+              data: {
+                guid: domain.guid
+              }
+            }
+          },
+          links: {
+            self: {
+              href: 'http://api2.vcap.me/v3/routes/route-without-host2'
+            },
+            space: {
+              href: "http://api2.vcap.me/v3/spaces/#{space.guid}"
+            },
+            domain: {
+              href: "http://api2.vcap.me/v3/domains/#{domain.guid}"
+            }
+          }
+        }
       end
-    end
+      let!(:route_without_path_and_with_host) do
+        VCAP::CloudController::Route.make(space: space, host: 'host-1', domain: domain, path: '', guid: 'route-without-path')
+      end
+      let(:route_without_path_and_with_host_json) do
+        {
+          guid: 'route-without-path',
+          created_at: iso8601,
+          updated_at: iso8601,
+          host: 'host-1',
+          path: '',
+          url: "host-1.#{domain.name}",
+          metadata: {
+            labels: {},
+            annotations: {}
+          },
+          relationships: {
+            space: {
+              data: {
+                guid: space.guid
+              }
+            },
+            domain: {
+              data: {
+                guid: domain.guid
+              }
+            }
+          },
+          links: {
+            self: {
+              href: 'http://api2.vcap.me/v3/routes/route-without-path'
+            },
+            space: {
+              href: "http://api2.vcap.me/v3/spaces/#{space.guid}"
+            },
+            domain: {
+              href: "http://api2.vcap.me/v3/domains/#{domain.guid}"
+            }
+          }
+        }
+      end
 
-    describe 'domain_guids filter' do
-      it 'returns routes filtered by domain_guid' do
-        get "/v3/routes?domain_guids=#{route_in_other_org.domain.guid}", nil, admin_header
-        expect(last_response.status).to eq(200)
-        expect({
-          resources: parsed_response['resources']
-        }).to match_json_response({
-          resources: [route_in_other_org_json]
-        })
+      context 'hosts filter' do
+        it 'returns routes filtered by host' do
+          get '/v3/routes?hosts=host-1', nil, admin_header
+          expect(last_response.status).to eq(200)
+          expect({
+            resources: parsed_response['resources']
+          }).to match_json_response({
+            resources: [route_in_org_json, route_without_path_and_with_host_json]
+          })
+        end
+
+        it 'returns route with no host if one exists when filtering by empty host' do
+          get '/v3/routes?hosts=', nil, admin_header
+          expect(last_response.status).to eq(200)
+          expect({
+            resources: parsed_response['resources']
+          }).to match_json_response({
+            resources: [route_without_host_and_with_path_json, route_without_host_and_with_path2_json]
+          })
+        end
+      end
+
+      context 'paths filter' do
+        it 'returns routes filtered by path' do
+          get '/v3/routes?paths=%2Fpath1', nil, admin_header
+          expect(last_response.status).to eq(200)
+          expect({
+            resources: parsed_response['resources']
+          }).to match_json_response({
+            resources: [route_in_org_json, route_without_host_and_with_path_json]
+          })
+        end
+
+        it 'returns route with no path when filtering by empty path' do
+          get '/v3/routes?paths=', nil, admin_header
+          expect(last_response.status).to eq(200)
+          expect({
+            resources: parsed_response['resources']
+          }).to match_json_response({
+            resources: [route_without_path_and_with_host_json]
+          })
+        end
+      end
+
+      context 'hosts and paths filter' do
+        it 'returns routes with no host and the provided path when host is empty' do
+          get '/v3/routes?paths=%2Fpath1&hosts=', nil, admin_header
+          expect(last_response.status).to eq(200)
+          expect({
+            resources: parsed_response['resources']
+          }).to match_json_response({
+            resources: [route_without_host_and_with_path_json]
+          })
+        end
+      end
+
+      context 'organization_guids filter' do
+        it 'returns routes filtered by organization_guid' do
+          get "/v3/routes?organization_guids=#{other_space.organization.guid}", nil, admin_header
+          expect(last_response.status).to eq(200)
+          expect({
+            resources: parsed_response['resources']
+          }).to match_json_response({
+            resources: [route_in_other_org_json]
+          })
+        end
+      end
+
+      context 'space_guids filter' do
+        it 'returns routes filtered by space_guid' do
+          get "/v3/routes?space_guids=#{other_space.guid}", nil, admin_header
+          expect(last_response.status).to eq(200)
+          expect({
+            resources: parsed_response['resources']
+          }).to match_json_response({
+            resources: [route_in_other_org_json]
+          })
+        end
+      end
+
+      context 'domain_guids filter' do
+        it 'returns routes filtered by domain_guid' do
+          get "/v3/routes?domain_guids=#{route_in_other_org.domain.guid}", nil, admin_header
+          expect(last_response.status).to eq(200)
+          expect({
+            resources: parsed_response['resources']
+          }).to match_json_response({
+            resources: [route_in_other_org_json]
+          })
+        end
       end
     end
 

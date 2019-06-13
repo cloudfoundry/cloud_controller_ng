@@ -20,7 +20,14 @@ module VCAP::CloudController
     validates :domain_guids, allow_nil: true, array: true
 
     def self.from_params(params)
-      super(params, %w(hosts space_guids organization_guids domain_guids paths))
+      message = super(params, %w(hosts space_guids organization_guids domain_guids paths))
+      if message.requested?(:hosts) && message.hosts.empty?
+        message.hosts.push('')
+      end
+      if message.requested?(:paths) && message.paths.empty?
+        message.paths.push('')
+      end
+      message
     end
   end
 end
