@@ -43,11 +43,9 @@ module VCAP::CloudController
     end
 
     def valid_process?(process)
-      if process.nil?
-        return true
-      end
+      return true if process.nil?
 
-      process.is_a?(Hash) && process.keys == [:type] && process[:type].is_a?(String)
+      process.is_a?(Hash) && process.keys == [:type] && process[:type].is_a?(String) && !process[:type].empty?
     end
 
     def valid_guid?(guid)

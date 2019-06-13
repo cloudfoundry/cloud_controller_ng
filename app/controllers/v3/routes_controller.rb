@@ -142,7 +142,7 @@ class RoutesController < ApplicationController
 
     missing_app_guids = desired_app_guids - (existing_app_guids & permission_queryer.readable_app_guids)
 
-    unprocessable!("App(s) with guid(s) \"#{missing_app_guids.join('","')}\" do not exist or you do not have access.") unless missing_app_guids.empty?
+    unprocessable!("App(s) with guid(s) \"#{missing_app_guids.join('", "')}\" do not exist or you do not have access.") unless missing_app_guids.empty?
   end
 
   def validate_app_spaces!(apps_hash, route)

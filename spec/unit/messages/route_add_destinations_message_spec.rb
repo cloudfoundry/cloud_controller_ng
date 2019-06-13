@@ -142,6 +142,17 @@ module VCAP::CloudController
 
           context 'when type is not a string' do
             let(:params) { { destinations: [{ app: { guid: 'guid', process: { type: 4 } } }] } }
+
+            it 'is not valid' do
+              expect(subject).to be_invalid
+              expect(subject.errors[:base].length).to eq 1
+              expect(subject.errors[:base][0]).to eq('Process must have the structure "process": {"type": "type"}')
+            end
+          end
+
+          context 'when type is not empty' do
+            let(:params) { { destinations: [{ app: { guid: 'guid', process: { type: '' } } }] } }
+
             it 'is not valid' do
               expect(subject).to be_invalid
               expect(subject.errors[:base].length).to eq 1

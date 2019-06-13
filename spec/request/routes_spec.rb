@@ -1939,6 +1939,62 @@ RSpec.describe 'Routes Request' do
           end
         end
 
+        context 'when the process type is empty' do
+          let(:params) do
+            {
+              destinations: [
+                {
+                  app: {
+                    guid: app_model.guid,
+                    process: {
+                      type: ''
+                    }
+                  }
+                }
+              ]
+            }
+          end
+
+          it 'returns a 422' do
+            post "/v3/routes/#{route.guid}/destinations", params.to_json, user_header
+            expect(last_response.status).to eq(422)
+
+            expect(parsed_response['errors'][0]['detail']).to match('Process must have the structure "process": {"type": "type"}')
+          end
+        end
+
+        context 'when multiple apps do *not* exist' do
+          let(:params) do
+            {
+              destinations: [
+                {
+                  app: {
+                    guid: 'whoops-1',
+                    process: {
+                      type: 'web'
+                    }
+                  }
+                },
+                {
+                  app: {
+                    guid: 'whoops-2',
+                    process: {
+                      type: 'web'
+                    }
+                  }
+                }
+              ]
+            }
+          end
+
+          it 'returns a 422' do
+            post "/v3/routes/#{route.guid}/destinations", params.to_json, user_header
+            expect(last_response.status).to eq(422)
+
+            expect(parsed_response['errors'][0]['detail']).to match('App(s) with guid(s) "whoops-1", "whoops-2" do not exist or you do not have access.')
+          end
+        end
+
         context 'when the user can not read the app' do
           let(:non_visible_space) { VCAP::CloudController::Space.make }
           let(:app_model) { VCAP::CloudController::AppModel.make(space: non_visible_space) }
