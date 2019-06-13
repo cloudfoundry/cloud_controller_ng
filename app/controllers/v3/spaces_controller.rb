@@ -54,7 +54,7 @@ class SpacesV3Controller < ApplicationController
     space = SpaceCreate.new(perm_client: perm_client).create(org, message)
 
     render status: 201, json: Presenters::V3::SpacePresenter.new(space)
-  rescue SpaceCreate::Error, AnnotationsUpdate::TooManyAnnotations => e
+  rescue SpaceCreate::Error => e
     unprocessable!(e.message)
   end
 
@@ -70,8 +70,6 @@ class SpacesV3Controller < ApplicationController
     space = SpaceUpdate.new.update(space, message)
 
     render status: :ok, json: Presenters::V3::SpacePresenter.new(space)
-  rescue AnnotationsUpdate::TooManyAnnotations => e
-    unprocessable!(e.message)
   end
 
   def update_isolation_segment

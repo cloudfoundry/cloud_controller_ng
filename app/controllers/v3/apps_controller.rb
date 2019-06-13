@@ -94,7 +94,7 @@ class AppsV3Controller < ApplicationController
     app = AppCreate.new(user_audit_info).create(message, lifecycle)
 
     render status: :created, json: Presenters::V3::AppPresenter.new(app)
-  rescue AppCreate::InvalidApp, AnnotationsUpdate::TooManyAnnotations => e
+  rescue AppCreate::InvalidApp => e
     unprocessable!(e.message)
   end
 
@@ -115,7 +115,7 @@ class AppsV3Controller < ApplicationController
     render status: :ok, json: Presenters::V3::AppPresenter.new(app)
   rescue AppUpdate::DropletNotFound
     droplet_not_found!
-  rescue AppUpdate::InvalidApp, AnnotationsUpdate::TooManyAnnotations => e
+  rescue AppUpdate::InvalidApp => e
     unprocessable!(e.message)
   end
 
