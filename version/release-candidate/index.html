@@ -15910,6 +15910,10 @@ Deployed revisions are revisions that are linked to started processes in the app
       "space": {
         "data": { "guid": "space-guid" }
       }
+    },
+    "metadata": {
+      "labels": { "key": "value" },
+      "annotations": { "note": "detailed information"}
     }
   }'</span>
 </code></pre>
@@ -15926,8 +15930,8 @@ Deployed revisions are revisions that are linked to started processes in the app
     </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">}</span><span class="w">
+      </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"key"</span><span class="p">:</span><span class="w"> </span><span class="s2">"value"</span><span class="w"> </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"note"</span><span class="p">:</span><span class="w"> </span><span class="s2">"detailed information"</span><span class="w"> </span><span class="p">}</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -15970,12 +15974,12 @@ Deployed revisions are revisions that are linked to started processes in the app
 </tr>
 </thead><tbody>
 <tr>
-<td><strong>space</strong></td>
+<td><strong>relationships.space</strong></td>
 <td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
 <td>A relationship to the space containing the route. Routes can only be mapped to destinations in that space.</td>
 </tr>
 <tr>
-<td><strong>domain</strong></td>
+<td><strong>relationships.domain</strong></td>
 <td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
 <td>A relationship to the domain of the route.</td>
 </tr>
@@ -15991,14 +15995,19 @@ Deployed revisions are revisions that are linked to started processes in the app
 </tr>
 </thead><tbody>
 <tr>
-<td>host</td>
+<td><strong>host</strong></td>
 <td><em>string</em></td>
 <td>The host component for the route.</td>
 </tr>
 <tr>
-<td>path</td>
+<td><strong>path</strong></td>
 <td><em>string</em></td>
-<td>The path component for the route.</td>
+<td>The path component for the route. Should begin with a <code class="prettyprint">/</code>.</td>
+</tr>
+<tr>
+<td><strong>metadata.annotations</strong> <em>(experimental)</em></td>
+<td><a href="#annotations"><em>annotation object</em></a></td>
+<td>Annotations applied to the route.</td>
 </tr>
 </tbody></table>
 
