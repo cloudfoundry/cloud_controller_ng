@@ -35,7 +35,7 @@ Example Response
 HTTP/1.1 201 Created
 Content-Type: application/json
 
-<%= yield_content :single_route, labels: { "key" => "value" }, "annotations": {"note" => "detailed information"} %>
+<%= yield_content :single_route, labels: { "key" => "value" }, annotations: {"note" => "detailed information"} %>
 ```
 
 #### Definition
@@ -55,6 +55,7 @@ Content-Type: application/json
 | **host**                                  | _string_                            | The host component for the route. |
 | **path**                                  | _string_                            | The path component for the route. Should begin with a `/`.
 | **metadata.annotations** _(experimental)_ | [_annotation object_](#annotations) | Annotations applied to the route. |
+| **metadata.labels** _(experimental)_      | [_label object_](#labels) | Labels applied to the route.      |
 
 #### Permitted Roles
 
