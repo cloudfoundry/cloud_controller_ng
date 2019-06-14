@@ -153,6 +153,7 @@ Rails.application.routes.draw do
   delete '/routes/:guid', to: 'routes#destroy'
   get '/routes/:guid/destinations', to: 'routes#index_destinations'
   post '/routes/:guid/destinations', to: 'routes#insert_destinations'
+  delete '/routes/:guid/destinations/:destination_guid', to: 'routes#destroy_destination'
 
   # service_bindings
   post '/service_bindings', to: 'service_bindings#create'

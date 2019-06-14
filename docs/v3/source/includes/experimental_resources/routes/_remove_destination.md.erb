@@ -1,0 +1,31 @@
+### Remove destination for a route
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/routes/[guid]/destinations/[destination_guid]" \
+  -X DELETE \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 204 No Content
+```
+
+Remove a destination from a route.
+
+#### Definition
+`DELETE /v3/routes/:guid/destinations/:destination_guid`
+
+#### Permitted Roles
+
+Role  | Notes
+--- | ---
+Space Developer |
+Admin |

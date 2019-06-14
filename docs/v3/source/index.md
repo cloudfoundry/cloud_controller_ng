@@ -230,6 +230,7 @@ includes:
   - experimental_resources/routes/delete
   - experimental_resources/routes/list_destinations
   - experimental_resources/routes/insert_destinations
+  - experimental_resources/routes/remove_destination
   - experimental_resources/service_bindings/header
   - experimental_resources/service_bindings/object
   - experimental_resources/service_bindings/create

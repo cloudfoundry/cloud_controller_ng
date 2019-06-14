@@ -4,6 +4,7 @@ require 'messages/route_show_message'
 require 'messages/route_update_message'
 require 'messages/route_add_destinations_message'
 require 'actions/add_route_destinations'
+require 'actions/destination_delete'
 require 'presenters/v3/route_presenter'
 require 'presenters/v3/route_destinations_presenter'
 require 'presenters/v3/paginated_list_presenter'
@@ -119,10 +120,27 @@ class RoutesController < ApplicationController
     render status: :ok, json: Presenters::V3::RouteDestinationsPresenter.new(route)
   end
 
+  def destroy_destination
+    route = Route.find(guid: hashed_params[:guid])
+    route_not_found! unless route && permission_queryer.can_read_route?(route.space.guid, route.organization.guid)
+    unauthorized! unless permission_queryer.can_write_to_space?(route.space.guid)
+
+    destination = RouteMappingModel.find(guid: hashed_params[:destination_guid])
+    unprocessable_destination! unless destination
+
+    DestinationDeleteAction.delete(destination)
+
+    head :no_content
+  end
+
   private
 
   def route_not_found!
     resource_not_found!(:route)
+  end
+
+  def unprocessable_destination!
+    unprocessable!('Unable to unmap route from destination. Ensure the route has a destination with this guid.')
   end
 
   def unprocessable_wildcard!

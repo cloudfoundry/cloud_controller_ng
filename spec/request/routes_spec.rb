@@ -2022,4 +2022,77 @@ RSpec.describe 'Routes Request' do
       end
     end
   end
+
+  describe 'DELETE /v3/routes/:guid/destinations/:destination_guid' do
+    let(:user_header) { headers_for(user) }
+    let(:route) { VCAP::CloudController::Route.make(space: space) }
+    let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
+
+    let!(:destination_to_preserve) do
+      VCAP::CloudController::RouteMappingModel.make(
+        app: app_model,
+        route: route,
+        process_type: 'web',
+        app_port: VCAP::CloudController::ProcessModel::DEFAULT_HTTP_PORT
+      )
+    end
+
+    let!(:destination_to_delete) do
+      VCAP::CloudController::RouteMappingModel.make(
+        app: app_model,
+        route: route,
+        process_type: 'worker',
+        app_port: VCAP::CloudController::ProcessModel::DEFAULT_HTTP_PORT
+      )
+    end
+
+    context 'permissions' do
+      let(:api_call) { lambda { |user_headers| delete "/v3/routes/#{route.guid}/destinations/#{destination_to_delete.guid}", nil, user_headers } }
+
+      let(:db_check) do
+        lambda do
+          get "/v3/routes/#{route.guid}/destinations", {}, admin_headers
+          parsed_response = MultiJson.load(last_response.body)
+          expect(parsed_response['destinations'].length).to eq(1)
+          expect(parsed_response['destinations'][0]['guid']).to eq(destination_to_preserve.guid)
+        end
+      end
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(
+          code: 403,
+        )
+
+        h['admin'] = { code: 204 }
+        h['space_developer'] = { code: 204 }
+        h['org_billing_manager'] = { code: 404 }
+        h['no_role'] = { code: 404 }
+        h
+      end
+
+      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
+    end
+
+    context 'when the route does not exist' do
+      it 'returns not found' do
+        delete "/v3/routes/does-not-exist/destinations/#{destination_to_delete.guid}", nil, admin_header
+        expect(last_response.status).to eq(404)
+      end
+    end
+
+    context 'when the destination does not exist' do
+      it 'returns 422 with a helpful message' do
+        delete "/v3/routes/#{route.guid}/destinations/does-not-exist", nil, admin_header
+        expect(last_response.status).to eq(422)
+        expect(last_response).to have_error_message('Unable to unmap route from destination. Ensure the route has a destination with this guid.')
+      end
+    end
+
+    describe 'when the user is not logged in' do
+      it 'returns 401 for Unauthenticated requests' do
+        delete "/v3/routes/#{route.guid}/destinations/#{destination_to_delete.guid}", nil, base_json_headers
+        expect(last_response.status).to eq(401)
+      end
+    end
+  end
 end
