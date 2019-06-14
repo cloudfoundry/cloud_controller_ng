@@ -1,4 +1,4 @@
-### List destinations for a route
+### Insert destinations for a route
 
 ```
 Example Request
@@ -6,8 +6,19 @@ Example Request
 
 ```shell
 curl "https://api.example.org/v3/routes/[guid]/destinations" \
-  -X GET \
+  -X POST \
   -H "Authorization: bearer [token]"
+  -d '{
+    "destinations": [
+      { "app": { "guid": "1cb006ee-fb05-47e1-b541-c34179ddc446" } },
+      {
+        "app": {
+          "guid": "01856e12-8ee8-11e9-98a5-bb397dbc818f",
+          "process_type": "api"
+        }
+      }
+    ]
+  }'
 ```
 
 ```
@@ -21,20 +32,14 @@ Content-Type: application/json
 <%= yield_content :list_of_route_destinations %>
 ```
 
-Retrieve all destinations associated with a route.
+Adds destinations to a route.
 
 #### Definition
-`GET /v3/routes/:guid/destinations`
+`POST /v3/routes/:guid/destinations`
 
 #### Permitted Roles
 
 Role  | Notes
 --- | ---
-Admin Read-Only |
 Admin |
-Global Auditor |
-Org Auditor |
-Org Manager |
-Space Auditor |
 Space Developer |
-Space Manager |
