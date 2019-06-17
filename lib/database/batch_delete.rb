@@ -19,7 +19,7 @@ module Database
     private
 
     def delete_batch(set)
-      dataset.model.where(id: set.pluck(:id)).delete
+      dataset.model.where(id: set.select_map(:id)).delete
     end
   end
 end
