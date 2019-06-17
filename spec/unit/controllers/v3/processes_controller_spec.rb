@@ -387,7 +387,7 @@ RSpec.describe ProcessesController, type: :controller do
         patch :update, params: { process_guid: process.guid }.merge(request_body), as: :json
 
         expect(response.status).to eq(422)
-        expect(response.body).to include('ProcessUpdateDisabledDuringDeployment')
+        expect(response.body).to include('Cannot update this process while a deployment is in flight.')
       end
     end
 
