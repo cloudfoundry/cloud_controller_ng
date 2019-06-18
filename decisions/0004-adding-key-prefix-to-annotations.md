@@ -43,8 +43,8 @@ Decision
     * Create a [time bomb test](https://github.com/cloudfoundry/cloud_controller_ng/blob/b6ba5196722728a221034aadad076646f43f5de3/spec/support/deprecation_helpers.rb) to tell us to rename the column in six months
 1. New annotations will be stored with the key split between `key_prefix` and `key_name` (`key` column)
 1. Updated annotations will be stored with the key split between `key_prefix` and `key_name` (`key` column)
-1. Updated annotations that do not meet the new prefix validations will fail with a `422` error
-1. Existing annotations will continue to work until they are updated. Since they are not queryable this should not cause too much overhead.
+1. Updating annotations that do not meet the new prefix validations will fail with a `422` error
+1. Existing annotations will continue to be readable until they are updated. Since they are not queryable this should not cause too much overhead.
 
 We **will not** attempt to migrate existing data into this new structure for the following reasons:
 
