@@ -8,12 +8,18 @@ module Database
     end
 
     def delete
+      total_count = 0
+
       loop do
         set = dataset.limit(amount)
-        break if set.count == 0
+        set_count = set.count
+        break if set_count == 0
 
+        total_count += set_count
         delete_batch(set)
       end
+
+      total_count
     end
 
     private

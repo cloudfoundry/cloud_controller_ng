@@ -49,6 +49,19 @@ module VCAP::CloudController
               expect(pending_task.exists?).to be_truthy
             end
           end
+
+          describe 'logging' do
+            it 'should log the number of deleted tasks' do
+              TaskModel.make(state: TaskModel::FAILED_STATE)
+              TaskModel.make(state: TaskModel::FAILED_STATE)
+              TaskModel.make(state: TaskModel::SUCCEEDED_STATE)
+
+              Timecop.travel(time_after_expiration) do
+                expect(logger).to receive(:info).with('Cleaned up 3 TaskModel rows')
+                job.perform
+              end
+            end
+          end
         end
 
         context 'when tasks are younger than the cutoff age' do

@@ -1,3 +1,5 @@
+require 'database/batch_delete'
+
 module VCAP::CloudController
   module Jobs
     module Runtime
@@ -13,7 +15,7 @@ module VCAP::CloudController
           logger.info('Cleaning up old TaskModel rows')
 
           tasks_to_delete = TaskModel.where(state: prunable_states).where(Sequel.lit('updated_at < ?', cutoff_age))
-          deleted_count   = tasks_to_delete.destroy
+          deleted_count   = Database::BatchDelete.new(tasks_to_delete).delete
 
           logger.info("Cleaned up #{deleted_count} TaskModel rows")
         end
