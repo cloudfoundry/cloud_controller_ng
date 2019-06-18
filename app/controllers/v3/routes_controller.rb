@@ -2,8 +2,8 @@ require 'messages/route_create_message'
 require 'messages/routes_list_message'
 require 'messages/route_show_message'
 require 'messages/route_update_message'
-require 'messages/route_add_destinations_message'
-require 'actions/add_route_destinations'
+require 'messages/route_update_destinations_message'
+require 'actions/update_route_destinations'
 require 'actions/destination_delete'
 require 'presenters/v3/route_presenter'
 require 'presenters/v3/route_destinations_presenter'
@@ -101,7 +101,7 @@ class RoutesController < ApplicationController
   end
 
   def insert_destinations
-    message = RouteAddDestinationsMessage.new(hashed_params[:body])
+    message = RouteUpdateDestinationsMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     route = Route.find(guid: hashed_params[:guid])
@@ -115,7 +115,27 @@ class RoutesController < ApplicationController
     validate_app_guids!(apps_hash, desired_app_guids)
     validate_app_spaces!(apps_hash, route)
 
-    route = AddRouteDestinations.add(message, route, apps_hash)
+    route = UpdateRouteDestinations.add(message, route, apps_hash)
+
+    render status: :ok, json: Presenters::V3::RouteDestinationsPresenter.new(route)
+  end
+
+  def replace_destinations
+    message = RouteUpdateDestinationsMessage.new(hashed_params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    route = Route.find(guid: hashed_params[:guid])
+    route_not_found! unless route && permission_queryer.can_read_route?(route.space.guid, route.organization.guid)
+
+    unauthorized! unless permission_queryer.can_write_to_space?(route.space.guid)
+
+    desired_app_guids = message.destinations.map { |dst| HashUtils.dig(dst, :app, :guid) }.compact
+
+    apps_hash = AppModel.where(guid: desired_app_guids).each_with_object({}) { |app, apps_hsh| apps_hsh[app.guid] = app; }
+    validate_app_guids!(apps_hash, desired_app_guids)
+    validate_app_spaces!(apps_hash, route)
+
+    route = UpdateRouteDestinations.replace(message, route, apps_hash)
 
     render status: :ok, json: Presenters::V3::RouteDestinationsPresenter.new(route)
   end

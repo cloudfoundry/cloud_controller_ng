@@ -1,0 +1,45 @@
+### Replace all destinations for a route
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/routes/[guid]/destinations" \
+  -X PATCH \
+  -H "Authorization: bearer [token]"
+  -d '{
+    "destinations": [
+      { "app": { "guid": "1cb006ee-fb05-47e1-b541-c34179ddc446" } },
+      {
+        "app": {
+          "guid": "01856e12-8ee8-11e9-98a5-bb397dbc818f",
+          "process_type": "api"
+        }
+      }
+    ]
+  }'
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :list_of_route_destinations %>
+```
+
+Replaces destinations in a route.
+
+#### Definition
+`PATCH /v3/routes/:guid/destinations`
+
+#### Permitted Roles
+
+Role  | Notes
+--- | ---
+Admin |
+Space Developer |

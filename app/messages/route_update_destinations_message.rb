@@ -1,5 +1,5 @@
 module VCAP::CloudController
-  class RouteAddDestinationsMessage < BaseMessage
+  class RouteUpdateDestinationsMessage < BaseMessage
     register_allowed_keys [:destinations]
 
     validates_with NoAdditionalKeysValidator

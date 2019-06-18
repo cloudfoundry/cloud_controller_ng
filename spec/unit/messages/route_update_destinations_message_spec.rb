@@ -1,9 +1,9 @@
 require 'spec_helper'
-require 'messages/route_add_destinations_message'
+require 'messages/route_update_destinations_message'
 
 module VCAP::CloudController
-  RSpec.describe RouteAddDestinationsMessage do
-    subject(:message) { RouteAddDestinationsMessage.new(params) }
+  RSpec.describe RouteUpdateDestinationsMessage do
+    subject(:message) { RouteUpdateDestinationsMessage.new(params) }
 
     context 'when the body has the correct structure' do
       let(:params) do
