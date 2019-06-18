@@ -2591,6 +2591,51 @@ module VCAP::CloudController
           end
         end
 
+        context 'when maintenance_info does not match the one from the service plan' do
+          let(:body) do
+            { maintenance_info: { version: '3.0' } }.to_json
+          end
+
+          before do
+            stub_request(:patch, service_broker_url).
+              with(basic_auth: basic_auth(service_instance: service_instance)).
+              to_return(status: 422, body: { error: 'MaintenanceInfoConflict', description: 'Version mismatch' }.to_json)
+          end
+
+          it 'should forward the maintanance info to the broker' do
+            put "/v2/service_instances/#{service_instance.guid}", body
+
+            expect(a_request(:patch, /#{service_broker_url}/)).to have_been_made
+            # TODO: fix to 422 and proper error in https://www.pivotaltracker.com/n/projects/2105761/stories/165377426
+            expect(last_response).to have_status_code 502
+          end
+        end
+
+        context 'when maintenance_info has extra fields' do
+          let(:body) do
+            { maintenance_info: { version: '2.0', extra: 'oopsie', description: 'an upgrade of all things' } }.to_json
+          end
+
+          let(:status) { 200 }
+
+          before do
+            stub_request(:patch, service_broker_url).
+              with(basic_auth: basic_auth(service_instance: service_instance)).
+              to_return(status: status, body: response_body)
+          end
+
+          it 'should forward just the version of the maintenance_info and updates service_instance' do
+            put "/v2/service_instances/#{service_instance.guid}", body
+
+            expect(a_request(:patch, /#{service_broker_url}/).with(body: hash_including(
+              maintenance_info: { version: '2.0' }
+            ))).to have_been_made
+
+            expect(last_response).to have_status_code 201
+            expect(service_instance.reload.maintenance_info).to eq({ 'version' => '2.0' })
+          end
+        end
+
         context 'when the maintenance was already performed' do
           let(:old_maintenance_info) { { 'version' => '2.0' } }
 

@@ -235,14 +235,8 @@ module VCAP::CloudController
         context 'when mismatching maintenance_info update requested' do
           let(:update_attrs) { { 'maintenance_info' => { 'version' => '1.0' } } }
 
-          it 'errors' do
-            expect {
-              ServiceUpdateValidator.validate!(service_instance, args)
-            }.to raise_error(
-              CloudController::Errors::ApiError,
-              'The maintenance requested is not available for this service instance. ' \
-              'Please confirm your maintenance_info is available for the service plan'
-            )
+          it 'succeeds' do
+            expect(ServiceUpdateValidator.validate!(service_instance, args)).to eq(true)
           end
         end
 

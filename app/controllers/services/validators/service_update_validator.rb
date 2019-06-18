@@ -37,7 +37,7 @@ module VCAP::CloudController
       def validate_maintenance_info_update(service_plan, maintenance_info)
         return unless maintenance_info
 
-        if service_plan.maintenance_info.nil? || maintenance_info != service_plan.maintenance_info
+        if service_plan.maintenance_info.nil?
           raise CloudController::Errors::ApiError.new_from_details('MaintenanceInfoMismatch')
         end
       end

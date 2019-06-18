@@ -500,7 +500,7 @@ RSpec.describe 'Service Broker API integration' do
         expect(maintenance_info).to eq({ 'version' => '2.0.0', 'description' => 'Test description' })
       end
 
-      context 'when updating the service with the provided maintanance_info' do
+      context 'when updating the service with the provided maintenance_info' do
         let(:service_instance) do
           VCAP::CloudController::ManagedServiceInstance.make(
             space_guid: @space_guid,
@@ -512,25 +512,14 @@ RSpec.describe 'Service Broker API integration' do
           @service_instance_guid = service_instance.guid
         end
 
-        it 'should forward the maintanance info to the broker' do
+        it 'should forward the maintanance info to the broker (only version)' do
           response = async_update_service(maintenance_info: { 'version' => '2.0.0', 'description' => 'Test description' })
           expect(response).to have_status_code(202)
           expect(
-            a_request(:patch, update_url_for_broker(@broker, accepts_incomplete: true)).with(
-              body: hash_including(maintenance_info: { version: '2.0.0', description: 'Test description' })
-            )
+            a_request(:patch, update_url_for_broker(@broker, accepts_incomplete: true)).with do |req|
+              expect(JSON.parse(req.body)).to include('maintenance_info' => { 'version' => '2.0.0' })
+            end
           ).to have_been_made
-        end
-
-        context 'when the maintenance_info does not match the one from the service plan' do
-          it 'should not forward the maintanance info to the broker' do
-            response = async_update_service(maintenance_info: { 'version' => '1.0.0' })
-            expect(response).to have_status_code(422)
-            expect(JSON.parse(response.body)['error_code']).to eq('CF-MaintenanceInfoMismatch')
-            expect(
-              a_request(:patch, update_url_for_broker(@broker, accepts_incomplete: true))
-            ).to_not have_been_made
-          end
         end
       end
     end

@@ -21,10 +21,7 @@ module VCAP::CloudController
 
       if update_broker_needed?(request_attrs, cached_service_instance['service_plan_guid'], service_instance)
         handle_broker_update(cached_service_instance, lock, previous_values, request_attrs, service_instance)
-        update_deferred_attrs(service_instance,
-                              service_plan_guid: request_attrs.fetch('service_plan_guid', false),
-                              maintenance_info: request_attrs.fetch('maintenance_info', false)
-                             )
+        update_deferred_attrs(service_instance, request_attrs)
       else
         lock.synchronous_unlock!
       end
@@ -39,12 +36,13 @@ module VCAP::CloudController
     private
 
     def update_broker_needed?(attrs, old_service_plan_guid, service_instance)
-      return true if attrs['parameters']
-      return true if attrs['name'] && service_instance.service.allow_context_updates
-      return true if attrs['maintenance_info'] && attrs['maintenance_info']['version'] != service_instance.maintenance_info['version']
-      return false if !attrs['service_plan_guid']
+      parameters_changed = attrs['parameters']
+      service_name_changed = attrs['name'] && service_instance.service.allow_context_updates
+      maintenance_info_version_changed = attrs['maintenance_info'] &&
+        attrs['maintenance_info']['version'] != service_instance.maintenance_info&.fetch('version', nil)
+      service_plan_changed = attrs['service_plan_guid'] && attrs['service_plan_guid'] != old_service_plan_guid
 
-      attrs['service_plan_guid'] != old_service_plan_guid
+      parameters_changed || service_name_changed || maintenance_info_version_changed || service_plan_changed
     end
 
     def handle_broker_update(cached_service_instance, lock, previous_values, request_attrs, service_instance)
@@ -65,17 +63,8 @@ module VCAP::CloudController
     end
 
     def update_broker(accepts_incomplete, request_attrs, service_instance, previous_values)
-      service_plan = if request_attrs.key?('service_plan_guid')
-                       ServicePlan.find(guid: request_attrs['service_plan_guid'])
-                     else
-                       service_instance.service_plan
-                     end
-
-      maintenance_info = if request_attrs.key?('service_plan_guid')
-                           service_plan.maintenance_info
-                         else
-                           request_attrs['maintenance_info']
-                         end
+      service_plan = extract_current_or_updated_service_plan(service_instance, request_attrs)
+      maintenance_info = extract_updated_maintenance_info(service_plan, request_attrs)
 
       client = VCAP::Services::ServiceClientProvider.provide({ instance: service_instance })
       response, err = client.update(
@@ -96,17 +85,44 @@ module VCAP::CloudController
       err
     end
 
-    def update_deferred_attrs(service_instance, service_plan_guid:, maintenance_info:)
+    def extract_current_or_updated_service_plan(service_instance, request_attrs)
+      if plan_update_requested?(request_attrs)
+        ServicePlan.find(guid: request_attrs['service_plan_guid'])
+      else
+        service_instance.service_plan
+      end
+    end
+
+    def extract_updated_maintenance_info(service_plan, request_attrs)
+      maintenance_info = if plan_update_requested?(request_attrs)
+                           service_plan.maintenance_info
+                         else
+                           request_attrs['maintenance_info']
+                         end
+
+      get_version_only(from: maintenance_info)
+    end
+
+    def plan_update_requested?(request_attrs)
+      request_attrs.key?('service_plan_guid')
+    end
+
+    def get_version_only(from:)
+      from&.slice('version')
+    end
+
+    def update_deferred_attrs(service_instance, request_attrs)
       unless service_instance.operation_in_progress?
-        attrs_to_update = {}
-        if service_plan_guid
-          service_plan = ServicePlan.find(guid: service_plan_guid)
-          attrs_to_update[:service_plan] = service_plan
-          attrs_to_update[:maintenance_info] = service_plan.maintenance_info
-        elsif maintenance_info
-          attrs_to_update[:maintenance_info] = maintenance_info
-        end
-        service_instance.update_service_instance(attrs_to_update)
+        service_plan = extract_current_or_updated_service_plan(service_instance, request_attrs)
+        maintenance_info = extract_updated_maintenance_info(service_plan, request_attrs)
+
+        attrs_to_update = if plan_update_requested?(request_attrs)
+                            { service_plan: service_plan, maintenance_info: maintenance_info }
+                          elsif maintenance_info
+                            { maintenance_info: maintenance_info }
+                          end
+
+        service_instance.update_service_instance(attrs_to_update) if attrs_to_update
       end
     end
 
