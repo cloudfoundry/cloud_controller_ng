@@ -663,7 +663,7 @@ RSpec.describe 'Tasks' do
             bananas: 'gros_michel',
           },
           annotations: {
-            'potato/wombats' => 'althea',
+            'wombats' => 'althea',
           }
         },
       }
@@ -687,7 +687,7 @@ RSpec.describe 'Tasks' do
         },
         'droplet_guid' => droplet.guid,
         'metadata' => { 'labels' => { 'bananas' => 'gros_michel', },
-          'annotations' => { 'potato/wombats' => 'althea' } },
+          'annotations' => { 'wombats' => 'althea' } },
         'created_at'   => iso8601,
         'updated_at'   => iso8601,
         'links'        => {
@@ -707,7 +707,7 @@ RSpec.describe 'Tasks' do
         }
       }
 
-      expect(last_response.status).to eq(202)
+      expect(last_response.status).to eq(202), last_response.body
       expect(parsed_response).to be_a_response_like(expected_response)
       expect(VCAP::CloudController::TaskModel.find(guid: guid)).to be_present
 

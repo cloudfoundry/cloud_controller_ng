@@ -6,8 +6,8 @@ module VCAP::CloudController
 
     it 'can be created' do
       droplet = DropletModel.make
-      DropletAnnotationModel.create(resource_guid: droplet.guid, key: 'release', value: 'stable')
-      expect(DropletAnnotationModel.find(key: 'release').value).to eq 'stable'
+      DropletAnnotationModel.create(resource_guid: droplet.guid, key_prefix: 'coolapp', key: 'release', value: 'stable')
+      expect(DropletAnnotationModel.find(key_prefix: 'coolapp', key: 'release').value).to eq 'stable'
     end
   end
 end

@@ -1,5 +1,5 @@
 require 'presenters/v3/base_presenter'
-require 'models/helpers/label_helpers'
+require 'models/helpers/metadata_helpers'
 require 'presenters/mixins/metadata_presentation_helpers'
 
 module VCAP::CloudController

@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe AnnotationsUpdate do
@@ -12,13 +13,25 @@ module VCAP::CloudController
       let(:app) { AppModel.make }
       let(:annotations) do
         {
-          release: 'stable',
+          'clodefloundry.org/release': 'stable',
         }
       end
 
       it 'updates the annotations' do
-        subject
-        expect(AppAnnotationModel.find(resource_guid: app.guid, key: 'release').value).to eq 'stable'
+        AnnotationsUpdate.update(app, annotations, AppAnnotationModel)
+        expect(AppAnnotationModel.find(resource_guid: app.guid, key_prefix: 'clodefloundry.org', key: 'release').value).to eq 'stable'
+      end
+
+      context 'when lazily migrating old annotations' do
+        let!(:annotation_model) do
+          AppAnnotationModel.create(resource_guid: app.guid, key: 'clodefloundry.org/release', value: 'stable2')
+        end
+
+        it 'splits the old key into prefix/key' do
+          AnnotationsUpdate.update(app, annotations, AppAnnotationModel)
+          expect(AppAnnotationModel.find(resource_guid: app.guid, key: 'clodefloundry.org/release')).to be_nil
+          expect(AppAnnotationModel.find(resource_guid: app.guid, key_prefix: 'clodefloundry.org', key: 'release').value).to eq 'stable'
+        end
       end
 
       context 'no annotation updates' do

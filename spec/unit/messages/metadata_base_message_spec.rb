@@ -35,6 +35,7 @@ module VCAP::CloudController
           expect(message.errors_on(:metadata)).to include("'labels' is not a hash")
         end
       end
+
       context 'when the message contains annotations' do
         it 'can parse annotations' do
           params =

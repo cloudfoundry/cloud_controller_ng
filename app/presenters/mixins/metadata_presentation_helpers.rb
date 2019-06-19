@@ -1,10 +1,10 @@
-require 'models/helpers/label_helpers'
+require 'models/helpers/metadata_helpers'
 
 module VCAP::CloudController::Presenters::Mixins
   module MetadataPresentationHelpers
     def hashified_labels(labels)
       labels.each_with_object({}) do |label, memo|
-        key = [label.key_prefix, label.key_name].compact.join(VCAP::CloudController::LabelHelpers::KEY_SEPARATOR)
+        key = [label.key_prefix, label.key_name].compact.join(VCAP::CloudController::MetadataHelpers::KEY_SEPARATOR)
         memo[key] = label.value
       end
     end

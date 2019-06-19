@@ -596,7 +596,8 @@ RSpec.describe 'Domains Request' do
         }.to_json, user_header
 
         expect(last_response.status).to eq(422)
-        expect(parsed_response['errors'][0]['detail']).to match('Metadata key error: label key cannot be empty string, Metadata key error: annotation')
+        expect(parsed_response['errors'][0]['detail']).to match(/label [\w\s]+ error/)
+        expect(parsed_response['errors'][0]['detail']).to match(/annotation [\w\s]+ error/)
       end
     end
 
@@ -1686,7 +1687,7 @@ RSpec.describe 'Domains Request' do
         }.to_json, user_header
 
         expect(last_response.status).to eq(422)
-        expect(parsed_response['errors'][0]['detail']).to match('Metadata key error: label key cannot be empty string, Metadata key error: annotation')
+        expect(parsed_response['errors'][0]['detail']).to match(/label [\w\s]+ error/)
       end
     end
 

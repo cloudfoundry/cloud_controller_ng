@@ -577,7 +577,7 @@ RSpec.describe PackagesController, type: :controller do
         it 'displays an informative error' do
           patch :update, params: { guid: package.guid }.merge(request_body), as: :json
           expect(response.status).to eq(422)
-          expect(response).to have_error_message('Metadata key error: cloudfoundry.org is a reserved domain')
+          expect(response).to have_error_message(/label [\w\s]+ error/)
         end
       end
 
@@ -1191,7 +1191,7 @@ RSpec.describe PackagesController, type: :controller do
 
             expect(response.status).to eq 422
             expect(response.body).to include 'UnprocessableEntity'
-            expect(response.body).to include 'cloudfoundry.org is a reserved domain'
+            expect(response).to have_error_message(/label [\w\s]+ error/)
           end
         end
 
@@ -1211,7 +1211,7 @@ RSpec.describe PackagesController, type: :controller do
 
             expect(response.status).to eq 422
             expect(response.body).to include 'UnprocessableEntity'
-            expect(response.body).to include 'annotations key cannot be empty string'
+            expect(response).to have_error_message(/annotation [\w\s]+ error/)
           end
         end
 

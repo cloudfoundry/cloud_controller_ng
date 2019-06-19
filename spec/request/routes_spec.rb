@@ -1638,7 +1638,7 @@ RSpec.describe 'Routes Request' do
         patch "/v3/routes/#{route.guid}", params_with_invalid_metadata_format.to_json, admin_header
 
         expect(last_response.status).to eq(422)
-        expect(parsed_response['errors'][0]['detail']).to match(/Metadata \w+ error/)
+        expect(parsed_response['errors'][0]['detail']).to match(/Metadata [\w\s]+ error/)
       end
     end
 

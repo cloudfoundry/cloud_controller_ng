@@ -1,5 +1,5 @@
 module VCAP::CloudController
-  class LabelHelpers
+  class MetadataHelpers
     KEY_SEPARATOR = '/'.freeze
     REQUIREMENT_SPLITTER = /(?:\(.*?\)|[^,])+/.freeze
     KEY_CHARACTERS = %r{[\w\-\.\_\/]+}.freeze
@@ -21,10 +21,10 @@ module VCAP::CloudController
     ].freeze
 
     class << self
-      def extract_prefix(label_key)
-        return [nil, label_key] unless label_key.include?(KEY_SEPARATOR)
+      def extract_prefix(metadata_key)
+        return [nil, metadata_key] unless metadata_key.include?(KEY_SEPARATOR)
 
-        prefix, name = label_key.split(KEY_SEPARATOR)
+        prefix, name = metadata_key.split(KEY_SEPARATOR)
         name ||= ''
         [prefix, name]
       end

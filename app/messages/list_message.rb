@@ -89,12 +89,12 @@ module VCAP::CloudController
     def self.parse_label_selector(label_selector)
       return [] unless label_selector
 
-      label_selector.scan(LabelHelpers::REQUIREMENT_SPLITTER).map { |r| parse_requirement(r) }
+      label_selector.scan(MetadataHelpers::REQUIREMENT_SPLITTER).map { |r| parse_requirement(r) }
     end
 
     def self.parse_requirement(requirement)
       match_data = nil
-      requirement_operator_pair = LabelHelpers::REQUIREMENT_OPERATOR_PAIRS.find do |rop|
+      requirement_operator_pair = MetadataHelpers::REQUIREMENT_OPERATOR_PAIRS.find do |rop|
         match_data = rop[:pattern].match(requirement)
       end
       return nil unless requirement_operator_pair

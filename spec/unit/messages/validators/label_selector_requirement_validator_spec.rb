@@ -36,7 +36,7 @@ module VCAP::CloudController::Validators
       it 'fails' do
         expect(message).not_to be_valid
         keys.each do |key|
-          expect(message.errors_on(:base)).to include("label '#{key}' starts or ends with invalid characters")
+          expect(message.errors_on(:base)).to include("'#{key}' starts or ends with invalid characters")
         end
       end
     end
@@ -45,7 +45,7 @@ module VCAP::CloudController::Validators
       let(:requirements) { [VCAP::CloudController::LabelSelectorRequirement.new(key: '', operator: :equal, values: 'value')] }
       it 'fails' do
         expect(message).not_to be_valid
-        expect(message.errors_on(:base)).to include('label key cannot be empty string')
+        expect(message.errors_on(:base)).to include('key cannot be empty string')
       end
     end
 
@@ -53,7 +53,7 @@ module VCAP::CloudController::Validators
       let(:requirements) { [VCAP::CloudController::LabelSelectorRequirement.new(key: 'a/b/c', operator: :equal, values: 'value')] }
       it 'fails' do
         expect(message).not_to be_valid
-        expect(message.errors_on(:base)).to include("label key has more than one '/'")
+        expect(message.errors_on(:base)).to include("key has more than one '/'")
       end
     end
 
@@ -61,7 +61,7 @@ module VCAP::CloudController::Validators
       let(:requirements) { [VCAP::CloudController::LabelSelectorRequirement.new(key: 'underscores_not_allowed/foo', operator: :equal, values: 'value')] }
       it 'fails' do
         expect(message).not_to be_valid
-        expect(message.errors_on(:base)).to include("label prefix 'underscores_not_allowed' must be in valid dns format")
+        expect(message.errors_on(:base)).to include("prefix 'underscores_not_allowed' must be in valid dns format")
       end
     end
 
@@ -84,7 +84,7 @@ module VCAP::CloudController::Validators
       let(:requirements) { [VCAP::CloudController::LabelSelectorRequirement.new(key: 'cloudfoundry.org/foo', operator: :equal, values: 'value')] }
       it 'fails' do
         expect(message).not_to be_valid
-        expect(message.errors_on(:base)).to include('cloudfoundry.org is a reserved domain')
+        expect(message.errors_on(:base)).to include('prefix \'cloudfoundry.org\' is reserved')
       end
     end
 
@@ -92,7 +92,7 @@ module VCAP::CloudController::Validators
       let(:requirements) { [VCAP::CloudController::LabelSelectorRequirement.new(key: 'mangos.com/', operator: :equal, values: 'value')] }
       it 'fails' do
         expect(message).not_to be_valid
-        expect(message.errors_on(:base)).to include('label key cannot be empty string')
+        expect(message.errors_on(:base)).to include('key cannot be empty string')
       end
     end
 
@@ -100,7 +100,7 @@ module VCAP::CloudController::Validators
       let(:requirements) { [VCAP::CloudController::LabelSelectorRequirement.new(key: 'mangos.com/<limes>', operator: :equal, values: 'value')] }
       it 'fails' do
         expect(message).not_to be_valid
-        expect(message.errors_on(:base)).to include("label '<limes>' contains invalid characters")
+        expect(message.errors_on(:base)).to include("'<limes>' contains invalid characters")
       end
     end
 
@@ -110,7 +110,7 @@ module VCAP::CloudController::Validators
       it 'fails' do
         expect(message).not_to be_valid
         keys.each do |key|
-          expect(message.errors_on(:base)).to include("label '#{key}' starts or ends with invalid characters")
+          expect(message.errors_on(:base)).to include("'#{key}' starts or ends with invalid characters")
         end
       end
     end
@@ -151,7 +151,7 @@ module VCAP::CloudController::Validators
       it 'fails' do
         expect(message).not_to be_valid
         values.each do |value|
-          expect(message.errors_on(:base)).to include("label '#{value}' starts or ends with invalid characters")
+          expect(message.errors_on(:base)).to include("'#{value}' starts or ends with invalid characters")
         end
       end
     end

@@ -121,6 +121,7 @@ module VCAP
 
     def self.annotations_common(migration, table_key, foreign_resource_table_key)
       migration.String :resource_guid, size: 255
+      migration.String :key_prefix, size: 253
       migration.String :key, size: 1000
       migration.String :value, size: 5000
 

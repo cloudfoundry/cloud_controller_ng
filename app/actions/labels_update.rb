@@ -1,4 +1,4 @@
-require 'models/helpers/label_helpers'
+require 'models/helpers/metadata_helpers'
 
 module VCAP::CloudController
   module LabelsUpdate
@@ -9,7 +9,7 @@ module VCAP::CloudController
         labels ||= {}
         labels.each do |label_key, label_value|
           label_key = label_key.to_s
-          prefix, name = VCAP::CloudController::LabelHelpers.extract_prefix(label_key)
+          prefix, name = VCAP::CloudController::MetadataHelpers.extract_prefix(label_key)
           if label_value.nil?
             label_klass.find(resource_guid: resource.guid, key_prefix: prefix, key_name: name).try(:destroy)
             next

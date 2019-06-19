@@ -673,18 +673,16 @@ module VCAP::CloudController
           let(:params_from_yaml) do
             {
               metadata: {
-                labels: { nil => 'value', '' => 'value', '-x' => 'value' }
+                labels: { nil => 'value' }
               }
             }
           end
           it 'is not valid' do
             message = AppManifestMessage.create_from_yml(params_from_yaml, params)
             expect(message).to_not be_valid
-            expect(message.errors.count).to eq(3)
+            expect(message.errors.count).to eq(1)
             expect(message.errors_on(:metadata)).to match_array([
-              'key error: label key cannot be empty string',
-              'key error: label key cannot be empty string',
-              "key error: label '-x' starts or ends with invalid characters",
+              'label key error: key cannot be empty string',
             ])
           end
         end
@@ -695,8 +693,6 @@ module VCAP::CloudController
               metadata: {
                 labels: {
                   'k1' => 'no spaces or ! allowed',
-                  'k2' => '-must be bounded by alnums-',
-                  'k3' => 'oversize-' + 'x' * 70
                 }
               }
             }
@@ -704,11 +700,9 @@ module VCAP::CloudController
           it 'is not valid' do
             message = AppManifestMessage.create_from_yml(params_from_yaml, params)
             expect(message).to_not be_valid
-            expect(message.errors.count).to eq(3)
+            expect(message.errors.count).to eq(1)
             expect(message.errors_on(:metadata)).to match_array([
-              "value error: label 'no spaces or ! allowed' contains invalid characters",
-              "value error: label '-must be bounded by alnums-' contains invalid characters",
-              "value error: label 'oversize...' is greater than 63 characters"
+              "label value error: 'no spaces or ! allowed' contains invalid characters",
             ])
           end
         end
@@ -733,7 +727,7 @@ module VCAP::CloudController
           let(:params_from_yaml) do
             {
               metadata: {
-                annotations: { 'too large: ' + 'x' * 1000 => 'value' }
+                annotations: { 'x' * 1000 => 'value' }
               }
             }
           end
@@ -742,7 +736,7 @@ module VCAP::CloudController
             expect(message).to_not be_valid
             expect(message.errors.count).to eq(1)
             expect(message.errors_on(:metadata)).to match_array([
-              "key error: annotation 'too larg...' is greater than 1000 characters",
+              "annotation key error: 'xxxxxxxx...' is greater than 63 characters",
             ])
           end
         end
@@ -752,7 +746,7 @@ module VCAP::CloudController
             {
               metadata: {
                 annotations: {
-                  'too large value' => 'oversize-' + 'x' * 5000
+                  'too-large-value' => 'oversize-' + 'x' * 5000
                 }
               }
             }
@@ -762,7 +756,7 @@ module VCAP::CloudController
             expect(message).to_not be_valid
             expect(message.errors.count).to eq(1)
             expect(message.errors_on(:metadata)).to match_array([
-              "value error: annotation 'oversize...' is greater than 5000 characters"
+              "annotation value error: 'oversize...' is greater than 5000 characters"
             ])
           end
         end

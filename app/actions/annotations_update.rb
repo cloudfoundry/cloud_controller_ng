@@ -7,11 +7,20 @@ module VCAP::CloudController
         annotations ||= {}
         annotations.each do |key, value|
           key = key.to_s
-          if value.nil?
+          prefix, key_name = VCAP::CloudController::MetadataHelpers.extract_prefix(key)
+          if value.nil? # this is delete
             annotation_klass.find(resource_guid: resource.guid, key: key).try(:destroy)
             next
           end
-          annotation = annotation_klass.find_or_create(resource_guid: resource.guid, key: key)
+
+          # if the key has a prefix, but we can find its whole text in the key column,
+          # it needs to be reformed in the newer, prefix-aware format.
+          # see decisions/0004-adding-key-prefix-to-annotations.md.
+          if prefix.present?
+            annotation_klass.find(resource_guid: resource.guid, key: key)&.destroy
+          end
+
+          annotation = annotation_klass.find_or_create(resource_guid: resource.guid, key: key_name, key_prefix: prefix)
           annotation.update(value: value.to_s)
         end
 

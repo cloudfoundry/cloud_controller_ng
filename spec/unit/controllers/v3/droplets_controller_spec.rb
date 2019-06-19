@@ -635,7 +635,7 @@ RSpec.describe DropletsController, type: :controller do
 
           expect(response.status).to eq 422
           expect(response.body).to include 'UnprocessableEntity'
-          expect(response.body).to include 'cloudfoundry.org is a reserved domain'
+          expect(response).to have_error_message(/label [\w\s]+ error/)
         end
       end
 
@@ -658,7 +658,7 @@ RSpec.describe DropletsController, type: :controller do
 
           expect(response.status).to eq 422
           expect(response.body).to include 'UnprocessableEntity'
-          expect(response.body).to include 'Metadata annotations key cannot be empty string'
+          expect(response).to have_error_message(/annotation [\w\s]+ error/)
         end
       end
 

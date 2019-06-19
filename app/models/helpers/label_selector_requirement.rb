@@ -4,7 +4,7 @@ module VCAP::CloudController
 
     def initialize(key:, operator:, values:)
       @key = key
-      @key_prefix, @key_name = VCAP::CloudController::LabelHelpers.extract_prefix(key)
+      @key_prefix, @key_name = VCAP::CloudController::MetadataHelpers.extract_prefix(key)
       @operator = operator
       @values = values.split(',')
     end

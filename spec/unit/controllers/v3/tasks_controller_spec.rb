@@ -165,7 +165,7 @@ RSpec.describe TasksController, type: :controller do
 
           expect(response.status).to eq 422
           expect(response.body).to include 'UnprocessableEntity'
-          expect(response.body).to include 'cloudfoundry.org is a reserved domain'
+          expect(response.body).to include('label key error')
         end
       end
 
@@ -190,7 +190,7 @@ RSpec.describe TasksController, type: :controller do
 
           expect(response.status).to eq 422
           expect(response.body).to include 'UnprocessableEntity'
-          expect(response.body).to include 'Metadata annotations key cannot be empty string'
+          expect(response.body).to include 'annotation key error'
         end
       end
 
@@ -750,7 +750,7 @@ RSpec.describe TasksController, type: :controller do
 
         expect(response.status).to eq 422
         expect(response.body).to include 'UnprocessableEntity'
-        expect(response.body).to include 'cloudfoundry.org is a reserved domain'
+        expect(response.body).to include 'label key error'
       end
     end
 
@@ -773,7 +773,7 @@ RSpec.describe TasksController, type: :controller do
 
         expect(response.status).to eq 422
         expect(response.body).to include 'UnprocessableEntity'
-        expect(response.body).to include 'Metadata annotations key cannot be empty string'
+        expect(response.body).to include 'annotation key error'
       end
     end
 

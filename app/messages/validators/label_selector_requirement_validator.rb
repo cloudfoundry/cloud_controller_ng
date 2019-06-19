@@ -1,6 +1,6 @@
 require 'active_model'
-require 'models/helpers/label_helpers'
-require 'messages/label_validator_helper'
+require 'models/helpers/metadata_helpers'
+require 'messages/metadata_validator_helper'
 
 module VCAP::CloudController::Validators
   class LabelSelectorRequirementValidator < ActiveModel::Validator
@@ -22,17 +22,17 @@ module VCAP::CloudController::Validators
     private
 
     def valid_requirement?(requirement)
-      return VCAP::CloudController::LabelError.error(INVALID_LABEL_SELECTOR_ERROR) if requirement.nil?
+      return VCAP::CloudController::MetadataError.error(INVALID_LABEL_SELECTOR_ERROR) if requirement.nil?
 
-      res = LabelValidatorHelper.valid_key?(requirement.key)
+      res = MetadataValidatorHelper.new(key: requirement.key).key_error
       return res unless res.is_valid?
 
       requirement.values.each do |v|
-        res = LabelValidatorHelper.valid_value?(v)
+        res = MetadataValidatorHelper.new(value: v).value_error
         return res unless res.is_valid?
       end
 
-      VCAP::CloudController::LabelError.none
+      VCAP::CloudController::MetadataError.none
     end
   end
 end

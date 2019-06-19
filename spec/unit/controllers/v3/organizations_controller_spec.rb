@@ -815,7 +815,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
         it 'displays an informative error' do
           patch :update, params: { guid: org.guid }.merge(request_body), as: :json
           expect(response.status).to eq(422)
-          expect(response).to have_error_message('Metadata key error: cloudfoundry.org is a reserved domain')
+          expect(response).to have_error_message(/label [\w\s]+ error/)
         end
       end
 

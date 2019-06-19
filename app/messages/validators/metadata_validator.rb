@@ -1,13 +1,17 @@
 require 'active_model'
-require 'models/helpers/label_helpers'
+require 'models/helpers/metadata_helpers'
 require 'cloud_controller/domain_decorator'
-require 'messages/label_validator_helper'
+require 'messages/metadata_validator_helper'
 
 module VCAP::CloudController::Validators
   class MetadataValidator < ActiveModel::Validator
-    MAX_ANNOTATION_KEY_SIZE = 1000
     MAX_ANNOTATION_VALUE_SIZE = 5000
+
+    attr_accessor :labels, :annotations, :record
+
     def validate(record)
+      self.record = record
+
       unless record.metadata.is_a? Hash
         record.errors.add(:metadata, 'must be a hash')
         return
@@ -19,60 +23,44 @@ module VCAP::CloudController::Validators
         record.errors.add(:metadata, "has unexpected field(s): #{unexpected_keys}")
       end
 
-      labels = record.labels
-      annotations = record.annotations
+      self.labels = record.labels
+      self.annotations = record.annotations
 
-      if labels
-        if labels.is_a? Hash
-          labels.each do |label_key, label_value|
-            validate_label_key(label_key, record)
-            validate_label_value(label_value, record)
-          end
-        else
-          record.errors.add(:metadata, "'labels' is not a hash")
-        end
-      end
-
-      if annotations
-        if annotations.is_a? Hash
-          annotations.each do |annotation_key, annotation_value|
-            validate_annotation_key(annotation_key, record)
-            validate_annotation_value(annotation_value, record)
-          end
-        else
-          record.errors.add(:metadata, "'annotations' is not a hash")
-        end
-      end
+      validate_labels if labels
+      validate_annotations if annotations
     end
 
     private
 
-    def validate_label_key(label_key, record)
-      label_result = LabelValidatorHelper.valid_key?(label_key.to_s)
-      unless label_result.is_valid?
-        record.errors.add(:metadata, "key error: #{label_result.message}")
+    def validate_annotations
+      return record.errors.add(:metadata, "'annotations' is not a hash") unless annotations.is_a? Hash
+
+      annotations.each do |annotation_key, annotation_value|
+        helper = MetadataValidatorHelper.new(key: annotation_key, value: annotation_value)
+        key_result = helper.key_error
+        if annotation_value.present? && !key_result.is_valid?
+          record.errors.add(:metadata, "annotation key error: #{key_result.message}")
+        end
+        validate_annotation_value(annotation_value, record)
       end
     end
 
-    def validate_label_value(label_value, record)
-      label_result = LabelValidatorHelper.valid_value?(label_value)
-      unless label_result.is_valid?
-        record.errors.add(:metadata, "value error: #{label_result.message}")
-      end
-    end
+    def validate_labels
+      return record.errors.add(:metadata, "'labels' is not a hash") unless labels.is_a? Hash
 
-    def validate_annotation_key(annotation_key, record)
-      if annotation_key.size > MAX_ANNOTATION_KEY_SIZE
-        record.errors.add(:metadata, "key error: annotation '#{annotation_key[0...8]}...' is greater than 1000 characters")
-      end
-      if annotation_key.empty?
-        record.errors.add(:metadata, 'annotations key cannot be empty string')
+      labels.each do |key, value|
+        helper = MetadataValidatorHelper.new(key: key, value: value)
+        key_result = helper.key_error
+        value_result = helper.value_error
+
+        record.errors.add(:metadata, "label key error: #{key_result.message}") unless key_result.is_valid?
+        record.errors.add(:metadata, "label value error: #{value_result.message}") unless value_result.is_valid?
       end
     end
 
     def validate_annotation_value(annotation_value, record)
       if !annotation_value.nil? && annotation_value.size > MAX_ANNOTATION_VALUE_SIZE
-        record.errors.add(:metadata, "value error: annotation '#{annotation_value[0...8]}...' is greater than 5000 characters")
+        record.errors.add(:metadata, "annotation value error: '#{annotation_value[0...8]}...' is greater than 5000 characters")
       end
     end
   end

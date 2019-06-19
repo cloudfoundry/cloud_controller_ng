@@ -1,4 +1,4 @@
-require 'models/helpers/label_helpers'
+require 'models/helpers/metadata_helpers'
 require 'actions/labels_update'
 require 'actions/annotations_update'
 

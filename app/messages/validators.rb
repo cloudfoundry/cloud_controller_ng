@@ -1,11 +1,11 @@
 require 'active_model'
 require 'utils/uri_utils'
 require 'models/helpers/health_check_types'
-require 'models/helpers/label_error'
-require 'models/helpers/label_helpers'
+require 'models/helpers/metadata_error'
+require 'models/helpers/metadata_helpers'
 require 'models/helpers/label_selector_requirement'
 require 'cloud_controller/domain_decorator'
-require 'messages/label_validator_helper'
+require 'messages/metadata_validator_helper'
 
 module VCAP::CloudController::Validators
   module StandaloneValidator
