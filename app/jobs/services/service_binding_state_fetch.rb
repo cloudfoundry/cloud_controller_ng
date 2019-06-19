@@ -22,14 +22,14 @@ module VCAP::CloudController
           service_binding = ServiceBinding.first(guid: service_binding_guid)
           return if service_binding.nil? # assume the binding has been purged
 
-          @intended_operation = service_binding.last_operation
+          intended_operation = service_binding.last_operation
 
           client = VCAP::Services::ServiceClientProvider.provide(instance: service_binding.service_instance)
           last_operation_result = client.fetch_service_binding_last_operation(service_binding)
           raise "Invalid response from client: #{last_operation_result}" unless valid_client_response?(last_operation_result)
 
           if service_binding.last_operation.type == 'create'
-            create_result = process_create_operation(logger, service_binding, last_operation_result)
+            create_result = process_create_operation(logger, service_binding, last_operation_result, intended_operation)
             return if create_result[:finished]
           elsif service_binding.last_operation.type == 'delete'
             delete_result = process_delete_operation(service_binding, last_operation_result)
@@ -52,7 +52,7 @@ module VCAP::CloudController
 
         private
 
-        def process_create_operation(logger, service_binding, last_operation_result)
+        def process_create_operation(logger, service_binding, last_operation_result, intended_operation)
           if state_succeeded?(last_operation_result)
             client = VCAP::Services::ServiceClientProvider.provide(instance: service_binding.service_instance)
 
@@ -66,7 +66,7 @@ module VCAP::CloudController
 
             ServiceBinding.db.transaction do
               service_binding.lock!
-              return { finished: false } if @intended_operation != service_binding.last_operation
+              return { finished: false } if intended_operation != service_binding.last_operation
 
               service_binding.update({
                 'credentials'      => binding_response[:credentials],

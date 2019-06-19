@@ -389,8 +389,10 @@ module VCAP::CloudController
 
             context 'when the last_operation state is in progress' do
               let(:description) { '50%' }
+              let(:polling_interval) { 60 }
 
               before do
+                TestConfig.config[:broker_client_default_async_poll_interval_seconds] = polling_interval
                 run_job(job)
               end
 
@@ -402,6 +404,18 @@ module VCAP::CloudController
               it 'should update the service binding operation' do
                 service_binding.reload
                 expect(service_binding.last_operation.description).to eq('50%')
+              end
+
+              context 'when the last_operation is replaced with delete in progress' do
+                before do
+                  service_binding.save_with_new_operation(type: 'delete', state: 'in progress')
+                end
+
+                it 'is able to run the job again' do
+                  Timecop.travel(Time.now + polling_interval.seconds) do
+                    execute_all_jobs(expected_successes: 1, expected_failures: 0)
+                  end
+                end
               end
             end
 

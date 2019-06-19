@@ -371,6 +371,22 @@ module VCAP::CloudController
 
               expect(Event.find(type: 'audit.service_instance.create')).to be_nil
             end
+
+            context 'when the last_operation is replaced with delete in progress' do
+              let(:polling_interval) { 60 }
+
+              before do
+                TestConfig.config[:broker_client_default_async_poll_interval_seconds] = polling_interval
+                run_job(job)
+                service_instance.save_with_new_operation({}, { type: 'delete', state: 'in progress' })
+              end
+
+              it 'is able to run the job again' do
+                Timecop.travel(Time.now + polling_interval.seconds) do
+                  execute_all_jobs(expected_successes: 1, expected_failures: 0)
+                end
+              end
+            end
           end
 
           context 'when saving to the database fails' do
