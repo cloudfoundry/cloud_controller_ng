@@ -495,6 +495,63 @@ RSpec.describe 'ServiceInstances' do
         expect(parsed_response['code']).to eq 390002
       end
     end
+
+    context 'when create operation has been polled once and is still in progress' do
+      let(:broker_client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client) }
+      let(:polling_interval) { 60 }
+
+      before do
+        TestConfig.config[:broker_client_default_async_poll_interval_seconds] = polling_interval
+
+        allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new).and_return(broker_client)
+
+        service_instance.save_with_new_operation({}, { type: 'create', state: 'in progress' })
+
+        job = VCAP::CloudController::Jobs::Services::ServiceInstanceStateFetch.new(
+          'fake-name',
+          service_instance.guid,
+          VCAP::CloudController::UserAuditInfo.new(user_guid: user.guid, user_email: 'test@example.org'),
+          {},
+        )
+        VCAP::CloudController::Jobs::Enqueuer.new(job).enqueue
+
+        allow(broker_client).to receive(:fetch_service_instance_last_operation).and_return(
+          last_operation: {
+            type: 'create',
+            state: 'in progress',
+          }
+        )
+        execute_all_jobs(expected_successes: 1, expected_failures: 0)
+      end
+
+      context 'when broker rejected a delete operation' do
+        before do
+          error = CloudController::Errors::ApiError.new_from_details(
+            'AsyncServiceInstanceOperationInProgress', service_instance.name)
+          allow(broker_client).to receive(:deprovision).and_raise(error)
+
+          set_current_user_as_admin
+        end
+
+        it 'does not affect the create operation' do
+          delete "v2/service_instances/#{service_instance.guid}", nil, admin_headers
+          expect(last_response).to have_status_code(409)
+
+          Timecop.travel(Time.now + polling_interval.seconds) do
+            allow(broker_client).to receive(:fetch_service_instance_last_operation).and_return(
+              last_operation: {
+                type: 'create',
+                state: 'succeeded',
+              }
+            )
+
+            execute_all_jobs(expected_successes: 1, expected_failures: 0)
+            expect { service_instance.reload }.not_to raise_error
+            expect(service_instance.last_operation.state).to eq('succeeded')
+          end
+        end
+      end
+    end
   end
 
   describe 'POST /v2/user_provided_service_instances' do

@@ -3421,8 +3421,6 @@ module VCAP::CloudController
             delete "/v2/service_instances/#{service_instance.guid}"
             expect(last_response.status).to eq 409
             expect(last_response.body).to match 'AsyncServiceInstanceOperationInProgress'
-            # expect(last_response.status).to eq(204)
-            # expect(ManagedServiceInstance.find(guid: service_instance.guid)).to be_nil
           end
         end
 
@@ -3432,7 +3430,7 @@ module VCAP::CloudController
             service_instance.service_instance_operation = last_operation
           end
 
-          it 'should show an error message for delete operation' do
+          it 'deletes the service instance' do
             delete "/v2/service_instances/#{service_instance.guid}"
             expect(last_response.status).to eq(204)
             expect(ManagedServiceInstance.find(guid: service_instance.guid)).to be_nil

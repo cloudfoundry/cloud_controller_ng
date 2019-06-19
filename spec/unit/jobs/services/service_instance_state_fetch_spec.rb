@@ -201,7 +201,44 @@ module VCAP::CloudController
                   expect(Event.find(type: 'audit.service_instance.delete')).not_to be
 
                   db_service_instance = ManagedServiceInstance.first(guid: service_instance.guid)
-                  expect(db_service_instance.last_operation.state).not_to eq(state)
+                  expect(db_service_instance.last_operation.state).not_to eq('succeeded')
+                end
+              end
+            end
+
+            context 'when the last operation type is `create`' do
+              before do
+                service_instance.save_with_new_operation({}, { type: 'create' })
+              end
+
+              context 'when during create, a delete operation was started' do
+                before do
+                  allow(client).to receive(:fetch_service_instance_last_operation) do
+                    service_instance.save_with_new_operation(
+                      {},
+                      {
+                        type: 'delete',
+                        state: 'in progress'
+                      }
+                    )
+
+                    last_operation_response
+                  end
+
+                  run_job(job)
+                end
+
+                let(:db_service_instance) { ManagedServiceInstance.first(guid: service_instance.guid) }
+
+                it 'does not finish creating' do
+                  expect(db_service_instance.last_operation.type).to eq('delete')
+                  expect(db_service_instance.last_operation.state).to eq('in progress')
+                  expect(Event.find(type: 'audit.service_instance.create')).not_to be
+                end
+
+                it 'does not delete' do
+                  expect(db_service_instance).not_to be_nil
+                  expect(Event.find(type: 'audit.service_instance.delete')).not_to be
                 end
               end
             end

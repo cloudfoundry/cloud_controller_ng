@@ -21,12 +21,12 @@ module VCAP::CloudController
           service_instance = ManagedServiceInstance.first(guid: service_instance_guid)
           return if service_instance.nil?
 
-          @intended_operation = service_instance.last_operation
+          intended_operation = service_instance.last_operation
 
           client = VCAP::Services::ServiceClientProvider.provide(instance: service_instance)
 
           last_operation_result = client.fetch_service_instance_last_operation(service_instance)
-          update_with_attributes(last_operation_result[:last_operation], service_instance)
+          update_with_attributes(last_operation_result[:last_operation], service_instance, intended_operation)
 
           retry_job(retry_after_header: last_operation_result[:retry_after]) unless service_instance.terminal_state?
         rescue HttpRequestError, HttpResponseError, Sequel::Error => e
@@ -49,10 +49,10 @@ module VCAP::CloudController
           Repositories::ServiceEventRepository.new(user_audit_info)
         end
 
-        def update_with_attributes(last_operation, service_instance)
+        def update_with_attributes(last_operation, service_instance, intended_operation)
           ServiceInstance.db.transaction do
             service_instance.lock!
-            return unless @intended_operation == service_instance.last_operation
+            return unless intended_operation == service_instance.last_operation
 
             service_instance.save_and_update_operation(
               last_operation: last_operation.slice(:state, :description)
