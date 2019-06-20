@@ -2571,8 +2571,8 @@ module VCAP::CloudController
           { maintenance_info: { version: '2.0' } }.to_json
         end
         let(:old_maintenance_info) { { 'version' => '1.0' } }
-        let(:service_plan) { ServicePlan.make(:v2, service: service, maintenance_info: { 'version': '2.0' }) }
-        let(:service_instance) { ManagedServiceInstance.make(service_plan: service_plan, maintenance_info: old_maintenance_info) }
+        let(:plan) { ServicePlan.make(:v2, service: service, maintenance_info: { 'version': '2.0' }) }
+        let(:service_instance) { ManagedServiceInstance.make(service_plan: plan, maintenance_info: old_maintenance_info) }
 
         context 'when the broker responds synchronously' do
           let(:status) { 200 }
@@ -2593,21 +2593,49 @@ module VCAP::CloudController
 
         context 'when maintenance_info does not match the one from the service plan' do
           let(:body) do
-            { maintenance_info: { version: '3.0' } }.to_json
+            {
+              'maintenance_info' => {
+                'version' => '3.0',
+              }
+            }
           end
 
-          before do
-            stub_request(:patch, service_broker_url).
-              with(basic_auth: basic_auth(service_instance: service_instance)).
-              to_return(status: 422, body: { error: 'MaintenanceInfoConflict', description: 'Version mismatch' }.to_json)
+          context 'when updating a service instance' do
+            before do
+              stub_request(:patch, service_broker_url).
+                with(basic_auth: basic_auth(service_instance: service_instance)).
+                to_return(status: 422, body: { error: 'MaintenanceInfoConflict', description: 'Version mismatch' }.to_json)
+
+              put "/v2/service_instances/#{service_instance.guid}", body.to_json
+            end
+
+            it 'should forward the maintanance info to the broker' do
+              expect(a_request(:patch, /#{service_broker_url}/).with do |req|
+                expect(JSON.parse(req.body)).to include(body)
+              end).to have_been_made
+            end
+
+            it 'should return a CF-MaintenanceInfoConflict error' do
+              expect(last_response).to have_status_code 422
+              expect(last_response.body).to include 'CF-MaintenanceInfoConflict'
+              expect(last_response.body).to include 'Version mismatch'
+            end
           end
 
-          it 'should forward the maintanance info to the broker' do
-            put "/v2/service_instances/#{service_instance.guid}", body
+          context 'when provisioning a service instance' do
+            before do
+              stub_request(:put, service_broker_url_regex).
+                with(basic_auth: basic_auth(service_instance: service_instance)).
+                to_return(status: 422, body: { error: 'MaintenanceInfoConflict', description: 'Version mismatch' }.to_json)
 
-            expect(a_request(:patch, /#{service_broker_url}/)).to have_been_made
-            # TODO: fix to 422 and proper error in https://www.pivotaltracker.com/n/projects/2105761/stories/165377426
-            expect(last_response).to have_status_code 502
+              create_managed_service_instance(accepts_incomplete: 'false')
+            end
+
+            it 'should return a CF-MaintenanceInfoConflict error' do
+              expect(last_response).to have_status_code 422
+              expect(last_response.body).to include 'CF-MaintenanceInfoConflict'
+              expect(last_response.body).to include 'Version mismatch'
+            end
           end
         end
 

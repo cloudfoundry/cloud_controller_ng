@@ -24,10 +24,15 @@ module VCAP::Services
             when 409
               FailingValidator.new(Errors::ServiceBrokerConflict)
             when 422
-              FailWhenValidator.new('error',
-                                    { 'AsyncRequired' => Errors::AsyncRequired,
-                                      'ConcurrencyError' => Errors::ConcurrencyError },
-                                    FailingValidator.new(Errors::ServiceBrokerBadResponse))
+              FailWhenValidator.new(
+                'error',
+                {
+                  'AsyncRequired' => Errors::AsyncRequired,
+                  'ConcurrencyError' => Errors::ConcurrencyError,
+                  'MaintenanceInfoConflict' => Errors::MaintenanceInfoConflict,
+                },
+                FailingValidator.new(Errors::ServiceBrokerBadResponse),
+              )
             else
               FailingValidator.new(Errors::ServiceBrokerBadResponse)
             end
@@ -158,7 +163,10 @@ module VCAP::Services
               JsonSchemaValidator.new(@logger, update_service_instance_schema,
                 SuccessValidator.new(state: 'in progress'))
             when 422
-              FailWhenValidator.new('error', { 'AsyncRequired' => Errors::AsyncRequired },
+              FailWhenValidator.new('error', {
+                'AsyncRequired' => Errors::AsyncRequired,
+                'MaintenanceInfoConflict' => Errors::MaintenanceInfoConflict,
+               },
                 FailingValidator.new(Errors::ServiceBrokerRequestRejected))
             else
               FailingValidator.new(Errors::ServiceBrokerBadResponse)
