@@ -115,7 +115,7 @@ class RoutesController < ApplicationController
     validate_app_guids!(apps_hash, desired_app_guids)
     validate_app_spaces!(apps_hash, route)
 
-    route = UpdateRouteDestinations.add(message, route)
+    route = UpdateRouteDestinations.add(message, route, user_audit_info)
 
     render status: :ok, json: Presenters::V3::RouteDestinationsPresenter.new(route)
   end
@@ -135,7 +135,7 @@ class RoutesController < ApplicationController
     validate_app_guids!(apps_hash, desired_app_guids)
     validate_app_spaces!(apps_hash, route)
 
-    route = UpdateRouteDestinations.replace(message, route)
+    route = UpdateRouteDestinations.replace(message, route, user_audit_info)
 
     render status: :ok, json: Presenters::V3::RouteDestinationsPresenter.new(route)
   end

@@ -24,6 +24,8 @@ module VCAP::CloudController
     let(:process1_route_handler) { instance_double(ProcessRouteHandler, update_route_information: nil) }
     let(:process2_route_handler) { instance_double(ProcessRouteHandler, update_route_information: nil) }
     let(:process3_route_handler) { instance_double(ProcessRouteHandler, update_route_information: nil) }
+    let(:user_audit_info) { UserAuditInfo.new(user_email: 'user@example.com', user_guid: 'user-guid') }
+    let(:route_event_repo) { instance_double(Repositories::RouteEventRepository) }
 
     describe '#add' do
       context 'when all destinations are valid' do
@@ -57,7 +59,7 @@ module VCAP::CloudController
 
         it 'adds all the destinations and updates the routing' do
           expect {
-            subject.add(message, route)
+            subject.add(message, route, user_audit_info)
           }.to change { RouteMappingModel.count }.by(2)
           route.reload
           mappings = route.route_mappings.collect { |rm| { app_guid: rm.app_guid, process_type: rm.process_type } }
@@ -69,10 +71,25 @@ module VCAP::CloudController
         end
 
         it 'delegates to the route handler to update route information' do
-          subject.add(message, route)
+          subject.add(message, route, user_audit_info)
 
           expect(process1_route_handler).to have_received(:update_route_information)
           expect(process2_route_handler).to have_received(:update_route_information)
+        end
+
+        describe 'audit events' do
+          before do
+            allow(Repositories::RouteEventRepository).to receive(:new).and_return(route_event_repo)
+            allow(route_event_repo).to receive(:record_route_map)
+            subject.add(message, route, user_audit_info)
+          end
+
+          it 'records an audit event for each new route mapping' do
+            route.reload
+            route.route_mappings.reject { |rm| rm.process_type == 'existing' }.each do |rm|
+              expect(route_event_repo).to have_received(:record_route_map).once.with(rm, user_audit_info)
+            end
+          end
         end
 
         describe 'copilot integration' do
@@ -82,7 +99,7 @@ module VCAP::CloudController
 
           it 'delegates to the copilot handler to notify copilot' do
             expect {
-              subject.add(message, route)
+              subject.add(message, route, user_audit_info)
               expect(Copilot::Adapter).to have_received(:map_route).with(have_attributes(process_type: 'web'))
               expect(Copilot::Adapter).to have_received(:map_route).with(have_attributes(process_type: 'worker'))
               expect(Copilot::Adapter).not_to have_received(:map_route).with(have_attributes(process_type: 'existing'))
@@ -116,10 +133,22 @@ module VCAP::CloudController
           }
         end
 
-        it 'doesnt add the new destination' do
+        it "doesn't add the new destination" do
           expect {
-            subject.add(message, route)
+            subject.add(message, route, user_audit_info)
           }.to change { RouteMappingModel.count }.by(0)
+        end
+
+        describe 'audit events' do
+          before do
+            allow(Repositories::RouteEventRepository).to receive(:new).and_return(route_event_repo)
+            allow(route_event_repo).to receive(:record_route_map)
+            subject.replace(message, route, user_audit_info)
+          end
+
+          it 'does not record an audit event for an existing route mapping' do
+            expect(route_event_repo).not_to have_received(:record_route_map)
+          end
         end
       end
     end
@@ -157,7 +186,7 @@ module VCAP::CloudController
 
         it 'replaces all the route_mappings' do
           expect {
-            subject.replace(message, route)
+            subject.replace(message, route, user_audit_info)
           }.to change { RouteMappingModel.count }.by(1)
           route.reload
           mappings = route.route_mappings.collect { |rm| { app_guid: rm.app_guid, process_type: rm.process_type } }
@@ -168,11 +197,26 @@ module VCAP::CloudController
         end
 
         it 'delegates to the route handler to update route information' do
-          subject.replace(message, route)
+          subject.replace(message, route, user_audit_info)
 
           expect(process1_route_handler).to have_received(:update_route_information)
           expect(process2_route_handler).to have_received(:update_route_information)
           expect(process3_route_handler).to have_received(:update_route_information)
+        end
+
+        describe 'audit events' do
+          before do
+            allow(Repositories::RouteEventRepository).to receive(:new).and_return(route_event_repo)
+            allow(route_event_repo).to receive(:record_route_map)
+            subject.replace(message, route, user_audit_info)
+          end
+
+          it 'records an audit event for each new route mapping' do
+            route.reload
+            route.route_mappings.each do |rm|
+              expect(route_event_repo).to have_received(:record_route_map).once.with(rm, user_audit_info)
+            end
+          end
         end
 
         describe 'copilot integration' do
@@ -183,7 +227,7 @@ module VCAP::CloudController
 
           it 'delegates to the copilot handler to notify copilot' do
             expect {
-              subject.replace(message, route)
+              subject.replace(message, route, user_audit_info)
               expect(Copilot::Adapter).to have_received(:map_route).with(have_attributes(process_type: 'web'))
               expect(Copilot::Adapter).to have_received(:map_route).with(have_attributes(process_type: 'worker'))
               expect(Copilot::Adapter).to have_received(:unmap_route).with(have_attributes(process_type: 'existing'))
@@ -219,8 +263,20 @@ module VCAP::CloudController
 
         it 'doesnt replace the new destination' do
           expect {
-            subject.replace(message, route)
+            subject.replace(message, route, user_audit_info)
           }.to change { RouteMappingModel.count }.by(-1)
+        end
+
+        describe 'audit events' do
+          before do
+            allow(Repositories::RouteEventRepository).to receive(:new).and_return(route_event_repo)
+            allow(route_event_repo).to receive(:record_route_map)
+            subject.replace(message, route, user_audit_info)
+          end
+
+          it 'does not record an audit event for a new route mapping' do
+            expect(route_event_repo).not_to have_received(:record_route_map)
+          end
         end
       end
     end

@@ -1,17 +1,17 @@
 module VCAP::CloudController
   class UpdateRouteDestinations
     class << self
-      def add(message, route)
-        update(message, route, replace: false)
+      def add(message, route, user_audit_info)
+        update(message, route, user_audit_info, replace: false)
       end
 
-      def replace(message, route)
-        update(message, route, replace: true)
+      def replace(message, route, user_audit_info)
+        update(message, route, user_audit_info, replace: true)
       end
 
       private
 
-      def update(message, route, replace:)
+      def update(message, route, user_audit_info, replace:)
         existing_route_mappings = route_to_mappings(route)
         new_route_mappings = message_to_mappings(message, route)
 
@@ -34,6 +34,8 @@ module VCAP::CloudController
 
             Copilot::Adapter.map_route(route_mapping)
             update_route_information(route_mapping)
+
+            Repositories::RouteEventRepository.new.record_route_map(route_mapping, user_audit_info)
           end
         end
 

@@ -151,7 +151,26 @@ RSpec.describe 'Route Destinations Request' do
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+        let(:expected_event_hash) do
+          new_destination = parsed_response['destinations'].detect { |dst| dst['guid'] != existing_destination.guid }
+
+          {
+            type: 'audit.app.map-route',
+            actee: app_model.guid,
+            actee_type: 'app',
+            actee_name: app_model.name,
+            space_guid: space.guid,
+            organization_guid: org.guid,
+            metadata: {
+              route_guid: route.guid,
+              app_port: 8080,
+              destination_guid: new_destination['guid'],
+              process_type: 'web'
+            }.to_json,
+          }
+        end
+      end
 
       context 'when the user is not logged in' do
         it 'returns 401 for Unauthenticated requests' do

@@ -76,6 +76,33 @@ module VCAP::CloudController
           expect(event.metadata).to eq({ 'request' => { 'recursive' => true } })
         end
       end
+
+      describe '#record_route_map' do
+        let(:app) { AppModel.make(space: route.space) }
+        let(:route_mapping) { RouteMappingModel.make(app: app, route: route, process_type: 'web') }
+
+        it 'records event correctly' do
+          event = route_event_repository.record_route_map(route_mapping, actor_audit_info)
+          event.reload
+          expect(event.type).to eq('audit.app.map-route')
+          expect(event.actor).to eq(user.guid)
+          expect(event.actor_type).to eq('user')
+          expect(event.actor_name).to eq(user_email)
+          expect(event.actor_username).to eq(user_name)
+          expect(event.actee).to eq(app.guid)
+          expect(event.actee_type).to eq('app')
+          expect(event.actee_name).to eq(app.name)
+          expect(event.space_guid).to eq(app.space.guid)
+          expect(event.organization_guid).to eq(app.space.organization_guid)
+
+          expect(event.metadata).to eq({
+            'route_guid' => route.guid,
+            'app_port' => 8080,
+            'destination_guid' => route_mapping.guid,
+            'process_type' => 'web'
+          })
+        end
+      end
     end
   end
 end
