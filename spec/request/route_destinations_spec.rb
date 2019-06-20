@@ -331,15 +331,8 @@ RSpec.describe 'Route Destinations Request' do
 
   describe 'PATCH /v3/routes/:guid/destinations' do
     let(:route) { VCAP::CloudController::Route.make(space: space) }
-    let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
     let(:user_header) { headers_for(user) }
-    let!(:existing_destination) do
-      VCAP::CloudController::RouteMappingModel.make(
-        app: app_model,
-        route: route,
-        process_type: 'assistant'
-      )
-    end
+    let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
     let(:params) do
       {
         destinations: [
@@ -363,12 +356,63 @@ RSpec.describe 'Route Destinations Request' do
       }
     end
 
-    it 'replaces all destinations on the route' do
-      patch "/v3/routes/#{route.guid}/destinations", params.to_json, admin_header
-      expect(last_response.status).to eq(200)
-      expect(parsed_response['destinations'].map { |r| r['app']['process']['type'] }).to contain_exactly('web', 'worker')
-      process_types = VCAP::CloudController::RouteMappingModel.where(app: app_model).all.collect(&:process_type)
-      expect(process_types).to contain_exactly('web', 'worker')
+    context 'when all destinations are for the same app' do
+      let!(:existing_destination) do
+        VCAP::CloudController::RouteMappingModel.make(
+          app: app_model,
+          route: route,
+          process_type: 'assistant'
+        )
+      end
+
+      it 'replaces all destinations on the route' do
+        patch "/v3/routes/#{route.guid}/destinations", params.to_json, admin_header
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['destinations'].map { |r| r['app']['process']['type'] }).to contain_exactly('web', 'worker')
+        process_types = VCAP::CloudController::RouteMappingModel.where(app: app_model).all.collect(&:process_type)
+        expect(process_types).to contain_exactly('web', 'worker')
+      end
+    end
+
+    context 'when removing a destination app' do
+      let(:app_model_1) { VCAP::CloudController::AppModel.make(space: space) }
+      let(:app_model_2) { VCAP::CloudController::AppModel.make(space: space) }
+      let!(:existing_destination_1) do
+        VCAP::CloudController::RouteMappingModel.make(
+          app: app_model_1,
+          route: route,
+          process_type: 'web',
+          app_port: 8080,
+        )
+      end
+      let!(:existing_destination_2) do
+        VCAP::CloudController::RouteMappingModel.make(
+          app: app_model_2,
+          route: route,
+          process_type: 'web',
+          app_port: 8080,
+        )
+      end
+      let(:params) do
+        {
+          destinations: [
+            {
+              app: {
+                guid: app_model_1.guid,
+                process: {
+                  type: 'web'
+                }
+              }
+            }
+          ]
+        }
+      end
+
+      it 'replaces all destinations on the route' do
+        patch "/v3/routes/#{route.guid}/destinations", params.to_json, admin_header
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['destinations'].map { |r| r['app']['guid'] }).to contain_exactly(app_model_1.guid)
+      end
     end
 
     context 'permissions' do

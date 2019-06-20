@@ -8,12 +8,6 @@ module VCAP::CloudController
     let(:space) { Space.make }
     let(:app_model) { AppModel.make(guid: 'some-guid', space: space) }
     let(:app_model2) { AppModel.make(guid: 'some-other-guid', space: space) }
-    let(:app_hash) do
-      {
-        app_model.guid => app_model,
-        app_model2.guid => app_model2,
-      }
-    end
     let(:route) { Route.make }
     let(:ports) { [8080] }
     let!(:existing_destination) do
@@ -63,7 +57,7 @@ module VCAP::CloudController
 
         it 'adds all the destinations and updates the routing' do
           expect {
-            subject.add(message, route, app_hash)
+            subject.add(message, route)
           }.to change { RouteMappingModel.count }.by(2)
           route.reload
           mappings = route.route_mappings.collect { |rm| { app_guid: rm.app_guid, process_type: rm.process_type } }
@@ -75,7 +69,7 @@ module VCAP::CloudController
         end
 
         it 'delegates to the route handler to update route information' do
-          subject.add(message, route, app_hash)
+          subject.add(message, route)
 
           expect(process1_route_handler).to have_received(:update_route_information)
           expect(process2_route_handler).to have_received(:update_route_information)
@@ -88,7 +82,7 @@ module VCAP::CloudController
 
           it 'delegates to the copilot handler to notify copilot' do
             expect {
-              subject.add(message, route, app_hash)
+              subject.add(message, route)
               expect(Copilot::Adapter).to have_received(:map_route).with(have_attributes(process_type: 'web'))
               expect(Copilot::Adapter).to have_received(:map_route).with(have_attributes(process_type: 'worker'))
               expect(Copilot::Adapter).not_to have_received(:map_route).with(have_attributes(process_type: 'existing'))
@@ -124,7 +118,7 @@ module VCAP::CloudController
 
         it 'doesnt add the new destination' do
           expect {
-            subject.add(message, route, app_hash)
+            subject.add(message, route)
           }.to change { RouteMappingModel.count }.by(0)
         end
       end
@@ -163,7 +157,7 @@ module VCAP::CloudController
 
         it 'replaces all the route_mappings' do
           expect {
-            subject.replace(message, route, app_hash)
+            subject.replace(message, route)
           }.to change { RouteMappingModel.count }.by(1)
           route.reload
           mappings = route.route_mappings.collect { |rm| { app_guid: rm.app_guid, process_type: rm.process_type } }
@@ -174,7 +168,7 @@ module VCAP::CloudController
         end
 
         it 'delegates to the route handler to update route information' do
-          subject.replace(message, route, app_hash)
+          subject.replace(message, route)
 
           expect(process1_route_handler).to have_received(:update_route_information)
           expect(process2_route_handler).to have_received(:update_route_information)
@@ -189,7 +183,7 @@ module VCAP::CloudController
 
           it 'delegates to the copilot handler to notify copilot' do
             expect {
-              subject.replace(message, route, app_hash)
+              subject.replace(message, route)
               expect(Copilot::Adapter).to have_received(:map_route).with(have_attributes(process_type: 'web'))
               expect(Copilot::Adapter).to have_received(:map_route).with(have_attributes(process_type: 'worker'))
               expect(Copilot::Adapter).to have_received(:unmap_route).with(have_attributes(process_type: 'existing'))
@@ -225,7 +219,7 @@ module VCAP::CloudController
 
         it 'doesnt replace the new destination' do
           expect {
-            subject.replace(message, route, app_hash)
+            subject.replace(message, route)
           }.to change { RouteMappingModel.count }.by(-1)
         end
       end

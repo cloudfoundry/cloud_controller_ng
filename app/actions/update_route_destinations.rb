@@ -1,17 +1,17 @@
 module VCAP::CloudController
   class UpdateRouteDestinations
     class << self
-      def add(message, route, apps_hash)
-        update(message, route, apps_hash, replace: false)
+      def add(message, route)
+        update(message, route, replace: false)
       end
 
-      def replace(message, route, apps_hash)
-        update(message, route, apps_hash, replace: true)
+      def replace(message, route)
+        update(message, route, replace: true)
       end
 
       private
 
-      def update(message, route, apps_hash, replace:)
+      def update(message, route, replace:)
         existing_route_mappings = route_to_mappings(route)
         new_route_mappings = message_to_mappings(message, route)
 
@@ -25,7 +25,7 @@ module VCAP::CloudController
             route_mapping.destroy
 
             Copilot::Adapter.unmap_route(route_mapping)
-            update_route_information(route_mapping, apps_hash)
+            update_route_information(route_mapping)
           end
 
           to_add.each do |rm|
@@ -33,17 +33,16 @@ module VCAP::CloudController
             route_mapping.save
 
             Copilot::Adapter.map_route(route_mapping)
-            update_route_information(route_mapping, apps_hash)
+            update_route_information(route_mapping)
           end
         end
 
         route.reload
       end
 
-      def update_route_information(route_mapping, apps_hash)
-        app = apps_hash[route_mapping.app_guid]
-        app.processes_dataset.where(type: route_mapping.process_type).each do |process|
-          ProcessRouteHandler.new(process).update_route_information
+      def update_route_information(route_mapping)
+        route_mapping.processes.each do |process|
+          ProcessRouteHandler.new(process).update_route_information(perform_validation: false)
         end
       end
 
