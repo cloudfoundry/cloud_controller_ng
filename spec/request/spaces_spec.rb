@@ -68,6 +68,17 @@ RSpec.describe 'Spaces' do
         }
       )
     end
+
+    context 'when a relationships hash is not provided' do
+      it 'returns a 422 error' do
+        request_body = {
+          name: 'space1'
+        }.to_json
+
+        post '/v3/spaces', request_body, admin_header
+        expect(last_response.status).to eq(422)
+      end
+    end
   end
 
   describe 'GET /v3/spaces/:guid' do

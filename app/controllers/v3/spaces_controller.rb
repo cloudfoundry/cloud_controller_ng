@@ -45,9 +45,9 @@ class SpacesV3Controller < ApplicationController
     message = SpaceCreateMessage.new(hashed_params[:body])
     missing_org = 'Invalid organization. Ensure the organization exists and you have access to it.'
 
+    unprocessable!(message.errors.full_messages) unless message.valid?
     unprocessable!(missing_org) unless permission_queryer.can_read_from_org?(message.organization_guid)
     unauthorized! unless permission_queryer.can_write_to_org?(message.organization_guid)
-    unprocessable!(message.errors.full_messages) unless message.valid?
 
     org = fetch_organization(message.organization_guid)
     unprocessable!(missing_org) unless org
