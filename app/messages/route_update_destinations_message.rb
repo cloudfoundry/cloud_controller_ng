@@ -1,5 +1,10 @@
 module VCAP::CloudController
   class RouteUpdateDestinationsMessage < BaseMessage
+    def initialize(params, replace: false)
+      super(params)
+      @replace = replace
+    end
+
     register_allowed_keys [:destinations]
 
     validates_with NoAdditionalKeysValidator
@@ -11,8 +16,10 @@ module VCAP::CloudController
     ERROR_MESSAGE = 'Destinations must have the structure "destinations": [{"app": {"guid": "app_guid"}}]'.freeze
 
     def destinations_valid?
-      unless destinations.is_a?(Array) && (1...100).cover?(destinations.length)
-        errors.add(:base, 'Destinations must be an array containing between 1 and 100 destination objects')
+      minimum = @replace ? 0 : 1
+
+      unless destinations.is_a?(Array) && (minimum...100).cover?(destinations.length)
+        errors.add(:base, "Destinations must be an array containing between #{minimum} and 100 destination objects")
         return
       end
 

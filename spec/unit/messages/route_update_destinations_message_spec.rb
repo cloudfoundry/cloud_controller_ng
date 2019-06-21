@@ -3,7 +3,8 @@ require 'messages/route_update_destinations_message'
 
 module VCAP::CloudController
   RSpec.describe RouteUpdateDestinationsMessage do
-    subject(:message) { RouteUpdateDestinationsMessage.new(params) }
+    let(:replace) { false }
+    subject(:message) { RouteUpdateDestinationsMessage.new(params, replace: replace) }
 
     context 'when the body has the correct structure' do
       let(:params) do
@@ -159,6 +160,28 @@ module VCAP::CloudController
               expect(subject.errors[:base][0]).to eq('Process must have the structure "process": {"type": "type"}')
             end
           end
+        end
+      end
+    end
+
+    context 'when destinations is an empty array' do
+      let(:params) { { destinations: [] } }
+
+      context 'when replacing destinations' do
+        let(:replace) { true }
+
+        it 'is valid' do
+          expect(subject).to be_valid
+        end
+      end
+
+      context 'when inserting destinations' do
+        let(:replace) { false }
+
+        it 'is not valid' do
+          expect(subject).to be_invalid
+          expect(subject.errors[:base].length).to eq 1
+          expect(subject.errors[:base][0]).to eq('Destinations must be an array containing between 1 and 100 destination objects')
         end
       end
     end

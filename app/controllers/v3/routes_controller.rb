@@ -121,7 +121,7 @@ class RoutesController < ApplicationController
   end
 
   def replace_destinations
-    message = RouteUpdateDestinationsMessage.new(hashed_params[:body])
+    message = RouteUpdateDestinationsMessage.new(hashed_params[:body], replace: true)
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     route = Route.find(guid: hashed_params[:guid])

@@ -434,6 +434,31 @@ RSpec.describe 'Route Destinations Request' do
       end
     end
 
+    context 'when removing all destination apps' do
+      let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
+      let!(:existing_destination) do
+        VCAP::CloudController::RouteMappingModel.make(
+          app: app_model,
+          route: route,
+          process_type: 'web',
+          app_port: 8080,
+        )
+      end
+      let(:params) do
+        {
+          destinations: []
+        }
+      end
+
+      it "removes all of the route's destinations" do
+        expect(app_model.reload.routes).not_to be_empty
+        patch "/v3/routes/#{route.guid}/destinations", params.to_json, admin_header
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['destinations']).to be_empty
+        expect(app_model.reload.routes).to be_empty
+      end
+    end
+
     context 'permissions' do
       let(:api_call) { lambda { |user_headers| patch "/v3/routes/#{route.guid}/destinations", params.to_json, user_headers } }
       let(:response_json) do
