@@ -143,16 +143,16 @@ class FakeModelTables
       String :altered_to_default
       String :altered_to_case_sensitive
       String :altered_to_case_insensitive
-
-      index [:altered_to_default], unique: true, name: 'uniq_str_altered_1'
-      index [:altered_to_case_sensitive], unique: true, name: 'uniq_str_altered_2'
-      index [:altered_to_case_insensitive], unique: true, name: 'uniq_str_altered_3'
     end
 
     db.alter_table :unique_str_altered do
       set_column_type :altered_to_default, String
       set_column_type :altered_to_case_sensitive, String, case_insensitive: false
       set_column_type :altered_to_case_insensitive, String, case_insensitive: true
+
+      add_index [:altered_to_default], unique: true, name: 'uniq_str_altered_1'
+      add_index [:altered_to_case_sensitive], unique: true, name: 'uniq_str_altered_2'
+      add_index [:altered_to_case_insensitive], unique: true, name: 'uniq_str_altered_3'
     end
   end
 
