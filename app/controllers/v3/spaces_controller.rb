@@ -51,7 +51,7 @@ class SpacesV3Controller < ApplicationController
 
     org = fetch_organization(message.organization_guid)
     unprocessable!(missing_org) unless org
-    space = SpaceCreate.new(perm_client: perm_client).create(org, message)
+    space = SpaceCreate.new(perm_client: perm_client, user_audit_info: user_audit_info).create(org, message)
 
     render status: 201, json: Presenters::V3::SpacePresenter.new(space)
   rescue SpaceCreate::Error => e

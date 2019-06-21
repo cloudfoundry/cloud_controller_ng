@@ -3,8 +3,9 @@ module VCAP::CloudController
     class Error < ::StandardError
     end
 
-    def initialize(perm_client:)
+    def initialize(perm_client:, user_audit_info:)
       @perm_client = perm_client
+      @user_audit_info = user_audit_info
     end
 
     def create(org, message)
@@ -12,6 +13,7 @@ module VCAP::CloudController
       Space.db.transaction do
         space = VCAP::CloudController::Space.create(name: message.name, organization: org)
         MetadataUpdate.update(space, message)
+        Repositories::SpaceEventRepository.new.record_space_create(space, user_audit_info, message.audit_hash)
       end
 
       VCAP::CloudController::Roles::SPACE_ROLE_NAMES.each do |role|
@@ -25,7 +27,7 @@ module VCAP::CloudController
 
     private
 
-    attr_reader :perm_client
+    attr_reader :perm_client, :user_audit_info
 
     def validation_error!(error)
       if error.is_a?(Space::DBNameUniqueRaceError) || error.errors.on([:organization_id, :name])&.include?(:unique)

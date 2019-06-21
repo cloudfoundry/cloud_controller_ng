@@ -8,23 +8,45 @@ module VCAP::CloudController
       let(:org) { VCAP::CloudController::Organization.make }
       let(:perm_client) { instance_spy(VCAP::CloudController::Perm::Client) }
       let(:relationships) { { organization: { data: { guid: org.guid } } } }
+      let(:user_audit_info) { UserAuditInfo.new(user_email: 'gooid', user_guid: 'amelia@cats.com', user_name: 'amelia') }
 
-      it 'creates a space' do
-        message = VCAP::CloudController::SpaceCreateMessage.new(
+      context 'when creating a space' do
+        let(:message) { VCAP::CloudController::SpaceCreateMessage.new(
           name: 'my-space',
           relationships: relationships,
           metadata: {
-              labels: {
-                  release: 'stable',
-                  'seriouseats.com/potato': 'mashed'
-              }
+            labels: {
+              release: 'stable',
+              'seriouseats.com/potato': 'mashed'
+            }
           }
         )
-        space = SpaceCreate.new(perm_client: perm_client).create(org, message)
+        }
+        let!(:space) { SpaceCreate.new(perm_client: perm_client, user_audit_info: user_audit_info).create(org, message) }
 
-        expect(space.organization).to eq(org)
-        expect(space.name).to eq('my-space')
-        expect(space.labels.map(&:value)).to contain_exactly('stable', 'mashed')
+        it 'creates a space' do
+          expect(space.organization).to eq(org)
+          expect(space.name).to eq('my-space')
+          expect(space.labels.map(&:value)).to contain_exactly('stable', 'mashed')
+        end
+
+        it 'creates an audit event' do
+          expect(VCAP::CloudController::Event.count).to eq(1)
+          event = VCAP::CloudController::Event.last
+
+          expect(event.values).to include(
+            type: 'audit.space.create',
+            actee: space.guid,
+            actee_type: 'space',
+            actee_name: 'my-space',
+            actor: user_audit_info.user_guid,
+            actor_type: 'user',
+            actor_name: user_audit_info.user_email,
+            actor_username: user_audit_info.user_name,
+            space_guid: space.guid,
+            organization_guid: space.organization.guid,
+          )
+        end
       end
 
       context 'when a model validation fails' do
@@ -36,7 +58,7 @@ module VCAP::CloudController
 
           message = VCAP::CloudController::SpaceCreateMessage.new(name: 'foobar')
           expect {
-            SpaceCreate.new(perm_client: perm_client).create(org, message)
+            SpaceCreate.new(perm_client: perm_client, user_audit_info: user_audit_info).create(org, message)
           }.to raise_error(SpaceCreate::Error, 'blork is busted')
         end
 
@@ -50,7 +72,7 @@ module VCAP::CloudController
           it 'raises a human-friendly error' do
             message = VCAP::CloudController::SpaceCreateMessage.new(name: name)
             expect {
-              SpaceCreate.new(perm_client: perm_client).create(org, message)
+              SpaceCreate.new(perm_client: perm_client, user_audit_info: user_audit_info).create(org, message)
             }.to raise_error(SpaceCreate::Error, 'Name must be unique per organization')
           end
         end
@@ -62,7 +84,7 @@ module VCAP::CloudController
 
             message = VCAP::CloudController::SpaceCreateMessage.new(name: name)
             expect {
-              SpaceCreate.new(perm_client: perm_client).create(org, message)
+              SpaceCreate.new(perm_client: perm_client, user_audit_info: user_audit_info).create(org, message)
             }.to raise_error(SpaceCreate::Error, 'Name must be unique per organization')
           end
         end

@@ -190,18 +190,18 @@ RSpec.describe 'Apps' do
         expect(parsed_response).to be_a_response_like(expected_response)
 
         event = VCAP::CloudController::Event.last
-        expect(event.values).to include({
-                                            type: 'audit.app.create',
-                                            actee: created_app.guid,
-                                            actee_type: 'app',
-                                            actee_name: 'my_app',
-                                            actor: user.guid,
-                                            actor_type: 'user',
-                                            actor_name: user_email,
-                                            actor_username: user_name,
-                                            space_guid: space.guid,
-                                            organization_guid: space.organization.guid,
-                                        })
+        expect(event.values).to include(
+          type: 'audit.app.create',
+          actee: created_app.guid,
+          actee_type: 'app',
+          actee_name: 'my_app',
+          actor: user.guid,
+          actor_type: 'user',
+          actor_name: user_email,
+          actor_username: user_name,
+          space_guid: space.guid,
+          organization_guid: space.organization.guid,
+        )
       end
     end
   end
