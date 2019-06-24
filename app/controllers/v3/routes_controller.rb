@@ -4,7 +4,6 @@ require 'messages/route_show_message'
 require 'messages/route_update_message'
 require 'messages/route_update_destinations_message'
 require 'actions/update_route_destinations'
-require 'actions/destination_delete'
 require 'presenters/v3/route_presenter'
 require 'presenters/v3/route_destinations_presenter'
 require 'presenters/v3/paginated_list_presenter'
@@ -148,7 +147,7 @@ class RoutesController < ApplicationController
     destination = RouteMappingModel.find(guid: hashed_params[:destination_guid])
     unprocessable_destination! unless destination
 
-    DestinationDeleteAction.delete(destination)
+    UpdateRouteDestinations.delete(destination, route, user_audit_info)
 
     head :no_content
   end

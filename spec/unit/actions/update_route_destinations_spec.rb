@@ -280,5 +280,40 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe '#delete' do
+      it 'deletes the route mapping record' do
+        expect {
+          subject.delete(existing_destination, route, user_audit_info)
+        }.to change { RouteMappingModel.count }.by(-1)
+        expect { existing_destination.refresh }.to raise_error Sequel::Error, 'Record not found'
+      end
+
+      describe 'copilot integration' do
+        before do
+          allow(Copilot::Adapter).to receive(:unmap_route)
+        end
+
+        it 'delegates to the copilot handler to notify copilot' do
+          subject.delete(existing_destination, route, user_audit_info)
+          expect(Copilot::Adapter).to have_received(:unmap_route).with(existing_destination)
+        end
+      end
+
+      describe 'diego integration' do
+        let(:fake_process_route_handler) { instance_double(ProcessRouteHandler) }
+
+        before do
+          allow(ProcessRouteHandler).to receive(:new).with(process3).and_return(fake_process_route_handler)
+          allow(fake_process_route_handler).to receive(:update_route_information)
+        end
+
+        it 'updates route information for route processes' do
+          subject.delete(existing_destination, route, user_audit_info)
+          expect(fake_process_route_handler).to have_received(:update_route_information).
+            with(perform_validation: false)
+        end
+      end
+    end
   end
 end

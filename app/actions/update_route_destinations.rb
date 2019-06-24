@@ -2,23 +2,31 @@ module VCAP::CloudController
   class UpdateRouteDestinations
     class << self
       def add(message, route, user_audit_info)
-        update(message, route, user_audit_info, replace: false)
+        existing_route_mappings = route_to_mapping_hashes(route)
+        new_route_mappings = message_to_mapping_hashes(message, route)
+        to_add = new_route_mappings - existing_route_mappings
+
+        update(route, to_add, [], user_audit_info)
       end
 
       def replace(message, route, user_audit_info)
-        update(message, route, user_audit_info, replace: true)
+        existing_route_mappings = route_to_mapping_hashes(route)
+        new_route_mappings = message_to_mapping_hashes(message, route)
+        to_add = new_route_mappings - existing_route_mappings
+        to_delete = existing_route_mappings - new_route_mappings
+
+        update(route, to_add, to_delete, user_audit_info)
+      end
+
+      def delete(destination, route, user_audit_info)
+        to_delete = [destination_to_mapping_hash(route, destination)]
+
+        update(route, [], to_delete, user_audit_info)
       end
 
       private
 
-      def update(message, route, user_audit_info, replace:)
-        existing_route_mappings = route_to_mappings(route)
-        new_route_mappings = message_to_mappings(message, route)
-
-        to_add = new_route_mappings - existing_route_mappings
-        to_delete = []
-        to_delete = existing_route_mappings - new_route_mappings if replace
-
+      def update(route, to_add, to_delete, user_audit_info)
         RouteMappingModel.db.transaction do
           to_delete.each do |rm|
             route_mapping = RouteMappingModel.find(rm)
@@ -48,7 +56,7 @@ module VCAP::CloudController
         end
       end
 
-      def message_to_mappings(message, route)
+      def message_to_mapping_hashes(message, route)
         new_route_mappings = []
         message.destinations.each do |dst|
           app_guid = HashUtils.dig(dst, :app, :guid)
@@ -66,16 +74,20 @@ module VCAP::CloudController
         new_route_mappings
       end
 
-      def route_to_mappings(route)
-        route.route_mappings.map do |rm|
-          {
-            app_guid: rm.app_guid,
-            route_guid: rm.route_guid,
-            process_type: rm.process_type,
-            app_port: rm.app_port,
-            route: route
-          }
+      def route_to_mapping_hashes(route)
+        route.route_mappings.map do |destination|
+          destination_to_mapping_hash(route, destination)
         end
+      end
+
+      def destination_to_mapping_hash(route, destination)
+        {
+          app_guid: destination.app_guid,
+          route_guid: destination.route_guid,
+          process_type: destination.process_type,
+          app_port: destination.app_port,
+          route: route
+        }
       end
     end
   end
