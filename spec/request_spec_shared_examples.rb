@@ -85,10 +85,22 @@ RSpec.shared_examples 'permissions for single object endpoint' do |roles|
 end
 
 RSpec.shared_examples 'permissions for delete endpoint' do |roles|
+  let(:expected_event_hash) { nil }
+
   roles.each do |role|
     describe "as an #{role}" do
       it 'returns the correct response status and resources' do
-        headers = set_user_with_header_as_role(role: role, org: org, space: space, user: user, scopes: expected_codes_and_responses[role][:scopes])
+        email = Sham.email
+        user_name = Sham.name
+        headers = set_user_with_header_as_role(
+          role: role,
+          org: org,
+          space: space,
+          user: user,
+          scopes: expected_codes_and_responses[role][:scopes],
+          user_name: user_name,
+          email: email,
+        )
         api_call.call(headers)
 
         expected_response_code = expected_codes_and_responses[role][:code]
@@ -96,6 +108,17 @@ RSpec.shared_examples 'permissions for delete endpoint' do |roles|
           "role #{role}: expected #{expected_response_code}, got: #{last_response.status}\nResponse Body: #{last_response.body[0..2000]}"
         if (200...300).cover? expected_response_code
           db_check.call
+
+          if expected_event_hash
+            event = VCAP::CloudController::Event.last
+            expect(event).not_to be_nil
+            expect(event.values).to include(expected_event_hash.merge({
+              actor: user.guid,
+              actor_type: 'user',
+              actor_name: email,
+              actor_username: user_name,
+            }))
+          end
         end
       end
     end

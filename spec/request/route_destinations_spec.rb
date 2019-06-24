@@ -726,7 +726,24 @@ RSpec.describe 'Route Destinations Request' do
         h
       end
 
-      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
+      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS do
+        let(:expected_event_hash) do
+          {
+            type: 'audit.app.unmap-route',
+            actee: app_model.guid,
+            actee_type: 'app',
+            actee_name: app_model.name,
+            space_guid: space.guid,
+            organization_guid: org.guid,
+            metadata: {
+              route_guid: route.guid,
+              app_port: 8080,
+              destination_guid: destination_to_delete.guid,
+              process_type: destination_to_delete.process_type,
+            }.to_json,
+          }
+        end
+      end
     end
 
     context 'when the route does not exist' do

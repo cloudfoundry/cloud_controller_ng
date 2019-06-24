@@ -143,7 +143,7 @@ module VCAP::CloudController
           before do
             allow(Repositories::RouteEventRepository).to receive(:new).and_return(route_event_repo)
             allow(route_event_repo).to receive(:record_route_map)
-            subject.replace(message, route, user_audit_info)
+            subject.add(message, route, user_audit_info)
           end
 
           it 'does not record an audit event for an existing route mapping' do
@@ -208,6 +208,7 @@ module VCAP::CloudController
           before do
             allow(Repositories::RouteEventRepository).to receive(:new).and_return(route_event_repo)
             allow(route_event_repo).to receive(:record_route_map)
+            allow(route_event_repo).to receive(:record_route_unmap)
             subject.replace(message, route, user_audit_info)
           end
 
@@ -216,6 +217,9 @@ module VCAP::CloudController
             route.route_mappings.each do |rm|
               expect(route_event_repo).to have_received(:record_route_map).once.with(rm, user_audit_info)
             end
+          end
+          it 'records an audit event for each new route unmapping' do
+            expect(route_event_repo).to have_received(:record_route_unmap).once.with(existing_destination, user_audit_info)
           end
         end
 
@@ -261,7 +265,7 @@ module VCAP::CloudController
           }
         end
 
-        it 'doesnt replace the new destination' do
+        it 'removes the non-matching destination and preserves the matching destination' do
           expect {
             subject.replace(message, route, user_audit_info)
           }.to change { RouteMappingModel.count }.by(-1)
@@ -271,11 +275,13 @@ module VCAP::CloudController
           before do
             allow(Repositories::RouteEventRepository).to receive(:new).and_return(route_event_repo)
             allow(route_event_repo).to receive(:record_route_map)
+            allow(route_event_repo).to receive(:record_route_unmap)
             subject.replace(message, route, user_audit_info)
           end
 
           it 'does not record an audit event for a new route mapping' do
             expect(route_event_repo).not_to have_received(:record_route_map)
+            expect(route_event_repo).to have_received(:record_route_unmap).once.with(existing_destination, user_audit_info)
           end
         end
       end
@@ -312,6 +318,18 @@ module VCAP::CloudController
           subject.delete(existing_destination, route, user_audit_info)
           expect(fake_process_route_handler).to have_received(:update_route_information).
             with(perform_validation: false)
+        end
+      end
+
+      describe 'audit events' do
+        before do
+          allow(Repositories::RouteEventRepository).to receive(:new).and_return(route_event_repo)
+          allow(route_event_repo).to receive(:record_route_unmap)
+          subject.delete(existing_destination, route, user_audit_info)
+        end
+
+        it 'records an audit event for each new route mapping' do
+          expect(route_event_repo).to have_received(:record_route_unmap).once.with(existing_destination, user_audit_info)
         end
       end
     end

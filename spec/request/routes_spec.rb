@@ -1676,19 +1676,19 @@ RSpec.describe 'Routes Request' do
         h
       end
 
-      let(:expected_event_hash) do
-        {
-          type: 'audit.route.delete-request',
-          actee: parsed_response['guid'],
-          actee_type: 'route',
-          actee_name: 'some-host',
-          metadata: { request: params }.to_json,
-          space_guid: space.guid,
-          organization_guid: org.guid,
-        }
+      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS do
+        let(:expected_event_hash) do
+          {
+            type: 'audit.route.delete-request',
+            actee: route.guid,
+            actee_type: 'route',
+            actee_name: route.host,
+            metadata: { request: { recursive: true } }.to_json,
+            space_guid: space.guid,
+            organization_guid: org.guid,
+          }
+        end
       end
-
-      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
     end
 
     describe 'when the user is not logged in' do

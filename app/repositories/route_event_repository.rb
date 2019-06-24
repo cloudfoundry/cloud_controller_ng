@@ -75,7 +75,29 @@ module VCAP::CloudController
           organization_guid: route_mapping.space.organization.guid,
           metadata:          {
             route_guid:       route_mapping.route.guid,
-            app_port:         8080,
+            app_port:         route_mapping.app_port,
+            destination_guid: route_mapping.guid,
+            process_type:     route_mapping.process_type
+          }
+        )
+      end
+
+      def record_route_unmap(route_mapping, actor_audit_info)
+        Event.create(
+          type:              'audit.app.unmap-route',
+          actee:             route_mapping.app.guid,
+          actee_type:        'app',
+          actee_name:        route_mapping.app.name,
+          actor:             actor_audit_info.user_guid,
+          actor_type:        'user',
+          actor_name:        actor_audit_info.user_email,
+          actor_username:    actor_audit_info.user_name,
+          timestamp:         Sequel::CURRENT_TIMESTAMP,
+          space_guid:        route_mapping.space.guid,
+          organization_guid: route_mapping.space.organization.guid,
+          metadata:          {
+            route_guid:       route_mapping.route.guid,
+            app_port:         route_mapping.app_port,
             destination_guid: route_mapping.guid,
             process_type:     route_mapping.process_type
           }

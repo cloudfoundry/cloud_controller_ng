@@ -34,6 +34,8 @@ module VCAP::CloudController
 
             Copilot::Adapter.unmap_route(route_mapping)
             update_route_information(route_mapping)
+
+            Repositories::RouteEventRepository.new.record_route_unmap(route_mapping, user_audit_info)
           end
 
           to_add.each do |rm|
