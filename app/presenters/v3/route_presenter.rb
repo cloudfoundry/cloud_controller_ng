@@ -56,6 +56,10 @@ module VCAP::CloudController::Presenters::V3
         href: url_builder.build_url(path: "/v3/spaces/#{route.space.guid}")
       }
 
+      links[:destinations] = {
+        href: url_builder.build_url(path: "/v3/routes/#{route.guid}/destinations")
+      }
+
       links[:domain] = {
         href: url_builder.build_url(path: "/v3/domains/#{route.domain.guid}")
       }

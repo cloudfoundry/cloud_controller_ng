@@ -40,6 +40,7 @@ RSpec.describe 'Routes Request' do
         links: {
           self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{route_in_org.guid}) },
           space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{route_in_org.space.guid}) },
+          destinations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{route_in_org.guid}\/destinations) },
           domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{route_in_org.domain.guid}) }
         }
       }
@@ -68,6 +69,7 @@ RSpec.describe 'Routes Request' do
         links: {
           self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{route_in_other_org.guid}) },
           space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{route_in_other_org.space.guid}) },
+          destinations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{route_in_other_org.guid}\/destinations) },
           domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{route_in_other_org.domain.guid}) }
         }
       }
@@ -124,15 +126,10 @@ RSpec.describe 'Routes Request' do
             }
           },
           links: {
-            self: {
-              href: 'http://api2.vcap.me/v3/routes/route-without-host'
-            },
-            space: {
-              href: "http://api2.vcap.me/v3/spaces/#{space.guid}"
-            },
-            domain: {
-              href: "http://api2.vcap.me/v3/domains/#{domain.guid}"
-            }
+            self: { href: 'http://api2.vcap.me/v3/routes/route-without-host' },
+            space: { href: "http://api2.vcap.me/v3/spaces/#{space.guid}" },
+            destinations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/route-without-host\/destinations) },
+            domain: { href: "http://api2.vcap.me/v3/domains/#{domain.guid}" }
           }
         }
       end
@@ -161,15 +158,10 @@ RSpec.describe 'Routes Request' do
             }
           },
           links: {
-            self: {
-              href: 'http://api2.vcap.me/v3/routes/route-without-host2'
-            },
-            space: {
-              href: "http://api2.vcap.me/v3/spaces/#{space.guid}"
-            },
-            domain: {
-              href: "http://api2.vcap.me/v3/domains/#{domain.guid}"
-            }
+            self: { href: 'http://api2.vcap.me/v3/routes/route-without-host2' },
+            space: { href: "http://api2.vcap.me/v3/spaces/#{space.guid}" },
+            destinations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/route-without-host2\/destinations) },
+            domain: { href: "http://api2.vcap.me/v3/domains/#{domain.guid}" }
           }
         }
       end
@@ -201,15 +193,10 @@ RSpec.describe 'Routes Request' do
             }
           },
           links: {
-            self: {
-              href: 'http://api2.vcap.me/v3/routes/route-without-path'
-            },
-            space: {
-              href: "http://api2.vcap.me/v3/spaces/#{space.guid}"
-            },
-            domain: {
-              href: "http://api2.vcap.me/v3/domains/#{domain.guid}"
-            }
+            self: { href: 'http://api2.vcap.me/v3/routes/route-without-path' },
+            space: { href: "http://api2.vcap.me/v3/spaces/#{space.guid}" },
+            destinations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/route-without-path\/destinations) },
+            domain: { href: "http://api2.vcap.me/v3/domains/#{domain.guid}" }
           }
         }
       end
@@ -492,7 +479,7 @@ RSpec.describe 'Routes Request' do
     let(:api_call) { lambda { |user_headers| get "/v3/routes/#{route.guid}", nil, user_headers } }
     let(:route_json) do
       {
-        guid: UUID_REGEX,
+        guid: route.guid,
         host: route.host,
         path: route.path,
         url: "#{route.host}.#{route.domain.name}#{route.path}",
@@ -513,6 +500,7 @@ RSpec.describe 'Routes Request' do
         links: {
           self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },
           space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{route.space.guid}) },
+          destinations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}\/destinations) },
           domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{route.domain.guid}) }
         }
       }
@@ -578,6 +566,7 @@ RSpec.describe 'Routes Request' do
             links: {
               self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },
               space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
+              destinations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}\/destinations) },
               domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{domain.guid}) },
             },
             metadata: {
@@ -648,7 +637,8 @@ RSpec.describe 'Routes Request' do
             links: {
               self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },
               space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
-              domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{domain.guid}) },
+              destinations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}\/destinations) },
+              domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{domain.guid}) }
             },
             metadata: {
               labels: { potato: 'yam' },
@@ -725,7 +715,8 @@ RSpec.describe 'Routes Request' do
             links: {
               self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },
               space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
-              domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{domain.guid}) },
+              destinations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}\/destinations) },
+              domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{domain.guid}) }
             },
             metadata: {
               labels: {},
@@ -815,7 +806,8 @@ RSpec.describe 'Routes Request' do
             links: {
               self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },
               space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
-              domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{domain.guid}) },
+              destinations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}\/destinations) },
+              domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{domain.guid}) }
             },
             metadata: {
               labels: {},
@@ -880,7 +872,8 @@ RSpec.describe 'Routes Request' do
             links: {
               self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },
               space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
-              domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{domain.guid}) },
+              destinations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}\/destinations) },
+              domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{domain.guid}) }
             },
             metadata: {
               labels: {},
@@ -956,7 +949,8 @@ RSpec.describe 'Routes Request' do
           links: {
             self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },
             space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
-            domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{domain.guid}) },
+            destinations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}\/destinations) },
+            domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{domain.guid}) }
           }
         }
       end
@@ -1066,6 +1060,7 @@ RSpec.describe 'Routes Request' do
             links: {
               self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },
               space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
+              destinations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}\/destinations) },
               domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{domain.guid}) },
             },
             metadata: {
@@ -1295,7 +1290,8 @@ RSpec.describe 'Routes Request' do
           links: {
             self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },
             space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
-            domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{domain.guid}) }
+            destinations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}\/destinations) },
+            domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{domain.guid}) },
           }
         }
       end
@@ -1514,6 +1510,7 @@ RSpec.describe 'Routes Request' do
         links: {
           self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },
           space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
+          destinations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}\/destinations) },
           domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{domain.guid}) }
         },
         metadata: {
@@ -1569,6 +1566,7 @@ RSpec.describe 'Routes Request' do
           links: {
             self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}) },
             space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{other_space.guid}) },
+            destinations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{UUID_REGEX}\/destinations) },
             domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{domain.guid}) }
           },
           metadata: {

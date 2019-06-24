@@ -54,6 +54,7 @@ module VCAP::CloudController::Presenters::V3
         expect(subject[:links][:self][:href]).to eq("#{link_prefix}/v3/routes/#{route.guid}")
         expect(subject[:links][:space][:href]).to eq("#{link_prefix}/v3/spaces/#{space.guid}")
         expect(subject[:links][:domain][:href]).to eq("#{link_prefix}/v3/domains/#{domain.guid}")
+        expect(subject[:links][:destinations][:href]).to eq("#{link_prefix}/v3/routes/#{route.guid}/destinations")
       end
 
       context 'when the host is empty' do
