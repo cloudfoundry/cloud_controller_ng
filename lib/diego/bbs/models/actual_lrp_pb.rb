@@ -28,6 +28,12 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
     optional :address, :string, 1
     repeated :ports, :message, 2, "diego.bbs.models.PortMapping"
     optional :instance_address, :string, 3
+    optional :preferred_address, :enum, 4, "diego.bbs.models.ActualLRPNetInfo.PreferredAddress"
+  end
+  add_enum "diego.bbs.models.ActualLRPNetInfo.PreferredAddress" do
+    value :UNKNOWN, 0
+    value :INSTANCE, 1
+    value :HOST, 2
   end
   add_message "diego.bbs.models.ActualLRP" do
     optional :actual_lrp_key, :message, 1, "diego.bbs.models.ActualLRPKey"
@@ -56,6 +62,7 @@ module Diego
       ActualLRPKey = Google::Protobuf::DescriptorPool.generated_pool.lookup("diego.bbs.models.ActualLRPKey").msgclass
       ActualLRPInstanceKey = Google::Protobuf::DescriptorPool.generated_pool.lookup("diego.bbs.models.ActualLRPInstanceKey").msgclass
       ActualLRPNetInfo = Google::Protobuf::DescriptorPool.generated_pool.lookup("diego.bbs.models.ActualLRPNetInfo").msgclass
+      ActualLRPNetInfo::PreferredAddress = Google::Protobuf::DescriptorPool.generated_pool.lookup("diego.bbs.models.ActualLRPNetInfo.PreferredAddress").enummodule
       ActualLRP = Google::Protobuf::DescriptorPool.generated_pool.lookup("diego.bbs.models.ActualLRP").msgclass
       ActualLRP::Presence = Google::Protobuf::DescriptorPool.generated_pool.lookup("diego.bbs.models.ActualLRP.Presence").enummodule
     end
