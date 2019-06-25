@@ -1329,6 +1329,7 @@ module VCAP::CloudController
                 'space_name'          => process.space.name,
                 'space_id'            => process.space.guid,
                 'organization_id' => process.organization.guid,
+                'organization_name' => process.organization.name,
                 'users' => nil
               }
             })
@@ -1591,7 +1592,8 @@ module VCAP::CloudController
               'space_name'          => process.space.name,
               'space_id'            => process.space.guid,
               'organization_id'     => process.organization.guid,
-              'users'               => nil
+              'organization_name' =>   process.organization.name,
+              'users' => nil
             }
           })
         end

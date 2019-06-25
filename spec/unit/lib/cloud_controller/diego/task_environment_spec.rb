@@ -30,6 +30,7 @@ module VCAP::CloudController::Diego
         space_name:          space.name,
         space_id:            space.guid,
         organization_id:     space.organization.guid,
+        organization_name: space.organization.name,
         uris:                [],
         users:               nil
       }
@@ -114,6 +115,7 @@ module VCAP::CloudController::Diego
             space_name:          space.name,
             space_id:            space.guid,
             organization_id:     space.organization.guid,
+            organization_name: space.organization.name,
             users:               nil
           }
         end

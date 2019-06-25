@@ -54,6 +54,7 @@ module VCAP::CloudController
                 space_name: space.name,
                 space_id: space.guid,
                 organization_id: space.organization.guid,
+                organization_name: space.organization.name,
                 users: nil
               }
             })

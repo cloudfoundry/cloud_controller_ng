@@ -27,6 +27,7 @@ module VCAP::CloudController
             space_name: process.space.name,
             space_id: process.space.guid,
             organization_id: process.organization.guid,
+            organization_name: process.organization.name,
             uris: process.uris,
             users: nil
           }
@@ -56,6 +57,7 @@ module VCAP::CloudController
                 space_name: v3_app_model.space.name,
                 space_id: v3_app_model.space.guid,
                 organization_id: v3_app_model.organization.guid,
+                organization_name: v3_app_model.organization.name,
                 uris: [],
                 users: nil
               }
@@ -83,6 +85,7 @@ module VCAP::CloudController
                 space_name: v3_app_model.space.name,
                 space_id: v3_app_model.space.guid,
                 organization_id: v3_app_model.organization.guid,
+                organization_name: v3_app_model.organization.name,
                 uris: [],
                 users: nil
               }
@@ -113,6 +116,7 @@ module VCAP::CloudController
               space_name: space.name,
               space_id: space.guid,
               organization_id: process.organization.guid,
+              organization_name: process.organization.name,
               uris: process.uris,
               users: nil
             }
@@ -143,6 +147,7 @@ module VCAP::CloudController
               space_name: process.space.name,
               space_id: process.space.guid,
               organization_id: process.organization.guid,
+              organization_name: process.organization.name,
               uris: process.uris,
               users: nil
             }

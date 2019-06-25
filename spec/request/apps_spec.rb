@@ -1011,9 +1011,10 @@ RSpec.describe 'Apps' do
                   'application_name' => 'my_app',
                   'application_uris' => [],
                   'name' => 'my_app',
-                  'space_name' => space.name,
-                  'space_id' => space.guid,
                   'organization_id' => space.organization.guid,
+                  'organization_name' => space.organization.name,
+                  'space_id' => space.guid,
+                  'space_name' => space.name,
                 'uris' => [],
                   'users' => nil,
                   'application_id' => app_model.guid

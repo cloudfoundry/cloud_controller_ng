@@ -1005,7 +1005,8 @@ RSpec.describe 'Apps' do
               'application_id'      => process.app_guid,
               'version'             => process.version,
               'application_version' => process.version,
-              'organization_id'     => space.organization_guid
+              'organization_id'     => space.organization_guid,
+              'organization_name' => space.organization.name,
             }
           }
         }

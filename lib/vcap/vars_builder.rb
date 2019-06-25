@@ -42,6 +42,7 @@ module VCAP
         space_name: @space.name,
         space_id: @space.guid,
         organization_id: @space.organization_guid,
+        organization_name: @space.organization.name,
         uris: uris,
         users: nil
       }
