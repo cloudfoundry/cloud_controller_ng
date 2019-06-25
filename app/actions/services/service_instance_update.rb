@@ -139,12 +139,17 @@ module VCAP::CloudController
     end
 
     def cache_previous_values(service_instance)
-      {
+      previous_values = {
         plan_id: service_instance.service_plan.broker_provided_id,
         service_id: service_instance.service.broker_provided_id,
         organization_id: service_instance.organization.guid,
-        space_id: service_instance.space.guid
+        space_id: service_instance.space.guid,
       }
+
+      maintenance_info = get_version_only(from: service_instance.maintenance_info)
+      previous_values[:maintenance_info] = maintenance_info if maintenance_info
+
+      previous_values
     end
 
     def reset_service_instance_to_cached(service_instance, cached_service_instance)

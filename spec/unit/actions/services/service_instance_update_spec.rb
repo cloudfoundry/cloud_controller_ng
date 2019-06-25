@@ -54,8 +54,8 @@ module VCAP::CloudController
         expect(service_instance.maintenance_info).to eq(new_service_plan.maintenance_info)
 
         expect(
-          a_request(:patch, update_url(service_instance)).with(
-            body: hash_including({
+          a_request(:patch, update_url(service_instance)).with do |req|
+            expect(JSON.parse(req.body)).to include({
               'parameters' => updated_parameters,
               'plan_id' => new_service_plan.broker_provided_id,
               'previous_values' => {
@@ -65,7 +65,7 @@ module VCAP::CloudController
                 'space_id' => service_instance.space.guid,
               }
             })
-          )
+          end
         ).to have_been_made.once
       end
 
@@ -170,7 +170,8 @@ module VCAP::CloudController
 
       context 'arbitrary params are the only change' do
         let(:request_attrs) { { 'parameters' => updated_parameters } }
-        let(:old_service_plan) { ServicePlan.make(:v2, service: service, maintenance_info: { 'version' => '5.0.0' }) }
+        let(:old_maintenance_info) { { 'version' => '5.0.0' } }
+        let(:old_service_plan) { ServicePlan.make(:v2, service: service, maintenance_info: old_maintenance_info) }
 
         it 'sends a request to the broker updating only parameters' do
           service_instance_update.update_service_instance(service_instance, request_attrs)
@@ -186,7 +187,8 @@ module VCAP::CloudController
                   'plan_id' => old_service_plan.broker_provided_id,
                   'service_id' => service_instance.service.broker_provided_id,
                   'organization_id' => service_instance.organization.guid,
-                  'space_id' => service_instance.space.guid
+                  'space_id' => service_instance.space.guid,
+                  'maintenance_info' => old_maintenance_info,
                 }
               })
               expect(parsed_body).not_to include('maintenance_info')
@@ -441,18 +443,35 @@ module VCAP::CloudController
         service_instance_update.update_service_instance(service_instance, request_attrs)
 
         expect(
-          a_request(:patch, update_url(service_instance)).with(
-            body: hash_including({
+          a_request(:patch, update_url(service_instance)).with do |req|
+            expect(JSON.parse(req.body)).to include({
               'maintenance_info' => new_maintenance_info,
               'previous_values' => {
                 'plan_id' => service_instance.service_plan.broker_provided_id,
                 'service_id' => service_instance.service.broker_provided_id,
                 'organization_id' => service_instance.organization.guid,
                 'space_id' => service_instance.space.guid,
+                'maintenance_info' => old_maintenance_info,
               }
             })
-          )
+          end
         ).to have_been_made.once
+      end
+
+      context 'previous values when maintenance_info is nil' do
+        let(:old_maintenance_info) { nil }
+
+        it 'does not include it in the previous_values' do
+          service_instance_update.update_service_instance(service_instance, request_attrs)
+
+          expect(
+            a_request(:patch, update_url(service_instance)).with do |req|
+              expect(JSON.parse(req.body)).not_to include({
+                'previous_values' => have_key('maintenance_info'),
+              })
+            end
+          ).to have_been_made.once
+        end
       end
 
       context 'when the maintenance_info has extra fields' do
@@ -464,6 +483,14 @@ module VCAP::CloudController
         }
         let(:maintenance_info_without_extra) { { 'version' => '2.0' } }
 
+        let(:old_maintenance_info) {
+          {
+            'version' => '1.0',
+            'extra' => 'some extra information',
+          }
+        }
+        let(:old_maintenance_info_without_extra) { { 'version' => '1.0' } }
+
         it 'sends maintenance_info to the broker without the extra fields' do
           service_instance_update.update_service_instance(service_instance, request_attrs)
 
@@ -471,6 +498,9 @@ module VCAP::CloudController
             a_request(:patch, update_url(service_instance)).with do |req|
               expect(JSON.parse(req.body)).to include({
                 'maintenance_info' => maintenance_info_without_extra,
+                'previous_values' => include(
+                  'maintenance_info' => old_maintenance_info_without_extra,
+                ),
               })
             end
           ).to have_been_made.once
@@ -615,17 +645,18 @@ module VCAP::CloudController
               service_instance_update.update_service_instance(service_instance, request_attrs)
 
               expect(
-                a_request(:patch, update_url(service_instance, accepts_incomplete: true)).with(
-                  body: hash_including({
+                a_request(:patch, update_url(service_instance, accepts_incomplete: true)).with do |req|
+                  expect(JSON.parse(req.body)).to include({
                     'maintenance_info' => maintenance_info_without_extra,
                     'previous_values' => {
                       'plan_id' => service_instance.service_plan.broker_provided_id,
                       'service_id' => service_instance.service.broker_provided_id,
                       'organization_id' => service_instance.organization.guid,
                       'space_id' => service_instance.space.guid,
+                      'maintenance_info' => maintenance_info_without_extra,
                     }
                   })
-                )
+                end
               ).to have_been_made.once
             end
           end
