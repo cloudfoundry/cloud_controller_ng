@@ -10,7 +10,7 @@ class UaaTokenCache
     token_value.token if token_value.expires_at.nil? || Time.now < token_value.expires_at
   end
 
-  def self.set_token(client_id, token, expires_in:)
+  def self.set_token(client_id, token, expires_in: nil)
     @tokens[client_id] = TokenValue.new(token, expires_in ? expires_in.seconds.from_now : nil)
   end
 

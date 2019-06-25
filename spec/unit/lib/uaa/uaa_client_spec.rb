@@ -50,19 +50,15 @@ module VCAP::CloudController
 
     describe '#scim' do
       it 'knows how to build a valid scim' do
-        scim = uaa_client.scim
+        scim = uaa_client.send(:scim)
         expect(scim).to be_a(CF::UAA::Scim)
         expect(scim.instance_variable_get(:@target)).to eq(url)
         expect(scim.instance_variable_get(:@auth_header)).to eq(auth_header)
       end
 
       it 'gives the scim a timeout from the config uaa client_timeout' do
-        scim = uaa_client.scim
+        scim = uaa_client.send(:scim)
         expect(scim.instance_variable_get(:@http_timeout)).to eq(60)
-      end
-
-      it 'caches the scim' do
-        expect(uaa_client.scim).to be(uaa_client.scim)
       end
     end
 
@@ -130,6 +126,30 @@ module VCAP::CloudController
         expect(result.length).to eq(1)
         expect(result[0]).to include('client_id' => 'existing-id')
       end
+
+      context 'when the cached token is invalid' do
+        before do
+          UaaTokenCache.set_token(client_id, 'bearer invalid')
+
+          WebMock::API.stub_request(:get, "#{url}/oauth/clients/client_id").
+            with(headers: { 'Authorization' => 'bearer STUFF' }).
+            to_return(
+              status: 200,
+              headers: { 'content-type' => 'application/json' },
+              body: { 'client_id' => client_id, name: 'My Client Name' }.to_json)
+
+          WebMock::API.stub_request(:get, "#{url}/oauth/clients/client_id").
+            with(headers: { 'Authorization' => 'bearer invalid' }).
+            to_return(
+              status: 403,
+              headers: { 'content-type' => 'application/json' },
+              body: { 'error' => 'invalid_token' }.to_json)
+        end
+
+        it 'successfully refreshes the token' do
+          expect(uaa_client.get_clients([client_id])).to eq([{ 'client_id' => 'client_id', 'id' => 'client_id', 'name' => 'My Client Name' }])
+        end
+      end
     end
 
     describe '#usernames_for_ids' do
@@ -196,6 +216,8 @@ module VCAP::CloudController
 
       context 'with invalid tokens' do
         before do
+          UaaTokenCache.set_token(client_id, 'bearer invalid')
+
           response_body = {
             'resources' => [
               { 'id' => '111', 'origin' => 'uaa', 'username' => 'user_1' },
@@ -207,19 +229,21 @@ module VCAP::CloudController
             'totalresults' => 2 }
 
           WebMock::API.stub_request(:get, "#{url}/ids/Users").
-            with(query: { 'filter' => 'id eq "111" or id eq "222"' }).
+            with(query: { 'filter' => 'id eq "111" or id eq "222"' }, headers: { 'Authorization' => 'bearer STUFF' }).
             to_return(
               status: 200,
               headers: { 'content-type' => 'application/json' },
               body: response_body.to_json)
+
+          WebMock::API.stub_request(:get, "#{url}/ids/Users").
+            with(query: { 'filter' => 'id eq "111" or id eq "222"' }, headers: { 'Authorization' => 'bearer invalid' }).
+            to_return(
+              status: 403,
+              headers: { 'content-type' => 'application/json' },
+              body: { 'error' => 'invalid_token' }.to_json)
         end
 
         context 'when token is invalid or expired one time' do
-          before do
-            expect(uaa_client.scim).to receive(:query).once.and_raise(CF::UAA::InvalidToken)
-            expect(uaa_client.scim).to receive(:query).once.and_call_original
-          end
-
           it 'retries once and then succeeds' do
             mapping = uaa_client.usernames_for_ids([userid_1, userid_2])
             expect(mapping[userid_1]).to eq('user_1')
@@ -228,9 +252,7 @@ module VCAP::CloudController
         end
 
         context 'when token is invalid or expired twice' do
-          before do
-            expect(uaa_client.scim).to receive(:query).twice.and_raise(CF::UAA::InvalidToken)
-          end
+          let(:auth_header) { 'bearer invalid' }
 
           it 'retries once and then returns no usernames' do
             expect(uaa_client.usernames_for_ids([userid_1, userid_2])).to eq({})

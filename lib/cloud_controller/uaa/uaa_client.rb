@@ -22,14 +22,10 @@ module VCAP::CloudController
       @http_timeout = self.class.default_http_timeout
     end
 
-    def scim
-      @scim ||= CF::UAA::Scim.new(uaa_target, auth_header, uaa_connection_opts)
-    end
-
     def get_clients(client_ids)
       client_ids.map do |id|
         begin
-          scim.get(:client, id)
+          get(:client, id)
         rescue CF::UAA::NotFound
           nil
         end
@@ -45,14 +41,6 @@ module VCAP::CloudController
 
     def usernames_for_ids(user_ids)
       fetch_usernames(user_ids)
-    rescue CF::UAA::InvalidToken
-      UaaTokenCache.clear_token(client_id)
-      begin
-        fetch_usernames(user_ids)
-      rescue UaaUnavailable, CF::UAA::UAAError => e
-        logger.error("Failed to retrieve usernames from UAA: #{e.inspect}")
-        {}
-      end
     rescue UaaUnavailable, CF::UAA::UAAError => e
       logger.error("Failed to retrieve usernames from UAA: #{e.inspect}")
       {}
@@ -61,7 +49,7 @@ module VCAP::CloudController
     def id_for_username(username, origin: nil)
       filter_string = %(username eq "#{username}")
       filter_string = %/origin eq "#{origin}" and #{filter_string}/ if origin.present?
-      results = scim.query(:user_id, includeInactive: true, filter: filter_string)
+      results = query(:user_id, includeInactive: true, filter: filter_string)
 
       user = results['resources'].first
       user && user['id']
@@ -71,7 +59,7 @@ module VCAP::CloudController
 
     def origins_for_username(username)
       filter_string = %(username eq "#{username}")
-      results = scim.query(:user_id, includeInactive: true, filter: filter_string)
+      results = query(:user_id, includeInactive: true, filter: filter_string)
 
       results['resources'].map { |resource| resource['origin'] }
     rescue UaaUnavailable, CF::UAA::UAAError => e
@@ -85,11 +73,30 @@ module VCAP::CloudController
 
     private
 
+    def query(type, **opts)
+      with_cache_retry { scim.query(type, **opts) }
+    end
+
+    def get(type, id)
+      with_cache_retry { scim.get(type, id) }
+    end
+
+    def with_cache_retry
+      yield
+    rescue CF::UAA::InvalidToken
+      UaaTokenCache.clear_token(client_id)
+      yield
+    end
+
+    def scim
+      CF::UAA::Scim.new(uaa_target, auth_header, uaa_connection_opts)
+    end
+
     def fetch_usernames(user_ids)
       return {} unless user_ids.present?
 
       filter_string = user_ids.map { |user_id| %(id eq "#{user_id}") }.join(' or ')
-      results = scim.query(:user_id, filter: filter_string)
+      results = query(:user_id, filter: filter_string)
 
       results['resources'].each_with_object({}) do |resource, results_hash|
         results_hash[resource['id']] = resource['username']
