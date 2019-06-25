@@ -1328,7 +1328,8 @@ module VCAP::CloudController
                 'version'             => /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/,
                 'space_name'          => process.space.name,
                 'space_id'            => process.space.guid,
-                'users'               => nil
+                'organization_id' => process.organization.guid,
+                'users' => nil
               }
             })
           end
@@ -1589,6 +1590,7 @@ module VCAP::CloudController
               'version'             => /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/,
               'space_name'          => process.space.name,
               'space_id'            => process.space.guid,
+              'organization_id'     => process.organization.guid,
               'users'               => nil
             }
           })

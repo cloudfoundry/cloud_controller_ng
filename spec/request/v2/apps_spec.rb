@@ -1002,9 +1002,10 @@ RSpec.describe 'Apps' do
               'space_id'            => space.guid,
               'uris'                => ["potato.#{VCAP::CloudController::SharedDomain.first.name}"],
               'users'               => nil,
-              'application_id'      => process.guid,
+              'application_id'      => process.app_guid,
               'version'             => process.version,
-              'application_version' => process.version
+              'application_version' => process.version,
+              'organization_id'     => space.organization_guid
             }
           }
         }

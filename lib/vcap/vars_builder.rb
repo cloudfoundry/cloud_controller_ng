@@ -41,6 +41,7 @@ module VCAP
         name: @process.name,
         space_name: @space.name,
         space_id: @space.guid,
+        organization_id: @space.organization_guid,
         uris: uris,
         users: nil
       }

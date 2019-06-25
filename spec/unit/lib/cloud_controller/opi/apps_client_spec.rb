@@ -98,6 +98,7 @@ RSpec.describe(OPI::Client) do
                     "name": "#{app_model.name}",
                     "space_name": "#{lrp.space.name}",
                     "space_id": "#{lrp.space.guid}",
+                    "organization_id": "#{lrp.space.organization_guid}",
                     "uris": [],
                     "application_id": "#{app_model.guid}",
                     "version": "#{lrp.version}",

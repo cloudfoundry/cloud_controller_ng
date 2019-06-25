@@ -4,67 +4,39 @@ require 'vcap/vars_builder'
 module VCAP::CloudController
   RSpec.describe 'VarsBuilder' do
     describe 'vcap_application' do
-      let(:v3_app_model) { AppModel.make(name: 'v3-app-name') }
-      let(:v2_app) { ProcessModelFactory.make(memory: 259, disk_quota: 799, file_descriptors: 1234, name: 'v2-app-name') }
+      let(:v3_app_model) { AppModel.make(name: 'v3-app-name', space: space) }
+      let(:process) { ProcessModelFactory.make(app: v3_app_model, memory: 259, disk_quota: 799, file_descriptors: 1234) }
       let(:space) { VCAP::CloudController::Space.make }
 
-      describe 'building hash for a v2 app model' do
-        context 'when a v3 app is associated' do
-          it 'has the expected values' do
-            process = ProcessModelFactory.make(memory: 259, disk_quota: 799, file_descriptors: 1234, name: 'process-name')
-            v3_app_model.add_process(process)
-            expected_hash = {
-              cf_api: "#{TestConfig.config[:external_protocol]}://#{TestConfig.config[:external_domain]}",
-              limits: {
-                mem: v2_app.memory,
-                disk: v2_app.disk_quota,
-                fds: v2_app.file_descriptors,
-              },
-              application_id: v3_app_model.guid,
-              application_version: process.version,
-              application_name: v3_app_model.name,
-              application_uris: process.uris,
-              version: process.version,
-              name: process.name,
-              space_name: process.space.name,
-              space_id: process.space.guid,
-              uris: process.uris,
-              users: nil
-            }
+      describe 'building hash for a v2 app model (ProcessModel)' do
+        it 'has the expected values' do
+          v3_app_model.add_process(process)
+          expected_hash = {
+            cf_api: "#{TestConfig.config[:external_protocol]}://#{TestConfig.config[:external_domain]}",
+            limits: {
+              mem: process.memory,
+              disk: process.disk_quota,
+              fds: process.file_descriptors,
+            },
+            application_id: v3_app_model.guid,
+            application_version: process.version,
+            application_name: v3_app_model.name,
+            application_uris: process.uris,
+            version: process.version,
+            name: process.name,
+            space_name: process.space.name,
+            space_id: process.space.guid,
+            organization_id: process.organization.guid,
+            uris: process.uris,
+            users: nil
+          }
 
-            vars_builder = VCAP::VarsBuilder.new(process)
-            expect(vars_builder.to_hash).to eq(expected_hash)
-          end
-        end
-
-        context 'when a v3 app is not associated' do
-          it 'has the expected values' do
-            expected_hash = {
-              cf_api: "#{TestConfig.config[:external_protocol]}://#{TestConfig.config[:external_domain]}",
-              limits: {
-                mem: v2_app.memory,
-                disk: v2_app.disk_quota,
-                fds: v2_app.file_descriptors,
-              },
-              application_id: v2_app.guid,
-              application_version: v2_app.version,
-              application_name: 'v2-app-name',
-              application_uris: v2_app.uris,
-              version: v2_app.version,
-              name: 'v2-app-name',
-              space_name: v2_app.space.name,
-              space_id: v2_app.space.guid,
-              uris: v2_app.uris,
-              users: nil
-            }
-
-            vars_builder = VCAP::VarsBuilder.new(v2_app)
-            expect(vars_builder.to_hash).to eq(expected_hash)
-          end
+          vars_builder = VCAP::VarsBuilder.new(process)
+          expect(vars_builder.to_hash).to eq(expected_hash)
         end
       end
 
-      describe 'building hash for a v3 AppModel' do
+      describe 'building hash for a v3 app model (AppModel)' do
         describe 'optional memory_limit, staging_disk_in_mb, file_descriptors and version' do
           context 'when memory_limit, staging_disk_in_mb, file_descriptors and version are supplied' do
             it 'builds hash with suppplied value' do
@@ -83,6 +55,7 @@ module VCAP::CloudController
                 name: 'v3-app-name',
                 space_name: v3_app_model.space.name,
                 space_id: v3_app_model.space.guid,
+                organization_id: v3_app_model.organization.guid,
                 uris: [],
                 users: nil
               }
@@ -109,6 +82,7 @@ module VCAP::CloudController
                 name: 'v3-app-name',
                 space_name: v3_app_model.space.name,
                 space_id: v3_app_model.space.guid,
+                organization_id: v3_app_model.organization.guid,
                 uris: [],
                 users: nil
               }
@@ -122,28 +96,29 @@ module VCAP::CloudController
 
       describe 'optional space argument' do
         context 'when space is supplied' do
-          it 'builds hash with suppplied value' do
+          it 'builds hash with supplied value' do
             expected_hash = {
               cf_api: "#{TestConfig.config[:external_protocol]}://#{TestConfig.config[:external_domain]}",
               limits: {
-                mem: v2_app.memory,
-                disk: v2_app.disk_quota,
-                fds: v2_app.file_descriptors,
+                mem: process.memory,
+                disk: process.disk_quota,
+                fds: process.file_descriptors,
               },
-              application_id: v2_app.guid,
-              application_version: v2_app.version,
-              application_name: 'v2-app-name',
-              application_uris: v2_app.uris,
-              version: v2_app.version,
-              name: 'v2-app-name',
+              application_id: process.guid,
+              application_version: process.version,
+              application_name: v3_app_model.name,
+              application_uris: process.uris,
+              version: process.version,
+              name: v3_app_model.name,
               space_name: space.name,
               space_id: space.guid,
-              uris: v2_app.uris,
+              organization_id: process.organization.guid,
+              uris: process.uris,
               users: nil
             }
 
             vars_builder = VCAP::VarsBuilder.new(
-              v2_app,
+              process,
               space: space
             )
             expect(vars_builder.to_hash).to eq(expected_hash)
@@ -155,23 +130,24 @@ module VCAP::CloudController
             expected_hash = {
               cf_api: "#{TestConfig.config[:external_protocol]}://#{TestConfig.config[:external_domain]}",
               limits: {
-                mem: v2_app.memory,
-                disk: v2_app.disk_quota,
-                fds: v2_app.file_descriptors,
+                mem: process.memory,
+                disk: process.disk_quota,
+                fds: process.file_descriptors,
               },
-              application_id: v2_app.guid,
-              application_version: v2_app.version,
-              application_name: 'v2-app-name',
-              application_uris: v2_app.uris,
-              version: v2_app.version,
-              name: 'v2-app-name',
-              space_name: v2_app.space.name,
-              space_id: v2_app.space.guid,
-              uris: v2_app.uris,
+              application_id: process.guid,
+              application_version: process.version,
+              application_name: v3_app_model.name,
+              application_uris: process.uris,
+              version: process.version,
+              name: v3_app_model.name,
+              space_name: process.space.name,
+              space_id: process.space.guid,
+              organization_id: process.organization.guid,
+              uris: process.uris,
               users: nil
             }
 
-            vars_builder = VCAP::VarsBuilder.new(v2_app)
+            vars_builder = VCAP::VarsBuilder.new(process)
             expect(vars_builder.to_hash).to eq(expected_hash)
           end
         end

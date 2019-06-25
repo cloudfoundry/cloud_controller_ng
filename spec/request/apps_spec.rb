@@ -1013,7 +1013,8 @@ RSpec.describe 'Apps' do
                   'name' => 'my_app',
                   'space_name' => space.name,
                   'space_id' => space.guid,
-                  'uris' => [],
+                  'organization_id' => space.organization.guid,
+                'uris' => [],
                   'users' => nil,
                   'application_id' => app_model.guid
               }
