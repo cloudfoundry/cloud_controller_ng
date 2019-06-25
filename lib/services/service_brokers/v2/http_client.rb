@@ -64,7 +64,7 @@ module VCAP::Services
         user_guid = user_guid(options)
         opts[:header][VCAP::Request::HEADER_BROKER_API_ORIGINATING_IDENTITY] = IdentityEncoder.encode(user_guid) if user_guid
 
-        headers = default_headers.merge(opts[:header])
+        headers = client.default_header.merge(opts[:header])
 
         logger.debug "Sending #{method} to #{uri}, BODY: #{body.inspect}, HEADERS: #{headers}"
 
@@ -92,6 +92,7 @@ module VCAP::Services
         {
           VCAP::Request::HEADER_BROKER_API_VERSION => VCAP::CloudController::Constants::OSBAPI_VERSION,
           VCAP::Request::HEADER_NAME => VCAP::Request.current_id,
+          VCAP::Request::HEADER_BROKER_API_REQUEST_IDENTITY => SecureRandom.uuid,
           'Accept' => 'application/json',
           VCAP::Request::HEADER_API_INFO_LOCATION => "#{VCAP::CloudController::Config.config.get(:external_domain)}/v2/info"
         }

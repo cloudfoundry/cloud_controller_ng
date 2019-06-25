@@ -79,6 +79,7 @@ module VCAP::Services::ServiceBrokers::V2
         make_request
         expect(fake_logger).to have_received(:debug).with(match(%r{Accept"=>"application/json}))
         expect(fake_logger).to have_received(:debug).with(match(/X-VCAP-Request-ID"=>"[[:alnum:]-]+/))
+        expect(fake_logger).to have_received(:debug).with(match(/X-Broker-API-Request-Identity"=>"[[:alnum:]-]+/))
         expect(fake_logger).to have_received(:debug).with(match(/X-Broker-Api-Version"=>"2\.14/))
         expect(fake_logger).to have_received(:debug).with(match(%r{X-Api-Info-Location"=>"api2\.vcap\.me/v2/info}))
       end
@@ -173,6 +174,18 @@ module VCAP::Services::ServiceBrokers::V2
               with(query: hash_including({})).
               with(&no_user_guid)).to have_been_made
           end
+        end
+      end
+
+      context 'X-Broker-API-Request-Identity' do
+        it 'sets the X-Broker-API-Request-Identity header with a uuid' do
+          make_request
+
+          expect(a_request(http_method, full_url).
+                 with(basic_auth: basic_auth).
+                 with(query: hash_including({})).
+                 with(headers: { 'X-Broker-API-Request-Identity' => /[[:alnum:]-]+/ })).
+            to have_been_made
         end
       end
     end
