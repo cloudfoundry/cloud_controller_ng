@@ -1,6 +1,7 @@
 require 'presenters/v3/paginated_list_presenter'
 require 'presenters/v3/space_presenter'
 require 'messages/space_create_message'
+require 'messages/space_delete_unmapped_routes_message'
 require 'messages/space_update_message'
 require 'messages/space_update_isolation_segment_message'
 require 'messages/spaces_list_message'
@@ -8,8 +9,10 @@ require 'messages/space_show_message'
 require 'actions/space_update_isolation_segment'
 require 'actions/space_create'
 require 'actions/space_update'
+require 'actions/space_delete_unmapped_routes'
 require 'fetchers/space_list_fetcher'
 require 'fetchers/space_fetcher'
+require 'jobs/v3/space_delete_unmapped_routes_job'
 
 class SpacesV3Controller < ApplicationController
   def index
@@ -70,6 +73,22 @@ class SpacesV3Controller < ApplicationController
     space = SpaceUpdate.new.update(space, message)
 
     render status: :ok, json: Presenters::V3::SpacePresenter.new(space)
+  end
+
+  def delete_unmapped_routes
+    message = SpaceDeleteUnmappedRoutesMessage.new(query_params)
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    space = fetch_space(hashed_params[:guid])
+    space_not_found! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
+
+    unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
+
+    deletion_job = VCAP::CloudController::Jobs::V3::SpaceDeleteUnmappedRoutesJob.new(space)
+    pollable_job = Jobs::Enqueuer.new(deletion_job, queue: 'cc-generic').enqueue_pollable
+
+    url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
+    head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job.guid}")
   end
 
   def update_isolation_segment

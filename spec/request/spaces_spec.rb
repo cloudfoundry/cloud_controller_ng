@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'request_spec_shared_examples'
 
 RSpec.describe 'Spaces' do
   let(:user) { VCAP::CloudController::User.make }
@@ -454,6 +455,56 @@ RSpec.describe 'Spaces' do
             },
           }
         )
+      end
+    end
+  end
+
+  describe 'DELETE /v3/spaces/:guid/routes?unmapped=true' do
+    let(:space) { VCAP::CloudController::Space.make }
+    let(:org) { space.organization }
+    let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: org) }
+    let!(:unmapped_route) { VCAP::CloudController::Route.make(space: space, domain: domain) }
+    let!(:mapped_route) { VCAP::CloudController::Route.make(space: space, domain: domain, host: 'mapped') }
+    let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
+    let!(:destination) { VCAP::CloudController::RouteMappingModel.make(route: mapped_route, app: app_model) }
+
+    let(:api_call) { lambda { |user_headers| delete "/v3/spaces/#{space.guid}/routes?unmapped=true", nil, user_headers } }
+
+    let(:db_check) do
+      lambda do
+        expect(last_response.headers['Location']).to match(%r(http.+/v3/jobs/[a-fA-F0-9-]+))
+
+        execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+        get "/v3/routes/#{unmapped_route.guid}", {}, admin_headers
+        expect(last_response.status).to eq(404)
+
+        get "/v3/routes/#{mapped_route.guid}", {}, admin_headers
+        expect(last_response.status).to eq(200)
+      end
+    end
+
+    context 'when the user is a member in the spaces org' do
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 403)
+
+        h['org_billing_manager'] = { code: 404 }
+        h['org_auditor'] = { code: 404 }
+        h['no_role'] = { code: 404 }
+
+        h['admin'] = { code: 202 }
+        h['space_developer'] = { code: 202 }
+        h
+      end
+
+      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
+    end
+
+    context 'when user does not specify unmapped query param' do
+      it 'returns 422 with helpful error message' do
+        delete "v3/spaces/#{space.guid}/routes", nil, admin_headers
+        expect(last_response.status).to eq(422)
+        expect(last_response).to have_error_message("Mass delete not supported for routes. Use 'unmapped' parameter to delete all unmapped routes.")
       end
     end
   end
