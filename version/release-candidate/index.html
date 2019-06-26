@@ -15786,7 +15786,7 @@ Deployed revisions are revisions that are linked to started processes in the app
 
           <h2 id="routes">Routes</h2>
 
-<p>Routes are addresses that direct matched network traffic to one or more processes. Each route is based on a domain name with additional matching criteria (subdomain, path, etc).</p>
+<p>Routes are addresses that direct matched network traffic to one or more destinations. Each route is based on a domain name with additional matching criteria (host (subdomain), path, etc). Matched traffic will be distributed across all destinations, based on their configuration (round-robin by default).</p>
 
           <h3 id="the-route-object">The route object</h3>
 <pre class="highlight plaintext"><code>Example Route object
@@ -15823,6 +15823,9 @@ Deployed revisions are revisions that are linked to started processes in the app
       </span><span class="p">},</span><span class="w">
       </span><span class="nt">"domain"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/domains/0b5f3633-194c-42d2-9408-972366617e0e"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"destinations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31/destinations"</span><span class="w">
       </span><span class="p">}</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">}</span><span class="w">
@@ -15954,6 +15957,9 @@ Deployed revisions are revisions that are linked to started processes in the app
       </span><span class="p">},</span><span class="w">
       </span><span class="nt">"domain"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/domains/0b5f3633-194c-42d2-9408-972366617e0e"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"destinations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31/destinations"</span><span class="w">
       </span><span class="p">}</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">}</span><span class="w">
@@ -16078,6 +16084,9 @@ Deployed revisions are revisions that are linked to started processes in the app
       </span><span class="p">},</span><span class="w">
       </span><span class="nt">"domain"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/domains/0b5f3633-194c-42d2-9408-972366617e0e"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"destinations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31/destinations"</span><span class="w">
       </span><span class="p">}</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">}</span><span class="w">
@@ -16190,6 +16199,9 @@ Deployed revisions are revisions that are linked to started processes in the app
           </span><span class="p">},</span><span class="w">
           </span><span class="nt">"domain"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
             </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/domains/0b5f3633-194c-42d2-9408-972366617e0e"</span><span class="w">
+          </span><span class="p">},</span><span class="w">
+          </span><span class="nt">"destinations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31/destinations"</span><span class="w">
           </span><span class="p">}</span><span class="w">
         </span><span class="p">}</span><span class="w">
       </span><span class="p">}</span><span class="w">
@@ -16323,6 +16335,9 @@ Deployed revisions are revisions that are linked to started processes in the app
       </span><span class="p">},</span><span class="w">
       </span><span class="nt">"domain"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/domains/0b5f3633-194c-42d2-9408-972366617e0e"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"destinations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31/destinations"</span><span class="w">
       </span><span class="p">}</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">}</span><span class="w">
@@ -16515,7 +16530,9 @@ Deployed revisions are revisions that are linked to started processes in the app
       {
         "app": {
           "guid": "01856e12-8ee8-11e9-98a5-bb397dbc818f",
-          "process_type": "api"
+          "process": {
+            "type": "api"
+          }
         }
       }
     ]
@@ -16595,7 +16612,9 @@ Deployed revisions are revisions that are linked to started processes in the app
       {
         "app": {
           "guid": "01856e12-8ee8-11e9-98a5-bb397dbc818f",
-          "process_type": "api"
+          "process": {
+            "type": "api"
+          }
         }
       }
     ]
