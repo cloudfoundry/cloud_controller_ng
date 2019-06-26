@@ -1205,9 +1205,9 @@
   message: 'You cannot delete service instances that have been shared with you'
 
 390006:
-  name: MaintenanceInfoMismatch
+  name: MaintenanceInfoNotSupported
   http_code: 422
-  message: "The maintenance requested is not available for this service instance. Please confirm your maintenance_info is available for the service plan"
+  message: "The service broker does not support upgrades for service instances created from this plan."
 
 390011:
   name: BuildpackStacksDontMatch
