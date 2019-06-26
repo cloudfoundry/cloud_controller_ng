@@ -31,13 +31,21 @@ module VCAP::CloudController::Presenters::Mixins
             resource_guid: app.guid
           )
         end
+        let(:prefixless_label) do
+          VCAP::CloudController::AppAnnotationModel.make(
+            resource_guid: app.guid,
+            key: 'cake_type',
+            value: 'birthday'
+          )
+        end
 
-        let(:labels) { [release_label, potato_label] }
+        let(:labels) { [release_label, potato_label, prefixless_label] }
 
         it 'returns a hash with the expected keys and values' do
           expect(subject.hashified_labels(labels)).to eq(
             'release' => 'stable',
-            'maine.gov/potato' => 'mashed'
+            'maine.gov/potato' => 'mashed',
+            'cake_type' => 'birthday'
           )
         end
       end
@@ -55,6 +63,7 @@ module VCAP::CloudController::Presenters::Mixins
         let(:philosophical_annotation) do
           VCAP::CloudController::AppAnnotationModel.make(
             resource_guid: app.guid,
+            key_prefix: 'subject.edu',
             key: 'philosophy',
             value: 'All we are is dust in the wind, dude'
           )
@@ -62,17 +71,26 @@ module VCAP::CloudController::Presenters::Mixins
         let(:most_excellent_annotation) do
           VCAP::CloudController::AppAnnotationModel.make(
             resource_guid: app.guid,
+            key_prefix: 'nynex.net',
             key: 'contacts',
             value: 'Bill tel(1111111) email(bill@s.preston), Test tel(222222) pager(3333333#555) email(theodore@logan)'
           )
         end
+        let(:prefixless_annotation) do
+          VCAP::CloudController::AppAnnotationModel.make(
+            resource_guid: app.guid,
+            key: 'pies',
+            value: 'apple, blueberry, marionberry, pumpkin, rhuharb, coconut creme, lemon meringue'
+          )
+        end
 
-        let(:annotations) { [philosophical_annotation, most_excellent_annotation] }
+        let(:annotations) { [philosophical_annotation, most_excellent_annotation, prefixless_annotation] }
 
         it 'returns a hash with the expected keys and values' do
           expect(subject.hashified_annotations(annotations)).to eq(
-            'philosophy' => 'All we are is dust in the wind, dude',
-            'contacts' => 'Bill tel(1111111) email(bill@s.preston), Test tel(222222) pager(3333333#555) email(theodore@logan)'
+            'subject.edu/philosophy' => 'All we are is dust in the wind, dude',
+            'nynex.net/contacts' => 'Bill tel(1111111) email(bill@s.preston), Test tel(222222) pager(3333333#555) email(theodore@logan)',
+            'pies' => 'apple, blueberry, marionberry, pumpkin, rhuharb, coconut creme, lemon meringue'
           )
         end
       end

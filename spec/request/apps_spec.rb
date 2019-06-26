@@ -42,7 +42,8 @@ RSpec.describe 'Apps' do
                   'code.cloudfoundry.org/cloud_controller_ng' => 'awesome'
               },
               annotations: {
-                  'description' => 'gud app'
+                  'description' => 'gud app',
+                  'dora.capi.land/stuff' => 'real gud stuff'
               }
           }
       }
@@ -84,6 +85,7 @@ RSpec.describe 'Apps' do
               },
               'annotations' => {
                 'description' => 'gud app',
+                'dora.capi.land/stuff' => 'real gud stuff'
               },
             },
             'links' => {

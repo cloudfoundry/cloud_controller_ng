@@ -3,15 +3,19 @@ require 'models/helpers/metadata_helpers'
 module VCAP::CloudController::Presenters::Mixins
   module MetadataPresentationHelpers
     def hashified_labels(labels)
-      labels.each_with_object({}) do |label, memo|
-        key = [label.key_prefix, label.key_name].compact.join(VCAP::CloudController::MetadataHelpers::KEY_SEPARATOR)
-        memo[key] = label.value
-      end
+      hashified_metadata(labels)
     end
 
     def hashified_annotations(annotations)
-      annotations.each_with_object({}) do |annotation, memo|
-        memo[annotation.key] = annotation.value
+      hashified_metadata(annotations)
+    end
+
+    private
+
+    def hashified_metadata(metadata)
+      metadata.each_with_object({}) do |m, memo|
+        key = [m.key_prefix, m.key_name].compact.join(VCAP::CloudController::MetadataHelpers::KEY_SEPARATOR)
+        memo[key] = m.value
       end
     end
   end
