@@ -22,7 +22,8 @@ RSpec.describe 'Route Destinations Request' do
               process: {
                 type: 'web'
               }
-            }
+            },
+            weight: nil
           }
         ],
         links: {
@@ -121,7 +122,8 @@ RSpec.describe 'Route Destinations Request' do
                 process: {
                   type: existing_destination.process_type
                 }
-              }
+              },
+              weight: nil
             },
             {
               guid: UUID_REGEX,
@@ -130,7 +132,8 @@ RSpec.describe 'Route Destinations Request' do
                 process: {
                   type: 'web'
                 }
-              }
+              },
+              weight: nil
             }
           ],
           links: {
@@ -284,7 +287,7 @@ RSpec.describe 'Route Destinations Request' do
             post "/v3/routes/#{route.guid}/destinations", params.to_json, user_header
             expect(last_response.status).to eq(422)
 
-            expect(parsed_response['errors'][0]['detail']).to match('Process must have the structure "process": {"type": "type"}')
+            expect(parsed_response['errors'][0]['detail']).to match('Destinations[0]: process must have the structure {"type": "process_type"}')
           end
         end
 
@@ -343,6 +346,55 @@ RSpec.describe 'Route Destinations Request' do
             expect(last_response.status).to eq(422)
             expect(parsed_response['errors'][0]['detail']).to match("App(s) with guid(s) \"#{app_model.guid}\" do not exist or you do not have access.")
           end
+        end
+      end
+
+      context 'when weights are involved' do
+        before do
+          VCAP::CloudController::RouteMappingModel.dataset.destroy
+        end
+
+        context 'when no destinations exist' do
+          let(:params) do
+            {
+              destinations: [
+                {
+                  app: {
+                    guid: app_model.guid,
+                    process: {
+                      type: 'web'
+                    }
+                  },
+                  weight: 60
+                },
+                {
+                  app: {
+                    guid: app_model.guid,
+                    process: {
+                      type: 'worker'
+                    }
+                  },
+                  weight: 40
+                }
+              ]
+            }
+          end
+
+          it 'returns 422 with a helpful message' do
+            post "/v3/routes/#{route.guid}/destinations", params.to_json, admin_header
+            expect(last_response.status).to eq(422)
+            expect(last_response).to have_error_message('Destinations[0]: weighted destinations can only be used when replacing all destinations.')
+          end
+        end
+      end
+
+      context 'when there is an existing weighted destination' do
+        let!(:existing_destination) { VCAP::CloudController::RouteMappingModel.make(app: app_model, process_type: 'something', route: route, weight: 10) }
+
+        it 'returns 422 with a helpful message' do
+          post "/v3/routes/#{route.guid}/destinations", params.to_json, admin_header
+          expect(last_response.status).to eq(422)
+          expect(last_response).to have_error_message('Destinations cannot be inserted when there are weighted destinations already configured.')
         end
       end
     end
@@ -471,7 +523,8 @@ RSpec.describe 'Route Destinations Request' do
                 process: {
                   type: 'web'
                 }
-              }
+              },
+              weight: nil
             },
             {
               guid: UUID_REGEX,
@@ -480,7 +533,8 @@ RSpec.describe 'Route Destinations Request' do
                 process: {
                   type: 'worker'
                 }
-              }
+              },
+              weight: nil
             }
           ],
           links: {
@@ -615,7 +669,7 @@ RSpec.describe 'Route Destinations Request' do
             patch "/v3/routes/#{route.guid}/destinations", params.to_json, user_header
             expect(last_response.status).to eq(422)
 
-            expect(parsed_response['errors'][0]['detail']).to match('Process must have the structure "process": {"type": "type"}')
+            expect(parsed_response['errors'][0]['detail']).to match('Destinations[0]: process must have the structure {"type": "process_type"}')
           end
         end
 
@@ -674,6 +728,92 @@ RSpec.describe 'Route Destinations Request' do
             expect(last_response.status).to eq(422)
             expect(parsed_response['errors'][0]['detail']).to match("App(s) with guid(s) \"#{app_model.guid}\" do not exist or you do not have access.")
           end
+        end
+      end
+    end
+
+    describe 'weighted routing' do
+      let(:params) do
+        {
+          destinations: [
+            {
+              app: {
+                guid: app_model.guid,
+                process: {
+                  type: 'web'
+                }
+              },
+              weight: 80
+            },
+            {
+              app: {
+                guid: app_model.guid,
+                process: {
+                  type: 'worker'
+                }
+              },
+              weight: 20
+            }
+          ]
+        }
+      end
+
+      it 'creates route destinations with weights' do
+        patch "/v3/routes/#{route.guid}/destinations", params.to_json, admin_header
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['destinations'].map { |r| r['weight'] }).to contain_exactly(80, 20)
+        rm_hashes = route.reload.route_mappings.map do |rm|
+          { process_type: rm.process_type, weight: rm.weight }
+        end
+        expect(rm_hashes).to contain_exactly(
+          { process_type: 'web',    weight: 80 },
+          { process_type: 'worker', weight: 20 }
+        )
+      end
+
+      context 'when the destination weights do *not* add up to 100' do
+        let(:params) do
+          {
+            destinations: [
+              {
+                app: { guid: app_model.guid },
+                weight: 10
+              }
+            ]
+          }
+        end
+
+        it 'returns 422 with a helpful message' do
+          patch "/v3/routes/#{route.guid}/destinations", params.to_json, admin_header
+          expect(last_response.status).to eq(422)
+          expect(last_response).to have_error_message('Destinations must have weights that sum to 100.')
+        end
+      end
+
+      context 'when there are both weighted and unweighted destinations' do
+        let(:params) do
+          {
+            destinations: [
+              {
+                app: { guid: app_model.guid },
+                weight: 10
+              },
+              {
+                app: {
+                  guid: app_model.guid,
+                  process: {
+                    type: 'worker'
+                  }
+                },
+              }
+            ]
+          }
+        end
+
+        it 'returns 422 with a helpful message' do
+          patch "/v3/routes/#{route.guid}/destinations", params.to_json, admin_header
+          expect(last_response.status).to eq(422)
+          expect(last_response).to have_error_message('Destinations cannot contain both weighted and unweighted destinations.')
         end
       end
     end
@@ -758,6 +898,16 @@ RSpec.describe 'Route Destinations Request' do
         delete "/v3/routes/#{route.guid}/destinations/does-not-exist", nil, admin_header
         expect(last_response.status).to eq(422)
         expect(last_response).to have_error_message('Unable to unmap route from destination. Ensure the route has a destination with this guid.')
+      end
+    end
+
+    context 'when there is an existing weighted destination' do
+      let!(:existing_destination) { VCAP::CloudController::RouteMappingModel.make(app: app_model, process_type: 'something', route: route, weight: 10) }
+
+      it 'returns 422 with a helpful message' do
+        delete "/v3/routes/#{route.guid}/destinations/#{existing_destination.guid}", nil, admin_header
+        expect(last_response.status).to eq(422)
+        expect(last_response).to have_error_message('Weighted destinations cannot be deleted individually.')
       end
     end
 

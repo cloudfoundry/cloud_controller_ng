@@ -24,7 +24,8 @@ module VCAP::CloudController::Presenters::V3
             process: {
               type: route_mapping.process_type
             }
-          }
+          },
+          weight: route_mapping.weight
         }
       end
     end

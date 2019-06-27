@@ -534,6 +534,7 @@ module VCAP::CloudController
     route { Route.make(space: app.space) }
     process_type { 'web' }
     app_port { -1 }
+    weight { nil }
   end
 
   RequestCount.blueprint do

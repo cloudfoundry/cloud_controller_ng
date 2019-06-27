@@ -1,8 +1,14 @@
 module VCAP::CloudController
   class UpdateRouteDestinations
+    class Error < StandardError; end
+
     class << self
       def add(message, route, user_audit_info)
         existing_route_mappings = route_to_mapping_hashes(route)
+        if existing_route_mappings.any? { |rm| rm[:weight] }
+          raise Error.new('Destinations cannot be inserted when there are weighted destinations already configured.')
+        end
+
         new_route_mappings = message_to_mapping_hashes(message, route)
         to_add = new_route_mappings - existing_route_mappings
 
@@ -19,6 +25,10 @@ module VCAP::CloudController
       end
 
       def delete(destination, route, user_audit_info)
+        if destination.weight
+          raise Error.new('Weighted destinations cannot be deleted individually.')
+        end
+
         to_delete = [destination_to_mapping_hash(route, destination)]
 
         update(route, [], to_delete, user_audit_info)
@@ -63,13 +73,15 @@ module VCAP::CloudController
         message.destinations.each do |dst|
           app_guid = HashUtils.dig(dst, :app, :guid)
           process_type = HashUtils.dig(dst, :app, :process, :type) || 'web'
+          weight = HashUtils.dig(dst, :weight)
 
           new_route_mappings << {
             app_guid: app_guid,
             route_guid: route.guid,
             route: route,
             process_type: process_type,
-            app_port: ProcessModel::DEFAULT_HTTP_PORT
+            app_port: ProcessModel::DEFAULT_HTTP_PORT,
+            weight: weight
           }
         end
 
@@ -88,7 +100,8 @@ module VCAP::CloudController
           route_guid: destination.route_guid,
           process_type: destination.process_type,
           app_port: destination.app_port,
-          route: route
+          route: route,
+          weight: destination.weight
         }
       end
     end

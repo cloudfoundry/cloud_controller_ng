@@ -15,7 +15,7 @@ module VCAP::CloudController
         app: app_model,
         route: route,
         process_type: 'existing',
-        app_port: VCAP::CloudController::ProcessModel::DEFAULT_HTTP_PORT
+        app_port: VCAP::CloudController::ProcessModel::DEFAULT_HTTP_PORT,
       )
     end
     let!(:process1) { ProcessModel.make(:process, app: app_model, type: 'web', ports: ports, health_check_type: 'none') }
@@ -38,7 +38,7 @@ module VCAP::CloudController
                   process: {
                     type: 'web'
                   }
-                }
+                },
               },
               {
                 app: {
@@ -46,7 +46,7 @@ module VCAP::CloudController
                   process: {
                     type: 'worker'
                   }
-                }
+                },
               }
             ]
           }
@@ -75,6 +75,21 @@ module VCAP::CloudController
 
           expect(process1_route_handler).to have_received(:update_route_information)
           expect(process2_route_handler).to have_received(:update_route_information)
+        end
+
+        context 'when there are weighted routes in the database' do
+          before do
+            existing_destination.update(weight: 10)
+          end
+
+          it 'rejects any inserts' do
+            expect {
+              subject.add(message, route, user_audit_info)
+            }.to raise_error(
+              UpdateRouteDestinations::Error,
+              'Destinations cannot be inserted when there are weighted destinations already configured.'
+            ).and change { RouteMappingModel.count }.by(0)
+          end
         end
 
         describe 'audit events' do
@@ -293,6 +308,21 @@ module VCAP::CloudController
           subject.delete(existing_destination, route, user_audit_info)
         }.to change { RouteMappingModel.count }.by(-1)
         expect { existing_destination.refresh }.to raise_error Sequel::Error, 'Record not found'
+      end
+
+      context 'when there are weighted routes in the database' do
+        before do
+          existing_destination.update(weight: 10)
+        end
+
+        it 'rejects the delete' do
+          expect {
+            subject.delete(existing_destination, route, user_audit_info)
+          }.to raise_error(
+            UpdateRouteDestinations::Error,
+            'Weighted destinations cannot be deleted individually.'
+          ).and change { RouteMappingModel.count }.by(0)
+        end
       end
 
       describe 'copilot integration' do

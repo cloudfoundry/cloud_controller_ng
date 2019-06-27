@@ -34,6 +34,7 @@ module VCAP::CloudController::Presenters::V3
           guid: app.guid,
           process: { type: process.type }
         })
+        expect(result[:destinations][0][:weight]).to eq(route_mapping.weight)
       end
 
       context 'links' do

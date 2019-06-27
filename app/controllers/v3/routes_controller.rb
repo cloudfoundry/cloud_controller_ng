@@ -117,6 +117,8 @@ class RoutesController < ApplicationController
     route = UpdateRouteDestinations.add(message, route, user_audit_info)
 
     render status: :ok, json: Presenters::V3::RouteDestinationsPresenter.new(route)
+  rescue UpdateRouteDestinations::Error => e
+    unprocessable!(e.message)
   end
 
   def replace_destinations
@@ -150,6 +152,8 @@ class RoutesController < ApplicationController
     UpdateRouteDestinations.delete(destination, route, user_audit_info)
 
     head :no_content
+  rescue UpdateRouteDestinations::Error => e
+    unprocessable!(e.message)
   end
 
   private

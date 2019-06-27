@@ -19,7 +19,7 @@ module VCAP::CloudController
       minimum = @replace ? 0 : 1
 
       unless destinations.is_a?(Array) && (minimum...100).cover?(destinations.length)
-        errors.add(:base, "Destinations must be an array containing between #{minimum} and 100 destination objects")
+        errors.add(:destinations, "must be an array containing between #{minimum} and 100 destination objects.")
         return
       end
 
@@ -27,25 +27,67 @@ module VCAP::CloudController
     end
 
     def validate_destination_contents
-      destinations.each do |dst|
-        unless dst.is_a?(Hash) && dst.keys == [:app]
-          errors.add(:base, ERROR_MESSAGE)
-          break
+      destinations.each_with_index do |dst, index|
+        unless dst.is_a?(Hash)
+          add_destination_error(index, 'must be a hash.')
+          next
         end
 
-        break unless valid_app?(dst[:app])
+        if dst.is_a?(Hash) && !dst.key?(:app)
+          add_destination_error(index, 'must have an "app".')
+          next
+        end
+
+        if dst.is_a?(Hash) && !(dst.keys - [:app, :weight]).empty?
+          add_destination_error(index, 'must have only "app" and "weight".')
+          next
+        end
+
+        validate_app(index, dst[:app])
+        validate_weight(index, dst[:weight])
+      end
+
+      return if !errors.empty?
+
+      validate_weights(destinations)
+    end
+
+    def validate_weight(destination_index, weight)
+      return unless weight
+
+      unless @replace
+        add_destination_error(destination_index, 'weighted destinations can only be used when replacing all destinations.')
+        return
+      end
+
+      unless weight.is_a?(Integer) && weight > 0 && weight <= 100
+        add_destination_error(destination_index, 'weight must be a positive integer between 1 and 100.')
       end
     end
 
-    def valid_app?(app)
+    def validate_weights(destinations)
+      weights = destinations.map { |d| d.is_a?(Hash) && d[:weight] }
+
+      return if weights.all?(&:nil?)
+
+      if weights.any?(&:nil?)
+        errors.add(:destinations, 'cannot contain both weighted and unweighted destinations.')
+        return
+      end
+
+      if weights.sum != 100
+        errors.add(:destinations, 'must have weights that sum to 100.')
+      end
+    end
+
+    def validate_app(destination_index, app)
       unless app.is_a?(Hash) && valid_guid?(app[:guid])
-        errors.add(:base, ERROR_MESSAGE)
-        return false
+        add_destination_error(destination_index, 'app must have the structure {"guid": "app_guid"}')
+        return
       end
 
       unless valid_process?(app[:process])
-        errors.add(:base, 'Process must have the structure "process": {"type": "type"}')
-        return false
+        add_destination_error(destination_index, 'process must have the structure {"type": "process_type"}')
       end
     end
 
@@ -57,6 +99,10 @@ module VCAP::CloudController
 
     def valid_guid?(guid)
       guid.is_a?(String) && (1...200).cover?(guid.size)
+    end
+
+    def add_destination_error(index, message)
+      errors.add("Destinations[#{index}]:", message)
     end
   end
 end
