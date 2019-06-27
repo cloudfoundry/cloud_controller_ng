@@ -101,6 +101,8 @@ RSpec.describe(OPI::Client) do
                     "organization_id": "#{lrp.space.organization_guid}",
                     "organization_name": "#{lrp.space.organization.name}",
                     "uris": [],
+                    "process_id": "#{lrp.guid}",
+                    "process_type": "#{lrp.type}",
                     "application_id": "#{app_model.guid}",
                     "version": "#{lrp.version}",
                     "application_version": "#{lrp.version}"

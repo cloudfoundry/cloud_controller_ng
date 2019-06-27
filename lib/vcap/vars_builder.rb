@@ -18,7 +18,7 @@ module VCAP
     def to_hash
       app_name = @process.name
 
-      if @process.class == VCAP::CloudController::AppModel
+      if @process.is_a?(VCAP::CloudController::AppModel)
         uris = @process.routes.map(&:fqdn)
       else
         @staging_disk_in_mb ||= @process.disk_quota
@@ -47,15 +47,17 @@ module VCAP
         users: nil
       }
 
+      if @process.is_a?(VCAP::CloudController::ProcessModel)
+        env_hash[:process_id] = @process.guid
+        env_hash[:process_type] = @process.type
+        env_hash[:application_id] = @process.app_guid
+      else # process is an AppModel
+        env_hash[:application_id] = @process.guid
+      end
+
       env_hash[:limits][:fds] = @file_descriptors if @file_descriptors
       env_hash[:limits][:mem] = @memory_limit if @memory_limit
       env_hash[:limits][:disk] = @staging_disk_in_mb if @staging_disk_in_mb
-      application_id = if @process.class == VCAP::CloudController::AppModel
-                         @process.guid
-                       else
-                         @process.app.guid
-                       end
-      env_hash[:application_id] = application_id if application_id
 
       unless @version.nil?
         env_hash[:version] = @version

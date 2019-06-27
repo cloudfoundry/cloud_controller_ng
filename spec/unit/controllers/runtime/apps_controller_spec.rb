@@ -1330,6 +1330,8 @@ module VCAP::CloudController
                 'space_id'            => process.space.guid,
                 'organization_id' => process.organization.guid,
                 'organization_name' => process.organization.name,
+                'process_id' => process.guid,
+                'process_type' => process.type,
                 'users' => nil
               }
             })
@@ -1593,6 +1595,8 @@ module VCAP::CloudController
               'space_id'            => process.space.guid,
               'organization_id'     => process.organization.guid,
               'organization_name' =>   process.organization.name,
+              'process_id' => process.guid,
+              'process_type' => process.type,
               'users' => nil
             }
           })
