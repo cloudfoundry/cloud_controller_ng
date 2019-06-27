@@ -114,7 +114,7 @@ module VCAP::CloudController
       end
 
       context 'when the service plan contains maintenance_info' do
-        let(:service_plan) { ServicePlan.make(maintenance_info: '{"version": "2.0"}') }
+        let(:service_plan) { ServicePlan.make(maintenance_info: { 'version' => '2.0' }) }
         let(:request_attrs) do
           {
             'space_guid' => space.guid,
@@ -127,7 +127,12 @@ module VCAP::CloudController
           create_action.create(request_attrs, false)
           service_instance = ManagedServiceInstance.last
 
-          expect(service_instance.maintenance_info).to eq('{"version": "2.0"}')
+          expect(service_instance.maintenance_info).to eq({ 'version' => '2.0' })
+        end
+
+        it 'passes the maintenance_info to the client' do
+          create_action.create(request_attrs, false)
+          expect(client).to have_received(:provision).with(anything, hash_including(maintenance_info: { 'version' => '2.0' }))
         end
       end
     end
