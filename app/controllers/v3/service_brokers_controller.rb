@@ -38,7 +38,14 @@ class ServiceBrokersController < ApplicationController
   def create
     message = ServiceBrokerCreateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
-    unauthorized! unless permission_queryer.can_write_service_broker?
+
+    if message.space_guid
+      space = Space.where(guid: message.space_guid).first
+      unprocessable_space! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization_guid)
+      unauthorized! unless permission_queryer.can_write_space_scoped_service_broker?(space.guid)
+    else
+      unauthorized! unless permission_queryer.can_write_global_service_broker?
+    end
 
     service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository::WithBrokerActor.new
     service_manager = VCAP::Services::ServiceBrokers::ServiceManager.new(service_event_repository)
@@ -56,5 +63,9 @@ class ServiceBrokersController < ApplicationController
 
   def broker_not_found!
     resource_not_found!(:service_broker)
+  end
+
+  def unprocessable_space!
+    unprocessable!('Invalid space. Ensure that the space exists and you have access to it.')
   end
 end
