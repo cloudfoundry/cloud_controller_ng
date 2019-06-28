@@ -504,7 +504,7 @@ RSpec.describe 'Spaces' do
       it 'returns 422 with helpful error message' do
         delete "v3/spaces/#{space.guid}/routes", nil, admin_headers
         expect(last_response.status).to eq(422)
-        expect(last_response).to have_error_message("Mass delete not supported for routes. Use 'unmapped' parameter to delete all unmapped routes.")
+        expect(last_response).to have_error_message("Mass delete not supported for routes. Use 'unmapped=true' parameter to delete all unmapped routes.")
       end
     end
   end

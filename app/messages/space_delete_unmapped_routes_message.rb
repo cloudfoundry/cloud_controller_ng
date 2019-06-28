@@ -6,19 +6,21 @@ module VCAP::CloudController
 
     validates_with NoAdditionalKeysValidator
 
-    validates_inclusion_of :unmapped, in: ['true', 'false']
-    validates :unmapped, presence: true, string: true
+    validates :unmapped, presence: true
     validate :unmapped_valid?
 
     private
 
     def unmapped_valid?
-      if self.requested?(:unmapped)
-        if self.unmapped == 'false'
-          errors.add(:unmapped, "Mass delete not supported for mapped routes. Use 'unmapped=true' parameter to delete all unmapped routes.")
-        end
-      else
-        errors.add(:unmapped, "Mass delete not supported for routes. Use 'unmapped' parameter to delete all unmapped routes.")
+      errors.add(:base, "Mass delete not supported for routes. Use 'unmapped=true' parameter to delete all unmapped routes.") unless self.requested?(:unmapped)
+
+      unless ['true', 'false'].include?(self.unmapped)
+        errors.add(:unmapped, 'must be a boolean')
+        return
+      end
+
+      if self.unmapped == 'false'
+        errors.add(:base, "Mass delete not supported for mapped routes. Use 'unmapped=true' parameter to delete all unmapped routes.")
       end
     end
   end
