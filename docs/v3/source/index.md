@@ -228,6 +228,7 @@ includes:
   - experimental_resources/routes/list
   - experimental_resources/routes/update
   - experimental_resources/routes/delete
+  - experimental_resources/routes/check_route_reservations
   - experimental_resources/routes/list_destinations
   - experimental_resources/routes/insert_destinations
   - experimental_resources/routes/replace_destinations

@@ -92,6 +92,7 @@ Rails.application.routes.draw do
   post '/domains/:guid/relationships/shared_organizations', to: 'domains#update_shared_orgs'
   delete '/domains/:guid/relationships/shared_organizations/:org_guid', to: 'domains#delete_shared_org'
   patch '/domains/:guid', to: 'domains#update'
+  get 'domains/:guid/route_reservations', to: 'domains#check_routes'
 
   # droplets
   post '/droplets', to: 'droplets#create'

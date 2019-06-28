@@ -1,0 +1,48 @@
+### Check reserved routes for a domain
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/domains/[guid]/route_reservations" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :matching_route %>
+```
+
+Check if a specific route for a domain exists, regardless of the user's visibility for the route in case the route
+belongs to a space the user does not belong to.
+
+#### Definition
+`GET /v3/domains/:guid/route_reservations`
+
+#### Query Parameters
+
+Name | Type | Description
+---- | ---- | ------------
+**host** | _string_ | Hostname to filter by. Defaults to empty string if not provided.
+**path** | _string_ | Path to filter by. Defaults to empty string if not provided.
+
+#### Permitted Roles
+
+Role  | Notes
+--- | ---
+Admin |
+Admin Read-Only |
+Global Auditor |
+Org Auditor |
+Org Manager |
+Space Auditor |
+Space Developer |
+Space Manager |

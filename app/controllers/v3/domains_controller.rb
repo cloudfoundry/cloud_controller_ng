@@ -49,6 +49,26 @@ class DomainsController < ApplicationController
     unprocessable!(e)
   end
 
+  def check_routes
+    message = DomainShowMessage.new({ guid: hashed_params['guid'] })
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    domain = find_domain(message)
+    domain_not_found! unless domain
+
+    check_route_params = to_route_list_params(query_params, domain)
+    message = RoutesListMessage.from_params(check_route_params)
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    dataset = RouteFetcher.fetch(message, Route.dataset.all.map(&:guid))
+    matching_route = false
+    if dataset.any?
+      matching_route = true
+    end
+
+    render status: :ok, json: { "matching_route": matching_route }
+  end
+
   def show
     message = DomainShowMessage.new({ guid: hashed_params['guid'] })
     unprocessable!(message.errors.full_messages) unless message.valid?
@@ -129,6 +149,13 @@ class DomainsController < ApplicationController
   end
 
   private
+
+  def to_route_list_params(query_params, domain)
+    check_route_params = { 'domain_guids' => domain.guid, 'paths' => '', 'hosts' => '' }
+    check_route_params['paths'] = query_params[:path] if query_params.key?(:path)
+    check_route_params['hosts'] = query_params[:host] if query_params.key?(:host)
+    check_route_params
+  end
 
   def find_domain(message)
     readable_org_guids = permission_queryer.readable_org_guids_for_domains

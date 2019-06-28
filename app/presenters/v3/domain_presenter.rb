@@ -63,6 +63,9 @@ module VCAP::CloudController::Presenters::V3
         self: {
           href: url_builder.build_url(path: "/v3/domains/#{domain.guid}")
         },
+        route_reservations: {
+          href: url_builder.build_url(path: "/v3/domains/#{domain.guid}/route_reservations")
+        }
       }
 
       if domain.owning_organization

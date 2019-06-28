@@ -39,6 +39,10 @@
   }
 <% end %>
 
+<% content_for :matching_route do%>
+  { "matching_route": true }
+<% end %>
+
 <% content_for :paginated_list_of_routes do %>
   {
     "pagination": {

@@ -301,7 +301,8 @@ module VCAP::CloudController
               }
             },
             links: {
-              self: { href: "#{link_prefix}/v3/domains/#{shared_domain.guid}" }
+              self: { href: "#{link_prefix}/v3/domains/#{shared_domain.guid}" },
+              route_reservations: { href: %r(#{Regexp.escape(link_prefix)}\/v3/domains/#{shared_domain.guid}/route_reservations) },
             }
           }
         end
@@ -327,6 +328,7 @@ module VCAP::CloudController
             links: {
               self: { href: "#{link_prefix}/v3/domains/#{owned_private_domain.guid}" },
               organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}) },
+              route_reservations: { href: %r(#{Regexp.escape(link_prefix)}\/v3/domains/#{owned_private_domain.guid}/route_reservations) },
               shared_organizations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{owned_private_domain.guid}\/relationships\/shared_organizations) }
             }
           }
@@ -353,6 +355,7 @@ module VCAP::CloudController
             links: {
               self: { href: "#{link_prefix}/v3/domains/#{shared_private_domain.guid}" },
               organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{organization1.guid}) },
+              route_reservations: { href: %r(#{Regexp.escape(link_prefix)}\/v3/domains/#{shared_private_domain.guid}/route_reservations) },
               shared_organizations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{shared_private_domain.guid}\/relationships\/shared_organizations) }
             }
           }
@@ -701,6 +704,7 @@ module VCAP::CloudController
               links: {
                 self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{UUID_REGEX}) },
                 organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{organization1.guid}) },
+                route_reservations: { href: %r(#{Regexp.escape(link_prefix)}\/v3/domains/#{shared_private_domain.guid}/route_reservations) },
                 shared_organizations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{shared_private_domain.guid}/relationships/shared_organizations) }
               }
             }
@@ -732,7 +736,8 @@ module VCAP::CloudController
                 }
               },
               links: {
-                self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{UUID_REGEX}) }
+                self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{UUID_REGEX}) },
+                route_reservations: { href: %r(#{Regexp.escape(link_prefix)}\/v3/domains/#{UUID_REGEX}/route_reservations) },
               }
             }
           end
