@@ -16718,6 +16718,45 @@ Deployed revisions are revisions that are linked to started processes in the app
 </tr>
 </tbody></table>
 
+          <h3 id="delete-unmapped-routes-for-a-space">Delete unmapped routes for a space</h3>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/spaces/[guid]/routes?unmapped=true"</span> <span class="se">\</span>
+  -X DELETE<span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">202</span> <span class="ne">Accepted</span>
+<span class="na">Location</span><span class="p">:</span> <span class="s">https://api.example.org/v3/jobs/[guid]</span>
+</code></pre>
+
+<p>Replaces destinations in a route.</p>
+
+<h4 id="definition">Definition</h4>
+
+<p><code class="prettyprint">DELETE /v3/spaces/:guid/routes?unmapped=true</code></p>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th>Role</th>
+<th>Notes</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Admin</td>
+<td></td>
+</tr>
+<tr>
+<td>Space Developer</td>
+<td></td>
+</tr>
+</tbody></table>
+
+<p><strong>Note</strong>: <code class="prettyprint">unmapped=true</code> is a required query parameter; always include it.</p>
+
           <h2 id="service-bindings">Service Bindings</h2>
 
 <p>Service bindings are relations between a service instance and an app; to use a service instance with an app, you must first bind them together.</p>
