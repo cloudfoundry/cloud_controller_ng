@@ -249,8 +249,7 @@ module VCAP::CloudController
               ServiceUpdateValidator.validate!(service_instance, args)
             }.to raise_error(
               CloudController::Errors::ApiError,
-              'The maintenance requested is not available for this service instance. ' \
-              'Please confirm your maintenance_info is available for the service plan'
+              'The service broker does not support upgrades for service instances created from this plan.'
             )
           end
         end

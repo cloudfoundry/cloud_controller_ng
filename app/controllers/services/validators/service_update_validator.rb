@@ -38,7 +38,7 @@ module VCAP::CloudController
         return unless maintenance_info
 
         if service_plan.maintenance_info.nil?
-          raise CloudController::Errors::ApiError.new_from_details('MaintenanceInfoMismatch')
+          raise CloudController::Errors::ApiError.new_from_details('MaintenanceInfoNotSupported')
         end
       end
 
