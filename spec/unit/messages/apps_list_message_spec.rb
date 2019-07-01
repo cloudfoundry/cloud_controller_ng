@@ -10,6 +10,7 @@ module VCAP::CloudController
           'guids' => 'guid1,guid2',
           'organization_guids' => 'orgguid',
           'space_guids' => 'spaceguid',
+          'stacks' => 'cflinxfs3',
           'page' => 1,
           'per_page' => 5,
           'order_by' => 'created_at',
@@ -26,6 +27,7 @@ module VCAP::CloudController
         expect(message.guids).to eq(['guid1', 'guid2'])
         expect(message.organization_guids).to eq(['orgguid'])
         expect(message.space_guids).to eq(['spaceguid'])
+        expect(message.stacks).to eq(['cflinxfs3'])
         expect(message.page).to eq(1)
         expect(message.per_page).to eq(5)
         expect(message.order_by).to eq('created_at')
@@ -142,6 +144,12 @@ module VCAP::CloudController
           message = AppsListMessage.from_params space_guids: 'not array'
           expect(message).to be_invalid
           expect(message.errors[:space_guids].length).to eq 1
+        end
+
+        it 'validates stacks is an array' do
+          message = AppsListMessage.from_params stacks: 'not array'
+          expect(message).to be_invalid
+          expect(message.errors[:stacks].length).to eq 1
         end
 
         it 'validates requirements' do

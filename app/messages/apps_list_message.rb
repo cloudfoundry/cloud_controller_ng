@@ -7,6 +7,7 @@ module VCAP::CloudController
       :guids,
       :organization_guids,
       :space_guids,
+      :stacks,
       :include,
     ]
 
@@ -17,13 +18,14 @@ module VCAP::CloudController
     validates :guids, array: true, allow_nil: true
     validates :organization_guids, array: true, allow_nil: true
     validates :space_guids, array: true, allow_nil: true
+    validates :stacks, array: true, allow_nil: true
 
     def valid_order_by_values
       super << :name
     end
 
     def self.from_params(params)
-      super(params, %w(names guids organization_guids space_guids include))
+      super(params, %w(names guids organization_guids space_guids stacks include))
     end
   end
 end

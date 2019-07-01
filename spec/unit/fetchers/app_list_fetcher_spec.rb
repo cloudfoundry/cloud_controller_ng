@@ -5,7 +5,7 @@ module VCAP::CloudController
   RSpec.describe AppListFetcher do
     describe '#fetch' do
       let(:space) { Space.make }
-      let(:app) { AppModel.make(space_guid: space.guid) }
+      let(:app) { AppModel.make(space_guid: space.guid, name: "app") }
       let(:sad_app) { AppModel.make(space_guid: space.guid) }
       let(:org) { space.organization }
       let(:fetcher) { AppListFetcher.new }
@@ -63,6 +63,15 @@ module VCAP::CloudController
         let(:sad_space) { Space.make(organization_guid: sad_org.guid) }
         let(:sad_app) { AppModel.make(space_guid: sad_space.guid) }
         let(:space_guids) { [space.guid, sad_space.guid] }
+
+        it 'returns all of the desired apps' do
+          expect(apps.all).to include(app)
+          expect(apps.all).to_not include(sad_app)
+        end
+      end
+
+      context 'when the stacks are provided' do
+        let(:filters) { { stacks: [app.buildpack_lifecycle_data.stack] } }
 
         it 'returns all of the desired apps' do
           expect(apps.all).to include(app)

@@ -26,9 +26,13 @@ module VCAP::CloudController
       if message.requested?(:organization_guids)
         dataset = dataset.where(space_guid: Organization.where(guid: message.organization_guids).map(&:spaces).flatten.map(&:guid))
       end
+      if message.requested?(:stacks)
+        dataset = dataset.where(guid: BuildpackLifecycleDataModel.where(stack: message.stacks).map(&:app_guid))
+      end
       if message.requested?(:guids)
         dataset = dataset.where(guid: message.guids)
       end
+
       if message.requested?(:label_selector)
         dataset = LabelSelectorQueryGenerator.add_selector_queries(
           label_klass: AppLabelModel,

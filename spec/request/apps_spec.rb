@@ -439,6 +439,43 @@ RSpec.describe 'Apps' do
         expect(parsed_response['resources'].map { |r| r['name'] }).to eq(['name1', 'name3'])
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
+
+      it 'filters by stack' do
+        app_model1 = VCAP::CloudController::AppModel.make(name: 'name1')
+        app_model2 = VCAP::CloudController::AppModel.make(name: 'name2')
+        app_model3 = VCAP::CloudController::AppModel.make(name: 'name3')
+
+        stack2 = VCAP::CloudController::Stack.make(name: "name2")
+        stack3 = VCAP::CloudController::Stack.make(name: "name3")
+
+        app_model1.lifecycle_data.stack = stack2.name
+        app_model1.lifecycle_data.save
+
+        app_model2.lifecycle_data.stack = stack2.name
+        app_model2.lifecycle_data.save
+
+        app_model3.lifecycle_data.stack = stack3.name
+        app_model3.lifecycle_data.save
+
+        get "/v3/apps?stacks=#{stack2.name}", nil, admin_header
+
+        expected_pagination = {
+          'total_results' => 2,
+          'total_pages' => 1,
+          'first' => { 'href' => "#{link_prefix}/v3/apps?page=1&per_page=50&stacks=#{stack2.name}" },
+          'last' => { 'href' => "#{link_prefix}/v3/apps?page=1&per_page=50&stacks=#{stack2.name}" },
+          'next' => nil,
+          'previous' => nil
+        }
+
+        parsed_response = MultiJson.load(last_response.body)
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['resources'].map { |r| r['name'] }).to eq(['name1', 'name2'])
+        expect(parsed_response['pagination']).to eq(expected_pagination)
+      end
+
+
     end
 
     context 'ordering' do
