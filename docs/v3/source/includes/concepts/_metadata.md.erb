@@ -39,11 +39,22 @@ Examples may include (but are not limited to):
 - `"library versions": "Spring: 5.1, Redis Client: a184098. yaml parser: 38"`
 - `"git-sha": "d56fe0367554ae5e878e37ed6c5b9a82f5995512"`
 
-#### Annotations Key
+#### Annotation Key
 
-Annotation keys must adhere to the following restrictions:
+Annotation keys are made up of an (optional) prefix, and name. If a prefix is present, it is separated from the name by a `/`.
+Prefixes are dns names intended to enable namespacing of annotation keys.
 
-* Length: 1-1000 characters
+A annotation key `prefix` must adhere to the following restrictions:
+
+* Length: 0-253 characters
+* Allowed characters: alphanumeric, `-`, and `.`
+* DNS subdomain format (series of subdomain annotations separated by `.`)
+
+A annotation key `name` must adhere to the following restrictions:
+
+* Length: 1-63 characters
+* Allowed characters: alphanumeric , `-`, `_`, and `.`
+* Must begin and end with an alphanumeric character
 
 #### Annotation Value
 
