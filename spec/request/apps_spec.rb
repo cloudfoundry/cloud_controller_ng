@@ -445,8 +445,8 @@ RSpec.describe 'Apps' do
         app_model2 = VCAP::CloudController::AppModel.make(name: 'name2')
         app_model3 = VCAP::CloudController::AppModel.make(name: 'name3')
 
-        stack2 = VCAP::CloudController::Stack.make(name: "name2")
-        stack3 = VCAP::CloudController::Stack.make(name: "name3")
+        stack2 = VCAP::CloudController::Stack.make(name: 'name2')
+        stack3 = VCAP::CloudController::Stack.make(name: 'name3')
 
         app_model1.lifecycle_data.stack = stack2.name
         app_model1.lifecycle_data.save
@@ -474,8 +474,6 @@ RSpec.describe 'Apps' do
         expect(parsed_response['resources'].map { |r| r['name'] }).to eq(['name1', 'name2'])
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
-
-
     end
 
     context 'ordering' do

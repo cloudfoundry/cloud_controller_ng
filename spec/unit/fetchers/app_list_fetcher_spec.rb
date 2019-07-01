@@ -5,7 +5,7 @@ module VCAP::CloudController
   RSpec.describe AppListFetcher do
     describe '#fetch' do
       let(:space) { Space.make }
-      let(:app) { AppModel.make(space_guid: space.guid, name: "app") }
+      let(:app) { AppModel.make(space_guid: space.guid, name: 'app') }
       let(:sad_app) { AppModel.make(space_guid: space.guid) }
       let(:org) { space.organization }
       let(:fetcher) { AppListFetcher.new }
