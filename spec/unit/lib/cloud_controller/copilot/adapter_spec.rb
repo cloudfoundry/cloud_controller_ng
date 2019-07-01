@@ -134,6 +134,35 @@ module VCAP::CloudController
         )
       end
 
+      context 'when map_route is called with an unweighted destination' do
+        let(:unweighted_route_mapping) do
+          RouteMappingModel.make(
+            app: app,
+            route: route,
+            process_type: 'web',
+            weight: nil,
+            app_port: 9090
+          )
+        end
+
+        it 'calls copilot_client.map_route with weight 1' do
+          adapter.map_route(unweighted_route_mapping)
+
+          expect(copilot_client).to have_received(:map_route).with(
+            capi_process_guid: process1.guid,
+            route_guid: route.guid,
+            route_weight: 1,
+            app_port: 9090
+          )
+
+          expect(copilot_client).to have_received(:map_route).with(
+            capi_process_guid: process2.guid,
+            route_guid: route.guid,
+            route_weight: 1,
+            app_port: 9090
+          )
+        end
+      end
       context 'when the route is not associated with an istio domain' do
         let(:route) { Route.make }
 
@@ -200,6 +229,36 @@ module VCAP::CloudController
           route_weight: 5,
           app_port: 9090
         )
+      end
+
+      context 'when unmap_route is called with an unweighted destination' do
+        let(:unweighted_route_mapping) do
+          RouteMappingModel.make(
+            app: app,
+            route: route,
+            process_type: 'web',
+            weight: nil,
+            app_port: 9090
+          )
+        end
+
+        it 'calls copilot_client.unmap_route with weight 1' do
+          adapter.unmap_route(unweighted_route_mapping)
+
+          expect(copilot_client).to have_received(:unmap_route).with(
+            capi_process_guid: process1.guid,
+            route_guid: route.guid,
+            route_weight: 1,
+            app_port: 9090
+          )
+
+          expect(copilot_client).to have_received(:unmap_route).with(
+            capi_process_guid: process2.guid,
+            route_guid: route.guid,
+            route_weight: 1,
+            app_port: 9090
+          )
+        end
       end
 
       context 'when the route is not associated with an istio domain' do

@@ -17,7 +17,7 @@ module VCAP::CloudController
             {
               capi_process_guid: rm.process.guid,
               route_guid: rm.route_guid,
-              route_weight: rm.weight,
+              route_weight: rm.adapted_weight,
               app_port: rm.app_port
             }
           end,

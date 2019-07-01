@@ -36,6 +36,10 @@ module VCAP::CloudController
       end
     end
 
+    def adapted_weight
+      self.weight || 1
+    end
+
     private
 
     def logger
