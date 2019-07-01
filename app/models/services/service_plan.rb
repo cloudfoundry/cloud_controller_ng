@@ -96,7 +96,7 @@ module VCAP::CloudController
       included_ids = ServicePlanVisibility.visible_private_plan_ids_for_user(user).
                      concat(plan_ids_from_private_brokers(user))
 
-      Sequel.or({ public: true, id: included_ids }).&(active: true)
+      Sequel.or({ public: true, service_plans__id: included_ids }).&(service_plans__active: true)
     end
 
     def self.user_visibility_show_filter(user)
