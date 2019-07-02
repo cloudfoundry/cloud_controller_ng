@@ -4,6 +4,7 @@
   "name": "auth-sidecar",
   "command": "bundle exec rackup",
   "process_types": ["web", "worker"],
+  "memory_in_mb": 300,
   "relationships": {
     "app": {
       "data": {
@@ -38,6 +39,7 @@
       "name": "auth-sidecar",
       "command": "bundle exec rackup",
       "process_types": ["web", "worker"],
+      "memory_in_mb": 300,
       "relationships": {
         "app": {
           "data": {
@@ -53,6 +55,7 @@
       "name": "echo-sidecar",
       "command": "start-echo-server",
       "process_types": ["web"],
+      "memory_in_mb": 300,
       "relationships": {
         "app": {
           "data": {

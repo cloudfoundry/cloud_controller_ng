@@ -2,7 +2,7 @@ require 'messages/base_message'
 
 module VCAP::CloudController
   class SidecarUpdateMessage < BaseMessage
-    register_allowed_keys [:name, :command, :process_types]
+    register_allowed_keys [:name, :command, :process_types, :memory_in_mb]
 
     validates_with NoAdditionalKeysValidator
 
@@ -12,5 +12,6 @@ module VCAP::CloudController
       minimum: 1,
       too_short: 'must have at least %{count} process_type'
     }, if: ->(message) { message.requested?(:process_types) }
+    validates :memory_in_mb, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
   end
 end

@@ -7,7 +7,8 @@ module VCAP::CloudController
       {
         name: 'my sidecar',
         command: 'bundle exec rackup',
-        process_types: ['web', 'worker']
+        process_types: ['web', 'worker'],
+        memory_in_mb: 300
       }
     end
 
@@ -47,6 +48,14 @@ module VCAP::CloudController
 
         expect(message).to_not be_valid
         expect(message.errors.full_messages).to include('Process types must have at least 1 process_type')
+      end
+
+      it 'validates that memory is a positive integer' do
+        body[:memory_in_mb] = 'totes not a number'
+        message = SidecarCreateMessage.new(body)
+
+        expect(message).to_not be_valid
+        expect(message.errors.full_messages).to include('Memory in mb is not a number')
       end
     end
   end

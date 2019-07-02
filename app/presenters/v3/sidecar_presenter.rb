@@ -13,6 +13,7 @@ module VCAP::CloudController
             name: sidecar.name,
             command: sidecar.command,
             process_types: sidecar.process_types,
+            memory_in_mb: sidecar.memory,
             relationships: {
               app: {
                 data: {

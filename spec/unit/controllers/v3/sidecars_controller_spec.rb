@@ -113,6 +113,7 @@ RSpec.describe SidecarsController, type: :controller do
         'process_types' => ['other_worker', 'web'],
         'created_at' => iso8601,
         'updated_at' => iso8601,
+        'memory_in_mb' => nil,
         'relationships' => {
           'app' => {
             'data' => {
