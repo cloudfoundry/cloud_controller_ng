@@ -172,7 +172,13 @@ RSpec.describe 'RouteMappings' do
       expect(event.type).to eq('audit.app.map-route')
       expect(event.actee_type).to eq('app')
       expect(event.actee).to eq(process.guid)
-      expect(event.metadata).to eq({ 'route_guid' => route.guid, 'app_port' => 9090, 'route_mapping_guid' => route_mapping.guid, 'process_type' => 'web' })
+      expect(event.metadata).to eq({
+        'route_guid' => route.guid,
+        'app_port' => 9090,
+        'route_mapping_guid' => route_mapping.guid,
+        'process_type' => 'web',
+        'weight' => nil
+      })
     end
   end
 
@@ -191,7 +197,13 @@ RSpec.describe 'RouteMappings' do
       expect(event.type).to eq('audit.app.unmap-route')
       expect(event.actee_type).to eq('app')
       expect(event.actee).to eq(process.guid)
-      expect(event.metadata).to eq({ 'route_guid' => route.guid, 'route_mapping_guid' => route_mapping.guid, 'process_type' => 'web' })
+      expect(event.metadata).to eq({
+        'route_guid' => route.guid,
+        'app_port' => route_mapping.app_port,
+        'route_mapping_guid' => route_mapping.guid,
+        'process_type' => 'web',
+        'weight' => nil
+      })
     end
   end
 end

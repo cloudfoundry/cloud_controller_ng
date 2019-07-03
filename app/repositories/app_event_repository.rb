@@ -94,22 +94,31 @@ module VCAP::CloudController
         { guid: user_audit_info.user_guid, name: user_audit_info.user_email, user_name: user_audit_info.user_name, type: 'user' }
       end
 
-      def record_map_route(app, route, user_audit_info, route_mapping: nil, manifest_triggered: false)
+      def record_map_route(user_audit_info, route_mapping, manifest_triggered: false)
+        route = route_mapping.route
+        app = route_mapping.app
         actor_hash = actor_or_system_hash(user_audit_info)
         metadata = add_manifest_triggered(manifest_triggered, {
-          route_guid: route.guid
+          route_guid: route.guid,
+          app_port: route_mapping.app_port,
+          route_mapping_guid: route_mapping.guid,
+          process_type: route_mapping.process_type,
+          weight: route_mapping.weight
         })
-        if route_mapping
-          metadata[:app_port]           = route_mapping.app_port
-          metadata[:route_mapping_guid] = route_mapping.guid
-          metadata[:process_type]       = route_mapping.process_type
-        end
         create_app_audit_event('audit.app.map-route', app, app.space, actor_hash, metadata)
       end
 
-      def record_unmap_route(app, route, user_audit_info, route_mapping_guid, process_type, manifest_triggered: false)
+      def record_unmap_route(user_audit_info, route_mapping, manifest_triggered: false)
+        route = route_mapping.route
+        app = route_mapping.app
         actor_hash = actor_or_system_hash(user_audit_info)
-        metadata   = add_manifest_triggered(manifest_triggered, { route_guid: route.guid, route_mapping_guid: route_mapping_guid, process_type: process_type })
+        metadata   = add_manifest_triggered(manifest_triggered, {
+          route_guid: route.guid,
+          app_port: route_mapping.app_port,
+          route_mapping_guid: route_mapping.guid,
+          process_type: route_mapping.process_type,
+          weight: route_mapping.weight
+        })
         create_app_audit_event('audit.app.unmap-route', app, app.space, actor_hash, metadata)
       end
 

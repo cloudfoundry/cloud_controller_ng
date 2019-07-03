@@ -225,18 +225,20 @@ module VCAP::CloudController
       end
 
       describe '#record_map_route' do
-        let(:process) { ProcessModelFactory.make }
+        let(:space) { Space.make }
+        let(:app) { AppModel.make(space: space) }
         let(:route) { Route.make }
+        let(:route_mapping) { RouteMappingModel.make(route: route, app: app, process_type: 'potato') }
 
         it 'creates a new app.map_route audit event' do
-          event = app_event_repository.record_map_route(process, route, user_audit_info)
+          event = app_event_repository.record_map_route(user_audit_info, route_mapping)
           expect(event.type).to eq('audit.app.map-route')
           expect(event.actor).to eq(user_guid)
           expect(event.actor_type).to eq('user')
           expect(event.actor_name).to eq(user_email)
           expect(event.actor_username).to eq(user_name)
           expect(event.actee_type).to eq('app')
-          expect(event.actee).to eq(process.guid)
+          expect(event.actee).to eq(app.guid)
           expect(event.metadata[:route_guid]).to eq(route.guid)
           expect(event.metadata[:manifest_triggered]).to eq(nil)
         end
@@ -245,7 +247,7 @@ module VCAP::CloudController
           let(:manifest_triggered) { true }
 
           it 'tags the event for manifest triggered as true' do
-            event = app_event_repository.record_map_route(process, route, user_audit_info, manifest_triggered: manifest_triggered)
+            event = app_event_repository.record_map_route(user_audit_info, route_mapping, manifest_triggered: manifest_triggered)
 
             expect(event.metadata[:manifest_triggered]).to eq(true)
           end
@@ -255,54 +257,68 @@ module VCAP::CloudController
           let(:user_guid) { nil }
 
           it 'creates a new app.map_route audit event with system as the actor' do
-            event = app_event_repository.record_map_route(process, route, user_audit_info)
+            event = app_event_repository.record_map_route(user_audit_info, route_mapping)
             expect(event.type).to eq('audit.app.map-route')
             expect(event.actor).to eq('system')
             expect(event.actor_type).to eq('system')
             expect(event.actor_name).to eq('system')
             expect(event.actee_type).to eq('app')
-            expect(event.actee).to eq(process.guid)
+            expect(event.actee).to eq(app.guid)
             expect(event.metadata[:route_guid]).to eq(route.guid)
           end
         end
 
         context 'when given route mapping information' do
           let(:app) { AppModel.make(space: route.space) }
-          let(:route_mapping) { RouteMappingModel.make(route: route, app: app, process_type: 'potato') }
+          context 'when the route mapping is unweighted' do
+            let(:route_mapping) { RouteMappingModel.make(route: route, app: app, process_type: 'potato') }
 
-          it 'creates a new app.map_route audit event with appropriate metadata' do
-            event = app_event_repository.record_map_route(app, route, user_audit_info, route_mapping: route_mapping)
-            expect(event.metadata[:route_guid]).to eq(route.guid)
-            expect(event.metadata[:route_mapping_guid]).to eq(route_mapping.guid)
-            expect(event.metadata[:process_type]).to eq('potato')
+            it 'creates a new app.map_route audit event with appropriate metadata' do
+              event = app_event_repository.record_map_route(user_audit_info, route_mapping)
+              expect(event.metadata[:route_guid]).to eq(route.guid)
+              expect(event.metadata[:route_mapping_guid]).to eq(route_mapping.guid)
+              expect(event.metadata[:process_type]).to eq('potato')
+              expect(event.metadata[:weight]).to be_nil
+            end
+          end
+          context 'when the route mapping has a weight' do
+            let(:route_mapping) { RouteMappingModel.make(route: route, app: app, process_type: 'potato', weight: 100) }
+
+            it 'creates a new app.map_route audit event with appropriate metadata' do
+              event = app_event_repository.record_map_route(user_audit_info, route_mapping)
+              expect(event.metadata[:route_guid]).to eq(route.guid)
+              expect(event.metadata[:route_mapping_guid]).to eq(route_mapping.guid)
+              expect(event.metadata[:process_type]).to eq('potato')
+              expect(event.metadata[:weight]).to eq(100)
+            end
           end
         end
       end
 
       describe '#record_unmap_route' do
-        let(:process) { ProcessModelFactory.make }
+        let(:space) { Space.make }
+        let(:app) { AppModel.make(space: space) }
         let(:route) { Route.make }
-        let(:route_mapping_guid) { 'twice_baked' }
-        let(:process_type) { 'potato' }
+        let(:route_mapping) { RouteMappingModel.make(route: route, guid: 'twice_baked', app: app, process_type: 'potato', weight: 100) }
 
         it 'creates a new app.unmap_route audit event' do
-          event = app_event_repository.record_unmap_route(process, route, user_audit_info, route_mapping_guid, process_type)
+          event = app_event_repository.record_unmap_route(user_audit_info, route_mapping)
           expect(event.type).to eq('audit.app.unmap-route')
           expect(event.actor).to eq(user_guid)
           expect(event.actor_type).to eq('user')
           expect(event.actee_type).to eq('app')
           expect(event.actor_name).to eq(user_email)
           expect(event.actor_username).to eq(user_name)
-          expect(event.actee).to eq(process.guid)
+          expect(event.actee).to eq(app.guid)
           expect(event.metadata[:route_guid]).to eq(route.guid)
-          expect(event.metadata[:route_mapping_guid]).to eq('twice_baked')
+          expect(event.metadata[:route_mapping_guid]).to eq(route_mapping.guid)
           expect(event.metadata[:process_type]).to eq('potato')
           expect(event.metadata[:manifest_triggered]).to eq(nil)
         end
 
         context 'when the event is manifest triggered' do
           it 'includes manifest_triggered in the metadata' do
-            event = app_event_repository.record_unmap_route(process, route, user_audit_info, route_mapping_guid, process_type, manifest_triggered: true)
+            event = app_event_repository.record_unmap_route(user_audit_info, route_mapping, manifest_triggered: true)
 
             expect(event.metadata[:route_guid]).to eq(route.guid)
             expect(event.metadata[:route_mapping_guid]).to eq('twice_baked')
@@ -315,13 +331,13 @@ module VCAP::CloudController
           let(:user_guid) { nil }
 
           it 'creates a new app.unmap_route audit event with system as the actor' do
-            event = app_event_repository.record_unmap_route(process, route, user_audit_info, route_mapping_guid, process_type)
+            event = app_event_repository.record_unmap_route(user_audit_info, route_mapping)
             expect(event.type).to eq('audit.app.unmap-route')
             expect(event.actor).to eq('system')
             expect(event.actor_type).to eq('system')
             expect(event.actor_name).to eq('system')
             expect(event.actee_type).to eq('app')
-            expect(event.actee).to eq(process.guid)
+            expect(event.actee).to eq(app.guid)
             expect(event.metadata[:route_guid]).to eq(route.guid)
             expect(event.metadata[:route_mapping_guid]).to eq('twice_baked')
             expect(event.metadata[:process_type]).to eq('potato')

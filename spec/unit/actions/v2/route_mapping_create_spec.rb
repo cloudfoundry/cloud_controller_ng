@@ -323,10 +323,8 @@ module VCAP::CloudController
             route_mapping = route_mapping_create.add
 
             expect(event_repository).to have_received(:record_map_route).with(
-              app,
-              route,
               user_audit_info,
-              route_mapping: route_mapping
+              route_mapping
             )
           end
         end

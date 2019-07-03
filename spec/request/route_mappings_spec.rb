@@ -70,7 +70,8 @@ RSpec.describe 'Route Mappings' do
                              route_guid:         route.guid,
                              app_port:           8080,
                              route_mapping_guid: route_mapping.guid,
-                             process_type:       'worker'
+                             process_type:       'worker',
+                             weight: 55,
                            }.to_json,
         organization_guid: space.organization.guid,
       })
@@ -257,33 +258,69 @@ RSpec.describe 'Route Mappings' do
   end
 
   describe 'DELETE /v3/route_mappings/:route_mapping_guid' do
-    let!(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: app_model, route: route, process_type: 'buckeyes') }
+    context 'when route mapping is not weighted' do
+      let!(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: app_model, route: route, process_type: 'buckeyes') }
 
-    it 'deletes the specified route mapping' do
-      delete "/v3/route_mappings/#{route_mapping.guid}", nil, developer_headers
+      it 'deletes the specified route mapping' do
+        delete "/v3/route_mappings/#{route_mapping.guid}", nil, developer_headers
 
-      # verify response
-      expect(last_response.status).to eq(204)
-      expect(route_mapping.exists?).to be_falsey
+        # verify response
+        expect(last_response.status).to eq(204)
+        expect(route_mapping.exists?).to be_falsey
 
-      # verify audit event
-      event = VCAP::CloudController::Event.last
-      expect(event.values).to include({
-        type:              'audit.app.unmap-route',
-        actee:             app_model.guid,
-        actee_type:        'app',
-        actee_name:        app_model.name,
-        actor:             developer.guid,
-        actor_type:        'user',
-        actor_username:    user_name,
-        space_guid:        space.guid,
-        metadata:          {
-                             route_guid:         route.guid,
-                             route_mapping_guid: route_mapping.guid,
-                             process_type:       'buckeyes'
-                           }.to_json,
-        organization_guid: space.organization.guid,
-      })
+        # verify audit event
+        event = VCAP::CloudController::Event.last
+        expect(event.values).to include({
+          type:              'audit.app.unmap-route',
+          actee:             app_model.guid,
+          actee_type:        'app',
+          actee_name:        app_model.name,
+          actor:             developer.guid,
+          actor_type:        'user',
+          actor_username:    user_name,
+          space_guid:        space.guid,
+          metadata:          {
+            route_guid:         route.guid,
+            app_port:           route_mapping.app_port,
+            route_mapping_guid: route_mapping.guid,
+            process_type:       'buckeyes',
+            weight: nil
+          }.to_json,
+          organization_guid: space.organization.guid,
+        })
+      end
+    end
+    context 'when route mapping is weighted' do
+      let!(:route_mapping) { VCAP::CloudController::RouteMappingModel.make(app: app_model, route: route, process_type: 'buckeyes', weight: 55) }
+
+      it 'deletes the specified route mapping' do
+        delete "/v3/route_mappings/#{route_mapping.guid}", nil, developer_headers
+
+        # verify response
+        expect(last_response.status).to eq(204)
+        expect(route_mapping.exists?).to be_falsey
+
+        # verify audit event
+        event = VCAP::CloudController::Event.last
+        expect(event.values).to include({
+          type:              'audit.app.unmap-route',
+          actee:             app_model.guid,
+          actee_type:        'app',
+          actee_name:        app_model.name,
+          actor:             developer.guid,
+          actor_type:        'user',
+          actor_username:    user_name,
+          space_guid:        space.guid,
+          metadata:          {
+            route_guid:         route.guid,
+            app_port:           route_mapping.app_port,
+            route_mapping_guid: route_mapping.guid,
+            process_type:       'buckeyes',
+            weight: 55
+          }.to_json,
+          organization_guid: space.organization.guid,
+        })
+      end
     end
   end
 

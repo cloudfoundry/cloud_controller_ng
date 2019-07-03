@@ -71,10 +71,8 @@ module VCAP::CloudController
           route_mapping = RouteMappingCreate.add(user_audit_info: user_audit_info, route: route, app: app, process_type: process_type)
 
           expect(event_repository).to have_received(:record_map_route).with(
-            app,
-            route,
             user_audit_info,
-            route_mapping: route_mapping,
+            route_mapping,
             manifest_triggered: false
           )
         end
@@ -84,10 +82,8 @@ module VCAP::CloudController
             route_mapping = RouteMappingCreate.add(user_audit_info: user_audit_info, route: route, app: app, process_type: process_type, manifest_triggered: true)
 
             expect(event_repository).to have_received(:record_map_route).with(
-              app,
-              route,
               user_audit_info,
-              route_mapping: route_mapping,
+              route_mapping,
               manifest_triggered: true
             )
           end

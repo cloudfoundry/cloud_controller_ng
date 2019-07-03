@@ -55,11 +55,8 @@ module VCAP::CloudController
             route_mapping_delete.delete(route_mapping)
 
             expect(event_repository).to have_received(:record_unmap_route).with(
-              app,
-              route,
               user_audit_info,
-              route_mapping.guid,
-              route_mapping.process_type,
+              route_mapping,
               manifest_triggered: false
             )
           end
@@ -70,11 +67,8 @@ module VCAP::CloudController
               route_mapping_delete.delete(route_mapping)
 
               expect(event_repository).to have_received(:record_unmap_route).with(
-                app,
-                route,
                 user_audit_info,
-                route_mapping.guid,
-                route_mapping.process_type,
+                route_mapping,
                 manifest_triggered: true
               )
             end
@@ -107,11 +101,8 @@ module VCAP::CloudController
           route_mapping_delete.delete(route_mapping)
 
           expect(event_repository).to have_received(:record_unmap_route).with(
-            app,
-            route,
             user_audit_info,
-            route_mapping.guid,
-            route_mapping.process_type,
+            route_mapping,
             manifest_triggered: false
           )
         end

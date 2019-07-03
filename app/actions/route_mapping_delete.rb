@@ -17,11 +17,8 @@ module VCAP::CloudController
 
         RouteMappingModel.db.transaction do
           event_repository.record_unmap_route(
-            route_mapping.app,
-            route_mapping.route,
             @user_audit_info,
-            route_mapping.guid,
-            route_mapping.process_type,
+            route_mapping,
             manifest_triggered: @manifest_triggered
           )
 

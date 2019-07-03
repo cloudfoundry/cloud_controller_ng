@@ -169,7 +169,8 @@ RSpec.describe 'Route Destinations Request' do
               route_guid: route.guid,
               app_port: 8080,
               destination_guid: new_destination['guid'],
-              process_type: 'web'
+              process_type: 'web',
+              weight: nil
             }.to_json,
           }
         end
@@ -829,7 +830,8 @@ RSpec.describe 'Route Destinations Request' do
         app: app_model,
         route: route,
         process_type: 'web',
-        app_port: VCAP::CloudController::ProcessModel::DEFAULT_HTTP_PORT
+        app_port: VCAP::CloudController::ProcessModel::DEFAULT_HTTP_PORT,
+        weight: nil
       )
     end
 
@@ -838,7 +840,8 @@ RSpec.describe 'Route Destinations Request' do
         app: app_model,
         route: route,
         process_type: 'worker',
-        app_port: VCAP::CloudController::ProcessModel::DEFAULT_HTTP_PORT
+        app_port: VCAP::CloudController::ProcessModel::DEFAULT_HTTP_PORT,
+        weight: nil
       )
     end
 
@@ -880,6 +883,7 @@ RSpec.describe 'Route Destinations Request' do
               app_port: 8080,
               destination_guid: destination_to_delete.guid,
               process_type: destination_to_delete.process_type,
+              weight: nil
             }.to_json,
           }
         end

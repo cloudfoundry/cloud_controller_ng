@@ -43,11 +43,8 @@ module VCAP::CloudController
 
       route.route_mappings.each do |route_mapping|
         app_event_repository.record_unmap_route(
-          route_mapping.app,
-          route,
           user_audit_info,
-          route_mapping.guid,
-          route_mapping.process_type
+          route_mapping
         )
       end
 

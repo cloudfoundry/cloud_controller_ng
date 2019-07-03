@@ -45,10 +45,8 @@ module VCAP::CloudController
           Copilot::Adapter.map_route(route_mapping)
 
           app_event_repository.record_map_route(
-            app,
-            route,
             user_audit_info,
-            route_mapping: route_mapping
+            route_mapping
           )
         end
 

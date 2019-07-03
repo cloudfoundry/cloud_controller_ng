@@ -79,55 +79,113 @@ module VCAP::CloudController
 
       describe '#record_route_map' do
         let(:app) { AppModel.make(space: route.space) }
-        let(:route_mapping) { RouteMappingModel.make(app: app, route: route, process_type: 'web', app_port: 8080) }
+        context 'when route mapping has no weight' do
+          let(:route_mapping) { RouteMappingModel.make(app: app, route: route, process_type: 'web', app_port: 8080) }
 
-        it 'records event correctly' do
-          event = route_event_repository.record_route_map(route_mapping, actor_audit_info)
-          event.reload
-          expect(event.type).to eq('audit.app.map-route')
-          expect(event.actor).to eq(user.guid)
-          expect(event.actor_type).to eq('user')
-          expect(event.actor_name).to eq(user_email)
-          expect(event.actor_username).to eq(user_name)
-          expect(event.actee).to eq(app.guid)
-          expect(event.actee_type).to eq('app')
-          expect(event.actee_name).to eq(app.name)
-          expect(event.space_guid).to eq(app.space.guid)
-          expect(event.organization_guid).to eq(app.space.organization_guid)
+          it 'records event correctly' do
+            event = route_event_repository.record_route_map(route_mapping, actor_audit_info)
+            event.reload
+            expect(event.type).to eq('audit.app.map-route')
+            expect(event.actor).to eq(user.guid)
+            expect(event.actor_type).to eq('user')
+            expect(event.actor_name).to eq(user_email)
+            expect(event.actor_username).to eq(user_name)
+            expect(event.actee).to eq(app.guid)
+            expect(event.actee_type).to eq('app')
+            expect(event.actee_name).to eq(app.name)
+            expect(event.space_guid).to eq(app.space.guid)
+            expect(event.organization_guid).to eq(app.space.organization_guid)
 
-          expect(event.metadata).to eq({
-            'route_guid' => route.guid,
-            'app_port' => 8080,
-            'destination_guid' => route_mapping.guid,
-            'process_type' => 'web'
-          })
+            expect(event.metadata).to eq({
+              'route_guid' => route.guid,
+              'app_port' => 8080,
+              'destination_guid' => route_mapping.guid,
+              'process_type' => 'web',
+              'weight' => route_mapping.weight,
+            })
+          end
+        end
+        context 'when route mapping has weight' do
+          let(:route_mapping) { RouteMappingModel.make(app: app, route: route, process_type: 'web', app_port: 8080, weight: 100) }
+
+          it 'records event correctly' do
+            event = route_event_repository.record_route_map(route_mapping, actor_audit_info)
+            event.reload
+            expect(event.type).to eq('audit.app.map-route')
+            expect(event.actor).to eq(user.guid)
+            expect(event.actor_type).to eq('user')
+            expect(event.actor_name).to eq(user_email)
+            expect(event.actor_username).to eq(user_name)
+            expect(event.actee).to eq(app.guid)
+            expect(event.actee_type).to eq('app')
+            expect(event.actee_name).to eq(app.name)
+            expect(event.space_guid).to eq(app.space.guid)
+            expect(event.organization_guid).to eq(app.space.organization_guid)
+
+            expect(event.metadata).to eq({
+              'route_guid' => route.guid,
+              'app_port' => 8080,
+              'destination_guid' => route_mapping.guid,
+              'process_type' => 'web',
+              'weight' => route_mapping.weight,
+            })
+          end
         end
       end
 
       describe '#record_route_unmap' do
         let(:app) { AppModel.make(space: route.space) }
-        let(:route_mapping) { RouteMappingModel.make(app: app, route: route, process_type: 'web', app_port: 8080) }
+        context 'when route mapping has no weight' do
+          let(:route_mapping) { RouteMappingModel.make(app: app, route: route, process_type: 'web', app_port: 8080) }
 
-        it 'records event correctly' do
-          event = route_event_repository.record_route_unmap(route_mapping, actor_audit_info)
-          event.reload
-          expect(event.type).to eq('audit.app.unmap-route')
-          expect(event.actor).to eq(user.guid)
-          expect(event.actor_type).to eq('user')
-          expect(event.actor_name).to eq(user_email)
-          expect(event.actor_username).to eq(user_name)
-          expect(event.actee).to eq(app.guid)
-          expect(event.actee_type).to eq('app')
-          expect(event.actee_name).to eq(app.name)
-          expect(event.space_guid).to eq(app.space.guid)
-          expect(event.organization_guid).to eq(app.space.organization_guid)
+          it 'records event correctly' do
+            event = route_event_repository.record_route_unmap(route_mapping, actor_audit_info)
+            event.reload
+            expect(event.type).to eq('audit.app.unmap-route')
+            expect(event.actor).to eq(user.guid)
+            expect(event.actor_type).to eq('user')
+            expect(event.actor_name).to eq(user_email)
+            expect(event.actor_username).to eq(user_name)
+            expect(event.actee).to eq(app.guid)
+            expect(event.actee_type).to eq('app')
+            expect(event.actee_name).to eq(app.name)
+            expect(event.space_guid).to eq(app.space.guid)
+            expect(event.organization_guid).to eq(app.space.organization_guid)
 
-          expect(event.metadata).to eq({
-            'route_guid' => route.guid,
-            'app_port' => 8080,
-            'destination_guid' => route_mapping.guid,
-            'process_type' => 'web'
-          })
+            expect(event.metadata).to eq({
+              'route_guid' => route.guid,
+              'app_port' => 8080,
+              'destination_guid' => route_mapping.guid,
+              'process_type' => 'web',
+              'weight' => route_mapping.weight
+            })
+          end
+        end
+        context 'when route mapping has weight' do
+          let(:route_mapping) { RouteMappingModel.make(app: app, route: route, process_type: 'web', app_port: 8080, weight: 100) }
+
+          it 'records event correctly' do
+            event = route_event_repository.record_route_unmap(route_mapping, actor_audit_info)
+            event.reload
+            expect(event.type).to eq('audit.app.unmap-route')
+            expect(event.actor).to eq(user.guid)
+            expect(event.actor_type).to eq('user')
+            expect(event.actor_name).to eq(user_email)
+            expect(event.actor_username).to eq(user_name)
+            expect(event.actee).to eq(app.guid)
+            expect(event.actee_type).to eq('app')
+            expect(event.actee_name).to eq(app.name)
+            expect(event.space_guid).to eq(app.space.guid)
+            expect(event.organization_guid).to eq(app.space.organization_guid)
+
+            expect(event.metadata).to eq({
+              'route_guid' => route.guid,
+              'app_port' => 8080,
+              'destination_guid' => route_mapping.guid,
+              'process_type' => 'web',
+              'weight' => route_mapping.weight
+            })
+          end
         end
       end
     end
