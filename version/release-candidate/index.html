@@ -140,6 +140,7 @@
           
 
 
+
           
 
           
@@ -727,12 +728,25 @@ and the docker image is executed inside of it.</p>
 <li><code class="prettyprint">&quot;git-sha&quot;: &quot;d56fe0367554ae5e878e37ed6c5b9a82f5995512&quot;</code></li>
 </ul>
 
-<h4 id="annotations-key">Annotations Key</h4>
+<h4 id="annotation-key">Annotation Key</h4>
 
-<p>Annotation keys must adhere to the following restrictions:</p>
+<p>Annotation keys are made up of an (optional) prefix, and name. If a prefix is present, it is separated from the name by a <code class="prettyprint">/</code>.
+Prefixes are dns names intended to enable namespacing of annotation keys.</p>
+
+<p>A annotation key <code class="prettyprint">prefix</code> must adhere to the following restrictions:</p>
 
 <ul>
-<li>Length: 1-1000 characters</li>
+<li>Length: 0-253 characters</li>
+<li>Allowed characters: alphanumeric, <code class="prettyprint">-</code>, and <code class="prettyprint">.</code></li>
+<li>DNS subdomain format (series of subdomain annotations separated by <code class="prettyprint">.</code>)</li>
+</ul>
+
+<p>A annotation key <code class="prettyprint">name</code> must adhere to the following restrictions:</p>
+
+<ul>
+<li>Length: 1-63 characters</li>
+<li>Allowed characters: alphanumeric , <code class="prettyprint">-</code>, <code class="prettyprint">_</code>, and <code class="prettyprint">.</code></li>
+<li>Must begin and end with an alphanumeric character</li>
 </ul>
 
 <h4 id="annotation-value">Annotation Value</h4>
@@ -1949,6 +1963,11 @@ information for your packages, droplets, processes, tasks, and more.</p>
 <td><strong>organization_guids</strong></td>
 <td><em>list of strings</em></td>
 <td>Comma-delimited list of organization guids to filter by.</td>
+</tr>
+<tr>
+<td><strong>stacks</strong></td>
+<td><em>list of strings</em></td>
+<td>Comma-delimited list of stack names to filter by.</td>
 </tr>
 <tr>
 <td><strong>page</strong></td>
@@ -4129,6 +4148,9 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
       </span><span class="nt">"organization"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/organizations/3a3f3d89-3f89-4f05-8188-751b298c79d5"</span><span class="w">
       </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"route_reservations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/domains/3a5d3d89-3f89-4f05-8188-8a2b298c79d5/route_reservations"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
       </span><span class="nt">"shared_organizations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/domains/3a5d3d89-3f89-4f05-8188-8a2b298c79d5/relationships/shared_organizations"</span><span class="w">
       </span><span class="p">}</span><span class="w">
@@ -4240,6 +4262,9 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
       </span><span class="p">},</span><span class="w">
       </span><span class="nt">"organization"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/organizations/3a3f3d89-3f89-4f05-8188-751b298c79d5"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"route_reservations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/domains/3a5d3d89-3f89-4f05-8188-8a2b298c79d5/route_reservations"</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="nt">"shared_organizations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/domains/3a5d3d89-3f89-4f05-8188-8a2b298c79d5/relationships/shared_organizations"</span><span class="w">
@@ -4369,6 +4394,9 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
       </span><span class="nt">"organization"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/organizations/3a3f3d89-3f89-4f05-8188-751b298c79d5"</span><span class="w">
       </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"route_reservations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/domains/3a5d3d89-3f89-4f05-8188-8a2b298c79d5/route_reservations"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
       </span><span class="nt">"shared_organizations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/domains/3a5d3d89-3f89-4f05-8188-8a2b298c79d5/relationships/shared_organizations"</span><span class="w">
       </span><span class="p">}</span><span class="w">
@@ -4476,8 +4504,11 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
         </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
           </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
             </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/domains/3a5d3d89-3f89-4f05-8188-8a2b298c79d5"</span><span class="w">
-          </span><span class="p">}</span><span class="w">
-        </span><span class="p">}</span><span class="w">
+          </span><span class="p">},</span><span class="w">
+          </span><span class="nt">"route_reservations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/domains/3a5d3d89-3f89-4f05-8188-8a2b298c79d5/route_reservations"</span><span class="w">
+          </span><span class="p">},</span><span class="w">
+        </span><span class="err">}</span><span class="w">
       </span><span class="p">}</span><span class="w">
     </span><span class="p">]</span><span class="w">
   </span><span class="p">}</span><span class="w">
@@ -4594,8 +4625,11 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
         </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
           </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
             </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/domains/3a5d3d89-3f89-4f05-8188-8a2b298c79d5"</span><span class="w">
-          </span><span class="p">}</span><span class="w">
-        </span><span class="p">}</span><span class="w">
+          </span><span class="p">},</span><span class="w">
+          </span><span class="nt">"route_reservations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/domains/3a5d3d89-3f89-4f05-8188-8a2b298c79d5/route_reservations"</span><span class="w">
+          </span><span class="p">},</span><span class="w">
+        </span><span class="err">}</span><span class="w">
       </span><span class="p">}</span><span class="w">
     </span><span class="p">]</span><span class="w">
   </span><span class="p">}</span><span class="w">
@@ -4707,6 +4741,9 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
       </span><span class="p">},</span><span class="w">
       </span><span class="nt">"organization"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/organizations/3a3f3d89-3f89-4f05-8188-751b298c79d5"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"route_reservations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/domains/3a5d3d89-3f89-4f05-8188-8a2b298c79d5/route_reservations"</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="nt">"shared_organizations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/domains/3a5d3d89-3f89-4f05-8188-8a2b298c79d5/relationships/shared_organizations"</span><span class="w">
@@ -8303,6 +8340,9 @@ Only isolation segments that are entitled to the organization are eligible to be
       </span><span class="p">},</span><span class="w">
       </span><span class="nt">"organization"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/organizations/3a3f3d89-3f89-4f05-8188-751b298c79d5"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"route_reservations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/domains/3a5d3d89-3f89-4f05-8188-8a2b298c79d5/route_reservations"</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="nt">"shared_organizations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/domains/3a5d3d89-3f89-4f05-8188-8a2b298c79d5/relationships/shared_organizations"</span><span class="w">
@@ -16421,6 +16461,92 @@ Deployed revisions are revisions that are linked to started processes in the app
 </tr>
 <tr>
 <td>Admin</td>
+<td></td>
+</tr>
+</tbody></table>
+
+          <h3 id="check-reserved-routes-for-a-domain">Check reserved routes for a domain</h3>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/domains/[guid]/route_reservations"</span> <span class="se">\</span>
+  -X GET <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
+
+<span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nt">"matching_route"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span><span class="w">
+
+</span></code></pre>
+
+<p>Check if a specific route for a domain exists, regardless of the user&rsquo;s visibility for the route in case the route
+belongs to a space the user does not belong to.</p>
+
+<h4 id="definition">Definition</h4>
+
+<p><code class="prettyprint">GET /v3/domains/:guid/route_reservations</code></p>
+
+<h4 id="query-parameters">Query Parameters</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>host</strong></td>
+<td><em>string</em></td>
+<td>Hostname to filter by. Defaults to empty string if not provided.</td>
+</tr>
+<tr>
+<td><strong>path</strong></td>
+<td><em>string</em></td>
+<td>Path to filter by. Defaults to empty string if not provided.</td>
+</tr>
+</tbody></table>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th>Role</th>
+<th>Notes</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Admin</td>
+<td></td>
+</tr>
+<tr>
+<td>Admin Read-Only</td>
+<td></td>
+</tr>
+<tr>
+<td>Global Auditor</td>
+<td></td>
+</tr>
+<tr>
+<td>Org Auditor</td>
+<td></td>
+</tr>
+<tr>
+<td>Org Manager</td>
+<td></td>
+</tr>
+<tr>
+<td>Space Auditor</td>
+<td></td>
+</tr>
+<tr>
+<td>Space Developer</td>
+<td></td>
+</tr>
+<tr>
+<td>Space Manager</td>
 <td></td>
 </tr>
 </tbody></table>
