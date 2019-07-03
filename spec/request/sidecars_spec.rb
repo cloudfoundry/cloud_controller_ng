@@ -15,7 +15,8 @@ RSpec.describe 'Sidecars' do
       {
           name: 'sidecar_one',
           command: 'bundle exec rackup',
-          process_types: ['web', 'other_worker']
+          process_types: ['web', 'other_worker'],
+          memory_in_mb: 300
       }
     }
 
@@ -32,6 +33,7 @@ RSpec.describe 'Sidecars' do
         'name' => 'sidecar_one',
         'command' => 'bundle exec rackup',
         'process_types' => ['other_worker', 'web'],
+        'memory_in_mb' => 300,
         'created_at' => iso8601,
         'updated_at' => iso8601,
         'relationships' => {
@@ -86,10 +88,28 @@ RSpec.describe 'Sidecars' do
         expect(parsed_response['errors'][0]['detail']).to eq 'Process types must have at least 1 process_type'
       end
     end
+
+    describe 'validates sidecar memory' do
+      let!(:process) { VCAP::CloudController::ProcessModel.make(app_guid: app_model.guid, memory: 100, type: 'other_worker') }
+      let(:sidecar_params) {
+        {
+          name: 'sidecar_one',
+          command: 'bundle exec rackup',
+          process_types: ['web', 'other_worker'],
+          memory_in_mb: 300
+        }
+      }
+
+      it 'returns an error if the sidecar memory exceeds the process memory' do
+        post "/v3/apps/#{app_model.guid}/sidecars", sidecar_params.to_json, user_header
+        expect(last_response.status).to eq(422)
+        expect(parsed_response['errors'][0]['detail']).to eq 'The memory allocation defined is too large to run with the dependent "other_worker" process'
+      end
+    end
   end
 
   describe 'PATCH /v3/apps/:guid/sidecars' do
-    let!(:sidecar) { VCAP::CloudController::SidecarModel.make(name: 'My sidecar', command: 'rackdown', app: app_model) }
+    let!(:sidecar) { VCAP::CloudController::SidecarModel.make(name: 'My sidecar', command: 'rackdown', app: app_model, memory: 400) }
     let!(:sidecar_process_type) do
       VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar, type: 'other_worker', app_guid: app_model.guid)
     end
@@ -98,7 +118,8 @@ RSpec.describe 'Sidecars' do
       {
         name:          'my_sidecar_2',
         command:       'rackup',
-        process_types: ['sidecar_process']
+        process_types: ['sidecar_process'],
+        memory_in_mb: 300,
       }
     }
 
@@ -108,6 +129,7 @@ RSpec.describe 'Sidecars' do
         'name' => 'my_sidecar_2',
         'command' => 'rackup',
         'process_types' => ['sidecar_process'],
+        'memory_in_mb' => 300,
         'created_at' => iso8601,
         'updated_at' => iso8601,
         'relationships' => {
@@ -135,6 +157,7 @@ RSpec.describe 'Sidecars' do
           'name' => 'My sidecar',
           'command' => 'bundle exec rackup',
           'process_types' => ['other_worker'],
+          'memory_in_mb' => 400,
           'created_at' => iso8601,
           'updated_at' => iso8601,
           'relationships' => {
@@ -222,10 +245,28 @@ RSpec.describe 'Sidecars' do
         expect(last_response.status).to eq(404)
       end
     end
+
+    describe 'validates sidecar memory' do
+      let!(:process) { VCAP::CloudController::ProcessModel.make(app_guid: app_model.guid, memory: 100, type: 'other_worker') }
+      let(:sidecar_params) {
+        {
+          name: 'sidecar_one',
+          command: 'bundle exec rackup',
+          process_types: ['web', 'other_worker'],
+          memory_in_mb: 300
+        }
+      }
+
+      it 'returns an error if the sidecar memory exceeds the process memory' do
+        patch "/v3/sidecars/#{sidecar.guid}", sidecar_params.to_json, user_header
+        expect(last_response.status).to eq(422)
+        expect(parsed_response['errors'][0]['detail']).to eq 'The memory allocation defined is too large to run with the dependent "other_worker" process'
+      end
+    end
   end
 
   describe 'GET /v3/sidecars/:guid' do
-    let(:sidecar) { VCAP::CloudController::SidecarModel.make(app: app_model, name: 'sidecar', command: 'smarch') }
+    let(:sidecar) { VCAP::CloudController::SidecarModel.make(app: app_model, name: 'sidecar', command: 'smarch', memory: 300) }
     let!(:sidecar_spider) { VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar, type: 'spider') }
     let!(:sidecar_web) { VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar, type: 'web') }
 
@@ -237,6 +278,7 @@ RSpec.describe 'Sidecars' do
         'name' => 'sidecar',
         'command' => 'smarch',
         'process_types' => ['spider', 'web'],
+        'memory_in_mb' => 300,
         'created_at' => iso8601,
         'updated_at' => iso8601,
         'relationships' => {
@@ -309,6 +351,7 @@ RSpec.describe 'Sidecars' do
             'name' => 'sidecar1a',
             'command' => 'missile1a',
             'process_types' => ['web', 'worker'],
+            'memory_in_mb' => nil,
             'relationships' => {
               'app' => {
                 'data' => {
@@ -324,6 +367,7 @@ RSpec.describe 'Sidecars' do
             'name' => 'sidecar1b',
             'command' => 'missile1b',
             'process_types' => ['web', 'worker'],
+            'memory_in_mb' => nil,
             'relationships' => {
               'app' => {
                 'data' => {
@@ -377,6 +421,7 @@ RSpec.describe 'Sidecars' do
               'name' => 'sidecar1',
               'command' => 'bundle exec rackup',
               'process_types' => ['one'],
+              'memory_in_mb' => nil,
               'created_at' => iso8601,
               'updated_at' => iso8601,
               'relationships' => {
@@ -392,6 +437,7 @@ RSpec.describe 'Sidecars' do
               'name' => 'sidecar2',
               'command' => 'bundle exec rackup',
               'process_types' => ['two'],
+              'memory_in_mb' => nil,
               'created_at' => iso8601,
               'updated_at' => iso8601,
               'relationships' => {

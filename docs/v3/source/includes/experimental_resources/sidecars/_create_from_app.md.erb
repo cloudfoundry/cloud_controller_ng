@@ -12,7 +12,8 @@ curl "https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/sidec
   -d '{
     "name": "auth-sidecar",
     "command": "bundle exec rackup",
-    "process_types": ["web", "worker"]
+    "process_types": ["web", "worker"],
+    "memory_in_mb": 300
   }'
 ```
 
@@ -37,6 +38,12 @@ Name | Type | Description
 **name** | _string_ | Human-readable name for the sidecar.
 **command** | _string_ | The command used to start the sidecar.
 **process_types** | _array of strings_  | A list of process types the sidecar applies to.
+
+#### Optional Parameters
+
+Name | Type | Description
+---- | ---- | -----------
+**memory_in_mb** | _integer_ | Reserved memory for sidecar.
 
 #### Permitted Roles
  |

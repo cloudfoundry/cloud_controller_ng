@@ -22,12 +22,16 @@ The recommended way to create sidecars for your app is with an [App Manifest](#a
   - name: performance monitor
       process_types: [ 'web' ]
       command: bundle exec run-performance-monitor
+      memory: 128M
 ```
 
 
 - **name** is a user defined identifier (unique per app)
 - **process_types** is a list of app processes the sidecar will attach to. You can attach multiple sidecars to each process type your app uses
 - **command** is the command used to start the sidecar
+- **memory** is the memory reserved for the sidecar<sup>[1]</sup>
+
+<sup>1 Applies for Java apps.  If you do not reserve memory for the sidecar, the JVM will consume all of the memory in the app container.  This value must be less thatn the process' reserved memory.</sup>
 
 #### Current Limitations
 - Start and stop order of app processes and their sidecars is undefined
