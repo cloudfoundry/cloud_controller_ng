@@ -141,7 +141,7 @@ RSpec.describe 'Route Mappings' do
             'guid'       => route_mapping1.guid,
             'created_at' => iso8601,
             'updated_at' => iso8601,
-            'weight'     => 1,
+            'weight'     => nil,
 
             'links'      => {
               'self'    => { 'href' => "#{link_prefix}/v3/route_mappings/#{route_mapping1.guid}" },
@@ -154,7 +154,7 @@ RSpec.describe 'Route Mappings' do
             'guid'       => route_mapping2.guid,
             'created_at' => iso8601,
             'updated_at' => iso8601,
-            'weight'     => 1,
+            'weight'     => nil,
 
             'links'      => {
               'self'    => { 'href' => "#{link_prefix}/v3/route_mappings/#{route_mapping2.guid}" },
@@ -238,7 +238,7 @@ RSpec.describe 'Route Mappings' do
         'guid'       => route_mapping.guid,
         'created_at' => iso8601,
         'updated_at' => iso8601,
-        'weight'     => 1,
+        'weight'     => nil,
 
         'links'      => {
           'self'    => { 'href' => "#{link_prefix}/v3/route_mappings/#{route_mapping.guid}" },
@@ -309,7 +309,7 @@ RSpec.describe 'Route Mappings' do
             'guid'       => route_mapping1.guid,
             'created_at' => iso8601,
             'updated_at' => iso8601,
-            'weight'     => 1,
+            'weight'     => nil,
 
             'links'      => {
               'self'    => { 'href' => "#{link_prefix}/v3/route_mappings/#{route_mapping1.guid}" },
@@ -322,7 +322,7 @@ RSpec.describe 'Route Mappings' do
             'guid'       => route_mapping2.guid,
             'created_at' => iso8601,
             'updated_at' => iso8601,
-            'weight'     => 1,
+            'weight'     => nil,
 
             'links'      => {
               'self'    => { 'href' => "#{link_prefix}/v3/route_mappings/#{route_mapping2.guid}" },

@@ -28,7 +28,7 @@ module VCAP::CloudController
           route_mapping = RouteMappingCreate.add(user_audit_info: user_audit_info, route: route, app: app, process_type: process_type)
           expect(route_mapping.route.guid).to eq(route.guid)
           expect(route_mapping.processes.map(&:guid)).to contain_exactly(process1.guid, process2.guid)
-          expect(route_mapping.weight).to eq(1)
+          expect(route_mapping.weight).to eq(nil)
         }.to change { RouteMappingModel.count }.by(1)
       end
 
