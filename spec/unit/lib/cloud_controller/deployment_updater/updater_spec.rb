@@ -220,6 +220,7 @@ module VCAP::CloudController
         let(:current_deploying_instances) { 3 }
         let!(:web_process) do
           ProcessModel.make(
+            guid: 'web_process',
             instances: 0,
             app: app,
             created_at: a_day_ago - 11,
@@ -228,6 +229,7 @@ module VCAP::CloudController
         end
         let!(:oldest_web_process_with_instances) do
           ProcessModel.make(
+            guid: 'oldest_web_process_with_instances',
             instances: 1,
             app: app,
             created_at: a_day_ago - 10,
@@ -239,11 +241,14 @@ module VCAP::CloudController
           RouteMappingModel.make(app: oldest_web_process_with_instances.app, process_type: oldest_web_process_with_instances.type)
         end
 
+        let!(:oldest_label) { ProcessLabelModel.make(resource_guid: oldest_web_process_with_instances.guid) }
+
         it 'destroys the oldest web process and ignores the original web process' do
           expect {
             subject.scale
           }.not_to change { ProcessModel.find(guid: web_process.guid) }
           expect(ProcessModel.find(guid: oldest_web_process_with_instances.guid)).to be_nil
+          expect(oldest_label.exists?).to be_falsey
         end
       end
 

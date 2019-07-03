@@ -96,7 +96,7 @@ module VCAP::CloudController
           memory: web_process.memory,
           file_descriptors: web_process.file_descriptors,
           disk_quota: web_process.disk_quota,
-          metadata: web_process.metadata,
+          metadata: web_process.metadata, # execution_metadata, not labels & annotations metadata!
           detected_buildpack: web_process.detected_buildpack,
           health_check_timeout: web_process.health_check_timeout,
           health_check_type: web_process.health_check_type,
@@ -105,7 +105,22 @@ module VCAP::CloudController
           enable_ssh: web_process.enable_ssh,
           ports: web_process.ports,
           revision: revision,
-        )
+        ).tap do |p|
+          web_process.labels.each do |label|
+            ProcessLabelModel.create(
+              key_prefix: label.key_prefix,
+              key_name: label.key_name,
+              value: label.value,
+              resource_guid: p.guid)
+          end
+          web_process.annotations.each do |annotation|
+            ProcessAnnotationModel.create(
+              key_prefix: annotation.key_prefix,
+              key: annotation.key,
+              value: annotation.value,
+              resource_guid: p.guid)
+          end
+        end
       end
 
       def record_audit_event(deployment, droplet, user_audit_info, message)

@@ -56,7 +56,7 @@ class ProcessesController < ApplicationController
 
     render status: :ok, json: Presenters::V3::ProcessPresenter.new(@process)
   rescue ProcessUpdate::InvalidProcess => e
-    message = e.message.to_s
+    message = e.message
     message = 'Cannot update this process while a deployment is in flight.' if message == 'ProcessUpdateDisabledDuringDeployment'
     unprocessable!(message)
   end

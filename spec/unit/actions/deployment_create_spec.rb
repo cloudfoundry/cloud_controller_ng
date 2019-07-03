@@ -34,6 +34,29 @@ module VCAP::CloudController
     end
 
     describe '#create' do
+      context 'when the old process has metadata' do
+        before do
+          ProcessLabelModel.make(
+            key_name: 'freaky',
+            value: 'wednesday',
+            resource_guid: web_process.guid
+          )
+          ProcessAnnotationModel.make(
+            key_name: 'tokyo',
+            value: 'grapes',
+            resource_guid: web_process.guid
+          )
+        end
+        it 'assigns the old process metadata to the new process' do
+          deployment = DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+          deploying_web_process = deployment.deploying_web_process
+
+          expect(deploying_web_process.labels.map { |label| { key: label.key_name, value: label.value } }).to match_array([{ key: 'freaky', value: 'wednesday' }])
+          expect(deploying_web_process.annotations.map { |a| { key: a.key, value: a.value } }).
+            to match_array([{ key: 'tokyo', value: 'grapes' }])
+        end
+      end
+
       context 'when a droplet is provided on the message' do
         context 'when a new droplet is provided' do
           it 'creates a deployment with the provided droplet' do

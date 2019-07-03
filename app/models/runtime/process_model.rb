@@ -361,6 +361,8 @@ module VCAP::CloudController
     def before_destroy
       lock!
       self.state = 'STOPPED'
+      LabelDelete.delete(labels)
+      AnnotationDelete.delete(annotations)
       super
     end
 
