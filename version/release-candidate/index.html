@@ -16857,11 +16857,11 @@ belongs to a space the user does not belong to.</p>
 <span class="na">Location</span><span class="p">:</span> <span class="s">https://api.example.org/v3/jobs/[guid]</span>
 </code></pre>
 
-<p>Replaces destinations in a route.</p>
+<p>Deletes all routes in a space that are not mapped to any applications and not bound to any service instances.</p>
 
 <h4 id="definition">Definition</h4>
 
-<p><code class="prettyprint">DELETE /v3/spaces/:guid/routes?unmapped=true</code></p>
+<p><code class="prettyprint">DELETE /v3/spaces/:space_guid/routes?unmapped=true</code></p>
 
 <h4 id="permitted-roles">Permitted Roles</h4>
 
