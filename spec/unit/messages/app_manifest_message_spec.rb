@@ -636,6 +636,37 @@ module VCAP::CloudController
             expect(message.errors.full_messages).to include('Sidecar name must be a string')
           end
         end
+
+        context 'when sidecars memory is not numeric' do
+          let(:params_from_yaml) do
+            {
+              sidecars: [{ command: 'rackup', process_types: ['web'], name: 'sylvester', memory: 'selective' }]
+            }
+          end
+
+          it 'is not valid' do
+            message = AppManifestMessage.create_from_yml(params_from_yaml, params)
+            expect(message).not_to be_valid
+            expect(message.errors.count).to eq(1)
+            expect(message.errors.full_messages).to include('Sidecar "sylvester": Memory in mb is not a number')
+          end
+        end
+
+        context 'when the sidecars are valid' do
+          let(:params_from_yaml) do
+            {
+              sidecars: [{ command: 'rackup', process_types: ['web'], name: 'sylvester', memory: '38M' },
+                         { command: 'rackup', process_types: ['web'], name: 'cookie', memory: '2G' },
+                         ]
+            }
+          end
+
+          it 'is valid' do
+            message = AppManifestMessage.create_from_yml(params_from_yaml, params)
+            expect(message).to be_valid
+            expect(message.sidecars.size).to eq(2)
+          end
+        end
       end
 
       describe 'metadata' do

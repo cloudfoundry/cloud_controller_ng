@@ -51,9 +51,11 @@ applications:
   - name: authenticator
     process_types: [ 'web', 'worker' ]
     command: bundle exec run-authenticator
+    memory: 800M
   - name: upcaser
     process_types: [ 'worker' ]
     command: ./tr-server
+    memory: 900M
 
 ```
 
@@ -110,3 +112,4 @@ Field | Description
 **name** | **(Required)** Sidecar name.  The identifier for the sidecars to be configured.
 **command** | The command used to start the sidecar.
 **process_types** | List of processes to associate sidecar with.
+**memory** | Memory in mb that the sidecar will be allocated.

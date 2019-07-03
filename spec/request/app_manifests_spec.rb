@@ -130,7 +130,8 @@ RSpec.describe 'App Manifests' do
           {
             'process_types' => ['worker'],
             'command'       => 'bundle exec sidecar_for_web_only',
-            'name'          => 'my-sidecar'
+            'name'          => 'my-sidecar',
+            'memory'        => 300,
           }
         ]
       end
@@ -146,10 +147,11 @@ RSpec.describe 'App Manifests' do
         expect(sidecar.name).to          eq('my-sidecar')
         expect(sidecar.command).to       eq('bundle exec sidecar_for_web_only')
         expect(sidecar.process_types).to eq(['worker'])
+        expect(sidecar.memory).to eq(300)
       end
 
       context 'when a sidecar already exists' do
-        let!(:sidecar) { VCAP::CloudController::SidecarModel.make(name: 'my-sidecar', app: app_model, command: 'rackup') }
+        let!(:sidecar) { VCAP::CloudController::SidecarModel.make(name: 'my-sidecar', app: app_model, command: 'rackup', memory: 200) }
         let!(:sidecar_process_type) { VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar, type: 'web', app_guid: app_model.guid) }
 
         it 'updates based on name' do
@@ -163,6 +165,7 @@ RSpec.describe 'App Manifests' do
           expect(sidecar.name).to          eq('my-sidecar')
           expect(sidecar.command).to       eq('bundle exec sidecar_for_web_only')
           expect(sidecar.process_types).to eq(['worker'])
+          expect(sidecar.memory).to eq(300)
         end
 
         context 'when sidecar name is not provided' do

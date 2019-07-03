@@ -50,6 +50,13 @@ module VCAP::CloudController
         expect(message.errors.full_messages).to include('Process types must have at least 1 process_type')
       end
 
+      it 'validates that there is a process_types field' do
+        message = SidecarCreateMessage.new(body.reject { |x| x == :process_types })
+
+        expect(message).to_not be_valid
+        expect(message.errors.full_messages).to include('Process types must have at least 1 process_type')
+      end
+
       it 'validates that memory is a positive integer' do
         body[:memory_in_mb] = 'totes not a number'
         message = SidecarCreateMessage.new(body)
