@@ -309,14 +309,41 @@ module VCAP::CloudController
       end
 
       context 'as a space developer' do
+        let(:space) { Space.make }
+        let(:user) { User.make }
+        let(:different_service_plan) { ServicePlan.make }
+
+        before do
+          space.organization.add_user(user)
+          space.add_developer(user)
+        end
+
+        it 'can query by service broker guid using ":"' do
+          set_current_user(user)
+          service = @services[:public][0].service
+          get "/v2/service_plans?q=service_broker_guid:#{service.service_broker.guid}"
+          expect(last_response).to have_status_code 200
+
+          expected_plan_guids = service.service_plans.map(&:guid)
+          expected_service_guids = [service.guid]
+
+          returned_plan_guids = decoded_response.fetch('resources').map do |res|
+            res['metadata']['guid']
+          end
+
+          returned_service_guids = decoded_response.fetch('resources').map do |res|
+            res['entity']['service_guid']
+          end
+
+          expect(returned_plan_guids).to match_array expected_plan_guids
+          expect(returned_service_guids).to match_array expected_service_guids
+          expect(returned_plan_guids).not_to include(different_service_plan.guid)
+        end
+
         context 'with private service brokers' do
           it 'returns service plans from private brokers that are in the same space as the user' do
-            user = User.make
-            space = Space.make
-            space.organization.add_user user
             private_broker = ServiceBroker.make(space: space)
             service = Service.make(service_broker: private_broker)
-            space.add_developer(user)
             private_broker_service_plan = ServicePlan.make(service: service, public: false)
 
             set_current_user(user)
@@ -333,16 +360,11 @@ module VCAP::CloudController
 
         context 'when a service instance is associated with an inactive plan' do
           it 'does not list the inactive service plan' do
-            user = User.make
-            space = Space.make
             service = Service.make
             service_plan = ServicePlan.make(service: service, public: true, active: true)
             ManagedServiceInstance.make(service_plan: service_plan)
             service_plan.update(public: false)
             service_plan.reload
-
-            space.organization.add_user(user)
-            space.add_developer(user)
 
             set_current_user(user)
             get '/v2/service_plans'
