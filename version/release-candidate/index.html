@@ -16534,6 +16534,10 @@ belongs to a space the user does not belong to.</p>
 <td></td>
 </tr>
 <tr>
+<td>Org Billing Manager</td>
+<td>Can only check if routes exist for a domain without an organization relationship.</td>
+</tr>
+<tr>
 <td>Org Manager</td>
 <td></td>
 </tr>
@@ -17783,13 +17787,17 @@ belongs to a space the user does not belong to.</p>
   <span class="pi">-</span> <span class="s">name</span><span class="pi">:</span> <span class="s">performance monitor</span>
       <span class="s">process_types</span><span class="pi">:</span> <span class="pi">[</span> <span class="s1">'</span><span class="s">web'</span> <span class="pi">]</span>
       <span class="s">command</span><span class="pi">:</span> <span class="s">bundle exec run-performance-monitor</span>
+      <span class="s">memory</span><span class="pi">:</span> <span class="s">128M</span>
 </code></pre>
 
 <ul>
 <li><strong>name</strong> is a user defined identifier (unique per app)</li>
 <li><strong>process_types</strong> is a list of app processes the sidecar will attach to. You can attach multiple sidecars to each process type your app uses</li>
 <li><strong>command</strong> is the command used to start the sidecar</li>
+<li><strong>memory</strong> is the memory reserved for the sidecar<sup>[1]</sup></li>
 </ul>
+
+<p><sup>1 Applies for Java apps.  If you do not reserve memory for the sidecar, the JVM will consume all of the memory in the app container.  This value must be less thatn the process&rsquo; reserved memory.</sup></p>
 
 <h4 id="current-limitations">Current Limitations</h4>
 
@@ -17809,6 +17817,7 @@ belongs to a space the user does not belong to.</p>
   </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"auth-sidecar"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"command"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bundle exec rackup"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"process_types"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"web"</span><span class="p">,</span><span class="w"> </span><span class="s2">"worker"</span><span class="p">],</span><span class="w">
+  </span><span class="nt">"memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">300</span><span class="p">,</span><span class="w">
   </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -17850,6 +17859,11 @@ belongs to a space the user does not belong to.</p>
 <td>A list of process types the sidecar applies to.</td>
 </tr>
 <tr>
+<td><strong>memory_in_mb</strong></td>
+<td><em>integer</em></td>
+<td>Reserved memory for sidecar.</td>
+</tr>
+<tr>
 <td><strong>relationships.app</strong></td>
 <td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
 <td>The app the sidecare is associated with.</td>
@@ -17876,7 +17890,8 @@ belongs to a space the user does not belong to.</p>
   -d <span class="s1">'{
     "name": "auth-sidecar",
     "command": "bundle exec rackup",
-    "process_types": ["web", "worker"]
+    "process_types": ["web", "worker"],
+    "memory_in_mb": 300
   }'</span>
 </code></pre>
 <pre class="highlight plaintext"><code>Example Response
@@ -17889,6 +17904,7 @@ belongs to a space the user does not belong to.</p>
   </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"auth-sidecar"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"command"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bundle exec rackup"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"process_types"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"web"</span><span class="p">,</span><span class="w"> </span><span class="s2">"worker"</span><span class="p">],</span><span class="w">
+  </span><span class="nt">"memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">300</span><span class="p">,</span><span class="w">
   </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -17932,6 +17948,22 @@ belongs to a space the user does not belong to.</p>
 </tr>
 </tbody></table>
 
+<h4 id="optional-parameters">Optional Parameters</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>memory_in_mb</strong></td>
+<td><em>integer</em></td>
+<td>Reserved memory for sidecar.</td>
+</tr>
+</tbody></table>
+
 <h4 id="permitted-roles">Permitted Roles</h4>
 
 <table><thead>
@@ -17964,6 +17996,7 @@ belongs to a space the user does not belong to.</p>
   </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"auth-sidecar"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"command"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bundle exec rackup"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"process_types"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"web"</span><span class="p">,</span><span class="w"> </span><span class="s2">"worker"</span><span class="p">],</span><span class="w">
+  </span><span class="nt">"memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">300</span><span class="p">,</span><span class="w">
   </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -18021,7 +18054,8 @@ belongs to a space the user does not belong to.</p>
   -d <span class="s1">'{
     "name": "auth-sidecar",
     "command": "bundle exec rackup",
-    "process_types": ["web", "worker"]
+    "process_types": ["web", "worker"],
+    "memory_in_mb": 300
   }'</span>
 
 </code></pre>
@@ -18035,6 +18069,7 @@ belongs to a space the user does not belong to.</p>
   </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"auth-sidecar"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"command"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bundle exec rackup"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"process_types"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"web"</span><span class="p">,</span><span class="w"> </span><span class="s2">"worker"</span><span class="p">],</span><span class="w">
+  </span><span class="nt">"memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">300</span><span class="p">,</span><span class="w">
   </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -18075,6 +18110,11 @@ belongs to a space the user does not belong to.</p>
 <td><strong>process_types</strong></td>
 <td><em>array of strings</em></td>
 <td>A list of process types the sidecar applies to.</td>
+</tr>
+<tr>
+<td><strong>memory_in_mb</strong></td>
+<td><em>integer</em></td>
+<td>Reserved memory for sidecar.</td>
 </tr>
 </tbody></table>
 
@@ -18126,6 +18166,7 @@ belongs to a space the user does not belong to.</p>
       </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"auth-sidecar"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"command"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bundle exec rackup"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"process_types"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"web"</span><span class="p">,</span><span class="w"> </span><span class="s2">"worker"</span><span class="p">],</span><span class="w">
+      </span><span class="nt">"memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">300</span><span class="p">,</span><span class="w">
       </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
           </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -18141,6 +18182,7 @@ belongs to a space the user does not belong to.</p>
       </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"echo-sidecar"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"command"</span><span class="p">:</span><span class="w"> </span><span class="s2">"start-echo-server"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"process_types"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"web"</span><span class="p">],</span><span class="w">
+      </span><span class="nt">"memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">300</span><span class="p">,</span><span class="w">
       </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
           </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -18251,6 +18293,7 @@ belongs to a space the user does not belong to.</p>
       </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"auth-sidecar"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"command"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bundle exec rackup"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"process_types"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"web"</span><span class="p">,</span><span class="w"> </span><span class="s2">"worker"</span><span class="p">],</span><span class="w">
+      </span><span class="nt">"memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">300</span><span class="p">,</span><span class="w">
       </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
           </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -18266,6 +18309,7 @@ belongs to a space the user does not belong to.</p>
       </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"echo-sidecar"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"command"</span><span class="p">:</span><span class="w"> </span><span class="s2">"start-echo-server"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"process_types"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"web"</span><span class="p">],</span><span class="w">
+      </span><span class="nt">"memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">300</span><span class="p">,</span><span class="w">
       </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
           </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
