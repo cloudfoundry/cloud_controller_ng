@@ -18,7 +18,6 @@ RSpec.describe 'V3 service brokers' do
             }
           ]
         },
-
         {
           'id' => 'service_id-2',
           'name' => 'route_volume_service_name-2',
@@ -38,7 +37,7 @@ RSpec.describe 'V3 service brokers' do
     }
   end
 
-  let(:valid_service_broker_create_body) do
+  let(:request_body) do
     {
       name: 'broker name',
       url: 'http://example.org/broker-url',
@@ -369,8 +368,6 @@ RSpec.describe 'V3 service brokers' do
     end
 
     describe 'registering a global service broker' do
-      let(:request_body) { valid_service_broker_create_body }
-
       subject do
         post('/v3/service_brokers', request_body.to_json, admin_headers)
       end
@@ -514,10 +511,6 @@ RSpec.describe 'V3 service brokers' do
     let(:user) { VCAP::CloudController::User.make }
     let(:org) { VCAP::CloudController::Organization.make }
     let(:space) { VCAP::CloudController::Space.make(organization: org) }
-    let!(:object) { VCAP::CloudController::ServiceBroker.make }
-
-    let!(:broker_with_space) { VCAP::CloudController::ServiceBroker.make space: space }
-    let!(:broker_non_spaced) { VCAP::CloudController::ServiceBroker.make }
 
     before(:each) do
       set_current_user(user)
@@ -526,6 +519,9 @@ RSpec.describe 'V3 service brokers' do
     end
 
     describe 'getting a single service broker' do
+      let!(:broker_with_space) { VCAP::CloudController::ServiceBroker.make space: space }
+      let!(:broker_non_spaced) { VCAP::CloudController::ServiceBroker.make }
+
       let(:parsed_body) {
         JSON.parse(last_response.body)
       }
@@ -560,6 +556,9 @@ RSpec.describe 'V3 service brokers' do
     end
 
     describe 'getting a list of service brokers' do
+      let!(:broker_with_space) { VCAP::CloudController::ServiceBroker.make space: space }
+      let!(:broker_non_spaced) { VCAP::CloudController::ServiceBroker.make }
+
       it 'only returns brokers visible to the user' do
         get('/v3/service_brokers', {}, headers_for(user))
 
@@ -573,9 +572,81 @@ RSpec.describe 'V3 service brokers' do
 
     describe 'registering a global service broker' do
       it 'fails authorization' do
-        response = post('/v3/service_brokers', valid_service_broker_create_body.to_json, headers_for(user))
+        response = post('/v3/service_brokers', request_body.to_json, headers_for(user))
 
         expect(response).to have_status_code(403)
+        expect(VCAP::CloudController::ServiceBroker.count).to eq(0)
+      end
+    end
+
+    describe 'registering a space scoped service broker' do
+      let(:request_body) do
+        {
+          name: 'space-scoped broker name',
+          url: 'http://example.org/broker-url',
+          credentials: {
+            type: 'basic',
+            data: {
+              username: 'admin',
+              password: 'welcome',
+            },
+          },
+          relationships: {
+            space: {
+              data: {
+                guid: space.guid
+              },
+            },
+          },
+        }
+      end
+
+      subject do
+        post('/v3/service_brokers', request_body.to_json, headers_for(user))
+      end
+
+      before do
+        stub_request(:get, 'http://example.org/broker-url/v2/catalog').
+          to_return(status: 200, body: catalog.to_json, headers: {})
+        subject
+      end
+
+      it 'returns 201 Created' do
+        expect(last_response).to have_status_code(201)
+      end
+
+      it 'creates a service broker entity' do
+        expect(VCAP::CloudController::ServiceBroker.count).to eq(1)
+
+        service_broker = VCAP::CloudController::ServiceBroker.last
+        expect(service_broker).to include(
+          'name' => 'space-scoped broker name',
+          'broker_url' => 'http://example.org/broker-url',
+          'auth_username' => 'admin',
+          'space_guid' => space.guid,
+        )
+        expect(service_broker.auth_password).to eq('welcome') # password not exported in to_hash
+      end
+
+      it 'synchronizes services and plans' do
+        service_broker = VCAP::CloudController::ServiceBroker.last
+
+        services = VCAP::CloudController::Service.where(service_broker_id: service_broker.id)
+        expect(services.count).to eq(2)
+
+        service = services.first
+        expect(service).to include('label' => 'service_name-1')
+        plan = VCAP::CloudController::ServicePlan.where(service_id: service.id).first
+        expect(plan).to include('name' => 'plan_name-1')
+      end
+
+      it 'reports service events' do
+        events = VCAP::CloudController::Event.all
+        expect(events).to have(4).items
+        expect(events[0]).to include('type' => 'audit.service.create', 'actor_name' => 'space-scoped broker name')
+        expect(events[1]).to include('type' => 'audit.service.create', 'actor_name' => 'space-scoped broker name')
+        expect(events[2]).to include('type' => 'audit.service_plan.create', 'actor_name' => 'space-scoped broker name')
+        expect(events[3]).to include('type' => 'audit.service_plan.create', 'actor_name' => 'space-scoped broker name')
       end
     end
   end
@@ -634,7 +705,36 @@ RSpec.describe 'V3 service brokers' do
 
     describe 'registering a global service broker' do
       it 'fails authorization' do
-        response = post('/v3/service_brokers', valid_service_broker_create_body.to_json, headers_for(user))
+        response = post('/v3/service_brokers', request_body.to_json, headers_for(user))
+
+        expect(response).to have_status_code(403)
+      end
+    end
+
+    describe 'registering a space scoped service broker' do
+      let(:request_body) do
+        {
+          name: 'space-scoped broker name',
+          url: 'http://example.org/broker-url',
+          credentials: {
+            type: 'basic',
+            data: {
+              username: 'admin',
+              password: 'welcome',
+            },
+          },
+          relationships: {
+            space: {
+              data: {
+                guid: space.guid
+              },
+            },
+          },
+        }
+      end
+
+      it 'fails authorization' do
+        response = post('/v3/service_brokers', request_body.to_json, headers_for(user))
 
         expect(response).to have_status_code(403)
       end

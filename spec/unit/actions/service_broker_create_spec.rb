@@ -7,9 +7,10 @@ module VCAP::CloudController
     let(:service_manager) { double }
     let(:registration) { instance_double(VCAP::Services::ServiceBrokers::ServiceBrokerRegistration) }
     let(:warnings) { [] }
+    let(:space_guid) { nil }
 
     let(:message) do
-      ServiceBrokerCreateMessage.new(
+      params = {
         name: 'broker name',
         url: 'http://example.org/broker-url',
         credentials: {
@@ -19,7 +20,13 @@ module VCAP::CloudController
             password: 'broker password',
           }
         }
-      )
+      }
+
+      if space_guid
+        params[:relationships] = { space: { data: { guid: space_guid } } }
+      end
+
+      ServiceBrokerCreateMessage.new(params)
     end
 
     let(:result) { V3::ServiceBrokerCreate.new(service_event_repository, service_manager).create(message) }
@@ -43,8 +50,6 @@ module VCAP::CloudController
         end
 
         it 'delegates to ServiceBrokerRegistration with correct params' do
-          result
-
           expect(VCAP::Services::ServiceBrokers::ServiceBrokerRegistration).to have_received(:new) do |broker, manager, repo, route_services_enabled, volume_services_enabled|
             expect(broker.broker_url).to eq(message.url)
             expect(broker.name).to eq(message.name)
@@ -55,7 +60,6 @@ module VCAP::CloudController
             expect(route_services_enabled).to be_truthy
             expect(volume_services_enabled).to be_truthy
           end
-          expect(registration).to have_received(:create)
         end
       end
 
@@ -75,6 +79,22 @@ module VCAP::CloudController
         end
       end
 
+      context 'when the broker is space scoped' do
+        let(:space) { VCAP::CloudController::Space.make }
+        let(:space_guid) { space.guid }
+
+        before do
+          result
+        end
+
+        it 'delegates to ServiceBrokerRegistration with correct params' do
+          expect(VCAP::Services::ServiceBrokers::ServiceBrokerRegistration).to have_received(:new) do |broker, _, _, _, _, _|
+            expect(broker.space_guid).to eq(space.guid)
+          end
+          expect(registration).to have_received(:create)
+        end
+      end
+
       context 'when there are warnings on registration' do
         let(:warnings) { %w(warning-1 warning-2) }
 
@@ -85,7 +105,6 @@ module VCAP::CloudController
 
       context 'when there are no warnings on registration' do
         let(:warnings) { [] }
-
         it 'returns warnings in the result' do
           expect(result).to eq(warnings: [])
         end
