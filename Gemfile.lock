@@ -447,7 +447,7 @@ GEM
       hashdiff
     xml-simple (1.1.5)
     yajl-ruby (1.4.1)
-    yard (0.9.19)
+    yard (0.9.20)
 
 PLATFORMS
   ruby
