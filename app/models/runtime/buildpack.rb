@@ -55,7 +55,7 @@ module VCAP::CloudController
 
     # This is used in the serialization of apps to JSON. The buildpack object is left in the hash for the app, then the
     # JSON encoder calls to_json on the buildpack.
-    def to_json
+    def to_json(*_args)
       MultiJson.dump name
     end
 

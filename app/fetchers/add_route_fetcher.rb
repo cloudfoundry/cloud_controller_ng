@@ -16,7 +16,7 @@ module VCAP::CloudController
       def routes_dataset(space_guid)
         Route.dataset.select_all(Route.table_name).
           join(Space.table_name, id: :space_id).
-          where(:"#{Space.table_name}__guid" => space_guid)
+          where("#{Space.table_name}__guid": space_guid)
       end
     end
   end
