@@ -124,7 +124,7 @@ module VCAP::CloudController
           expect(process.memory).to eq(1024)
           expect(process.disk_quota).to eq(50)
 
-          expect { process_scale.scale }.to raise_error(ProcessScale::InvalidProcess, 'ScaleDisabledDuringDeployment')
+          expect { process_scale.scale }.to raise_error(ProcessScale::InvalidProcess, 'Cannot scale this process while a deployment is in flight.')
 
           expect(process.reload.instances).to eq(1)
           expect(process.reload.memory).to eq(1024)

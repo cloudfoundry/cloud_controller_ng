@@ -11,7 +11,7 @@ module VCAP::CloudController
 
     def scale
       if @process.web? && @process.app.deploying?
-        raise InvalidProcess.new('ScaleDisabledDuringDeployment')
+        raise InvalidProcess.new('Cannot scale this process while a deployment is in flight.')
       end
 
       @process.db.transaction do

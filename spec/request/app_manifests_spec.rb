@@ -514,6 +514,75 @@ RSpec.describe 'App Manifests' do
         expect(lifecycle_data.buildpacks).to eq([buildpack.name, buildpack2.name])
       end
     end
+
+    context 'when a deployment is in progress' do
+      before do
+        TestConfig.override(temporary_disable_deployments: false)
+        deployment = VCAP::CloudController::DeploymentModelTestFactory.make(
+          state: VCAP::CloudController::DeploymentModel::DEPLOYING_STATE,
+          app: app_model,
+        )
+        expect(deployment.state).to eq(VCAP::CloudController::DeploymentModel::DEPLOYING_STATE)
+        post "/v3/apps/#{app_model.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
+        expect(last_response.status).to eq(202)
+
+        Delayed::Worker.new.work_off
+      end
+
+      let(:job) { VCAP::CloudController::PollableJobModel.last }
+
+      context 'when the manifest attempts to scale a web process' do
+        let(:yml_manifest) do
+          { 'applications' =>
+            [{ 'name' => 'blah',
+              'processes' => [{ 'type' => 'web', 'instances' => '3' }]
+            }]
+          }.to_yaml
+        end
+
+        it 'fails' do
+          expect(job.state).to eq('FAILED')
+          api_errors = YAML.safe_load(job.cf_api_error)['errors']
+          expect(api_errors.size).to eq(1)
+          expect(api_errors.map { |error| error['detail'] }).to match_array([
+            'Cannot scale this process while a deployment is in flight.',
+          ])
+        end
+      end
+
+      context 'when the manifest attempts to update a web process' do
+        let(:yml_manifest) do
+          { 'applications' =>
+            [{ 'name' => 'blah',
+              'processes' => [{ 'type' => 'web', 'command' => 'echo hi' }]
+            }]
+          }.to_yaml
+        end
+
+        it 'fails' do
+          expect(job.state).to eq('FAILED')
+          api_errors = YAML.safe_load(job.cf_api_error)['errors']
+          expect(api_errors.size).to eq(1)
+          expect(api_errors.map { |error| error['detail'] }).to match_array([
+            'Cannot update this process while a deployment is in flight.',
+          ])
+        end
+      end
+
+      context 'when the manifest attempts to update/scale non-web processes' do
+        let(:yml_manifest) do
+          { 'applications' =>
+            [{ 'name' => 'blah',
+              'processes' => [{ 'type' => 'worker', 'instances' => '3', 'command' => 'echo hi' }]
+            }]
+          }.to_yaml
+        end
+
+        it 'succeeds' do
+          expect(job.state).to eq('COMPLETE')
+        end
+      end
+    end
   end
 
   describe 'GET /v3/apps/:guid/manifest' do

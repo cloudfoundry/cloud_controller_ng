@@ -95,31 +95,6 @@ module VCAP::CloudController
               end
             end
           end
-
-          context 'when process scale raises an ProcessScale::InvalidProcess error' do
-            let(:manifest_process_scale_message) { instance_double(ManifestProcessScaleMessage, { type: process.type, to_process_scale_message: nil, requested?: false }) }
-            let(:message) do
-              instance_double(AppManifestMessage,
-                              manifest_process_scale_messages: [manifest_process_scale_message],
-                              manifest_process_update_messages: [],
-                              audit_hash: {}
-              )
-            end
-            let(:process) { ProcessModel.make(instances: 1) }
-            let(:app) { process.app }
-
-            before do
-              allow(process_scale).
-                to receive(:scale).and_raise(ProcessScale::InvalidProcess.new('instances less_than_zero'))
-            end
-
-            it 'translates the error into an InvalidManifest error' do
-              expect(process.instances).to eq(1)
-              expect {
-                app_apply_manifest.apply(app.guid, message)
-              }.to raise_error(AppApplyManifest::InvalidManifest, 'instances less_than_zero')
-            end
-          end
         end
 
         describe 'updating buildpack' do

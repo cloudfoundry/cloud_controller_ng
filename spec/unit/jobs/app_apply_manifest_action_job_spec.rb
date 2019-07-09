@@ -35,15 +35,6 @@ module VCAP::CloudController
         end
       end
 
-      context 'when an AppApplyManifest::InvalidManifest error occurs' do
-        it 'wraps the error in an ApiError' do
-          allow(apply_manifest_action).to receive(:apply).and_raise(AppApplyManifest::InvalidManifest, 'some sub-action failed!')
-          expect {
-            job.perform
-          }.to raise_error(CloudController::Errors::ApiError, /some sub-action failed!/)
-        end
-      end
-
       context 'when an AppApplyManifest::NoDefaultDomain error occurs' do
         it 'wraps the error in an ApiError' do
           allow(apply_manifest_action).to receive(:apply).and_raise(AppApplyManifest::NoDefaultDomain, 'some sub-action failed!')

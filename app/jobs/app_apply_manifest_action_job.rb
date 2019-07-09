@@ -14,8 +14,8 @@ module VCAP::CloudController
         apply_manifest_action.apply(resource_guid, apply_manifest_message)
       rescue AppPatchEnvironmentVariables::InvalidApp,
              AppUpdate::InvalidApp,
-             AppApplyManifest::InvalidManifest,
              AppApplyManifest::NoDefaultDomain,
+             ProcessScale::InvalidProcess,
              ProcessUpdate::InvalidProcess,
              SidecarCreate::InvalidSidecar,
              SidecarUpdate::InvalidSidecar,

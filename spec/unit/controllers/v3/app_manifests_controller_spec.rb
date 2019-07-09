@@ -66,7 +66,7 @@ RSpec.describe AppManifestsController, type: :controller do
         context 'when the app does not exist' do
           let(:request_body) { { 'applications' => [{ 'name' => 'blah', 'instances' => 1, 'memory' => '4MB' }] } }
 
-          it 'returns a 400' do
+          it 'returns a 404' do
             post :apply_manifest, params: { guid: 'no-such-app-guid' }.merge(request_body), as: :yaml
             expect(response.status).to eq(404)
           end
@@ -521,6 +521,28 @@ RSpec.describe AppManifestsController, type: :controller do
             { name: 'has_parameters', parameters: { foo: 'bar' } },
             { name: 'no_parameters' }
           ])
+          expect(action).to eq app_apply_manifest_action
+        end
+      end
+    end
+
+    context 'when the request body contains a process' do
+      let(:request_body) do
+        { 'applications' =>
+          [{ 'name' => 'blah',
+            'processes' => [{ 'type' => 'worker', 'instances' => '2', 'command' => 'echo hi' }]
+          }]
+        }
+      end
+      it 'sets the instances' do
+        post :apply_manifest, params: { guid: app_model.guid }.merge(request_body), as: :yaml
+        expect(response.status).to eq(202)
+        app_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%AppApplyManifest%'"))
+        expect(app_apply_manifest_jobs.count).to eq 1
+
+        expect(VCAP::CloudController::Jobs::AppApplyManifestActionJob).to have_received(:new) do |app_guid, message, action|
+          expect(app_guid).to eq app_model.guid
+          expect(message.processes).to include(instances: '2', command: 'echo hi', type: 'worker')
           expect(action).to eq app_apply_manifest_action
         end
       end

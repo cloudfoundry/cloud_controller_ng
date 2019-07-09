@@ -9,7 +9,6 @@ require 'cloud_controller/random_route_generator'
 
 module VCAP::CloudController
   class AppApplyManifest
-    class InvalidManifest < StandardError; end
     class NoDefaultDomain < StandardError; end
 
     SERVICE_BINDING_TYPE = 'app'.freeze
@@ -23,6 +22,11 @@ module VCAP::CloudController
       app_instance_not_found!(app_guid) unless app
 
       message.manifest_process_update_messages.each do |manifest_process_update_msg|
+        if manifest_process_update_msg.requested_keys == [:type] && manifest_process_update_msg.type == 'web'
+          # ignore trivial messages, most likely from manifest
+          next
+        end
+
         process_type = manifest_process_update_msg.type
         process = find_process(app, process_type) || create_process(app, manifest_process_update_msg, process_type)
 
@@ -56,10 +60,6 @@ module VCAP::CloudController
 
       create_service_bindings(message.manifest_service_bindings_message, app) if message.services.present?
       app
-    rescue ProcessScale::InvalidProcess => e
-      error = InvalidManifest.new(e.message)
-      error.set_backtrace(e.backtrace)
-      raise error
     end
 
     private

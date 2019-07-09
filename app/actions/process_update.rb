@@ -12,7 +12,7 @@ module VCAP::CloudController
 
     def update(process, message, strategy_class)
       if process.web? && process.app.deploying?
-        raise InvalidProcess.new('ProcessUpdateDisabledDuringDeployment')
+        raise InvalidProcess.new('Cannot update this process while a deployment is in flight.')
       end
 
       strategy = strategy_class.new(message, process)

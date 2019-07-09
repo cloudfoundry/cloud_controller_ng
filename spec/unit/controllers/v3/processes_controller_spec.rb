@@ -734,7 +734,7 @@ RSpec.describe ProcessesController, type: :controller do
         put :scale, params: { process_guid: process.guid }.merge(request_body), as: :json
 
         expect(response.status).to eq(422)
-        expect(response.body).to include('ScaleDisabledDuringDeployment')
+        expect(response.body).to include('Cannot scale this process while a deployment is in flight.'), response.body
       end
     end
 
