@@ -19,7 +19,8 @@ module VCAP::CloudController
       broker_response = client.provision(
         service_instance,
         accepts_incomplete: accepts_incomplete,
-        arbitrary_parameters: arbitrary_params
+        arbitrary_parameters: arbitrary_params,
+        maintenance_info: service_instance.service_plan.maintenance_info
       )
 
       service_instance_attributes = broker_response[:instance].merge({ maintenance_info: service_instance.service_plan.maintenance_info })

@@ -189,6 +189,11 @@ module VCAP::Services::ServiceBrokers::V2
         expect(http_client).to have_received(:put).with(path, hash_including(parameters: arbitrary_parameters))
       end
 
+      it 'passes the maintenance_info to the broker' do
+        client.provision(instance, maintenance_info: { 'version': '2.0.0' })
+        expect(http_client).to have_received(:put).with(path, hash_including(maintenance_info: { 'version': '2.0.0' }))
+      end
+
       context 'when the broker returns 204 (No Content)' do
         let(:code) { 204 }
         let(:client) { Client.new(client_attrs) }

@@ -460,6 +460,18 @@ module VCAP::CloudController
           end
         end
 
+        context 'when the plan has maintenance_info' do
+          let(:plan) { ServicePlan.make(:v2, service: service, maintenance_info: { 'version': '2.0' }) }
+
+          it 'should pass along the maintenance_info to the service broker' do
+            create_managed_service_instance(accepts_incomplete: 'false')
+            expect(last_response).to have_status_code(201)
+            expect(a_request(:put, service_broker_url_regex).
+                                        with(body: hash_including(maintenance_info: { 'version': '2.0' }))).
+              to have_been_made.times(1)
+          end
+        end
+
         context 'when the client provides arbitrary parameters' do
           before do
             create_managed_service_instance(

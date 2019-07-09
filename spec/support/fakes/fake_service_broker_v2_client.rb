@@ -34,7 +34,7 @@ class FakeServiceBrokerV2Client
     }
   end
 
-  def provision(_instance, arbitrary_parameters: {}, accepts_incomplete: false)
+  def provision(_instance, arbitrary_parameters: {}, accepts_incomplete: false, maintenance_info: {})
     {
       instance: {
         credentials:   {},

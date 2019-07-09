@@ -19,7 +19,7 @@ module VCAP::Services::ServiceBrokers::V2
       @response_parser.parse_catalog(CATALOG_PATH, response)
     end
 
-    def provision(instance, arbitrary_parameters: {}, accepts_incomplete: false)
+    def provision(instance, arbitrary_parameters: {}, accepts_incomplete: false, maintenance_info: nil)
       path = service_instance_resource_path(instance, accepts_incomplete: accepts_incomplete)
 
       body = {
@@ -31,6 +31,7 @@ module VCAP::Services::ServiceBrokers::V2
       }
 
       body[:parameters] = arbitrary_parameters if arbitrary_parameters.present?
+      body[:maintenance_info] = maintenance_info if maintenance_info.present?
 
       begin
         response = @http_client.put(path, body)
