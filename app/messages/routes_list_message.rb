@@ -19,6 +19,8 @@ module VCAP::CloudController
     validates :organization_guids, allow_nil: true, array: true
     validates :domain_guids, allow_nil: true, array: true
 
+    attr_reader :app_guid
+
     def self.from_params(params)
       message = super(params, %w(hosts space_guids organization_guids domain_guids paths))
       if message.requested?(:hosts) && message.hosts.empty?
@@ -28,6 +30,11 @@ module VCAP::CloudController
         message.paths.push('')
       end
       message
+    end
+
+    def for_app_guid(app_guid)
+      @app_guid = app_guid
+      self
     end
   end
 end

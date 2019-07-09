@@ -10,6 +10,7 @@ require 'presenters/v3/paginated_list_presenter'
 require 'actions/route_create'
 require 'actions/route_delete'
 require 'actions/route_update'
+require 'fetchers/app_fetcher'
 require 'fetchers/route_fetcher'
 
 class RoutesController < ApplicationController
@@ -156,6 +157,23 @@ class RoutesController < ApplicationController
     unprocessable!(e.message)
   end
 
+  def index_by_app
+    message = RoutesListMessage.from_params(query_params).for_app_guid(hashed_params['guid'])
+    invalid_param!(message.errors.full_messages) unless message.valid?
+
+    app, space, org = AppFetcher.new.fetch(hashed_params['guid'])
+    app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
+
+    dataset = RouteFetcher.fetch(message, permission_queryer.readable_route_guids)
+
+    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
+      presenter: Presenters::V3::RoutePresenter,
+      paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
+      path: "/v3/apps/#{app.guid}/routes",
+      message: message,
+    )
+  end
+
   private
 
   def route_not_found!
@@ -190,5 +208,9 @@ class RoutesController < ApplicationController
     if apps_hash.values.any? { |app| app.space != route.space }
       unprocessable!('Routes cannot be mapped to destinations in different spaces.')
     end
+  end
+
+  def app_not_found!
+    resource_not_found!(:app)
   end
 end

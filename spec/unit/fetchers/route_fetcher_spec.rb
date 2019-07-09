@@ -4,7 +4,7 @@ require 'fetchers/route_fetcher'
 
 module VCAP::CloudController
   RSpec.describe RouteFetcher do
-    describe '#fetch' do
+    describe '.fetch' do
       before do
         Route.dataset.destroy
       end
@@ -162,6 +162,18 @@ module VCAP::CloudController
             expect(results.length).to eq(1)
             expect(results[0]).to eq(route3)
           end
+        end
+      end
+
+      context 'when fetching routes for an app' do
+        let(:app_model) { AppModel.make(space: space1) }
+        let!(:destination1) { RouteMappingModel.make(app: app_model, route: route1, process_type: 'web') }
+        let!(:destination2) { RouteMappingModel.make(app: app_model, route: route2, process_type: 'worker') }
+        let(:message) { RoutesListMessage.from_params({}).for_app_guid(app_model.guid) }
+
+        it 'only returns routes that are mapped to the app' do
+          results = RouteFetcher.fetch(message, Route.all.map(&:guid)).all
+          expect(results).to contain_exactly(route1, route2)
         end
       end
     end

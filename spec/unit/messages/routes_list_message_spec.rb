@@ -15,6 +15,14 @@ module VCAP::CloudController
         expect(message.label_selector).to eq('animal in (cat,dog)')
       end
     end
+
+    describe '#for_app_guid' do
+      it 'sets app_guid on message' do
+        message = RoutesListMessage.from_params({}).for_app_guid('some-app-guid')
+        expect(message.app_guid).to eq('some-app-guid')
+      end
+    end
+
     describe 'fields' do
       it 'accepts an empty set' do
         message = RoutesListMessage.from_params({})
@@ -76,10 +84,10 @@ module VCAP::CloudController
       end
 
       it 'does not accept any other params' do
-        message = RoutesListMessage.from_params({ 'foobar' => 'pants' })
+        message = RoutesListMessage.from_params({ 'app_guid' => 'pants' })
 
         expect(message).not_to be_valid
-        expect(message.errors[:base]).to include("Unknown query parameter(s): 'foobar'")
+        expect(message.errors[:base]).to include("Unknown query parameter(s): 'app_guid'")
       end
     end
   end

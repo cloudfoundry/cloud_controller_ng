@@ -32,8 +32,8 @@ RSpec.shared_examples 'permissions for list endpoint' do |roles|
           expect(parsed_response['pagination']).to match_json_response({
             total_results: an_instance_of(Integer),
             total_pages: an_instance_of(Integer),
-            first: { href: /#{link_prefix}.+page=\d+&per_page=\d+/ },
-            last: { href: /#{link_prefix}.+page=\d+&per_page=\d+/ },
+            first: { href: /#{link_prefix}#{last_request.path}.+page=\d+&per_page=\d+/ },
+            last: { href: /#{link_prefix}#{last_request.path}.+page=\d+&per_page=\d+/ },
             next: anything,
             previous: anything
           })

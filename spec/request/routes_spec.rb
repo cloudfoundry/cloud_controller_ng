@@ -1698,4 +1698,88 @@ RSpec.describe 'Routes Request' do
       end
     end
   end
+
+  describe 'GET /v3/apps/:app_guid/routes' do
+    let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
+    let(:route1) { VCAP::CloudController::Route.make(space: space) }
+    let(:route2) { VCAP::CloudController::Route.make(space: space) }
+    let!(:route3) { VCAP::CloudController::Route.make(space: space) }
+    let!(:route_mapping1) { VCAP::CloudController::RouteMappingModel.make(app: app_model, route: route1, process_type: 'web') }
+    let!(:route_mapping2) { VCAP::CloudController::RouteMappingModel.make(app: app_model, route: route2, process_type: 'admin') }
+    let(:api_call) { lambda { |user_headers| get "/v3/apps/#{app_model.guid}/routes", nil, user_headers } }
+
+    let(:route1_json) do
+      {
+        guid: route1.guid,
+        host: route1.host,
+        path: route1.path,
+        url: "#{route1.host}.#{route1.domain.name}#{route1.path}",
+        created_at: iso8601,
+        updated_at: iso8601,
+        relationships: {
+          space: {
+            data: { guid: route1.space.guid }
+          },
+          domain: {
+            data: { guid: route1.domain.guid }
+          }
+        },
+        metadata: {
+          labels: {},
+          annotations: {}
+        },
+        links: {
+          self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{route1.guid}) },
+          space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{route1.space.guid}) },
+          destinations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{route1.guid}\/destinations) },
+          domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{route1.domain.guid}) }
+        }
+      }
+    end
+
+    let(:route2_json) do
+      {
+        guid: route2.guid,
+        host: route2.host,
+        path: route2.path,
+        url: "#{route2.host}.#{route2.domain.name}#{route2.path}",
+        created_at: iso8601,
+        updated_at: iso8601,
+        relationships: {
+          space: {
+            data: { guid: route2.space.guid }
+          },
+          domain: {
+            data: { guid: route2.domain.guid }
+          }
+        },
+        metadata: {
+          labels: {},
+          annotations: {}
+        },
+        links: {
+          self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{route2.guid}) },
+          space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{route2.space.guid}) },
+          destinations: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/routes\/#{route2.guid}\/destinations) },
+          domain: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/domains\/#{route2.domain.guid}) }
+        }
+      }
+    end
+
+    context 'when the user is a member in the app space' do
+      let(:expected_codes_and_responses) do
+        h = Hash.new(
+          code: 200,
+          response_objects: [route1_json, route2_json]
+        )
+
+        h['org_auditor'] = { code: 404 }
+        h['org_billing_manager'] = { code: 404 }
+        h['no_role'] = { code: 404 }
+        h
+      end
+
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+    end
+  end
 end

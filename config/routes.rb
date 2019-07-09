@@ -152,6 +152,7 @@ Rails.application.routes.draw do
   post '/routes', to: 'routes#create'
   patch '/routes/:guid', to: 'routes#update'
   delete '/routes/:guid', to: 'routes#destroy'
+  get '/apps/:guid/routes', to: 'routes#index_by_app'
 
   # destinations
   get '/routes/:guid/destinations', to: 'routes#index_destinations'
