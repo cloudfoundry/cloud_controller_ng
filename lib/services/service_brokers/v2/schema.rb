@@ -16,7 +16,7 @@ module VCAP::Services::ServiceBrokers::V2
       @schema = schema
     end
 
-    def to_json
+    def to_json(*_args)
       @schema.to_json
     end
 

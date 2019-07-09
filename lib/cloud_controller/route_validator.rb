@@ -102,8 +102,8 @@ module VCAP::CloudController
     def port_taken?
       domains = Route.dataset.select_all(Route.table_name).
                 join(Domain.table_name, id: :domain_id).
-                where(:"#{Domain.table_name}__router_group_guid" => route.domain.router_group_guid,
-                      :"#{Route.table_name}__port" => route.port)
+                where("#{Domain.table_name}__router_group_guid": route.domain.router_group_guid,
+                      "#{Route.table_name}__port": route.port)
 
       domains.count > 0
     end

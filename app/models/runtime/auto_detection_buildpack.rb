@@ -26,7 +26,7 @@ module VCAP::CloudController
       'Auto Detection Buildpack'
     end
 
-    def to_json
+    def to_json(*_args)
       %(null)
     end
 

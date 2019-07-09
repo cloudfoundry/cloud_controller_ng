@@ -423,7 +423,6 @@ RSpec.describe 'Service Broker' do
               "#{test[:type]}.#{schema_action}": { (test[:type]).to_s => { schema_action => true } },
               "#{test[:type]}.#{schema_action}.parameters": { (test[:type]).to_s => { schema_action => { 'parameters' => true } } },
             }.each do |path, schema|
-
               context "operator receives an error about #{path} #{schema}" do
                 before do
                   stub_catalog_fetch(200, default_catalog(plan_schemas: schema))

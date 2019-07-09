@@ -83,7 +83,6 @@ module VCAP::CloudController
           it 'unshares without deleting the binding' do
             expect { service_instance_unshare.unshare(service_instance, target_space, user_audit_info) }.
               to raise_error(VCAP::CloudController::ServiceInstanceUnshare::Error) do |err|
-
               expect(err.message).to include("\n\tThe binding between an application and service instance #{service_instance.name}" \
                                              " in space #{target_space.name} is being deleted asynchronously.")
             end

@@ -6,7 +6,7 @@ module VCAP::CloudController
       url
     end
 
-    def to_json
+    def to_json(*_args)
       MultiJson.dump(url)
     end
 
