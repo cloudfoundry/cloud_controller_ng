@@ -525,11 +525,7 @@ RSpec.describe 'App Manifests' do
         expect(deployment.state).to eq(VCAP::CloudController::DeploymentModel::DEPLOYING_STATE)
         post "/v3/apps/#{app_model.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
         expect(last_response.status).to eq(202)
-
-        Delayed::Worker.new.work_off
       end
-
-      let(:job) { VCAP::CloudController::PollableJobModel.last }
 
       context 'when the manifest attempts to scale a web process' do
         let(:yml_manifest) do
@@ -541,6 +537,10 @@ RSpec.describe 'App Manifests' do
         end
 
         it 'fails' do
+          Delayed::Worker.new.work_off
+          job = VCAP::CloudController::PollableJobModel.last
+
+          expect(last_response.headers['Location']).to match(%r(/v3/jobs/#{job.guid}))
           expect(job.state).to eq('FAILED')
           api_errors = YAML.safe_load(job.cf_api_error)['errors']
           expect(api_errors.size).to eq(1)
@@ -560,6 +560,10 @@ RSpec.describe 'App Manifests' do
         end
 
         it 'fails' do
+          Delayed::Worker.new.work_off
+          job = VCAP::CloudController::PollableJobModel.last
+
+          expect(last_response.headers['Location']).to match(%r(/v3/jobs/#{job.guid}))
           expect(job.state).to eq('FAILED')
           api_errors = YAML.safe_load(job.cf_api_error)['errors']
           expect(api_errors.size).to eq(1)
@@ -579,6 +583,10 @@ RSpec.describe 'App Manifests' do
         end
 
         it 'succeeds' do
+          Delayed::Worker.new.work_off
+          job = VCAP::CloudController::PollableJobModel.last
+
+          expect(last_response.headers['Location']).to match(%r(/v3/jobs/#{job.guid}))
           expect(job.state).to eq('COMPLETE')
         end
       end
