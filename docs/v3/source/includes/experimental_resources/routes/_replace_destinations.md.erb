@@ -10,14 +10,20 @@ curl "https://api.example.org/v3/routes/[guid]/destinations" \
   -H "Authorization: bearer [token]"
   -d '{
     "destinations": [
-      { "app": { "guid": "1cb006ee-fb05-47e1-b541-c34179ddc446" } },
+      {
+        "app": {
+          "guid": "1cb006ee-fb05-47e1-b541-c34179ddc446"
+        },
+        "weight": 61
+      },
       {
         "app": {
           "guid": "01856e12-8ee8-11e9-98a5-bb397dbc818f",
           "process": {
             "type": "api"
           }
-        }
+        },
+        "weight": 39
       }
     ]
   }'
@@ -31,7 +37,35 @@ Example Response
 HTTP/1.1 200 OK
 Content-Type: application/json
 
-<%= yield_content :list_of_route_destinations %>
+{
+  "destinations": [
+    {
+      "guid": "89323d4e-2e84-43e7-83e9-adbf50a20c0e",
+      "app": {
+        "guid": "1cb006ee-fb05-47e1-b541-c34179ddc446"
+      },
+      "weight": 61
+    },
+    {
+      "guid": "fbef10a2-8ee7-11e9-aa2d-abeeaf7b83c5",
+      "app": {
+        "guid": "01856e12-8ee8-11e9-98a5-bb397dbc818f",
+        "process": {
+          "type": "api"
+        }
+      },
+      "weight": 39
+    }
+  ],
+  "links": {
+    "self": {
+      "href": "https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31/destinations"
+    },
+    "route": {
+      "href": "https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31"
+    }
+  }
+}
 ```
 
 Replaces destinations in a route.

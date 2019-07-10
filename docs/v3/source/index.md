@@ -223,6 +223,7 @@ includes:
   - experimental_resources/route_mappings/delete
   - experimental_resources/routes/header
   - experimental_resources/routes/object
+  - experimental_resources/routes/destination_object
   - experimental_resources/routes/create
   - experimental_resources/routes/get
   - experimental_resources/routes/list
