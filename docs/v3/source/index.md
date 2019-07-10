@@ -226,6 +226,7 @@ includes:
   - experimental_resources/routes/create
   - experimental_resources/routes/get
   - experimental_resources/routes/list
+  - experimental_resources/routes/list_for_app
   - experimental_resources/routes/update
   - experimental_resources/routes/delete
   - experimental_resources/routes/check_route_reservations

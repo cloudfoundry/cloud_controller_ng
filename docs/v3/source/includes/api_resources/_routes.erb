@@ -43,19 +43,19 @@
   { "matching_route": true }
 <% end %>
 
-<% content_for :paginated_list_of_routes do %>
+<% content_for :paginated_list_of_routes do |path| %>
   {
     "pagination": {
       "total_results": 3,
       "total_pages": 2,
       "first": {
-        "href": "https://api.example.org/v3/routes?page=1&per_page=2"
+        "href": "https://api.example.org<%= path %>?page=1&per_page=2"
       },
       "last": {
-        "href": "https://api.example.org/v3/routes?page=2&per_page=2"
+        "href": "https://api.example.org<%= path %>?page=2&per_page=2"
       },
       "next": {
-        "href": "https://api.example.org/v3/routes?page=2&per_page=2"
+        "href": "https://api.example.org<%= path %>?page=2&per_page=2"
       },
       "previous": null
     },
