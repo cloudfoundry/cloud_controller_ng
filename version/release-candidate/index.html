@@ -141,6 +141,7 @@
 
 
 
+
           
 
           
@@ -13470,9 +13471,11 @@ excluded in the response based on the user&rsquo;s role.</p>
   <span class="pi">-</span> <span class="s">name</span><span class="pi">:</span> <span class="s">authenticator</span>
     <span class="s">process_types</span><span class="pi">:</span> <span class="pi">[</span> <span class="s1">'</span><span class="s">web'</span><span class="pi">,</span> <span class="s1">'</span><span class="s">worker'</span> <span class="pi">]</span>
     <span class="s">command</span><span class="pi">:</span> <span class="s">bundle exec run-authenticator</span>
+    <span class="s">memory</span><span class="pi">:</span> <span class="s">800M</span>
   <span class="pi">-</span> <span class="s">name</span><span class="pi">:</span> <span class="s">upcaser</span>
     <span class="s">process_types</span><span class="pi">:</span> <span class="pi">[</span> <span class="s1">'</span><span class="s">worker'</span> <span class="pi">]</span>
     <span class="s">command</span><span class="pi">:</span> <span class="s">./tr-server</span>
+    <span class="s">memory</span><span class="pi">:</span> <span class="s">900M</span>
 
 </code></pre>
 
@@ -13630,6 +13633,10 @@ take either an array of service instance name strings or an array of the followi
 <tr>
 <td><strong>process_types</strong></td>
 <td>List of processes to associate sidecar with.</td>
+</tr>
+<tr>
+<td><strong>memory</strong></td>
+<td>Memory in mb that the sidecar will be allocated.</td>
 </tr>
 </tbody></table>
 
@@ -15936,6 +15943,50 @@ Deployed revisions are revisions that are linked to started processes in the app
 </tr>
 </tbody></table>
 
+          <h3 id="the-destination-object">The destination object</h3>
+<pre class="highlight plaintext"><code>Example Destination object
+</code></pre>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"89323d4e-2e84-43e7-83e9-adbf50a20c0e"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1cb006ee-fb05-47e1-b541-c34179ddc446"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"process"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"web"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+
+</span></code></pre>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>guid</strong></td>
+<td><em>uuid</em></td>
+<td>Unique identifier for the destination.</td>
+</tr>
+<tr>
+<td><strong>app.guid</strong></td>
+<td><em>uuid</em></td>
+<td>Unique identifier for the app to which the route is mapped.</td>
+</tr>
+<tr>
+<td><strong>app.process.type</strong></td>
+<td><em>string</em></td>
+<td>Process type. A unique identifier for processes belonging to an app.</td>
+</tr>
+<tr>
+<td><strong>weight</strong> <em>(experimental)</em></td>
+<td><em>integer</em></td>
+<td>Percentage of traffic which will be routed to this destination. <em>This feature is only available via the BETA Service Mesh routing plane</em>.</td>
+</tr>
+</tbody></table>
+
           <h3 id="create-a-route">Create a route</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
@@ -16321,6 +16372,169 @@ Deployed revisions are revisions that are linked to started processes in the app
 </thead><tbody>
 <tr>
 <td>All Roles</td>
+</tr>
+</tbody></table>
+
+          <h3 id="list-routes-for-an-app">List routes for an app</h3>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/routes"</span> <span class="se">\</span>
+  -X GET <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
+
+<span class="w">  </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"pagination"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"total_results"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"total_pages"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"first"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/routes?page=1&amp;per_page=2"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"last"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/routes?page=2&amp;per_page=2"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"next"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/routes?page=2&amp;per_page=2"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"previous"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"resources"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cbad697f-cac1-48f4-9017-ac08f39dfb31"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"host"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a-hostname"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/some_path"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a-hostname.a-domain.com/some_path"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+          </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"885a8cb3-c07b-4856-b448-eeb10bf36236"</span><span class="w">
+            </span><span class="p">}</span><span class="w">
+          </span><span class="p">},</span><span class="w">
+          </span><span class="nt">"domain"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"0b5f3633-194c-42d2-9408-972366617e0e"</span><span class="w">
+            </span><span class="p">}</span><span class="w">
+          </span><span class="p">}</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31"</span><span class="w">
+          </span><span class="p">},</span><span class="w">
+          </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/spaces/885a8cb3-c07b-4856-b448-eeb10bf36236"</span><span class="w">
+          </span><span class="p">},</span><span class="w">
+          </span><span class="nt">"domain"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/domains/0b5f3633-194c-42d2-9408-972366617e0e"</span><span class="w">
+          </span><span class="p">},</span><span class="w">
+          </span><span class="nt">"destinations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31/destinations"</span><span class="w">
+          </span><span class="p">}</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">]</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+
+</span></code></pre>
+
+<p>Retrieve all routes the user has access to.</p>
+
+<h4 id="definition">Definition</h4>
+
+<p><code class="prettyprint">GET /v3/apps/:app_guid/routes</code></p>
+
+<h4 id="query-parameters">Query Parameters</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>hosts</strong></td>
+<td><em>list of strings</em></td>
+<td>Comma-delimited list of hostnames to filter by.</td>
+</tr>
+<tr>
+<td><strong>paths</strong></td>
+<td><em>list of strings</em></td>
+<td>Comma-delimited list of paths to filter by (e.g. <code class="prettyprint">/path1,/path2</code>).</td>
+</tr>
+<tr>
+<td><strong>domain_guids</strong></td>
+<td><em>list of strings</em></td>
+<td>Comma-delimited list of domain guids to filter by.</td>
+</tr>
+<tr>
+<td><strong>space_guids</strong></td>
+<td><em>list of strings</em></td>
+<td>Comma-delimited list of space guids to filter by.</td>
+</tr>
+<tr>
+<td><strong>organization_guids</strong></td>
+<td><em>list of strings</em></td>
+<td>Comma-delimited list of organization guids to filter by.</td>
+</tr>
+<tr>
+<td><strong>page</strong></td>
+<td><em>integer</em></td>
+<td>Page to display. Valid values are integers &gt;= 1.</td>
+</tr>
+<tr>
+<td><strong>per_page</strong></td>
+<td><em>integer</em></td>
+<td>Number of results per page. <br>Valid values are 1 through 5000.</td>
+</tr>
+<tr>
+<td><strong>order_by</strong></td>
+<td><em>string</em></td>
+<td>Value to sort by. Defaults to ascending. Prepend with <code class="prettyprint">-</code> to sort descending. <br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code>.</td>
+</tr>
+<tr>
+<td><strong>label_selector</strong></td>
+<td><em>string</em></td>
+<td><strong>Experimental</strong> - A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements.</td>
+</tr>
+</tbody></table>
+
+<h4 id="permitted-roles">Permitted Roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Admin</td>
+</tr>
+<tr>
+<td>Admin Read-Only</td>
+</tr>
+<tr>
+<td>Global Auditor</td>
+</tr>
+<tr>
+<td>Org Manager</td>
+</tr>
+<tr>
+<td>Space Auditor</td>
+</tr>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Space Manager</td>
 </tr>
 </tbody></table>
 
@@ -16738,14 +16952,20 @@ belongs to a space the user does not belong to.</p>
   -H <span class="s2">"Authorization: bearer [token]"</span>
   -d <span class="s1">'{
     "destinations": [
-      { "app": { "guid": "1cb006ee-fb05-47e1-b541-c34179ddc446" } },
+      {
+        "app": {
+          "guid": "1cb006ee-fb05-47e1-b541-c34179ddc446"
+        },
+        "weight": 61
+      },
       {
         "app": {
           "guid": "01856e12-8ee8-11e9-98a5-bb397dbc818f",
           "process": {
             "type": "api"
           }
-        }
+        },
+        "weight": 39
       }
     ]
   }'</span>
@@ -16755,37 +16975,35 @@ belongs to a space the user does not belong to.</p>
 <pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
 <span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
 
-<span class="w">  </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"destinations"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-      </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"89323d4e-2e84-43e7-83e9-adbf50a20c0e"</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1cb006ee-fb05-47e1-b541-c34179ddc446"</span><span class="p">,</span><span class="w">
-          </span><span class="nt">"process"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-            </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"web"</span><span class="w">
-          </span><span class="p">}</span><span class="w">
+<span class="p">{</span><span class="w">
+  </span><span class="nt">"destinations"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"89323d4e-2e84-43e7-83e9-adbf50a20c0e"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1cb006ee-fb05-47e1-b541-c34179ddc446"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="mi">61</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"fbef10a2-8ee7-11e9-aa2d-abeeaf7b83c5"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"01856e12-8ee8-11e9-98a5-bb397dbc818f"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"process"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"api"</span><span class="w">
         </span><span class="p">}</span><span class="w">
       </span><span class="p">},</span><span class="w">
-      </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"fbef10a2-8ee7-11e9-aa2d-abeeaf7b83c5"</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"01856e12-8ee8-11e9-98a5-bb397dbc818f"</span><span class="p">,</span><span class="w">
-          </span><span class="nt">"process"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-            </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"api"</span><span class="w">
-          </span><span class="p">}</span><span class="w">
-        </span><span class="p">}</span><span class="w">
-      </span><span class="p">}</span><span class="w">
-    </span><span class="p">],</span><span class="w">
-    </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31/destinations"</span><span class="w">
-      </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"route"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31"</span><span class="w">
-      </span><span class="p">}</span><span class="w">
+      </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="mi">39</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">],</span><span class="w">
+  </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31/destinations"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"route"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">}</span><span class="w">
-
+</span><span class="p">}</span><span class="w">
 </span></code></pre>
 
 <p>Replaces destinations in a route.</p>
@@ -18478,9 +18696,12 @@ belongs to a space the user does not belong to.</p>
   <span class="pi">-</span> <span class="s">name</span><span class="pi">:</span> <span class="s">authenticator</span>
     <span class="s">process_types</span><span class="pi">:</span> <span class="pi">[</span> <span class="s1">'</span><span class="s">web'</span><span class="pi">,</span> <span class="s1">'</span><span class="s">worker'</span> <span class="pi">]</span>
     <span class="s">command</span><span class="pi">:</span> <span class="s">bundle exec run-authenticator</span>
+    <span class="s">memory</span><span class="pi">:</span> <span class="s">800M</span>
+
   <span class="pi">-</span> <span class="s">name</span><span class="pi">:</span> <span class="s">upcaser</span>
     <span class="s">process_types</span><span class="pi">:</span> <span class="pi">[</span> <span class="s1">'</span><span class="s">worker'</span> <span class="pi">]</span>
     <span class="s">command</span><span class="pi">:</span> <span class="s">./tr-server</span>
+    <span class="s">memory</span><span class="pi">:</span> <span class="s">2G</span>
 </code></pre>
 
 <h4 id="space-level-configuration">Space-level configuration</h4>
@@ -18655,6 +18876,10 @@ take either an array of service instance name strings or an array of the followi
 <tr>
 <td><strong>process_types</strong></td>
 <td>List of processes to associate sidecar with.</td>
+</tr>
+<tr>
+<td><strong>memory</strong></td>
+<td>Memory in mb that the sidecar will be allocated.</td>
 </tr>
 </tbody></table>
 
