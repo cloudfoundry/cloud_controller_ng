@@ -18,9 +18,9 @@ module VCAP::CloudController
 
     def initialize(params)
       params = params ? params.deep_symbolize_keys : {}
-      @requested_keys   = params.keys
+      @requested_keys = params.keys
       disallowed_params = params.slice!(*allowed_keys)
-      @extra_keys       = disallowed_params.keys
+      @extra_keys = disallowed_params.keys
       super(params)
     end
 
@@ -57,12 +57,15 @@ module VCAP::CloudController
     end
 
     def self.to_array!(params, key)
-      if params[key]
+      return if params[key].nil?
 
-        params[key] = params[key].to_s.split(/,\s*/).map do |val|
-          Addressable::URI.unescape(val) unless val.nil?
-        end
-      end
+      params[key] = if params[key] == ''
+                      ['']
+                    else
+                      params[key].to_s.split(/,\s*/, -1).map do |val|
+                        Addressable::URI.unescape(val)
+                      end
+                    end
     end
 
     class NoAdditionalKeysValidator < ActiveModel::Validator

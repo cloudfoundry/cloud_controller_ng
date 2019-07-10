@@ -108,13 +108,14 @@ module VCAP::CloudController
       let(:escaped_comma) { '%2C' }
       let(:params) do
         {
-            array_field:                     'state1,state2',
-            array_with_comma_in_value_field: "st ate1,sta#{escaped_comma}te2",
-            array_with_plus:                  'state+state2',
-            array_with_nil_field:            'state1,state2,',
-            num_field:                       1.2,
-            string_field:                    'stringval&',
-            nil_field:                       nil
+          array_field: 'state1,state2',
+          array_with_comma_in_value_field: "st ate1,sta#{escaped_comma}te2",
+          array_with_plus: 'state+state2',
+          array_with_empty_field: 'state1,state2,',
+          num_field: 1.2,
+          string_field: 'stringval&',
+          nil_field: nil,
+          empty_field: '',
         }
       end
 
@@ -131,7 +132,7 @@ module VCAP::CloudController
       end
 
       it 'handles nil array values' do
-        expect(BaseMessage.to_array!(params, :array_with_nil_field)).to eq(['state1', 'state2'])
+        expect(BaseMessage.to_array!(params, :array_with_empty_field)).to eq(['state1', 'state2', ''])
       end
 
       it 'handles single numeric values' do
@@ -144,6 +145,10 @@ module VCAP::CloudController
 
       it 'handles single nil values' do
         expect(BaseMessage.to_array!(params, :nil_field)).to eq(nil)
+      end
+
+      it 'handles empty values' do
+        expect(BaseMessage.to_array!(params, :empty_field)).to eq([''])
       end
     end
 
