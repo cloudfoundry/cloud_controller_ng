@@ -1,0 +1,32 @@
+## Filters
+
+Endpoints that return lists of resources support filtering down the returned resources using query parameters.
+
+#### Examples
+
+##### **Single value request**
+`GET /v3/apps?names=the_name`
+
+This will return all apps with name `the_name`.
+
+##### **Multiple value request**
+`GET /v3/apps?names=first_name,second_name`
+
+This will return all apps with name `the_name` OR `second_name`.
+
+##### **Combined filters**
+`GET /v3/apps?names=the_name&state=STARTED`
+
+This will return all apps with name `the_name` AND state `STARTED`.
+
+##### **Empty filters**
+
+An empty filter (`/v3/resources?fields=`) can mean either empty string (`""`) or `NULL`, depending on the resource type.
+
+`GET /v3/buildpacks?stacks=`
+
+This will return all buildpacks with stack `NULL`.
+
+`GET /v3/routes?paths=pepper,,tabi`
+
+This will return all routes with path `"pepper"`, `""` OR `"tabi"`.

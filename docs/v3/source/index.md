@@ -39,6 +39,7 @@ includes:
   - concepts/authentication
   - concepts/authorization
   - concepts/errors
+  - concepts/filters
   - concepts/includes
   - concepts/lifecycles
   - concepts/metadata
