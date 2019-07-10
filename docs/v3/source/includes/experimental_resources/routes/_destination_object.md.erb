@@ -11,6 +11,6 @@ Example Destination object
 | Name                        | Type                     | Description                                                                                                                               |
 | --------------              | ------------------------ | ------------------------------------------------------                                                                                    |
 | **guid**                    | _uuid_                   | Unique identifier for the destination.                                                                                                    |
-| **app.guid**                | _uuid_                   | Unique identifier for the app to which the route is mapped.                                                                               |
-| **app.process.type**        | _string_                 | Process type. A unique identifier for processes belonging to an app.                                                                      |
+| **app.guid**                | _uuid_                   | Unique identifier for the app to route traffic to.                                                                               |
+| **app.process.type**        | _string_                 | Type of the process belonging to the app to route traffic to.                                                                      |
 | **weight** _(experimental)_ | _integer_                | Percentage of traffic which will be routed to this destination. _This feature is only available via the BETA Service Mesh routing plane_. |
