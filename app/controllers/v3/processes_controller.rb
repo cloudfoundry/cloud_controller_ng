@@ -76,7 +76,7 @@ class ProcessesController < ApplicationController
     ProcessScale.new(user_audit_info, @process, message).scale
 
     render status: :accepted, json: Presenters::V3::ProcessPresenter.new(@process)
-  rescue ProcessScale::InvalidProcess => e
+  rescue ProcessScale::SidecarMemoryLessThanProcessMemory, ProcessScale::InvalidProcess => e
     unprocessable!(e.message)
   end
 

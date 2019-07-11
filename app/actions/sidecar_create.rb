@@ -38,14 +38,9 @@ module VCAP::CloudController
           app_guid: app_guid,
           type: message.process_types,
         )
+        policy = SidecarMemoryLessThanProcessMemoryPolicy.new(processes, message.memory_in_mb)
 
-        processes.each do |process|
-          total_sidecar_memory = process.sidecars.sum(&:memory) + message.memory_in_mb
-
-          if total_sidecar_memory >= process.memory
-            raise InvalidSidecar.new("The memory allocation defined is too large to run with the dependent \"#{process.type}\" process")
-          end
-        end
+        raise InvalidSidecar.new(policy.message) if !policy.valid?
       end
     end
   end

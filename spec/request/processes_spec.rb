@@ -685,6 +685,37 @@ RSpec.describe 'Processes' do
         }
       })
     end
+
+    it 'ensures that the memory allocation is greater than existing sidecar memory allocation' do
+      process = VCAP::CloudController::ProcessModel.make(
+        :process,
+        app:        app_model,
+        type:       'web',
+        instances:  2,
+        memory:     1024,
+        disk_quota: 1024,
+        command:    'rackup',
+      )
+
+      sidecar = VCAP::CloudController::SidecarModel.make(
+        name: 'my-sidecar',
+        app: app_model,
+        memory: 256
+      )
+      VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar, type: process.type, app_guid: app_model.guid)
+
+      scale_request = {
+        memory_in_mb: 256,
+      }
+
+      post "/v3/processes/#{process.guid}/actions/scale", scale_request.to_json, developer_headers
+
+      expect(last_response.status).to eq(422)
+      expect(parsed_response['errors'][0]['detail']).to eq 'The requested memory allocation is not large enough to run all of your sidecar processes'
+
+      process.reload
+      expect(process.memory).to eq(1024)
+    end
   end
 
   describe 'DELETE /v3/processes/:guid/instances/:index' do

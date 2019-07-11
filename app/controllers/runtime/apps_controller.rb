@@ -117,6 +117,8 @@ module VCAP::CloudController
         CloudController::Errors::ApiError.new_from_details('AppMemoryInvalid')
       elsif memory_errors.include?(:instance_memory_limit_exceeded)
         CloudController::Errors::ApiError.new_from_details('QuotaInstanceMemoryLimitExceeded')
+      elsif memory_errors.include?(:process_memory_insufficient_for_sidecars)
+        CloudController::Errors::ApiError.new_from_details('AppMemoryInsufficientForSidecars')
       end
     end
 

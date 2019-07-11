@@ -1,6 +1,7 @@
 module VCAP::CloudController
   class ProcessScale
     class InvalidProcess < StandardError; end
+    class SidecarMemoryLessThanProcessMemory < StandardError; end
 
     def initialize(user_audit_info, process, message, manifest_triggered: false)
       @user_audit_info = user_audit_info
@@ -27,6 +28,9 @@ module VCAP::CloudController
         record_audit_event
       end
     rescue Sequel::ValidationFailed => e
+      if @process.errors.on(:memory)&.include?(:process_memory_insufficient_for_sidecars)
+        raise SidecarMemoryLessThanProcessMemory.new("The requested memory allocation is not large enough to run all of your sidecar processes")
+      end
       raise InvalidProcess.new(e.message)
     end
 

@@ -37,6 +37,34 @@ module VCAP::CloudController
             subject.create(app)
           }.not_to change { existing_process.refresh.command }
         end
+
+        context 'when the sidecar memory validation fails' do
+          let!(:sidecar) { SidecarModel.make(app: app, name: 'my_sidecar', command: 'athenz', memory: 2000) }
+          let!(:sidecar_process_type) { SidecarProcessTypeModel.make(sidecar: sidecar, type: 'other') }
+
+          it 'translates the validation failure to a luxurious error' do
+            expect {
+              subject.create(app)
+            }.to raise_error(
+              ProcessCreateFromAppDroplet::SidecarMemoryLessThanProcessMemory,
+              /The sidecar memory allocation defined is too large to run with the dependent "other" process/
+            )
+          end
+        end
+
+        context 'when non-sidecar validation fails' do
+          before do
+            errors = Sequel::Model::Errors.new
+            errors.add(:something_important, 'is busted')
+            allow_any_instance_of(VCAP::CloudController::ProcessCreate).to receive(:create).and_raise(Sequel::ValidationFailed.new(errors))
+          end
+
+          it 'raises the validation error' do
+            expect {
+              subject.create(app)
+            }.to raise_error(Sequel::ValidationFailed)
+          end
+        end
       end
 
       context 'when the app does not have droplet' do

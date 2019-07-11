@@ -247,13 +247,13 @@ RSpec.describe 'Sidecars' do
     end
 
     describe 'validates sidecar memory' do
-      let!(:process) { VCAP::CloudController::ProcessModel.make(app_guid: app_model.guid, memory: 100, type: 'other_worker') }
+      let!(:process) { VCAP::CloudController::ProcessModel.make(app_guid: app_model.guid, memory: 500, type: 'other_worker') }
       let(:sidecar_params) {
         {
           name: 'sidecar_one',
           command: 'bundle exec rackup',
           process_types: ['web', 'other_worker'],
-          memory_in_mb: 300
+          memory_in_mb: 600
         }
       }
 

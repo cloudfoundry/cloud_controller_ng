@@ -699,6 +699,34 @@ RSpec.describe 'Apps' do
       )
     end
 
+    context 'when process memory is being decreased and the new memory allocation is lower than memory of associated sidecars' do
+      let!(:process) {
+        VCAP::CloudController::ProcessModelFactory.make(
+          space:            space,
+          name:             'mario',
+          environment_json: { 'RAILS_ENV' => 'staging' },
+          command:          'hello_world',
+          memory:           400
+        )
+      }
+      let(:sidecar1) { VCAP::CloudController::SidecarModel.make(app: process.app, memory: 20) }
+      before do
+        VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar1, type: process.type)
+      end
+
+      it 'throws an error' do
+        update_params = MultiJson.dump({
+          memory: 10
+        })
+
+        put "/v2/apps/#{process.guid}", update_params, headers_for(user)
+
+        expect(last_response.status).to eq(400)
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response['error_code']).to eq 'CF-AppMemoryInsufficientForSidecars'
+      end
+    end
+
     describe 'docker apps' do
       let(:app_model) { VCAP::CloudController::AppModel.make(:docker, name: 'mario', space: space, environment_variables: { 'RAILS_ENV' => 'staging' }) }
       let!(:process) {
