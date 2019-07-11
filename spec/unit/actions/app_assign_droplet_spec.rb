@@ -10,7 +10,7 @@ module VCAP::CloudController
     let(:user) { double(:user, guid: '1337') }
     let(:user_email) { 'cool_dude@hoopy_frood.com' }
     let(:user_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email) }
-    let(:current_process_types) { double(:current_process_types) }
+    let(:process_create_from_app_droplet) { double(:process_create_from_app_droplet) }
 
     describe '#assign' do
       let(:droplet) do
@@ -25,14 +25,14 @@ module VCAP::CloudController
 
       before do
         app_model.add_droplet_by_guid(droplet_guid)
-        allow(ProcessCreateFromAppDroplet).to receive(:new).with(user_audit_info).and_return(current_process_types)
-        allow(current_process_types).to receive(:create).with(app_model)
+        allow(ProcessCreateFromAppDroplet).to receive(:new).with(user_audit_info).and_return(process_create_from_app_droplet)
+        allow(process_create_from_app_droplet).to receive(:create).with(app_model)
       end
 
       it 'sets the desired droplet guid' do
         updated_app = app_assign_droplet.assign(app_model, droplet)
         expect(updated_app.droplet_guid).to eq(droplet_guid)
-        expect(current_process_types).to have_received(:create).once
+        expect(process_create_from_app_droplet).to have_received(:create).once
       end
 
       it 'creates an audit event' do
@@ -73,13 +73,25 @@ module VCAP::CloudController
 
         context 'when we fail to create missing processes' do
           before do
-            allow(current_process_types).to receive(:create).and_raise(ProcessCreateFromAppDroplet::ProcessTypesNotFound, 'some message')
+            allow(process_create_from_app_droplet).to receive(:create).and_raise(ProcessCreateFromAppDroplet::ProcessTypesNotFound, 'some message')
           end
 
           it 'raises an error' do
             expect {
               app_assign_droplet.assign(app_model, droplet)
             }.to raise_error AppAssignDroplet::InvalidDroplet, 'some message'
+          end
+        end
+
+        context 'when we fail to allocate enough memory to go with existing sidecars' do
+          before do
+            allow(process_create_from_app_droplet).to receive(:create).and_raise(ProcessCreateFromAppDroplet::SidecarMemoryLessThanProcessMemory, 'some message')
+          end
+
+          it 'raises an error' do
+            expect {
+              app_assign_droplet.assign(app_model, droplet)
+            }.to raise_error AppAssignDroplet::InvalidApp, 'some message'
           end
         end
       end

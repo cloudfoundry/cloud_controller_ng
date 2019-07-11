@@ -438,6 +438,11 @@
   http_code: 400
   message: "You have exceeded the instance limit for your organization's quota."
 
+100009:
+  name: AppMemoryInsufficientForSidecars
+  http_code: 400
+  message: "The requested memory allocation is not large enough to run all of your sidecar processes."
+
 110001:
   name: ServicePlanInvalid
   http_code: 400

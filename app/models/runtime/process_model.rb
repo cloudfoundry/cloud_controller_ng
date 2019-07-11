@@ -243,7 +243,7 @@ module VCAP::CloudController
         MaxAppInstancesPolicy.new(self, space, space && space.space_quota_definition, :space_app_instance_limit_exceeded),
         HealthCheckPolicy.new(self, health_check_timeout, health_check_invocation_timeout),
         DockerPolicy.new(self),
-        PortsPolicy.new(self),
+        PortsPolicy.new(self)
       ]
     end
 
@@ -258,6 +258,13 @@ module VCAP::CloudController
       validate_health_check_type_and_port_presence_are_in_agreement
       validation_policies.map(&:validate)
       validate_health_check_http_endpoint
+      validate_sidecar_memory if modified?(:memory)
+    end
+
+    def validate_sidecar_memory
+      if !SidecarMemoryLessThanProcessMemoryPolicy.new([self]).valid?
+        errors.add(:memory, :process_memory_insufficient_for_sidecars)
+      end
     end
 
     def validate_health_check_http_endpoint

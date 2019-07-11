@@ -16,6 +16,7 @@ module VCAP::CloudController
              AppUpdate::InvalidApp,
              AppApplyManifest::NoDefaultDomain,
              ProcessScale::InvalidProcess,
+             ProcessScale::SidecarMemoryLessThanProcessMemory,
              ProcessUpdate::InvalidProcess,
              SidecarCreate::InvalidSidecar,
              SidecarUpdate::InvalidSidecar,

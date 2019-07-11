@@ -133,17 +133,30 @@ module VCAP::CloudController
         end
       end
 
-      it 'has sidecars' do
-        process = ProcessModelFactory.make
-        sidecar1  = SidecarModel.make(app: process.app)
-        sidecar2  = SidecarModel.make(app: process.app)
-        other_sidecar = SidecarModel.make(app: process.app)
+      context 'with sidecars' do
+        let(:process) { ProcessModelFactory.make }
+        let(:sidecar1)  { SidecarModel.make(app: process.app) }
+        let(:sidecar2)  { SidecarModel.make(app: process.app) }
+        let(:other_sidecar) { SidecarModel.make(app: process.app) }
 
-        SidecarProcessTypeModel.make(sidecar: sidecar1, type: process.type)
-        SidecarProcessTypeModel.make(sidecar: sidecar2, type: process.type)
-        SidecarProcessTypeModel.make(sidecar: other_sidecar, type: 'worker')
+        before :each do
+          SidecarProcessTypeModel.make(sidecar: sidecar1, type: process.type)
+          SidecarProcessTypeModel.make(sidecar: sidecar2, type: process.type)
+          SidecarProcessTypeModel.make(sidecar: other_sidecar, type: 'worker')
+        end
 
-        expect(process.reload.sidecars).to match_array([sidecar1, sidecar2])
+        it 'has sidecars' do
+          expect(process.reload.sidecars).to match_array([sidecar1, sidecar2])
+        end
+
+        context 'when process has less memory than sidecars' do
+          let(:process) { ProcessModelFactory.make(memory: 500) }
+          let(:sidecar1)  { SidecarModel.make(app: process.app, memory: 400) }
+
+          it 'is invalid' do
+            expect { process.update(memory: 300) }.to raise_error Sequel::ValidationFailed
+          end
+        end
       end
     end
 
@@ -184,6 +197,10 @@ module VCAP::CloudController
           targets = max_app_instances_policy.collect(&:quota_definition)
           expect(targets).to match_array([org.quota_definition, space.space_quota_definition])
         end
+      end
+
+      describe 'sidecar memory less than process memroy' do
+        subject(:process) { ProcessModel.make }
       end
 
       describe 'buildpack' do

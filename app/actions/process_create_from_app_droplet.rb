@@ -2,8 +2,8 @@ require 'actions/process_create'
 
 module VCAP::CloudController
   class ProcessCreateFromAppDroplet
-    class ProcessTypesNotFound < StandardError
-    end
+    class ProcessTypesNotFound < StandardError; end
+    class SidecarMemoryLessThanProcessMemory < StandardError; end
 
     def initialize(user_audit_info)
       @user_audit_info = user_audit_info
@@ -31,7 +31,15 @@ module VCAP::CloudController
 
     def create_process(app, type)
       if app.processes_dataset.where(type: type).count == 0
-        ProcessCreate.new(@user_audit_info).create(app, { type: type })
+        begin
+          ProcessCreate.new(@user_audit_info).create(app, { type: type })
+        rescue Sequel::ValidationFailed => e
+          if e.errors.on(:memory)&.include?(:process_memory_insufficient_for_sidecars)
+            raise SidecarMemoryLessThanProcessMemory.new("The sidecar memory allocation defined is too large to run with the dependent \"#{type}\" process")
+          end
+
+          raise e
+        end
       end
     end
   end

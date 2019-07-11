@@ -186,6 +186,59 @@ RSpec.describe 'App Manifests' do
       end
     end
 
+    describe 'scaling proceses when there are existing sidecars' do
+      let!(:process) { VCAP::CloudController::ProcessModel.make(app: app_model, type: 'web', memory: 400) }
+      let!(:sidecar) { VCAP::CloudController::SidecarModel.make(name: 'my-sidecar', app: app_model, command: 'rackup', memory: 200) }
+      let!(:sidecar_process_type) { VCAP::CloudController::SidecarProcessTypeModel.make(sidecar: sidecar, type: 'web', app_guid: app_model.guid) }
+
+      context 'when the new process memory is more than the cumulative sidecars memory' do
+        let(:yml_manifest) do
+          {
+            'applications' => [
+              { 'name' => app_model.name,
+                'processes' => [{
+                  'type' => 'web',
+                  'memory' => '300MB'
+                }]
+              }
+            ]
+          }.to_yaml
+        end
+        it 'returns a 200' do
+          post "/v3/apps/#{app_model.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
+          Delayed::Worker.new.work_off
+          expect(process.reload.memory).to eq 300
+          expect(last_response.status).to eq(202)
+        end
+      end
+
+      context 'when the new process memory is less than the cumulative sidecars memory' do
+        let(:yml_manifest) do
+          {
+            'applications' => [
+              { 'name' => 'blah',
+                'memory' => '100MB'
+              }
+            ]
+          }.to_yaml
+        end
+
+        it 'does not update the memory allocation and the job returns a good message' do
+          post "/v3/apps/#{app_model.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
+          expect(last_response.status).to eq(202)
+          job_guid = VCAP::CloudController::PollableJobModel.last.guid
+          expect(last_response.headers['Location']).to match(%r(/v3/jobs/#{job_guid}))
+
+          Delayed::Worker.new.work_off
+          delayed_job = VCAP::CloudController::PollableJobModel.find(guid: job_guid)
+          expect(delayed_job.state).to eq('FAILED')
+          expect(delayed_job.cf_api_error).to match('The requested memory allocation is not large enough')
+          expect(process.reload.memory).to eq(400)
+          expect(last_response.status).to eq(202)
+        end
+      end
+    end
+
     context 'yaml anchors' do
       let(:yml_manifest) do
         <<~YML
