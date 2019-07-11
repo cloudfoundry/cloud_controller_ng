@@ -13,10 +13,34 @@ module VCAP::CloudController
       end
 
       def as_json(_={})
+        process_memory_limit = process.memory - sidecar_memory_total
+        common_json_and_merge do
+          {
+            'VCAP_APPLICATION' => vcap_application(memory_limit: process_memory_limit),
+            'MEMORY_LIMIT' => "#{process_memory_limit}m"
+          }
+        end
+      end
+
+      def as_json_for_sidecar(sidecar)
+        sidecar_memory_limit = sidecar.memory || process.memory
+        common_json_and_merge do
+          {
+            'VCAP_APPLICATION' => vcap_application(memory_limit: sidecar_memory_limit),
+            'MEMORY_LIMIT' => "#{sidecar_memory_limit}m"
+          }
+        end
+      end
+
+      private
+
+      attr_reader :process
+
+      def common_json_and_merge(&blk)
         diego_env =
           @initial_env.
           merge(process.environment_json || {}).
-          merge('VCAP_APPLICATION' => vcap_application, 'MEMORY_LIMIT' => "#{process.memory}m").
+          merge(blk.call).
           merge(SystemEnvPresenter.new(process.service_bindings).system_env)
 
         diego_env = diego_env.merge(DATABASE_URL: process.database_uri) if process.database_uri
@@ -24,14 +48,14 @@ module VCAP::CloudController
         NormalEnvHashToDiegoEnvArrayPhilosopher.muse(diego_env)
       end
 
-      private
-
-      attr_reader :process
-
-      def vcap_application
-        VCAP::VarsBuilder.new(process).to_hash.reject do |k, _v|
+      def vcap_application(memory_limit:)
+        VCAP::VarsBuilder.new(process, memory_limit: memory_limit).to_hash.reject do |k, _v|
           EXCLUDE.include? k
         end
+      end
+
+      def sidecar_memory_total
+        process.sidecars.sum { |sidecar| sidecar.memory || 0 }
       end
     end
   end

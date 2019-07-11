@@ -17,10 +17,12 @@ module VCAP::CloudController
           environment = instance_double(Environment)
           allow(Environment).to receive(:new).with(process, {}).and_return(environment)
           allow(environment).to receive(:as_json).and_return(environment_variables)
+          allow(environment).to receive(:as_json_for_sidecar).and_return(sidecar_environment_variables)
         end
 
         let(:ssh_key) { SSHKey.new }
         let(:environment_variables) { ['name' => 'KEY', 'value' => 'running_value'] }
+        let(:sidecar_environment_variables) { ['name' => 'KEY', 'value' => 'running_sidecar_value'] }
         let(:port_environment_variables) do
           [
             ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'PORT', value: '4444'),
@@ -104,63 +106,70 @@ module VCAP::CloudController
             each { |env_vars| expect(env_vars).to_not include(an_object_satisfying { |var| var.name == 'VCAP_PLATFORM_OPTIONS' }) }
         end
 
-        context 'when a process has a sidecar' do
-          let!(:sidecar) { SidecarModel.make(app: app_model, name: 'my_sidecar', command: 'athenz') }
-          let!(:sidecar_process_type) { SidecarProcessTypeModel.make(sidecar: sidecar, type: 'web') }
+        context 'sidecars' do
+          let(:sidecar_action_environment_variables) {
+            [::Diego::Bbs::Models::EnvironmentVariable.new(name: 'PORT', value: '4444'),
+             ::Diego::Bbs::Models::EnvironmentVariable.new(name: 'KEY', value: 'running_sidecar_value'),]
+          }
 
-          it 'includes the sidecar process as a codependent run action' do
-            run_actions = MainLRPActionBuilder.build(process, lrp_builder, ssh_key).
-                          codependent_action.actions.map(&:run_action)
+          context 'when a process has a sidecar' do
+            let!(:sidecar) { SidecarModel.make(app: app_model, name: 'my_sidecar', command: 'athenz', memory: 10) }
+            let!(:sidecar_process_type) { SidecarProcessTypeModel.make(sidecar: sidecar, type: 'web') }
 
-            expect(run_actions).to include(
-              ::Diego::Bbs::Models::RunAction.new(
-                user:            'lrp-action-user',
-                path:            '/tmp/lifecycle/launcher',
-                args:            ['app', 'athenz', execution_metadata],
-                resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: expected_file_descriptor_limit),
-                env:             expected_action_environment_variables,
-                log_source:      'APP/PROC/WEB/SIDECAR/MY_SIDECAR',
+            it 'includes the sidecar process as a codependent run action' do
+              run_actions = MainLRPActionBuilder.build(process, lrp_builder, ssh_key).
+                            codependent_action.actions.map(&:run_action)
+
+              expect(run_actions).to include(
+                ::Diego::Bbs::Models::RunAction.new(
+                  user:            'lrp-action-user',
+                  path:            '/tmp/lifecycle/launcher',
+                  args:            ['app', 'athenz', execution_metadata],
+                  resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: expected_file_descriptor_limit),
+                  env:             sidecar_action_environment_variables,
+                  log_source:      'APP/PROC/WEB/SIDECAR/MY_SIDECAR',
+                )
               )
-            )
+            end
           end
-        end
 
-        context 'when a process has multiple sidecars' do
-          let!(:sidecar1) { SidecarModel.make(app: app_model, name: 'my_sidecar1', command: 'athenz') }
-          let!(:sidecar2) { SidecarModel.make(app: app_model, name: 'my_sidecar2', command: 'newrelic') }
-          let!(:sidecar3) { SidecarModel.make(app: app_model, name: 'unused_sidecar', command: 'envoy') }
-          let!(:sidecar_process_type1) { SidecarProcessTypeModel.make(sidecar: sidecar1, type: 'web') }
-          let!(:sidecar_process_type2) { SidecarProcessTypeModel.make(sidecar: sidecar2, type: 'web') }
-          let!(:unused_process_type2a) { SidecarProcessTypeModel.make(sidecar: sidecar2, type: 'worker') }
-          let!(:irrelevant_sidecar_process_type) { SidecarProcessTypeModel.make(sidecar: sidecar3, type: 'worker') }
+          context 'when a process has multiple sidecars' do
+            let!(:sidecar1) { SidecarModel.make(app: app_model, name: 'my_sidecar1', command: 'athenz') }
+            let!(:sidecar2) { SidecarModel.make(app: app_model, name: 'my_sidecar2', command: 'newrelic') }
+            let!(:sidecar3) { SidecarModel.make(app: app_model, name: 'unused_sidecar', command: 'envoy') }
+            let!(:sidecar_process_type1) { SidecarProcessTypeModel.make(sidecar: sidecar1, type: 'web') }
+            let!(:sidecar_process_type2) { SidecarProcessTypeModel.make(sidecar: sidecar2, type: 'web') }
+            let!(:unused_process_type2a) { SidecarProcessTypeModel.make(sidecar: sidecar2, type: 'worker') }
+            let!(:irrelevant_sidecar_process_type) { SidecarProcessTypeModel.make(sidecar: sidecar3, type: 'worker') }
 
-          it 'includes the sidecar process as a codependent run action' do
-            run_actions = MainLRPActionBuilder.build(process, lrp_builder, ssh_key).
-                          codependent_action.actions.map(&:run_action)
+            it 'includes the sidecar process as a codependent run action' do
+              run_actions = MainLRPActionBuilder.build(process, lrp_builder, ssh_key).
+                            codependent_action.actions.map(&:run_action)
 
-            expect(run_actions).to include(
-              ::Diego::Bbs::Models::RunAction.new(
-                user:            'lrp-action-user',
-                path:            '/tmp/lifecycle/launcher',
-                args:            ['app', 'athenz', execution_metadata],
-                resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: expected_file_descriptor_limit),
-                env:             expected_action_environment_variables,
-                log_source:      'APP/PROC/WEB/SIDECAR/MY_SIDECAR1',
+              expect(run_actions).to include(
+                ::Diego::Bbs::Models::RunAction.new(
+                  user:            'lrp-action-user',
+                  path:            '/tmp/lifecycle/launcher',
+                  args:            ['app', 'athenz', execution_metadata],
+                  resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: expected_file_descriptor_limit),
+                  env:             sidecar_action_environment_variables,
+                  log_source:      'APP/PROC/WEB/SIDECAR/MY_SIDECAR1',
+                )
               )
-            )
 
-            expect(run_actions).to include(
-              ::Diego::Bbs::Models::RunAction.new(
-                user:            'lrp-action-user',
-                path:            '/tmp/lifecycle/launcher',
-                args:            ['app', 'newrelic', execution_metadata],
-                resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: expected_file_descriptor_limit),
-                env:             expected_action_environment_variables,
-                log_source:      'APP/PROC/WEB/SIDECAR/MY_SIDECAR2',
+              expect(run_actions).to include(
+                ::Diego::Bbs::Models::RunAction.new(
+                  user:            'lrp-action-user',
+                  path:            '/tmp/lifecycle/launcher',
+                  args:            ['app', 'newrelic', execution_metadata],
+                  resource_limits: ::Diego::Bbs::Models::ResourceLimits.new(nofile: expected_file_descriptor_limit),
+                  env:             sidecar_action_environment_variables,
+                  log_source:      'APP/PROC/WEB/SIDECAR/MY_SIDECAR2',
+                )
               )
-            )
 
-            expect(run_actions.size).to eq(3), 'should only have main, athenz, and newrelic actions'
+              expect(run_actions.size).to eq(3), 'should only have main, athenz, and newrelic actions'
+            end
           end
         end
 

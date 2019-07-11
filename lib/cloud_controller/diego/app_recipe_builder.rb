@@ -66,7 +66,7 @@ module VCAP::CloudController
           environment_variables:            desired_lrp_builder.global_environment_variables,
           start_timeout_ms:                 health_check_timeout_in_seconds * 1000,
           disk_mb:                          process.disk_quota,
-          memory_mb:                        process.memory,
+          memory_mb:                        process.memory, # sums up
           privileged:                       desired_lrp_builder.privileged?,
           ports:                            ports,
           log_source:                       LRP_LOG_SOURCE,
