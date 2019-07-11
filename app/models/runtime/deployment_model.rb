@@ -11,6 +11,17 @@ module VCAP::CloudController
 
     CANCELABLE_STATES = [DEPLOYING_STATE, FAILING_STATE].freeze
 
+    STATUS_VALUES = [
+      DEPLOYING_STATUS_VALUE = 'DEPLOYING'.freeze,
+      FINALIZED_STATUS_VALUE = 'FINALIZED'.freeze
+    ].freeze
+
+    STATUS_REASONS = [
+      DEPLOYED_STATUS_REASON = 'DEPLOYED'.freeze,
+      CANCELED_STATUS_REASON = 'CANCELED'.freeze,
+      SUPERSEDED_STATUS_REASON = 'SUPERSEDED'.freeze
+    ].freeze
+
     many_to_one :app,
       class: 'VCAP::CloudController::AppModel',
       primary_key: :guid,

@@ -32,9 +32,14 @@ module VCAP::CloudController
         let(:state) { DeploymentModel::DEPLOYING_STATE }
 
         it 'sets the deployments state to CANCELING' do
-          expect(deployment.state).to_not eq('CANCELING')
+          expect(deployment.state).to_not eq(DeploymentModel::CANCELING_STATE)
+
           DeploymentCancel.cancel(deployment: deployment, user_audit_info: user_audit_info)
-          expect(deployment.reload.state).to eq('CANCELING')
+          deployment.reload
+
+          expect(deployment.state).to eq(DeploymentModel::CANCELING_STATE)
+          expect(deployment.status_value).to eq(DeploymentModel::DEPLOYING_STATUS_VALUE)
+          expect(deployment.status_reason).to be_nil
         end
 
         it "resets the app's current droplet to the previous droplet from the deploy" do
@@ -131,9 +136,14 @@ module VCAP::CloudController
         let(:state) { DeploymentModel::FAILING_STATE }
 
         it 'sets the deployments state to CANCELING' do
-          expect(deployment.state).to_not eq('CANCELING')
+          expect(deployment.state).to_not eq(DeploymentModel::CANCELING_STATE)
+
           DeploymentCancel.cancel(deployment: deployment, user_audit_info: user_audit_info)
-          expect(deployment.reload.state).to eq('CANCELING')
+          deployment.reload
+
+          expect(deployment.state).to eq(DeploymentModel::CANCELING_STATE)
+          expect(deployment.status_value).to eq(DeploymentModel::DEPLOYING_STATUS_VALUE)
+          expect(deployment.status_reason).to be_nil
         end
 
         it "resets the app's current droplet to the previous droplet from the deploy" do

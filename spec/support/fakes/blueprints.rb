@@ -102,6 +102,8 @@ module VCAP::CloudController
 
   DeploymentModel.blueprint do
     state { VCAP::CloudController::DeploymentModel::DEPLOYING_STATE }
+    status_value { VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_VALUE }
+    status_reason { nil }
     app { AppModel.make }
     droplet { DropletModel.make(app: app) }
     deploying_web_process { ProcessModel.make(app: app, type: "web-deployment-#{Sham.guid}") }

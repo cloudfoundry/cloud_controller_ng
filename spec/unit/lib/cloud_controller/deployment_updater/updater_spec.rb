@@ -152,6 +152,8 @@ module VCAP::CloudController
           subject.scale
           deployment.reload
           expect(deployment.state).to eq(DeploymentModel::DEPLOYED_STATE)
+          expect(deployment.status_value).to eq(DeploymentModel::FINALIZED_STATUS_VALUE)
+          expect(deployment.status_reason).to eq(DeploymentModel::DEPLOYED_STATUS_REASON)
         end
 
         it 'restarts the non-web processes with the deploying process revision, but not the web process' do
@@ -173,7 +175,10 @@ module VCAP::CloudController
             not_to have_received(:restart).
             with(process: deploying_web_process, config: TestConfig.config_instance, stop_in_runtime: true)
 
-          expect(deployment.reload.state).to eq(DeploymentModel::DEPLOYED_STATE)
+          deployment.reload
+          expect(deployment.state).to eq(DeploymentModel::DEPLOYED_STATE)
+          expect(deployment.status_value).to eq(DeploymentModel::FINALIZED_STATUS_VALUE)
+          expect(deployment.status_reason).to eq(DeploymentModel::DEPLOYED_STATUS_REASON)
         end
 
         it 'sets the commands on the non-web processes to be the commands from the revision of the deploying web process' do
@@ -319,6 +324,8 @@ module VCAP::CloudController
             subject.scale
             expect(deployment.reload.last_healthy_at).to be > previous_last_healthy_at
             expect(deployment.state).to eq(DeploymentModel::DEPLOYING_STATE)
+            expect(deployment.status_value).to eq(DeploymentModel::DEPLOYING_STATUS_VALUE)
+            expect(deployment.status_reason).to eq(nil)
           end
         end
 
@@ -370,6 +377,8 @@ module VCAP::CloudController
               subject.scale
               expect(deployment.reload.last_healthy_at).to be > previous_last_healthy_at
               expect(deployment.state).to eq(DeploymentModel::DEPLOYING_STATE)
+              expect(deployment.status_value).to eq(DeploymentModel::DEPLOYING_STATUS_VALUE)
+              expect(deployment.status_reason).to be_nil
             end
           end
         end
@@ -389,6 +398,8 @@ module VCAP::CloudController
                 subject.scale
                 expect(deployment.reload.last_healthy_at).to eq previous_last_healthy_at
                 expect(deployment.state).to eq(DeploymentModel::DEPLOYING_STATE)
+                expect(deployment.status_value).to eq(DeploymentModel::DEPLOYING_STATUS_VALUE)
+                expect(deployment.status_reason).to be_nil
               end
             end
           end
@@ -399,6 +410,8 @@ module VCAP::CloudController
                 subject.scale
                 expect(deployment.reload.last_healthy_at).to eq previous_last_healthy_at
                 expect(deployment.state).to eq(DeploymentModel::FAILING_STATE)
+                expect(deployment.status_value).to eq(DeploymentModel::DEPLOYING_STATUS_VALUE)
+                expect(deployment.status_reason).to be_nil
               end
             end
           end
@@ -530,7 +543,9 @@ module VCAP::CloudController
 
       it 'sets the deployment to CANCELED' do
         subject.cancel
-        expect(deployment.state).to eq('CANCELED')
+        expect(deployment.state).to eq(DeploymentModel::CANCELED_STATE)
+        expect(deployment.status_value).to eq(DeploymentModel::FINALIZED_STATUS_VALUE)
+        expect(deployment.status_reason).to eq(DeploymentModel::CANCELED_STATUS_REASON)
       end
 
       context 'when there are interim deployments' do

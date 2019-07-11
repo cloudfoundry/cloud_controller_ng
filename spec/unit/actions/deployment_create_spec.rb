@@ -67,6 +67,8 @@ module VCAP::CloudController
             }.to change { DeploymentModel.count }.by(1)
 
             expect(deployment.state).to eq(DeploymentModel::DEPLOYING_STATE)
+            expect(deployment.status_value).to eq(DeploymentModel::DEPLOYING_STATUS_VALUE)
+            expect(deployment.status_reason).to be_nil
             expect(deployment.app_guid).to eq(app.guid)
             expect(deployment.droplet_guid).to eq(next_droplet.guid)
             expect(deployment.previous_droplet).to eq(original_droplet)
@@ -400,16 +402,21 @@ module VCAP::CloudController
                 }.to change { DeploymentModel.count }.by(1)
 
                 expect(deployment.state).to eq(DeploymentModel::DEPLOYING_STATE)
+                expect(deployment.status_value).to eq(DeploymentModel::DEPLOYING_STATUS_VALUE)
+                expect(deployment.status_reason).to be_nil
                 expect(deployment.app_guid).to eq(app.guid)
                 expect(deployment.droplet_guid).to eq(next_droplet.guid)
                 expect(deployment.previous_droplet).to eq(original_droplet)
                 expect(deployment.original_web_process_instance_count).to eq(originally_desired_instance_count)
               end
 
-              it 'sets the existing deployment to DEPLOYED' do
+              it 'sets the existing deployment to DEPLOYED, with reason SUPERSEDED' do
                 DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+                existing_deployment.reload
 
-                expect(existing_deployment.reload.state).to eq(DeploymentModel::DEPLOYED_STATE)
+                expect(existing_deployment.state).to eq(DeploymentModel::DEPLOYED_STATE)
+                expect(existing_deployment.status_value).to eq(DeploymentModel::FINALIZED_STATUS_VALUE)
+                expect(existing_deployment.status_reason).to eq(DeploymentModel::SUPERSEDED_STATUS_REASON)
               end
             end
 
@@ -428,11 +435,17 @@ module VCAP::CloudController
                 expect(deployment.droplet_guid).to eq(next_droplet.guid)
                 expect(deployment.previous_droplet).to eq(original_droplet)
                 expect(deployment.original_web_process_instance_count).to eq(originally_desired_instance_count)
+                expect(deployment.status_value).to eq(DeploymentModel::DEPLOYING_STATUS_VALUE)
+                expect(deployment.status_reason).to eq(nil)
               end
 
               it 'sets the existing deployment to FAILED' do
                 DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
-                expect(existing_deployment.reload.state).to eq(DeploymentModel::FAILED_STATE)
+                existing_deployment.reload
+
+                expect(existing_deployment.state).to eq(DeploymentModel::FAILED_STATE)
+                expect(existing_deployment.status_value).to eq(DeploymentModel::FINALIZED_STATUS_VALUE)
+                expect(existing_deployment.status_reason).to eq(DeploymentModel::SUPERSEDED_STATUS_REASON)
               end
             end
           end
@@ -487,6 +500,8 @@ module VCAP::CloudController
               }.to change { DeploymentModel.count }.by(1)
 
               expect(deployment.state).to eq(DeploymentModel::DEPLOYED_STATE)
+              expect(deployment.status_value).to eq(DeploymentModel::FINALIZED_STATUS_VALUE)
+              expect(deployment.status_reason).to eq(DeploymentModel::DEPLOYED_STATUS_REASON)
               expect(deployment.app_guid).to eq(app.guid)
               expect(deployment.droplet_guid).to eq(next_droplet.guid)
               expect(deployment.previous_droplet).to eq(original_droplet)

@@ -9,6 +9,10 @@ module VCAP::CloudController::Presenters::V3
       {
         guid: deployment.guid,
         state: deployment.state,
+        status: {
+          value: deployment.status_value,
+          reason: deployment.status_reason
+        },
         droplet: {
           guid: deployment.droplet_guid
         },

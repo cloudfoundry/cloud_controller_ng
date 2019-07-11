@@ -38,7 +38,11 @@ RSpec.describe 'Deployments' do
 
         expect(parsed_response).to be_a_response_like({
           'guid' => deployment.guid,
-          'state' => 'DEPLOYING',
+          'state' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATE,
+          'status' => {
+            'value' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_VALUE,
+            'reason' => nil
+          },
           'droplet' => {
             'guid' => droplet.guid
           },
@@ -98,7 +102,11 @@ RSpec.describe 'Deployments' do
 
         expect(parsed_response).to be_a_response_like({
           'guid' => deployment.guid,
-          'state' => 'DEPLOYING',
+          'state' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATE,
+          'status' => {
+            'value' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_VALUE,
+            'reason' => nil
+          },
           'droplet' => {
             'guid' => other_droplet.guid
           },
@@ -167,7 +175,11 @@ RSpec.describe 'Deployments' do
 
         expect(parsed_response).to be_a_response_like({
           'guid' => deployment.guid,
-          'state' => 'DEPLOYING',
+          'state' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATE,
+          'status' => {
+            'value' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_VALUE,
+            'reason' => nil
+          },
           'droplet' => {
             'guid' => other_droplet.guid
           },
@@ -270,7 +282,11 @@ RSpec.describe 'Deployments' do
 
         expect(parsed_response).to be_a_response_like({
           'guid' => deployment.guid,
-          'state' => 'DEPLOYING',
+          'state' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATE,
+          'status' => {
+            'value' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_VALUE,
+            'reason' => nil
+          },
           'droplet' => {
             'guid' => droplet.guid
           },
@@ -336,7 +352,11 @@ RSpec.describe 'Deployments' do
         parsed_response = MultiJson.load(last_response.body)
         expect(parsed_response).to be_a_response_like({
           'guid' => deployment.guid,
-          'state' => 'DEPLOYING',
+          'state' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATE,
+          'status' => {
+            'value' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_VALUE,
+            'reason' => nil
+          },
           'droplet' => {
             'guid' => other_droplet.guid
           },
@@ -348,9 +368,9 @@ RSpec.describe 'Deployments' do
             'guid' => droplet.guid
           },
           'new_processes' => [{
-                                'guid' => deployment.deploying_web_process.guid,
-                                'type' => deployment.deploying_web_process.type
-                              }],
+            'guid' => deployment.deploying_web_process.guid,
+            'type' => deployment.deploying_web_process.type
+          }],
           'created_at' => iso8601,
           'updated_at' => iso8601,
           'metadata' => metadata,
@@ -395,10 +415,15 @@ RSpec.describe 'Deployments' do
 
       context 'when we redeploy the app with a new deployment' do
         it 'the deployment state of the "FAILING" deployment will be changed to "FAILED"' do
-          expect(deployment.state).to eq('FAILING')
+          expect(deployment.state).to eq(VCAP::CloudController::DeploymentModel::FAILING_STATE)
+
           post '/v3/deployments', create_request.to_json, user_header
           expect(last_response.status).to eq(201)
-          expect(deployment.reload.state).to eq('FAILED')
+
+          deployment.reload
+          expect(deployment.state).to eq(VCAP::CloudController::DeploymentModel::FAILED_STATE)
+          expect(deployment.status_value).to eq(VCAP::CloudController::DeploymentModel::FINALIZED_STATUS_VALUE)
+          expect(deployment.status_reason).to eq(VCAP::CloudController::DeploymentModel::SUPERSEDED_STATUS_REASON)
         end
       end
     end
@@ -434,7 +459,11 @@ RSpec.describe 'Deployments' do
 
         expect(parsed_response).to be_a_response_like({
           'guid' => deployment.guid,
-          'state' => 'DEPLOYED',
+          'state' => VCAP::CloudController::DeploymentModel::DEPLOYED_STATE,
+          'status' => {
+            'value' => VCAP::CloudController::DeploymentModel::FINALIZED_STATUS_VALUE,
+            'reason' => VCAP::CloudController::DeploymentModel::DEPLOYED_STATUS_REASON
+          },
           'droplet' => {
             'guid' => other_droplet.guid
           },
@@ -500,7 +529,11 @@ RSpec.describe 'Deployments' do
       parsed_response = MultiJson.load(last_response.body)
       expect(parsed_response).to be_a_response_like({
         'guid' => deployment.guid,
-        'state' => 'DEPLOYING',
+        'state' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATE,
+        'status' => {
+          'value' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_VALUE,
+          'reason' => nil
+        },
         'droplet' => {
           'guid' => droplet.guid,
         },
@@ -539,7 +572,6 @@ RSpec.describe 'Deployments' do
 
     it 'should get and display the deployment' do
       deployment = VCAP::CloudController::DeploymentModelTestFactory.make(
-        state: 'DEPLOYING',
         app: app_model,
         droplet: droplet,
         previous_droplet: old_droplet
@@ -551,7 +583,11 @@ RSpec.describe 'Deployments' do
       parsed_response = MultiJson.load(last_response.body)
       expect(parsed_response).to be_a_response_like({
         'guid' => deployment.guid,
-        'state' => 'DEPLOYING',
+        'state' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATE,
+        'status' => {
+          'value' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_VALUE,
+          'reason' => nil
+        },
         'droplet' => {
           'guid' => droplet.guid
         },
@@ -596,7 +632,6 @@ RSpec.describe 'Deployments' do
     let(:droplet) { VCAP::CloudController::DropletModel.make }
     let!(:deployment) do
       VCAP::CloudController::DeploymentModelTestFactory.make(
-        state: 'DEPLOYING',
         app: app_model,
         droplet: app_model.droplet,
         previous_droplet: app_model.droplet
@@ -612,9 +647,9 @@ RSpec.describe 'Deployments' do
       let(:app2) { droplet2.app }
       let(:app3) { droplet3.app }
       let(:app4) { droplet4.app }
-      let!(:deployment2) { VCAP::CloudController::DeploymentModelTestFactory.make(state: 'DEPLOYING', app: app2, droplet: app2.droplet) }
-      let!(:deployment3) { VCAP::CloudController::DeploymentModelTestFactory.make(state: 'DEPLOYING', app: app3, droplet: app3.droplet) }
-      let!(:deployment4) { VCAP::CloudController::DeploymentModelTestFactory.make(state: 'DEPLOYING', app: app4, droplet: app4.droplet) }
+      let!(:deployment2) { VCAP::CloudController::DeploymentModelTestFactory.make(app: app2, droplet: app2.droplet) }
+      let!(:deployment3) { VCAP::CloudController::DeploymentModelTestFactory.make(app: app3, droplet: app3.droplet) }
+      let!(:deployment4) { VCAP::CloudController::DeploymentModelTestFactory.make(app: app4, droplet: app4.droplet) }
 
       it 'should list all deployments' do
         get '/v3/deployments?per_page=2', nil, admin_user_header
@@ -639,7 +674,11 @@ RSpec.describe 'Deployments' do
           'resources' => [
             {
               'guid' => deployment.guid,
-              'state' => 'DEPLOYING',
+              'state' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATE,
+              'status' => {
+                'value' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_VALUE,
+                'reason' => nil
+              },
               'droplet' => {
                 'guid' => droplet.guid
               },
@@ -672,7 +711,11 @@ RSpec.describe 'Deployments' do
             },
             {
               'guid' => deployment2.guid,
-              'state' => 'DEPLOYING',
+              'state' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATE,
+              'status' => {
+                'value' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_VALUE,
+                'reason' => nil
+              },
               'droplet' => {
                 'guid' => droplet2.guid
               },
@@ -731,7 +774,7 @@ RSpec.describe 'Deployments' do
       let(:another_app) { another_droplet.app }
       let(:another_droplet) { VCAP::CloudController::DropletModel.make }
       let(:another_space) { another_app.space }
-      let!(:another_deployment) { VCAP::CloudController::DeploymentModelTestFactory.make(state: 'DEPLOYING', app: another_app, droplet: another_droplet) }
+      let!(:another_deployment) { VCAP::CloudController::DeploymentModelTestFactory.make(app: another_app, droplet: another_droplet) }
 
       let(:user_header) { headers_for(user) }
 
@@ -756,7 +799,11 @@ RSpec.describe 'Deployments' do
           'resources' => [
             {
               'guid' => deployment.guid,
-              'state' => 'DEPLOYING',
+              'state' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATE,
+              'status' => {
+                'value' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_VALUE,
+                'reason' => nil
+              },
               'droplet' => {
                 'guid' => droplet.guid
               },
@@ -799,7 +846,6 @@ RSpec.describe 'Deployments' do
 
       it 'changes the deployment state to CANCELING and rolls the droplet back' do
         deployment = VCAP::CloudController::DeploymentModelTestFactory.make(
-          state: 'DEPLOYING',
           app: app_model,
           droplet: droplet,
           previous_droplet: old_droplet
@@ -809,13 +855,19 @@ RSpec.describe 'Deployments' do
         expect(last_response.status).to eq(200), last_response.body
 
         expect(last_response.body).to be_empty
-        expect(deployment.reload.state).to eq('CANCELING')
+        deployment.reload
+        expect(deployment.state).to eq(VCAP::CloudController::DeploymentModel::CANCELING_STATE)
+        expect(deployment.status_value).to eq(VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_VALUE)
+        expect(deployment.status_reason).to be_nil
 
         expect(app_model.reload.droplet).to eq(old_droplet)
 
         require 'cloud_controller/deployment_updater/scheduler'
         VCAP::CloudController::DeploymentUpdater::Updater.new(deployment, Steno.logger('blah')).cancel
-        expect(deployment.reload.state).to eq('CANCELED')
+        deployment.reload
+        expect(deployment.state).to eq(VCAP::CloudController::DeploymentModel::CANCELED_STATE)
+        expect(deployment.status_value).to eq(VCAP::CloudController::DeploymentModel::FINALIZED_STATUS_VALUE)
+        expect(deployment.status_reason).to eq(VCAP::CloudController::DeploymentModel::CANCELED_STATUS_REASON)
       end
     end
   end

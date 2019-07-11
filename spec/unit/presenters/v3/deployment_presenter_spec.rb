@@ -13,6 +13,9 @@ module VCAP::CloudController::Presenters::V3
         droplet: droplet,
         previous_droplet: previous_droplet,
         deploying_web_process: process,
+        state: VCAP::CloudController::DeploymentModel::DEPLOYING_STATE,
+        status_value: VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_VALUE,
+        status_reason: nil
       )
     end
 
@@ -20,7 +23,11 @@ module VCAP::CloudController::Presenters::V3
       it 'presents the deployment as json' do
         result = DeploymentPresenter.new(deployment).to_hash
         expect(result[:guid]).to eq(deployment.guid)
+
         expect(result[:state]).to eq(VCAP::CloudController::DeploymentModel::DEPLOYING_STATE)
+        expect(result[:status][:value]).to eq(VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_VALUE)
+        expect(result[:status][:reason]).to be_nil
+
         expect(result[:droplet][:guid]).to eq(droplet.guid)
         expect(result[:previous_droplet][:guid]).to eq(previous_droplet.guid)
 
@@ -47,7 +54,9 @@ module VCAP::CloudController::Presenters::V3
             deploying_web_process: process,
             revision_guid: 'totes-a-guid',
             revision_version: 96,
-            )
+            status_value: VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_VALUE,
+            status_reason: nil
+          )
         end
 
         it 'presents the deployment as json' do
@@ -55,7 +64,11 @@ module VCAP::CloudController::Presenters::V3
 
           result = DeploymentPresenter.new(deployment).to_hash
           expect(result[:guid]).to eq(deployment.guid)
+
           expect(result[:state]).to eq(VCAP::CloudController::DeploymentModel::DEPLOYING_STATE)
+          expect(result[:status][:value]).to eq(VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_VALUE)
+          expect(result[:status][:reason]).to be_nil
+
           expect(result[:droplet][:guid]).to eq(droplet.guid)
           expect(result[:previous_droplet][:guid]).to eq(previous_droplet.guid)
 

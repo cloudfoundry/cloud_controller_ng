@@ -54,7 +54,11 @@ module VCAP::CloudController
 
           cleanup_web_processes_except(prior_web_process)
 
-          deployment.update(state: DeploymentModel::CANCELED_STATE)
+          deployment.update(
+            state: DeploymentModel::CANCELED_STATE,
+            status_value: DeploymentModel::FINALIZED_STATUS_VALUE,
+            status_reason: DeploymentModel::CANCELED_STATUS_REASON
+          )
         end
       end
 
@@ -68,11 +72,21 @@ module VCAP::CloudController
           deploying_web_process.lock!
 
           if !ready_to_scale?
-            deployment.update(state: DeploymentModel::FAILING_STATE) if deployment.should_fail?
+            if deployment.should_fail?
+              deployment.update(
+                state: DeploymentModel::FAILING_STATE,
+                status_value: DeploymentModel::DEPLOYING_STATUS_VALUE
+              )
+            end
+
             return
           end
 
-          deployment.update(last_healthy_at: Time.now, state: DeploymentModel::DEPLOYING_STATE)
+          deployment.update(
+            last_healthy_at: Time.now,
+            state: DeploymentModel::DEPLOYING_STATE,
+            status_value: DeploymentModel::DEPLOYING_STATUS_VALUE
+          )
 
           if deploying_web_process.instances >= deployment.original_web_process_instance_count
             finalize_deployment
@@ -136,7 +150,11 @@ module VCAP::CloudController
 
         update_non_web_processes
         restart_non_web_processes
-        deployment.update(state: DeploymentModel::DEPLOYED_STATE)
+        deployment.update(
+          state: DeploymentModel::DEPLOYED_STATE,
+          status_value: DeploymentModel::FINALIZED_STATUS_VALUE,
+          status_reason: DeploymentModel::DEPLOYED_STATUS_REASON
+        )
       end
 
       def promote_deploying_web_process

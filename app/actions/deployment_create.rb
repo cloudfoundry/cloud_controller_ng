@@ -36,6 +36,7 @@ module VCAP::CloudController
         deployment = DeploymentModel.create(
           app: app,
           state: DeploymentModel::DEPLOYING_STATE,
+          status_value: DeploymentModel::DEPLOYING_STATUS_VALUE,
           droplet: target_state.droplet,
           previous_droplet: previous_droplet,
           original_web_process_instance_count: desired_instances(app.oldest_web_process, previous_deployment),
@@ -47,7 +48,12 @@ module VCAP::CloudController
         DeploymentModel.db.transaction do
           if previous_deployment
             new_state = previous_deployment.deploying? ? DeploymentModel::DEPLOYED_STATE : DeploymentModel::FAILED_STATE
-            previous_deployment.update(state: new_state)
+
+            previous_deployment.update(
+              state: new_state,
+              status_value: DeploymentModel::FINALIZED_STATUS_VALUE,
+              status_reason: DeploymentModel::SUPERSEDED_STATUS_REASON
+            )
           end
 
           process = create_deployment_process(app, deployment.guid, revision)
@@ -143,9 +149,12 @@ module VCAP::CloudController
       def deployment_for_stopped_app(app, message, previous_deployment, previous_droplet, revision, target_state, user_audit_info)
         # Do not create a revision here because AppStart will not handle the rollback case
         AppStart.start(app: app, user_audit_info: user_audit_info, create_revision: false)
+
         deployment = DeploymentModel.create(
           app: app,
           state: DeploymentModel::DEPLOYED_STATE,
+          status_value: DeploymentModel::FINALIZED_STATUS_VALUE,
+          status_reason: DeploymentModel::DEPLOYED_STATUS_REASON,
           droplet: target_state.droplet,
           previous_droplet: previous_droplet,
           original_web_process_instance_count: desired_instances(app.oldest_web_process, previous_deployment),
