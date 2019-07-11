@@ -10,7 +10,11 @@ curl "https://api.example.org/v3/routes/[guid]/destinations" \
   -H "Authorization: bearer [token]"
   -d '{
     "destinations": [
-      { "app": { "guid": "1cb006ee-fb05-47e1-b541-c34179ddc446" } },
+      {
+        "app": {
+          "guid": "1cb006ee-fb05-47e1-b541-c34179ddc446"
+        }
+      },
       {
         "app": {
           "guid": "01856e12-8ee8-11e9-98a5-bb397dbc818f",
@@ -34,14 +38,23 @@ Content-Type: application/json
 <%= yield_content :list_of_route_destinations %>
 ```
 
-Adds destinations to a route.
+Add one or more destinations to a route, preserving any existing destinations.
+
+Note that weighted destinations cannot be added with this endpoint. To add weighted destinations,
+replace all destinations for a route at once using the [replace destinations endpoint](#replace-all-destinations-for-a-route).
 
 #### Definition
 `POST /v3/routes/:guid/destinations`
 
+#### Required Parameters
+
+| Name             | Type                                                      | Description                                                                                                                   |
+| ---------------- | --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| **destinations** | array of [_destination objects_](#the-destination-object) | List of destinations to add to route. Destinations without `process.type` specified will get process type `"web"` by default. |
+
 #### Permitted Roles
 
-Role  | Notes
---- | ---
-Admin |
-Space Developer |
+| Role            |
+| --------------- |
+| Admin           |
+| Space Developer |

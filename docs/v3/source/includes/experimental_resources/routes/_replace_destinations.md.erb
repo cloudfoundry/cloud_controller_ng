@@ -68,14 +68,24 @@ Content-Type: application/json
 }
 ```
 
-Replaces destinations in a route.
+Replaces all destinations for a route, removing any destinations not included in the provided list.
+
+If using weighted destinations, all destinations provided here must have a `weight` specified, and all weights
+for this route must sum to 100. If not, all provided destinations must not have a `weight`. Mixing weighted
+and unweighted destinations for a route is not allowed.
 
 #### Definition
 `PATCH /v3/routes/:guid/destinations`
 
+#### Required Parameters
+
+| Name             | Type                                                      | Description                                                                                                                   |
+| ---------------- | --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| **destinations** | array of [_destination objects_](#the-destination-object) | List of destinations use for route. Destinations without `process.type` specified will get process type `"web"` by default. |
+
 #### Permitted Roles
 
-Role  | Notes
---- | ---
-Admin |
-Space Developer |
+| Role            |
+| --------------- |
+| Admin           |
+| Space Developer |
