@@ -416,6 +416,42 @@ Use the cf cli to obtain a bearer token: cf oauth-token
 </tr>
 </tbody></table>
 
+          <h2 id="filters">Filters</h2>
+
+<p>Endpoints that return lists of resources support filtering down the returned resources using query parameters.</p>
+
+<h4 id="examples">Examples</h4>
+
+<h5 id="single-value-request"><strong>Single value request</strong></h5>
+
+<p><code class="prettyprint">GET /v3/apps?names=the_name</code></p>
+
+<p>This will return all apps with name <code class="prettyprint">the_name</code>.</p>
+
+<h5 id="multiple-value-request"><strong>Multiple value request</strong></h5>
+
+<p><code class="prettyprint">GET /v3/apps?names=first_name,second_name</code></p>
+
+<p>This will return all apps with name <code class="prettyprint">the_name</code> OR <code class="prettyprint">second_name</code>.</p>
+
+<h5 id="combined-filters"><strong>Combined filters</strong></h5>
+
+<p><code class="prettyprint">GET /v3/apps?names=the_name&amp;state=STARTED</code></p>
+
+<p>This will return all apps with name <code class="prettyprint">the_name</code> AND state <code class="prettyprint">STARTED</code>.</p>
+
+<h5 id="empty-filters"><strong>Empty filters</strong></h5>
+
+<p>An empty filter (<code class="prettyprint">/v3/resources?fields=</code>) can mean either empty string (<code class="prettyprint">&quot;&quot;</code>) or <code class="prettyprint">NULL</code>, depending on the resource type.</p>
+
+<p><code class="prettyprint">GET /v3/buildpacks?stacks=</code></p>
+
+<p>This will return all buildpacks with stack <code class="prettyprint">NULL</code>.</p>
+
+<p><code class="prettyprint">GET /v3/routes?paths=pepper,,tabi</code></p>
+
+<p>This will return all routes with path <code class="prettyprint">&quot;pepper&quot;</code>, <code class="prettyprint">&quot;&quot;</code> OR <code class="prettyprint">&quot;tabi&quot;</code>.</p>
+
           <h2 id="include">Include</h2>
 
 <p>The <code class="prettyprint">include</code> parameter allows clients to fetch resources and ensure that information about the parent object(s) is part of the response.
@@ -15944,6 +15980,11 @@ Deployed revisions are revisions that are linked to started processes in the app
 </tbody></table>
 
           <h3 id="the-destination-object">The destination object</h3>
+
+<p>A destination represents the relationship between a route and a resource that can serve traffic (e.g. the <code class="prettyprint">web</code> process
+of an application).</p>
+
+<p>When a route has destinations, that route will direct traffic to the processes represented by those destinations.</p>
 <pre class="highlight plaintext"><code>Example Destination object
 </code></pre>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
@@ -15973,12 +16014,12 @@ Deployed revisions are revisions that are linked to started processes in the app
 <tr>
 <td><strong>app.guid</strong></td>
 <td><em>uuid</em></td>
-<td>Unique identifier for the app to which the route is mapped.</td>
+<td>Unique identifier for the app to route traffic to.</td>
 </tr>
 <tr>
 <td><strong>app.process.type</strong></td>
 <td><em>string</em></td>
-<td>Process type. A unique identifier for processes belonging to an app.</td>
+<td>Type of the process belonging to the app to route traffic to.</td>
 </tr>
 <tr>
 <td><strong>weight</strong> <em>(experimental)</em></td>
@@ -16870,7 +16911,11 @@ belongs to a space the user does not belong to.</p>
   -H <span class="s2">"Authorization: bearer [token]"</span>
   -d <span class="s1">'{
     "destinations": [
-      { "app": { "guid": "1cb006ee-fb05-47e1-b541-c34179ddc446" } },
+      {
+        "app": {
+          "guid": "1cb006ee-fb05-47e1-b541-c34179ddc446"
+        }
+      },
       {
         "app": {
           "guid": "01856e12-8ee8-11e9-98a5-bb397dbc818f",
@@ -16920,27 +16965,43 @@ belongs to a space the user does not belong to.</p>
 
 </span></code></pre>
 
-<p>Adds destinations to a route.</p>
+<p>Add one or more destinations to a route, preserving any existing destinations.</p>
+
+<p>Note that weighted destinations cannot be added with this endpoint. To add weighted destinations,
+replace all destinations for a route at once using the <a href="#replace-all-destinations-for-a-route">replace destinations endpoint</a>.</p>
 
 <h4 id="definition">Definition</h4>
 
 <p><code class="prettyprint">POST /v3/routes/:guid/destinations</code></p>
+
+<h4 id="required-parameters">Required Parameters</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>destinations</strong></td>
+<td>array of <a href="#the-destination-object"><em>destination objects</em></a></td>
+<td>List of destinations to add to route. Destinations without <code class="prettyprint">process.type</code> specified will get process type <code class="prettyprint">&quot;web&quot;</code> by default.</td>
+</tr>
+</tbody></table>
 
 <h4 id="permitted-roles">Permitted Roles</h4>
 
 <table><thead>
 <tr>
 <th>Role</th>
-<th>Notes</th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-<td></td>
 </tr>
 </tbody></table>
 
@@ -17006,27 +17067,44 @@ belongs to a space the user does not belong to.</p>
 </span><span class="p">}</span><span class="w">
 </span></code></pre>
 
-<p>Replaces destinations in a route.</p>
+<p>Replaces all destinations for a route, removing any destinations not included in the provided list.</p>
+
+<p>If using weighted destinations, all destinations provided here must have a <code class="prettyprint">weight</code> specified, and all weights
+for this route must sum to 100. If not, all provided destinations must not have a <code class="prettyprint">weight</code>. Mixing weighted
+and unweighted destinations for a route is not allowed.</p>
 
 <h4 id="definition">Definition</h4>
 
 <p><code class="prettyprint">PATCH /v3/routes/:guid/destinations</code></p>
+
+<h4 id="required-parameters">Required Parameters</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>destinations</strong></td>
+<td>array of <a href="#the-destination-object"><em>destination objects</em></a></td>
+<td>List of destinations use for route. Destinations without <code class="prettyprint">process.type</code> specified will get process type <code class="prettyprint">&quot;web&quot;</code> by default.</td>
+</tr>
+</tbody></table>
 
 <h4 id="permitted-roles">Permitted Roles</h4>
 
 <table><thead>
 <tr>
 <th>Role</th>
-<th>Notes</th>
 </tr>
 </thead><tbody>
 <tr>
 <td>Admin</td>
-<td></td>
 </tr>
 <tr>
 <td>Space Developer</td>
-<td></td>
 </tr>
 </tbody></table>
 
