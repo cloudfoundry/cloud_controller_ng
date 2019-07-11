@@ -1,5 +1,4 @@
 require 'diego/client'
-require 'diego/actual_lrp_group_resolver'
 
 module VCAP::CloudController
   module Diego
@@ -12,15 +11,13 @@ module VCAP::CloudController
         process_guid = ProcessGuid.from_process(process)
         logger.info('lrp.instances.request', process_guid: process_guid)
 
-        actual_lrp_groups = handle_diego_errors(process_guid) do
-          response = @client.actual_lrp_groups_by_process_guid(process_guid)
+        actual_lrps_response = handle_diego_errors(process_guid) do
+          response = @client.actual_lrps_by_process_guid(process_guid)
           logger.info('lrp.instances.response', process_guid: process_guid, error: response.error)
           response
         end
 
-        actual_lrp_groups.actual_lrp_groups.map do |actual_lrp_group|
-          ::Diego::ActualLRPGroupResolver.get_lrp(actual_lrp_group)
-        end
+        actual_lrps_response.actual_lrps
       end
 
       def desired_lrp_instance(process)

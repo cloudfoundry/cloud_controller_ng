@@ -1,5 +1,6 @@
 require 'utils/workpool'
 require 'cloud_controller/diego/reporters/reporter_mixins'
+require 'diego/lrp_constants'
 
 module VCAP::CloudController
   module Diego

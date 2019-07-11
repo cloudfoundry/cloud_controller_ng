@@ -149,15 +149,15 @@ module Diego
       protobuf_decode!(response.body, Bbs::Models::DesiredLRPSchedulingInfosResponse)
     end
 
-    def actual_lrp_groups_by_process_guid(process_guid)
-      request = protobuf_encode!({ process_guid: process_guid }, Bbs::Models::ActualLRPGroupsByProcessGuidRequest)
+    def actual_lrps_by_process_guid(process_guid)
+      request = protobuf_encode!({ process_guid: process_guid }, Bbs::Models::ActualLRPsRequest)
 
       response = with_request_error_handling do
-        client.post(Routes::ACTUAL_LRP_GROUPS, request, PROTOBUF_HEADER)
+        client.post(Routes::ACTUAL_LRPS, request, PROTOBUF_HEADER)
       end
 
       validate_status!(response: response, statuses: [200])
-      protobuf_decode!(response.body, Bbs::Models::ActualLRPGroupsResponse)
+      protobuf_decode!(response.body, Bbs::Models::ActualLRPsResponse)
     end
 
     def with_request_error_handling(&blk)

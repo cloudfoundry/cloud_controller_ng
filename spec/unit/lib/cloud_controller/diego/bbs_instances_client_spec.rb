@@ -6,26 +6,19 @@ module VCAP::CloudController::Diego
     let(:bbs_client) { instance_double(::Diego::Client) }
 
     describe '#lrp_instances' do
-      let(:bbs_response) { ::Diego::Bbs::Models::ActualLRPGroupsResponse.new(actual_lrp_groups: actual_lrp_groups) }
-      let(:actual_lrp_groups) { [actual_lrp_group] }
-      let(:actual_lrp_group) { ::Diego::Bbs::Models::ActualLRPGroup.new(instance: actual_lrp) }
+      let(:bbs_response) { ::Diego::Bbs::Models::ActualLRPsResponse.new(actual_lrps: actual_lrps) }
+      let(:actual_lrps) { [actual_lrp] }
       let(:actual_lrp) { ::Diego::Bbs::Models::ActualLRP.new(state: 'potato') }
       let(:process) { VCAP::CloudController::ProcessModelFactory.make }
       let(:process_guid) { ProcessGuid.from_process(process) }
 
       before do
-        allow(bbs_client).to receive(:actual_lrp_groups_by_process_guid).with(process_guid).and_return(bbs_response)
+        allow(bbs_client).to receive(:actual_lrps_by_process_guid).with(process_guid).and_return(bbs_response)
       end
 
       it 'sends the lrp instances request to diego' do
         client.lrp_instances(process)
-        expect(bbs_client).to have_received(:actual_lrp_groups_by_process_guid).with(process_guid)
-      end
-
-      it 'returns a resolved list of actual LRPs' do
-        resolved_actual_lrp = ::Diego::Bbs::Models::ActualLRP.new(state: 'yuca')
-        allow(::Diego::ActualLRPGroupResolver).to receive(:get_lrp).with(actual_lrp_group).and_return(resolved_actual_lrp)
-        expect(client.lrp_instances(process)).to eq([resolved_actual_lrp])
+        expect(bbs_client).to have_received(:actual_lrps_by_process_guid).with(process_guid)
       end
 
       context 'when the response contains a ResourceNotFound error' do
@@ -45,7 +38,7 @@ module VCAP::CloudController::Diego
 
       context 'when a Diego error is thrown' do
         before do
-          allow(bbs_client).to receive(:actual_lrp_groups_by_process_guid).with(process_guid).and_raise(::Diego::Error.new('boom'))
+          allow(bbs_client).to receive(:actual_lrps_by_process_guid).with(process_guid).and_raise(::Diego::Error.new('boom'))
         end
 
         it 're-raises with a CC Error' do
@@ -57,7 +50,7 @@ module VCAP::CloudController::Diego
 
       context 'when the response contains an unknown error' do
         let(:bbs_response) do
-          ::Diego::Bbs::Models::ActualLRPGroupsResponse.new(error: ::Diego::Bbs::Models::Error.new(message: 'error-message'))
+          ::Diego::Bbs::Models::ActualLRPsResponse.new(error: ::Diego::Bbs::Models::Error.new(message: 'error-message'))
         end
 
         it 'raises' do
