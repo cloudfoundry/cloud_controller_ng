@@ -40,6 +40,20 @@ RSpec.describe 'buildpacks' do
       end
     end
 
+    context 'when filtered by null stack' do
+      let!(:stack) { VCAP::CloudController::Stack.make }
+      let!(:buildpack_without_stack) { VCAP::CloudController::Buildpack.make(stack: nil) }
+      let!(:buildpack_with_stack) { VCAP::CloudController::Buildpack.make(stack: stack.name) }
+
+      it 'returns the matching buildpacks' do
+        get '/v3/buildpacks?stacks=', nil, admin_headers
+        expect(last_response.status).to eq(200), last_response.body
+
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(buildpack_without_stack.guid)
+      end
+    end
+
     context 'When buildpacks exist' do
       let!(:stack1) { VCAP::CloudController::Stack.make }
       let!(:stack2) { VCAP::CloudController::Stack.make }

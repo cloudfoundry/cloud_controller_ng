@@ -1,5 +1,6 @@
 require 'cloud_controller/paging/sequel_paginator'
 require 'cloud_controller/paging/paginated_result'
+require 'fetchers/null_filter_query_generator'
 
 module VCAP::CloudController
   class BuildpackListFetcher
@@ -14,7 +15,7 @@ module VCAP::CloudController
       end
 
       if message.requested?(:stacks)
-        dataset = dataset.where(stack: message.stacks)
+        dataset = NullFilterQueryGenerator.add_filter(dataset, :stack, message.stacks)
       end
 
       if message.requested?(:label_selector)
