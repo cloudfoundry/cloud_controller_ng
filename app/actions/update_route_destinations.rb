@@ -3,25 +3,25 @@ module VCAP::CloudController
     class Error < StandardError; end
 
     class << self
-      def add(message, route, user_audit_info)
+      def add(new_route_mappings, route, user_audit_info, manifest_triggered: false)
         existing_route_mappings = route_to_mapping_hashes(route)
+        new_route_mappings = add_route(new_route_mappings, route)
         if existing_route_mappings.any? { |rm| rm[:weight] }
           raise Error.new('Destinations cannot be inserted when there are weighted destinations already configured.')
         end
 
-        new_route_mappings = message_to_mapping_hashes(message, route)
         to_add = new_route_mappings - existing_route_mappings
 
-        update(route, to_add, [], user_audit_info)
+        update(route, to_add, [], user_audit_info, manifest_triggered)
       end
 
-      def replace(message, route, user_audit_info)
+      def replace(new_route_mappings, route, user_audit_info, manifest_triggered: false)
         existing_route_mappings = route_to_mapping_hashes(route)
-        new_route_mappings = message_to_mapping_hashes(message, route)
+        new_route_mappings = add_route(new_route_mappings, route)
         to_add = new_route_mappings - existing_route_mappings
         to_delete = existing_route_mappings - new_route_mappings
 
-        update(route, to_add, to_delete, user_audit_info)
+        update(route, to_add, to_delete, user_audit_info, manifest_triggered)
       end
 
       def delete(destination, route, user_audit_info)
@@ -31,12 +31,12 @@ module VCAP::CloudController
 
         to_delete = [destination_to_mapping_hash(route, destination)]
 
-        update(route, [], to_delete, user_audit_info)
+        update(route, [], to_delete, user_audit_info, false)
       end
 
       private
 
-      def update(route, to_add, to_delete, user_audit_info)
+      def update(route, to_add, to_delete, user_audit_info, manifest_triggered)
         RouteMappingModel.db.transaction do
           to_delete.each do |rm|
             route_mapping = RouteMappingModel.find(rm)
@@ -45,7 +45,11 @@ module VCAP::CloudController
             Copilot::Adapter.unmap_route(route_mapping)
             update_route_information(route_mapping)
 
-            Repositories::RouteEventRepository.new.record_route_unmap(route_mapping, user_audit_info)
+            Repositories::AppEventRepository.new.record_unmap_route(
+              user_audit_info,
+              route_mapping,
+              manifest_triggered: manifest_triggered
+            )
           end
 
           to_add.each do |rm|
@@ -55,7 +59,11 @@ module VCAP::CloudController
             Copilot::Adapter.map_route(route_mapping)
             update_route_information(route_mapping)
 
-            Repositories::RouteEventRepository.new.record_route_map(route_mapping, user_audit_info)
+            Repositories::AppEventRepository.new.record_map_route(
+              user_audit_info,
+              route_mapping,
+              manifest_triggered: manifest_triggered
+            )
           end
         end
 
@@ -68,24 +76,10 @@ module VCAP::CloudController
         end
       end
 
-      def message_to_mapping_hashes(message, route)
-        new_route_mappings = []
-        message.destinations.each do |dst|
-          app_guid = HashUtils.dig(dst, :app, :guid)
-          process_type = HashUtils.dig(dst, :app, :process, :type) || 'web'
-          weight = HashUtils.dig(dst, :weight)
-
-          new_route_mappings << {
-            app_guid: app_guid,
-            route_guid: route.guid,
-            route: route,
-            process_type: process_type,
-            app_port: ProcessModel::DEFAULT_HTTP_PORT,
-            weight: weight
-          }
+      def add_route(destinations, route)
+        destinations.map do |dst|
+          dst.merge({ route: route, route_guid: route.guid })
         end
-
-        new_route_mappings
       end
 
       def route_to_mapping_hashes(route)

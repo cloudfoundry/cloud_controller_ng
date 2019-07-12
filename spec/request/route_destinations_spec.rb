@@ -168,6 +168,7 @@ RSpec.describe 'Route Destinations Request' do
             metadata: {
               route_guid: route.guid,
               app_port: 8080,
+              route_mapping_guid: new_destination['guid'],
               destination_guid: new_destination['guid'],
               process_type: 'web',
               weight: nil
@@ -881,6 +882,7 @@ RSpec.describe 'Route Destinations Request' do
             metadata: {
               route_guid: route.guid,
               app_port: 8080,
+              route_mapping_guid: destination_to_delete.guid,
               destination_guid: destination_to_delete.guid,
               process_type: destination_to_delete.process_type,
               weight: nil

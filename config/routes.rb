@@ -138,14 +138,6 @@ Rails.application.routes.draw do
   # resource_matches
   post '/resource_matches', to: 'resource_matches#create'
 
-  # route_mappings
-  post '/route_mappings', to: 'route_mappings#create'
-  patch '/route_mappings/:route_mapping_guid', to: 'route_mappings#update'
-  get '/route_mappings', to: 'route_mappings#index'
-  get '/route_mappings/:route_mapping_guid', to: 'route_mappings#show'
-  delete '/route_mappings/:route_mapping_guid', to: 'route_mappings#destroy'
-  get '/apps/:app_guid/route_mappings', to: 'route_mappings#index'
-
   # routes
   get '/routes', to: 'routes#index'
   get '/routes/:guid', to: 'routes#show'

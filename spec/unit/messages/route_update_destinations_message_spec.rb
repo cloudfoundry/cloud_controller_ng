@@ -441,5 +441,33 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe 'destinations' do
+      let(:params) do
+        {
+          destinations: [
+            {
+              app: {
+                guid: 'some-guid',
+                process: {
+                  type: 'web'
+                }
+              }
+            }
+          ]
+        }
+      end
+
+      it 'returns an array of destination hashes' do
+        expect(subject.destinations_array).to eq([
+          {
+            app_guid: 'some-guid',
+            process_type: 'web',
+            app_port: ProcessModel::DEFAULT_HTTP_PORT,
+            weight: nil,
+          }
+        ])
+      end
+    end
   end
 end

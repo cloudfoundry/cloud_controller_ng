@@ -21,7 +21,6 @@ module VCAP::CloudController
              SidecarUpdate::InvalidSidecar,
              ManifestRouteUpdate::InvalidRoute,
              Route::InvalidOrganizationRelation,
-             RouteMappingCreate::SpaceMismatch,
              ServiceBindingCreate::InvalidServiceBinding => e
 
         error = CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', e.message)

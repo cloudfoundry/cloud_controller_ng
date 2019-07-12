@@ -28,8 +28,12 @@ module VCAP::CloudController
         routes_to_map.
           select { |route| RouteMappingModel.find(app: app, route: route).nil? }.
           each do |route|
-            RouteMappingCreate.add(user_audit_info: user_audit_info, route: route, app: app, process_type: ProcessTypes::WEB, manifest_triggered: true)
-          end
+          UpdateRouteDestinations.add([{
+            app_guid: app_guid,
+            process_type: 'web',
+            app_port: ProcessModel::DEFAULT_HTTP_PORT,
+          }], route, user_audit_info, manifest_triggered: true)
+        end
       rescue Sequel::ValidationFailed => e
         raise InvalidRoute.new(e.message)
       end
@@ -60,7 +64,10 @@ module VCAP::CloudController
             end
 
             route = V3::RouteCreate.create_route(route_hash: route_hash, user_audit_info: user_audit_info, logger: logger, manifest_triggered: true)
+          elsif route.space.guid != app.space.guid
+            raise InvalidRoute.new('Routes cannot be mapped to destinations in different spaces')
           end
+
           return route
         end
         nil

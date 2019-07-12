@@ -22,7 +22,6 @@ module VCAP::CloudController
                  ProcessUpdate::InvalidProcess,
                  ManifestRouteUpdate::InvalidRoute,
                  Route::InvalidOrganizationRelation,
-                 RouteMappingCreate::SpaceMismatch,
                  ServiceBindingCreate::InvalidServiceBinding => e
 
             app_name = AppModel.find(guid: app_guid)&.name
