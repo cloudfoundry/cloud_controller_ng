@@ -85,7 +85,7 @@ module VCAP::CloudController
 
     describe '#latest_revision' do
       let!(:revision1) { RevisionModel.make(app: app_model, created_at: 10.minutes.ago) }
-      let!(:revision2) { RevisionModel.make(app: app_model) }
+      let!(:revision2) { RevisionModel.make(app: app_model, created_at: Time.now) }
       let!(:revision3) { RevisionModel.make(app: app_model, created_at: 5.minutes.ago) }
 
       context 'when revisions are enabled' do
