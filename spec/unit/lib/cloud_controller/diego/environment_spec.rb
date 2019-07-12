@@ -80,10 +80,11 @@ module VCAP::CloudController::Diego
         expect(Environment.new(process).as_json_for_sidecar(sidecar1)).
           to include({ 'name' => 'MEMORY_LIMIT', 'value' => '20m' })
 
-        vcap_application_json = Environment.new(process).as_json_for_sidecar(sidecar0).find { |e| e['name'] == 'VCAP_APPLICATION' }['value']
-        expect(JSON.parse(vcap_application_json)['limits']['mem'] ).to eq(10)
-        vcap_application_json = Environment.new(process).as_json_for_sidecar(sidecar1).find { |e| e['name'] == 'VCAP_APPLICATION' }['value']
-        expect(JSON.parse(vcap_application_json)['limits']['mem'] ).to eq(20)
+        sidecar0_vcap_application_json = Environment.new(process).as_json_for_sidecar(sidecar0).find { |e| e['name'] == 'VCAP_APPLICATION' }['value']
+        expect(JSON.parse(sidecar0_vcap_application_json)['limits']['mem']).to eq(10)
+
+        sidecar1_vcap_application_json = Environment.new(process).as_json_for_sidecar(sidecar1).find { |e| e['name'] == 'VCAP_APPLICATION' }['value']
+        expect(JSON.parse(sidecar1_vcap_application_json)['limits']['mem']).to eq(20)
       end
 
       it 'subtracts sidecar memory limits from the main actions environment variables' do
@@ -91,7 +92,7 @@ module VCAP::CloudController::Diego
           to include({ 'name' => 'MEMORY_LIMIT', 'value' => '170m' })
 
         vcap_application_json = Environment.new(process).as_json.find { |e| e['name'] == 'VCAP_APPLICATION' }['value']
-        expect(JSON.parse(vcap_application_json)['limits']['mem'] ).to eq(170)
+        expect(JSON.parse(vcap_application_json)['limits']['mem']).to eq(170)
       end
 
       context 'when a sidecar doesnt have a memory limit' do
