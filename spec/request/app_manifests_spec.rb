@@ -530,52 +530,6 @@ RSpec.describe 'App Manifests' do
         expect(last_response.status).to eq(202)
       end
 
-      context 'when the manifest attempts to scale a web process' do
-        let(:yml_manifest) do
-          { 'applications' =>
-            [{ 'name' => 'blah',
-              'processes' => [{ 'type' => 'web', 'instances' => '3' }]
-            }]
-          }.to_yaml
-        end
-
-        it 'fails' do
-          Delayed::Worker.new.work_off
-          job = VCAP::CloudController::PollableJobModel.last
-
-          expect(last_response.headers['Location']).to match(%r(/v3/jobs/#{job.guid}))
-          expect(job.state).to eq('FAILED')
-          api_errors = YAML.safe_load(job.cf_api_error)['errors']
-          expect(api_errors.size).to eq(1)
-          expect(api_errors.map { |error| error['detail'] }).to match_array([
-            'Cannot scale this process while a deployment is in flight.',
-          ])
-        end
-      end
-
-      context 'when the manifest attempts to update a web process' do
-        let(:yml_manifest) do
-          { 'applications' =>
-            [{ 'name' => 'blah',
-              'processes' => [{ 'type' => 'web', 'command' => 'echo hi' }]
-            }]
-          }.to_yaml
-        end
-
-        it 'fails' do
-          Delayed::Worker.new.work_off
-          job = VCAP::CloudController::PollableJobModel.last
-
-          expect(last_response.headers['Location']).to match(%r(/v3/jobs/#{job.guid}))
-          expect(job.state).to eq('FAILED')
-          api_errors = YAML.safe_load(job.cf_api_error)['errors']
-          expect(api_errors.size).to eq(1)
-          expect(api_errors.map { |error| error['detail'] }).to match_array([
-            'Cannot update this process while a deployment is in flight.',
-          ])
-        end
-      end
-
       context 'when the manifest attempts to update/scale non-web processes' do
         let(:yml_manifest) do
           { 'applications' =>

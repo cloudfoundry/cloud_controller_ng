@@ -246,6 +246,43 @@ module VCAP::CloudController
           end
         end
       end
+
+      context 'when there is a deployment in flight' do
+        before do
+          DeploymentModel.make(app: app, state: DeploymentModel::DEPLOYING_STATE)
+        end
+
+        context 'when the process type is web' do
+          it 'raises an invalid error' do
+            expect {
+              process_update.update(process, message, NonManifestStrategy)
+            }.to raise_error(ProcessUpdate::InvalidProcess, 'Cannot update this process while a deployment is in flight.')
+          end
+        end
+
+        context 'when the process type is NOT web' do
+          let!(:process) do
+            ProcessModel.make(
+              :process,
+              type: 'gerg',
+              command:              'zrob',
+              health_check_type:    'port',
+              health_check_timeout: 10,
+              ports:                [1574, 3389],
+              app: app
+            )
+          end
+
+          it 'does not raise an error and updates the process' do
+            process_update.update(process, message, NonManifestStrategy)
+
+            process.reload
+            expect(process.command).to eq('new')
+            expect(process.health_check_type).to eq('process')
+            expect(process.health_check_timeout).to eq(20)
+          end
+        end
+      end
     end
   end
 end
