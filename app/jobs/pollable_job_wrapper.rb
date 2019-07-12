@@ -39,13 +39,13 @@ module VCAP::CloudController
       # Doing `ModelClass.where(CONDITION).update(field: value)` bypasses the sequel timestamp updater hook
 
       def save_error(api_error, job)
-        PollableJobModel.where(delayed_job_guid: job.guid).map do |pollable_job|
+        PollableJobModel.where(delayed_job_guid: job.guid).each do |pollable_job|
           pollable_job.update(cf_api_error: api_error)
         end
       end
 
       def change_state(job, new_state)
-        PollableJobModel.where(delayed_job_guid: job.guid).map do |pollable_job|
+        PollableJobModel.where(delayed_job_guid: job.guid).each do |pollable_job|
           pollable_job.update(state: new_state)
         end
       end
