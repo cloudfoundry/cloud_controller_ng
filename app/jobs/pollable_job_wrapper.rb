@@ -35,12 +35,19 @@ module VCAP::CloudController
         YAML.dump(error_presenter.to_hash)
       end
 
+      # Need to update each pollable job instance individually to ensure timestamps are set correctly
+      # Doing `ModelClass.where(CONDITION).update(field: value)` bypasses the sequel timestamp updater hook
+
       def save_error(api_error, job)
-        PollableJobModel.where(delayed_job_guid: job.guid).update(cf_api_error: api_error)
+        PollableJobModel.where(delayed_job_guid: job.guid).map do |pollable_job|
+          pollable_job.update(cf_api_error: api_error)
+        end
       end
 
       def change_state(job, new_state)
-        PollableJobModel.where(delayed_job_guid: job.guid).update(state: new_state)
+        PollableJobModel.where(delayed_job_guid: job.guid).map do |pollable_job|
+          pollable_job.update(state: new_state)
+        end
       end
     end
   end
