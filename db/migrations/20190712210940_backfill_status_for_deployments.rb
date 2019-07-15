@@ -1,18 +1,25 @@
 Sequel.migration do
   change do
-    deployments_without_status_value = self[:deployments].where(
-      Sequel.lit("status_value IS NULL OR TRIM(status_value) = ''")
+    problematic_deployments = self[:deployments].where(
+      Sequel.lit("status_value IS NULL OR TRIM(status_value) = '' OR state = 'FAILING' OR state = 'FAILED'")
     )
 
-    deployments_without_status_value.each do |deployment|
-      deployment_guid = deployment[:guid]
-      state = deployment[:state]
-
+    problematic_deployments.each do |deployment|
       fields_to_update = {}
-      fields_to_update[:status_value] = 'FINALIZED' if ['DEPLOYED', 'CANCELED', 'FAILED'].include?(state)
-      fields_to_update[:status_value] = 'DEPLOYING' if ['DEPLOYING', 'CANCELING', 'FAILING'].include?(state)
+      case deployment[:state]
+      when 'DEPLOYED', 'CANCELED'
+        fields_to_update[:status_value] = 'FINALIZED'
+      when 'FAILED'
+        fields_to_update[:state] = 'DEPLOYED'
+        fields_to_update[:status_value] = 'FINALIZED'
+      when 'DEPLOYING', 'CANCELING'
+        fields_to_update[:status_value] = 'DEPLOYING'
+      when 'FAILING'
+        fields_to_update[:state] = 'DEPLOYING'
+        fields_to_update[:status_value] = 'DEPLOYING'
+      end
 
-      self[:deployments].where(guid: deployment_guid).update(fields_to_update) unless fields_to_update.empty?
+      self[:deployments].where(guid: deployment[:guid]).update(fields_to_update) unless fields_to_update.empty?
     end
   end
 end

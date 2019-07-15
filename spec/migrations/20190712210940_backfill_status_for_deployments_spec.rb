@@ -56,7 +56,7 @@ RSpec.describe 'backfill status_value for deployments', isolation: :truncation d
     let!(:deployment_with_state_failed) do
       VCAP::CloudController::DeploymentModel.create(
         guid: 'with-state-failed',
-        state: VCAP::CloudController::DeploymentModel::FAILED_STATE,
+        state: 'FAILED',
         app: app,
         original_web_process_instance_count: 1
       )
@@ -66,7 +66,7 @@ RSpec.describe 'backfill status_value for deployments', isolation: :truncation d
       Sequel::Migrator.run(VCAP::CloudController::DeploymentModel.db, tmp_migrations_dir, table: :my_fake_table)
       deployment = VCAP::CloudController::DeploymentModel.where(guid: deployment_with_state_failed.guid).first
 
-      expect(deployment.state).to eq(VCAP::CloudController::DeploymentModel::FAILED_STATE)
+      expect(deployment.state).to eq(VCAP::CloudController::DeploymentModel::DEPLOYED_STATE)
       expect(deployment.status_value).to eq(VCAP::CloudController::DeploymentModel::FINALIZED_STATUS_VALUE)
       expect(deployment.status_reason).to be_nil
     end
@@ -116,7 +116,7 @@ RSpec.describe 'backfill status_value for deployments', isolation: :truncation d
     let!(:deployment_with_state_failing) do
       VCAP::CloudController::DeploymentModel.create(
         guid: 'with-state-failing',
-        state: VCAP::CloudController::DeploymentModel::FAILING_STATE,
+        state: 'FAILING',
         app: app,
         original_web_process_instance_count: 1
       )
@@ -126,7 +126,7 @@ RSpec.describe 'backfill status_value for deployments', isolation: :truncation d
       Sequel::Migrator.run(VCAP::CloudController::DeploymentModel.db, tmp_migrations_dir, table: :my_fake_table)
       deployment = VCAP::CloudController::DeploymentModel.where(guid: deployment_with_state_failing.guid).first
 
-      expect(deployment.state).to eq(VCAP::CloudController::DeploymentModel::FAILING_STATE)
+      expect(deployment.state).to eq(VCAP::CloudController::DeploymentModel::DEPLOYING_STATE)
       expect(deployment.status_value).to eq(VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_VALUE)
       expect(deployment.status_reason).to be_nil
     end
@@ -159,7 +159,7 @@ RSpec.describe 'backfill status_value for deployments', isolation: :truncation d
       let!(:deployment_with_state_failing) do
         VCAP::CloudController::DeploymentModel.create(
           guid: 'with-state-deployed',
-          state: VCAP::CloudController::DeploymentModel::FAILING_STATE,
+          state: 'FAILING',
           status_value: 'foo',
           status_reason: 'bar',
           app: app,
@@ -171,8 +171,8 @@ RSpec.describe 'backfill status_value for deployments', isolation: :truncation d
         Sequel::Migrator.run(VCAP::CloudController::DeploymentModel.db, tmp_migrations_dir, table: :my_fake_table)
         deployment = VCAP::CloudController::DeploymentModel.where(guid: deployment_with_state_failing.guid).first
 
-        expect(deployment.state).to eq(VCAP::CloudController::DeploymentModel::FAILING_STATE)
-        expect(deployment.status_value).to eq('foo')
+        expect(deployment.state).to eq(VCAP::CloudController::DeploymentModel::DEPLOYING_STATE)
+        expect(deployment.status_value).to eq('DEPLOYING')
         expect(deployment.status_reason).to eq('bar')
       end
     end
