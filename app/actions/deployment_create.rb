@@ -19,7 +19,7 @@ module VCAP::CloudController
                      RevisionResolver.update_app_revision(app, user_audit_info)
                    end
 
-        previous_deployment = DeploymentModel.find(app: app, state: [DeploymentModel::DEPLOYING_STATE, DeploymentModel::FAILING_STATE])
+        previous_deployment = DeploymentModel.find(app: app, state: DeploymentModel::DEPLOYING_STATE)
 
         if app.stopped?
           return deployment_for_stopped_app(
@@ -47,10 +47,8 @@ module VCAP::CloudController
 
         DeploymentModel.db.transaction do
           if previous_deployment
-            new_state = previous_deployment.deploying? ? DeploymentModel::DEPLOYED_STATE : DeploymentModel::FAILED_STATE
-
             previous_deployment.update(
-              state: new_state,
+              state: DeploymentModel::DEPLOYED_STATE,
               status_value: DeploymentModel::FINALIZED_STATUS_VALUE,
               status_reason: DeploymentModel::SUPERSEDED_STATUS_REASON
             )

@@ -314,11 +314,11 @@ module VCAP::CloudController
 
       context 'when there are database-like services' do
         before do
-          sql_service_plan     = ServicePlan.make(service: Service.make(label: 'elephantsql-n/a'))
+          sql_service_plan = ServicePlan.make(service: Service.make(label: 'elephantsql-n/a'))
           sql_service_instance = ManagedServiceInstance.make(space: space, service_plan: sql_service_plan, name: 'elephantsql-vip-uat')
           ServiceBinding.make(app: parent_app, service_instance: sql_service_instance, credentials: { 'uri' => 'mysql://foo.com' })
 
-          banana_service_plan     = ServicePlan.make(service: Service.make(label: 'chiquita-n/a'))
+          banana_service_plan = ServicePlan.make(service: Service.make(label: 'chiquita-n/a'))
           banana_service_instance = ManagedServiceInstance.make(space: space, service_plan: banana_service_plan, name: 'chiqiuta-yummy')
           ServiceBinding.make(app: parent_app, service_instance: banana_service_instance, credentials: { 'uri' => 'banana://yum.com' })
         end
@@ -330,11 +330,11 @@ module VCAP::CloudController
 
       context 'when there are non-database-like services' do
         before do
-          banana_service_plan     = ServicePlan.make(service: Service.make(label: 'chiquita-n/a'))
+          banana_service_plan = ServicePlan.make(service: Service.make(label: 'chiquita-n/a'))
           banana_service_instance = ManagedServiceInstance.make(space: space, service_plan: banana_service_plan, name: 'chiqiuta-yummy')
           ServiceBinding.make(app: parent_app, service_instance: banana_service_instance, credentials: { 'uri' => 'banana://yum.com' })
 
-          uncredentialed_service_plan     = ServicePlan.make(service: Service.make(label: 'mysterious-n/a'))
+          uncredentialed_service_plan = ServicePlan.make(service: Service.make(label: 'mysterious-n/a'))
           uncredentialed_service_instance = ManagedServiceInstance.make(space: space, service_plan: uncredentialed_service_plan, name: 'mysterious-mystery')
           ServiceBinding.make(app: parent_app, service_instance: uncredentialed_service_instance, credentials: {})
         end
@@ -352,7 +352,7 @@ module VCAP::CloudController
 
       context 'when the service binding credentials is nil' do
         before do
-          banana_service_plan     = ServicePlan.make(service: Service.make(label: 'chiquita-n/a'))
+          banana_service_plan = ServicePlan.make(service: Service.make(label: 'chiquita-n/a'))
           banana_service_instance = ManagedServiceInstance.make(space: space, service_plan: banana_service_plan, name: 'chiqiuta-yummy')
           ServiceBinding.make(app: parent_app, service_instance: banana_service_instance, credentials: nil)
         end
@@ -489,21 +489,32 @@ module VCAP::CloudController
         expect(app_model.failing?).to be(false)
       end
 
-      it 'returns false when the app has no deployments that are being failing' do
-        VCAP::CloudController::DeploymentModel.make(state: 'DEPLOYING', app: app_model)
-        VCAP::CloudController::DeploymentModel.make(state: 'CANCELING', app: app_model)
-        VCAP::CloudController::DeploymentModel.make(state: 'CANCELED', app: app_model)
+      context 'when the app has no failing deployments' do
+        let!(:deployment_1) { VCAP::CloudController::DeploymentModel.make(state: 'DEPLOYING', app: app_model) }
+        let!(:deployment_2) { VCAP::CloudController::DeploymentModel.make(state: 'CANCELING', app: app_model) }
+        let!(:deployment_3) { VCAP::CloudController::DeploymentModel.make(state: 'CANCELED', app: app_model) }
 
-        expect(app_model.failing?).to be(false)
+        it 'returns false' do
+          expect(app_model.failing?).to be(false)
+        end
       end
 
-      it 'returns true when the app has a deployment that is being failing' do
-        VCAP::CloudController::DeploymentModel.make(state: 'FAILING', app: app_model)
-        VCAP::CloudController::DeploymentModel.make(state: 'CANCELING', app: app_model)
-        VCAP::CloudController::DeploymentModel.make(state: 'DEPLOYING', app: app_model)
-        VCAP::CloudController::DeploymentModel.make(state: 'CANCELED', app: app_model)
+      context 'when the app has at least one failing deployment' do
+        let!(:unhealthy_deployment) do
+          VCAP::CloudController::DeploymentModel.make(
+            state: 'DEPLOYING',
+            app: app_model,
+            last_healthy_at: Time.now - 24.hours
+          )
+        end
 
-        expect(app_model.failing?).to be(true)
+        before do
+          TestConfig.override(default_health_check_timeout: 3.seconds)
+        end
+
+        it 'returns true' do
+          expect(app_model.failing?).to be(true)
+        end
       end
     end
 

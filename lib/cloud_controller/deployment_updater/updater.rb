@@ -71,16 +71,7 @@ module VCAP::CloudController
           app.lock!
           deploying_web_process.lock!
 
-          if !ready_to_scale?
-            if deployment.should_fail?
-              deployment.update(
-                state: DeploymentModel::FAILING_STATE,
-                status_value: DeploymentModel::DEPLOYING_STATUS_VALUE
-              )
-            end
-
-            return
-          end
+          return unless ready_to_scale?
 
           deployment.update(
             last_healthy_at: Time.now,

@@ -46,9 +46,9 @@ module VCAP::CloudController
     let(:diego_instances_reporter) { instance_double(Diego::InstancesReporter) }
     let(:all_instances_results) {
       {
-          0 => { state: 'RUNNING', uptime: 50, since: 2 },
-          1 => { state: 'RUNNING', uptime: 50, since: 2 },
-          2 => { state: 'RUNNING', uptime: 50, since: 2 },
+        0 => { state: 'RUNNING', uptime: 50, since: 2 },
+        1 => { state: 'RUNNING', uptime: 50, since: 2 },
+        2 => { state: 'RUNNING', uptime: 50, since: 2 },
       }
     }
     let(:instances_reporters) { double(:instance_reporters) }
@@ -261,9 +261,9 @@ module VCAP::CloudController
         let(:current_deploying_instances) { 3 }
         let(:all_instances_results) {
           {
-              0 => { state: 'RUNNING', uptime: 50, since: 2 },
-              1 => { state: 'STARTING', uptime: 50, since: 2 },
-              2 => { state: 'STARTING', uptime: 50, since: 2 },
+            0 => { state: 'RUNNING', uptime: 50, since: 2 },
+            1 => { state: 'STARTING', uptime: 50, since: 2 },
+            2 => { state: 'STARTING', uptime: 50, since: 2 },
           }
         }
 
@@ -286,9 +286,9 @@ module VCAP::CloudController
         let(:current_deploying_instances) { 3 }
         let(:all_instances_results) {
           {
-              0 => { state: 'RUNNING', uptime: 50, since: 2 },
-              1 => { state: 'FAILING', uptime: 50, since: 2 },
-              2 => { state: 'FAILING', uptime: 50, since: 2 },
+            0 => { state: 'RUNNING', uptime: 50, since: 2 },
+            1 => { state: 'FAILING', uptime: 50, since: 2 },
+            2 => { state: 'FAILING', uptime: 50, since: 2 },
           }
         }
 
@@ -307,63 +307,6 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the deployment is failing' do
-        let(:deployment) do
-          DeploymentModel.make(
-            app: web_process.app,
-            deploying_web_process: deploying_web_process,
-            state: 'FAILING',
-            original_web_process_instance_count: original_web_process_instance_count,
-            last_healthy_at: Time.now - 5.minutes
-          )
-        end
-        let!(:previous_last_healthy_at) { deployment.last_healthy_at || 0 }
-
-        context 'when all its instances are running' do
-          it 'sets the deployment to DEPLOYING and updates last_healthy_at' do
-            subject.scale
-            expect(deployment.reload.last_healthy_at).to be > previous_last_healthy_at
-            expect(deployment.state).to eq(DeploymentModel::DEPLOYING_STATE)
-            expect(deployment.status_value).to eq(DeploymentModel::DEPLOYING_STATUS_VALUE)
-            expect(deployment.status_reason).to eq(nil)
-          end
-        end
-
-        context 'when some instances are failing' do
-          let(:all_instances_results) {
-            {
-              0 => { state: 'RUNNING', uptime: 50, since: 2 },
-              1 => { state: 'FAILING', uptime: 50, since: 2 },
-              2 => { state: 'FAILING', uptime: 50, since: 2 },
-            }
-          }
-          it 'changes nothing' do
-            Timecop.travel(Time.now + 5.minutes) do
-              expect {
-                subject.scale
-              }.not_to change { [deployment.reload.last_healthy_at, deployment.state] }
-            end
-          end
-        end
-
-        context 'when all instances are starting' do
-          let(:all_instances_results) {
-            {
-              0 => { state: 'STARTING', uptime: 50, since: 2 },
-              1 => { state: 'STARTING', uptime: 50, since: 2 },
-              2 => { state: 'STARTING', uptime: 50, since: 2 },
-            }
-          }
-          it 'changes nothing' do
-            Timecop.travel(Time.now + 1.minute) do
-              expect {
-                subject.scale
-              }.to_not change { [deployment.reload.last_healthy_at, deployment.state] }
-            end
-          end
-        end
-      end
-
       context 'when the deployment is deploying' do
         let!(:previous_last_healthy_at) { deployment.last_healthy_at || 0 }
 
@@ -372,7 +315,7 @@ module VCAP::CloudController
         end
 
         context 'when all its instances are running' do
-          it 'updates last_healthy_at'  do
+          it 'updates last_healthy_at' do
             Timecop.travel(deployment.last_healthy_at + 10.seconds) do
               subject.scale
               expect(deployment.reload.last_healthy_at).to be > previous_last_healthy_at
@@ -392,28 +335,12 @@ module VCAP::CloudController
             }
           }
 
-          context 'when 2x the timeout has not passed' do
-            it 'changes nothing' do
-              Timecop.travel(deployment.last_healthy_at + 10.seconds) do
-                subject.scale
-                expect(deployment.reload.last_healthy_at).to eq previous_last_healthy_at
-                expect(deployment.state).to eq(DeploymentModel::DEPLOYING_STATE)
-                expect(deployment.status_value).to eq(DeploymentModel::DEPLOYING_STATUS_VALUE)
-                expect(deployment.status_reason).to be_nil
-              end
-            end
-          end
-
-          context 'when 2x the timeout has passed' do
-            it 'sets the deployment to FAILING and doesnt updates last_healthy_at' do
-              Timecop.travel(deployment.last_healthy_at + 130.seconds) do
-                subject.scale
-                expect(deployment.reload.last_healthy_at).to eq previous_last_healthy_at
-                expect(deployment.state).to eq(DeploymentModel::FAILING_STATE)
-                expect(deployment.status_value).to eq(DeploymentModel::DEPLOYING_STATUS_VALUE)
-                expect(deployment.status_reason).to be_nil
-              end
-            end
+          it 'changes nothing' do
+            subject.scale
+            expect(deployment.reload.last_healthy_at).to eq previous_last_healthy_at
+            expect(deployment.state).to eq(DeploymentModel::DEPLOYING_STATE)
+            expect(deployment.status_value).to eq(DeploymentModel::DEPLOYING_STATUS_VALUE)
+            expect(deployment.status_reason).to be_nil
           end
         end
       end
@@ -485,10 +412,10 @@ module VCAP::CloudController
 
           expect(logger).to have_received(:error).with(
             'error-scaling-deployment',
-              deployment_guid: deployment.guid,
-              error: 'StandardError',
-              error_message: 'Something real bad happened',
-              backtrace: anything
+            deployment_guid: deployment.guid,
+            error: 'StandardError',
+            error_message: 'Something real bad happened',
+            backtrace: anything
           )
         end
 

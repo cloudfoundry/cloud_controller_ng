@@ -13,6 +13,7 @@ module VCAP::CloudController::Presenters::V3
         droplet: droplet,
         previous_droplet: previous_droplet,
         deploying_web_process: process,
+        last_healthy_at: '2019-07-12 19:01:54',
         state: VCAP::CloudController::DeploymentModel::DEPLOYING_STATE,
         status_value: VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_VALUE,
         status_reason: nil
@@ -27,6 +28,7 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:state]).to eq(VCAP::CloudController::DeploymentModel::DEPLOYING_STATE)
         expect(result[:status][:value]).to eq(VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_VALUE)
         expect(result[:status][:reason]).to be_nil
+        expect(result[:status][:details][:last_successful_healthcheck]).to eq('2019-07-12 19:01:54')
 
         expect(result[:droplet][:guid]).to eq(droplet.guid)
         expect(result[:previous_droplet][:guid]).to eq(previous_droplet.guid)

@@ -419,35 +419,6 @@ module VCAP::CloudController
                 expect(existing_deployment.status_reason).to eq(DeploymentModel::SUPERSEDED_STATUS_REASON)
               end
             end
-
-            context 'when the existing deployment is FAILING' do
-              let(:existing_state) { DeploymentModel::FAILING_STATE }
-
-              it 'creates a new deployment with the instance count from the existing deployment' do
-                deployment = nil
-
-                expect {
-                  deployment = DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
-                }.to change { DeploymentModel.count }.by(1)
-
-                expect(deployment.state).to eq(DeploymentModel::DEPLOYING_STATE)
-                expect(deployment.app_guid).to eq(app.guid)
-                expect(deployment.droplet_guid).to eq(next_droplet.guid)
-                expect(deployment.previous_droplet).to eq(original_droplet)
-                expect(deployment.original_web_process_instance_count).to eq(originally_desired_instance_count)
-                expect(deployment.status_value).to eq(DeploymentModel::DEPLOYING_STATUS_VALUE)
-                expect(deployment.status_reason).to eq(nil)
-              end
-
-              it 'sets the existing deployment to FAILED' do
-                DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
-                existing_deployment.reload
-
-                expect(existing_deployment.state).to eq(DeploymentModel::FAILED_STATE)
-                expect(existing_deployment.status_value).to eq(DeploymentModel::FINALIZED_STATUS_VALUE)
-                expect(existing_deployment.status_reason).to eq(DeploymentModel::SUPERSEDED_STATUS_REASON)
-              end
-            end
           end
 
           context 'when the message specifies metadata' do

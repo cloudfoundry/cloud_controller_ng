@@ -9,7 +9,7 @@ Example Deployment object
 
 Name | Type | Description
 ---- | ---- | -----------
-**state** | _string_ | **(deprecated)** The state of the deployment. Valid values are `DEPLOYING`, `DEPLOYED`, `CANCELING`, `CANCELED`, `FAILING`, or `FAILED`. This field will be removed in the future; use the `status` fields to determine deployment state instead.
+**state** | _string_ | **(deprecated)** The state of the deployment. Valid values are `DEPLOYING`, `DEPLOYED`, `CANCELING`, or `CANCELED`. This field will be removed in the future; use the `status` fields to determine deployment state instead.
 **status.value** | _string_ | The current status of the deployment. Valid values are `DEPLOYING` (still in-progress) and `FINALIZED` (finished, either successfully or not).
 **status.reason** | _string_ or `null` | The reason for the current status of the deployment. Valid values are `DEPLOYED` (completed successfully), `CANCELED` (canceled before completion), `SUPERSEDED` (another deployment created for app before completion), or `null` (still in-progress).
 **guid** | _uuid_ | Unique identifier for the deployment.

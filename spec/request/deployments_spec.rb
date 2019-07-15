@@ -41,7 +41,10 @@ RSpec.describe 'Deployments' do
           'state' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATE,
           'status' => {
             'value' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_VALUE,
-            'reason' => nil
+            'reason' => nil,
+            'details' => {
+              'last_successful_healthcheck' => iso8601
+            }
           },
           'droplet' => {
             'guid' => droplet.guid
@@ -105,7 +108,10 @@ RSpec.describe 'Deployments' do
           'state' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATE,
           'status' => {
             'value' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_VALUE,
-            'reason' => nil
+            'reason' => nil,
+            'details' => {
+              'last_successful_healthcheck' => iso8601
+            }
           },
           'droplet' => {
             'guid' => other_droplet.guid
@@ -178,7 +184,10 @@ RSpec.describe 'Deployments' do
           'state' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATE,
           'status' => {
             'value' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_VALUE,
-            'reason' => nil
+            'reason' => nil,
+            'details' => {
+              'last_successful_healthcheck' => iso8601
+            }
           },
           'droplet' => {
             'guid' => other_droplet.guid
@@ -285,7 +294,10 @@ RSpec.describe 'Deployments' do
           'state' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATE,
           'status' => {
             'value' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_VALUE,
-            'reason' => nil
+            'reason' => nil,
+            'details' => {
+              'last_successful_healthcheck' => iso8601
+            }
           },
           'droplet' => {
             'guid' => droplet.guid
@@ -355,7 +367,10 @@ RSpec.describe 'Deployments' do
           'state' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATE,
           'status' => {
             'value' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_VALUE,
-            'reason' => nil
+            'reason' => nil,
+            'details' => {
+              'last_successful_healthcheck' => iso8601
+            }
           },
           'droplet' => {
             'guid' => other_droplet.guid
@@ -393,41 +408,6 @@ RSpec.describe 'Deployments' do
       end
     end
 
-    context 'when the app has an existing FAILING deployment' do
-      let(:deployment) {
-        VCAP::CloudController::DeploymentModel.make(
-          app: app_model,
-          droplet: droplet,
-          state: VCAP::CloudController::DeploymentModel::FAILING_STATE
-        )
-      }
-      let(:create_request) do
-        {
-          relationships: {
-            app: {
-              data: {
-                guid: app_model.guid
-              }
-            },
-          }
-        }
-      end
-
-      context 'when we redeploy the app with a new deployment' do
-        it 'the deployment state of the "FAILING" deployment will be changed to "FAILED"' do
-          expect(deployment.state).to eq(VCAP::CloudController::DeploymentModel::FAILING_STATE)
-
-          post '/v3/deployments', create_request.to_json, user_header
-          expect(last_response.status).to eq(201)
-
-          deployment.reload
-          expect(deployment.state).to eq(VCAP::CloudController::DeploymentModel::FAILED_STATE)
-          expect(deployment.status_value).to eq(VCAP::CloudController::DeploymentModel::FINALIZED_STATUS_VALUE)
-          expect(deployment.status_reason).to eq(VCAP::CloudController::DeploymentModel::SUPERSEDED_STATUS_REASON)
-        end
-      end
-    end
-
     context 'when the app is stopped' do
       let(:other_droplet) { VCAP::CloudController::DropletModel.make(app: app_model, process_types: { web: 'start-me-up' }) }
       let(:create_request) do
@@ -462,7 +442,10 @@ RSpec.describe 'Deployments' do
           'state' => VCAP::CloudController::DeploymentModel::DEPLOYED_STATE,
           'status' => {
             'value' => VCAP::CloudController::DeploymentModel::FINALIZED_STATUS_VALUE,
-            'reason' => VCAP::CloudController::DeploymentModel::DEPLOYED_STATUS_REASON
+            'reason' => VCAP::CloudController::DeploymentModel::DEPLOYED_STATUS_REASON,
+            'details' => {
+              'last_successful_healthcheck' => iso8601
+            }
           },
           'droplet' => {
             'guid' => other_droplet.guid
@@ -532,7 +515,10 @@ RSpec.describe 'Deployments' do
         'state' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATE,
         'status' => {
           'value' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_VALUE,
-          'reason' => nil
+          'reason' => nil,
+          'details' => {
+            'last_successful_healthcheck' => iso8601
+          }
         },
         'droplet' => {
           'guid' => droplet.guid,
@@ -586,7 +572,10 @@ RSpec.describe 'Deployments' do
         'state' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATE,
         'status' => {
           'value' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_VALUE,
-          'reason' => nil
+          'reason' => nil,
+          'details' => {
+            'last_successful_healthcheck' => iso8601
+          }
         },
         'droplet' => {
           'guid' => droplet.guid
@@ -677,7 +666,10 @@ RSpec.describe 'Deployments' do
               'state' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATE,
               'status' => {
                 'value' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_VALUE,
-                'reason' => nil
+                'reason' => nil,
+                'details' => {
+                  'last_successful_healthcheck' => iso8601
+                }
               },
               'droplet' => {
                 'guid' => droplet.guid
@@ -714,7 +706,10 @@ RSpec.describe 'Deployments' do
               'state' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATE,
               'status' => {
                 'value' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_VALUE,
-                'reason' => nil
+                'reason' => nil,
+                'details' => {
+                  'last_successful_healthcheck' => iso8601
+                }
               },
               'droplet' => {
                 'guid' => droplet2.guid
@@ -802,7 +797,10 @@ RSpec.describe 'Deployments' do
               'state' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATE,
               'status' => {
                 'value' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_VALUE,
-                'reason' => nil
+                'reason' => nil,
+                'details' => {
+                  'last_successful_healthcheck' => iso8601
+                }
               },
               'droplet' => {
                 'guid' => droplet.guid

@@ -11,7 +11,10 @@ module VCAP::CloudController::Presenters::V3
         state: deployment.state,
         status: {
           value: deployment.status_value,
-          reason: deployment.status_reason
+          reason: deployment.status_reason,
+          details: {
+            last_successful_healthcheck: deployment.last_healthy_at
+          }
         },
         droplet: {
           guid: deployment.droplet_guid

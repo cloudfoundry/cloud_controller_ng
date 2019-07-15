@@ -6,7 +6,6 @@ module VCAP::CloudController
     subject(:dispatcher) { DeploymentUpdater::Dispatcher }
 
     let(:scaling_deployment) { DeploymentModel.make(state: DeploymentModel::DEPLOYING_STATE) }
-    let(:failing_deployment) { DeploymentModel.make(state: DeploymentModel::FAILING_STATE) }
     let(:canceling_deployment) { DeploymentModel.make(state: DeploymentModel::CANCELING_STATE) }
 
     let(:logger) { instance_double(Steno::Logger, info: nil, error: nil) }
@@ -33,16 +32,6 @@ module VCAP::CloudController
       context 'when a deployment is in flight' do
         before do
           allow(DeploymentUpdater::Updater).to receive(:new).with(scaling_deployment, logger).and_return(updater)
-        end
-        it 'scales the deployment' do
-          subject.dispatch
-          expect(updater).to have_received(:scale)
-        end
-      end
-
-      context 'when a deployment is FAILING' do
-        before do
-          allow(DeploymentUpdater::Updater).to receive(:new).with(failing_deployment, logger).and_return(updater)
         end
         it 'scales the deployment' do
           subject.dispatch
