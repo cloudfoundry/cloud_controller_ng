@@ -277,7 +277,6 @@ module VCAP::CloudController
               event = app_event_repository.record_map_route(user_audit_info, route_mapping)
               expect(event.metadata[:route_guid]).to eq(route.guid)
               expect(event.metadata[:route_mapping_guid]).to eq(route_mapping.guid)
-              expect(event.metadata[:destination_guid]).to eq(route_mapping.guid)
               expect(event.metadata[:process_type]).to eq('potato')
               expect(event.metadata[:weight]).to be_nil
             end
@@ -289,7 +288,6 @@ module VCAP::CloudController
               event = app_event_repository.record_map_route(user_audit_info, route_mapping)
               expect(event.metadata[:route_guid]).to eq(route.guid)
               expect(event.metadata[:route_mapping_guid]).to eq(route_mapping.guid)
-              expect(event.metadata[:destination_guid]).to eq(route_mapping.guid)
               expect(event.metadata[:process_type]).to eq('potato')
               expect(event.metadata[:weight]).to eq(100)
             end

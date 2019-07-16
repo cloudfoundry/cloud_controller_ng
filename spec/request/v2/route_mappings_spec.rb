@@ -175,7 +175,6 @@ RSpec.describe 'RouteMappings' do
       expect(event.metadata).to eq({
         'route_guid' => route.guid,
         'app_port' => 9090,
-        'destination_guid' => route_mapping.guid,
         'route_mapping_guid' => route_mapping.guid,
         'process_type' => 'web',
         'weight' => nil
@@ -201,7 +200,6 @@ RSpec.describe 'RouteMappings' do
       expect(event.metadata).to eq({
         'route_guid' => route.guid,
         'app_port' => route_mapping.app_port,
-        'destination_guid' => route_mapping.guid,
         'route_mapping_guid' => route_mapping.guid,
         'process_type' => 'web',
         'weight' => nil

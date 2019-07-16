@@ -1,0 +1,57 @@
+### Create a route mapping
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/route_mappings" \
+  -X POST \
+  -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
+  -d '{
+    "relationships": {
+      "app": {
+        "guid": "[app-guid]"
+      },
+      "route": {
+        "guid": "[route_guid]"
+      }
+    },
+    "weight": 55
+  }'
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 201 Created
+Content-Type: application/json
+
+<%= yield_content :single_route_mapping %>
+```
+
+#### Definition
+`POST /v3/route_mappings`
+
+#### Required Parameters
+
+Name | Type | Description
+---- | ---- | -----------
+**relationships.app** | [_to-one relationship_](#to-one-relationships) | A relationship to an app.
+**relationships.route** | [_to-one relationship_](#to-one-relationships) | A relationship to a route.
+
+#### Optional Parameters
+
+Name | Type | Description | Default
+---- | ---- | ----------- | -------
+**relationships.process** | [_to-one relationship_](#to-one-relationships) | A relationship to a process. This relationship is specified by `type` instead of `guid`.
+**weight**  | int         | A relative weight for your application that must be between 1 and 128.
+
+#### Permitted Roles
+ |
+--- | ---
+Admin |
+Space Developer |

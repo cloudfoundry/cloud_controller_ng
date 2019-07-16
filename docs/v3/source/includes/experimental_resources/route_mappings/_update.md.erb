@@ -1,0 +1,42 @@
+### Update a route mapping
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/route_mappings/[guid]" \
+  -X PATCH \
+  -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
+  -d '{
+    "weight": 55
+  }'
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 201 Created
+Content-Type: application/json
+
+<%= yield_content :single_route_mapping %>
+```
+
+#### Definition
+`PATCH /v3/route_mappings/:guid`
+
+#### Optional Parameters
+
+Name | Type | Description | Default
+---- | ---- | ----------- | -------
+**weight**  | int         | A relative weight for your application that must be between 1 and 128.
+
+#### Permitted Roles
+ |
+--- | ---
+Admin |
+Space Developer |
+

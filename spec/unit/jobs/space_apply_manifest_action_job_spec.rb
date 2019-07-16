@@ -53,6 +53,7 @@ module VCAP::CloudController
         ProcessScale::InvalidProcess,
         ProcessUpdate::InvalidProcess,
         Route::InvalidOrganizationRelation,
+        RouteMappingCreate::SpaceMismatch,
         ServiceBindingCreate::InvalidServiceBinding,
         ServiceBindingCreate::ServiceBrokerInvalidSyslogDrainUrl,
         ServiceBindingCreate::ServiceInstanceNotBindable,

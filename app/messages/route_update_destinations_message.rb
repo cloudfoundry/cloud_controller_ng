@@ -11,24 +11,6 @@ module VCAP::CloudController
 
     validate :destinations_valid?
 
-    def destinations_array
-      new_route_mappings = []
-      destinations.each do |dst|
-        app_guid = HashUtils.dig(dst, :app, :guid)
-        process_type = HashUtils.dig(dst, :app, :process, :type) || 'web'
-        weight = HashUtils.dig(dst, :weight)
-
-        new_route_mappings << {
-          app_guid: app_guid,
-          process_type: process_type,
-          app_port: ProcessModel::DEFAULT_HTTP_PORT,
-          weight: weight
-        }
-      end
-
-      new_route_mappings
-    end
-
     private
 
     ERROR_MESSAGE = 'Destinations must have the structure "destinations": [{"app": {"guid": "app_guid"}}]'.freeze

@@ -49,16 +49,6 @@ module VCAP::CloudController
             expect(route.domain.name).to eq 'tomato.avocado-toast.com'
             expect(route.path).to eq '/some-path'
           end
-
-          context 'when the route and app are in different spaces' do
-            let!(:outside_app) { AppModel.make }
-            it 'raises a route invalid error' do
-              expect {
-                ManifestRouteUpdate.update(outside_app.guid, message, user_audit_info)
-              }.to raise_error(VCAP::CloudController::ManifestRouteUpdate::InvalidRoute,
-                'Routes cannot be mapped to destinations in different spaces')
-            end
-          end
         end
       end
 

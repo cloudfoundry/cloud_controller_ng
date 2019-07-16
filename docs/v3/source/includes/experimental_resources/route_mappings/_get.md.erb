@@ -1,0 +1,36 @@
+### Get a route mapping
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/route_mappings/[guid]" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :single_route_mapping %>
+```
+
+#### Definition
+`GET /v3/route_mappings/:guid`
+
+#### Permitted Roles
+ |
+--- | ---
+Admin |
+Admin Read-Only |
+Global Auditor |
+Org Manager |
+Space Auditor |
+Space Developer |
+Space Manager |

@@ -102,7 +102,6 @@ module VCAP::CloudController
           route_guid: route.guid,
           app_port: route_mapping.app_port,
           route_mapping_guid: route_mapping.guid,
-          destination_guid: route_mapping.guid,
           process_type: route_mapping.process_type,
           weight: route_mapping.weight
         })
@@ -117,7 +116,6 @@ module VCAP::CloudController
           route_guid: route.guid,
           app_port: route_mapping.app_port,
           route_mapping_guid: route_mapping.guid,
-          destination_guid: route_mapping.guid,
           process_type: route_mapping.process_type,
           weight: route_mapping.weight
         })

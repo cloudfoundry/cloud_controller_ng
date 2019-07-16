@@ -1,6 +1,5 @@
 require 'spec_helper'
 require 'fetchers/route_mapping_list_fetcher'
-require 'messages/route_mappings_list_message'
 
 module VCAP::CloudController
   RSpec.describe RouteMappingListFetcher do
