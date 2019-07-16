@@ -29,8 +29,9 @@ module VCAP::CloudController
       end
     rescue Sequel::ValidationFailed => e
       if @process.errors.on(:memory)&.include?(:process_memory_insufficient_for_sidecars)
-        raise SidecarMemoryLessThanProcessMemory.new("The requested memory allocation is not large enough to run all of your sidecar processes")
+        raise SidecarMemoryLessThanProcessMemory.new('The requested memory allocation is not large enough to run all of your sidecar processes')
       end
+
       raise InvalidProcess.new(e.message)
     end
 
