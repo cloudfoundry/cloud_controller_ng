@@ -9,7 +9,7 @@ module VCAP::CloudController
     end
 
     def fetch_for_spaces(space_guids:)
-      app_dataset = AppModel.select(:id).where(space_guid: space_guids)
+      app_dataset = AppModel.where(space_guid: space_guids)
       filter(app_dataset)
     end
 
@@ -21,7 +21,7 @@ module VCAP::CloudController
       dataset = filter_deployment_dataset(DeploymentModel.dataset)
 
       if message.requested? :app_guids
-        app_dataset = app_dataset.where(app_guid: message.app_guids)
+        app_dataset = app_dataset.where(guid: message.app_guids)
       end
 
       dataset.where(app: app_dataset)
@@ -30,6 +30,14 @@ module VCAP::CloudController
     def filter_deployment_dataset(dataset)
       if message.requested? :states
         dataset = dataset.where(state: message.states)
+      end
+
+      if message.requested? :status_reasons
+        dataset = NullFilterQueryGenerator.add_filter(dataset, :status_reason, message.status_reasons)
+      end
+
+      if message.requested? :status_values
+        dataset = dataset.where(status_value: message.status_values)
       end
 
       if message.requested?(:label_selector)

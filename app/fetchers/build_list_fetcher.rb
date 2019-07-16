@@ -42,7 +42,7 @@ module VCAP::CloudController
 
     def filter_app_dataset(app_dataset)
       if message.requested? :app_guids
-        app_dataset = app_dataset.where(app_guid: message.app_guids)
+        app_dataset = app_dataset.where(guid: message.app_guids)
       end
       app_dataset
     end

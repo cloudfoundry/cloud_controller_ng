@@ -1,11 +1,14 @@
 require 'spec_helper'
+require 'request_spec_shared_examples'
 
 RSpec.describe 'Deployments' do
   let(:user) { make_developer_for_space(space) }
   let(:space) { app_model.space }
+  let(:org) { space.organization }
   let(:app_model) { VCAP::CloudController::AppModel.make(desired_state: VCAP::CloudController::ProcessModel::STARTED) }
   let(:droplet) { VCAP::CloudController::DropletModel.make(app: app_model, process_types: { 'web': 'webby' }) }
   let!(:process_model) { VCAP::CloudController::ProcessModel.make(app: app_model) }
+  let(:admin_header) { headers_for(user, scopes: %w(cloud_controller.admin)) }
   let(:user_header) { headers_for(user, email: user_email, user_name: user_name) }
   let(:user_email) { Sham.email }
   let(:user_name) { 'some-username' }
@@ -611,164 +614,317 @@ RSpec.describe 'Deployments' do
   end
 
   describe 'GET /v3/deployments/' do
-    let(:user) { make_developer_for_space(space) }
-    let(:user_header) { headers_for(user, email: user_email, user_name: user_name) }
-    let(:user_email) { Sham.email }
-    let(:user_name) { 'some-username' }
-
+    let(:user) {  VCAP::CloudController::User.make }
     let(:space) { app_model.space }
     let(:app_model) { droplet.app }
-    let(:droplet) { VCAP::CloudController::DropletModel.make }
+    let(:droplet) { VCAP::CloudController::DropletModel.make(guid: 'droplet1') }
     let!(:deployment) do
       VCAP::CloudController::DeploymentModelTestFactory.make(
         app: app_model,
         droplet: app_model.droplet,
-        previous_droplet: app_model.droplet
+        previous_droplet: app_model.droplet,
+        status_value: VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_VALUE,
+        state: VCAP::CloudController::DeploymentModel::DEPLOYING_STATE,
+        status_reason: nil
       )
     end
 
     context 'with an admin who can see all deployments' do
       let(:admin_user_header) { headers_for(user, scopes: %w(cloud_controller.admin)) }
 
-      let(:droplet2) { VCAP::CloudController::DropletModel.make }
-      let(:droplet3) { VCAP::CloudController::DropletModel.make }
-      let(:droplet4) { VCAP::CloudController::DropletModel.make }
+      let(:droplet2) { VCAP::CloudController::DropletModel.make(guid: 'droplet2') }
+      let(:droplet3) { VCAP::CloudController::DropletModel.make(guid: 'droplet3') }
+      let(:droplet4) { VCAP::CloudController::DropletModel.make(guid: 'droplet4') }
+      let(:droplet5) { VCAP::CloudController::DropletModel.make(guid: 'droplet5') }
       let(:app2) { droplet2.app }
       let(:app3) { droplet3.app }
       let(:app4) { droplet4.app }
-      let!(:deployment2) { VCAP::CloudController::DeploymentModelTestFactory.make(app: app2, droplet: app2.droplet) }
-      let!(:deployment3) { VCAP::CloudController::DeploymentModelTestFactory.make(app: app3, droplet: app3.droplet) }
-      let!(:deployment4) { VCAP::CloudController::DeploymentModelTestFactory.make(app: app4, droplet: app4.droplet) }
+      let(:app5) { droplet5.app }
+
+      before do
+        app2.update(space: space)
+        app3.update(space: space)
+        app4.update(space: space)
+        app5.update(space: space)
+      end
+
+      let!(:deployment2) { VCAP::CloudController::DeploymentModelTestFactory.make(app: app2, droplet: droplet2,
+        previous_droplet: droplet2,
+        status_value: VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_VALUE,
+        state: VCAP::CloudController::DeploymentModel::CANCELING_STATE,
+        status_reason: nil)
+      }
+
+      let!(:deployment3) { VCAP::CloudController::DeploymentModelTestFactory.make(app: app3, droplet: droplet3,
+        previous_droplet: droplet3,
+        status_value: VCAP::CloudController::DeploymentModel::FINALIZED_STATUS_VALUE,
+        state: VCAP::CloudController::DeploymentModel::DEPLOYED_STATE,
+        status_reason: VCAP::CloudController::DeploymentModel::DEPLOYED_STATUS_REASON)
+      }
+
+      let!(:deployment4) { VCAP::CloudController::DeploymentModelTestFactory.make(app: app4, droplet: droplet4,
+        previous_droplet: droplet4,
+        status_value: VCAP::CloudController::DeploymentModel::FINALIZED_STATUS_VALUE,
+        state: VCAP::CloudController::DeploymentModel::CANCELED_STATE,
+        status_reason: VCAP::CloudController::DeploymentModel::CANCELED_STATUS_REASON)
+      }
+
+      let!(:deployment5) { VCAP::CloudController::DeploymentModelTestFactory.make(app: app5, droplet: droplet5,
+        previous_droplet: droplet5,
+        status_value: VCAP::CloudController::DeploymentModel::FINALIZED_STATUS_VALUE,
+        state: VCAP::CloudController::DeploymentModel::DEPLOYED_STATE,
+        status_reason: VCAP::CloudController::DeploymentModel::SUPERSEDED_STATUS_REASON)
+      }
+
+      def json_for_deployment(deployment, app_model, droplet, state, status_value, status_reason)
+        {
+          guid: deployment.guid,
+          state: state,
+          status: {
+            value: status_value,
+            reason: status_reason,
+            details: {
+              last_successful_healthcheck: iso8601
+            }
+          },
+          droplet: {
+            guid: droplet.guid
+          },
+          revision: nil,
+          # previous_droplet: { guid: nil },
+          previous_droplet: {
+            guid: droplet.guid
+          },
+          new_processes: [{
+            guid: deployment.deploying_web_process.guid,
+            type: deployment.deploying_web_process.type
+          }],
+          created_at: iso8601,
+          updated_at: iso8601,
+          metadata: {
+            labels: {},
+            annotations: {},
+          },
+          relationships: {
+            app: {
+              data: {
+                guid: app_model.guid
+              }
+            }
+          },
+          links: {
+            self: {
+              href: "#{link_prefix}/v3/deployments/#{deployment.guid}"
+            },
+            app: {
+              href: "#{link_prefix}/v3/apps/#{app_model.guid}"
+            }
+          }
+        }
+      end
 
       it 'should list all deployments' do
         get '/v3/deployments?per_page=2', nil, admin_user_header
         expect(last_response.status).to eq(200)
 
         parsed_response = MultiJson.load(last_response.body)
-        expect(parsed_response).to be_a_response_like({
-          'pagination' => {
-            'total_results' => 4,
-            'total_pages' => 2,
-            'first' => {
-              'href' => "#{link_prefix}/v3/deployments?page=1&per_page=2"
+        expect(parsed_response).to match_json_response({
+          pagination: {
+            total_results: 5,
+            total_pages: 3,
+            first: {
+              href: "#{link_prefix}/v3/deployments?page=1&per_page=2"
             },
-            'last' => {
-              'href' => "#{link_prefix}/v3/deployments?page=2&per_page=2"
+            last: {
+              href: "#{link_prefix}/v3/deployments?page=3&per_page=2"
             },
-            'next' => {
-              'href' => "#{link_prefix}/v3/deployments?page=2&per_page=2"
+            next: {
+              href: "#{link_prefix}/v3/deployments?page=2&per_page=2"
             },
-            'previous' => nil
+            previous: nil
           },
-          'resources' => [
-            {
-              'guid' => deployment.guid,
-              'state' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATE,
-              'status' => {
-                'value' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_VALUE,
-                'reason' => nil,
-                'details' => {
-                  'last_successful_healthcheck' => iso8601
-                }
-              },
-              'droplet' => {
-                'guid' => droplet.guid
-              },
-              'revision' => nil,
-              'previous_droplet' => {
-                'guid' => droplet.guid
-              },
-              'new_processes' => [{
-                'guid' => deployment.deploying_web_process.guid,
-                'type' => deployment.deploying_web_process.type
-              }],
-              'created_at' => iso8601,
-              'updated_at' => iso8601,
-              'metadata' => metadata,
-              'relationships' => {
-                'app' => {
-                  'data' => {
-                    'guid' => app_model.guid
-                  }
-                }
-              },
-              'links' => {
-                'self' => {
-                  'href' => "#{link_prefix}/v3/deployments/#{deployment.guid}"
-                },
-                'app' => {
-                  'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
-                }
-              }
-            },
-            {
-              'guid' => deployment2.guid,
-              'state' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATE,
-              'status' => {
-                'value' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_VALUE,
-                'reason' => nil,
-                'details' => {
-                  'last_successful_healthcheck' => iso8601
-                }
-              },
-              'droplet' => {
-                'guid' => droplet2.guid
-              },
-              'revision' => nil,
-              'previous_droplet' => {
-                'guid' => nil
-              },
-              'new_processes' => [{
-                'guid' => deployment2.deploying_web_process.guid,
-                'type' => deployment2.deploying_web_process.type
-              }],
-              'created_at' => iso8601,
-              'updated_at' => iso8601,
-              'metadata' => metadata,
-              'relationships' => {
-                'app' => {
-                  'data' => {
-                    'guid' => app2.guid
-                  }
-                }
-              },
-              'links' => {
-                'self' => {
-                  'href' => "#{link_prefix}/v3/deployments/#{deployment2.guid}"
-                },
-                'app' => {
-                  'href' => "#{link_prefix}/v3/apps/#{app2.guid}"
-                }
-              }
-            },
+          resources: [
+            json_for_deployment(deployment, app_model, droplet,
+              VCAP::CloudController::DeploymentModel::DEPLOYING_STATE,
+              VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_VALUE, nil),
+            json_for_deployment(deployment2, app2, droplet2,
+              VCAP::CloudController::DeploymentModel::CANCELING_STATE,
+              VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_VALUE, nil),
           ]
         })
       end
 
-      it 'returns a list of label filtered deployments' do
-        VCAP::CloudController::DeploymentLabelModel.make(
-          key_name: 'release',
-          value: 'stable',
-          resource_guid: deployment2.guid
-        )
-        VCAP::CloudController::DeploymentLabelModel.make(
-          key_name: 'release',
-          value: 'unstable',
-          resource_guid: deployment3.guid
-        )
+      context 'when filtering' do
+        let(:api_call) { lambda { |user_headers| get endpoint, nil, user_headers } }
 
-        get '/v3/deployments?label_selector=release=stable', nil, admin_user_header
-        expect(last_response.status).to eq(200)
+        describe 'when filtering by status_value' do
+          let(:url) { '/v3/deployments' }
+          let(:query) { 'status_values=FINALIZED' }
+          let(:endpoint) { "#{url}?#{query}" }
+          let(:expected_codes_and_responses) do
+            h = Hash.new(
+              code: 200,
+              response_objects: [
+                json_for_deployment(deployment3, app3, droplet3,
+                  VCAP::CloudController::DeploymentModel::DEPLOYED_STATE,
+                  VCAP::CloudController::DeploymentModel::FINALIZED_STATUS_VALUE,
+                  VCAP::CloudController::DeploymentModel::DEPLOYED_STATUS_REASON),
+                json_for_deployment(deployment4, app4, droplet4,
+                  VCAP::CloudController::DeploymentModel::CANCELED_STATE,
+                  VCAP::CloudController::DeploymentModel::FINALIZED_STATUS_VALUE,
+                  VCAP::CloudController::DeploymentModel::CANCELED_STATUS_REASON),
+                json_for_deployment(deployment5, app5, droplet5,
+                  VCAP::CloudController::DeploymentModel::DEPLOYED_STATE,
+                  VCAP::CloudController::DeploymentModel::FINALIZED_STATUS_VALUE,
+                  VCAP::CloudController::DeploymentModel::SUPERSEDED_STATUS_REASON),
+              ]
+            )
+            # because the user is a manager in the shared org, they have access to see the domain
+            h['org_billing_manager'] = h['org_auditor'] = h['no_role'] = {
+              code: 200,
+              response_objects: []
+            }
+            h.freeze
+          end
 
-        expect(parsed_response['resources']).to have(1).items
-        expect(parsed_response['resources'][0]['guid']).to eq(deployment2.guid)
+          it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+
+          context 'pagination' do
+            let(:pagination_hsh) do
+              {
+                'total_results' => 3,
+                'total_pages' => 1,
+                'first' => { 'href' => "#{link_prefix}#{url}?page=1&per_page=50&#{query}" },
+                'last' => { 'href' => "#{link_prefix}#{url}?page=1&per_page=50&#{query}" },
+                'next' => nil,
+                'previous' => nil
+              }
+            end
+
+            it 'paginates the results' do
+              get endpoint, nil, admin_header
+              expect(pagination_hsh).to eq(parsed_response['pagination'])
+            end
+          end
+        end
+
+        describe 'when filtering by status_reason' do
+          let(:url) { '/v3/deployments' }
+          let(:query) { 'status_reasons=SUPERSEDED,DEPLOYED' }
+          let(:endpoint) { "#{url}?#{query}" }
+          let(:expected_codes_and_responses) do
+            h = Hash.new(
+              code: 200,
+              response_objects: [
+                json_for_deployment(deployment3, app3, droplet3,
+                  VCAP::CloudController::DeploymentModel::DEPLOYED_STATE,
+                  VCAP::CloudController::DeploymentModel::FINALIZED_STATUS_VALUE,
+                  VCAP::CloudController::DeploymentModel::DEPLOYED_STATUS_REASON),
+                json_for_deployment(deployment5, app5, droplet5,
+                  VCAP::CloudController::DeploymentModel::DEPLOYED_STATE,
+                  VCAP::CloudController::DeploymentModel::FINALIZED_STATUS_VALUE,
+                  VCAP::CloudController::DeploymentModel::SUPERSEDED_STATUS_REASON),
+              ]
+            )
+            # because the user is a manager in the shared org, they have access to see the domain
+            h['org_billing_manager'] = h['org_auditor'] = h['no_role'] = {
+              code: 200,
+              response_objects: []
+            }
+            h.freeze
+          end
+
+          it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+
+          context 'pagination' do
+            let(:pagination_hsh) do
+              {
+                'total_results' => 2,
+                'total_pages' => 1,
+                'first' => { 'href' => "#{link_prefix}#{url}?page=1&per_page=50&#{query.gsub(',', '%2C')}" },
+                'last' => { 'href' => "#{link_prefix}#{url}?page=1&per_page=50&#{query.gsub(',', '%2C')}" },
+                'next' => nil,
+                'previous' => nil
+              }
+            end
+
+            it 'paginates the results' do
+              get endpoint, nil, admin_header
+              expect(pagination_hsh).to eq(parsed_response['pagination'])
+            end
+          end
+        end
+
+        describe 'when filtering by state' do
+          let(:url) { '/v3/deployments' }
+          let(:query) { 'states=DEPLOYING' }
+          let(:endpoint) { "#{url}?#{query}" }
+          let(:expected_codes_and_responses) do
+            h = Hash.new(
+              code: 200,
+              response_objects: [
+                json_for_deployment(deployment, app_model, droplet,
+                  VCAP::CloudController::DeploymentModel::DEPLOYING_STATE,
+                  VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_VALUE,
+                  nil),
+              ]
+            )
+            # because the user is a manager in the shared org, they have access to see the domain
+            h['org_billing_manager'] = h['org_auditor'] = h['no_role'] = {
+              code: 200,
+              response_objects: []
+            }
+            h.freeze
+          end
+
+          it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+
+          context 'pagination' do
+            let(:pagination_hsh) do
+              {
+                total_results: 1,
+                total_pages: 1,
+                first: { href: "#{link_prefix}#{url}?page=1&per_page=50&#{query.gsub(',', '%2C')}" },
+                last: { href: "#{link_prefix}#{url}?page=1&per_page=50&#{query.gsub(',', '%2C')}" },
+                next: nil,
+                previous: nil
+              }
+            end
+
+            it 'paginates the results' do
+              get endpoint, nil, admin_header
+
+              expect(parsed_response['pagination']).to match_json_response(pagination_hsh)
+            end
+          end
+        end
+
+        it 'returns a list of label filtered deployments' do
+          VCAP::CloudController::DeploymentLabelModel.make(
+            key_name: 'release',
+            value: 'stable',
+            resource_guid: deployment2.guid
+          )
+          VCAP::CloudController::DeploymentLabelModel.make(
+            key_name: 'release',
+            value: 'unstable',
+            resource_guid: deployment3.guid
+          )
+
+          get '/v3/deployments?label_selector=release=stable', nil, admin_user_header
+          expect(last_response.status).to eq(200)
+
+          expect(parsed_response['resources']).to have(1).items
+          expect(parsed_response['resources'][0]['guid']).to eq(deployment2.guid)
+        end
       end
     end
 
     context 'when there are other spaces the developer cannot see' do
+      let(:user) { make_developer_for_space(space) }
       let(:another_app) { another_droplet.app }
       let(:another_droplet) { VCAP::CloudController::DropletModel.make }
-      let(:another_space) { another_app.space }
+      let!(:another_space) { another_app.space }
       let!(:another_deployment) { VCAP::CloudController::DeploymentModelTestFactory.make(app: another_app, droplet: another_droplet) }
 
       let(:user_header) { headers_for(user) }
