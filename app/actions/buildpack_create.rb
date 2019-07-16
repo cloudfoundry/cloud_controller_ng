@@ -9,6 +9,8 @@ module VCAP::CloudController
 
     def create(message)
       Buildpack.db.transaction do
+        Locking[name: 'buildpacks'].lock!
+
         buildpack = Buildpack.create(
           name: message.name,
           stack: message.stack,

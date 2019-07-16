@@ -5,6 +5,8 @@ module VCAP::CloudController
 
     def update(buildpack, message)
       Buildpack.db.transaction do
+        Locking[name: 'buildpacks'].lock!
+
         MetadataUpdate.update(buildpack, message)
 
         buildpack.move_to(message.position) if message.requested?(:position)

@@ -3,6 +3,8 @@ module VCAP::CloudController
     def delete(buildpacks)
       buildpacks.each do |buildpack|
         Buildpack.db.transaction do
+          Locking[name: 'buildpacks'].lock!
+
           delete_metadata(buildpack)
 
           if buildpack.key
