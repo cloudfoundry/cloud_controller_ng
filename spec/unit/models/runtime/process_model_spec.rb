@@ -199,10 +199,6 @@ module VCAP::CloudController
         end
       end
 
-      describe 'sidecar memory less than process memroy' do
-        subject(:process) { ProcessModel.make }
-      end
-
       describe 'buildpack' do
         subject(:process) { ProcessModel.make }
 
