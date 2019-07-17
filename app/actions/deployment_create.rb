@@ -8,44 +8,48 @@ module VCAP::CloudController
 
     class << self
       def create(app:, user_audit_info:, message:)
-        target_state = DeploymentTargetState.new(app, message)
-
-        previous_droplet = app.droplet
-        target_state.apply_to_app(app, user_audit_info)
-
-        revision = if target_state.rollback_target_revision
-                     RevisionResolver.rollback_app_revision(app, target_state.rollback_target_revision, user_audit_info)
-                   else
-                     RevisionResolver.update_app_revision(app, user_audit_info)
-                   end
-
-        previous_deployment = DeploymentModel.find(app: app, state: DeploymentModel::DEPLOYING_STATE)
-
-        if app.stopped?
-          return deployment_for_stopped_app(
-            app,
-            message,
-            previous_deployment,
-            previous_droplet,
-            revision,
-            target_state,
-            user_audit_info
-          )
-        end
-
-        deployment = DeploymentModel.create(
-          app: app,
-          state: DeploymentModel::DEPLOYING_STATE,
-          status_value: DeploymentModel::DEPLOYING_STATUS_VALUE,
-          droplet: target_state.droplet,
-          previous_droplet: previous_droplet,
-          original_web_process_instance_count: desired_instances(app.oldest_web_process, previous_deployment),
-          revision_guid: revision&.guid,
-          revision_version: revision&.version,
-        )
-        MetadataUpdate.update(deployment, message)
+        deployment = nil
 
         DeploymentModel.db.transaction do
+          app.lock!
+
+          target_state = DeploymentTargetState.new(app, message)
+
+          previous_droplet = app.droplet
+          target_state.apply_to_app(app, user_audit_info)
+
+          revision = if target_state.rollback_target_revision
+                       RevisionResolver.rollback_app_revision(app, target_state.rollback_target_revision, user_audit_info)
+                     else
+                       RevisionResolver.update_app_revision(app, user_audit_info)
+                     end
+
+          previous_deployment = DeploymentModel.find(app: app, state: DeploymentModel::DEPLOYING_STATE)
+
+          if app.stopped?
+            return deployment_for_stopped_app(
+              app,
+              message,
+              previous_deployment,
+              previous_droplet,
+              revision,
+              target_state,
+              user_audit_info
+            )
+          end
+
+          deployment = DeploymentModel.create(
+            app: app,
+            state: DeploymentModel::DEPLOYING_STATE,
+            status_value: DeploymentModel::DEPLOYING_STATUS_VALUE,
+            droplet: target_state.droplet,
+            previous_droplet: previous_droplet,
+            original_web_process_instance_count: desired_instances(app.oldest_web_process, previous_deployment),
+            revision_guid: revision&.guid,
+            revision_version: revision&.version,
+          )
+          MetadataUpdate.update(deployment, message)
+
           if previous_deployment
             previous_deployment.update(
               state: DeploymentModel::DEPLOYED_STATE,
@@ -61,8 +65,9 @@ module VCAP::CloudController
           process.reload.update(state: ProcessModel::STARTED)
 
           deployment.update(deploying_web_process: process)
+
+          record_audit_event(deployment, target_state.droplet, user_audit_info, message)
         end
-        record_audit_event(deployment, target_state.droplet, user_audit_info, message)
 
         deployment
       rescue RevisionResolver::NoUpdateRollback => e
