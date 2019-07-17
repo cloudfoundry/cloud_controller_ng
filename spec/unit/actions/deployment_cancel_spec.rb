@@ -14,6 +14,7 @@ module VCAP::CloudController
     let!(:deployment) do
       VCAP::CloudController::DeploymentModel.make(
         state: state,
+        status_value: status_value,
         app: original_web_process.app,
         deploying_web_process: deploying_web_process,
         droplet: new_droplet,
@@ -30,6 +31,7 @@ module VCAP::CloudController
     describe '.cancel' do
       context 'when the deployment is in the DEPLOYING state' do
         let(:state) { DeploymentModel::DEPLOYING_STATE }
+        let(:status_value) { DeploymentModel::DEPLOYING_STATUS_VALUE }
 
         it 'sets the deployments state to CANCELING' do
           expect(deployment.state).to_not eq(DeploymentModel::CANCELING_STATE)
@@ -102,33 +104,39 @@ module VCAP::CloudController
         end
       end
 
+      context 'when the deployment is in the CANCELING state' do
+        let(:state) { DeploymentModel::CANCELING_STATE }
+        let(:status_value) { DeploymentModel::DEPLOYING_STATUS_VALUE }
+
+        it 'does *not* fail (idempotent canceling)' do
+          DeploymentCancel.cancel(deployment: deployment, user_audit_info: user_audit_info)
+          deployment.reload
+
+          expect(deployment.state).to eq(DeploymentModel::CANCELING_STATE)
+          expect(deployment.status_value).to eq(DeploymentModel::DEPLOYING_STATUS_VALUE)
+          expect(deployment.status_reason).to be_nil
+        end
+      end
+
       context 'when the deployment is in the DEPLOYED state' do
         let(:state) { DeploymentModel::DEPLOYED_STATE }
+        let(:status_value) { DeploymentModel::FINALIZED_STATUS_VALUE }
 
         it 'raises an error' do
           expect {
             DeploymentCancel.cancel(deployment: deployment, user_audit_info: user_audit_info)
-          }.to raise_error(DeploymentCancel::InvalidState, 'Cannot cancel a DEPLOYED deployment')
+          }.to raise_error(DeploymentCancel::InvalidStatus, 'Cannot cancel a FINALIZED deployment')
         end
       end
 
       context 'when the deployment is in the CANCELED state' do
         let(:state) { DeploymentModel::CANCELED_STATE }
+        let(:status_value) { DeploymentModel::FINALIZED_STATUS_VALUE }
 
         it 'raises an error' do
           expect {
             DeploymentCancel.cancel(deployment: deployment, user_audit_info: user_audit_info)
-          }.to raise_error(DeploymentCancel::InvalidState, 'Cannot cancel a CANCELED deployment')
-        end
-      end
-
-      context 'when the deployment is in the CANCELING state' do
-        let(:state) { DeploymentModel::CANCELING_STATE }
-
-        it 'raises an error' do
-          expect {
-            DeploymentCancel.cancel(deployment: deployment, user_audit_info: user_audit_info)
-          }.to raise_error(DeploymentCancel::InvalidState, 'Cannot cancel a CANCELING deployment')
+          }.to raise_error(DeploymentCancel::InvalidStatus, 'Cannot cancel a FINALIZED deployment')
         end
       end
     end

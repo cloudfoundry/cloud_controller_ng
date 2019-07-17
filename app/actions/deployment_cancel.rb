@@ -1,14 +1,14 @@
 module VCAP::CloudController
   class DeploymentCancel
     class Error < StandardError; end
-    class InvalidState < Error; end
+    class InvalidStatus < Error; end
     class SetCurrentDropletError < Error; end
 
     class << self
       def cancel(deployment:, user_audit_info:)
         deployment.db.transaction do
           deployment.lock!
-          reject_invalid_states!(deployment) unless valid_state?(deployment)
+          reject_invalid_status!(deployment) unless valid_status?(deployment)
 
           begin
             AppAssignDroplet.new(user_audit_info).assign(deployment.app, deployment.previous_droplet)
@@ -22,12 +22,12 @@ module VCAP::CloudController
 
       private
 
-      def valid_state?(deployment)
-        deployment.state == DeploymentModel::DEPLOYING_STATE
+      def valid_status?(deployment)
+        deployment.status_value == DeploymentModel::DEPLOYING_STATUS_VALUE
       end
 
-      def reject_invalid_states!(deployment)
-        raise InvalidState.new("Cannot cancel a #{deployment.state} deployment")
+      def reject_invalid_status!(deployment)
+        raise InvalidStatus.new("Cannot cancel a #{deployment.status_value} deployment")
       end
 
       def record_audit_event(deployment, user_audit_info)
