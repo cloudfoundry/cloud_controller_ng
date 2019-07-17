@@ -17,9 +17,9 @@ module VCAP::CloudController::Metrics
 
       allow(EventMachine).to receive(:instance_variable_get) do |instance_var|
         case instance_var
-        when :@threadqueue then
+        when :@threadqueue
           threadqueue
-        when :@resultqueue then
+        when :@resultqueue
           resultqueue
         else
           raise "Unexpected call: #{instance_var}"

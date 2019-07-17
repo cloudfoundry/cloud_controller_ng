@@ -46,6 +46,7 @@ module VCAP::CloudController
           let(:update_attrs) { { 'parameters' => { 'foo' => 'bar' } } }
           let(:active) {}
           let(:public) {}
+
           let(:old_service_plan) { ServicePlan.make(:v2, service: service, active: active, public: public) }
 
           context 'when the current user is an admin' do
@@ -334,7 +335,9 @@ module VCAP::CloudController
 
         context 'when parameters update requested' do
           let(:update_attrs) { { 'parameters' => { 'foo' => 'bar' } } }
+
           let(:old_service_plan) { ServicePlan.make(:v2, service: service, active: active, public: public) }
+
           let(:active) {}
           let(:public) {}
 
