@@ -163,17 +163,28 @@ class OrganizationsV3Controller < ApplicationController
 
   def fetch_orgs(message)
     if permission_queryer.can_read_globally?
-      OrgListFetcher.new.fetch_all(message: message)
+      OrgListFetcher.new.fetch_all(message: message, eager_loaded_associations: Presenters::V3::OrganizationPresenter.associated_resources)
     else
-      OrgListFetcher.new.fetch(message: message, guids: permission_queryer.readable_org_guids)
+      OrgListFetcher.new.fetch(
+        message: message,
+        guids: permission_queryer.readable_org_guids,
+        eager_loaded_associations: Presenters::V3::OrganizationPresenter.associated_resources
+      )
     end
   end
 
   def fetch_orgs_for_isolation_segment(message)
     if permission_queryer.can_read_globally?
-      isolation_segment, dataset = OrgListFetcher.new.fetch_all_for_isolation_segment(message: message)
+      isolation_segment, dataset = OrgListFetcher.new.fetch_all_for_isolation_segment(
+        message: message,
+        eager_loaded_associations: Presenters::V3::OrganizationPresenter.associated_resources
+      )
     else
-      isolation_segment, dataset = OrgListFetcher.new.fetch_for_isolation_segment(message: message, guids: permission_queryer.readable_org_guids)
+      isolation_segment, dataset = OrgListFetcher.new.fetch_for_isolation_segment(
+        message: message,
+        guids: permission_queryer.readable_org_guids,
+        eager_loaded_associations: Presenters::V3::OrganizationPresenter.associated_resources
+      )
     end
     isolation_segment_not_found! unless isolation_segment && permission_queryer.can_read_from_isolation_segment?(isolation_segment)
     dataset

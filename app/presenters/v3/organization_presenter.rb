@@ -5,6 +5,16 @@ module VCAP::CloudController::Presenters::V3
   class OrganizationPresenter < BasePresenter
     include VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers
 
+    class << self
+      def associated_resources
+        [
+          :quota_definition,
+          :labels,
+          :annotations
+        ]
+      end
+    end
+
     def to_hash
       {
         guid: organization.guid,
