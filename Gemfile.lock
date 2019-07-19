@@ -375,7 +375,7 @@ GEM
     rubyzip (1.2.3)
     safe_yaml (1.0.4)
     scientist (1.1.1)
-    sequel (5.16.0)
+    sequel (5.22.0)
     sexp_processor (4.7.0)
     signet (0.11.0)
       addressable (~> 2.3)
