@@ -1,10 +1,15 @@
 
 ### The destination object
 
-A destination represents the relationship between a route and a resource that can serve traffic (e.g. the `web` process
-of an application).
+A destination represents the relationship between a route and a resource that can serve traffic (for example, the `web` process of an application).
 
 When a route has destinations, that route will direct traffic to the processes represented by those destinations.
+
+If a destination is created with a port specified, the route will direct traffic to that port on the process. A destination with port 9000 and process type `api` means traffic will be directed to the `api` process running on container port 9000.
+
+Note that when using a custom port, the app process must be listening on the specified port for the mapping to work. Otherwise, visiting the route will result in a 404 error.
+
+If a destination does not specify a port, the default port depends on the app lifecycle type. For buildpack apps, traffic will be directed to port 8080. For Docker apps, the first port specified in the Dockerfile will be used.
 
 ```
 Example Destination object
@@ -18,4 +23,5 @@ Example Destination object
 | **guid**                    | _uuid_                   | Unique identifier for the destination.                                                                                                    |
 | **app.guid**                | _uuid_                   | Unique identifier for the app to route traffic to.                                                                               |
 | **app.process.type**        | _string_                 | Type of the process belonging to the app to route traffic to.                                                                      |
+| **port**                    | _integer_                | Port on the destination process to route traffic to.
 | **weight** _(experimental)_ | _integer_ or `null`      | Percentage of traffic which will be routed to this destination. _This feature is only available via the BETA Service Mesh routing plane_. |

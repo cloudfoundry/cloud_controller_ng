@@ -11,6 +11,24 @@ module VCAP::CloudController
 
     validate :destinations_valid?
 
+    def destinations_array
+      new_route_mappings = []
+      destinations.each do |dst|
+        app_guid = HashUtils.dig(dst, :app, :guid)
+        process_type = HashUtils.dig(dst, :app, :process, :type) || 'web'
+        weight = HashUtils.dig(dst, :weight)
+
+        new_route_mappings << {
+          app_guid: app_guid,
+          process_type: process_type,
+          app_port: dst[:port],
+          weight: weight
+        }
+      end
+
+      new_route_mappings
+    end
+
     private
 
     ERROR_MESSAGE = 'Destinations must have the structure "destinations": [{"app": {"guid": "app_guid"}}]'.freeze
@@ -18,7 +36,7 @@ module VCAP::CloudController
     def destinations_valid?
       minimum = @replace ? 0 : 1
 
-      unless destinations.is_a?(Array) && (minimum...100).cover?(destinations.length)
+      unless destinations.is_a?(Array) && (minimum..100).cover?(destinations.length)
         errors.add(:destinations, "must be an array containing between #{minimum} and 100 destination objects.")
         return
       end
@@ -27,27 +45,40 @@ module VCAP::CloudController
     end
 
     def validate_destination_contents
+      app_to_ports_hash = {}
+
       destinations.each_with_index do |dst, index|
         unless dst.is_a?(Hash)
           add_destination_error(index, 'must be a hash.')
           next
         end
 
-        if dst.is_a?(Hash) && !dst.key?(:app)
+        unless dst.key?(:app)
           add_destination_error(index, 'must have an "app".')
           next
         end
 
-        if dst.is_a?(Hash) && !(dst.keys - [:app, :weight]).empty?
-          add_destination_error(index, 'must have only "app" and "weight".')
+        unless (dst.keys - [:app, :weight, :port]).empty?
+          add_destination_error(index, 'must have only "app" and optionally "weight" and "port".')
           next
         end
 
         validate_app(index, dst[:app])
         validate_weight(index, dst[:weight])
+        validate_port(index, dst[:port])
+
+        app_to_ports_hash[dst[:app]] ||= []
+        app_to_ports_hash[dst[:app]] << dst[:port]
       end
 
-      return if !errors.empty?
+      app_to_ports_hash.each do |_, port_array|
+        if port_array.length > 10
+          errors.add(:process, 'must have at most 10 exposed ports.')
+          break
+        end
+      end
+
+      return unless errors.empty?
 
       validate_weights(destinations)
     end
@@ -62,6 +93,14 @@ module VCAP::CloudController
 
       unless weight.is_a?(Integer) && weight > 0 && weight <= 100
         add_destination_error(destination_index, 'weight must be a positive integer between 1 and 100.')
+      end
+    end
+
+    def validate_port(destination_index, port)
+      return unless port
+
+      unless port.is_a?(Integer) && port >= 1024 && port <= 65535
+        add_destination_error(destination_index, 'port must be a positive integer between 1024 and 65535 inclusive.')
       end
     end
 

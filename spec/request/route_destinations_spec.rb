@@ -23,7 +23,8 @@ RSpec.describe 'Route Destinations Request' do
                 type: 'web'
               }
             },
-            weight: nil
+            weight: nil,
+            port: 8080
           }
         ],
         links: {
@@ -123,7 +124,8 @@ RSpec.describe 'Route Destinations Request' do
                   type: existing_destination.process_type
                 }
               },
-              weight: nil
+              weight: nil,
+              port: 8080
             },
             {
               guid: UUID_REGEX,
@@ -133,7 +135,8 @@ RSpec.describe 'Route Destinations Request' do
                   type: 'web'
                 }
               },
-              weight: nil
+              weight: nil,
+              port: 8080
             }
           ],
           links: {
@@ -525,7 +528,8 @@ RSpec.describe 'Route Destinations Request' do
                   type: 'web'
                 }
               },
-              weight: nil
+              weight: nil,
+              port: 8080
             },
             {
               guid: UUID_REGEX,
@@ -535,7 +539,8 @@ RSpec.describe 'Route Destinations Request' do
                   type: 'worker'
                 }
               },
-              weight: nil
+              weight: nil,
+              port: 8080
             }
           ],
           links: {

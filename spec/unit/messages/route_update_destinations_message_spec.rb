@@ -25,6 +25,28 @@ module VCAP::CloudController
       it 'is valid' do
         expect(subject).to be_valid
       end
+
+      context 'when ports are specified' do
+        let(:params) do
+          {
+            destinations: [
+              {
+                app: {
+                  guid: 'some-guid',
+                  process: {
+                    type: 'web'
+                  }
+                },
+                port: 8081
+              }
+            ]
+          }
+        end
+
+        it 'is valid' do
+          expect(subject).to be_valid
+        end
+      end
     end
 
     context 'when destinations is missing' do
@@ -61,7 +83,7 @@ module VCAP::CloudController
       end
     end
 
-    context 'when destinations doesnt contain hashes' do
+    context 'when destinations do not contain hashes' do
       let(:params) { { destinations: [''] } }
 
       it 'is not valid' do
@@ -72,7 +94,7 @@ module VCAP::CloudController
       end
     end
 
-    context 'when destinations are malformed' do
+    context 'when destinations are invalid' do
       context 'when the app key is missing' do
         let(:params) { { destinations: [{ potato: '' }] } }
 
@@ -80,6 +102,16 @@ module VCAP::CloudController
           expect(subject).to be_invalid
           expect(subject.errors.full_messages).to contain_exactly(
             'Destinations[0]: must have an "app".'
+          )
+        end
+      end
+
+      context 'when an invalid key is alongside the app key' do
+        let(:params) { { destinations: [{ app: '', potato: '' }] } }
+        it 'is not valid' do
+          expect(subject).to be_invalid
+          expect(subject.errors.full_messages).to contain_exactly(
+            'Destinations[0]: must have only "app" and optionally "weight" and "port".'
           )
         end
       end
@@ -194,6 +226,126 @@ module VCAP::CloudController
               'Destinations[1]: process must have the structure {"type": "process_type"}',
               'Destinations[1]: weight must be a positive integer between 1 and 100.',
               'Destinations[2]: must be a hash.'
+            )
+          end
+        end
+      end
+
+      context 'when port is invalid' do
+        let(:params) do
+          {
+            destinations: [
+              {
+                app: {
+                  guid: 'some-guid',
+                  process: {
+                    type: 'web'
+                  }
+                },
+                port: port
+              }
+            ]
+          }
+        end
+
+        context 'when port is a string' do
+          let(:port) { 'some-string' }
+          it 'is not valid' do
+            expect(subject).to be_invalid
+            expect(subject.errors.full_messages).to contain_exactly(
+              'Destinations[0]: port must be a positive integer between 1024 and 65535 inclusive.'
+            )
+          end
+        end
+        context 'when port is less than 1024' do
+          let(:port) { 1023 }
+          it 'is not valid' do
+            expect(subject).to be_invalid
+            expect(subject.errors.full_messages).to contain_exactly(
+              'Destinations[0]: port must be a positive integer between 1024 and 65535 inclusive.'
+            )
+          end
+        end
+        context 'when port is greater than 65535' do
+          let(:port) { 65536 }
+          it 'is not valid' do
+            expect(subject).to be_invalid
+            expect(subject.errors.full_messages).to contain_exactly(
+              'Destinations[0]: port must be a positive integer between 1024 and 65535 inclusive.'
+            )
+          end
+        end
+      end
+
+      context 'when there are more than 10 destinations' do
+        context 'and all 10+ destinations are for the same app but different ports' do
+          let(:params) do
+            {
+              destinations: (1..11).map { |i|
+                {
+                  app: {
+                    guid: 'app-guid',
+                    process: {
+                      type: 'web'
+                    }
+                  },
+                  port: 8080 + i
+                }
+              }
+            }
+          end
+
+          it 'is not valid' do
+            expect(subject).to be_invalid
+            expect(subject.errors.full_messages).to contain_exactly(
+              'Process must have at most 10 exposed ports.'
+            )
+          end
+        end
+
+        context 'and all 10+ combinations have unique process types' do
+          let(:params) do
+            {
+              destinations: (1..100).map { |i|
+                {
+                  app: {
+                    guid: 'app-guid',
+                    process: {
+                      type: "web-#{i}"
+                    }
+                  },
+                  port: 8080
+                }
+              }
+            }
+          end
+
+          it 'is valid' do
+            expect(subject).to be_valid
+          end
+        end
+
+        context 'when 100+ combinations have unique process types' do
+          let(:params) do
+            {
+              destinations: (1..101).map { |i|
+                {
+                  app: {
+                    guid: 'app-guid',
+                    process: {
+                      type: "web-#{i}"
+                    }
+                  },
+                  port: 8080
+                }
+              }
+            }
+          end
+
+          it 'is invalid' do
+            expect(subject).to be_invalid
+            expect(subject.errors.full_messages).to contain_exactly(
+              'Destinations must be an array containing between 1 and 100 destination objects.'
             )
           end
         end
@@ -439,6 +591,49 @@ module VCAP::CloudController
             )
           end
         end
+      end
+    end
+
+    describe 'destinations' do
+      let(:params) do
+        {
+          destinations: [
+            {
+              app: {
+                guid: 'some-guid',
+                process: {
+                  type: 'web'
+                }
+              }
+            },
+            {
+              app: {
+                guid: 'some-other-guid',
+                process: {
+                  type: 'web'
+                }
+              },
+              port: 9000
+            }
+          ]
+        }
+      end
+
+      it 'returns an array of destination hashes' do
+        expect(subject.destinations_array).to eq([
+          {
+            app_guid: 'some-guid',
+            process_type: 'web',
+            app_port: nil,
+            weight: nil,
+          },
+          {
+            app_guid: 'some-other-guid',
+            process_type: 'web',
+            app_port: 9000,
+            weight: nil,
+          }
+        ])
       end
     end
   end

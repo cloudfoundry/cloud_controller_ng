@@ -3,11 +3,11 @@ module VCAP::CloudController
     include Serializer
 
     DROPLET_STATES = [
-      STAGING_STATE         = 'STAGING'.freeze,
-      COPYING_STATE         = 'COPYING'.freeze,
-      FAILED_STATE          = 'FAILED'.freeze,
-      STAGED_STATE          = 'STAGED'.freeze,
-      EXPIRED_STATE         = 'EXPIRED'.freeze,
+      STAGING_STATE = 'STAGING'.freeze,
+      COPYING_STATE = 'COPYING'.freeze,
+      FAILED_STATE = 'FAILED'.freeze,
+      STAGED_STATE = 'STAGED'.freeze,
+      EXPIRED_STATE = 'EXPIRED'.freeze,
       AWAITING_UPLOAD_STATE = 'AWAITING_UPLOAD'.freeze,
       PROCESSING_UPLOAD_STATE = 'PROCESSING_UPLOAD'.freeze,
     ].freeze
@@ -28,8 +28,8 @@ module VCAP::CloudController
       without_guid_generation: true
     one_through_one :space, join_table: AppModel.table_name, left_key: :guid, left_primary_key: :app_guid, right_primary_key: :guid, right_key: :space_guid
     one_to_one :buildpack_lifecycle_data,
-      class:       'VCAP::CloudController::BuildpackLifecycleDataModel',
-      key:         :droplet_guid,
+      class: 'VCAP::CloudController::BuildpackLifecycleDataModel',
+      key: :droplet_guid,
       primary_key: :guid
     one_to_many :labels, class: 'VCAP::CloudController::DropletLabelModel', key: :resource_guid, primary_key: :guid
     one_to_many :annotations, class: 'VCAP::CloudController::DropletAnnotationModel', key: :resource_guid, primary_key: :guid
@@ -54,7 +54,7 @@ module VCAP::CloudController
 
       if buildpack_key.present? && (admin_buildpack = Buildpack.find(key: buildpack_key))
         self.buildpack_receipt_buildpack_guid = admin_buildpack.guid
-        self.buildpack_receipt_buildpack      = admin_buildpack.name
+        self.buildpack_receipt_buildpack = admin_buildpack.name
       elsif buildpack_url.present?
         self.buildpack_receipt_buildpack = buildpack_url
       else
@@ -79,6 +79,24 @@ module VCAP::CloudController
 
     def docker?
       lifecycle_type == DockerLifecycleDataModel::LIFECYCLE_TYPE
+    end
+
+    def docker_ports
+      exposed_ports = []
+      if self.execution_metadata.present?
+        begin
+          metadata = JSON.parse(self.execution_metadata)
+          unless metadata['ports'].nil?
+            metadata['ports'].each { |port|
+              if port['Protocol'] == 'tcp'
+                exposed_ports << port['Port']
+              end
+            }
+          end
+        rescue JSON::ParserError
+        end
+      end
+      exposed_ports
     end
 
     def staging?
@@ -108,8 +126,8 @@ module VCAP::CloudController
     def fail_to_stage!(reason='StagingError', details='staging failed')
       reason = 'StagingError' unless STAGING_FAILED_REASONS.include?(reason)
 
-      self.state             = FAILED_STATE
-      self.error_id          = reason
+      self.state = FAILED_STATE
+      self.error_id = reason
       self.error_description = CloudController::Errors::ApiError.new_from_details(reason, details).message
       save_changes(raise_on_save_failure: true)
     end

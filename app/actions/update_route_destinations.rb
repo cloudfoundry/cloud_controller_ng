@@ -1,23 +1,26 @@
 module VCAP::CloudController
   class UpdateRouteDestinations
-    class Error < StandardError; end
+    class Error < StandardError
+    end
 
     class << self
-      def add(message, route, user_audit_info)
+      def add(new_route_mappings, route, apps_hash, user_audit_info)
         existing_route_mappings = route_to_mapping_hashes(route)
+        new_route_mappings = update_port(new_route_mappings, apps_hash)
+        new_route_mappings = add_route(new_route_mappings, route)
         if existing_route_mappings.any? { |rm| rm[:weight] }
           raise Error.new('Destinations cannot be inserted when there are weighted destinations already configured.')
         end
 
-        new_route_mappings = message_to_mapping_hashes(message, route)
         to_add = new_route_mappings - existing_route_mappings
 
         update(route, to_add, [], user_audit_info)
       end
 
-      def replace(message, route, user_audit_info)
+      def replace(new_route_mappings, route, apps_hash, user_audit_info)
         existing_route_mappings = route_to_mapping_hashes(route)
-        new_route_mappings = message_to_mapping_hashes(message, route)
+        new_route_mappings = update_port(new_route_mappings, apps_hash)
+        new_route_mappings = add_route(new_route_mappings, route)
         to_add = new_route_mappings - existing_route_mappings
         to_delete = existing_route_mappings - new_route_mappings
 
@@ -38,12 +41,19 @@ module VCAP::CloudController
 
       def update(route, to_add, to_delete, user_audit_info)
         RouteMappingModel.db.transaction do
+          processes_to_ports_map = {}
+
           to_delete.each do |rm|
             route_mapping = RouteMappingModel.find(rm)
             route_mapping.destroy
 
             Copilot::Adapter.unmap_route(route_mapping)
-            update_route_information(route_mapping)
+            route_mapping.processes.each do |process|
+              processes_to_ports_map[process] ||= { to_add: [], to_delete: [] }
+              processes_to_ports_map[process][:to_delete] << route_mapping.app_port unless process.route_mappings.any? do |process_route_mapping|
+                process_route_mapping.guid != route_mapping.guid && process_route_mapping.app_port == route_mapping.app_port
+              end
+            end
 
             Repositories::RouteEventRepository.new.record_route_unmap(route_mapping, user_audit_info)
           end
@@ -53,39 +63,57 @@ module VCAP::CloudController
             route_mapping.save
 
             Copilot::Adapter.map_route(route_mapping)
-            update_route_information(route_mapping)
+            route_mapping.processes.each do |process|
+              processes_to_ports_map[process] ||= { to_add: [], to_delete: [] }
+              processes_to_ports_map[process][:to_add] << route_mapping.app_port
+            end
 
             Repositories::RouteEventRepository.new.record_route_map(route_mapping, user_audit_info)
           end
+
+          update_processes(processes_to_ports_map)
         end
 
         route.reload
       end
 
-      def update_route_information(route_mapping)
-        route_mapping.processes.each do |process|
-          ProcessRouteHandler.new(process).update_route_information(perform_validation: false)
+      def update_processes(processes_to_ports_map)
+        processes_to_ports_map.each do |process, ports_hash|
+          ports_to_add = ports_hash[:to_add].uniq.reject { |port| port == ProcessModel::NO_APP_PORT_SPECIFIED }
+          ports_to_delete = ports_hash[:to_delete].uniq.reject { |port| port == ProcessModel::NO_APP_PORT_SPECIFIED }
+
+          updated_ports = ((process.ports || []) + ports_to_add - ports_to_delete).uniq
+          if process.ports.nil? && updated_ports.empty?
+            updated_ports = nil
+          end
+
+          ProcessRouteHandler.new(process).update_route_information(
+            perform_validation: false,
+            updated_ports: updated_ports
+          )
+        end
+      rescue Sequel::ValidationFailed => e
+        raise Error.new(e.message)
+      end
+
+      def add_route(destinations, route)
+        destinations.map do |dst|
+          dst.merge({ route: route, route_guid: route.guid })
         end
       end
 
-      def message_to_mapping_hashes(message, route)
-        new_route_mappings = []
-        message.destinations.each do |dst|
-          app_guid = HashUtils.dig(dst, :app, :guid)
-          process_type = HashUtils.dig(dst, :app, :process, :type) || 'web'
-          weight = HashUtils.dig(dst, :weight)
+      def update_port(destinations, apps_hash)
+        destinations.each do |dst|
+          if dst[:app_port].nil?
+            app = apps_hash[dst[:app_guid]]
 
-          new_route_mappings << {
-            app_guid: app_guid,
-            route_guid: route.guid,
-            route: route,
-            process_type: process_type,
-            app_port: ProcessModel::DEFAULT_HTTP_PORT,
-            weight: weight
-          }
+            dst[:app_port] = if app.buildpack?
+                               ProcessModel::DEFAULT_HTTP_PORT
+                             else
+                               ProcessModel::NO_APP_PORT_SPECIFIED
+                             end
+          end
         end
-
-        new_route_mappings
       end
 
       def route_to_mapping_hashes(route)

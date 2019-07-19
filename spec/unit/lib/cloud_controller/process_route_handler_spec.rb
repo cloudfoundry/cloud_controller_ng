@@ -6,17 +6,28 @@ module VCAP::CloudController
     subject(:handler) { ProcessRouteHandler.new(process, runners) }
     let(:runners) { instance_double(Runners, runner_for_process: runner) }
     let(:runner) { instance_double(Diego::Runner, update_routes: nil) }
+    let(:port_policy) { instance_double(PortsPolicy, validate: nil) }
+
+    before do
+      allow(PortsPolicy).to receive(:new).and_return(port_policy)
+    end
 
     describe '#update_route_information' do
       let!(:process) do
-        ProcessModelFactory.make(diego: true).tap do |p|
+        ProcessModelFactory.make(diego: true, ports: [1024, 2024]).tap do |p|
           p.this.update(updated_at: Time.now - 1.day)
           p.reload
         end
       end
 
-      it 'updates the version' do
-        expect { handler.update_route_information }.to change { process.reload.updated_at }
+      it 'updates the version and ports' do
+        expect {
+          handler.update_route_information(perform_validation: false, updated_ports: [3024])
+        }.to change {
+          process.reload.updated_at
+        }.and change {
+          process.reload.ports
+        }.from([1024, 2024]).to([3024])
       end
 
       context 'when perform_validation is not provided' do
@@ -25,9 +36,12 @@ module VCAP::CloudController
 
         it 'calls #save_changes with validate true' do
           allow(db).to receive_messages(in_transaction?: true, after_commit: nil)
-          allow(process).to receive_messages(lock!: nil)
+          allow(process).to receive_messages(lock!: nil, ports: [])
 
-          expect(process).to receive(:set).with(updated_at: instance_of(Sequel::CurrentDateTimeTimestamp::Time))
+          expect(process).to receive(:set).with(
+            updated_at: instance_of(Sequel::CurrentDateTimeTimestamp::Time),
+            ports: []
+          )
           expect(process).to receive(:save_changes).with(hash_including(validate: true))
 
           handler.update_route_information
@@ -40,17 +54,39 @@ module VCAP::CloudController
 
         it 'calls #save_changes with validate false' do
           allow(db).to receive_messages(in_transaction?: true, after_commit: nil)
-          allow(process).to receive_messages(lock!: nil)
+          allow(process).to receive_messages(lock!: nil, ports: [])
 
-          expect(process).to receive(:set).with(updated_at: instance_of(Sequel::CurrentDateTimeTimestamp::Time))
+          expect(process).to receive(:set).with(
+            updated_at: instance_of(Sequel::CurrentDateTimeTimestamp::Time),
+            ports: []
+          )
           expect(process).to receive(:save_changes).with(hash_including(validate: false))
 
           handler.update_route_information(perform_validation: false)
         end
       end
 
+      context 'when the updated ports are invalid' do
+        before do
+          allow(port_policy).to receive(:validate) do
+            process.errors.add(:ports, 'Ports must be in the 1024-65535.')
+            true
+          end
+        end
+
+        it 'raises a validation error' do
+          expect {
+            handler.update_route_information(perform_validation: false, updated_ports: [-3024])
+          }.to raise_error(Sequel::ValidationFailed, /Ports must be in the 1024-65535./)
+        end
+      end
+
       describe 'updating the backend' do
         let(:process) { ProcessModelFactory.make(state: 'STARTED') }
+
+        before do
+          allow(VCAP::CloudController::ProcessObserver).to receive(:updated)
+        end
 
         it 'registers notify_backend_of_route_update for after_commit', isolation: :truncation do
           handler.update_route_information

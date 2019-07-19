@@ -25,7 +25,8 @@ module VCAP::CloudController::Presenters::V3
               type: route_mapping.process_type
             }
           },
-          weight: route_mapping.weight
+          weight: route_mapping.weight,
+          port: build_port(route_mapping)
         }
       end
     end
@@ -44,6 +45,21 @@ module VCAP::CloudController::Presenters::V3
       }
 
       links
+    end
+
+    def build_port(route_mapping)
+      rm_port = route_mapping.app_port
+
+      if rm_port != VCAP::CloudController::ProcessModel::NO_APP_PORT_SPECIFIED
+        return rm_port
+      end
+
+      app_droplet = route_mapping.app.droplet
+      if app_droplet && !app_droplet.docker_ports.empty?
+        return app_droplet.docker_ports.first
+      end
+
+      VCAP::CloudController::ProcessModel::DEFAULT_HTTP_PORT
     end
   end
 end

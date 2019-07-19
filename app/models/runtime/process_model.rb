@@ -538,21 +538,11 @@ module VCAP::CloudController
     end
 
     def docker_ports
-      exposed_ports = []
-      if !self.needs_staging? && desired_droplet.present? && self.execution_metadata.present?
-        begin
-          metadata = JSON.parse(self.execution_metadata)
-          unless metadata['ports'].nil?
-            metadata['ports'].each { |port|
-              if port['Protocol'] == 'tcp'
-                exposed_ports << port['Port']
-              end
-            }
-          end
-        rescue JSON::ParserError
-        end
+      if !self.needs_staging? && desired_droplet.present?
+        return desired_droplet.docker_ports
       end
-      exposed_ports
+
+      []
     end
 
     def web?
@@ -575,17 +565,6 @@ module VCAP::CloudController
 
     def changed_from_default_ports?
       @ports_changed_by_user && (initial_value(:ports).nil? || initial_value(:ports) == [DEFAULT_HTTP_PORT])
-    end
-
-    # HACK: We manually call the Serializer here because the plugin uses the
-    # _before_validation method to serialize ports. This is called before
-    # validations and we want to set the default ports after validations.
-    #
-    # See:
-    # https://github.com/jeremyevans/sequel/blob/7d6753da53196884e218a59a7dcd9a7803881b68/lib/sequel/model/base.rb#L1772-L1779
-    def update_ports(new_ports)
-      self.ports   = new_ports
-      self[:ports] = IntegerArraySerializer.serializer.call(self.ports)
     end
 
     def metadata_deserialized
