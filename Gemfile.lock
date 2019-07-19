@@ -265,7 +265,7 @@ GEM
     multipart-post (2.1.1)
     mustache (0.99.8)
     mustermann (1.0.3)
-    mysql2 (0.4.10)
+    mysql2 (0.5.2)
     net-ssh (5.0.2)
     netaddr (2.0.3)
     newrelic_rpm (5.3.0.346)
@@ -492,7 +492,7 @@ DEPENDENCIES
   mime-types (~> 3.0)
   multi_json
   multipart-parser
-  mysql2 (~> 0.4.10)
+  mysql2 (~> 0.5.0)
   net-ssh
   netaddr
   newrelic_rpm
