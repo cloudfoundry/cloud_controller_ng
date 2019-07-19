@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'diego/lrp_constants'
 
 RSpec.describe 'Apps' do
   let(:user) { VCAP::CloudController::User.make }

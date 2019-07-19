@@ -666,29 +666,29 @@ module Diego
       end
     end
 
-    describe '#actual_lrp_groups_by_process_guid' do
+    describe '#actual_lrps_by_process_guid' do
       let(:process_guid) { 'process-guid' }
 
       let(:response_body) do
-        Bbs::Models::ActualLRPGroupsResponse.encode(
-          Bbs::Models::ActualLRPGroupsResponse.new(error: nil, actual_lrp_groups: actual_lrp_groups)
+        Bbs::Models::ActualLRPsResponse.encode(
+          Bbs::Models::ActualLRPsResponse.new(error: nil, actual_lrps: actual_lrps)
         ).to_s
       end
-      let(:actual_lrp_groups) { [::Diego::Bbs::Models::ActualLRPGroup.new] }
+      let(:actual_lrps) { [::Diego::Bbs::Models::ActualLRP.new] }
       let(:response_status) { 200 }
       before do
-        stub_request(:post, 'https://bbs.example.com:4443/v1/actual_lrp_groups/list_by_process_guid').to_return(status: response_status, body: response_body)
+        stub_request(:post, 'https://bbs.example.com:4443/v1/actual_lrps/list').to_return(status: response_status, body: response_body)
       end
 
       it 'returns a LRP instances response' do
-        expected_request = Bbs::Models::ActualLRPGroupsByProcessGuidRequest.new(process_guid: process_guid)
+        expected_request = Bbs::Models::ActualLRPsRequest.new(process_guid: process_guid)
 
-        response = client.actual_lrp_groups_by_process_guid(process_guid)
-        expect(response).to be_a(Bbs::Models::ActualLRPGroupsResponse)
+        response = client.actual_lrps_by_process_guid(process_guid)
+        expect(response).to be_a(Bbs::Models::ActualLRPsResponse)
         expect(response.error).to be_nil
-        expect(response.actual_lrp_groups).to eq(actual_lrp_groups)
-        expect(a_request(:post, 'https://bbs.example.com:4443/v1/actual_lrp_groups/list_by_process_guid').with(
-                 body: Bbs::Models::ActualLRPGroupsByProcessGuidRequest.encode(expected_request).to_s,
+        expect(response.actual_lrps).to eq(actual_lrps)
+        expect(a_request(:post, 'https://bbs.example.com:4443/v1/actual_lrps/list').with(
+                 body: Bbs::Models::ActualLRPsRequest.encode(expected_request).to_s,
                  headers: { 'Content-Type' => 'application/x-protobuf' }
         )).to have_been_made
       end
