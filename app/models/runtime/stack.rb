@@ -10,11 +10,10 @@ module VCAP::CloudController
     end
 
     many_to_many :apps,
-      class:             'VCAP::CloudController::ProcessModel',
+      class:             'VCAP::CloudController::AppModel',
       join_table:        BuildpackLifecycleDataModel.table_name,
       left_primary_key:  :name, left_key: :stack,
-      right_primary_key: :app_guid, right_key: :app_guid,
-      conditions:        { type: ProcessTypes::WEB }
+      right_primary_key: :guid, right_key: :app_guid
 
     one_to_many :labels, class: 'VCAP::CloudController::StackLabelModel', key: :resource_guid, primary_key: :guid
     one_to_many :annotations, class: 'VCAP::CloudController::StackAnnotationModel', key: :resource_guid, primary_key: :guid

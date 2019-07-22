@@ -11,14 +11,7 @@ module VCAP::CloudController
         stack = Stack.make
         process1 = ProcessModelFactory.make(stack: stack)
         process2 = ProcessModelFactory.make(stack: stack)
-        expect(stack.apps).to match_array([process1, process2])
-      end
-
-      it 'does not associate non-web v2 apps' do
-        stack = Stack.make
-        process1 = ProcessModelFactory.make(type: 'web', stack: stack)
-        ProcessModelFactory.make(type: 'other', stack: stack)
-        expect(stack.apps).to match_array([process1])
+        expect(stack.apps).to match_array([process1.app, process2.app])
       end
     end
 
