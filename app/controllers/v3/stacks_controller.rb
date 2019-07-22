@@ -5,6 +5,7 @@ require 'actions/stack_update'
 require 'messages/stack_create_message'
 require 'messages/stack_update_message'
 require 'messages/stacks_list_message'
+require 'messages/stack_apps_list_message'
 require 'fetchers/stack_list_fetcher'
 
 class StacksController < ApplicationController
@@ -54,6 +55,26 @@ class StacksController < ApplicationController
     stack_not_found! unless stack
 
     render status: :ok, json: Presenters::V3::StackPresenter.new(stack)
+  end
+
+  def show_apps
+    stack = Stack.find(guid: hashed_params[:guid])
+    stack_not_found! unless stack
+
+    message = StackAppsListMessage.from_params(query_params, stack_name: stack.name)
+    invalid_param!(message.errors.full_messages) unless message.valid?
+
+    dataset = if permission_queryer.can_read_globally?
+                AppListFetcher.new.fetch_all(message)
+              else
+                AppListFetcher.new.fetch(message, permission_queryer.readable_space_guids)
+              end
+
+    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
+      presenter: Presenters::V3::AppPresenter,
+      paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
+      path: "/v3/stacks/#{hashed_params[:guid]}/apps"
+    )
   end
 
   def destroy

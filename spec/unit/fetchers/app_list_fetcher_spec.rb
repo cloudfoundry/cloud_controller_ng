@@ -16,7 +16,7 @@ module VCAP::CloudController
     let!(:lifecycle_data_for_app) {
       BuildpackLifecycleDataModel.make(
         app: app,
-        stack: stack,
+        stack: stack.name,
         buildpacks: [Buildpack.make.name]
       )
     }

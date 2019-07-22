@@ -201,6 +201,209 @@ RSpec.describe 'Stacks Request' do
     end
   end
 
+  describe 'GET /v3/stacks/:guid/apps' do
+    let(:user) { make_user }
+    let(:headers) { headers_for(user) }
+    let!(:stack) { VCAP::CloudController::Stack.make(name: 'stack-name') }
+    let!(:buildpack) { VCAP::CloudController::Buildpack.make(name: 'bp-name') }
+    let!(:space) { make_space_for_user(user) }
+    let!(:space2) { VCAP::CloudController::Space.make }
+    let!(:app_model1) { VCAP::CloudController::AppModel.make(name: 'name1', space: space) }
+    let!(:app_model2) { VCAP::CloudController::AppModel.make(name: 'name2', space: space2) }
+    let!(:buildpack_lifecycle_data1) do
+      VCAP::CloudController::BuildpackLifecycleDataModel.make(stack: stack.name, app: app_model1, buildpacks: [buildpack.name])
+    end
+    let!(:buildpack_lifecycle_data2) do
+      VCAP::CloudController::BuildpackLifecycleDataModel.make(stack: stack.name, app: app_model2, buildpacks: [buildpack.name])
+    end
+    let!(:app_model3) do
+      VCAP::CloudController::AppModel.make(
+        :docker,
+        name: 'name2')
+    end
+
+    it 'returns the list of space-visible apps using the given stack' do
+      get "/v3/stacks/#{stack.guid}/apps", { per_page: 2 }, headers
+
+      expect(last_response.status).to eq(200), last_response.body
+      parsed_response = MultiJson.load(last_response.body)
+      expect(parsed_response).to be_a_response_like(
+        {
+          'pagination' => {
+            'total_results' => 1,
+            'total_pages' => 1,
+            'first' => { 'href' => "#{link_prefix}/v3/stacks/#{stack.guid}/apps?page=1&per_page=2" },
+            'last' => { 'href' => "#{link_prefix}/v3/stacks/#{stack.guid}/apps?page=1&per_page=2" },
+            'previous' => nil,
+            'next' => nil,
+          },
+          'resources' => [
+            {
+              'guid' => app_model1.guid,
+              'name' => 'name1',
+              'state' => 'STOPPED',
+              'lifecycle' => {
+                'type' => 'buildpack',
+                'data' => {
+                  'buildpacks' => ['bp-name'],
+                  'stack' => 'stack-name',
+                }
+              },
+              'relationships' => {
+                'space' => {
+                  'data' => {
+                    'guid' => space.guid
+                  }
+                }
+              },
+              'created_at' => iso8601,
+              'updated_at' => iso8601,
+              'metadata' => { 'labels' => {}, 'annotations' => {} },
+              'links' => {
+                'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}" },
+                'processes' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/processes" },
+                'packages' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/packages" },
+                'environment_variables' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/environment_variables" },
+                'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
+                'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/droplets/current" },
+                'droplets' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/droplets" },
+                'tasks' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/tasks" },
+                'route_mappings' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/route_mappings" },
+                'start' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/actions/start", 'method' => 'POST' },
+                'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/actions/stop", 'method' => 'POST' },
+                'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/revisions" },
+                'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/revisions/deployed" },
+              }
+            },
+          ]
+        }
+      )
+    end
+
+    context 'as an admin user' do
+      let!(:user) { make_user(admin: true) }
+      let!(:headers) { admin_headers_for(user) }
+      it 'return the list of all apps using the given stack' do
+        get "/v3/stacks/#{stack.guid}/apps", { per_page: 2 }, headers
+
+        expect(last_response.status).to eq(200), last_response.body
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response).to be_a_response_like(
+          {
+            'pagination' => {
+              'total_results' => 2,
+              'total_pages' => 1,
+              'first' => { 'href' => "#{link_prefix}/v3/stacks/#{stack.guid}/apps?page=1&per_page=2" },
+              'last' => { 'href' => "#{link_prefix}/v3/stacks/#{stack.guid}/apps?page=1&per_page=2" },
+              'previous' => nil,
+              'next' => nil,
+            },
+            'resources' => [
+              {
+                'guid' => app_model1.guid,
+                'name' => 'name1',
+                'state' => 'STOPPED',
+                'lifecycle' => {
+                  'type' => 'buildpack',
+                  'data' => {
+                    'buildpacks' => ['bp-name'],
+                    'stack' => 'stack-name',
+                  }
+                },
+                'relationships' => {
+                  'space' => {
+                    'data' => {
+                      'guid' => space.guid
+                    }
+                  }
+                },
+                'created_at' => iso8601,
+                'updated_at' => iso8601,
+                'metadata' => { 'labels' => {}, 'annotations' => {} },
+                'links' => {
+                  'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}" },
+                  'processes' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/processes" },
+                  'packages' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/packages" },
+                  'environment_variables' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/environment_variables" },
+                  'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
+                  'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/droplets/current" },
+                  'droplets' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/droplets" },
+                  'tasks' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/tasks" },
+                  'route_mappings' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/route_mappings" },
+                  'start' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/actions/start", 'method' => 'POST' },
+                  'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/actions/stop", 'method' => 'POST' },
+                  'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/revisions" },
+                  'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/revisions/deployed" },
+                }
+              },
+              {
+                'guid' => app_model2.guid,
+                'name' => 'name2',
+                'state' => 'STOPPED',
+                'lifecycle' => {
+                  'type' => 'buildpack',
+                  'data' => {
+                    'buildpacks' => ['bp-name'],
+                    'stack' => 'stack-name',
+                  }
+                },
+                'relationships' => {
+                  'space' => {
+                    'data' => {
+                      'guid' => space2.guid
+                    }
+                  }
+                },
+                'created_at' => iso8601,
+                'updated_at' => iso8601,
+                'metadata' => { 'labels' => {}, 'annotations' => {} },
+                'links' => {
+                  'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}" },
+                  'processes' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/processes" },
+                  'packages' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/packages" },
+                  'environment_variables' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/environment_variables" },
+                  'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space2.guid}" },
+                  'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/droplets/current" },
+                  'droplets' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/droplets" },
+                  'tasks' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/tasks" },
+                  'route_mappings' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/route_mappings" },
+                  'start' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/actions/start", 'method' => 'POST' },
+                  'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/actions/stop", 'method' => 'POST' },
+                  'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/revisions" },
+                  'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/revisions/deployed" },
+                }
+              }
+            ]
+          }
+        )
+      end
+    end
+
+    context 'user is not logged in' do
+      it 'returns 401 when user not logged in' do
+        get "/v3/stacks/#{stack.guid}/apps", {}, {} # empty headers indicates logged out
+
+        expect(last_response.status).to eq 401
+      end
+    end
+
+    context 'when seeking apps for a stack that does not exist' do
+      it '404s' do
+        get '/v3/stacks/hot_garbage/apps', {}, headers
+        expect(last_response.status).to eq 404
+        expect(last_response.body).to include('ResourceNotFound')
+      end
+    end
+
+    context 'when the params are invalid' do
+      it '400s' do
+        get "/v3/stacks/#{stack.guid}/apps", { per_pae: 2 }, headers
+
+        expect(last_response.status).to eq(400), last_response.body
+      end
+    end
+  end
+
   describe 'POST /v3/stacks' do
     let(:user) { make_user(admin: true) }
     let(:request_body) do

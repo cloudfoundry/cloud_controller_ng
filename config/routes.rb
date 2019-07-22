@@ -203,6 +203,7 @@ Rails.application.routes.draw do
   # stacks
   get '/stacks', to: 'stacks#index'
   get '/stacks/:guid', to: 'stacks#show'
+  get '/stacks/:guid/apps', to: 'stacks#show_apps'
   post '/stacks', to: 'stacks#create'
   patch '/stacks/:guid', to: 'stacks#update'
   delete '/stacks/:guid', to: 'stacks#destroy'
