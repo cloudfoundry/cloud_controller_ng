@@ -1,4 +1,8 @@
+require 'coverband'
+
 Rails.application.routes.draw do
+  mount Coverband::Reporters::Web.new, at: '/coverage'
+
   get '/', to: 'root#v3_root'
 
   # apps

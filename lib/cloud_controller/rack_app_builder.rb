@@ -1,3 +1,4 @@
+require 'coverband'
 require 'syslog/logger'
 require 'vcap_request_id'
 require 'cors'
@@ -17,6 +18,7 @@ module VCAP::CloudController
       logger = access_log(config)
 
       Rack::Builder.new do
+        use Coverband::BackgroundMiddleware
         use CloudFoundry::Middleware::RequestMetrics, request_metrics
         use CloudFoundry::Middleware::Cors, config.get(:allowed_cors_domains)
         use CloudFoundry::Middleware::VcapRequestId

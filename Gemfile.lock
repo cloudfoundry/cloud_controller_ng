@@ -114,6 +114,8 @@ GEM
     coderay (1.1.2)
     concurrent-ruby (1.1.5)
     cookiejar (0.3.3)
+    coverband (4.2.1)
+      redis
     crack (0.4.3)
       safe_yaml (~> 1.0.0)
     crass (1.0.4)
@@ -313,6 +315,7 @@ GEM
     rb-fsevent (0.10.3)
     rb-inotify (0.9.10)
       ffi (>= 0.5.0, < 2)
+    redis (4.1.2)
     representable (3.0.4)
       declarative (< 0.1.0)
       declarative-option (< 0.2.0)
@@ -471,6 +474,7 @@ DEPENDENCIES
   clockwork
   cloudfront-signer
   codeclimate-test-reporter
+  coverband
   debase (>= 0.2.2.beta14)
   em-http-request (~> 1.1)
   eventmachine (~> 1.0.9)

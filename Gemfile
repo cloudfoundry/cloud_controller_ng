@@ -1,5 +1,7 @@
 source 'https://rubygems.org'
 
+gem 'coverband'
+
 gem 'addressable'
 gem 'allowy'
 gem 'cf-copilot', '0.0.13'
