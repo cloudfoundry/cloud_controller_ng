@@ -42,6 +42,17 @@ RSpec.describe AppsV3Controller, type: :controller do
         expect(response.status).to eq(200)
         expect(response_guids).to match_array([app_model_1, app_model_2, app_model_3].map(&:guid))
       end
+
+      it 'eager loads associated resources that the presenter specifies' do
+        expect_any_instance_of(VCAP::CloudController::AppListFetcher).to receive(:fetch_all).with(
+          anything,
+          hash_including(eager_loaded_associations: [:labels, :annotations, { buildpack_lifecycle_data: :buildpack_lifecycle_buildpacks }])
+        ).and_call_original
+
+        get :index
+
+        expect(response.status).to eq(200)
+      end
     end
 
     context 'when the user does not have read scope' do

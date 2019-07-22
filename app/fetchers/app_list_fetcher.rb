@@ -4,13 +4,13 @@ require 'fetchers/label_selector_query_generator'
 
 module VCAP::CloudController
   class AppListFetcher
-    def fetch_all(message)
-      dataset = AppModel.dataset
+    def fetch_all(message, eager_loaded_associations: [])
+      dataset = AppModel.dataset.eager(eager_loaded_associations)
       filter(message, dataset)
     end
 
-    def fetch(message, space_guids)
-      dataset = AppModel.where(space_guid: space_guids)
+    def fetch(message, space_guids, eager_loaded_associations: [])
+      dataset = AppModel.where(space_guid: space_guids).eager(eager_loaded_associations)
       filter(message, dataset)
     end
 

@@ -2,6 +2,17 @@ require 'models/helpers/metadata_helpers'
 
 module VCAP::CloudController::Presenters::Mixins
   module MetadataPresentationHelpers
+    extend ActiveSupport::Concern
+
+    class_methods do
+      def associated_resources
+        [
+          :labels,
+          :annotations
+        ]
+      end
+    end
+
     def hashified_labels(labels)
       hashified_metadata(labels)
     end

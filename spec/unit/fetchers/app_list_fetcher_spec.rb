@@ -3,40 +3,53 @@ require 'messages/apps_list_message'
 
 module VCAP::CloudController
   RSpec.describe AppListFetcher do
-    describe '#fetch' do
-      let!(:stack) { Stack.make }
-      let(:space) { Space.make }
-      let(:app) { AppModel.make(space_guid: space.guid, name: 'app') }
-      let(:sad_app) { AppModel.make(space_guid: space.guid) }
-      let(:org) { space.organization }
-      let(:fetcher) { AppListFetcher.new }
-      let(:space_guids) { [space.guid] }
-      let(:pagination_options) { PaginationOptions.new({}) }
-      let(:filters) { {} }
-      let(:message) { AppsListMessage.from_params(filters) }
-      let!(:lifecycle_data_for_app) {
-        BuildpackLifecycleDataModel.make(app: app, stack: stack)
-      }
-      let!(:lifecycle_data_for_sad_app) {
-        BuildpackLifecycleDataModel.make(app: sad_app, stack: nil)
-      }
+    let!(:stack) { Stack.make }
+    let(:space) { Space.make }
+    let!(:app) { AppModel.make(space_guid: space.guid, name: 'app') }
+    let!(:sad_app) { AppModel.make(space_guid: space.guid) }
+    let(:org) { space.organization }
+    let(:fetcher) { AppListFetcher.new }
+    let(:space_guids) { [space.guid] }
+    let(:pagination_options) { PaginationOptions.new({}) }
+    let(:filters) { {} }
+    let(:message) { AppsListMessage.from_params(filters) }
+    let!(:lifecycle_data_for_app) {
+      BuildpackLifecycleDataModel.make(
+        app: app,
+        stack: stack,
+        buildpacks: [Buildpack.make.name]
+      )
+    }
+    let!(:lifecycle_data_for_sad_app) {
+      BuildpackLifecycleDataModel.make(app: sad_app, stack: nil)
+    }
 
-      apps = nil
+    context '#fetch_all' do
+      it 'eager loads the specified resources for all apps' do
+        results = fetcher.fetch_all(message, eager_loaded_associations: [:labels, { buildpack_lifecycle_data: :buildpack_lifecycle_buildpacks }]).all
 
-      before do
-        app.save
-        sad_app.save
-        expect(message).to be_valid
-        apps = fetcher.fetch(message, space_guids)
+        expect(results.first.buildpack_lifecycle_data.associations.key?(:buildpack_lifecycle_buildpacks)).to be true
+        expect(results.first.associations.key?(:buildpack_lifecycle_data)).to be true
+        expect(results.first.associations.key?(:labels)).to be true
+        expect(results.first.associations.key?(:annotations)).to be false
       end
 
-      after do
-        apps = nil
-      end
-
-      it 'fetch_all includes all the apps' do
+      it 'includes all the apps' do
         app = AppModel.make
         expect(fetcher.fetch_all(message).all).to include(app, sad_app)
+      end
+    end
+
+    describe '#fetch' do
+      let(:apps) { fetcher.fetch(message, space_guids) }
+
+      it 'eager loads the specified resources for all apps' do
+        results = fetcher.fetch(message, space_guids, eager_loaded_associations: [:labels, { buildpack_lifecycle_data: :buildpack_lifecycle_buildpacks }]).all
+
+        expect(results.first.buildpack_lifecycle_data.associations.key?(:buildpack_lifecycle_buildpacks)).to be true
+        expect(results.first.associations.key?(:buildpack_lifecycle_data)).to be true
+        expect(results.first.associations.key?(:labels)).to be true
+        expect(results.first.associations.key?(:annotations)).to be false
       end
 
       context 'when no filters are specified' do

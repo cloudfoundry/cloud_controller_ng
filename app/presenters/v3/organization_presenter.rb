@@ -6,12 +6,9 @@ module VCAP::CloudController::Presenters::V3
     include VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers
 
     class << self
+      # :labels and :annotations come from MetadataPresentationHelpers
       def associated_resources
-        [
-          :quota_definition,
-          :labels,
-          :annotations
-        ]
+        super << :quota_definition
       end
     end
 

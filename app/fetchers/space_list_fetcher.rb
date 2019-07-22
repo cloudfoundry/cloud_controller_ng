@@ -3,13 +3,13 @@ require 'cloud_controller/paging/paginated_result'
 
 module VCAP::CloudController
   class SpaceListFetcher
-    def fetch(message:, guids:)
-      dataset = Space.where(guid: guids)
+    def fetch(message:, guids:, eager_loaded_associations: [])
+      dataset = Space.where(guid: guids).eager(eager_loaded_associations)
       filter(message, dataset)
     end
 
-    def fetch_all(message:)
-      dataset = Space.dataset
+    def fetch_all(message:, eager_loaded_associations: [])
+      dataset = Space.dataset.eager(eager_loaded_associations)
       filter(message, dataset)
     end
 

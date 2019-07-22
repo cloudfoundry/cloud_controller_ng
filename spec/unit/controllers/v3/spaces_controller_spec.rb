@@ -151,7 +151,7 @@ RSpec.describe SpacesV3Controller, type: :controller do
         org1_space.add_developer(user)
       end
 
-      it 'returns the space' do
+      it 'returns the spaces' do
         get :index
 
         expect(response.status).to eq(200)
@@ -177,6 +177,16 @@ RSpec.describe SpacesV3Controller, type: :controller do
         expect(parsed_body['resources'].map { |r| r['name'] }).to match_array([
           org1_space.name, org1_other_space.name, org2_space.name,
         ])
+      end
+
+      it 'eager loads associated resources that the presenter specifies' do
+        expect_any_instance_of(VCAP::CloudController::SpaceListFetcher).to receive(:fetch).with(
+          hash_including(eager_loaded_associations: [:labels, :annotations, :organization])
+        ).and_call_original
+
+        get :index
+
+        expect(response.status).to eq(200)
       end
     end
 

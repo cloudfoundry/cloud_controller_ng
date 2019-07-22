@@ -5,6 +5,13 @@ module VCAP::CloudController::Presenters::V3
   class SpacePresenter < BasePresenter
     include VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers
 
+    class << self
+      # :labels and :annotations come from MetadataPresentationHelpers
+      def associated_resources
+        super << :organization
+      end
+    end
+
     def to_hash
       hash = {
         guid: space.guid,

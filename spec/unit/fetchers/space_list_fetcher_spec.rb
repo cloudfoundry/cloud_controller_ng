@@ -23,6 +23,18 @@ module VCAP::CloudController
         expect(results).to match_array([space1, space3, space4])
       end
 
+      describe 'eager loading associated resources' do
+        it 'eager loads the specified resources for all orgs' do
+          results = fetcher.fetch(message: message, guids: permitted_space_guids, eager_loaded_associations: [:labels]).all
+
+          expect(results.first.associations.key?(:labels)).to be true
+          expect(results.first.associations.key?(:annotations)).to be false
+
+          expect(results.last.associations.key?(:labels)).to be true
+          expect(results.last.associations.key?(:annotations)).to be false
+        end
+      end
+
       context 'when names filter is given' do
         let(:message) { SpacesListMessage.from_params({ names: ['Lamb', 'Buffalo'] }) }
 
@@ -50,6 +62,18 @@ module VCAP::CloudController
         expect(all_spaces).to match_array([
           space1, space2, space3, space4
         ])
+      end
+
+      describe 'eager loading associated resources' do
+        it 'eager loads the specified resources for all orgs' do
+          results = fetcher.fetch_all(message: message, eager_loaded_associations: [:labels]).all
+
+          expect(results.first.associations.key?(:labels)).to be true
+          expect(results.first.associations.key?(:annotations)).to be false
+
+          expect(results.last.associations.key?(:labels)).to be true
+          expect(results.last.associations.key?(:annotations)).to be false
+        end
       end
 
       context 'when names filter is given' do

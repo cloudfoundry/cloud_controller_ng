@@ -210,6 +210,16 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
       ])
     end
 
+    it 'eager loads associated resources that the presenter specifies' do
+      expect_any_instance_of(VCAP::CloudController::OrgListFetcher).to receive(:fetch).with(
+        hash_including(eager_loaded_associations: [:labels, :annotations, :quota_definition])
+      ).and_call_original
+
+      get :index
+
+      expect(response.status).to eq(200)
+    end
+
     describe 'query params' do
       describe 'names' do
         it 'returns orgs with matching names' do

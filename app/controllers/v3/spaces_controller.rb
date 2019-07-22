@@ -156,14 +156,14 @@ class SpacesV3Controller < ApplicationController
   def readable_spaces(message:)
     if permission_queryer.can_read_globally?
       if message.requested?(:guids)
-        SpaceListFetcher.new.fetch(message: message, guids: message.guids)
+        SpaceListFetcher.new.fetch(message: message, guids: message.guids, eager_loaded_associations: Presenters::V3::SpacePresenter.associated_resources)
       else
-        SpaceListFetcher.new.fetch_all(message: message)
+        SpaceListFetcher.new.fetch_all(message: message, eager_loaded_associations: Presenters::V3::SpacePresenter.associated_resources)
       end
     else
       readable_space_guids = permission_queryer.readable_space_guids
       filtered_readable_guids = message.requested?(:guids) ? readable_space_guids & message.guids : readable_space_guids
-      SpaceListFetcher.new.fetch(message: message, guids: filtered_readable_guids)
+      SpaceListFetcher.new.fetch(message: message, guids: filtered_readable_guids, eager_loaded_associations: Presenters::V3::SpacePresenter.associated_resources)
     end
   end
 end
