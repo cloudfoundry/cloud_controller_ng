@@ -39,19 +39,19 @@ This endpoint is only for creating a droplet without a package. To create a drop
 #### Definition
 `POST /v3/droplets`
 
-#### Required Parameters
+#### Required parameters
 
 | Name    | Type                                           | Description                |
 | ----    | ----                                           | -----------                |
 | **app** | [_to-one relationship_](#to-one-relationships) | App to create droplet for. |
 
-#### Optional Parameters
+#### Optional parameters
 
 | Name              | Type     | Description                                                                   | Default       |
 | -----------       | -------- | ----------------------------------------------------------------------------- | -------       |
 | **process_types** | _hash_   | Process names and start commands for the droplet.                             | `{"web": ""}` |
 
-#### Permitted Roles
+#### Permitted roles
 |                 |     |
 | ---             | --- |
 | Admin           |     |

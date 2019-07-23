@@ -12,7 +12,7 @@ Sidecars are useful for any app processes that need to communicate with another 
   
 
 #### Steps to create a sidecar
-The recommended way to create sidecars for your app is with an [App Manifest](#app-manifest).
+The recommended way to create sidecars for your app is with an [app manifest](#app-manifest).
 
 ```yaml
  sidecars:
@@ -33,9 +33,9 @@ The recommended way to create sidecars for your app is with an [App Manifest](#a
 
 <sup>1 Applies for Java apps.  If you do not reserve memory for the sidecar, the JVM will consume all of the memory in the app container.  This value must be less thatn the process' reserved memory.</sup>
 
-#### Current Limitations
+#### Current limitations
 - Start and stop order of app processes and their sidecars is undefined
-- App processes and Sidecar processes are codependent: if either crashes or exits, the other will as well 
+- App processes and sidecar processes are codependent: if either crashes or exits, the other will as well
 - Sidecars are currently not independently scalable (memory / disk) and share resources with the main app process and other sidecars within that container
 - Sidecars only support PID based health checks; HTTP health-checks for sidecars are not currently supported
 - This has only been tested on Linux based systems

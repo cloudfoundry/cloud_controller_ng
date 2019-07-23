@@ -2,7 +2,7 @@
 
 Lifecycles inform the platform of how to build droplets and run apps. For example the
 `buildpack` lifecycle will use a droplet and a rootfs to run the app, while a `docker` lifecycle will
-pull a docker image from a registry to run an app.
+pull a Docker image from a registry to run an app.
 
 #### The lifecycle object
 
@@ -41,9 +41,9 @@ Name | Type | Description
 
 ### Docker lifecycle
 
-This allows Cloud Foundry to run docker images. When staging an app with this lifecycle, the docker registry is queried for
+This allows Cloud Foundry to run Docker images. When staging an app with this lifecycle, the Docker registry is queried for
 metadata about the image, such as ports and start command.  When running an app with this lifecycle, a container is created
-and the docker image is executed inside of it.
+and the Docker image is executed inside of it.
 
 #### Docker lifecycle object
 
@@ -61,5 +61,5 @@ Example Docker Lifecycle
 Name | Type | Description
 ---- | ---- | -----------
 **type** | _string_ | `docker`
-**data** | _object_ | Data is not used by the docker lifecycle. Valid value is `{}`.
+**data** | _object_ | Data is not used by the Docker lifecycle. Valid value is `{}`.
 

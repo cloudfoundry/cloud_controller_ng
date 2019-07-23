@@ -39,7 +39,7 @@ Examples may include (but are not limited to):
 - `"library versions": "Spring: 5.1, Redis Client: a184098. yaml parser: 38"`
 - `"git-sha": "d56fe0367554ae5e878e37ed6c5b9a82f5995512"`
 
-#### Annotation Key
+#### Annotation key
 
 Annotation keys are made up of an (optional) prefix, and name. If a prefix is present, it is separated from the name by a `/`.
 Prefixes are dns names intended to enable namespacing of annotation keys.
@@ -56,13 +56,13 @@ A annotation key `name` must adhere to the following restrictions:
 * Allowed characters: alphanumeric , `-`, `_`, and `.`
 * Must begin and end with an alphanumeric character
 
-#### Annotation Value
+#### Annotation value
 
 Annotation values must adhere to the following restrictions:
 
 * Length: 0-5000 characters
 
-### Labels and Selectors
+### Labels and selectors
 
 Labels are user-specified key/value pairs that are attached to [API Resources](#api-resource).
 They are queryable, identifying attributes of a resource, but they do not affect the operation of CloudFoundry.
@@ -110,7 +110,7 @@ Examples may include (but are not limited to):
 - `"env" : "dev"` or `"env" : "test"` or `"env" : "prod"`
 - `"chargeback-code" : "abc123"`
 
-**Label Keys**
+##### Label keys
 
 Label keys are made up of an (optional) prefix, and name. If a prefix is present, it is separated from the name by a `/`.
 Prefixes are dns names intended to enable namespacing of label keys.
@@ -127,7 +127,7 @@ A label key `name` must adhere to the following restrictions:
 * Allowed characters: alphanumeric , `-`, `_`, and `.`
 * Must begin and end with an alphanumeric character
 
-**Label Values**
+##### Label values
 
 Label values must adhere to the following restrictions:
 
@@ -170,7 +170,7 @@ set exclusion | _key_ `notin` (_value1_,_value2_...) | Returns all resources tha
 
 See [the metadata documentation](https://docs.cloudfoundry.org/adminguide/metadata.html#query) for more information.
 
-### Updating Labels and Annotations
+### Updating labels and annotations
 
 Labels and annotations can be updated by using the PATCH endpoint for their resource.
 For example, to update labels or annotations on an app, use the [update an app](#update-an-app) endpoint.

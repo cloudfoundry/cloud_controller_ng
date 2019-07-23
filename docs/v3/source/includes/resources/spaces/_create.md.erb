@@ -35,21 +35,21 @@ Content-Type: application/json
 #### Definition
 `POST /v3/spaces`
 
-#### Required Parameters
+#### Required parameters
 
 Name | Type | Description
 ---- | ---- | -----------
 **name** | _string_ | Space name |
 **relationships.organization** | [_to-one relationship_](#to-one-relationships) | A relationship to an organization.
 
-#### Optional Parameters
+#### Optional parameters
 
 Name | Type | Description
 ---- | ---- | -----------
 **metadata.labels** _(experimental)_| [_label object_](#labels) | Labels applied to the space.
 **metadata.annotations** _(experimental)_| [_annotation object_](#annotations) | Annotations applied to the space.
 
-#### Permitted Roles
+#### Permitted roles
  |
 --- | ---
 Admin |

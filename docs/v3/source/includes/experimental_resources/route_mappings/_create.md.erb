@@ -36,21 +36,21 @@ Content-Type: application/json
 #### Definition
 `POST /v3/route_mappings`
 
-#### Required Parameters
+#### Required parameters
 
 Name | Type | Description
 ---- | ---- | -----------
 **relationships.app** | [_to-one relationship_](#to-one-relationships) | A relationship to an app.
 **relationships.route** | [_to-one relationship_](#to-one-relationships) | A relationship to a route.
 
-#### Optional Parameters
+#### Optional parameters
 
 Name | Type | Description | Default
 ---- | ---- | ----------- | -------
 **relationships.process** | [_to-one relationship_](#to-one-relationships) | A relationship to a process. This relationship is specified by `type` instead of `guid`.
 **weight**  | int         | A relative weight for your application that must be between 1 and 128.
 
-#### Permitted Roles
+#### Permitted roles
  |
 --- | ---
 Admin |

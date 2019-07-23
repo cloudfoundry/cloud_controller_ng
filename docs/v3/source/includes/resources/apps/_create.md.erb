@@ -35,14 +35,14 @@ Content-Type: application/json
 #### Definition
 `POST /v3/apps`
 
-#### Required Parameters
+#### Required parameters
 
 Name | Type | Description
 ---- | ---- | -----------
 **name** | _string_ | Name of the app.
 **relationships.space** | [_to-one relationship_](#to-one-relationships) | A relationship to a space.
 
-#### Optional Parameters
+#### Optional parameters
 
 Name | Type | Description | Default
 ---- | ---- | ----------- | -------
@@ -51,7 +51,7 @@ Name | Type | Description | Default
 **metadata.labels** _(experimental)_| [_label object_](#labels) | Labels applied to the app.
 **metadata.annotations** _(experimental)_ | [_annotation object_](#annotations) | Annotations applied to the app.
 
-#### Permitted Roles
+#### Permitted roles
  |
 --- | ---
 Admin |

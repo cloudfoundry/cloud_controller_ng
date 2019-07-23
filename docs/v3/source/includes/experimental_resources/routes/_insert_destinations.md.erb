@@ -47,13 +47,13 @@ replace all destinations for a route at once using the [replace destinations end
 #### Definition
 `POST /v3/routes/:guid/destinations`
 
-#### Required Parameters
+#### Required parameters
 
 | Name             | Type                                                      | Description                                                                                                                   |
 | ---------------- | --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | **destinations** | array of [_destination objects_](#the-destination-object) | List of destinations to add to route. Destinations without `process.type` specified will get process type `"web"` by default. |
 
-#### Permitted Roles
+#### Permitted roles
 
 | Role            |
 | --------------- |

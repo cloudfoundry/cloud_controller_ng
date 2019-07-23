@@ -38,13 +38,13 @@ Content-Type: application/json
 #### Definition
 `POST /v3/apps/:app_guid/tasks`
 
-#### Required Parameters
+#### Required parameters
 
 Name | Type | Description
 ---- | ---- | -----------
 **command**<sup>[1]</sup> | _string_ | Command that will be executed. **NOTE:** optional if a `template.process.guid` is provided
 
-#### Optional Parameters
+#### Optional parameters
 
 Name | Type | Description | Default
 ---- | ---- | ----------- | -------
@@ -58,7 +58,7 @@ Name | Type | Description | Default
 
 <sup>1 If not provided, and a `template.process.guid` is provided, this field will use the value from the process with the given guid.</sup>
 
-#### Permitted Roles
+#### Permitted roles
  |
 --- | ---
 Space Developer |

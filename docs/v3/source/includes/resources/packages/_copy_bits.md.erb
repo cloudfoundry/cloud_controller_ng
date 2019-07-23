@@ -36,19 +36,19 @@ This endpoint copies the bits of a source package to a target package.
 #### Definition
 `POST /v3/packages?source_guid=:guid`
 
-#### Required Query Parameters
+#### Required query parameters
 
 Name | Type | Description
 ---- | ---- | -----------
 **source_guid** | _uuid_ | GUID of the source package to copy from.
 
-#### Required Parameters
+#### Required parameters
 
 Name | Type | Description
 ---- | ---- | -----------
 **relationships.app** | [_to-one relationship_](#to-one-relationships) | A relationship to the destination app.
 
-#### Permitted Roles
+#### Permitted roles
  |
 --- | ---
 Admin |

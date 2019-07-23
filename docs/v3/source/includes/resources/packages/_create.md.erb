@@ -33,7 +33,7 @@ Content-Type: application/json
 ```
 
 ```
-Example Request (docker app)
+Example Request (Docker app)
 ```
 
 ```shell
@@ -72,14 +72,14 @@ Content-Type: application/json
 #### Definition
 `POST /v3/packages`
 
-#### Required Parameters
+#### Required parameters
 
 Name | Type | Description
 ---- | ---- | -----------
 **type** | _string_ | Type of the package. Valid values are `bits`, `docker`.
 **relationships.app** | [_to-one relationship_](#to-one-relationships) | A relationship to an app.
 
-#### Optional Parameters
+#### Optional parameters
 
 Name | Type | Description | Default
 ---- | ---- | ----------- | -------
@@ -96,7 +96,7 @@ Name | Type | Description
 **metadata.labels** _(experimental)_| [_label object_](#labels) | Labels applied to the package.
 **metadata.annotations** _(experimental)_ | [_annotation object_](#annotations) | Annotations applied to the package.
 
-#### Permitted Roles
+#### Permitted roles
  |
 --- | ---
 Admin |

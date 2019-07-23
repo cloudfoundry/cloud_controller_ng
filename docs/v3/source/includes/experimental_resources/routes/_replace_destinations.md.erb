@@ -83,13 +83,13 @@ and unweighted destinations for a route is not allowed.
 #### Definition
 `PATCH /v3/routes/:guid/destinations`
 
-#### Required Parameters
+#### Required parameters
 
 | Name             | Type                                                      | Description                                                                                                                   |
 | ---------------- | --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | **destinations** | array of [_destination objects_](#the-destination-object) | List of destinations use for route. Destinations without `process.type` specified will get process type `"web"` by default. |
 
-#### Permitted Roles
+#### Permitted roles
 
 | Role            |
 | --------------- |
