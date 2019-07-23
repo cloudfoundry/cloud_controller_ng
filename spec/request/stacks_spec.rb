@@ -210,16 +210,15 @@ RSpec.describe 'Stacks Request' do
     let!(:space2) { VCAP::CloudController::Space.make }
     let!(:app_model1) { VCAP::CloudController::AppModel.make(name: 'name1', space: space) }
     let!(:app_model2) { VCAP::CloudController::AppModel.make(name: 'name2', space: space2) }
-    let!(:buildpack_lifecycle_data1) do
-      VCAP::CloudController::BuildpackLifecycleDataModel.make(stack: stack.name, app: app_model1, buildpacks: [buildpack.name])
-    end
-    let!(:buildpack_lifecycle_data2) do
-      VCAP::CloudController::BuildpackLifecycleDataModel.make(stack: stack.name, app: app_model2, buildpacks: [buildpack.name])
-    end
     let!(:app_model3) do
       VCAP::CloudController::AppModel.make(
         :docker,
         name: 'name2')
+    end
+
+    before do
+      app_model1.buildpack_lifecycle_data.update(stack: stack.name, buildpacks: [buildpack.name])
+      app_model2.buildpack_lifecycle_data.update(stack: stack.name, buildpacks: [buildpack.name])
     end
 
     it 'returns the list of space-visible apps using the given stack' do
