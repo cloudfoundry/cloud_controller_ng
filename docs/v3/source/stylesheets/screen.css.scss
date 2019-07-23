@@ -33,6 +33,7 @@ html, body {
   margin: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-size: $font-size-s;
   @extend %default-font;
   background-color: $main-bg;
   height: 100%;
@@ -41,7 +42,7 @@ html, body {
 
 h1, h2, h3, h4, h5, h6 {
   margin: 1.414em 0 0.5em;
-  font-weight: inherit;
+  font-weight: bold;
   line-height: 1.2;
 }
 
@@ -104,6 +105,7 @@ a, .link {
   // language selector for mobile devices
   .lang-selector {
     display: none;
+
     a {
       padding-top: 0.5em;
       padding-bottom: 0.5em;
@@ -111,13 +113,13 @@ a, .link {
   }
 
   // This is the logo at the top of the ToC
-  &>img {
+  & > img {
     display: block;
     width: 200px;
     padding: 15px 10px 0px 10px;
   }
 
-  &>.search {
+  & > .search {
     position: relative;
 
     input {
@@ -142,7 +144,7 @@ a, .link {
     }
   }
 
-  img+.tocify {
+  img + .tocify {
     margin-top: $logo-margin;
   }
 
@@ -155,6 +157,7 @@ a, .link {
     transition-property: height, margin;
     transition-duration: 180ms;
     transition-timing-function: ease-in-out;
+
     &.visible {
       height: 30%;
       margin-bottom: 1em;
@@ -230,17 +233,14 @@ a, .link {
     background-color: $nav-subitem-bg;
     font-weight: 400;
     padding: 0 $nav-padding 0 $nav-padding;
-
-      .tocify-subheader {
-      }
-    }
+  }
 
   .toc-footer {
     padding: 1em 0;
     margin-top: 1em;
     border-top: 1px dashed $nav-footer-border-color;
 
-    li,a {
+    li, a {
       color: $nav-text;
       text-decoration: none;
     }
@@ -268,6 +268,7 @@ a, .link {
     transform: rotate(-90deg) translate(-100%, 0);
     border-radius: 0 0 0 5px;
   }
+
   padding: 0 1.5em 5em 0; // increase touch size area
   display: none;
   position: fixed;
@@ -279,6 +280,7 @@ a, .link {
   font-weight: bold;
   opacity: 0.7;
   line-height: 16px;
+
   img {
     height: 16px;
     vertical-align: bottom;
@@ -286,8 +288,13 @@ a, .link {
 
   transition: left 0.3s ease-in-out;
 
-  &:hover { opacity: 1; }
-  &.open {left: $nav-width}
+  &:hover {
+    opacity: 1;
+  }
+
+  &.open {
+    left: $nav-width
+  }
 }
 
 
@@ -329,9 +336,10 @@ a, .link {
   background-color: $lang-select-bg;
   width: 100%;
   font-weight: bold;
+
   a {
     display: block;
-    float:left;
+    float: left;
     color: $lang-select-text;
     text-decoration: none;
     padding: 0 10px;
@@ -372,7 +380,7 @@ a, .link {
     clear: both;
   }
 
-  &>h1, &>h2, &>h3, &>h4, &>h5, &>h6, &>p, &>table, &>ul, &>ol, &>aside, &>dl {
+  & > h1, & > h2, & > h3, & > h4, & > h5, & > h6, & > p, & > table, & > ul, & > ol, & > aside, & > dl {
     margin-right: $examples-width;
     padding: 0 $main-padding;
     box-sizing: border-box;
@@ -382,18 +390,17 @@ a, .link {
     @extend %left-col;
   }
 
-  &>ul, &>ol {
+  & > ul, & > ol {
     padding-left: $main-padding + 15px;
   }
 
   // the div is the tocify hidden div for placeholding stuff
-  &>h1, &>h2, &>div {
-    clear:both;
+  & > h1, & > h2, & > div {
+    clear: both;
   }
 
   h1 {
     @extend %header-font;
-    font-size: 30px;
     padding-top: 0.5em;
     padding-bottom: 0.5em;
     border-bottom: 1px solid #ccc;
@@ -410,7 +417,6 @@ a, .link {
 
   h2, h3 {
     @extend %header-font;
-    font-size: 20px;
     margin-top: 4em;
     margin-bottom: 0;
     border-top: 1px solid #ccc;
@@ -431,6 +437,7 @@ a, .link {
     margin-bottom: $section-divide-margin;
     padding-bottom: $section-divide-padding;
   }
+
   h1 + p, h1 + pre + p {
     margin-top: $section-divide-margin;
     padding-top: $section-divide-padding;
@@ -445,7 +452,8 @@ a, .link {
   table {
     margin-bottom: 1em;
     overflow: auto;
-    th,td {
+
+    th, td {
       text-align: left;
       vertical-align: top;
       line-height: 1.6;
@@ -468,12 +476,12 @@ a, .link {
       border-bottom: 1px solid #ccc;
     }
 
-    tr:nth-child(odd)>td {
-      background-color: lighten($table-row-bg,4.2%);
+    tr:nth-child(odd) > td {
+      background-color: lighten($table-row-bg, 4.2%);
     }
 
-    tr:nth-child(even)>td {
-      background-color: lighten($table-row-bg,2.4%);
+    tr:nth-child(even) > td {
+      background-color: lighten($table-row-bg, 2.4%);
     }
   }
 
@@ -495,14 +503,14 @@ a, .link {
   }
 
   code {
-    background-color: rgba(0,0,0,0.05);
+    background-color: rgba(0, 0, 0, 0.05);
     padding: 3px;
     border-radius: 3px;
     @extend %code-font;
-    hyphens: none;
+    hyphens: auto;
   }
 
-  pre>code {
+  pre > code {
     background-color: transparent;
     padding: 0;
   }
@@ -569,15 +577,17 @@ a, .link {
     margin: 0;
     width: $examples-width;
 
-    float:right;
-    clear:right;
+    float: right;
+    clear: right;
 
     box-sizing: border-box;
-    @include text-shadow(0px 1px 2px rgba(0,0,0,0.4));
+    @include text-shadow(0px 1px 2px rgba(0, 0, 0, 0.4));
 
     @extend %right-col;
 
-    &>p { margin: 0; }
+    & > p {
+      margin: 0;
+    }
 
     a {
       color: #fff;
@@ -588,6 +598,7 @@ a, .link {
 
   pre {
     @extend %code-font;
+    font-size: $font-size-xs;
   }
 
   // provide blockquote styles to pre tags as an alternative to changing which tag is produced by the Markdown processor
@@ -616,7 +627,7 @@ a, .link {
   }
 
   blockquote {
-    &>p {
+    & > p {
       background-color: $code-annotation-bg;
       border-radius: 5px;
       padding: $code-annotation-padding;

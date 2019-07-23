@@ -13,22 +13,18 @@ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 License for the specific language governing permissions and limitations
 under the License.
 */
-
-
 ////////////////////////////////////////////////////////////////////////////////
 // CUSTOMIZE SLATE
 ////////////////////////////////////////////////////////////////////////////////
 // Use these settings to help adjust the appearance of Slate
-
 // CLOUDFOUNDRY STYLE GUIDE
 @import "partials/_vars.scss";
 
 // CODE TAB LANGUAGES
 ////////////////////
-$lexed-languages: ("json", "http", "shell", "ruby", "golang", "yaml");   // used to style code blocks written in a language differently from plaintext code blocks
-                                                                  // drawn from the Rouge lexer: http://rouge.jayferd.us/demo
-                                                                  // only languages used in our docs are listed thus far
-
+$lexed-languages: ("json", "java", "js", "http", "shell", "ruby", "golang", "yaml"); // used to style code blocks written in a language differently from plaintext code blocks
+// drawn from the Rouge lexer: http://rouge.jayferd.us/demo
+// only languages used in our docs are listed thus far
 
 // BACKGROUND COLORS
 ////////////////////
@@ -79,8 +75,7 @@ $phone-width: $tablet-width - $nav-width; // min width before reverting to mobil
 // FONTS
 ////////////////////
 %default-font {
-  font-family: $font-primary, "Helvetica Neue", Helvetica, Arial, "Microsoft Yahei","微软雅黑", STXihei, "华文细黑", sans-serif;
-  font-size: $font-size-s;
+  font-family: $font-primary, "Helvetica Neue", Helvetica, Arial, "Microsoft Yahei", "微软雅黑", STXihei, "华文细黑", sans-serif;
   font-weight: 400;
   line-height: 1.45;
 }
@@ -95,7 +90,6 @@ $phone-width: $tablet-width - $nav-width; // min width before reverting to mobil
   font-size: $font-size-xls;
   line-height: 1.5;
 }
-
 
 // OTHER
 ////////////////////
@@ -113,10 +107,10 @@ $search-box-border-color: transparent;
 // These settings are probably best left alone.
 
 %break-words {
-     word-break: break-all;
+  word-break: break-all;
 
-     /* Non standard for webkit */
-     word-break: break-word;
+  /* Non standard for webkit */
+  word-break: break-word;
 
-        hyphens: auto;
+  hyphens: auto;
 }
