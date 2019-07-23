@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'fetchers/add_route_fetcher'
 
 module VCAP::CloudController
   RSpec.describe AddRouteFetcher do
@@ -12,21 +13,9 @@ module VCAP::CloudController
     let!(:old_process) { ProcessModel.make(app_guid: app.guid, type: 'web', created_at: process.created_at - 1) }
     let!(:another_process) { ProcessModel.make(app_guid: app.guid, type: 'worker') }
 
-    let(:message) do
-      RouteMappingsCreateMessage.new(
-        {
-          relationships: {
-            app: { guid: app.guid },
-            route: { guid: route.guid },
-            process: { type: process.type }
-          }
-        }
-      )
-    end
-
     it 'should fetch the associated app, route, space, org, process' do
       returned_app, returned_route, returned_process, returned_space, returned_org =
-        AddRouteFetcher.fetch(app_guid: message.app_guid, process_type: message.process_type, route_guid: message.route_guid)
+        AddRouteFetcher.fetch(app_guid: app.guid, process_type: process.type, route_guid: route.guid)
       expect(returned_app).to eq(app)
       expect(returned_route).to eq(route)
       expect(returned_space).to eq(space)
@@ -39,7 +28,7 @@ module VCAP::CloudController
 
       it 'finds the newest process' do
         returned_app, returned_route, returned_process, returned_space, returned_org =
-          AddRouteFetcher.fetch(app_guid: message.app_guid, process_type: message.process_type, route_guid: message.route_guid)
+          AddRouteFetcher.fetch(app_guid: app.guid, process_type: process.type, route_guid: route.guid)
         expect(returned_app).to eq(app)
         expect(returned_route).to eq(route)
         expect(returned_space).to eq(space)
@@ -49,21 +38,9 @@ module VCAP::CloudController
     end
 
     context 'when app is not found' do
-      let(:message) do
-        RouteMappingsCreateMessage.new(
-          {
-            relationships: {
-              app: { guid: 'made-up' },
-              route: { guid: route.guid },
-              process: { type: process.type }
-            }
-          }
-        )
-      end
-
       it 'returns nil' do
         returned_app, returned_route, returned_process, returned_space, returned_org =
-          AddRouteFetcher.fetch(app_guid: message.app_guid, process_type: message.process_type, route_guid: message.route_guid)
+          AddRouteFetcher.fetch(app_guid: 'made-up', process_type: process.type, route_guid: route.guid)
         expect(returned_app).to be_nil
         expect(returned_route).to be_nil
         expect(returned_space).to be_nil

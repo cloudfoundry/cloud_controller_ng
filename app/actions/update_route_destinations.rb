@@ -4,7 +4,7 @@ module VCAP::CloudController
     end
 
     class << self
-      def add(new_route_mappings, route, apps_hash, user_audit_info)
+      def add(new_route_mappings, route, apps_hash, user_audit_info, manifest_triggered: false)
         existing_route_mappings = route_to_mapping_hashes(route)
         new_route_mappings = update_port(new_route_mappings, apps_hash)
         new_route_mappings = add_route(new_route_mappings, route)
@@ -14,17 +14,17 @@ module VCAP::CloudController
 
         to_add = new_route_mappings - existing_route_mappings
 
-        update(route, to_add, [], user_audit_info)
+        update(route, to_add, [], user_audit_info, manifest_triggered)
       end
 
-      def replace(new_route_mappings, route, apps_hash, user_audit_info)
+      def replace(new_route_mappings, route, apps_hash, user_audit_info, manifest_triggered: false)
         existing_route_mappings = route_to_mapping_hashes(route)
         new_route_mappings = update_port(new_route_mappings, apps_hash)
         new_route_mappings = add_route(new_route_mappings, route)
         to_add = new_route_mappings - existing_route_mappings
         to_delete = existing_route_mappings - new_route_mappings
 
-        update(route, to_add, to_delete, user_audit_info)
+        update(route, to_add, to_delete, user_audit_info, manifest_triggered)
       end
 
       def delete(destination, route, user_audit_info)
@@ -34,12 +34,12 @@ module VCAP::CloudController
 
         to_delete = [destination_to_mapping_hash(route, destination)]
 
-        update(route, [], to_delete, user_audit_info)
+        update(route, [], to_delete, user_audit_info, false)
       end
 
       private
 
-      def update(route, to_add, to_delete, user_audit_info)
+      def update(route, to_add, to_delete, user_audit_info, manifest_triggered)
         RouteMappingModel.db.transaction do
           processes_to_ports_map = {}
 
@@ -55,7 +55,11 @@ module VCAP::CloudController
               end
             end
 
-            Repositories::RouteEventRepository.new.record_route_unmap(route_mapping, user_audit_info)
+            Repositories::AppEventRepository.new.record_unmap_route(
+              user_audit_info,
+              route_mapping,
+              manifest_triggered: manifest_triggered
+            )
           end
 
           to_add.each do |rm|
@@ -68,7 +72,11 @@ module VCAP::CloudController
               processes_to_ports_map[process][:to_add] << route_mapping.app_port
             end
 
-            Repositories::RouteEventRepository.new.record_route_map(route_mapping, user_audit_info)
+            Repositories::AppEventRepository.new.record_map_route(
+              user_audit_info,
+              route_mapping,
+              manifest_triggered: manifest_triggered
+            )
           end
 
           update_processes(processes_to_ports_map)

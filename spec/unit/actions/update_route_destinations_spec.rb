@@ -25,7 +25,7 @@ module VCAP::CloudController
     let(:process2_route_handler) { instance_double(ProcessRouteHandler, update_route_information: nil) }
     let(:process3_route_handler) { instance_double(ProcessRouteHandler, update_route_information: nil) }
     let(:user_audit_info) { UserAuditInfo.new(user_email: 'user@example.com', user_guid: 'user-guid') }
-    let(:route_event_repo) { instance_double(Repositories::RouteEventRepository) }
+    let(:app_event_repo) { instance_double(Repositories::AppEventRepository) }
     let(:apps_hash) do
       {
         app_model.guid => app_model,
@@ -103,16 +103,33 @@ module VCAP::CloudController
         end
 
         describe 'audit events' do
-          before do
-            allow(Repositories::RouteEventRepository).to receive(:new).and_return(route_event_repo)
-            allow(route_event_repo).to receive(:record_route_map)
-            subject.add(params, route, apps_hash, user_audit_info)
+          context 'not from manifest' do
+            before do
+              allow(Repositories::AppEventRepository).to receive(:new).and_return(app_event_repo)
+              allow(app_event_repo).to receive(:record_map_route)
+              subject.add(params, route, apps_hash, user_audit_info)
+            end
+
+            it 'records an audit event for each new route mapping' do
+              route.reload
+              route.route_mappings.reject { |rm| rm.process_type == 'existing' }.each do |rm|
+                expect(app_event_repo).to have_received(:record_map_route).once.with(user_audit_info, rm, manifest_triggered: false)
+              end
+            end
           end
 
-          it 'records an audit event for each new route mapping' do
-            route.reload
-            route.route_mappings.reject { |rm| rm.process_type == 'existing' }.each do |rm|
-              expect(route_event_repo).to have_received(:record_route_map).once.with(rm, user_audit_info)
+          context 'from manifest' do
+            before do
+              allow(Repositories::AppEventRepository).to receive(:new).and_return(app_event_repo)
+              allow(app_event_repo).to receive(:record_map_route)
+              subject.add(params, route, apps_hash, user_audit_info, manifest_triggered: true)
+            end
+
+            it 'records an audit event when triggered by a manifest' do
+              route.reload
+              route.route_mappings.reject { |rm| rm.process_type == 'existing' }.each do |rm|
+                expect(app_event_repo).to have_received(:record_map_route).once.with(user_audit_info, rm, manifest_triggered: true)
+              end
             end
           end
         end
@@ -163,13 +180,13 @@ module VCAP::CloudController
 
           describe 'audit events' do
             before do
-              allow(Repositories::RouteEventRepository).to receive(:new).and_return(route_event_repo)
-              allow(route_event_repo).to receive(:record_route_map)
+              allow(Repositories::AppEventRepository).to receive(:new).and_return(app_event_repo)
+              allow(app_event_repo).to receive(:record_map_route)
               subject.add(params, route, apps_hash, user_audit_info)
             end
 
             it 'does not record an audit event for an existing route mapping' do
-              expect(route_event_repo).not_to have_received(:record_route_map)
+              expect(app_event_repo).not_to have_received(:record_map_route)
             end
           end
         end
@@ -203,13 +220,13 @@ module VCAP::CloudController
 
           describe 'audit events' do
             before do
-              allow(Repositories::RouteEventRepository).to receive(:new).and_return(route_event_repo)
-              allow(route_event_repo).to receive(:record_route_map)
+              allow(Repositories::AppEventRepository).to receive(:new).and_return(app_event_repo)
+              allow(app_event_repo).to receive(:record_map_route)
               subject.add(params, route, apps_hash, user_audit_info)
             end
 
             it 'does not record an audit event for an existing route mapping' do
-              expect(route_event_repo).not_to have_received(:record_route_map)
+              expect(app_event_repo).not_to have_received(:record_map_route)
             end
           end
         end
@@ -328,171 +345,190 @@ module VCAP::CloudController
         describe 'audit events' do
           context 'not from manifest' do
             before do
-              allow(Repositories::RouteEventRepository).to receive(:new).and_return(route_event_repo)
-              allow(route_event_repo).to receive(:record_route_map)
-              allow(route_event_repo).to receive(:record_route_unmap)
+              allow(Repositories::AppEventRepository).to receive(:new).and_return(app_event_repo)
+              allow(app_event_repo).to receive(:record_map_route)
+              allow(app_event_repo).to receive(:record_unmap_route)
               subject.replace(params, route, apps_hash, user_audit_info)
             end
 
             it 'records an audit event for each new route mapping' do
               route.reload
               route.route_mappings.each do |rm|
-                expect(route_event_repo).to have_received(:record_route_map).once.with(rm, user_audit_info)
+                expect(app_event_repo).to have_received(:record_map_route).once.with(user_audit_info, rm, manifest_triggered: false)
               end
             end
             it 'records an audit event for each new route unmapping' do
-              expect(route_event_repo).to have_received(:record_route_unmap).once.with(existing_destination, user_audit_info)
+              expect(app_event_repo).to have_received(:record_unmap_route).once.with(user_audit_info, existing_destination, manifest_triggered: false)
             end
           end
 
-          describe 'copilot integration' do
+          context 'from manifest' do
             before do
-              allow(Copilot::Adapter).to receive(:map_route)
-              allow(Copilot::Adapter).to receive(:unmap_route)
+              allow(Repositories::AppEventRepository).to receive(:new).and_return(app_event_repo)
+              allow(app_event_repo).to receive(:record_map_route)
+              allow(app_event_repo).to receive(:record_unmap_route)
+              subject.replace(params, route, apps_hash, user_audit_info, manifest_triggered: true)
             end
 
-            it 'delegates to the copilot handler to notify copilot' do
-              expect {
-                subject.replace(params, route, apps_hash, user_audit_info)
-                expect(Copilot::Adapter).to have_received(:map_route).with(have_attributes(process_type: 'web'))
-                expect(Copilot::Adapter).to have_received(:map_route).with(have_attributes(process_type: 'worker'))
-                expect(Copilot::Adapter).to have_received(:unmap_route).with(have_attributes(process_type: 'existing'))
-              }.to change { RouteMappingModel.count }.by(1)
+            it 'records an audit event for each new route mapping' do
+              route.reload
+              route.route_mappings.each do |rm|
+                expect(app_event_repo).to have_received(:record_map_route).once.with(user_audit_info, rm, manifest_triggered: true)
+              end
             end
-          end
-        end
-
-        context 'when a fully equal destination already exists' do
-          let!(:same_destination) do
-            RouteMappingModel.make(
-              app: app_model,
-              route: route,
-              app_port: ProcessModel::DEFAULT_HTTP_PORT,
-              process_type: 'web'
-            )
-          end
-
-          let(:params) do
-            [
-              {
-                app_guid: app_model.guid,
-                process_type: 'web',
-                app_port: ProcessModel::DEFAULT_HTTP_PORT,
-                weight: nil,
-              },
-            ]
-          end
-
-          it 'removes the non-matching destination and preserves the matching destination' do
-            expect {
-              subject.replace(params, route, apps_hash, user_audit_info)
-            }.to change { RouteMappingModel.count }.by(-1)
-          end
-
-          describe 'audit events' do
-            before do
-              allow(Repositories::RouteEventRepository).to receive(:new).and_return(route_event_repo)
-              allow(route_event_repo).to receive(:record_route_map)
-              allow(route_event_repo).to receive(:record_route_unmap)
-              subject.replace(params, route, apps_hash, user_audit_info)
+            it 'records an audit event for each new route unmapping' do
+              expect(app_event_repo).to have_received(:record_unmap_route).once.with(user_audit_info, existing_destination, manifest_triggered: true)
             end
-
-            it 'does not record an audit event for a new route mapping' do
-              expect(route_event_repo).not_to have_received(:record_route_map)
-              expect(route_event_repo).to have_received(:record_route_unmap).once.with(existing_destination, user_audit_info)
-            end
-          end
-        end
-      end
-
-      describe '#delete' do
-        it 'deletes the route mapping record' do
-          expect {
-            subject.delete(existing_destination, route, user_audit_info)
-          }.to change { RouteMappingModel.count }.by(-1)
-          expect { existing_destination.refresh }.to raise_error Sequel::Error, 'Record not found'
-        end
-
-        context 'when there are weighted routes in the database' do
-          before do
-            existing_destination.update(weight: 10)
-          end
-
-          it 'rejects the delete' do
-            expect {
-              subject.delete(existing_destination, route, user_audit_info)
-            }.to raise_error(
-              UpdateRouteDestinations::Error,
-              'Weighted destinations cannot be deleted individually.'
-            ).and change { RouteMappingModel.count }.by(0)
-          end
-        end
-
-        context 'when there are multiple routes with destinations to the same process' do
-          let(:other_route) { Route.make }
-
-          let!(:other_existing_destination) do
-            VCAP::CloudController::RouteMappingModel.make(
-              app: app_model,
-              route: other_route,
-              process_type: 'existing',
-              app_port: 3001,
-            )
-          end
-
-          before do
-            allow(ProcessRouteHandler).to receive(:new).with(process3).and_return(process3_route_handler)
-          end
-
-          it 'should not remove the process ports because they are still needed for the other destination' do
-            subject.delete(existing_destination, route, user_audit_info)
-
-            expect(process3_route_handler).to have_received(:update_route_information).with(
-              perform_validation: false,
-              updated_ports: [3001]
-            )
           end
         end
 
         describe 'copilot integration' do
           before do
+            allow(Copilot::Adapter).to receive(:map_route)
             allow(Copilot::Adapter).to receive(:unmap_route)
           end
 
           it 'delegates to the copilot handler to notify copilot' do
-            subject.delete(existing_destination, route, user_audit_info)
-            expect(Copilot::Adapter).to have_received(:unmap_route).with(existing_destination)
+            expect {
+              subject.replace(params, route, apps_hash, user_audit_info)
+              expect(Copilot::Adapter).to have_received(:map_route).with(have_attributes(process_type: 'web'))
+              expect(Copilot::Adapter).to have_received(:map_route).with(have_attributes(process_type: 'worker'))
+              expect(Copilot::Adapter).to have_received(:unmap_route).with(have_attributes(process_type: 'existing'))
+            }.to change { RouteMappingModel.count }.by(1)
           end
         end
+      end
 
-        describe 'diego integration' do
-          let(:fake_process_route_handler) { instance_double(ProcessRouteHandler) }
+      context 'when a fully equal destination already exists' do
+        let!(:same_destination) do
+          RouteMappingModel.make(
+            app: app_model,
+            route: route,
+            app_port: ProcessModel::DEFAULT_HTTP_PORT,
+            process_type: 'web'
+          )
+        end
 
-          before do
-            allow(ProcessRouteHandler).to receive(:new).with(process3).and_return(fake_process_route_handler)
-            allow(fake_process_route_handler).to receive(:update_route_information)
-          end
+        let(:params) do
+          [
+            {
+              app_guid: app_model.guid,
+              process_type: 'web',
+              app_port: ProcessModel::DEFAULT_HTTP_PORT,
+              weight: nil,
+            },
+          ]
+        end
 
-          it 'updates route information for route processes' do
-            subject.delete(existing_destination, route, user_audit_info)
-
-            expect(fake_process_route_handler).to have_received(:update_route_information).with(
-              perform_validation: false,
-              updated_ports: []
-            )
-          end
+        it 'removes the non-matching destination and preserves the matching destination' do
+          expect {
+            subject.replace(params, route, apps_hash, user_audit_info)
+          }.to change { RouteMappingModel.count }.by(-1)
         end
 
         describe 'audit events' do
           before do
-            allow(Repositories::RouteEventRepository).to receive(:new).and_return(route_event_repo)
-            allow(route_event_repo).to receive(:record_route_unmap)
-            subject.delete(existing_destination, route, user_audit_info)
+            allow(Repositories::AppEventRepository).to receive(:new).and_return(app_event_repo)
+            allow(app_event_repo).to receive(:record_map_route)
+            allow(app_event_repo).to receive(:record_unmap_route)
+            subject.replace(params, route, apps_hash, user_audit_info)
           end
 
-          it 'records an audit event for each new route mapping' do
-            expect(route_event_repo).to have_received(:record_route_unmap).once.with(existing_destination, user_audit_info)
+          it 'does not record an audit event for a new route mapping' do
+            expect(app_event_repo).not_to have_received(:record_map_route)
+            expect(app_event_repo).to have_received(:record_unmap_route).once.with(user_audit_info, existing_destination, manifest_triggered: false)
           end
+        end
+      end
+    end
+
+    describe '#delete' do
+      it 'deletes the route mapping record' do
+        expect {
+          subject.delete(existing_destination, route, user_audit_info)
+        }.to change { RouteMappingModel.count }.by(-1)
+        expect { existing_destination.refresh }.to raise_error Sequel::Error, 'Record not found'
+      end
+
+      context 'when there are weighted routes in the database' do
+        before do
+          existing_destination.update(weight: 10)
+        end
+
+        it 'rejects the delete' do
+          expect {
+            subject.delete(existing_destination, route, user_audit_info)
+          }.to raise_error(
+            UpdateRouteDestinations::Error,
+            'Weighted destinations cannot be deleted individually.'
+          ).and change { RouteMappingModel.count }.by(0)
+        end
+      end
+
+      context 'when there are multiple routes with destinations to the same process' do
+        let(:other_route) { Route.make }
+
+        let!(:other_existing_destination) do
+          VCAP::CloudController::RouteMappingModel.make(
+            app: app_model,
+            route: other_route,
+            process_type: 'existing',
+            app_port: 3001,
+          )
+        end
+
+        before do
+          allow(ProcessRouteHandler).to receive(:new).with(process3).and_return(process3_route_handler)
+        end
+
+        it 'should not remove the process ports because they are still needed for the other destination' do
+          subject.delete(existing_destination, route, user_audit_info)
+
+          expect(process3_route_handler).to have_received(:update_route_information).with(
+            perform_validation: false,
+            updated_ports: [3001]
+          )
+        end
+      end
+
+      describe 'copilot integration' do
+        before do
+          allow(Copilot::Adapter).to receive(:unmap_route)
+        end
+
+        it 'delegates to the copilot handler to notify copilot' do
+          subject.delete(existing_destination, route, user_audit_info)
+          expect(Copilot::Adapter).to have_received(:unmap_route).with(existing_destination)
+        end
+      end
+
+      describe 'diego integration' do
+        let(:fake_process_route_handler) { instance_double(ProcessRouteHandler) }
+
+        before do
+          allow(ProcessRouteHandler).to receive(:new).with(process3).and_return(fake_process_route_handler)
+          allow(fake_process_route_handler).to receive(:update_route_information)
+        end
+
+        it 'updates route information for route processes' do
+          subject.delete(existing_destination, route, user_audit_info)
+
+          expect(fake_process_route_handler).to have_received(:update_route_information).with(
+            perform_validation: false,
+            updated_ports: []
+          )
+        end
+      end
+
+      describe 'audit events' do
+        before do
+          allow(Repositories::AppEventRepository).to receive(:new).and_return(app_event_repo)
+          allow(app_event_repo).to receive(:record_unmap_route)
+          subject.delete(existing_destination, route, user_audit_info)
+        end
+
+        it 'records an audit event for each new route mapping' do
+          expect(app_event_repo).to have_received(:record_unmap_route).once.with(user_audit_info, existing_destination, manifest_triggered: false)
         end
       end
     end

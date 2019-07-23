@@ -132,15 +132,6 @@ module VCAP::CloudController
         end
       end
 
-      context 'when an RouteMappingCreate::SpaceMismatch error occurs' do
-        it 'wraps the error in an ApiError' do
-          allow(apply_manifest_action).to receive(:apply).and_raise(RouteMappingCreate::SpaceMismatch, 'space mismatch message')
-          expect {
-            job.perform
-          }.to raise_error(CloudController::Errors::ApiError, /space mismatch message/)
-        end
-      end
-
       describe '#resource_type' do
         it 'returns a display name' do
           expect(job.resource_type).to eq('app')
