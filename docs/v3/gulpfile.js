@@ -44,7 +44,7 @@ var checkPagesOptions = {
 var checkPathAndExit = function(path, options, done) {
   var app = express();
   app.use(express.static(path));
-  var server = app.listen({port: 8000});
+  var server = app.listen({port: 8001});
 
   return checkPages(console, options, function(err, stdout, stderr) {
     server.close();
@@ -60,10 +60,10 @@ var checkPathAndExit = function(path, options, done) {
 
 gulp.task("checkV3docs", gulp.series("build", function(done) {
   checkPagesOptions.pageUrls = [
-    'http://localhost:8000/'
+    'http://localhost:8001/'
   ];
 
-  checkPagesOptions.linksToIgnore = ["http://localhost:8000/version/release-candidate"];
+  checkPagesOptions.linksToIgnore = ["http://localhost:8001/version/release-candidate"];
 
   checkPathAndExit("build", checkPagesOptions, done);
 
@@ -76,11 +76,11 @@ gulp.task("checkV2docs", function(done) {
     }
 
     var fixedFiles = htmlFiles.map(function(fname) {
-      return "http://localhost:8000" + fname.substr("../v2".length);
+      return "http://localhost:8001" + fname.substr("../v2".length);
     });
 
     checkPagesOptions.pageUrls = [
-      'http://localhost:8000/'
+      'http://localhost:8001/'
     ].concat(fixedFiles);
     checkPathAndExit("../v2", checkPagesOptions, done);
     return;
