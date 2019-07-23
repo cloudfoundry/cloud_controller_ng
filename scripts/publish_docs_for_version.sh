@@ -67,14 +67,17 @@ function update_index_html() {
 <!DOCTYPE html>
 <html>
 <head>
-<link rel="canonical" href="/version/${VERSION}/index.html"/>
-<meta http-equiv="content-type" content="text/html; charset=utf-8" />
-<meta http-equiv="refresh" content="0;url=/version/${VERSION}/index.html" />
+  <link rel="canonical" href="/version/${VERSION}/index.html"/>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta http-equiv="refresh" content="0;url=/version/${VERSION}/index.html" />
+  <script>
+    var hash = location.hash || '';
+    location = '/version/${VERSION}/index.html' + hash;
+  </script>
 </head>
 <body>
-    <h1>Redirecting...</h1>
-      <a href="/version/${VERSION}/index.html">Click here if you are not redirected.<a>
-      <script>location='/version/${VERSION}/index.html'</script>
+  <h1>Redirecting...</h1>
+  <a id="redirect-link" href="/version/${VERSION}/index.html">Click here if you are not redirected.</a>
 </body>
 </html>
 INDEX
