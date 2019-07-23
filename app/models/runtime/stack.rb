@@ -9,6 +9,7 @@ module VCAP::CloudController
     class AppsStillPresentError < StandardError
     end
 
+    # note that "apps" here returns processes for v2 meta-reasons
     many_to_many :apps,
       class:             'VCAP::CloudController::ProcessModel',
       join_table:        BuildpackLifecycleDataModel.table_name,
