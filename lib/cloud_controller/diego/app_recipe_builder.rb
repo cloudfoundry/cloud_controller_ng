@@ -78,6 +78,12 @@ module VCAP::CloudController
             'process_type' => METRIC_TAG_VALUE.new(static: process.type),
             'process_instance_id' => METRIC_TAG_VALUE.new(dynamic: METRIC_TAG_VALUE::DynamicValue::INSTANCE_GUID),
             'instance_id' => METRIC_TAG_VALUE.new(dynamic: METRIC_TAG_VALUE::DynamicValue::INDEX),
+            'organization_id' => METRIC_TAG_VALUE.new(static: process.organization.guid),
+            'space_id' => METRIC_TAG_VALUE.new(static: process.space.guid),
+            'app_id' => METRIC_TAG_VALUE.new(static: process.app.guid),
+            'organization_name' => METRIC_TAG_VALUE.new(static: process.organization.name),
+            'space_name' => METRIC_TAG_VALUE.new(static: process.space.name),
+            'app_name' => METRIC_TAG_VALUE.new(static: process.app.name),
           },
           annotation:                       process.updated_at.to_f.to_s,
           egress_rules:                     Diego::EgressRules.new.running_protobuf_rules(process),
@@ -98,11 +104,7 @@ module VCAP::CloudController
           routes:                           ::Diego::Bbs::Models::ProtoRoutes.new(routes: routes),
           max_pids:                         @config.get(:diego, :pid_limit),
           certificate_properties:           ::Diego::Bbs::Models::CertificateProperties.new(
-            organizational_unit: [
-              "organization:#{process.organization.guid}",
-              "space:#{process.space.guid}",
-              "app:#{process.app.guid}"
-            ]
+            organizational_unit: ["organization:#{process.organization.guid}", "space:#{process.space.guid}", "app:#{process.app.guid}"]
           ),
           image_username:                   process.desired_droplet.docker_receipt_username,
           image_password:                   process.desired_droplet.docker_receipt_password,

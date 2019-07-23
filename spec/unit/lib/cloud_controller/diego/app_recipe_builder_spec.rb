@@ -32,7 +32,9 @@ module VCAP::CloudController
         end
 
         let(:lifecycle_type) { nil }
-        let(:app_model) { AppModel.make(lifecycle_type, guid: 'app-guid', droplet: DropletModel.make(state: 'STAGED'), enable_ssh: false) }
+        let(:org) { Organization.make }
+        let(:space) { Space.make(organization: org) }
+        let(:app_model) { AppModel.make(lifecycle_type, guid: 'app-guid', space: space, droplet: DropletModel.make(state: 'STAGED'), enable_ssh: false) }
         let(:package) { PackageModel.make(lifecycle_type, app: app_model) }
         let(:process) do
           process = ProcessModel.make(:process,
@@ -284,13 +286,19 @@ module VCAP::CloudController
             expect(lrp.max_pids).to eq(100)
             expect(lrp.memory_mb).to eq(128)
             expect(lrp.metrics_guid).to eq(process.app.guid)
-            expect(lrp.metric_tags.keys.size).to eq(5)
 
+            expect(lrp.metric_tags.keys.size).to eq(11)
             expect(lrp.metric_tags['source_id'].static).to eq(process.app.guid)
             expect(lrp.metric_tags['process_id'].static).to eq(process.guid)
             expect(lrp.metric_tags['process_type'].static).to eq(process.type)
             expect(lrp.metric_tags['process_instance_id'].dynamic).to eq(:INSTANCE_GUID)
             expect(lrp.metric_tags['instance_id'].dynamic).to eq(:INDEX)
+            expect(lrp.metric_tags['organization_id'].static).to eq(org.guid)
+            expect(lrp.metric_tags['space_id'].static).to eq(space.guid)
+            expect(lrp.metric_tags['app_id'].static).to eq(app_model.guid)
+            expect(lrp.metric_tags['organization_name'].static).to eq(org.name)
+            expect(lrp.metric_tags['space_name'].static).to eq(space.name)
+            expect(lrp.metric_tags['app_name'].static).to eq(app_model.name)
 
             expect(lrp.monitor).to eq(expected_monitor_action)
             expect(lrp.network).to eq(expected_network)
@@ -857,13 +865,19 @@ module VCAP::CloudController
             expect(lrp.max_pids).to eq(100)
             expect(lrp.memory_mb).to eq(128)
             expect(lrp.metrics_guid).to eq(process.app.guid)
-            expect(lrp.metric_tags.keys.size).to eq(5)
 
+            expect(lrp.metric_tags.keys.size).to eq(11)
             expect(lrp.metric_tags['source_id'].static).to eq(process.app.guid)
             expect(lrp.metric_tags['process_id'].static).to eq(process.guid)
             expect(lrp.metric_tags['process_type'].static).to eq(process.type)
             expect(lrp.metric_tags['process_instance_id'].dynamic).to eq(:INSTANCE_GUID)
             expect(lrp.metric_tags['instance_id'].dynamic).to eq(:INDEX)
+            expect(lrp.metric_tags['organization_id'].static).to eq(org.guid)
+            expect(lrp.metric_tags['space_id'].static).to eq(space.guid)
+            expect(lrp.metric_tags['app_id'].static).to eq(app_model.guid)
+            expect(lrp.metric_tags['organization_name'].static).to eq(org.name)
+            expect(lrp.metric_tags['space_name'].static).to eq(space.name)
+            expect(lrp.metric_tags['app_name'].static).to eq(app_model.name)
 
             expect(lrp.monitor).to eq(expected_monitor_action)
             expect(lrp.monitor).to eq(expected_monitor_action)
