@@ -17,19 +17,20 @@ function displayErrors(err, stdout, stderr) {
 
 function checkInternalLinksAndExit(htmlPath) {
   const badLinks = [];
-
   const $ = cheerio.load(fs.readFileSync(htmlPath, 'utf8'));
+
   $('a').each((index, anchor) => {
     const href = $(anchor).attr('href') || '';
+
     if (href.startsWith('#') && href.length > 1) {
-      const targetElementById = $(href);
-      if (!targetElementById.length) {
-        const targetElementByName = $(`[name=${href.substr(1)}]`);
-        if (!targetElementByName.length) {
-          const text = $(anchor).text();
-          badLinks.push({text, href});
-        }
-      }
+      const foundElementById = $(href).length > 0;
+      if (foundElementById) return;
+
+      const foundElementByName = $(`[name=${href.substr(1)}]`).length > 0;
+      if (foundElementByName) return;
+
+      const text = $(anchor).text();
+      badLinks.push({text, href});
     }
   });
 
@@ -39,6 +40,23 @@ function checkInternalLinksAndExit(htmlPath) {
     console.log(badLinks.map(({text, href}) => `  - [${text}](${href})`).join('\n'));
     process.exit(1);
   }
+}
+
+function checkPathAndExit(path, options, done) {
+  const app = express();
+  app.use(express.static(path));
+  const server = app.listen({port: 8001});
+
+  return checkPages(console, options, (err, stdout, stderr) => {
+    server.close();
+    done();
+
+    if (err) {
+      return displayErrors(err, stdout, stderr);
+    }
+
+    return true;
+  });
 }
 
 gulp.task('build', cb => {
@@ -62,38 +80,16 @@ gulp.task('webserver', cb => {
 
 gulp.task('default', gulp.series('webserver'));
 
-const checkPagesOptions = {
-  checkLinks: true,
-  summary: true,
-  terse: true
-};
-
-const checkPathAndExit = (path, options, done) => {
-  const app = express();
-  app.use(express.static(path));
-  const server = app.listen({port: 8001});
-
-  return checkPages(console, options, (err, stdout, stderr) => {
-    server.close();
-    done();
-
-    if (err) {
-      return displayErrors(err, stdout, stderr);
-    }
-
-    return true;
-  });
-};
-
 gulp.task('checkV3docs', gulp.series('build', done => {
-  checkInternalLinksAndExit(`build/index.html`);
+  checkInternalLinksAndExit('build/index.html');
 
-  checkPagesOptions.pageUrls = [
-    'http://localhost:8001/'
-  ];
-
-  checkPagesOptions.linksToIgnore = ['http://localhost:8001/version/release-candidate'];
-  checkPathAndExit('build', checkPagesOptions, done);
+  checkPathAndExit('build', {
+    checkLinks: true,
+    summary: true,
+    terse: true,
+    pageUrls: ['http://localhost:8001/'],
+    linksToIgnore: ['http://localhost:8001/version/release-candidate']
+  }, done);
 }));
 
 gulp.task('checkV2docs', done => {
@@ -106,9 +102,12 @@ gulp.task('checkV2docs', done => {
       return 'http://localhost:8001' + fname.substr('../v2'.length);
     });
 
-    checkPagesOptions.pageUrls = ['http://localhost:8001/'].concat(fixedFiles);
-
-    checkPathAndExit('../v2', checkPagesOptions, done);
+    checkPathAndExit('../v2', {
+      checkLinks: true,
+      summary: true,
+      terse: true,
+      pageUrls: ['http://localhost:8001/'].concat(fixedFiles)
+    }, done);
   });
 });
 
