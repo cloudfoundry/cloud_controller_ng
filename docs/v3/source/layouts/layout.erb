@@ -59,7 +59,7 @@ under the License.
         <%= image_tag('navbar.png') %>
       </span>
     </a>
-    <div class="tocify-wrapper tocify-sidebar">
+    <nav class="tocify-wrapper tocify-sidebar">
       <%= image_tag "logo.png" %>
       <% if language_tabs %>
         <div class="lang-selector">
@@ -98,7 +98,7 @@ under the License.
 
       <% if current_page.data.search %>
         <div class="search">
-          <input type="text" class="search" id="input-search" placeholder="Search">
+          <input type="search" class="search" id="input-search" placeholder="Search">
         </div>
         <ul class="search-results"></ul>
       <% end %>
@@ -112,8 +112,9 @@ under the License.
           <% end %>
         </ul>
       <% end %>
-    </div>
-    <div class="page-wrapper">
+    </nav>
+
+    <main class="page-wrapper">
       <div class="dark-box"></div>
       <div class="content">
         <%= yield %>
@@ -134,6 +135,6 @@ under the License.
           </div>
         <% end %>
       </div>
-    </div>
+    </main>
   </body>
 </html>
