@@ -1,4 +1,4 @@
-require 'messages/metadata_list_message'
+require 'messages/apps_list_message'
 
 module VCAP::CloudController
   class StackAppsListMessage < AppsListMessage
