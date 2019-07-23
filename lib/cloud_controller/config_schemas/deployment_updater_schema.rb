@@ -37,6 +37,7 @@ module VCAP::CloudController
           external_protocol: String,
 
           default_health_check_timeout: Integer,
+          maximum_health_check_timeout: Integer,
 
           db_encryption_key: enum(String, NilClass),
 
