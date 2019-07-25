@@ -68,39 +68,55 @@ module VCAP::CloudController
         end
       end
 
-      def create_seed_domains(config, system_org)
-        domains = parsed_domains(config.get(:app_domains))
-        system_domain = config.get(:system_domain)
-
-        domains.each do |domain|
-          attrs = {
-            name: domain['name'],
-            router_group_guid: find_routing_guid(domain),
-            internal: domain['internal']
-          }
-          SharedDomain.find_or_create(attrs.compact)
+      def with_retries(tries=9, &blk)
+        base = tries
+        begin
+          yield
+        rescue RoutingApi::RoutingApiDisabled
+          unless (tries -= 1).zero?
+            # Final wait for 51.2 seconds for 9 tries
+            sleep(0.1 * 2**(base - tries - 1))
+            retry
+          end
+          raise
         end
+      end
 
-        if CloudController::DomainDecorator.new(system_domain).has_sub_domain?(test_domains: domains.map { |domain_hash| domain_hash['name'] })
-          Config.config.get(:system_hostnames).each do |hostnames|
-            domains.each do |app_domain|
-              raise 'App domain cannot overlap with reserved system hostnames' if hostnames + '.' + system_domain == app_domain['name']
-            end
+      def create_seed_domains(config, system_org)
+        with_retries do
+          domains = parsed_domains(config.get(:app_domains))
+          system_domain = config.get(:system_domain)
+
+          domains.each do |domain|
+            attrs = {
+              name: domain['name'],
+              router_group_guid: find_routing_guid(domain),
+              internal: domain['internal']
+            }
+            SharedDomain.find_or_create(attrs.compact)
           end
 
-          router_group_guid = find_routing_guid({ 'name' => system_domain })
-          SharedDomain.find_or_create(name: system_domain, router_group_guid: router_group_guid)
-        else
-          raise 'A system_domain_organization must be provided if the system_domain is not shared with (in the list of) app_domains' unless system_org
-
-          domain = Domain.find(name: system_domain)
-
-          if domain
-            if domain.owning_organization != system_org
-              Steno.logger('cc.seeds').warn('seeds.system-domain.collision', organization: domain.owning_organization)
+          if CloudController::DomainDecorator.new(system_domain).has_sub_domain?(test_domains: domains.map { |domain_hash| domain_hash['name'] })
+            Config.config.get(:system_hostnames).each do |hostnames|
+              domains.each do |app_domain|
+                raise 'App domain cannot overlap with reserved system hostnames' if hostnames + '.' + system_domain == app_domain['name']
+              end
             end
+
+            router_group_guid = find_routing_guid({ 'name' => system_domain })
+            SharedDomain.find_or_create(name: system_domain, router_group_guid: router_group_guid)
           else
-            PrivateDomain.create({ owning_organization: system_org, name: system_domain })
+            raise 'A system_domain_organization must be provided if the system_domain is not shared with (in the list of) app_domains' unless system_org
+
+            domain = Domain.find(name: system_domain)
+
+            if domain
+              if domain.owning_organization != system_org
+                Steno.logger('cc.seeds').warn('seeds.system-domain.collision', organization: domain.owning_organization)
+              end
+            else
+              PrivateDomain.create({ owning_organization: system_org, name: system_domain })
+            end
           end
         end
       end

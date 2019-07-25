@@ -147,7 +147,7 @@ module VCAP::CloudController
             mock_logger = double
             allow(Steno).to receive(:logger).and_return(mock_logger)
             config.set(:quota_definitions,
-                       config.get(:quota_definitions).deep_merge('small' => { total_routes: 2 }))
+              config.get(:quota_definitions).deep_merge('small' => { total_routes: 2 }))
 
             expect(mock_logger).to receive(:warn).with('seeds.quota-collision', hash_including(name: 'small'))
 
@@ -348,6 +348,24 @@ module VCAP::CloudController
           before do
             locator = CloudController::DependencyLocator.instance
             allow(locator).to receive(:routing_api_client).and_return(client)
+            allow(client).to receive(:router_group_guid).with('default-tcp').and_return('some-router-guid')
+          end
+
+          it 'seeds the shared domains with the router group guid' do
+            Seeds.create_seed_domains(config, system_org)
+            expect(Domain.shared_domains.map(&:name)).to eq(['app.example.com'])
+            expect(Domain.shared_domains.map(&:router_group_guid)).to eq(['some-router-guid'])
+          end
+        end
+
+        context 'when the routing api is initially disabled and then comes online' do
+          let(:client) { instance_double(VCAP::CloudController::RoutingApi::Client, enabled?: true) }
+          let(:disabled_client) { RoutingApi::DisabledClient.new }
+          let(:app_domains) { [{ 'name' => 'app.example.com', 'router_group_name' => 'default-tcp' }] }
+
+          before do
+            locator = CloudController::DependencyLocator.instance
+            allow(locator).to receive(:routing_api_client).and_return(disabled_client, disabled_client, disabled_client, disabled_client, client)
             allow(client).to receive(:router_group_guid).with('default-tcp').and_return('some-router-guid')
           end
 
@@ -582,7 +600,7 @@ module VCAP::CloudController
       end
       context 'when app domains is an array of hashes' do
         let(:app_domains) { [{ 'name' => 'string1.com',
-                               'router_group_name' => 'some-name' },
+          'router_group_name' => 'some-name' },
                              { 'name' => 'string2.com' }]
         }
         it 'returns in the same format' do
@@ -606,7 +624,7 @@ module VCAP::CloudController
               label2.to_sym => 'secret_key2',
               label3.to_sym => 'secret_key3',
             },
-                                 current_key_label: label2,
+            current_key_label: label2,
           }
         }
       end
@@ -643,7 +661,7 @@ module VCAP::CloudController
                   label2.to_sym => 'new_secret_2',
                   label3.to_sym => 'new_secret_3',
                 },
-                                     current_key_label: label2,
+                current_key_label: label2,
               }
             }
           end
