@@ -6,6 +6,13 @@ module VCAP::CloudController::Presenters::V3
   class RoutePresenter < BasePresenter
     include VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers
 
+    class << self
+      # :labels and :annotations come from MetadataPresentationHelpers
+      def associated_resources
+        [:domain, :space].concat(super)
+      end
+    end
+
     def initialize(
       resource,
         show_secrets: false,

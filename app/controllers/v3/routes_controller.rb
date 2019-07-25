@@ -18,7 +18,11 @@ class RoutesController < ApplicationController
     message = RoutesListMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
 
-    dataset = RouteFetcher.fetch(message, permission_queryer.readable_route_guids)
+    dataset = RouteFetcher.fetch(
+      message,
+      permission_queryer.readable_route_guids,
+      eager_loaded_associations: Presenters::V3::RoutePresenter.associated_resources
+    )
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::RoutePresenter,
@@ -164,7 +168,11 @@ class RoutesController < ApplicationController
     app, space, org = AppFetcher.new.fetch(hashed_params['guid'])
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
 
-    dataset = RouteFetcher.fetch(message, permission_queryer.readable_route_guids)
+    dataset = RouteFetcher.fetch(
+      message,
+      permission_queryer.readable_route_guids,
+      eager_loaded_associations: Presenters::V3::RoutePresenter.associated_resources
+    )
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::RoutePresenter,

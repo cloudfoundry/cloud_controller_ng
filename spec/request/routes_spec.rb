@@ -457,6 +457,19 @@ RSpec.describe 'Routes Request' do
       end
     end
 
+    describe 'eager loading' do
+      it 'eager loads associated resources that the presenter specifies' do
+        expect(VCAP::CloudController::RouteFetcher).to receive(:fetch).with(
+          anything,
+          anything,
+          hash_including(eager_loaded_associations: [:domain, :space, :labels, :annotations])
+        ).and_call_original
+
+        get '/v3/routes', nil, admin_header
+        expect(last_response.status).to eq(200)
+      end
+    end
+
     context 'when the request is invalid' do
       it 'returns 400 with a meaningful error' do
         get '/v3/routes?page=potato', nil, admin_header
@@ -1780,6 +1793,19 @@ RSpec.describe 'Routes Request' do
       end
 
       it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+    end
+
+    describe 'eager loading' do
+      it 'eager loads associated resources that the presenter specifies' do
+        expect(VCAP::CloudController::RouteFetcher).to receive(:fetch).with(
+          anything,
+          anything,
+          hash_including(eager_loaded_associations: [:domain, :space, :labels, :annotations])
+        ).and_call_original
+
+        get "/v3/apps/#{app_model.guid}/routes", nil, admin_header
+        expect(last_response.status).to eq(200)
+      end
     end
   end
 end

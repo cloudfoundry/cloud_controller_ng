@@ -21,6 +21,18 @@ module VCAP::CloudController
         RoutesListMessage.from_params(routes_filter)
       end
 
+      describe 'eager loading associated resources' do
+        let(:routes_filter) { {} }
+
+        it 'eager loads the specified resources for the routes' do
+          results = RouteFetcher.fetch(message, [route1.guid, route2.guid], eager_loaded_associations: [:labels, :domain]).all
+
+          expect(results.first.associations.key?(:labels)).to be true
+          expect(results.first.associations.key?(:domain)).to be true
+          expect(results.first.associations.key?(:annotations)).to be false
+        end
+      end
+
       context 'when fetching routes by hosts' do
         context 'when there is a matching route' do
           let(:routes_filter) { { hosts: 'host2' } }
