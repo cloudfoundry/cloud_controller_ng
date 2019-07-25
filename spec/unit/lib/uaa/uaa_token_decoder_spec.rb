@@ -215,6 +215,18 @@ module VCAP::CloudController
             end
           end
 
+          context 'when the token issuer is out of date' do
+            let(:token_issuer_string) { 'https://totally.different.issuer/uaa' }
+            let(:invalid_issuer) { 'oops' }
+
+            it 'calls uaa_issuer twice' do
+              token = generate_token(rsa_key, token_content)
+              allow_any_instance_of(UaaTokenDecoder).to receive(:fetch_uaa_issuer).and_return(invalid_issuer, token_issuer_string)
+
+              expect(subject.decode_token("bearer #{token}")).to eq(token_content)
+            end
+          end
+
           context 'when UAA responds with a non-200 while fetching the issuer' do
             let(:token_issuer_string) { uaa_issuer_string }
 

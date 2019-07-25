@@ -74,7 +74,11 @@ module VCAP::CloudController
       end
 
       raise BadToken.new('Incorrect token') unless access_token?(token)
-      raise BadToken.new('Incorrect issuer') if token['iss'] != uaa_issuer
+
+      if token['iss'] != uaa_issuer
+        @uaa_issuer = nil
+        raise BadToken.new('Incorrect issuer') if token['iss'] != uaa_issuer
+      end
 
       token
     end
@@ -93,11 +97,15 @@ module VCAP::CloudController
 
     def uaa_issuer
       @uaa_issuer ||= with_request_error_handling do
-        response = http_client.get('.well-known/openid-configuration')
-        raise "Could not retrieve issuer information from UAA: #{response.status}" unless response.status == 200
-
-        JSON.parse(response.body).fetch('issuer')
+        fetch_uaa_issuer
       end
+    end
+
+    def fetch_uaa_issuer
+      response = http_client.get('.well-known/openid-configuration')
+      raise "Could not retrieve issuer information from UAA: #{response.status}" unless response.status == 200
+
+      JSON.parse(response.body).fetch('issuer')
     end
 
     def http_client
