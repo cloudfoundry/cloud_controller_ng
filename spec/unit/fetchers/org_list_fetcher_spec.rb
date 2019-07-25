@@ -27,15 +27,9 @@ module VCAP::CloudController
         it 'eager loads the specified resources for all orgs' do
           results = fetcher.fetch(message: message, guids: some_org_guids, eager_loaded_associations: [:quota_definition, :labels]).all
 
-          expect(results.size).to eq(2)
-
           expect(results.first.associations.key?(:quota_definition)).to be true
           expect(results.first.associations.key?(:labels)).to be true
           expect(results.first.associations.key?(:annotations)).to be false
-
-          expect(results.last.associations.key?(:quota_definition)).to be true
-          expect(results.last.associations.key?(:labels)).to be true
-          expect(results.last.associations.key?(:annotations)).to be false
         end
       end
 

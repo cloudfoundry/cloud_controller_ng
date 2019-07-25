@@ -4,20 +4,20 @@ module VCAP::CloudController
       @message = message
     end
 
-    def fetch_all
-      filter(AppModel.dataset)
+    def fetch_all(eager_loaded_associations: [])
+      filter(AppModel.dataset, eager_loaded_associations: eager_loaded_associations)
     end
 
-    def fetch_for_spaces(space_guids:)
+    def fetch_for_spaces(space_guids:, eager_loaded_associations: [])
       app_dataset = AppModel.select(:id).where(space_guid: space_guids)
-      filter(app_dataset)
+      filter(app_dataset, eager_loaded_associations: eager_loaded_associations)
     end
 
     private
 
     attr_reader :message
 
-    def filter(app_dataset)
+    def filter(app_dataset, eager_loaded_associations: [])
       dataset = BuildModel.dataset
 
       if message.requested?(:label_selector)
@@ -37,7 +37,7 @@ module VCAP::CloudController
         dataset = dataset.where(package_guid: message.package_guids)
       end
 
-      dataset.where(app: filter_app_dataset(app_dataset))
+      dataset.where(app: filter_app_dataset(app_dataset)).eager(eager_loaded_associations)
     end
 
     def filter_app_dataset(app_dataset)

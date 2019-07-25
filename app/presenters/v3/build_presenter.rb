@@ -6,6 +6,14 @@ module VCAP::CloudController
     module V3
       class BuildPresenter < BasePresenter
         include VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers
+
+        class << self
+          # :labels and :annotations come from MetadataPresentationHelpers
+          def associated_resources
+            super << { buildpack_lifecycle_data: :buildpack_lifecycle_buildpacks }
+          end
+        end
+
         def to_hash
           {
             guid: build.guid,

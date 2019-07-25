@@ -26,6 +26,17 @@ RSpec.describe BuildsController, type: :controller do
       )
     end
 
+    it 'eager loads associated resources that the presenter specifies' do
+      set_current_user_as_role(role: 'admin', org: organization, space: space, user: user)
+      expect_any_instance_of(VCAP::CloudController::BuildListFetcher).to receive(:fetch_all).with(
+        hash_including(eager_loaded_associations: [:labels, :annotations, { buildpack_lifecycle_data: :buildpack_lifecycle_buildpacks }])
+      ).and_call_original
+
+      get :index
+
+      expect(response.status).to eq(200), response.body
+    end
+
     context 'permissions' do
       describe 'authorization' do
         role_to_expected_http_response = {

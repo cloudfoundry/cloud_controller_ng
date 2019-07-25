@@ -12,9 +12,10 @@ class BuildsController < ApplicationController
     invalid_param!(message.errors.full_messages) unless message.valid?
     build_list_fetcher = BuildListFetcher.new(message: message)
     dataset = if permission_queryer.can_read_globally?
-                build_list_fetcher.fetch_all
+                build_list_fetcher.fetch_all(eager_loaded_associations: Presenters::V3::BuildPresenter.associated_resources)
               else
-                build_list_fetcher.fetch_for_spaces(space_guids: permission_queryer.readable_space_guids)
+                build_list_fetcher.fetch_for_spaces(space_guids: permission_queryer.readable_space_guids,
+                                                    eager_loaded_associations: Presenters::V3::BuildPresenter.associated_resources)
               end
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
