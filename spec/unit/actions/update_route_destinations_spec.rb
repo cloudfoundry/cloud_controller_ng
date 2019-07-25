@@ -338,7 +338,7 @@ module VCAP::CloudController
           )
           expect(process3_route_handler).to have_received(:update_route_information).with(
             perform_validation: false,
-            updated_ports: []
+            updated_ports: nil
           )
         end
 
@@ -515,7 +515,7 @@ module VCAP::CloudController
 
           expect(fake_process_route_handler).to have_received(:update_route_information).with(
             perform_validation: false,
-            updated_ports: []
+            updated_ports: nil
           )
         end
       end

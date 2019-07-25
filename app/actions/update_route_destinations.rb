@@ -91,7 +91,7 @@ module VCAP::CloudController
           ports_to_delete = ports_hash[:to_delete].uniq.reject { |port| port == ProcessModel::NO_APP_PORT_SPECIFIED }
 
           updated_ports = ((process.ports || []) + ports_to_add - ports_to_delete).uniq
-          if process.ports.nil? && updated_ports.empty?
+          if updated_ports.empty?
             updated_ports = nil
           end
 

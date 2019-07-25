@@ -276,7 +276,7 @@ module VCAP::CloudController
     def validate_health_check_type_and_port_presence_are_in_agreement
       default_to_port = nil
       if [default_to_port, HealthCheckTypes::PORT].include?(health_check_type) && ports == []
-        errors.add(:ports, 'ports array cannot be empty when health check type is "port"')
+        errors.add(:ports, 'array cannot be empty when health check type is "port"')
       end
     end
 
