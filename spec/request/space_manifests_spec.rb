@@ -168,50 +168,50 @@ RSpec.describe 'Space Manifests' do
     context 'when one of the apps does not exist' do
       let!(:yml_manifest) do
         {
-            'applications' => [
-              { 'name' => app1_model.name,
-                'instances' => 4,
-                'memory' => '2048MB',
-                'disk_quota' => '1.5GB',
-                'buildpack' => buildpack.name,
-                'stack' => buildpack.stack,
-                'command' => 'new-command',
-                'health_check_type' => 'http',
-                'health_check_http_endpoint' => '/health',
-                'timeout' => 42,
-                'env' => {
-                    'k1' => 'mangos',
-                    'k2' => 'pears',
-                    'k3' => 'watermelon'
-                },
-                'routes' => [
-                  { 'route' => "https://#{route.host}.#{route.domain.name}" },
-                  { 'route' => "https://#{second_route.host}.#{second_route.domain.name}/path" }
-                ],
-                'services' => [
-                  service_instance.name
-                ]
+          'applications' => [
+            { 'name' => app1_model.name,
+              'instances' => 4,
+              'memory' => '2048MB',
+              'disk_quota' => '1.5GB',
+              'buildpack' => buildpack.name,
+              'stack' => buildpack.stack,
+              'command' => 'new-command',
+              'health_check_type' => 'http',
+              'health_check_http_endpoint' => '/health',
+              'timeout' => 42,
+              'env' => {
+                'k1' => 'mangos',
+                'k2' => 'pears',
+                'k3' => 'watermelon'
               },
-              { 'name' => 'some-other-app',
-                'instances' => 4,
-                'memory' => '2048MB',
-                'disk_quota' => '1.5GB',
-                'buildpack' => buildpack.name,
-                'stack' => buildpack.stack,
-                'command' => 'new-command',
-                'health_check_type' => 'http',
-                'health_check_http_endpoint' => '/health',
-                'timeout' => 42,
-                'env' => {
-                    'k1' => 'mangos',
-                    'k2' => 'pears',
-                    'k3' => 'watermelon'
-                },
-                'services' => [
-                  service_instance.name
-                ]
-              }
-            ]
+              'routes' => [
+                { 'route' => "https://#{route.host}.#{route.domain.name}" },
+                { 'route' => "https://#{second_route.host}.#{second_route.domain.name}/path" }
+              ],
+              'services' => [
+                service_instance.name
+              ]
+            },
+            { 'name' => 'some-other-app',
+              'instances' => 4,
+              'memory' => '2048MB',
+              'disk_quota' => '1.5GB',
+              'buildpack' => buildpack.name,
+              'stack' => buildpack.stack,
+              'command' => 'new-command',
+              'health_check_type' => 'http',
+              'health_check_http_endpoint' => '/health',
+              'timeout' => 42,
+              'env' => {
+                'k1' => 'mangos',
+                'k2' => 'pears',
+                'k3' => 'watermelon'
+              },
+              'services' => [
+                service_instance.name
+              ]
+            }
+          ]
         }.to_yaml
       end
 
@@ -246,10 +246,45 @@ RSpec.describe 'Space Manifests' do
           'k1' => 'mangos',
           'k2' => 'pears',
           'k3' => 'watermelon'
-                                                   )
+        )
 
         expect(new_app.service_bindings.length).to eq 1
         expect(new_app.service_bindings.first.service_instance).to eq service_instance
+      end
+    end
+
+    context 'when there is an existing app with Docker lifecycle-type' do
+      let!(:docker_route) { VCAP::CloudController::Route.make(domain: shared_domain, space: space) }
+      let!(:docker_app) { VCAP::CloudController::AppModel.make(:docker, name: 'docker-app', space: space) }
+      let!(:yml_manifest) do
+        {
+          'applications' => [
+            {
+              'name' => docker_app.name,
+              'routes' => [
+                { 'route' => "https://#{docker_route.host}.#{docker_route.domain.name}" },
+              ],
+            }
+          ]
+        }.to_yaml
+      end
+
+      it 'maps the new route to the app without a port specified' do
+        post "/v3/spaces/#{space.guid}/actions/apply_manifest?no_route=false", yml_manifest, yml_headers(user_header)
+        expect(last_response.status).to eq(202), last_response.body
+
+        job_guid = VCAP::CloudController::PollableJobModel.last.guid
+        expect(last_response.headers['Location']).to match(%r(/v3/jobs/#{job_guid}))
+
+        Delayed::Worker.new.work_off
+        expect(VCAP::CloudController::PollableJobModel.find(guid: job_guid)).to be_complete, VCAP::CloudController::PollableJobModel.find(guid: job_guid).cf_api_error
+
+        expect(docker_app.buildpack?).to be false
+
+        app_destinations = VCAP::CloudController::RouteMappingModel.where(app: docker_app).all
+        expect(app_destinations.first.app_port).to eq(
+          VCAP::CloudController::ProcessModel::NO_APP_PORT_SPECIFIED
+        )
       end
     end
 

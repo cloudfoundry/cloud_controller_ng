@@ -14,7 +14,7 @@ module VCAP::CloudController
         not_found! unless app
 
         apps_hash = {
-          app_guid: app
+          app_guid => app
         }
         routes_to_map = []
 
@@ -32,11 +32,13 @@ module VCAP::CloudController
         routes_to_map.
           select { |route| RouteMappingModel.find(app: app, route: route).nil? }.
           each do |route|
-          UpdateRouteDestinations.add([{
-            app_guid: app_guid,
-            process_type: 'web',
-            app_port: ProcessModel::DEFAULT_HTTP_PORT,
-          }], route, apps_hash, user_audit_info, manifest_triggered: true)
+          UpdateRouteDestinations.add(
+            [{ app_guid: app_guid, process_type: 'web', }],
+            route,
+            apps_hash,
+            user_audit_info,
+            manifest_triggered: true
+          )
         end
       rescue Sequel::ValidationFailed => e
         raise InvalidRoute.new(e.message)
