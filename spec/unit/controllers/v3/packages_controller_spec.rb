@@ -1100,6 +1100,18 @@ RSpec.describe PackagesController, type: :controller do
           end
         end
 
+        context 'when the existing app is a Docker app' do
+          let(:app_model) { VCAP::CloudController::AppModel.make(:docker) }
+
+          it 'returns 422' do
+            post :create, params: request_body, as: :json
+
+            expect(response.status).to eq 422
+            expect(response.body).to include 'UnprocessableEntity'
+            expect(response).to have_error_message('Cannot create bits package for a Docker app.')
+          end
+        end
+
         context 'permissions' do
           context 'when the user does not have write scope' do
             before do
@@ -1143,6 +1155,7 @@ RSpec.describe PackagesController, type: :controller do
       end
 
       context 'docker' do
+        let(:app_model) { VCAP::CloudController::AppModel.make(:docker) }
         let(:image) { 'registry/image:latest' }
         let(:docker_username) { 'naruto' }
         let(:docker_password) { 'oturan' }
@@ -1170,6 +1183,18 @@ RSpec.describe PackagesController, type: :controller do
           expect(package.image).to eq('registry/image:latest')
           expect(package.docker_username).to eq(docker_username)
           expect(package.docker_password).to eq(docker_password)
+        end
+
+        context 'when the existing app is a buildpack app' do
+          let(:app_model) { VCAP::CloudController::AppModel.make }
+
+          it 'returns 422' do
+            post :create, params: request_body, as: :json
+
+            expect(response.status).to eq 422
+            expect(response.body).to include 'UnprocessableEntity'
+            expect(response).to have_error_message('Cannot create Docker package for a buildpack app.')
+          end
         end
       end
 

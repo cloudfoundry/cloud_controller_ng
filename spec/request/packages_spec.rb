@@ -7,7 +7,7 @@ RSpec.describe 'Packages' do
   let(:user_header) { headers_for(user, email: email, user_name: user_name) }
   let(:space) { VCAP::CloudController::Space.make }
   let(:space_guid) { space.guid }
-  let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space_guid) }
+  let(:app_model) { VCAP::CloudController::AppModel.make(:docker, space_guid: space_guid) }
 
   describe 'POST /v3/packages' do
     let(:guid) { app_model.guid }

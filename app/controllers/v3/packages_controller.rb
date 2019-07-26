@@ -144,6 +144,12 @@ class PackagesController < ApplicationController
       permission_queryer.can_read_from_space?(app.space.guid, app.organization.guid) &&
       permission_queryer.can_write_to_space?(app.space.guid)
 
+    if message.type != PackageModel::DOCKER_TYPE && app.docker?
+      unprocessable_non_docker_package!
+    elsif message.type != PackageModel::BITS_TYPE && app.buildpack?
+      unprocessable_non_bits_package!
+    end
+
     PackageCreate.create(message: message, user_audit_info: user_audit_info)
   end
 
@@ -177,6 +183,14 @@ class PackagesController < ApplicationController
   def send_package_blob(package)
     package_blobstore = CloudController::DependencyLocator.instance.package_blobstore
     BlobDispatcher.new(blobstore: package_blobstore, controller: self).send_or_redirect(guid: package.guid)
+  end
+
+  def unprocessable_non_bits_package!
+    unprocessable!('Cannot create Docker package for a buildpack app.')
+  end
+
+  def unprocessable_non_docker_package!
+    unprocessable!('Cannot create bits package for a Docker app.')
   end
 
   def unprocessable_app!
