@@ -68,11 +68,11 @@ module VCAP::CloudController
         end
       end
 
-      def with_retries(tries=9, &blk)
+      def with_retries(tries=9)
         base = tries
         begin
           yield
-        rescue RoutingApi::RoutingApiDisabled
+        rescue RoutingApi::RoutingApiUnavailable
           unless (tries -= 1).zero?
             # Final wait for 51.2 seconds for 9 tries
             sleep(0.1 * 2**(base - tries - 1))

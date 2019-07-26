@@ -358,15 +358,15 @@ module VCAP::CloudController
           end
         end
 
-        context 'when the routing api is initially disabled and then comes online' do
-          let(:client) { instance_double(VCAP::CloudController::RoutingApi::Client, enabled?: true) }
-          let(:disabled_client) { RoutingApi::DisabledClient.new }
+        context 'when the routing api is initially unavailable and then comes online' do
           let(:app_domains) { [{ 'name' => 'app.example.com', 'router_group_name' => 'default-tcp' }] }
 
           before do
-            locator = CloudController::DependencyLocator.instance
-            allow(locator).to receive(:routing_api_client).and_return(disabled_client, disabled_client, disabled_client, disabled_client, client)
-            allow(client).to receive(:router_group_guid).with('default-tcp').and_return('some-router-guid')
+            allow_any_instance_of(RoutingApi::Client).to receive(:token_info).and_return(OpenStruct.new(auth_header: 'my_token'))
+            stub_request(:get, 'http://localhost:3000/routing/v1/router_groups').
+              to_return({ status: 404, body: '[]' },
+                        { status: 500, body: '[]' },
+                        { status: 200, body: '[{"name": "default-tcp", "guid": "some-router-guid"}]' })
           end
 
           it 'seeds the shared domains with the router group guid' do
