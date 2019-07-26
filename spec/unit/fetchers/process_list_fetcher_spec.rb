@@ -18,6 +18,15 @@ module VCAP::CloudController
         expect(results).to be_a(Sequel::Dataset)
       end
 
+      describe 'eager loading associated resources' do
+        it 'eager loads the specified resources for the processes' do
+          results = fetcher.fetch_all(eager_loaded_associations: [:labels]).all
+
+          expect(results.first.associations.key?(:labels)).to be true
+          expect(results.first.associations.key?(:annotations)).to be false
+        end
+      end
+
       it 'returns all of the processes' do
         results = fetcher.fetch_all.all
         expect(results).to match_array([web, web2, worker])
@@ -99,6 +108,15 @@ module VCAP::CloudController
         expect(results).to be_a(Sequel::Dataset)
       end
 
+      describe 'eager loading associated resources' do
+        it 'eager loads the specified resources for the processes' do
+          results = fetcher.fetch_for_spaces(space_guids: [space1.guid, space2.guid], eager_loaded_associations: [:labels]).all
+
+          expect(results.first.associations.key?(:labels)).to be true
+          expect(results.first.associations.key?(:annotations)).to be false
+        end
+      end
+
       it 'returns only the processes in spaces requested' do
         results = fetcher.fetch_for_spaces(space_guids: [space1.guid, space2.guid]).all
         expect(results).to match_array([process_in_space1, process2_in_space1, process_in_space2])
@@ -122,6 +140,18 @@ module VCAP::CloudController
         returned_app, results = fetcher.fetch_for_app
         expect(returned_app.guid).to eq(app.guid)
         expect(results).to be_a(Sequel::Dataset)
+      end
+
+      describe 'eager loading associated resources' do
+        it 'eager loads the specified resources for the processes' do
+          ProcessModel.make(:process, app: app)
+
+          _, processes_dataset = fetcher.fetch_for_app(eager_loaded_associations: [:labels])
+          results = processes_dataset.all
+
+          expect(results.first.associations.key?(:labels)).to be true
+          expect(results.first.associations.key?(:annotations)).to be false
+        end
       end
 
       it 'returns the processes for the app' do

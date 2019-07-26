@@ -9,6 +9,13 @@ module VCAP::CloudController
       class ProcessPresenter < BasePresenter
         include VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers
 
+        class << self
+          # :labels and :annotations come from MetadataPresentationHelpers
+          def associated_resources
+            super
+          end
+        end
+
         def to_hash
           health_check_data = { timeout: process.health_check_timeout, invocation_timeout: process.health_check_invocation_timeout }
           health_check_data[:endpoint] = process.health_check_http_endpoint if process.health_check_type == HealthCheckTypes::HTTP
@@ -39,9 +46,9 @@ module VCAP::CloudController
         private
 
         def revision
-          process.revision && {
+          process.revision_guid && {
             data: {
-              guid: process.revision.guid
+              guid: process.revision_guid
             }
           }
         end

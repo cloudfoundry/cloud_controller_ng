@@ -4,25 +4,28 @@ module VCAP::CloudController
       @message = message
     end
 
-    def fetch_all
-      filter(process_dataset)
+    def fetch_all(eager_loaded_associations: [])
+      filter(process_dataset(eager_loaded_associations))
     end
 
-    def fetch_for_spaces(space_guids:)
-      filter(process_dataset.where(Sequel.qualify(:space, :guid) => space_guids))
+    def fetch_for_spaces(space_guids:, eager_loaded_associations: [])
+      filter(process_dataset(eager_loaded_associations).where(Sequel.qualify(:space, :guid) => space_guids))
     end
 
-    def fetch_for_app
+    def fetch_for_app(eager_loaded_associations: [])
       app = AppModel.where(guid: @message.app_guid).eager(:space, :organization).first
       return nil unless app
 
-      [app, filter(app.processes_dataset)]
+      [app, filter(app.processes_dataset.eager(eager_loaded_associations))]
     end
 
     private
 
-    def process_dataset
-      ProcessModel.dataset.eager(:desired_droplet).eager_graph_with_options({ space: :organization }, join_type: :inner)
+    def process_dataset(eager_loaded_associations)
+      ProcessModel.dataset.
+        eager(eager_loaded_associations).
+        eager(:desired_droplet).
+        eager_graph_with_options({ space: :organization }, join_type: :inner)
     end
 
     def filter(dataset)

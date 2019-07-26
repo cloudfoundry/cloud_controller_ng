@@ -25,13 +25,16 @@ class ProcessesController < ApplicationController
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     if app_nested?
-      app, dataset = ProcessListFetcher.new(message).fetch_for_app
+      app, dataset = ProcessListFetcher.new(message).fetch_for_app(eager_loaded_associations: Presenters::V3::ProcessPresenter.associated_resources)
       app_not_found! unless app && permission_queryer.can_read_from_space?(app.space.guid, app.organization.guid)
     else
       dataset = if permission_queryer.can_read_globally?
-                  ProcessListFetcher.new(message).fetch_all
+                  ProcessListFetcher.new(message).fetch_all(eager_loaded_associations: Presenters::V3::ProcessPresenter.associated_resources)
                 else
-                  ProcessListFetcher.new(message).fetch_for_spaces(space_guids: permission_queryer.readable_space_guids)
+                  ProcessListFetcher.new(message).fetch_for_spaces(
+                    space_guids: permission_queryer.readable_space_guids,
+                    eager_loaded_associations: Presenters::V3::ProcessPresenter.associated_resources
+                  )
                 end
     end
 

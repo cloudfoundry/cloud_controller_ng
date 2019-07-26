@@ -36,6 +36,16 @@ RSpec.describe ProcessesController, type: :controller do
         expect(response_guids).to match_array([process1.guid, process2.guid])
       end
 
+      it 'eager loads associated resources that the presenter specifies' do
+        expect_any_instance_of(VCAP::CloudController::ProcessListFetcher).to receive(:fetch_for_app).with(
+          hash_including(eager_loaded_associations: [:labels, :annotations])
+        ).and_call_original
+
+        get :index, params: { app_guid: app.guid }
+
+        expect(response.status).to eq(200)
+      end
+
       it 'provides the correct base url in the pagination links' do
         get :index, params: { app_guid: app.guid }
         expect(parsed_body['pagination']['first']['href']).to include("/v3/apps/#{app.guid}/processes")
@@ -110,8 +120,19 @@ RSpec.describe ProcessesController, type: :controller do
           expect(response.status).to eq(200)
           expect(response_guids).to match_array([process1.guid, process2.guid, process3.guid])
         end
+
+        it 'eager loads associated resources that the presenter specifies' do
+          expect_any_instance_of(VCAP::CloudController::ProcessListFetcher).to receive(:fetch_all).with(
+            hash_including(eager_loaded_associations: [:labels, :annotations])
+          ).and_call_original
+
+          get :index
+
+          expect(response.status).to eq(200)
+        end
       end
     end
+
     context 'when the request parameters are invalid' do
       context 'because there are unknown parameters' do
         let(:params) { { 'invalid' => 'thing', 'bad' => 'stuff' } }
