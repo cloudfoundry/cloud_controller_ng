@@ -87,7 +87,7 @@ module VCAP::CloudController
                 it 'logs an error for the CF user' do
                   handler.staging_complete(payload)
 
-                  expect(VCAP::Loggregator).to have_received(:emit_error).with(build.guid, /No process types returned from stager/)
+                  expect(VCAP::Loggregator).to have_received(:emit_error).with(build.app_guid, /No process types returned from stager/)
                 end
               end
 
@@ -229,7 +229,7 @@ module VCAP::CloudController
               end
 
               it 'should emit a loggregator error' do
-                expect(VCAP::Loggregator).to receive(:emit_error).with(build.guid, /Insufficient resources/)
+                expect(VCAP::Loggregator).to receive(:emit_error).with(build.app_guid, /Insufficient resources/)
                 handler.staging_complete(payload)
               end
             end
@@ -263,7 +263,7 @@ module VCAP::CloudController
               end
 
               it 'logs an error for the CF user' do
-                expect(VCAP::Loggregator).to have_received(:emit_error).with(build.guid, /Malformed message from Diego stager/)
+                expect(VCAP::Loggregator).to have_received(:emit_error).with(build.app_guid, /Malformed message from Diego stager/)
               end
 
               it 'should mark the build as failed' do
@@ -292,7 +292,7 @@ module VCAP::CloudController
                   handler.staging_complete(payload)
                 }.to raise_error(CloudController::Errors::ApiError)
 
-                expect(VCAP::Loggregator).to have_received(:emit_error).with(build.guid, /Malformed message from Diego stager/)
+                expect(VCAP::Loggregator).to have_received(:emit_error).with(build.app_guid, /Malformed message from Diego stager/)
               end
 
               it 'logs an error for the CF operator' do
