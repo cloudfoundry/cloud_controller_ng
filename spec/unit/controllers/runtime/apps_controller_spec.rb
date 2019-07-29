@@ -292,7 +292,7 @@ module VCAP::CloudController
             it 'return an error' do
               post '/v2/apps', MultiJson.dump(initial_hash.merge(diego: true, ports: [9090, 500]))
               expect(last_response.status).to eq(400)
-              expect(decoded_response['description']).to include('Ports must be in the 1024-65535.')
+              expect(decoded_response['description']).to include('Ports must be in the 1024-65535 range.')
             end
           end
         end
@@ -660,7 +660,7 @@ module VCAP::CloudController
             it 'returns 400' do
               put "/v2/apps/#{process.app.guid}", '{ "ports":[5222, 1234] }'
               expect(last_response.status).to eq(400)
-              expect(decoded_response['description']).to include('App ports ports may not be removed while routes are mapped to them.')
+              expect(decoded_response['description']).to include('App ports may not be removed while routes are mapped to them.')
             end
           end
 
@@ -668,7 +668,7 @@ module VCAP::CloudController
             it 'returns 400' do
               put "/v2/apps/#{process.app.guid}", '{ "ports":[1234] }'
               expect(last_response.status).to eq(400)
-              expect(decoded_response['description']).to include('App ports ports may not be removed while routes are mapped to them.')
+              expect(decoded_response['description']).to include('App ports may not be removed while routes are mapped to them.')
             end
           end
         end

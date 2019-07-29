@@ -8,28 +8,28 @@ RSpec.describe PortsPolicy do
     it 'registers error a provided port is not an integer' do
       process.diego = true
       process.ports = [1, 2, 'foo']
-      expect(validator).to validate_with_error(process, :ports, 'must be integers')
+      expect(validator).to validate_with_error(process, :base, 'Ports must be integers.')
     end
 
     it 'registers error if an out of range port is requested' do
       process.diego = true
       process.ports = [1024, 0]
-      expect(validator).to validate_with_error(process, :ports, 'Ports must be in the 1024-65535.')
+      expect(validator).to validate_with_error(process, :base, 'Ports must be in the 1024-65535 range.')
 
       process.ports = [1024, -1]
-      expect(validator).to validate_with_error(process, :ports, 'Ports must be in the 1024-65535.')
+      expect(validator).to validate_with_error(process, :base, 'Ports must be in the 1024-65535 range.')
 
       process.ports = [1024, 70_000]
-      expect(validator).to validate_with_error(process, :ports, 'Ports must be in the 1024-65535.')
+      expect(validator).to validate_with_error(process, :base, 'Ports must be in the 1024-65535 range.')
 
       process.ports = [1024, 1023]
-      expect(validator).to validate_with_error(process, :ports, 'Ports must be in the 1024-65535.')
+      expect(validator).to validate_with_error(process, :base, 'Ports must be in the 1024-65535 range.')
     end
 
     it 'registers an error if the ports limit is exceeded' do
       process.diego = true
       process.ports = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
-      expect(validator).to validate_with_error(process, :ports, 'Maximum of 10 app ports allowed.')
+      expect(validator).to validate_with_error(process, :base, 'Processes may have at most 10 exposed ports.')
     end
   end
 

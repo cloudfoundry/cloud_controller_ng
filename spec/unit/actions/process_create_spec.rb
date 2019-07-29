@@ -47,11 +47,33 @@ module VCAP::CloudController
 
       it 'adds existing routes to the process' do
         route = Route.make(space: app.space)
-        RouteMappingModel.make(route: route, app: app, process_type: 'web')
+        destination = RouteMappingModel.make(
+          route: route,
+          app: app,
+          process_type: 'web',
+          app_port: 3121
+        )
 
         process = process_create.create(app, message)
 
         expect(process.routes).to include(route)
+        expect(process.ports).to include(destination.app_port)
+      end
+
+      it 'validates number of ports when adding existing routes to a new process' do
+        route = Route.make(space: app.space)
+        11.times do |i|
+          RouteMappingModel.make(
+            route: route,
+            app: app,
+            process_type: 'web',
+            app_port: 3120 + i
+          )
+        end
+
+        expect {
+          process_create.create(app, message)
+        }.to raise_error 'base Processes may have at most 10 exposed ports.'
       end
 
       describe 'audit events' do
