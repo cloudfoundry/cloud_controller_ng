@@ -1,5 +1,5 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8">
     <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible">
@@ -10,7 +10,6 @@
     <link href="stylesheets/screen.css" rel="stylesheet" media="screen" />
     <link href="stylesheets/print.css" rel="stylesheet" media="print" />
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
-    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.2.36.min.js"></script>
 
       <script src="javascripts/all.js"></script>
 
@@ -28,7 +27,7 @@
         <img src="images/navbar.png" alt="Navbar" />
       </span>
     </a>
-    <div class="tocify-wrapper tocify-sidebar">
+    <nav class="tocify-wrapper tocify-sidebar">
       <img src="images/logo.png" alt="Logo" />
         <div class="lang-selector">
               <a href="#" data-language-name="shell">curl</a>
@@ -58,14 +57,15 @@
       </div>
 
         <div class="search">
-          <input type="text" class="search" id="input-search" placeholder="Search">
+          <input type="search" class="search" id="input-search" placeholder="Search">
         </div>
         <ul class="search-results"></ul>
 
       <div id="toc">
       </div>
-    </div>
-    <div class="page-wrapper">
+    </nav>
+
+    <main class="page-wrapper">
       <div class="dark-box"></div>
       <div class="content">
         
@@ -137,8 +137,6 @@
 
           
 
-          
-
 
 
 
@@ -175,13 +173,13 @@ key features:</p>
 
 <h2 id="getting-help">Getting help</h2>
 
-<p>The CAPI team can most easily be reached from our <a href="https://cloudfoundry.slack.com/messages/capi/">slack channel</a> for
-questions and issues regarding the API. To report an issue with the docs or API, please feel free to file a github
+<p>The CAPI team can most easily be reached from our <a href="https://cloudfoundry.slack.com/messages/capi/">Slack channel</a> for
+questions and issues regarding the API. To report an issue with the docs or API, please feel free to file a GitHub
 issue on our API repo <a href="https://github.com/cloudfoundry/cloud_controller_ng">cloud_controller_ng</a>.</p>
 
 <p>We recommend reaching out to slack first as the team will be most responsive there.</p>
 
-<h2 id="more-resources">More Resources</h2>
+<h2 id="more-resources">More resources</h2>
 
 <ul>
 <li>The <a href="http://apidocs.cloudfoundry.org/">Cloud Foundry V2 API</a> is still the primary API for interacting with Cloud Foundry.</li>
@@ -294,7 +292,7 @@ Use the cf cli to obtain a bearer token: cf oauth-token
 
 <p>Access to resources is determined by combining scopes in the OAuth2 Token with User Roles that are managed by the API. User Roles are currently managed by the <a href="http://apidocs.cloudfoundry.org/">V2 API</a>.</p>
 
-<h4 id="oauth2-scopes">OAuth2 Scopes</h4>
+<h4 id="oauth2-scopes">OAuth2 scopes</h4>
 
 <table><thead>
 <tr>
@@ -303,28 +301,28 @@ Use the cf cli to obtain a bearer token: cf oauth-token
 </tr>
 </thead><tbody>
 <tr>
-<td>cloud_controller.admin</td>
+<td><code class="prettyprint">cloud_controller.admin</code></td>
 <td>This scope provides read and write access to all resources</td>
 </tr>
 <tr>
-<td>cloud_controller.admin_read_only</td>
+<td><code class="prettyprint">cloud_controller.admin_read_only</code></td>
 <td>This scope provides read only access to all resources</td>
 </tr>
 <tr>
-<td>cloud_controller.global_auditor</td>
+<td><code class="prettyprint">cloud_controller.global_auditor</code></td>
 <td>This scope provides read only access to all resources except secrets (such as environment variables)</td>
 </tr>
 <tr>
-<td>cloud_controller.read</td>
+<td><code class="prettyprint">cloud_controller.read</code></td>
 <td>This scope provides read access to resources based on user roles</td>
 </tr>
 <tr>
-<td>cloud_controller.write</td>
+<td><code class="prettyprint">cloud_controller.write</code></td>
 <td>This scope provides write access to resources based on user roles</td>
 </tr>
 </tbody></table>
 
-<h4 id="cloud-foundry-user-roles">Cloud Foundry User Roles</h4>
+<h4 id="cloud-foundry-user-roles">Cloud Foundry user roles</h4>
 
 <table><thead>
 <tr>
@@ -627,7 +625,7 @@ query param can be used with a single resource or a list of resources.</p>
 
 <p>Lifecycles inform the platform of how to build droplets and run apps. For example the
 <code class="prettyprint">buildpack</code> lifecycle will use a droplet and a rootfs to run the app, while a <code class="prettyprint">docker</code> lifecycle will
-pull a docker image from a registry to run an app.</p>
+pull a Docker image from a registry to run an app.</p>
 
 <h4 id="the-lifecycle-object">The lifecycle object</h4>
 
@@ -694,9 +692,9 @@ will be created and the droplet will be expanded inside that container to be exe
 
 <h3 id="docker-lifecycle">Docker lifecycle</h3>
 
-<p>This allows Cloud Foundry to run docker images. When staging an app with this lifecycle, the docker registry is queried for
+<p>This allows Cloud Foundry to run Docker images. When staging an app with this lifecycle, the Docker registry is queried for
 metadata about the image, such as ports and start command.  When running an app with this lifecycle, a container is created
-and the docker image is executed inside of it.</p>
+and the Docker image is executed inside of it.</p>
 
 <h4 id="docker-lifecycle-object">Docker lifecycle object</h4>
 <pre class="highlight plaintext"><code>Example Docker Lifecycle
@@ -722,7 +720,7 @@ and the docker image is executed inside of it.</p>
 <tr>
 <td><strong>data</strong></td>
 <td><em>object</em></td>
-<td>Data is not used by the docker lifecycle. Valid value is <code class="prettyprint">{}</code>.</td>
+<td>Data is not used by the Docker lifecycle. Valid value is <code class="prettyprint">{}</code>.</td>
 </tr>
 </tbody></table>
 
@@ -765,7 +763,7 @@ and the docker image is executed inside of it.</p>
 <li><code class="prettyprint">&quot;git-sha&quot;: &quot;d56fe0367554ae5e878e37ed6c5b9a82f5995512&quot;</code></li>
 </ul>
 
-<h4 id="annotation-key">Annotation Key</h4>
+<h4 id="annotation-key">Annotation key</h4>
 
 <p>Annotation keys are made up of an (optional) prefix, and name. If a prefix is present, it is separated from the name by a <code class="prettyprint">/</code>.
 Prefixes are dns names intended to enable namespacing of annotation keys.</p>
@@ -786,7 +784,7 @@ Prefixes are dns names intended to enable namespacing of annotation keys.</p>
 <li>Must begin and end with an alphanumeric character</li>
 </ul>
 
-<h4 id="annotation-value">Annotation Value</h4>
+<h4 id="annotation-value">Annotation value</h4>
 
 <p>Annotation values must adhere to the following restrictions:</p>
 
@@ -794,7 +792,7 @@ Prefixes are dns names intended to enable namespacing of annotation keys.</p>
 <li>Length: 0-5000 characters</li>
 </ul>
 
-<h3 id="labels-and-selectors">Labels and Selectors</h3>
+<h3 id="labels-and-selectors">Labels and selectors</h3>
 
 <p>Labels are user-specified key/value pairs that are attached to <a href="#api-resource">API Resources</a>.
 They are queryable, identifying attributes of a resource, but they do not affect the operation of CloudFoundry.</p>
@@ -840,7 +838,7 @@ only apps having the label key <code class="prettyprint">sensitive</code> with a
 <li><code class="prettyprint">&quot;chargeback-code&quot; : &quot;abc123&quot;</code></li>
 </ul>
 
-<p><strong>Label Keys</strong></p>
+<h5 id="label-keys">Label keys</h5>
 
 <p>Label keys are made up of an (optional) prefix, and name. If a prefix is present, it is separated from the name by a <code class="prettyprint">/</code>.
 Prefixes are dns names intended to enable namespacing of label keys.</p>
@@ -861,7 +859,7 @@ Prefixes are dns names intended to enable namespacing of label keys.</p>
 <li>Must begin and end with an alphanumeric character</li>
 </ul>
 
-<p><strong>Label Values</strong></p>
+<h5 id="label-values">Label values</h5>
 
 <p>Label values must adhere to the following restrictions:</p>
 
@@ -932,7 +930,7 @@ When included in a url, the selector must be appropriately escaped.
 
 <p>See <a href="https://docs.cloudfoundry.org/adminguide/metadata.html#query">the metadata documentation</a> for more information.</p>
 
-<h3 id="updating-labels-and-annotations">Updating Labels and Annotations</h3>
+<h3 id="updating-labels-and-annotations">Updating labels and annotations</h3>
 
 <p>Labels and annotations can be updated by using the PATCH endpoint for their resource.
 For example, to update labels or annotations on an app, use the <a href="#update-an-app">update an app</a> endpoint.
@@ -1132,7 +1130,7 @@ Relationships are tied to the lifecycles of the associated resources and will be
 </tr>
 </tbody></table>
 
-<h3 id="to-one-relationships">To-One relationships</h3>
+<h3 id="to-one-relationships">To-one relationships</h3>
 <pre class="highlight plaintext"><code>Example to-one relationship
 </code></pre>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
@@ -1144,7 +1142,7 @@ Relationships are tied to the lifecycles of the associated resources and will be
 
 <p>Some relationships relate a resource to exactly one other resource. For example an app can belong to only one space.</p>
 
-<h4 id="to-one-relationship-object">To-One relationship object</h4>
+<h4 id="to-one-relationship-object">To-one relationship object</h4>
 
 <table><thead>
 <tr>
@@ -1203,7 +1201,7 @@ Relationships are tied to the lifecycles of the associated resources and will be
   -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
 
-<h3 id="to-many-relationships">To-Many relationships</h3>
+<h3 id="to-many-relationships">To-many relationships</h3>
 <pre class="highlight plaintext"><code>Example to-many relationship
 </code></pre>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
@@ -1216,7 +1214,7 @@ Relationships are tied to the lifecycles of the associated resources and will be
 
 <p>Some relationships relate an resource to several other resources. For example an Isolation Segment can be entitled to multiple organizations.</p>
 
-<h4 id="to-many-relationship-object">To-Many relationship object</h4>
+<h4 id="to-many-relationship-object">To-many relationship object</h4>
 
 <table><thead>
 <tr>
@@ -1341,9 +1339,9 @@ In general, codes in the 2xx range indicate success, codes in the 4xx range indi
 Performing a push operation actually requires a client to orchestrate several requests to the API to accomplish the entire operation.
 This section is meant to explain how clients can perform complex workflows using the API.</p>
 
-<h2 id="push-v2-app-and-run-a-v3-task">Push V2 App and Run a V3 Task</h2>
+<h2 id="push-v2-app-and-run-a-v3-task">Push V2 app and run a V3 task</h2>
 
-<p>As of CF-245, a V2 Application is also available as a V3 Application, allowing a user to run a V3 Task against it.</p>
+<p>As of CF-245, a V2 application is also available as a V3 application, allowing a user to run a V3 task against it.</p>
 
 <ol>
 <li>Push an application: <code class="prettyprint">cf push v3-tasks-sample</code></li>
@@ -1592,7 +1590,7 @@ information for your packages, droplets, processes, tasks, and more.</p>
 
 <p><code class="prettyprint">POST /v3/apps</code></p>
 
-<h4 id="required-parameters">Required Parameters</h4>
+<h4 id="required-parameters">Required parameters</h4>
 
 <table><thead>
 <tr>
@@ -1613,7 +1611,7 @@ information for your packages, droplets, processes, tasks, and more.</p>
 </tr>
 </tbody></table>
 
-<h4 id="optional-parameters">Optional Parameters</h4>
+<h4 id="optional-parameters">Optional parameters</h4>
 
 <table><thead>
 <tr>
@@ -1649,7 +1647,7 @@ information for your packages, droplets, processes, tasks, and more.</p>
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -1751,7 +1749,7 @@ information for your packages, droplets, processes, tasks, and more.</p>
 
 <p><code class="prettyprint">GET /v3/apps/:guid</code></p>
 
-<h4 id="query-parameters">Query Parameters</h4>
+<h4 id="query-parameters">Query parameters</h4>
 
 <table><thead>
 <tr>
@@ -1767,7 +1765,7 @@ information for your packages, droplets, processes, tasks, and more.</p>
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -1972,7 +1970,7 @@ information for your packages, droplets, processes, tasks, and more.</p>
 
 <p><code class="prettyprint">GET /v3/apps</code></p>
 
-<h4 id="query-parameters">Query Parameters</h4>
+<h4 id="query-parameters">Query parameters</h4>
 
 <table><thead>
 <tr>
@@ -2033,7 +2031,7 @@ information for your packages, droplets, processes, tasks, and more.</p>
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -2142,7 +2140,7 @@ information for your packages, droplets, processes, tasks, and more.</p>
 
 <p><code class="prettyprint">PATCH /v3/apps/:guid</code></p>
 
-<h4 id="optional-parameters">Optional Parameters</h4>
+<h4 id="optional-parameters">Optional parameters</h4>
 
 <table><thead>
 <tr>
@@ -2173,7 +2171,7 @@ information for your packages, droplets, processes, tasks, and more.</p>
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -2205,7 +2203,7 @@ information for your packages, droplets, processes, tasks, and more.</p>
 
 <p><code class="prettyprint">DELETE /v3/apps/:guid</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -2288,7 +2286,7 @@ information for your packages, droplets, processes, tasks, and more.</p>
 
 <p><code class="prettyprint">GET /v3/apps/:guid/droplets/current</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -2353,7 +2351,7 @@ information for your packages, droplets, processes, tasks, and more.</p>
 
 <p><code class="prettyprint">GET /v3/apps/:guid/relationships/current_droplet</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -2447,7 +2445,7 @@ It will include environment variables for Environment Variable Groups and Servic
 
 <p><code class="prettyprint">GET /v3/apps/:guid/env</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -2499,7 +2497,7 @@ For the entire list of environment variables that will be available to the app a
 
 <p><code class="prettyprint">GET /v3/apps/:guid/environment_variables</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -2553,7 +2551,7 @@ For the entire list of environment variables that will be available to the app a
 
 <p><code class="prettyprint">PATCH /v3/apps/:guid/relationships/current_droplet</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -2655,7 +2653,7 @@ For the entire list of environment variables that will be available to the app a
 
 <p><code class="prettyprint">POST /v3/apps/:guid/actions/start</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -2757,7 +2755,7 @@ For the entire list of environment variables that will be available to the app a
 
 <p><code class="prettyprint">POST /v3/apps/:guid/actions/stop</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -2817,7 +2815,7 @@ Environment variable names may not start with VCAP_. PORT is not a valid environ
 
 <p><code class="prettyprint">PATCH /v3/apps/:guid/environment_variables</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -3014,7 +3012,7 @@ resource can be created to initiate the staging process. A successful build resu
 
 <p><code class="prettyprint">POST /v3/builds</code></p>
 
-<h4 id="required-parameters">Required Parameters</h4>
+<h4 id="required-parameters">Required parameters</h4>
 
 <table><thead>
 <tr>
@@ -3030,7 +3028,7 @@ resource can be created to initiate the staging process. A successful build resu
 </tr>
 </tbody></table>
 
-<h4 id="optional-parameters">Optional Parameters</h4>
+<h4 id="optional-parameters">Optional parameters</h4>
 
 <table><thead>
 <tr>
@@ -3060,7 +3058,7 @@ resource can be created to initiate the staging process. A successful build resu
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -3132,7 +3130,7 @@ resource can be created to initiate the staging process. A successful build resu
 
 <p><code class="prettyprint">GET /v3/builds/:guid</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -3234,7 +3232,7 @@ resource can be created to initiate the staging process. A successful build resu
 
 <p><code class="prettyprint">GET /v3/builds</code></p>
 
-<h4 id="query-parameters">Query Parameters</h4>
+<h4 id="query-parameters">Query parameters</h4>
 
 <table><thead>
 <tr>
@@ -3280,7 +3278,7 @@ resource can be created to initiate the staging process. A successful build resu
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -3364,7 +3362,7 @@ resource can be created to initiate the staging process. A successful build resu
 
 <p><code class="prettyprint">GET /v3/apps/[guid]/builds</code></p>
 
-<h4 id="query-parameters">Query Parameters</h4>
+<h4 id="query-parameters">Query parameters</h4>
 
 <table><thead>
 <tr>
@@ -3400,7 +3398,7 @@ resource can be created to initiate the staging process. A successful build resu
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -3490,7 +3488,7 @@ resource can be created to initiate the staging process. A successful build resu
 
 <p><code class="prettyprint">PATCH /v3/builds/:guid</code></p>
 
-<h4 id="optional-parameters">Optional Parameters</h4>
+<h4 id="optional-parameters">Optional parameters</h4>
 
 <table><thead>
 <tr>
@@ -3511,7 +3509,7 @@ resource can be created to initiate the staging process. A successful build resu
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -3684,7 +3682,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 
 <p><code class="prettyprint">POST /v3/buildpacks</code></p>
 
-<h4 id="required-parameters">Required Parameters</h4>
+<h4 id="required-parameters">Required parameters</h4>
 
 <table><thead>
 <tr>
@@ -3700,7 +3698,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 </tr>
 </tbody></table>
 
-<h4 id="optional-parameters">Optional Parameters</h4>
+<h4 id="optional-parameters">Optional parameters</h4>
 
 <table><thead>
 <tr>
@@ -3748,7 +3746,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -3804,7 +3802,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 
 <p><code class="prettyprint">GET /v3/buildpacks/:guid</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -3880,7 +3878,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 
 <p><code class="prettyprint">GET /v3/buildpacks</code></p>
 
-<h4 id="query-parameters">Query Parameters</h4>
+<h4 id="query-parameters">Query parameters</h4>
 
 <table><thead>
 <tr>
@@ -3921,7 +3919,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -3985,7 +3983,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 
 <p><code class="prettyprint">PATCH /v3/buildpacks/:guid</code></p>
 
-<h4 id="optional-parameters">Optional Parameters</h4>
+<h4 id="optional-parameters">Optional parameters</h4>
 
 <table><thead>
 <tr>
@@ -4031,7 +4029,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -4120,7 +4118,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 
 <p><code class="prettyprint">POST /v3/buildpacks/:guid/upload</code></p>
 
-<h4 id="required-parameters">Required Parameters</h4>
+<h4 id="required-parameters">Required parameters</h4>
 
 <table><thead>
 <tr>
@@ -4136,7 +4134,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -4152,7 +4150,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 
 <p>Domains represent a <a href="https://en.wikipedia.org/wiki/Fully_qualified_domain_name">fully qualified domain name</a> that is used for application routes.</p>
 
-<p>Domains can be scoped to a set of organizations or be left unscoped to allow all organizations access.</p>
+<p>A domain can be scoped to an organization, meaning it can be used to create routes for spaces inside that organization, or be left unscoped to allow all organizations access.</p>
 
           <h3 id="the-domain-object">The domain object</h3>
 <pre class="highlight plaintext"><code>Example Domain object
@@ -4168,7 +4166,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
       </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">}</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"organizations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"organization"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3a3f3d89-3f89-4f05-8188-751b298c79d5"</span><span class="w"> </span><span class="p">}</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="nt">"shared_organizations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -4283,7 +4281,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
       </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">}</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"organizations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"organization"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3a3f3d89-3f89-4f05-8188-751b298c79d5"</span><span class="w"> </span><span class="p">}</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="nt">"shared_organizations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -4315,7 +4313,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 
 <p><code class="prettyprint">POST /v3/domains</code></p>
 
-<h4 id="required-parameters">Required Parameters</h4>
+<h4 id="required-parameters">Required parameters</h4>
 
 <table><thead>
 <tr>
@@ -4331,7 +4329,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 </tr>
 </tbody></table>
 
-<h4 id="optional-parameters">Optional Parameters</h4>
+<h4 id="optional-parameters">Optional parameters</h4>
 
 <table><thead>
 <tr>
@@ -4373,7 +4371,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -4414,7 +4412,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
       </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">}</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"organizations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"organization"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3a3f3d89-3f89-4f05-8188-751b298c79d5"</span><span class="w"> </span><span class="p">}</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="nt">"shared_organizations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -4446,7 +4444,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 
 <p><code class="prettyprint">GET /v3/domains/:guid</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -4558,7 +4556,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 
 <p><code class="prettyprint">GET /v3/domains</code></p>
 
-<h4 id="query-parameters">Query Parameters</h4>
+<h4 id="query-parameters">Query parameters</h4>
 
 <table><thead>
 <tr>
@@ -4599,7 +4597,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -4679,7 +4677,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 
 <p><code class="prettyprint">GET /v3/organizations/:org_guid/domains</code></p>
 
-<h4 id="query-parameters">Query Parameters</h4>
+<h4 id="query-parameters">Query parameters</h4>
 
 <table><thead>
 <tr>
@@ -4720,7 +4718,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -4762,7 +4760,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
       </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"note"</span><span class="p">:</span><span class="w"> </span><span class="s2">"detailed information"</span><span class="w"> </span><span class="p">}</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"organizations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"organization"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3a3f3d89-3f89-4f05-8188-751b298c79d5"</span><span class="w"> </span><span class="p">}</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="nt">"shared_organizations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -4794,7 +4792,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 
 <p><code class="prettyprint">PATCH /v3/domains/:guid</code></p>
 
-<h4 id="optional-parameters">Optional Parameters</h4>
+<h4 id="optional-parameters">Optional parameters</h4>
 
 <table><thead>
 <tr>
@@ -4818,7 +4816,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -4853,7 +4851,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 
 <p><code class="prettyprint">DELETE /v3/domains/:guid</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -4905,7 +4903,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 
 <p><code class="prettyprint">POST /v3/domains/:guid/relationships/shared_organizations</code></p>
 
-<h4 id="required-parameters">Required Parameters</h4>
+<h4 id="required-parameters">Required parameters</h4>
 
 <table><thead>
 <tr>
@@ -4921,7 +4919,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -4958,7 +4956,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 
 <p><code class="prettyprint">DELETE /v3/domains/:guid/relationships/shared_organizations/:org_guid</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -4985,7 +4983,7 @@ code and dependencies.</p>
 
 <p>After an application is created and packages are uploaded, a droplet must be
 created via a <a href="#builds">build</a> in order for an application to be deployed or tasks to be run. 
-The current droplet <a href="#set-current-droplet-for-an-app">must be assigned</a> to an 
+The current droplet <a href="#set-current-droplet">must be assigned</a> to an
 application before it may be started. When <a href="#create-a-task">tasks are created</a>, 
 they either use a specific droplet guid, or use the current droplet assigned to an application.</p>
 
@@ -5274,7 +5272,7 @@ Their values will be <code class="prettyprint">null</code> by default and will c
 
 <p><code class="prettyprint">POST /v3/droplets</code></p>
 
-<h4 id="required-parameters">Required Parameters</h4>
+<h4 id="required-parameters">Required parameters</h4>
 
 <table><thead>
 <tr>
@@ -5290,7 +5288,7 @@ Their values will be <code class="prettyprint">null</code> by default and will c
 </tr>
 </tbody></table>
 
-<h4 id="optional-parameters">Optional Parameters</h4>
+<h4 id="optional-parameters">Optional parameters</h4>
 
 <table><thead>
 <tr>
@@ -5308,7 +5306,7 @@ Their values will be <code class="prettyprint">null</code> by default and will c
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -5394,7 +5392,7 @@ Their values will be <code class="prettyprint">null</code> by default and will c
 
 <p><code class="prettyprint">GET /v3/droplets/:guid</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -5547,7 +5545,7 @@ Their values will be <code class="prettyprint">null</code> by default and will c
 
 <p><code class="prettyprint">GET /v3/droplets</code></p>
 
-<h4 id="query-parameters">Query Parameters</h4>
+<h4 id="query-parameters">Query parameters</h4>
 
 <table><thead>
 <tr>
@@ -5603,7 +5601,7 @@ Their values will be <code class="prettyprint">null</code> by default and will c
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -5738,7 +5736,7 @@ Their values will be <code class="prettyprint">null</code> by default and will c
 
 <p><code class="prettyprint">GET /v3/packages/:guid/droplets</code></p>
 
-<h4 id="query-parameters">Query Parameters</h4>
+<h4 id="query-parameters">Query parameters</h4>
 
 <table><thead>
 <tr>
@@ -5779,7 +5777,7 @@ Their values will be <code class="prettyprint">null</code> by default and will c
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -5932,7 +5930,7 @@ Their values will be <code class="prettyprint">null</code> by default and will c
 
 <p><code class="prettyprint">GET /v3/apps/:guid/droplets</code></p>
 
-<h4 id="query-parameters">Query Parameters</h4>
+<h4 id="query-parameters">Query parameters</h4>
 
 <table><thead>
 <tr>
@@ -5978,7 +5976,7 @@ Their values will be <code class="prettyprint">null</code> by default and will c
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -6082,7 +6080,7 @@ Their values will be <code class="prettyprint">null</code> by default and will c
 
 <p><code class="prettyprint">PATCH /v3/droplets/:guid</code></p>
 
-<h4 id="optional-parameters">Optional Parameters</h4>
+<h4 id="optional-parameters">Optional parameters</h4>
 
 <table><thead>
 <tr>
@@ -6103,7 +6101,7 @@ Their values will be <code class="prettyprint">null</code> by default and will c
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -6224,7 +6222,7 @@ environment variables listed on the source droplet.</p>
 
 <p><code class="prettyprint">POST /v3/droplets?source_guid=:guid</code></p>
 
-<h4 id="required-query-parameters">Required Query Parameters</h4>
+<h4 id="required-query-parameters">Required query parameters</h4>
 
 <table><thead>
 <tr>
@@ -6240,7 +6238,7 @@ environment variables listed on the source droplet.</p>
 </tr>
 </tbody></table>
 
-<h4 id="required-parameters">Required Parameters</h4>
+<h4 id="required-parameters">Required parameters</h4>
 
 <table><thead>
 <tr>
@@ -6256,7 +6254,7 @@ environment variables listed on the source droplet.</p>
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -6330,7 +6328,7 @@ environment variables listed on the source droplet.</p>
 
 <p><code class="prettyprint">POST /v3/droplets/:guid/upload</code></p>
 
-<h4 id="required-parameters">Required Parameters</h4>
+<h4 id="required-parameters">Required parameters</h4>
 
 <table><thead>
 <tr>
@@ -6346,7 +6344,7 @@ environment variables listed on the source droplet.</p>
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -6500,7 +6498,7 @@ environment variables listed on the source droplet.</p>
 
 <p><code class="prettyprint">GET /v3/feature_flags/:name</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -6573,7 +6571,7 @@ environment variables listed on the source droplet.</p>
 
 <p><code class="prettyprint">GET /v3/feature_flags</code></p>
 
-<h4 id="query-parameters">Query Parameters</h4>
+<h4 id="query-parameters">Query parameters</h4>
 
 <table><thead>
 <tr>
@@ -6599,7 +6597,7 @@ environment variables listed on the source droplet.</p>
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -6646,7 +6644,7 @@ environment variables listed on the source droplet.</p>
 
 <p><code class="prettyprint">PATCH /v3/feature_flags/:name</code></p>
 
-<h4 id="optional-parameters">Optional Parameters</h4>
+<h4 id="optional-parameters">Optional parameters</h4>
 
 <table><thead>
 <tr>
@@ -6667,7 +6665,7 @@ environment variables listed on the source droplet.</p>
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -6792,7 +6790,7 @@ environment variables listed on the source droplet.</p>
 
 <p><code class="prettyprint">POST /v3/isolation_segments</code></p>
 
-<h4 id="required-parameters">Required Parameters</h4>
+<h4 id="required-parameters">Required parameters</h4>
 
 <table><thead>
 <tr>
@@ -6818,7 +6816,7 @@ environment variables listed on the source droplet.</p>
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -6867,7 +6865,7 @@ environment variables listed on the source droplet.</p>
 
 <p><code class="prettyprint">GET /v3/isolation_segments/:guid</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -7026,7 +7024,7 @@ environment variables listed on the source droplet.</p>
 
 <p><code class="prettyprint">GET /v3/isolation_segments</code></p>
 
-<h4 id="query-parameters">Query Parameters</h4>
+<h4 id="query-parameters">Query parameters</h4>
 
 <table><thead>
 <tr>
@@ -7072,7 +7070,7 @@ environment variables listed on the source droplet.</p>
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -7123,7 +7121,7 @@ environment variables listed on the source droplet.</p>
 
 <p><code class="prettyprint">GET /v3/isolation_segments/:guid/relationships/organizations</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -7171,7 +7169,7 @@ environment variables listed on the source droplet.</p>
 
 <p><code class="prettyprint">GET /v3/isolation_segments/:guid/relationships/spaces</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -7240,7 +7238,7 @@ environment variables listed on the source droplet.</p>
 
 <p><code class="prettyprint">PATCH /v3/isolation_segments/:guid</code></p>
 
-<h4 id="optional-parameters">Optional Parameters</h4>
+<h4 id="optional-parameters">Optional parameters</h4>
 
 <table><thead>
 <tr>
@@ -7266,7 +7264,7 @@ environment variables listed on the source droplet.</p>
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -7296,7 +7294,7 @@ environment variables listed on the source droplet.</p>
 
 <p><code class="prettyprint">DELETE /v3/isolation_segments/:guid</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -7355,7 +7353,7 @@ In the case where the specified isolation segment is the system-wide shared segm
 
 <p><code class="prettyprint">POST /v3/isolation_segments/:guid/relationships/organizations</code></p>
 
-<h4 id="required-parameters">Required Parameters</h4>
+<h4 id="required-parameters">Required parameters</h4>
 
 <table><thead>
 <tr>
@@ -7371,7 +7369,7 @@ In the case where the specified isolation segment is the system-wide shared segm
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -7401,7 +7399,7 @@ In the case where the specified isolation segment is the system-wide shared segm
 
 <p><code class="prettyprint">DELETE /v3/isolation_segments/:guid/relationships/organizations/:org_guid</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -7541,7 +7539,7 @@ In the case where the specified isolation segment is the system-wide shared segm
 
 <p><code class="prettyprint">GET /v3/jobs/:guid</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -7713,7 +7711,7 @@ In the case where the specified isolation segment is the system-wide shared segm
 
 <p><code class="prettyprint">POST /v3/organizations</code></p>
 
-<h4 id="required-parameters">Required Parameters</h4>
+<h4 id="required-parameters">Required parameters</h4>
 
 <table><thead>
 <tr>
@@ -7729,7 +7727,7 @@ In the case where the specified isolation segment is the system-wide shared segm
 </tr>
 </tbody></table>
 
-<h4 id="optional-parameters">Optional Parameters</h4>
+<h4 id="optional-parameters">Optional parameters</h4>
 
 <table><thead>
 <tr>
@@ -7750,7 +7748,7 @@ In the case where the specified isolation segment is the system-wide shared segm
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -7813,7 +7811,7 @@ In the case where the specified isolation segment is the system-wide shared segm
 
 <p><code class="prettyprint">GET /v3/organizations/:guid</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -7918,7 +7916,7 @@ In the case where the specified isolation segment is the system-wide shared segm
 
 <p><code class="prettyprint">GET /v3/organizations</code></p>
 
-<h4 id="query-parameters">Query Parameters</h4>
+<h4 id="query-parameters">Query parameters</h4>
 
 <table><thead>
 <tr>
@@ -7959,7 +7957,7 @@ In the case where the specified isolation segment is the system-wide shared segm
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -8064,7 +8062,7 @@ In the case where the specified isolation segment is the system-wide shared segm
 
 <p><code class="prettyprint">GET /v3/isolation_segments/:guid/organizations</code></p>
 
-<h4 id="query-parameters">Query Parameters</h4>
+<h4 id="query-parameters">Query parameters</h4>
 
 <table><thead>
 <tr>
@@ -8100,7 +8098,7 @@ In the case where the specified isolation segment is the system-wide shared segm
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -8177,7 +8175,7 @@ In the case where the specified isolation segment is the system-wide shared segm
 
 <p><code class="prettyprint">PATCH /v3/organizations/:guid</code></p>
 
-<h4 id="optional-parameters">Optional Parameters</h4>
+<h4 id="optional-parameters">Optional parameters</h4>
 
 <table><thead>
 <tr>
@@ -8203,7 +8201,7 @@ In the case where the specified isolation segment is the system-wide shared segm
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -8261,7 +8259,7 @@ Only isolation segments that are entitled to the organization are eligible to be
 
 <p><code class="prettyprint">PATCH /v3/organizations/:guid/relationships/default_isolation_segment</code></p>
 
-<h4 id="required-parameters">Required Parameters</h4>
+<h4 id="required-parameters">Required parameters</h4>
 
 <table><thead>
 <tr>
@@ -8277,7 +8275,7 @@ Only isolation segments that are entitled to the organization are eligible to be
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -8326,7 +8324,7 @@ Only isolation segments that are entitled to the organization are eligible to be
 
 <p><code class="prettyprint">GET /v3/organizations/:guid/relationships/default_isolation_segment</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -8361,7 +8359,7 @@ Only isolation segments that are entitled to the organization are eligible to be
       </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">}</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"organizations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"organization"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3a3f3d89-3f89-4f05-8188-751b298c79d5"</span><span class="w"> </span><span class="p">}</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="nt">"shared_organizations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -8395,7 +8393,7 @@ Only isolation segments that are entitled to the organization are eligible to be
 
 <p><code class="prettyprint">GET /v3/organizations/:guid/domains/default</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -8611,7 +8609,7 @@ Only isolation segments that are entitled to the organization are eligible to be
 
 <h4 id="docker-package">Docker package</h4>
 
-<p>A docker package references a docker image from a registry.</p>
+<p>A Docker package references a Docker image from a registry.</p>
 
 <table><thead>
 <tr>
@@ -8736,7 +8734,7 @@ Only isolation segments that are entitled to the organization are eligible to be
 </span><span class="p">}</span><span class="w">
 
 </span></code></pre>
-<pre class="highlight plaintext"><code>Example Request (docker app)
+<pre class="highlight plaintext"><code>Example Request (Docker app)
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/packages"</span> <span class="se">\</span>
   -X POST <span class="se">\</span>
@@ -8794,7 +8792,7 @@ Only isolation segments that are entitled to the organization are eligible to be
 
 <p><code class="prettyprint">POST /v3/packages</code></p>
 
-<h4 id="required-parameters">Required Parameters</h4>
+<h4 id="required-parameters">Required parameters</h4>
 
 <table><thead>
 <tr>
@@ -8815,7 +8813,7 @@ Only isolation segments that are entitled to the organization are eligible to be
 </tr>
 </tbody></table>
 
-<h4 id="optional-parameters">Optional Parameters</h4>
+<h4 id="optional-parameters">Optional parameters</h4>
 
 <table><thead>
 <tr>
@@ -8869,7 +8867,7 @@ Only isolation segments that are entitled to the organization are eligible to be
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -8937,7 +8935,7 @@ Only isolation segments that are entitled to the organization are eligible to be
 
 <p><code class="prettyprint">GET /v3/packages/:guid</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -9062,7 +9060,7 @@ Only isolation segments that are entitled to the organization are eligible to be
 
 <p><code class="prettyprint">GET /v3/packages</code></p>
 
-<h4 id="query-parameters">Query Parameters</h4>
+<h4 id="query-parameters">Query parameters</h4>
 
 <table><thead>
 <tr>
@@ -9123,7 +9121,7 @@ Only isolation segments that are entitled to the organization are eligible to be
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -9205,7 +9203,7 @@ Only isolation segments that are entitled to the organization are eligible to be
 
 <p><code class="prettyprint">GET /v3/apps/:guid/packages</code></p>
 
-<h4 id="query-parameters">Query Parameters</h4>
+<h4 id="query-parameters">Query parameters</h4>
 
 <table><thead>
 <tr>
@@ -9246,7 +9244,7 @@ Only isolation segments that are entitled to the organization are eligible to be
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -9332,7 +9330,7 @@ Only isolation segments that are entitled to the organization are eligible to be
 
 <p><code class="prettyprint">PATCH /v3/packages/:guid</code></p>
 
-<h4 id="optional-parameters">Optional Parameters</h4>
+<h4 id="optional-parameters">Optional parameters</h4>
 
 <table><thead>
 <tr>
@@ -9353,7 +9351,7 @@ Only isolation segments that are entitled to the organization are eligible to be
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -9453,7 +9451,7 @@ Only isolation segments that are entitled to the organization are eligible to be
 
 <p><code class="prettyprint">POST /v3/packages?source_guid=:guid</code></p>
 
-<h4 id="required-query-parameters">Required Query Parameters</h4>
+<h4 id="required-query-parameters">Required query parameters</h4>
 
 <table><thead>
 <tr>
@@ -9469,7 +9467,7 @@ Only isolation segments that are entitled to the organization are eligible to be
 </tr>
 </tbody></table>
 
-<h4 id="required-parameters">Required Parameters</h4>
+<h4 id="required-parameters">Required parameters</h4>
 
 <table><thead>
 <tr>
@@ -9485,7 +9483,7 @@ Only isolation segments that are entitled to the organization are eligible to be
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -9525,7 +9523,7 @@ the request in that case. Clients may need to follow the redirect without includ
 
 <p><code class="prettyprint">GET /v3/packages/:guid/download</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -9603,7 +9601,7 @@ the request in that case. Clients may need to follow the redirect without includ
 
 <p><code class="prettyprint">POST /v3/packages/:guid/upload</code></p>
 
-<h4 id="optional-parameters">Optional Parameters</h4>
+<h4 id="optional-parameters">Optional parameters</h4>
 
 <table><thead>
 <tr>
@@ -9627,7 +9625,7 @@ the request in that case. Clients may need to follow the redirect without includ
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -10000,7 +9998,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 <p><code class="prettyprint">GET /v3/processes/:guid</code> <br>
 <code class="prettyprint">GET /v3/apps/:guid/processes/:type</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -10078,7 +10076,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 <p><code class="prettyprint">GET /v3/processes/:guid/stats</code> <br>
 <code class="prettyprint">GET /v3/apps/:guid/processes/:type/stats</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -10233,7 +10231,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 
 <p><code class="prettyprint">GET /v3/processes</code></p>
 
-<h4 id="query-parameters">Query Parameters</h4>
+<h4 id="query-parameters">Query parameters</h4>
 
 <table><thead>
 <tr>
@@ -10289,7 +10287,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -10426,7 +10424,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 
 <p><code class="prettyprint">GET /v3/apps/:guid/processes</code></p>
 
-<h4 id="query-parameters">Query Parameters</h4>
+<h4 id="query-parameters">Query parameters</h4>
 
 <table><thead>
 <tr>
@@ -10467,7 +10465,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -10504,7 +10502,17 @@ Processes for an app are defined by the buildpack used to stage the app and can 
   -X PATCH <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
   -H <span class="s2">"Content-type: application/json"</span> <span class="se">\</span>
-  -d <span class="s1">'{ "command": "rackup", "metadata": { "labels": { "key": "value" }, "annotations": {"note": "detailed information"}} }'</span>
+  -d <span class="s1">'{
+    "command": "rackup",
+    "metadata": {
+      "labels": {
+        "key": "value"
+      },
+      "annotations": {
+        "note": "detailed information"
+      }
+    }
+  }'</span>
 </code></pre>
 <pre class="highlight plaintext"><code>Example Response
 </code></pre>
@@ -10563,7 +10571,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 
 <p><code class="prettyprint">PATCH /v3/processes/:guid</code></p>
 
-<h4 id="optional-parameters">Optional Parameters</h4>
+<h4 id="optional-parameters">Optional parameters</h4>
 
 <table><thead>
 <tr>
@@ -10579,7 +10587,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 </tr>
 <tr>
 <td><strong>health_check</strong></td>
-<td><a href="#the-health_check-object"><em>health_check object</em></a></td>
+<td><a href="#the-health-check-object"><em>health check object</em></a></td>
 <td>The health check to perform on the process.</td>
 </tr>
 <tr>
@@ -10594,7 +10602,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -10680,7 +10688,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 <p><code class="prettyprint">POST /v3/processes/:guid/actions/scale</code> <br>
 <code class="prettyprint">POST /v3/apps/:guid/processes/:type/actions/scale</code></p>
 
-<h4 id="optional-parameters">Optional Parameters</h4>
+<h4 id="optional-parameters">Optional parameters</h4>
 
 <table><thead>
 <tr>
@@ -10706,7 +10714,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -10899,7 +10907,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 
 <p><code class="prettyprint">GET /v3/service_instances</code></p>
 
-<h4 id="query-parameters">Query Parameters</h4>
+<h4 id="query-parameters">Query parameters</h4>
 
 <table><thead>
 <tr>
@@ -10935,7 +10943,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -10983,7 +10991,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 
 <p><code class="prettyprint">GET /v3/service_instances/:guid/relationships/shared_spaces</code></p>
 
-<h4 id="permitted-roles-in-the-service-instance-39-s-originating-space">Permitted Roles (in the service instance&rsquo;s originating space)</h4>
+<h4 id="permitted-roles-in-the-service-instance-39-s-originating-space">Permitted roles (in the service instance&rsquo;s originating space)</h4>
 
 <table><thead>
 <tr>
@@ -11057,7 +11065,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 
 <p><code class="prettyprint">PATCH /v3/service_instances/:guid</code></p>
 
-<h4 id="optional-parameters">Optional Parameters</h4>
+<h4 id="optional-parameters">Optional parameters</h4>
 
 <table><thead>
 <tr>
@@ -11078,7 +11086,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -11137,7 +11145,7 @@ In order to share into a space the requesting user must be a space developer in 
 
 <p><code class="prettyprint">POST /v3/service_instances/:guid/relationships/shared_spaces</code></p>
 
-<h4 id="required-parameters">Required Parameters</h4>
+<h4 id="required-parameters">Required parameters</h4>
 
 <table><thead>
 <tr>
@@ -11153,7 +11161,7 @@ In order to share into a space the requesting user must be a space developer in 
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -11186,7 +11194,7 @@ In order to share into a space the requesting user must be a space developer in 
 
 <p><code class="prettyprint">DELETE /v3/service_instances/:guid/relationships/shared_spaces/:space_guid</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -11340,7 +11348,7 @@ In order to share into a space the requesting user must be a space developer in 
 
 <p><code class="prettyprint">POST /v3/spaces</code></p>
 
-<h4 id="required-parameters">Required Parameters</h4>
+<h4 id="required-parameters">Required parameters</h4>
 
 <table><thead>
 <tr>
@@ -11361,7 +11369,7 @@ In order to share into a space the requesting user must be a space developer in 
 </tr>
 </tbody></table>
 
-<h4 id="optional-parameters">Optional Parameters</h4>
+<h4 id="optional-parameters">Optional parameters</h4>
 
 <table><thead>
 <tr>
@@ -11382,7 +11390,7 @@ In order to share into a space the requesting user must be a space developer in 
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -11406,37 +11414,36 @@ In order to share into a space the requesting user must be a space developer in 
 </code></pre>
 <pre class="highlight plaintext"><code>Example Response
 </code></pre>
-<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OKAdmin|</span>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
 
-Content-Type: application/json
+<span class="p">{</span><span class="w">
+  </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"885735b5-aea4-4cf5-8e44-961af0e41920"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-02-01T01:33:58Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-02-01T01:33:58Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-space"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"organization"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"e00705b9-7b42-4561-ae97-2520399d2133"</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/spaces/885735b5-aea4-4cf5-8e44-961af0e41920"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"organization"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/organizations/e00705b9-7b42-4561-ae97-2520399d2133"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
 
-{
-  "guid": "885735b5-aea4-4cf5-8e44-961af0e41920",
-  "created_at": "2017-02-01T01:33:58Z",
-  "updated_at": "2017-02-01T01:33:58Z",
-  "name": "my-space",
-  "relationships": {
-    "organization": {
-      "data": {
-        "guid": "e00705b9-7b42-4561-ae97-2520399d2133"
-      }
-    }
-  },
-  "links": {
-    "self": {
-      "href": "https://api.example.org/v3/spaces/885735b5-aea4-4cf5-8e44-961af0e41920"
-    },
-    "organization": {
-      "href": "https://api.example.org/v3/organizations/e00705b9-7b42-4561-ae97-2520399d2133"
-    }
-  },
-  "metadata": {
-    "labels": {},
-    "annotations": {}
-  }
-}
-
-</code></pre>
+</span></code></pre>
 
 <p>This endpoint retrieves the specified space object.</p>
 
@@ -11444,7 +11451,7 @@ Content-Type: application/json
 
 <p><code class="prettyprint">GET /v3/spaces/:guid</code></p>
 
-<h4 id="query-parameters">Query Parameters</h4>
+<h4 id="query-parameters">Query parameters</h4>
 
 <table><thead>
 <tr>
@@ -11460,7 +11467,7 @@ Content-Type: application/json
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -11577,7 +11584,7 @@ Content-Type: application/json
 
 <p><code class="prettyprint">GET /v3/spaces</code></p>
 
-<h4 id="query-parameters">Query Parameters</h4>
+<h4 id="query-parameters">Query parameters</h4>
 
 <table><thead>
 <tr>
@@ -11628,7 +11635,7 @@ Content-Type: application/json
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -11687,7 +11694,7 @@ Content-Type: application/json
 
 <p><code class="prettyprint">PATCH /v3/spaces/:guid</code></p>
 
-<h4 id="optional-parameters">Optional Parameters</h4>
+<h4 id="optional-parameters">Optional parameters</h4>
 
 <table><thead>
 <tr>
@@ -11713,7 +11720,7 @@ Content-Type: application/json
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -11763,7 +11770,7 @@ Content-Type: application/json
 
 <p><code class="prettyprint">GET /v3/spaces/:guid/relationships/isolation_segment</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -11836,7 +11843,7 @@ The isolation segment must be <a href="#entitle-organizations-for-an-isolation-s
 
 <p><code class="prettyprint">PATCH /v3/spaces/:guid/relationships/isolation_segment</code></p>
 
-<h4 id="required-parameters">Required Parameters</h4>
+<h4 id="required-parameters">Required parameters</h4>
 
 <table><thead>
 <tr>
@@ -11852,7 +11859,7 @@ The isolation segment must be <a href="#entitle-organizations-for-an-isolation-s
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -11992,7 +11999,7 @@ An application will automatically use buildpacks associated with the application
 
 <p><code class="prettyprint">POST /v3/stacks</code></p>
 
-<h4 id="required-parameters">Required Parameters</h4>
+<h4 id="required-parameters">Required parameters</h4>
 
 <table><thead>
 <tr>
@@ -12008,7 +12015,7 @@ An application will automatically use buildpacks associated with the application
 </tr>
 </tbody></table>
 
-<h4 id="optional-parameters">Optional Parameters</h4>
+<h4 id="optional-parameters">Optional parameters</h4>
 
 <table><thead>
 <tr>
@@ -12038,7 +12045,7 @@ An application will automatically use buildpacks associated with the application
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -12085,7 +12092,7 @@ An application will automatically use buildpacks associated with the application
 
 <p><code class="prettyprint">GET /v3/stacks/:guid</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -12169,7 +12176,7 @@ An application will automatically use buildpacks associated with the application
 
 <p><code class="prettyprint">GET /v3/stacks</code></p>
 
-<h4 id="query-parameters">Query Parameters</h4>
+<h4 id="query-parameters">Query parameters</h4>
 
 <table><thead>
 <tr>
@@ -12200,7 +12207,7 @@ An application will automatically use buildpacks associated with the application
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -12250,7 +12257,7 @@ An application will automatically use buildpacks associated with the application
 
 <p><code class="prettyprint">PATCH /v3/stacks/:guid</code></p>
 
-<h4 id="optional-parameters">Optional Parameters</h4>
+<h4 id="optional-parameters">Optional parameters</h4>
 
 <table><thead>
 <tr>
@@ -12271,7 +12278,7 @@ An application will automatically use buildpacks associated with the application
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -12302,7 +12309,7 @@ An application will automatically use buildpacks associated with the application
 
 <p><code class="prettyprint">DELETE /v3/stacks/:guid</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -12507,7 +12514,7 @@ An application will automatically use buildpacks associated with the application
 
 <p><code class="prettyprint">POST /v3/apps/:app_guid/tasks</code></p>
 
-<h4 id="required-parameters">Required Parameters</h4>
+<h4 id="required-parameters">Required parameters</h4>
 
 <table><thead>
 <tr>
@@ -12523,7 +12530,7 @@ An application will automatically use buildpacks associated with the application
 </tr>
 </tbody></table>
 
-<h4 id="optional-parameters">Optional Parameters</h4>
+<h4 id="optional-parameters">Optional parameters</h4>
 
 <table><thead>
 <tr>
@@ -12579,7 +12586,7 @@ An application will automatically use buildpacks associated with the application
 
 <p><sup>1 If not provided, and a <code class="prettyprint">template.process.guid</code> is provided, this field will use the value from the process with the given guid.</sup></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -12650,7 +12657,7 @@ in the response based on the user&rsquo;s role.</p>
 
 <p><code class="prettyprint">GET /v3/tasks/:guid</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -12785,7 +12792,7 @@ in the response based on the user&rsquo;s role.</p>
 
 <p><code class="prettyprint">GET /v3/tasks</code></p>
 
-<h4 id="query-parameters">Query Parameters</h4>
+<h4 id="query-parameters">Query parameters</h4>
 
 <table><thead>
 <tr>
@@ -12846,7 +12853,7 @@ in the response based on the user&rsquo;s role.</p>
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -12964,7 +12971,7 @@ excluded in the response based on the user&rsquo;s role.</p>
 
 <p><code class="prettyprint">GET /v3/apps/:guid/tasks</code></p>
 
-<h4 id="query-parameters">Query Parameters</h4>
+<h4 id="query-parameters">Query parameters</h4>
 
 <table><thead>
 <tr>
@@ -13015,7 +13022,7 @@ excluded in the response based on the user&rsquo;s role.</p>
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -13101,7 +13108,7 @@ excluded in the response based on the user&rsquo;s role.</p>
 
 <p><code class="prettyprint">PATCH /v3/tasks/:guid</code></p>
 
-<h4 id="optional-parameters">Optional Parameters</h4>
+<h4 id="optional-parameters">Optional parameters</h4>
 
 <table><thead>
 <tr>
@@ -13122,7 +13129,7 @@ excluded in the response based on the user&rsquo;s role.</p>
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -13199,7 +13206,7 @@ excluded in the response based on the user&rsquo;s role.</p>
 <p><code class="prettyprint">POST /v3/tasks/:task_guid/actions/cancel</code> <br>
 <code class="prettyprint">PUT /v3/tasks/:task_guid/cancel</code> <em>(Deprecated)</em></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -13295,7 +13302,7 @@ excluded in the response based on the user&rsquo;s role.</p>
 
 <p><code class="prettyprint">GET /v3/apps/:guid/features/:name</code> <br></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -13368,7 +13375,7 @@ excluded in the response based on the user&rsquo;s role.</p>
 
 <p><code class="prettyprint">GET /v3/apps/:guid/features</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -13424,7 +13431,7 @@ excluded in the response based on the user&rsquo;s role.</p>
 
 <p><code class="prettyprint">PATCH /v3/apps/:guid/features/:name</code></p>
 
-<h4 id="required-parameters">Required Parameters</h4>
+<h4 id="required-parameters">Required parameters</h4>
 
 <table><thead>
 <tr>
@@ -13440,7 +13447,7 @@ excluded in the response based on the user&rsquo;s role.</p>
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -13855,7 +13862,7 @@ applications:
 
 <p><code class="prettyprint">POST /v3/apps/:guid/actions/restart</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -13895,7 +13902,7 @@ applications:
 
 <p><code class="prettyprint">GET /v3/apps/:guid/ssh_enabled</code> <br></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -14169,7 +14176,7 @@ applications without incurring downtime. This is different from the traditional 
 
 <p><code class="prettyprint">POST /v3/deployments</code></p>
 
-<h4 id="required-parameters">Required Parameters</h4>
+<h4 id="required-parameters">Required parameters</h4>
 
 <table><thead>
 <tr>
@@ -14185,7 +14192,7 @@ applications without incurring downtime. This is different from the traditional 
 </tr>
 </tbody></table>
 
-<h4 id="optional-parameters">Optional Parameters</h4>
+<h4 id="optional-parameters">Optional parameters</h4>
 
 <table><thead>
 <tr>
@@ -14223,7 +14230,7 @@ applications without incurring downtime. This is different from the traditional 
 
 <p><sup>1 Only a droplet <em>or</em> a revision may be provided, not both.</sup></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -14303,7 +14310,7 @@ applications without incurring downtime. This is different from the traditional 
 
 <p><code class="prettyprint">GET /v3/deployments/:guid</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -14415,7 +14422,7 @@ applications without incurring downtime. This is different from the traditional 
 
 <p><code class="prettyprint">GET /v3/deployments</code></p>
 
-<h4 id="query-parameters">Query Parameters</h4>
+<h4 id="query-parameters">Query parameters</h4>
 
 <table><thead>
 <tr>
@@ -14466,7 +14473,7 @@ applications without incurring downtime. This is different from the traditional 
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -14567,7 +14574,7 @@ applications without incurring downtime. This is different from the traditional 
 
 <p><code class="prettyprint">PATCH /v3/deployments/:guid</code></p>
 
-<h4 id="optional-parameters">Optional Parameters</h4>
+<h4 id="optional-parameters">Optional parameters</h4>
 
 <table><thead>
 <tr>
@@ -14588,7 +14595,7 @@ applications without incurring downtime. This is different from the traditional 
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -14620,7 +14627,7 @@ applications without incurring downtime. This is different from the traditional 
 
 <p><code class="prettyprint">POST /v3/deployments/:guid/actions/cancel</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -14746,7 +14753,7 @@ it will not be matched against.</p>
 
 <p><code class="prettyprint">POST /v3/resource_matches</code></p>
 
-<h4 id="required-parameters">Required Parameters</h4>
+<h4 id="required-parameters">Required parameters</h4>
 
 <table><thead>
 <tr>
@@ -14762,7 +14769,7 @@ it will not be matched against.</p>
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -14934,7 +14941,7 @@ it will not be matched against.</p>
 
 <p><code class="prettyprint">GET /v3/revisions/:revguid</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -15033,7 +15040,7 @@ it will not be matched against.</p>
 
 <p><code class="prettyprint">GET /v3/apps/:guid/revisions</code></p>
 
-<h4 id="query-parameters">Query Parameters</h4>
+<h4 id="query-parameters">Query parameters</h4>
 
 <table><thead>
 <tr>
@@ -15069,7 +15076,7 @@ it will not be matched against.</p>
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -15169,7 +15176,7 @@ Deployed revisions are revisions that are linked to started processes in the app
 
 <p><code class="prettyprint">GET /v3/apps/:guid/revisions/deployed</code></p>
 
-<h4 id="query-parameters">Query Parameters</h4>
+<h4 id="query-parameters">Query parameters</h4>
 
 <table><thead>
 <tr>
@@ -15195,7 +15202,7 @@ Deployed revisions are revisions that are linked to started processes in the app
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -15279,7 +15286,7 @@ Deployed revisions are revisions that are linked to started processes in the app
 
 <p><code class="prettyprint">PATCH /v3/revisions/:revguid</code></p>
 
-<h4 id="optional-parameters">Optional Parameters</h4>
+<h4 id="optional-parameters">Optional parameters</h4>
 
 <table><thead>
 <tr>
@@ -15300,620 +15307,7 @@ Deployed revisions are revisions that are linked to started processes in the app
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
-
-<table><thead>
-<tr>
-<th></th>
-</tr>
-</thead><tbody>
-<tr>
-<td>Admin</td>
-</tr>
-<tr>
-<td>Space Developer</td>
-</tr>
-</tbody></table>
-
-          <h2 id="route-mappings">Route Mappings</h2>
-
-<p>Route Mappings are relations between an app and a route; to direct traffic from a route to an app, you must first create a mapping.</p>
-
-          <h3 id="the-route-mapping-object">The route mapping object</h3>
-<pre class="highlight plaintext"><code>Example Route Mapping object
-</code></pre>
-<pre class="highlight json"><code><span class="p">{</span><span class="w">
-  </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"89323d4e-2e84-43e7-83e9-adbf50a20c0e"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-02-17T01:50:05Z"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-06-08T16:41:26Z"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="mi">55</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/route_mappings/89323d4e-2e84-43e7-83e9-adbf50a20c0e"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"route"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v2/routes/9612ecbd-36f1-4ada-927a-efae9310b3a1"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"process"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/processes/web"</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-  </span><span class="p">}</span><span class="w">
-</span><span class="p">}</span><span class="w">
-
-</span></code></pre>
-
-<table><thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead><tbody>
-<tr>
-<td><strong>guid</strong></td>
-<td><em>uuid</em></td>
-<td>Unique identifier for the route mapping.</td>
-</tr>
-<tr>
-<td><strong>created_at</strong></td>
-<td><em>datetime</em></td>
-<td>The time with zone when the object was created.</td>
-</tr>
-<tr>
-<td><strong>updated_at</strong></td>
-<td><em>datetime</em></td>
-<td>The time with zone when the object was last updated.</td>
-</tr>
-<tr>
-<td><strong>links</strong></td>
-<td><a href="#links"><em>links object</em></a></td>
-<td>Links to related resources.</td>
-</tr>
-</tbody></table>
-
-          <h3 id="create-a-route-mapping">Create a route mapping</h3>
-<pre class="highlight plaintext"><code>Example Request
-</code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/route_mappings"</span> <span class="se">\</span>
-  -X POST <span class="se">\</span>
-  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
-  -H <span class="s2">"Content-type: application/json"</span> <span class="se">\</span>
-  -d <span class="s1">'{
-    "relationships": {
-      "app": {
-        "guid": "[app-guid]"
-      },
-      "route": {
-        "guid": "[route_guid]"
-      }
-    },
-    "weight": 55
-  }'</span>
-</code></pre>
-<pre class="highlight plaintext"><code>Example Response
-</code></pre>
-<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">201</span> <span class="ne">Created</span>
-<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
-
-<span class="p">{</span><span class="w">
-  </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"89323d4e-2e84-43e7-83e9-adbf50a20c0e"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-02-17T01:50:05Z"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-06-08T16:41:26Z"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="mi">55</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/route_mappings/89323d4e-2e84-43e7-83e9-adbf50a20c0e"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"route"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v2/routes/9612ecbd-36f1-4ada-927a-efae9310b3a1"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"process"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/processes/web"</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-  </span><span class="p">}</span><span class="w">
-</span><span class="p">}</span><span class="w">
-
-</span></code></pre>
-
-<h4 id="definition">Definition</h4>
-
-<p><code class="prettyprint">POST /v3/route_mappings</code></p>
-
-<h4 id="required-parameters">Required Parameters</h4>
-
-<table><thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead><tbody>
-<tr>
-<td><strong>relationships.app</strong></td>
-<td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
-<td>A relationship to an app.</td>
-</tr>
-<tr>
-<td><strong>relationships.route</strong></td>
-<td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
-<td>A relationship to a route.</td>
-</tr>
-</tbody></table>
-
-<h4 id="optional-parameters">Optional Parameters</h4>
-
-<table><thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-<th>Default</th>
-</tr>
-</thead><tbody>
-<tr>
-<td><strong>relationships.process</strong></td>
-<td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
-<td>A relationship to a process. This relationship is specified by <code class="prettyprint">type</code> instead of <code class="prettyprint">guid</code>.</td>
-<td></td>
-</tr>
-<tr>
-<td><strong>weight</strong></td>
-<td>int</td>
-<td>A relative weight for your application that must be between 1 and 128.</td>
-<td></td>
-</tr>
-</tbody></table>
-
-<h4 id="permitted-roles">Permitted Roles</h4>
-
-<table><thead>
-<tr>
-<th></th>
-</tr>
-</thead><tbody>
-<tr>
-<td>Admin</td>
-</tr>
-<tr>
-<td>Space Developer</td>
-</tr>
-</tbody></table>
-
-          <h3 id="get-a-route-mapping">Get a route mapping</h3>
-<pre class="highlight plaintext"><code>Example Request
-</code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/route_mappings/[guid]"</span> <span class="se">\</span>
-  -X GET <span class="se">\</span>
-  -H <span class="s2">"Authorization: bearer [token]"</span>
-</code></pre>
-<pre class="highlight plaintext"><code>Example Response
-</code></pre>
-<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
-<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
-
-<span class="p">{</span><span class="w">
-  </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"89323d4e-2e84-43e7-83e9-adbf50a20c0e"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-02-17T01:50:05Z"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-06-08T16:41:26Z"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="mi">55</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/route_mappings/89323d4e-2e84-43e7-83e9-adbf50a20c0e"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"route"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v2/routes/9612ecbd-36f1-4ada-927a-efae9310b3a1"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"process"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/processes/web"</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-  </span><span class="p">}</span><span class="w">
-</span><span class="p">}</span><span class="w">
-
-</span></code></pre>
-
-<h4 id="definition">Definition</h4>
-
-<p><code class="prettyprint">GET /v3/route_mappings/:guid</code></p>
-
-<h4 id="permitted-roles">Permitted Roles</h4>
-
-<table><thead>
-<tr>
-<th></th>
-</tr>
-</thead><tbody>
-<tr>
-<td>Admin</td>
-</tr>
-<tr>
-<td>Admin Read-Only</td>
-</tr>
-<tr>
-<td>Global Auditor</td>
-</tr>
-<tr>
-<td>Org Manager</td>
-</tr>
-<tr>
-<td>Space Auditor</td>
-</tr>
-<tr>
-<td>Space Developer</td>
-</tr>
-<tr>
-<td>Space Manager</td>
-</tr>
-</tbody></table>
-
-          <h3 id="list-route-mappings">List route mappings</h3>
-<pre class="highlight plaintext"><code>Example Request
-</code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/route_mappings"</span> <span class="se">\</span>
-  -X GET <span class="se">\</span>
-  -H <span class="s2">"Authorization: bearer [token]"</span>
-</code></pre>
-<pre class="highlight plaintext"><code>Example Response
-</code></pre>
-<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
-<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
-
-<span class="p">{</span><span class="w">
-  </span><span class="nt">"pagination"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"total_results"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"total_pages"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"first"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/route_mappings?page=1&amp;per_page=2"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"last"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/route_mappings?page=2&amp;per_page=2"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"next"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/route_mappings?page=2&amp;per_page=2"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"previous"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"resources"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-    </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"89323d4e-2e84-43e7-83e9-adbf50a20c0e"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-02-17T01:50:05Z"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-06-08T16:41:26Z"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="mi">65</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/route_mappings/89323d4e-2e84-43e7-83e9-adbf50a20c0e"</span><span class="w">
-        </span><span class="p">},</span><span class="w">
-        </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"</span><span class="w">
-        </span><span class="p">},</span><span class="w">
-        </span><span class="nt">"route"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v2/routes/9612ecbd-36f1-4ada-927a-efae9310b3a1"</span><span class="w">
-        </span><span class="p">},</span><span class="w">
-        </span><span class="nt">"process"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/processes/web"</span><span class="w">
-        </span><span class="p">}</span><span class="w">
-      </span><span class="p">}</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"9f4970a8-9e6f-4984-b0a5-5e4a8af91665"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-02-17T01:50:05Z"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-06-08T16:41:26Z"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="mi">35</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/route_mappings/9f4970a8-9e6f-4984-b0a5-5e4a8af91665"</span><span class="w">
-        </span><span class="p">},</span><span class="w">
-        </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"</span><span class="w">
-        </span><span class="p">},</span><span class="w">
-        </span><span class="nt">"route"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v2/routes/a32332f0-fb30-4e9e-9b78-348b8b6b98b6"</span><span class="w">
-        </span><span class="p">},</span><span class="w">
-        </span><span class="nt">"process"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/processes/admin-web"</span><span class="w">
-        </span><span class="p">}</span><span class="w">
-      </span><span class="p">}</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-  </span><span class="p">]</span><span class="w">
-</span><span class="p">}</span><span class="w">
-
-</span></code></pre>
-
-<p>Retrieve all route mappings the user has access to.</p>
-
-<h4 id="definition">Definition</h4>
-
-<p><code class="prettyprint">GET /v3/route_mappings</code></p>
-
-<h4 id="query-parameters">Query Parameters</h4>
-
-<table><thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead><tbody>
-<tr>
-<td><strong>app_guids</strong></td>
-<td><em>list of strings</em></td>
-<td>Comma-delimited list of app guids to filter by.</td>
-</tr>
-<tr>
-<td><strong>route_guids</strong></td>
-<td><em>list of strings</em></td>
-<td>Comma-delimited list of route guids to filter by.</td>
-</tr>
-<tr>
-<td><strong>page</strong></td>
-<td><em>integer</em></td>
-<td>Page to display. Valid values are integers &gt;= 1.</td>
-</tr>
-<tr>
-<td><strong>per_page</strong></td>
-<td><em>integer</em></td>
-<td>Number of results per page. <br>Valid values are 1 through 5000.</td>
-</tr>
-<tr>
-<td><strong>order_by</strong></td>
-<td><em>string</em></td>
-<td>Value to sort by. Defaults to ascending. Prepend with <code class="prettyprint">-</code> to sort descending. <br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code>.</td>
-</tr>
-</tbody></table>
-
-<h4 id="permitted-roles">Permitted Roles</h4>
-
-<table><thead>
-<tr>
-<th></th>
-</tr>
-</thead><tbody>
-<tr>
-<td>All Roles</td>
-</tr>
-</tbody></table>
-
-          <h3 id="list-route-mappings-for-an-app">List route mappings for an app</h3>
-<pre class="highlight plaintext"><code>Example Request
-</code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/route_mappings"</span> <span class="se">\</span>
-  -X GET <span class="se">\</span>
-  -H <span class="s2">"Authorization: bearer [token]"</span>
-</code></pre>
-<pre class="highlight plaintext"><code>Example Response
-</code></pre>
-<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
-<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
-
-<span class="p">{</span><span class="w">
-  </span><span class="nt">"pagination"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"total_results"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"total_pages"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"first"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/route_mappings?page=1&amp;per_page=2"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"last"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/route_mappings?page=2&amp;per_page=2"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"next"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/route_mappings?page=2&amp;per_page=2"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"previous"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"resources"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-    </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"89323d4e-2e84-43e7-83e9-adbf50a20c0e"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-02-17T01:50:05Z"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-06-08T16:41:26Z"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="mi">65</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/route_mappings/89323d4e-2e84-43e7-83e9-adbf50a20c0e"</span><span class="w">
-        </span><span class="p">},</span><span class="w">
-        </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"</span><span class="w">
-        </span><span class="p">},</span><span class="w">
-        </span><span class="nt">"route"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v2/routes/9612ecbd-36f1-4ada-927a-efae9310b3a1"</span><span class="w">
-        </span><span class="p">},</span><span class="w">
-        </span><span class="nt">"process"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/processes/web"</span><span class="w">
-        </span><span class="p">}</span><span class="w">
-      </span><span class="p">}</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"9f4970a8-9e6f-4984-b0a5-5e4a8af91665"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-02-17T01:50:05Z"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-06-08T16:41:26Z"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="mi">35</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/route_mappings/9f4970a8-9e6f-4984-b0a5-5e4a8af91665"</span><span class="w">
-        </span><span class="p">},</span><span class="w">
-        </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"</span><span class="w">
-        </span><span class="p">},</span><span class="w">
-        </span><span class="nt">"route"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v2/routes/a32332f0-fb30-4e9e-9b78-348b8b6b98b6"</span><span class="w">
-        </span><span class="p">},</span><span class="w">
-        </span><span class="nt">"process"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/processes/admin-web"</span><span class="w">
-        </span><span class="p">}</span><span class="w">
-      </span><span class="p">}</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-  </span><span class="p">]</span><span class="w">
-</span><span class="p">}</span><span class="w">
-
-</span></code></pre>
-
-<p>Retrieve route mappings for an app.</p>
-
-<h4 id="definition">Definition</h4>
-
-<p><code class="prettyprint">GET /v3/apps/:guid/route_mappings</code></p>
-
-<h4 id="query-parameters">Query Parameters</h4>
-
-<table><thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead><tbody>
-<tr>
-<td><strong>route_guids</strong></td>
-<td><em>list of strings</em></td>
-<td>Comma-delimited list of route guids to filter by.</td>
-</tr>
-<tr>
-<td><strong>page</strong></td>
-<td><em>integer</em></td>
-<td>Page to display. Valid values are integers &gt;= 1.</td>
-</tr>
-<tr>
-<td><strong>per_page</strong></td>
-<td><em>integer</em></td>
-<td>Number of results per page. <br>Valid values are 1 through 5000.</td>
-</tr>
-<tr>
-<td><strong>order_by</strong></td>
-<td><em>string</em></td>
-<td>Value to sort by. Defaults to ascending. Prepend with <code class="prettyprint">-</code> to sort descending. <br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code>.</td>
-</tr>
-</tbody></table>
-
-<h4 id="permitted-roles">Permitted Roles</h4>
-
-<table><thead>
-<tr>
-<th></th>
-</tr>
-</thead><tbody>
-<tr>
-<td>Admin</td>
-</tr>
-<tr>
-<td>Admin Read-Only</td>
-</tr>
-<tr>
-<td>Global Auditor</td>
-</tr>
-<tr>
-<td>Org Manager</td>
-</tr>
-<tr>
-<td>Space Auditor</td>
-</tr>
-<tr>
-<td>Space Developer</td>
-</tr>
-<tr>
-<td>Space Manager</td>
-</tr>
-</tbody></table>
-
-          <h3 id="update-a-route-mapping">Update a route mapping</h3>
-<pre class="highlight plaintext"><code>Example Request
-</code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/route_mappings/[guid]"</span> <span class="se">\</span>
-  -X PATCH <span class="se">\</span>
-  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
-  -H <span class="s2">"Content-type: application/json"</span> <span class="se">\</span>
-  -d <span class="s1">'{
-    "weight": 55
-  }'</span>
-</code></pre>
-<pre class="highlight plaintext"><code>Example Response
-</code></pre>
-<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">201</span> <span class="ne">Created</span>
-<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
-
-<span class="p">{</span><span class="w">
-  </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"89323d4e-2e84-43e7-83e9-adbf50a20c0e"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-02-17T01:50:05Z"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-06-08T16:41:26Z"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="mi">55</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/route_mappings/89323d4e-2e84-43e7-83e9-adbf50a20c0e"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"route"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v2/routes/9612ecbd-36f1-4ada-927a-efae9310b3a1"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"process"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/ccc25a0f-c8f4-4b39-9f1b-de9f328d0ee5/processes/web"</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-  </span><span class="p">}</span><span class="w">
-</span><span class="p">}</span><span class="w">
-
-</span></code></pre>
-
-<h4 id="definition">Definition</h4>
-
-<p><code class="prettyprint">PATCH /v3/route_mappings/:guid</code></p>
-
-<h4 id="optional-parameters">Optional Parameters</h4>
-
-<table><thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-<th>Default</th>
-</tr>
-</thead><tbody>
-<tr>
-<td><strong>weight</strong></td>
-<td>int</td>
-<td>A relative weight for your application that must be between 1 and 128.</td>
-<td></td>
-</tr>
-</tbody></table>
-
-<h4 id="permitted-roles">Permitted Roles</h4>
-
-<table><thead>
-<tr>
-<th></th>
-</tr>
-</thead><tbody>
-<tr>
-<td>Admin</td>
-</tr>
-<tr>
-<td>Space Developer</td>
-</tr>
-</tbody></table>
-
-          <h3 id="delete-a-route-mapping">Delete a route mapping</h3>
-<pre class="highlight plaintext"><code>Example Request
-</code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/route_mappings/[guid]"</span> <span class="se">\</span>
-  -X DELETE <span class="se">\</span>
-  -H <span class="s2">"Authorization: bearer [token]"</span>
-</code></pre>
-<pre class="highlight plaintext"><code>Example Response
-</code></pre>
-<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">204</span> <span class="ne">No Content</span>
-</code></pre>
-
-<h4 id="definition">Definition</h4>
-
-<p><code class="prettyprint">DELETE /v3/route_mappings/:guid</code></p>
-
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -16042,10 +15436,15 @@ Deployed revisions are revisions that are linked to started processes in the app
 
           <h3 id="the-destination-object">The destination object</h3>
 
-<p>A destination represents the relationship between a route and a resource that can serve traffic (e.g. the <code class="prettyprint">web</code> process
-of an application).</p>
+<p>A destination represents the relationship between a route and a resource that can serve traffic (for example, the <code class="prettyprint">web</code> process of an application).</p>
 
 <p>When a route has destinations, that route will direct traffic to the processes represented by those destinations.</p>
+
+<p>If a destination is created with a port specified, the route will direct traffic to that port on the process. A destination with port 9000 and process type <code class="prettyprint">api</code> means traffic will be directed to the <code class="prettyprint">api</code> process running on container port 9000.</p>
+
+<p>Note that when using a custom port, the app process must be listening on the specified port for the mapping to work. Otherwise, visiting the route will result in a 404 error.</p>
+
+<p>If a destination does not specify a port, the default port depends on the app lifecycle type. For buildpack apps, traffic will be directed to port 8080. For Docker apps, the first port specified in the Dockerfile will be used.</p>
 <pre class="highlight plaintext"><code>Example Destination object
 </code></pre>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
@@ -16056,7 +15455,8 @@ of an application).</p>
       </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"web"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+  </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="w">
 </span><span class="p">}</span><span class="w">
 
 </span></code></pre>
@@ -16082,6 +15482,11 @@ of an application).</p>
 <td><strong>app.process.type</strong></td>
 <td><em>string</em></td>
 <td>Type of the process belonging to the app to route traffic to.</td>
+</tr>
+<tr>
+<td><strong>port</strong></td>
+<td><em>integer</em></td>
+<td>Port on the destination process to route traffic to.</td>
 </tr>
 <tr>
 <td><strong>weight</strong> <em>(experimental)</em></td>
@@ -16164,7 +15569,7 @@ of an application).</p>
 
 <p><code class="prettyprint">POST /v3/routes</code></p>
 
-<h4 id="required-parameters">Required Parameters</h4>
+<h4 id="required-parameters">Required parameters</h4>
 
 <table><thead>
 <tr>
@@ -16185,7 +15590,7 @@ of an application).</p>
 </tr>
 </tbody></table>
 
-<h4 id="optional-parameters">Optional Parameters</h4>
+<h4 id="optional-parameters">Optional parameters</h4>
 
 <table><thead>
 <tr>
@@ -16216,7 +15621,7 @@ of an application).</p>
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -16291,7 +15696,7 @@ of an application).</p>
 
 <p><code class="prettyprint">GET /v3/routes/:guid</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -16410,7 +15815,7 @@ of an application).</p>
 
 <p><code class="prettyprint">GET /v3/routes</code></p>
 
-<h4 id="query-parameters">Query Parameters</h4>
+<h4 id="query-parameters">Query parameters</h4>
 
 <table><thead>
 <tr>
@@ -16466,7 +15871,7 @@ of an application).</p>
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -16549,13 +15954,13 @@ of an application).</p>
 
 </span></code></pre>
 
-<p>Retrieve all routes the user has access to.</p>
+<p>Retrieve all routes that have <a href="#the-destination-object">destinations</a> that point to the given app.</p>
 
 <h4 id="definition">Definition</h4>
 
 <p><code class="prettyprint">GET /v3/apps/:app_guid/routes</code></p>
 
-<h4 id="query-parameters">Query Parameters</h4>
+<h4 id="query-parameters">Query parameters</h4>
 
 <table><thead>
 <tr>
@@ -16611,7 +16016,7 @@ of an application).</p>
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -16705,7 +16110,7 @@ of an application).</p>
 
 <p><code class="prettyprint">PATCH /v3/routes/:guid</code></p>
 
-<h4 id="optional-parameters">Optional Parameters</h4>
+<h4 id="optional-parameters">Optional parameters</h4>
 
 <table><thead>
 <tr>
@@ -16729,7 +16134,7 @@ of an application).</p>
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -16764,7 +16169,7 @@ of an application).</p>
 
 <p><code class="prettyprint">DELETE /v3/routes/:guid</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -16805,7 +16210,7 @@ belongs to a space the user does not belong to.</p>
 
 <p><code class="prettyprint">GET /v3/domains/:guid/route_reservations</code></p>
 
-<h4 id="query-parameters">Query Parameters</h4>
+<h4 id="query-parameters">Query parameters</h4>
 
 <table><thead>
 <tr>
@@ -16826,7 +16231,7 @@ belongs to a space the user does not belong to.</p>
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -16894,7 +16299,8 @@ belongs to a space the user does not belong to.</p>
             </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"web"</span><span class="w">
           </span><span class="p">}</span><span class="w">
         </span><span class="p">},</span><span class="w">
-        </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+        </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="p">{</span><span class="w">
         </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"fbef10a2-8ee7-11e9-aa2d-abeeaf7b83c5"</span><span class="p">,</span><span class="w">
@@ -16904,7 +16310,8 @@ belongs to a space the user does not belong to.</p>
             </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"api"</span><span class="w">
           </span><span class="p">}</span><span class="w">
         </span><span class="p">},</span><span class="w">
-        </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+        </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">9000</span><span class="w">
       </span><span class="p">}</span><span class="w">
     </span><span class="p">],</span><span class="w">
     </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -16925,7 +16332,7 @@ belongs to a space the user does not belong to.</p>
 
 <p><code class="prettyprint">GET /v3/routes/:guid/destinations</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -16986,7 +16393,8 @@ belongs to a space the user does not belong to.</p>
           "process": {
             "type": "api"
           }
-        }
+        },
+        "port": 9000
       }
     ]
   }'</span>
@@ -17006,7 +16414,8 @@ belongs to a space the user does not belong to.</p>
             </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"web"</span><span class="w">
           </span><span class="p">}</span><span class="w">
         </span><span class="p">},</span><span class="w">
-        </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+        </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="p">{</span><span class="w">
         </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"fbef10a2-8ee7-11e9-aa2d-abeeaf7b83c5"</span><span class="p">,</span><span class="w">
@@ -17016,7 +16425,8 @@ belongs to a space the user does not belong to.</p>
             </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"api"</span><span class="w">
           </span><span class="p">}</span><span class="w">
         </span><span class="p">},</span><span class="w">
-        </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+        </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">9000</span><span class="w">
       </span><span class="p">}</span><span class="w">
     </span><span class="p">],</span><span class="w">
     </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -17040,7 +16450,7 @@ replace all destinations for a route at once using the <a href="#replace-all-des
 
 <p><code class="prettyprint">POST /v3/routes/:guid/destinations</code></p>
 
-<h4 id="required-parameters">Required Parameters</h4>
+<h4 id="required-parameters">Required parameters</h4>
 
 <table><thead>
 <tr>
@@ -17056,7 +16466,7 @@ replace all destinations for a route at once using the <a href="#replace-all-des
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -17092,7 +16502,8 @@ replace all destinations for a route at once using the <a href="#replace-all-des
             "type": "api"
           }
         },
-        "weight": 39
+        "weight": 39,
+        "port": 9000
       }
     ]
   }'</span>
@@ -17107,9 +16518,13 @@ replace all destinations for a route at once using the <a href="#replace-all-des
     </span><span class="p">{</span><span class="w">
       </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"89323d4e-2e84-43e7-83e9-adbf50a20c0e"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1cb006ee-fb05-47e1-b541-c34179ddc446"</span><span class="w">
+        </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1cb006ee-fb05-47e1-b541-c34179ddc446"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"process"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"web"</span><span class="w">
+        </span><span class="p">}</span><span class="w">
       </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="mi">61</span><span class="w">
+      </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="mi">61</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="p">{</span><span class="w">
       </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"fbef10a2-8ee7-11e9-aa2d-abeeaf7b83c5"</span><span class="p">,</span><span class="w">
@@ -17119,7 +16534,8 @@ replace all destinations for a route at once using the <a href="#replace-all-des
           </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"api"</span><span class="w">
         </span><span class="p">}</span><span class="w">
       </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="mi">39</span><span class="w">
+      </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="mi">39</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">9000</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">],</span><span class="w">
   </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -17143,7 +16559,7 @@ and unweighted destinations for a route is not allowed.</p>
 
 <p><code class="prettyprint">PATCH /v3/routes/:guid/destinations</code></p>
 
-<h4 id="required-parameters">Required Parameters</h4>
+<h4 id="required-parameters">Required parameters</h4>
 
 <table><thead>
 <tr>
@@ -17159,7 +16575,7 @@ and unweighted destinations for a route is not allowed.</p>
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -17192,7 +16608,7 @@ and unweighted destinations for a route is not allowed.</p>
 
 <p><code class="prettyprint">DELETE /v3/routes/:guid/destinations/:destination_guid</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -17229,7 +16645,7 @@ and unweighted destinations for a route is not allowed.</p>
 
 <p><code class="prettyprint">DELETE /v3/spaces/:space_guid/routes?unmapped=true</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -17388,7 +16804,7 @@ and unweighted destinations for a route is not allowed.</p>
 
 <p><code class="prettyprint">POST /v3/service_bindings</code></p>
 
-<h4 id="required-parameters">Required Parameters</h4>
+<h4 id="required-parameters">Required parameters</h4>
 
 <table><thead>
 <tr>
@@ -17414,7 +16830,7 @@ and unweighted destinations for a route is not allowed.</p>
 </tr>
 </tbody></table>
 
-<h4 id="optional-parameters">Optional Parameters</h4>
+<h4 id="optional-parameters">Optional parameters</h4>
 
 <table><thead>
 <tr>
@@ -17432,7 +16848,7 @@ and unweighted destinations for a route is not allowed.</p>
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -17490,7 +16906,7 @@ and unweighted destinations for a route is not allowed.</p>
 
 <p><code class="prettyprint">GET /v3/service_bindings/:guid</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -17607,7 +17023,7 @@ and unweighted destinations for a route is not allowed.</p>
 
 <p><code class="prettyprint">GET /v3/service_bindings</code></p>
 
-<h4 id="query-parameters">Query Parameters</h4>
+<h4 id="query-parameters">Query parameters</h4>
 
 <table><thead>
 <tr>
@@ -17643,7 +17059,7 @@ and unweighted destinations for a route is not allowed.</p>
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -17800,7 +17216,7 @@ and unweighted destinations for a route is not allowed.</p>
 
 <p><code class="prettyprint">GET /v3/service_brokers/:guid</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -17895,7 +17311,7 @@ and unweighted destinations for a route is not allowed.</p>
 
 <p><code class="prettyprint">GET /v3/service_brokers</code></p>
 
-<h4 id="query-parameters">Query Parameters</h4>
+<h4 id="query-parameters">Query parameters</h4>
 
 <table><thead>
 <tr>
@@ -17931,7 +17347,7 @@ and unweighted destinations for a route is not allowed.</p>
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -18014,7 +17430,7 @@ and unweighted destinations for a route is not allowed.</p>
 
 <p><code class="prettyprint">POST /v3/service_brokers</code></p>
 
-<h4 id="required-parameters">Required Parameters</h4>
+<h4 id="required-parameters">Required parameters</h4>
 
 <table><thead>
 <tr>
@@ -18040,7 +17456,7 @@ and unweighted destinations for a route is not allowed.</p>
 </tr>
 </tbody></table>
 
-<h4 id="optional-parameters">Optional Parameters</h4>
+<h4 id="optional-parameters">Optional parameters</h4>
 
 <table><thead>
 <tr>
@@ -18110,7 +17526,7 @@ and unweighted destinations for a route is not allowed.</p>
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -18141,7 +17557,7 @@ and unweighted destinations for a route is not allowed.</p>
 
 <h4 id="steps-to-create-a-sidecar">Steps to create a sidecar</h4>
 
-<p>The recommended way to create sidecars for your app is with an <a href="#app-manifest">App Manifest</a>.</p>
+<p>The recommended way to create sidecars for your app is with an <a href="#app-manifest">app manifest</a>.</p>
 <pre class="highlight yaml"><code> <span class="s">sidecars</span><span class="pi">:</span>
   <span class="pi">-</span> <span class="s">name</span><span class="pi">:</span> <span class="s">authenticator</span>
     <span class="s">process_types</span><span class="pi">:</span> <span class="pi">[</span> <span class="s1">'</span><span class="s">web'</span><span class="pi">,</span> <span class="s1">'</span><span class="s">worker'</span> <span class="pi">]</span>
@@ -18161,11 +17577,11 @@ and unweighted destinations for a route is not allowed.</p>
 
 <p><sup>1 Applies for Java apps.  If you do not reserve memory for the sidecar, the JVM will consume all of the memory in the app container.  This value must be less thatn the process&rsquo; reserved memory.</sup></p>
 
-<h4 id="current-limitations">Current Limitations</h4>
+<h4 id="current-limitations">Current limitations</h4>
 
 <ul>
 <li>Start and stop order of app processes and their sidecars is undefined</li>
-<li>App processes and Sidecar processes are codependent: if either crashes or exits, the other will as well </li>
+<li>App processes and sidecar processes are codependent: if either crashes or exits, the other will as well</li>
 <li>Sidecars are currently not independently scalable (memory / disk) and share resources with the main app process and other sidecars within that container</li>
 <li>Sidecars only support PID based health checks; HTTP health-checks for sidecars are not currently supported</li>
 <li>This has only been tested on Linux based systems</li>
@@ -18284,7 +17700,7 @@ and unweighted destinations for a route is not allowed.</p>
 
 <p><code class="prettyprint">POST /v3/apps/:app_guid/sidecars</code></p>
 
-<h4 id="required-parameters">Required Parameters</h4>
+<h4 id="required-parameters">Required parameters</h4>
 
 <table><thead>
 <tr>
@@ -18310,7 +17726,7 @@ and unweighted destinations for a route is not allowed.</p>
 </tr>
 </tbody></table>
 
-<h4 id="optional-parameters">Optional Parameters</h4>
+<h4 id="optional-parameters">Optional parameters</h4>
 
 <table><thead>
 <tr>
@@ -18326,7 +17742,7 @@ and unweighted destinations for a route is not allowed.</p>
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -18376,7 +17792,7 @@ and unweighted destinations for a route is not allowed.</p>
 
 <p><code class="prettyprint">GET /v3/sidecars/:sidecar_guid</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -18449,7 +17865,7 @@ and unweighted destinations for a route is not allowed.</p>
 
 <p><code class="prettyprint">PATCH /v3/revisions/:sidecar-guid</code></p>
 
-<h4 id="optional-parameters">Optional Parameters</h4>
+<h4 id="optional-parameters">Optional parameters</h4>
 
 <table><thead>
 <tr>
@@ -18480,7 +17896,7 @@ and unweighted destinations for a route is not allowed.</p>
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -18566,7 +17982,7 @@ and unweighted destinations for a route is not allowed.</p>
 
 <p><code class="prettyprint">GET /v3/apps/:app_guid/sidecars</code></p>
 
-<h4 id="query-parameters">Query Parameters</h4>
+<h4 id="query-parameters">Query parameters</h4>
 
 <table><thead>
 <tr>
@@ -18592,7 +18008,7 @@ and unweighted destinations for a route is not allowed.</p>
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -18693,7 +18109,7 @@ and unweighted destinations for a route is not allowed.</p>
 
 <p><code class="prettyprint">GET /v3/processes/:process_guid/sidecars</code></p>
 
-<h4 id="query-parameters">Query Parameters</h4>
+<h4 id="query-parameters">Query parameters</h4>
 
 <table><thead>
 <tr>
@@ -18719,7 +18135,7 @@ and unweighted destinations for a route is not allowed.</p>
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -18765,7 +18181,7 @@ and unweighted destinations for a route is not allowed.</p>
 
 <p><code class="prettyprint">DELETE /v3/sidecars/:guid</code></p>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -18878,7 +18294,7 @@ and unweighted destinations for a route is not allowed.</p>
 </tr>
 <tr>
 <td><strong>docker</strong></td>
-<td>If present, the created app will have lifecycle type docker. The value of this key is ignored by the API but may be used by clients to source the registry address of the image and credentials, if needed. The <a href="#generate-an-app-manifest">generate manifest endpoint</a> will return the registry address of the image and username provided with this key.</td>
+<td>If present, the created app will have Docker lifecycle type. The value of this key is ignored by the API but may be used by clients to source the registry address of the image and credentials, if needed. The <a href="#generate-an-app-manifest">generate manifest endpoint</a> will return the registry address of the image and username provided with this key.</td>
 </tr>
 <tr>
 <td><strong>env</strong></td>
@@ -19052,7 +18468,7 @@ take either an array of service instance name strings or an array of the followi
 
 <p><code class="prettyprint">POST /v3/spaces/:guid/actions/apply_manifest</code></p>
 
-<h4 id="query-parameters">Query Parameters</h4>
+<h4 id="query-parameters">Query parameters</h4>
 
 <table><thead>
 <tr>
@@ -19068,7 +18484,7 @@ take either an array of service instance name strings or an array of the followi
 </tr>
 </tbody></table>
 
-<h4 id="permitted-roles">Permitted Roles</h4>
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
@@ -19089,6 +18505,6 @@ take either an array of service instance name strings or an array of the followi
                 <a href="#" data-language-name="shell">curl</a>
           </div>
       </div>
-    </div>
+    </main>
   </body>
 </html>
