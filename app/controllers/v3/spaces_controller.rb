@@ -75,6 +75,20 @@ class SpacesV3Controller < ApplicationController
     render status: :ok, json: Presenters::V3::SpacePresenter.new(space)
   end
 
+  def destroy
+    space = fetch_space(hashed_params[:guid])
+    space_not_found! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
+    unauthorized! unless permission_queryer.can_write_to_org?(space.organization.guid)
+
+    service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository.new(user_audit_info)
+    delete_action = SpaceDelete.new(user_audit_info, service_event_repository)
+    deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(Space, space.guid, delete_action)
+    pollable_job = Jobs::Enqueuer.new(deletion_job, queue: 'cc-generic').enqueue_pollable
+
+    url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
+    head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job.guid}")
+  end
+
   def delete_unmapped_routes
     message = SpaceDeleteUnmappedRoutesMessage.new(query_params)
     unprocessable!(message.errors.full_messages) unless message.valid?

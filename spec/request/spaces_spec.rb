@@ -459,6 +459,79 @@ RSpec.describe 'Spaces' do
     end
   end
 
+  describe 'DELETE /v3/spaces/:guid' do
+    let(:space) { VCAP::CloudController::Space.make }
+    let(:org) { space.organization }
+    let(:associated_user) { VCAP::CloudController::User.make(default_space: space) }
+    let(:shared_service_instance) do
+      s = VCAP::CloudController::ServiceInstance.make
+      s.add_shared_space(space)
+      s
+    end
+
+    before do
+      VCAP::CloudController::AppModel.make(space: space)
+      VCAP::CloudController::Route.make(space: space)
+      org.add_user(associated_user)
+      space.add_developer(associated_user)
+      VCAP::CloudController::ServiceInstance.make(space: space)
+      VCAP::CloudController::ServiceBroker.make(space: space)
+    end
+
+    it 'destroys the requested space and sub resources' do
+      expect {
+        delete "/v3/spaces/#{space.guid}", nil, admin_header
+        expect(last_response.status).to eq(202)
+        expect(last_response.headers['Location']).to match(%r(http.+/v3/jobs/[a-fA-F0-9-]+))
+
+        execute_all_jobs(expected_successes: 2, expected_failures: 0)
+        get "/v3/spaces/#{space.guid}", {}, admin_headers
+        expect(last_response.status).to eq(404)
+      }.to  change { VCAP::CloudController::Space.count }.by(-1).
+        and change { VCAP::CloudController::AppModel.count }.by(-1).
+        and change { VCAP::CloudController::Route.count }.by(-1).
+        and change { associated_user.reload.default_space }.to(be_nil).
+        and change { associated_user.reload.spaces }.to(be_empty).
+        and change { VCAP::CloudController::ServiceInstance.count }.by(-1).
+        and change { VCAP::CloudController::ServiceBroker.count }.by(-1).
+        and change { shared_service_instance.reload.shared_spaces }.to(be_empty)
+    end
+
+    let(:api_call) { lambda { |user_headers| delete "/v3/spaces/#{space.guid}", nil, user_headers } }
+    let(:db_check) do
+      lambda do
+        expect(last_response.headers['Location']).to match(%r(http.+/v3/jobs/[a-fA-F0-9-]+))
+
+        execute_all_jobs(expected_successes: 2, expected_failures: 0)
+        get "/v3/spaces/#{space.guid}", {}, admin_headers
+        expect(last_response.status).to eq(404)
+      end
+    end
+
+    context 'when the user is a member in the spaces org' do
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 403)
+
+        h['org_billing_manager'] = { code: 404 }
+        h['org_auditor'] = { code: 404 }
+        h['no_role'] = { code: 404 }
+
+        h['admin'] = { code: 202 }
+        h['org_manager'] = { code: 202 }
+        h
+      end
+
+      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
+    end
+
+    describe 'when the user is not logged in' do
+      it 'returns 401 for Unauthenticated requests' do
+        delete "/v3/spaces/#{space.guid}", nil, base_json_headers
+        expect(last_response.status).to eq(401)
+      end
+    end
+  end
+
   describe 'DELETE /v3/spaces/:guid/routes?unmapped=true' do
     let(:space) { VCAP::CloudController::Space.make }
     let(:org) { space.organization }

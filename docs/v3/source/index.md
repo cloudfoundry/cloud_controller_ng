@@ -165,6 +165,7 @@ includes:
   - resources/spaces/get_a_space
   - resources/spaces/list
   - resources/spaces/update
+  - resources/spaces/delete
   - resources/spaces/get_assigned_isolation_segment
   - resources/spaces/manage_isolation_segment
   - resources/stacks/header

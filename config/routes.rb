@@ -171,6 +171,7 @@ Rails.application.routes.draw do
   get '/spaces', to: 'spaces_v3#index'
   get '/spaces/:guid', to: 'spaces_v3#show'
   patch '/spaces/:guid', to: 'spaces_v3#update'
+  delete 'spaces/:guid', to: 'spaces_v3#destroy'
   delete 'spaces/:guid/routes', to: 'spaces_v3#delete_unmapped_routes'
   get '/spaces/:guid/relationships/isolation_segment', to: 'spaces_v3#show_isolation_segment'
   patch '/spaces/:guid/relationships/isolation_segment', to: 'spaces_v3#update_isolation_segment'
