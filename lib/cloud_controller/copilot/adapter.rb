@@ -26,8 +26,7 @@ module VCAP::CloudController
               copilot_client.map_route(
                 capi_process_guid: process.guid,
                 route_guid: route_mapping.route_guid,
-                route_weight: route_mapping.adapted_weight,
-                app_port: route_mapping.app_port
+                route_weight: route_mapping.adapted_weight
               )
             end
           end
@@ -39,8 +38,7 @@ module VCAP::CloudController
               copilot_client.unmap_route(
                 capi_process_guid: process.guid,
                 route_guid: route_mapping.route_guid,
-                route_weight: route_mapping.adapted_weight,
-                app_port: route_mapping.app_port
+                route_weight: route_mapping.adapted_weight
               )
             end
           end
