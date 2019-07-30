@@ -29,7 +29,6 @@ module VCAP::CloudController::Presenters::V3
           self: { href: "#{link_prefix}/v3/apps/#{app.guid}" },
           space: { href: "#{link_prefix}/v3/spaces/#{app.space_guid}" },
           processes: { href: "#{link_prefix}/v3/apps/#{app.guid}/processes" },
-          route_mappings: { href: "#{link_prefix}/v3/apps/#{app.guid}/route_mappings" },
           packages: { href: "#{link_prefix}/v3/apps/#{app.guid}/packages" },
           current_droplet: { href: "#{link_prefix}/v3/apps/#{app.guid}/droplets/current" },
           droplets: { href: "#{link_prefix}/v3/apps/#{app.guid}/droplets" },
