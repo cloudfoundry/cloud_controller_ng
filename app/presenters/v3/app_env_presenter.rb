@@ -9,7 +9,7 @@ module VCAP::CloudController
         end
 
         def to_hash
-          vars_builder = VCAP::VarsBuilder.new(
+          vars_builder = VCAP::CloudController::VarsBuilder.new(
             app,
             file_descriptors: Config.config.get(:instance_file_descriptor_limit)
           )

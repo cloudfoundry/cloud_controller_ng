@@ -1,7 +1,7 @@
 require 'uri'
 require 'httpclient'
 require 'multi_json'
-require_relative '../../vcap/vars_builder'
+require 'cloud_controller/backends/vars_builder'
 require 'json'
 require 'ostruct'
 require 'cloud_controller/opi/helpers'
@@ -208,7 +208,7 @@ module OPI
     end
 
     def vcap_application(process)
-      VCAP::VarsBuilder.new(process).to_hash.reject do |k, _v|
+      VCAP::CloudController::VarsBuilder.new(process).to_hash.reject do |k, _v|
         [:users].include? k
       end
     end

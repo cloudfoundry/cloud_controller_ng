@@ -11,7 +11,7 @@ require 'messages/droplet_copy_message'
 require 'messages/droplet_create_message'
 require 'messages/droplet_update_message'
 require 'messages/droplet_upload_message'
-require 'cloud_controller/membership'
+require 'cloud_controller/permissions/membership'
 require 'controllers/v3/mixins/app_sub_resource'
 
 class DropletsController < ApplicationController

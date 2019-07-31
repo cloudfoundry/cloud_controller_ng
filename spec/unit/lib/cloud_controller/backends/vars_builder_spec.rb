@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'vcap/vars_builder'
+require 'cloud_controller/backends/vars_builder'
 
 module VCAP::CloudController
   RSpec.describe 'VarsBuilder' do
@@ -34,7 +34,7 @@ module VCAP::CloudController
             users: nil
           }
 
-          vars_builder = VCAP::VarsBuilder.new(process)
+          vars_builder = VCAP::CloudController::VarsBuilder.new(process)
           expect(vars_builder.to_hash).to eq(expected_hash)
         end
       end
@@ -64,7 +64,7 @@ module VCAP::CloudController
                 users: nil
               }
 
-              vars_builder = VCAP::VarsBuilder.new(
+              vars_builder = VCAP::CloudController::VarsBuilder.new(
                 v3_app_model,
                 memory_limit: 1234,
                 staging_disk_in_mb: 5555,
@@ -92,7 +92,7 @@ module VCAP::CloudController
                 users: nil
               }
 
-              vars_builder = VCAP::VarsBuilder.new(v3_app_model)
+              vars_builder = VCAP::CloudController::VarsBuilder.new(v3_app_model)
               expect(vars_builder.to_hash).to eq(expected_hash)
             end
           end
@@ -125,7 +125,7 @@ module VCAP::CloudController
               users: nil
             }
 
-            vars_builder = VCAP::VarsBuilder.new(
+            vars_builder = VCAP::CloudController::VarsBuilder.new(
               process,
               space: space
             )
@@ -158,7 +158,7 @@ module VCAP::CloudController
               users: nil
             }
 
-            vars_builder = VCAP::VarsBuilder.new(process)
+            vars_builder = VCAP::CloudController::VarsBuilder.new(process)
             expect(vars_builder.to_hash).to eq(expected_hash)
           end
         end

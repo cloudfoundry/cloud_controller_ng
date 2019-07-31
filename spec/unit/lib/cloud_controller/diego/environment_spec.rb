@@ -1,6 +1,6 @@
 require 'spec_helper'
 require 'presenters/system_environment/system_env_presenter'
-require_relative '../../../../../lib/vcap/vars_builder'
+require 'cloud_controller/backends/vars_builder'
 
 module VCAP::CloudController::Diego
   RSpec.describe Environment do
@@ -17,7 +17,7 @@ module VCAP::CloudController::Diego
     end
 
     it 'returns the correct environment hash for an application' do
-      vcap_app = VCAP::VarsBuilder.new(process, memory_limit: 200).to_hash
+      vcap_app = VCAP::CloudController::VarsBuilder.new(process, memory_limit: 200).to_hash
 
       Environment::EXCLUDE.each { |k| vcap_app.delete(k) }
       encoded_vcap_application_json = vcap_app.to_json

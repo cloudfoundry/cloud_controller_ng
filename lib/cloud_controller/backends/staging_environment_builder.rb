@@ -1,4 +1,4 @@
-require_relative '../../vcap/vars_builder'
+require 'cloud_controller/backends/vars_builder'
 
 module VCAP::CloudController
   class StagingEnvironmentBuilder
@@ -7,7 +7,7 @@ module VCAP::CloudController
       vars_from_message ||= {}
       staging_var_group = EnvironmentVariableGroup.staging.environment_json
 
-      vars_builder = VCAP::VarsBuilder.new(
+      vars_builder = VCAP::CloudController::VarsBuilder.new(
         app,
         memory_limit: memory_limit,
         staging_disk_in_mb: staging_disk_in_mb,

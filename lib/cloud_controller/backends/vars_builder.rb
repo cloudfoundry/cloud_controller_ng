@@ -1,4 +1,4 @@
-module VCAP
+module VCAP::CloudController
   class VarsBuilder
     def initialize(process,
                    memory_limit: nil,

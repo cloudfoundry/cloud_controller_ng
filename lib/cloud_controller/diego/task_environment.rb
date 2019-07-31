@@ -34,7 +34,7 @@ module VCAP::CloudController
       private
 
       def vcap_application
-        vars_builder = VCAP::VarsBuilder.new(
+        vars_builder = VCAP::CloudController::VarsBuilder.new(
           app,
           memory_limit:       task.memory_in_mb,
           staging_disk_in_mb: default_disk_limit,

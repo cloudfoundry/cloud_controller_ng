@@ -63,7 +63,7 @@ module VCAP::CloudController
       process = find_guid_and_validate_access(:read_env, guid, ProcessModel)
       FeatureFlag.raise_unless_enabled!(:space_developer_env_var_visibility)
 
-      vcap_application = VCAP::VarsBuilder.new(process).to_hash
+      vcap_application = VCAP::CloudController::VarsBuilder.new(process).to_hash
 
       [
         HTTP::OK,

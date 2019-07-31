@@ -1,6 +1,6 @@
 require 'presenters/system_environment/system_env_presenter'
 require 'cloud_controller/diego/normal_env_hash_to_diego_env_array_philosopher'
-require_relative '../../vcap/vars_builder'
+require 'cloud_controller/backends/vars_builder'
 
 module VCAP::CloudController
   module Diego
@@ -49,7 +49,7 @@ module VCAP::CloudController
       end
 
       def vcap_application(memory_limit:)
-        VCAP::VarsBuilder.new(process, memory_limit: memory_limit).to_hash.reject do |k, _v|
+        VCAP::CloudController::VarsBuilder.new(process, memory_limit: memory_limit).to_hash.reject do |k, _v|
           EXCLUDE.include? k
         end
       end

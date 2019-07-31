@@ -1,6 +1,6 @@
 require 'actions/space_delete'
 require 'fetchers/space_user_roles_fetcher'
-require 'cloud_controller/roles'
+require 'cloud_controller/permissions/roles'
 require 'controllers/runtime/mixins/uaa_origin_validator'
 
 module VCAP::CloudController
