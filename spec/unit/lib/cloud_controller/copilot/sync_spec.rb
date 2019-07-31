@@ -17,10 +17,10 @@ module VCAP::CloudController
         let(:app) { VCAP::CloudController::AppModel.make }
 
         let(:route) { Route.make(domain: istio_domain, host: 'some-host', path: '/some/path') }
-        let!(:route_mapping) { RouteMappingModel.make(route: route, app: app, process_type: 'web', app_port: 9191) }
+        let!(:route_mapping) { RouteMappingModel.make(route: route, app: app, process_type: 'web') }
 
         let(:internal_route) { Route.make(domain: internal_istio_domain, host: 'internal-host', vip_offset: 1) }
-        let!(:internal_route_mapping) { RouteMappingModel.make(route: internal_route, app: app, process_type: 'web', app_port: 9191) }
+        let!(:internal_route_mapping) { RouteMappingModel.make(route: internal_route, app: app, process_type: 'web') }
 
         let(:legacy_domain) { SharedDomain.make }
         let(:legacy_route) { Route.make(domain: legacy_domain, host: 'some-host', path: '/some/path') }
@@ -58,13 +58,11 @@ module VCAP::CloudController
               route_mappings: [{
                 capi_process_guid: web_process_model.guid,
                 route_guid: route_mapping.route_guid,
-                route_weight: 1,
-                app_port: route_mapping.app_port
+                route_weight: 1
               }, {
                 capi_process_guid: web_process_model.guid,
                 route_guid: internal_route_mapping.route_guid,
-                route_weight: 1,
-                app_port: internal_route_mapping.app_port
+                route_weight: 1
               }],
               capi_diego_process_associations: [{
                 capi_process_guid: web_process_model.guid,
@@ -99,13 +97,11 @@ module VCAP::CloudController
                   route_mappings: [{
                     capi_process_guid: web_process_model.guid,
                     route_guid: route_mapping.route_guid,
-                    route_weight: 1,
-                    app_port: route_mapping.app_port
+                    route_weight: 1
                   }, {
                     capi_process_guid: web_process_model.guid,
                     route_guid: internal_route_mapping.route_guid,
-                    route_weight: 1,
-                    app_port: internal_route_mapping.app_port
+                    route_weight: 1
                   }],
                   capi_diego_process_associations: [{
                     capi_process_guid: web_process_model.guid,
@@ -146,14 +142,12 @@ module VCAP::CloudController
               {
                 capi_process_guid: web_process_model_1.guid,
                 route_guid: route_mapping_1.route_guid,
-                route_weight: 1,
-                app_port: route_mapping_1.app_port
+                route_weight: 1
               },
               {
                 capi_process_guid: web_process_model_2.guid,
                 route_guid: route_mapping_2.route_guid,
-                route_weight: 1,
-                app_port: route_mapping_2.app_port
+                route_weight: 1
               }
             ])
             expect(args[:capi_diego_process_associations]).to match_array([
