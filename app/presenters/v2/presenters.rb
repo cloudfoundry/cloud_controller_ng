@@ -1,0 +1,21 @@
+# This must be loaded first, or the other presenters will not be registered
+require 'cloud_controller/rest_controller/presenters/presenter_provider'
+
+require 'cloud_controller/rest_controller/presenters/base_presenter'
+require 'cloud_controller/rest_controller/presenters/default_presenter'
+require 'cloud_controller/rest_controller/presenters/relations_presenter'
+
+require 'presenters/v2/private_domain_presenter'
+require 'presenters/v2/process_model_presenter'
+require 'presenters/v2/app_usage_event_presenter'
+require 'presenters/v2/route_presenter'
+require 'presenters/v2/shared_domain_presenter'
+require 'presenters/v2/route_mapping_presenter'
+require 'presenters/v2/service_presenter'
+require 'presenters/v2/service_binding_presenter'
+require 'presenters/v2/service_key_presenter'
+require 'presenters/v2/service_instance_presenter'
+require 'presenters/v2/space_presenter'
+require 'presenters/v2/organization_presenter'
+require 'presenters/v2/service_plan_presenter'
+require 'presenters/v2/user_presenter'

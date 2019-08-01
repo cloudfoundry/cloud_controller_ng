@@ -1,5 +1,3 @@
-require 'presenters/v2/base_presenter'
-require 'presenters/v2/presenter_provider'
 require 'presenters/mixins/services_presentation_helpers'
 
 module CloudController
