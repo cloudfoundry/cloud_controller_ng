@@ -16,7 +16,7 @@ module VCAP::CloudController
     describe '#start' do
       let(:lock_runner) { instance_double(Locket::LockRunner, start: nil, lock_acquired?: nil) }
       let(:lock_worker) { instance_double(Locket::LockWorker) }
-      let(:logger) { instance_double(Steno::Logger, info: nil, debug: nil) }
+      let(:logger) { instance_double(Steno::Logger, info: nil, debug: nil, error: nil) }
       let(:statsd_client) { instance_double(Statsd) }
 
       before do
@@ -94,6 +94,25 @@ module VCAP::CloudController
           expect(DeploymentUpdater::Dispatcher).to_not have_received(:dispatch)
           timed_block.call
           expect(DeploymentUpdater::Dispatcher).to have_received(:dispatch)
+        end
+      end
+
+      describe 'when an unexpected error is thrown' do
+        let(:error) { StandardError.new('Something real bad happened') }
+
+        before do
+          allow(lock_worker).to receive(:acquire_lock_and_repeatedly_call).and_raise(error)
+        end
+
+        it 'logs' do
+          DeploymentUpdater::Scheduler.start
+
+          expect(logger).to have_received(:error).with(
+            'cc.deployment_updater',
+            error: error.class.name,
+            error_message: error.message,
+            backtrace: anything,
+          )
         end
       end
     end

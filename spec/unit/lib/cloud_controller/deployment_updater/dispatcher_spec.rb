@@ -8,7 +8,7 @@ module VCAP::CloudController
     let(:scaling_deployment) { DeploymentModel.make(state: DeploymentModel::DEPLOYING_STATE) }
     let(:canceling_deployment) { DeploymentModel.make(state: DeploymentModel::CANCELING_STATE) }
 
-    let(:logger) { instance_double(Steno::Logger, info: nil, error: nil) }
+    let(:logger) { instance_double(Steno::Logger, info: nil, error: nil, warn: nil) }
     let(:workpool) { instance_double(WorkPool, submit: nil, drain: nil) }
     let(:updater) { instance_double(DeploymentUpdater::Updater, scale: nil, cancel: nil) }
 
@@ -46,6 +46,30 @@ module VCAP::CloudController
         it 'cancels the deployment' do
           subject.dispatch
           expect(updater).to have_received(:cancel)
+        end
+      end
+
+      context 'when a deployment is missing a process' do
+        let!(:scaling_deployment) { DeploymentModel.make(state: DeploymentModel::DEPLOYING_STATE, deploying_web_process: nil) }
+        let!(:deployment_process_model) { DeploymentProcessModel.make(deployment: scaling_deployment, process_guid: 'some_guid') }
+
+        before do
+          allow(DeploymentUpdater::Updater).to receive(:new).with(scaling_deployment, logger).and_return(updater)
+        end
+
+        it 'deletes the deployment and logs' do
+          subject.dispatch
+          expect(logger).to have_received(:warn).with(
+            'cleaned-up-degenerate-deployment',
+            deployment: scaling_deployment.guid,
+            app: scaling_deployment.app.guid,
+          )
+          expect(scaling_deployment.exists?).to be(false)
+        end
+
+        it 'does not scale the deployment' do
+          subject.dispatch
+          expect(updater).to_not have_received(:scale)
         end
       end
     end

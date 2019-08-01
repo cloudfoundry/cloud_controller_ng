@@ -7,25 +7,27 @@ module VCAP::CloudController
     class Scheduler
       class << self
         def start
-          config = CloudController::DependencyLocator.instance.config
-          lock_runner = Locket::LockRunner.new(
-            key: config.get(:deployment_updater, :lock_key),
-            owner: config.get(:deployment_updater, :lock_owner),
-            host: config.get(:locket, :host),
-            port: config.get(:locket, :port),
-            client_ca_path: config.get(:locket, :ca_file),
-            client_key_path: config.get(:locket, :key_file),
-            client_cert_path: config.get(:locket, :cert_file),
-          )
-          statsd_client = CloudController::DependencyLocator.instance.statsd_client
-
-          lock_worker = Locket::LockWorker.new(lock_runner)
-
-          lock_worker.acquire_lock_and_repeatedly_call do
-            update(
-              update_frequency: config.get(:deployment_updater, :update_frequency_in_seconds),
-              statsd_client: statsd_client
+          with_error_logging('cc.deployment_updater') do
+            config = CloudController::DependencyLocator.instance.config
+            lock_runner = Locket::LockRunner.new(
+              key: config.get(:deployment_updater, :lock_key),
+              owner: config.get(:deployment_updater, :lock_owner),
+              host: config.get(:locket, :host),
+              port: config.get(:locket, :port),
+              client_ca_path: config.get(:locket, :ca_file),
+              client_key_path: config.get(:locket, :key_file),
+              client_cert_path: config.get(:locket, :cert_file),
             )
+            statsd_client = CloudController::DependencyLocator.instance.statsd_client
+
+            lock_worker = Locket::LockWorker.new(lock_runner)
+
+            lock_worker.acquire_lock_and_repeatedly_call do
+              update(
+                update_frequency: config.get(:deployment_updater, :update_frequency_in_seconds),
+                statsd_client: statsd_client
+              )
+            end
           end
         end
 
@@ -48,6 +50,19 @@ module VCAP::CloudController
           else
             logger.info('Not Sleeping')
           end
+        end
+
+        def with_error_logging(error_message)
+          yield
+        rescue => e
+          logger = Steno.logger('cc.deployment_updater')
+          error_name = e.is_a?(CloudController::Errors::ApiError) ? e.name : e.class.name
+          logger.error(
+            error_message,
+            error: error_name,
+            error_message: e.message,
+            backtrace: e.backtrace.join("\n"),
+          )
         end
       end
     end
