@@ -28,31 +28,6 @@ module VCAP::CloudController
         end
       end
 
-      def create2(app:, droplet_guid:, environment_variables:, description:, commands_by_process_type:, user_audit_info:)
-        RevisionModel.db.transaction do
-          next_version = calculate_next_version(app)
-
-          if (existing_revision_for_version = RevisionModel.find(app: app, version: next_version))
-            existing_revision_for_version.destroy
-          end
-
-          revision = RevisionModel.create(
-            app: app,
-            version: next_version,
-            droplet_guid: droplet_guid,
-            environment_variables: environment_variables,
-            description: description,
-          )
-
-          commands_by_process_type.
-            each { |process_type, command| revision.add_command_for_process_type(process_type, command) }
-
-          record_audit_event(revision, user_audit_info) if user_audit_info
-
-          revision
-        end
-      end
-
       def create3(app:, droplet_guid:, environment_variables:, description:, commands_by_process_type:, user_audit_info:)
         RevisionModel.db.transaction do
           next_version = calculate_next_version(app)
