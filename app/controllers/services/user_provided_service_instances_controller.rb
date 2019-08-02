@@ -94,7 +94,7 @@ module VCAP::CloudController
 
     def delete(guid)
       service_instance = UserProvidedServiceInstance.find(guid: guid)
-      raise_if_has_dependent_associations!(service_instance) if v2_api? && !recursive_delete?
+      raise_if_has_dependent_associations!(service_instance) unless recursive_delete?
 
       deletion_job = Jobs::Runtime::ModelDeletion.new(ServiceInstance, guid)
       delete_and_audit_job = Jobs::AuditEventJob.new(

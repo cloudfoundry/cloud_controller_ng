@@ -239,46 +239,6 @@ module VCAP::CloudController
       end
     end
 
-    describe '#v2_api?' do
-      subject(:base_controller) do
-        VCAP::CloudController::RestController::BaseController.new(config, logger, env, params, double(:body), nil, dependencies)
-      end
-      context 'when the endpoint is v2' do
-        let(:env) { { 'PATH_INFO' => '/v2/foobar' } }
-        it { is_expected.to be_v2_api }
-      end
-
-      context 'when the endpoint is not v2' do
-        let(:env) { { 'PATH_INFO' => '/v1/foobar' } }
-        it { is_expected.not_to be_v2_api }
-
-        context 'and the v2 is in capitals' do
-          let(:env) { { 'PATH_INFO' => '/V2/foobar' } }
-          it { is_expected.not_to be_v2_api }
-        end
-
-        context 'and the v2 is somewhere in the middle (for example, the app is called v2)' do
-          let(:env) { { 'PATH_INFO' => '/v1/apps/v2' } }
-          it { is_expected.not_to be_v2_api }
-        end
-      end
-    end
-
-    describe '#unversioned_api?' do
-      subject(:base_controller) do
-        VCAP::CloudController::RestController::BaseController.new(config, logger, env, params, double(:body), nil, dependencies)
-      end
-      context 'when the endpoint is unversioned' do
-        let(:env) { { 'PATH_INFO' => '/foobar' } }
-        it { is_expected.to be_unversioned_api }
-      end
-
-      context 'when the endpoint is not unversioned' do
-        let(:env) { { 'PATH_INFO' => '/v1/foobar' } }
-        it { is_expected.not_to be_unversioned_api }
-      end
-    end
-
     describe '#async?' do
       subject(:base_controller) do
         VCAP::CloudController::RestController::BaseController.new(config, logger, env, params, double(:body), nil, dependencies)
