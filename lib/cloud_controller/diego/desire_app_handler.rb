@@ -2,7 +2,6 @@ module VCAP::CloudController
   module Diego
     class DesireAppHandler
       class << self
-
         def logger
           @logger ||= Steno.logger('cc.diego.sync.processes')
         end
