@@ -393,10 +393,15 @@ RSpec.describe 'Processes' do
         ports: [
           {
             host_port: 8080,
-            container_port: 1234
-          }, {
+            container_port: 1234,
+            host_tls_proxy_port: 61002,
+            container_tls_proxy_port: 61003
+          },
+          {
             host_port: 3000,
-            container_port: 4000
+            container_port: 4000,
+            host_tls_proxy_port: 61006,
+            container_tls_proxy_port: 61007
           }
         ]
       }
@@ -449,11 +454,15 @@ RSpec.describe 'Processes' do
         'instance_ports' => [
           {
             'external' => 8080,
-            'internal' => 1234
+            'internal' => 1234,
+            'external_tls_proxy_port' => 61002,
+            'internal_tls_proxy_port' => 61003
           },
           {
             'external' => 3000,
-            'internal' => 4000
+            'internal' => 4000,
+            'external_tls_proxy_port' => 61006,
+            'internal_tls_proxy_port' => 61007
           }
         ],
         'uptime'         => 12345,
@@ -470,13 +479,15 @@ RSpec.describe 'Processes' do
     end
 
     describe 'GET /v3/processes/:guid/stats' do
-      it 'retrieves the stats for a process' do
-        get "/v3/processes/#{process.guid}/stats", nil, developer_headers
+      context 'route integrity is enabled' do
+        it 'retrieves the stats for a process' do
+          get "/v3/processes/#{process.guid}/stats", nil, developer_headers
 
-        parsed_response = MultiJson.load(last_response.body)
+          parsed_response = MultiJson.load(last_response.body)
 
-        expect(last_response.status).to eq(200)
-        expect(parsed_response).to be_a_response_like(expected_response)
+          expect(last_response.status).to eq(200)
+          expect(parsed_response).to be_a_response_like(expected_response)
+        end
       end
     end
 

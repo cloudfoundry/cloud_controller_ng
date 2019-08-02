@@ -14,11 +14,15 @@ module VCAP::CloudController::Presenters::V3
           ports: [
             {
               host_port: 8080,
-              container_port: 1234
+              container_port: 1234,
+              host_tls_proxy_port: 61002,
+              container_tls_proxy_port: 61003
             }, {
               host_port: 3000,
-              container_port: 4000
-            }
+              container_port: 4000,
+              host_tls_proxy_port: 0,
+              container_tls_proxy_port: 0
+          }
           ]
         }
       }
@@ -34,10 +38,14 @@ module VCAP::CloudController::Presenters::V3
         [
           {
             external: 8080,
-            internal: 1234
+            internal: 1234,
+            external_tls_proxy_port: 61002,
+            internal_tls_proxy_port: 61003
           }, {
             external: 3000,
-            internal: 4000
+            internal: 4000,
+            external_tls_proxy_port: nil,
+            internal_tls_proxy_port: nil
           }
         ]
       }

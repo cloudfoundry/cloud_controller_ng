@@ -77,6 +77,8 @@ module VCAP::CloudController
             {
               external: ports[:host_port],
               internal: ports[:container_port],
+              external_tls_proxy_port: ports[:host_tls_proxy_port].nonzero?,
+              internal_tls_proxy_port: ports[:container_tls_proxy_port].nonzero?
             }
           end
         end
