@@ -15,7 +15,8 @@ module VCAP::CloudController
     STATUS_REASONS = [
       DEPLOYED_STATUS_REASON = 'DEPLOYED'.freeze,
       CANCELED_STATUS_REASON = 'CANCELED'.freeze,
-      SUPERSEDED_STATUS_REASON = 'SUPERSEDED'.freeze
+      SUPERSEDED_STATUS_REASON = 'SUPERSEDED'.freeze,
+      DEGENERATE_STATUS_REASON = 'DEGENERATE'.freeze
     ].freeze
 
     many_to_one :app,
@@ -47,8 +48,6 @@ module VCAP::CloudController
       key: :deployment_guid,
       primary_key: :guid,
       without_guid_generation: true
-
-    add_association_dependencies historical_related_processes: :destroy
 
     one_to_many :labels, class: 'VCAP::CloudController::DeploymentLabelModel', key: :resource_guid, primary_key: :guid
     one_to_many :annotations, class: 'VCAP::CloudController::DeploymentAnnotationModel', key: :resource_guid, primary_key: :guid

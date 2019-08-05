@@ -9,7 +9,7 @@ module VCAP::CloudController
           logger = Steno.logger('cc.deployment_updater.update')
           logger.info('run-deployment-update')
 
-          cleanup_deployments_without_processes(logger)
+          finalize_degenerate_deployments(logger)
 
           deployments_to_scale = DeploymentModel.where(state: DeploymentModel::DEPLOYING_STATE).all
           deployments_to_cancel = DeploymentModel.where(state: DeploymentModel::CANCELING_STATE).all
@@ -36,10 +36,15 @@ module VCAP::CloudController
           end
         end
 
-        def cleanup_deployments_without_processes(logger)
+        def finalize_degenerate_deployments(logger)
           DeploymentModel.where(deploying_web_process_guid: nil).each do |d|
-            d.destroy
-            logger.warn('cleaned-up-degenerate-deployment', { deployment: d.guid, app: d.app.guid })
+            d.update(
+              state: DeploymentModel::DEPLOYED_STATE,
+              status_value: DeploymentModel::FINALIZED_STATUS_VALUE,
+              status_reason: DeploymentModel::DEGENERATE_STATUS_REASON
+            )
+
+            logger.warn('finalized-degenerate-deployment', { deployment: d.guid, app: d.app.guid })
           end
         end
       end

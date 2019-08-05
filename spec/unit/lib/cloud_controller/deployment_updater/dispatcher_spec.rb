@@ -49,7 +49,7 @@ module VCAP::CloudController
         end
       end
 
-      context 'when a deployment is missing a process' do
+      context 'when a deployment is missing its deploying_web_process' do
         let!(:scaling_deployment) { DeploymentModel.make(state: DeploymentModel::DEPLOYING_STATE, deploying_web_process: nil) }
         let!(:deployment_process_model) { DeploymentProcessModel.make(deployment: scaling_deployment, process_guid: 'some_guid') }
 
@@ -57,14 +57,17 @@ module VCAP::CloudController
           allow(DeploymentUpdater::Updater).to receive(:new).with(scaling_deployment, logger).and_return(updater)
         end
 
-        it 'deletes the deployment and logs' do
+        it 'finalizes the deployment, sets the status, and logs' do
           subject.dispatch
+
+          deployment = scaling_deployment.reload
           expect(logger).to have_received(:warn).with(
-            'cleaned-up-degenerate-deployment',
-            deployment: scaling_deployment.guid,
-            app: scaling_deployment.app.guid,
+            'finalized-degenerate-deployment',
+            deployment: deployment.guid,
+            app: deployment.app.guid,
           )
-          expect(scaling_deployment.exists?).to be(false)
+          expect(deployment.status_value).to eq(DeploymentModel::FINALIZED_STATUS_VALUE)
+          expect(deployment.status_reason).to eq(DeploymentModel::DEGENERATE_STATUS_REASON)
         end
 
         it 'does not scale the deployment' do
