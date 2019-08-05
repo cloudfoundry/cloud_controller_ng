@@ -85,7 +85,7 @@ module VCAP::CloudController
 
         context 'when we fail to allocate enough memory to go with existing sidecars' do
           before do
-            allow(process_create_from_app_droplet).to receive(:create).and_raise(ProcessCreateFromAppDroplet::SidecarMemoryLessThanProcessMemory, 'some message')
+            allow(process_create_from_app_droplet).to receive(:create).and_raise(ProcessCreate::SidecarMemoryLessThanProcessMemory, 'some message')
           end
 
           it 'raises an error' do

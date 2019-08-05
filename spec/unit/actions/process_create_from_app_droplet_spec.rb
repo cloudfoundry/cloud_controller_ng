@@ -46,7 +46,7 @@ module VCAP::CloudController
             expect {
               subject.create(app)
             }.to raise_error(
-              ProcessCreateFromAppDroplet::SidecarMemoryLessThanProcessMemory,
+              ProcessCreate::SidecarMemoryLessThanProcessMemory,
               /The sidecar memory allocation defined is too large to run with the dependent "other" process/
             )
           end

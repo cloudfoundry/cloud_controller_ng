@@ -4,6 +4,9 @@ require 'models/helpers/health_check_types'
 
 module VCAP::CloudController
   class ProcessCreate
+    class InvalidProcess < StandardError; end
+    class SidecarMemoryLessThanProcessMemory < StandardError; end
+
     def initialize(user_audit_info, manifest_triggered: false)
       @user_audit_info = user_audit_info
       @manifest_triggered = manifest_triggered
@@ -30,6 +33,12 @@ module VCAP::CloudController
       end
 
       process
+    rescue Sequel::ValidationFailed => e
+      if e.errors.on(:memory)&.include?(:process_memory_insufficient_for_sidecars)
+        raise SidecarMemoryLessThanProcessMemory.new("The sidecar memory allocation defined is too large to run with the dependent \"#{type}\" process")
+      end
+
+      raise InvalidProcess.new(e.message)
     end
 
     private

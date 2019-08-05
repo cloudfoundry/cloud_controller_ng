@@ -27,7 +27,7 @@ module VCAP::CloudController
       app
     rescue ProcessCreateFromAppDroplet::ProcessTypesNotFound => e
       raise InvalidDroplet.new(e.message)
-    rescue ProcessCreateFromAppDroplet::SidecarMemoryLessThanProcessMemory, Sequel::ValidationFailed => e
+    rescue ProcessCreate::SidecarMemoryLessThanProcessMemory, Sequel::ValidationFailed => e
       raise InvalidApp.new(e.message)
     end
 

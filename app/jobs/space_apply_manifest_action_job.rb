@@ -18,6 +18,7 @@ module VCAP::CloudController
           rescue AppPatchEnvironmentVariables::InvalidApp,
                  AppUpdate::InvalidApp,
                  AppApplyManifest::NoDefaultDomain,
+                 ProcessCreate::InvalidProcess,
                  ProcessScale::InvalidProcess,
                  ProcessUpdate::InvalidProcess,
                  ManifestRouteUpdate::InvalidRoute,

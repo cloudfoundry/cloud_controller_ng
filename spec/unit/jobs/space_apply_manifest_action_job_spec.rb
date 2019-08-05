@@ -50,6 +50,7 @@ module VCAP::CloudController
         AppUpdate::InvalidApp,
         ManifestRouteUpdate::InvalidRoute,
         AppApplyManifest::NoDefaultDomain,
+        ProcessCreate::InvalidProcess,
         ProcessScale::InvalidProcess,
         ProcessUpdate::InvalidProcess,
         Route::InvalidOrganizationRelation,
