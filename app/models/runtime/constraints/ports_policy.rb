@@ -26,7 +26,7 @@ class PortsPolicy
       if m.app_port.blank?
         return false unless @process.ports.include?(VCAP::CloudController::ProcessModel::DEFAULT_HTTP_PORT)
       elsif !@process.ports.include?(m.app_port)
-        return false
+        return false if m.app_port != VCAP::CloudController::ProcessModel::NO_APP_PORT_SPECIFIED
       end
     end
   end

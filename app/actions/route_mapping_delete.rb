@@ -26,7 +26,9 @@ module VCAP::CloudController
 
           route_mapping.destroy
 
-          route_handlers.each { |handler| handler.update_route_information(perform_validation: false) }
+          route_handlers.each do |handler|
+            handler.update_route_information(perform_validation: false)
+          end
         end
       end
     end

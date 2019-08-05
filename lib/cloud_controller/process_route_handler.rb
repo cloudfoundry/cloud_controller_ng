@@ -5,15 +5,21 @@ module VCAP::CloudController
       @runners = runners || CloudController::DependencyLocator.instance.runners
     end
 
-    def update_route_information(perform_validation: true, updated_ports: nil)
+    def update_route_information(perform_validation: true, updated_ports: false)
       return unless @process
 
       with_transaction do
         @process.lock!
 
+        # `false` means do **not** update ports. `nil` is a valid value as it
+        # is used to use defaults later on.
+        if updated_ports == false
+          updated_ports = @process.ports
+        end
+
         @process.set(
           updated_at: ProcessModel.dataset.current_datetime,
-          ports: updated_ports || @process.ports
+          ports: updated_ports
         )
 
         raise Sequel::ValidationFailed.new(@process.errors.full_messages) if PortsPolicy.new(@process).validate

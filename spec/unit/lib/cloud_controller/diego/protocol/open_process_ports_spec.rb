@@ -5,73 +5,162 @@ module VCAP::CloudController
     class Protocol
       RSpec.describe OpenProcessPorts do
         describe '#to_a' do
-          let(:process) do
-            ProcessModelFactory.make(
-              command: 'start_me',
-              diego:   true,
-              type:    type,
-              ports:   ports,
-              health_check_type: 'process'
-            )
-          end
-          let(:type) { 'web' }
-          let(:ports) { [1111, 2222] }
-
           subject(:open_ports) { OpenProcessPorts.new(process).to_a }
 
-          context 'when the process has ports' do
-            it 'returns those ports' do
-              expect(open_ports).to eq([1111, 2222])
+          context 'when the process is docker' do
+            let(:process) { ProcessModel.make(:docker, ports: ports, type: type) }
+
+            context 'when the process has ports specified' do
+              let(:ports) { [1111, 2222] }
+              let(:type) { 'worker' }
+
+              context 'when there is at least one route mapping with no port specified' do
+                before do
+                  RouteMappingModel.make(app: process.app, process_type: type, app_port: ProcessModel::NO_APP_PORT_SPECIFIED)
+                end
+
+                context 'when the Docker image exposes a port' do
+                  before do
+                    allow(process).to receive(:docker_ports).and_return([2222, 3333, 4444])
+                  end
+
+                  it 'uses the port exposed by the Docker image and the process ports' do
+                    expect(open_ports).to contain_exactly(1111, 2222, 3333, 4444)
+                  end
+                end
+
+                context 'when the Docker image does **not** expose a port' do
+                  before do
+                    allow(process).to receive(:docker_ports).and_return(nil)
+                  end
+
+                  it 'uses 8080 and the process ports' do
+                    expect(open_ports).to contain_exactly(1111, 2222, 8080)
+                  end
+                end
+              end
+
+              context 'when all route mappings have ports specified' do
+                before do
+                  RouteMappingModel.make(app: process.app, process_type: type, app_port: 9999)
+                end
+
+                it 'uses the process ports' do
+                  expect(open_ports).to contain_exactly(1111, 2222)
+                end
+              end
             end
 
-            context 'but the ports it has is explicitly empty' do
-              let(:ports) { [] }
+            context 'when the process does not have ports specified, but is a web process' do
+              let(:ports) { nil }
+              let(:type) { ProcessTypes::WEB }
 
-              it 'respects the desire to have no ports' do
-                expect(open_ports).to eq([])
+              context 'when there is at least one route mapping with no port specified' do
+                before do
+                  RouteMappingModel.make(app: process.app, process_type: type, app_port: ProcessModel::NO_APP_PORT_SPECIFIED)
+                end
+
+                context 'when the Docker image exposes a port' do
+                  before do
+                    allow(process).to receive(:docker_ports).and_return([3333, 4444])
+                  end
+
+                  it 'uses the port exposed by the Docker image' do
+                    expect(open_ports).to contain_exactly(3333, 4444)
+                  end
+                end
+
+                context 'when the Docker image does **not** expose a port' do
+                  before do
+                    allow(process).to receive(:docker_ports).and_return(nil)
+                  end
+
+                  it 'uses 8080' do
+                    expect(open_ports).to contain_exactly(8080)
+                  end
+                end
+              end
+
+              context 'when all route mappings have ports specified' do
+                before do
+                  RouteMappingModel.make(app: process.app, process_type: type, app_port: 9999)
+                end
+
+                it 'uses 8080' do
+                  expect(open_ports).to contain_exactly(8080)
+                end
+              end
+            end
+
+            context 'when the process does not have ports specified, and is not a web process' do
+              let(:ports) { nil }
+              let(:type) { 'worker' }
+
+              context 'when there is at least one route mapping with no port specified' do
+                before do
+                  RouteMappingModel.make(app: process.app, process_type: type, app_port: ProcessModel::NO_APP_PORT_SPECIFIED)
+                end
+
+                context 'when the Docker image exposes a port' do
+                  before do
+                    allow(process).to receive(:docker_ports).and_return([3333, 4444])
+                  end
+
+                  it 'uses the port exposed by the Docker image' do
+                    expect(open_ports).to contain_exactly(3333, 4444)
+                  end
+                end
+
+                context 'when the Docker image does **not** expose a port' do
+                  before do
+                    allow(process).to receive(:docker_ports).and_return(nil)
+                  end
+
+                  it 'uses 8080' do
+                    expect(open_ports).to contain_exactly(8080)
+                  end
+                end
+              end
+
+              context 'when all route mappings have ports specified' do
+                before do
+                  RouteMappingModel.make(app: process.app, process_type: type, app_port: 9999)
+                end
+
+                it 'does not open any ports' do
+                  expect(open_ports).to be_empty
+                end
               end
             end
           end
 
-          context 'when process does not have ports defined' do
-            let(:ports) { nil }
+          context 'when the process is buildpack' do
+            let(:process) { ProcessModel.make(ports: ports, type: type) }
 
-            context 'when this is a docker process' do
-              let(:process) do
-                ProcessModelFactory.make(
-                  docker_image:      'some-image',
-                  command:           'start_me',
-                  diego:             true,
-                  type:              type,
-                  ports:             ports,
-                  health_check_type: 'process'
-                )
-              end
+            context 'when the process has ports specified' do
+              let(:ports) { [1111, 2222] }
+              let(:type) { 'worker' }
 
-              before do
-                allow(process).to receive(:docker_ports).and_return([123, 456])
-              end
-
-              it 'uses the saved docker ports' do
-                expect(open_ports).to eq([123, 456])
+              it 'uses the specified ports' do
+                expect(open_ports).to contain_exactly(1111, 2222)
               end
             end
 
-            context 'when this is a buildpack process' do
-              context 'when the type is web' do
-                let(:type) { 'web' }
+            context 'when the process does not have ports specified, but is a web process' do
+              let(:ports) { nil }
+              let(:type) { ProcessTypes::WEB }
 
-                it 'defaults to [8080]' do
-                  expect(open_ports).to eq([8080])
-                end
+              it 'uses port 8080' do
+                expect(open_ports).to contain_exactly(8080)
               end
+            end
 
-              context 'when the type is not web' do
-                let(:type) { 'other' }
+            context 'when the process does not have ports specified, and is not a web process' do
+              let(:ports) { nil }
+              let(:type) { 'worker' }
 
-                it 'default to []' do
-                  expect(open_ports).to eq([])
-                end
+              it 'does not open any ports' do
+                expect(open_ports).to be_empty
               end
             end
           end

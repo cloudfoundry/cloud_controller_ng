@@ -66,6 +66,42 @@ module VCAP::CloudController
         end
       end
 
+      context 'when the updated ports are nil' do
+        let(:db) { instance_double(Sequel::Database) }
+        let(:process) { instance_double(ProcessModel, db: db) }
+
+        it 'sets the process ports to nil' do
+          allow(db).to receive_messages(in_transaction?: true, after_commit: nil)
+          allow(process).to receive_messages(lock!: nil, ports: [1234])
+
+          expect(process).to receive(:set).with(
+            updated_at: instance_of(Sequel::CurrentDateTimeTimestamp::Time),
+            ports: nil
+          )
+          expect(process).to receive(:save_changes).with(hash_including(validate: false))
+
+          handler.update_route_information(perform_validation: false, updated_ports: nil)
+        end
+      end
+
+      context 'when the updated ports are false' do
+        let(:db) { instance_double(Sequel::Database) }
+        let(:process) { instance_double(ProcessModel, db: db) }
+
+        it 'sets the process ports to what they are currently set to' do
+          allow(db).to receive_messages(in_transaction?: true, after_commit: nil)
+          allow(process).to receive_messages(lock!: nil, ports: [1234])
+
+          expect(process).to receive(:set).with(
+            updated_at: instance_of(Sequel::CurrentDateTimeTimestamp::Time),
+            ports: [1234]
+          )
+          expect(process).to receive(:save_changes).with(hash_including(validate: false))
+
+          handler.update_route_information(perform_validation: false, updated_ports: false)
+        end
+      end
+
       context 'when the updated ports are invalid' do
         before do
           allow(port_policy).to receive(:validate) do

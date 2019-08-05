@@ -83,7 +83,7 @@ module VCAP::CloudController
 
           expect(process2_route_handler).to have_received(:update_route_information).with(
             perform_validation: false,
-            updated_ports: nil
+            updated_ports: [8080]
           )
         end
 
@@ -338,7 +338,7 @@ module VCAP::CloudController
           )
           expect(process3_route_handler).to have_received(:update_route_information).with(
             perform_validation: false,
-            updated_ports: nil
+            updated_ports: [8080]
           )
         end
 
@@ -395,6 +395,21 @@ module VCAP::CloudController
               expect(Copilot::Adapter).to have_received(:map_route).with(have_attributes(process_type: 'worker'))
               expect(Copilot::Adapter).to have_received(:unmap_route).with(have_attributes(process_type: 'existing'))
             }.to change { RouteMappingModel.count }.by(1)
+          end
+        end
+
+        context 'when deleting a the last destination for a port' do
+          let(:params) { [] }
+
+          it 'removes the mapping port from the process' do
+            expect {
+              subject.replace(params, route, apps_hash, user_audit_info)
+            }.to change { RouteMappingModel.count }.by(-1)
+
+            expect(process3_route_handler).to have_received(:update_route_information).with(
+              perform_validation: false,
+              updated_ports: [8080]
+            )
           end
         end
       end
@@ -515,7 +530,7 @@ module VCAP::CloudController
 
           expect(fake_process_route_handler).to have_received(:update_route_information).with(
             perform_validation: false,
-            updated_ports: nil
+            updated_ports: [8080]
           )
         end
       end

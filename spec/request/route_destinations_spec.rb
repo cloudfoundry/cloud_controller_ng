@@ -7,6 +7,122 @@ RSpec.describe 'Route Destinations Request' do
   let(:space) { VCAP::CloudController::Space.make }
   let(:org) { space.organization }
 
+  context 'buildpack table test' do
+    let(:app_model) { VCAP::CloudController::AppModel.make(:docker, space: space) }
+    let!(:process_model) { VCAP::CloudController::ProcessModel.make(:docker, app: app_model, type: 'web') }
+    let(:route1) { VCAP::CloudController::Route.make(space: space) }
+    let(:route2) { VCAP::CloudController::Route.make(space: space) }
+
+    [
+      # case,  dst1 specified port,   dst2 specified port,   dst1 actual port,   dst2 actual port,   exposed ports,
+      [0,      nil,                   nil,                   8080,               8080,               [8080]],
+      [1,      nil,                   2222,                  8080,               2222,               [8080, 2222]],
+      [2,      1111,                  nil,                   1111,               8080,               [1111, 8080]],
+      [3,      1111,                  2222,                  1111,               2222,               [1111, 2222]],
+      [4,      nil,                   8080,                  8080,               8080,               [8080]],
+    ].each do |sample, dst1_specified_port, dst2_specified_port, expected_dst1_port, expected_dst2_port, expected_exposed_ports|
+      it "case #{sample}" do
+        params1 = {
+          app: { guid: app_model.guid },
+        }
+        params1[:port] = dst1_specified_port if dst1_specified_port
+
+        post "/v3/routes/#{route1.guid}/destinations", { destinations: [params1] }.to_json, admin_header
+        expect(last_response.status).to eq(200)
+
+        params2 = {
+          app: { guid: app_model.guid },
+        }
+        params2[:port] = dst2_specified_port if dst2_specified_port
+
+        post "/v3/routes/#{route2.guid}/destinations", { destinations: [params2] }.to_json, admin_header
+        expect(last_response.status).to eq(200)
+
+        get "/v3/routes/#{route1.guid}/destinations", nil, admin_header
+        expect(last_response.status).to eq(200)
+
+        actual_dst1_port = parsed_response['destinations'][0]['port']
+        expect(actual_dst1_port).to eq(expected_dst1_port)
+
+        get "/v3/routes/#{route2.guid}/destinations", nil, admin_header
+        expect(last_response.status).to eq(200)
+
+        actual_dst2_port = parsed_response['destinations'][0]['port']
+        expect(actual_dst2_port).to eq(expected_dst2_port)
+
+        get "/v2/apps/#{app_model.guid}", nil, admin_header
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['entity']['ports']).not_to be_nil
+        expect(parsed_response['entity']['ports']).to contain_exactly(*expected_exposed_ports)
+      end
+    end
+  end
+
+  context 'docker table test' do
+    let(:app_model) { VCAP::CloudController::AppModel.make(:docker, space: space) }
+    let!(:process_model) { VCAP::CloudController::ProcessModel.make(:docker, app: app_model, type: 'web') }
+    let(:route1) { VCAP::CloudController::Route.make(space: space) }
+    let(:route2) { VCAP::CloudController::Route.make(space: space) }
+
+    [
+      # case,  dst1 specified port,   dst2 specified port,   docker ports,   dst1 actual port,   dst2 actual port,   exposed ports,
+      [0,      nil,                   nil,                   [],             8080,               8080,               [8080]],
+      [1,      nil,                   nil,                   [3333],         3333,               3333,               [3333]],
+      [2,      nil,                   2222,                  [],             8080,               2222,               [8080, 2222]],
+      [3,      nil,                   2222,                  [3333],         3333,               2222,               [3333, 2222]],
+      [4,      1111,                  nil,                   [],             1111,               8080,               [1111, 8080]],
+      [5,      1111,                  nil,                   [3333],         1111,               3333,               [1111, 3333]],
+      [6,      1111,                  2222,                  [],             1111,               2222,               [1111, 2222]],
+      [7,      1111,                  2222,                  [3333],         1111,               2222,               [1111, 2222]],
+      [8,      nil,                   8080,                  [],             8080,               8080,               [8080]],
+    ].each do |sample, dst1_specified_port, dst2_specified_port, docker_ports, expected_dst1_port, expected_dst2_port, expected_exposed_ports|
+      it "case #{sample}" do
+        params1 = {
+          app: { guid: app_model.guid },
+        }
+        params1[:port] = dst1_specified_port if dst1_specified_port
+
+        post "/v3/routes/#{route1.guid}/destinations", { destinations: [params1] }.to_json, admin_header
+        expect(last_response.status).to eq(200)
+
+        params2 = {
+          app: { guid: app_model.guid },
+        }
+        params2[:port] = dst2_specified_port if dst2_specified_port
+
+        post "/v3/routes/#{route2.guid}/destinations", { destinations: [params2] }.to_json, admin_header
+        expect(last_response.status).to eq(200)
+
+        droplet = VCAP::CloudController::DropletModel.make(
+          :docker,
+          app: app_model,
+          execution_metadata: {
+            ports: docker_ports.map { |dp| { Port: dp, Protocol: 'tcp' } }
+          }.to_json,
+          state: VCAP::CloudController::DropletModel::STAGED_STATE,
+        )
+        app_model.update(droplet: droplet)
+
+        get "/v3/routes/#{route1.guid}/destinations", nil, admin_header
+        expect(last_response.status).to eq(200)
+
+        actual_dst1_port = parsed_response['destinations'][0]['port']
+        expect(actual_dst1_port).to eq(expected_dst1_port)
+
+        get "/v3/routes/#{route2.guid}/destinations", nil, admin_header
+        expect(last_response.status).to eq(200)
+
+        actual_dst2_port = parsed_response['destinations'][0]['port']
+        expect(actual_dst2_port).to eq(expected_dst2_port)
+
+        get "/v2/apps/#{app_model.guid}", nil, admin_header
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['entity']['ports']).not_to be_nil
+        expect(parsed_response['entity']['ports']).to contain_exactly(*expected_exposed_ports)
+      end
+    end
+  end
+
   describe 'GET /v3/routes/:guid/destinations' do
     let(:route) { VCAP::CloudController::Route.make(space: space) }
     let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }

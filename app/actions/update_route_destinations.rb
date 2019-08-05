@@ -92,7 +92,9 @@ module VCAP::CloudController
 
           updated_ports = ((process.ports || []) + ports_to_add - ports_to_delete).uniq
           if updated_ports.empty?
-            updated_ports = nil
+            updated_ports = if process.app.buildpack?
+                              ProcessModel::DEFAULT_PORTS
+                            end
           end
 
           ProcessRouteHandler.new(process).update_route_information(
@@ -115,12 +117,16 @@ module VCAP::CloudController
           if dst[:app_port].nil?
             app = apps_hash[dst[:app_guid]]
 
-            dst[:app_port] = if app.buildpack?
-                               ProcessModel::DEFAULT_HTTP_PORT
-                             else
-                               ProcessModel::NO_APP_PORT_SPECIFIED
-                             end
+            dst[:app_port] = default_port(app)
           end
+        end
+      end
+
+      def default_port(app)
+        if app.buildpack?
+          ProcessModel::DEFAULT_HTTP_PORT
+        else
+          ProcessModel::NO_APP_PORT_SPECIFIED
         end
       end
 
