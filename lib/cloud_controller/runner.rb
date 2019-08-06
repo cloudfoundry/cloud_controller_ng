@@ -7,6 +7,7 @@ require 'loggregator'
 require 'cloud_controller/rack_app_builder'
 require 'cloud_controller/metrics/periodic_updater'
 require 'cloud_controller/metrics/request_metrics'
+require 'cloud_controller/telemetry_logger'
 
 module VCAP::CloudController
   class Runner
@@ -110,6 +111,7 @@ module VCAP::CloudController
 
     def start_cloud_controller
       setup_logging
+      setup_telemetry_logging
       setup_db
       @config.configure_components
 
@@ -132,6 +134,14 @@ module VCAP::CloudController
       StenoConfigurer.new(@config.get(:logging)).configure do |steno_config_hash|
         steno_config_hash[:sinks] << @log_counter
       end
+    end
+
+    def setup_telemetry_logging
+      return if @setup_telemetry_logging
+
+      @setup_telemetry_logging = true
+
+      TelemetryLogger.init(@config.get(:telemetry_log_path))
     end
 
     def setup_db

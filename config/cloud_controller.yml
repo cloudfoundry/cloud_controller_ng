@@ -82,6 +82,8 @@ logging:
   level: debug2
   syslog: vcap.example
 
+telemetry_log_path: /tmp/cloud_controller_telemetry.log
+
 loggregator:
   router: "127.0.0.1:3456"
   internal_url: 'http://loggregator-trafficcontroller.service.cf.internal:8081'
