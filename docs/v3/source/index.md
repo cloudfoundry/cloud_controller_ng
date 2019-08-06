@@ -126,6 +126,7 @@ includes:
   - resources/organizations/list
   - resources/organizations/list_for_isolation_segment
   - resources/organizations/update
+  - resources/organizations/delete
   - resources/organizations/assign_default_isolation_segment
   - resources/organizations/get_default_isolation_segment
   - resources/organizations/get_default_domain

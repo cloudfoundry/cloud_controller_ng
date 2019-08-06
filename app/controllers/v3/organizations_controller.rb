@@ -63,6 +63,18 @@ class OrganizationsV3Controller < ApplicationController
     render json: Presenters::V3::OrganizationPresenter.new(org), status: :ok
   end
 
+  def destroy
+    org = fetch_deletable_org(hashed_params[:guid])
+
+    service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository.new(user_audit_info)
+    delete_action = OrganizationDelete.new(SpaceDelete.new(user_audit_info, service_event_repository))
+    deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(Organization, org.guid, delete_action)
+    pollable_job = Jobs::Enqueuer.new(deletion_job, queue: 'cc-generic').enqueue_pollable
+
+    url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
+    head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job.guid}")
+  end
+
   def show_default_isolation_segment
     org = fetch_org(hashed_params[:guid])
     org_not_found! unless org && permission_queryer.can_read_from_org?(org.guid)
@@ -134,6 +146,13 @@ class OrganizationsV3Controller < ApplicationController
     org = fetch_org(guid)
     org_not_found! unless org && permission_queryer.can_read_from_org?(org.guid)
     unauthorized! unless roles.admin? || (org.managers.include?(current_user) && org.active?)
+    org
+  end
+
+  def fetch_deletable_org(guid)
+    org = fetch_org(guid)
+    org_not_found! unless org && permission_queryer.can_read_from_org?(org.guid)
+    unauthorized! unless roles.admin?
     org
   end
 
