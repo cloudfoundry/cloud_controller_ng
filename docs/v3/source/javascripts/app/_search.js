@@ -8,20 +8,17 @@
 
   index.ref('id');
   index.field('title', { boost: 10 });
-  index.field('body');
   index.pipeline.add(lunr.trimmer, lunr.stopWordFilter);
 
   $(populate);
   $(bind);
 
   function populate() {
-    $('h1, h2').each(function() {
+    $('h1, h2, h3').each(function() {
       var title = $(this);
-      var body = title.nextUntil('h1, h2');
       index.add({
         id: title.prop('id'),
-        title: title.text(),
-        body: body.text()
+        title: title.text()
       });
     });
   }
