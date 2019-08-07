@@ -153,6 +153,21 @@ includes:
   - resources/processes/update
   - resources/processes/scale
   - resources/processes/terminate_instance
+  - resources/routes/header
+  - resources/routes/object
+  - resources/routes/destination_object
+  - resources/routes/create
+  - resources/routes/get
+  - resources/routes/list
+  - resources/routes/list_for_app
+  - resources/routes/update
+  - resources/routes/delete
+  - resources/routes/check_route_reservations
+  - resources/routes/list_destinations
+  - resources/routes/insert_destinations
+  - resources/routes/replace_destinations
+  - resources/routes/remove_destination
+  - resources/routes/delete_unmapped
   - resources/service_instances/header
   - resources/service_instances/object
   - resources/service_instances/list
@@ -215,21 +230,6 @@ includes:
   - experimental_resources/revisions/list
   - experimental_resources/revisions/deployed_list
   - experimental_resources/revisions/update
-  - experimental_resources/routes/header
-  - experimental_resources/routes/object
-  - experimental_resources/routes/destination_object
-  - experimental_resources/routes/create
-  - experimental_resources/routes/get
-  - experimental_resources/routes/list
-  - experimental_resources/routes/list_for_app
-  - experimental_resources/routes/update
-  - experimental_resources/routes/delete
-  - experimental_resources/routes/check_route_reservations
-  - experimental_resources/routes/list_destinations
-  - experimental_resources/routes/insert_destinations
-  - experimental_resources/routes/replace_destinations
-  - experimental_resources/routes/remove_destination
-  - experimental_resources/routes/delete_unmapped
   - experimental_resources/service_bindings/header
   - experimental_resources/service_bindings/object
   - experimental_resources/service_bindings/create
