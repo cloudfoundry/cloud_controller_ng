@@ -680,16 +680,16 @@ module VCAP::CloudController
       it 'asks for #can_update_space? on behalf of the current user' do
         allow(perm_permissions).to receive(:can_update_space?).and_return(true)
 
-        subject.can_update_space?(space_guid)
+        subject.can_update_space?(space_guid, org_guid)
 
-        expect(db_permissions).to have_received(:can_update_space?).with(space_guid)
-        expect(perm_permissions).to have_received(:can_update_space?).with(space_guid)
+        expect(db_permissions).to have_received(:can_update_space?).with(space_guid, org_guid)
+        expect(perm_permissions).to have_received(:can_update_space?).with(space_guid, org_guid)
       end
 
       it 'skips the experiment if the user is a global writer' do
         allow(db_permissions).to receive(:can_write_globally?).and_return(true)
 
-        subject.can_update_space?(space_guid)
+        subject.can_update_space?(space_guid, org_guid)
 
         expect(perm_permissions).not_to have_received(:can_update_space?)
       end
@@ -697,13 +697,14 @@ module VCAP::CloudController
       it 'uses the expected branch from the experiment' do
         allow(perm_permissions).to receive(:can_update_space?).and_return('not-expected')
 
-        response = subject.can_update_space?(space_guid)
+        response = subject.can_update_space?(space_guid, org_guid)
 
         expect(response).to eq(true)
       end
 
       context 'when the control and candidate are the same' do
         space_guid = SecureRandom.uuid
+        org_guid = SecureRandom.uuid
 
         before do
           allow(db_permissions).to receive(:can_update_space?).and_return(true)
@@ -711,16 +712,17 @@ module VCAP::CloudController
         end
 
         it_behaves_like('match recorder',
-          proc { |queryer| queryer.can_update_space?(space_guid) },
+          proc { |queryer| queryer.can_update_space?(space_guid, org_guid) },
           :can_update_space?,
           true,
           true,
-          space_guid: space_guid
+          { space_guid: space_guid, org_guid: org_guid }
         )
       end
 
       context 'when the control and candidate are different' do
         space_guid = SecureRandom.uuid
+        org_guid = SecureRandom.uuid
 
         before do
           allow(db_permissions).to receive(:can_update_space?).and_return(true)
@@ -728,11 +730,11 @@ module VCAP::CloudController
         end
 
         it_behaves_like('mismatch recorder',
-          proc { |queryer| queryer.can_update_space?(space_guid) },
+          proc { |queryer| queryer.can_update_space?(space_guid, org_guid) },
           :can_update_space?,
           true,
           'something wrong',
-          space_guid: space_guid
+          { space_guid: space_guid, org_guid: org_guid }
         )
       end
     end

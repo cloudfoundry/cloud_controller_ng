@@ -38,6 +38,7 @@ class VCAP::CloudController::Permissions
 
   ROLES_FOR_SPACE_UPDATING ||= [
     VCAP::CloudController::Membership::SPACE_MANAGER,
+    VCAP::CloudController::Membership::ORG_MANAGER,
   ].freeze
 
   ROLES_FOR_ROUTE_WRITING ||= [
@@ -118,9 +119,9 @@ class VCAP::CloudController::Permissions
     VCAP::CloudController::Space.find(guid: space_guid)&.organization&.active?
   end
 
-  def can_update_space?(space_guid)
+  def can_update_space?(space_guid, org_guid)
     return true if can_write_globally?
-    return false unless membership.has_any_roles?(ROLES_FOR_SPACE_UPDATING, space_guid)
+    return false unless membership.has_any_roles?(ROLES_FOR_SPACE_UPDATING, space_guid, org_guid)
 
     VCAP::CloudController::Space.find(guid: space_guid)&.organization&.active?
   end

@@ -158,8 +158,8 @@ module VCAP::CloudController
           expect(last_response.status).to eq(200)
           parsed_body = MultiJson.load(last_response.body)
           after_size = parsed_body['total_results']
-          # 1 more event for the deletion.
-          expect(after_size).to eq(before_size + 1)
+          # 2 more events for the org and space deletion due to recursive deletes.
+          expect(after_size).to eq(before_size + 2)
 
           event = Event.last
           expect(event.type).to eq('audit.organization.delete-request')

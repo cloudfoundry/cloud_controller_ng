@@ -788,8 +788,8 @@ RSpec.describe SpacesV3Controller, type: :controller do
             'space_manager' => 200,
             'space_auditor' => 403,
             'org_manager' => 200,
-            'org_auditor' => 403,
-            'org_billing_manager' => 403,
+            'org_auditor' => 404,
+            'org_billing_manager' => 404,
           }
         end
         let(:api_call) { lambda { patch :update, params: { guid: space.guid }.merge(update_message), as: :json } }

@@ -63,14 +63,13 @@ class SpacesV3Controller < ApplicationController
 
   def update
     space = fetch_space(hashed_params[:guid])
-    space_not_found! unless space
-    org = space.organization
+    space_not_found! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
+    unauthorized! unless permission_queryer.can_update_space?(space.guid, space.organization.guid)
 
     message = VCAP::CloudController::SpaceUpdateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
-    unauthorized! unless roles.admin? || org.managers.include?(current_user) || space.managers.include?(current_user)
 
-    space = SpaceUpdate.new.update(space, message)
+    space = SpaceUpdate.new(user_audit_info).update(space, message)
 
     render status: :ok, json: Presenters::V3::SpacePresenter.new(space)
   rescue SpaceUpdate::Error => e

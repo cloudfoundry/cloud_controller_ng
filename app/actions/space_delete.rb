@@ -26,6 +26,7 @@ module VCAP::CloudController
             delete_apps(space_model)
             delete_labels(space_model)
             space_model.destroy
+            Repositories::SpaceEventRepository.new.record_space_delete_request(space_model, @user_audit_info, true)
           end
         end
       end

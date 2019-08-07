@@ -3,6 +3,10 @@ module VCAP::CloudController
     class Error < ::StandardError
     end
 
+    def initialize(user_audit_info)
+      @user_audit_info = user_audit_info
+    end
+
     def update(space, message)
       space.db.transaction do
         space.lock!
@@ -10,6 +14,7 @@ module VCAP::CloudController
         MetadataUpdate.update(space, message)
 
         space.save
+        Repositories::SpaceEventRepository.new.record_space_update(space, @user_audit_info, message.audit_hash)
       end
 
       space

@@ -559,28 +559,28 @@ module VCAP::CloudController
         context 'and user is an admin' do
           it 'returns true' do
             set_current_user(user, { admin: true })
-            expect(permissions.can_update_space?(space_guid)).to be true
+            expect(permissions.can_update_space?(space_guid, org_guid)).to be true
           end
         end
 
         context 'and user is admin_read_only' do
           it 'return false' do
             set_current_user_as_admin_read_only
-            expect(permissions.can_update_space?(space_guid)).to be false
+            expect(permissions.can_update_space?(space_guid, org_guid)).to be false
           end
         end
 
         context 'and user is global auditor' do
           it 'return false' do
             set_current_user_as_global_auditor
-            expect(permissions.can_update_space?(space_guid)).to be false
+            expect(permissions.can_update_space?(space_guid, org_guid)).to be false
           end
         end
 
         context 'and user is not an admin' do
           it 'return false' do
             set_current_user(user)
-            expect(permissions.can_update_space?(space_guid)).to be false
+            expect(permissions.can_update_space?(space_guid, org_guid)).to be false
           end
         end
       end
@@ -589,7 +589,7 @@ module VCAP::CloudController
         it 'returns true for space manager' do
           org.add_user(user)
           space.add_manager(user)
-          expect(permissions.can_update_space?(space_guid)).to be true
+          expect(permissions.can_update_space?(space_guid, org_guid)).to be true
         end
 
         context "and the space's org is suspended" do
@@ -604,18 +604,18 @@ module VCAP::CloudController
         it 'returns false for space developer' do
           org.add_user(user)
           space.add_developer(user)
-          expect(permissions.can_update_space?(space_guid)).to be false
+          expect(permissions.can_update_space?(space_guid, org_guid)).to be false
         end
 
         it 'returns false for space auditor' do
           org.add_user(user)
           space.add_auditor(user)
-          expect(permissions.can_update_space?(space_guid)).to be false
+          expect(permissions.can_update_space?(space_guid, org_guid)).to be false
         end
 
-        it 'returns false for org manager' do
+        it 'returns true for org manager' do
           org.add_manager(user)
-          expect(permissions.can_update_space?(space_guid)).to be false
+          expect(permissions.can_update_space?(space_guid, org_guid)).to be true
         end
       end
     end

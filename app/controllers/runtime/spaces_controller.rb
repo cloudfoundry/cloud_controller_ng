@@ -178,8 +178,6 @@ module VCAP::CloudController
       raise_if_has_dependent_associations!(space) unless recursive_delete?
       raise_if_dependency_present!(space) unless recursive_delete?
 
-      @space_event_repository.record_space_delete_request(space, UserAuditInfo.from_context(SecurityContext), recursive_delete?)
-
       delete_action = SpaceDelete.new(UserAuditInfo.from_context(SecurityContext), @services_event_repository)
 
       deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(Space, guid, delete_action)

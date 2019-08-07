@@ -5,14 +5,14 @@ RSpec.describe 'Spaces' do
   let(:user) { VCAP::CloudController::User.make }
   let(:user_header) { headers_for(user) }
   let(:admin_header) { admin_headers_for(user) }
-  let(:organization)       { VCAP::CloudController::Organization.make name: 'Boardgames', created_at: 2.days.ago }
-  let!(:space1)            { VCAP::CloudController::Space.make name: 'Catan', organization: organization }
-  let!(:space2)            { VCAP::CloudController::Space.make name: 'Ticket to Ride', organization: organization }
-  let!(:space3)            { VCAP::CloudController::Space.make name: 'Agricola', organization: organization }
-  let!(:unaccesable_space) { VCAP::CloudController::Space.make name: 'Ghost Stories', organization: organization }
+  let(:org) { VCAP::CloudController::Organization.make name: 'Boardgames', created_at: 2.days.ago }
+  let!(:space1)            { VCAP::CloudController::Space.make name: 'Catan', organization: org }
+  let!(:space2)            { VCAP::CloudController::Space.make name: 'Ticket to Ride', organization: org }
+  let!(:space3)            { VCAP::CloudController::Space.make name: 'Agricola', organization: org }
+  let!(:unaccesable_space) { VCAP::CloudController::Space.make name: 'Ghost Stories', organization: org }
 
   before do
-    organization.add_user(user)
+    org.add_user(user)
     space1.add_developer(user)
     space2.add_developer(user)
     space3.add_developer(user)
@@ -24,7 +24,7 @@ RSpec.describe 'Spaces' do
         name: 'space1',
         relationships: {
           organization: {
-            data: { guid: organization.guid }
+            data: { guid: org.guid }
           }
         },
         metadata: {
@@ -125,10 +125,10 @@ RSpec.describe 'Spaces' do
       expect(orgs).to be_present
       expect(orgs[0]).to be_a_response_like(
         {
-          'guid' => organization.guid,
+          'guid' => org.guid,
           'created_at' => iso8601,
           'updated_at' => iso8601,
-          'name' => organization.name,
+          'name' => org.name,
           'status' => 'active',
           'metadata' => {
             'labels' => {},
@@ -136,16 +136,16 @@ RSpec.describe 'Spaces' do
           },
           'links' => {
             'self' => {
-              'href' => "#{link_prefix}/v3/organizations/#{organization.guid}",
+              'href' => "#{link_prefix}/v3/organizations/#{org.guid}",
             },
             'default_domain' => {
-              'href' => "#{link_prefix}/v3/organizations/#{organization.guid}/domains/default",
+              'href' => "#{link_prefix}/v3/organizations/#{org.guid}/domains/default",
             },
             'domains' => {
-              'href' => "#{link_prefix}/v3/organizations/#{organization.guid}/domains",
+              'href' => "#{link_prefix}/v3/organizations/#{org.guid}/domains",
             },
           },
-          'relationships' => { 'quota' => { 'data' => { 'guid' => organization.quota_definition.guid } } },
+          'relationships' => { 'quota' => { 'data' => { 'guid' => org.quota_definition.guid } } },
         }
       )
     end
@@ -228,22 +228,22 @@ RSpec.describe 'Spaces' do
     end
 
     context 'when a label_selector is provided' do
-      let!(:spaceA) { VCAP::CloudController::Space.make(organization: organization) }
+      let!(:spaceA) { VCAP::CloudController::Space.make(organization: org) }
       let!(:spaceAFruit) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'fruit', value: 'strawberry', space: spaceA) }
       let!(:spaceAAnimal) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'animal', value: 'horse', space: spaceA) }
 
-      let!(:spaceB) { VCAP::CloudController::Space.make(organization: organization) }
+      let!(:spaceB) { VCAP::CloudController::Space.make(organization: org) }
       let!(:spaceBEnv) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'env', value: 'prod', space: spaceB) }
       let!(:spaceBAnimal) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'animal', value: 'dog', space: spaceB) }
 
-      let!(:spaceC) { VCAP::CloudController::Space.make(organization: organization) }
+      let!(:spaceC) { VCAP::CloudController::Space.make(organization: org) }
       let!(:spaceCEnv) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'env', value: 'prod', space: spaceC) }
       let!(:spaceCAnimal) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'animal', value: 'horse', space: spaceC) }
 
-      let!(:spaceD) { VCAP::CloudController::Space.make(organization: organization) }
+      let!(:spaceD) { VCAP::CloudController::Space.make(organization: org) }
       let!(:spaceDEnv) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'env', value: 'prod', space: spaceD) }
 
-      let!(:spaceE) { VCAP::CloudController::Space.make(organization: organization) }
+      let!(:spaceE) { VCAP::CloudController::Space.make(organization: org) }
       let!(:spaceEEnv) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'env', value: 'staging', space: spaceE) }
       let!(:spaceEAnimal) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'animal', value: 'dog', space: spaceE) }
 
@@ -335,8 +335,8 @@ RSpec.describe 'Spaces' do
 
   describe 'PATCH /v3/spaces/:guid' do
     context 'updating the space to a duplicate name' do
-      let(:space1) { VCAP::CloudController::Space.make(name: 'space1', organization: organization) }
-      let!(:space2) { VCAP::CloudController::Space.make(name: 'space2', organization: organization) }
+      let(:space1) { VCAP::CloudController::Space.make(name: 'space1', organization: org) }
+      let!(:space2) { VCAP::CloudController::Space.make(name: 'space2', organization: org) }
 
       it 'returns a 422 with a helpful error message' do
         patch "/v3/spaces/#{space1.guid}", { name: 'space2' }.to_json, admin_header
@@ -346,7 +346,10 @@ RSpec.describe 'Spaces' do
       end
     end
 
-    it 'updates the requested space' do
+    context 'updates the requested space' do
+      let(:space) { VCAP::CloudController::Space.make }
+      let(:org) { space.organization }
+
       request_body = {
         name: 'codenames',
         metadata: {
@@ -358,39 +361,85 @@ RSpec.describe 'Spaces' do
           }
         }
       }.to_json
-      patch "/v3/spaces/#{space1.guid}", request_body, admin_header
-      expect(last_response.status).to eq(200)
 
-      parsed_response = MultiJson.load(last_response.body)
-      expect(parsed_response).to be_a_response_like(
-        {
-            'guid' => space1.guid,
-            'name' => 'codenames',
-            'created_at' => iso8601,
-            'updated_at' => iso8601,
-            'relationships' => {
-                'organization' => {
-                    'data' => { 'guid' => space1.organization_guid }
+      let(:space_json) do {
+            guid: space.guid,
+            name: 'codenames',
+            created_at: iso8601,
+            updated_at: iso8601,
+            relationships: {
+                organization: {
+                    data: { guid: space.organization_guid }
                 }
             },
-            'metadata' => {
-                'labels' => {
-                  'label' => 'value'
+            metadata: {
+                labels: {
+                  label: 'value'
                 },
-                'annotations' => {
-                  'potato' => 'yellow'
+                annotations: {
+                  potato: 'yellow'
                 }
             },
-            'links' => {
-                'self' => {
-                    'href' => "#{link_prefix}/v3/spaces/#{space1.guid}"
+            links: {
+                self: {
+                    href: "#{link_prefix}/v3/spaces/#{space.guid}"
                 },
-                'organization' => {
-                    'href' => "#{link_prefix}/v3/organizations/#{space1.organization_guid}"
+                organization: {
+                    href: "#{link_prefix}/v3/organizations/#{space.organization_guid}"
                 }
             },
         }
-      )
+      end
+
+      let(:api_call) { lambda { |user_headers| patch "/v3/spaces/#{space.guid}", request_body, user_headers } }
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 403)
+
+        h['org_billing_manager'] = { code: 404 }
+        h['org_auditor'] = { code: 404 }
+        h['no_role'] = { code: 404 }
+
+        h['admin'] = {
+          code: 200,
+          response_object: space_json
+        }
+        h['org_manager'] = {
+          code: 200,
+          response_object: space_json
+        }
+        h['space_manager'] = {
+          code: 200,
+          response_object: space_json
+        }
+        h
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+        let(:expected_event_hash) do
+          {
+            type: 'audit.space.update',
+            actee: space.guid,
+            actee_type: 'space',
+            actee_name: 'codenames',
+            metadata: {
+              request: {
+                name: 'codenames',
+                metadata: {
+                  labels: {
+                    label: 'value'
+                  },
+                  annotations: {
+                    potato: 'yellow'
+                  }
+                }
+              }
+            }.to_json,
+            space_guid: space.guid,
+            organization_guid: space.organization_guid,
+          }
+        end
+      end
     end
 
     context 'removing labels' do
@@ -533,7 +582,19 @@ RSpec.describe 'Spaces' do
         h
       end
 
-      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
+      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS do
+        let(:expected_event_hash) do
+          {
+            type: 'audit.space.delete-request',
+            actee: space.guid,
+            actee_type: 'space',
+            actee_name: space.name,
+            metadata: { request: { recursive: true } }.to_json,
+            space_guid: space.guid,
+            organization_guid: org.guid,
+          }
+        end
+      end
     end
 
     describe 'when the user is not logged in' do

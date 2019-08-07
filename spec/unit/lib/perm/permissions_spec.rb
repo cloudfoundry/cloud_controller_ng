@@ -540,7 +540,7 @@ module VCAP::CloudController::Perm
       it 'returns true when the user is an admin' do
         allow(roles).to receive(:admin?).and_return(true)
 
-        has_permission = permissions.can_update_space?(space_id)
+        has_permission = permissions.can_update_space?(space_id, org_id)
 
         expect(has_permission).to equal(true)
       end
@@ -552,13 +552,13 @@ module VCAP::CloudController::Perm
 
         allow(perm_client).to receive(:has_any_permission?).with(permissions: expected_permissions, user_id: user_id, issuer: issuer).and_return(true)
 
-        has_permission = permissions.can_update_space?(space_id)
+        has_permission = permissions.can_update_space?(space_id, org_id)
 
         expect(has_permission).to equal(true)
       end
 
       it 'returns false otherwise' do
-        has_permission = permissions.can_update_space?(space_id)
+        has_permission = permissions.can_update_space?(space_id, org_id)
 
         expect(has_permission).to equal(false)
       end

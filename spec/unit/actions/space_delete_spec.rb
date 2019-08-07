@@ -16,11 +16,38 @@ module VCAP::CloudController
       let(:user) { User.make }
       let(:user_email) { 'user@example.com' }
 
-      it 'deletes the space record' do
+      it 'deletes both space records' do
         expect {
           space_delete.delete(space_dataset)
         }.to change { Space.count }.by(-2)
         expect { space.refresh }.to raise_error Sequel::Error, 'Record not found'
+      end
+
+      it 'creates audit events for recursive app deletion and space deletion' do
+        space_delete.delete([space])
+        expect(VCAP::CloudController::Event.count).to eq(2)
+
+        events = VCAP::CloudController::Event.all
+        event = events.last
+        expect(event.values).to include(
+          type: 'audit.space.delete-request',
+          actor: user_audit_info.user_guid,
+          actor_type: 'user',
+          actor_name: user_audit_info.user_email,
+          actor_username: user_audit_info.user_name,
+          actee: space.guid,
+          actee_type: 'space',
+          actee_name: 'space-1',
+          space_guid: space.guid,
+          organization_guid: space.organization.guid,
+        )
+        expect(event.metadata).to eq({ 'request' => { 'recursive' => true } })
+        expect(event.timestamp).to be
+
+        event = VCAP::CloudController::Event.first
+        expect(event.values).to include(
+          type: 'audit.app.delete-request'
+        )
       end
 
       describe 'recursive deletion' do
