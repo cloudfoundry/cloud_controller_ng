@@ -1,4 +1,4 @@
-### Delete an Organization
+### Delete an organization
 
 ```
 Example Request
