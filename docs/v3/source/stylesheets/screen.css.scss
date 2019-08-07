@@ -4,7 +4,6 @@
 @import 'variables';
 @import 'syntax';
 @import 'icon-font';
-@import 'parameters';
 @import 'overrides';
 
 /*
@@ -101,16 +100,6 @@ a, .link {
   background-color: $nav-bg;
   font-size: 14px;
   font-weight: bold;
-
-  // language selector for mobile devices
-  .lang-selector {
-    display: none;
-
-    a {
-      padding-top: 0.5em;
-      padding-bottom: 0.5em;
-    }
-  }
 
   // This is the logo at the top of the ToC
   & > img {
@@ -323,44 +312,6 @@ a, .link {
     right: 0;
     top: 0;
     bottom: 0;
-  }
-
-  .lang-selector {
-    position: fixed;
-    z-index: 50;
-    border-bottom: 5px solid $lang-select-active-bg;
-  }
-}
-
-.lang-selector {
-  background-color: $lang-select-bg;
-  width: 100%;
-  font-weight: bold;
-
-  a {
-    display: block;
-    float: left;
-    color: $lang-select-text;
-    text-decoration: none;
-    padding: 0 10px;
-    line-height: 30px;
-    outline: 0;
-
-    &:active, &:focus {
-      background-color: $lang-select-pressed-bg;
-      color: $lang-select-pressed-text;
-    }
-
-    &.active {
-      background-color: $lang-select-active-bg;
-      color: $lang-select-active-text;
-    }
-  }
-
-  &:after {
-    content: '';
-    clear: both;
-    display: block;
   }
 }
 
@@ -668,14 +619,6 @@ a, .link {
 
   %left-col {
     margin-right: 0;
-  }
-
-  .tocify-wrapper .lang-selector {
-    display: block;
-  }
-
-  .page-wrapper .lang-selector {
-    display: none;
   }
 
   %right-col {
