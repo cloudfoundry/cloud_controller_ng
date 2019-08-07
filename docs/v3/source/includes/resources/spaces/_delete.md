@@ -26,6 +26,6 @@ Location: https://api.example.org/v3/jobs/[guid]
 
 Role  | Notes
 --- | ---
-Org manager |
 Admin |
+Org Manager |
 
