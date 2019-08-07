@@ -544,15 +544,11 @@ nav {
   // provide blockquote styles to pre tags as an alternative to changing which tag is produced by the Markdown processor
   @each $lang in $lexed-languages {
     pre.highlight.#{$lang} {
-      border-radius: 5px;
+      border-radius: 0;
       color: #ccc;
       border-top: 1px solid #000;
       border-bottom: 1px solid #404040;
       background-color: $code-snippet-background-color;
-      position: relative;
-      left: 2em;
-      margin-right: 4em;
-      width: 45%;
     }
 
     pre.highlight.#{$lang} > code {
