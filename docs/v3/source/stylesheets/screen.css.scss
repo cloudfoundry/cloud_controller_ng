@@ -92,6 +92,7 @@ a, .link {
 
 nav {
   background: $main-bg;
+  padding: 16px;
 }
 
 .tocify-wrapper {
@@ -113,27 +114,27 @@ nav {
   & > img {
     display: block;
     width: 100%;
-    padding: 15px 10px 0px 10px;
   }
 
   & > .search {
     position: relative;
 
     input {
-      border-width: 0 0 1px 0;
-      border-color: $search-box-border-color;
-      padding: 6px 0 6px 20px;
-      margin: $nav-v-padding $nav-padding;
-      width: $nav-width - 30;
-      outline: none;
+      border: none;
+      border-bottom: 1px solid #ccc;
+      padding: 4px 0 4px 28px;
+      margin-top: $nav-v-padding;
+      height: 32px;
+      width: 100%;
       color: $nav-text;
-      border-radius: 0; /* ios has a default border radius */
+      box-sizing: border-box;
+      border-radius: 0;
     }
 
     &:before {
       position: absolute;
-      top: 17px;
-      left: $nav-padding;
+      top: 18px;
+      left: 8px;
       color: $nav-text;
       @extend %icon-search;
     }
@@ -145,25 +146,29 @@ nav {
 
   .search-results {
     margin-top: 0;
+    margin-bottom: 1em;
     height: 0;
+    background: #fbfbfb;
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
     overflow-y: auto;
     overflow-x: hidden;
     transition-property: height, margin;
     transition-duration: 180ms;
     transition-timing-function: ease-in-out;
+    padding: 0;
+    box-shadow: inset 0px -4px 17px rgba(0,0,0,0.05);
 
     &.visible {
       height: 30%;
-      margin-bottom: 1em;
     }
 
     li {
-      margin: 1em $nav-padding;
+      margin: 16px;
       line-height: 1;
     }
 
     a {
-      color: $nav-text;
       text-decoration: none;
 
       &:hover {
@@ -203,7 +208,6 @@ nav {
 
   li {
     padding: 0;
-    color: $nav-text;
     transition-property: background;
     transition-timing-function: linear;
     transition-duration: 230ms;
@@ -216,7 +220,7 @@ nav {
   }
 
   .tocify-header {
-    padding: 0 $nav-padding 0 $nav-padding;
+    padding: 0;
   }
 
   // Subheaders are the submenus that slide open
@@ -224,7 +228,7 @@ nav {
   .tocify-subheader {
     display: none; // tocify will override this when needed
     font-weight: 400;
-    padding: 0 $nav-padding 0 $nav-padding;
+    padding-left: $nav-padding;
   }
 
   .toc-footer {
@@ -548,7 +552,6 @@ nav {
 
   // provide blockquote styles to pre tags as an alternative to changing which tag is produced by the Markdown processor
   @each $lang in $lexed-languages {
-
     pre.highlight.#{$lang} {
       border-radius: 5px;
       color: #ccc;
@@ -568,7 +571,6 @@ nav {
     pre.highlight.#{$lang} > code .w {
       background-color: $code-snippet-background-color;
     }
-
   }
 
   blockquote {
