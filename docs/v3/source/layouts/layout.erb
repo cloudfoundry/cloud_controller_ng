@@ -36,11 +36,7 @@ under the License.
     <%= stylesheet_link_tag :print, media: :print %>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
 
-    <% if current_page.data.search %>
-      <%= javascript_include_tag  "all" %>
-    <% else %>
-      <%= javascript_include_tag  "all_nosearch" %>
-    <% end %>
+    <%= javascript_include_tag  "all" %>
   </head>
 
   <body class="<%= page_classes %>">
@@ -76,12 +72,10 @@ under the License.
         </div>
       </div>
 
-      <% if current_page.data.search %>
-        <div class="search">
-          <input type="search" class="search" id="input-search" placeholder="Search">
-        </div>
-        <ul class="search-results"></ul>
-      <% end %>
+      <div class="search">
+        <input type="search" class="search" id="input-search" placeholder="Search">
+      </div>
+      <ul class="search-results"></ul>
 
       <div id="toc">
       </div>
