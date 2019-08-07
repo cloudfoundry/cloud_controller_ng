@@ -4,7 +4,7 @@
 @import 'variables';
 @import 'syntax';
 @import 'icon-font';
-@import 'overrides';
+@import 'version-dropdown';
 
 /*
 Copyright 2008-2013 Concur Technologies, Inc.
@@ -37,6 +37,10 @@ html, body {
   background-color: $main-bg;
   height: 100%;
   -webkit-text-size-adjust: none; /* Never autoresize text */
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -108,7 +112,6 @@ nav {
   // This is the logo at the top of the ToC
   & > img {
     display: block;
-    box-sizing: border-box;
     width: 100%;
     padding: 15px 10px 0px 10px;
   }
@@ -120,7 +123,6 @@ nav {
       border-width: 0 0 1px 0;
       border-color: $search-box-border-color;
       padding: 6px 0 6px 20px;
-      box-sizing: border-box;
       margin: $nav-v-padding $nav-padding;
       width: $nav-width - 30;
       outline: none;
@@ -143,7 +145,6 @@ nav {
 
   .search-results {
     margin-top: 0;
-    box-sizing: border-box;
     height: 0;
     overflow-y: auto;
     overflow-x: hidden;
@@ -336,7 +337,6 @@ nav {
   & > h1, & > h2, & > h3, & > h4, & > h5, & > h6, & > p, & > table, & > ul, & > ol, & > aside, & > dl {
     margin-right: $examples-width;
     padding: 0 $main-padding;
-    box-sizing: border-box;
     display: block;
 
     @extend %left-col;
@@ -526,8 +526,6 @@ nav {
 
     float: right;
     clear: right;
-
-    box-sizing: border-box;
 
     @extend %right-col;
 
