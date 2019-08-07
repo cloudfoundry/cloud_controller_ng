@@ -1,10 +1,8 @@
 //= require ../lib/_lunr
-//= require ../lib/_jquery.highlight
 (function () {
   'use strict';
 
   var content, searchResults;
-  var highlightOpts = { element: 'span', className: 'search-highlight' };
 
   var index = new lunr.Index();
 
@@ -36,7 +34,6 @@
   }
 
   function search(event) {
-    unhighlight();
     searchResults.addClass('visible');
 
     // ESC clears the field
@@ -53,22 +50,12 @@
           var elem = document.getElementById(result.ref);
           searchResults.append("<li><a href='#" + result.ref + "'>" + $(elem).text() + "</a></li>");
         });
-        highlight.call(this);
       } else {
         searchResults.html('<li></li>');
         $('.search-results li').text('No Results Found for "' + this.value + '"');
       }
     } else {
-      unhighlight();
       searchResults.removeClass('visible');
     }
-  }
-
-  function highlight() {
-    if (this.value) content.highlight(this.value, highlightOpts);
-  }
-
-  function unhighlight() {
-    content.unhighlight(highlightOpts);
   }
 })();
