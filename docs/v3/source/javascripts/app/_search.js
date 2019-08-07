@@ -12,6 +12,7 @@
 
   $(populate);
   $(bind);
+  $(initializeSlashHandler);
 
   function populate() {
     $('h1, h2, h3').each(function() {
@@ -28,6 +29,15 @@
     searchResults = $('.search-results');
 
     $('#input-search').on('keyup', search);
+  }
+
+  function initializeSlashHandler() {
+    $('body').on('keydown', function(event) {
+      if (event.keyCode == 191) {
+        event.preventDefault();
+        $('#input-search').focus();
+      }
+    });
   }
 
   function search(event) {
@@ -49,7 +59,7 @@
         });
       } else {
         searchResults.html('<li></li>');
-        $('.search-results li').text('No Results Found for "' + this.value + '"');
+        $('.search-results li').text('No results found for "' + this.value + '"');
       }
     } else {
       searchResults.removeClass('visible');
