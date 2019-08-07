@@ -69,5 +69,9 @@
     color: $color-text;
     padding: 2px 10px;
     display: block;
+
+    &:hover, &:focus {
+      background: #eee;
+    }
   }
 }
