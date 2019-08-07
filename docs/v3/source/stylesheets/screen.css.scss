@@ -107,7 +107,6 @@ nav {
   bottom: 0;
   width: $nav-width;
   font-size: 14px;
-  font-weight: bold;
   border-right: 1px solid #ccc;
 
   // This is the logo at the top of the ToC
@@ -126,7 +125,6 @@ nav {
       margin-top: $nav-v-padding;
       height: 32px;
       width: 100%;
-      color: $nav-text;
       box-sizing: border-box;
       border-radius: 0;
     }
@@ -221,6 +219,7 @@ nav {
 
   .tocify-header {
     padding: 0;
+    font-weight: bold;
   }
 
   // Subheaders are the submenus that slide open
@@ -504,14 +503,6 @@ nav {
 
   aside.success:before {
     @extend %icon-ok-sign;
-  }
-
-  .search-highlight {
-    padding: 2px;
-    margin: -2px;
-    border-radius: 4px;
-    border: 1px solid transparentize($teal1, 0.75);
-    background: linear-gradient(to top left, transparentize($teal1, 0.75) 0%, transparentize($teal2, 0.75) 100%);
   }
 }
 
