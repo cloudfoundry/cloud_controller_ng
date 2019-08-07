@@ -1,11 +1,8 @@
 ---
 title: Cloud Controller API Reference
 
-language_tabs:
-  - shell: curl
-
 includes:
- # snippets have to be at the top to be used in other files
+  # snippets have to be at the top to be used in other files
   - snippets/query_params
   - snippets/object_attributes
   - api_resources/app_features
