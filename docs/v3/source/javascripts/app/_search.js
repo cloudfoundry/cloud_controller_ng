@@ -35,7 +35,7 @@
     $('body').on('keydown', function(event) {
       if (event.keyCode == 191) {
         event.preventDefault();
-        $('#input-search').focus();
+        $('#input-search').val('').focus();
       }
     });
   }
