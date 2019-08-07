@@ -1,4 +1,4 @@
-### Delete a Space
+### Delete a space
 
 ```
 Example Request
