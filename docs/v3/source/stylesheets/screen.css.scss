@@ -86,6 +86,10 @@ a, .link {
   width: 20px;
 }
 
+nav {
+  background: $main-bg;
+}
+
 .tocify-wrapper {
   transition: left 0.3s ease-in-out;
 
@@ -97,14 +101,15 @@ a, .link {
   left: 0;
   bottom: 0;
   width: $nav-width;
-  background-color: $nav-bg;
   font-size: 14px;
   font-weight: bold;
+  border-right: 1px solid #ccc;
 
   // This is the logo at the top of the ToC
   & > img {
     display: block;
-    width: 200px;
+    box-sizing: border-box;
+    width: 100%;
     padding: 15px 10px 0px 10px;
   }
 
@@ -112,7 +117,6 @@ a, .link {
     position: relative;
 
     input {
-      background: $nav-bg;
       border-width: 0 0 1px 0;
       border-color: $search-box-border-color;
       padding: 6px 0 6px 20px;
@@ -207,7 +211,6 @@ a, .link {
   // This is the currently selected ToC entry
   .tocify-focus {
     box-shadow: 0px 1px 0px $nav-active-shadow;
-    background-color: $nav-active-bg;
     color: $nav-active-text;
   }
 
@@ -219,7 +222,6 @@ a, .link {
   // in the table of contents.
   .tocify-subheader {
     display: none; // tocify will override this when needed
-    background-color: $nav-subitem-bg;
     font-weight: 400;
     padding: 0 $nav-padding 0 $nav-padding;
   }
@@ -357,7 +359,6 @@ a, .link {
     margin-bottom: $h1-margin-bottom;
     margin-top: 2em;
     border-top: 1px solid #ddd;
-    background-image: linear-gradient(to bottom, #fff, $gray5);
   }
 
   h1:first-child, div:first-child + h1 {
