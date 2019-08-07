@@ -45,6 +45,7 @@ docs/v3/.cache
 docs/v3/node_modules
 docs/v3/node_modules/**/*
 docs/v3/source/version
+docs/v3/vendor
 
 # YARD artifacts
 docs/v3/.yardoc
