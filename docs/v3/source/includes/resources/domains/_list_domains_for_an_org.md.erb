@@ -5,7 +5,7 @@ Example Request
 ```
 
 ```shell
-curl "https://api.example.org/v3/organizations/[org_guid]/domains" \
+curl "https://api.example.org/v3/organizations/[guid]/domains" \
   -X GET \
   -H "Authorization: bearer [token]"
 ```
@@ -24,7 +24,7 @@ Content-Type: application/json
 Retrieve all domains available in an organization for the current user. This will return user-visible domains without an organization relationship AND domains scoped or shared with the organization.
 
 #### Definition
-`GET /v3/organizations/:org_guid/domains`
+`GET /v3/organizations/:guid/domains`
 
 #### Query parameters
 
