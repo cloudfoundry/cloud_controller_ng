@@ -158,7 +158,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
         it 'responds with 422' do
           post :create, params: { name: name }, as: :json
           expect(response.status).to eq(422)
-          expect(response).to have_error_message('Name must be unique')
+          expect(response).to have_error_message("Organization '#{name}' already exists.")
         end
       end
 
