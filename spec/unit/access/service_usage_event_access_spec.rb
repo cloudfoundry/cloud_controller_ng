@@ -17,6 +17,10 @@ module VCAP::CloudController
       it { is_expected.to allow_op_on_object :reset, VCAP::CloudController::ServiceUsageEvent }
     end
 
+    context 'a global auditor' do
+      it_behaves_like :global_auditor_access
+    end
+
     context 'a user that is not an admin (defensive)' do
       it_behaves_like :no_access
 
