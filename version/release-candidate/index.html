@@ -4429,15 +4429,15 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 </tr>
 </thead><tbody>
 <tr>
-<td>Space Developer</td>
+<td>Admin Read-Only</td>
 <td></td>
 </tr>
 <tr>
-<td>Space Manager</td>
+<td>Admin</td>
 <td></td>
 </tr>
 <tr>
-<td>Space Auditor</td>
+<td>Global Auditor</td>
 <td></td>
 </tr>
 <tr>
@@ -4445,23 +4445,23 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 <td></td>
 </tr>
 <tr>
-<td>Org Manager</td>
-<td></td>
-</tr>
-<tr>
 <td>Org Billing Manager</td>
 <td>Can only view domains without an organization relationship.</td>
 </tr>
 <tr>
-<td>Admin</td>
+<td>Org Manager</td>
 <td></td>
 </tr>
 <tr>
-<td>Admin Read-Only</td>
+<td>Space Auditor</td>
 <td></td>
 </tr>
 <tr>
-<td>Global Auditor</td>
+<td>Space Developer</td>
+<td></td>
+</tr>
+<tr>
+<td>Space Manager</td>
 <td></td>
 </tr>
 </tbody></table>
@@ -6088,13 +6088,13 @@ Their values will be <code class="prettyprint">null</code> by default and will c
 <td>Admin</td>
 </tr>
 <tr>
-<td>OrgManager</td>
+<td>Org Manager</td>
 </tr>
 <tr>
-<td>SpaceDeveloper</td>
+<td>Space Developer</td>
 </tr>
 <tr>
-<td>SpaceManager</td>
+<td>Space Manager</td>
 </tr>
 </tbody></table>
 
@@ -8188,7 +8188,7 @@ In the case where the specified isolation segment is the system-wide shared segm
 <td>Admin</td>
 </tr>
 <tr>
-<td>OrgManager</td>
+<td>Org Manager</td>
 </tr>
 </tbody></table>
 
@@ -10772,6 +10772,1349 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 </tr>
 </tbody></table>
 
+          <h2 id="routes">Routes</h2>
+
+<p>Routes are addresses that direct matched network traffic to one or more destinations. Each route is based on a domain name with additional matching criteria (host (subdomain), path, etc). Matched traffic will be distributed across all destinations, based on their configuration (round-robin by default).</p>
+
+          <h3 id="the-route-object">The route object</h3>
+<pre class="highlight plaintext"><code>Example Route object
+</code></pre>
+<pre class="highlight json"><code><span class="w">  </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cbad697f-cac1-48f4-9017-ac08f39dfb31"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"host"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a-hostname"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/some_path"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a-hostname.a-domain.com/some_path"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">}</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"885a8cb3-c07b-4856-b448-eeb10bf36236"</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"domain"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"0b5f3633-194c-42d2-9408-972366617e0e"</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/spaces/885a8cb3-c07b-4856-b448-eeb10bf36236"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"domain"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/domains/0b5f3633-194c-42d2-9408-972366617e0e"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"destinations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31/destinations"</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+
+</span></code></pre>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>guid</strong></td>
+<td><em>uuid</em></td>
+<td>Unique identifier for the route.</td>
+</tr>
+<tr>
+<td><strong>host</strong></td>
+<td><em>string</em></td>
+<td>The hostname for the route.<br>Must be under 63 character long and only contain letters, numbers, dashes (-) or underscores(_).</td>
+</tr>
+<tr>
+<td><strong>path</strong></td>
+<td><em>string</em></td>
+<td>The path for the route.<br>Must be under 128 character long and not contain question marks (?), begin with a slash (/) and not be exactly a slash (/). Must conform to path components from <a href="https://tools.ietf.org/html/rfc2396">RFC 2396</a>.</td>
+</tr>
+<tr>
+<td><strong>url</strong></td>
+<td><em>string</em></td>
+<td>The URL for the route. Combination of host, domain name, and path.</td>
+</tr>
+<tr>
+<td><strong>created_at</strong></td>
+<td><em>datetime</em></td>
+<td>The time with zone when the object was created.</td>
+</tr>
+<tr>
+<td><strong>updated_at</strong></td>
+<td><em>datetime</em></td>
+<td>The time with zone when the object was last updated.</td>
+</tr>
+<tr>
+<td><strong>space</strong></td>
+<td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
+<td>A relationship to the space containing the route. Routes can only be mapped to destinations in that space.</td>
+</tr>
+<tr>
+<td><strong>domain</strong></td>
+<td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
+<td>A relationship to the domain of the route.</td>
+</tr>
+<tr>
+<td><strong>links</strong></td>
+<td><a href="#links"><em>links object</em></a></td>
+<td>Links to related resources.</td>
+</tr>
+<tr>
+<td><strong>metadata.labels</strong> <em>(experimental)</em></td>
+<td><a href="#labels"><em>label object</em></a></td>
+<td>Labels applied to the route.</td>
+</tr>
+<tr>
+<td><strong>metadata.annotations</strong> <em>(experimental)</em></td>
+<td><a href="#annotations"><em>annotation object</em></a></td>
+<td>Annotations applied to the route.</td>
+</tr>
+</tbody></table>
+
+          <h3 id="the-destination-object">The destination object</h3>
+
+<p>A destination represents the relationship between a route and a resource that can serve traffic (for example, the <code class="prettyprint">web</code> process of an application).</p>
+
+<p>When a route has destinations, that route will direct traffic to the processes represented by those destinations.</p>
+
+<p>If a destination is created with a port specified, the route will direct traffic to that port on the process. A destination with port 9000 and process type <code class="prettyprint">api</code> means traffic will be directed to the <code class="prettyprint">api</code> process running on container port 9000.</p>
+
+<p>Note that when using a custom port, the app process must be listening on the specified port for the mapping to work. Otherwise, visiting the route will result in a 404 error.</p>
+
+<p>If a destination does not specify a port, the default port depends on the app lifecycle type. For buildpack apps, traffic will be directed to port 8080. For Docker apps, the first port specified in the Dockerfile will be used.</p>
+<pre class="highlight plaintext"><code>Example Destination object
+</code></pre>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"89323d4e-2e84-43e7-83e9-adbf50a20c0e"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1cb006ee-fb05-47e1-b541-c34179ddc446"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"process"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"web"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="w">
+</span><span class="p">}</span><span class="w">
+
+</span></code></pre>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>guid</strong></td>
+<td><em>uuid</em></td>
+<td>Unique identifier for the destination.</td>
+</tr>
+<tr>
+<td><strong>app.guid</strong></td>
+<td><em>uuid</em></td>
+<td>Unique identifier for the app to route traffic to.</td>
+</tr>
+<tr>
+<td><strong>app.process.type</strong></td>
+<td><em>string</em></td>
+<td>Type of the process belonging to the app to route traffic to.</td>
+</tr>
+<tr>
+<td><strong>port</strong></td>
+<td><em>integer</em></td>
+<td>Port on the destination process to route traffic to.</td>
+</tr>
+<tr>
+<td><strong>weight</strong> <em>(experimental)</em></td>
+<td><em>integer</em> or <code class="prettyprint">null</code></td>
+<td>Percentage of traffic which will be routed to this destination. <em>This feature is only available via the BETA Service Mesh routing plane</em>.</td>
+</tr>
+</tbody></table>
+
+          <h3 id="create-a-route">Create a route</h3>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/routes"</span> <span class="se">\</span>
+  -X POST <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+  -H <span class="s2">"Content-type: application/json"</span> <span class="se">\</span>
+  -d <span class="s1">'{
+    "host": "a-hostname",
+    "path": "/some_path",
+    "relationships": {
+      "domain": {
+        "data": { "guid": "domain-guid" }
+      },
+      "space": {
+        "data": { "guid": "space-guid" }
+      }
+    },
+    "metadata": {
+      "labels": { "key": "value" },
+      "annotations": { "note": "detailed information"}
+    }
+  }'</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">201</span> <span class="ne">Created</span>
+<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
+
+<span class="w">  </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cbad697f-cac1-48f4-9017-ac08f39dfb31"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"host"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a-hostname"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/some_path"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a-hostname.a-domain.com/some_path"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"key"</span><span class="p">:</span><span class="w"> </span><span class="s2">"value"</span><span class="w"> </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"note"</span><span class="p">:</span><span class="w"> </span><span class="s2">"detailed information"</span><span class="w"> </span><span class="p">}</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"885a8cb3-c07b-4856-b448-eeb10bf36236"</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"domain"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"0b5f3633-194c-42d2-9408-972366617e0e"</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/spaces/885a8cb3-c07b-4856-b448-eeb10bf36236"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"domain"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/domains/0b5f3633-194c-42d2-9408-972366617e0e"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"destinations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31/destinations"</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+
+</span></code></pre>
+
+<h4 id="definition">Definition</h4>
+
+<p><code class="prettyprint">POST /v3/routes</code></p>
+
+<h4 id="required-parameters">Required parameters</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>relationships.space</strong></td>
+<td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
+<td>A relationship to the space containing the route. Routes can only be mapped to destinations in that space.</td>
+</tr>
+<tr>
+<td><strong>relationships.domain</strong></td>
+<td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
+<td>A relationship to the domain of the route.</td>
+</tr>
+</tbody></table>
+
+<h4 id="optional-parameters">Optional parameters</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>host</strong></td>
+<td><em>string</em></td>
+<td>The host component for the route.</td>
+</tr>
+<tr>
+<td><strong>path</strong></td>
+<td><em>string</em></td>
+<td>The path component for the route. Should begin with a <code class="prettyprint">/</code>.</td>
+</tr>
+<tr>
+<td><strong>metadata.annotations</strong> <em>(experimental)</em></td>
+<td><a href="#annotations"><em>annotation object</em></a></td>
+<td>Annotations applied to the route.</td>
+</tr>
+<tr>
+<td><strong>metadata.labels</strong> <em>(experimental)</em></td>
+<td><a href="#labels"><em>label object</em></a></td>
+<td>Labels applied to the route.</td>
+</tr>
+</tbody></table>
+
+<h4 id="permitted-roles">Permitted roles</h4>
+
+<table><thead>
+<tr>
+<th>Role</th>
+<th>Notes</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Admin</td>
+<td></td>
+</tr>
+<tr>
+<td>Space Developer</td>
+<td></td>
+</tr>
+</tbody></table>
+
+          <h3 id="get-a-route">Get a route</h3>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/routes/[guid]"</span> <span class="se">\</span>
+  -X GET <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
+
+<span class="w">  </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cbad697f-cac1-48f4-9017-ac08f39dfb31"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"host"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a-hostname"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/some_path"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a-hostname.a-domain.com/some_path"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">}</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"885a8cb3-c07b-4856-b448-eeb10bf36236"</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"domain"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"0b5f3633-194c-42d2-9408-972366617e0e"</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/spaces/885a8cb3-c07b-4856-b448-eeb10bf36236"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"domain"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/domains/0b5f3633-194c-42d2-9408-972366617e0e"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"destinations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31/destinations"</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+
+</span></code></pre>
+
+<h4 id="definition">Definition</h4>
+
+<p><code class="prettyprint">GET /v3/routes/:guid</code></p>
+
+<h4 id="permitted-roles">Permitted roles</h4>
+
+<table><thead>
+<tr>
+<th>Role</th>
+<th>Notes</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Admin Read-Only</td>
+<td></td>
+</tr>
+<tr>
+<td>Admin</td>
+<td></td>
+</tr>
+<tr>
+<td>Global Auditor</td>
+<td></td>
+</tr>
+<tr>
+<td>Org Auditor</td>
+<td></td>
+</tr>
+<tr>
+<td>Org Manager</td>
+<td></td>
+</tr>
+<tr>
+<td>Space Auditor</td>
+<td></td>
+</tr>
+<tr>
+<td>Space Developer</td>
+<td></td>
+</tr>
+<tr>
+<td>Space Manager</td>
+<td></td>
+</tr>
+</tbody></table>
+
+          <h3 id="list-routes">List routes</h3>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/routes"</span> <span class="se">\</span>
+  -X GET <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
+
+<span class="w">  </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"pagination"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"total_results"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"total_pages"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"first"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes?page=1&amp;per_page=2"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"last"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes?page=2&amp;per_page=2"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"next"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes?page=2&amp;per_page=2"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"previous"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"resources"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cbad697f-cac1-48f4-9017-ac08f39dfb31"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"host"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a-hostname"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/some_path"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a-hostname.a-domain.com/some_path"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+          </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"885a8cb3-c07b-4856-b448-eeb10bf36236"</span><span class="w">
+            </span><span class="p">}</span><span class="w">
+          </span><span class="p">},</span><span class="w">
+          </span><span class="nt">"domain"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"0b5f3633-194c-42d2-9408-972366617e0e"</span><span class="w">
+            </span><span class="p">}</span><span class="w">
+          </span><span class="p">}</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31"</span><span class="w">
+          </span><span class="p">},</span><span class="w">
+          </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/spaces/885a8cb3-c07b-4856-b448-eeb10bf36236"</span><span class="w">
+          </span><span class="p">},</span><span class="w">
+          </span><span class="nt">"domain"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/domains/0b5f3633-194c-42d2-9408-972366617e0e"</span><span class="w">
+          </span><span class="p">},</span><span class="w">
+          </span><span class="nt">"destinations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31/destinations"</span><span class="w">
+          </span><span class="p">}</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">]</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+
+</span></code></pre>
+
+<p>Retrieve all routes the user has access to.</p>
+
+<h4 id="definition">Definition</h4>
+
+<p><code class="prettyprint">GET /v3/routes</code></p>
+
+<h4 id="query-parameters">Query parameters</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>hosts</strong></td>
+<td><em>list of strings</em></td>
+<td>Comma-delimited list of hostnames to filter by.</td>
+</tr>
+<tr>
+<td><strong>paths</strong></td>
+<td><em>list of strings</em></td>
+<td>Comma-delimited list of paths to filter by (e.g. <code class="prettyprint">/path1,/path2</code>).</td>
+</tr>
+<tr>
+<td><strong>domain_guids</strong></td>
+<td><em>list of strings</em></td>
+<td>Comma-delimited list of domain guids to filter by.</td>
+</tr>
+<tr>
+<td><strong>space_guids</strong></td>
+<td><em>list of strings</em></td>
+<td>Comma-delimited list of space guids to filter by.</td>
+</tr>
+<tr>
+<td><strong>organization_guids</strong></td>
+<td><em>list of strings</em></td>
+<td>Comma-delimited list of organization guids to filter by.</td>
+</tr>
+<tr>
+<td><strong>page</strong></td>
+<td><em>integer</em></td>
+<td>Page to display. Valid values are integers &gt;= 1.</td>
+</tr>
+<tr>
+<td><strong>per_page</strong></td>
+<td><em>integer</em></td>
+<td>Number of results per page. <br>Valid values are 1 through 5000.</td>
+</tr>
+<tr>
+<td><strong>order_by</strong></td>
+<td><em>string</em></td>
+<td>Value to sort by. Defaults to ascending. Prepend with <code class="prettyprint">-</code> to sort descending. <br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code>.</td>
+</tr>
+<tr>
+<td><strong>label_selector</strong></td>
+<td><em>string</em></td>
+<td><strong>Experimental</strong> - A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements.</td>
+</tr>
+</tbody></table>
+
+<h4 id="permitted-roles">Permitted roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>All Roles</td>
+</tr>
+</tbody></table>
+
+          <h3 id="list-routes-for-an-app">List routes for an app</h3>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/routes"</span> <span class="se">\</span>
+  -X GET <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
+
+<span class="w">  </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"pagination"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"total_results"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"total_pages"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"first"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/routes?page=1&amp;per_page=2"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"last"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/routes?page=2&amp;per_page=2"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"next"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/routes?page=2&amp;per_page=2"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"previous"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"resources"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cbad697f-cac1-48f4-9017-ac08f39dfb31"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"host"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a-hostname"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/some_path"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a-hostname.a-domain.com/some_path"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+          </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"885a8cb3-c07b-4856-b448-eeb10bf36236"</span><span class="w">
+            </span><span class="p">}</span><span class="w">
+          </span><span class="p">},</span><span class="w">
+          </span><span class="nt">"domain"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"0b5f3633-194c-42d2-9408-972366617e0e"</span><span class="w">
+            </span><span class="p">}</span><span class="w">
+          </span><span class="p">}</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31"</span><span class="w">
+          </span><span class="p">},</span><span class="w">
+          </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/spaces/885a8cb3-c07b-4856-b448-eeb10bf36236"</span><span class="w">
+          </span><span class="p">},</span><span class="w">
+          </span><span class="nt">"domain"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/domains/0b5f3633-194c-42d2-9408-972366617e0e"</span><span class="w">
+          </span><span class="p">},</span><span class="w">
+          </span><span class="nt">"destinations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31/destinations"</span><span class="w">
+          </span><span class="p">}</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">]</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+
+</span></code></pre>
+
+<p>Retrieve all routes that have <a href="#the-destination-object">destinations</a> that point to the given app.</p>
+
+<h4 id="definition">Definition</h4>
+
+<p><code class="prettyprint">GET /v3/apps/:app_guid/routes</code></p>
+
+<h4 id="query-parameters">Query parameters</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>hosts</strong></td>
+<td><em>list of strings</em></td>
+<td>Comma-delimited list of hostnames to filter by.</td>
+</tr>
+<tr>
+<td><strong>paths</strong></td>
+<td><em>list of strings</em></td>
+<td>Comma-delimited list of paths to filter by (e.g. <code class="prettyprint">/path1,/path2</code>).</td>
+</tr>
+<tr>
+<td><strong>domain_guids</strong></td>
+<td><em>list of strings</em></td>
+<td>Comma-delimited list of domain guids to filter by.</td>
+</tr>
+<tr>
+<td><strong>space_guids</strong></td>
+<td><em>list of strings</em></td>
+<td>Comma-delimited list of space guids to filter by.</td>
+</tr>
+<tr>
+<td><strong>organization_guids</strong></td>
+<td><em>list of strings</em></td>
+<td>Comma-delimited list of organization guids to filter by.</td>
+</tr>
+<tr>
+<td><strong>page</strong></td>
+<td><em>integer</em></td>
+<td>Page to display. Valid values are integers &gt;= 1.</td>
+</tr>
+<tr>
+<td><strong>per_page</strong></td>
+<td><em>integer</em></td>
+<td>Number of results per page. <br>Valid values are 1 through 5000.</td>
+</tr>
+<tr>
+<td><strong>order_by</strong></td>
+<td><em>string</em></td>
+<td>Value to sort by. Defaults to ascending. Prepend with <code class="prettyprint">-</code> to sort descending. <br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code>.</td>
+</tr>
+<tr>
+<td><strong>label_selector</strong></td>
+<td><em>string</em></td>
+<td><strong>Experimental</strong> - A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements.</td>
+</tr>
+</tbody></table>
+
+<h4 id="permitted-roles">Permitted roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Admin</td>
+</tr>
+<tr>
+<td>Admin Read-Only</td>
+</tr>
+<tr>
+<td>Global Auditor</td>
+</tr>
+<tr>
+<td>Org Manager</td>
+</tr>
+<tr>
+<td>Space Auditor</td>
+</tr>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Space Manager</td>
+</tr>
+</tbody></table>
+
+          <h3 id="update-a-route">Update a route</h3>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/routes/[guid]"</span> <span class="se">\</span>
+  -X PATCH <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
+  -H <span class="s2">"Content-type: application/json"</span> <span class="se">\</span>
+  -d <span class="s1">'{
+    "metadata": {
+      "labels": {"key": "value"},
+      "annotations": {"note": "detailed information"}
+    }
+  }'</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
+
+<span class="w">  </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cbad697f-cac1-48f4-9017-ac08f39dfb31"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"host"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a-hostname"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/some_path"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a-hostname.a-domain.com/some_path"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"key"</span><span class="p">:</span><span class="w"> </span><span class="s2">"value"</span><span class="w"> </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"note"</span><span class="p">:</span><span class="w"> </span><span class="s2">"detailed information"</span><span class="w"> </span><span class="p">}</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"885a8cb3-c07b-4856-b448-eeb10bf36236"</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"domain"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"0b5f3633-194c-42d2-9408-972366617e0e"</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/spaces/885a8cb3-c07b-4856-b448-eeb10bf36236"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"domain"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/domains/0b5f3633-194c-42d2-9408-972366617e0e"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"destinations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31/destinations"</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+
+</span></code></pre>
+
+<h4 id="definition">Definition</h4>
+
+<p><code class="prettyprint">PATCH /v3/routes/:guid</code></p>
+
+<h4 id="optional-parameters">Optional parameters</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>metadata.labels</strong> <em>(experimental)</em></td>
+<td><a href="#labels"><em>label object</em></a></td>
+<td>Labels applied to the route.</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>metadata.annotations</strong> <em>(experimental)</em></td>
+<td><a href="#annotations"><em>annotation object</em></a></td>
+<td>Annotations applied to the route.</td>
+<td></td>
+</tr>
+</tbody></table>
+
+<h4 id="permitted-roles">Permitted roles</h4>
+
+<table><thead>
+<tr>
+<th>Role</th>
+<th>Notes</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Admin</td>
+<td></td>
+</tr>
+<tr>
+<td>Space Developer</td>
+<td></td>
+</tr>
+</tbody></table>
+
+          <h3 id="delete-a-route">Delete a route</h3>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/routes/[guid]"</span> <span class="se">\</span>
+  -X DELETE <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">202</span> <span class="ne">Accepted</span>
+<span class="na">Location</span><span class="p">:</span> <span class="s">https://api.example.org/v3/jobs/[guid]</span>
+</code></pre>
+
+<h4 id="definition">Definition</h4>
+
+<p><code class="prettyprint">DELETE /v3/routes/:guid</code></p>
+
+<h4 id="permitted-roles">Permitted roles</h4>
+
+<table><thead>
+<tr>
+<th>Role</th>
+<th>Notes</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Admin</td>
+<td></td>
+</tr>
+<tr>
+<td>Space Developer</td>
+<td></td>
+</tr>
+</tbody></table>
+
+          <h3 id="check-reserved-routes-for-a-domain">Check reserved routes for a domain</h3>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/domains/[guid]/route_reservations"</span> <span class="se">\</span>
+  -X GET <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
+
+<span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nt">"matching_route"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span><span class="w">
+
+</span></code></pre>
+
+<p>Check if a specific route for a domain exists, regardless of the user&rsquo;s visibility for the route in case the route
+belongs to a space the user does not belong to.</p>
+
+<h4 id="definition">Definition</h4>
+
+<p><code class="prettyprint">GET /v3/domains/:guid/route_reservations</code></p>
+
+<h4 id="query-parameters">Query parameters</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>host</strong></td>
+<td><em>string</em></td>
+<td>Hostname to filter by. Defaults to empty string if not provided.</td>
+</tr>
+<tr>
+<td><strong>path</strong></td>
+<td><em>string</em></td>
+<td>Path to filter by. Defaults to empty string if not provided.</td>
+</tr>
+</tbody></table>
+
+<h4 id="permitted-roles">Permitted roles</h4>
+
+<table><thead>
+<tr>
+<th>Role</th>
+<th>Notes</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Admin</td>
+<td></td>
+</tr>
+<tr>
+<td>Admin Read-Only</td>
+<td></td>
+</tr>
+<tr>
+<td>Global Auditor</td>
+<td></td>
+</tr>
+<tr>
+<td>Org Auditor</td>
+<td></td>
+</tr>
+<tr>
+<td>Org Billing Manager</td>
+<td>Can only check if routes exist for a domain without an organization relationship.</td>
+</tr>
+<tr>
+<td>Org Manager</td>
+<td></td>
+</tr>
+<tr>
+<td>Space Auditor</td>
+<td></td>
+</tr>
+<tr>
+<td>Space Developer</td>
+<td></td>
+</tr>
+<tr>
+<td>Space Manager</td>
+<td></td>
+</tr>
+</tbody></table>
+
+          <h3 id="list-destinations-for-a-route">List destinations for a route</h3>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/routes/[guid]/destinations"</span> <span class="se">\</span>
+  -X GET <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
+
+<span class="w">  </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"destinations"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"89323d4e-2e84-43e7-83e9-adbf50a20c0e"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1cb006ee-fb05-47e1-b541-c34179ddc446"</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"process"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"web"</span><span class="w">
+          </span><span class="p">}</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"fbef10a2-8ee7-11e9-aa2d-abeeaf7b83c5"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"01856e12-8ee8-11e9-98a5-bb397dbc818f"</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"process"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"api"</span><span class="w">
+          </span><span class="p">}</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">9000</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31/destinations"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"route"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31"</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+
+</span></code></pre>
+
+<p>Retrieve all destinations associated with a route.</p>
+
+<h4 id="definition">Definition</h4>
+
+<p><code class="prettyprint">GET /v3/routes/:guid/destinations</code></p>
+
+<h4 id="permitted-roles">Permitted roles</h4>
+
+<table><thead>
+<tr>
+<th>Role</th>
+<th>Notes</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Admin Read-Only</td>
+<td></td>
+</tr>
+<tr>
+<td>Admin</td>
+<td></td>
+</tr>
+<tr>
+<td>Global Auditor</td>
+<td></td>
+</tr>
+<tr>
+<td>Org Auditor</td>
+<td></td>
+</tr>
+<tr>
+<td>Org Manager</td>
+<td></td>
+</tr>
+<tr>
+<td>Space Auditor</td>
+<td></td>
+</tr>
+<tr>
+<td>Space Developer</td>
+<td></td>
+</tr>
+<tr>
+<td>Space Manager</td>
+<td></td>
+</tr>
+</tbody></table>
+
+          <h3 id="insert-destinations-for-a-route">Insert destinations for a route</h3>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/routes/[guid]/destinations"</span> <span class="se">\</span>
+  -X POST <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
+  -d <span class="s1">'{
+    "destinations": [
+      {
+        "app": {
+          "guid": "1cb006ee-fb05-47e1-b541-c34179ddc446"
+        }
+      },
+      {
+        "app": {
+          "guid": "01856e12-8ee8-11e9-98a5-bb397dbc818f",
+          "process": {
+            "type": "api"
+          }
+        },
+        "port": 9000
+      }
+    ]
+  }'</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
+
+<span class="w">  </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"destinations"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"89323d4e-2e84-43e7-83e9-adbf50a20c0e"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1cb006ee-fb05-47e1-b541-c34179ddc446"</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"process"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"web"</span><span class="w">
+          </span><span class="p">}</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"fbef10a2-8ee7-11e9-aa2d-abeeaf7b83c5"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"01856e12-8ee8-11e9-98a5-bb397dbc818f"</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"process"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"api"</span><span class="w">
+          </span><span class="p">}</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">9000</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31/destinations"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"route"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31"</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+
+</span></code></pre>
+
+<p>Add one or more destinations to a route, preserving any existing destinations.</p>
+
+<p>Note that weighted destinations cannot be added with this endpoint. To add weighted destinations,
+replace all destinations for a route at once using the <a href="#replace-all-destinations-for-a-route">replace destinations endpoint</a>.</p>
+
+<h4 id="definition">Definition</h4>
+
+<p><code class="prettyprint">POST /v3/routes/:guid/destinations</code></p>
+
+<h4 id="required-parameters">Required parameters</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>destinations</strong></td>
+<td>array of <a href="#the-destination-object"><em>destination objects</em></a></td>
+<td>List of destinations to add to route. Destinations without <code class="prettyprint">process.type</code> specified will get process type <code class="prettyprint">&quot;web&quot;</code> by default.</td>
+</tr>
+</tbody></table>
+
+<h4 id="permitted-roles">Permitted roles</h4>
+
+<table><thead>
+<tr>
+<th>Role</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Admin</td>
+</tr>
+<tr>
+<td>Space Developer</td>
+</tr>
+</tbody></table>
+
+          <h3 id="replace-all-destinations-for-a-route">Replace all destinations for a route</h3>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/routes/[guid]/destinations"</span> <span class="se">\</span>
+  -X PATCH <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
+  -d <span class="s1">'{
+    "destinations": [
+      {
+        "app": {
+          "guid": "1cb006ee-fb05-47e1-b541-c34179ddc446"
+        },
+        "weight": 61
+      },
+      {
+        "app": {
+          "guid": "01856e12-8ee8-11e9-98a5-bb397dbc818f",
+          "process": {
+            "type": "api"
+          }
+        },
+        "weight": 39,
+        "port": 9000
+      }
+    ]
+  }'</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
+
+<span class="p">{</span><span class="w">
+  </span><span class="nt">"destinations"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"89323d4e-2e84-43e7-83e9-adbf50a20c0e"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1cb006ee-fb05-47e1-b541-c34179ddc446"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"process"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"web"</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="mi">61</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"fbef10a2-8ee7-11e9-aa2d-abeeaf7b83c5"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"01856e12-8ee8-11e9-98a5-bb397dbc818f"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"process"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"api"</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="mi">39</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">9000</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">],</span><span class="w">
+  </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31/destinations"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"route"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<p>Replaces all destinations for a route, removing any destinations not included in the provided list.</p>
+
+<p>If using weighted destinations, all destinations provided here must have a <code class="prettyprint">weight</code> specified, and all weights
+for this route must sum to 100. If not, all provided destinations must not have a <code class="prettyprint">weight</code>. Mixing weighted
+and unweighted destinations for a route is not allowed.</p>
+
+<h4 id="definition">Definition</h4>
+
+<p><code class="prettyprint">PATCH /v3/routes/:guid/destinations</code></p>
+
+<h4 id="required-parameters">Required parameters</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>destinations</strong></td>
+<td>array of <a href="#the-destination-object"><em>destination objects</em></a></td>
+<td>List of destinations use for route. Destinations without <code class="prettyprint">process.type</code> specified will get process type <code class="prettyprint">&quot;web&quot;</code> by default.</td>
+</tr>
+</tbody></table>
+
+<h4 id="permitted-roles">Permitted roles</h4>
+
+<table><thead>
+<tr>
+<th>Role</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Admin</td>
+</tr>
+<tr>
+<td>Space Developer</td>
+</tr>
+</tbody></table>
+
+          <h3 id="remove-destination-for-a-route">Remove destination for a route</h3>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/routes/[guid]/destinations/[destination_guid]"</span> <span class="se">\</span>
+  -X DELETE <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">204</span> <span class="ne">No Content</span>
+</code></pre>
+
+<p>Remove a destination from a route.</p>
+
+<h4 id="definition">Definition</h4>
+
+<p><code class="prettyprint">DELETE /v3/routes/:guid/destinations/:destination_guid</code></p>
+
+<h4 id="permitted-roles">Permitted roles</h4>
+
+<table><thead>
+<tr>
+<th>Role</th>
+<th>Notes</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Admin</td>
+<td></td>
+</tr>
+<tr>
+<td>Space Developer</td>
+<td></td>
+</tr>
+</tbody></table>
+
+          <h3 id="delete-unmapped-routes-for-a-space">Delete unmapped routes for a space</h3>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/spaces/[guid]/routes?unmapped=true"</span> <span class="se">\</span>
+  -X DELETE<span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">202</span> <span class="ne">Accepted</span>
+<span class="na">Location</span><span class="p">:</span> <span class="s">https://api.example.org/v3/jobs/[guid]</span>
+</code></pre>
+
+<p>Deletes all routes in a space that are not mapped to any applications and not bound to any service instances.</p>
+
+<h4 id="definition">Definition</h4>
+
+<p><code class="prettyprint">DELETE /v3/spaces/:space_guid/routes?unmapped=true</code></p>
+
+<h4 id="permitted-roles">Permitted roles</h4>
+
+<table><thead>
+<tr>
+<th>Role</th>
+<th>Notes</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Admin</td>
+<td></td>
+</tr>
+<tr>
+<td>Space Developer</td>
+<td></td>
+</tr>
+</tbody></table>
+
+<p><strong>Note</strong>: <code class="prettyprint">unmapped=true</code> is a required query parameter; always include it.</p>
+
           <h2 id="service-instances">Service Instances</h2>
 
 <p>An instantiation of a service offering.</p>
@@ -11408,7 +12751,7 @@ In order to share into a space the requesting user must be a space developer in 
 <td>Admin</td>
 </tr>
 <tr>
-<td>OrgManager</td>
+<td>Org Manager</td>
 </tr>
 </tbody></table>
 
@@ -11738,10 +13081,10 @@ In order to share into a space the requesting user must be a space developer in 
 <td>Admin</td>
 </tr>
 <tr>
-<td>OrgManager</td>
+<td>Org Manager</td>
 </tr>
 <tr>
-<td>SpaceManager</td>
+<td>Space Manager</td>
 </tr>
 </tbody></table>
 
@@ -11771,11 +13114,11 @@ In order to share into a space the requesting user must be a space developer in 
 </tr>
 </thead><tbody>
 <tr>
-<td>Org manager</td>
+<td>Admin</td>
 <td></td>
 </tr>
 <tr>
-<td>Admin</td>
+<td>Org Manager</td>
 <td></td>
 </tr>
 </tbody></table>
@@ -12636,10 +13979,10 @@ An application will automatically use buildpacks associated with the application
 </tr>
 </thead><tbody>
 <tr>
-<td>Space Developer</td>
+<td>Admin</td>
 </tr>
 <tr>
-<td>Admin</td>
+<td>Space Developer</td>
 </tr>
 </tbody></table>
 
@@ -12707,25 +14050,25 @@ in the response based on the user&rsquo;s role.</p>
 </tr>
 </thead><tbody>
 <tr>
-<td>Space Developer</td>
-</tr>
-<tr>
-<td>Space Manager</td>
-</tr>
-<tr>
-<td>Space Auditor</td>
-</tr>
-<tr>
-<td>Org Manager</td>
+<td>Admin Read-Only</td>
 </tr>
 <tr>
 <td>Admin</td>
 </tr>
 <tr>
-<td>Admin Read-Only</td>
+<td>Global Auditor</td>
 </tr>
 <tr>
-<td>Global Auditor</td>
+<td>Org Manager</td>
+</tr>
+<tr>
+<td>Space Auditor</td>
+</tr>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Space Manager</td>
 </tr>
 </tbody></table>
 
@@ -13072,25 +14415,25 @@ excluded in the response based on the user&rsquo;s role.</p>
 </tr>
 </thead><tbody>
 <tr>
-<td>Space Developer</td>
-</tr>
-<tr>
-<td>Space Manager</td>
-</tr>
-<tr>
-<td>Space Auditor</td>
-</tr>
-<tr>
-<td>Org Manager</td>
+<td>Admin Read-Only</td>
 </tr>
 <tr>
 <td>Admin</td>
 </tr>
 <tr>
-<td>Admin Read-Only</td>
+<td>Global Auditor</td>
 </tr>
 <tr>
-<td>Global Auditor</td>
+<td>Org Manager</td>
+</tr>
+<tr>
+<td>Space Auditor</td>
+</tr>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Space Manager</td>
 </tr>
 </tbody></table>
 
@@ -13179,10 +14522,10 @@ excluded in the response based on the user&rsquo;s role.</p>
 </tr>
 </thead><tbody>
 <tr>
-<td>Space Developer</td>
+<td>Admin</td>
 </tr>
 <tr>
-<td>Admin</td>
+<td>Space Developer</td>
 </tr>
 </tbody></table>
 
@@ -13256,10 +14599,10 @@ excluded in the response based on the user&rsquo;s role.</p>
 </tr>
 </thead><tbody>
 <tr>
-<td>Space Developer</td>
+<td>Admin</td>
 </tr>
 <tr>
-<td>Admin</td>
+<td>Space Developer</td>
 </tr>
 </tbody></table>
 
@@ -15360,1349 +16703,6 @@ Deployed revisions are revisions that are linked to started processes in the app
 <td>Space Developer</td>
 </tr>
 </tbody></table>
-
-          <h2 id="routes">Routes</h2>
-
-<p>Routes are addresses that direct matched network traffic to one or more destinations. Each route is based on a domain name with additional matching criteria (host (subdomain), path, etc). Matched traffic will be distributed across all destinations, based on their configuration (round-robin by default).</p>
-
-          <h3 id="the-route-object">The route object</h3>
-<pre class="highlight plaintext"><code>Example Route object
-</code></pre>
-<pre class="highlight json"><code><span class="w">  </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cbad697f-cac1-48f4-9017-ac08f39dfb31"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"host"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a-hostname"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/some_path"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a-hostname.a-domain.com/some_path"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">}</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"885a8cb3-c07b-4856-b448-eeb10bf36236"</span><span class="w">
-        </span><span class="p">}</span><span class="w">
-      </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"domain"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"0b5f3633-194c-42d2-9408-972366617e0e"</span><span class="w">
-        </span><span class="p">}</span><span class="w">
-      </span><span class="p">}</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31"</span><span class="w">
-      </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/spaces/885a8cb3-c07b-4856-b448-eeb10bf36236"</span><span class="w">
-      </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"domain"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/domains/0b5f3633-194c-42d2-9408-972366617e0e"</span><span class="w">
-      </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"destinations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31/destinations"</span><span class="w">
-      </span><span class="p">}</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-  </span><span class="p">}</span><span class="w">
-
-</span></code></pre>
-
-<table><thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead><tbody>
-<tr>
-<td><strong>guid</strong></td>
-<td><em>uuid</em></td>
-<td>Unique identifier for the route.</td>
-</tr>
-<tr>
-<td><strong>host</strong></td>
-<td><em>string</em></td>
-<td>The hostname for the route.<br>Must be under 63 character long and only contain letters, numbers, dashes (-) or underscores(_).</td>
-</tr>
-<tr>
-<td><strong>path</strong></td>
-<td><em>string</em></td>
-<td>The path for the route.<br>Must be under 128 character long and not contain question marks (?), begin with a slash (/) and not be exactly a slash (/). Must conform to path components from <a href="https://tools.ietf.org/html/rfc2396">RFC 2396</a>.</td>
-</tr>
-<tr>
-<td><strong>url</strong></td>
-<td><em>string</em></td>
-<td>The URL for the route. Combination of host, domain name, and path.</td>
-</tr>
-<tr>
-<td><strong>created_at</strong></td>
-<td><em>datetime</em></td>
-<td>The time with zone when the object was created.</td>
-</tr>
-<tr>
-<td><strong>updated_at</strong></td>
-<td><em>datetime</em></td>
-<td>The time with zone when the object was last updated.</td>
-</tr>
-<tr>
-<td><strong>space</strong></td>
-<td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
-<td>A relationship to the space containing the route. Routes can only be mapped to destinations in that space.</td>
-</tr>
-<tr>
-<td><strong>domain</strong></td>
-<td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
-<td>A relationship to the domain of the route.</td>
-</tr>
-<tr>
-<td><strong>links</strong></td>
-<td><a href="#links"><em>links object</em></a></td>
-<td>Links to related resources.</td>
-</tr>
-<tr>
-<td><strong>metadata.labels</strong> <em>(experimental)</em></td>
-<td><a href="#labels"><em>label object</em></a></td>
-<td>Labels applied to the route.</td>
-</tr>
-<tr>
-<td><strong>metadata.annotations</strong> <em>(experimental)</em></td>
-<td><a href="#annotations"><em>annotation object</em></a></td>
-<td>Annotations applied to the route.</td>
-</tr>
-</tbody></table>
-
-          <h3 id="the-destination-object">The destination object</h3>
-
-<p>A destination represents the relationship between a route and a resource that can serve traffic (for example, the <code class="prettyprint">web</code> process of an application).</p>
-
-<p>When a route has destinations, that route will direct traffic to the processes represented by those destinations.</p>
-
-<p>If a destination is created with a port specified, the route will direct traffic to that port on the process. A destination with port 9000 and process type <code class="prettyprint">api</code> means traffic will be directed to the <code class="prettyprint">api</code> process running on container port 9000.</p>
-
-<p>Note that when using a custom port, the app process must be listening on the specified port for the mapping to work. Otherwise, visiting the route will result in a 404 error.</p>
-
-<p>If a destination does not specify a port, the default port depends on the app lifecycle type. For buildpack apps, traffic will be directed to port 8080. For Docker apps, the first port specified in the Dockerfile will be used.</p>
-<pre class="highlight plaintext"><code>Example Destination object
-</code></pre>
-<pre class="highlight json"><code><span class="p">{</span><span class="w">
-  </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"89323d4e-2e84-43e7-83e9-adbf50a20c0e"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1cb006ee-fb05-47e1-b541-c34179ddc446"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"process"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"web"</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="w">
-</span><span class="p">}</span><span class="w">
-
-</span></code></pre>
-
-<table><thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead><tbody>
-<tr>
-<td><strong>guid</strong></td>
-<td><em>uuid</em></td>
-<td>Unique identifier for the destination.</td>
-</tr>
-<tr>
-<td><strong>app.guid</strong></td>
-<td><em>uuid</em></td>
-<td>Unique identifier for the app to route traffic to.</td>
-</tr>
-<tr>
-<td><strong>app.process.type</strong></td>
-<td><em>string</em></td>
-<td>Type of the process belonging to the app to route traffic to.</td>
-</tr>
-<tr>
-<td><strong>port</strong></td>
-<td><em>integer</em></td>
-<td>Port on the destination process to route traffic to.</td>
-</tr>
-<tr>
-<td><strong>weight</strong> <em>(experimental)</em></td>
-<td><em>integer</em> or <code class="prettyprint">null</code></td>
-<td>Percentage of traffic which will be routed to this destination. <em>This feature is only available via the BETA Service Mesh routing plane</em>.</td>
-</tr>
-</tbody></table>
-
-          <h3 id="create-a-route">Create a route</h3>
-<pre class="highlight plaintext"><code>Example Request
-</code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/routes"</span> <span class="se">\</span>
-  -X POST <span class="se">\</span>
-  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
-  -H <span class="s2">"Content-type: application/json"</span> <span class="se">\</span>
-  -d <span class="s1">'{
-    "host": "a-hostname",
-    "path": "/some_path",
-    "relationships": {
-      "domain": {
-        "data": { "guid": "domain-guid" }
-      },
-      "space": {
-        "data": { "guid": "space-guid" }
-      }
-    },
-    "metadata": {
-      "labels": { "key": "value" },
-      "annotations": { "note": "detailed information"}
-    }
-  }'</span>
-</code></pre>
-<pre class="highlight plaintext"><code>Example Response
-</code></pre>
-<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">201</span> <span class="ne">Created</span>
-<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
-
-<span class="w">  </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cbad697f-cac1-48f4-9017-ac08f39dfb31"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"host"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a-hostname"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/some_path"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a-hostname.a-domain.com/some_path"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"key"</span><span class="p">:</span><span class="w"> </span><span class="s2">"value"</span><span class="w"> </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"note"</span><span class="p">:</span><span class="w"> </span><span class="s2">"detailed information"</span><span class="w"> </span><span class="p">}</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"885a8cb3-c07b-4856-b448-eeb10bf36236"</span><span class="w">
-        </span><span class="p">}</span><span class="w">
-      </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"domain"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"0b5f3633-194c-42d2-9408-972366617e0e"</span><span class="w">
-        </span><span class="p">}</span><span class="w">
-      </span><span class="p">}</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31"</span><span class="w">
-      </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/spaces/885a8cb3-c07b-4856-b448-eeb10bf36236"</span><span class="w">
-      </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"domain"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/domains/0b5f3633-194c-42d2-9408-972366617e0e"</span><span class="w">
-      </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"destinations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31/destinations"</span><span class="w">
-      </span><span class="p">}</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-  </span><span class="p">}</span><span class="w">
-
-</span></code></pre>
-
-<h4 id="definition">Definition</h4>
-
-<p><code class="prettyprint">POST /v3/routes</code></p>
-
-<h4 id="required-parameters">Required parameters</h4>
-
-<table><thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead><tbody>
-<tr>
-<td><strong>relationships.space</strong></td>
-<td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
-<td>A relationship to the space containing the route. Routes can only be mapped to destinations in that space.</td>
-</tr>
-<tr>
-<td><strong>relationships.domain</strong></td>
-<td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
-<td>A relationship to the domain of the route.</td>
-</tr>
-</tbody></table>
-
-<h4 id="optional-parameters">Optional parameters</h4>
-
-<table><thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead><tbody>
-<tr>
-<td><strong>host</strong></td>
-<td><em>string</em></td>
-<td>The host component for the route.</td>
-</tr>
-<tr>
-<td><strong>path</strong></td>
-<td><em>string</em></td>
-<td>The path component for the route. Should begin with a <code class="prettyprint">/</code>.</td>
-</tr>
-<tr>
-<td><strong>metadata.annotations</strong> <em>(experimental)</em></td>
-<td><a href="#annotations"><em>annotation object</em></a></td>
-<td>Annotations applied to the route.</td>
-</tr>
-<tr>
-<td><strong>metadata.labels</strong> <em>(experimental)</em></td>
-<td><a href="#labels"><em>label object</em></a></td>
-<td>Labels applied to the route.</td>
-</tr>
-</tbody></table>
-
-<h4 id="permitted-roles">Permitted roles</h4>
-
-<table><thead>
-<tr>
-<th>Role</th>
-<th>Notes</th>
-</tr>
-</thead><tbody>
-<tr>
-<td>Admin</td>
-<td></td>
-</tr>
-<tr>
-<td>Space Developer</td>
-<td></td>
-</tr>
-</tbody></table>
-
-          <h3 id="get-a-route">Get a route</h3>
-<pre class="highlight plaintext"><code>Example Request
-</code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/routes/[guid]"</span> <span class="se">\</span>
-  -X GET <span class="se">\</span>
-  -H <span class="s2">"Authorization: bearer [token]"</span>
-</code></pre>
-<pre class="highlight plaintext"><code>Example Response
-</code></pre>
-<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
-<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
-
-<span class="w">  </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cbad697f-cac1-48f4-9017-ac08f39dfb31"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"host"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a-hostname"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/some_path"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a-hostname.a-domain.com/some_path"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">}</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"885a8cb3-c07b-4856-b448-eeb10bf36236"</span><span class="w">
-        </span><span class="p">}</span><span class="w">
-      </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"domain"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"0b5f3633-194c-42d2-9408-972366617e0e"</span><span class="w">
-        </span><span class="p">}</span><span class="w">
-      </span><span class="p">}</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31"</span><span class="w">
-      </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/spaces/885a8cb3-c07b-4856-b448-eeb10bf36236"</span><span class="w">
-      </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"domain"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/domains/0b5f3633-194c-42d2-9408-972366617e0e"</span><span class="w">
-      </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"destinations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31/destinations"</span><span class="w">
-      </span><span class="p">}</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-  </span><span class="p">}</span><span class="w">
-
-</span></code></pre>
-
-<h4 id="definition">Definition</h4>
-
-<p><code class="prettyprint">GET /v3/routes/:guid</code></p>
-
-<h4 id="permitted-roles">Permitted roles</h4>
-
-<table><thead>
-<tr>
-<th>Role</th>
-<th>Notes</th>
-</tr>
-</thead><tbody>
-<tr>
-<td>Space Developer</td>
-<td></td>
-</tr>
-<tr>
-<td>Space Manager</td>
-<td></td>
-</tr>
-<tr>
-<td>Space Auditor</td>
-<td></td>
-</tr>
-<tr>
-<td>Org Auditor</td>
-<td></td>
-</tr>
-<tr>
-<td>Org Manager</td>
-<td></td>
-</tr>
-<tr>
-<td>Admin</td>
-<td></td>
-</tr>
-<tr>
-<td>Admin Read-Only</td>
-<td></td>
-</tr>
-<tr>
-<td>Global Auditor</td>
-<td></td>
-</tr>
-</tbody></table>
-
-          <h3 id="list-routes">List routes</h3>
-<pre class="highlight plaintext"><code>Example Request
-</code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/routes"</span> <span class="se">\</span>
-  -X GET <span class="se">\</span>
-  -H <span class="s2">"Authorization: bearer [token]"</span>
-</code></pre>
-<pre class="highlight plaintext"><code>Example Response
-</code></pre>
-<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
-<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
-
-<span class="w">  </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"pagination"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"total_results"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"total_pages"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"first"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes?page=1&amp;per_page=2"</span><span class="w">
-      </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"last"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes?page=2&amp;per_page=2"</span><span class="w">
-      </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"next"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes?page=2&amp;per_page=2"</span><span class="w">
-      </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"previous"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"resources"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-      </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cbad697f-cac1-48f4-9017-ac08f39dfb31"</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"host"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a-hostname"</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/some_path"</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a-hostname.a-domain.com/some_path"</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
-          </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
-        </span><span class="p">},</span><span class="w">
-        </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-            </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-              </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"885a8cb3-c07b-4856-b448-eeb10bf36236"</span><span class="w">
-            </span><span class="p">}</span><span class="w">
-          </span><span class="p">},</span><span class="w">
-          </span><span class="nt">"domain"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-            </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-              </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"0b5f3633-194c-42d2-9408-972366617e0e"</span><span class="w">
-            </span><span class="p">}</span><span class="w">
-          </span><span class="p">}</span><span class="w">
-        </span><span class="p">},</span><span class="w">
-        </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-            </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31"</span><span class="w">
-          </span><span class="p">},</span><span class="w">
-          </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-            </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/spaces/885a8cb3-c07b-4856-b448-eeb10bf36236"</span><span class="w">
-          </span><span class="p">},</span><span class="w">
-          </span><span class="nt">"domain"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-            </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/domains/0b5f3633-194c-42d2-9408-972366617e0e"</span><span class="w">
-          </span><span class="p">},</span><span class="w">
-          </span><span class="nt">"destinations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-            </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31/destinations"</span><span class="w">
-          </span><span class="p">}</span><span class="w">
-        </span><span class="p">}</span><span class="w">
-      </span><span class="p">}</span><span class="w">
-    </span><span class="p">]</span><span class="w">
-  </span><span class="p">}</span><span class="w">
-
-</span></code></pre>
-
-<p>Retrieve all routes the user has access to.</p>
-
-<h4 id="definition">Definition</h4>
-
-<p><code class="prettyprint">GET /v3/routes</code></p>
-
-<h4 id="query-parameters">Query parameters</h4>
-
-<table><thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead><tbody>
-<tr>
-<td><strong>hosts</strong></td>
-<td><em>list of strings</em></td>
-<td>Comma-delimited list of hostnames to filter by.</td>
-</tr>
-<tr>
-<td><strong>paths</strong></td>
-<td><em>list of strings</em></td>
-<td>Comma-delimited list of paths to filter by (e.g. <code class="prettyprint">/path1,/path2</code>).</td>
-</tr>
-<tr>
-<td><strong>domain_guids</strong></td>
-<td><em>list of strings</em></td>
-<td>Comma-delimited list of domain guids to filter by.</td>
-</tr>
-<tr>
-<td><strong>space_guids</strong></td>
-<td><em>list of strings</em></td>
-<td>Comma-delimited list of space guids to filter by.</td>
-</tr>
-<tr>
-<td><strong>organization_guids</strong></td>
-<td><em>list of strings</em></td>
-<td>Comma-delimited list of organization guids to filter by.</td>
-</tr>
-<tr>
-<td><strong>page</strong></td>
-<td><em>integer</em></td>
-<td>Page to display. Valid values are integers &gt;= 1.</td>
-</tr>
-<tr>
-<td><strong>per_page</strong></td>
-<td><em>integer</em></td>
-<td>Number of results per page. <br>Valid values are 1 through 5000.</td>
-</tr>
-<tr>
-<td><strong>order_by</strong></td>
-<td><em>string</em></td>
-<td>Value to sort by. Defaults to ascending. Prepend with <code class="prettyprint">-</code> to sort descending. <br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code>.</td>
-</tr>
-<tr>
-<td><strong>label_selector</strong></td>
-<td><em>string</em></td>
-<td><strong>Experimental</strong> - A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements.</td>
-</tr>
-</tbody></table>
-
-<h4 id="permitted-roles">Permitted roles</h4>
-
-<table><thead>
-<tr>
-<th></th>
-</tr>
-</thead><tbody>
-<tr>
-<td>All Roles</td>
-</tr>
-</tbody></table>
-
-          <h3 id="list-routes-for-an-app">List routes for an app</h3>
-<pre class="highlight plaintext"><code>Example Request
-</code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/routes"</span> <span class="se">\</span>
-  -X GET <span class="se">\</span>
-  -H <span class="s2">"Authorization: bearer [token]"</span>
-</code></pre>
-<pre class="highlight plaintext"><code>Example Response
-</code></pre>
-<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
-<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
-
-<span class="w">  </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"pagination"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"total_results"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"total_pages"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"first"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/routes?page=1&amp;per_page=2"</span><span class="w">
-      </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"last"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/routes?page=2&amp;per_page=2"</span><span class="w">
-      </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"next"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/routes?page=2&amp;per_page=2"</span><span class="w">
-      </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"previous"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"resources"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-      </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cbad697f-cac1-48f4-9017-ac08f39dfb31"</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"host"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a-hostname"</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/some_path"</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a-hostname.a-domain.com/some_path"</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
-          </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
-        </span><span class="p">},</span><span class="w">
-        </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-            </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-              </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"885a8cb3-c07b-4856-b448-eeb10bf36236"</span><span class="w">
-            </span><span class="p">}</span><span class="w">
-          </span><span class="p">},</span><span class="w">
-          </span><span class="nt">"domain"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-            </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-              </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"0b5f3633-194c-42d2-9408-972366617e0e"</span><span class="w">
-            </span><span class="p">}</span><span class="w">
-          </span><span class="p">}</span><span class="w">
-        </span><span class="p">},</span><span class="w">
-        </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-            </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31"</span><span class="w">
-          </span><span class="p">},</span><span class="w">
-          </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-            </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/spaces/885a8cb3-c07b-4856-b448-eeb10bf36236"</span><span class="w">
-          </span><span class="p">},</span><span class="w">
-          </span><span class="nt">"domain"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-            </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/domains/0b5f3633-194c-42d2-9408-972366617e0e"</span><span class="w">
-          </span><span class="p">},</span><span class="w">
-          </span><span class="nt">"destinations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-            </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31/destinations"</span><span class="w">
-          </span><span class="p">}</span><span class="w">
-        </span><span class="p">}</span><span class="w">
-      </span><span class="p">}</span><span class="w">
-    </span><span class="p">]</span><span class="w">
-  </span><span class="p">}</span><span class="w">
-
-</span></code></pre>
-
-<p>Retrieve all routes that have <a href="#the-destination-object">destinations</a> that point to the given app.</p>
-
-<h4 id="definition">Definition</h4>
-
-<p><code class="prettyprint">GET /v3/apps/:app_guid/routes</code></p>
-
-<h4 id="query-parameters">Query parameters</h4>
-
-<table><thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead><tbody>
-<tr>
-<td><strong>hosts</strong></td>
-<td><em>list of strings</em></td>
-<td>Comma-delimited list of hostnames to filter by.</td>
-</tr>
-<tr>
-<td><strong>paths</strong></td>
-<td><em>list of strings</em></td>
-<td>Comma-delimited list of paths to filter by (e.g. <code class="prettyprint">/path1,/path2</code>).</td>
-</tr>
-<tr>
-<td><strong>domain_guids</strong></td>
-<td><em>list of strings</em></td>
-<td>Comma-delimited list of domain guids to filter by.</td>
-</tr>
-<tr>
-<td><strong>space_guids</strong></td>
-<td><em>list of strings</em></td>
-<td>Comma-delimited list of space guids to filter by.</td>
-</tr>
-<tr>
-<td><strong>organization_guids</strong></td>
-<td><em>list of strings</em></td>
-<td>Comma-delimited list of organization guids to filter by.</td>
-</tr>
-<tr>
-<td><strong>page</strong></td>
-<td><em>integer</em></td>
-<td>Page to display. Valid values are integers &gt;= 1.</td>
-</tr>
-<tr>
-<td><strong>per_page</strong></td>
-<td><em>integer</em></td>
-<td>Number of results per page. <br>Valid values are 1 through 5000.</td>
-</tr>
-<tr>
-<td><strong>order_by</strong></td>
-<td><em>string</em></td>
-<td>Value to sort by. Defaults to ascending. Prepend with <code class="prettyprint">-</code> to sort descending. <br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code>.</td>
-</tr>
-<tr>
-<td><strong>label_selector</strong></td>
-<td><em>string</em></td>
-<td><strong>Experimental</strong> - A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements.</td>
-</tr>
-</tbody></table>
-
-<h4 id="permitted-roles">Permitted roles</h4>
-
-<table><thead>
-<tr>
-<th></th>
-</tr>
-</thead><tbody>
-<tr>
-<td>Admin</td>
-</tr>
-<tr>
-<td>Admin Read-Only</td>
-</tr>
-<tr>
-<td>Global Auditor</td>
-</tr>
-<tr>
-<td>Org Manager</td>
-</tr>
-<tr>
-<td>Space Auditor</td>
-</tr>
-<tr>
-<td>Space Developer</td>
-</tr>
-<tr>
-<td>Space Manager</td>
-</tr>
-</tbody></table>
-
-          <h3 id="update-a-route">Update a route</h3>
-<pre class="highlight plaintext"><code>Example Request
-</code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/routes/[guid]"</span> <span class="se">\</span>
-  -X PATCH <span class="se">\</span>
-  -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
-  -H <span class="s2">"Content-type: application/json"</span> <span class="se">\</span>
-  -d <span class="s1">'{
-    "metadata": {
-      "labels": {"key": "value"},
-      "annotations": {"note": "detailed information"}
-    }
-  }'</span>
-</code></pre>
-<pre class="highlight plaintext"><code>Example Response
-</code></pre>
-<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
-<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
-
-<span class="w">  </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cbad697f-cac1-48f4-9017-ac08f39dfb31"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"host"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a-hostname"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/some_path"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a-hostname.a-domain.com/some_path"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-05-10T17:17:48Z"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"key"</span><span class="p">:</span><span class="w"> </span><span class="s2">"value"</span><span class="w"> </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"note"</span><span class="p">:</span><span class="w"> </span><span class="s2">"detailed information"</span><span class="w"> </span><span class="p">}</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"885a8cb3-c07b-4856-b448-eeb10bf36236"</span><span class="w">
-        </span><span class="p">}</span><span class="w">
-      </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"domain"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"0b5f3633-194c-42d2-9408-972366617e0e"</span><span class="w">
-        </span><span class="p">}</span><span class="w">
-      </span><span class="p">}</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31"</span><span class="w">
-      </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/spaces/885a8cb3-c07b-4856-b448-eeb10bf36236"</span><span class="w">
-      </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"domain"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/domains/0b5f3633-194c-42d2-9408-972366617e0e"</span><span class="w">
-      </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"destinations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31/destinations"</span><span class="w">
-      </span><span class="p">}</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-  </span><span class="p">}</span><span class="w">
-
-</span></code></pre>
-
-<h4 id="definition">Definition</h4>
-
-<p><code class="prettyprint">PATCH /v3/routes/:guid</code></p>
-
-<h4 id="optional-parameters">Optional parameters</h4>
-
-<table><thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-<th>Default</th>
-</tr>
-</thead><tbody>
-<tr>
-<td><strong>metadata.labels</strong> <em>(experimental)</em></td>
-<td><a href="#labels"><em>label object</em></a></td>
-<td>Labels applied to the route.</td>
-<td></td>
-</tr>
-<tr>
-<td><strong>metadata.annotations</strong> <em>(experimental)</em></td>
-<td><a href="#annotations"><em>annotation object</em></a></td>
-<td>Annotations applied to the route.</td>
-<td></td>
-</tr>
-</tbody></table>
-
-<h4 id="permitted-roles">Permitted roles</h4>
-
-<table><thead>
-<tr>
-<th>Role</th>
-<th>Notes</th>
-</tr>
-</thead><tbody>
-<tr>
-<td>Admin</td>
-<td></td>
-</tr>
-<tr>
-<td>Space Developer</td>
-<td></td>
-</tr>
-</tbody></table>
-
-          <h3 id="delete-a-route">Delete a route</h3>
-<pre class="highlight plaintext"><code>Example Request
-</code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/routes/[guid]"</span> <span class="se">\</span>
-  -X DELETE <span class="se">\</span>
-  -H <span class="s2">"Authorization: bearer [token]"</span>
-</code></pre>
-<pre class="highlight plaintext"><code>Example Response
-</code></pre>
-<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">202</span> <span class="ne">Accepted</span>
-<span class="na">Location</span><span class="p">:</span> <span class="s">https://api.example.org/v3/jobs/[guid]</span>
-</code></pre>
-
-<h4 id="definition">Definition</h4>
-
-<p><code class="prettyprint">DELETE /v3/routes/:guid</code></p>
-
-<h4 id="permitted-roles">Permitted roles</h4>
-
-<table><thead>
-<tr>
-<th>Role</th>
-<th>Notes</th>
-</tr>
-</thead><tbody>
-<tr>
-<td>Space Developer</td>
-<td></td>
-</tr>
-<tr>
-<td>Admin</td>
-<td></td>
-</tr>
-</tbody></table>
-
-          <h3 id="check-reserved-routes-for-a-domain">Check reserved routes for a domain</h3>
-<pre class="highlight plaintext"><code>Example Request
-</code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/domains/[guid]/route_reservations"</span> <span class="se">\</span>
-  -X GET <span class="se">\</span>
-  -H <span class="s2">"Authorization: bearer [token]"</span>
-</code></pre>
-<pre class="highlight plaintext"><code>Example Response
-</code></pre>
-<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
-<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
-
-<span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nt">"matching_route"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span><span class="w">
-
-</span></code></pre>
-
-<p>Check if a specific route for a domain exists, regardless of the user&rsquo;s visibility for the route in case the route
-belongs to a space the user does not belong to.</p>
-
-<h4 id="definition">Definition</h4>
-
-<p><code class="prettyprint">GET /v3/domains/:guid/route_reservations</code></p>
-
-<h4 id="query-parameters">Query parameters</h4>
-
-<table><thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead><tbody>
-<tr>
-<td><strong>host</strong></td>
-<td><em>string</em></td>
-<td>Hostname to filter by. Defaults to empty string if not provided.</td>
-</tr>
-<tr>
-<td><strong>path</strong></td>
-<td><em>string</em></td>
-<td>Path to filter by. Defaults to empty string if not provided.</td>
-</tr>
-</tbody></table>
-
-<h4 id="permitted-roles">Permitted roles</h4>
-
-<table><thead>
-<tr>
-<th>Role</th>
-<th>Notes</th>
-</tr>
-</thead><tbody>
-<tr>
-<td>Admin</td>
-<td></td>
-</tr>
-<tr>
-<td>Admin Read-Only</td>
-<td></td>
-</tr>
-<tr>
-<td>Global Auditor</td>
-<td></td>
-</tr>
-<tr>
-<td>Org Auditor</td>
-<td></td>
-</tr>
-<tr>
-<td>Org Billing Manager</td>
-<td>Can only check if routes exist for a domain without an organization relationship.</td>
-</tr>
-<tr>
-<td>Org Manager</td>
-<td></td>
-</tr>
-<tr>
-<td>Space Auditor</td>
-<td></td>
-</tr>
-<tr>
-<td>Space Developer</td>
-<td></td>
-</tr>
-<tr>
-<td>Space Manager</td>
-<td></td>
-</tr>
-</tbody></table>
-
-          <h3 id="list-destinations-for-a-route">List destinations for a route</h3>
-<pre class="highlight plaintext"><code>Example Request
-</code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/routes/[guid]/destinations"</span> <span class="se">\</span>
-  -X GET <span class="se">\</span>
-  -H <span class="s2">"Authorization: bearer [token]"</span>
-</code></pre>
-<pre class="highlight plaintext"><code>Example Response
-</code></pre>
-<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
-<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
-
-<span class="w">  </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"destinations"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-      </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"89323d4e-2e84-43e7-83e9-adbf50a20c0e"</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1cb006ee-fb05-47e1-b541-c34179ddc446"</span><span class="p">,</span><span class="w">
-          </span><span class="nt">"process"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-            </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"web"</span><span class="w">
-          </span><span class="p">}</span><span class="w">
-        </span><span class="p">},</span><span class="w">
-        </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="w">
-      </span><span class="p">},</span><span class="w">
-      </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"fbef10a2-8ee7-11e9-aa2d-abeeaf7b83c5"</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"01856e12-8ee8-11e9-98a5-bb397dbc818f"</span><span class="p">,</span><span class="w">
-          </span><span class="nt">"process"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-            </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"api"</span><span class="w">
-          </span><span class="p">}</span><span class="w">
-        </span><span class="p">},</span><span class="w">
-        </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">9000</span><span class="w">
-      </span><span class="p">}</span><span class="w">
-    </span><span class="p">],</span><span class="w">
-    </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31/destinations"</span><span class="w">
-      </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"route"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31"</span><span class="w">
-      </span><span class="p">}</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-  </span><span class="p">}</span><span class="w">
-
-</span></code></pre>
-
-<p>Retrieve all destinations associated with a route.</p>
-
-<h4 id="definition">Definition</h4>
-
-<p><code class="prettyprint">GET /v3/routes/:guid/destinations</code></p>
-
-<h4 id="permitted-roles">Permitted roles</h4>
-
-<table><thead>
-<tr>
-<th>Role</th>
-<th>Notes</th>
-</tr>
-</thead><tbody>
-<tr>
-<td>Admin Read-Only</td>
-<td></td>
-</tr>
-<tr>
-<td>Admin</td>
-<td></td>
-</tr>
-<tr>
-<td>Global Auditor</td>
-<td></td>
-</tr>
-<tr>
-<td>Org Auditor</td>
-<td></td>
-</tr>
-<tr>
-<td>Org Manager</td>
-<td></td>
-</tr>
-<tr>
-<td>Space Auditor</td>
-<td></td>
-</tr>
-<tr>
-<td>Space Developer</td>
-<td></td>
-</tr>
-<tr>
-<td>Space Manager</td>
-<td></td>
-</tr>
-</tbody></table>
-
-          <h3 id="insert-destinations-for-a-route">Insert destinations for a route</h3>
-<pre class="highlight plaintext"><code>Example Request
-</code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/routes/[guid]/destinations"</span> <span class="se">\</span>
-  -X POST <span class="se">\</span>
-  -H <span class="s2">"Authorization: bearer [token]"</span>
-  -d <span class="s1">'{
-    "destinations": [
-      {
-        "app": {
-          "guid": "1cb006ee-fb05-47e1-b541-c34179ddc446"
-        }
-      },
-      {
-        "app": {
-          "guid": "01856e12-8ee8-11e9-98a5-bb397dbc818f",
-          "process": {
-            "type": "api"
-          }
-        },
-        "port": 9000
-      }
-    ]
-  }'</span>
-</code></pre>
-<pre class="highlight plaintext"><code>Example Response
-</code></pre>
-<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
-<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
-
-<span class="w">  </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"destinations"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-      </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"89323d4e-2e84-43e7-83e9-adbf50a20c0e"</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1cb006ee-fb05-47e1-b541-c34179ddc446"</span><span class="p">,</span><span class="w">
-          </span><span class="nt">"process"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-            </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"web"</span><span class="w">
-          </span><span class="p">}</span><span class="w">
-        </span><span class="p">},</span><span class="w">
-        </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="w">
-      </span><span class="p">},</span><span class="w">
-      </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"fbef10a2-8ee7-11e9-aa2d-abeeaf7b83c5"</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"01856e12-8ee8-11e9-98a5-bb397dbc818f"</span><span class="p">,</span><span class="w">
-          </span><span class="nt">"process"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-            </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"api"</span><span class="w">
-          </span><span class="p">}</span><span class="w">
-        </span><span class="p">},</span><span class="w">
-        </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">9000</span><span class="w">
-      </span><span class="p">}</span><span class="w">
-    </span><span class="p">],</span><span class="w">
-    </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31/destinations"</span><span class="w">
-      </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"route"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31"</span><span class="w">
-      </span><span class="p">}</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-  </span><span class="p">}</span><span class="w">
-
-</span></code></pre>
-
-<p>Add one or more destinations to a route, preserving any existing destinations.</p>
-
-<p>Note that weighted destinations cannot be added with this endpoint. To add weighted destinations,
-replace all destinations for a route at once using the <a href="#replace-all-destinations-for-a-route">replace destinations endpoint</a>.</p>
-
-<h4 id="definition">Definition</h4>
-
-<p><code class="prettyprint">POST /v3/routes/:guid/destinations</code></p>
-
-<h4 id="required-parameters">Required parameters</h4>
-
-<table><thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead><tbody>
-<tr>
-<td><strong>destinations</strong></td>
-<td>array of <a href="#the-destination-object"><em>destination objects</em></a></td>
-<td>List of destinations to add to route. Destinations without <code class="prettyprint">process.type</code> specified will get process type <code class="prettyprint">&quot;web&quot;</code> by default.</td>
-</tr>
-</tbody></table>
-
-<h4 id="permitted-roles">Permitted roles</h4>
-
-<table><thead>
-<tr>
-<th>Role</th>
-</tr>
-</thead><tbody>
-<tr>
-<td>Admin</td>
-</tr>
-<tr>
-<td>Space Developer</td>
-</tr>
-</tbody></table>
-
-          <h3 id="replace-all-destinations-for-a-route">Replace all destinations for a route</h3>
-<pre class="highlight plaintext"><code>Example Request
-</code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/routes/[guid]/destinations"</span> <span class="se">\</span>
-  -X PATCH <span class="se">\</span>
-  -H <span class="s2">"Authorization: bearer [token]"</span>
-  -d <span class="s1">'{
-    "destinations": [
-      {
-        "app": {
-          "guid": "1cb006ee-fb05-47e1-b541-c34179ddc446"
-        },
-        "weight": 61
-      },
-      {
-        "app": {
-          "guid": "01856e12-8ee8-11e9-98a5-bb397dbc818f",
-          "process": {
-            "type": "api"
-          }
-        },
-        "weight": 39,
-        "port": 9000
-      }
-    ]
-  }'</span>
-</code></pre>
-<pre class="highlight plaintext"><code>Example Response
-</code></pre>
-<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
-<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
-
-<span class="p">{</span><span class="w">
-  </span><span class="nt">"destinations"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-    </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"89323d4e-2e84-43e7-83e9-adbf50a20c0e"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1cb006ee-fb05-47e1-b541-c34179ddc446"</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"process"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"web"</span><span class="w">
-        </span><span class="p">}</span><span class="w">
-      </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="mi">61</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">8080</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"fbef10a2-8ee7-11e9-aa2d-abeeaf7b83c5"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"app"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"01856e12-8ee8-11e9-98a5-bb397dbc818f"</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"process"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"api"</span><span class="w">
-        </span><span class="p">}</span><span class="w">
-      </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="mi">39</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"port"</span><span class="p">:</span><span class="w"> </span><span class="mi">9000</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-  </span><span class="p">],</span><span class="w">
-  </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31/destinations"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"route"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/routes/cbad697f-cac1-48f4-9017-ac08f39dfb31"</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-  </span><span class="p">}</span><span class="w">
-</span><span class="p">}</span><span class="w">
-</span></code></pre>
-
-<p>Replaces all destinations for a route, removing any destinations not included in the provided list.</p>
-
-<p>If using weighted destinations, all destinations provided here must have a <code class="prettyprint">weight</code> specified, and all weights
-for this route must sum to 100. If not, all provided destinations must not have a <code class="prettyprint">weight</code>. Mixing weighted
-and unweighted destinations for a route is not allowed.</p>
-
-<h4 id="definition">Definition</h4>
-
-<p><code class="prettyprint">PATCH /v3/routes/:guid/destinations</code></p>
-
-<h4 id="required-parameters">Required parameters</h4>
-
-<table><thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead><tbody>
-<tr>
-<td><strong>destinations</strong></td>
-<td>array of <a href="#the-destination-object"><em>destination objects</em></a></td>
-<td>List of destinations use for route. Destinations without <code class="prettyprint">process.type</code> specified will get process type <code class="prettyprint">&quot;web&quot;</code> by default.</td>
-</tr>
-</tbody></table>
-
-<h4 id="permitted-roles">Permitted roles</h4>
-
-<table><thead>
-<tr>
-<th>Role</th>
-</tr>
-</thead><tbody>
-<tr>
-<td>Admin</td>
-</tr>
-<tr>
-<td>Space Developer</td>
-</tr>
-</tbody></table>
-
-          <h3 id="remove-destination-for-a-route">Remove destination for a route</h3>
-<pre class="highlight plaintext"><code>Example Request
-</code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/routes/[guid]/destinations/[destination_guid]"</span> <span class="se">\</span>
-  -X DELETE <span class="se">\</span>
-  -H <span class="s2">"Authorization: bearer [token]"</span>
-</code></pre>
-<pre class="highlight plaintext"><code>Example Response
-</code></pre>
-<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">204</span> <span class="ne">No Content</span>
-</code></pre>
-
-<p>Remove a destination from a route.</p>
-
-<h4 id="definition">Definition</h4>
-
-<p><code class="prettyprint">DELETE /v3/routes/:guid/destinations/:destination_guid</code></p>
-
-<h4 id="permitted-roles">Permitted roles</h4>
-
-<table><thead>
-<tr>
-<th>Role</th>
-<th>Notes</th>
-</tr>
-</thead><tbody>
-<tr>
-<td>Space Developer</td>
-<td></td>
-</tr>
-<tr>
-<td>Admin</td>
-<td></td>
-</tr>
-</tbody></table>
-
-          <h3 id="delete-unmapped-routes-for-a-space">Delete unmapped routes for a space</h3>
-<pre class="highlight plaintext"><code>Example Request
-</code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/spaces/[guid]/routes?unmapped=true"</span> <span class="se">\</span>
-  -X DELETE<span class="se">\</span>
-  -H <span class="s2">"Authorization: bearer [token]"</span>
-</code></pre>
-<pre class="highlight plaintext"><code>Example Response
-</code></pre>
-<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">202</span> <span class="ne">Accepted</span>
-<span class="na">Location</span><span class="p">:</span> <span class="s">https://api.example.org/v3/jobs/[guid]</span>
-</code></pre>
-
-<p>Deletes all routes in a space that are not mapped to any applications and not bound to any service instances.</p>
-
-<h4 id="definition">Definition</h4>
-
-<p><code class="prettyprint">DELETE /v3/spaces/:space_guid/routes?unmapped=true</code></p>
-
-<h4 id="permitted-roles">Permitted roles</h4>
-
-<table><thead>
-<tr>
-<th>Role</th>
-<th>Notes</th>
-</tr>
-</thead><tbody>
-<tr>
-<td>Admin</td>
-<td></td>
-</tr>
-<tr>
-<td>Space Developer</td>
-<td></td>
-</tr>
-</tbody></table>
-
-<p><strong>Note</strong>: <code class="prettyprint">unmapped=true</code> is a required query parameter; always include it.</p>
 
           <h2 id="service-bindings">Service Bindings</h2>
 
