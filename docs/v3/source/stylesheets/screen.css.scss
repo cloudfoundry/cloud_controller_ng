@@ -377,6 +377,7 @@ nav {
     border-top: 1px solid #ccc;
     padding-top: 1.2em;
     padding-bottom: 1.2em;
+    clear: both;
   }
 
   // h2s right after h1s should bump right up
@@ -516,7 +517,7 @@ nav {
     background-color: $code-background-color;
     color: #fff;
 
-    padding: 2em $main-padding;
+    padding: 32px;
     margin: 0;
     width: $examples-width;
 
@@ -555,6 +556,17 @@ nav {
 
     pre.highlight.#{$lang} > code .w {
       background-color: $code-snippet-background-color;
+    }
+  }
+
+  pre.highlight.plaintext {
+    background-color: darken($code-snippet-background-color, 10%);
+    white-space: normal;
+    padding: 16px 32px;
+
+    code {
+      @extend %default-font;
+      font-weight: bold;
     }
   }
 
