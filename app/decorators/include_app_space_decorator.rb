@@ -1,5 +1,7 @@
+require 'decorators/include_decorator'
+
 module VCAP::CloudController
-  class IncludeAppSpaceDecorator
+  class IncludeAppSpaceDecorator < IncludeDecorator
     class << self
       def match?(include)
         include&.any? { |i| %w(space space.organization).include?(i) }
@@ -9,9 +11,18 @@ module VCAP::CloudController
         hash[:included] ||= {}
         space_guids = apps.map(&:space_guid).uniq
         spaces = Space.where(guid: space_guids)
+      end
 
-        hash[:included][:spaces] = spaces.map { |space| Presenters::V3::SpacePresenter.new(space).to_hash }
-        hash
+      def association_name
+        'space'
+      end
+
+      def association_class
+        Space
+      end
+
+      def presenter
+        Presenters::V3::SpacePresenter
       end
     end
   end
