@@ -1,11 +1,5 @@
 ### Apply an app manifest
 
-Apply changes specified in a manifest to an app and its underlying processes. These changes are additive and will not modify any unspecified properties or remove any existing environment variables, routes, or services.
-
-<aside class="notice">
-Apply manifest will only trigger an immediate update for the "disk_quota", "instances", and "memory" properties. All other properties will update on app restart.
-</aside>
-
 ```
 Example Request
 ```
@@ -26,6 +20,12 @@ Example Response
 HTTP/1.1 202 Accepted
 Location: https://api.example.org/v3/jobs/[guid]
 ```
+
+Apply changes specified in a manifest to an app and its underlying processes. These changes are additive and will not modify any unspecified properties or remove any existing environment variables, routes, or services.
+
+<aside class="notice">
+Apply manifest will only trigger an immediate update for the "disk_quota", "instances", and "memory" properties. All other properties will update on app restart.
+</aside>
 
 #### Definition
 `POST /v3/apps/:guid/actions/apply_manifest`
