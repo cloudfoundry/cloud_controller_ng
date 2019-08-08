@@ -1,7 +1,7 @@
 require 'decorators/include_decorator'
 
 module VCAP::CloudController
-  class IncludeAppOrganizationDecorator < IncludeDecorator
+  class IncludeOrganizationDecorator < IncludeDecorator
     class << self
       def match?(include)
         include&.any? { |i| %w(org space.organization).include?(i) }

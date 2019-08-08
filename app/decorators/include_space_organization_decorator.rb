@@ -1,5 +1,5 @@
 module VCAP::CloudController
-  class IncludeSpaceOrganizationDecorator < IncludeDecorator
+  class IncludeOrganizationDecorator < IncludeDecorator
     class << self
       def match?(include)
         include&.any? { |i| %w(org organization).include?(i) }
