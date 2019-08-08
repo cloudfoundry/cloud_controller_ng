@@ -13,16 +13,15 @@ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 License for the specific language governing permissions and limitations
 under the License.
 %>
+
 <%
-  def get_version
-    version = File.exists?('source/versionfile') ? File.read('source/versionfile') : 'local'
-    if version =~ /release-candidate/
-      "Release Candidate"
-    else
-      "Version #{version}"
-    end
-  end
+html = current_page.data.includes
+  .map { |include| partial "includes/#{include}" }
+  .join ""
+
+table_of_contents = extract_table_of_contents(html)
 %>
+
 <!doctype html>
 <html lang="en">
   <head>
@@ -46,6 +45,7 @@ under the License.
         <%= image_tag('navbar.png') %>
       </span>
     </a>
+
     <nav class="tocify-wrapper tocify-sidebar">
       <%= image_tag "logo.png" %>
 
@@ -72,16 +72,14 @@ under the License.
       <ul class="search-results"></ul>
 
       <div id="toc">
+        <%= table_of_contents %>
       </div>
     </nav>
 
     <main class="page-wrapper">
       <div class="dark-box"></div>
       <div class="content">
-        <%= yield %>
-        <% current_page.data.includes && current_page.data.includes.each do |include| %>
-          <%= partial "includes/#{include}" %>
-        <% end %>
+        <%= html %>
       </div>
     </main>
   </body>

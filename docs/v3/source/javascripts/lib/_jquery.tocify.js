@@ -35,9 +35,7 @@
         subheaderClassName = "tocify-subheader",
         subheaderClass = "." + subheaderClassName,
         itemClassName = "tocify-item",
-        itemClass = "." + itemClassName,
-        extendPageClassName = "tocify-extend-page",
-        extendPageClass = "." + extendPageClassName;
+        itemClass = "." + itemClassName;
 
     // Calling the jQueryUI Widget Factory Method
     $.widget("toc.tocify", {
@@ -51,10 +49,6 @@
             // **context**: Accepts String: Any jQuery selector
             // The container element that holds all of the elements used to generate the table of contents
             context: "body",
-
-            // **ignoreSelector**: Accepts String: Any jQuery selector
-            // A selector to any element that would be matched by selectors that you wish to be ignored
-            ignoreSelector: null,
 
             // **selectors**: Accepts an Array of Strings: Any jQuery selectors
             // The element's used to generate the table of contents.  The order is very important since it will determine the table of content's nesting structure
@@ -104,18 +98,6 @@
             // The offset distance in pixels to trigger the next active table of contents item
             highlightOffset: 40,
 
-            // **theme**: Accepts a string: "bootstrap", "jqueryui", or "none"
-            // Determines if Twitter Bootstrap, jQueryUI, or Tocify classes should be added to the table of contents
-            theme: "bootstrap",
-
-            // **extendPage**: Accepts a boolean: true or false
-            // If a user scrolls to the bottom of the page and the page is not tall enough to scroll to the last table of contents item, then the page height is increased
-            extendPage: true,
-
-            // **extendPageOffset**: Accepts a number: pixels
-            // How close to the bottom of the page a user must scroll before the page is extended
-            extendPageOffset: 100,
-
             // **history**: Accepts a boolean: true or false
             // Adds a hash to the page url to maintain history
             history: true,
@@ -143,17 +125,12 @@
         // -------
         //      Constructs the plugin.  Only called once.
         _create: function() {
-
             var self = this;
 
             self.tocifyWrapper = $('.tocify-wrapper');
-            self.extendPageScroll = true;
 
             // Internal array that keeps track of all TOC items (Helps to recognize if there are duplicate TOC item strings)
             self.items = [];
-
-            // Generates the HTML for the dynamic table of contents
-            self._generateToc();
 
             // Caches heights and anchors
             self.cachedHeights = [],
@@ -190,123 +167,6 @@
 
                 // Sets the active TOC item
                 self._setActiveElement(true);
-
-                // Once all animations on the page are complete, this callback function will be called
-                $("html, body").promise().done(function() {
-
-                    setTimeout(function() {
-
-                        self.extendPageScroll = false;
-
-                    },0);
-
-                });
-
-            });
-
-        },
-
-        // _generateToc
-        // ------------
-        //      Generates the HTML for the dynamic table of contents
-        _generateToc: function() {
-
-            // _Local variables_
-
-            // Stores the plugin context in the self variable
-            var self = this,
-
-                // All of the HTML tags found within the context provided (i.e. body) that match the top level jQuery selector above
-                firstElem,
-
-                // Instantiated variable that will store the top level newly created unordered list DOM element
-                ul,
-                ignoreSelector = self.options.ignoreSelector;
-
-             // If the selectors option has a comma within the string
-             if(this.options.selectors.indexOf(",") !== -1) {
-
-                 // Grabs the first selector from the string
-                 firstElem = $(this.options.context).find(this.options.selectors.replace(/ /g,"").substr(0, this.options.selectors.indexOf(",")));
-
-             }
-
-             // If the selectors option does not have a comman within the string
-             else {
-
-                 // Grabs the first selector from the string and makes sure there are no spaces
-                 firstElem = $(this.options.context).find(this.options.selectors.replace(/ /g,""));
-
-             }
-
-            if(!firstElem.length) {
-
-                self.element.addClass(hideTocClassName);
-
-                return;
-
-            }
-
-            self.element.addClass(tocClassName);
-
-            // Loops through each top level selector
-            firstElem.each(function(index) {
-
-                //If the element matches the ignoreSelector then we skip it
-                if($(this).is(ignoreSelector)) {
-                    return;
-                }
-
-                // Creates an unordered list HTML element and adds a dynamic ID and standard class name
-                ul = $("<ul/>", {
-                    "id": headerClassName + index,
-                    "class": headerClassName
-                }).
-
-                // Appends a top level list item HTML element to the previously created HTML header
-                append(self._nestElements($(this), index));
-
-                // Add the created unordered list element to the HTML element calling the plugin
-                self.element.append(ul);
-
-                // Finds all of the HTML tags between the header and subheader elements
-                $(this).nextUntil(this.nodeName.toLowerCase()).each(function() {
-
-                    // If there are no nested subheader elemements
-                    if($(this).find(self.options.selectors).length === 0) {
-
-                        // Loops through all of the subheader elements
-                        $(this).filter(self.options.selectors).each(function() {
-
-                            //If the element matches the ignoreSelector then we skip it
-                            if($(this).is(ignoreSelector)) {
-                                return;
-                            }
-
-                            self._appendSubheaders.call(this, self, ul);
-
-                        });
-
-                    }
-
-                    // If there are nested subheader elements
-                    else {
-
-                        // Loops through all of the subheader elements
-                        $(this).find(self.options.selectors).each(function() {
-
-                            //If the element matches the ignoreSelector then we skip it
-                            if($(this).is(ignoreSelector)) {
-                                return;
-                            }
-
-                            self._appendSubheaders.call(this, self, ul);
-
-                        });
-
-                    }
-
-                });
 
             });
 
@@ -561,8 +421,6 @@
 
                 }
 
-                self._scrollTo($(this));
-
             });
 
             // Mouseenter and Mouseleave event handlers for the list item's within the HTML element calling the plugin
@@ -582,12 +440,8 @@
                 // Mouseleave event handler
                 "mouseleave.tocify": function() {
 
-                    if(self.options.theme !== "bootstrap") {
-
-                        // Removes the hover CSS class from the current list item
-                        $(this).removeClass(self.hoverClass);
-
-                    }
+                    // Removes the hover CSS class from the current list item
+                    $(this).removeClass(self.hoverClass);
 
                 }
             });
@@ -626,45 +480,6 @@
 
                         currentElem;
 
-                    if(self.options.extendPage) {
-
-                        // If the user has scrolled to the bottom of the page and the last toc item is not focused
-                        if((self.webkit && winScrollTop >= scrollHeight - winHeight - self.options.extendPageOffset) || (!self.webkit && winHeight + winScrollTop > docHeight - self.options.extendPageOffset)) {
-
-                            if(!$(extendPageClass).length) {
-
-                                lastElem = $('div[data-unique="' + $(itemClass).last().attr("data-unique") + '"]');
-
-                                if(!lastElem.length) return;
-
-                                // Gets the top offset of the page header that is linked to the last toc item
-                                lastElemOffset = lastElem.offset().top;
-
-                                // Appends a div to the bottom of the page and sets the height to the difference of the window scrollTop and the last element's position top offset
-                                $(self.options.context).append($("<div />", {
-
-                                    "class": extendPageClassName,
-
-                                    "height": Math.abs(lastElemOffset - winScrollTop) + "px",
-
-                                    "data-unique": extendPageClassName
-
-                                }));
-
-                                if(self.extendPageScroll) {
-
-                                    currentElem = self.element.find('li.active');
-
-                                    self._scrollTo($("div[data-unique=" + currentElem.attr("data-unique") + "]"));
-
-                                }
-
-                            }
-
-                        }
-
-                    }
-
                     // The zero timeout ensures the following code is run after the scroll events
                     setTimeout(function() {
 
@@ -691,7 +506,7 @@
                             }
                         });
 
-                        anchorText = $(self.cachedAnchors[closestAnchorIdx]).attr("data-unique");
+                        anchorText = $(self.cachedAnchors[closestAnchorIdx]).attr("id");
 
                         // Stores the list item HTML element that corresponds to the currently traversed anchor tag
                         elem = $('li[data-unique="' + anchorText + '"]');
@@ -764,7 +579,7 @@
             var self = this;
             self.cachedHeights = [];
             self.cachedAnchors = [];
-            var anchors = $(self.options.context).find("div[data-unique]");
+            var anchors = $(self.options.context).find(self.options.selectors);
             anchors.each(function(idx) {
                 var distance = (($(this).next().length ? $(this).next() : $(this)).offset().top - self.options.highlightOffset);
                 self.cachedHeights[idx] = distance;
@@ -947,38 +762,11 @@
         // --------------
         //      Adds CSS classes to the newly generated table of contents HTML
         _addCSSClasses: function() {
+            // Adds more neutral classes (instead of jqueryui)
 
-            // If the user wants a jqueryUI theme
-            if(this.options.theme === "jqueryui") {
+            this.focusClass = tocFocusClassName;
 
-                this.focusClass = "ui-state-default";
-
-                this.hoverClass = "ui-state-hover";
-
-                //Adds the default styling to the dropdown list
-                this.element.addClass("ui-widget").find(".toc-title").addClass("ui-widget-header").end().find("li").addClass("ui-widget-content");
-
-            }
-
-            // If the user wants a twitterBootstrap theme
-            else if(this.options.theme === "bootstrap") {
-
-                this.element.find(headerClass + "," + subheaderClass).addClass("nav nav-list");
-
-                this.focusClass = "active";
-
-            }
-
-            // If a user does not want a prebuilt theme
-            else {
-
-                // Adds more neutral classes (instead of jqueryui)
-
-                this.focusClass = tocFocusClassName;
-
-                this.hoverClass = tocHoverClassName;
-
-            }
+            this.hoverClass = tocHoverClassName;
 
             //Maintains chainability
             return this;
@@ -1002,38 +790,6 @@
 
             // Calls the jQueryUI Widget Factory setOptions method
             $.Widget.prototype._setOptions.apply(this, arguments);
-
-        },
-
-        // _scrollTo
-        // ---------
-        //      Scrolls to a specific element
-        _scrollTo: function(elem) {
-
-            var self = this,
-                duration = self.options.smoothScroll || 0,
-                scrollTo = self.options.scrollTo;
-
-            // Once all animations on the page are complete, this callback function will be called
-            $("html, body").promise().done(function() {
-
-                // Animates the html and body element scrolltops
-                $("html, body").animate({
-
-                    // Sets the jQuery `scrollTop` to the top offset of the HTML div tag that matches the current list item's `data-unique` tag
-                    "scrollTop": $('div[data-unique="' + elem.attr("data-unique") + '"]').next().offset().top - ($.isFunction(scrollTo) ? scrollTo.call() : scrollTo) + "px"
-
-                }, {
-
-                    // Sets the smoothScroll animation time duration to the smoothScrollSpeed option
-                    "duration": duration
-
-                });
-
-            });
-
-            // Maintains chainability
-            return self;
 
         }
 

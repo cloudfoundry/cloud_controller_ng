@@ -156,6 +156,7 @@ DEPENDENCIES
   middleman-gh-pages
   middleman-livereload
   middleman-syntax
+  nokogiri
   rake
   redcarpet
   rouge
