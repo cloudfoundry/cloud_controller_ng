@@ -8,6 +8,7 @@ module VCAP::CloudController
 
         validate_name_update(service_instance, update_attrs)
         prevent_changing_space(space, update_attrs)
+        prevent_maintenance_info_and_plan_update(service_plan, update_attrs['service_plan_guid'], update_attrs['maintenance_info'])
         validate_changing_plan(service_plan, service, service_instance, update_attrs['service_plan_guid'])
         check_plan_still_valid(service_instance, service_plan, update_attrs['service_plan_guid'])
         validate_update_of_service_parameters(service_instance, update_attrs['parameters'])
@@ -48,6 +49,12 @@ module VCAP::CloudController
 
       def prevent_changing_space(space, update_attrs)
         space_change_not_allowed! if space_change_requested?(update_attrs['space_guid'], space)
+      end
+
+      def prevent_maintenance_info_and_plan_update(current_plan, requested_plan_guid, requested_maintenance_info)
+        if plan_update_requested?(requested_plan_guid, current_plan) && requested_maintenance_info
+          raise CloudController::Errors::ApiError.new_from_details('MaintenanceInfoNotUpdatableWhenChangingPlan')
+        end
       end
 
       def space_change_requested?(requested_space_guid, current_space)

@@ -1219,6 +1219,11 @@
   http_code: 422
   message: "maintenance_info.version should be a semantic version."
 
+390008:
+  name: MaintenanceInfoNotUpdatableWhenChangingPlan
+  http_code: 422
+  message: "maintenance_info should not be changed when switching to different plan."
+
 390011:
   name: BuildpackStacksDontMatch
   http_code: 422

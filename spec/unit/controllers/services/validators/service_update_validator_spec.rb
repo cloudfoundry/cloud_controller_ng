@@ -268,6 +268,22 @@ module VCAP::CloudController
           end
         end
 
+        context 'when maintenance_info and plan_id are changed' do
+          let(:update_attrs) { {
+            'maintenance_info' => { 'version' => '2.0.0' },
+            'service_plan_guid' => new_service_plan.guid }
+          }
+
+          it 'errors' do
+            expect {
+              ServiceUpdateValidator.validate!(service_instance, args)
+            }.to raise_error(
+              CloudController::Errors::ApiError,
+              'maintenance_info should not be changed when switching to different plan.'
+            )
+          end
+        end
+
         context 'paid plans' do
           let(:old_service_plan) { ServicePlan.make(:v2, service: service, free: false) }
 
