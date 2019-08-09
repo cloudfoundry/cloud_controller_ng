@@ -461,13 +461,13 @@ module VCAP::CloudController
         end
 
         context 'when the plan has maintenance_info' do
-          let(:plan) { ServicePlan.make(:v2, service: service, maintenance_info: { 'version': '2.0' }) }
+          let(:plan) { ServicePlan.make(:v2, service: service, maintenance_info: { 'version': '2.0.0' }) }
 
           it 'should pass along the maintenance_info to the service broker' do
             create_managed_service_instance(accepts_incomplete: 'false')
             expect(last_response).to have_status_code(201)
             expect(a_request(:put, service_broker_url_regex).
-                                        with(body: hash_including(maintenance_info: { 'version': '2.0' }))).
+                                        with(body: hash_including(maintenance_info: { 'version': '2.0.0' }))).
               to have_been_made.times(1)
           end
         end
@@ -1061,14 +1061,14 @@ module VCAP::CloudController
         end
 
         context 'when the broker returns "maintenance_info" in the catalog' do
-          let(:plan) { ServicePlan.make(:v2, service: service, maintenance_info: { 'version': '2.0' }) }
+          let(:plan) { ServicePlan.make(:v2, service: service, maintenance_info: { 'version': '2.0.0' }) }
 
           it 'should store it on a service instance level' do
             create_managed_service_instance
 
             expect(last_response).to have_status_code(201)
             maintenance_info = decoded_response['entity']['maintenance_info']
-            expect(maintenance_info).to eq({ 'version' => '2.0' })
+            expect(maintenance_info).to eq({ 'version' => '2.0.0' })
           end
         end
       end
@@ -2532,7 +2532,7 @@ module VCAP::CloudController
         end
 
         context 'when maintenance_info is NOT provided in the request, but it exists for the new plan' do
-          let(:new_service_plan) { ServicePlan.make(:v2, service: service, maintenance_info: { 'version': '1.0' }) }
+          let(:new_service_plan) { ServicePlan.make(:v2, service: service, maintenance_info: { 'version': '1.0.0' }) }
           let(:status) { 202 }
 
           context 'when the delayed job finishes successfully' do
@@ -2580,10 +2580,10 @@ module VCAP::CloudController
 
       context 'when maintenance_info is provided' do
         let(:body) do
-          { maintenance_info: { version: '2.0' } }.to_json
+          { maintenance_info: { version: '2.0.0' } }.to_json
         end
-        let(:old_maintenance_info) { { 'version' => '1.0' } }
-        let(:plan) { ServicePlan.make(:v2, service: service, maintenance_info: { 'version': '2.0' }) }
+        let(:old_maintenance_info) { { 'version' => '1.0.0' } }
+        let(:plan) { ServicePlan.make(:v2, service: service, maintenance_info: { 'version': '2.0.0' }) }
         let(:service_instance) { ManagedServiceInstance.make(service_plan: plan, maintenance_info: old_maintenance_info) }
 
         context 'when the broker responds synchronously' do
@@ -2599,7 +2599,7 @@ module VCAP::CloudController
             put "/v2/service_instances/#{service_instance.guid}", body
 
             expect(last_response).to have_status_code 201
-            expect(service_instance.reload.maintenance_info).to eq({ 'version' => '2.0' })
+            expect(service_instance.reload.maintenance_info).to eq({ 'version' => '2.0.0' })
           end
         end
 
@@ -2607,7 +2607,7 @@ module VCAP::CloudController
           let(:body) do
             {
               'maintenance_info' => {
-                'version' => '3.0',
+                'version' => '3.0.0',
               }
             }
           end
@@ -2653,7 +2653,7 @@ module VCAP::CloudController
 
         context 'when maintenance_info has extra fields' do
           let(:body) do
-            { maintenance_info: { version: '2.0', extra: 'oopsie', description: 'an upgrade of all things' } }.to_json
+            { maintenance_info: { version: '2.0.0', extra: 'oopsie', description: 'an upgrade of all things' } }.to_json
           end
 
           let(:status) { 200 }
@@ -2668,16 +2668,16 @@ module VCAP::CloudController
             put "/v2/service_instances/#{service_instance.guid}", body
 
             expect(a_request(:patch, /#{service_broker_url}/).with(body: hash_including(
-              maintenance_info: { version: '2.0' }
+              maintenance_info: { version: '2.0.0' }
             ))).to have_been_made
 
             expect(last_response).to have_status_code 201
-            expect(service_instance.reload.maintenance_info).to eq({ 'version' => '2.0' })
+            expect(service_instance.reload.maintenance_info).to eq({ 'version' => '2.0.0' })
           end
         end
 
         context 'when the maintenance was already performed' do
-          let(:old_maintenance_info) { { 'version' => '2.0' } }
+          let(:old_maintenance_info) { { 'version' => '2.0.0' } }
 
           it 'does not call the broker and returns 201' do
             put "/v2/service_instances/#{service_instance.guid}", body
@@ -2710,7 +2710,7 @@ module VCAP::CloudController
             end
 
             it 'updates the maintenance_info for the instance' do
-              expect(service_instance.reload.maintenance_info).to eq({ 'version' => '2.0' })
+              expect(service_instance.reload.maintenance_info).to eq({ 'version' => '2.0.0' })
               expect(a_request(:patch, /#{service_broker_url}/)).to have_been_made.times(1)
             end
           end
