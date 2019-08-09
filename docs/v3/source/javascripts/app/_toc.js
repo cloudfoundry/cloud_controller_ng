@@ -5,25 +5,19 @@
   'use strict';
 
   var closeToc = function() {
-    $(".tocify-wrapper").removeClass('open');
+    $(".toc-wrapper").removeClass('open');
     $("#nav-button").removeClass('open');
   };
 
   var makeToc = function() {
     global.toc = $("#toc").tocify({
       selectors: 'h1, h2, h3',
-      smoothScroll: false,
       showEffectSpeed: 0,
       hideEffectSpeed: 180,
-      highlightOffset: 60,
-      scrollHistory: true,
-      hashGenerator: function (text, element) {
-        return element.prop('id');
-      }
     }).data('toc-tocify');
 
     $("#nav-button").click(function() {
-      $(".tocify-wrapper").toggleClass('open');
+      $(".toc-wrapper").toggleClass('open');
       $("#nav-button").toggleClass('open');
       return false;
     });
@@ -44,7 +38,7 @@
     makeToc();
     animate();
     $('.content').imagesLoaded( function() {
-      global.toc.calculateHeights();
+      toc._calculateHeights();
     });
   });
 })(window);

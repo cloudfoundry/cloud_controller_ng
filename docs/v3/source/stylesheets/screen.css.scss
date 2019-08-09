@@ -95,7 +95,7 @@ nav {
   padding: 16px;
 }
 
-.tocify-wrapper {
+.toc-wrapper {
   transition: left 0.3s ease-in-out;
 
   overflow-y: auto;
@@ -138,7 +138,7 @@ nav {
     }
   }
 
-  img + .tocify {
+  img + .toc {
     margin-top: $logo-margin;
   }
 
@@ -175,24 +175,15 @@ nav {
     }
   }
 
-  .tocify-item {
+  .toc-link {
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
+    color: $gray1;
 
-    &, a {
-      color: $gray1;
-    }
-
-    &.tocify-focus, &.tocify-focus a {
+    &.toc-focus {
       color: $blue1;
     }
-  }
-
-  .toc-footer li {
-    overflow-x: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
   }
 
   // The Table of Contents is composed of multiple nested
@@ -212,43 +203,22 @@ nav {
   }
 
   // This is the currently selected ToC entry
-  .tocify-focus {
+  .toc-focus {
     box-shadow: 0px 1px 0px $nav-active-shadow;
     color: $nav-active-text;
   }
 
-  .tocify-header {
+  .toc-header {
     padding: 0;
     font-weight: bold;
   }
 
   // Subheaders are the submenus that slide open
   // in the table of contents.
-  .tocify-subheader {
+  .toc-subheader {
     display: none; // tocify will override this when needed
     font-weight: 400;
     padding-left: $nav-padding;
-  }
-
-  .toc-footer {
-    padding: 1em 0;
-    margin-top: 1em;
-    border-top: 1px dashed $nav-footer-border-color;
-
-    li, a {
-      color: $nav-text;
-      text-decoration: none;
-    }
-
-    a:hover {
-      text-decoration: underline;
-    }
-
-    li {
-      font-size: 0.8em;
-      line-height: 1.7;
-      text-decoration: none;
-    }
   }
 }
 
@@ -350,7 +320,7 @@ nav {
     padding-left: $main-padding + 15px;
   }
 
-  // the div is the tocify hidden div for placeholding stuff
+  // the div is the toc hidden div for placeholding stuff
   & > h1, & > h2, & > div {
     clear: both;
   }
@@ -589,7 +559,7 @@ nav {
 // There are also a couple styles disperesed
 
 @media (max-width: $tablet-width) {
-  .tocify-wrapper {
+  .toc-wrapper {
     left: -$nav-width;
 
     &.open {
@@ -605,7 +575,7 @@ nav {
     display: block;
   }
 
-  .tocify-wrapper .tocify-item > a {
+  .toc-wrapper .toc-item > a {
     padding-top: 0.3em;
     padding-bottom: 0.3em;
   }

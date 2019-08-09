@@ -39,20 +39,20 @@ module DocsHelpers
     output = ""
 
     headings.each do |h1|
-      output += "<ul class='tocify-header'>"
-      output += "<li class='tocify-item' data-unique='#{h1[:id]}'><a>#{h1[:text]}</a></li>"
+      output += "<ul class='toc-header'>"
+      output += "<li class='toc-item'><a class='toc-link' href='\##{h1[:id]}'>#{h1[:text]}</a></li>"
 
       if h1[:children].any?
-        output += "<ul class='tocify-subheader' data-tag='2'>"
+        output += "<ul class='toc-subheader'>"
 
         h1[:children].each do |h2|
-          output += "<li class='tocify-item' data-unique='#{h2[:id]}'><a>#{h2[:text]}</a></li>"
+          output += "<li class='toc-item'><a class='toc-link' href='\##{h2[:id]}'>#{h2[:text]}</a></li>"
 
           if h2[:children].any?
-            output += "<ul class='tocify-subheader' data-tag='3'>"
+            output += "<ul class='toc-subheader'>"
 
             h2[:children].each do |h3|
-              output += "<li class='tocify-item' data-unique='#{h3[:id]}'><a>#{h3[:text]}</a></li>"
+              output += "<li class='toc-item'><a class='toc-link' href='\##{h3[:id]}'>#{h3[:text]}</a></li>"
             end
 
             output += "</ul>"
