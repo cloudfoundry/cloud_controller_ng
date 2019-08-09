@@ -13,6 +13,10 @@ module VCAP::CloudController
         raise NotImplementedError
       end
 
+      def include_name
+        association_name
+      end
+
       def association_guid
         :"#{association_name}_guid"
       end

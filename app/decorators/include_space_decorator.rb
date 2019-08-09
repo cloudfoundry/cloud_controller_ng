@@ -26,4 +26,6 @@ module VCAP::CloudController
       end
     end
   end
+
+  IncludeDecoratorRegistry.register(IncludeSpaceDecorator)
 end

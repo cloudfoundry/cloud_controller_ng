@@ -10,8 +10,6 @@ require 'actions/app_apply_manifest'
 require 'actions/app_start'
 require 'actions/app_stop'
 require 'actions/app_assign_droplet'
-require 'decorators/include_space_decorator'
-require 'decorators/include_organization_decorator'
 require 'messages/apps_list_message'
 require 'messages/app_show_message'
 require 'messages/app_update_message'
@@ -48,6 +46,8 @@ class AppsV3Controller < ApplicationController
     decorators << IncludeAppOrganizationDecorator if IncludeAppOrganizationDecorator.match?(message.include)
     decorators << IncludeSpaceDecorator if message.include&.include?('space')
     decorators << IncludeOrganizationDecorator if message.include&.include?('org')
+    include = message.include || []
+    decorators = include.map { |include_name| IncludeDecoratorRegistry.for_include(include_name) }
 
     render status: :ok,
            json: Presenters::V3::PaginatedListPresenter.new(
@@ -73,6 +73,8 @@ class AppsV3Controller < ApplicationController
     decorators << IncludeAppOrganizationDecorator if IncludeAppOrganizationDecorator.match?(message.include)
     decorators << IncludeSpaceDecorator if message.include&.include?('space')
     decorators << IncludeOrganizationDecorator if message.include&.include?('org')
+    include = message.include || []
+    decorators = include.map { |include_name| IncludeDecoratorRegistry.for_include(include_name) }
 
     render status: :ok, json: Presenters::V3::AppPresenter.new(
       app,

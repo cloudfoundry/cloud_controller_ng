@@ -22,13 +22,10 @@ class SpacesV3Controller < ApplicationController
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     decorators = []
-<<<<<<< HEAD
     decorators << IncludeSpaceOrganizationDecorator if IncludeSpaceOrganizationDecorator.match?(message.include)
-||||||| parent of 64a033ca7... Include decorators now only vary by included resource
-    decorators << IncludeSpaceOrganizationDecorator if message.include&.include?('org')
-=======
     decorators << IncludeOrganizationDecorator if message.include&.include?('org')
->>>>>>> 64a033ca7... Include decorators now only vary by included resource
+    include = message.include || []
+    decorators = include.map { |include_name| IncludeDecoratorRegistry.for_include(include_name) }
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::SpacePresenter,
@@ -47,13 +44,10 @@ class SpacesV3Controller < ApplicationController
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     decorators = []
-<<<<<<< HEAD
     decorators << IncludeSpaceOrganizationDecorator if IncludeSpaceOrganizationDecorator.match?(message.include)
-||||||| parent of 64a033ca7... Include decorators now only vary by included resource
-    decorators << IncludeSpaceOrganizationDecorator if message.include&.include?('org')
-=======
     decorators << IncludeOrganizationDecorator if message.include&.include?('org')
->>>>>>> 64a033ca7... Include decorators now only vary by included resource
+    include = message.include || []
+    decorators = include.map { |include_name| IncludeDecoratorRegistry.for_include(include_name) }
 
     render status: :ok, json: Presenters::V3::SpacePresenter.new(space, decorators: decorators)
   end
