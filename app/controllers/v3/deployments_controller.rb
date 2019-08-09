@@ -6,6 +6,7 @@ require 'presenters/v3/deployment_presenter'
 require 'actions/deployment_create'
 require 'actions/deployment_update'
 require 'actions/deployment_cancel'
+require 'cloud_controller/telemetry_logger'
 
 class DeploymentsController < ApplicationController
   def index
@@ -39,6 +40,14 @@ class DeploymentsController < ApplicationController
     begin
       deployment = DeploymentCreate.create(app: app, user_audit_info: user_audit_info, message: message)
       logger.info("Created deployment #{deployment.guid} for app #{app.guid}")
+
+      TelemetryLogger.emit(
+        'create-deployment',
+        { 'strategy' => { 'value' => 'rolling', 'raw' => true },
+          'app-id' => { 'value' => app.guid },
+          'user-id' => { 'value' => current_user.guid }
+        }
+      )
     rescue DeploymentCreate::Error => e
       unprocessable!(e.message)
     end

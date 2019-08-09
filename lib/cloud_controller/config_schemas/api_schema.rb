@@ -59,6 +59,8 @@ module VCAP::CloudController
             syslog: String, # Name to associate with syslog messages (should start with 'vcap.')
           },
 
+          telemetry_log_path: String, # path to log telemetry to, /dev/null to disable
+
           pid_filename: String, # Pid filename to use
 
           directories: {

@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'request_spec_shared_examples'
+require 'digest'
 
 RSpec.describe 'Deployments' do
   let(:user) { make_developer_for_space(space) }
@@ -484,6 +485,31 @@ RSpec.describe 'Deployments' do
         expect(last_response.status).to eq(201)
 
         expect(app_model.reload.desired_state).to eq(VCAP::CloudController::ProcessModel::STARTED)
+      end
+    end
+
+    context 'telemetry' do
+      let(:create_request) do
+        {
+          relationships: {
+            app: {
+              data: {
+                guid: app_model.guid
+              }
+            },
+          }
+        }
+      end
+
+      it 'should log the required fields when a deployment is created' do
+        post '/v3/deployments', create_request.to_json, user_header
+
+        expect(last_response.status).to eq(201)
+        expect(VCAP::CloudController::TelemetryLogger).to have_received(:emit).with('create-deployment', {
+            'strategy' => { 'value' => 'rolling', 'raw' => true },
+            'app-id' => { 'value' => app_model.guid },
+            'user-id' => { 'value' => user.guid }
+        })
       end
     end
   end

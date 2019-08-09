@@ -18,7 +18,7 @@ class RootController < ActionController::Base
     links.merge!(create_link(:packages))
     links.merge!(create_link(:processes))
     links.merge!(create_link(:resource_matches, experimental: true))
-    links.merge!(create_link(:routes, experimental: true))
+    links.merge!(create_link(:routes))
     links.merge!(create_link(:service_brokers, experimental: true))
     links.merge!(create_link(:service_instances))
     links.merge!(create_link(:spaces))

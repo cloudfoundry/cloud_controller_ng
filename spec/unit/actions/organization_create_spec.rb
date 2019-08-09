@@ -56,7 +56,7 @@ module VCAP::CloudController
             message = VCAP::CloudController::OrganizationUpdateMessage.new(name: name)
             expect {
               OrganizationCreate.new(perm_client: perm_client).create(message)
-            }.to raise_error(OrganizationCreate::Error, 'Name must be unique')
+            }.to raise_error(OrganizationCreate::Error, "Organization '#{name}' already exists.")
           end
         end
       end
