@@ -175,10 +175,13 @@ nav {
     }
   }
 
-  .toc-link {
+  .toc-item {
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
+  }
+
+  .toc-link {
     color: $gray1;
 
     &.toc-focus {
