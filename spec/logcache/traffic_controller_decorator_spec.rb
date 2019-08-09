@@ -399,6 +399,45 @@ RSpec.describe Logcache::TrafficControllerDecorator do
       end
     end
 
+    context 'when given container metrics in separate envelopes' do
+      let(:envelopes) {
+        Loggregator::V2::EnvelopeBatch.new(
+            batch: [ #TODO multiple instances
+                Loggregator::V2::Envelope.new(
+                    source_id: process_guid,
+                    gauge: Loggregator::V2::Gauge.new(metrics: {
+                        'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 10),
+                    }),
+                    instance_id: '1'
+                ),
+                Loggregator::V2::Envelope.new(
+                    source_id: process_guid,
+                    gauge: Loggregator::V2::Gauge.new(metrics: {
+                        'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 21),
+                    }),
+                    instance_id: '1'
+                ),
+                Loggregator::V2::Envelope.new(
+                    source_id: process_guid,
+                    gauge: Loggregator::V2::Gauge.new(metrics: {
+                        'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 32),
+                    }),
+                    instance_id: '1'
+                )
+            ]
+        )
+      }
+      let(:num_instances) { 1 }
+
+      it 'returns a single envelope' do
+        expect(subject.count).to eq(1)
+        expect(subject.first.containerMetric.instanceIndex).to eq(1)
+        expect(subject.first.containerMetric.cpuPercentage).to eq(10)
+        expect(subject.first.containerMetric.memoryBytes).to eq(21)
+        expect(subject.first.containerMetric.diskBytes).to eq(32)
+      end
+    end
+
     describe 'walking the log cache' do
       let(:lookback_window) { 2.minutes }
 
