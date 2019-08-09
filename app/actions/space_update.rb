@@ -14,12 +14,12 @@ module VCAP::CloudController
 
       space
     rescue Sequel::ValidationFailed => e
-      validation_error!(e)
+      validation_error!(e, space)
     end
 
-    def validation_error!(error)
+    def validation_error!(error, space)
       if error.is_a?(Space::DBNameUniqueRaceError) || error.errors.on([:organization_id, :name])&.include?(:unique)
-        error!('Name must be unique per organization')
+        error!("Organization '#{space.organization.name}' already contains a space with name '#{space.name}'.")
       end
       error!(error.message)
     end

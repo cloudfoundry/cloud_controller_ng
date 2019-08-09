@@ -334,6 +334,18 @@ RSpec.describe 'Spaces' do
   end
 
   describe 'PATCH /v3/spaces/:guid' do
+    context 'updating the space to a duplicate name' do
+      let(:space1) { VCAP::CloudController::Space.make(name: 'space1', organization: organization) }
+      let!(:space2) { VCAP::CloudController::Space.make(name: 'space2', organization: organization) }
+
+      it 'returns a 422 with a helpful error message' do
+        patch "/v3/spaces/#{space1.guid}", { name: 'space2' }.to_json, admin_header
+
+        expect(last_response.status).to eq(422)
+        expect(parsed_response['errors'][0]['detail']).to eq("Organization 'Boardgames' already contains a space with name 'space2'.")
+      end
+    end
+
     it 'updates the requested space' do
       request_body = {
         name: 'codenames',

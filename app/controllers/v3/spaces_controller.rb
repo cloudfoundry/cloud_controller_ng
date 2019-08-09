@@ -73,6 +73,8 @@ class SpacesV3Controller < ApplicationController
     space = SpaceUpdate.new.update(space, message)
 
     render status: :ok, json: Presenters::V3::SpacePresenter.new(space)
+  rescue SpaceUpdate::Error => e
+    unprocessable!(e)
   end
 
   def destroy

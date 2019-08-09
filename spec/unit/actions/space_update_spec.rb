@@ -50,7 +50,7 @@ module VCAP::CloudController
 
             expect {
               SpaceUpdate.new.update(space, message)
-            }.to raise_error(SpaceUpdate::Error, 'Name must be unique per organization')
+            }.to raise_error(SpaceUpdate::Error, "Organization '#{org.name}' already contains a space with name '#{message.name}'.")
           end
         end
       end
