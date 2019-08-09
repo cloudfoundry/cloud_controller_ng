@@ -55,7 +55,7 @@ class AppsV3Controller < ApplicationController
              paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
              path: '/v3/apps',
              message: message,
-             decorators: decorators
+             decorators: decorators_for_include(message.include)
       )
   end
 
@@ -79,7 +79,7 @@ class AppsV3Controller < ApplicationController
     render status: :ok, json: Presenters::V3::AppPresenter.new(
       app,
       show_secrets: permission_queryer.can_read_secrets_in_space?(space.guid, org.guid),
-      decorators: decorators
+      decorators: decorators_for_include(message.include)
     )
   end
 

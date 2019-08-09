@@ -1,5 +1,6 @@
 require 'cloud_controller/blobstore/errors'
 require 'cloud_controller/errors/compound_error'
+require 'decorators/include_decorator_mixin'
 
 module V3ErrorsHelper
   def invalid_request!(message)
@@ -39,6 +40,7 @@ class ApplicationController < ActionController::Base
   include VCAP::CloudController
   include V3ErrorsHelper
   include VCAP::CloudController::ParamsHashifier
+  include VCAP::CloudController::IncludeDecoratorMixin
 
   ANONYMOUSLY_AVAILABLE = ['not_found', 'internal_error', 'bad_request'].map(&:freeze).freeze
   UNSCOPED_PAGES = ['not_found', 'internal_error', 'bad_request', 'v3_root'].map(&:freeze).freeze

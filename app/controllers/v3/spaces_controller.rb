@@ -32,7 +32,7 @@ class SpacesV3Controller < ApplicationController
       paginated_result: SequelPaginator.new.get_page(readable_spaces(message: message), message.try(:pagination_options)),
       path: '/v3/spaces',
       message: message,
-      decorators: decorators
+      decorators: decorators_for_include(message.include)
     )
   end
 
@@ -49,7 +49,10 @@ class SpacesV3Controller < ApplicationController
     include = message.include || []
     decorators = include.map { |include_name| IncludeDecoratorRegistry.for_include(include_name) }
 
-    render status: :ok, json: Presenters::V3::SpacePresenter.new(space, decorators: decorators)
+    render status: :ok, json: Presenters::V3::SpacePresenter.new(
+      space,
+      decorators: decorators_for_include(message.include)
+    )
   end
 
   def create
