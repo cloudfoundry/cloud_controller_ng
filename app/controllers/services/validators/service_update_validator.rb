@@ -40,6 +40,10 @@ module VCAP::CloudController
         if service_plan.maintenance_info.nil?
           raise CloudController::Errors::ApiError.new_from_details('MaintenanceInfoNotSupported')
         end
+
+        unless VCAP::SemverValidator.valid?(maintenance_info['version'])
+          raise CloudController::Errors::ApiError.new_from_details('MaintenanceInfoNotSemver')
+        end
       end
 
       def prevent_changing_space(space, update_attrs)

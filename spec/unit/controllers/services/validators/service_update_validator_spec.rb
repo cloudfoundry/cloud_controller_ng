@@ -6,7 +6,7 @@ module VCAP::CloudController
       let(:service_broker_url) { "http://example.com/v2/service_instances/#{service_instance.guid}" }
       let(:service_broker) { ServiceBroker.make(broker_url: 'http://example.com', auth_username: 'auth_username', auth_password: 'auth_password') }
       let(:service) { Service.make(plan_updateable: true, service_broker: service_broker) }
-      let(:old_service_plan) { ServicePlan.make(:v2, service: service, free: true, maintenance_info: { 'version': '2.0' }) }
+      let(:old_service_plan) { ServicePlan.make(:v2, service: service, free: true, maintenance_info: { 'version': '2.0.0' }) }
       let(:new_service_plan) { ServicePlan.make(:v2, service: service) }
       let(:service_instance) { ManagedServiceInstance.make(service_plan: old_service_plan) }
       let(:space) { service_instance.space }
@@ -35,7 +35,7 @@ module VCAP::CloudController
         end
 
         context 'and when maintenance_info update requested' do
-          let(:update_attrs) { { 'maintenance_info' => { 'version' => '2.0' } } }
+          let(:update_attrs) { { 'maintenance_info' => { 'version' => '2.0.0' } } }
 
           it 'returns true' do
             expect(ServiceUpdateValidator.validate!(service_instance, args)).to eq(true)
@@ -234,7 +234,7 @@ module VCAP::CloudController
         end
 
         context 'when mismatching maintenance_info update requested' do
-          let(:update_attrs) { { 'maintenance_info' => { 'version' => '1.0' } } }
+          let(:update_attrs) { { 'maintenance_info' => { 'version' => '1.0.0' } } }
 
           it 'succeeds' do
             expect(ServiceUpdateValidator.validate!(service_instance, args)).to eq(true)
@@ -242,7 +242,7 @@ module VCAP::CloudController
         end
 
         context 'when maintenance_info is absent on service_plan and maintenance_info update requested' do
-          let(:update_attrs) { { 'maintenance_info' => { 'version' => '2.0' } } }
+          let(:update_attrs) { { 'maintenance_info' => { 'version' => '2.0.0' } } }
           let(:old_service_plan) { ServicePlan.make(:v2, service: service, free: true) }
 
           it 'errors' do
@@ -251,6 +251,19 @@ module VCAP::CloudController
             }.to raise_error(
               CloudController::Errors::ApiError,
               'The service broker does not support upgrades for service instances created from this plan.'
+            )
+          end
+        end
+
+        context 'when maintenance_info.version is not valid semantic version' do
+          let(:update_attrs) { { 'maintenance_info' => { 'version' => 'not a semantic version' } } }
+
+          it 'errors' do
+            expect {
+              ServiceUpdateValidator.validate!(service_instance, args)
+            }.to raise_error(
+              CloudController::Errors::ApiError,
+              'maintenance_info.version should be a semantic version.'
             )
           end
         end

@@ -1214,6 +1214,11 @@
   http_code: 422
   message: "The service broker does not support upgrades for service instances created from this plan."
 
+390007:
+  name: MaintenanceInfoNotSemver
+  http_code: 422
+  message: "maintenance_info.version should be a semantic version."
+
 390011:
   name: BuildpackStacksDontMatch
   http_code: 422
