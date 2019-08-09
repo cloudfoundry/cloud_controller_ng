@@ -37,7 +37,7 @@ module Logcache
 
       final_envelopes.
         select { |e| has_container_metrics_fields?(e) && logcache_filter.call(e) }.
-        uniq{ |e| e.gauge.metrics.keys << e.instance_id }.
+        uniq { |e| e.gauge.metrics.keys << e.instance_id }.
         sort_by(&:instance_id).
         chunk(&:instance_id).
         map { |envelopes_by_instance| convert_to_traffic_controller_envelope(source_guid, envelopes_by_instance) }
@@ -79,6 +79,9 @@ module Logcache
       tags = {}
       envelopes_by_instance.second.each { |e|
         tc_envelope.containerMetric.instanceIndex = e.instance_id
+        # rubocop seems to think that there is a 'key?' method
+        # on envelope.gauge.metrics - but it does not
+        # rubocop:disable Style/PreferredHashMethods
         if e.gauge.metrics.has_key?('cpu')
           tc_envelope.containerMetric.cpuPercentage = e.gauge.metrics['cpu'].value
         end
@@ -88,6 +91,7 @@ module Logcache
         if e.gauge.metrics.has_key?('disk')
           tc_envelope.containerMetric.diskBytes = e.gauge.metrics['disk'].value
         end
+        # rubocop:enable Style/PreferredHashMethods
 
         tags.merge!(e.tags)
       }
