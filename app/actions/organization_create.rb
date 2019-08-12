@@ -10,7 +10,10 @@ module VCAP::CloudController
     def create(message)
       org = nil
       Organization.db.transaction do
-        org = VCAP::CloudController::Organization.create(name: message.name)
+        org = VCAP::CloudController::Organization.create(
+          name: message.name,
+          status: message.suspended ? Organization::SUSPENDED : Organization::ACTIVE,
+        )
 
         MetadataUpdate.update(org, message)
       end

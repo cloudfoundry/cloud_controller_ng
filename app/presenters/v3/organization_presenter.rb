@@ -19,6 +19,7 @@ module VCAP::CloudController::Presenters::V3
         updated_at: organization.updated_at,
         name: organization.name,
         status: organization.status,
+        suspended: organization.suspended?,
         relationships: {
           quota: {
             data: {
@@ -30,7 +31,7 @@ module VCAP::CloudController::Presenters::V3
         metadata: {
           labels: hashified_labels(organization.labels),
           annotations: hashified_annotations(organization.annotations)
-        }
+        },
       }
     end
 

@@ -89,6 +89,23 @@ module VCAP::CloudController
         end
       end
 
+      describe 'suspended' do
+        it 'validates that it is a boolean' do
+          body = { suspended: 1 }
+          message = OrganizationUpdateMessage.new(body)
+
+          expect(message).to_not be_valid
+          expect(message.errors.full_messages).to include('Suspended must be a boolean')
+        end
+
+        it 'is not requred' do
+          body = {}
+          message = OrganizationUpdateMessage.new(body)
+
+          expect(message).to be_valid
+        end
+      end
+
       describe 'metadata' do
         context 'when the annotations params are valid' do
           let(:params) do

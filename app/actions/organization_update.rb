@@ -10,6 +10,10 @@ module VCAP::CloudController
         LabelsUpdate.update(org, message.labels, OrganizationLabelModel)
         AnnotationsUpdate.update(org, message.annotations, OrganizationAnnotationModel)
 
+        if message.requested?(:suspended)
+          org.status = message.suspended ? Organization::SUSPENDED : Organization::ACTIVE
+        end
+
         org.save
       end
 

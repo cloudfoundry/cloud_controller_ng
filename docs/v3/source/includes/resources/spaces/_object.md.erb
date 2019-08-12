@@ -9,8 +9,9 @@ Example Space object
 
 Name | Type | Description
 ---- | ---- | -----------
-**name** | _string_ | Name of the space.
 **guid** | _uuid_ | Unique identifier for the space.
+**name** | _string_ | Name of the space.
+**suspended** _(experimental)_| _boolean_ | Whether a space is suspended or not.
 **created_at** | _datetime_ | The time with zone when the object was created.
 **updated_at** | _datetime_ | The time with zone when the object was last updated.
 **relationships.organization** | [_to-one relationship_](#to-one-relationships) | The organization the space is contained in.

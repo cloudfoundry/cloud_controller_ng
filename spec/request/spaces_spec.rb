@@ -130,6 +130,7 @@ RSpec.describe 'Spaces' do
           'updated_at' => iso8601,
           'name' => org.name,
           'status' => 'active',
+          'suspended' => false,
           'metadata' => {
             'labels' => {},
             'annotations' => {},
@@ -278,6 +279,7 @@ RSpec.describe 'Spaces' do
           'updated_at' => iso8601,
           'name' => org1.name,
           'status' => 'active',
+          'suspended' => false,
           'metadata' => {
             'labels' => {},
             'annotations' => {},
@@ -301,6 +303,7 @@ RSpec.describe 'Spaces' do
           'updated_at' => iso8601,
           'name' => org2.name,
           'status' => 'active',
+          'suspended' => false,
           'metadata' => {
             'labels' => {},
             'annotations' => {},

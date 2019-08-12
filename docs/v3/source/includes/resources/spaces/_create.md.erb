@@ -11,13 +11,15 @@ curl "https://api.example.org/v3/spaces" \
   -H "Content-Type: application/json" \
   -d '{
     "name": "my-space",
+    "suspended": false,
     "relationships": {
       "organization": {
         "data": {
           "guid": "[org-guid]"
         }
       }
-    }'
+    }
+  }'
 
 ```
 
@@ -46,6 +48,7 @@ Name | Type | Description
 
 Name | Type | Description
 ---- | ---- | -----------
+**suspended** _(experimental)_| _boolean_ | Whether a space is suspended or not.
 **metadata.labels** _(experimental)_| [_label object_](#labels) | Labels applied to the space.
 **metadata.annotations** _(experimental)_| [_annotation object_](#annotations) | Annotations applied to the space.
 

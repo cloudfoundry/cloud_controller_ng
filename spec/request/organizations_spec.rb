@@ -60,7 +60,38 @@ module VCAP::CloudController
             'metadata' => {
               'labels' => { 'freaky' => 'friday' },
               'annotations' => { 'make' => 'subaru', 'model' => 'xv crosstrek', 'color' => 'orange' }
-            }
+            },
+            'suspended' => false
+          }
+        )
+      end
+
+      it 'allows creating a suspended org' do
+        request_body = {
+          name: 'suspended-org',
+          suspended: true
+        }.to_json
+
+        post '/v3/organizations', request_body, admin_header
+        expect(last_response.status).to eq(201)
+
+        created_org = Organization.last
+
+        expect(parsed_response).to be_a_response_like(
+          {
+            'guid' => created_org.guid,
+            'created_at' => iso8601,
+            'updated_at' => iso8601,
+            'name' => 'suspended-org',
+            'status' => 'suspended',
+            'links' => {
+              'self' => { 'href' => "#{link_prefix}/v3/organizations/#{created_org.guid}" },
+              'domains' => { 'href' => "http://api2.vcap.me/v3/organizations/#{created_org.guid}/domains" },
+              'default_domain' => { 'href' => "http://api2.vcap.me/v3/organizations/#{created_org.guid}/domains/default" }
+            },
+            'metadata' => { 'labels' => {}, 'annotations' => {} },
+            'relationships' => { 'quota' => { 'data' => { 'guid' => created_org.quota_definition.guid } } },
+            'suspended' => true
           }
         )
       end
@@ -106,7 +137,8 @@ module VCAP::CloudController
                 'metadata' => {
                   'labels' => {},
                   'annotations' => {}
-                }
+                },
+                'suspended' => false
               },
               {
                 'guid' => organization2.guid,
@@ -125,7 +157,8 @@ module VCAP::CloudController
                 'metadata' => {
                   'labels' => {},
                   'annotations' => {}
-                }
+                },
+                'suspended' => false
               }
             ]
           }
@@ -207,7 +240,8 @@ module VCAP::CloudController
                 'metadata' => {
                   'labels' => {},
                   'annotations' => {}
-                }
+                },
+                'suspended' => false
               },
               {
                 'guid' => organization3.guid,
@@ -226,7 +260,8 @@ module VCAP::CloudController
                 'metadata' => {
                   'labels' => {},
                   'annotations' => {}
-                }
+                },
+                'suspended' => false
               }
             ]
           }
@@ -825,8 +860,13 @@ module VCAP::CloudController
     end
 
     describe 'PATCH /v3/organizations/:guid' do
-      let(:update_request) do
-        {
+      before do
+        set_current_user(user, { admin: true })
+        allow_user_read_access_for(user, orgs: [organization1])
+      end
+
+      it 'updates the name for the organization' do
+        update_request = {
           name: 'New Name World',
           metadata: {
             labels: {
@@ -837,14 +877,7 @@ module VCAP::CloudController
             }
           },
         }.to_json
-      end
 
-      before do
-        set_current_user(user, { admin: true })
-        allow_user_read_access_for(user, orgs: [organization1])
-      end
-
-      it 'updates the name for the organization' do
         patch "/v3/organizations/#{organization1.guid}", update_request, admin_headers_for(user).merge('CONTENT_TYPE' => 'application/json')
 
         expected_response = {
@@ -862,7 +895,8 @@ module VCAP::CloudController
           'metadata' => {
             'labels' => { 'freaky' => 'thursday' },
             'annotations' => { 'quality' => 'p sus' }
-          }
+          },
+          'suspended' => false
         }
 
         parsed_response = MultiJson.load(last_response.body)
@@ -872,6 +906,40 @@ module VCAP::CloudController
 
         organization1.reload
         expect(organization1.name).to eq('New Name World')
+      end
+
+      it 'updates the suspended field for the organization' do
+        update_request = {
+          name: 'New Name World',
+          suspended: true,
+        }.to_json
+
+        patch "/v3/organizations/#{organization1.guid}", update_request, admin_headers_for(user).merge('CONTENT_TYPE' => 'application/json')
+
+        expected_response = {
+          'name' => 'New Name World',
+          'guid' => organization1.guid,
+          'status' => 'suspended',
+          'relationships' => { 'quota' => { 'data' => { 'guid' => organization1.quota_definition.guid } } },
+          'links' => {
+            'self' => { 'href' => "http://api2.vcap.me/v3/organizations/#{organization1.guid}" },
+            'domains' => { 'href' => "http://api2.vcap.me/v3/organizations/#{organization1.guid}/domains" },
+            'default_domain' => { 'href' => "http://api2.vcap.me/v3/organizations/#{organization1.guid}/domains/default" }
+          },
+          'created_at' => iso8601,
+          'updated_at' => iso8601,
+          'metadata' => { 'labels' => {}, 'annotations' => {} },
+          'suspended' => true
+        }
+
+        parsed_response = MultiJson.load(last_response.body)
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response).to be_a_response_like(expected_response)
+
+        organization1.reload
+        expect(organization1.name).to eq('New Name World')
+        expect(organization1).to be_suspended
       end
 
       context 'deleting labels' do
@@ -905,7 +973,8 @@ module VCAP::CloudController
             'metadata' => {
               'labels' => { 'animal' => 'horse' },
               'annotations' => {}
-            }
+            },
+            'suspended' => false
           }
 
           parsed_response = MultiJson.load(last_response.body)

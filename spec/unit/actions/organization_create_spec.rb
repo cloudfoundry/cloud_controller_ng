@@ -32,6 +32,17 @@ module VCAP::CloudController
         expect(organization.annotations.map(&:value)).to contain_exactly('land', 'boys')
       end
 
+      it 'creates a suspended organization' do
+        message = VCAP::CloudController::OrganizationUpdateMessage.new({
+          name: 'my-organization',
+          suspended: true
+        })
+        organization = OrganizationCreate.new(perm_client: perm_client).create(message)
+
+        expect(organization.name).to eq('my-organization')
+        expect(organization.suspended?).to be true
+      end
+
       context 'when a model validation fails' do
         it 'raises an error' do
           errors = Sequel::Model::Errors.new

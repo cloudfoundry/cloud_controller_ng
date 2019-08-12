@@ -785,6 +785,7 @@ RSpec.describe 'Apps' do
             'labels' => {},
             'annotations' => {},
           },
+          'suspended' => false,
           'links' => {
             'self' => {
               'href' => "#{link_prefix}/v3/organizations/#{org1.guid}",
@@ -803,7 +804,8 @@ RSpec.describe 'Apps' do
             'created_at' => iso8601,
             'updated_at' => iso8601,
             'name' => org2.name,
-          'status' => 'active',
+            'status' => 'active',
+            'suspended' => false,
             'metadata' => {
               'labels' => {},
               'annotations' => {},
@@ -993,6 +995,7 @@ RSpec.describe 'Apps' do
             'labels' => {},
             'annotations' => {},
           },
+          'suspended' => false,
           'links' => {
             'self' => {
               'href' => "#{link_prefix}/v3/organizations/#{org.guid}",
