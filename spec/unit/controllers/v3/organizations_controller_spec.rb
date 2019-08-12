@@ -37,7 +37,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
             if expected_return_value == 200
               expect(parsed_body['guid']).to eq(org.guid)
               expect(parsed_body['name']).to eq('Eric\'s Farm')
-              expect(parsed_body['status']).to eq('active')
+              expect(parsed_body['suspended']).to be false
               expect(parsed_body['created_at']).to match(iso8601)
               expect(parsed_body['updated_at']).to match(iso8601)
               expect(parsed_body['links']['self']['href']).to match(%r{/v3/organizations/#{org.guid}$})
@@ -62,7 +62,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
               if expected_return_value == 200
                 expect(parsed_body['guid']).to eq(org.guid)
                 expect(parsed_body['name']).to eq('Eric\'s Farm')
-                expect(parsed_body['status']).to eq('suspended')
+                expect(parsed_body['suspended']).to be true
               end
             end
           end
