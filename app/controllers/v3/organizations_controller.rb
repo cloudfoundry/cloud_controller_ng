@@ -1,5 +1,6 @@
 require 'actions/organization_create'
 require 'actions/organization_update'
+require 'actions/organization_delete'
 require 'actions/set_default_isolation_segment'
 require 'controllers/v3/mixins/sub_resource'
 require 'fetchers/org_list_fetcher'

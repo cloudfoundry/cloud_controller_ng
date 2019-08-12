@@ -1,4 +1,4 @@
-require 'actions/organization_delete'
+require 'actions/v2/organization_delete'
 require 'actions/space_delete'
 require 'fetchers/organization_user_roles_fetcher'
 require 'cloud_controller/roles'
@@ -262,7 +262,7 @@ module VCAP::CloudController
       end
 
       space_delete_action = SpaceDelete.new(UserAuditInfo.from_context(SecurityContext), @services_event_repository)
-      delete_action = OrganizationDelete.new(space_delete_action)
+      delete_action = V2::OrganizationDelete.new(space_delete_action)
 
       deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(Organization, guid, delete_action)
       response = run_or_enqueue_deletion_job(deletion_job)

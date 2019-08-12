@@ -62,7 +62,7 @@ module VCAP::CloudController
     end
 
     def usable_by_organization?(org)
-      owned_by?(org) || shared_by?(org)
+      owned_by?(org) || shared_with?(org)
     end
 
     def shared?
@@ -84,6 +84,14 @@ module VCAP::CloudController
       end
     end
 
+    def shared_with_any_orgs?
+      shared_organization_ids.any?
+    end
+
+    def shared_with?(org)
+      shared_organization_ids.include?(org.id)
+    end
+
     private
 
     def domains_exist_in_other_orgs?
@@ -92,10 +100,6 @@ module VCAP::CloudController
         or(SHARED_DOMAIN_CONDITION).
         filter(Sequel.like(:name, "%.#{name}")).
         first
-    end
-
-    def shared_by?(org)
-      shared_organization_ids.include?(org.id)
     end
 
     def validate_total_private_domains

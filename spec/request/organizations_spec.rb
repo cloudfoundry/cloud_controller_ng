@@ -3,19 +3,19 @@ require 'request_spec_shared_examples'
 
 module VCAP::CloudController
   RSpec.describe 'Organizations' do
-    let(:user) { VCAP::CloudController::User.make }
+    let(:user) { User.make }
     let(:user_header) { headers_for(user) }
     let(:admin_header) { admin_headers_for(user) }
     let!(:organization1) { Organization.make name: 'Apocalypse World' }
     let!(:organization2) { Organization.make name: 'Dungeon World' }
     let!(:organization3) { Organization.make name: 'The Sprawl' }
-    let!(:unaccesable_organization) { Organization.make name: 'D&D' }
+    let!(:inaccessible_organization) { Organization.make name: 'D&D' }
 
     before do
       organization1.add_user(user)
       organization2.add_user(user)
       organization3.add_user(user)
-      VCAP::CloudController::Domain.dataset.destroy # this will clean up the seeded test domains
+      Domain.dataset.destroy # this will clean up the seeded test domains
     end
 
     describe 'POST /v3/organizations' do
@@ -196,8 +196,8 @@ module VCAP::CloudController
     end
 
     describe 'GET /v3/isolation_segments/:guid/organizations' do
-      let(:isolation_segment1) { VCAP::CloudController::IsolationSegmentModel.make(name: 'awesome_seg') }
-      let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
+      let(:isolation_segment1) { IsolationSegmentModel.make(name: 'awesome_seg') }
+      let(:assigner) { IsolationSegmentAssign.new }
 
       before do
         assigner.assign(isolation_segment1, [organization2, organization3])
@@ -270,8 +270,8 @@ module VCAP::CloudController
     end
 
     describe 'GET /v3/organizations/:guid/relationships/default_isolation_segment' do
-      let(:isolation_segment) { VCAP::CloudController::IsolationSegmentModel.make(name: 'default_seg') }
-      let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
+      let(:isolation_segment) { IsolationSegmentModel.make(name: 'default_seg') }
+      let(:assigner) { IsolationSegmentAssign.new }
 
       before do
         set_current_user(user, { admin: true })
@@ -312,9 +312,9 @@ module VCAP::CloudController
       end
 
       describe 'when the user is logged in' do
-        let!(:shared_domain) { VCAP::CloudController::SharedDomain.make(guid: 'shared-guid') }
-        let!(:owned_private_domain) { VCAP::CloudController::PrivateDomain.make(owning_organization_guid: org.guid, guid: 'owned-private') }
-        let!(:shared_private_domain) { VCAP::CloudController::PrivateDomain.make(owning_organization_guid: organization1.guid, guid: 'shared-private') }
+        let!(:shared_domain) { SharedDomain.make(guid: 'shared-guid') }
+        let!(:owned_private_domain) { PrivateDomain.make(owning_organization_guid: org.guid, guid: 'owned-private') }
+        let!(:shared_private_domain) { PrivateDomain.make(owning_organization_guid: organization1.guid, guid: 'shared-private') }
 
         let(:shared_domain_json) do
           {
@@ -497,12 +497,12 @@ module VCAP::CloudController
       end
 
       describe 'when filtering by labels' do
-        let!(:domain1) { VCAP::CloudController::PrivateDomain.make(name: 'dom1.com', owning_organization: org) }
-        let!(:domain1_label) { VCAP::CloudController::DomainLabelModel.make(resource_guid: domain1.guid, key_name: 'animal', value: 'dog') }
+        let!(:domain1) { PrivateDomain.make(name: 'dom1.com', owning_organization: org) }
+        let!(:domain1_label) { DomainLabelModel.make(resource_guid: domain1.guid, key_name: 'animal', value: 'dog') }
 
-        let!(:domain2) { VCAP::CloudController::PrivateDomain.make(name: 'dom2.com', owning_organization: org) }
-        let!(:domain2_label) { VCAP::CloudController::DomainLabelModel.make(resource_guid: domain2.guid, key_name: 'animal', value: 'cow') }
-        let!(:domain2__exclusive_label) { VCAP::CloudController::DomainLabelModel.make(resource_guid: domain2.guid, key_name: 'santa', value: 'claus') }
+        let!(:domain2) { PrivateDomain.make(name: 'dom2.com', owning_organization: org) }
+        let!(:domain2_label) { DomainLabelModel.make(resource_guid: domain2.guid, key_name: 'animal', value: 'cow') }
+        let!(:domain2__exclusive_label) { DomainLabelModel.make(resource_guid: domain2.guid, key_name: 'santa', value: 'claus') }
 
         let(:base_link) { "/v3/organizations/#{org.guid}/domains" }
         let(:base_pagination_link) { "#{link_prefix}#{base_link}" }
@@ -685,8 +685,8 @@ module VCAP::CloudController
       end
 
       context 'when domains exist' do
-        let!(:internal_domain) { VCAP::CloudController::SharedDomain.make(internal: true) } # used to ensure internal domains do not get returned in any case
-        let!(:tcp_domain) { VCAP::CloudController::SharedDomain.make(router_group_guid: 'default-tcp') }
+        let!(:internal_domain) { SharedDomain.make(internal: true) } # used to ensure internal domains do not get returned in any case
+        let!(:tcp_domain) { SharedDomain.make(router_group_guid: 'default-tcp') }
         let(:expected_codes_and_responses) do
           h = Hash.new(
             code: 200,
@@ -696,8 +696,8 @@ module VCAP::CloudController
           h.freeze
         end
 
-        let(:shared_private_domain) { VCAP::CloudController::PrivateDomain.make(owning_organization_guid: organization1.guid) }
-        let(:owned_private_domain) { VCAP::CloudController::PrivateDomain.make(owning_organization_guid: org.guid) }
+        let(:shared_private_domain) { PrivateDomain.make(owning_organization_guid: organization1.guid) }
+        let(:owned_private_domain) { PrivateDomain.make(owning_organization_guid: org.guid) }
 
         before do
           org.add_private_domain(shared_private_domain)
@@ -749,7 +749,7 @@ module VCAP::CloudController
         end
 
         context 'when at least one non-internal shared domain exists' do
-          let!(:shared_domain) { VCAP::CloudController::SharedDomain.make }
+          let!(:shared_domain) { SharedDomain.make }
 
           let(:domain_json) do
             {
@@ -782,7 +782,7 @@ module VCAP::CloudController
       end
 
       context 'when only internal domains exist' do
-        let!(:internal_domain) { VCAP::CloudController::SharedDomain.make(internal: true) } # used to ensure internal domains do not get returned in any case
+        let!(:internal_domain) { SharedDomain.make(internal: true) } # used to ensure internal domains do not get returned in any case
 
         let(:expected_codes_and_responses) do
           h = Hash.new(
@@ -795,7 +795,7 @@ module VCAP::CloudController
       end
 
       context 'when only tcp domains exist' do
-        let!(:tcp_domain) { VCAP::CloudController::SharedDomain.make(router_group_guid: 'default-tcp') }
+        let!(:tcp_domain) { SharedDomain.make(router_group_guid: 'default-tcp') }
 
         let(:expected_codes_and_responses) do
           h = Hash.new(
@@ -820,13 +820,13 @@ module VCAP::CloudController
     end
 
     describe 'PATCH /v3/organizations/:guid/relationships/default_isolation_segment' do
-      let(:isolation_segment) { VCAP::CloudController::IsolationSegmentModel.make(name: 'default_seg') }
+      let(:isolation_segment) { IsolationSegmentModel.make(name: 'default_seg') }
       let(:update_request) do
         {
           data: { guid: isolation_segment.guid }
         }.to_json
       end
-      let(:assigner) { VCAP::CloudController::IsolationSegmentAssign.new }
+      let(:assigner) { IsolationSegmentAssign.new }
 
       before do
         set_current_user(user, { admin: true })
@@ -986,22 +986,22 @@ module VCAP::CloudController
     end
 
     describe 'DELETE /v3/organizations/:guid' do
-      let(:space) { VCAP::CloudController::Space.make }
+      let(:space) { Space.make }
       let(:org) { space.organization }
-      let(:associated_user) { VCAP::CloudController::User.make(default_space: space) }
+      let(:associated_user) { User.make(default_space: space) }
       let(:shared_service_instance) do
-        s = VCAP::CloudController::ServiceInstance.make
+        s = ServiceInstance.make
         s.add_shared_space(space)
         s
       end
 
       before do
-        VCAP::CloudController::AppModel.make(space: space)
-        VCAP::CloudController::Route.make(space: space)
+        AppModel.make(space: space)
+        Route.make(space: space)
         org.add_user(associated_user)
         space.add_developer(associated_user)
-        VCAP::CloudController::ServiceInstance.make(space: space)
-        VCAP::CloudController::ServiceBroker.make(space: space)
+        ServiceInstance.make(space: space)
+        ServiceBroker.make(space: space)
       end
 
       it 'destroys the requested organization and sub resources (spaces)' do
@@ -1015,14 +1015,14 @@ module VCAP::CloudController
           expect(last_response.status).to eq(404)
           get "/v3/spaces/#{space.guid}", {}, admin_headers
           expect(last_response.status).to eq(404)
-        }.to  change { VCAP::CloudController::Organization.count }.by(-1).
-          and change { VCAP::CloudController::Space.count }.by(-1).
-          and change { VCAP::CloudController::AppModel.count }.by(-1).
-          and change { VCAP::CloudController::Route.count }.by(-1).
+        }.to  change { Organization.count }.by(-1).
+          and change { Space.count }.by(-1).
+          and change { AppModel.count }.by(-1).
+          and change { Route.count }.by(-1).
           and change { associated_user.reload.default_space }.to(be_nil).
           and change { associated_user.reload.spaces }.to(be_empty).
-          and change { VCAP::CloudController::ServiceInstance.count }.by(-1).
-          and change { VCAP::CloudController::ServiceBroker.count }.by(-1).
+          and change { ServiceInstance.count }.by(-1).
+          and change { ServiceBroker.count }.by(-1).
           and change { shared_service_instance.reload.shared_spaces }.to(be_empty)
       end
 
@@ -1052,6 +1052,31 @@ module VCAP::CloudController
         it 'returns 401 for Unauthenticated requests' do
           delete "/v3/organizations/#{org.guid}", nil, base_json_headers
           expect(last_response.status).to eq(401)
+        end
+      end
+
+      describe 'when there is a shared private domain' do
+        let!(:shared_private_domain) { PrivateDomain.make(owning_organization_guid: org.guid, guid: 'shared-private', shared_organization_guids: [organization1.guid]) }
+
+        it 'returns a 202' do
+          delete "/v3/organizations/#{org.guid}", nil, admin_headers
+          expect(last_response.status).to eq(202)
+          expect(last_response.headers['Location']).to match(%r(http.+/v3/jobs/[a-fA-F0-9-]+))
+
+          # ::OrganizationDelete should fail and ::V3::BuildpackCacheDelete should succeed
+          execute_all_jobs(expected_successes: 1, expected_failures: 1)
+
+          job_url = last_response.headers['Location']
+          get job_url, {}, admin_headers
+          expect(last_response.status).to eq(200)
+
+          expect(parsed_response['state']).to eq('FAILED')
+          expect(parsed_response['errors'].size).to eq(1)
+          expect(parsed_response['errors'].first['detail']).to eq(
+            "Deletion of organization #{org.name} failed because one or more resources " \
+            "within could not be deleted.\n\nDomain '#{shared_private_domain.name}' is " \
+            'shared with other organizations. Unshare before deleting.'
+          )
         end
       end
     end
