@@ -4,18 +4,6 @@ module IntegrationSetup
   CC_START_TIMEOUT = 60
   SLEEP_INTERVAL = 0.5
 
-  def get_connection_string_with_database_suffix(suffix)
-    if TestConfig.config[:db][:database_parts]
-      database_config = TestConfig.config[:db][:database_parts].clone
-      database_config[:database] += suffix
-      return VCAP::CloudController::DatabasePartsParser.connection_from_database_parts(database_config)
-    end
-    raise Exception.new('No database config') if !TestConfig.config[:db][:database]
-
-    warn('Time to move to db.database_parts')
-    TestConfig.config[:db][:database] + suffix
-  end
-
   def start_cc(opts={})
     @cc_pids ||= []
 
@@ -24,7 +12,7 @@ module IntegrationSetup
 
     FileUtils.rm(config['pid_filename']) if File.exist?(config['pid_filename'])
 
-    db_connection_string = get_connection_string_with_database_suffix('_integration_cc')
+    db_connection_string = "#{TestConfig.config[:db][:db_connection_string]}_integration_cc"
     if !opts[:preserve_database]
       db = /postgres/.match?(db_connection_string) ? 'postgres' : 'mysql'
       env = {

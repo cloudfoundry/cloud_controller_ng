@@ -8,9 +8,7 @@ module VCAP::CloudController
     #
     # @param [Logger]  Logger to pass to Sequel
     #
-    # @option opts [String]  :database Database connection string
-    #
-    # @option opts [String]  :database_parts Database configuration values hash
+    # @option opts [String]  :database Database configuration values hash
     #
     # @option opts [Symbol]  :log_level Steno log level
     #
@@ -24,9 +22,29 @@ module VCAP::CloudController
     def self.connect(opts, logger)
       connection_options = VCAP::CloudController::DbConnection::OptionsFactory.build(opts)
 
-      db_connection = Sequel.connect(connection_options)
+      db = get_connection(opts, connection_options)
 
-      VCAP::CloudController::DbConnection::Finalizer.finalize(db_connection, connection_options, logger)
+      if opts[:log_db_queries]
+        db.logger = logger
+        db.sql_log_level = opts[:log_level]
+      end
+      db.default_collate = 'utf8_bin' if db.database_type == :mysql
+      add_connection_validator_extension(db, opts)
+      db
+    end
+
+    def self.get_database_scheme(opts)
+      scheme = opts[:database][:adapter]
+      scheme.starts_with?('mysql') ? 'mysql' : scheme
+    end
+
+    def self.get_connection(opts, connection_options)
+      Sequel.connect(opts[:database].merge(connection_options))
+    end
+
+    def self.add_connection_validator_extension(db, opts)
+      db.extension(:connection_validator)
+      db.pool.connection_validation_timeout = opts[:connection_validation_timeout] if opts[:connection_validation_timeout]
     end
 
     def self.load_models(db_config, logger)

@@ -2,14 +2,14 @@ require 'spec_helper'
 require 'cloud_controller/db_connection/mysql_options_factory'
 
 RSpec.describe VCAP::CloudController::DbConnection::MysqlOptionsFactory do
-  let(:required_options) { { database_parts: { adapter: 'mysql' } } }
+  let(:required_options) { { database: { adapter: 'mysql' } } }
 
   describe 'when the Cloud Controller Config specifies MySQL' do
     let(:ssl_verify_hostname) { true }
     let(:ca_cert_path) { nil }
     let(:mysql_options) do
       VCAP::CloudController::DbConnection::MysqlOptionsFactory.build(
-        database_parts: {
+        database: {
           adapter: 'mysql2' },
         ca_cert_path: ca_cert_path,
         ssl_verify_hostname: ssl_verify_hostname

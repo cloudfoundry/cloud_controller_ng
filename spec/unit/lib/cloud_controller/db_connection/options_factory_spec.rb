@@ -4,19 +4,19 @@ require 'cloud_controller/db_connection/mysql_options_factory'
 
 RSpec.describe VCAP::CloudController::DbConnection::OptionsFactory do
   let(:adapter) { '' }
-  let(:required_options) { { database_parts: { adapter: adapter } } }
+  let(:required_options) { { database: { adapter: adapter } } }
 
   describe '.build' do
     describe 'database schemes' do
       it 'raises if the database_scheme is unsupported' do
         expect {
-          VCAP::CloudController::DbConnection::OptionsFactory.build(database_parts: { adapter: 'foo' })
+          VCAP::CloudController::DbConnection::OptionsFactory.build(database: { adapter: 'foo' })
         }.to raise_error(VCAP::CloudController::DbConnection::UnknownSchemeError, /Unknown .* 'foo'/)
       end
 
       it 'raises if the database_scheme is missing' do
         expect {
-          VCAP::CloudController::DbConnection::OptionsFactory.build(database_parts: {})
+          VCAP::CloudController::DbConnection::OptionsFactory.build(database: {})
         }.to raise_error(VCAP::CloudController::DbConnection::UnknownSchemeError, /Unknown .* ''/)
       end
 
@@ -107,7 +107,7 @@ RSpec.describe VCAP::CloudController::DbConnection::OptionsFactory do
       it 'up-levels the database parts' do
         db_connection_options = VCAP::CloudController::DbConnection::OptionsFactory.
                                 build(required_options.merge(
-                                        database_parts: {
+                                        database: {
                                           adapter: 'mysql',
                                           host: 'example.com',
                                           port: 1234,

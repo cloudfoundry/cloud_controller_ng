@@ -18,7 +18,7 @@ module VCAP::CloudController
         def build(opts)
           base_options(opts).
             merge(adapter_options(opts)).
-            merge(opts[:database_parts]).
+            merge(opts[:database]).
             compact
         end
 
@@ -43,7 +43,7 @@ module VCAP::CloudController
         end
 
         def adapter_options(opts)
-          adapter = opts[:database_parts][:adapter]
+          adapter = opts[:database][:adapter]
           factory_for(adapter).build(opts)
         end
 

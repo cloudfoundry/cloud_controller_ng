@@ -48,11 +48,6 @@ module VCAP::CloudController
     }
 
     describe '#load_from_file' do
-      it_should_be_removed(
-        by: '2019/08/12',
-        explanation: 'Database parts can now be renamed to database. See story: #158544649'
-      )
-
       it 'raises if the file does not exist' do
         expect {
           Config.load_from_file('nonexistent.yml', context: :worker)
@@ -80,8 +75,8 @@ module VCAP::CloudController
           end
 
           it 'sets a default value for database' do
-            expect(config[:db][:database]).to eq(ENV['DB_CONNECTION_STRING'])
-            expect(config[:db][:database_parts]).to eq(DatabasePartsParser.database_parts_from_connection(ENV['DB_CONNECTION_STRING']))
+            expect(config[:db][:db_connection_string]).to eq(ENV['DB_CONNECTION_STRING'])
+            expect(config[:db][:database]).to eq(DatabasePartsParser.database_parts_from_connection(ENV['DB_CONNECTION_STRING']))
           end
 
           context 'special passwords characters' do

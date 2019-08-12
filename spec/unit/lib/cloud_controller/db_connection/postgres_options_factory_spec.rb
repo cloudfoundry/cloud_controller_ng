@@ -2,14 +2,14 @@ require 'spec_helper'
 require 'cloud_controller/db_connection/postgres_options_factory'
 
 RSpec.describe VCAP::CloudController::DbConnection::PostgresOptionsFactory do
-  let(:required_options) { { database_parts: { adapter: 'postgres' } } }
+  let(:required_options) { { database: { adapter: 'postgres' } } }
 
   describe 'when the Cloud Controller Config specifies Postgres' do
     let(:ssl_verify_hostname) { true }
     let(:ca_cert_path) { nil }
     let(:postgres_options) do
       VCAP::CloudController::DbConnection::PostgresOptionsFactory.build(
-        database_parts: {
+        database: {
           adapter: 'postgres' },
         ca_cert_path: ca_cert_path,
         ssl_verify_hostname: ssl_verify_hostname

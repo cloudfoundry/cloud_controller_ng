@@ -42,22 +42,10 @@ module VCAP::CloudController
         sanitize(config)
       end
 
-      # ensure_config_has_database_parts
-      # At some point we want to drop the database connection string
-      # and rename the :database_parts field to :database, so deprecate if the parts is missing
       def ensure_config_has_database_parts(config)
-        abort_no_db_connection! if ENV['DB_CONNECTION_STRING'].nil? && \
-          config[:db][:database].nil? && config[:db][:database_parts].nil?
-        if config[:db][:database_parts].nil?
-          if config[:db][:database]
-            warn('Config should be updated to include cc.db.database_parts')
-          else
-            config[:db][:database] = ENV['DB_CONNECTION_STRING']
-          end
-          config[:db][:database_parts] = DatabasePartsParser.database_parts_from_connection(config[:db][:database])
-        else
-          config[:db][:database] ||= ENV['DB_CONNECTION_STRING'] || DatabasePartsParser.connection_from_database_parts(config[:db][:database_parts])
-        end
+        abort_no_db_connection! if ENV['DB_CONNECTION_STRING'].nil? && config[:db][:database].nil?
+        config[:db][:db_connection_string] ||= ENV['DB_CONNECTION_STRING']
+        config[:db][:database] ||= DatabasePartsParser.database_parts_from_connection(config[:db][:db_connection_string])
       end
 
       def abort_no_db_connection!

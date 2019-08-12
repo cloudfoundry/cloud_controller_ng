@@ -13,8 +13,8 @@ class DbConfig
   def config
     {
       log_level: 'debug',
-      database: connection_string,
-      database_parts: VCAP::CloudController::DatabasePartsParser.database_parts_from_connection(connection_string),
+      db_connection_string: connection_string,
+      database: VCAP::CloudController::DatabasePartsParser.database_parts_from_connection(connection_string),
       pool_timeout: 10,
       read_timeout: 3600,
       connection_validation_timeout: 3600
