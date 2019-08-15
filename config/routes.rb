@@ -203,6 +203,9 @@ Rails.application.routes.draw do
   patch '/stacks/:guid', to: 'stacks#update'
   delete '/stacks/:guid', to: 'stacks#destroy'
 
+  # users
+  post '/users', to: 'users#create'
+
   # buildpacks
   get '/buildpacks', to: 'buildpacks#index'
   get '/buildpacks/:guid', to: 'buildpacks#show'

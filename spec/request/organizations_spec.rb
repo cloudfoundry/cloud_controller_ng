@@ -965,14 +965,12 @@ module VCAP::CloudController
           Organization.make(name: 'new-name')
         end
 
-        it 'updates the name for the organization' do
+        it 'returns a 422 with a helpful error message' do
           update_request = { name: 'new-name' }.to_json
 
           expect {
             patch "/v3/organizations/#{organization1.guid}", update_request, admin_headers_for(user).merge('CONTENT_TYPE' => 'application/json')
           }.not_to change { organization1.reload.name }
-
-          parsed_response = MultiJson.load(last_response.body)
 
           expect(last_response.status).to eq(422)
           expect(last_response).to have_error_message("Organization name 'new-name' is already taken.")

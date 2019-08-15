@@ -32,6 +32,7 @@ includes:
   - api_resources/spaces
   - api_resources/stacks
   - api_resources/tasks
+  - api_resources/users
   - introduction/introduction
   - concepts/concepts
   - concepts/api_resource
@@ -253,6 +254,9 @@ includes:
   - experimental_resources/space_manifest/header
   - experimental_resources/space_manifest/object
   - experimental_resources/space_manifest/apply
+  - experimental_resources/users/header
+  - experimental_resources/users/object
+  - experimental_resources/users/create
 
 search: true
 ---
