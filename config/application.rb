@@ -25,4 +25,12 @@ class Application < ::Rails::Application
   config.middleware.delete Rack::ConditionalGet
   config.middleware.delete Rack::ETag
   config.middleware.delete Rack::MethodOverride
+
+  config.generators do |g|
+    g.orm             false
+    g.stylesheets     false
+    g.helper          false
+    g.template_engine false
+    g.assets          false
+  end
 end
