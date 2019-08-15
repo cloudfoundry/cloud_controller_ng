@@ -1,2 +1,1 @@
 require 'cloud_controller'
-
