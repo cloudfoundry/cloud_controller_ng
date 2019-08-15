@@ -10,6 +10,7 @@ require 'messages/orgs_default_iso_seg_update_message'
 require 'messages/orgs_list_message'
 require 'presenters/v3/paginated_list_presenter'
 require 'presenters/v3/organization_presenter'
+require 'presenters/v3/organization_usage_summary_presenter'
 require 'presenters/v3/to_one_relationship_presenter'
 
 class OrganizationsV3Controller < ApplicationController
@@ -88,6 +89,13 @@ class OrganizationsV3Controller < ApplicationController
       relationship_name: 'default_isolation_segment',
       related_resource_name: 'isolation_segments'
     )
+  end
+
+  def show_usage_summary
+    org = fetch_org(hashed_params[:guid])
+    org_not_found! unless org && permission_queryer.can_read_from_org?(org.guid)
+
+    render status: :ok, json: Presenters::V3::OrganizationUsageSummaryPresenter.new(org)
   end
 
   def update_default_isolation_segment

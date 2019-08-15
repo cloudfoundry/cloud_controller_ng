@@ -1,0 +1,32 @@
+### Get usage summary
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/organizations/[guid]/usage_summary" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :organization_usage_summary, '/v3/organizations/:guid/usage_summary' %>
+```
+
+This endpoint retrieves the specified organization object's memory and app instance usage summary.
+
+#### Definition
+`GET /v3/organizations/:guid/usage_summary`
+
+#### Permitted roles
+ |
+--- | ---
+All Roles |

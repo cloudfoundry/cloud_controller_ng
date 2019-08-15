@@ -130,6 +130,7 @@ includes:
   - resources/organizations/assign_default_isolation_segment
   - resources/organizations/get_default_isolation_segment
   - resources/organizations/get_default_domain
+  - resources/organizations/get_usage_summary
   - resources/packages/header
   - resources/packages/object
   - resources/packages/create
