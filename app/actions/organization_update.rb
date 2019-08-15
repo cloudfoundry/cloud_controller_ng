@@ -3,6 +3,10 @@ module VCAP::CloudController
     class Error < ::StandardError
     end
 
+    def initialize(user_audit_info)
+      @user_audit_info = user_audit_info
+    end
+
     def update(org, message)
       org.db.transaction do
         org.lock!
@@ -15,6 +19,7 @@ module VCAP::CloudController
         end
 
         org.save
+        Repositories::OrganizationEventRepository.new.record_organization_update(org, @user_audit_info, message.audit_hash)
       end
 
       org

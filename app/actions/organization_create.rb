@@ -3,8 +3,9 @@ module VCAP::CloudController
     class Error < ::StandardError
     end
 
-    def initialize(perm_client:)
+    def initialize(perm_client:, user_audit_info:)
       @perm_client = perm_client
+      @user_audit_info = user_audit_info
     end
 
     def create(message)
@@ -22,6 +23,7 @@ module VCAP::CloudController
         perm_client.create_org_role(role: role, org_id: org.guid)
       end
 
+      Repositories::OrganizationEventRepository.new.record_organization_create(org, @user_audit_info, message.audit_hash)
       org
     rescue Sequel::ValidationFailed => e
       validation_error!(e, message)

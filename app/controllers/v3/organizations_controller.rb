@@ -46,7 +46,7 @@ class OrganizationsV3Controller < ApplicationController
     message = VCAP::CloudController::OrganizationCreateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    org = OrganizationCreate.new(perm_client: perm_client).create(message)
+    org = OrganizationCreate.new(perm_client: perm_client, user_audit_info: user_audit_info).create(message)
 
     render json: Presenters::V3::OrganizationPresenter.new(org), status: :created
   rescue OrganizationCreate::Error => e
@@ -59,7 +59,7 @@ class OrganizationsV3Controller < ApplicationController
     message = VCAP::CloudController::OrganizationUpdateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    org = OrganizationUpdate.new.update(org, message)
+    org = OrganizationUpdate.new(user_audit_info).update(org, message)
 
     render json: Presenters::V3::OrganizationPresenter.new(org), status: :ok
   end
@@ -68,7 +68,7 @@ class OrganizationsV3Controller < ApplicationController
     org = fetch_deletable_org(hashed_params[:guid])
 
     service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository.new(user_audit_info)
-    delete_action = OrganizationDelete.new(SpaceDelete.new(user_audit_info, service_event_repository))
+    delete_action = OrganizationDelete.new(SpaceDelete.new(user_audit_info, service_event_repository), user_audit_info)
     deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(Organization, org.guid, delete_action)
     pollable_job = Jobs::Enqueuer.new(deletion_job, queue: 'cc-generic').enqueue_pollable
 

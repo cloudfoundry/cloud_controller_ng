@@ -4,8 +4,9 @@ require 'actions/annotation_delete'
 
 module VCAP::CloudController
   class OrganizationDelete
-    def initialize(space_deleter)
+    def initialize(space_deleter, user_audit_info)
       @space_deleter = space_deleter
+      @user_audit_info = user_audit_info
     end
 
     def delete(org_dataset)
@@ -35,6 +36,8 @@ module VCAP::CloudController
           delete_metadata(org)
           unshare_private_domains(domains_to_unshare, org)
           org.destroy
+
+          Repositories::OrganizationEventRepository.new.record_organization_delete_request(org, @user_audit_info, { recursive: true }.to_json)
         end
       end
     end
