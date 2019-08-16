@@ -121,6 +121,7 @@
 
 
 
+
           
 
 
@@ -8461,6 +8462,53 @@ Only isolation segments that are entitled to the organization are eligible to be
 <tr>
 <td>Global Auditor</td>
 <td></td>
+</tr>
+</tbody></table>
+
+          <h3 id="get-usage-summary">Get usage summary</h3>
+<pre class="highlight plaintext"><code>Example Request
+</code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/organizations/[guid]/usage_summary"</span> <span class="se">\</span>
+  -X GET <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
+</code></pre>
+<pre class="highlight plaintext"><code>Example Response
+</code></pre>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
+
+<span class="p">{</span><span class="w">
+  </span><span class="nt">"usage_summary"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"started_instances"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"memory_in_mb"</span><span class="p">:</span><span class="w"> </span><span class="mi">50</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/organizations/d4c91047-7b29-4fda-b7f9-04033e5c9c9f/usage_summary"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"organization"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/organizations/d4c91047-7b29-4fda-b7f9-04033e5c9c9f"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+
+</span></code></pre>
+
+<p>This endpoint retrieves the specified organization object&rsquo;s memory and app instance usage summary.</p>
+
+<h4 id="definition">Definition</h4>
+
+<p><code class="prettyprint">GET /v3/organizations/:guid/usage_summary</code></p>
+
+<h4 id="permitted-roles">Permitted roles</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>All Roles</td>
 </tr>
 </tbody></table>
 
