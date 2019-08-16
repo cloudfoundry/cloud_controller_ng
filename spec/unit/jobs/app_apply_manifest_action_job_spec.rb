@@ -118,26 +118,10 @@ module VCAP::CloudController
 
       context 'when an ServiceBindingCreate::InvalidServiceBinding error occurs' do
         it 'wraps the error in an ApiError' do
-          allow(apply_manifest_action).to receive(:apply).and_raise(ServiceBindingCreate::InvalidServiceBinding, 'Invalid binding name')
+          allow(apply_manifest_action).to receive(:apply).and_raise(AppApplyManifest::ServiceBindingError, 'Invalid binding name')
           expect {
             job.perform
           }.to raise_error(CloudController::Errors::ApiError, /Invalid binding name/)
-        end
-
-        context 'subclasses of InvalidServiceBinding' do
-          it 'wraps the error in an ApiError' do
-            [
-              ServiceBindingCreate::ServiceInstanceNotBindable,
-              ServiceBindingCreate::ServiceBrokerInvalidSyslogDrainUrl,
-              ServiceBindingCreate::VolumeMountServiceDisabled,
-              ServiceBindingCreate::SpaceMismatch
-            ].each do |exception|
-              allow(apply_manifest_action).to receive(:apply).and_raise(exception, 'Invalid binding name')
-              expect {
-                job.perform
-              }.to raise_error(CloudController::Errors::ApiError, /Invalid binding name/)
-            end
-          end
         end
       end
 

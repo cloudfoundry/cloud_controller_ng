@@ -165,6 +165,25 @@ RSpec.describe 'Space Manifests' do
         to match_array([{ key: 'potato', value: 'idaho' }, { key: 'juice', value: 'newton' },])
     end
 
+    context 'service bindings' do
+      let(:client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client, bind: {}) }
+
+      it 'returns an appropriate error when fail to bind' do
+        allow(VCAP::Services::ServiceClientProvider).to receive(:provide).and_return(client)
+        allow(client).to receive(:bind).and_raise('Failed')
+
+        post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
+        Delayed::Worker.new.work_off
+
+        job_location = last_response.headers['Location']
+        get job_location, nil, user_header
+        parsed_response = MultiJson.load(last_response.body)
+
+        expect(VCAP::CloudController::ServiceBinding.count).to eq(0)
+        expect(parsed_response['errors'].first['detail']).to eq("For application '#{app1_model.name}': For service '#{service_instance.name}': Failed")
+      end
+    end
+
     context 'when one of the apps does not exist' do
       let!(:yml_manifest) do
         {
