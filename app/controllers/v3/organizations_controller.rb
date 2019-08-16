@@ -63,6 +63,8 @@ class OrganizationsV3Controller < ApplicationController
     org = OrganizationUpdate.new(user_audit_info).update(org, message)
 
     render json: Presenters::V3::OrganizationPresenter.new(org), status: :ok
+  rescue OrganizationUpdate::Error => e
+    unprocessable!(e.message)
   end
 
   def destroy

@@ -667,7 +667,7 @@ RSpec.describe OrganizationsV3Controller, type: :controller do
     end
   end
 
-  describe '#patch' do
+  describe '#update' do
     let(:org) { VCAP::CloudController::Organization.make(name: 'Water') }
     let(:labels) do
       {

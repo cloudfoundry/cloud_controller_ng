@@ -960,6 +960,25 @@ module VCAP::CloudController
         expect(organization1.name).to eq('New Name World')
       end
 
+      context 'when the new name is already taken' do
+        before do
+          Organization.make(name: 'new-name')
+        end
+
+        it 'updates the name for the organization' do
+          update_request = { name: 'new-name' }.to_json
+
+          expect {
+            patch "/v3/organizations/#{organization1.guid}", update_request, admin_headers_for(user).merge('CONTENT_TYPE' => 'application/json')
+          }.not_to change { organization1.reload.name }
+
+          parsed_response = MultiJson.load(last_response.body)
+
+          expect(last_response.status).to eq(422)
+          expect(last_response).to have_error_message("Organization name 'new-name' is already taken.")
+        end
+      end
+
       it 'updates the suspended field for the organization' do
         update_request = {
           name: 'New Name World',

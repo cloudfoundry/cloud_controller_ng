@@ -24,12 +24,12 @@ module VCAP::CloudController
 
       org
     rescue Sequel::ValidationFailed => e
-      validation_error!(e)
+      validation_error!(e, message)
     end
 
-    def validation_error!(error)
+    def validation_error!(error, message)
       if error.errors.on(:name)&.include?(:unique)
-        error!('Name must be unique')
+        error!("Organization name '#{message.name}' is already taken.")
       end
       error!(error.message)
     end

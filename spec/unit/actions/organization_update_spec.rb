@@ -77,7 +77,7 @@ module VCAP::CloudController
 
             expect {
               org_update.update(org, message)
-            }.to raise_error(OrganizationUpdate::Error, 'Name must be unique')
+            }.to raise_error(OrganizationUpdate::Error, "Organization name 'new-org-name' is already taken.")
           end
         end
       end
@@ -120,7 +120,7 @@ module VCAP::CloudController
 
             expect {
               org_update.update(org, message)
-            }.to raise_error(OrganizationUpdate::Error, 'Name must be unique')
+            }.to raise_error(OrganizationUpdate::Error, "Organization name 'new-org-name' is already taken.")
           end
         end
       end
