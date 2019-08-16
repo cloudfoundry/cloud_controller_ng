@@ -7557,6 +7557,7 @@ In the case where the specified isolation segment is the system-wide shared segm
   </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-02-01T01:33:58Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-02-01T01:33:58Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-organization"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"suspended"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
   </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"quota"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -7591,19 +7592,19 @@ In the case where the specified isolation segment is the system-wide shared segm
 </tr>
 </thead><tbody>
 <tr>
-<td><strong>name</strong></td>
-<td><em>string</em></td>
-<td>Name of the organization.</td>
-</tr>
-<tr>
 <td><strong>guid</strong></td>
 <td><em>uuid</em></td>
 <td>Unique identifier for the organization.</td>
 </tr>
 <tr>
-<td><strong>status</strong> <em>(experimental)</em></td>
+<td><strong>name</strong></td>
 <td><em>string</em></td>
-<td>Valid values are <code class="prettyprint">active</code> and <code class="prettyprint">suspended</code>. Suspended organizations, along with their spaces, may not be modified by non-admins.</td>
+<td>Name of the organization.</td>
+</tr>
+<tr>
+<td><strong>suspended</strong> <em>(experimental)</em></td>
+<td><em>boolean</em></td>
+<td>Whether an organization is suspended or not.</td>
 </tr>
 <tr>
 <td><strong>relationships.quota</strong> <em>(experimental)</em></td>
@@ -7657,6 +7658,7 @@ In the case where the specified isolation segment is the system-wide shared segm
   </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-02-01T01:33:58Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-02-01T01:33:58Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-organization"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"suspended"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
   </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"quota"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -7713,6 +7715,11 @@ In the case where the specified isolation segment is the system-wide shared segm
 </tr>
 </thead><tbody>
 <tr>
+<td><strong>suspended</strong> <em>(experimental)</em></td>
+<td><em>boolean</em></td>
+<td>Whether an organization is suspended or not.</td>
+</tr>
+<tr>
 <td><strong>metadata.labels</strong> <em>(experimental)</em></td>
 <td><a href="#labels"><em>label object</em></a></td>
 <td>Labels applied to the organization.</td>
@@ -7755,6 +7762,7 @@ In the case where the specified isolation segment is the system-wide shared segm
   </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-02-01T01:33:58Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-02-01T01:33:58Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-organization"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"suspended"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
   </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"quota"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -7830,6 +7838,7 @@ In the case where the specified isolation segment is the system-wide shared segm
       </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-02-01T01:33:58Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-02-01T01:33:58Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"org1"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"suspended"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
       </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"quota"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
           </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -7858,6 +7867,7 @@ In the case where the specified isolation segment is the system-wide shared segm
       </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-02-02T00:14:30Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-02-02T00:14:30Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"org2"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"suspended"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
       </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"quota"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
           </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -7976,6 +7986,7 @@ In the case where the specified isolation segment is the system-wide shared segm
       </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-02-01T01:33:58Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-02-01T01:33:58Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"org1"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"suspended"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
       </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
           </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/organizations/885735b5-aea4-4cf5-8e44-961af0e41920"</span><span class="w">
@@ -8004,6 +8015,7 @@ In the case where the specified isolation segment is the system-wide shared segm
       </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-02-02T00:14:30Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-02-02T00:14:30Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"org2"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"suspended"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
       </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"quota"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
           </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -8121,6 +8133,7 @@ In the case where the specified isolation segment is the system-wide shared segm
   </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-02-01T01:33:58Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-02-01T01:33:58Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-organization"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"suspended"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
   </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"quota"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -8164,6 +8177,11 @@ In the case where the specified isolation segment is the system-wide shared segm
 <td><strong>name</strong></td>
 <td><em>string</em></td>
 <td>Organization name</td>
+</tr>
+<tr>
+<td><strong>suspended</strong> <em>(experimental)</em></td>
+<td><em>boolean</em></td>
+<td>Whether an organization is suspended or not.</td>
 </tr>
 <tr>
 <td><strong>metadata.labels</strong> <em>(experimental)</em></td>
@@ -12602,14 +12620,14 @@ In order to share into a space the requesting user must be a space developer in 
 </tr>
 </thead><tbody>
 <tr>
-<td><strong>name</strong></td>
-<td><em>string</em></td>
-<td>Name of the space.</td>
-</tr>
-<tr>
 <td><strong>guid</strong></td>
 <td><em>uuid</em></td>
 <td>Unique identifier for the space.</td>
+</tr>
+<tr>
+<td><strong>name</strong></td>
+<td><em>string</em></td>
+<td>Name of the space.</td>
 </tr>
 <tr>
 <td><strong>created_at</strong></td>
@@ -12658,7 +12676,8 @@ In order to share into a space the requesting user must be a space developer in 
           "guid": "[org-guid]"
         }
       }
-    }'</span>
+    }
+  }'</span>
 
 </code></pre>
 <pre class="highlight plaintext"><code>Example Response
