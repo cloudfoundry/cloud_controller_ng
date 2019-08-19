@@ -80,8 +80,13 @@ RSpec.describe(OPI::Client) do
             guid: 'process-guid',
             version: lrp.version.to_s,
             process_guid: "process-guid-#{lrp.version}",
-            docker_image: 'http://example.org/image1234',
-            start_command: 'ls -la',
+            lifecycle: {
+              buildpack_lifecycle: {
+                droplet_hash: lrp.droplet_hash,
+                droplet_guid: 'some-droplet-guid',
+                start_command: 'ls -la',
+              }
+            },
             environment: {
               'BISH': 'BASH',
               'FOO': 'BAR',
@@ -116,8 +121,6 @@ RSpec.describe(OPI::Client) do
             instances: 21,
             memory_mb: 128,
             cpu_weight: 1,
-            droplet_hash: lrp.droplet_hash,
-            droplet_guid: 'some-droplet-guid',
             health_check_type: 'port',
             health_check_http_endpoint: nil,
             health_check_timeout_ms: 12000,
@@ -125,14 +128,14 @@ RSpec.describe(OPI::Client) do
             volume_mounts: [],
             ports: [8080],
             routes: {
-              'cf-router' => [
+              "cf-router": [
                 {
-                  'hostname' => 'numero-uno.example.com',
-                  'port' => 8080
+                  hostname: 'numero-uno.example.com',
+                  port: 8080
                 },
                 {
-                  'hostname' => 'numero-dos.example.com',
-                  'port' => 7777
+                  hostname: 'numero-dos.example.com',
+                  port: 7777
                 }
               ]
             }
@@ -143,7 +146,10 @@ RSpec.describe(OPI::Client) do
         response = client.desire_app(lrp)
 
         expect(response.status_code).to equal(201)
-        expect(WebMock).to have_requested(:put, "#{opi_url}/apps/process-guid-#{lrp.version}").with(body: MultiJson.dump(expected_body))
+        expect(WebMock).to have_requested(:put, "#{opi_url}/apps/process-guid-#{lrp.version}").with { |request|
+          actual_body = MultiJson.load(request.body, symbolize_keys: true)
+          actual_body == expected_body
+        }
       end
 
       context 'when volume mounts are provided' do
@@ -238,7 +244,10 @@ RSpec.describe(OPI::Client) do
           response = client.desire_app(lrp)
 
           expect(response.status_code).to equal(201)
-          expect(WebMock).to have_requested(:put, "#{opi_url}/apps/process-guid-#{lrp.version}").with(body: MultiJson.dump(expected_body))
+          expect(WebMock).to have_requested(:put, "#{opi_url}/apps/process-guid-#{lrp.version}").with { |request|
+            actual_body = MultiJson.load(request.body, symbolize_keys: true)
+            actual_body == expected_body
+          }
         end
       end
     end
