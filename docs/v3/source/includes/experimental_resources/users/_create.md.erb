@@ -1,5 +1,11 @@
 ### Create a user
 
+Creating a user requires one value, a GUID. This creates a user in the Cloud
+Controller database.
+
+Generally, the GUID should match the GUID of an already-created user in the
+UAA database, though this is not required.
+
 ```
 Example Request
 ```
@@ -32,7 +38,7 @@ Content-Type: application/json
 
 Name     | Type     | Description
 -------  | -------  | -----------
-**guid** | _string_ | Unique identifier for the user. For UAA users and clients, this is the UAA user GUID.                                                                                             |         |
+**guid** | _string_ | Unique identifier for the user. For UAA users this will match the user ID of an existing UAA user's GUID. In the case of UAA clients, this will match the UAA client ID. For a non-UAA user, this can be set to a username of one's choosing.                                                                                             |         |
 
 #### Permitted roles
 
