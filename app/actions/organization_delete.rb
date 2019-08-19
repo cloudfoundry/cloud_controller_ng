@@ -37,7 +37,7 @@ module VCAP::CloudController
           unshare_private_domains(domains_to_unshare, org)
           org.destroy
 
-          Repositories::OrganizationEventRepository.new.record_organization_delete_request(org, @user_audit_info, { recursive: true }.to_json)
+          Repositories::OrganizationEventRepository.new.record_organization_delete_request(org, @user_audit_info, { recursive: true })
         end
       end
     end

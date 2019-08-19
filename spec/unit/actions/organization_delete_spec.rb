@@ -158,7 +158,7 @@ module VCAP::CloudController
             actee_name: org_3.name,
             organization_guid: org_3.guid
           )
-          expect(org_delete_event.metadata).to eq({ 'request' => { recursive: true }.to_json })
+          expect(org_delete_event.metadata).to eq({ 'request' => { 'recursive' => true } })
           expect(org_delete_event.timestamp).to be
 
           app_delete_event = events[0]
