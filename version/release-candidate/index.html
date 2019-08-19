@@ -18608,7 +18608,12 @@ take either an array of service instance name strings or an array of the followi
 
           <h2 id="users">Users</h2>
 
-<p>Users and clients that have access to and roles in Cloud Foundry.</p>
+<p>Every Cloud Foundry action (pushing an application, creating a space) requires a
+user. Each Cloud Foundry installation has one pre-installed user, admin, which
+can create subsequent users. Users can be assigned roles which give them
+privileges to perform actions. For example, the Space Developer role grants a
+user permission to manage apps and services in a space (to push apps, scale
+apps, delete apps).</p>
 
           <h3 id="the-user-object">The user object</h3>
 <pre class="highlight plaintext"><code>Example User object
@@ -18653,12 +18658,12 @@ take either an array of service instance name strings or an array of the followi
 <tr>
 <td><strong>username</strong></td>
 <td><em>string</em></td>
-<td>The name registered in UAA.<br>Must be between 1 ~ 253 characters.</td>
+<td>The name registered in UAA. Will be <code class="prettyprint">null</code> for UAA clients and non-UAA users.</td>
 </tr>
 <tr>
 <td><strong>presentation_name</strong></td>
 <td><em>string</em></td>
-<td>The name displayed for the user. For UAA users, this is the same as the username. For UAA clients, this is the Client ID.<br>Must be between 1 ~ 253 characters.</td>
+<td>The name displayed for the user. For UAA users, this is the same as the username. For UAA clients, this is the UAA client ID. Will be <code class="prettyprint">null</code> for non-UAA users.</td>
 </tr>
 <tr>
 <td><strong>links</strong></td>
@@ -18668,6 +18673,12 @@ take either an array of service instance name strings or an array of the followi
 </tbody></table>
 
           <h3 id="create-a-user">Create a user</h3>
+
+<p>Creating a user requires one value, a GUID. This creates a user in the Cloud
+Controller database.</p>
+
+<p>Generally, the GUID should match the GUID of an already-created user in the
+UAA database, though this is not required.</p>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/users"</span> <span class="se">\</span>
@@ -18714,7 +18725,7 @@ take either an array of service instance name strings or an array of the followi
 <tr>
 <td><strong>guid</strong></td>
 <td><em>string</em></td>
-<td>Unique identifier for the user. For UAA users and clients, this is the UAA user GUID.</td>
+<td>Unique identifier for the user. For UAA users this will match the user ID of an existing UAA user&rsquo;s GUID. In the case of UAA clients, this will match the UAA client ID. For a non-UAA user, this can be set to a username of one&rsquo;s choosing.</td>
 </tr>
 </tbody></table>
 
