@@ -4,7 +4,8 @@ module VCAP::CloudController
     end
 
     def create(message:)
-      User.create(guid: message.guid)
+      user = User.create(guid: message.guid)
+      UsernamePopulator.new(CloudController::DependencyLocator.instance.uaa_client).transform(user).first
     rescue Sequel::ValidationFailed => e
       validation_error!(message, e)
     end

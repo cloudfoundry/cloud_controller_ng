@@ -18,7 +18,7 @@ RSpec.describe 'Users Request' do
   describe 'POST /v3/users' do
     let(:params) do
       {
-        guid: other_user_guid,
+          guid: other_user_guid,
       }
     end
 
@@ -31,14 +31,14 @@ RSpec.describe 'Users Request' do
 
       let(:user_json) do
         {
-          guid: params[:guid],
-          created_at: iso8601,
-          updated_at: iso8601,
-          username: nil,
-          presentation_name: nil,
-          links: {
-            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{params[:guid]}) },
-          }
+            guid: params[:guid],
+            created_at: iso8601,
+            updated_at: iso8601,
+            username: nil,
+            presentation_name: params[:guid],
+            links: {
+                self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{params[:guid]}) },
+            }
         }
       end
 
@@ -47,8 +47,8 @@ RSpec.describe 'Users Request' do
           code: 403,
         )
         h['admin'] = {
-          code: 201,
-          response_object: user_json
+            code: 201,
+            response_object: user_json
         }
         h.freeze
       end
@@ -57,37 +57,80 @@ RSpec.describe 'Users Request' do
     end
 
     describe 'when creating a user that exists in uaa' do
-      before do
-        allow(uaa_client).to receive(:usernames_for_ids).and_return({ other_user_guid => 'bob-mcjames' })
-      end
+      context "it's a UAA user" do
+        before do
+          allow(uaa_client).to receive(:usernames_for_ids).and_return({ other_user_guid => 'bob-mcjames' })
+        end
 
-      let(:api_call) { lambda { |user_headers| post '/v3/users', params.to_json, user_headers } }
+        let(:api_call) { lambda { |user_headers| post '/v3/users', params.to_json, user_headers } }
 
-      let(:user_json) do
-        {
-          guid: params[:guid],
-          created_at: iso8601,
-          updated_at: iso8601,
-          username: 'bob-mcjames',
-          presentation_name: 'bob-mcjames',
-          links: {
-            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{params[:guid]}) },
+        let(:user_json) do
+          {
+              guid: params[:guid],
+              created_at: iso8601,
+              updated_at: iso8601,
+              username: 'bob-mcjames',
+              presentation_name: 'bob-mcjames',
+              links: {
+                  self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{params[:guid]}) },
+              }
           }
-        }
-      end
+        end
 
-      let(:expected_codes_and_responses) do
-        h = Hash.new(
-          code: 403,
-        )
-        h['admin'] = {
-          code: 201,
-          response_object: user_json
-        }
-        h.freeze
-      end
+        let(:expected_codes_and_responses) do
+          h = Hash.new(
+            code: 403,
+          )
+          h['admin'] = {
+              code: 201,
+              response_object: user_json
+          }
+          h.freeze
+        end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
+      context "it's a UAA client" do
+        let(:params) do
+          {
+              guid: uaa_client_id,
+          }
+        end
+        let(:uaa_client_id) { 'cc_routing' }
+
+        before do
+          allow(uaa_client).to receive(:usernames_for_ids).and_return({})
+          allow(uaa_client).to receive(:get_clients).and_return([{ client_id: uaa_client_id }])
+        end
+
+        let(:api_call) { lambda { |user_headers| post '/v3/users', params.to_json, user_headers } }
+
+        let(:user_json) do
+          {
+              guid: uaa_client_id,
+              created_at: iso8601,
+              updated_at: iso8601,
+              username: nil,
+              presentation_name: uaa_client_id,
+              links: {
+                  self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{uaa_client_id}) },
+              }
+          }
+        end
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(
+            code: 403,
+          )
+          h['admin'] = {
+              code: 201,
+              response_object: user_json
+          }
+          h.freeze
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
     end
     describe 'when the user is not logged in' do
       it 'returns 401 for Unauthenticated requests' do
@@ -111,7 +154,7 @@ RSpec.describe 'Users Request' do
       context 'when provided invalid arguments' do
         let(:params) do
           {
-            guid: 555
+              guid: 555
           }
         end
 
@@ -132,7 +175,7 @@ RSpec.describe 'Users Request' do
 
         let(:params) do
           {
-            guid: existing_user.guid,
+              guid: existing_user.guid,
           }
         end
 

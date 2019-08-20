@@ -9,7 +9,6 @@ class UsersController < ApplicationController
     message = UserCreateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
     user = UserCreate.new.create(message: message)
-    UsernamePopulator.new(CloudController::DependencyLocator.instance.uaa_client).transform(user)
 
     render status: :created, json: Presenters::V3::UserPresenter.new(user)
   rescue UserCreate::Error => e

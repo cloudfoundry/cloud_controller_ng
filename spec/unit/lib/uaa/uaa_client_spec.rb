@@ -370,7 +370,7 @@ module VCAP::CloudController
             with(query: { 'includeInactive' => true, 'filter' => 'username eq "user_1"' }).
             to_return(
               status: 200,
-              headers: { 'content-type' => 'application/json' },
+               headers: { 'content-type' => 'application/json' },
               body: response_body.to_json)
 
           origins = uaa_client.origins_for_username(username)

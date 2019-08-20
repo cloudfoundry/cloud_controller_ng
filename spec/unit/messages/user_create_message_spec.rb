@@ -65,15 +65,6 @@ module VCAP::CloudController
             expect(subject.errors[:guid]).to include 'is too long (maximum is 250 characters)'
           end
         end
-
-        context 'when it contains invalid characters' do
-          let(:params) { { guid: '_!@#$%^&*().swag' } }
-
-          it 'is not valid' do
-            expect(subject).to be_invalid
-            expect(subject.errors[:guid]).to include 'must consist of alphanumeric characters and hyphens'
-          end
-        end
       end
     end
   end
