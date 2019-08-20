@@ -694,7 +694,7 @@ module VCAP::CloudController
               it 'decorates the error with the name of the service instance' do
                 expect {
                   app_apply_manifest.apply(app.guid, message)
-                }.to raise_error(AppApplyManifest::ServiceBindingError, /For service 'si-name'/)
+                }.to raise_error(AppApplyManifest::ServiceBindingError, /For service 'si-name': fake binding error/)
               end
             end
           end
