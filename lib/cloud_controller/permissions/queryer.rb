@@ -1,25 +1,25 @@
 class VCAP::CloudController::Permissions::Queryer
-  def self.build(perm_client, statsd_client, security_context, perm_enabled, query_raise_on_mismatch=false)
+  def self.build(perm_client, statsd_client, security_context, perm_enabled, query_raise_on_mismatch = false)
     VCAP::CloudController::Science::Experiment.raise_on_mismatches = query_raise_on_mismatch
 
     db_permissions =
-      VCAP::CloudController::Permissions.new(
-        security_context.current_user
-      )
+        VCAP::CloudController::Permissions.new(
+            security_context.current_user
+        )
 
     perm_permissions = VCAP::CloudController::Perm::Permissions.new(
-      perm_client: perm_client,
-      roles: security_context.roles,
-      user_id: security_context.current_user_guid,
-      issuer: security_context.issuer,
+        perm_client: perm_client,
+        roles: security_context.roles,
+        user_id: security_context.current_user_guid,
+        issuer: security_context.issuer,
     )
 
     self.new(
-      db_permissions: db_permissions,
-      perm_permissions: perm_permissions,
-      statsd_client: statsd_client,
-      perm_enabled: perm_enabled,
-      current_user_guid: security_context.current_user_guid
+        db_permissions: db_permissions,
+        perm_permissions: perm_permissions,
+        statsd_client: statsd_client,
+        perm_enabled: perm_enabled,
+        current_user_guid: security_context.current_user_guid
     )
   end
 
@@ -44,6 +44,15 @@ class VCAP::CloudController::Permissions::Queryer
     science 'can_write_globally' do |e|
       e.use { db_permissions.can_write_globally? }
       e.try { perm_permissions.can_write_globally? }
+
+      e.run_if { false }
+    end
+  end
+
+  def can_read_secrets_globally?
+    science 'can_read_secrets_globally' do |e|
+      e.use { db_permissions.can_read_secrets_globally? }
+      e.try { perm_permissions.can_read_secrets_globally? }
 
       e.run_if { false }
     end
@@ -205,7 +214,7 @@ class VCAP::CloudController::Permissions::Queryer
 
   def can_read_space_scoped_service_broker?(service_broker)
     service_broker.space_scoped? &&
-      can_read_secrets_in_space?(service_broker.space_guid, service_broker.space.organization_guid)
+        can_read_secrets_in_space?(service_broker.space_guid, service_broker.space.organization_guid)
   end
 
   def can_write_global_service_broker?
@@ -241,9 +250,9 @@ class VCAP::CloudController::Permissions::Queryer
 
   def science(name)
     experiment = VCAP::CloudController::Science::Experiment.new(
-      statsd_client: statsd_client,
-      name: name,
-      enabled: enabled,
+        statsd_client: statsd_client,
+        name: name,
+        enabled: enabled,
     )
     experiment.context(current_user_guid: current_user_guid)
     yield experiment

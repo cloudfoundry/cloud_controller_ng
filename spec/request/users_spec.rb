@@ -3,6 +3,7 @@ require 'request_spec_shared_examples'
 
 RSpec.describe 'Users Request' do
   let(:user) { VCAP::CloudController::User.make }
+  let(:user2) { VCAP::CloudController::User.make }
   let(:space) { VCAP::CloudController::Space.make }
   let(:org) { space.organization }
   let(:admin_header) { headers_for(user, scopes: %w(cloud_controller.admin)) }
@@ -13,6 +14,71 @@ RSpec.describe 'Users Request' do
   before do
     VCAP::CloudController::User.dataset.destroy # this will clean up the seeded test users
     allow(VCAP::CloudController::UaaClient).to receive(:new).and_return(uaa_client)
+  end
+
+  describe 'GET /v3/users' do
+    context 'without filters' do
+      let(:api_call) { lambda { |user_headers| get '/v3/users', nil, user_headers } }
+
+      let(:current_user_json) do
+        {
+            guid: user.guid,
+            created_at: iso8601,
+            updated_at: iso8601,
+            username: nil,
+            presentation_name: user.guid,
+            links: {
+                self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{user.guid}) },
+            }
+        }
+      end
+
+      let(:user2_json) do
+        {
+            guid: user2.guid,
+            created_at: iso8601,
+            updated_at: iso8601,
+            username: nil,
+            presentation_name: user2.guid,
+            links: {
+                self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{user2.guid}) },
+            }
+        }
+      end
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(
+          code: 200,
+          response_objects: [
+            current_user_json
+          ]
+        )
+        h['admin'] = {
+            code: 200,
+            response_objects: [
+              current_user_json,
+              user2_json
+            ]
+        }
+        h['admin_read_only'] = {
+            code: 200,
+            response_objects: [
+              current_user_json,
+              user2_json
+            ]
+        }
+        h.freeze
+      end
+
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+    end
+
+    describe 'when the user is not logged in' do
+      it 'returns 401 for Unauthenticated requests' do
+        get '/v3/users', nil, base_json_headers
+        expect(last_response.status).to eq(401)
+      end
+    end
   end
 
   describe 'POST /v3/users' do

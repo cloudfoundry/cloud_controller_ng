@@ -204,6 +204,7 @@ Rails.application.routes.draw do
   delete '/stacks/:guid', to: 'stacks#destroy'
 
   # users
+  get '/users', to: 'users#index'
   post '/users', to: 'users#create'
 
   # buildpacks

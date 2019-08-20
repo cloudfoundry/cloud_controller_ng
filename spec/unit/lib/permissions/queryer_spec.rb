@@ -323,6 +323,38 @@ module VCAP::CloudController
       end
     end
 
+    describe '#can_read_secrets_globally?' do
+      before do
+        allow(perm_permissions).to receive(:can_read_secrets_globally?)
+
+        allow(db_permissions).to receive(:can_read_secrets_globally?).and_return(true)
+      end
+
+      it 'asks for #can_read_secrets_globally? on behalf of the current user' do
+        allow(perm_permissions).to receive(:can_read_secrets_globally?).and_return(true)
+
+        subject.can_read_secrets_globally?
+
+        expect(db_permissions).to have_received(:can_read_secrets_globally?)
+      end
+
+      it 'skips the experiment' do
+        allow(db_permissions).to receive(:can_read_secrets_globally?).and_return(true)
+
+        subject.can_read_secrets_globally?
+
+        expect(perm_permissions).not_to have_received(:can_read_secrets_globally?)
+      end
+
+      it 'uses the expected branch from the experiment' do
+        allow(perm_permissions).to receive(:can_read_secrets_globally?).and_return('not-expected')
+
+        response = subject.can_read_secrets_globally?
+
+        expect(response).to eq(true)
+      end
+    end
+
     describe '#readable_org_guids' do
       it_behaves_like 'readable guids', 'org'
     end
