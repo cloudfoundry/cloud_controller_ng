@@ -143,6 +143,59 @@ module VCAP::CloudController::Presenters::V3
           details: 'you must construct additional pylons'
         )
       end
+
+      context 'the process is running on opi and not diego, so *_tls_proxy_ports are not included in the port struct' do
+        let(:net_info_1) {
+          {
+            address: '1.2.3.4',
+            ports: [
+              {
+                host_port: 8080,
+                container_port: 1234,
+              }, {
+              host_port: 3000,
+              container_port: 4000,
+            }
+            ]
+          }
+        }
+
+        let(:instance_ports_1) {
+          [
+            {
+              external: 8080,
+              internal: 1234,
+              external_tls_proxy_port: nil,
+              internal_tls_proxy_port: nil
+            }, {
+            external: 3000,
+            internal: 4000,
+            external_tls_proxy_port: nil,
+            internal_tls_proxy_port: nil
+          }
+          ]
+        }
+
+        it 'does not error and sets the *_tls_proxy_port values to nil' do
+          result = presenter.present_stats_hash
+
+          expect(result[0][:type]).to eq(process.type)
+          expect(result[0][:index]).to eq(0)
+          expect(result[0][:state]).to eq('RUNNING')
+          expect(result[0][:details]).to eq(nil)
+          expect(result[0][:isolation_segment]).to eq('hecka-compliant')
+          expect(result[0][:host]).to eq('myhost')
+          expect(result[0][:instance_ports]).to eq(instance_ports_1)
+          expect(result[0][:uptime]).to eq(12345)
+          expect(result[0][:mem_quota]).to eq(process[:memory] * 1024 * 1024)
+          expect(result[0][:disk_quota]).to eq(process[:disk_quota] * 1024 * 1024)
+          expect(result[0][:fds_quota]).to eq(process.file_descriptors)
+          expect(result[0][:usage]).to eq({ time: '2015-12-08 16:54:48 -0800',
+            cpu: 80,
+            mem: 128,
+            disk: 1024 })
+        end
+      end
     end
 
     describe '#to_hash' do
