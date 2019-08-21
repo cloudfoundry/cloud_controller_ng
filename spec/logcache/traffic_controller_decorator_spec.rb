@@ -413,23 +413,23 @@ RSpec.describe Logcache::TrafficControllerDecorator do
             Loggregator::V2::Envelope.new(
               source_id: process_guid,
               gauge: Loggregator::V2::Gauge.new(metrics: {
+                  'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 11),
+              }),
+              instance_id: '1'
+            ),
+            Loggregator::V2::Envelope.new(
+              source_id: process_guid,
+              gauge: Loggregator::V2::Gauge.new(metrics: {
+                  'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 12),
+              }),
+              instance_id: '1'
+            ),
+            Loggregator::V2::Envelope.new(
+              source_id: process_guid,
+              gauge: Loggregator::V2::Gauge.new(metrics: {
+                  'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 20),
                   'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 21),
-              }),
-              instance_id: '1'
-            ),
-            Loggregator::V2::Envelope.new(
-              source_id: process_guid,
-              gauge: Loggregator::V2::Gauge.new(metrics: {
-                  'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 32),
-              }),
-              instance_id: '1'
-            ),
-            Loggregator::V2::Envelope.new(
-              source_id: process_guid,
-              gauge: Loggregator::V2::Gauge.new(metrics: {
-                  'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 30),
-                  'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 31),
-                  'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 32),
+                  'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 22),
               }),
               instance_id: '2'
             )
@@ -443,13 +443,13 @@ RSpec.describe Logcache::TrafficControllerDecorator do
 
         expect(subject.first.containerMetric.instanceIndex).to eq(1)
         expect(subject.first.containerMetric.cpuPercentage).to eq(10)
-        expect(subject.first.containerMetric.memoryBytes).to eq(21)
-        expect(subject.first.containerMetric.diskBytes).to eq(32)
+        expect(subject.first.containerMetric.memoryBytes).to eq(11)
+        expect(subject.first.containerMetric.diskBytes).to eq(12)
 
         expect(subject.second.containerMetric.instanceIndex).to eq(2)
-        expect(subject.second.containerMetric.cpuPercentage).to eq(30)
-        expect(subject.second.containerMetric.memoryBytes).to eq(31)
-        expect(subject.second.containerMetric.diskBytes).to eq(32)
+        expect(subject.second.containerMetric.cpuPercentage).to eq(20)
+        expect(subject.second.containerMetric.memoryBytes).to eq(21)
+        expect(subject.second.containerMetric.diskBytes).to eq(22)
       end
     end
 
