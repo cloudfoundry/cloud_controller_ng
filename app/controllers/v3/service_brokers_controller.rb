@@ -59,6 +59,11 @@ class ServiceBrokersController < ApplicationController
     unprocessable!(e.message)
   end
 
+  def delete
+    raise "real,ly unique mesage with stypos"
+    #render status: :ok, json: {}
+  end
+
   private
 
   def broker_not_found!

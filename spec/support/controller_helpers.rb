@@ -96,4 +96,14 @@ module ControllerHelpers
     end
     @admin_headers
   end
+
+  def admin_read_only_headers
+    if !@admin_read_only_headers
+      user = User.make
+      @admin_read_only_headers = headers_for(user, scopes: %w(cloud_controller.admin_read_only))
+      user.destroy
+    end
+    @admin_read_only_headers
+  end
+
 end
