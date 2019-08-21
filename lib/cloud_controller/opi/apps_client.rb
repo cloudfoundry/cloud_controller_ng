@@ -79,6 +79,8 @@ module OPI
           docker_lifecycle: {
             command: command,
             image: @process.desired_droplet.docker_receipt_image,
+            registry_username: @process.desired_droplet.docker_receipt_username,
+            registry_password: @process.desired_droplet.docker_receipt_password,
           }
         }
       end
@@ -103,8 +105,10 @@ module OPI
     def lifecycle_for(process)
       if process.app.lifecycle_type == VCAP::CloudController::Lifecycles::DOCKER
         DockerLifecycle.new(process)
-      else
+      elsif process.app.lifecycle_type == VCAP::CloudController::Lifecycles::BUILDPACK
         BuildpackLifecycle.new(process)
+      else
+        raise("lifecycle type `#{process.app.lifecycle_type}` is invalid")
       end
     end
 
