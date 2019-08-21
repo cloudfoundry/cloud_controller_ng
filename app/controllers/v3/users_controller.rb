@@ -8,12 +8,14 @@ class UsersController < ApplicationController
     message = UsersListMessage.from_params(query_params)
     unprocessable!(message.errors.full_messages) unless message.valid?
     users = fetch_readable_users
+    user_guids = users.map(&:guid)
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::UserPresenter,
       paginated_result: SequelPaginator.new.get_page(users, message.try(:pagination_options)),
       path: '/v3/users',
-      message: message
+      message: message,
+      extra_presenter_args: { uaa_users: uaa_users_info(user_guids) },
     )
   end
 
@@ -24,7 +26,7 @@ class UsersController < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
     user = UserCreate.new.create(message: message)
 
-    render status: :created, json: Presenters::V3::UserPresenter.new(user)
+    render status: :created, json: Presenters::V3::UserPresenter.new(user, uaa_users: uaa_users_info(user.guid))
   rescue UserCreate::Error => e
     unprocessable!(e)
   end
@@ -37,5 +39,10 @@ class UsersController < ApplicationController
     else
       User.where(guid: current_user.guid)
     end
+  end
+
+  def uaa_users_info(user_guids)
+    uaa_client = CloudController::DependencyLocator.instance.uaa_client
+    uaa_client.users_for_ids([user_guids])
   end
 end

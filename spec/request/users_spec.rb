@@ -14,6 +14,7 @@ RSpec.describe 'Users Request' do
   before do
     VCAP::CloudController::User.dataset.destroy # this will clean up the seeded test users
     allow(VCAP::CloudController::UaaClient).to receive(:new).and_return(uaa_client)
+    allow(uaa_client).to receive(:users_for_ids).and_return({ user.guid => { 'username' => 'bob-mcjames', 'origin' => 'Okta' } })
   end
 
   describe 'GET /v3/users' do
@@ -25,9 +26,9 @@ RSpec.describe 'Users Request' do
             guid: user.guid,
             created_at: iso8601,
             updated_at: iso8601,
-            username: nil,
-            presentation_name: user.guid,
-            origin: nil,
+            username: 'bob-mcjames',
+            presentation_name: 'bob-mcjames',
+            origin: 'Okta',
             links: {
                 self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{user.guid}) },
             }

@@ -30,11 +30,6 @@ module VCAP::CloudController
             UserCreateMessage.new({ guid: guid })
           end
 
-          before do
-            allow(VCAP::CloudController::UaaClient).to receive(:new).and_return(uaa_client)
-            allow(uaa_client).to receive(:users_for_ids).and_return({ guid => { 'origin' => origin, 'username' => username } })
-          end
-
           it 'creates a user' do
             created_user = nil
             expect {
@@ -42,8 +37,6 @@ module VCAP::CloudController
             }.to change { User.count }.by(1)
 
             expect(created_user.guid).to eq guid
-            expect(created_user.username).to eq username
-            expect(created_user.origin).to eq origin
           end
         end
 
@@ -54,11 +47,6 @@ module VCAP::CloudController
             UserCreateMessage.new({ guid: client_id })
           end
 
-          before do
-            allow(VCAP::CloudController::UaaClient).to receive(:new).and_return(uaa_client)
-            allow(uaa_client).to receive(:users_for_ids).and_return({})
-          end
-
           it 'creates a user' do
             created_user = nil
             expect {
@@ -66,8 +54,6 @@ module VCAP::CloudController
             }.to change { User.count }.by(1)
 
             expect(created_user.guid).to eq client_id
-            expect(created_user.username).to eq nil
-            expect(created_user.origin).to eq nil
           end
         end
       end
