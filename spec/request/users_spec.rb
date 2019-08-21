@@ -84,6 +84,49 @@ RSpec.describe 'Users Request' do
     end
   end
 
+  describe 'GET /v3/users/:guid' do
+    let(:api_call) { lambda { |user_headers| get "/v3/users/#{user.guid}", nil, user_headers } }
+
+    let(:user_json) do
+      {
+          guid: user.guid,
+          created_at: iso8601,
+          updated_at: iso8601,
+          username: 'bob-mcjames',
+          presentation_name: 'bob-mcjames',
+          origin: 'Okta',
+          links: {
+              self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{user.guid}) },
+          }
+      }
+    end
+
+    let(:expected_codes_and_responses) do
+      h = Hash.new(
+          code: 404,
+          response_objects: []
+      )
+      h['admin'] = {
+          code: 200,
+          response_object: user_json
+      }
+      h['admin_read_only'] = {
+          code: 200,
+          response_object: user_json
+      }
+      h.freeze
+    end
+
+    it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+    describe 'when the user is not logged in' do
+      it 'returns 401 for Unauthenticated requests' do
+        get "/v3/users/#{user.guid}", nil, base_json_headers
+        expect(last_response.status).to eq(401)
+      end
+    end
+  end
+
   describe 'POST /v3/users' do
     let(:params) do
       {

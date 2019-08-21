@@ -31,6 +31,13 @@ class UsersController < ApplicationController
     unprocessable!(e)
   end
 
+  def show
+    user = User.find(guid: hashed_params[:guid])
+    user_not_found! unless permission_queryer.can_read_secrets_globally? && user
+
+    render status: :ok, json: Presenters::V3::UserPresenter.new(user, uaa_users: uaa_users_info(user.guid))
+  end
+
   private
 
   def fetch_readable_users
@@ -44,5 +51,9 @@ class UsersController < ApplicationController
   def uaa_users_info(user_guids)
     uaa_client = CloudController::DependencyLocator.instance.uaa_client
     uaa_client.users_for_ids([user_guids])
+  end
+
+  def user_not_found!
+    resource_not_found!(:stack)
   end
 end

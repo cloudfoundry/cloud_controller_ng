@@ -205,6 +205,7 @@ Rails.application.routes.draw do
 
   # users
   get '/users', to: 'users#index'
+  get '/users/:guid', to: 'users#show'
   post '/users', to: 'users#create'
 
   # buildpacks
