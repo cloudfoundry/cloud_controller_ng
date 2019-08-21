@@ -158,14 +158,14 @@ module VCAP::CloudController
 
       it 'returns a map of the given ids to the corresponding usernames from UAA' do
         response_body = {
-          'resources' => [
-            { 'id' => '111', 'origin' => 'uaa', 'username' => 'user_1' },
-            { 'id' => '222', 'origin' => 'uaa', 'username' => 'user_2' }
-          ],
-          'schemas' => ['urn:scim:schemas:core:1.0'],
-          'startindex' => 1,
-          'itemsperpage' => 100,
-          'totalresults' => 2 }
+            'resources' => [
+              { 'id' => '111', 'origin' => 'uaa', 'username' => 'user_1' },
+              { 'id' => '222', 'origin' => 'uaa', 'username' => 'user_2' }
+            ],
+            'schemas' => ['urn:scim:schemas:core:1.0'],
+            'startindex' => 1,
+            'itemsperpage' => 100,
+            'totalresults' => 2 }
 
         WebMock::API.stub_request(:get, "#{url}/ids/Users").
           with(query: { 'filter' => 'id eq "111" or id eq "222"' }).
@@ -219,14 +219,14 @@ module VCAP::CloudController
           UaaTokenCache.set_token(client_id, 'bearer invalid')
 
           response_body = {
-            'resources' => [
-              { 'id' => '111', 'origin' => 'uaa', 'username' => 'user_1' },
-              { 'id' => '222', 'origin' => 'uaa', 'username' => 'user_2' }
-            ],
-            'schemas' => ['urn:scim:schemas:core:1.0'],
-            'startindex' => 1,
-            'itemsperpage' => 100,
-            'totalresults' => 2 }
+              'resources' => [
+                { 'id' => '111', 'origin' => 'uaa', 'username' => 'user_1' },
+                { 'id' => '222', 'origin' => 'uaa', 'username' => 'user_2' }
+              ],
+              'schemas' => ['urn:scim:schemas:core:1.0'],
+              'startindex' => 1,
+              'itemsperpage' => 100,
+              'totalresults' => 2 }
 
           WebMock::API.stub_request(:get, "#{url}/ids/Users").
             with(query: { 'filter' => 'id eq "111" or id eq "222"' }, headers: { 'Authorization' => 'bearer STUFF' }).
@@ -256,6 +256,115 @@ module VCAP::CloudController
 
           it 'retries once and then returns no usernames' do
             expect(uaa_client.usernames_for_ids([userid_1, userid_2])).to eq({})
+          end
+        end
+      end
+    end
+
+    describe '#users_for_ids' do
+      let(:userid_1) { '111' }
+      let(:userid_2) { '222' }
+
+      it 'returns a map of the given ids to the corresponding user objects from UAA' do
+        response_body = {
+            'resources' => [
+              { 'id' => '111', 'origin' => 'uaa', 'username' => 'user_1' },
+              { 'id' => '222', 'origin' => 'uaa', 'username' => 'user_2' }
+            ],
+            'schemas' => ['urn:scim:schemas:core:1.0'],
+            'startindex' => 1,
+            'itemsperpage' => 100,
+            'totalresults' => 2 }
+
+        WebMock::API.stub_request(:get, "#{url}/ids/Users").
+          with(query: { 'filter' => 'id eq "111" or id eq "222"' }).
+          to_return(
+            status: 200,
+            headers: { 'content-type' => 'application/json' },
+            body: response_body.to_json)
+
+        mapping = uaa_client.users_for_ids([userid_1, userid_2])
+        expect(mapping[userid_1]).to eq({ 'id' => '111', 'origin' => 'uaa', 'username' => 'user_1' })
+        expect(mapping[userid_2]).to eq({ 'id' => '222', 'origin' => 'uaa', 'username' => 'user_2' })
+      end
+
+      it 'returns an empty hash when given no ids' do
+        expect(uaa_client.users_for_ids([])).to eq({})
+      end
+
+      context 'when UAA is unavailable' do
+        before do
+          allow(uaa_client).to receive(:token_info).and_raise(UaaUnavailable)
+        end
+
+        it 'returns an empty hash' do
+          expect(uaa_client.users_for_ids([userid_1])).to eq({})
+        end
+      end
+
+      context 'when the endpoint returns an error' do
+        let(:uaa_error) { CF::UAA::UAAError.new('some error') }
+        let(:mock_logger) { double(:steno_logger, error: nil) }
+
+        before do
+          scim = instance_double(CF::UAA::Scim)
+          allow(scim).to receive(:query).and_raise(uaa_error)
+          allow(uaa_client).to receive(:scim).and_return(scim)
+          allow(uaa_client).to receive(:logger).and_return(mock_logger)
+        end
+
+        it 'returns an empty hash' do
+          expect(uaa_client.users_for_ids([userid_1])).to eq({})
+        end
+
+        it 'logs the error' do
+          uaa_client.users_for_ids([userid_1])
+          expect(mock_logger).to have_received(:error).with("Failed to retrieve usernames from UAA: #{uaa_error.inspect}")
+        end
+      end
+
+      context 'with invalid tokens' do
+        before do
+          UaaTokenCache.set_token(client_id, 'bearer invalid')
+
+          response_body = {
+              'resources' => [
+                { 'id' => '111', 'origin' => 'uaa', 'username' => 'user_1' },
+                { 'id' => '222', 'origin' => 'uaa', 'username' => 'user_2' }
+              ],
+              'schemas' => ['urn:scim:schemas:core:1.0'],
+              'startindex' => 1,
+              'itemsperpage' => 100,
+              'totalresults' => 2 }
+
+          WebMock::API.stub_request(:get, "#{url}/ids/Users").
+            with(query: { 'filter' => 'id eq "111" or id eq "222"' }, headers: { 'Authorization' => 'bearer STUFF' }).
+            to_return(
+              status: 200,
+              headers: { 'content-type' => 'application/json' },
+              body: response_body.to_json)
+
+          WebMock::API.stub_request(:get, "#{url}/ids/Users").
+            with(query: { 'filter' => 'id eq "111" or id eq "222"' }, headers: { 'Authorization' => 'bearer invalid' }).
+            to_return(
+              status: 403,
+              headers: { 'content-type' => 'application/json' },
+              body: { 'error' => 'invalid_token' }.to_json)
+        end
+
+        context 'when token is invalid or expired one time' do
+          it 'retries once and then succeeds' do
+            mapping = uaa_client.users_for_ids([userid_1, userid_2])
+            expect(mapping[userid_1]).to eq({ 'id' => '111', 'origin' => 'uaa', 'username' => 'user_1' })
+            expect(mapping[userid_2]).to eq({ 'id' => '222', 'origin' => 'uaa', 'username' => 'user_2' })
+          end
+        end
+
+        context 'when token is invalid or expired twice' do
+          let(:auth_header) { 'bearer invalid' }
+
+          it 'retries once and then returns no usernames' do
+            expect(uaa_client.users_for_ids([userid_1, userid_2])).to eq({})
           end
         end
       end

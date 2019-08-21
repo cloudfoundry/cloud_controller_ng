@@ -27,6 +27,7 @@ RSpec.describe 'Users Request' do
             updated_at: iso8601,
             username: nil,
             presentation_name: user.guid,
+            origin: nil,
             links: {
                 self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{user.guid}) },
             }
@@ -40,6 +41,7 @@ RSpec.describe 'Users Request' do
             updated_at: iso8601,
             username: nil,
             presentation_name: user2.guid,
+            origin: nil,
             links: {
                 self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{user2.guid}) },
             }
@@ -90,7 +92,7 @@ RSpec.describe 'Users Request' do
 
     describe 'when creating a user that does not exist in uaa' do
       before do
-        allow(uaa_client).to receive(:usernames_for_ids).and_return({})
+        allow(uaa_client).to receive(:users_for_ids).and_return({})
       end
 
       let(:api_call) { lambda { |user_headers| post '/v3/users', params.to_json, user_headers } }
@@ -102,6 +104,7 @@ RSpec.describe 'Users Request' do
             updated_at: iso8601,
             username: nil,
             presentation_name: params[:guid],
+            origin: nil,
             links: {
                 self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{params[:guid]}) },
             }
@@ -125,7 +128,7 @@ RSpec.describe 'Users Request' do
     describe 'when creating a user that exists in uaa' do
       context "it's a UAA user" do
         before do
-          allow(uaa_client).to receive(:usernames_for_ids).and_return({ other_user_guid => 'bob-mcjames' })
+          allow(uaa_client).to receive(:users_for_ids).and_return({ other_user_guid => { 'username' => 'bob-mcjames', 'origin' => 'Okta' } })
         end
 
         let(:api_call) { lambda { |user_headers| post '/v3/users', params.to_json, user_headers } }
@@ -137,6 +140,7 @@ RSpec.describe 'Users Request' do
               updated_at: iso8601,
               username: 'bob-mcjames',
               presentation_name: 'bob-mcjames',
+              origin: 'Okta',
               links: {
                   self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{params[:guid]}) },
               }
@@ -165,7 +169,7 @@ RSpec.describe 'Users Request' do
         let(:uaa_client_id) { 'cc_routing' }
 
         before do
-          allow(uaa_client).to receive(:usernames_for_ids).and_return({})
+          allow(uaa_client).to receive(:users_for_ids).and_return({})
           allow(uaa_client).to receive(:get_clients).and_return([{ client_id: uaa_client_id }])
         end
 
@@ -178,6 +182,7 @@ RSpec.describe 'Users Request' do
               updated_at: iso8601,
               username: nil,
               presentation_name: uaa_client_id,
+              origin: nil,
               links: {
                   self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{uaa_client_id}) },
               }

@@ -15,4 +15,5 @@ Example User object
 | **updated_at**        | _datetime_               | The time with zone when the object was last updated.                                                                          |
 | **username**          | _string_                 | The name registered in UAA. Will be `null` for UAA clients and non-UAA users.                                                 |
 | **presentation_name** | _string_                 | The name displayed for the user. For UAA users, this is the same as the username. For UAA clients, this is the UAA client ID. |
+| **origin**            | _string_                 | The identity provider for the UAA user. Will be `null` for UAA clients.
 | **links**             | [_links object_](#links) | Links to related resources.                                                                                                   |

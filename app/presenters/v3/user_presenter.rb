@@ -9,6 +9,7 @@ module VCAP::CloudController::Presenters::V3
           updated_at: user.updated_at,
           username: user.username,
           presentation_name: user.username || user.guid,
+          origin: user.origin,
           links: build_links
       }
     end

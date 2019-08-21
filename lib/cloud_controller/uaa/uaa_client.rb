@@ -39,8 +39,15 @@ module VCAP::CloudController
       raise UaaUnavailable.new
     end
 
+    def users_for_ids(user_ids)
+      fetch_users(user_ids)
+    rescue UaaUnavailable, CF::UAA::UAAError => e
+      logger.error("Failed to retrieve usernames from UAA: #{e.inspect}")
+      {}
+    end
+
     def usernames_for_ids(user_ids)
-      fetch_usernames(user_ids)
+      fetch_users(user_ids).map { |id, user| [id, user['username']] }.to_h
     rescue UaaUnavailable, CF::UAA::UAAError => e
       logger.error("Failed to retrieve usernames from UAA: #{e.inspect}")
       {}
@@ -92,14 +99,14 @@ module VCAP::CloudController
       CF::UAA::Scim.new(uaa_target, auth_header, uaa_connection_opts)
     end
 
-    def fetch_usernames(user_ids)
+    def fetch_users(user_ids)
       return {} unless user_ids.present?
 
       filter_string = user_ids.map { |user_id| %(id eq "#{user_id}") }.join(' or ')
       results = query(:user_id, filter: filter_string)
 
       results['resources'].each_with_object({}) do |resource, results_hash|
-        results_hash[resource['id']] = resource['username']
+        results_hash[resource['id']] = resource
         results_hash
       end
     end

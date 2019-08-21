@@ -12,17 +12,21 @@ module VCAP::CloudController::Presenters::V3
         VCAP::CloudController::User.make
       end
 
-      before do
-        user.username = 'some-user'
-      end
+      context 'when the user is a UAA user' do
+        before do
+          user.username = 'some-user'
+          user.origin = 'LDAP'
+        end
 
-      it 'presents the user as json' do
-        expect(subject[:guid]).to eq(user.guid)
-        expect(subject[:created_at]).to be_a(Time)
-        expect(subject[:updated_at]).to be_a(Time)
-        expect(subject[:username]).to eq(user.username)
-        expect(subject[:presentation_name]).to eq(user.username)
-        expect(subject[:links][:self][:href]).to eq("#{link_prefix}/v3/users/#{user.guid}")
+        it 'presents the user as json' do
+          expect(subject[:guid]).to eq(user.guid)
+          expect(subject[:created_at]).to be_a(Time)
+          expect(subject[:updated_at]).to be_a(Time)
+          expect(subject[:username]).to eq(user.username)
+          expect(subject[:presentation_name]).to eq(user.username)
+          expect(subject[:origin]).to eq('LDAP')
+          expect(subject[:links][:self][:href]).to eq("#{link_prefix}/v3/users/#{user.guid}")
+        end
       end
 
       context 'when the user is a UAA client' do
@@ -36,6 +40,7 @@ module VCAP::CloudController::Presenters::V3
           expect(subject[:updated_at]).to be_a(Time)
           expect(subject[:username]).to be_nil
           expect(subject[:presentation_name]).to eq(user.guid)
+          expect(subject[:origin]).to be_nil
           expect(subject[:links][:self][:href]).to eq("#{link_prefix}/v3/users/#{user.guid}")
         end
       end

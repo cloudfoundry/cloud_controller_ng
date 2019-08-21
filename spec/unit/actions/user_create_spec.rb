@@ -7,6 +7,7 @@ module VCAP::CloudController
     subject { UserCreate.new }
     let(:guid) { 'some-user-guid' }
     let(:username) { 'some-username' }
+    let(:origin) { 'some-origin' }
     let(:uaa_client) { instance_double(VCAP::CloudController::UaaClient) }
 
     describe '#create' do
@@ -31,7 +32,7 @@ module VCAP::CloudController
 
           before do
             allow(VCAP::CloudController::UaaClient).to receive(:new).and_return(uaa_client)
-            allow(uaa_client).to receive(:usernames_for_ids).and_return({ guid => username })
+            allow(uaa_client).to receive(:users_for_ids).and_return({ guid => { 'origin' => origin, 'username' => username } })
           end
 
           it 'creates a user' do
@@ -42,6 +43,7 @@ module VCAP::CloudController
 
             expect(created_user.guid).to eq guid
             expect(created_user.username).to eq username
+            expect(created_user.origin).to eq origin
           end
         end
 
@@ -54,7 +56,7 @@ module VCAP::CloudController
 
           before do
             allow(VCAP::CloudController::UaaClient).to receive(:new).and_return(uaa_client)
-            allow(uaa_client).to receive(:usernames_for_ids).and_return({})
+            allow(uaa_client).to receive(:users_for_ids).and_return({})
           end
 
           it 'creates a user' do
@@ -65,6 +67,7 @@ module VCAP::CloudController
 
             expect(created_user.guid).to eq client_id
             expect(created_user.username).to eq nil
+            expect(created_user.origin).to eq nil
           end
         end
       end

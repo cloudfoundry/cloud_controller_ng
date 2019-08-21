@@ -1,7 +1,7 @@
 module VCAP::CloudController
   class User < Sequel::Model
     class InvalidOrganizationRelation < CloudController::Errors::InvalidRelation; end
-    attr_accessor :username, :organization_roles, :space_roles
+    attr_accessor :username, :organization_roles, :space_roles, :origin
 
     no_auto_guid
 
@@ -86,6 +86,7 @@ module VCAP::CloudController
       attrs += [:username] if username
       attrs += [:organization_roles] if organization_roles
       attrs += [:space_roles] if space_roles
+      attrs += [:origin] if origin
       attrs
     end
 
