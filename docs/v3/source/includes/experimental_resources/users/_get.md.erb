@@ -1,0 +1,31 @@
+### Get a user
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/users/[guid]" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :single_user %>
+```
+
+#### Definition
+`GET /v3/users/:guid`
+
+#### Permitted roles
+ |
+--- | ---
+Admin |
+Admin Read-Only |

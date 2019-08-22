@@ -258,6 +258,7 @@ includes:
   - experimental_resources/users/object
   - experimental_resources/users/create
   - experimental_resources/users/list
+  - experimental_resources/users/get
 
 search: true
 ---
