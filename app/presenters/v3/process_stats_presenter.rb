@@ -74,26 +74,15 @@ module VCAP::CloudController
           return [] if net_info_ports.nil?
 
           net_info_ports.map do |ports|
-            instance_ports = {
-              external: ports[:host_port],
-              internal: ports[:container_port]
-            }
-
             external_tls_proxy_port_raw = HashUtils.dig(ports, :host_tls_proxy_port)
-            instance_ports[:external_tls_proxy_port] = if external_tls_proxy_port_raw.nil? || external_tls_proxy_port_raw == 0
-                                                         nil
-                                                       else
-                                                         external_tls_proxy_port_raw
-                                                       end
-
             internal_tls_proxy_port_raw = HashUtils.dig(ports, :container_tls_proxy_port)
-            instance_ports[:internal_tls_proxy_port] = if internal_tls_proxy_port_raw.nil? || internal_tls_proxy_port_raw == 0
-                                                         nil
-                                                       else
-                                                         internal_tls_proxy_port_raw
-                                                       end
 
-            instance_ports
+            {
+              external: ports[:host_port],
+              internal: ports[:container_port],
+              external_tls_proxy_port: external_tls_proxy_port_raw.to_i == 0 ? nil : external_tls_proxy_port_raw,
+              internal_tls_proxy_port: internal_tls_proxy_port_raw.to_i == 0 ? nil : internal_tls_proxy_port_raw
+            }
           end
         end
       end
