@@ -59,9 +59,22 @@ class ServiceBrokersController < ApplicationController
     unprocessable!(e.message)
   end
 
-  def delete
-    raise "real,ly unique mesage with stypos"
-    #render status: :ok, json: {}
+  def destroy
+    service_broker = VCAP::CloudController::ServiceBroker.find(guid: hashed_params[:guid])
+    broker_not_found! unless service_broker
+
+    if service_broker.space.nil?
+      broker_not_found! unless permission_queryer.can_read_globally?
+      unauthorized! unless permission_queryer.can_write_global_service_broker?
+    else
+      broker_not_found! unless permission_queryer.can_read_from_space?(service_broker.space.guid, service_broker.space.organization.guid)
+      unauthorized! unless permission_queryer.can_write_space_scoped_service_broker?(service_broker.space.guid)
+    end
+
+    service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository.new(user_audit_info)
+    service_broker_remover = VCAP::Services::ServiceBrokers::ServiceBrokerRemover.new(service_event_repository)
+
+    service_broker_remover.remove(service_broker)
   end
 
   private

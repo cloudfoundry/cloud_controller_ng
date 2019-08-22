@@ -1,39 +1,53 @@
 require 'spec_helper'
+require 'cloud_controller'
+require 'services'
 
 RSpec.describe 'V3 service brokers' do
-  def catalog
+  let(:global_broker_id) { 'global-service-id' }
+  let(:space_broker_id) { 'space-service-id' }
+
+  def catalog(id=global_broker_id)
     {
-        'services' => [
+      'services' => [
+        {
+          'id' => "#{id}-1",
+          'name' => 'service_name-1',
+          'description' => 'some description 1',
+          'bindable' => true,
+          'plans' => [
             {
-                'id' => 'service_id-1',
-                'name' => 'service_name-1',
-                'description' => 'some description 1',
-                'bindable' => true,
-                'plans' => [
-                    {
-                        'id' => 'fake_plan_id-1',
-                        'name' => 'plan_name-1',
-                        'description' => 'fake_plan_description 1',
-                        'schemas' => nil
-                    }
-                ]
-            },
+                'id' => 'fake_plan_id-1',
+                'name' => 'plan_name-1',
+                'description' => 'fake_plan_description 1',
+                'schemas' => nil
+            }
+          ],
+          'dashboard_client' => dashboard_client(id)
+        },
+        {
+          'id' => "#{id}-2",
+          'name' => 'route_volume_service_name-2',
+          'requires' => ['volume_mount', 'route_forwarding'],
+          'description' => 'some description 2',
+          'bindable' => true,
+          'plans' => [
             {
-                'id' => 'service_id-2',
-                'name' => 'route_volume_service_name-2',
-                'requires' => ['volume_mount', 'route_forwarding'],
-                'description' => 'some description 2',
-                'bindable' => true,
-                'plans' => [
-                    {
-                        'id' => 'fake_plan_id-2',
-                        'name' => 'plan_name-2',
-                        'description' => 'fake_plan_description 2',
-                        'schemas' => nil
-                    }
-                ]
-            },
-        ]
+                'id' => 'fake_plan_id-2',
+                'name' => 'plan_name-2',
+                'description' => 'fake_plan_description 2',
+                'schemas' => nil
+            }
+          ]
+        },
+      ]
+    }
+  end
+
+  def dashboard_client(id=global_broker_id)
+    {
+      'id' => "#{id}-uaa-id",
+      'secret' => 'my-dashboard-secret',
+      'redirect_uri' => 'http://example.org'
     }
   end
 
@@ -70,9 +84,58 @@ RSpec.describe 'V3 service brokers' do
     headers_for(user)
   }
 
+  let(:global_broker_request_body) do
+    {
+      name: 'broker name',
+      url: 'http://example.org/broker-url',
+      credentials: {
+        type: 'basic',
+        data: {
+          username: 'admin',
+          password: 'welcome',
+        }
+      }
+    }
+  end
+
+  let(:space_scoped_broker_request_body) do
+    {
+      name: 'space-scoped broker name',
+      url: 'http://example.org/space-broker-url',
+      credentials: {
+        type: 'basic',
+        data: {
+          username: 'admin',
+          password: 'welcome',
+        },
+      },
+      relationships: {
+        space: {
+          data: {
+            guid: space.guid
+          },
+        },
+      },
+    }
+  end
+
   let(:parsed_body) {
     JSON.parse(last_response.body)
   }
+
+  before do
+    stub_request(:get, 'http://example.org/broker-url/v2/catalog').
+      to_return(status: 200, body: catalog.to_json, headers: {})
+    stub_request(:get, 'http://example.org/space-broker-url/v2/catalog').
+      to_return(status: 200, body: catalog(space_broker_id).to_json, headers: {})
+
+    token = { token_type: 'Bearer', access_token: 'my-favourite-access-token' }
+    stub_request(:post, 'https://uaa.service.cf.internal/oauth/token').
+      to_return(status: 200, body: token.to_json, headers: { 'Content-Type' => 'application/json' })
+
+    stub_uaa_for(global_broker_id)
+    stub_uaa_for(space_broker_id)
+  end
 
   describe 'GET /v3/service_brokers' do
     context 'when there are no service brokers' do
@@ -221,7 +284,7 @@ RSpec.describe 'V3 service brokers' do
       list.each do |expected_broker|
         actual_broker = brokers.find { |b| b.fetch('name') == expected_broker.name }
         expect(actual_broker).to_not be_nil, "Could not find broker with name '#{expected_broker.name}'"
-        expect_broker_to_match(expected: expected_broker, actual: actual_broker)
+        expect(actual_broker).to match_broker(expected_broker)
       end
     end
   end
@@ -229,7 +292,7 @@ RSpec.describe 'V3 service brokers' do
   describe 'GET /v3/service_brokers/:guid' do
     context 'when the service broker does not exist' do
       it 'return with 404 Not Found' do
-        expect_broker_not_found('does-not-exist', with: admin_headers)
+        is_expected.to_not find_broker(broker_guid: 'does-not-exist', with: admin_headers)
       end
     end
 
@@ -246,11 +309,11 @@ RSpec.describe 'V3 service brokers' do
       end
 
       it 'returns 404 Not Found for space developer' do
-        expect_broker_not_found(global_service_broker_1.guid, with: space_developer_headers)
+        is_expected.to_not find_broker(broker_guid: global_service_broker_1.guid, with: space_developer_headers)
       end
 
       it 'returns 404 Not Found for org/space auditor/manager' do
-        expect_broker_not_found(global_service_broker_2.guid, with: org_space_manager_headers)
+        is_expected.to_not find_broker(broker_guid: global_service_broker_2.guid, with: org_space_manager_headers)
       end
     end
 
@@ -270,78 +333,28 @@ RSpec.describe 'V3 service brokers' do
       end
 
       it 'returns 404 Not Found for space developer in another space' do
-        expect_broker_not_found(space_scoped_service_broker.guid, with: space_developer_alternate_space_headers)
+        is_expected.to_not find_broker(broker_guid: space_scoped_service_broker.guid, with: space_developer_alternate_space_headers)
       end
 
       it 'returns 404 Not Found for org/space auditor/manager' do
-        expect_broker_not_found(space_scoped_service_broker.guid, with: org_space_manager_headers)
+        is_expected.to_not find_broker(broker_guid: space_scoped_service_broker.guid, with: org_space_manager_headers)
       end
-    end
-
-    def expect_broker_not_found(guid, with:)
-      get("/v3/service_brokers/#{guid}", {}, with)
-      expect(last_response.status).to eq(404)
     end
 
     def expect_broker(expected_broker, with:)
       get("/v3/service_brokers/#{expected_broker.guid}", {}, with)
       expect(last_response.status).to eq(200)
-      expect_broker_to_match(expected: expected_broker, actual: parsed_body)
+      expect(parsed_body).to match_broker(expected_broker)
     end
   end
 
   describe 'POST /v3/service_brokers' do
-    let(:global_broker_request_body) do
-      {
-          name: 'broker name',
-          url: 'http://example.org/broker-url',
-          credentials: {
-              type: 'basic',
-              data: {
-                  username: 'admin',
-                  password: 'welcome',
-              }
-          }
-      }
-    end
-
-    let(:space_scoped_broker_request_body) do
-      {
-          name: 'space-scoped broker name',
-          url: 'http://example.org/broker-url',
-          credentials: {
-              type: 'basic',
-              data: {
-                  username: 'admin',
-                  password: 'welcome',
-              },
-          },
-          relationships: {
-              space: {
-                  data: {
-                      guid: space.guid
-                  },
-              },
-          },
-      }
-    end
-
-    before do
-      stub_request(:get, 'http://example.org/broker-url/v2/catalog').
-          to_return(status: 200, body: catalog.to_json, headers: {})
-    end
-
-    def create_broker(broker_body, with:)
-      @count_before_creation = VCAP::CloudController::ServiceBroker.count
-      post('/v3/service_brokers', broker_body.to_json, with)
-    end
-
     context 'as admin' do
       context 'when route and volume mount services are enabled' do
         before do
           TestConfig.config[:route_services_enabled] = true
           TestConfig.config[:volume_services_enabled] = true
-          create_broker(global_broker_request_body, with: admin_headers)
+          create_broker_successfully(global_broker_request_body, with: admin_headers)
         end
 
         it 'returns 201 Created' do
@@ -355,12 +368,13 @@ RSpec.describe 'V3 service brokers' do
 
         it 'reports service events' do
           # FIXME: there is an event missing for registering/creating the broker itself by the respective user
-          expect_events([
-                            {type: 'audit.service.create', actor: 'broker name'},
-                            {type: 'audit.service.create', actor: 'broker name'},
-                            {type: 'audit.service_plan.create', actor: 'broker name'},
-                            {type: 'audit.service_plan.create', actor: 'broker name'},
-                        ])
+          expect([
+            { type: 'audit.service.create', actor: 'broker name' },
+            { type: 'audit.service.create', actor: 'broker name' },
+            { type: 'audit.service_dashboard_client.create', actor: 'broker name' },
+            { type: 'audit.service_plan.create', actor: 'broker name' },
+            { type: 'audit.service_plan.create', actor: 'broker name' },
+          ]).to be_reported_as_events
         end
       end
 
@@ -368,7 +382,7 @@ RSpec.describe 'V3 service brokers' do
         before do
           TestConfig.config[:route_services_enabled] = false
           TestConfig.config[:volume_services_enabled] = false
-          create_broker(global_broker_request_body, with: admin_headers)
+          create_broker_successfully(global_broker_request_body, with: admin_headers)
         end
 
         it 'returns 201 Created' do
@@ -382,19 +396,25 @@ RSpec.describe 'V3 service brokers' do
 
         it 'returns warning in the header' do
           expect(last_response_warnings).
-              to eq([
-                        'Service route_volume_service_name-2 is declared to be a route service but support for route services is disabled.' \
+            to eq([
+              'Service route_volume_service_name-2 is declared to be a route service but support for route services is disabled.' \
 ' Users will be prevented from binding instances of this service with routes.',
-                        'Service route_volume_service_name-2 is declared to be a volume mount service but support for volume mount services is disabled.' \
+              'Service route_volume_service_name-2 is declared to be a volume mount service but support for volume mount services is disabled.' \
 ' Users will be prevented from binding instances of this service with apps.'
-                    ])
+            ])
+        end
+
+        let(:uaa_uri) { VCAP::CloudController::Config.config.get(:uaa, :internal_url) }
+        let(:tx_url) { uaa_uri + '/oauth/clients/tx/modify' }
+        it 'creates some UAA stuff' do
+          expect(a_request(:post, tx_url)).to have_been_made
         end
       end
 
       context 'when user provides a malformed request' do
         let(:malformed_body) do
           {
-              whatever: 'oopsie'
+            whatever: 'oopsie'
           }
         end
 
@@ -422,7 +442,7 @@ RSpec.describe 'V3 service brokers' do
       context 'when fetching broker catalog fails' do
         before do
           stub_request(:get, 'http://example.org/broker-url/v2/catalog').
-              to_return(status: 418, body: {}.to_json)
+            to_return(status: 418, body: {}.to_json)
           create_broker(global_broker_request_body, with: admin_headers)
         end
 
@@ -438,7 +458,7 @@ RSpec.describe 'V3 service brokers' do
         create_broker(global_broker_request_body, with: space_developer_headers)
 
         expect_no_broker_created
-        expect_error(status: 403, error: 'CF-NotAuthorized', description: 'You are not authorized to perform the requested action')
+        expect_unauthorized
       end
 
       describe 'registering a space scoped service broker' do
@@ -457,12 +477,13 @@ RSpec.describe 'V3 service brokers' do
 
         it 'reports service events' do
           # FIXME: there is an event missing for registering/creating the broker itself by the respective user
-          expect_events([
-                            {type: 'audit.service.create', actor: 'space-scoped broker name'},
-                            {type: 'audit.service.create', actor: 'space-scoped broker name'},
-                            {type: 'audit.service_plan.create', actor: 'space-scoped broker name'},
-                            {type: 'audit.service_plan.create', actor: 'space-scoped broker name'},
-                        ])
+          expect([
+            { type: 'audit.service.create', actor: 'space-scoped broker name' },
+            { type: 'audit.service.create', actor: 'space-scoped broker name' },
+            { type: 'audit.service_dashboard_client.create', actor: 'space-scoped broker name' },
+            { type: 'audit.service_plan.create', actor: 'space-scoped broker name' },
+            { type: 'audit.service_plan.create', actor: 'space-scoped broker name' },
+          ]).to be_reported_as_events
         end
       end
     end
@@ -472,14 +493,14 @@ RSpec.describe 'V3 service brokers' do
         create_broker(global_broker_request_body, with: org_space_manager_headers)
 
         expect_no_broker_created
-        expect_error(status: 403, error: 'CF-NotAuthorized', description: 'You are not authorized to perform the requested action')
+        expect_unauthorized
       end
 
       it 'returns 403 when registering a space-scoped broker' do
         create_broker(space_scoped_broker_request_body, with: org_space_manager_headers)
 
         expect_no_broker_created
-        expect_error(status: 403, error: 'CF-NotAuthorized', description: 'You are not authorized to perform the requested action')
+        expect_unauthorized
       end
     end
 
@@ -489,11 +510,11 @@ RSpec.describe 'V3 service brokers' do
       service_broker = VCAP::CloudController::ServiceBroker.last
 
       expect(service_broker).to include(
-                                    'name' => expected_broker[:name],
-                                    'broker_url' => expected_broker[:url],
-                                    'auth_username' => expected_broker.dig(:credentials, :data, :username),
-                                    'space_guid' => expected_broker.dig(:relationships, :space, :data, :guid),
-                                )
+        'name' => expected_broker[:name],
+        'broker_url' => expected_broker[:url],
+        'auth_username' => expected_broker.dig(:credentials, :data, :username),
+        'space_guid' => expected_broker.dig(:relationships, :space, :data, :guid),
+      )
       # password not exported in to_hash
       expect(service_broker.auth_password).to eq(expected_broker[:credentials][:data][:password])
     end
@@ -510,82 +531,159 @@ RSpec.describe 'V3 service brokers' do
       end
     end
 
-    def expect_events(expected_events)
-      events = VCAP::CloudController::Event.all
-      expect(events.map { |e| {type: e.type, actor: e.actor_name} }).to eq(expected_events)
-    end
-
     def expect_no_broker_created
       expect(VCAP::CloudController::ServiceBroker.count).to eq(@count_before_creation)
-    end
-
-    def expect_error(status:, error: '', description: '')
-      expect(last_response).to have_status_code(status)
-      expect(last_response.body).to include(error)
-      expect(last_response.body).to include(description)
     end
   end
 
   describe 'DELETE /v3/service_brokers/:guid' do
-    let!(:global_service_broker) { VCAP::CloudController::ServiceBroker.make }
-    let!(:space_scoped_service_broker) { VCAP::CloudController::ServiceBroker.make(space: space) }
+    let!(:global_broker) {
+      create_broker_successfully(global_broker_request_body, with: admin_headers)
+    }
+    let!(:global_broker_services) { VCAP::CloudController::Service.where(service_broker_id: global_broker.id) }
+    let!(:global_broker_plans) { VCAP::CloudController::ServicePlan.where(service_id: global_broker_services.map(&:id)) }
+
+    let!(:space_scoped_service_broker) {
+      create_broker_successfully(space_scoped_broker_request_body, with: admin_headers)
+    }
+    let!(:space_broker_services) { VCAP::CloudController::Service.where(service_broker_id: space_scoped_service_broker.id) }
+    let!(:space_broker_plans) { VCAP::CloudController::ServicePlan.where(service_id: space_broker_services.map(&:id)) }
 
     context 'as an admin user' do
-      # what about space scoped?
-      # what about when there are SIs?
       context 'when the broker does not exist' do
-        xit 'responds with 404 Not Found' do
-          delete '/v3/service_brokers/guid-that-does-not-exist', {}, admin_headers
-          expect(last_response).to have_status_code(404)
+        it 'responds with 404 Not Found' do
+          delete_broker('guid-that-does-not-exist', with: admin_headers)
+          expect_error(status: 404, error: 'CF-ResourceNotFound', description: 'Service broker not found')
         end
       end
 
-      context 'there are no service instances' do
-        xit 'returns 204 No Content' do
-        end
+      context 'when there are no service instances' do
+        let(:broker) { global_broker }
+        let(:broker_services) { global_broker_services }
+        let(:broker_plans) { global_broker_plans }
+        let(:actor) { 'broker name' }
+        let(:user_headers) { admin_headers }
+        let(:broker_id) { global_broker_id }
+
+        it_behaves_like 'a successful broker delete'
       end
     end
 
-    context 'as an admin-read-only user' do
+    context 'as an admin-read-only/global auditor user' do
       it 'fails authorization' do
-        delete("/v3/service_brokers/#{global_service_broker.guid}", {}, admin_read_only_headers)
+        delete_broker(global_broker.guid, with: admin_read_only_headers)
+        expect_unauthorized
 
-        expect(last_response).to have_status_code(403)
+        delete_broker(global_broker.guid, with: global_auditor_headers)
+        expect_unauthorized
+      end
+    end
+
+    context 'as a space developer' do
+      context 'with access to the broker' do
+        context 'when the broker has no service instances' do
+          let(:broker) { space_scoped_service_broker }
+          let(:broker_services) { space_broker_services }
+          let(:broker_plans) { space_broker_plans }
+          let(:actor) { 'space-scoped broker name' }
+          let(:user_headers) { space_developer_headers }
+          let(:broker_id) { space_broker_id }
+
+          it_behaves_like 'a successful broker delete'
+        end
+      end
+
+      context 'without access to the broker' do
+        it 'fails authorization' do
+          delete_broker(space_scoped_service_broker.guid, with: space_developer_alternate_space_headers)
+          expect(last_response.status).to eq(404)
+        end
       end
     end
 
     context 'as an org/space auditor/manager/billing manager user' do
-      xit 'responds with 404 Not Found' do
-        delete "/v3/service_brokers/#{global_service_broker.guid}", {}, org_space_manager_headers
-        expect(last_response).to have_status_code(404)
-
-        delete "/v3/service_brokers/#{space_scoped_service_broker.guid}", {}, org_space_manager_headers
+      it 'responds with 404 Not Found for global brokers' do
+        delete "/v3/service_brokers/#{global_broker.guid}", {}, org_space_manager_headers
         expect(last_response).to have_status_code(404)
       end
+
+      it 'responds with 403 Not Authorized for space-scoped broker' do
+        delete "/v3/service_brokers/#{space_scoped_service_broker.guid}", {}, org_space_manager_headers
+        expect(last_response).to have_status_code(403)
+      end
+    end
+
+    def delete_broker(guid, with:)
+      delete "/v3/service_brokers/#{guid}", {}, with
     end
   end
 
-  def expect_broker_to_match(actual:, expected:)
-    expect(actual['url']).to eq(expected.broker_url)
-    expect(actual['created_at']).to eq(expected.created_at.iso8601)
-    expect(actual['updated_at']).to eq(expected.updated_at.iso8601)
-    expect(actual).to have_key('links')
-    expect(actual['links']).to have_key('self')
-    expect(actual['links']['self']['href']).to include("/v3/service_brokers/#{expected.guid}")
+  def create_broker(broker_body, with:)
+    @count_before_creation = VCAP::CloudController::ServiceBroker.count
+    post('/v3/service_brokers', broker_body.to_json, with)
+  end
 
-    if expected.space.nil?
-      expect(actual['relationships'].length).to eq(0)
-      expect(actual['links']).not_to have_key('space')
-    else
-      expect(actual['relationships'].length).to eq(1)
-      expect(actual['relationships']['space']).to have_key('data')
-      expect(actual['relationships']['space']['data']['guid']).to eq(expected.space.guid)
-      expect(actual['links']).to have_key('space')
-      expect(actual['links']['space']['href']).to include("/v3/spaces/#{expected.space.guid}")
-    end
+  def create_broker_successfully(broker_body, with:)
+    create_broker(broker_body, with: with)
+    expect(last_response).to have_status_code(201)
+    VCAP::CloudController::ServiceBroker.last
   end
 
   def last_response_warnings
     last_response.headers['X-Cf-Warnings'].split(',').map { |w| CGI.unescape(w) }
+  end
+
+  def expect_error(status:, error: '', description: '')
+    expect(last_response).to have_status_code(status)
+    expect(last_response.body).to include(error)
+    expect(last_response.body).to include(description)
+  end
+
+  def expect_unauthorized
+    expect_error(
+      status: 403,
+      error: 'CF-NotAuthorized',
+      description: 'You are not authorized to perform the requested action'
+    )
+  end
+
+  def stub_uaa_for(broker_id)
+    stub_request(:get, "https://uaa.service.cf.internal/oauth/clients/#{broker_id}-uaa-id").
+      to_return(
+        { status: 404, body: {}.to_json, headers: { 'Content-Type' => 'application/json' } },
+            { status: 200, body: { client_id: dashboard_client(broker_id)['id'] }.to_json, headers: { 'Content-Type' => 'application/json' } }
+        )
+
+    stub_request(:post, 'https://uaa.service.cf.internal/oauth/clients/tx/modify').
+      with(
+        body: [
+          {
+                "client_id": "#{broker_id}-uaa-id",
+                "client_secret": 'my-dashboard-secret',
+                "redirect_uri": 'http://example.org',
+                "scope": %w(openid cloud_controller_service_permissions.read),
+                "authorities": ['uaa.resource'],
+                "authorized_grant_types": ['authorization_code'],
+                "action": 'add'
+            }
+        ].to_json
+        ).
+      to_return(status: 201, body: {}.to_json, headers: { 'Content-Type' => 'application/json' })
+
+    stub_request(:post, 'https://uaa.service.cf.internal/oauth/clients/tx/modify').
+      with(
+        body: [
+          {
+                "client_id": "#{broker_id}-uaa-id",
+                "client_secret": nil,
+                "redirect_uri": nil,
+                "scope": %w(openid cloud_controller_service_permissions.read),
+                "authorities": ['uaa.resource'],
+                "authorized_grant_types": ['authorization_code'],
+                "action": 'delete'
+            }
+        ].to_json
+        ).
+      to_return(status: 200, body: {}.to_json, headers: { 'Content-Type' => 'application/json' })
   end
 end
