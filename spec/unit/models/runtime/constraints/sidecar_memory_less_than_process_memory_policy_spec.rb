@@ -44,5 +44,13 @@ RSpec.describe 'max instance memory policies' do
         expect(validator.valid?).to eq true
       end
     end
+
+    context 'when newly added sidecar process memory is nil' do
+      let(:validator) { SidecarMemoryLessThanProcessMemoryPolicy.new(process, nil) }
+
+      it 'does not error' do
+        expect(validator.valid?).to eq true
+      end
+    end
   end
 end
