@@ -1,5 +1,6 @@
 require 'cloud_controller/diego/lifecycles/app_lifecycle_provider'
 require 'cloud_controller/paging/pagination_options'
+require 'cloud_controller/telemetry_logger'
 require 'actions/app_create'
 require 'actions/app_update'
 require 'actions/app_patch_environment_variables'
@@ -92,6 +93,13 @@ class AppsV3Controller < ApplicationController
     unprocessable!(lifecycle.errors.full_messages) unless lifecycle.valid?
 
     app = AppCreate.new(user_audit_info).create(message, lifecycle)
+    TelemetryLogger.emit(
+      'create-app',
+      {
+        'app-id' => { 'value' => app.guid },
+        'user-id' => { 'value' => current_user.guid }
+      }
+    )
 
     render status: :created, json: Presenters::V3::AppPresenter.new(app)
   rescue AppCreate::InvalidApp => e

@@ -130,6 +130,21 @@ RSpec.describe 'Apps' do
       expect(VCAP::CloudController::ProcessModel.find(guid: app_guid)).to_not be_nil
     end
 
+    context 'telemetry' do
+      it 'should log the required fields when the app is created' do
+        post '/v3/apps', create_request.to_json, user_header
+
+        expect(last_response.status).to eq(201)
+        parsed_response = MultiJson.load(last_response.body)
+        app_guid = parsed_response['guid']
+
+        expect(VCAP::CloudController::TelemetryLogger).to have_received(:emit).with('create-app', {
+          'app-id' => { 'value' => app_guid },
+          'user-id' => { 'value' => user.guid }
+        })
+      end
+    end
+
     describe 'Docker app' do
       before do
         VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: true, error_message: nil)
