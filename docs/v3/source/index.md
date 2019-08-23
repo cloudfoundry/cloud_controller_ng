@@ -5,9 +5,6 @@ language_tabs:
   - shell: curl
 
 includes:
- # snippets have to be at the top to be used in other files
-  - snippets/query_params
-  - snippets/object_attributes
   - api_resources/app_features
   - api_resources/app_ssh_enabled
   - api_resources/apps

@@ -64,16 +64,6 @@ Annotation values must adhere to the following restrictions:
 
 ### Labels and selectors
 
-Labels are user-specified key/value pairs that are attached to [API Resources](#api-resource).
-They are queryable, identifying attributes of a resource, but they do not affect the operation of CloudFoundry.
-
-For example, an app may be assigned a label with key `sensitive` and possible values `true` or `false`.
-
-Users could then find all sensitive apps with a selector for `sensitive=true`, resulting in a response containing
-only apps having the label key `sensitive` with a label value of `false`.
-
-#### Labels
-
 ```
 Example Resource with Labels
 ```
@@ -101,6 +91,16 @@ Example Resource with Labels
   }
 }
 ```
+
+Labels are user-specified key/value pairs that are attached to [API Resources](#api-resource).
+They are queryable, identifying attributes of a resource, but they do not affect the operation of CloudFoundry.
+
+For example, an app may be assigned a label with key `sensitive` and possible values `true` or `false`.
+
+Users could then find all sensitive apps with a selector for `sensitive=true`, resulting in a response containing
+only apps having the label key `sensitive` with a label value of `false`.
+
+#### Labels
 
 Labels allow users to apply identifying attributes to resources that are meaningful to the user, but not the CloudFoundry system.
 
@@ -172,17 +172,6 @@ See [the metadata documentation](https://docs.cloudfoundry.org/adminguide/metada
 
 ### Updating labels and annotations
 
-Labels and annotations can be updated by using the PATCH endpoint for their resource.
-For example, to update labels or annotations on an app, use the [update an app](#update-an-app) endpoint.
-When patching metadata, CAPI endpoints do a deep merge, only updating labels or annotations that are specified in the request.
-
-Labels and annotations follow the same rules for patching and must be wrapped in the metadata object inside the request body
-
-* To create, include the new key with a value
-* To change, include the existing key with a new value
-* To delete, include the existing key with a `null` value
-* To remain unchanged, do not include the existing key.
-
 ```
 Example Initial Metadata
 ```
@@ -239,4 +228,15 @@ Example Final Metadata
   }
 }
 ```
+
+Labels and annotations can be updated by using the PATCH endpoint for their resource.
+For example, to update labels or annotations on an app, use the [update an app](#update-an-app) endpoint.
+When patching metadata, CAPI endpoints do a deep merge, only updating labels or annotations that are specified in the request.
+
+Labels and annotations follow the same rules for patching and must be wrapped in the metadata object inside the request body
+
+* To create, include the new key with a value
+* To change, include the existing key with a new value
+* To delete, include the existing key with a `null` value
+* To remain unchanged, do not include the existing key.
 
