@@ -15464,12 +15464,12 @@ applications without incurring downtime. This is different from the traditional 
 <tr>
 <td><strong>status.value</strong></td>
 <td><em>string</em></td>
-<td>The current status of the deployment. Valid values are <code class="prettyprint">DEPLOYING</code> (still in-progress) and <code class="prettyprint">FINALIZED</code> (finished, either successfully or not).</td>
+<td>The current status of the deployment. Valid values are <code class="prettyprint">DEPLOYING</code>, <code class="prettyprint">CANCELING</code>, and <code class="prettyprint">FINALIZED</code> (meaning finished, either successfully or not).</td>
 </tr>
 <tr>
 <td><strong>status.reason</strong></td>
 <td><em>string</em> or <code class="prettyprint">null</code></td>
-<td>The reason for the current status of the deployment. Valid values are <code class="prettyprint">DEPLOYED</code> (completed successfully), <code class="prettyprint">CANCELED</code> (canceled before completion), <code class="prettyprint">SUPERSEDED</code> (another deployment created for app before completion), <code class="prettyprint">DEGENERATE</code> (the deployment was created incorrectly by the system), or <code class="prettyprint">null</code> (still in-progress).</td>
+<td>The reason for the current status of the deployment. Valid values are <code class="prettyprint">DEPLOYED</code>, <code class="prettyprint">CANCELED</code>, <code class="prettyprint">SUPERSEDED</code> (another deployment created for app before completion), <code class="prettyprint">DEGENERATE</code> (the deployment was created incorrectly by the system), or <code class="prettyprint">null</code> (still in-progress).</td>
 </tr>
 <tr>
 <td><strong>guid</strong></td>
