@@ -1,10 +1,10 @@
 require 'nokogiri'
 
 module DocsHelpers
-  def get_version
-    version = File.exists?('source/versionfile') ? File.read('source/versionfile') : 'local'
+  def current_version
+    version = File.exist?('source/versionfile') ? File.read('source/versionfile') : 'local'
     if version =~ /release-candidate/
-      "Release Candidate"
+      'Release Candidate'
     else
       "Version #{version}"
     end
@@ -36,7 +36,7 @@ module DocsHelpers
       end
     end
 
-    output = ""
+    output = ''
 
     headings.each do |h1|
       output += "<ul class='toc-header'>"
@@ -55,15 +55,15 @@ module DocsHelpers
               output += "<li class='toc-item'><a class='toc-link' href='\##{h3[:id]}'>#{h3[:text]}</a></li>"
             end
 
-            output += "</ul>"
+            output += '</ul>'
           end
         end
       end
 
-      output += "</ul>"
+      output += '</ul>'
     end
 
-    output += "</ul>"
+    output += '</ul>'
 
     output
   end

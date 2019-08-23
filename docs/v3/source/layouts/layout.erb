@@ -15,9 +15,9 @@ under the License.
 %>
 
 <%
-html = current_page.data.includes
-  .map { |include| partial "includes/#{include}" }
-  .join ""
+html = if current_page.data.includes
+         current_page.data.includes.map { |include| partial "includes/#{include}" }.join ""
+       end
 
 table_of_contents = extract_table_of_contents(html)
 %>
@@ -50,7 +50,7 @@ table_of_contents = extract_table_of_contents(html)
       <%= image_tag "logo.png" %>
 
       <div class="dropdown version-dropdown">
-        <button type="button" id="version-dropdown-button" class="version-dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><%= get_version %><span class="caret">&#x25BE;</span></button>
+        <button type="button" id="version-dropdown-button" class="version-dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><%= current_version %><span class="caret">&#x25BE;</span></button>
 
         <ul id="version-dropdown-menu" class="dropdown-menu" role="menu" aria-labelledby="version-dropdown-button">
           <div class="dropdown-content">
