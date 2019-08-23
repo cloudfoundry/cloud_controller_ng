@@ -119,6 +119,24 @@ RSpec.describe 'Builds' do
         'package_guid' => package.guid,
       })
     end
+
+    context 'telemetry' do
+      it 'should log the required fields when the build is created' do
+        post '/v3/builds', create_request.merge(metadata: metadata).to_json, developer_headers
+
+        expect(last_response.status).to eq(201)
+        parsed_response = MultiJson.load(last_response.body)
+        build_guid = parsed_response['guid']
+
+        expect(VCAP::CloudController::TelemetryLogger).to have_received(:emit).with('create-build', {
+          'lifecycle' => { 'value' => 'buildpack', 'raw' => true },
+          'buildpacks' => { 'value' => ['http://github.com/myorg/awesome-buildpack'], 'raw' => true },
+          'stack' => { 'value' => 'cflinuxfs3', 'raw' => true },
+          'app-id' => { 'value' => build_guid },
+          'user-id' => { 'value' => developer.guid }
+        })
+      end
+    end
   end
 
   describe 'GET /v3/builds' do
