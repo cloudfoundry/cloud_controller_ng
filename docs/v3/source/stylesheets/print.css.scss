@@ -3,7 +3,6 @@
 @import 'compass';
 @import 'variables';
 @import 'icon-font';
-@import 'overrides';
 
 /*
 Copyright 2008-2013 Concur Technologies, Inc.
@@ -29,7 +28,7 @@ body {
   @extend %default-font;
 }
 
-.tocify, .toc-footer, .lang-selector, .search, #nav-button {
+.tocify, .toc-footer, .search, #nav-button {
   display: none;
 }
 

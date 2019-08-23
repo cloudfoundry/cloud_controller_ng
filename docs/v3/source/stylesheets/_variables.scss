@@ -28,14 +28,9 @@ $lexed-languages: ("json", "java", "js", "http", "shell", "ruby", "golang", "yam
 
 // BACKGROUND COLORS
 ////////////////////
-$nav-bg: $gray5;
 $code-annotation-bg: #1c1c1c;
 $nav-subitem-bg: $gray5;
 $nav-active-bg: $gray5;
-$lang-select-border: #000;
-$lang-select-bg: $lang-selector-background-color;
-$lang-select-active-bg: $code-background-color; // feel free to change this to blue or something
-$lang-select-pressed-bg: #111; // color of language tab bg when mouse is pressed
 $main-bg: #fff;
 $aside-notice-bg: #8fbcd4;
 $aside-warning-bg: #c97a7e;
@@ -60,7 +55,7 @@ $nav-width: 230px; // width of the navbar
 $examples-width: 50%; // portion of the screen taken up by code examples
 $logo-margin: 20px; // margin between nav items and logo, ignored if search is active
 $main-padding: 28px; // padding to left and right of content & examples
-$nav-padding: 15px; // padding to left and right of navbar
+$nav-padding: 16px; // padding to left and right of navbar
 $nav-v-padding: 10px; // padding used vertically around search boxes and results
 $nav-indent: 10px; // extra padding for ToC subitems
 $code-annotation-padding: 13px; // padding inside code annotations
@@ -75,7 +70,7 @@ $phone-width: $tablet-width - $nav-width; // min width before reverting to mobil
 // FONTS
 ////////////////////
 %default-font {
-  font-family: $font-primary, "Helvetica Neue", Helvetica, Arial, "Microsoft Yahei", "微软雅黑", STXihei, "华文细黑", sans-serif;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Avenir Next", "Avenir", "Segoe UI", "Lucida Grande", "Helvetica Neue", "Helvetica", "Fira Sans", "Roboto", "Noto", "Droid Sans", "Cantarell", "Oxygen", "Ubuntu", "Franklin Gothic Medium", "Century Gothic", "Liberation Sans", sans-serif;
   font-weight: 400;
   line-height: 1.45;
 }
@@ -86,7 +81,7 @@ $phone-width: $tablet-width - $nav-width; // min width before reverting to mobil
 }
 
 %code-font {
-  font-family: Consolas, Menlo, Monaco, "Lucida Console", "Liberation Mono", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", "Courier New", monospace, serif;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
   font-size: $font-size-xls;
   line-height: 1.5;
 }
@@ -97,7 +92,6 @@ $nav-active-shadow: transparent;
 $nav-footer-border-color: #666;
 $nav-embossed-border-top: #000;
 $nav-embossed-border-bottom: #939393;
-$main-embossed-text-shadow: 0px 1px 0px #fff;
 $search-box-border-color: transparent;
 
 

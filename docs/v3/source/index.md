@@ -1,9 +1,6 @@
 ---
 title: Cloud Controller API Reference
 
-language_tabs:
-  - shell: curl
-
 includes:
   - api_resources/app_features
   - api_resources/app_ssh_enabled
@@ -257,5 +254,4 @@ includes:
   - experimental_resources/users/list
   - experimental_resources/users/get
 
-search: true
 ---

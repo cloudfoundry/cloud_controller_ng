@@ -1,42 +1,45 @@
 //= require ../lib/_lunr
-//= require ../lib/_jquery.highlight
 (function () {
   'use strict';
 
-  var content, searchResults;
-  var highlightOpts = { element: 'span', className: 'search-highlight' };
+  var searchInput, searchResults;
 
   var index = new lunr.Index();
-
   index.ref('id');
   index.field('title', { boost: 10 });
-  index.field('body');
   index.pipeline.add(lunr.trimmer, lunr.stopWordFilter);
 
   $(populate);
   $(bind);
+  $(initializeSlashHandler);
 
   function populate() {
-    $('h1, h2').each(function() {
+    $('h1, h2, h3').each(function() {
       var title = $(this);
-      var body = title.nextUntil('h1, h2');
       index.add({
         id: title.prop('id'),
-        title: title.text(),
-        body: body.text()
+        title: title.text()
       });
     });
   }
 
   function bind() {
-    content = $('.content');
+    searchInput = $('#input-search');
     searchResults = $('.search-results');
+    searchInput.on('keyup', search);
+  }
 
-    $('#input-search').on('keyup', search);
+  function initializeSlashHandler() {
+    $('body').on('keydown', function(event) {
+      if (event.keyCode == 191 && !searchInput.is(':focus')) {
+        event.preventDefault();
+        searchResults.empty();
+        searchInput.val('').focus();
+      }
+    });
   }
 
   function search(event) {
-    unhighlight();
     searchResults.addClass('visible');
 
     // ESC clears the field
@@ -50,25 +53,14 @@
       if (results.length) {
         searchResults.empty();
         $.each(results, function (index, result) {
-          var elem = document.getElementById(result.ref);
-          searchResults.append("<li><a href='#" + result.ref + "'>" + $(elem).text() + "</a></li>");
+          var elemId = '#' + result.ref;
+          searchResults.append("<li><a href='" + elemId + "'>" + $(elemId).text() + "</a></li>");
         });
-        highlight.call(this);
       } else {
-        searchResults.html('<li></li>');
-        $('.search-results li').text('No Results Found for "' + this.value + '"');
+        searchResults.html('<li>No results found for "' + this.value + '"</li>');
       }
     } else {
-      unhighlight();
       searchResults.removeClass('visible');
     }
-  }
-
-  function highlight() {
-    if (this.value) content.highlight(this.value, highlightOpts);
-  }
-
-  function unhighlight() {
-    content.unhighlight(highlightOpts);
   }
 })();

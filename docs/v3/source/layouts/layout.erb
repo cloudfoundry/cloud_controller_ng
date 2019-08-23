@@ -13,17 +13,15 @@ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 License for the specific language governing permissions and limitations
 under the License.
 %>
-<% language_tabs = current_page.data.language_tabs %>
+
 <%
-  def get_version
-    version = File.exists?('source/versionfile') ? File.read('source/versionfile') : 'local'
-    if version =~ /release-candidate/
-      "Release Candidate"
-    else
-      "Version #{version}"
-    end
-  end
+html = current_page.data.includes
+  .map { |include| partial "includes/#{include}" }
+  .join ""
+
+table_of_contents = extract_table_of_contents(html)
 %>
+
 <!doctype html>
 <html lang="en">
   <head>
@@ -37,19 +35,7 @@ under the License.
     <%= stylesheet_link_tag :print, media: :print %>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
 
-    <% if current_page.data.search %>
-      <%= javascript_include_tag  "all" %>
-    <% else %>
-      <%= javascript_include_tag  "all_nosearch" %>
-    <% end %>
-
-    <% if language_tabs %>
-      <script>
-        $(function() {
-          setupLanguages(<%= language_tabs.map{ |lang| lang.is_a?(Hash) ? lang.keys.first : lang }.to_json %>);
-        });
-      </script>
-    <% end %>
+    <%= javascript_include_tag  "all" %>
   </head>
 
   <body class="<%= page_classes %>">
@@ -59,81 +45,41 @@ under the License.
         <%= image_tag('navbar.png') %>
       </span>
     </a>
-    <nav class="tocify-wrapper tocify-sidebar">
-      <%= image_tag "logo.png" %>
-      <% if language_tabs %>
-        <div class="lang-selector">
-          <% language_tabs.each do |lang| %>
-            <% if lang.is_a? Hash %>
-              <a href="#" data-language-name="<%= lang.keys.first %>"><%= lang.values.first %></a>
-            <% else %>
-              <a href="#" data-language-name="<%= lang %>"><%= lang %></a>
-            <% end %>
-          <% end %>
-        </div>
-      <% end %>
 
-      <div id="version-dropdown">
-        <div class="dropdown">
-          <button type="button" id="version-dropdown-button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><%= get_version %><span class="caret">&#x25BE;</span></button>
-          <ul id="version-dropdown-menu" class="dropdown-menu" role="menu" aria-labelledby="version-dropdown-button">
-            <div class="dropdown-filter">
-              <div class="dropdown-search-bar">
-                <input id="version-select" type="text" placeholder="Filter">
-              </div>
-              <div class="dropdown-content">
-                <ul class="dropdown-list" id="version-list">
-                </ul>
-              </div>
-              <div class="dropdown-footer dropdown-content">
-                <ul class="dropdown-list">
-                  <li><a id="release-candidate" href="/version/release-candidate">Release Candidate</a></li>
-                  <li><a id="latest-release" href="/">Latest</a></li>
-                </ul>
-              </div>
-            </div>
-          </ul>
-        </div>
+    <nav class="toc-wrapper">
+      <%= image_tag "logo.png" %>
+
+      <div class="dropdown version-dropdown">
+        <button type="button" id="version-dropdown-button" class="version-dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><%= get_version %><span class="caret">&#x25BE;</span></button>
+
+        <ul id="version-dropdown-menu" class="dropdown-menu" role="menu" aria-labelledby="version-dropdown-button">
+          <div class="dropdown-content">
+            <ul class="dropdown-list" id="version-list">
+            </ul>
+          </div>
+          <div class="dropdown-footer dropdown-content">
+            <ul class="dropdown-list">
+              <li><a id="release-candidate" href="/version/release-candidate">Release Candidate</a></li>
+              <li><a id="latest-release" href="/">Latest</a></li>
+            </ul>
+          </div>
+        </ul>
       </div>
 
-      <% if current_page.data.search %>
-        <div class="search">
-          <input type="search" class="search" id="input-search" placeholder="Search">
-        </div>
-        <ul class="search-results"></ul>
-      <% end %>
+      <div class="search">
+        <input type="search" class="search" id="input-search" placeholder='Search (press "/")' aria-label="Search sections (press '/' to focus this input)">
+      </div>
+      <ul class="search-results"></ul>
 
       <div id="toc">
+        <%= table_of_contents %>
       </div>
-      <% if current_page.data.toc_footers %>
-        <ul class="toc-footer">
-          <% current_page.data.toc_footers.each do |footer| %>
-            <li><%= footer %></li>
-          <% end %>
-        </ul>
-      <% end %>
     </nav>
 
     <main class="page-wrapper">
       <div class="dark-box"></div>
       <div class="content">
-        <%= yield %>
-        <% current_page.data.includes && current_page.data.includes.each do |include| %>
-          <%= partial "includes/#{include}" %>
-        <% end %>
-      </div>
-      <div class="dark-box">
-        <% if language_tabs %>
-          <div class="lang-selector">
-            <% language_tabs.each do |lang| %>
-              <% if lang.is_a? Hash %>
-                <a href="#" data-language-name="<%= lang.keys.first %>"><%= lang.values.first %></a>
-              <% else %>
-                <a href="#" data-language-name="<%= lang %>"><%= lang %></a>
-              <% end %>
-            <% end %>
-          </div>
-        <% end %>
+        <%= html %>
       </div>
     </main>
   </body>
