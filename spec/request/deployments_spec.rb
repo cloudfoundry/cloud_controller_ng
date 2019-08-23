@@ -1024,7 +1024,7 @@ RSpec.describe 'Deployments' do
     context 'when the deployment is running and has a previous droplet' do
       let(:old_droplet) { VCAP::CloudController::DropletModel.make(app: app_model, process_types: { 'web' => 'run' }) }
 
-      it 'changes the deployment state to CANCELING and rolls the droplet back' do
+      it 'changes the deployment status_value CANCELING and rolls the droplet back' do
         deployment = VCAP::CloudController::DeploymentModelTestFactory.make(
           app: app_model,
           droplet: droplet,
@@ -1037,7 +1037,7 @@ RSpec.describe 'Deployments' do
         expect(last_response.body).to be_empty
         deployment.reload
         expect(deployment.state).to eq(VCAP::CloudController::DeploymentModel::CANCELING_STATE)
-        expect(deployment.status_value).to eq(VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_VALUE)
+        expect(deployment.status_value).to eq(VCAP::CloudController::DeploymentModel::CANCELING_STATUS_VALUE)
         expect(deployment.status_reason).to be_nil
 
         expect(app_model.reload.droplet).to eq(old_droplet)

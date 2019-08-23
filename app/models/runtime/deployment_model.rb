@@ -9,7 +9,8 @@ module VCAP::CloudController
 
     STATUS_VALUES = [
       DEPLOYING_STATUS_VALUE = 'DEPLOYING'.freeze,
-      FINALIZED_STATUS_VALUE = 'FINALIZED'.freeze
+      FINALIZED_STATUS_VALUE = 'FINALIZED'.freeze,
+      CANCELING_STATUS_VALUE = 'CANCELING'.freeze
     ].freeze
 
     STATUS_REASONS = [

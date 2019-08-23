@@ -16,14 +16,19 @@ module VCAP::CloudController
             raise SetCurrentDropletError.new(e)
           end
           record_audit_event(deployment, user_audit_info)
-          deployment.update(state: DeploymentModel::CANCELING_STATE)
+          deployment.update(
+            state: DeploymentModel::CANCELING_STATE,
+            status_value: DeploymentModel::CANCELING_STATUS_VALUE
+          )
         end
       end
 
       private
 
       def valid_status?(deployment)
-        deployment.status_value == DeploymentModel::DEPLOYING_STATUS_VALUE
+        valid_statuses_for_cancel = [DeploymentModel::DEPLOYING_STATUS_VALUE,
+                                    DeploymentModel::CANCELING_STATUS_VALUE]
+        valid_statuses_for_cancel.include?(deployment.status_value)
       end
 
       def reject_invalid_status!(deployment)
