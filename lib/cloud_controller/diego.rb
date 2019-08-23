@@ -1,7 +1,6 @@
 require 'cloud_controller/diego/environment'
 require 'cloud_controller/diego/process_guid'
 require 'cloud_controller/diego/staging_request'
-require 'cloud_controller/diego/protocol/open_process_ports'
 require 'cloud_controller/diego/protocol/app_volume_mounts'
 require 'cloud_controller/diego/protocol/routing_info'
 require 'cloud_controller/diego/protocol/container_network_info'

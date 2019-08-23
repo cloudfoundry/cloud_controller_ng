@@ -115,7 +115,7 @@ module VCAP::CloudController
       end
 
       def available_ports
-        @available_ports ||= Diego::Protocol::OpenProcessPorts.new(process).to_a
+        @available_ports ||= process.open_ports
       end
 
       def validate_routing_api_enabled!

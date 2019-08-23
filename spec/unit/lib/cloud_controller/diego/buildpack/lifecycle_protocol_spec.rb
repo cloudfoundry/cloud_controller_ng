@@ -209,11 +209,12 @@ module VCAP
                 diego:    true,
                 command:  'go go go',
                 metadata: {},
+                ports:    [1234, 5678]
               )
             end
             let(:builder_opts) do
               {
-                ports:              [1, 2, 3],
+                ports:              [1234, 5678],
                 stack:              process.stack.name,
                 droplet_uri:        'www.droplet.com',
                 droplet_hash:       droplet.droplet_hash,
@@ -222,12 +223,6 @@ module VCAP
                 checksum_value:     droplet.sha256_checksum,
                 start_command:      'go go go',
               }
-            end
-
-            before do
-              allow(Protocol::OpenProcessPorts).to receive(:new).with(process).and_return(
-                instance_double(Protocol::OpenProcessPorts, to_a: [1, 2, 3])
-              )
             end
 
             it 'creates a diego DesiredLrpBuilder' do

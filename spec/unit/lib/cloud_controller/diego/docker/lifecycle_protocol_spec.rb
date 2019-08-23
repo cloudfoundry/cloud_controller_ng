@@ -67,16 +67,11 @@ module VCAP
             let(:process) { ProcessModel.make(app: app, diego: true, command: 'go go go', metadata: {}) }
             let(:builder_opts) do
               {
-                ports: [1, 2, 3],
+                ports: [8080],
                 docker_image: 'the-image',
                 execution_metadata: 'foobar',
                 start_command: 'go go go',
               }
-            end
-            before do
-              allow(Protocol::OpenProcessPorts).to receive(:new).with(process).and_return(
-                instance_double(Protocol::OpenProcessPorts, to_a: [1, 2, 3])
-              )
             end
 
             it 'creates a diego DesiredLrpBuilder' do

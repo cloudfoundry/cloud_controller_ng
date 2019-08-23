@@ -40,6 +40,23 @@ module VCAP::CloudController
       self.weight || 1
     end
 
+    def presented_port
+      if has_app_port_specified?
+        return app_port
+      end
+
+      app_droplet = app.droplet
+      if app_droplet && !app_droplet.docker_ports.empty?
+        return app_droplet.docker_ports.first
+      end
+
+      ProcessModel::DEFAULT_HTTP_PORT
+    end
+
+    def has_app_port_specified?
+      app_port != ProcessModel::NO_APP_PORT_SPECIFIED
+    end
+
     private
 
     def logger

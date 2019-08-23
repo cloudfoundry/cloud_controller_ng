@@ -85,7 +85,7 @@ module OPI
         health_check_timeout_ms: timeout_ms,
         last_updated: process.updated_at.to_f.to_s,
         volume_mounts: generate_volume_mounts(process),
-        ports: ports(process),
+        ports: process.open_ports,
         routes: routes(process)
       }
       MultiJson.dump(body)
@@ -127,7 +127,7 @@ module OPI
     end
 
     def port_environment_variables(process)
-      port = ports(process).first
+      port = process.open_ports.first
       {
         PORT: port.to_s,
         VCAP_APP_PORT: port.to_s,
@@ -143,10 +143,6 @@ module OPI
 
     def process_guid(process)
       "#{process.guid}-#{process.version}"
-    end
-
-    def ports(process)
-      ::VCAP::CloudController::Diego::Protocol::OpenProcessPorts.new(process).to_a
     end
 
     def generate_volume_mounts(process)

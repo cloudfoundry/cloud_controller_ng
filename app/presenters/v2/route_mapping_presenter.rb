@@ -18,11 +18,9 @@ module CloudController
         private
 
         def present_app_port(route_mapping)
-          if route_mapping.app_port == VCAP::CloudController::ProcessModel::NO_APP_PORT_SPECIFIED
-            nil
-          else
-            route_mapping.app_port
-          end
+          return route_mapping.app_port if route_mapping.has_app_port_specified?
+
+          nil
         end
       end
     end

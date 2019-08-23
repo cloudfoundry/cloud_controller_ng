@@ -26,6 +26,7 @@ module CloudController::Presenters::V2
           environment_json: { 'UNICORNS': 'RAINBOWS' },
           memory:           1024,
           disk_quota:       1024,
+          ports:            [1234],
           state:            'STOPPED',
           command:          'start',
           enable_ssh:       true,
@@ -84,7 +85,7 @@ module CloudController::Presenters::V2
           'package_updated_at'         => anything,
           'detected_start_command'     => anything,
           'enable_ssh'                 => true,
-          'ports'                      => [8080],
+          'ports'                      => [1234],
           'relationship_key'           => 'relationship_value'
         }
 
@@ -189,18 +190,6 @@ module CloudController::Presenters::V2
             expect(actual_entity_hash['docker_credentials']['password']).to eq('***')
             expect(relations_presenter).to have_received(:to_hash).with(controller, process, opts, depth, parents, orphans)
           end
-        end
-      end
-
-      describe 'ports' do
-        before do
-          allow_any_instance_of(VCAP::CloudController::Diego::Protocol::OpenProcessPorts).to receive(:to_a).and_return('expected-ports')
-        end
-
-        it 'delegates to OpenProcessPorts' do
-          actual_entity_hash = app_presenter.entity_hash(controller, process, opts, depth, parents, orphans)
-
-          expect(actual_entity_hash['ports']).to eq('expected-ports')
         end
       end
 
