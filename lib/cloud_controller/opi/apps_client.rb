@@ -77,6 +77,7 @@ module OPI
         environment: hash_values_to_s(environment_variables(process)),
         instances: process.desired_instances,
         memory_mb: process.memory,
+        disk_mb: process.disk_quota,
         cpu_weight: cpu_weight,
         droplet_hash: process.desired_droplet.droplet_hash,
         droplet_guid: process.desired_droplet.guid,

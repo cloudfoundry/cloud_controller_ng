@@ -115,6 +115,7 @@ RSpec.describe(OPI::Client) do
             },
             instances: 21,
             memory_mb: 128,
+            disk_mb: 256,
             cpu_weight: 1,
             droplet_hash: lrp.droplet_hash,
             droplet_guid: 'some-droplet-guid',
