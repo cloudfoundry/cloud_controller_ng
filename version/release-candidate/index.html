@@ -1,3 +1,5 @@
+
+
 <!doctype html>
 <html lang="en">
   <head>
@@ -11,13 +13,7 @@
     <link href="stylesheets/print.css" rel="stylesheet" media="print" />
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
 
-      <script src="javascripts/all.js"></script>
-
-      <script>
-        $(function() {
-          setupLanguages(["shell"]);
-        });
-      </script>
+    <script src="javascripts/all.js"></script>
   </head>
 
   <body class="index">
@@ -27,41 +23,34 @@
         <img src="images/navbar.png" alt="Navbar" />
       </span>
     </a>
-    <nav class="tocify-wrapper tocify-sidebar">
-      <img src="images/logo.png" alt="Logo" />
-        <div class="lang-selector">
-              <a href="#" data-language-name="shell">curl</a>
-        </div>
 
-      <div id="version-dropdown">
-        <div class="dropdown">
-          <button type="button" id="version-dropdown-button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Release Candidate<span class="caret">&#x25BE;</span></button>
-          <ul id="version-dropdown-menu" class="dropdown-menu" role="menu" aria-labelledby="version-dropdown-button">
-            <div class="dropdown-filter">
-              <div class="dropdown-search-bar">
-                <input id="version-select" type="text" placeholder="Filter">
-              </div>
-              <div class="dropdown-content">
-                <ul class="dropdown-list" id="version-list">
-                </ul>
-              </div>
-              <div class="dropdown-footer dropdown-content">
-                <ul class="dropdown-list">
-                  <li><a id="release-candidate" href="/version/release-candidate">Release Candidate</a></li>
-                  <li><a id="latest-release" href="/">Latest</a></li>
-                </ul>
-              </div>
-            </div>
-          </ul>
-        </div>
+    <nav class="toc-wrapper">
+      <img src="images/logo.png" alt="Logo" />
+
+      <div class="dropdown version-dropdown">
+        <button type="button" id="version-dropdown-button" class="version-dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Release Candidate<span class="caret">&#x25BE;</span></button>
+
+        <ul id="version-dropdown-menu" class="dropdown-menu" role="menu" aria-labelledby="version-dropdown-button">
+          <div class="dropdown-content">
+            <ul class="dropdown-list" id="version-list">
+            </ul>
+          </div>
+          <div class="dropdown-footer dropdown-content">
+            <ul class="dropdown-list">
+              <li><a id="release-candidate" href="/version/release-candidate">Release Candidate</a></li>
+              <li><a id="latest-release" href="/">Latest</a></li>
+            </ul>
+          </div>
+        </ul>
       </div>
 
-        <div class="search">
-          <input type="search" class="search" id="input-search" placeholder="Search">
-        </div>
-        <ul class="search-results"></ul>
+      <div class="search">
+        <input type="search" class="search" id="input-search" placeholder='Search (press "/")' aria-label="Search sections (press '/' to focus this input)">
+      </div>
+      <ul class="search-results"></ul>
 
       <div id="toc">
+        <ul class='toc-header'><li class='toc-item'><a class='toc-link' href='#introduction'>Introduction</a></li><ul class='toc-subheader'><li class='toc-item'><a class='toc-link' href='#overview'>Overview</a></li><li class='toc-item'><a class='toc-link' href='#getting-help'>Getting help</a></li><li class='toc-item'><a class='toc-link' href='#more-resources'>More resources</a></li></ul><ul class='toc-header'><li class='toc-item'><a class='toc-link' href='#concepts'>Concepts</a></li><ul class='toc-subheader'><li class='toc-item'><a class='toc-link' href='#api-resource'>API Resource</a></li><ul class='toc-subheader'><li class='toc-item'><a class='toc-link' href='#required-fields'>Required fields</a></li><li class='toc-item'><a class='toc-link' href='#links'>Links</a></li></ul><li class='toc-item'><a class='toc-link' href='#authentication'>Authentication</a></li><li class='toc-item'><a class='toc-link' href='#authorization'>Authorization</a></li><li class='toc-item'><a class='toc-link' href='#errors'>Errors</a></li><li class='toc-item'><a class='toc-link' href='#filters'>Filters</a></li><li class='toc-item'><a class='toc-link' href='#include'>Include</a></li><ul class='toc-subheader'><li class='toc-item'><a class='toc-link' href='#resources'>Resources</a></li><li class='toc-item'><a class='toc-link' href='#sample-requests'>Sample requests</a></li></ul><li class='toc-item'><a class='toc-link' href='#lifecycles'>Lifecycles</a></li><ul class='toc-subheader'><li class='toc-item'><a class='toc-link' href='#buildpack-lifecycle'>Buildpack lifecycle</a></li><li class='toc-item'><a class='toc-link' href='#docker-lifecycle'>Docker lifecycle</a></li></ul><li class='toc-item'><a class='toc-link' href='#metadata'>Metadata</a></li><ul class='toc-subheader'><li class='toc-item'><a class='toc-link' href='#annotations'>Annotations</a></li><li class='toc-item'><a class='toc-link' href='#labels-and-selectors'>Labels and selectors</a></li><li class='toc-item'><a class='toc-link' href='#updating-labels-and-annotations'>Updating labels and annotations</a></li></ul><li class='toc-item'><a class='toc-link' href='#pagination'>Pagination</a></li><li class='toc-item'><a class='toc-link' href='#procfiles'>Procfiles</a></li><li class='toc-item'><a class='toc-link' href='#relationships'>Relationships</a></li><ul class='toc-subheader'><li class='toc-item'><a class='toc-link' href='#to-one-relationships'>To-one relationships</a></li><li class='toc-item'><a class='toc-link' href='#to-many-relationships'>To-many relationships</a></li></ul><li class='toc-item'><a class='toc-link' href='#status-codes'>Status Codes</a></li></ul><ul class='toc-header'><li class='toc-item'><a class='toc-link' href='#workflows'>Workflows</a></li><ul class='toc-subheader'><li class='toc-item'><a class='toc-link' href='#push-v2-app-and-run-a-v3-task'>Push V2 app and run a V3 task</a></li></ul><ul class='toc-header'><li class='toc-item'><a class='toc-link' href='#resources'>Resources</a></li><ul class='toc-subheader'><li class='toc-item'><a class='toc-link' href='#apps'>Apps</a></li><ul class='toc-subheader'><li class='toc-item'><a class='toc-link' href='#the-app-object'>The app object</a></li><li class='toc-item'><a class='toc-link' href='#create-an-app'>Create an app</a></li><li class='toc-item'><a class='toc-link' href='#get-an-app'>Get an app</a></li><li class='toc-item'><a class='toc-link' href='#list-apps'>List apps</a></li><li class='toc-item'><a class='toc-link' href='#update-an-app'>Update an app</a></li><li class='toc-item'><a class='toc-link' href='#delete-an-app'>Delete an app</a></li><li class='toc-item'><a class='toc-link' href='#get-current-droplet'>Get current droplet</a></li><li class='toc-item'><a class='toc-link' href='#get-current-droplet-association-for-an-app'>Get current droplet association for an app</a></li><li class='toc-item'><a class='toc-link' href='#get-environment-for-an-app'>Get environment for an app</a></li><li class='toc-item'><a class='toc-link' href='#get-environment-variables-for-an-app'>Get environment variables for an app</a></li><li class='toc-item'><a class='toc-link' href='#set-current-droplet'>Set current droplet</a></li><li class='toc-item'><a class='toc-link' href='#start-an-app'>Start an app</a></li><li class='toc-item'><a class='toc-link' href='#stop-an-app'>Stop an app</a></li><li class='toc-item'><a class='toc-link' href='#update-environment-variables-for-an-app'>Update environment variables for an app</a></li></ul><li class='toc-item'><a class='toc-link' href='#builds'>Builds</a></li><ul class='toc-subheader'><li class='toc-item'><a class='toc-link' href='#the-build-object'>The build object</a></li><li class='toc-item'><a class='toc-link' href='#create-a-build'>Create a build</a></li><li class='toc-item'><a class='toc-link' href='#get-a-build'>Get a build</a></li><li class='toc-item'><a class='toc-link' href='#list-builds'>List builds</a></li><li class='toc-item'><a class='toc-link' href='#list-builds-for-an-app'>List builds for an app</a></li><li class='toc-item'><a class='toc-link' href='#update-a-build'>Update a build</a></li></ul><li class='toc-item'><a class='toc-link' href='#buildpacks'>Buildpacks</a></li><ul class='toc-subheader'><li class='toc-item'><a class='toc-link' href='#the-buildpack-object'>The buildpack object</a></li><li class='toc-item'><a class='toc-link' href='#create-a-buildpack'>Create a buildpack</a></li><li class='toc-item'><a class='toc-link' href='#get-a-buildpack'>Get a buildpack</a></li><li class='toc-item'><a class='toc-link' href='#list-buildpacks'>List buildpacks</a></li><li class='toc-item'><a class='toc-link' href='#update-a-buildpack'>Update a buildpack</a></li><li class='toc-item'><a class='toc-link' href='#delete-a-buildpack'>Delete a buildpack</a></li><li class='toc-item'><a class='toc-link' href='#upload-buildpack-bits'>Upload buildpack bits</a></li></ul><li class='toc-item'><a class='toc-link' href='#domains'>Domains</a></li><ul class='toc-subheader'><li class='toc-item'><a class='toc-link' href='#the-domain-object'>The domain object</a></li><li class='toc-item'><a class='toc-link' href='#create-a-domain'>Create a domain</a></li><li class='toc-item'><a class='toc-link' href='#get-a-domain'>Get a domain</a></li><li class='toc-item'><a class='toc-link' href='#list-domains'>List domains</a></li><li class='toc-item'><a class='toc-link' href='#list-domains-for-an-organization'>List domains for an organization</a></li><li class='toc-item'><a class='toc-link' href='#update-a-domain'>Update a domain</a></li><li class='toc-item'><a class='toc-link' href='#delete-a-domain'>Delete a domain</a></li><li class='toc-item'><a class='toc-link' href='#share-a-domain'>Share a domain</a></li><li class='toc-item'><a class='toc-link' href='#unshare-a-domain'>Unshare a domain</a></li></ul><li class='toc-item'><a class='toc-link' href='#droplets'>Droplets</a></li><ul class='toc-subheader'><li class='toc-item'><a class='toc-link' href='#the-droplet-object'>The droplet object</a></li><li class='toc-item'><a class='toc-link' href='#create-a-droplet'>Create a droplet</a></li><li class='toc-item'><a class='toc-link' href='#get-a-droplet'>Get a droplet</a></li><li class='toc-item'><a class='toc-link' href='#list-droplets'>List droplets</a></li><li class='toc-item'><a class='toc-link' href='#list-droplets-for-a-package'>List droplets for a package</a></li><li class='toc-item'><a class='toc-link' href='#list-droplets-for-an-app'>List droplets for an app</a></li><li class='toc-item'><a class='toc-link' href='#update-a-droplet'>Update a droplet</a></li><li class='toc-item'><a class='toc-link' href='#delete-a-droplet'>Delete a droplet</a></li><li class='toc-item'><a class='toc-link' href='#copy-a-droplet'>Copy a droplet</a></li><li class='toc-item'><a class='toc-link' href='#upload-droplet-bits'>Upload droplet bits</a></li></ul><li class='toc-item'><a class='toc-link' href='#feature-flags'>Feature Flags</a></li><ul class='toc-subheader'><li class='toc-item'><a class='toc-link' href='#the-feature-flag-object'>The feature flag object</a></li><li class='toc-item'><a class='toc-link' href='#list-of-feature-flags'>List of feature flags</a></li><li class='toc-item'><a class='toc-link' href='#get-a-feature-flag'>Get a feature flag</a></li><li class='toc-item'><a class='toc-link' href='#list-feature-flags'>List feature flags</a></li><li class='toc-item'><a class='toc-link' href='#update-a-feature-flag'>Update a feature flag</a></li></ul><li class='toc-item'><a class='toc-link' href='#isolation-segments'>Isolation Segments</a></li><ul class='toc-subheader'><li class='toc-item'><a class='toc-link' href='#the-isolation-segment-object'>The isolation segment object</a></li><li class='toc-item'><a class='toc-link' href='#create-an-isolation-segment'>Create an isolation segment</a></li><li class='toc-item'><a class='toc-link' href='#get-an-isolation-segment'>Get an isolation segment</a></li><li class='toc-item'><a class='toc-link' href='#list-isolation-segments'>List isolation segments</a></li><li class='toc-item'><a class='toc-link' href='#list-organizations-relationship'>List organizations relationship</a></li><li class='toc-item'><a class='toc-link' href='#list-spaces-relationship'>List spaces relationship</a></li><li class='toc-item'><a class='toc-link' href='#update-an-isolation-segment'>Update an isolation segment</a></li><li class='toc-item'><a class='toc-link' href='#delete-an-isolation-segment'>Delete an isolation segment</a></li><li class='toc-item'><a class='toc-link' href='#entitle-organizations-for-an-isolation-segment'>Entitle organizations for an isolation segment</a></li><li class='toc-item'><a class='toc-link' href='#revoke-entitlement-to-isolation-segment-for-an-organization'>Revoke entitlement to isolation segment for an organization</a></li></ul><li class='toc-item'><a class='toc-link' href='#jobs'>Jobs</a></li><ul class='toc-subheader'><li class='toc-item'><a class='toc-link' href='#the-job-object'>The job object</a></li><li class='toc-item'><a class='toc-link' href='#get-a-job'>Get a job</a></li></ul><li class='toc-item'><a class='toc-link' href='#organizations'>Organizations</a></li><ul class='toc-subheader'><li class='toc-item'><a class='toc-link' href='#the-organization-object'>The organization object</a></li><li class='toc-item'><a class='toc-link' href='#create-an-organization'>Create an organization</a></li><li class='toc-item'><a class='toc-link' href='#get-an-organization'>Get an organization</a></li><li class='toc-item'><a class='toc-link' href='#list-organizations'>List organizations</a></li><li class='toc-item'><a class='toc-link' href='#list-organizations-for-isolation-segment'>List organizations for isolation segment</a></li><li class='toc-item'><a class='toc-link' href='#update-an-organization'>Update an organization</a></li><li class='toc-item'><a class='toc-link' href='#delete-an-organization'>Delete an organization</a></li><li class='toc-item'><a class='toc-link' href='#assign-default-isolation-segment'>Assign default isolation segment</a></li><li class='toc-item'><a class='toc-link' href='#get-default-isolation-segment'>Get default isolation segment</a></li><li class='toc-item'><a class='toc-link' href='#get-default-domain'>Get default domain</a></li><li class='toc-item'><a class='toc-link' href='#get-usage-summary'>Get usage summary</a></li></ul><li class='toc-item'><a class='toc-link' href='#packages'>Packages</a></li><ul class='toc-subheader'><li class='toc-item'><a class='toc-link' href='#the-package-object'>The package object</a></li><li class='toc-item'><a class='toc-link' href='#create-a-package'>Create a package</a></li><li class='toc-item'><a class='toc-link' href='#get-a-package'>Get a package</a></li><li class='toc-item'><a class='toc-link' href='#list-packages'>List packages</a></li><li class='toc-item'><a class='toc-link' href='#list-packages-for-an-app'>List packages for an app</a></li><li class='toc-item'><a class='toc-link' href='#update-a-package'>Update a package</a></li><li class='toc-item'><a class='toc-link' href='#delete-a-package'>Delete a package</a></li><li class='toc-item'><a class='toc-link' href='#copy-a-package'>Copy a package</a></li><li class='toc-item'><a class='toc-link' href='#download-package-bits'>Download package bits</a></li><li class='toc-item'><a class='toc-link' href='#stage-a-package'>Stage a package</a></li><li class='toc-item'><a class='toc-link' href='#upload-package-bits'>Upload package bits</a></li></ul><li class='toc-item'><a class='toc-link' href='#processes'>Processes</a></li><ul class='toc-subheader'><li class='toc-item'><a class='toc-link' href='#the-process-object'>The process object</a></li><li class='toc-item'><a class='toc-link' href='#the-health-check-object'>The health check object</a></li><li class='toc-item'><a class='toc-link' href='#the-process-stats-object'>The process stats object</a></li><li class='toc-item'><a class='toc-link' href='#get-a-process'>Get a process</a></li><li class='toc-item'><a class='toc-link' href='#get-stats-for-a-process'>Get stats for a process</a></li><li class='toc-item'><a class='toc-link' href='#list-processes'>List processes</a></li><li class='toc-item'><a class='toc-link' href='#list-processes-for-app'>List processes for app</a></li><li class='toc-item'><a class='toc-link' href='#update-a-process'>Update a process</a></li><li class='toc-item'><a class='toc-link' href='#scale-a-process'>Scale a process</a></li><li class='toc-item'><a class='toc-link' href='#terminate-a-process-instance'>Terminate a process instance</a></li></ul><li class='toc-item'><a class='toc-link' href='#routes'>Routes</a></li><ul class='toc-subheader'><li class='toc-item'><a class='toc-link' href='#the-route-object'>The route object</a></li><li class='toc-item'><a class='toc-link' href='#the-destination-object'>The destination object</a></li><li class='toc-item'><a class='toc-link' href='#create-a-route'>Create a route</a></li><li class='toc-item'><a class='toc-link' href='#get-a-route'>Get a route</a></li><li class='toc-item'><a class='toc-link' href='#list-routes'>List routes</a></li><li class='toc-item'><a class='toc-link' href='#list-routes-for-an-app'>List routes for an app</a></li><li class='toc-item'><a class='toc-link' href='#update-a-route'>Update a route</a></li><li class='toc-item'><a class='toc-link' href='#delete-a-route'>Delete a route</a></li><li class='toc-item'><a class='toc-link' href='#check-reserved-routes-for-a-domain'>Check reserved routes for a domain</a></li><li class='toc-item'><a class='toc-link' href='#list-destinations-for-a-route'>List destinations for a route</a></li><li class='toc-item'><a class='toc-link' href='#insert-destinations-for-a-route'>Insert destinations for a route</a></li><li class='toc-item'><a class='toc-link' href='#replace-all-destinations-for-a-route'>Replace all destinations for a route</a></li><li class='toc-item'><a class='toc-link' href='#remove-destination-for-a-route'>Remove destination for a route</a></li><li class='toc-item'><a class='toc-link' href='#delete-unmapped-routes-for-a-space'>Delete unmapped routes for a space</a></li></ul><li class='toc-item'><a class='toc-link' href='#service-instances'>Service Instances</a></li><ul class='toc-subheader'><li class='toc-item'><a class='toc-link' href='#the-service-instance-object'>The service instance object</a></li><li class='toc-item'><a class='toc-link' href='#list-service-instances'>List service instances</a></li><li class='toc-item'><a class='toc-link' href='#list-shared-spaces-relationship'>List shared spaces relationship</a></li><li class='toc-item'><a class='toc-link' href='#update-a-service-instance'>Update a service instance</a></li><li class='toc-item'><a class='toc-link' href='#share-a-service-instance-to-other-spaces'>Share a service instance to other spaces</a></li><li class='toc-item'><a class='toc-link' href='#unshare-a-service-instance-from-another-space'>Unshare a service instance from another space</a></li></ul><li class='toc-item'><a class='toc-link' href='#spaces'>Spaces</a></li><ul class='toc-subheader'><li class='toc-item'><a class='toc-link' href='#the-space-object'>The space object</a></li><li class='toc-item'><a class='toc-link' href='#create-a-space'>Create a space</a></li><li class='toc-item'><a class='toc-link' href='#get-a-space'>Get a space</a></li><li class='toc-item'><a class='toc-link' href='#list-spaces'>List spaces</a></li><li class='toc-item'><a class='toc-link' href='#update-a-space'>Update a space</a></li><li class='toc-item'><a class='toc-link' href='#delete-a-space'>Delete a space</a></li><li class='toc-item'><a class='toc-link' href='#get-assigned-isolation-segment'>Get assigned isolation segment</a></li><li class='toc-item'><a class='toc-link' href='#manage-isolation-segment'>Manage isolation segment</a></li></ul><li class='toc-item'><a class='toc-link' href='#stacks'>Stacks</a></li><ul class='toc-subheader'><li class='toc-item'><a class='toc-link' href='#the-stack-object'>The stack object</a></li><li class='toc-item'><a class='toc-link' href='#create-a-stack'>Create a stack</a></li><li class='toc-item'><a class='toc-link' href='#get-a-stack'>Get a stack</a></li><li class='toc-item'><a class='toc-link' href='#list-stacks'>List stacks</a></li><li class='toc-item'><a class='toc-link' href='#update-a-stack'>Update a stack</a></li><li class='toc-item'><a class='toc-link' href='#delete-a-stack'>Delete a stack</a></li></ul><li class='toc-item'><a class='toc-link' href='#tasks'>Tasks</a></li><ul class='toc-subheader'><li class='toc-item'><a class='toc-link' href='#the-task-object'>The task object</a></li><li class='toc-item'><a class='toc-link' href='#create-a-task'>Create a task</a></li><li class='toc-item'><a class='toc-link' href='#get-a-task'>Get a task</a></li><li class='toc-item'><a class='toc-link' href='#list-tasks'>List tasks</a></li><li class='toc-item'><a class='toc-link' href='#list-tasks-for-an-app'>List tasks for an app</a></li><li class='toc-item'><a class='toc-link' href='#update-a-task'>Update a task</a></li><li class='toc-item'><a class='toc-link' href='#cancel-a-task'>Cancel a task</a></li></ul></ul><ul class='toc-header'><li class='toc-item'><a class='toc-link' href='#experimental-resources'>Experimental Resources</a></li><ul class='toc-subheader'><li class='toc-item'><a class='toc-link' href='#app-features'>App Features</a></li><ul class='toc-subheader'><li class='toc-item'><a class='toc-link' href='#the-app-feature-object'>The app feature object</a></li><li class='toc-item'><a class='toc-link' href='#supported-app-features'>Supported app features</a></li><li class='toc-item'><a class='toc-link' href='#get-an-app-feature'>Get an app feature</a></li><li class='toc-item'><a class='toc-link' href='#list-app-features'>List app features</a></li><li class='toc-item'><a class='toc-link' href='#update-an-app-feature'>Update an app feature</a></li></ul><li class='toc-item'><a class='toc-link' href='#app-manifest'>App Manifest</a></li><ul class='toc-subheader'><li class='toc-item'><a class='toc-link' href='#the-app-manifest-specification'>The app manifest specification</a></li><li class='toc-item'><a class='toc-link' href='#generate-an-app-manifest'>Generate an app manifest</a></li><li class='toc-item'><a class='toc-link' href='#apply-an-app-manifest'>Apply an app manifest</a></li></ul><li class='toc-item'><a class='toc-link' href='#app-restart'>App Restart</a></li><ul class='toc-subheader'><li class='toc-item'><a class='toc-link' href='#restart-an-app'>Restart an app</a></li></ul><li class='toc-item'><a class='toc-link' href='#app-ssh-enabled'>App SSH Enabled</a></li><ul class='toc-subheader'><li class='toc-item'><a class='toc-link' href='#get-app-ssh-enabled'>Get app SSH enabled</a></li></ul><li class='toc-item'><a class='toc-link' href='#deployments'>Deployments</a></li><ul class='toc-subheader'><li class='toc-item'><a class='toc-link' href='#the-deployment-object'>The deployment object</a></li><li class='toc-item'><a class='toc-link' href='#create-a-deployment'>Create a deployment</a></li><li class='toc-item'><a class='toc-link' href='#get-a-deployment'>Get a deployment</a></li><li class='toc-item'><a class='toc-link' href='#list-deployments'>List deployments</a></li><li class='toc-item'><a class='toc-link' href='#update-a-deployment'>Update a deployment</a></li><li class='toc-item'><a class='toc-link' href='#cancel-a-deployment'>Cancel a deployment</a></li></ul><li class='toc-item'><a class='toc-link' href='#resource-matches'>Resource Matches</a></li><ul class='toc-subheader'><li class='toc-item'><a class='toc-link' href='#the-resource-match-object'>The resource match object</a></li><li class='toc-item'><a class='toc-link' href='#create-a-resource-match'>Create a resource match</a></li></ul><li class='toc-item'><a class='toc-link' href='#revisions'>Revisions</a></li><ul class='toc-subheader'><li class='toc-item'><a class='toc-link' href='#the-revision-object'>The revision object</a></li><li class='toc-item'><a class='toc-link' href='#get-a-revision'>Get a revision</a></li><li class='toc-item'><a class='toc-link' href='#list-revisions-for-an-app'>List revisions for an app</a></li><li class='toc-item'><a class='toc-link' href='#list-deployed-revisions-for-an-app'>List deployed revisions for an app</a></li><li class='toc-item'><a class='toc-link' href='#update-a-revision'>Update a revision</a></li></ul><li class='toc-item'><a class='toc-link' href='#service-bindings'>Service Bindings</a></li><ul class='toc-subheader'><li class='toc-item'><a class='toc-link' href='#the-service-binding-object'>The service binding object</a></li><li class='toc-item'><a class='toc-link' href='#create-a-service-binding'>Create a service binding</a></li><li class='toc-item'><a class='toc-link' href='#get-a-service-binding'>Get a service binding</a></li><li class='toc-item'><a class='toc-link' href='#list-service-bindings'>List service bindings</a></li><li class='toc-item'><a class='toc-link' href='#delete-a-service-binding'>Delete a service binding</a></li></ul><li class='toc-item'><a class='toc-link' href='#service-brokers'>Service Brokers</a></li><ul class='toc-subheader'><li class='toc-item'><a class='toc-link' href='#the-service-broker-object'>The service broker object</a></li><li class='toc-item'><a class='toc-link' href='#get-a-service-broker'>Get a service broker</a></li><li class='toc-item'><a class='toc-link' href='#list-service-brokers'>List service brokers</a></li><li class='toc-item'><a class='toc-link' href='#create-a-service-broker'>Create a service broker</a></li></ul><li class='toc-item'><a class='toc-link' href='#sidecars'>Sidecars</a></li><ul class='toc-subheader'><li class='toc-item'><a class='toc-link' href='#the-sidecar-object'>The sidecar object</a></li><li class='toc-item'><a class='toc-link' href='#create-a-sidecar-associated-with-an-app'>Create a sidecar associated with an app</a></li><li class='toc-item'><a class='toc-link' href='#get-a-sidecar'>Get a sidecar</a></li><li class='toc-item'><a class='toc-link' href='#update-a-sidecar'>Update a sidecar</a></li><li class='toc-item'><a class='toc-link' href='#list-sidecars-for-app'>List sidecars for app</a></li><li class='toc-item'><a class='toc-link' href='#list-sidecars-for-process'>List sidecars for process</a></li><li class='toc-item'><a class='toc-link' href='#delete-a-sidecar'>Delete a sidecar</a></li></ul><li class='toc-item'><a class='toc-link' href='#space-manifest'>Space Manifest</a></li><ul class='toc-subheader'><li class='toc-item'><a class='toc-link' href='#the-space-manifest-specification'>The space manifest specification</a></li><li class='toc-item'><a class='toc-link' href='#apply-a-space-manifest'>Apply a space manifest</a></li></ul><li class='toc-item'><a class='toc-link' href='#users'>Users</a></li><ul class='toc-subheader'><li class='toc-item'><a class='toc-link' href='#the-user-object'>The user object</a></li><li class='toc-item'><a class='toc-link' href='#create-a-user'>Create a user</a></li><li class='toc-item'><a class='toc-link' href='#list-users'>List users</a></li><li class='toc-item'><a class='toc-link' href='#get-a-user'>Get a user</a></li></ul></ul></ul>
       </div>
     </nav>
 
@@ -69,7 +58,6 @@
       <div class="dark-box"></div>
       <div class="content">
         
-          
 
 
 
@@ -81,87 +69,46 @@
 
 
 
-          
 
 
 
-          
 
-          
-          
 
 
 
-          
 
 
-          
 
-          
 
-          
 
 
 
 
 
-          
 
 
-          
 
-          
 
 
 
 
-          
 
-          
 
 
 
 
-          
 
 
 
 
 
-          
 
 
 
 
-          
-          
 
-          
 
-
-
-
-          
-
-          
-
-
-          
-
-
-          
-
-          
-
-
-          
-
-          
-
-
-          
-
-          <h1 id="introduction">Introduction</h1>
+<h1 id="introduction">Introduction</h1>
 
 <h2 id="overview">Overview</h2>
 
@@ -189,10 +136,8 @@ issue on our API repo <a href="https://github.com/cloudfoundry/cloud_controller_
 <li><a href="https://docs.cloudfoundry.org/devguide/using-tasks.html">Running Tasks</a></li>
 <li><a href="https://github.com/cloudfoundry/cloud_controller_ng/tree/master/docs/v3">V3 API Documentation Source Code</a></li>
 </ul>
-
-          <h1 id="concepts">Concepts</h1>
-
-          <h2 id="api-resource">API Resource</h2>
+<h1 id="concepts">Concepts</h1>
+<h2 id="api-resource">API Resource</h2>
 
 <p>A resource represents an individual object within the system, such as an app or a service. It is represented as a JSON object.</p>
 
@@ -280,8 +225,7 @@ issue on our API repo <a href="https://github.com/cloudfoundry/cloud_controller_
 <td>An optional field containing the HTTP method to be used when following the URL.</td>
 </tr>
 </tbody></table>
-
-          <h2 id="authentication">Authentication</h2>
+<h2 id="authentication">Authentication</h2>
 
 <p>The Cloud Foundry V3 API is secured using OAuth 2. Clients are expected to present a valid bearer token via HTTP header: <code class="prettyprint">Authorization: bearer &lt;token&gt;</code></p>
 
@@ -290,8 +234,7 @@ issue on our API repo <a href="https://github.com/cloudfoundry/cloud_controller_
 <aside class="notice">
 Use the cf cli to obtain a bearer token: cf oauth-token
 </aside>
-
-          <h2 id="authorization">Authorization</h2>
+<h2 id="authorization">Authorization</h2>
 
 <p>Access to resources is determined by combining scopes in the OAuth2 Token with User Roles that are managed by the API. User Roles are currently managed by the <a href="http://apidocs.cloudfoundry.org/">V2 API</a>.</p>
 
@@ -374,8 +317,7 @@ Use the cf cli to obtain a bearer token: cf oauth-token
 <td>Provides read-only access to a Space for auditing purposes</td>
 </tr>
 </tbody></table>
-
-          <h2 id="errors">Errors</h2>
+<h2 id="errors">Errors</h2>
 <pre class="highlight plaintext"><code>Example Error
 </code></pre>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
@@ -416,8 +358,7 @@ Use the cf cli to obtain a bearer token: cf oauth-token
 <td>Detailed description of the error.</td>
 </tr>
 </tbody></table>
-
-          <h2 id="filters">Filters</h2>
+<h2 id="filters">Filters</h2>
 
 <p>Endpoints that return lists of resources support filtering down the returned resources using query parameters.</p>
 
@@ -452,8 +393,7 @@ Use the cf cli to obtain a bearer token: cf oauth-token
 <p><code class="prettyprint">GET /v3/routes?paths=pepper,,tabi</code></p>
 
 <p>This will return all routes with path <code class="prettyprint">&quot;pepper&quot;</code>, <code class="prettyprint">&quot;&quot;</code> OR <code class="prettyprint">&quot;tabi&quot;</code>.</p>
-
-          <h2 id="include">Include</h2>
+<h2 id="include">Include</h2>
 
 <p>The <code class="prettyprint">include</code> parameter allows clients to fetch resources and ensure that information about the parent object(s) is part of the response.
 For example, a response to <code class="prettyprint">/v3/spaces/:guid?include=org</code> will contain detailed information about the space and its parent org.</p>
@@ -623,8 +563,7 @@ query param can be used with a single resource or a list of resources.</p>
    <span class="o">}</span>
 <span class="o">}</span>
 </code></pre>
-
-          <h2 id="lifecycles">Lifecycles</h2>
+<h2 id="lifecycles">Lifecycles</h2>
 
 <p>Lifecycles inform the platform of how to build droplets and run apps. For example the
 <code class="prettyprint">buildpack</code> lifecycle will use a droplet and a rootfs to run the app, while a <code class="prettyprint">docker</code> lifecycle will
@@ -694,12 +633,6 @@ will be created and the droplet will be expanded inside that container to be exe
 </tbody></table>
 
 <h3 id="docker-lifecycle">Docker lifecycle</h3>
-
-<p>This allows Cloud Foundry to run Docker images. When staging an app with this lifecycle, the Docker registry is queried for
-metadata about the image, such as ports and start command.  When running an app with this lifecycle, a container is created
-and the Docker image is executed inside of it.</p>
-
-<h4 id="docker-lifecycle-object">Docker lifecycle object</h4>
 <pre class="highlight plaintext"><code>Example Docker Lifecycle
 </code></pre>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
@@ -707,6 +640,12 @@ and the Docker image is executed inside of it.</p>
   </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
 </span><span class="p">}</span><span class="w">
 </span></code></pre>
+
+<p>This allows Cloud Foundry to run Docker images. When staging an app with this lifecycle, the Docker registry is queried for
+metadata about the image, such as ports and start command.  When running an app with this lifecycle, a container is created
+and the Docker image is executed inside of it.</p>
+
+<h4 id="docker-lifecycle-object">Docker lifecycle object</h4>
 
 <table><thead>
 <tr>
@@ -726,8 +665,7 @@ and the Docker image is executed inside of it.</p>
 <td>Data is not used by the Docker lifecycle. Valid value is <code class="prettyprint">{}</code>.</td>
 </tr>
 </tbody></table>
-
-          <h2 id="metadata">Metadata</h2>
+<h2 id="metadata">Metadata</h2>
 
 <p>Metadata allows you to tag <a href="#api-resource">API Resources</a> with information that does not directly affect its functionality.</p>
 
@@ -796,16 +734,6 @@ Prefixes are dns names intended to enable namespacing of annotation keys.</p>
 </ul>
 
 <h3 id="labels-and-selectors">Labels and selectors</h3>
-
-<p>Labels are user-specified key/value pairs that are attached to <a href="#api-resource">API Resources</a>.
-They are queryable, identifying attributes of a resource, but they do not affect the operation of CloudFoundry.</p>
-
-<p>For example, an app may be assigned a label with key <code class="prettyprint">sensitive</code> and possible values <code class="prettyprint">true</code> or <code class="prettyprint">false</code>.</p>
-
-<p>Users could then find all sensitive apps with a selector for <code class="prettyprint">sensitive=true</code>, resulting in a response containing
-only apps having the label key <code class="prettyprint">sensitive</code> with a label value of <code class="prettyprint">false</code>.</p>
-
-<h4 id="labels">Labels</h4>
 <pre class="highlight plaintext"><code>Example Resource with Labels
 </code></pre>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
@@ -830,6 +758,16 @@ only apps having the label key <code class="prettyprint">sensitive</code> with a
   </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
 </span></code></pre>
+
+<p>Labels are user-specified key/value pairs that are attached to <a href="#api-resource">API Resources</a>.
+They are queryable, identifying attributes of a resource, but they do not affect the operation of CloudFoundry.</p>
+
+<p>For example, an app may be assigned a label with key <code class="prettyprint">sensitive</code> and possible values <code class="prettyprint">true</code> or <code class="prettyprint">false</code>.</p>
+
+<p>Users could then find all sensitive apps with a selector for <code class="prettyprint">sensitive=true</code>, resulting in a response containing
+only apps having the label key <code class="prettyprint">sensitive</code> with a label value of <code class="prettyprint">false</code>.</p>
+
+<h4 id="labels">Labels</h4>
 
 <p>Labels allow users to apply identifying attributes to resources that are meaningful to the user, but not the CloudFoundry system.</p>
 
@@ -934,19 +872,6 @@ When included in a url, the selector must be appropriately escaped.
 <p>See <a href="https://docs.cloudfoundry.org/adminguide/metadata.html#query">the metadata documentation</a> for more information.</p>
 
 <h3 id="updating-labels-and-annotations">Updating labels and annotations</h3>
-
-<p>Labels and annotations can be updated by using the PATCH endpoint for their resource.
-For example, to update labels or annotations on an app, use the <a href="#update-an-app">update an app</a> endpoint.
-When patching metadata, CAPI endpoints do a deep merge, only updating labels or annotations that are specified in the request.</p>
-
-<p>Labels and annotations follow the same rules for patching and must be wrapped in the metadata object inside the request body</p>
-
-<ul>
-<li>To create, include the new key with a value</li>
-<li>To change, include the existing key with a new value</li>
-<li>To delete, include the existing key with a <code class="prettyprint">null</code> value</li>
-<li>To remain unchanged, do not include the existing key.</li>
-</ul>
 <pre class="highlight plaintext"><code>Example Initial Metadata
 </code></pre>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
@@ -993,12 +918,19 @@ When patching metadata, CAPI endpoints do a deep merge, only updating labels or 
 </span><span class="p">}</span><span class="w">
 </span></code></pre>
 
-          <h2 id="pagination">Pagination</h2>
+<p>Labels and annotations can be updated by using the PATCH endpoint for their resource.
+For example, to update labels or annotations on an app, use the <a href="#update-an-app">update an app</a> endpoint.
+When patching metadata, CAPI endpoints do a deep merge, only updating labels or annotations that are specified in the request.</p>
 
-<p>Any request that can return multiple resources will be paginated and contain a <code class="prettyprint">pagination</code> object and list of <code class="prettyprint">resources</code>.
-Requests for multiple resources can use <code class="prettyprint">page</code>, <code class="prettyprint">per_page</code>, and <code class="prettyprint">order_by</code> in addition to filters specific to the endpoint.</p>
+<p>Labels and annotations follow the same rules for patching and must be wrapped in the metadata object inside the request body</p>
 
-<h4 id="the-pagination-object">The pagination object</h4>
+<ul>
+<li>To create, include the new key with a value</li>
+<li>To change, include the existing key with a new value</li>
+<li>To delete, include the existing key with a <code class="prettyprint">null</code> value</li>
+<li>To remain unchanged, do not include the existing key.</li>
+</ul>
+<h2 id="pagination">Pagination</h2>
 <pre class="highlight plaintext"><code>Example Paginated Response
 </code></pre>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
@@ -1033,6 +965,11 @@ Requests for multiple resources can use <code class="prettyprint">page</code>, <
   </span><span class="p">]</span><span class="w">
 </span><span class="p">}</span><span class="w">
 </span></code></pre>
+
+<p>Any request that can return multiple resources will be paginated and contain a <code class="prettyprint">pagination</code> object and list of <code class="prettyprint">resources</code>.
+Requests for multiple resources can use <code class="prettyprint">page</code>, <code class="prettyprint">per_page</code>, and <code class="prettyprint">order_by</code> in addition to filters specific to the endpoint.</p>
+
+<h4 id="the-pagination-object">The pagination object</h4>
 
 <table><thead>
 <tr>
@@ -1072,8 +1009,7 @@ Requests for multiple resources can use <code class="prettyprint">page</code>, <
 <td>Link to the previous page.</td>
 </tr>
 </tbody></table>
-
-          <h2 id="procfiles">Procfiles</h2>
+<h2 id="procfiles">Procfiles</h2>
 <pre class="highlight plaintext"><code>Example Ruby Procfile
 </code></pre>
 <pre class="highlight yaml"><code><span class="s">web</span><span class="pi">:</span> <span class="s">bundle exec rackup config.ru -p $PORT</span>
@@ -1105,8 +1041,7 @@ If a Procfile is provided that also contains a <code class="prettyprint">worker<
 
 <p><code class="prettyprint">web</code> is a <a href="#web-process-type">special process type</a> that is required for all applications.
 The <code class="prettyprint">web</code> <code class="prettyprint">PROCESS_TYPE</code> must be specified by either the buildpack or the Procfile.</p>
-
-          <h2 id="relationships">Relationships</h2>
+<h2 id="relationships">Relationships</h2>
 
 <p>Relationships represent associations between resources. They can be used to create, read, update, and delete these associations.</p>
 
@@ -1278,8 +1213,7 @@ Relationships are tied to the lifecycles of the associated resources and will be
   -X GET <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
-
-          <h2 id="status-codes">Status Codes</h2>
+<h2 id="status-codes">Status Codes</h2>
 
 <p>Cloud Foundry V3 API uses a subset of HTTP response codes to indicate the success or failure of an API request.
 In general, codes in the 2xx range indicate success, codes in the 4xx range indicate an error that can potentially be fixed by correcting the request, and codes in the 5xx range indicate an error on the server side.</p>
@@ -1335,8 +1269,7 @@ In general, codes in the 2xx range indicate success, codes in the 4xx range indi
 <td>An upstream service caused the request to fail.</td>
 </tr>
 </tbody></table>
-
-          <h1 id="workflows">Workflows</h1>
+<h1 id="workflows">Workflows</h1>
 
 <p>Many users will think of interactions with Cloud Foundry in terms of a single operation like <code class="prettyprint">cf push</code> in order to upload an application to the platform, have it compiled, and schedule it to be run.
 Performing a push operation actually requires a client to orchestrate several requests to the API to accomplish the entire operation.
@@ -1354,15 +1287,12 @@ This section is meant to explain how clients can perform complex workflows using
 </ol>
 
 <p>For more information, see <a href="#create-a-task">Create a task</a>.</p>
-
-          <h1 id="resources">Resources</h1>
-
-          <h2 id="apps">Apps</h2>
+<h1 id="resources">Resources</h1>
+<h2 id="apps">Apps</h2>
 
 <p>Apps are top-level objects that link together and contain configuration
 information for your packages, droplets, processes, tasks, and more.</p>
-
-          <h3 id="the-app-object">The app object</h3>
+<h3 id="the-app-object">The app object</h3>
 <pre class="highlight plaintext"><code>Example App object
 </code></pre>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
@@ -1491,8 +1421,7 @@ information for your packages, droplets, processes, tasks, and more.</p>
 <td>Annotations added to the app.</td>
 </tr>
 </tbody></table>
-
-          <h3 id="create-an-app">Create an app</h3>
+<h3 id="create-an-app">Create an app</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps"</span> <span class="se">\</span>
@@ -1658,8 +1587,7 @@ information for your packages, droplets, processes, tasks, and more.</p>
 <td>Space Developer</td>
 </tr>
 </tbody></table>
-
-          <h3 id="get-an-app">Get an app</h3>
+<h3 id="get-an-app">Get an app</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]"</span> <span class="se">\</span>
@@ -1788,8 +1716,7 @@ information for your packages, droplets, processes, tasks, and more.</p>
 <td>Space Manager</td>
 </tr>
 </tbody></table>
-
-          <h3 id="list-apps">List apps</h3>
+<h3 id="list-apps">List apps</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps"</span> <span class="se">\</span>
@@ -2030,8 +1957,7 @@ information for your packages, droplets, processes, tasks, and more.</p>
 <td>All Roles</td>
 </tr>
 </tbody></table>
-
-          <h3 id="update-an-app">Update an app</h3>
+<h3 id="update-an-app">Update an app</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]"</span> <span class="se">\</span>
@@ -2170,8 +2096,7 @@ information for your packages, droplets, processes, tasks, and more.</p>
 <td>Space Developer</td>
 </tr>
 </tbody></table>
-
-          <h3 id="delete-an-app">Delete an app</h3>
+<h3 id="delete-an-app">Delete an app</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]"</span> <span class="se">\</span>
@@ -2202,14 +2127,13 @@ information for your packages, droplets, processes, tasks, and more.</p>
 <td>Space Developer</td>
 </tr>
 </tbody></table>
-
-          <h3 id="get-current-droplet">Get current droplet</h3>
+<h3 id="get-current-droplet">Get current droplet</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/droplets/current </span><span class="se">\</span><span class="s2">
-  -X GET </span><span class="se">\</span><span class="s2">
-  -H "</span>Authorization: bearer <span class="o">[</span>token]<span class="s2">"
-</span></code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/droplets/current"</span> <span class="se">\</span>
+  -X GET <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
+</code></pre>
 <pre class="highlight plaintext"><code>Example Response
 </code></pre>
 <pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
@@ -2300,8 +2224,7 @@ information for your packages, droplets, processes, tasks, and more.</p>
 <td>Space Manager</td>
 </tr>
 </tbody></table>
-
-          <h3 id="get-current-droplet-association-for-an-app">Get current droplet association for an app</h3>
+<h3 id="get-current-droplet-association-for-an-app">Get current droplet association for an app</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/relationships/current_droplet"</span> <span class="se">\</span>
@@ -2365,8 +2288,7 @@ information for your packages, droplets, processes, tasks, and more.</p>
 <td>Space Manager</td>
 </tr>
 </tbody></table>
-
-          <h3 id="get-environment-for-an-app">Get environment for an app</h3>
+<h3 id="get-environment-for-an-app">Get environment for an app</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/env"</span> <span class="se">\</span>
@@ -2447,8 +2369,7 @@ It will include environment variables for Environment Variable Groups and Servic
 <td>Space Developer</td>
 </tr>
 </tbody></table>
-
-          <h3 id="get-environment-variables-for-an-app">Get environment variables for an app</h3>
+<h3 id="get-environment-variables-for-an-app">Get environment variables for an app</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/environment_variables"</span> <span class="se">\</span>
@@ -2499,8 +2420,7 @@ For the entire list of environment variables that will be available to the app a
 <td>Space Developer</td>
 </tr>
 </tbody></table>
-
-          <h3 id="set-current-droplet">Set current droplet</h3>
+<h3 id="set-current-droplet">Set current droplet</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/relationships/current_droplet"</span> <span class="se">\</span>
@@ -2550,8 +2470,7 @@ For the entire list of environment variables that will be available to the app a
 <td>Space Developer</td>
 </tr>
 </tbody></table>
-
-          <h3 id="start-an-app">Start an app</h3>
+<h3 id="start-an-app">Start an app</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/actions/start"</span> <span class="se">\</span>
@@ -2649,8 +2568,7 @@ For the entire list of environment variables that will be available to the app a
 <td>Space Developer</td>
 </tr>
 </tbody></table>
-
-          <h3 id="stop-an-app">Stop an app</h3>
+<h3 id="stop-an-app">Stop an app</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/actions/stop"</span> <span class="se">\</span>
@@ -2748,8 +2666,7 @@ For the entire list of environment variables that will be available to the app a
 <td>Space Developer</td>
 </tr>
 </tbody></table>
-
-          <h3 id="update-environment-variables-for-an-app">Update environment variables for an app</h3>
+<h3 id="update-environment-variables-for-an-app">Update environment variables for an app</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/environment_variables"</span> <span class="se">\</span>
@@ -2808,8 +2725,7 @@ Environment variable names may not start with VCAP_. PORT is not a valid environ
 <td>Space Developer</td>
 </tr>
 </tbody></table>
-
-          <h2 id="builds">Builds</h2>
+<h2 id="builds">Builds</h2>
 
 <p>Builds represent the process of staging an application package. There are two types
 (<a href="#lifecycles">lifecycles</a>) of builds: buildpack and docker.</p>
@@ -2817,8 +2733,7 @@ Environment variable names may not start with VCAP_. PORT is not a valid environ
 <p>After an <a href="#apps">application</a> is created and <a href="#packages">packages</a> are uploaded, a build
 resource can be created to initiate the staging process. A successful build results in a 
 <a href="#droplets">droplet</a>.</p>
-
-          <h3 id="the-build-object">The build object</h3>
+<h3 id="the-build-object">The build object</h3>
 <pre class="highlight plaintext"><code>Example Build object
 </code></pre>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
@@ -2930,8 +2845,7 @@ resource can be created to initiate the staging process. A successful build resu
 <td>Annotations applied to the build.</td>
 </tr>
 </tbody></table>
-
-          <h3 id="create-a-build">Create a build</h3>
+<h3 id="create-a-build">Create a build</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/builds"</span> <span class="se">\</span>
@@ -3051,8 +2965,7 @@ resource can be created to initiate the staging process. A successful build resu
 <td>Space Developer</td>
 </tr>
 </tbody></table>
-
-          <h3 id="get-a-build">Get a build</h3>
+<h3 id="get-a-build">Get a build</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/builds/[guid]"</span> <span class="se">\</span>
@@ -3138,8 +3051,7 @@ resource can be created to initiate the staging process. A successful build resu
 <td>Space Manager</td>
 </tr>
 </tbody></table>
-
-          <h3 id="list-builds">List builds</h3>
+<h3 id="list-builds">List builds</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/builds"</span> <span class="se">\</span>
@@ -3268,8 +3180,7 @@ resource can be created to initiate the staging process. A successful build resu
 <td>All Roles</td>
 </tr>
 </tbody></table>
-
-          <h3 id="list-builds-for-an-app">List builds for an app</h3>
+<h3 id="list-builds-for-an-app">List builds for an app</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/builds"</span> <span class="se">\</span>
@@ -3339,7 +3250,7 @@ resource can be created to initiate the staging process. A successful build resu
 
 <h4 id="definition">Definition</h4>
 
-<p><code class="prettyprint">GET /v3/apps/[guid]/builds</code></p>
+<p><code class="prettyprint">GET /v3/apps/:guid/builds</code></p>
 
 <h4 id="query-parameters">Query parameters</h4>
 
@@ -3406,8 +3317,7 @@ resource can be created to initiate the staging process. A successful build resu
 <td>Space Manager</td>
 </tr>
 </tbody></table>
-
-          <h3 id="update-a-build">Update a build</h3>
+<h3 id="update-a-build">Update a build</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/builds/[guid]"</span> <span class="se">\</span>
@@ -3502,8 +3412,7 @@ resource can be created to initiate the staging process. A successful build resu
 <td>Space Developer</td>
 </tr>
 </tbody></table>
-
-          <h2 id="buildpacks">Buildpacks</h2>
+<h2 id="buildpacks">Buildpacks</h2>
 
 <p>Buildpacks are used during a <a href="#builds">build</a>
 to download external dependencies
@@ -3513,8 +3422,7 @@ In this way, buildpacks are a pluggable extension to Cloud Foundry
 that enable CF to run different languages and frameworks.
 Buildpacks will automatically detect if they support an application.
 Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a href="#builds">builds</a>.</p>
-
-          <h3 id="the-buildpack-object">The buildpack object</h3>
+<h3 id="the-buildpack-object">The buildpack object</h3>
 <pre class="highlight plaintext"><code>Example Buildpack object
 </code></pre>
 <pre class="highlight json"><code><span class="w">  </span><span class="p">{</span><span class="w">
@@ -3608,8 +3516,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 <td>Links to related resources.</td>
 </tr>
 </tbody></table>
-
-          <h3 id="create-a-buildpack">Create a buildpack</h3>
+<h3 id="create-a-buildpack">Create a buildpack</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/buildpacks"</span> <span class="se">\</span>
@@ -3736,8 +3643,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 <td>Admin</td>
 </tr>
 </tbody></table>
-
-          <h3 id="get-a-buildpack">Get a buildpack</h3>
+<h3 id="get-a-buildpack">Get a buildpack</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/buildpacks/[guid]"</span> <span class="se">\</span>
@@ -3792,8 +3698,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 <td>All Roles</td>
 </tr>
 </tbody></table>
-
-          <h3 id="list-buildpacks">List buildpacks</h3>
+<h3 id="list-buildpacks">List buildpacks</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/buildpacks"</span> <span class="se">\</span>
@@ -3909,8 +3814,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 <td>All Roles</td>
 </tr>
 </tbody></table>
-
-          <h3 id="update-a-buildpack">Update a buildpack</h3>
+<h3 id="update-a-buildpack">Update a buildpack</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/buildpacks/[guid]"</span> <span class="se">\</span>
@@ -4019,8 +3923,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 <td>Admin</td>
 </tr>
 </tbody></table>
-
-          <h3 id="delete-a-buildpack">Delete a buildpack</h3>
+<h3 id="delete-a-buildpack">Delete a buildpack</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/buildpacks/[guid]"</span> <span class="se">\</span>
@@ -4048,8 +3951,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 <td>Admin</td>
 </tr>
 </tbody></table>
-
-          <h3 id="upload-buildpack-bits">Upload buildpack bits</h3>
+<h3 id="upload-buildpack-bits">Upload buildpack bits</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/buildpacks/[guid]/upload"</span> <span class="se">\</span>
@@ -4124,14 +4026,12 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 <td>Admin</td>
 </tr>
 </tbody></table>
-
-          <h2 id="domains">Domains</h2>
+<h2 id="domains">Domains</h2>
 
 <p>Domains represent a <a href="https://en.wikipedia.org/wiki/Fully_qualified_domain_name">fully qualified domain name</a> that is used for application routes.</p>
 
 <p>A domain can be scoped to an organization, meaning it can be used to create routes for spaces inside that organization, or be left unscoped to allow all organizations access.</p>
-
-          <h3 id="the-domain-object">The domain object</h3>
+<h3 id="the-domain-object">The domain object</h3>
 <pre class="highlight plaintext"><code>Example Domain object
 </code></pre>
 <pre class="highlight json"><code><span class="w">  </span><span class="p">{</span><span class="w">
@@ -4231,8 +4131,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 <td>Annotations applied to the domain.</td>
 </tr>
 </tbody></table>
-
-          <h3 id="create-a-domain">Create a domain</h3>
+<h3 id="create-a-domain">Create a domain</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/domains"</span> <span class="se">\</span>
@@ -4367,8 +4266,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 <td>When an <code class="prettyprint">organization</code> relationship is provided.</td>
 </tr>
 </tbody></table>
-
-          <h3 id="get-a-domain">Get a domain</h3>
+<h3 id="get-a-domain">Get a domain</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/domains/[guid]"</span> <span class="se">\</span>
@@ -4468,8 +4366,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 <td></td>
 </tr>
 </tbody></table>
-
-          <h3 id="list-domains">List domains</h3>
+<h3 id="list-domains">List domains</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/domains"</span> <span class="se">\</span>
@@ -4589,11 +4486,10 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 <td></td>
 </tr>
 </tbody></table>
-
-          <h3 id="list-domains-for-an-organization">List domains for an organization</h3>
+<h3 id="list-domains-for-an-organization">List domains for an organization</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/organizations/[org_guid]/domains"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/organizations/[guid]/domains"</span> <span class="se">\</span>
   -X GET <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
@@ -4654,7 +4550,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 
 <h4 id="definition">Definition</h4>
 
-<p><code class="prettyprint">GET /v3/organizations/:org_guid/domains</code></p>
+<p><code class="prettyprint">GET /v3/organizations/:guid/domains</code></p>
 
 <h4 id="query-parameters">Query parameters</h4>
 
@@ -4708,8 +4604,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 <td>All Roles</td>
 </tr>
 </tbody></table>
-
-          <h3 id="update-a-domain">Update a domain</h3>
+<h3 id="update-a-domain">Update a domain</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/domains/[guid]"</span> <span class="se">\</span>
@@ -4812,8 +4707,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 <td>If domain is scoped to organization managed by the org manager.</td>
 </tr>
 </tbody></table>
-
-          <h3 id="delete-a-domain">Delete a domain</h3>
+<h3 id="delete-a-domain">Delete a domain</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/domains/[guid]"</span> <span class="se">\</span>
@@ -4847,10 +4741,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 <td>If domain is scoped to organization managed by the org manager.</td>
 </tr>
 </tbody></table>
-
-          <h3 id="share-a-domain">Share a domain</h3>
-
-<p>This endpoint shares an organization-scoped domain to other organizations specified by a list of organization guids. This will allow any of the other organizations to use the organization-scoped domain.</p>
+<h3 id="share-a-domain">Share a domain</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/domains/[guid]/relationships/shared_organizations"</span> <span class="se">\</span>
@@ -4877,6 +4768,8 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
   </span><span class="p">}</span><span class="w">
 
 </span></code></pre>
+
+<p>This endpoint shares an organization-scoped domain to other organizations specified by a list of organization guids. This will allow any of the other organizations to use the organization-scoped domain.</p>
 
 <h4 id="definition">Definition</h4>
 
@@ -4915,13 +4808,10 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 <td></td>
 </tr>
 </tbody></table>
-
-          <h3 id="unshare-a-domain">Unshare a domain</h3>
-
-<p>This endpoint removes an organization from the list of organizations an organization-scoped domain is shared with. This prevents the organization from using the organization-scoped domain.</p>
+<h3 id="unshare-a-domain">Unshare a domain</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/domains/[domain_guid]/relationships/shared_organizations/[org_guid]"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/domains/[guid]/relationships/shared_organizations/[org_guid]"</span> <span class="se">\</span>
   -X DELETE <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
   -H <span class="s2">"Content-type: application/json"</span>
@@ -4930,6 +4820,8 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 </code></pre>
 <pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">204</span> <span class="ne">No Content</span>
 </code></pre>
+
+<p>This endpoint removes an organization from the list of organizations an organization-scoped domain is shared with. This prevents the organization from using the organization-scoped domain.</p>
 
 <h4 id="definition">Definition</h4>
 
@@ -4952,8 +4844,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 <td><em>Can be in either the domain&rsquo;s owning organization or the organization it has been shared to</em></td>
 </tr>
 </tbody></table>
-
-          <h2 id="droplets">Droplets</h2>
+<h2 id="droplets">Droplets</h2>
 
 <p>Droplets are the result of staging an application package. There are two types
 (lifecycles) of droplets: buildpack and docker. In the case of the buildpacks,
@@ -4965,8 +4856,7 @@ created via a <a href="#builds">build</a> in order for an application to be depl
 The current droplet <a href="#set-current-droplet">must be assigned</a> to an
 application before it may be started. When <a href="#create-a-task">tasks are created</a>, 
 they either use a specific droplet guid, or use the current droplet assigned to an application.</p>
-
-          <h3 id="the-droplet-object">The droplet object</h3>
+<h3 id="the-droplet-object">The droplet object</h3>
 <pre class="highlight plaintext"><code>Example Droplet object
 </code></pre>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
@@ -5074,12 +4964,12 @@ they either use a specific droplet guid, or use the current droplet assigned to 
 <td>The process types (keys) and associated start commands (values) that will be created when the droplet is executed.</td>
 </tr>
 <tr>
-<td><strong>metadata.labels</strong><em>(experimental)</em></td>
+<td><strong>metadata.labels</strong> <em>(experimental)</em></td>
 <td><a href="#labels"><em>labels object</em></a></td>
 <td>Labels on the droplet</td>
 </tr>
 <tr>
-<td><strong>metadata.annotations</strong><em>(experimental)</em></td>
+<td><strong>metadata.annotations</strong> <em>(experimental)</em></td>
 <td><a href="#annotations"><em>annotations object</em></a></td>
 <td>Annotations on the droplet</td>
 </tr>
@@ -5165,8 +5055,7 @@ Their values will be <code class="prettyprint">null</code> by default and will c
 <td>Docker image name.</td>
 </tr>
 </tbody></table>
-
-          <h3 id="create-a-droplet">Create a droplet</h3>
+<h3 id="create-a-droplet">Create a droplet</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/droplets"</span> <span class="se">\</span>
@@ -5302,8 +5191,7 @@ Their values will be <code class="prettyprint">null</code> by default and will c
 <td></td>
 </tr>
 </tbody></table>
-
-          <h3 id="get-a-droplet">Get a droplet</h3>
+<h3 id="get-a-droplet">Get a droplet</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/droplets/[guid]"</span> <span class="se">\</span>
@@ -5400,8 +5288,7 @@ Their values will be <code class="prettyprint">null</code> by default and will c
 <td>Space Manager</td>
 </tr>
 </tbody></table>
-
-          <h3 id="list-droplets">List droplets</h3>
+<h3 id="list-droplets">List droplets</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/droplets"</span> <span class="se">\</span>
@@ -5591,8 +5478,7 @@ Their values will be <code class="prettyprint">null</code> by default and will c
 <td>All Roles</td>
 </tr>
 </tbody></table>
-
-          <h3 id="list-droplets-for-a-package">List droplets for a package</h3>
+<h3 id="list-droplets-for-a-package">List droplets for a package</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/packages/[guid]/droplets"</span> <span class="se">\</span>
@@ -5785,8 +5671,7 @@ Their values will be <code class="prettyprint">null</code> by default and will c
 <td>Space Manager</td>
 </tr>
 </tbody></table>
-
-          <h3 id="list-droplets-for-an-app">List droplets for an app</h3>
+<h3 id="list-droplets-for-an-app">List droplets for an app</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/droplets"</span> <span class="se">\</span>
@@ -5984,8 +5869,7 @@ Their values will be <code class="prettyprint">null</code> by default and will c
 <td>Space Manager</td>
 </tr>
 </tbody></table>
-
-          <h3 id="update-a-droplet">Update a droplet</h3>
+<h3 id="update-a-droplet">Update a droplet</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.space/v3/droplets/[guid]"</span> <span class="se">\</span>
@@ -6100,8 +5984,7 @@ Their values will be <code class="prettyprint">null</code> by default and will c
 <td>Space Manager</td>
 </tr>
 </tbody></table>
-
-          <h3 id="delete-a-droplet">Delete a droplet</h3>
+<h3 id="delete-a-droplet">Delete a droplet</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/droplets/[guid]"</span> <span class="se">\</span>
@@ -6132,8 +6015,7 @@ Their values will be <code class="prettyprint">null</code> by default and will c
 <td>Space Developer</td>
 </tr>
 </tbody></table>
-
-          <h3 id="copy-a-droplet">Copy a droplet</h3>
+<h3 id="copy-a-droplet">Copy a droplet</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/droplets?source_guid=[guid]"</span> <span class="se">\</span>
@@ -6247,8 +6129,7 @@ environment variables listed on the source droplet.</p>
 <td>Space Developer</td>
 </tr>
 </tbody></table>
-
-          <h3 id="upload-droplet-bits">Upload droplet bits</h3>
+<h3 id="upload-droplet-bits">Upload droplet bits</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/droplets/[guid]/upload"</span> <span class="se">\</span>
@@ -6337,12 +6218,10 @@ environment variables listed on the source droplet.</p>
 <td>Space Developer</td>
 </tr>
 </tbody></table>
-
-          <h2 id="feature-flags">Feature Flags</h2>
+<h2 id="feature-flags">Feature Flags</h2>
 
 <p>Feature flags are runtime flags that enable or disable functionality on the API.</p>
-
-          <h3 id="the-feature-flag-object">The feature flag object</h3>
+<h3 id="the-feature-flag-object">The feature flag object</h3>
 <pre class="highlight plaintext"><code>Example Feature Flag object
 </code></pre>
 <pre class="highlight json"><code><span class="w">  </span><span class="p">{</span><span class="w">
@@ -6392,8 +6271,7 @@ environment variables listed on the source droplet.</p>
 <td>Links to related resources.</td>
 </tr>
 </tbody></table>
-
-          <h3 id="list-of-feature-flags">List of feature flags</h3>
+<h3 id="list-of-feature-flags">List of feature flags</h3>
 
 <table><thead>
 <tr>
@@ -6446,8 +6324,7 @@ environment variables listed on the source droplet.</p>
 <td><strong>Name:</strong> <code class="prettyprint">user_org_creation</code><br><strong>Default:</strong> <code class="prettyprint">false</code> <br><strong>Description:</strong> When enabled, any user can create an organization via the API. When disabled, only admin users can create organizations via the API.</td>
 </tr>
 </tbody></table>
-
-          <h3 id="get-a-feature-flag">Get a feature flag</h3>
+<h3 id="get-a-feature-flag">Get a feature flag</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/feature_flags/[name]"</span> <span class="se">\</span>
@@ -6488,8 +6365,7 @@ environment variables listed on the source droplet.</p>
 <td>All Roles</td>
 </tr>
 </tbody></table>
-
-          <h3 id="list-feature-flags">List feature flags</h3>
+<h3 id="list-feature-flags">List feature flags</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/feature_flags"</span> <span class="se">\</span>
@@ -6587,8 +6463,7 @@ environment variables listed on the source droplet.</p>
 <td>All Roles</td>
 </tr>
 </tbody></table>
-
-          <h3 id="update-a-feature-flag">Update a feature flag</h3>
+<h3 id="update-a-feature-flag">Update a feature flag</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/feature_flags/[name]"</span> <span class="se">\</span>
@@ -6655,12 +6530,10 @@ environment variables listed on the source droplet.</p>
 <td>Admin</td>
 </tr>
 </tbody></table>
-
-          <h2 id="isolation-segments">Isolation Segments</h2>
+<h2 id="isolation-segments">Isolation Segments</h2>
 
 <p>Isolation Segments provide dedicated pools of resources to which apps can be deployed to isolate workloads.</p>
-
-          <h3 id="the-isolation-segment-object">The isolation segment object</h3>
+<h3 id="the-isolation-segment-object">The isolation segment object</h3>
 <pre class="highlight plaintext"><code>Example Isolation Segment object
 </code></pre>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
@@ -6717,18 +6590,17 @@ environment variables listed on the source droplet.</p>
 <td>Links to related resources.</td>
 </tr>
 <tr>
-<td><strong>metadata.labels</strong><em>(experimental)</em></td>
+<td><strong>metadata.labels</strong> <em>(experimental)</em></td>
 <td><a href="#labels"><em>labels object</em></a></td>
 <td>Labels on the isolation segment</td>
 </tr>
 <tr>
-<td><strong>metadata.annotations</strong><em>(experimental)</em></td>
+<td><strong>metadata.annotations</strong> <em>(experimental)</em></td>
 <td><a href="#annotations"><em>annotations object</em></a></td>
 <td>Annotations on the isolation segment</td>
 </tr>
 </tbody></table>
-
-          <h3 id="create-an-isolation-segment">Create an isolation segment</h3>
+<h3 id="create-an-isolation-segment">Create an isolation segment</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/isolation_segments"</span> <span class="se">\</span>
@@ -6806,8 +6678,7 @@ environment variables listed on the source droplet.</p>
 <td>Admin</td>
 </tr>
 </tbody></table>
-
-          <h3 id="get-an-isolation-segment">Get an isolation segment</h3>
+<h3 id="get-an-isolation-segment">Get an isolation segment</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/isolation_segments/[guid]"</span> <span class="se">\</span>
@@ -6873,8 +6744,7 @@ environment variables listed on the source droplet.</p>
 <td>Space Manager</td>
 </tr>
 </tbody></table>
-
-          <h3 id="list-isolation-segments">List isolation segments</h3>
+<h3 id="list-isolation-segments">List isolation segments</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/isolation_segments"</span> <span class="se">\</span>
@@ -7060,8 +6930,7 @@ environment variables listed on the source droplet.</p>
 <td>All Roles</td>
 </tr>
 </tbody></table>
-
-          <h3 id="list-organizations-relationship">List organizations relationship</h3>
+<h3 id="list-organizations-relationship">List organizations relationship</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/isolation_segments/[guid]/relationships/organizations"</span> <span class="se">\</span>
@@ -7111,8 +6980,7 @@ environment variables listed on the source droplet.</p>
 <td>All Roles</td>
 </tr>
 </tbody></table>
-
-          <h3 id="list-spaces-relationship">List spaces relationship</h3>
+<h3 id="list-spaces-relationship">List spaces relationship</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/isolation_segments/[guid]/relationships/spaces"</span> <span class="se">\</span>
@@ -7177,8 +7045,7 @@ environment variables listed on the source droplet.</p>
 <td>Space Manager</td>
 </tr>
 </tbody></table>
-
-          <h3 id="update-an-isolation-segment">Update an isolation segment</h3>
+<h3 id="update-an-isolation-segment">Update an isolation segment</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/isolation_segments/[guid]"</span> <span class="se">\</span>
@@ -7254,8 +7121,7 @@ environment variables listed on the source droplet.</p>
 <td>Admin</td>
 </tr>
 </tbody></table>
-
-          <h3 id="delete-an-isolation-segment">Delete an isolation segment</h3>
+<h3 id="delete-an-isolation-segment">Delete an isolation segment</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/isolation_segments/[guid]"</span> <span class="se">\</span>
@@ -7284,8 +7150,7 @@ environment variables listed on the source droplet.</p>
 <td>Admin</td>
 </tr>
 </tbody></table>
-
-          <h3 id="entitle-organizations-for-an-isolation-segment">Entitle organizations for an isolation segment</h3>
+<h3 id="entitle-organizations-for-an-isolation-segment">Entitle organizations for an isolation segment</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/isolation_segments/[guid]/relationships/organizations"</span> <span class="se">\</span>
@@ -7359,8 +7224,7 @@ In the case where the specified isolation segment is the system-wide shared segm
 <td>Admin</td>
 </tr>
 </tbody></table>
-
-          <h3 id="revoke-entitlement-to-isolation-segment-for-an-organization">Revoke entitlement to isolation segment for an organization</h3>
+<h3 id="revoke-entitlement-to-isolation-segment-for-an-organization">Revoke entitlement to isolation segment for an organization</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/isolation_segments/[guid]/relationships/organizations/[org_guid]"</span> <span class="se">\</span>
@@ -7389,12 +7253,10 @@ In the case where the specified isolation segment is the system-wide shared segm
 <td>Admin</td>
 </tr>
 </tbody></table>
-
-          <h2 id="jobs">Jobs</h2>
+<h2 id="jobs">Jobs</h2>
 
 <p>Jobs are created by the platform when performing certain asynchronous actions.</p>
-
-          <h3 id="the-job-object">The job object</h3>
+<h3 id="the-job-object">The job object</h3>
 <pre class="highlight plaintext"><code>Example Job object
 </code></pre>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
@@ -7456,8 +7318,7 @@ In the case where the specified isolation segment is the system-wide shared segm
 <td>Array of errors that occurred while processing the job.</td>
 </tr>
 </tbody></table>
-
-          <h3 id="get-a-job">Get a job</h3>
+<h3 id="get-a-job">Get a job</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/jobs/[guid]"</span> <span class="se">\</span>
@@ -7547,12 +7408,10 @@ In the case where the specified isolation segment is the system-wide shared segm
 <td>Space Manager</td>
 </tr>
 </tbody></table>
-
-          <h2 id="organizations">Organizations</h2>
+<h2 id="organizations">Organizations</h2>
 
 <p>An org is a development account that an individual or multiple collaborators can own and use. All collaborators access an org with user accounts. Collaborators in an org share a resource quota plan, applications, services availability, and custom domains.</p>
-
-          <h3 id="the-organization-object">The organization object</h3>
+<h3 id="the-organization-object">The organization object</h3>
 <pre class="highlight plaintext"><code>Example Organization object
 </code></pre>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
@@ -7640,8 +7499,7 @@ In the case where the specified isolation segment is the system-wide shared segm
 <td>Annotations added to the organization.</td>
 </tr>
 </tbody></table>
-
-          <h3 id="create-an-organization">Create an organization</h3>
+<h3 id="create-an-organization">Create an organization</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/organizations"</span> <span class="se">\</span>
@@ -7747,8 +7605,7 @@ In the case where the specified isolation segment is the system-wide shared segm
 </tbody></table>
 
 <p>If the <code class="prettyprint">user_org_creation</code> feature flag is enabled, any user with the <code class="prettyprint">cloud_controller.write</code> scope will be able to create organizations.</p>
-
-          <h3 id="get-an-organization">Get an organization</h3>
+<h3 id="get-an-organization">Get an organization</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/organizations/[guid]"</span> <span class="se">\</span>
@@ -7809,8 +7666,7 @@ In the case where the specified isolation segment is the system-wide shared segm
 <td>All Roles</td>
 </tr>
 </tbody></table>
-
-          <h3 id="list-organizations">List organizations</h3>
+<h3 id="list-organizations">List organizations</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/organizations"</span> <span class="se">\</span>
@@ -7957,8 +7813,7 @@ In the case where the specified isolation segment is the system-wide shared segm
 <td>All Roles</td>
 </tr>
 </tbody></table>
-
-          <h3 id="list-organizations-for-isolation-segment">List organizations for isolation segment</h3>
+<h3 id="list-organizations-for-isolation-segment">List organizations for isolation segment</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/isolation_segments/[guid]/organizations"</span> <span class="se">\</span>
@@ -8115,8 +7970,7 @@ In the case where the specified isolation segment is the system-wide shared segm
 <td>Org Manager</td>
 </tr>
 </tbody></table>
-
-          <h3 id="update-an-organization">Update an organization</h3>
+<h3 id="update-an-organization">Update an organization</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/organizations/[guid]"</span> <span class="se">\</span>
@@ -8212,8 +8066,7 @@ In the case where the specified isolation segment is the system-wide shared segm
 <td>Org Manager</td>
 </tr>
 </tbody></table>
-
-          <h3 id="delete-an-organization">Delete an Organization</h3>
+<h3 id="delete-an-organization">Delete an organization</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/organizations/[guid]"</span> <span class="se">\</span>
@@ -8243,8 +8096,7 @@ In the case where the specified isolation segment is the system-wide shared segm
 <td></td>
 </tr>
 </tbody></table>
-
-          <h3 id="assign-default-isolation-segment">Assign default isolation segment</h3>
+<h3 id="assign-default-isolation-segment">Assign default isolation segment</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/organizations/[guid]/relationships/default_isolation_segment"</span> <span class="se">\</span>
@@ -8317,8 +8169,7 @@ Only isolation segments that are entitled to the organization are eligible to be
 <td>Org Manager</td>
 </tr>
 </tbody></table>
-
-          <h3 id="get-default-isolation-segment">Get default isolation segment</h3>
+<h3 id="get-default-isolation-segment">Get default isolation segment</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/organizations/[guid]/relationships/default_isolation_segment"</span> <span class="se">\</span>
@@ -8363,8 +8214,7 @@ Only isolation segments that are entitled to the organization are eligible to be
 <td>All Roles</td>
 </tr>
 </tbody></table>
-
-          <h3 id="get-default-domain">Get default domain</h3>
+<h3 id="get-default-domain">Get default domain</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/organizations/[guid]/domains/default"</span> <span class="se">\</span>
@@ -8466,8 +8316,7 @@ Only isolation segments that are entitled to the organization are eligible to be
 <td></td>
 </tr>
 </tbody></table>
-
-          <h3 id="get-usage-summary">Get usage summary</h3>
+<h3 id="get-usage-summary">Get usage summary</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/organizations/[guid]/usage_summary"</span> <span class="se">\</span>
@@ -8513,14 +8362,12 @@ Only isolation segments that are entitled to the organization are eligible to be
 <td>All Roles</td>
 </tr>
 </tbody></table>
-
-          <h2 id="packages">Packages</h2>
+<h2 id="packages">Packages</h2>
 
 <p>A package is an application&rsquo;s &lsquo;source code&rsquo;; either raw bits for your application or a pointer to these bits.</p>
 
 <p>In Cloud Foundry, packages are staged to produce an executable Droplet. We currently support raw bits and Docker packages.</p>
-
-          <h3 id="the-package-object">The package object</h3>
+<h3 id="the-package-object">The package object</h3>
 <pre class="highlight plaintext"><code>Example Package object
 </code></pre>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
@@ -8749,8 +8596,7 @@ Only isolation segments that are entitled to the organization are eligible to be
 <td>Annotations applied to the package.</td>
 </tr>
 </tbody></table>
-
-          <h3 id="create-a-package">Create a package</h3>
+<h3 id="create-a-package">Create a package</h3>
 <pre class="highlight plaintext"><code>Example Request (buildpack app)
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/packages"</span> <span class="se">\</span>
@@ -8956,8 +8802,7 @@ Only isolation segments that are entitled to the organization are eligible to be
 <td>Space Developer</td>
 </tr>
 </tbody></table>
-
-          <h3 id="get-a-package">Get a package</h3>
+<h3 id="get-a-package">Get a package</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/packages/[guid]"</span> <span class="se">\</span>
@@ -9039,8 +8884,7 @@ Only isolation segments that are entitled to the organization are eligible to be
 <td>Space Manager</td>
 </tr>
 </tbody></table>
-
-          <h3 id="list-packages">List packages</h3>
+<h3 id="list-packages">List packages</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/packages"</span> <span class="se">\</span>
@@ -9207,8 +9051,7 @@ Only isolation segments that are entitled to the organization are eligible to be
 <td>All Roles</td>
 </tr>
 </tbody></table>
-
-          <h3 id="list-packages-for-an-app">List packages for an app</h3>
+<h3 id="list-packages-for-an-app">List packages for an app</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/packages"</span> <span class="se">\</span>
@@ -9348,8 +9191,7 @@ Only isolation segments that are entitled to the organization are eligible to be
 <td>Space Manager</td>
 </tr>
 </tbody></table>
-
-          <h3 id="update-a-package">Update a package</h3>
+<h3 id="update-a-package">Update a package</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/packages/[guid]"</span> <span class="se">\</span>
@@ -9440,8 +9282,7 @@ Only isolation segments that are entitled to the organization are eligible to be
 <td>Space Developer</td>
 </tr>
 </tbody></table>
-
-          <h3 id="delete-a-package">Delete a package</h3>
+<h3 id="delete-a-package">Delete a package</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/packages/[guid]"</span> <span class="se">\</span>
@@ -9472,8 +9313,7 @@ Only isolation segments that are entitled to the organization are eligible to be
 <td>Space Developer</td>
 </tr>
 </tbody></table>
-
-          <h3 id="copy-a-package">Copy a package</h3>
+<h3 id="copy-a-package">Copy a package</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/packages?source_guid=[guid]"</span> <span class="se">\</span>
@@ -9572,8 +9412,7 @@ Only isolation segments that are entitled to the organization are eligible to be
 <td>Space Developer</td>
 </tr>
 </tbody></table>
-
-          <h3 id="download-package-bits">Download package bits</h3>
+<h3 id="download-package-bits">Download package bits</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/packages/[guid]/download"</span> <span class="se">\</span>
@@ -9612,12 +9451,10 @@ the request in that case. Clients may need to follow the redirect without includ
 <td>Space Developer</td>
 </tr>
 </tbody></table>
-
-          <h3 id="stage-a-package">Stage a package</h3>
+<h3 id="stage-a-package">Stage a package</h3>
 
 <p>Staging a package is accomplished by creating a build. See <a href=#create-a-build>Create a build</a>.</p>
-
-          <h3 id="upload-package-bits">Upload package bits</h3>
+<h3 id="upload-package-bits">Upload package bits</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/packages/[guid]/upload"</span> <span class="se">\</span>
@@ -9714,8 +9551,7 @@ the request in that case. Clients may need to follow the redirect without includ
 <td>Space Developer</td>
 </tr>
 </tbody></table>
-
-          <h2 id="processes">Processes</h2>
+<h2 id="processes">Processes</h2>
 
 <p>Processes define the runnable units of an app. An app can have multiple process types, each with differing commands and scale.
 Processes for an app are defined by the buildpack used to stage the app and can be customized by including a <a href="#procfiles">Procfile</a> in the application source.</p>
@@ -9727,8 +9563,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 <li>Scale the <code class="prettyprint">web</code> process to zero if it is not required for your app</li>
 <li>Unless otherwise specified, all routes will be mapped to the <code class="prettyprint">web</code> process by default</li>
 </ul>
-
-          <h3 id="the-process-object">The process object</h3>
+<h3 id="the-process-object">The process object</h3>
 <pre class="highlight plaintext"><code>Example Process object
 </code></pre>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
@@ -9852,8 +9687,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 <td>Annotations applied to the process.</td>
 </tr>
 </tbody></table>
-
-          <h3 id="the-health-check-object">The health check object</h3>
+<h3 id="the-health-check-object">The health check object</h3>
 <pre class="highlight plaintext"><code>Example health check object
 </code></pre>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
@@ -9893,8 +9727,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 <td>The endpoint called to determine if the app is healthy. This key is only present for <code class="prettyprint">http</code> health checks.</td>
 </tr>
 </tbody></table>
-
-          <h3 id="the-process-stats-object">The process stats object</h3>
+<h3 id="the-process-stats-object">The process stats object</h3>
 <pre class="highlight plaintext"><code>Example process stats object
 </code></pre>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
@@ -10007,8 +9840,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 <td>Information about errors placing the instance. The value is <code class="prettyprint">null</code>  if there are no placement errors.</td>
 </tr>
 </tbody></table>
-
-          <h3 id="get-a-process">Get a process</h3>
+<h3 id="get-a-process">Get a process</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/processes/[guid]"</span> <span class="se">\</span>
@@ -10102,8 +9934,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 <td>Space Manager</td>
 </tr>
 </tbody></table>
-
-          <h3 id="get-stats-for-a-process">Get stats for a process</h3>
+<h3 id="get-stats-for-a-process">Get stats for a process</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/processes/[guid]/stats"</span> <span class="se">\</span>
@@ -10180,14 +10011,13 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 <td>Space Manager</td>
 </tr>
 </tbody></table>
-
-          <h3 id="list-processes">List processes</h3>
+<h3 id="list-processes">List processes</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/processes </span><span class="se">\</span><span class="s2">
-  -X GET </span><span class="se">\</span><span class="s2">
-  -H "</span>Authorization: bearer <span class="o">[</span>token]<span class="s2">"
-</span></code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/processes"</span> <span class="se">\</span>
+  -X GET <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
+</code></pre>
 <pre class="highlight plaintext"><code>Example Response
 </code></pre>
 <pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
@@ -10373,14 +10203,13 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 <td>All Roles</td>
 </tr>
 </tbody></table>
-
-          <h3 id="list-processes-for-app">List processes for app</h3>
+<h3 id="list-processes-for-app">List processes for app</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/processes </span><span class="se">\</span><span class="s2">
-  -X GET </span><span class="se">\</span><span class="s2">
-  -H "</span>Authorization: bearer <span class="o">[</span>token]<span class="s2">"
-</span></code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/processes"</span> <span class="se">\</span>
+  -X GET <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
+</code></pre>
 <pre class="highlight plaintext"><code>Example Response
 </code></pre>
 <pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
@@ -10569,8 +10398,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 <td>Space Manager</td>
 </tr>
 </tbody></table>
-
-          <h3 id="update-a-process">Update a process</h3>
+<h3 id="update-a-process">Update a process</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/processes/[guid]"</span> <span class="se">\</span>
@@ -10691,8 +10519,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 <td>Space Developer</td>
 </tr>
 </tbody></table>
-
-          <h3 id="scale-a-process">Scale a process</h3>
+<h3 id="scale-a-process">Scale a process</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/processes/[guid]/actions/scale"</span> <span class="se">\</span>
@@ -10803,8 +10630,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 <td>Space Developer</td>
 </tr>
 </tbody></table>
-
-          <h3 id="terminate-a-process-instance">Terminate a process instance</h3>
+<h3 id="terminate-a-process-instance">Terminate a process instance</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/processes/[guid]/instances/[index]"</span> <span class="se">\</span>
@@ -10839,12 +10665,10 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 <td>Space Developer</td>
 </tr>
 </tbody></table>
-
-          <h2 id="routes">Routes</h2>
+<h2 id="routes">Routes</h2>
 
 <p>Routes are addresses that direct matched network traffic to one or more destinations. Each route is based on a domain name with additional matching criteria (host (subdomain), path, etc). Matched traffic will be distributed across all destinations, based on their configuration (round-robin by default).</p>
-
-          <h3 id="the-route-object">The route object</h3>
+<h3 id="the-route-object">The route object</h3>
 <pre class="highlight plaintext"><code>Example Route object
 </code></pre>
 <pre class="highlight json"><code><span class="w">  </span><span class="p">{</span><span class="w">
@@ -10951,18 +10775,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 <td>Annotations applied to the route.</td>
 </tr>
 </tbody></table>
-
-          <h3 id="the-destination-object">The destination object</h3>
-
-<p>A destination represents the relationship between a route and a resource that can serve traffic (for example, the <code class="prettyprint">web</code> process of an application).</p>
-
-<p>When a route has destinations, that route will direct traffic to the processes represented by those destinations.</p>
-
-<p>If a destination is created with a port specified, the route will direct traffic to that port on the process. A destination with port 9000 and process type <code class="prettyprint">api</code> means traffic will be directed to the <code class="prettyprint">api</code> process running on container port 9000.</p>
-
-<p>Note that when using a custom port, the app process must be listening on the specified port for the mapping to work. Otherwise, visiting the route will result in a 404 error.</p>
-
-<p>If a destination does not specify a port, the default port depends on the app lifecycle type. For buildpack apps, traffic will be directed to port 8080. For Docker apps, the first port specified in the Dockerfile will be used.</p>
+<h3 id="the-destination-object">The destination object</h3>
 <pre class="highlight plaintext"><code>Example Destination object
 </code></pre>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
@@ -10978,6 +10791,16 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 </span><span class="p">}</span><span class="w">
 
 </span></code></pre>
+
+<p>A destination represents the relationship between a route and a resource that can serve traffic (for example, the <code class="prettyprint">web</code> process of an application).</p>
+
+<p>When a route has destinations, that route will direct traffic to the processes represented by those destinations.</p>
+
+<p>If a destination is created with a port specified, the route will direct traffic to that port on the process. A destination with port 9000 and process type <code class="prettyprint">api</code> means traffic will be directed to the <code class="prettyprint">api</code> process running on container port 9000.</p>
+
+<p>Note that when using a custom port, the app process must be listening on the specified port for the mapping to work. Otherwise, visiting the route will result in a 404 error.</p>
+
+<p>If a destination does not specify a port, the default port depends on the app lifecycle type. For buildpack apps, traffic will be directed to port 8080. For Docker apps, the first port specified in the Dockerfile will be used.</p>
 
 <table><thead>
 <tr>
@@ -11012,8 +10835,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 <td>Percentage of traffic which will be routed to this destination. <em>This feature is only available via the BETA Service Mesh routing plane</em>.</td>
 </tr>
 </tbody></table>
-
-          <h3 id="create-a-route">Create a route</h3>
+<h3 id="create-a-route">Create a route</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/routes"</span> <span class="se">\</span>
@@ -11156,8 +10978,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 <td></td>
 </tr>
 </tbody></table>
-
-          <h3 id="get-a-route">Get a route</h3>
+<h3 id="get-a-route">Get a route</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/routes/[guid]"</span> <span class="se">\</span>
@@ -11255,8 +11076,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 <td></td>
 </tr>
 </tbody></table>
-
-          <h3 id="list-routes">List routes</h3>
+<h3 id="list-routes">List routes</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/routes"</span> <span class="se">\</span>
@@ -11400,8 +11220,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 <td>All Roles</td>
 </tr>
 </tbody></table>
-
-          <h3 id="list-routes-for-an-app">List routes for an app</h3>
+<h3 id="list-routes-for-an-app">List routes for an app</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/routes"</span> <span class="se">\</span>
@@ -11476,7 +11295,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 
 <h4 id="definition">Definition</h4>
 
-<p><code class="prettyprint">GET /v3/apps/:app_guid/routes</code></p>
+<p><code class="prettyprint">GET /v3/apps/:guid/routes</code></p>
 
 <h4 id="query-parameters">Query parameters</h4>
 
@@ -11563,8 +11382,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 <td>Space Manager</td>
 </tr>
 </tbody></table>
-
-          <h3 id="update-a-route">Update a route</h3>
+<h3 id="update-a-route">Update a route</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/routes/[guid]"</span> <span class="se">\</span>
@@ -11669,8 +11487,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 <td></td>
 </tr>
 </tbody></table>
-
-          <h3 id="delete-a-route">Delete a route</h3>
+<h3 id="delete-a-route">Delete a route</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/routes/[guid]"</span> <span class="se">\</span>
@@ -11704,8 +11521,7 @@ Processes for an app are defined by the buildpack used to stage the app and can 
 <td></td>
 </tr>
 </tbody></table>
-
-          <h3 id="check-reserved-routes-for-a-domain">Check reserved routes for a domain</h3>
+<h3 id="check-reserved-routes-for-a-domain">Check reserved routes for a domain</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/domains/[guid]/route_reservations"</span> <span class="se">\</span>
@@ -11794,8 +11610,7 @@ belongs to a space the user does not belong to.</p>
 <td></td>
 </tr>
 </tbody></table>
-
-          <h3 id="list-destinations-for-a-route">List destinations for a route</h3>
+<h3 id="list-destinations-for-a-route">List destinations for a route</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/routes/[guid]/destinations"</span> <span class="se">\</span>
@@ -11891,8 +11706,7 @@ belongs to a space the user does not belong to.</p>
 <td></td>
 </tr>
 </tbody></table>
-
-          <h3 id="insert-destinations-for-a-route">Insert destinations for a route</h3>
+<h3 id="insert-destinations-for-a-route">Insert destinations for a route</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/routes/[guid]/destinations"</span> <span class="se">\</span>
@@ -11998,8 +11812,7 @@ replace all destinations for a route at once using the <a href="#replace-all-des
 <td>Space Developer</td>
 </tr>
 </tbody></table>
-
-          <h3 id="replace-all-destinations-for-a-route">Replace all destinations for a route</h3>
+<h3 id="replace-all-destinations-for-a-route">Replace all destinations for a route</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/routes/[guid]/destinations"</span> <span class="se">\</span>
@@ -12107,8 +11920,7 @@ and unweighted destinations for a route is not allowed.</p>
 <td>Space Developer</td>
 </tr>
 </tbody></table>
-
-          <h3 id="remove-destination-for-a-route">Remove destination for a route</h3>
+<h3 id="remove-destination-for-a-route">Remove destination for a route</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/routes/[guid]/destinations/[destination_guid]"</span> <span class="se">\</span>
@@ -12143,8 +11955,7 @@ and unweighted destinations for a route is not allowed.</p>
 <td></td>
 </tr>
 </tbody></table>
-
-          <h3 id="delete-unmapped-routes-for-a-space">Delete unmapped routes for a space</h3>
+<h3 id="delete-unmapped-routes-for-a-space">Delete unmapped routes for a space</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/spaces/[guid]/routes?unmapped=true"</span> <span class="se">\</span>
@@ -12161,7 +11972,7 @@ and unweighted destinations for a route is not allowed.</p>
 
 <h4 id="definition">Definition</h4>
 
-<p><code class="prettyprint">DELETE /v3/spaces/:space_guid/routes?unmapped=true</code></p>
+<p><code class="prettyprint">DELETE /v3/spaces/:guid/routes?unmapped=true</code></p>
 
 <h4 id="permitted-roles">Permitted roles</h4>
 
@@ -12182,12 +11993,10 @@ and unweighted destinations for a route is not allowed.</p>
 </tbody></table>
 
 <p><strong>Note</strong>: <code class="prettyprint">unmapped=true</code> is a required query parameter; always include it.</p>
-
-          <h2 id="service-instances">Service Instances</h2>
+<h2 id="service-instances">Service Instances</h2>
 
 <p>An instantiation of a service offering.</p>
-
-          <h3 id="the-service-instance-object">The service instance object</h3>
+<h3 id="the-service-instance-object">The service instance object</h3>
 <pre class="highlight plaintext"><code>Example Service Instance object
 </code></pre>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
@@ -12263,8 +12072,7 @@ and unweighted destinations for a route is not allowed.</p>
 <td>Annotations applied to the service instance.</td>
 </tr>
 </tbody></table>
-
-          <h3 id="list-service-instances">List service instances</h3>
+<h3 id="list-service-instances">List service instances</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/service_instances"</span> <span class="se">\</span>
@@ -12372,8 +12180,7 @@ and unweighted destinations for a route is not allowed.</p>
 <td>All Roles</td>
 </tr>
 </tbody></table>
-
-          <h3 id="list-shared-spaces-relationship">List shared spaces relationship</h3>
+<h3 id="list-shared-spaces-relationship">List shared spaces relationship</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/service_instances/[guid]/relationships/shared_spaces"</span> <span class="se">\</span>
@@ -12438,8 +12245,7 @@ and unweighted destinations for a route is not allowed.</p>
 <td>Space Manager</td>
 </tr>
 </tbody></table>
-
-          <h3 id="update-a-service-instance">Update a service instance</h3>
+<h3 id="update-a-service-instance">Update a service instance</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/service_instances/[guid]"</span> <span class="se">\</span>
@@ -12518,8 +12324,7 @@ and unweighted destinations for a route is not allowed.</p>
 <td>Space Developer</td>
 </tr>
 </tbody></table>
-
-          <h3 id="share-a-service-instance-to-other-spaces">Share a service instance to other spaces</h3>
+<h3 id="share-a-service-instance-to-other-spaces">Share a service instance to other spaces</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/service_instances/[guid]/relationships/shared_spaces"</span> <span class="se">\</span>
@@ -12593,8 +12398,7 @@ In order to share into a space the requesting user must be a space developer in 
 <td>Space Developer</td>
 </tr>
 </tbody></table>
-
-          <h3 id="unshare-a-service-instance-from-another-space">Unshare a service instance from another space</h3>
+<h3 id="unshare-a-service-instance-from-another-space">Unshare a service instance from another space</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/service_instances/[guid]/relationships/shared_spaces/[space_guid]"</span> <span class="se">\</span>
@@ -12626,12 +12430,10 @@ In order to share into a space the requesting user must be a space developer in 
 <td>Space Developer</td>
 </tr>
 </tbody></table>
-
-          <h2 id="spaces">Spaces</h2>
+<h2 id="spaces">Spaces</h2>
 
 <p>Every application and service is scoped to a space. Each org contains at least one space. A space provides users with access to a shared location for application development, deployment, and maintenance.</p>
-
-          <h3 id="the-space-object">The space object</h3>
+<h3 id="the-space-object">The space object</h3>
 <pre class="highlight plaintext"><code>Example Space object
 </code></pre>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
@@ -12710,8 +12512,7 @@ In order to share into a space the requesting user must be a space developer in 
 <td>Annotations applied to the space.</td>
 </tr>
 </tbody></table>
-
-          <h3 id="create-a-space">Create a space</h3>
+<h3 id="create-a-space">Create a space</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/spaces"</span> <span class="se">\</span>
@@ -12823,8 +12624,7 @@ In order to share into a space the requesting user must be a space developer in 
 <td>Org Manager</td>
 </tr>
 </tbody></table>
-
-          <h3 id="get-a-space">Get a space</h3>
+<h3 id="get-a-space">Get a space</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/spaces/[guid]"</span> <span class="se">\</span>
@@ -12915,8 +12715,7 @@ In order to share into a space the requesting user must be a space developer in 
 <td>Space Manager</td>
 </tr>
 </tbody></table>
-
-          <h3 id="list-spaces">List spaces</h3>
+<h3 id="list-spaces">List spaces</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/spaces"</span> <span class="se">\</span>
@@ -13065,8 +12864,7 @@ In order to share into a space the requesting user must be a space developer in 
 <td>All Roles</td>
 </tr>
 </tbody></table>
-
-          <h3 id="update-a-space">Update a space</h3>
+<h3 id="update-a-space">Update a space</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.space/v3/spaces/[guid]"</span> <span class="se">\</span>
@@ -13156,8 +12954,7 @@ In order to share into a space the requesting user must be a space developer in 
 <td>Space Manager</td>
 </tr>
 </tbody></table>
-
-          <h3 id="delete-a-space">Delete a Space</h3>
+<h3 id="delete-a-space">Delete a space</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/spaces/[guid]"</span> <span class="se">\</span>
@@ -13191,8 +12988,7 @@ In order to share into a space the requesting user must be a space developer in 
 <td></td>
 </tr>
 </tbody></table>
-
-          <h3 id="get-assigned-isolation-segment">Get assigned isolation segment</h3>
+<h3 id="get-assigned-isolation-segment">Get assigned isolation segment</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/spaces/[guid]/relationships/isolation_segment"</span> <span class="se">\</span>
@@ -13253,8 +13049,7 @@ In order to share into a space the requesting user must be a space developer in 
 <td>Space Manager</td>
 </tr>
 </tbody></table>
-
-          <h3 id="manage-isolation-segment">Manage isolation segment</h3>
+<h3 id="manage-isolation-segment">Manage isolation segment</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/spaces/[guid]/relationships/isolation_segment"</span> <span class="se">\</span>
@@ -13327,8 +13122,7 @@ The isolation segment must be <a href="#entitle-organizations-for-an-isolation-s
 <td>Org Manager</td>
 </tr>
 </tbody></table>
-
-          <h2 id="stacks">Stacks</h2>
+<h2 id="stacks">Stacks</h2>
 
 <p>Stacks are the base operating system and file system that your application will execute in.
 A stack is how you configure applications to run against different operating systems
@@ -13341,8 +13135,7 @@ Buildpacks can also be associated with a particular stack if they contain stack-
 An application will automatically use buildpacks associated with the application&rsquo;s configured stack.</p>
 
 <p>Stacks are not used for apps with a <a href="#docker-lifecycle">Docker lifecycle</a>.</p>
-
-          <h3 id="the-stack-object">The stack object</h3>
+<h3 id="the-stack-object">The stack object</h3>
 <pre class="highlight plaintext"><code>Example Stack object
 </code></pre>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
@@ -13412,8 +13205,7 @@ An application will automatically use buildpacks associated with the application
 <td>Links to related resources.</td>
 </tr>
 </tbody></table>
-
-          <h3 id="create-a-stack">Create a stack</h3>
+<h3 id="create-a-stack">Create a stack</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/stacks"</span> <span class="se">\</span>
@@ -13510,8 +13302,7 @@ An application will automatically use buildpacks associated with the application
 <td>Admin</td>
 </tr>
 </tbody></table>
-
-          <h3 id="get-a-stack">Get a stack</h3>
+<h3 id="get-a-stack">Get a stack</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/stacks/[guid]"</span> <span class="se">\</span>
@@ -13557,8 +13348,7 @@ An application will automatically use buildpacks associated with the application
 <td>All Roles</td>
 </tr>
 </tbody></table>
-
-          <h3 id="list-stacks">List stacks</h3>
+<h3 id="list-stacks">List stacks</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/stacks"</span> <span class="se">\</span>
@@ -13672,8 +13462,7 @@ An application will automatically use buildpacks associated with the application
 <td>All Roles</td>
 </tr>
 </tbody></table>
-
-          <h3 id="update-a-stack">Update a stack</h3>
+<h3 id="update-a-stack">Update a stack</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/stacks/[guid]"</span> <span class="se">\</span>
@@ -13746,8 +13535,7 @@ An application will automatically use buildpacks associated with the application
 <td>Space Developer</td>
 </tr>
 </tbody></table>
-
-          <h3 id="delete-a-stack">Delete a Stack</h3>
+<h3 id="delete-a-stack">Delete a stack</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/stacks/[guid]"</span> <span class="se">\</span>
@@ -13774,14 +13562,12 @@ An application will automatically use buildpacks associated with the application
 <td>Admin</td>
 </tr>
 </tbody></table>
-
-          <h2 id="tasks">Tasks</h2>
+<h2 id="tasks">Tasks</h2>
 
 <p>Tasks are one-off jobs that are intended to perform a task, stop, and be cleaned up, freeing up resources.</p>
 
 <p>Examples of this include database migrations, sending things, and batch jobs.</p>
-
-          <h3 id="the-task-object">The task object</h3>
+<h3 id="the-task-object">The task object</h3>
 <pre class="highlight plaintext"><code>Example Task object
 </code></pre>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
@@ -13904,8 +13690,7 @@ An application will automatically use buildpacks associated with the application
 <td>Annotations applied to the task.</td>
 </tr>
 </tbody></table>
-
-          <h3 id="create-a-task">Create a task</h3>
+<h3 id="create-a-task">Create a task</h3>
 <pre class="highlight plaintext"><code>Example Request with Command
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/tasks"</span> <span class="se">\</span>
@@ -13966,7 +13751,7 @@ An application will automatically use buildpacks associated with the application
 
 <h4 id="definition">Definition</h4>
 
-<p><code class="prettyprint">POST /v3/apps/:app_guid/tasks</code></p>
+<p><code class="prettyprint">POST /v3/apps/:guid/tasks</code></p>
 
 <h4 id="required-parameters">Required parameters</h4>
 
@@ -14054,8 +13839,7 @@ An application will automatically use buildpacks associated with the application
 <td>Space Developer</td>
 </tr>
 </tbody></table>
-
-          <h3 id="get-a-task">Get a task</h3>
+<h3 id="get-a-task">Get a task</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/tasks/[guid]"</span> <span class="se">\</span>
@@ -14140,8 +13924,7 @@ in the response based on the user&rsquo;s role.</p>
 <td>Space Manager</td>
 </tr>
 </tbody></table>
-
-          <h3 id="list-tasks">List tasks</h3>
+<h3 id="list-tasks">List tasks</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/tasks"</span> <span class="se">\</span>
@@ -14318,8 +14101,7 @@ in the response based on the user&rsquo;s role.</p>
 <td>All Roles</td>
 </tr>
 </tbody></table>
-
-          <h3 id="list-tasks-for-an-app">List tasks for an app</h3>
+<h3 id="list-tasks-for-an-app">List tasks for an app</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/:guid/tasks"</span> <span class="se">\</span>
@@ -14505,8 +14287,7 @@ excluded in the response based on the user&rsquo;s role.</p>
 <td>Space Manager</td>
 </tr>
 </tbody></table>
-
-          <h3 id="update-a-task">Update a task</h3>
+<h3 id="update-a-task">Update a task</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/tasks/[guid]"</span> <span class="se">\</span>
@@ -14597,8 +14378,7 @@ excluded in the response based on the user&rsquo;s role.</p>
 <td>Space Developer</td>
 </tr>
 </tbody></table>
-
-          <h3 id="cancel-a-task">Cancel a task</h3>
+<h3 id="cancel-a-task">Cancel a task</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/tasks/[guid]/actions/cancel"</span> <span class="se">\</span>
@@ -14657,8 +14437,8 @@ excluded in the response based on the user&rsquo;s role.</p>
 
 <h4 id="definition">Definition</h4>
 
-<p><code class="prettyprint">POST /v3/tasks/:task_guid/actions/cancel</code> <br>
-<code class="prettyprint">PUT /v3/tasks/:task_guid/cancel</code> <em>(Deprecated)</em></p>
+<p><code class="prettyprint">POST /v3/tasks/:guid/actions/cancel</code> <br>
+<code class="prettyprint">PUT /v3/tasks/:guid/cancel</code> <em>(Deprecated)</em></p>
 
 <h4 id="permitted-roles">Permitted roles</h4>
 
@@ -14674,12 +14454,9 @@ excluded in the response based on the user&rsquo;s role.</p>
 <td>Space Developer</td>
 </tr>
 </tbody></table>
-
-          <h1 id="experimental-resources">Experimental Resources</h1>
-
-          <h2 id="app-features">App Features</h2>
-
-          <h3 id="the-app-feature-object">The app feature object</h3>
+<h1 id="experimental-resources">Experimental Resources</h1>
+<h2 id="app-features">App Features</h2>
+<h3 id="the-app-feature-object">The app feature object</h3>
 <pre class="highlight plaintext"><code>Example App Feature object
 </code></pre>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
@@ -14713,8 +14490,7 @@ excluded in the response based on the user&rsquo;s role.</p>
 <td>Denotes whether or not the app feature is enabled.</td>
 </tr>
 </tbody></table>
-
-          <h3 id="supported-app-features">Supported app features</h3>
+<h3 id="supported-app-features">Supported app features</h3>
 
 <table><thead>
 <tr>
@@ -14731,8 +14507,7 @@ excluded in the response based on the user&rsquo;s role.</p>
 <td>Enable versioning of an application (experimental)</td>
 </tr>
 </tbody></table>
-
-          <h3 id="get-an-app-feature">Get an app feature</h3>
+<h3 id="get-an-app-feature">Get an app feature</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/features/[name]"</span> <span class="se">\</span>
@@ -14785,8 +14560,7 @@ excluded in the response based on the user&rsquo;s role.</p>
 <td>Space Manager</td>
 </tr>
 </tbody></table>
-
-          <h3 id="list-app-features">List app features</h3>
+<h3 id="list-app-features">List app features</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/features"</span> <span class="se">\</span>
@@ -14858,8 +14632,7 @@ excluded in the response based on the user&rsquo;s role.</p>
 <td>Space Manager</td>
 </tr>
 </tbody></table>
-
-          <h3 id="update-an-app-feature">Update an app feature</h3>
+<h3 id="update-an-app-feature">Update an app feature</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/features/[name]"</span> <span class="se">\</span>
@@ -14915,10 +14688,8 @@ excluded in the response based on the user&rsquo;s role.</p>
 <td>Space Developer</td>
 </tr>
 </tbody></table>
-
-          <h2 id="app-manifest">App Manifest</h2>
-
-          <p>The app manifest is a method for applying bulk configuration to an app and its underlying processes.</p>
+<h2 id="app-manifest">App Manifest</h2>
+<p>The app manifest is a method for applying bulk configuration to an app and its underlying processes.</p>
 
 <h3 id="the-app-manifest-specification">The app manifest specification</h3>
 <pre class="highlight plaintext"><code>Example Manifest
@@ -15040,9 +14811,9 @@ excluded in the response based on the user&rsquo;s role.</p>
 
 <p>This configuration is for the individual process. Each process is created if it does not already exist.</p>
 
-<blockquote>
-<p><strong>Note:</strong> With the exception of &ldquo;type&rdquo;, process-level fields can also be provided at the top-level and will apply to the &ldquo;web&rdquo; process only. <br/><br/> If there is a process with &ldquo;type: web&rdquo; defined in the processes section, then all top level process configuration will be ignored.</p>
-</blockquote>
+<p>With the exception of <code class="prettyprint">type</code>, process-level fields can also be provided at the top-level and will apply to the <code class="prettyprint">web</code> process only.</p>
+
+<p>If there is a process with <code class="prettyprint">type: web</code> defined in the processes section, then all top level process configuration will be ignored.</p>
 
 <table><thead>
 <tr>
@@ -15136,10 +14907,7 @@ take either an array of service instance name strings or an array of the followi
 <td>Memory in mb that the sidecar will be allocated.</td>
 </tr>
 </tbody></table>
-
-          <h3 id="generate-an-app-manifest">Generate an app manifest</h3>
-
-<p>Generate a manifest for an app and its underlying processes.</p>
+<h3 id="generate-an-app-manifest">Generate an app manifest</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/manifest"</span> <span class="se">\</span>
@@ -15165,6 +14933,8 @@ applications:
     health-check-type: port
 </code></pre>
 
+<p>Generate a manifest for an app and its underlying processes.</p>
+
 <h4 id="definition">Definition</h4>
 
 <p><code class="prettyprint">GET /v3/apps/:guid/manifest</code></p>
@@ -15186,14 +14956,7 @@ applications:
 <td>Space Developer</td>
 </tr>
 </tbody></table>
-
-          <h3 id="apply-an-app-manifest">Apply an app manifest</h3>
-
-<blockquote>
-<p><strong>Note:</strong> Apply manifest will only trigger an immediate update for the &ldquo;disk_quota&rdquo;, &ldquo;instances&rdquo;, and &ldquo;memory&rdquo; properties. All other properties will update on app restart.</p>
-</blockquote>
-
-<p>Apply changes specified in a manifest to an app and its underlying processes. These changes are additive and will not modify any unspecified properties or remove any existing environment variables, routes, or services.</p>
+<h3 id="apply-an-app-manifest">Apply an app manifest</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/actions/apply_manifest"</span> <span class="se">\</span>
@@ -15207,6 +14970,12 @@ applications:
 <pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">202</span> <span class="ne">Accepted</span>
 <span class="na">Location</span><span class="p">:</span> <span class="s">https://api.example.org/v3/jobs/[guid]</span>
 </code></pre>
+
+<p>Apply changes specified in a manifest to an app and its underlying processes. These changes are additive and will not modify any unspecified properties or remove any existing environment variables, routes, or services.</p>
+
+<aside class="notice">
+Apply manifest will only trigger an immediate update for the &ldquo;disk_quota&rdquo;, &ldquo;instances&rdquo;, and &ldquo;memory&rdquo; properties. All other properties will update on app restart.
+</aside>
 
 <h4 id="definition">Definition</h4>
 
@@ -15226,10 +14995,8 @@ applications:
 <td>Space Developer</td>
 </tr>
 </tbody></table>
-
-          <h2 id="app-restart">App Restart</h2>
-
-          <h3 id="restart-an-app">Restart an app</h3>
+<h2 id="app-restart">App Restart</h2>
+<h3 id="restart-an-app">Restart an app</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/actions/restart"</span> <span class="se">\</span>
@@ -15327,10 +15094,8 @@ applications:
 <td>Space Developer</td>
 </tr>
 </tbody></table>
-
-          <h2 id="app-ssh-enabled">App SSH Enabled</h2>
-
-          <h3 id="get-app-ssh-enabled">Get app SSH enabled</h3>
+<h2 id="app-ssh-enabled">App SSH Enabled</h2>
+<h3 id="get-app-ssh-enabled">Get app SSH enabled</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/:guid/ssh_enabled"</span> <span class="se">\</span>
@@ -15382,8 +15147,7 @@ applications:
 <td>Space Manager</td>
 </tr>
 </tbody></table>
-
-          <h2 id="deployments">Deployments</h2>
+<h2 id="deployments">Deployments</h2>
 
 <p>Deployments are objects that manage updates to applications with zero downtime.</p>
 
@@ -15396,8 +15160,7 @@ applications:
 
 <p>It is possible to use <a href="https://docs.cloudfoundry.org/devguide/deploy-apps/rolling-deploy.html">rolling deployments</a> for
 applications without incurring downtime. This is different from the traditional method of pushing app updates which performs start/stop deployments.</p>
-
-          <h3 id="the-deployment-object">The deployment object</h3>
+<h3 id="the-deployment-object">The deployment object</h3>
 <pre class="highlight plaintext"><code>Example Deployment object
 </code></pre>
 <pre class="highlight json"><code><span class="w">
@@ -15527,8 +15290,7 @@ applications without incurring downtime. This is different from the traditional 
 <td>Links to related resources.</td>
 </tr>
 </tbody></table>
-
-          <h3 id="create-a-deployment">Create a deployment</h3>
+<h3 id="create-a-deployment">Create a deployment</h3>
 <pre class="highlight plaintext"><code>Example Request with Droplet
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/deployments"</span> <span class="se">\</span>
@@ -15695,8 +15457,7 @@ applications without incurring downtime. This is different from the traditional 
 <td>Space Developer</td>
 </tr>
 </tbody></table>
-
-          <h3 id="get-a-deployment">Get a deployment</h3>
+<h3 id="get-a-deployment">Get a deployment</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/deployments/[guid]"</span> <span class="se">\</span>
@@ -15790,8 +15551,7 @@ applications without incurring downtime. This is different from the traditional 
 <td>Space Manager</td>
 </tr>
 </tbody></table>
-
-          <h3 id="list-deployments">List deployments</h3>
+<h3 id="list-deployments">List deployments</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/deployments"</span> <span class="se">\</span>
@@ -15956,8 +15716,7 @@ applications without incurring downtime. This is different from the traditional 
 <td>Space Manager</td>
 </tr>
 </tbody></table>
-
-          <h3 id="update-a-deployment">Update a deployment</h3>
+<h3 id="update-a-deployment">Update a deployment</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/deployments/[guid]"</span> <span class="se">\</span>
@@ -16060,8 +15819,7 @@ applications without incurring downtime. This is different from the traditional 
 <td>Space Developer</td>
 </tr>
 </tbody></table>
-
-          <h3 id="cancel-a-deployment">Cancel a deployment</h3>
+<h3 id="cancel-a-deployment">Cancel a deployment</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/deployments/[guid]/actions/cancel"</span> <span class="se">\</span>
@@ -16092,8 +15850,7 @@ applications without incurring downtime. This is different from the traditional 
 <td>Space Developer</td>
 </tr>
 </tbody></table>
-
-          <h2 id="resource-matches">Resource Matches</h2>
+<h2 id="resource-matches">Resource Matches</h2>
 
 <p>This endpoint matches given resource SHA-1 / file size pairs against the Cloud Controller cache,
 and reports the subset that describes already cached files.
@@ -16109,8 +15866,7 @@ even though they are not used when determining a resource match.</p>
 <p>Cloud Foundry operators may set minimum / maximum file sizes to match against.
 If the file size provided is outside this range,
 it will not be matched against.</p>
-
-          <h3 id="the-resource-match-object">The resource match object</h3>
+<h3 id="the-resource-match-object">The resource match object</h3>
 <pre class="highlight plaintext"><code>Example Resource Match object
 </code></pre>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
@@ -16154,8 +15910,7 @@ it will not be matched against.</p>
 <td>File mode, i.e. POSIX file permissions. Defaults to 0744</td>
 </tr>
 </tbody></table>
-
-          <h3 id="create-a-resource-match">Create a resource match</h3>
+<h3 id="create-a-resource-match">Create a resource match</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/resource_matches"</span> <span class="se">\</span>
@@ -16231,8 +15986,7 @@ it will not be matched against.</p>
 <td>All Roles</td>
 </tr>
 </tbody></table>
-
-          <h2 id="revisions">Revisions</h2>
+<h2 id="revisions">Revisions</h2>
 
 <p>Revisions represent code used by an application at a specific time. The most recent revision for a running application represents code and configuration currently running in Cloud Foundry.</p>
 
@@ -16248,8 +16002,7 @@ it will not be matched against.</p>
 <p>Each time a new revision is created the reason(s) for the revisions creation will be appended to its description field.</p>
 
 <p>By default the cloud foundry API retains at most 100 revisions per app.</p>
-
-          <h3 id="the-revision-object">The revision object</h3>
+<h3 id="the-revision-object">The revision object</h3>
 <pre class="highlight plaintext"><code>Example Revision object
 </code></pre>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
@@ -16340,11 +16093,10 @@ it will not be matched against.</p>
 <td>Links to related resources.</td>
 </tr>
 </tbody></table>
-
-          <h3 id="get-a-revision">Get a revision</h3>
+<h3 id="get-a-revision">Get a revision</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/revisions/[revision_guid]"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/revisions/[guid]"</span> <span class="se">\</span>
   -X GET <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
@@ -16390,7 +16142,7 @@ it will not be matched against.</p>
 
 <h4 id="definition">Definition</h4>
 
-<p><code class="prettyprint">GET /v3/revisions/:revguid</code></p>
+<p><code class="prettyprint">GET /v3/revisions/:guid</code></p>
 
 <h4 id="permitted-roles">Permitted roles</h4>
 
@@ -16421,8 +16173,7 @@ it will not be matched against.</p>
 <td>Space Manager</td>
 </tr>
 </tbody></table>
-
-          <h3 id="list-revisions-for-an-app">List revisions for an app</h3>
+<h3 id="list-revisions-for-an-app">List revisions for an app</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/:guid/revisions"</span> <span class="se">\</span>
@@ -16556,8 +16307,7 @@ it will not be matched against.</p>
 <td>Space Manager</td>
 </tr>
 </tbody></table>
-
-          <h3 id="list-deployed-revisions-for-an-app">List deployed revisions for an app</h3>
+<h3 id="list-deployed-revisions-for-an-app">List deployed revisions for an app</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/:guid/revisions/deployed"</span> <span class="se">\</span>
@@ -16682,8 +16432,7 @@ Deployed revisions are revisions that are linked to started processes in the app
 <td>Space Manager</td>
 </tr>
 </tbody></table>
-
-          <h3 id="update-a-revision">Update a revision</h3>
+<h3 id="update-a-revision">Update a revision</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/revisions/[revguid]"</span> <span class="se">\</span>
@@ -16735,7 +16484,7 @@ Deployed revisions are revisions that are linked to started processes in the app
 
 <h4 id="definition">Definition</h4>
 
-<p><code class="prettyprint">PATCH /v3/revisions/:revguid</code></p>
+<p><code class="prettyprint">PATCH /v3/revisions/:guid</code></p>
 
 <h4 id="optional-parameters">Optional parameters</h4>
 
@@ -16772,14 +16521,12 @@ Deployed revisions are revisions that are linked to started processes in the app
 <td>Space Developer</td>
 </tr>
 </tbody></table>
-
-          <h2 id="service-bindings">Service Bindings</h2>
+<h2 id="service-bindings">Service Bindings</h2>
 
 <p>Service bindings are relations between a service instance and an app; to use a service instance with an app, you must first bind them together.</p>
 
 <p>Not all services support binding, as some services deliver value to users directly without integration with an application.</p>
-
-          <h3 id="the-service-binding-object">The service binding object</h3>
+<h3 id="the-service-binding-object">The service binding object</h3>
 <pre class="highlight plaintext"><code>Example Service Binding object
 </code></pre>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
@@ -16847,8 +16594,7 @@ Deployed revisions are revisions that are linked to started processes in the app
 <td>Links to related resources.</td>
 </tr>
 </tbody></table>
-
-          <h3 id="create-a-service-binding">Create a service binding</h3>
+<h3 id="create-a-service-binding">Create a service binding</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/service_bindings"</span> <span class="se">\</span>
@@ -16970,8 +16716,7 @@ Deployed revisions are revisions that are linked to started processes in the app
 <td>Space Developer</td>
 </tr>
 </tbody></table>
-
-          <h3 id="get-a-service-binding">Get a service binding</h3>
+<h3 id="get-a-service-binding">Get a service binding</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/service_bindings/[guid]"</span> <span class="se">\</span>
@@ -17043,8 +16788,7 @@ Deployed revisions are revisions that are linked to started processes in the app
 <td>Space Manager</td>
 </tr>
 </tbody></table>
-
-          <h3 id="list-service-bindings">List service bindings</h3>
+<h3 id="list-service-bindings">List service bindings</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/service_bindings"</span> <span class="se">\</span>
@@ -17178,8 +16922,7 @@ Deployed revisions are revisions that are linked to started processes in the app
 <td>All Roles</td>
 </tr>
 </tbody></table>
-
-          <h3 id="delete-a-service-binding">Delete a service binding</h3>
+<h3 id="delete-a-service-binding">Delete a service binding</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/service_bindings/[guid]"</span> <span class="se">\</span>
@@ -17209,12 +16952,10 @@ Deployed revisions are revisions that are linked to started processes in the app
 <td>Space Developer</td>
 </tr>
 </tbody></table>
-
-          <h2 id="service-brokers">Service Brokers</h2>
+<h2 id="service-brokers">Service Brokers</h2>
 
 <p>Service brokers manage the lifecycle of services. On behalf of users, Cloud Controller will interact with service brokers to provision, get access to and manage access to the services and plans they offer.</p>
-
-          <h3 id="the-service_broker-object">The service_broker object</h3>
+<h3 id="the-service-broker-object">The service broker object</h3>
 <pre class="highlight plaintext"><code>Example Service Broker object
 </code></pre>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
@@ -17280,8 +17021,7 @@ Deployed revisions are revisions that are linked to started processes in the app
 <td>Links to related resources.</td>
 </tr>
 </tbody></table>
-
-          <h3 id="get-a-service-broker">Get a service broker</h3>
+<h3 id="get-a-service-broker">Get a service broker</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/service_brokers/[guid]"</span> <span class="se">\</span>
@@ -17344,8 +17084,7 @@ Deployed revisions are revisions that are linked to started processes in the app
 <td>Space Developer</td>
 </tr>
 </tbody></table>
-
-          <h3 id="list-service-brokers">List service brokers</h3>
+<h3 id="list-service-brokers">List service brokers</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/service_brokers"</span> <span class="se">\</span>
@@ -17475,8 +17214,7 @@ Deployed revisions are revisions that are linked to started processes in the app
 <td>Space Developer</td>
 </tr>
 </tbody></table>
-
-          <h3 id="create-a-service-broker">Create a service broker</h3>
+<h3 id="create-a-service-broker">Create a service broker</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/service_brokers"</span> <span class="se">\</span>
@@ -17648,8 +17386,7 @@ Deployed revisions are revisions that are linked to started processes in the app
 <td>Admin</td>
 </tr>
 </tbody></table>
-
-          <h2 id="sidecars">Sidecars</h2>
+<h2 id="sidecars">Sidecars</h2>
 
 <p>Sidecars are additional operating system processes that are run in the same container as a <a href="#processes">process</a>.</p>
 
@@ -17694,8 +17431,7 @@ Deployed revisions are revisions that are linked to started processes in the app
 <li>Sidecars only support PID based health checks; HTTP health-checks for sidecars are not currently supported</li>
 <li>This has only been tested on Linux based systems</li>
 </ul>
-
-          <h3 id="the-sidecar-object">The sidecar object</h3>
+<h3 id="the-sidecar-object">The sidecar object</h3>
 <pre class="highlight plaintext"><code>Example Sidecar object
 </code></pre>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
@@ -17765,8 +17501,7 @@ Deployed revisions are revisions that are linked to started processes in the app
 <td>The time with zone when the object was last updated.</td>
 </tr>
 </tbody></table>
-
-          <h3 id="create-a-sidecar-associated-with-an-app">Create a sidecar associated with an app</h3>
+<h3 id="create-a-sidecar-associated-with-an-app">Create a sidecar associated with an app</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/1cb006ee-fb05-47e1-b541-c34179ddc446/sidecars"</span> <span class="se">\</span>
@@ -17806,7 +17541,7 @@ Deployed revisions are revisions that are linked to started processes in the app
 
 <h4 id="definition">Definition</h4>
 
-<p><code class="prettyprint">POST /v3/apps/:app_guid/sidecars</code></p>
+<p><code class="prettyprint">POST /v3/apps/:guid/sidecars</code></p>
 
 <h4 id="required-parameters">Required parameters</h4>
 
@@ -17864,11 +17599,10 @@ Deployed revisions are revisions that are linked to started processes in the app
 <td>Space Developer</td>
 </tr>
 </tbody></table>
-
-          <h3 id="get-a-sidecar">Get a sidecar</h3>
+<h3 id="get-a-sidecar">Get a sidecar</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/sidecars/[sidecar_guid]"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/sidecars/[guid]"</span> <span class="se">\</span>
   -X GET <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span>
 </code></pre>
@@ -17898,7 +17632,7 @@ Deployed revisions are revisions that are linked to started processes in the app
 
 <h4 id="definition">Definition</h4>
 
-<p><code class="prettyprint">GET /v3/sidecars/:sidecar_guid</code></p>
+<p><code class="prettyprint">GET /v3/sidecars/:guid</code></p>
 
 <h4 id="permitted-roles">Permitted roles</h4>
 
@@ -17929,11 +17663,10 @@ Deployed revisions are revisions that are linked to started processes in the app
 <td>Space Manager</td>
 </tr>
 </tbody></table>
-
-          <h3 id="update-a-sidecar">Update a sidecar</h3>
+<h3 id="update-a-sidecar">Update a sidecar</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/sidecars/[sidecar-guid]"</span> <span class="se">\</span>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/sidecars/[guid]"</span> <span class="se">\</span>
   -X PATCH <span class="se">\</span>
   -H <span class="s2">"Authorization: bearer [token]"</span> <span class="se">\</span>
   -H <span class="s2">"Content-Type: application/json"</span> <span class="se">\</span>
@@ -17971,7 +17704,7 @@ Deployed revisions are revisions that are linked to started processes in the app
 
 <h4 id="definition">Definition</h4>
 
-<p><code class="prettyprint">PATCH /v3/revisions/:sidecar-guid</code></p>
+<p><code class="prettyprint">PATCH /v3/sidecars/:guid</code></p>
 
 <h4 id="optional-parameters">Optional parameters</h4>
 
@@ -18018,14 +17751,13 @@ Deployed revisions are revisions that are linked to started processes in the app
 <td>Space Developer</td>
 </tr>
 </tbody></table>
-
-          <h3 id="list-sidecars-for-app">List sidecars for app</h3>
+<h3 id="list-sidecars-for-app">List sidecars for app</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/sidecars </span><span class="se">\</span><span class="s2">
-  -X GET </span><span class="se">\</span><span class="s2">
-  -H "</span>Authorization: bearer <span class="o">[</span>token]<span class="s2">"
-</span></code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/apps/[guid]/sidecars"</span> <span class="se">\</span>
+  -X GET <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
+</code></pre>
 <pre class="highlight plaintext"><code>Example Response
 </code></pre>
 <pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
@@ -18088,7 +17820,7 @@ Deployed revisions are revisions that are linked to started processes in the app
 
 <h4 id="definition">Definition</h4>
 
-<p><code class="prettyprint">GET /v3/apps/:app_guid/sidecars</code></p>
+<p><code class="prettyprint">GET /v3/apps/:guid/sidecars</code></p>
 
 <h4 id="query-parameters">Query parameters</h4>
 
@@ -18145,14 +17877,13 @@ Deployed revisions are revisions that are linked to started processes in the app
 <td>Space Manager</td>
 </tr>
 </tbody></table>
-
-          <h3 id="list-sidecars-for-process">List sidecars for process</h3>
+<h3 id="list-sidecars-for-process">List sidecars for process</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
-<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/processes/[guid]/sidecars </span><span class="se">\</span><span class="s2">
-  -X GET </span><span class="se">\</span><span class="s2">
-  -H "</span>Authorization: bearer <span class="o">[</span>token]<span class="s2">"
-</span></code></pre>
+<pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/processes/[guid]/sidecars"</span> <span class="se">\</span>
+  -X GET <span class="se">\</span>
+  -H <span class="s2">"Authorization: bearer [token]"</span>
+</code></pre>
 <pre class="highlight plaintext"><code>Example Response
 </code></pre>
 <pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
@@ -18215,7 +17946,7 @@ Deployed revisions are revisions that are linked to started processes in the app
 
 <h4 id="definition">Definition</h4>
 
-<p><code class="prettyprint">GET /v3/processes/:process_guid/sidecars</code></p>
+<p><code class="prettyprint">GET /v3/processes/:guid/sidecars</code></p>
 
 <h4 id="query-parameters">Query parameters</h4>
 
@@ -18272,8 +18003,7 @@ Deployed revisions are revisions that are linked to started processes in the app
 <td>Space Manager</td>
 </tr>
 </tbody></table>
-
-          <h3 id="delete-a-sidecar">Delete a sidecar</h3>
+<h3 id="delete-a-sidecar">Delete a sidecar</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/sidecars/[guid]"</span> <span class="se">\</span>
@@ -18303,10 +18033,8 @@ Deployed revisions are revisions that are linked to started processes in the app
 <td>Space Developer</td>
 </tr>
 </tbody></table>
-
-          <h2 id="space-manifest">Space Manifest</h2>
-
-          <p>The space manifest is a method for applying bulk configurations to apps and their underlying processes.</p>
+<h2 id="space-manifest">Space Manifest</h2>
+<p>The space manifest is a method for applying bulk configurations to apps and their underlying processes.</p>
 
 <h3 id="the-space-manifest-specification">The space manifest specification</h3>
 <pre class="highlight plaintext"><code>Example Manifest
@@ -18454,9 +18182,9 @@ Deployed revisions are revisions that are linked to started processes in the app
 
 <p>This configuration is for the individual process. Each process is created if it does not already exist.</p>
 
-<blockquote>
-<p><strong>Note:</strong> With the exception of &ldquo;type&rdquo;, process-level fields can also be provided at the top-level and will apply to the &ldquo;web&rdquo; process only. <br/><br/> If there is a process with &ldquo;type: web&rdquo; defined in the processes section, then all top level process configuration will be ignored.</p>
-</blockquote>
+<p>With the exception of <code class="prettyprint">type</code>, process-level fields can also be provided at the top-level and will apply to the <code class="prettyprint">web</code> process only.</p>
+
+<p>If there is a process with <code class="prettyprint">type: web</code> defined in the processes section, then all top level process configuration will be ignored.</p>
 
 <table><thead>
 <tr>
@@ -18550,14 +18278,7 @@ take either an array of service instance name strings or an array of the followi
 <td>Memory in mb that the sidecar will be allocated.</td>
 </tr>
 </tbody></table>
-
-          <h3 id="apply-a-space-manifest">Apply a space manifest</h3>
-
-<blockquote>
-<p><strong>Note:</strong> Apply manifest will only trigger an immediate update for the &ldquo;disk_quota&rdquo;, &ldquo;instances&rdquo;, and &ldquo;memory&rdquo; properties. All other properties will update on app restart.</p>
-</blockquote>
-
-<p>Apply changes specified in a manifest to the named apps and their underlying processes. These changes are additive and will not modify any unspecified properties or remove any existing environment variables, routes, or services.</p>
+<h3 id="apply-a-space-manifest">Apply a space manifest</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/spaces/[guid]/actions/apply_manifest"</span> <span class="se">\</span>
@@ -18571,6 +18292,12 @@ take either an array of service instance name strings or an array of the followi
 <pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">202</span> <span class="ne">Accepted</span>
 <span class="na">Location</span><span class="p">:</span> <span class="s">https://api.example.org/v3/jobs/[guid]</span>
 </code></pre>
+
+<p>Apply changes specified in a manifest to the named apps and their underlying processes. These changes are additive and will not modify any unspecified properties or remove any existing environment variables, routes, or services.</p>
+
+<aside class="notice">
+Apply manifest will only trigger an immediate update for the &ldquo;disk_quota&rdquo;, &ldquo;instances&rdquo;, and &ldquo;memory&rdquo; properties. All other properties will update on app restart.
+</aside>
 
 <h4 id="definition">Definition</h4>
 
@@ -18606,8 +18333,7 @@ take either an array of service instance name strings or an array of the followi
 <td>Space Developer</td>
 </tr>
 </tbody></table>
-
-          <h2 id="users">Users</h2>
+<h2 id="users">Users</h2>
 
 <p>Every Cloud Foundry action (pushing an application, creating a space) requires a
 user. Each Cloud Foundry installation has one pre-installed user, admin, which
@@ -18615,8 +18341,7 @@ can create subsequent users. Users can be assigned roles which give them
 privileges to perform actions. For example, the Space Developer role grants a
 user permission to manage apps and services in a space (to push apps, scale
 apps, delete apps).</p>
-
-          <h3 id="the-user-object">The user object</h3>
+<h3 id="the-user-object">The user object</h3>
 <pre class="highlight plaintext"><code>Example User object
 </code></pre>
 <pre class="highlight json"><code><span class="w">  </span><span class="p">{</span><span class="w">
@@ -18678,8 +18403,7 @@ apps, delete apps).</p>
 <td>Links to related resources.</td>
 </tr>
 </tbody></table>
-
-          <h3 id="create-a-user">Create a user</h3>
+<h3 id="create-a-user">Create a user</h3>
 
 <p>Creating a user requires one value, a GUID. This creates a user in the Cloud
 Controller database.</p>
@@ -18750,8 +18474,7 @@ UAA database, though this is not required.</p>
 <td></td>
 </tr>
 </tbody></table>
-
-          <h3 id="list-users">List users</h3>
+<h3 id="list-users">List users</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/users"</span> <span class="se">\</span>
@@ -18849,8 +18572,7 @@ UAA database, though this is not required.</p>
 <td>All Roles</td>
 </tr>
 </tbody></table>
-
-          <h3 id="get-a-user">Get a user</h3>
+<h3 id="get-a-user">Get a user</h3>
 <pre class="highlight plaintext"><code>Example Request
 </code></pre>
 <pre class="highlight shell"><code>curl <span class="s2">"https://api.example.org/v3/users/[guid]"</span> <span class="se">\</span>
@@ -18897,11 +18619,6 @@ UAA database, though this is not required.</p>
 </tr>
 </tbody></table>
 
-      </div>
-      <div class="dark-box">
-          <div class="lang-selector">
-                <a href="#" data-language-name="shell">curl</a>
-          </div>
       </div>
     </main>
   </body>
