@@ -33,7 +33,10 @@ class UsersController < ApplicationController
 
   def show
     user = User.find(guid: hashed_params[:guid])
-    user_not_found! unless permission_queryer.can_read_secrets_globally? && user
+
+    user_not_found! unless user
+    db_user_is_current_user = current_user.guid == user.guid
+    user_not_found! unless permission_queryer.can_read_secrets_globally? || db_user_is_current_user
 
     render status: :ok, json: Presenters::V3::UserPresenter.new(user, uaa_users: uaa_users_info(user.guid))
   end
@@ -54,6 +57,6 @@ class UsersController < ApplicationController
   end
 
   def user_not_found!
-    resource_not_found!(:stack)
+    resource_not_found!(:user)
   end
 end
