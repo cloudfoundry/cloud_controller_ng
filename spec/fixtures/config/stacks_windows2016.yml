@@ -7,5 +7,5 @@ stacks:
     description: "default-stack-description"
   - name: "cider"
     description: "cider-description"
-  - name: "windows2016"
-    description: "windows2016-description"
+  - name: "windows"
+    description: "windows-description"
