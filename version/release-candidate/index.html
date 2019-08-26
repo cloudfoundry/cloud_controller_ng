@@ -15232,7 +15232,7 @@ applications without incurring downtime. This is different from the traditional 
 <tr>
 <td><strong>status.reason</strong></td>
 <td><em>string</em> or <code class="prettyprint">null</code></td>
-<td>The reason for the current status of the deployment. Valid values are <code class="prettyprint">DEPLOYED</code>, <code class="prettyprint">CANCELED</code>, <code class="prettyprint">SUPERSEDED</code> (another deployment created for app before completion), <code class="prettyprint">DEGENERATE</code> (the deployment was created incorrectly by the system), or <code class="prettyprint">null</code> (still in-progress).</td>
+<td>The reason for the final status of the deployment. Valid values are <code class="prettyprint">DEPLOYED</code>, <code class="prettyprint">CANCELED</code>, <code class="prettyprint">SUPERSEDED</code> (another deployment created for app before completion), <code class="prettyprint">DEGENERATE</code> (the deployment was created incorrectly by the system). <br><br> This attribute is only set if the deployment has <code class="prettyprint">status.value</code> of <code class="prettyprint">FINALIZED</code>.  If the deployment is still in progress, this field will be set to <code class="prettyprint">null</code>.</td>
 </tr>
 <tr>
 <td><strong>guid</strong></td>
@@ -18618,6 +18618,8 @@ UAA database, though this is not required.</p>
 <td>Admin Read-Only</td>
 </tr>
 </tbody></table>
+
+<p><strong>Note:</strong> A user can always see themselves with this endpoint, regardless of role.</p>
 
       </div>
     </main>
