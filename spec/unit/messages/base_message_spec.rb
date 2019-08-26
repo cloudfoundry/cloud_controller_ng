@@ -217,5 +217,27 @@ module VCAP::CloudController
         expect(message.errors.full_messages[0]).to include("Invalid included resource: 'stuff'")
       end
     end
+
+    describe 'lifecycle type param validation' do
+      let(:fake_class) do
+        Class.new(BaseMessage) do
+          register_allowed_keys [:lifecycle_type]
+          validates_with VCAP::CloudController::BaseMessage::LifecycleTypeParamValidator
+        end
+      end
+
+      it 'is valid with an allowed lifecycle_type value' do
+        message = fake_class.new({ lifecycle_type: 'docker' })
+
+        expect(message).to be_valid
+      end
+
+      it 'is NOT valid with not allowed lifecycle_type value' do
+        message = fake_class.new({ lifecycle_type: 'stuff' })
+
+        expect(message).to be_invalid
+        expect(message.errors.full_messages[0]).to include("Invalid lifecycle_type: 'stuff'")
+      end
+    end
   end
 end

@@ -52,6 +52,24 @@ module VCAP::CloudController
         )
       end
 
+      if message.requested?(:lifecycle_type)
+        if message.lifecycle_type == BuildpackLifecycleDataModel::LIFECYCLE_TYPE
+          dataset = dataset.where(
+            guid: BuildpackLifecycleDataModel.
+                  select(:app_guid).
+                  where(Sequel.~(app_guid: nil)).
+                  map(&:app_guid)
+          )
+        elsif message.lifecycle_type == DockerLifecycleDataModel::LIFECYCLE_TYPE
+          dataset = dataset.exclude(
+            guid: BuildpackLifecycleDataModel.
+                  select(:app_guid).
+                  where(Sequel.~(app_guid: nil)).
+                  map(&:app_guid)
+          )
+        end
+      end
+
       dataset.eager(:processes)
     end
   end

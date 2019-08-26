@@ -520,6 +520,32 @@ RSpec.describe 'Apps' do
         expect(parsed_response['resources'].map { |r| r['name'] }).to eq(['name1'])
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
+
+      it 'filters by lifecycle_type' do
+        VCAP::CloudController::AppModel.make(name: 'name1')
+        docker_app_model = VCAP::CloudController::AppModel.make(name: 'name2')
+        VCAP::CloudController::AppModel.make(name: 'name3')
+
+        docker_app_model.buildpack_lifecycle_data = nil
+        docker_app_model.save
+
+        get '/v3/apps?lifecycle_type=buildpack', nil, admin_header
+
+        expected_pagination = {
+          'total_results' => 2,
+          'total_pages' => 1,
+          'first' => { 'href' => "#{link_prefix}/v3/apps?lifecycle_type=buildpack&page=1&per_page=50" },
+          'last' => { 'href' => "#{link_prefix}/v3/apps?lifecycle_type=buildpack&page=1&per_page=50" },
+          'next' => nil,
+          'previous' => nil
+        }
+
+        parsed_response = MultiJson.load(last_response.body)
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['resources'].map { |r| r['name'] }).to eq(['name1', 'name3'])
+        expect(parsed_response['pagination']).to eq(expected_pagination)
+      end
     end
 
     context 'ordering' do
