@@ -6,6 +6,7 @@ require 'messages/service_bindings_list_message'
 require 'actions/service_binding_create'
 require 'actions/service_binding_delete'
 require 'controllers/v3/mixins/app_sub_resource'
+require 'cloud_controller/telemetry_logger'
 
 class ServiceBindingsController < ApplicationController
   include AppSubResource
@@ -22,6 +23,16 @@ class ServiceBindingsController < ApplicationController
     accepts_incomplete = false
     begin
       service_binding = ServiceBindingCreate.new(user_audit_info).create(app, service_instance, message, volume_services_enabled?, accepts_incomplete)
+      TelemetryLogger.emit(
+        'bind-service',
+        {
+          'service-id' => { 'value' => service_instance.managed_instance? ? service_instance.service_plan.service.guid : 'user-provided' },
+          'service-instance-id' => { 'value' => service_instance.guid },
+          'app-id' => { 'value' => app.guid },
+          'user-id' => { 'value' => current_user.guid }
+        }
+      )
+
       render status: :created, json: Presenters::V3::ServiceBindingPresenter.new(service_binding)
     rescue ServiceBindingCreate::ServiceInstanceNotBindable
       raise CloudController::Errors::ApiError.new_from_details('UnbindableService')

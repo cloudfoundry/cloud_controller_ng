@@ -113,6 +113,37 @@ RSpec.describe 'v3 service bindings' do
                                        }
                                      })
       end
+
+      context 'telemetry' do
+        it 'should log the required fields when a deployment is created' do
+          request_body = {
+            type: 'app',
+            data: { parameters: { potato: 'tomato' } },
+            relationships: {
+              app: {
+                data: {
+                  guid: app_model.guid
+                }
+              },
+              service_instance: {
+                data: {
+                  guid: service_instance.guid
+                }
+              },
+            }
+          }.to_json
+
+          post '/v3/service_bindings', request_body, user_headers
+
+          expect(last_response.status).to eq(201)
+          expect(VCAP::CloudController::TelemetryLogger).to have_received(:emit).with('bind-service', {
+            'service-id' => { 'value' => service_instance.service_plan.service.guid },
+            'service-instance-id' => { 'value' => service_instance.guid },
+            'app-id' => { 'value' => app_model.guid },
+            'user-id' => { 'value' => user.guid }
+          })
+        end
+      end
     end
 
     context 'user provided service instance' do
@@ -176,6 +207,37 @@ RSpec.describe 'v3 service bindings' do
         expect(last_response.status).to eq(201)
         expect(parsed_response).to be_a_response_like(expected_response)
         expect(VCAP::CloudController::ServiceBinding.find(guid: guid)).to be_present
+      end
+
+      context 'telemetry' do
+        it 'should log the required fields when a deployment is created' do
+          request_body = {
+            type: 'app',
+            data: { parameters: { potato: 'tomato' } },
+            relationships: {
+              app: {
+                data: {
+                  guid: app_model.guid
+                }
+              },
+              service_instance: {
+                data: {
+                  guid: service_instance.guid
+                }
+              },
+            }
+          }.to_json
+
+          post '/v3/service_bindings', request_body, user_headers
+
+          expect(last_response.status).to eq(201)
+          expect(VCAP::CloudController::TelemetryLogger).to have_received(:emit).with('bind-service', {
+            'service-id' => { 'value' => 'user-provided' },
+            'service-instance-id' => { 'value' => service_instance.guid },
+            'app-id' => { 'value' => app_model.guid },
+            'user-id' => { 'value' => user.guid }
+          })
+        end
       end
     end
   end
