@@ -26,7 +26,7 @@ class UsersController < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
     user = UserCreate.new.create(message: message)
 
-    render status: :created, json: Presenters::V3::UserPresenter.new(user, uaa_users: uaa_users_info(user.guid))
+    render status: :created, json: Presenters::V3::UserPresenter.new(user, uaa_users: uaa_users_info([user.guid]))
   rescue UserCreate::Error => e
     unprocessable!(e)
   end
@@ -38,7 +38,7 @@ class UsersController < ApplicationController
     db_user_is_current_user = current_user.guid == user.guid
     user_not_found! unless permission_queryer.can_read_secrets_globally? || db_user_is_current_user
 
-    render status: :ok, json: Presenters::V3::UserPresenter.new(user, uaa_users: uaa_users_info(user.guid))
+    render status: :ok, json: Presenters::V3::UserPresenter.new(user, uaa_users: uaa_users_info([user.guid]))
   end
 
   private
@@ -53,7 +53,7 @@ class UsersController < ApplicationController
 
   def uaa_users_info(user_guids)
     uaa_client = CloudController::DependencyLocator.instance.uaa_client
-    uaa_client.users_for_ids([user_guids])
+    uaa_client.users_for_ids(user_guids)
   end
 
   def user_not_found!

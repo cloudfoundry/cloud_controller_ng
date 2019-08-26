@@ -5,9 +5,9 @@ module VCAP::CloudController::Presenters::V3
   class UserPresenter < BasePresenter
     def initialize(
       resource,
-        show_secrets: false,
-        censored_message: VCAP::CloudController::Presenters::Censorship::REDACTED_CREDENTIAL,
-        uaa_users: {}
+      show_secrets: false,
+      censored_message: VCAP::CloudController::Presenters::Censorship::REDACTED_CREDENTIAL,
+      uaa_users: {}
     )
       @uaa_users = uaa_users
       super(resource, show_secrets: show_secrets, censored_message: censored_message, decorators: [])
@@ -42,13 +42,13 @@ module VCAP::CloudController::Presenters::V3
     end
 
     def username
-      return nil if @uaa_users[user.guid].nil?
+      return nil unless @uaa_users[user.guid]
 
       @uaa_users[user.guid]['username']
     end
 
     def origin
-      return nil if @uaa_users[user.guid].nil?
+      return nil unless @uaa_users[user.guid]
 
       @uaa_users[user.guid]['origin']
     end

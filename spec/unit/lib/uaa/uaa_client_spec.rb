@@ -319,7 +319,7 @@ module VCAP::CloudController
 
         it 'logs the error' do
           uaa_client.users_for_ids([userid_1])
-          expect(mock_logger).to have_received(:error).with("Failed to retrieve usernames from UAA: #{uaa_error.inspect}")
+          expect(mock_logger).to have_received(:error).with("Failed to retrieve users from UAA: #{uaa_error.inspect}")
         end
       end
 

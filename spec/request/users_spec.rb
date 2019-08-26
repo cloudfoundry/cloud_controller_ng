@@ -2,9 +2,9 @@ require 'spec_helper'
 require 'request_spec_shared_examples'
 
 RSpec.describe 'Users Request' do
-  let(:user) { VCAP::CloudController::User.make(guid: 'current-user') }
-  let(:client_user) { VCAP::CloudController::User.make(guid: 'client-user') }
   let(:other_user) { VCAP::CloudController::User.make(guid: 'other-user') }
+  let(:user) { VCAP::CloudController::User.make(guid: 'user1') }
+  let(:client) { VCAP::CloudController::User.make(guid: 'client-user') }
   let(:space) { VCAP::CloudController::Space.make }
   let(:org) { space.organization }
   let(:admin_header) { headers_for(user, scopes: %w(cloud_controller.admin)) }
@@ -14,10 +14,23 @@ RSpec.describe 'Users Request' do
   before do
     VCAP::CloudController::User.dataset.destroy # this will clean up the seeded test users
     allow(VCAP::CloudController::UaaClient).to receive(:new).and_return(uaa_client)
-    allow(uaa_client).to receive(:users_for_ids).and_return({
-                                                                user.guid => { 'username' => 'bob-mcjames', 'origin' => 'Okta' },
-                                                                other_user.guid => { 'username' => 'lola', 'origin' => 'uaa' },
-                                                            })
+    allow(uaa_client).to receive(:users_for_ids).with([other_user.guid, client.guid, user.guid]).and_return(
+      {
+          user.guid => { 'username' => 'bob-mcjames', 'origin' => 'Okta' },
+          other_user.guid => { 'username' => 'lola', 'origin' => 'uaa' },
+      }
+    )
+    allow(uaa_client).to receive(:users_for_ids).with([user.guid]).and_return(
+      {
+          user.guid => { 'username' => 'bob-mcjames', 'origin' => 'Okta' },
+      }
+    )
+    allow(uaa_client).to receive(:users_for_ids).with([client.guid]).and_return({})
+    allow(uaa_client).to receive(:users_for_ids).with([other_user.guid]).and_return(
+      {
+          other_user.guid => { 'username' => 'lola', 'origin' => 'uaa' },
+      }
+    )
   end
 
   describe 'GET /v3/users' do
@@ -38,16 +51,16 @@ RSpec.describe 'Users Request' do
         }
       end
 
-      let(:client_user_json) do
+      let(:client_json) do
         {
-            guid: client_user.guid,
+            guid: client.guid,
             created_at: iso8601,
             updated_at: iso8601,
             username: nil,
-            presentation_name: client_user.guid,
+            presentation_name: client.guid,
             origin: nil,
             links: {
-                self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{client_user.guid}) },
+                self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{client.guid}) },
             }
         }
       end
@@ -76,17 +89,17 @@ RSpec.describe 'Users Request' do
         h['admin'] = {
             code: 200,
             response_objects: [
-              current_user_json,
               other_user_json,
-              client_user_json
+              client_json,
+              current_user_json
             ]
         }
         h['admin_read_only'] = {
             code: 200,
             response_objects: [
-              current_user_json,
               other_user_json,
-              client_user_json
+              client_json,
+              current_user_json
             ]
         }
         h.freeze
@@ -106,7 +119,7 @@ RSpec.describe 'Users Request' do
   describe 'GET /v3/users/:guid' do
     let(:api_call) { lambda { |user_headers| get "/v3/users/#{other_user.guid}", nil, user_headers } }
 
-    let(:client_user_json) do
+    let(:client_json) do
       {
           guid: other_user.guid,
           created_at: iso8601,
@@ -127,11 +140,11 @@ RSpec.describe 'Users Request' do
       )
       h['admin'] = {
           code: 200,
-          response_object: client_user_json
+          response_object: client_json
       }
       h['admin_read_only'] = {
           code: 200,
-          response_object: client_user_json
+          response_object: client_json
       }
       h.freeze
     end

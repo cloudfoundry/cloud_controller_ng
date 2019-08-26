@@ -42,7 +42,7 @@ module VCAP::CloudController
     def users_for_ids(user_ids)
       fetch_users(user_ids)
     rescue UaaUnavailable, CF::UAA::UAAError => e
-      logger.error("Failed to retrieve usernames from UAA: #{e.inspect}")
+      logger.error("Failed to retrieve users from UAA: #{e.inspect}")
       {}
     end
 
