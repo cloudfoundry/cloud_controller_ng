@@ -150,7 +150,7 @@ GEM
     ffi (1.9.25)
     fluent-logger (0.7.2)
       msgpack (>= 1.0.0, < 2)
-    fog-aliyun (0.3.4)
+    fog-aliyun (0.3.5)
       fog-core
       fog-json
       ipaddress (~> 0.8)
