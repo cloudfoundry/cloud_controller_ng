@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module VCAP::CloudController
-  RSpec.describe VCAP::CloudController::ResourcePool do
+  RSpec.describe ResourcePool do
     include_context 'resource pool'
 
     describe '#match_resources' do
@@ -9,26 +9,13 @@ module VCAP::CloudController
         @resource_pool.add_directory(@tmpdir)
       end
 
-      it 'should return an empty list when no resources match' do
-        res = @resource_pool.match_resources([@nonexisting_descriptor])
-        expect(res).to eq([])
-      end
-
-      it 'should return a resource that matches' do
-        res = @resource_pool.match_resources([@descriptors.first, @nonexisting_descriptor])
-        expect(res).to eq([@descriptors.first])
-      end
-
-      it 'should return many resources that match' do
-        res = @resource_pool.match_resources(@descriptors + [@nonexisting_descriptor])
+      it 'calls match_resources on ResourceMatch object' do
+        descriptors = @descriptors + [@nonexisting_descriptor]
+        resource_match = ResourceMatch.new(descriptors)
+        allow(ResourceMatch).to receive(:new).with(descriptors).and_return(resource_match)
+        expect(resource_match).to receive(:match_resources).and_call_original
+        res = @resource_pool.match_resources(descriptors)
         expect(res).to eq(@descriptors)
-      end
-
-      it 'does not break when the sha1 is not long enough to generate a key' do
-        expect do
-          @resource_pool.match_resources(['sha1' => 0, 'size' => 123])
-          @resource_pool.match_resources(['sha1' => 'abc', 'size' => 234])
-        end.not_to raise_error
       end
     end
 
