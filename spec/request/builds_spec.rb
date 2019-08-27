@@ -9,6 +9,13 @@ RSpec.describe 'Builds' do
   let(:parsed_response) { MultiJson.load(last_response.body) }
   let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid, name: 'my-app') }
   let(:second_app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid, name: 'my-second-app') }
+  let(:rails_logger) { instance_double(ActiveSupport::Logger, info: nil) }
+
+  before do
+    allow(ActiveSupport::Logger).to receive(:new).and_return(rails_logger)
+    allow(VCAP::CloudController::TelemetryLogger).to receive(:emit).and_call_original
+    VCAP::CloudController::TelemetryLogger.init('fake-log-path')
+  end
 
   describe 'POST /v3/builds' do
     let(:package) do
@@ -122,19 +129,23 @@ RSpec.describe 'Builds' do
 
     context 'telemetry' do
       it 'should log the required fields when the build is created' do
-        post '/v3/builds', create_request.merge(metadata: metadata).to_json, developer_headers
+        Timecop.freeze do
+          post '/v3/builds', create_request.merge(metadata: metadata).to_json, developer_headers
 
-        expect(last_response.status).to eq(201)
-        parsed_response = MultiJson.load(last_response.body)
-        build_guid = parsed_response['guid']
-
-        expect(VCAP::CloudController::TelemetryLogger).to have_received(:emit).with('create-build', {
-          'lifecycle' => { 'value' => 'buildpack', 'raw' => true },
-          'buildpacks' => { 'value' => ['http://github.com/myorg/awesome-buildpack'], 'raw' => true },
-          'stack' => { 'value' => 'cflinuxfs3', 'raw' => true },
-          'app-id' => { 'value' => build_guid },
-          'user-id' => { 'value' => developer.guid }
-        })
+          expected_json = {
+            'telemetry-source' => 'cloud_controller_ng',
+            'telemetry-time' => Time.now.to_datetime.rfc3339,
+            'create-build' => {
+                'lifecycle' =>  'buildpack',
+                'buildpacks' =>  ['http://github.com/myorg/awesome-buildpack'],
+                'stack' =>  'cflinuxfs3',
+                'app-id' =>  Digest::SHA256.hexdigest(app_model.guid),
+                'user-id' =>  Digest::SHA256.hexdigest(developer.guid),
+            }
+          }
+          expect(last_response.status).to eq(201), last_response.body
+          expect(rails_logger).to have_received(:info).with(JSON.generate(expected_json))
+        end
       end
     end
   end

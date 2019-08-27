@@ -1,6 +1,5 @@
 require 'spec_helper'
 require 'request_spec_shared_examples'
-require 'digest'
 
 RSpec.describe 'Deployments' do
   let(:user) { make_developer_for_space(space) }
@@ -14,10 +13,15 @@ RSpec.describe 'Deployments' do
   let(:user_email) { Sham.email }
   let(:user_name) { 'some-username' }
   let(:metadata) { { 'labels' => {}, 'annotations' => {} } }
+  let(:rails_logger) { instance_double(ActiveSupport::Logger, info: nil) }
 
   before do
     TestConfig.override(temporary_disable_deployments: false)
     app_model.update(droplet_guid: droplet.guid)
+
+    allow(ActiveSupport::Logger).to receive(:new).and_return(rails_logger)
+    allow(VCAP::CloudController::TelemetryLogger).to receive(:emit).and_call_original
+    VCAP::CloudController::TelemetryLogger.init('fake-log-path')
   end
 
   describe 'POST /v3/deployments' do
@@ -502,14 +506,21 @@ RSpec.describe 'Deployments' do
       end
 
       it 'should log the required fields when a deployment is created' do
-        post '/v3/deployments', create_request.to_json, user_header
+        Timecop.freeze do
+          post '/v3/deployments', create_request.to_json, user_header
 
-        expect(last_response.status).to eq(201)
-        expect(VCAP::CloudController::TelemetryLogger).to have_received(:emit).with('create-deployment', {
-            'strategy' => { 'value' => 'rolling', 'raw' => true },
-            'app-id' => { 'value' => app_model.guid },
-            'user-id' => { 'value' => user.guid }
-        })
+          expected_json = {
+            'telemetry-source' => 'cloud_controller_ng',
+            'telemetry-time' => Time.now.to_datetime.rfc3339,
+            'create-deployment' => {
+              'strategy' => 'rolling',
+              'app-id' => Digest::SHA256.hexdigest(app_model.guid),
+              'user-id' => Digest::SHA256.hexdigest(user.guid),
+            }
+          }
+          expect(last_response.status).to eq(201), last_response.body
+          expect(rails_logger).to have_received(:info).with(JSON.generate(expected_json))
+        end
       end
     end
   end

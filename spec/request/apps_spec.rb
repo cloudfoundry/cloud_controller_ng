@@ -10,10 +10,14 @@ RSpec.describe 'Apps' do
   let(:stack) { VCAP::CloudController::Stack.make }
   let(:user_email) { Sham.email }
   let(:user_name) { 'some-username' }
+  let(:rails_logger) { instance_double(ActiveSupport::Logger, info: nil) }
 
   before do
     space.organization.add_user(user)
     space.add_developer(user)
+    allow(ActiveSupport::Logger).to receive(:new).and_return(rails_logger)
+    allow(VCAP::CloudController::TelemetryLogger).to receive(:emit).and_call_original
+    VCAP::CloudController::TelemetryLogger.init('fake-log-path')
   end
 
   describe 'POST /v3/apps' do
@@ -132,16 +136,23 @@ RSpec.describe 'Apps' do
 
     context 'telemetry' do
       it 'should log the required fields when the app is created' do
-        post '/v3/apps', create_request.to_json, user_header
+        Timecop.freeze do
+          post '/v3/apps', create_request.to_json, user_header
 
-        expect(last_response.status).to eq(201)
-        parsed_response = MultiJson.load(last_response.body)
-        app_guid = parsed_response['guid']
+          parsed_response = MultiJson.load(last_response.body)
+          app_guid = parsed_response['guid']
 
-        expect(VCAP::CloudController::TelemetryLogger).to have_received(:emit).with('create-app', {
-          'app-id' => { 'value' => app_guid },
-          'user-id' => { 'value' => user.guid }
-        })
+          expected_json = {
+            'telemetry-source' => 'cloud_controller_ng',
+            'telemetry-time' => Time.now.to_datetime.rfc3339,
+            'create-app' => {
+              'app-id' => Digest::SHA256.hexdigest(app_guid),
+              'user-id' => Digest::SHA256.hexdigest(user.guid),
+            }
+          }
+          expect(last_response.status).to eq(201), last_response.body
+          expect(rails_logger).to have_received(:info).with(JSON.generate(expected_json))
+        end
       end
     end
 

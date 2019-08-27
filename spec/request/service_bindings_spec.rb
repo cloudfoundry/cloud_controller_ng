@@ -6,6 +6,13 @@ RSpec.describe 'v3 service bindings' do
   let(:user) { make_developer_for_space(space) }
   let(:user_headers) { headers_for(user, user_name: user_name) }
   let(:user_name) { 'room' }
+  let(:rails_logger) { instance_double(ActiveSupport::Logger, info: nil) }
+
+  before do
+    allow(ActiveSupport::Logger).to receive(:new).and_return(rails_logger)
+    allow(VCAP::CloudController::TelemetryLogger).to receive(:emit).and_call_original
+    VCAP::CloudController::TelemetryLogger.init('fake-log-path')
+  end
 
   describe 'POST /v3/service_bindings' do
     context 'managed service instance' do
@@ -115,33 +122,40 @@ RSpec.describe 'v3 service bindings' do
       end
 
       context 'telemetry' do
-        it 'should log the required fields when a deployment is created' do
-          request_body = {
-            type: 'app',
-            data: { parameters: { potato: 'tomato' } },
-            relationships: {
-              app: {
-                data: {
-                  guid: app_model.guid
-                }
-              },
-              service_instance: {
-                data: {
-                  guid: service_instance.guid
-                }
-              },
+        it 'should log the required fields when a service is bound' do
+          Timecop.freeze do
+            request_body = {
+              type: 'app',
+              data: { parameters: { potato: 'tomato' } },
+              relationships: {
+                app: {
+                  data: {
+                    guid: app_model.guid
+                  }
+                },
+                service_instance: {
+                  data: {
+                    guid: service_instance.guid
+                  }
+                },
+              }
+            }.to_json
+
+            post '/v3/service_bindings', request_body, user_headers
+
+            expected_json = {
+              'telemetry-source' => 'cloud_controller_ng',
+              'telemetry-time' => Time.now.to_datetime.rfc3339,
+              'bind-service' => {
+                'service-id' => Digest::SHA256.hexdigest(service_instance.service_plan.service.guid),
+                'service-instance-id' => Digest::SHA256.hexdigest(service_instance.guid),
+                'app-id' => Digest::SHA256.hexdigest(app_model.guid),
+                'user-id' => Digest::SHA256.hexdigest(user.guid),
+              }
             }
-          }.to_json
-
-          post '/v3/service_bindings', request_body, user_headers
-
-          expect(last_response.status).to eq(201)
-          expect(VCAP::CloudController::TelemetryLogger).to have_received(:emit).with('bind-service', {
-            'service-id' => { 'value' => service_instance.service_plan.service.guid },
-            'service-instance-id' => { 'value' => service_instance.guid },
-            'app-id' => { 'value' => app_model.guid },
-            'user-id' => { 'value' => user.guid }
-          })
+            expect(last_response.status).to eq(201), last_response.body
+            expect(rails_logger).to have_received(:info).with(JSON.generate(expected_json))
+          end
         end
       end
     end
@@ -210,33 +224,40 @@ RSpec.describe 'v3 service bindings' do
       end
 
       context 'telemetry' do
-        it 'should log the required fields when a deployment is created' do
-          request_body = {
-            type: 'app',
-            data: { parameters: { potato: 'tomato' } },
-            relationships: {
-              app: {
-                data: {
-                  guid: app_model.guid
-                }
-              },
-              service_instance: {
-                data: {
-                  guid: service_instance.guid
-                }
-              },
+        it 'should log the required fields when a service is bound' do
+          Timecop.freeze do
+            request_body = {
+              type: 'app',
+              data: { parameters: { potato: 'tomato' } },
+              relationships: {
+                app: {
+                  data: {
+                    guid: app_model.guid
+                  }
+                },
+                service_instance: {
+                  data: {
+                    guid: service_instance.guid
+                  }
+                },
+              }
+            }.to_json
+
+            post '/v3/service_bindings', request_body, user_headers
+
+            expected_json = {
+              'telemetry-source' => 'cloud_controller_ng',
+              'telemetry-time' => Time.now.to_datetime.rfc3339,
+              'bind-service' => {
+                'service-id' => Digest::SHA256.hexdigest('user-provided'),
+                'service-instance-id' => Digest::SHA256.hexdigest(service_instance.guid),
+                'app-id' => Digest::SHA256.hexdigest(app_model.guid),
+                'user-id' => Digest::SHA256.hexdigest(user.guid),
+              }
             }
-          }.to_json
-
-          post '/v3/service_bindings', request_body, user_headers
-
-          expect(last_response.status).to eq(201)
-          expect(VCAP::CloudController::TelemetryLogger).to have_received(:emit).with('bind-service', {
-            'service-id' => { 'value' => 'user-provided' },
-            'service-instance-id' => { 'value' => service_instance.guid },
-            'app-id' => { 'value' => app_model.guid },
-            'user-id' => { 'value' => user.guid }
-          })
+            expect(last_response.status).to eq(201), last_response.body
+            expect(rails_logger).to have_received(:info).with(JSON.generate(expected_json))
+          end
         end
       end
     end

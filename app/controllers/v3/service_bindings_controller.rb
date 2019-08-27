@@ -26,10 +26,10 @@ class ServiceBindingsController < ApplicationController
       TelemetryLogger.emit(
         'bind-service',
         {
-          'service-id' => { 'value' => service_instance.managed_instance? ? service_instance.service_plan.service.guid : 'user-provided' },
-          'service-instance-id' => { 'value' => service_instance.guid },
-          'app-id' => { 'value' => app.guid },
-          'user-id' => { 'value' => current_user.guid }
+          'service-id' =>  service_instance.managed_instance? ? service_instance.service_plan.service.guid : 'user-provided',
+          'service-instance-id' => service_instance.guid,
+          'app-id' => app.guid,
+          'user-id' => current_user.guid,
         }
       )
 

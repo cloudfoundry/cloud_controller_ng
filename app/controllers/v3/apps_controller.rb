@@ -96,8 +96,8 @@ class AppsV3Controller < ApplicationController
     TelemetryLogger.emit(
       'create-app',
       {
-        'app-id' => { 'value' => app.guid },
-        'user-id' => { 'value' => current_user.guid }
+        'app-id' => app.guid,
+        'user-id' => current_user.guid
       }
     )
 

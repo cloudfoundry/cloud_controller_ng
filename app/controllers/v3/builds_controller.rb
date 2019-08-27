@@ -47,11 +47,13 @@ class BuildsController < ApplicationController
     TelemetryLogger.emit(
       'create-build',
       {
-        'lifecycle' => { 'value' => build.lifecycle_type, 'raw' => true },
-        'buildpacks' => { 'value' => build.lifecycle_data&.buildpacks, 'raw' => true },
-        'stack' => { 'value' => build.lifecycle_data.try(:stack), 'raw' => true },
-        'app-id' => { 'value' => build.guid },
-        'user-id' => { 'value' => current_user.guid },
+        'app-id' => package.app.guid,
+        'user-id' => current_user.guid,
+      },
+      {
+        'lifecycle' => build.lifecycle_type,
+        'buildpacks' => build.lifecycle_data&.buildpacks,
+        'stack' => build.lifecycle_data.try(:stack),
       }
     )
 

@@ -43,10 +43,11 @@ class DeploymentsController < ApplicationController
 
       TelemetryLogger.emit(
         'create-deployment',
-        { 'strategy' => { 'value' => 'rolling', 'raw' => true },
-          'app-id' => { 'value' => app.guid },
-          'user-id' => { 'value' => current_user.guid }
-        }
+        {
+          'app-id' => app.guid,
+          'user-id' => current_user.guid
+        },
+        { 'strategy' => 'rolling' }
       )
     rescue DeploymentCreate::Error => e
       unprocessable!(e.message)
