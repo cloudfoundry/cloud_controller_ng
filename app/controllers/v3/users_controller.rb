@@ -1,6 +1,7 @@
 require 'messages/user_create_message'
 require 'messages/users_list_message'
 require 'actions/user_create'
+require 'actions/user_delete'
 require 'presenters/v3/user_presenter'
 
 class UsersController < ApplicationController
@@ -39,6 +40,22 @@ class UsersController < ApplicationController
     user_not_found! unless permission_queryer.can_read_secrets_globally? || db_user_is_current_user
 
     render status: :ok, json: Presenters::V3::UserPresenter.new(user, uaa_users: uaa_users_info([user.guid]))
+  end
+
+  def destroy
+    user = User.find(guid: hashed_params[:guid])
+    user_not_found! unless user
+
+    db_user_is_current_user = current_user.guid == user.guid
+    unauthorized! if db_user_is_current_user && !permission_queryer.can_write_globally?
+    user_not_found! unless permission_queryer.can_read_secrets_globally?
+
+    delete_action = UserDeleteAction.new
+    deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(User, user.guid, delete_action)
+    pollable_job = Jobs::Enqueuer.new(deletion_job, queue: 'cc-generic').enqueue_pollable
+
+    url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
+    head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job.guid}")
   end
 
   private

@@ -253,5 +253,6 @@ includes:
   - experimental_resources/users/create
   - experimental_resources/users/list
   - experimental_resources/users/get
+  - experimental_resources/users/delete
 
 ---
