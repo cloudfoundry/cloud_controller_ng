@@ -183,13 +183,13 @@ module VCAP::CloudController
         it 'validates lifecycle_type is one of two values' do
           message = AppsListMessage.from_params lifecycle_type: 'not-buildpack-or-docker'
           expect(message).to be_invalid
-          expect(message.errors[:lifecycle_type].length).to eq 1
+          expect(message.errors[:base].length).to eq 1
         end
 
         it 'validates lifecycle_type can be null' do
           message = AppsListMessage.from_params({})
           expect(message).to be_valid
-          expect(message.errors[:lifecycle_type].length).to eq 0
+          expect(message.errors[:base].length).to eq 0
         end
       end
     end
