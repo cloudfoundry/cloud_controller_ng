@@ -503,7 +503,7 @@ module VCAP::CloudController
               it 'fails with a NoDefaultDomain error' do
                 expect {
                   app_apply_manifest.apply(app.guid, message)
-                }.to raise_error(AppApplyManifest::NoDefaultDomain, 'No domains available for random route')
+                }.to raise_error(AppApplyManifest::NoDefaultDomain, 'No default domains available')
               end
             end
           end
@@ -535,6 +535,86 @@ module VCAP::CloudController
             }
 
             it 'ignores the random_route' do
+              app_apply_manifest.apply(app.guid, message)
+              expect(ManifestRouteUpdate).to have_received(:update).with(app.guid, manifest_routes_update_message, user_audit_info)
+            end
+          end
+        end
+
+        describe 'updating with a default-route' do
+          let(:message) { AppManifestMessage.create_from_yml({ name: 'blah', default_route: true }, {}) }
+          let(:manifest_routes_update_message) { message.manifest_routes_update_message }
+          let(:process) { ProcessModel.make }
+          let(:app) { process.app }
+
+          context 'when the app has no routes and the message specifies no routes' do
+            it 'provides a default route' do
+              app_apply_manifest.apply(app.guid, message)
+              expect(ManifestRouteUpdate).to have_received(:update) do |guid, msg, audit_info|
+                expect(guid).to eq(app.guid)
+                expect(msg.routes.first[:route]).to eq("#{app.name}.#{Domain.first.name}")
+                expect(audit_info).to eq(user_audit_info)
+              end
+            end
+
+            context 'when there is no shared domain' do
+              let(:domain) { PrivateDomain.make(owning_organization: app.organization) }
+
+              before do
+                Domain.dataset.destroy
+                domain # ensure domain is created after the dataset is truncated
+              end
+
+              it 'provides a default route within a domain scoped to the apps organization' do
+                app_apply_manifest.apply(app.guid, message)
+                expect(ManifestRouteUpdate).to have_received(:update) do |guid, msg, audit_info|
+                  expect(guid).to eq(app.guid)
+                  expect(msg.routes.first[:route]).to eq("#{app.name}.#{domain.name}")
+                  expect(audit_info).to eq(user_audit_info)
+                end
+              end
+            end
+
+            context 'when there is no domains' do
+              before do
+                Domain.dataset.destroy
+              end
+
+              it 'fails with a NoDefaultDomain error' do
+                expect {
+                  app_apply_manifest.apply(app.guid, message)
+                }.to raise_error(AppApplyManifest::NoDefaultDomain, 'No default domains available')
+              end
+            end
+          end
+
+          context 'when the app has existing routes' do
+            let(:route1) { Route.make(space: app.space) }
+            let!(:route_mapping1) { RouteMappingModel.make(app: app, route: route1, process_type: process.type) }
+
+            it 'ignores the default_route' do
+              app_apply_manifest.apply(app.guid, message)
+              expect(ManifestRouteUpdate).not_to have_received(:update)
+            end
+          end
+
+          context 'when the message specifies routes' do
+            let(:message) { AppManifestMessage.create_from_yml({ name: 'blah', default_route: true,
+              routes: [{ route: 'billy.tabasco.com' }] }, {})
+            }
+
+            it 'ignores the default_route but uses the routes' do
+              app_apply_manifest.apply(app.guid, message)
+              expect(ManifestRouteUpdate).to have_received(:update).with(app.guid, manifest_routes_update_message, user_audit_info)
+            end
+          end
+
+          context 'when the message specifies an empty list of routes' do
+            let(:message) { AppManifestMessage.create_from_yml({ name: 'blah', default_route: true,
+              routes: [] }, {})
+            }
+
+            it 'ignores the default_route' do
               app_apply_manifest.apply(app.guid, message)
               expect(ManifestRouteUpdate).to have_received(:update).with(app.guid, manifest_routes_update_message, user_audit_info)
             end
