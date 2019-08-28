@@ -237,6 +237,7 @@ includes:
   - experimental_resources/service_brokers/get
   - experimental_resources/service_brokers/list
   - experimental_resources/service_brokers/create
+  - experimental_resources/service_brokers/delete
   - experimental_resources/sidecars/header
   - experimental_resources/sidecars/object
   - experimental_resources/sidecars/create_from_app
