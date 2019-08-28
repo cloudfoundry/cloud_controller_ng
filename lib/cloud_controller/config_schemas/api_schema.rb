@@ -222,6 +222,10 @@ module VCAP::CloudController
             url: String
           },
 
+          log_cache: {
+              url: String
+          },
+
           log_stream: {
               url: String
           },
