@@ -143,6 +143,30 @@ module VCAP::CloudController
           expect(msg.errors.full_messages).to include('Random-route must be a boolean')
         end
       end
+
+      context 'when default_route is not a boolean' do
+        let(:body) do
+          { 'default_route' => 'vicuna' }
+        end
+
+        it 'is not valid' do
+          msg = ManifestRoutesUpdateMessage.new(body)
+          expect(msg.valid?).to eq(false)
+          expect(msg.errors.full_messages).to include('Default-route must be a boolean')
+        end
+      end
+
+      context 'when random_route and default_route are used together' do
+        let(:body) do
+          { 'random_route' => true, 'default_route' => true }
+        end
+
+        it 'is not valid' do
+          msg = ManifestRoutesUpdateMessage.new(body)
+          expect(msg.valid?).to eq(false)
+          expect(msg.errors.full_messages).to include('Random-route and default-route may not be used together')
+        end
+      end
     end
 
     describe 'route validations' do

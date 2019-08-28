@@ -96,14 +96,29 @@ module VCAP::CloudController
 
       if update_message.random_route && existing_routes.empty?
         random_host = "#{app.name}-#{RandomRouteGenerator.new.route}"
-        domain_name = app.organization.default_domain&.name
-        raise NoDefaultDomain.new('No domains available for random route') unless domain_name
+        domain_name = get_default_domain_name(app)
 
         route = "#{random_host}.#{domain_name}"
 
         random_route_message = ManifestRoutesUpdateMessage.new(routes: [{ route: route }])
         ManifestRouteUpdate.update(app.guid, random_route_message, @user_audit_info)
       end
+
+      if update_message.default_route && existing_routes.empty?
+        domain_name = get_default_domain_name(app)
+
+        route = "#{app.name}.#{domain_name}"
+
+        random_route_message = ManifestRoutesUpdateMessage.new(routes: [{ route: route }])
+        ManifestRouteUpdate.update(app.guid, random_route_message, @user_audit_info)
+      end
+    end
+
+    def get_default_domain_name(app)
+      domain_name = app.organization.default_domain&.name
+      raise NoDefaultDomain.new('No default domains available') unless domain_name
+
+      domain_name
     end
 
     def create_service_bindings(manifest_service_bindings_message, app)

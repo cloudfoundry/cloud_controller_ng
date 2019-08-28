@@ -29,6 +29,7 @@ module VCAP::CloudController
       :no_route_flag,
       :processes,
       :random_route,
+      :default_route,
       :routes,
       :services,
       :sidecars,
@@ -87,7 +88,8 @@ module VCAP::CloudController
     validate :validate_manifest_routes_update_message!,      if: ->(record) {
       record.requested?(:routes) ||
       record.requested?(:no_route) ||
-      record.requested?(:random_route)
+      record.requested?(:random_route) ||
+        record.requested?(:default_route)
     }
 
     def initialize(original_yaml, attrs={})
@@ -270,6 +272,7 @@ module VCAP::CloudController
       mapping[:no_route] = apply_no_route_override
       mapping[:routes] = routes if manifest_routes_no_route_combo? || enable_route_creation?
       mapping[:random_route] = random_route if requested?(:random_route)
+      mapping[:default_route] = default_route if requested?(:default_route)
       mapping
     end
 

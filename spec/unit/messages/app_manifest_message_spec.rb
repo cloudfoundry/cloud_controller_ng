@@ -442,6 +442,46 @@ module VCAP::CloudController
             end
           end
         end
+
+        context 'when default_route is specified' do
+          let(:params_from_yaml) { { 'default_route' => default_route_val } }
+
+          context 'when default_route is true' do
+            let(:default_route_val) { true }
+
+            it 'is valid' do
+              message = AppManifestMessage.create_from_yml(params_from_yaml, params)
+              expect(message).to be_valid
+            end
+          end
+
+          context 'when default_route is not a boolean' do
+            let(:default_route_val) { 'I am a free s0mjgnbha' }
+
+            it 'is not valid' do
+              message = AppManifestMessage.create_from_yml(params_from_yaml, params)
+              expect(message).not_to be_valid
+              expect(message.errors.full_messages).to match_array(['Default-route must be a boolean'])
+            end
+          end
+
+          context 'when default_route is true and routes are specified' do
+            let(:params_from_yaml) do
+              {
+                default_route: true,
+                routes:
+                  [
+                    { route: 'http://example.com' }
+                  ]
+              }
+            end
+
+            it 'is valid' do
+              message = AppManifestMessage.create_from_yml(params_from_yaml, params)
+              expect(message).to be_valid
+            end
+          end
+        end
       end
 
       describe 'services bindings' do

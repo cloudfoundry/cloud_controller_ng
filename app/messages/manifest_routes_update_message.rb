@@ -3,7 +3,7 @@ require 'cloud_controller/app_manifest/manifest_route'
 
 module VCAP::CloudController
   class ManifestRoutesUpdateMessage < BaseMessage
-    register_allowed_keys [:routes, :no_route, :random_route]
+    register_allowed_keys [:routes, :no_route, :random_route, :default_route]
 
     class ManifestRoutesYAMLValidator < ActiveModel::Validator
       def validate(record)
@@ -25,7 +25,9 @@ module VCAP::CloudController
     validates_with ManifestRoutesYAMLValidator, if: proc { |record| record.requested?(:routes) }
     validate :routes_are_uris, if: proc { |record| record.requested?(:routes) }
     validate :no_route_is_boolean
+    validate :default_route_is_boolean
     validate :random_route_is_boolean
+    validate :random_route_and_default_route_conflict
     validate :no_route_and_routes_conflict
 
     def manifest_routes
@@ -44,11 +46,23 @@ module VCAP::CloudController
       end
     end
 
-    def no_route_is_boolean
-      return if no_route.nil?
+    def default_route_is_boolean
+      is_boolean(default_route, field_name: 'Default-route')
+    end
 
-      unless [true, false].include?(no_route)
-        errors.add(:base, 'No-route must be a boolean')
+    def no_route_is_boolean
+      is_boolean(no_route, field_name: 'No-route')
+    end
+
+    def random_route_is_boolean
+      is_boolean(random_route, field_name: 'Random-route')
+    end
+
+    def is_boolean(field, field_name:)
+      return if field.nil?
+
+      unless [true, false].include?(field)
+        errors.add(:base, "#{field_name} must be a boolean")
       end
     end
 
@@ -58,12 +72,8 @@ module VCAP::CloudController
       end
     end
 
-    def random_route_is_boolean
-      return if random_route.nil?
-
-      unless [true, false].include?(random_route)
-        errors.add(:base, 'Random-route must be a boolean')
-      end
+    def random_route_and_default_route_conflict
+      errors.add(:base, 'Random-route and default-route may not be used together') if random_route && default_route
     end
   end
 end
