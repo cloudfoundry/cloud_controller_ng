@@ -2,6 +2,7 @@ require 'presenters/v3/app_manifest_presenter'
 require 'repositories/app_event_repository'
 require 'messages/named_app_manifest_message'
 require 'actions/app_find_or_create_skeleton'
+require 'actions/app_create'
 
 class SpaceManifestsController < ApplicationController
   wrap_parameters :body, format: [:yaml]
@@ -19,8 +20,11 @@ class SpaceManifestsController < ApplicationController
 
     action = AppFindOrCreateSkeleton.new(user_audit_info)
     app_guid_message_hash = messages.map do |m|
-      app = action.find_or_create(message: m, space: space)
-
+      begin
+        app = action.find_or_create(message: m, space: space)
+      rescue AppCreate::InvalidApp => e
+        unprocessable!("For application '#{m.name}': " + e.message)
+      end
       unsupported_for_docker_apps!(m) if incompatible_with_buildpacks(app.lifecycle_type, m)
       unsupported_for_buildpack_apps!(m) if incompatible_with_docker(app.lifecycle_type, m)
 
