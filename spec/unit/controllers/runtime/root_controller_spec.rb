@@ -152,6 +152,14 @@ module VCAP::CloudController
         expect(hash['links']['logging']['href']).to eq(expected_uri)
       end
 
+      it 'returns a link to the log cache API' do
+        expected_uri = 'https://log-cache.example.com'
+
+        get '/'
+        hash = MultiJson.load(last_response.body)
+        expect(hash['links']['log_cache']['href']).to eq(expected_uri)
+      end
+
       it 'returns a link to the v2 logging API' do
         expected_uri = 'https://log-stream.example.com'
 
