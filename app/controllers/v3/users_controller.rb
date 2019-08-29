@@ -3,12 +3,13 @@ require 'messages/users_list_message'
 require 'actions/user_create'
 require 'actions/user_delete'
 require 'presenters/v3/user_presenter'
+require 'fetchers/user_list_fetcher'
 
 class UsersController < ApplicationController
   def index
     message = UsersListMessage.from_params(query_params)
     unprocessable!(message.errors.full_messages) unless message.valid?
-    users = fetch_readable_users
+    users = fetch_readable_users(message)
     user_guids = users.map(&:guid)
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
@@ -60,11 +61,11 @@ class UsersController < ApplicationController
 
   private
 
-  def fetch_readable_users
+  def fetch_readable_users(message)
     if permission_queryer.can_read_secrets_globally?
-      User.dataset
+      UserListFetcher.fetch_all(message, User.dataset)
     else
-      User.where(guid: current_user.guid)
+      UserListFetcher.fetch_all(message, User.where(guid: current_user.guid))
     end
   end
 
