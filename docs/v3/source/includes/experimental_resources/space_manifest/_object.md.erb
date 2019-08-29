@@ -84,6 +84,7 @@ Field | Description
 **no-route** | Boolean value. Removes the app's routes if `true`; ignored if `false`. Cannot be used in conjunction with the `routes` attribute when set to `true`.
 **processes** | List of configurations for individual process types. See [_Process-level configuration_](#space-manifest-process-level-configuration).
 **random-route** | Boolean value. Creates a random route for the app if `true`; ignored if `false`, if `routes` is specified, if the app already has routes, or if `no-route` is specified.
+**default-route** | Boolean value. If true, a route for the app will be created using the app name as the hostname and the containing organization's default domain as the domain. If `false`, if `routes` is specified, if the app already has routes, or if `no-route` is specified, this field is ignored and results in noop.
 **routes** | An array of route hashes declaring HTTP and TCP routes to be mapped to the app. Each route is created if it does not already exist. Example route hash entry: `- route: www.example.com/path`
 **services** | An array of service-instances to bind to the app. See [_Service-level configuration_](#space-manifest-service-level-configuration).
 **sidecars** | An array of configurations for individual sidecars. See [_Sidecar-level configuration_](#space-manifest-sidecar-level-configuration).
