@@ -6,8 +6,9 @@ module VCAP::CloudController
     describe '.from_params' do
       let(:params) do
         {
-            'page' => 1,
-            'per_page' => 5,
+          'page' => 1,
+          'per_page' => 5,
+          'guids' => 'user1-guid,user2-guid'
         }
       end
 
@@ -17,6 +18,7 @@ module VCAP::CloudController
         expect(message).to be_a(UsersListMessage)
         expect(message.page).to eq(1)
         expect(message.per_page).to eq(5)
+        expect(message.guids).to eq(%w[user1-guid user2-guid])
       end
 
       it 'converts requested keys to symbols' do
@@ -24,14 +26,15 @@ module VCAP::CloudController
 
         expect(message.requested?(:page)).to be_truthy
         expect(message.requested?(:per_page)).to be_truthy
+        expect(message.requested?(:guids)).to be_truthy
       end
     end
 
     describe '#to_param_hash' do
       let(:opts) do
         {
-            page: 1,
-            per_page: 5,
+          page: 1,
+          per_page: 5,
         }
       end
 
@@ -47,10 +50,22 @@ module VCAP::CloudController
         expect(message).to be_valid
       end
 
+      it 'accepts a guids param' do
+        message = UsersListMessage.from_params({ guids: %w[guid1 guid2] })
+        expect(message).to be_valid
+        expect(message.guids).to eq(%w[guid1 guid2])
+      end
+
+      it 'does not accept a non-array guids param' do
+        message = UsersListMessage.from_params({ guids: 'not array' })
+        expect(message).to be_invalid
+        expect(message.errors[:guids]).to include('must be an array')
+      end
+
       it 'does not accept a field not in this set' do
         message = UsersListMessage.from_params({ foobar: 'pants' })
 
-        expect(message).not_to be_valid
+        expect(message).to be_invalid
         expect(message.errors[:base]).to include("Unknown query parameter(s): 'foobar'")
       end
     end

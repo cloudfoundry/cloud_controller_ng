@@ -27,7 +27,7 @@ module VCAP::CloudController
         expect(message).to be_valid
       end
 
-      it 'accepts an guids param' do
+      it 'accepts a guids param' do
         message = DomainsListMessage.from_params({ 'guids' => 'guid1,guid2' })
         expect(message).to be_valid
         expect(message.guids).to eq(%w[guid1 guid2])
@@ -51,6 +51,12 @@ module VCAP::CloudController
 
           expect_any_instance_of(Validators::LabelSelectorRequirementValidator).to receive(:validate).with(message).and_call_original
           message.valid?
+        end
+
+        it 'validates guids' do
+          message = DomainsListMessage.from_params({ guids: 'not an array' })
+          expect(message).to be_invalid
+          expect(message.errors[:guids]).to include('must be an array')
         end
       end
     end

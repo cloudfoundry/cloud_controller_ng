@@ -16,68 +16,68 @@ RSpec.describe 'Users Request' do
     allow(VCAP::CloudController::UaaClient).to receive(:new).and_return(uaa_client)
     allow(uaa_client).to receive(:users_for_ids).with([other_user.guid, client.guid, user.guid]).and_return(
       {
-          user.guid => { 'username' => 'bob-mcjames', 'origin' => 'Okta' },
-          other_user.guid => { 'username' => 'lola', 'origin' => 'uaa' },
+        user.guid => { 'username' => 'bob-mcjames', 'origin' => 'Okta' },
+        other_user.guid => { 'username' => 'lola', 'origin' => 'uaa' },
       }
     )
     allow(uaa_client).to receive(:users_for_ids).with([user.guid]).and_return(
       {
-          user.guid => { 'username' => 'bob-mcjames', 'origin' => 'Okta' },
+        user.guid => { 'username' => 'bob-mcjames', 'origin' => 'Okta' },
       }
     )
     allow(uaa_client).to receive(:users_for_ids).with([client.guid]).and_return({})
     allow(uaa_client).to receive(:users_for_ids).with([other_user.guid]).and_return(
       {
-          other_user.guid => { 'username' => 'lola', 'origin' => 'uaa' },
+        other_user.guid => { 'username' => 'lola', 'origin' => 'uaa' },
       }
     )
   end
 
   describe 'GET /v3/users' do
+    let(:current_user_json) do
+      {
+        guid: user.guid,
+        created_at: iso8601,
+        updated_at: iso8601,
+        username: 'bob-mcjames',
+        presentation_name: 'bob-mcjames',
+        origin: 'Okta',
+        links: {
+          self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{user.guid}) },
+        }
+      }
+    end
+
+    let(:client_json) do
+      {
+        guid: client.guid,
+        created_at: iso8601,
+        updated_at: iso8601,
+        username: nil,
+        presentation_name: client.guid,
+        origin: nil,
+        links: {
+          self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{client.guid}) },
+        }
+      }
+    end
+
+    let(:other_user_json) do
+      {
+        guid: other_user.guid,
+        created_at: iso8601,
+        updated_at: iso8601,
+        username: 'lola',
+        presentation_name: 'lola',
+        origin: 'uaa',
+        links: {
+          self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{other_user.guid}) },
+        }
+      }
+    end
+
     context 'without filters' do
       let(:api_call) { lambda { |user_headers| get '/v3/users', nil, user_headers } }
-
-      let(:current_user_json) do
-        {
-            guid: user.guid,
-            created_at: iso8601,
-            updated_at: iso8601,
-            username: 'bob-mcjames',
-            presentation_name: 'bob-mcjames',
-            origin: 'Okta',
-            links: {
-                self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{user.guid}) },
-            }
-        }
-      end
-
-      let(:client_json) do
-        {
-            guid: client.guid,
-            created_at: iso8601,
-            updated_at: iso8601,
-            username: nil,
-            presentation_name: client.guid,
-            origin: nil,
-            links: {
-                self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{client.guid}) },
-            }
-        }
-      end
-
-      let(:other_user_json) do
-        {
-            guid: other_user.guid,
-            created_at: iso8601,
-            updated_at: iso8601,
-            username: 'lola',
-            presentation_name: 'lola',
-            origin: 'uaa',
-            links: {
-                self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{other_user.guid}) },
-            }
-        }
-      end
 
       let(:expected_codes_and_responses) do
         h = Hash.new(
@@ -87,25 +87,56 @@ RSpec.describe 'Users Request' do
           ]
         )
         h['admin'] = {
-            code: 200,
-            response_objects: [
-              other_user_json,
-              client_json,
-              current_user_json
-            ]
+          code: 200,
+          response_objects: [
+            other_user_json,
+            client_json,
+            current_user_json
+          ]
         }
         h['admin_read_only'] = {
-            code: 200,
-            response_objects: [
-              other_user_json,
-              client_json,
-              current_user_json
-            ]
+          code: 200,
+          response_objects: [
+            other_user_json,
+            client_json,
+            current_user_json
+          ]
         }
         h.freeze
       end
 
       it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+    end
+
+    context 'with filters' do
+      describe 'when filtering by guid' do
+        let(:endpoint) { "/v3/users?guids=#{user.guid}" }
+        let(:api_call) { lambda { |user_headers| get endpoint, nil, user_headers } }
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(
+            code: 200,
+            response_objects: [
+              current_user_json
+            ]
+          )
+          h['admin'] = {
+            code: 200,
+            response_objects: [
+              current_user_json
+            ]
+          }
+          h['admin_read_only'] = {
+            code: 200,
+            response_objects: [
+              current_user_json
+            ]
+          }
+          h.freeze
+        end
+
+        it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+      end
     end
 
     describe 'when the user is not logged in' do
@@ -121,15 +152,15 @@ RSpec.describe 'Users Request' do
 
     let(:client_json) do
       {
-          guid: other_user.guid,
-          created_at: iso8601,
-          updated_at: iso8601,
-          username: 'lola',
-          presentation_name: 'lola',
-          origin: 'uaa',
-          links: {
-              self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{other_user.guid}) },
-          }
+        guid: other_user.guid,
+        created_at: iso8601,
+        updated_at: iso8601,
+        username: 'lola',
+        presentation_name: 'lola',
+        origin: 'uaa',
+        links: {
+          self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{other_user.guid}) },
+        }
       }
     end
 
@@ -139,12 +170,12 @@ RSpec.describe 'Users Request' do
         response_objects: []
       )
       h['admin'] = {
-          code: 200,
-          response_object: client_json
+        code: 200,
+        response_object: client_json
       }
       h['admin_read_only'] = {
-          code: 200,
-          response_object: client_json
+        code: 200,
+        response_object: client_json
       }
       h.freeze
     end
@@ -184,7 +215,7 @@ RSpec.describe 'Users Request' do
   describe 'POST /v3/users' do
     let(:params) do
       {
-          guid: other_user_guid,
+        guid: other_user_guid,
       }
     end
 
@@ -197,15 +228,15 @@ RSpec.describe 'Users Request' do
 
       let(:user_json) do
         {
-            guid: params[:guid],
-            created_at: iso8601,
-            updated_at: iso8601,
-            username: nil,
-            presentation_name: params[:guid],
-            origin: nil,
-            links: {
-                self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{params[:guid]}) },
-            }
+          guid: params[:guid],
+          created_at: iso8601,
+          updated_at: iso8601,
+          username: nil,
+          presentation_name: params[:guid],
+          origin: nil,
+          links: {
+            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{params[:guid]}) },
+          }
         }
       end
 
@@ -214,8 +245,8 @@ RSpec.describe 'Users Request' do
           code: 403,
         )
         h['admin'] = {
-            code: 201,
-            response_object: user_json
+          code: 201,
+          response_object: user_json
         }
         h.freeze
       end
@@ -233,15 +264,15 @@ RSpec.describe 'Users Request' do
 
         let(:user_json) do
           {
-              guid: params[:guid],
-              created_at: iso8601,
-              updated_at: iso8601,
-              username: 'bob-mcjames',
-              presentation_name: 'bob-mcjames',
-              origin: 'Okta',
-              links: {
-                  self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{params[:guid]}) },
-              }
+            guid: params[:guid],
+            created_at: iso8601,
+            updated_at: iso8601,
+            username: 'bob-mcjames',
+            presentation_name: 'bob-mcjames',
+            origin: 'Okta',
+            links: {
+              self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{params[:guid]}) },
+            }
           }
         end
 
@@ -250,8 +281,8 @@ RSpec.describe 'Users Request' do
             code: 403,
           )
           h['admin'] = {
-              code: 201,
-              response_object: user_json
+            code: 201,
+            response_object: user_json
           }
           h.freeze
         end
@@ -261,7 +292,7 @@ RSpec.describe 'Users Request' do
       context "it's a UAA client" do
         let(:params) do
           {
-              guid: uaa_client_id,
+            guid: uaa_client_id,
           }
         end
         let(:uaa_client_id) { 'cc_routing' }
@@ -275,15 +306,15 @@ RSpec.describe 'Users Request' do
 
         let(:user_json) do
           {
-              guid: uaa_client_id,
-              created_at: iso8601,
-              updated_at: iso8601,
-              username: nil,
-              presentation_name: uaa_client_id,
-              origin: nil,
-              links: {
-                  self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{uaa_client_id}) },
-              }
+            guid: uaa_client_id,
+            created_at: iso8601,
+            updated_at: iso8601,
+            username: nil,
+            presentation_name: uaa_client_id,
+            origin: nil,
+            links: {
+              self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{uaa_client_id}) },
+            }
           }
         end
 
@@ -292,8 +323,8 @@ RSpec.describe 'Users Request' do
             code: 403,
           )
           h['admin'] = {
-              code: 201,
-              response_object: user_json
+            code: 201,
+            response_object: user_json
           }
           h.freeze
         end
@@ -323,7 +354,7 @@ RSpec.describe 'Users Request' do
       context 'when provided invalid arguments' do
         let(:params) do
           {
-              guid: 555
+            guid: 555
           }
         end
 
@@ -344,7 +375,7 @@ RSpec.describe 'Users Request' do
 
         let(:params) do
           {
-              guid: existing_user.guid,
+            guid: existing_user.guid,
           }
         end
 
