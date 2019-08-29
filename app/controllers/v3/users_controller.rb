@@ -50,6 +50,7 @@ class UsersController < ApplicationController
     db_user_is_current_user = current_user.guid == user.guid
     unauthorized! if db_user_is_current_user && !permission_queryer.can_write_globally?
     user_not_found! unless permission_queryer.can_read_secrets_globally?
+    unauthorized! unless permission_queryer.can_write_globally?
 
     delete_action = UserDeleteAction.new
     deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(User, user.guid, delete_action)

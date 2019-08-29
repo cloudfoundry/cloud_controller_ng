@@ -438,6 +438,15 @@ RSpec.describe 'Users Request' do
         end
       end
 
+      describe 'when the user is admin_read_only and has cloud_controller.write scope' do
+        let(:user_header) { headers_for(user, scopes: %w(cloud_controller.admin_read_only cloud_controller.write)) }
+
+        it 'returns 403' do
+          delete "/v3/users/#{user_to_delete.guid}", nil, user_header
+          expect(last_response.status).to eq(403)
+        end
+      end
+
       describe 'when the user is not found' do
         let(:user_header) { headers_for(user_to_delete, scopes: %w(cloud_controller.write)) }
 
