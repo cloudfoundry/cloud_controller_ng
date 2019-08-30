@@ -30,12 +30,6 @@ Apply manifest will only trigger an immediate update for the "disk_quota", "inst
 #### Definition
 `POST /v3/spaces/:guid/actions/apply_manifest`
 
-#### Query parameters
-
-Name | Type | Description
----- | ---- | ------------
-**no_route** | _boolean_ | Unmaps all existing routes and blocks route creation for apps in the manifest.
-
 #### Permitted roles
  |
 --- | ---

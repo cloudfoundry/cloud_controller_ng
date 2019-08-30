@@ -6,7 +6,7 @@ module VCAP::CloudController
       let(:user) { User.make(admin: true) }
       let(:apply_manifest_action) { instance_double(AppApplyManifest) }
       let(:app) { AppModel.make(name: Sham.guid) }
-      let(:parsed_app_manifest) { AppManifestMessage.create_from_yml({ name: 'blah', instances: 4, routes: [{ route: 'foo.example.com' }] }, {}) }
+      let(:parsed_app_manifest) { AppManifestMessage.create_from_yml({ name: 'blah', instances: 4, routes: [{ route: 'foo.example.com' }] }) }
       subject(:job) { AppApplyManifestActionJob.new(app.guid, parsed_app_manifest, apply_manifest_action) }
 
       before do
