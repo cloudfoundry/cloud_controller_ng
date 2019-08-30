@@ -395,10 +395,9 @@ module VCAP::CloudController
               }
             end
 
-            it 'is not valid' do
+            it 'is valid' do
               message = AppManifestMessage.create_from_yml(params_from_yaml, params)
-              expect(message).not_to be_valid
-              expect(message.errors.full_messages).to match_array(['Cannot use the combination of properties: no-route, routes'])
+              expect(message).to be_valid
             end
           end
         end
