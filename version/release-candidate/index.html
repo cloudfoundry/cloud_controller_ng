@@ -14772,11 +14772,11 @@ excluded in the response based on the user&rsquo;s role.</p>
 </tr>
 <tr>
 <td><strong>no-route</strong></td>
-<td>Boolean value. Removes the app&rsquo;s routes if <code class="prettyprint">true</code>; ignored if <code class="prettyprint">false</code>. Cannot be used in conjunction with the <code class="prettyprint">routes</code> attribute when set to <code class="prettyprint">true</code>.</td>
+<td>Boolean value. When set to <code class="prettyprint">true</code>, any routes specified with the <code class="prettyprint">routes</code> attribute will be ignored and any existing routes will be removed; ignored if <code class="prettyprint">false</code>.</td>
 </tr>
 <tr>
 <td><strong>processes</strong></td>
-<td>List of configurations for individual process types. See <a href="#process-level-configuration"><em>Process-level configuration</em></a>.</td>
+<td>List of configurations for individual process types. See <a href="#app-manifest-process-level-configuration"><em>Process-level configuration</em></a>.</td>
 </tr>
 <tr>
 <td><strong>random-route</strong></td>
@@ -18147,7 +18147,7 @@ Deployed revisions are revisions that are linked to started processes in the app
 </tr>
 <tr>
 <td><strong>no-route</strong></td>
-<td>Boolean value. Removes the app&rsquo;s routes if <code class="prettyprint">true</code>; ignored if <code class="prettyprint">false</code>. Cannot be used in conjunction with the <code class="prettyprint">routes</code> attribute when set to <code class="prettyprint">true</code>.</td>
+<td>Boolean value. When set to <code class="prettyprint">true</code>, any routes specified with the <code class="prettyprint">routes</code> attribute will be ignored and any existing routes will be removed; ignored if <code class="prettyprint">false</code>.</td>
 </tr>
 <tr>
 <td><strong>processes</strong></td>
@@ -18315,22 +18315,6 @@ Apply manifest will only trigger an immediate update for the &ldquo;disk_quota&r
 <h4 id="definition">Definition</h4>
 
 <p><code class="prettyprint">POST /v3/spaces/:guid/actions/apply_manifest</code></p>
-
-<h4 id="query-parameters">Query parameters</h4>
-
-<table><thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead><tbody>
-<tr>
-<td><strong>no_route</strong></td>
-<td><em>boolean</em></td>
-<td>Unmaps all existing routes and blocks route creation for apps in the manifest.</td>
-</tr>
-</tbody></table>
 
 <h4 id="permitted-roles">Permitted roles</h4>
 
