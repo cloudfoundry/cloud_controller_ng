@@ -761,6 +761,18 @@ module VCAP::CloudController
                   with(app, service_instance, instance_of(ServiceBindingCreateMessage), true, false)
               end
             end
+
+            context 'service binding errors' do
+              before do
+                allow(service_binding_create).to receive(:create).and_raise('fake binding error')
+              end
+
+              it 'decorates the error with the name of the service instance' do
+                expect {
+                  app_apply_manifest.apply(app.guid, message)
+                }.to raise_error(AppApplyManifest::ServiceBindingError, /For service 'si-name': fake binding error/)
+              end
+            end
           end
 
           context 'valid request with services that have parameters' do

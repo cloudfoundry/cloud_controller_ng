@@ -54,11 +54,7 @@ module VCAP::CloudController
         ProcessScale::InvalidProcess,
         ProcessUpdate::InvalidProcess,
         Route::InvalidOrganizationRelation,
-        ServiceBindingCreate::InvalidServiceBinding,
-        ServiceBindingCreate::ServiceBrokerInvalidSyslogDrainUrl,
-        ServiceBindingCreate::ServiceInstanceNotBindable,
-        ServiceBindingCreate::SpaceMismatch,
-        ServiceBindingCreate::VolumeMountServiceDisabled,
+        AppApplyManifest::ServiceBindingError,
       ].each do |klass|
         it "wraps a #{klass} in an ApiError" do
           allow(apply_manifest_action).to receive(:apply).

@@ -10,6 +10,7 @@ require 'cloud_controller/random_route_generator'
 module VCAP::CloudController
   class AppApplyManifest
     class NoDefaultDomain < StandardError; end
+    class ServiceBindingError < StandardError; end
 
     SERVICE_BINDING_TYPE = 'app'.freeze
 
@@ -127,13 +128,18 @@ module VCAP::CloudController
         service_instance_not_found!(manifest_service_binding.name) unless service_instance
         next if binding_exists?(service_instance, app)
 
-        action.create(
-          app,
-          service_instance,
-          ServiceBindingCreateMessage.new(type: SERVICE_BINDING_TYPE, data: { parameters: manifest_service_binding.parameters }),
-          volume_services_enabled?,
-          false
-        )
+        begin
+          action.create(
+            app,
+            service_instance,
+            ServiceBindingCreateMessage.new(type: SERVICE_BINDING_TYPE, data: { parameters: manifest_service_binding.parameters }),
+            volume_services_enabled?,
+            false
+          )
+        rescue => e
+          error_message = "For service '#{service_instance.name}': #{e.message}"
+          raise ServiceBindingError.new(error_message)
+        end
       end
     end
 

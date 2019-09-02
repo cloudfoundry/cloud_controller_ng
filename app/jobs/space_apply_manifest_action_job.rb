@@ -23,7 +23,7 @@ module VCAP::CloudController
                  ProcessUpdate::InvalidProcess,
                  ManifestRouteUpdate::InvalidRoute,
                  Route::InvalidOrganizationRelation,
-                 ServiceBindingCreate::InvalidServiceBinding => e
+                 AppApplyManifest::ServiceBindingError => e
 
             app_name = AppModel.find(guid: app_guid)&.name
             error_message = app_name ? "For application '#{app_name}': #{e.message}" : e.message
