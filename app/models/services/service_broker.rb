@@ -3,6 +3,7 @@ module VCAP::CloudController
     one_to_many :services
     one_to_many :service_dashboard_client
     many_to_one :space
+    one_to_one :service_broker_state
 
     import_attributes :name, :broker_url, :auth_username, :auth_password
     export_attributes :name, :broker_url, :auth_username, :space_guid

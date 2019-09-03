@@ -1,4 +1,5 @@
 require 'credhub/config_helpers'
+require 'diego/action_builder'
 
 module VCAP::CloudController
   module Diego

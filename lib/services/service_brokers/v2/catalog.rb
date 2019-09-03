@@ -1,12 +1,15 @@
 module VCAP::Services::ServiceBrokers::V2
   class Catalog
-    attr_reader :service_broker, :services, :plans, :errors
+    attr_reader :service_broker, :services, :plans, :errors, :incompatibility_errors
+
+    alias_method :validation_errors, :errors
 
     def initialize(service_broker, catalog_hash)
       @service_broker = service_broker
-      @services       = []
-      @plans          = []
-      @errors         = VCAP::Services::ValidationErrors.new
+      @services = []
+      @plans = []
+      @errors = VCAP::Services::ValidationErrors.new
+      @incompatibility_errors = VCAP::Services::ValidationErrors.new
 
       catalog_hash.fetch('services', []).each do |service_attrs|
         service = CatalogService.new(service_broker, service_attrs)
@@ -20,7 +23,20 @@ module VCAP::Services::ServiceBrokers::V2
       validate_all_service_ids_are_unique
       validate_all_service_names_are_unique
       validate_all_service_dashboard_clients_are_unique
-      errors.empty?
+      validation_errors.empty?
+    end
+
+    def compatible?
+      services.each { |service|
+        if service.route_service? && route_services_disabled?
+          incompatibility_errors.add("Service #{service.name} is declared to be a route service but support for route services is disabled.")
+        end
+
+        if service.volume_mount_service? && volume_services_disabled?
+          incompatibility_errors.add("Service #{service.name} is declared to be a volume mount service but support for volume mount services is disabled.")
+        end
+      }
+      incompatibility_errors.empty?
     end
 
     private
@@ -29,7 +45,7 @@ module VCAP::Services::ServiceBrokers::V2
       dashboard_clients = valid_dashboard_clients(services)
       dashboard_client_ids = valid_dashboard_client_ids(dashboard_clients)
       if has_duplicates?(dashboard_client_ids)
-        errors.add('Service dashboard_client id must be unique')
+        validation_errors.add('Service dashboard_client id must be unique')
       end
     end
 
@@ -43,13 +59,13 @@ module VCAP::Services::ServiceBrokers::V2
 
     def validate_all_service_ids_are_unique
       if has_duplicates?(services.map(&:broker_provided_id).compact)
-        errors.add('Service ids must be unique')
+        validation_errors.add('Service ids must be unique')
       end
     end
 
     def validate_all_service_names_are_unique
       if has_duplicates?(services.map(&:name))
-        errors.add('Service names must be unique within a broker')
+        validation_errors.add('Service names must be unique within a broker')
       end
     end
 
@@ -59,10 +75,18 @@ module VCAP::Services::ServiceBrokers::V2
 
     def validate_services
       services.each do |service|
-        errors.add_nested(service, service.errors) unless service.valid?
+        validation_errors.add_nested(service, service.errors) unless service.valid?
       end
 
-      errors.add('Service broker must provide at least one service') if services.empty?
+      validation_errors.add('Service broker must provide at least one service') if services.empty?
+    end
+
+    def volume_services_disabled?
+      !VCAP::CloudController::Config.config.get(:volume_services_enabled)
+    end
+
+    def route_services_disabled?
+      !VCAP::CloudController::Config.config.get(:route_services_enabled)
     end
   end
 end

@@ -1,3 +1,5 @@
+require 'support/bootstrap/test_config'
+
 module LinkHelpers
   include VCAP::CloudController
 

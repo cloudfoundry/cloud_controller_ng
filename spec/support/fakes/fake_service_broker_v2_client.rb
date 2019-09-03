@@ -92,4 +92,10 @@ class FakeServiceBrokerV2Client
   def fetch_service_binding(_binding)
     parameters
   end
+
+  class WithInvalidCatalog
+    def catalog
+      {}
+    end
+  end
 end

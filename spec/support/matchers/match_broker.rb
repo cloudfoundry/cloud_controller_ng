@@ -27,6 +27,15 @@ RSpec::Matchers.define :match_broker do |expected|
       end
     end
 
+    expected_availability = expected.service_broker_state&.state == VCAP::CloudController::ServiceBrokerStateEnum::AVAILABLE
+    problems << "Expected broker availability #{actual['available']} to be equal to #{expected_availability}" unless actual['available'] == expected_availability
+    expected_status = {
+      VCAP::CloudController::ServiceBrokerStateEnum::AVAILABLE => 'available',
+      VCAP::CloudController::ServiceBrokerStateEnum::SYNCHRONIZING => 'synchronization in progress',
+      VCAP::CloudController::ServiceBrokerStateEnum::SYNCHRONIZATION_FAILED => 'synchronization failed'
+    }.fetch(expected.service_broker_state&.state, 'unknown')
+    problems << "Expected broker status #{actual['status']} to be equal to #{expected_status}" unless actual['status'] == expected_status
+
     problems.empty?
   end
 
