@@ -822,7 +822,7 @@ RSpec.describe 'Apps' do
           space: space2
         )
 
-        get '/v3/apps?per_page=2&include=space,org', nil, admin_header
+        get '/v3/apps?per_page=2&include=space,space.organization', nil, admin_header
         expect(last_response.status).to eq(200)
 
         parsed_response = MultiJson.load(last_response.body)
@@ -876,7 +876,7 @@ RSpec.describe 'Apps' do
       end
 
       it 'flags unsupported includes that contain supported ones' do
-        get '/v3/apps?per_page=2&include=org,spaceship,borgs,space', nil, admin_header
+        get '/v3/apps?per_page=2&include=space.organization,spaceship,borgs,space', nil, admin_header
         expect(last_response.status).to eq(400)
       end
 
@@ -1026,7 +1026,7 @@ RSpec.describe 'Apps' do
     end
 
     it 'gets a specific app including space and org' do
-      get "/v3/apps/#{app_model.guid}?include=org,space", nil, user_header
+      get "/v3/apps/#{app_model.guid}?include=space.organization,space", nil, user_header
       expect(last_response.status).to eq(200)
 
       parsed_response = MultiJson.load(last_response.body)
