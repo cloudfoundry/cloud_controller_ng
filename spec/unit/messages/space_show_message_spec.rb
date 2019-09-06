@@ -11,6 +11,8 @@ module VCAP::CloudController
     it 'does not accept include that is not space or org' do
       message = SpaceShowMessage.from_params({ 'include' => 'org' })
       expect(message).to be_valid
+      message = SpaceShowMessage.from_params({ 'include' => 'organization' })
+      expect(message).to be_valid
       message = SpaceShowMessage.from_params({ 'include' => 'sunny\'s droplet' })
       expect(message).not_to be_valid
     end
