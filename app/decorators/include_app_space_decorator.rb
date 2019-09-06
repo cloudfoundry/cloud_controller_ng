@@ -2,7 +2,7 @@ module VCAP::CloudController
   class IncludeAppSpaceDecorator
     class << self
       def match?(include)
-        include&.include?('space')
+        include&.any? { |i| %w(space space.organization).include?(i) }
       end
 
       def decorate(hash, apps)

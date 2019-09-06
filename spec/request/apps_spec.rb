@@ -1026,7 +1026,7 @@ RSpec.describe 'Apps' do
     end
 
     it 'gets a specific app including space and org' do
-      get "/v3/apps/#{app_model.guid}?include=space.organization,space", nil, user_header
+      get "/v3/apps/#{app_model.guid}?include=space.organization", nil, user_header
       expect(last_response.status).to eq(200)
 
       parsed_response = MultiJson.load(last_response.body)
