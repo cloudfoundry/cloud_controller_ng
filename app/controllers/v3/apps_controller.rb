@@ -45,8 +45,8 @@ class AppsV3Controller < ApplicationController
               end
 
     decorators = []
-    decorators << IncludeAppSpaceDecorator if message.include&.include?('space')
-    decorators << IncludeAppOrganizationDecorator if message.include&.include?('org')
+    decorators << IncludeAppSpaceDecorator if IncludeAppSpaceDecorator.match?(message.include)
+    decorators << IncludeAppOrganizationDecorator if IncludeAppOrganizationDecorator.match?(message.include)
 
     render status: :ok,
            json: Presenters::V3::PaginatedListPresenter.new(
@@ -68,8 +68,8 @@ class AppsV3Controller < ApplicationController
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
 
     decorators = []
-    decorators << IncludeAppSpaceDecorator if message.include&.include?('space')
-    decorators << IncludeAppOrganizationDecorator if message.include&.include?('org')
+    decorators << IncludeAppSpaceDecorator if IncludeAppSpaceDecorator.match?(message.include)
+    decorators << IncludeAppOrganizationDecorator if IncludeAppOrganizationDecorator.match?(message.include)
 
     render status: :ok, json: Presenters::V3::AppPresenter.new(
       app,

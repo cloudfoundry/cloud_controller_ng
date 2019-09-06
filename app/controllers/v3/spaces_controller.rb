@@ -20,7 +20,7 @@ class SpacesV3Controller < ApplicationController
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     decorators = []
-    decorators << IncludeSpaceOrganizationDecorator if message.include&.include?('org')
+    decorators << IncludeSpaceOrganizationDecorator if IncludeSpaceOrganizationDecorator.match?(message.include)
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::SpacePresenter,
@@ -39,7 +39,7 @@ class SpacesV3Controller < ApplicationController
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     decorators = []
-    decorators << IncludeSpaceOrganizationDecorator if message.include&.include?('org')
+    decorators << IncludeSpaceOrganizationDecorator if IncludeSpaceOrganizationDecorator.match?(message.include)
 
     render status: :ok, json: Presenters::V3::SpacePresenter.new(space, decorators: decorators)
   end

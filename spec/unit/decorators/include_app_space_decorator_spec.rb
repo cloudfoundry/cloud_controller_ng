@@ -21,5 +21,15 @@ module VCAP::CloudController
       expect(hash[:included][:spaces]).to match_array([Presenters::V3::SpacePresenter.new(space1).to_hash, Presenters::V3::SpacePresenter.new(space2).to_hash])
       expect(hash[:included][:monkeys]).to match_array(['zach', 'greg'])
     end
+
+    describe '.match?' do
+      it 'matches include arrays containing "space"' do
+        expect(decorator.match?(['potato', 'space', 'turnip'])).to be_truthy
+      end
+
+      it 'does not match other include arrays' do
+        expect(decorator.match?(['potato', 'turnip'])).to be_falsey
+      end
+    end
   end
 end
