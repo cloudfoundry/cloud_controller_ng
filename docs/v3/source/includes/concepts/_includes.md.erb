@@ -1,7 +1,7 @@
 ## Include
 
 The `include` parameter allows clients to fetch resources and ensure that information about the parent object(s) is part of the response.
-For example, a response to `/v3/spaces/:guid?include=org` will contain detailed information about the space and its parent org.
+For example, a response to `/v3/spaces/:guid?include=organization` will contain detailed information about the space and its parent organization.
 
 Developers may choose to use the `include` feature to reduce the number of API calls. The include
 query param can be used with a single resource or a list of resources.
@@ -12,10 +12,10 @@ The following resources can take an `include` parameter:
 
 Resource | Allowed values
 -------- | --------------
-**apps** | `org`, `space`
-**apps/[:guid]** | `org`, `space`
-**spaces** | `org`
-**spaces/[:guid]** | `org`
+**apps** | `space.organization`, `space`
+**apps/[:guid]** | `space.organization`, `space`
+**spaces** | `organization`
+**spaces/[:guid]** | `organization`
 
 ### Sample requests
 
@@ -25,7 +25,7 @@ Example request to apps resource to include parent orgs and spaces
 ```
 
 ```shell
-curl "https://api.example.org/v3/apps?include=org,space" \
+curl "https://api.example.org/v3/apps?include=space.organization" \
   -X GET \
   -H "Authorization: bearer [token]"
 ```
@@ -113,11 +113,11 @@ Example response
 ```
 
 ```
-Example request for all spaces including their parent orgs
+Example request for all spaces including their parent organizations
 ```
 
 ```shell
-curl "https://api.example.org/v3/spaces?include=org" \
+curl "https://api.example.org/v3/spaces?include=organization" \
   -X GET \
   -H "Authorization: bearer [token]"
 ```
