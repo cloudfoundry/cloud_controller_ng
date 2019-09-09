@@ -128,6 +128,8 @@ RSpec.describe 'V3 service brokers' do
       to_return(status: 200, body: catalog.to_json, headers: {})
     stub_request(:get, 'http://example.org/space-broker-url/v2/catalog').
       to_return(status: 200, body: catalog(space_broker_id).to_json, headers: {})
+    stub_request(:put, %r{http://example.org/broker-url/v2/service\_instances/.*}).
+      to_return(status: 200, body: '{}', headers: {})
 
     token = { token_type: 'Bearer', access_token: 'my-favourite-access-token' }
     stub_request(:post, 'https://uaa.service.cf.internal/oauth/token').
@@ -567,6 +569,21 @@ RSpec.describe 'V3 service brokers' do
 
         it_behaves_like 'a successful broker delete'
       end
+
+      context 'when there are service instances' do
+        before do
+          create_service_instance(global_broker, with: admin_headers)
+        end
+
+        it 'responds with 422 Unprocessable Entity' do
+          delete_broker(global_broker.guid, with: admin_headers)
+          expect_error(
+            status: 422,
+            error: 'CF-ServiceBrokerNotRemovable',
+            description: "Can not remove brokers that have associated service instances: #{global_broker.name}"
+          )
+        end
+      end
     end
 
     context 'as an admin-read-only/global auditor user' do
@@ -627,6 +644,22 @@ RSpec.describe 'V3 service brokers' do
     create_broker(broker_body, with: with)
     expect(last_response).to have_status_code(201)
     VCAP::CloudController::ServiceBroker.last
+  end
+
+  def create_service_instance(broker, with:)
+    service = VCAP::CloudController::Service.where(service_broker_id: broker.id).first
+    plan = VCAP::CloudController::ServicePlan.where(service_id: service.id).first
+    plan.public = true
+    plan.save
+
+    request_body = {
+      name: 'my-service-instance',
+      space_guid: space.guid,
+      service_plan_guid: plan.guid
+    }
+    # TODO: replace this with v3 once it's implemented
+    post('/v2/service_instances', request_body.to_json, with)
+    expect(last_response).to have_status_code(201)
   end
 
   def last_response_warnings

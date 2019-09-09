@@ -1,0 +1,4 @@
+270010:
+  name: ServiceBrokerNotRemovable
+  http_code: 422
+  message: "Can not remove brokers that have associated service instances: %s"

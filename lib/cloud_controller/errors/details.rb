@@ -2,18 +2,14 @@ require 'cloud_controller/yaml_config'
 
 module CloudController
   module Errors
-    class Details
-      def self.yaml_file_path
-        File.join(File.expand_path('../../../vendor/errors', __dir__), 'v2.yml')
-      end
-
-      def self.details_by_code
+    class DetailsLoader
+      def self.load_by_code(yaml_file_path)
         VCAP::CloudController::YAMLConfig.safe_load_file(yaml_file_path)
       end
 
-      def self.details_by_name
+      def self.load_by_name(yaml_file_path)
         details_by_name = {}
-        details_by_code.each do |code, values|
+        load_by_code(yaml_file_path).each do |code, values|
           key = values['name']
           details_by_name[key] = values
           details_by_name[key]['code'] = code
@@ -21,14 +17,32 @@ module CloudController
         end
         details_by_name
       end
+    end
 
-      HARD_CODED_DETAILS = details_by_name
+    module V2
+      class HardCodedDetails
+        def self.yaml_file_path
+          File.join(File.expand_path('../../../vendor/errors', __dir__), 'v2.yml')
+        end
 
+        HARD_CODED_DETAILS = CloudController::Errors::DetailsLoader.load_by_name(yaml_file_path)
+
+        def self.details
+          HARD_CODED_DETAILS
+        end
+      end
+    end
+
+    class Details
       attr_accessor :name
       attr_accessor :details_hash
 
+      def hard_coded_details
+        V2::HardCodedDetails.details
+      end
+
       def initialize(name)
-        @details_hash = HARD_CODED_DETAILS.fetch(name.to_s)
+        @details_hash = hard_coded_details.fetch(name.to_s)
         @name = name
       end
 
