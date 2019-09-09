@@ -47,7 +47,8 @@ module ControllerHelpers
   end
 
   def headers_for(user, opts={})
-    opts = { email: Sham.email,
+    generated_email = Sham.email
+    opts = { email: generated_email,
              https: false }.merge(opts)
 
     headers = {}
@@ -55,7 +56,13 @@ module ControllerHelpers
     headers['HTTP_AUTHORIZATION'] = "bearer #{token}"
 
     headers['HTTP_X_FORWARDED_PROTO'] = 'https' if opts[:https]
-    json_headers(headers)
+    result = json_headers(headers)
+
+    result.define_singleton_method('_generated_email') do
+      generated_email
+    end
+
+    result
   end
 
   def json_headers(headers)
@@ -95,5 +102,23 @@ module ControllerHelpers
       user.destroy
     end
     @admin_headers
+  end
+
+  def admin_read_only_headers
+    if !@admin_read_only_headers
+      user = User.make
+      @admin_read_only_headers = headers_for(user, scopes: %w(cloud_controller.admin_read_only))
+      user.destroy
+    end
+    @admin_read_only_headers
+  end
+
+  def global_auditor_headers
+    if !@global_auditor_headers
+      user = User.make
+      @global_auditor_headers = headers_for(user, scopes: %w(cloud_controller.global_auditor))
+      user.destroy
+    end
+    @global_auditor_headers
   end
 end

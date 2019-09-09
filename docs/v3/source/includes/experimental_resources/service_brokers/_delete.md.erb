@@ -1,0 +1,32 @@
+### Delete a service broker
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/service_brokers/[guid]" \
+  -X DELETE \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 204 No Content
+Content-Type: application/json
+```
+
+This endpoint deletes an existing service broker.
+
+#### Definition
+`DELETE /v3/service_brokers/:guid`
+
+#### Permitted roles
+ |
+--- | ---
+Admin |
+Space Developer |
+

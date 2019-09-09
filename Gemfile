@@ -98,4 +98,5 @@ group :development do
   gem 'solargraph'
   gem 'spork', git: 'https://github.com/sporkrb/spork', ref: '224df49' # '~> 1.0rc'
   gem 'spring'
+  gem 'spring-commands-rspec'
 end

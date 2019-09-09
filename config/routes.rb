@@ -164,6 +164,7 @@ Rails.application.routes.draw do
   get '/service_brokers', to: 'service_brokers#index'
   get '/service_brokers/:guid', to: 'service_brokers#show'
   post '/service_brokers', to: 'service_brokers#create'
+  delete '/service_brokers/:guid', to: 'service_brokers#destroy'
 
   # space_manifests
   post '/spaces/:guid/actions/apply_manifest', to: 'space_manifests#apply_manifest'

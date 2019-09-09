@@ -85,6 +85,15 @@ module ServiceBrokerHelpers
       to_return(status: status, body: body)
   end
 
+  def stub_delete(broker, opts={})
+    status = opts[:status] || 204
+    body = opts[:body] || '{}'
+
+    stub_request(:delete, delete_broker_url(broker)).
+      with(basic_auth: basic_auth(service_broker: broker)).
+      to_return(status: status, body: body)
+  end
+
   def provision_url_for_broker(broker, accepts_incomplete: nil)
     path = "/v2/service_instances/#{guid_pattern}"
     async_query = "accepts_incomplete=#{accepts_incomplete}" if !accepts_incomplete.nil?
@@ -148,6 +157,10 @@ module ServiceBrokerHelpers
     path = "/v2/service_instances/#{service_instance.guid}"
     path += "/service_bindings/#{service_binding.guid}"
     build_broker_url(service_instance.service_broker, path, query)
+  end
+
+  def delete_broker_url(broker)
+    build_broker_url(broker)
   end
 
   def remove_basic_auth(url)
