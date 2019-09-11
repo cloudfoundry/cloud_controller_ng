@@ -64,6 +64,7 @@ module VCAP::CloudController::Presenters::V3
           expect(result[:created_at]).to be_a(Time)
           expect(result[:updated_at]).to be_a(Time)
           expect(result[:links]).to eq(links)
+          expect(result[:relationships][:app][:data][:guid]).to eq(droplet.app_guid)
         end
 
         it 'does not redacts the process_types and execution_metadata by default' do
@@ -195,6 +196,7 @@ module VCAP::CloudController::Presenters::V3
           expect(result[:created_at]).to be_a(Time)
           expect(result[:updated_at]).to be_a(Time)
           expect(result[:links]).to eq(links)
+          expect(result[:relationships][:app][:data][:guid]).to eq(droplet.app_guid)
         end
       end
 

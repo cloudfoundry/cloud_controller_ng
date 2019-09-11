@@ -1799,6 +1799,7 @@ RSpec.describe 'Apps' do
         'image' => nil,
         'created_at' => iso8601,
         'updated_at' => iso8601,
+        'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
         'links' => {
             'self' => { 'href' => "#{link_prefix}/v3/droplets/#{guid}" },
             'package' => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },

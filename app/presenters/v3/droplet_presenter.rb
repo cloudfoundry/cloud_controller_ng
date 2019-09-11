@@ -24,6 +24,7 @@ module VCAP::CloudController
             process_types: redact_hash(droplet.process_types),
             created_at: droplet.created_at,
             updated_at: droplet.updated_at,
+            relationships: { app: { data: { guid: droplet.app_guid } } },
             links: build_links,
             metadata: {
               labels: hashified_labels(droplet.labels),
