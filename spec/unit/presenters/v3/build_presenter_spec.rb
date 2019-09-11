@@ -44,6 +44,7 @@ module VCAP::CloudController::Presenters::V3
 
           expect(result[:created_at]).to be_a(Time)
           expect(result[:updated_at]).to be_a(Time)
+          expect(result[:relationships][:app][:data][:guid]).to eq(app.guid)
           expect(result[:links]).to eq(links)
 
           expect(result[:created_by]).to eq({
@@ -93,6 +94,7 @@ module VCAP::CloudController::Presenters::V3
 
           expect(result[:created_at]).to be_a(Time)
           expect(result[:updated_at]).to be_a(Time)
+          expect(result[:relationships][:app][:data][:guid]).to eq(app.guid)
           expect(result[:links]).to eq(links)
         end
       end

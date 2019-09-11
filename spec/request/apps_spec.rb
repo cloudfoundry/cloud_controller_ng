@@ -1232,6 +1232,7 @@ RSpec.describe 'Apps' do
                                                                   'guid' => droplet.guid,
                                                                   'href' => "#{link_prefix}/v3/droplets/#{droplet.guid}",
                                                               },
+                                                              'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
                                                               'metadata' => { 'labels' => {}, 'annotations' => {} },
                                                               'links' => {
                                                                   'self' => { 'href' => "#{link_prefix}/v3/builds/#{build.guid}", },
@@ -1257,6 +1258,7 @@ RSpec.describe 'Apps' do
                                                                   'guid' => second_droplet.guid,
                                                                   'href' => "#{link_prefix}/v3/droplets/#{second_droplet.guid}",
                                                               },
+                                                              'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
                                                               'metadata' => { 'labels' => {}, 'annotations' => {} },
                                                               'links' => {
                                                                   'self' => { 'href' => "#{link_prefix}/v3/builds/#{second_build.guid}", },

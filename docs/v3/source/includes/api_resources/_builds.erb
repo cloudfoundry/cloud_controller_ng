@@ -35,6 +35,13 @@
         "guid": "8e4da443-f255-499c-8b47-b3729b5b7432"
       },
       "droplet": null,
+      "relationships": {
+        "app": {
+          "data": {
+            "guid": "7b34f1cf-7e73-428a-bb5a-8a17a8058396"
+          }
+        }
+      },
       "metadata": {
         "labels": {},
         "annotations": {}
@@ -75,6 +82,13 @@
     "guid": "8e4da443-f255-499c-8b47-b3729b5b7432"
   },
   "droplet": null,
+  "relationships": {
+    "app": {
+      "data": {
+        "guid": "7b34f1cf-7e73-428a-bb5a-8a17a8058396"
+      }
+    }
+  },
   "metadata": {
     "labels": <%= metadata.fetch(:labels, {}).to_json(space: ' ', object_nl: ' ')%>,
     "annotations": <%= metadata.fetch(:annotations, {}).to_json(space: ' ', object_nl: ' ')%>
@@ -115,6 +129,13 @@
   "droplet": {
     "guid": "1e1186e7-d803-4c46-b9d6-5c81e50fe55a",
     "href": "https://api.example.org/v3/droplets/1e1186e7-d803-4c46-b9d6-5c81e50fe55a"
+  },
+  "relationships": {
+    "app": {
+      "data": {
+        "guid": "7b34f1cf-7e73-428a-bb5a-8a17a8058396"
+      }
+    }
   },
   "metadata": {
     "labels": <%= metadata.fetch(:labels, {}).to_json(space: ' ', object_nl: ' ')%>,
