@@ -67,6 +67,7 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:sequence_id]).to eq(5)
         expect(result[:created_at]).to eq(task.created_at.iso8601)
         expect(result[:updated_at]).to eq(task.updated_at.iso8601)
+        expect(result[:relationships][:app][:data][:guid]).to eq(task.app_guid)
         expect(result[:metadata][:labels]).to eq('release' => 'stable', 'canberra.au/potato' => 'mashed')
         expect(result[:metadata][:annotations]).to eq('altitude' => '14,412', 'maize' => 'hfcs')
         expect(result[:links]).to eq(links)
