@@ -14,7 +14,7 @@ RSpec.describe 'Users Request' do
   before do
     VCAP::CloudController::User.dataset.destroy # this will clean up the seeded test users
     allow(VCAP::CloudController::UaaClient).to receive(:new).and_return(uaa_client)
-    allow(uaa_client).to receive(:users_for_ids).with([other_user.guid, client.guid, user.guid]).and_return(
+    allow(uaa_client).to receive(:users_for_ids).with(contain_exactly(other_user.guid, client.guid, user.guid)).and_return(
       {
         user.guid => { 'username' => 'bob-mcjames', 'origin' => 'Okta' },
         other_user.guid => { 'username' => 'lola', 'origin' => 'uaa' },
