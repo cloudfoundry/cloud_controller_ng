@@ -255,7 +255,7 @@ class AppsV3Controller < ApplicationController
 
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
     unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
-    deployment_in_progress! if app.deploying? || app.failing?
+    deployment_in_progress! if app.deploying?
 
     AppAssignDroplet.new(user_audit_info).assign(app, droplet)
 

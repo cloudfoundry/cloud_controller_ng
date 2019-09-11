@@ -484,40 +484,6 @@ module VCAP::CloudController
       end
     end
 
-    describe '#failing?' do
-      it 'returns false when the app has no deployments' do
-        expect(app_model.failing?).to be(false)
-      end
-
-      context 'when the app has no failing deployments' do
-        let!(:deployment_1) { VCAP::CloudController::DeploymentModel.make(state: 'DEPLOYING', app: app_model) }
-        let!(:deployment_2) { VCAP::CloudController::DeploymentModel.make(state: 'CANCELING', app: app_model) }
-        let!(:deployment_3) { VCAP::CloudController::DeploymentModel.make(state: 'CANCELED', app: app_model) }
-
-        it 'returns false' do
-          expect(app_model.failing?).to be(false)
-        end
-      end
-
-      context 'when the app has at least one failing deployment' do
-        let!(:unhealthy_deployment) do
-          VCAP::CloudController::DeploymentModel.make(
-            state: 'DEPLOYING',
-            app: app_model,
-            last_healthy_at: Time.now - 24.hours
-          )
-        end
-
-        before do
-          TestConfig.override(default_health_check_timeout: 3.seconds)
-        end
-
-        it 'returns true' do
-          expect(app_model.failing?).to be(true)
-        end
-      end
-    end
-
     describe 'encryption' do
       context 'when not saving any encrypted fields, with db keys' do
         it 'still updates the encryption-key value' do
