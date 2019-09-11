@@ -101,6 +101,9 @@ logcache_tls:
 doppler:
   url: 'wss://doppler.example.com:443'
 
+log_cache:
+  url: 'https://log-cache.example.com'
+
 log_stream:
   url: 'https://log-stream.example.com'
 
