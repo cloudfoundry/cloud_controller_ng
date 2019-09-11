@@ -50,6 +50,7 @@ RSpec.describe 'Packages' do
             'password' => '***'
           },
           'state' => 'READY',
+          'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
           'metadata' => { 'labels' => { 'release' => 'stable', 'seriouseats.com/potato' => 'mashed' }, 'annotations' => { 'potato' => 'idaho' } },
           'created_at' => iso8601,
           'updated_at' => iso8601,
@@ -118,6 +119,7 @@ RSpec.describe 'Packages' do
             'password' => nil,
           },
           'state' => 'READY',
+          'relationships' => { 'app' => { 'data' => { 'guid' => target_app_model.guid } } },
           'metadata' => { 'labels' => {}, 'annotations' => {} },
           'created_at' => iso8601,
           'updated_at' => iso8601,
@@ -190,6 +192,7 @@ RSpec.describe 'Packages' do
               'checksum' => { 'type' => 'sha256', 'value' => nil },
               'error' => nil
             },
+            'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
             'state' => VCAP::CloudController::PackageModel::CREATED_STATE,
             'metadata' => { 'labels' => {}, 'annotations' => {} },
             'created_at' => iso8601,
@@ -208,6 +211,7 @@ RSpec.describe 'Packages' do
               'checksum' => { 'type' => 'sha256', 'value' => nil },
               'error' => nil
             },
+            'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
             'state' => VCAP::CloudController::PackageModel::CREATED_STATE,
             'metadata' => { 'labels' => {}, 'annotations' => {} },
             'created_at' => iso8601,
@@ -346,6 +350,7 @@ RSpec.describe 'Packages' do
               'error' => nil
             },
             'state' => VCAP::CloudController::PackageModel::CREATED_STATE,
+            'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
             'metadata' => { 'labels' => {}, 'annotations' => {} },
             'created_at' => iso8601,
             'updated_at' => iso8601,
@@ -365,6 +370,7 @@ RSpec.describe 'Packages' do
               'password' => nil,
             },
             'state' => VCAP::CloudController::PackageModel::READY_STATE,
+            'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
             'metadata' => { 'labels' => {}, 'annotations' => {} },
             'created_at' => iso8601,
             'updated_at' => iso8601,
@@ -606,6 +612,7 @@ RSpec.describe 'Packages' do
           'error' => nil
         },
         'state' => VCAP::CloudController::PackageModel::CREATED_STATE,
+        'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
         'metadata' => { 'labels' => {}, 'annotations' => {} },
         'created_at' => iso8601,
         'updated_at' => iso8601,
@@ -664,6 +671,7 @@ RSpec.describe 'Packages' do
             'error' => nil
           },
           'state' => VCAP::CloudController::PackageModel::PENDING_STATE,
+          'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
           'metadata' => { 'labels' => {}, 'annotations' => {} },
           'created_at' => iso8601,
           'updated_at' => iso8601,
@@ -712,6 +720,7 @@ RSpec.describe 'Packages' do
           'error' => nil
         },
         'state' => VCAP::CloudController::PackageModel::PENDING_STATE,
+        'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
         'metadata' => { 'labels' => {}, 'annotations' => {} },
         'created_at' => iso8601,
         'updated_at' => iso8601,

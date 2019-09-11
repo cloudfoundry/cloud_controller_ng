@@ -54,6 +54,7 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:data][:checksum]).to eq({ type: 'sha256', value: 'sha256' })
         expect(result[:created_at]).to eq(package.created_at)
         expect(result[:updated_at]).to eq(package.updated_at)
+        expect(result[:relationships][:app][:data][:guid]).to eq(package.app_guid)
         expect(result[:links]).to include(links)
         expect(result[:metadata][:labels]).to eq('release' => 'stable', 'canberra.au/potato' => 'mashed')
         expect(result[:metadata][:annotations]).to eq('altitude' => '14,412', 'maize' => 'hfcs')
