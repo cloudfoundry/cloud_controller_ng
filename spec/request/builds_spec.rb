@@ -131,7 +131,7 @@ RSpec.describe 'Builds' do
       it 'should log the required fields when the build is created' do
         Timecop.freeze do
           post '/v3/builds', create_request.merge(metadata: metadata).to_json, developer_headers
-
+          created_build = VCAP::CloudController::BuildModel.last
           expected_json = {
             'telemetry-source' => 'cloud_controller_ng',
             'telemetry-time' => Time.now.to_datetime.rfc3339,
@@ -140,6 +140,7 @@ RSpec.describe 'Builds' do
                 'buildpacks' =>  ['http://github.com/myorg/awesome-buildpack'],
                 'stack' =>  'cflinuxfs3',
                 'app-id' =>  Digest::SHA256.hexdigest(app_model.guid),
+                'build-id' =>  Digest::SHA256.hexdigest(created_build.guid),
                 'user-id' =>  Digest::SHA256.hexdigest(developer.guid),
             }
           }
