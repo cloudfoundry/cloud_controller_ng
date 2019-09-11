@@ -10,13 +10,12 @@ RSpec.describe 'making several resource_match requests when bits-service in enab
     TestConfig.override(bits_service: { enabled: true })
 
     ids = []
+
     expect(CloudController::DependencyLocator.instance).to receive(:bits_service_resource_pool).at_least(:once) {
       ids << VCAP::Request.current_id
-      return
+      double('FakeResourcePool', matches: double('FakeMatch', body: ''))
     }
     3.times { put '/v2/resource_match', [{ "fn": 'some-file', "mode": '644', "sha1": 'irrelevant', "size": 1 }].to_json, user_header }
-    expect(ids[0]).not_to equal(ids[1])
-    expect(ids[1]).not_to equal(ids[2])
-    expect(ids[2]).not_to equal(ids[0])
+    expect(ids.uniq.length).to eq(3)
   end
 end

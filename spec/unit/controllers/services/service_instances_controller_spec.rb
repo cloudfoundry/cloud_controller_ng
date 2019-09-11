@@ -1033,14 +1033,15 @@ module VCAP::CloudController
 
               allow_any_instance_of(ManagedServiceInstance).to receive(:save).and_raise
 
-              post '/v2/service_instances', req
+              expect {
+                post '/v2/service_instances', req
+              }.to raise_error(StandardError) {
+                expect(a_request(:put, service_broker_url_regex)).to have_been_made.times(1)
+                expect(a_request(:delete, service_broker_url_regex)).to have_been_made.times(1)
 
-              expect(last_response.status).to eq(500)
-              expect(a_request(:put, service_broker_url_regex)).to have_been_made.times(1)
-              expect(a_request(:delete, service_broker_url_regex)).to have_been_made.times(1)
-
-              orphan_mitigation_job = Delayed::Job.first
-              expect(orphan_mitigation_job).to be_nil
+                orphan_mitigation_job = Delayed::Job.first
+                expect(orphan_mitigation_job).to be_nil
+              }
             end
           end
         end

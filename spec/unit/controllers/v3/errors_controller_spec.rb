@@ -13,6 +13,7 @@ RSpec.describe ErrorsController, type: :controller do
   describe '#internal_error' do
     before do
       @request.env.merge!('action_dispatch.exception' => StandardError.new('sad things'))
+      allow_any_instance_of(ErrorPresenter).to receive(:raise_500?).and_return(false)
     end
 
     it 'returns the error from the request env in action_dispatch.exception' do

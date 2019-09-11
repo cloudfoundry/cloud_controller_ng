@@ -525,11 +525,9 @@ module VCAP::CloudController
         end
 
         it 'fails when trying to order by unapproved columns' do
-          get '/v2/test_models?order-by=nonsortable_value'
-
-          expect(last_response.status).to eq(500)
-          expect(last_response.body).to match /Cannot order/
-          expect(last_response.body).to match /nonsortable_value/
+          expect {
+            get '/v2/test_models?order-by=nonsortable_value'
+          }.to raise_error(CloudController::Errors::ApiError, /Cannot order by: nonsortable_value/)
         end
       end
     end

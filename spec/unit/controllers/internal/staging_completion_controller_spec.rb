@@ -359,9 +359,9 @@ module VCAP::CloudController
         it 'propagates other errors from staging_response' do
           expect_any_instance_of(Diego::Stager).to receive(:staging_complete).and_raise(StandardError)
 
-          post url, MultiJson.dump(staging_response)
-          expect(last_response.status).to eq(500)
-          expect(last_response.body).to match /ServerError/
+          expect {
+            post url, MultiJson.dump(staging_response)
+          }.to raise_error(StandardError)
         end
 
         context 'when staging failed' do

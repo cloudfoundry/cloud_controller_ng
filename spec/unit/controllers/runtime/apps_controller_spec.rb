@@ -679,12 +679,13 @@ module VCAP::CloudController
 
         context 'when the update succeeds' do
           it 'records app update with whitelisted attributes' do
+            allow_any_instance_of(ErrorPresenter).to receive(:raise_500?).and_return(false)
             allow(app_event_repository).to receive(:record_app_update).and_call_original
 
             expect(app_event_repository).to receive(:record_app_update) do |recorded_app, recorded_space, user_audit_info, attributes|
               expect(recorded_app.guid).to eq(process.app.guid)
               expect(recorded_app.instances).to eq(2)
-              expect(user_audit_info.user_guid).to eq(SecurityContext.current_user)
+              expect(user_audit_info.user_guid).to eq(SecurityContext.current_user.guid)
               expect(user_audit_info.user_name).to eq(SecurityContext.current_user_email)
               expect(attributes).to eq({ 'instances' => 2 })
             end
@@ -700,10 +701,11 @@ module VCAP::CloudController
           end
 
           it 'does not record app update' do
-            put "/v2/apps/#{process.app.guid}", MultiJson.dump(update_hash)
+            expect {
+              put "/v2/apps/#{process.app.guid}", MultiJson.dump(update_hash)
+            }.to raise_error RuntimeError, /Error saving/
 
             expect(app_event_repository).to_not have_received(:record_app_update)
-            expect(last_response.status).to eq(500)
           end
         end
       end
@@ -1214,8 +1216,9 @@ module VCAP::CloudController
 
         it 'does not record when the destroy fails' do
           allow_any_instance_of(ProcessModel).to receive(:destroy).and_raise('Error saving')
-
-          delete_app
+          expect {
+            delete_app
+          }.to raise_error RuntimeError, /Error saving/
 
           expect(Event.where(type: 'audit.app.delete-request').count).to eq(0)
         end
@@ -1797,10 +1800,6 @@ module VCAP::CloudController
             diego:        true,
             docker_image: 'some-image',
           )
-        end
-
-        before do
-          put "/v2/apps/#{docker_process.app.guid}/routes/#{pre_mapped_route.guid}", nil
         end
 
         context 'when Docker is disabled' do

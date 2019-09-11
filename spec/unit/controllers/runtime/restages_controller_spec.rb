@@ -174,10 +174,11 @@ module VCAP::CloudController
             end
 
             it 'does not generate an audit.app.restage event' do
-              restage_request
-
-              expect(last_response.status).to eq(500)
-              expect(app_event_repository).to_not have_received(:record_app_restage)
+              expect {
+                restage_request
+              }.to raise_error(/Error staging/) {
+                expect(app_event_repository).to_not have_received(:record_app_restage)
+              }
             end
           end
         end

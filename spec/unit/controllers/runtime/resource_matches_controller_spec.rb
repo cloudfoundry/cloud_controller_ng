@@ -107,7 +107,8 @@ module VCAP::CloudController
       end
 
       it 'forwards the request using the bits_service client' do
-        expect_any_instance_of(BitsService::ResourcePool).to receive(:matches).with(resources.to_json)
+        expect_any_instance_of(BitsService::ResourcePool).to receive(:matches).with(resources.to_json).
+          and_return(double(:response, code: 200, body: resources.to_json))
         send(:put, '/v2/resource_match', resources.to_json)
       end
 
@@ -126,14 +127,9 @@ module VCAP::CloudController
         end
 
         it 'retuns HTTP status 500' do
-          put '/v2/resource_match', '[]'
-          expect(last_response.status).to eq(500)
-        end
-
-        it 'returns an error description' do
-          put '/v2/resource_match', '[]'
-          error = JSON.parse(last_response.body)
-          expect(error['description']).to match(/Failed in bits-service/)
+          expect {
+            put '/v2/resource_match', '[]'
+          }.to raise_error(CloudController::Errors::ApiError, /Failed in bits-service/)
         end
       end
     end

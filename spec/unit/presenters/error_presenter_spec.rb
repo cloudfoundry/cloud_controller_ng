@@ -73,29 +73,31 @@ RSpec.describe ErrorPresenter do
       let(:test_mode) { true }
 
       it 'returns the unsanitized hash representation of the error' do
+        allow(error).to receive(:response_code).and_return(422)
         expect(presenter.to_hash).to eq('fake' => 'insane')
         expect(error_hasher).to have_received(:unsanitized_hash)
       end
 
-      context 'when the error is whitelisted to be raised' do
+      context 'when the response code is 500' do
         before do
-          allow(presenter).to receive(:errors_to_raise).and_return([ResponsiveStandardError])
+          allow(error).to receive(:response_code).and_return(500)
         end
 
-        context 'and it is not an api_error?' do
-          before { allow(presenter).to receive(:api_error?).and_return(false) }
-
-          it 'is raised' do
-            expect { presenter.to_hash }.to raise_error(error)
-          end
+        it 'raises the error' do
+          expect {
+            presenter.to_hash
+          }.to raise_error(ResponsiveStandardError)
         end
+      end
 
-        context 'and it is an api_error?' do
-          before { allow(presenter).to receive(:api_error?).and_return(true) }
+      context 'when the error does not respond to response_code' do
+        class CustomError < StandardError; end
+        let(:error) { CustomError.new }
 
-          it 'is not raised' do
-            expect { presenter.to_hash }.to_not raise_error
-          end
+        it 'raises the error' do
+          expect {
+            presenter.to_hash
+          }.to raise_error(CustomError)
         end
       end
     end
@@ -107,17 +109,6 @@ RSpec.describe ErrorPresenter do
         expect(presenter.to_hash).to eq('fake' => 'sane')
         expect(error_hasher).to have_received(:sanitized_hash)
       end
-
-      it 'does not raise whitelisted error' do
-        allow(presenter).to receive(:errors_to_raise).and_return([StandardError])
-        expect { presenter.to_hash }.to_not raise_error
-      end
-    end
-  end
-
-  describe '#errors_to_raise' do
-    it "includes WebMock's connection not allowed error" do
-      expect(presenter.errors_to_raise).to include(WebMock::NetConnectNotAllowedError)
     end
   end
 end

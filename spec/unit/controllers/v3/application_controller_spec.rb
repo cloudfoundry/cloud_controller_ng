@@ -269,6 +269,7 @@ RSpec.describe ApplicationController, type: :controller do
     let!(:user) { set_current_user(VCAP::CloudController::User.make) }
 
     it 'rescues from ApiError and renders an error presenter' do
+      allow_any_instance_of(ErrorPresenter).to receive(:raise_500?).and_return(false)
       routes.draw { get 'blobstore_error' => 'anonymous#blobstore_error' }
       get :blobstore_error
       expect(response.status).to eq(500)

@@ -42,6 +42,7 @@ module VCAP::CloudController::Jobs
         before do
           allow_any_instance_of(VCAP::CloudController::Jobs::DeleteActionJob).
             to receive(:perform).and_raise(CloudController::Blobstore::BlobstoreError.new('some-error'))
+          allow_any_instance_of(ErrorPresenter).to receive(:raise_500?).and_return(false)
         end
 
         context 'when there is an associated job model' do
@@ -126,6 +127,10 @@ module VCAP::CloudController::Jobs
     describe 'error' do
       let(:job) { double(job_name_in_configuration: 'my-job', max_attempts: 2, perform: nil, guid: '15') }
       let!(:actual_pollable_job) { VCAP::CloudController::PollableJobModel.create(delayed_job_guid: job.guid) }
+
+      before do
+        allow_any_instance_of(ErrorPresenter).to receive(:raise_500?).and_return(false)
+      end
 
       context 'with a big backtrace' do
         it 'culls it down' do

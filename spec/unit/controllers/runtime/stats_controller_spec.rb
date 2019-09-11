@@ -93,19 +93,16 @@ module VCAP::CloudController
 
         context 'when instance reporter raises an ApiError' do
           before do
-            allow(instances_reporters).to receive(:stats_for_app).and_raise(
-              CloudController::Errors::ApiError.new_from_details('ServerError')
-            )
+            @error = CloudController::Errors::ApiError.new_from_details('ServerError')
+            allow(instances_reporters).to receive(:stats_for_app).and_raise(@error)
             set_current_user(developer)
           end
 
           it 'does not re-raise as a StatsError' do
             process.update(state: 'STARTED')
-
-            get "/v2/apps/#{process.app.guid}/stats"
-
-            expect(last_response.status).to eq(500)
-            expect(last_response.body).to match('Server error')
+            expect {
+              get "/v2/apps/#{process.app.guid}/stats"
+            }.to raise_error(@error)
           end
         end
 

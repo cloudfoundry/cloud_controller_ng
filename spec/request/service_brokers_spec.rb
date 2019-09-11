@@ -1192,7 +1192,7 @@ RSpec.describe 'V3 service brokers' do
         job_url = nil
         before do
           allow_any_instance_of(VCAP::Services::ServiceBrokers::ServiceBrokerRemover).to receive(:remove).and_raise('error')
-
+          allow_any_instance_of(ErrorPresenter).to receive(:raise_500?).and_return(false)
           delete "/v3/service_brokers/#{global_broker.guid}", {}, admin_headers
           expect(last_response).to have_status_code(202)
           job_url = last_response['Location']

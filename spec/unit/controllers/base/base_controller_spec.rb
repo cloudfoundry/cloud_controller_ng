@@ -98,7 +98,10 @@ module VCAP::CloudController
       end
 
       context 'when the dispatch raises an error' do
-        before { set_current_user(user) }
+        before do
+          allow_any_instance_of(ErrorPresenter).to receive(:raise_500?).and_return(false)
+          set_current_user(user)
+        end
 
         it 'processes Sequel Validation errors using translate_validation_exception' do
           get '/test_validation_error'
