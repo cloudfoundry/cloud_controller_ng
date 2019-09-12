@@ -140,5 +140,20 @@ module VCAP::CloudController
         expect(broker.space_scoped?).to be_falsey
       end
     end
+
+    describe 'has_service_instances?' do
+      let(:service_broker) { ServiceBroker.make }
+      let(:service) { Service.make(service_broker: service_broker) }
+      let!(:service_plan) { ServicePlan.make(service: service) }
+
+      it 'returns true when there are service instances' do
+        ManagedServiceInstance.make(service_plan: service_plan)
+        expect(service_broker.has_service_instances?).to eq(true)
+      end
+
+      it 'return false when there are no service instances' do
+        expect(service_broker.has_service_instances?).to eq(false)
+      end
+    end
   end
 end

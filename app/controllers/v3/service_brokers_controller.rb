@@ -71,6 +71,8 @@ class ServiceBrokersController < ApplicationController
       unauthorized! unless permission_queryer.can_write_space_scoped_service_broker?(service_broker.space.guid)
     end
 
+    broker_has_instances!(service_broker.name) if service_broker.has_service_instances?
+
     service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository.new(user_audit_info)
     service_broker_remover = VCAP::Services::ServiceBrokers::ServiceBrokerRemover.new(service_event_repository)
 
@@ -78,6 +80,10 @@ class ServiceBrokersController < ApplicationController
   end
 
   private
+
+  def broker_has_instances!(broker_name)
+    raise CloudController::Errors::V3::ApiError.new_from_details('ServiceBrokerNotRemovable', broker_name)
+  end
 
   def broker_not_found!
     resource_not_found!(:service_broker)

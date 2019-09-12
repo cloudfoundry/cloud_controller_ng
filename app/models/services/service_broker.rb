@@ -32,6 +32,14 @@ module VCAP::CloudController
       !!space_id
     end
 
+    def has_service_instances?
+      services.select do |service|
+        service.service_plans.select { |plan|
+          plan.service_instances.any?
+        }.any?
+      end.any?
+    end
+
     def self.user_visibility_filter(user)
       { space: user.spaces_dataset }
     end

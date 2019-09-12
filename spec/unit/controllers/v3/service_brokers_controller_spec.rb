@@ -13,16 +13,16 @@ RSpec.describe ServiceBrokersController, type: :controller do
   describe '#create' do
     let(:request_body) {
       {
-          name: 'some-name',
-          relationships: { space: { data: { guid: space_guid } } },
-          url: 'https://fake.url',
-          credentials: {
-              type: 'basic',
-              data: {
-                  username: 'fake username',
-                  password: 'fake password',
-              },
+        name: 'some-name',
+        relationships: { space: { data: { guid: space_guid } } },
+        url: 'https://fake.url',
+        credentials: {
+          type: 'basic',
+          data: {
+            username: 'fake username',
+            password: 'fake password',
           },
+        },
       }
     }
 
@@ -59,10 +59,27 @@ RSpec.describe ServiceBrokersController, type: :controller do
       stub_delete(service_broker)
     end
 
-    it 'returns a 204' do
-      delete :destroy, params: { guid: service_broker.guid }
-      expect(response.status).to eq 204
-      expect(service_broker.exists?).to be_falsey
+    context 'when there are no service instances' do
+      it 'returns a 204' do
+        delete :destroy, params: { guid: service_broker.guid }
+        expect(response.status).to eq 204
+        expect(service_broker.exists?).to be_falsey
+      end
+    end
+
+    context 'when there are service instances' do
+      let(:service) { VCAP::CloudController::Service.make(service_broker: service_broker) }
+      let(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service) }
+
+      before do
+        VCAP::CloudController::ServiceInstance.make(space: space, service_plan_id: service_plan.id)
+      end
+
+      it 'returns a 422 and do not delete the broker' do
+        delete :destroy, params: { guid: service_broker.guid }
+        expect(response.status).to eq 422
+        expect(service_broker.exists?).to be_truthy
+      end
     end
 
     context 'permissions' do
