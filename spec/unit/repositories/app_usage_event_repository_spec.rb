@@ -692,6 +692,16 @@ module VCAP::CloudController
 
           expect(AppUsageEvent.last).to match_app(process)
         end
+
+        it 'will keep the last record even if before the cutoff age' do
+          expect {
+            repository.delete_events_older_than(cutoff_age_in_days)
+          }.to change {
+            AppUsageEvent.count
+          }.to(1)
+
+          expect(AppUsageEvent.last.created_at).to be < cutoff_age_in_days.days.ago
+        end
       end
     end
   end
