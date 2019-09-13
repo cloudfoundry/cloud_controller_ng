@@ -145,8 +145,7 @@ module VCAP::CloudController
         it 'creates audit events for org deletion and recursive deletes' do
           org_delete.delete([org_3])
           expect(VCAP::CloudController::Event.count).to eq(3)
-          events = VCAP::CloudController::Event.all
-          org_delete_event = events.last
+          org_delete_event = VCAP::CloudController::Event.where(type: 'audit.organization.delete-request').last
           expect(org_delete_event.values).to include(
             type: 'audit.organization.delete-request',
             actor: user_audit_info.user_guid,
@@ -159,16 +158,19 @@ module VCAP::CloudController
             organization_guid: org_3.guid
           )
           expect(org_delete_event.metadata).to eq({ 'request' => { 'recursive' => true } })
-          expect(org_delete_event.timestamp).to be
 
-          app_delete_event = events[0]
+          app_delete_event = VCAP::CloudController::Event.where(type: 'audit.app.delete-request').last
           expect(app_delete_event.values).to include(
-            type: 'audit.app.delete-request'
+            type: 'audit.app.delete-request',
+            actee: app_2.guid,
+            actee_type: 'app',
           )
 
-          space_delete_event = events[1]
+          space_delete_event = VCAP::CloudController::Event.where(type: 'audit.space.delete-request').last
           expect(space_delete_event.values).to include(
-            type: 'audit.space.delete-request'
+            type: 'audit.space.delete-request',
+            actee: space_3.guid,
+            actee_type: 'space',
           )
         end
 
