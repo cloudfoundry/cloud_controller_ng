@@ -1,7 +1,9 @@
 require 'messages/user_create_message'
 require 'messages/users_list_message'
+require 'messages/user_update_message'
 require 'actions/user_create'
 require 'actions/user_delete'
+require 'actions/user_update'
 require 'presenters/v3/user_presenter'
 require 'fetchers/user_list_fetcher'
 
@@ -58,6 +60,22 @@ class UsersController < ApplicationController
 
     url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
     head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job.guid}")
+  end
+
+  def update
+    user = User.find(guid: hashed_params[:guid])
+
+    user_not_found! unless user
+    db_user_is_current_user = current_user.guid == user.guid
+    user_not_found! unless permission_queryer.can_read_secrets_globally? || db_user_is_current_user
+    unauthorized! if !permission_queryer.can_write_globally?
+
+    message = UserUpdateMessage.new(hashed_params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    user = UserUpdate.new.update(user: user, message: message)
+
+    render status: :ok, json: Presenters::V3::UserPresenter.new(user, uaa_users: uaa_users_info([hashed_params[:guid]]))
   end
 
   private

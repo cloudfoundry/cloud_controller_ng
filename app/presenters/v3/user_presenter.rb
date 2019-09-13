@@ -1,8 +1,10 @@
 require 'presenters/v3/base_presenter'
+require 'presenters/mixins/metadata_presentation_helpers'
 require 'presenters/helpers/censorship'
 
 module VCAP::CloudController::Presenters::V3
   class UserPresenter < BasePresenter
+    include VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers
     def initialize(
       resource,
       show_secrets: false,
@@ -21,6 +23,10 @@ module VCAP::CloudController::Presenters::V3
           username: username,
           presentation_name: username || user.guid,
           origin: origin,
+          metadata: {
+            labels: hashified_labels(user.labels),
+            annotations: hashified_annotations(user.annotations),
+          },
           links: build_links
       }
     end

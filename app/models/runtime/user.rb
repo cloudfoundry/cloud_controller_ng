@@ -44,6 +44,9 @@ module VCAP::CloudController
       join_table: 'spaces_auditors',
       right_key: :space_id, reciprocal: :auditors
 
+    one_to_many :labels, class: 'VCAP::CloudController::UserLabelModel', key: :resource_guid, primary_key: :guid
+    one_to_many :annotations, class: 'VCAP::CloudController::UserAnnotationModel', key: :resource_guid, primary_key: :guid
+
     add_association_dependencies organizations: :nullify
     add_association_dependencies managed_organizations: :nullify
     add_association_dependencies audited_spaces: :nullify
@@ -63,6 +66,12 @@ module VCAP::CloudController
                       :managed_space_guids,
                       :audited_space_guids,
                       :default_space_guid
+
+    def before_destroy
+      LabelDelete.delete(labels)
+      AnnotationDelete.delete(annotations)
+      super
+    end
 
     def validate
       validates_presence :guid

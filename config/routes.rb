@@ -208,6 +208,7 @@ Rails.application.routes.draw do
   get '/users', to: 'users#index'
   get '/users/:guid', to: 'users#show'
   post '/users', to: 'users#create'
+  patch '/users/:guid', to: 'users#update'
   delete '/users/:guid', to: 'users#destroy'
 
   # buildpacks

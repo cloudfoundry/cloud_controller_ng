@@ -42,6 +42,10 @@ RSpec.describe 'Users Request' do
         username: 'bob-mcjames',
         presentation_name: 'bob-mcjames',
         origin: 'Okta',
+        metadata: {
+          labels: {},
+          annotations: {}
+        },
         links: {
           self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{user.guid}) },
         }
@@ -56,6 +60,10 @@ RSpec.describe 'Users Request' do
         username: nil,
         presentation_name: client.guid,
         origin: nil,
+        metadata: {
+          labels: {},
+          annotations: {}
+        },
         links: {
           self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{client.guid}) },
         }
@@ -70,6 +78,10 @@ RSpec.describe 'Users Request' do
         username: 'lola',
         presentation_name: 'lola',
         origin: 'uaa',
+        metadata: {
+          labels: {},
+          annotations: {}
+        },
         links: {
           self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{other_user.guid}) },
         }
@@ -158,6 +170,10 @@ RSpec.describe 'Users Request' do
         username: 'lola',
         presentation_name: 'lola',
         origin: 'uaa',
+        metadata: {
+          labels: {},
+          annotations: {}
+        },
         links: {
           self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{other_user.guid}) },
         }
@@ -219,6 +235,71 @@ RSpec.describe 'Users Request' do
       }
     end
 
+    describe 'metadata' do
+      before do
+        allow(uaa_client).to receive(:users_for_ids).and_return({})
+      end
+      let(:user_json) do
+        {
+          guid: params[:guid],
+          created_at: iso8601,
+          updated_at: iso8601,
+          username: nil,
+          presentation_name: params[:guid],
+          origin: nil,
+          metadata: {
+            labels: {
+              'potato': 'yam',
+              'style': 'casserole',
+            },
+            annotations: {
+              'potato': 'russet',
+              'style': 'french',
+            },
+          },
+          links: {
+            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{params[:guid]}) },
+          }
+        }
+      end
+
+      context 'when metadata is valid' do
+        it 'returns a 201' do
+          post '/v3/users', {
+            guid: params[:guid],
+            metadata: {
+              labels: {
+                'potato': 'yam',
+                'style': 'casserole',
+              },
+              annotations: {
+                'potato': 'russet',
+                'style': 'french',
+              }
+            }
+          }.to_json, admin_header
+
+          expect(parsed_response).to match_json_response(user_json)
+          expect(last_response.status).to eq(201)
+        end
+      end
+
+      context 'when metadata is invalid' do
+        it 'returns a 422' do
+          post '/v3/users', {
+            metadata: {
+              labels: { '': 'invalid' },
+              annotations: { "#{'a' * 1001}": 'value2' }
+            }
+          }.to_json, admin_header
+
+          expect(last_response.status).to eq(422)
+          expect(parsed_response['errors'][0]['detail']).to match(/label [\w\s]+ error/)
+          expect(parsed_response['errors'][0]['detail']).to match(/annotation [\w\s]+ error/)
+        end
+      end
+    end
+
     describe 'when creating a user that does not exist in uaa' do
       before do
         allow(uaa_client).to receive(:users_for_ids).and_return({})
@@ -234,6 +315,10 @@ RSpec.describe 'Users Request' do
           username: nil,
           presentation_name: params[:guid],
           origin: nil,
+          metadata: {
+            labels: {},
+            annotations: {}
+          },
           links: {
             self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{params[:guid]}) },
           }
@@ -270,6 +355,10 @@ RSpec.describe 'Users Request' do
             username: 'bob-mcjames',
             presentation_name: 'bob-mcjames',
             origin: 'Okta',
+            metadata: {
+              labels: {},
+              annotations: {}
+            },
             links: {
               self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{params[:guid]}) },
             }
@@ -312,6 +401,10 @@ RSpec.describe 'Users Request' do
             username: nil,
             presentation_name: uaa_client_id,
             origin: nil,
+            metadata: {
+              labels: {},
+              annotations: {}
+            },
             links: {
               self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{uaa_client_id}) },
             }
@@ -385,6 +478,86 @@ RSpec.describe 'Users Request' do
           expect(last_response.status).to eq(422)
 
           expect(parsed_response['errors'][0]['detail']).to eq "User with guid '#{existing_user.guid}' already exists."
+        end
+      end
+    end
+  end
+
+  describe 'PATCH /v3/users/:guid' do
+    describe 'metadata' do
+      let(:api_call) { lambda { |user_headers| patch "/v3/users/#{other_user.guid}", {
+        metadata: {
+          labels: {
+            'potato': 'yam',
+            'style': 'casserole',
+          },
+          annotations: {
+            'potato': 'russet',
+            'style': 'french',
+          }
+        }
+      }.to_json, user_headers
+                       }
+      }
+
+      let(:client_json) do
+        {
+          guid: other_user.guid,
+          created_at: iso8601,
+          updated_at: iso8601,
+          username: 'lola',
+          presentation_name: 'lola',
+          origin: 'uaa',
+          metadata: {
+            labels: {
+              'potato': 'yam',
+              'style': 'casserole',
+            },
+            annotations: {
+              'potato': 'russet',
+              'style': 'french',
+            }
+          },
+          links: {
+            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{other_user.guid}) },
+          }
+        }
+      end
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(
+          code: 404,
+          response_objects: []
+        )
+        h['admin'] = {
+          code: 200,
+          response_object: client_json
+        }
+        h['admin_read_only'] = {
+          code: 403,
+          response_object: client_json
+        }
+        h['global_auditor'] = {
+          code: 404,
+          scopes: %w(cloud_controller.write),
+        }
+        h.freeze
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+      context 'when metadata is invalid' do
+        it 'returns a 422' do
+          patch "/v3/users/#{other_user.guid}", {
+              metadata: {
+              labels: { '': 'invalid' },
+              annotations: { "#{'a' * 1001}": 'value2' }
+            }
+          }.to_json, admin_header
+
+          expect(last_response.status).to eq(422)
+          expect(parsed_response['errors'][0]['detail']).to match(/label [\w\s]+ error/)
+          expect(parsed_response['errors'][0]['detail']).to match(/annotation [\w\s]+ error/)
         end
       end
     end

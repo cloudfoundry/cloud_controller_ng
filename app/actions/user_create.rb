@@ -4,7 +4,11 @@ module VCAP::CloudController
     end
 
     def create(message:)
-      User.create(guid: message.guid)
+      user = User.create(guid: message.guid)
+      User.db.transaction do
+        MetadataUpdate.update(user, message)
+      end
+      user
     rescue Sequel::ValidationFailed => e
       validation_error!(message, e)
     end
