@@ -14,8 +14,7 @@ module VCAP::CloudController
       filter_if_user_guid(org.users_dataset).
         union(filter_if_user_guid(org.managers_dataset)).
         union(filter_if_user_guid(org.auditors_dataset)).
-        union(filter_if_user_guid(org.billing_managers_dataset)).
-        eager(:organizations, :managed_organizations, :billing_managed_organizations, :audited_organizations)
+        union(filter_if_user_guid(org.billing_managers_dataset))
     end
 
     def filter_if_user_guid(dataset)
