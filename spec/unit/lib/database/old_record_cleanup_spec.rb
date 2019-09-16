@@ -26,7 +26,7 @@ RSpec.describe Database::OldRecordCleanup do
       record_cleanup.delete
     end
 
-    it 'keeps the last row when :keep_at_least_one_record is true and all rows would be deleted' do
+    it 'keeps the last row when :keep_at_least_one_record is true even if it is older than the cutoff date' do
       record_cleanup = Database::OldRecordCleanup.new(VCAP::CloudController::Event, 0, keep_at_least_one_record: true)
 
       expect {
