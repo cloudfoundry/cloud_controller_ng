@@ -47,14 +47,13 @@ class ServiceBrokersController < ApplicationController
       unauthorized! unless permission_queryer.can_write_global_service_broker?
     end
 
-    service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository::WithBrokerActor.new
+    service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository::WithUserActor.new(user_audit_info)
     service_manager = VCAP::Services::ServiceBrokers::ServiceManager.new(service_event_repository)
     service_broker_create = VCAP::CloudController::V3::ServiceBrokerCreate.new(service_event_repository, service_manager)
-
     result = service_broker_create.create(message)
 
-    add_warning_headers(result[:warnings])
-    render status: :created, json: {}
+    url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
+    head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{result[:pollable_job].guid}")
   rescue VCAP::CloudController::V3::ServiceBrokerCreate::InvalidServiceBroker => e
     unprocessable!(e.message)
   end

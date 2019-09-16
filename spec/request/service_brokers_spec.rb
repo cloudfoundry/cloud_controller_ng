@@ -16,10 +16,10 @@ RSpec.describe 'V3 service brokers' do
           'bindable' => true,
           'plans' => [
             {
-                'id' => 'fake_plan_id-1',
-                'name' => 'plan_name-1',
-                'description' => 'fake_plan_description 1',
-                'schemas' => nil
+              'id' => 'fake_plan_id-1',
+              'name' => 'plan_name-1',
+              'description' => 'fake_plan_description 1',
+              'schemas' => nil
             }
           ],
           'dashboard_client' => dashboard_client(id)
@@ -32,10 +32,10 @@ RSpec.describe 'V3 service brokers' do
           'bindable' => true,
           'plans' => [
             {
-                'id' => 'fake_plan_id-2',
-                'name' => 'plan_name-2',
-                'description' => 'fake_plan_description 2',
-                'schemas' => nil
+              'id' => 'fake_plan_id-2',
+              'name' => 'plan_name-2',
+              'description' => 'fake_plan_description 2',
+              'schemas' => nil
             }
           ]
         },
@@ -98,6 +98,22 @@ RSpec.describe 'V3 service brokers' do
     }
   end
 
+  let(:global_broker_with_identical_name_body) {
+    {
+      name: global_broker_request_body[:name],
+      url: 'http://example.org/different-broker-url',
+      credentials: global_broker_request_body[:credentials]
+    }
+  }
+
+  let(:global_broker_with_identical_url_body) {
+    {
+      name: 'different broker name',
+      url: global_broker_request_body[:url],
+      credentials: global_broker_request_body[:credentials]
+    }
+  }
+
   let(:space_scoped_broker_request_body) do
     {
       name: 'space-scoped broker name',
@@ -119,9 +135,9 @@ RSpec.describe 'V3 service brokers' do
     }
   end
 
-  let(:parsed_body) {
+  def parsed_body
     JSON.parse(last_response.body)
-  }
+  end
 
   before do
     stub_request(:get, 'http://example.org/broker-url/v2/catalog').
@@ -159,8 +175,13 @@ RSpec.describe 'V3 service brokers' do
     end
 
     context 'when there are global service brokers' do
+      let!(:broker_state) { VCAP::CloudController::ServiceBrokerState.make_unsaved }
       let!(:global_service_broker1) { VCAP::CloudController::ServiceBroker.make }
       let!(:global_service_broker2) { VCAP::CloudController::ServiceBroker.make }
+
+      before do
+        global_service_broker1.update(service_broker_state: broker_state)
+      end
 
       it 'returns 200 OK and a list of brokers for admin' do
         expect_a_list_of_brokers(admin_headers, [global_service_broker1, global_service_broker2])
@@ -359,24 +380,167 @@ RSpec.describe 'V3 service brokers' do
           create_broker_successfully(global_broker_request_body, with: admin_headers)
         end
 
-        it 'returns 201 Created' do
-          expect(last_response).to have_status_code(201)
+        let(:job) { VCAP::CloudController::PollableJobModel.last }
+
+        it 'returns 202 Accepted and a job' do
+          expect(last_response).to have_status_code(202)
+
+          expect(VCAP::CloudController::PollableJobModel.count).to eq(1)
+          expect(last_response.headers['Location']).to match(%r(http.+/v3/jobs/#{job.guid}))
+
+          get "/v3/jobs/#{job.guid}", {}, admin_headers
+          expect(parsed_body).to include({
+            'state' => 'PROCESSING',
+            'operation' => 'service_broker.catalog.synchronize',
+            'links' => {
+              'self' => {
+                'href' => match(%r(http.+/v3/jobs/#{job.guid}))
+              },
+              'service_brokers' => {
+                'href' => match(%r(http.+/v3/service_brokers/[^/]+))
+              }
+            }
+          })
         end
 
-        it 'creates a service broker entity and synchronizes the catalog' do
+        it 'creates a service broker entity and does not synchronizes the catalog yet' do
           expect_created_broker(global_broker_request_body)
-          expect_catalog_synchronized(catalog)
+          expect_catalog_not_synchronized
         end
 
-        it 'reports service events' do
-          # FIXME: there is an event missing for registering/creating the broker itself by the respective user
-          expect([
-            { type: 'audit.service.create', actor: 'broker name' },
-            { type: 'audit.service.create', actor: 'broker name' },
-            { type: 'audit.service_dashboard_client.create', actor: 'broker name' },
-            { type: 'audit.service_plan.create', actor: 'broker name' },
-            { type: 'audit.service_plan.create', actor: 'broker name' },
-          ]).to be_reported_as_events
+        it 'leaves the broker in a synchronization in progress' do
+          expect_broker_status(
+            available: false,
+            status: 'synchronization in progress',
+            with: admin_headers
+          )
+        end
+
+        context 'when job processing is done and it succeeded' do
+          before do
+            execute_all_jobs(expected_successes: 1, expected_failures: 0)
+          end
+
+          it 'has completed the job' do
+            get "/v3/jobs/#{job.guid}", {}, admin_headers
+            expect(parsed_body).to include({
+              'state' => 'COMPLETE',
+              'operation' => 'service_broker.catalog.synchronize',
+              'links' => {
+                'self' => {
+                  'href' => match(%r(http.+/v3/jobs/#{job.guid}))
+                },
+                'service_brokers' => {
+                  'href' => match(%r(http.+/v3/service_brokers/[^/]+))
+                }
+              }
+            })
+          end
+
+          it 'has synchonized the catalog' do
+            expect_catalog_synchronized(catalog)
+          end
+
+          it 'reports service events' do
+            expect([
+              { type: 'audit.service.create', actor: 'broker name' },
+              { type: 'audit.service.create', actor: 'broker name' },
+              { type: 'audit.service_broker.create', actor: admin_headers._generated_email },
+              { type: 'audit.service_dashboard_client.create', actor: 'broker name' },
+              { type: 'audit.service_plan.create', actor: 'broker name' },
+              { type: 'audit.service_plan.create', actor: 'broker name' },
+            ]).to be_reported_as_events
+          end
+
+          it 'leaves the broker in an available state' do
+            expect_broker_status(
+              available: true,
+              status: 'available',
+              with: admin_headers
+            )
+          end
+
+          let(:uaa_uri) { VCAP::CloudController::Config.config.get(:uaa, :internal_url) }
+          let(:tx_url) { uaa_uri + '/oauth/clients/tx/modify' }
+          it 'creates some UAA stuff' do
+            expect(a_request(:post, tx_url)).to have_been_made
+          end
+        end
+
+        context 'when fetching broker catalog fails' do
+          before do
+            stub_request(:get, 'http://example.org/broker-url/v2/catalog').
+              to_return(status: 418, body: {}.to_json)
+            execute_all_jobs(expected_successes: 0, expected_failures: 1)
+          end
+
+          it 'leaves broker in a non-available failed state' do
+            expect_broker_status(
+              available: false,
+              status: 'synchronization failed',
+              with: admin_headers
+            )
+          end
+
+          it 'has failed the job with an appropriate error' do
+            get "/v3/jobs/#{job.guid}", {}, admin_headers
+            expect(parsed_body).to include({
+              'state' => 'FAILED',
+              'operation' => 'service_broker.catalog.synchronize',
+              'errors' => [
+                include(
+                  'code' => 10001,
+                  'detail' => "The service broker rejected the request to http://example.org/broker-url/v2/catalog. Status Code: 418 I'm a Teapot, Body: {}"
+                )
+              ],
+              'links' => {
+                'self' => {
+                  'href' => match(%r(http.+/v3/jobs/#{job.guid}))
+                },
+                'service_brokers' => {
+                  'href' => match(%r(http.+/v3/service_brokers/[^/]+))
+                }
+              }
+            })
+          end
+        end
+
+        context 'when catalog is not valid' do
+          before do
+            stub_request(:get, 'http://example.org/broker-url/v2/catalog').
+              to_return(status: 200, body: {}.to_json)
+            execute_all_jobs(expected_successes: 0, expected_failures: 1)
+          end
+
+          it 'leaves broker in a non-available failed state' do
+            expect_broker_status(
+              available: false,
+              status: 'synchronization failed',
+              with: admin_headers
+            )
+          end
+
+          it 'has failed the job with an appropriate error' do
+            get "/v3/jobs/#{job.guid}", {}, admin_headers
+            expect(parsed_body).to include({
+              'state' => 'FAILED',
+              'operation' => 'service_broker.catalog.synchronize',
+              'errors' => [
+                include(
+                  'code' => 270012,
+                  'detail' => "Service broker catalog is invalid: \nService broker must provide at least one service\n"
+                )
+              ],
+              'links' => {
+                'self' => {
+                  'href' => match(%r(http.+/v3/jobs/#{job.guid}))
+                },
+                'service_brokers' => {
+                  'href' => match(%r(http.+/v3/service_brokers/[^/]+))
+                }
+              }
+            })
+          end
         end
       end
 
@@ -387,29 +551,81 @@ RSpec.describe 'V3 service brokers' do
           create_broker_successfully(global_broker_request_body, with: admin_headers)
         end
 
-        it 'returns 201 Created' do
-          expect(last_response).to have_status_code(201)
+        let(:job) { VCAP::CloudController::PollableJobModel.last }
+
+        it 'returns 202 Accepted and a job' do
+          expect(last_response).to have_status_code(202)
+
+          expect(VCAP::CloudController::PollableJobModel.count).to eq(1)
+          expect(last_response.headers['Location']).to match(%r(http.+/v3/jobs/#{job.guid}))
+
+          get "/v3/jobs/#{job.guid}", {}, admin_headers
+          expect(parsed_body).to include({
+            'state' => 'PROCESSING',
+            'operation' => 'service_broker.catalog.synchronize',
+            'links' => {
+              'self' => {
+                'href' => match(%r(http.+/v3/jobs/#{job.guid}))
+              },
+              'service_brokers' => {
+                'href' => match(%r(http.+/v3/service_brokers/[^/]+))
+              }
+            }
+          })
         end
 
-        it 'creates a service broker entity and synchronizes the catalog' do
+        it 'creates a service broker entity and does not synchronizes the catalog yet' do
           expect_created_broker(global_broker_request_body)
-          expect_catalog_synchronized(catalog)
+          expect_catalog_not_synchronized
         end
 
-        it 'returns warning in the header' do
-          expect(last_response_warnings).
-            to eq([
-              'Service route_volume_service_name-2 is declared to be a route service but support for route services is disabled.' \
-' Users will be prevented from binding instances of this service with routes.',
-              'Service route_volume_service_name-2 is declared to be a volume mount service but support for volume mount services is disabled.' \
-' Users will be prevented from binding instances of this service with apps.'
-            ])
+        context 'when job processing is done and it failed' do
+          before do
+            execute_all_jobs(expected_successes: 0, expected_failures: 1)
+          end
+
+          it 'has failed the job' do
+            get "/v3/jobs/#{job.guid}", {}, admin_headers
+            expect(parsed_body).to include({
+              'state' => 'FAILED',
+              'operation' => 'service_broker.catalog.synchronize',
+              'errors' => [
+                include({
+                  'detail' => "Service broker catalog is incompatible: \n" \
+                    "Service route_volume_service_name-2 is declared to be a route service but support for route services is disabled.\n" \
+                    "Service route_volume_service_name-2 is declared to be a volume mount service but support for volume mount services is disabled.\n",
+                  'title' => 'CF-ServiceBrokerCatalogIncompatible',
+                  'code' => 270019
+                })
+              ],
+              'links' => {
+                'self' => {
+                  'href' => match(%r(http.+/v3/jobs/#{job.guid}))
+                },
+                'service_brokers' => {
+                  'href' => match(%r(http.+/v3/service_brokers/[^/]+))
+                }
+              }
+            })
+          end
+
+          it 'has failed synchronizing the catalog' do
+            expect_catalog_not_synchronized
+          end
+
+          it 'leaves the broker in an unavailable state' do
+            expect_broker_status(
+              available: false,
+              status: 'synchronization failed',
+              with: admin_headers
+            )
+          end
         end
 
         let(:uaa_uri) { VCAP::CloudController::Config.config.get(:uaa, :internal_url) }
         let(:tx_url) { uaa_uri + '/oauth/clients/tx/modify' }
-        it 'creates some UAA stuff' do
-          expect(a_request(:post, tx_url)).to have_been_made
+        it 'does not create any UAA dashboard clients' do
+          expect(a_request(:post, tx_url)).not_to have_been_made
         end
       end
 
@@ -432,25 +648,36 @@ RSpec.describe 'V3 service brokers' do
       context 'when a broker with the same name exists' do
         before do
           VCAP::CloudController::ServiceBroker.make(name: global_broker_request_body[:name])
-          create_broker(global_broker_request_body, with: admin_headers)
+          create_broker(global_broker_with_identical_name_body, with: admin_headers)
         end
 
-        it 'should return 422 and meaningful error, but still creates a broker' do
+        it 'should return 422 and meaningful error and does not create a broker' do
           expect_no_broker_created
           expect_error(status: 422, error: 'UnprocessableEntity', description: 'Name must be unique')
         end
       end
 
-      context 'when fetching broker catalog fails' do
+      context 'when another broker with the same name gets created whilst current one is in progress' do
         before do
-          stub_request(:get, 'http://example.org/broker-url/v2/catalog').
-            to_return(status: 418, body: {}.to_json)
-          create_broker(global_broker_request_body, with: admin_headers)
+          create_broker_successfully(global_broker_request_body, with: admin_headers)
+          create_broker(global_broker_with_identical_name_body, with: admin_headers)
         end
 
-        it 'returns 502 and does not create the service broker' do
+        it 'should return 422 and meaningful error and does not create a broker' do
           expect_no_broker_created
-          expect_error(status: 502, error: 'CF-ServiceBrokerRequestRejected', description: 'The service broker rejected the request')
+          expect_error(status: 422, error: 'UnprocessableEntity', description: 'Name must be unique')
+        end
+      end
+
+      context 'when another broker with the same URL gets created whilst current one is in progress' do
+        before do
+          create_broker_successfully(global_broker_request_body, with: admin_headers)
+          create_broker(global_broker_with_identical_url_body, with: admin_headers)
+        end
+
+        it 'should return 202 Accepted and broker created' do
+          expect(last_response).to have_status_code(202)
+          expect_created_broker(global_broker_with_identical_url_body)
         end
       end
     end
@@ -468,24 +695,85 @@ RSpec.describe 'V3 service brokers' do
           create_broker(space_scoped_broker_request_body, with: space_developer_headers)
         end
 
-        it 'returns 201 Created' do
-          expect(last_response).to have_status_code(201)
+        let(:job) { VCAP::CloudController::PollableJobModel.last }
+
+        it 'returns 202 Accepted and a job URL' do
+          expect(last_response).to have_status_code(202)
+
+          expect(VCAP::CloudController::PollableJobModel.count).to eq(1)
+          expect(last_response.headers['Location']).to match(%r(http.+/v3/jobs/#{job.guid}))
+
+          get "/v3/jobs/#{job.guid}", {}, space_developer_headers
+          expect(parsed_body).to include({
+            'state' => 'PROCESSING',
+            'operation' => 'service_broker.catalog.synchronize',
+            'links' => {
+              'self' => {
+                'href' => match(%r(http.+/v3/jobs/#{job.guid}))
+              },
+              'service_brokers' => {
+                'href' => match(%r(http.+/v3/service_brokers/[^/]+))
+              }
+            }
+          })
         end
 
-        it 'creates a service broker entity synchronizes the catalog' do
+        it 'creates a service broker entity and does not synchronize the catalog yet' do
           expect_created_broker(space_scoped_broker_request_body)
-          expect_catalog_synchronized(catalog)
+          expect_catalog_not_synchronized
         end
 
-        it 'reports service events' do
-          # FIXME: there is an event missing for registering/creating the broker itself by the respective user
-          expect([
-            { type: 'audit.service.create', actor: 'space-scoped broker name' },
-            { type: 'audit.service.create', actor: 'space-scoped broker name' },
-            { type: 'audit.service_dashboard_client.create', actor: 'space-scoped broker name' },
-            { type: 'audit.service_plan.create', actor: 'space-scoped broker name' },
-            { type: 'audit.service_plan.create', actor: 'space-scoped broker name' },
-          ]).to be_reported_as_events
+        it 'leaves the broker in a synchronization in progress' do
+          expect_broker_status(
+            available: false,
+            status: 'synchronization in progress',
+            with: space_developer_headers
+          )
+        end
+
+        context 'when job processing is done and it succeeded' do
+          before do
+            execute_all_jobs(expected_successes: 1, expected_failures: 0)
+          end
+
+          it 'has completed the job' do
+            get "/v3/jobs/#{job.guid}", {}, space_developer_headers
+            expect(parsed_body).to include({
+              'state' => 'COMPLETE',
+              'operation' => 'service_broker.catalog.synchronize',
+              'links' => {
+                'self' => {
+                  'href' => match(%r(http.+/v3/jobs/#{job.guid}))
+                },
+                'service_brokers' => {
+                  'href' => match(%r(http.+/v3/service_brokers/[^/]+))
+                }
+              }
+            })
+          end
+
+          it 'has synchonized the catalog' do
+            expect_catalog_synchronized(catalog)
+          end
+
+          it 'reports service events' do
+            expect([
+              { type: 'audit.service.create', actor: 'space-scoped broker name' },
+              { type: 'audit.service.create', actor: 'space-scoped broker name' },
+              { type: 'audit.service_broker.create', actor: space_developer_headers._generated_email },
+              { type: 'audit.service_dashboard_client.create', actor: 'space-scoped broker name' },
+              { type: 'audit.service_plan.create', actor: 'space-scoped broker name' },
+              { type: 'audit.service_plan.create', actor: 'space-scoped broker name' },
+            ]).to be_reported_as_events
+          end
+
+          it 'leaves the broker in an available state' do
+            expect_broker_status(
+              available: true,
+              status: 'available',
+              with: space_developer_headers
+            )
+          end
         end
       end
     end
@@ -517,8 +805,21 @@ RSpec.describe 'V3 service brokers' do
         'auth_username' => expected_broker.dig(:credentials, :data, :username),
         'space_guid' => expected_broker.dig(:relationships, :space, :data, :guid),
       )
-      # password not exported in to_hash
+
+      # asserting password separately because it is not exported in to_hash
       expect(service_broker.auth_password).to eq(expected_broker[:credentials][:data][:password])
+    end
+
+    def expect_broker_status(available:, status:, with:)
+      expect(VCAP::CloudController::ServiceBroker.count).to eq(@count_before_creation + 1)
+      service_broker = VCAP::CloudController::ServiceBroker.last
+
+      get("/v3/service_brokers/#{service_broker.guid}", {}, with)
+      expect(last_response.status).to eq(200)
+      expect(parsed_body).to include(
+        'available' => available,
+        'status' => status
+      )
     end
 
     def expect_catalog_synchronized(catalog)
@@ -533,6 +834,12 @@ RSpec.describe 'V3 service brokers' do
       end
     end
 
+    def expect_catalog_not_synchronized
+      service_broker = VCAP::CloudController::ServiceBroker.last
+      services = VCAP::CloudController::Service.where(service_broker_id: service_broker.id)
+      expect(services).to be_empty
+    end
+
     def expect_no_broker_created
       expect(VCAP::CloudController::ServiceBroker.count).to eq(@count_before_creation)
     end
@@ -540,13 +847,13 @@ RSpec.describe 'V3 service brokers' do
 
   describe 'DELETE /v3/service_brokers/:guid' do
     let!(:global_broker) {
-      create_broker_successfully(global_broker_request_body, with: admin_headers)
+      create_broker_successfully(global_broker_request_body, with: admin_headers, wait: true)
     }
     let!(:global_broker_services) { VCAP::CloudController::Service.where(service_broker_id: global_broker.id) }
     let!(:global_broker_plans) { VCAP::CloudController::ServicePlan.where(service_id: global_broker_services.map(&:id)) }
 
     let!(:space_scoped_service_broker) {
-      create_broker_successfully(space_scoped_broker_request_body, with: admin_headers)
+      create_broker_successfully(space_scoped_broker_request_body, with: admin_headers, wait: true)
     }
     let!(:space_broker_services) { VCAP::CloudController::Service.where(service_broker_id: space_scoped_service_broker.id) }
     let!(:space_broker_plans) { VCAP::CloudController::ServicePlan.where(service_id: space_broker_services.map(&:id)) }
@@ -640,10 +947,14 @@ RSpec.describe 'V3 service brokers' do
     post('/v3/service_brokers', broker_body.to_json, with)
   end
 
-  def create_broker_successfully(broker_body, with:)
+  def create_broker_successfully(broker_body, with:, wait: false)
     create_broker(broker_body, with: with)
-    expect(last_response).to have_status_code(201)
-    VCAP::CloudController::ServiceBroker.last
+    expect(last_response).to have_status_code(202)
+    broker = VCAP::CloudController::ServiceBroker.last
+
+    execute_all_jobs(expected_successes: 1, expected_failures: 0) if wait
+
+    broker
   end
 
   def create_service_instance(broker, with:)
@@ -684,39 +995,39 @@ RSpec.describe 'V3 service brokers' do
     stub_request(:get, "https://uaa.service.cf.internal/oauth/clients/#{broker_id}-uaa-id").
       to_return(
         { status: 404, body: {}.to_json, headers: { 'Content-Type' => 'application/json' } },
-            { status: 200, body: { client_id: dashboard_client(broker_id)['id'] }.to_json, headers: { 'Content-Type' => 'application/json' } }
-        )
+        { status: 200, body: { client_id: dashboard_client(broker_id)['id'] }.to_json, headers: { 'Content-Type' => 'application/json' } }
+      )
 
     stub_request(:post, 'https://uaa.service.cf.internal/oauth/clients/tx/modify').
       with(
         body: [
           {
-                "client_id": "#{broker_id}-uaa-id",
-                "client_secret": 'my-dashboard-secret',
-                "redirect_uri": 'http://example.org',
-                "scope": %w(openid cloud_controller_service_permissions.read),
-                "authorities": ['uaa.resource'],
-                "authorized_grant_types": ['authorization_code'],
-                "action": 'add'
-            }
+            "client_id": "#{broker_id}-uaa-id",
+            "client_secret": 'my-dashboard-secret',
+            "redirect_uri": 'http://example.org',
+            "scope": %w(openid cloud_controller_service_permissions.read),
+            "authorities": ['uaa.resource'],
+            "authorized_grant_types": ['authorization_code'],
+            "action": 'add'
+          }
         ].to_json
-        ).
+      ).
       to_return(status: 201, body: {}.to_json, headers: { 'Content-Type' => 'application/json' })
 
     stub_request(:post, 'https://uaa.service.cf.internal/oauth/clients/tx/modify').
       with(
         body: [
           {
-                "client_id": "#{broker_id}-uaa-id",
-                "client_secret": nil,
-                "redirect_uri": nil,
-                "scope": %w(openid cloud_controller_service_permissions.read),
-                "authorities": ['uaa.resource'],
-                "authorized_grant_types": ['authorization_code'],
-                "action": 'delete'
-            }
+            "client_id": "#{broker_id}-uaa-id",
+            "client_secret": nil,
+            "redirect_uri": nil,
+            "scope": %w(openid cloud_controller_service_permissions.read),
+            "authorities": ['uaa.resource'],
+            "authorized_grant_types": ['authorization_code'],
+            "action": 'delete'
+          }
         ].to_json
-        ).
+      ).
       to_return(status: 200, body: {}.to_json, headers: { 'Content-Type' => 'application/json' })
   end
 end

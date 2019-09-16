@@ -1,5 +1,5 @@
 require 'presenters/api/service_broker_presenter'
-require 'actions/services/service_broker_create'
+require 'actions/v2/services/service_broker_create'
 require 'actions/services/service_broker_update'
 
 module VCAP::CloudController

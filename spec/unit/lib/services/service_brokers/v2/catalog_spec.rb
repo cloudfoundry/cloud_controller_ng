@@ -6,35 +6,56 @@ module VCAP::Services::ServiceBrokers::V2
 
     def service_entry(opts={})
       {
-        'id'          => opts[:id] || Sham.guid,
-        'name'        => opts[:name] || Sham.name,
-        'description' => Sham.description,
-        'bindable'    => true,
-        'tags'        => ['magical', 'webscale'],
-        'plans'       => opts[:plans] || [plan_entry]
+          'id' => opts[:id] || Sham.guid,
+          'name' => opts[:name] || Sham.name,
+          'description' => Sham.description,
+          'bindable' => true,
+          'tags' => ['magical', 'webscale'],
+          'plans' => opts[:plans] || [plan_entry]
       }
     end
 
     def plan_entry(opts={})
       {
-        'id'          => opts[:id] || Sham.guid,
-        'name'        => opts[:name] || Sham.name,
-        'description' => Sham.description,
+          'id' => opts[:id] || Sham.guid,
+          'name' => opts[:name] || Sham.name,
+          'description' => Sham.description,
       }
     end
 
     let(:catalog) { Catalog.new(broker, catalog_hash) }
 
+    def build_service(attrs={})
+      @index ||= 0
+      @index += 1
+      {
+          'id' => @index.to_s,
+          'name' => @index.to_s,
+          'description' => 'the service description',
+          'bindable' => true,
+          'tags' => ['tag1'],
+          'metadata' => { 'foo' => 'bar' },
+          'plans' => [
+            {
+                'id' => @index.to_s,
+                'name' => @index.to_s,
+                'description' => 'the plan description',
+                'metadata' => { 'foo' => 'bar' }
+            }
+          ]
+      }.merge(attrs)
+    end
+
     describe 'validations' do
       context "when the catalog's services include errors" do
         let(:catalog_hash) do
           {
-            'services' => [
-              service_entry,
-              service_entry(id: 123),
-              service_entry(plans: [plan_entry(id: 'plan-id'), plan_entry(id: 'plan-id', name: 123)]),
-              service_entry(plans: [])
-            ]
+              'services' => [
+                service_entry,
+                service_entry(id: 123),
+                service_entry(plans: [plan_entry(id: 'plan-id'), plan_entry(id: 'plan-id', name: 123)]),
+                service_entry(plans: [])
+              ]
           }
         end
 
@@ -45,31 +66,10 @@ module VCAP::Services::ServiceBrokers::V2
         end
       end
 
-      def build_service(attrs={})
-        @index ||= 0
-        @index += 1
-        {
-          'id' => @index.to_s,
-          'name' => @index.to_s,
-          'description' => 'the service description',
-          'bindable' => true,
-          'tags' => ['tag1'],
-          'metadata' => { 'foo' => 'bar' },
-          'plans' => [
-            {
-              'id' => @index.to_s,
-              'name' => @index.to_s,
-              'description' => 'the plan description',
-              'metadata' => { 'foo' => 'bar' }
-            }
-          ]
-        }.merge(attrs)
-      end
-
       context 'when two services in the catalog have the same id' do
         let(:catalog_hash) do
           {
-            'services' => [build_service('id' => '1'), build_service('id' => '1')]
+              'services' => [build_service('id' => '1'), build_service('id' => '1')]
           }
         end
 
@@ -83,10 +83,10 @@ module VCAP::Services::ServiceBrokers::V2
       context 'when two services in the catalog have the same name' do
         let(:catalog_hash) do
           {
-            'services' => [
-              build_service('id' => '1', 'name' => 'my-service'),
-              build_service('id' => '2', 'name' => 'my-service')
-            ]
+              'services' => [
+                build_service('id' => '1', 'name' => 'my-service'),
+                build_service('id' => '2', 'name' => 'my-service')
+              ]
           }
         end
 
@@ -100,7 +100,7 @@ module VCAP::Services::ServiceBrokers::V2
       context 'when a service in the catalog has the same id as a service from a different broker' do
         let(:catalog_hash) do
           {
-            'services' => [build_service('id' => '1'), build_service('id' => '2')]
+              'services' => [build_service('id' => '1'), build_service('id' => '2')]
           }
         end
         let(:broker) { VCAP::CloudController::ServiceBroker.make }
@@ -118,18 +118,18 @@ module VCAP::Services::ServiceBrokers::V2
       context 'when two services in the catalog have the same dashboard_client id' do
         let(:catalog_hash) do
           {
-            'services' => [
-              build_service('dashboard_client' => {
-                'id' => 'client-1',
-                'secret' => 'secret',
-                'redirect_uri' => 'http://example.com/client-1'
-              }),
-              build_service('dashboard_client' => {
-                'id' => 'client-1',
-                'secret' => 'secret2',
-                'redirect_uri' => 'http://example.com/client-2'
-              }),
-            ]
+              'services' => [
+                build_service('dashboard_client' => {
+                    'id' => 'client-1',
+                    'secret' => 'secret',
+                    'redirect_uri' => 'http://example.com/client-1'
+                }),
+                build_service('dashboard_client' => {
+                    'id' => 'client-1',
+                    'secret' => 'secret2',
+                    'redirect_uri' => 'http://example.com/client-2'
+                }),
+              ]
           }
         end
 
@@ -165,10 +165,10 @@ module VCAP::Services::ServiceBrokers::V2
       context 'when there are multiple services with a nil dashboard_client id' do
         let(:catalog_hash) do
           {
-            'services' => [
-              build_service('dashboard_client' => { 'id' => nil }),
-              build_service('dashboard_client' => { 'id' => nil })
-            ]
+              'services' => [
+                build_service('dashboard_client' => { 'id' => nil }),
+                build_service('dashboard_client' => { 'id' => nil })
+              ]
           }
         end
 
@@ -194,10 +194,10 @@ module VCAP::Services::ServiceBrokers::V2
       context 'when there are both service validation problems and uniqueness problems' do
         let(:catalog_hash) do
           {
-            'services' => [
-              build_service('id' => 'service-1', 'dashboard_client' => { 'id' => 'client-1' }),
-              build_service('id' => 'service-1', 'dashboard_client' => { 'id' => 'client-1' }),
-            ]
+              'services' => [
+                build_service('id' => 'service-1', 'dashboard_client' => { 'id' => 'client-1' }),
+                build_service('id' => 'service-1', 'dashboard_client' => { 'id' => 'client-1' }),
+              ]
           }
         end
         let(:catalog) { Catalog.new(broker, catalog_hash) }
@@ -219,6 +219,103 @@ module VCAP::Services::ServiceBrokers::V2
         it 'has a validation error for duplicate dashboard_client ids' do
           catalog.valid?
           expect(catalog.errors.messages).to include('Service dashboard_client id must be unique')
+        end
+      end
+    end
+
+    describe 'incompatibilities' do
+      context 'when the catalog has no services with route forwarding or volume mounts' do
+        let(:catalog_hash) do
+          {
+              'services' => [
+                build_service('requires' => []),
+                build_service('requires' => []),
+              ]
+          }
+        end
+
+        context 'when the CF config has route forwarding and volume mounts disabled' do
+          before do
+            TestConfig.config[:volume_services_enabled] = false
+            TestConfig.config[:route_services_enabled] = false
+          end
+
+          it 'is compatible and there are no compatibility errors' do
+            expect(catalog.compatible?).to be(true)
+            expect(catalog.incompatibility_errors.messages).to be_empty
+          end
+        end
+      end
+
+      context 'when the catalog has a services with route forwarding and volume mounts' do
+        let(:catalog_hash) do
+          {
+              'services' => [
+                build_service('requires' => []),
+                build_service('requires' => %w(route_forwarding)),
+                build_service('requires' => %w(volume_mount)),
+                build_service('requires' => %w(route_forwarding volume_mount))
+              ]
+          }
+        end
+
+        context 'when the CF config has route forwarding and volume mounts enabled' do
+          before do
+            TestConfig.config[:volume_services_enabled] = true
+            TestConfig.config[:route_services_enabled] = true
+          end
+
+          it 'is compatible and there are no compatibility errors' do
+            expect(catalog.compatible?).to be(true)
+            expect(catalog.incompatibility_errors.messages).to be_empty
+          end
+        end
+
+        context 'when the CF config has route forwarding disabled' do
+          before do
+            TestConfig.config[:volume_services_enabled] = true
+            TestConfig.config[:route_services_enabled] = false
+          end
+
+          it 'is not compatible and there are few compatibility errors' do
+            expect(catalog.compatible?).to be(false)
+            expect(catalog.incompatibility_errors.messages).to eq([
+              'Service 2 is declared to be a route service but support for route services is disabled.',
+              'Service 4 is declared to be a route service but support for route services is disabled.'
+            ])
+          end
+        end
+
+        context 'when the CF config has volume mounts disabled' do
+          before do
+            TestConfig.config[:volume_services_enabled] = false
+            TestConfig.config[:route_services_enabled] = true
+          end
+
+          it 'is not compatible and there are few compatibility errors' do
+            expect(catalog.compatible?).to be(false)
+            expect(catalog.incompatibility_errors.messages).to eq([
+              'Service 3 is declared to be a volume mount service but support for volume mount services is disabled.',
+              'Service 4 is declared to be a volume mount service but support for volume mount services is disabled.'
+            ])
+          end
+        end
+
+        context 'when the CF config has route forwarding and volume mounts disabled' do
+          before do
+            TestConfig.config[:volume_services_enabled] = false
+            TestConfig.config[:route_services_enabled] = false
+          end
+
+          it 'is not compatible and there are few compatibility errors' do
+            expect(catalog.compatible?).to be(false)
+            expect(catalog.incompatibility_errors.messages).to eq([
+              'Service 2 is declared to be a route service but support for route services is disabled.',
+              'Service 3 is declared to be a volume mount service but support for volume mount services is disabled.',
+              'Service 4 is declared to be a route service but support for route services is disabled.',
+              'Service 4 is declared to be a volume mount service but support for volume mount services is disabled.'
+            ])
+          end
         end
       end
     end

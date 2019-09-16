@@ -2,50 +2,131 @@ require 'rails_helper'
 require 'permissions_spec_helper'
 
 RSpec.describe ServiceBrokersController, type: :controller do
-  let(:user) { set_current_user(VCAP::CloudController::User.make) }
+  let(:user) { set_current_user(VCAP::CloudController::User.make, email: 'joe@example.org') }
   let(:space) { VCAP::CloudController::Space.make }
-
-  before do
-    allow_user_read_access_for(user, spaces: [space])
-    allow_user_write_access(user, space: space)
-  end
+  let(:space_guid) { space.guid }
+  let(:relationships_part) { {} }
 
   describe '#create' do
     let(:request_body) {
       {
-        name: 'some-name',
-        relationships: { space: { data: { guid: space_guid } } },
-        url: 'https://fake.url',
-        credentials: {
-          type: 'basic',
-          data: {
-            username: 'fake username',
-            password: 'fake password',
+          name: 'some-name',
+          url: 'https://fake.url',
+          credentials: {
+              type: 'basic',
+              data: {
+                  username: 'fake username',
+                  password: 'fake password',
+              },
           },
-        },
-      }
+      }.merge(relationships_part)
     }
 
-    context 'when a non-existent space is provided' do
-      let(:space_guid) { 'space-that-does-not-exist' }
+    context 'when there are no relationships' do
+      before do
+        allow_user_global_read_access(user)
+        allow_user_global_write_access(user)
 
-      it 'returns a error saying the space is invalid' do
         post :create, params: request_body, as: :json
+      end
 
-        expect(response).to have_status_code(422)
-        expect(response.body).to include 'Invalid space. Ensure that the space exists and you have access to it.'
+      let(:broker) { VCAP::CloudController::ServiceBroker.last }
+      let(:job) { VCAP::CloudController::PollableJobModel.last }
+
+      it 'creates a global service broker and responds with 202 Accepted' do
+        expect(response).to have_status_code(202)
+
+        expect(broker.name).to eq(request_body[:name])
+        expect(broker.broker_url).to eq(request_body[:url])
+        expect(broker.auth_username).to eq(request_body.dig(:credentials, :data, :username))
+        expect(broker.auth_password).to eq(request_body.dig(:credentials, :data, :password))
+        expect(broker.space).to be_nil
+      end
+
+      it 'creates a pollable job to synchronize the catalog and responds with its location' do
+        expect(job.state).to eq(VCAP::CloudController::PollableJobModel::PROCESSING_STATE)
+        expect(job.operation).to eq('service_broker.catalog.synchronize')
+        expect(job.resource_guid).to eq(broker.guid)
+        expect(job.resource_type).to eq('service_brokers')
+
+        expect(response.headers['Location']).to end_with("/v3/jobs/#{job.guid}")
+      end
+
+      it 'emits an audit event' do
+        events = VCAP::CloudController::Event.all.map { |e| { type: e.type, actor: e.actor_name, metadata: e.metadata } }
+        expect(events).to eq([
+          {
+              type: 'audit.service_broker.create',
+              actor: 'joe@example.org',
+              metadata: {
+                  'request' => {
+                      'name' => 'some-name',
+                      'broker_url' => 'https://fake.url',
+                      'auth_username' => 'fake username',
+                      'auth_password' => '[REDACTED]'
+                  }
+              }
+          },
+        ])
       end
     end
 
-    context 'when a space is provided that the user cannot read' do
-      let(:space_with_no_read_access) { VCAP::CloudController::Space.make }
-      let(:space_guid) { space_with_no_read_access.guid }
+    context 'when there is a space relationship' do
+      let(:relationships_part) { { relationships: { space: { data: { guid: space_guid } } } } }
 
-      it 'returns a error saying the space is invalid' do
+      before do
+        allow_user_read_access_for(user, spaces: [space])
+        allow_user_write_access(user, space: space)
         post :create, params: request_body, as: :json
+      end
 
-        expect(response).to have_status_code(422)
-        expect(response.body).to include 'Invalid space. Ensure that the space exists and you have access to it.'
+      it 'responds with 202 Accepted and creates a space-scoped broker' do
+        expect(response).to have_status_code(202)
+
+        broker = VCAP::CloudController::ServiceBroker.last
+        expect(broker.name).to eq(request_body[:name])
+        expect(broker.broker_url).to eq(request_body[:url])
+        expect(broker.auth_username).to eq(request_body.dig(:credentials, :data, :username))
+        expect(broker.auth_password).to eq(request_body.dig(:credentials, :data, :password))
+        expect(broker.space.guid).to eq(request_body.dig(:relationships, :space, :data, :guid))
+      end
+
+      it 'emits an audit event' do
+        events = VCAP::CloudController::Event.all.map { |e| { type: e.type, actor: e.actor_name, metadata: e.metadata } }
+        expect(events).to eq([
+          {
+              type: 'audit.service_broker.create',
+              actor: 'joe@example.org',
+              metadata: {
+                  'request' => {
+                      'name' => 'some-name',
+                      'broker_url' => 'https://fake.url',
+                      'auth_username' => 'fake username',
+                      'auth_password' => '[REDACTED]',
+                      'space_guid' => space_guid
+                  }
+              }
+          },
+        ])
+      end
+
+      context 'when a non-existent space is provided' do
+        let(:space_guid) { 'space-that-does-not-exist' }
+
+        it 'returns a error saying the space is invalid' do
+          expect(response).to have_status_code(422)
+          expect(response.body).to include 'Invalid space. Ensure that the space exists and you have access to it.'
+        end
+      end
+
+      context 'when a space is provided that the user cannot read' do
+        let(:space_with_no_read_access) { VCAP::CloudController::Space.make }
+        let(:space_guid) { space_with_no_read_access.guid }
+
+        it 'returns a error saying the space is invalid' do
+          expect(response).to have_status_code(422)
+          expect(response.body).to include 'Invalid space. Ensure that the space exists and you have access to it.'
+        end
       end
     end
   end
@@ -132,6 +213,7 @@ RSpec.describe ServiceBrokersController, type: :controller do
 
         context 'when the user has read, but not write permissions on the space' do
           before do
+            allow_user_read_access_for(user, spaces: [space])
             disallow_user_write_access(user, space: space)
           end
 

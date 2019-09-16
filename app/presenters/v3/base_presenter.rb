@@ -1,3 +1,5 @@
+require 'presenters/helpers/censorship'
+
 module VCAP::CloudController
   module Presenters
     module V3

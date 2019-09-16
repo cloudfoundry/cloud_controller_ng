@@ -1,6 +1,8 @@
 require 'presenters/v3/base_presenter'
 require 'models/helpers/metadata_helpers'
 require 'presenters/mixins/metadata_presentation_helpers'
+require 'models/services/service_broker_state_enum'
+require 'presenters/api_url_builder'
 
 module VCAP::CloudController
   module Presenters
@@ -11,6 +13,8 @@ module VCAP::CloudController
             guid: broker.guid,
             name: broker.name,
             url: broker.broker_url,
+            available: status == 'available',
+            status: status,
             created_at: broker.created_at,
             updated_at: broker.updated_at,
             relationships: build_relationships,
@@ -22,6 +26,24 @@ module VCAP::CloudController
 
         def broker
           @resource
+        end
+
+        def status
+          state = broker.service_broker_state&.state
+
+          if state == VCAP::CloudController::ServiceBrokerStateEnum::SYNCHRONIZING
+            return 'synchronization in progress'
+          end
+
+          if state == VCAP::CloudController::ServiceBrokerStateEnum::SYNCHRONIZATION_FAILED
+            return 'synchronization failed'
+          end
+
+          if state == VCAP::CloudController::ServiceBrokerStateEnum::AVAILABLE
+            return 'available'
+          end
+
+          'unknown'
         end
 
         def build_relationships
