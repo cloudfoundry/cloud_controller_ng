@@ -6,6 +6,30 @@
     "username": "some-name",
     "presentation_name": "some-name",
     "origin": "uaa",
+    "metadata": {
+      "labels": {},
+      "annotations":{}
+    }
+    "links": {
+      "self": {
+        "href": "https://api.example.org/v3/users/3a5d3d89-3f89-4f05-8188-8a2b298c79d5"
+      }
+    }
+  }
+<% end %>
+
+<% content_for :single_user_with_metadata do %>
+  {
+    "guid": "3a5d3d89-3f89-4f05-8188-8a2b298c79d5",
+    "created_at": "2019-03-08T01:06:19Z",
+    "updated_at": "2019-03-08T01:06:19Z",
+    "username": "some-name",
+    "presentation_name": "some-name",
+    "origin": "uaa",
+    "metadata": {
+      "labels": {"enviroment": "production"},
+      "annotations": {"note": "detailed information"}
+    }
     "links": {
       "self": {
         "href": "https://api.example.org/v3/users/3a5d3d89-3f89-4f05-8188-8a2b298c79d5"
@@ -38,6 +62,10 @@
       "username": null,
       "presentation_name": "client_id",
       "origin": null,
+      "metadata": {
+        "labels": {},
+        "annotations":{}
+      }
       "links": {
         "self": {
           "href": "https://api.example.org/v3/users/3a5d3d89-3f89-4f05-8188-8a2b298c79d5"
@@ -51,6 +79,10 @@
       "username": "some-name",
       "presentation_name": "some-name",
       "origin": "uaa",
+      "metadata": {
+        "labels": {},
+        "annotations":{}
+      }
       "links": {
         "self": {
           "href": "https://api.example.org/v3/users/9da93b89-3f89-4f05-7238-8a2b123c79l9"

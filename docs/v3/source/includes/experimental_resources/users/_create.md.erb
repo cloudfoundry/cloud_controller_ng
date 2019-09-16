@@ -38,7 +38,9 @@ Content-Type: application/json
 
 Name     | Type     | Description
 -------  | -------  | -----------
-**guid** | _string_ | Unique identifier for the user. For UAA users this will match the user ID of an existing UAA user's GUID. In the case of UAA clients, this will match the UAA client ID.                                                                                             |         |
+**guid** | _string_ | Unique identifier for the user. For UAA users this will match the user ID of an existing UAA user's GUID. In the case of UAA clients, this will match the UAA client ID.                                                                                             |
+**metadata.labels** _(experimental)_  | [_label object_](#links) | Labels applied to the user.                                                                                                 |
+**metadata.annotations** _(experimental)_| [_annotation object_](#links) | Annotations added to the user.                                                                                      |
 
 #### Permitted roles
 
