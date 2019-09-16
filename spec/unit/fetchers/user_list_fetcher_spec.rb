@@ -25,6 +25,44 @@ module VCAP::CloudController
           expect(subject).to match_array([user2])
         end
       end
+
+      context 'when fetching users by label selector' do
+        let!(:org1) { Organization.make(guid: 'org1') }
+        let!(:user_label) do
+          VCAP::CloudController::UserLabelModel.make(resource_guid: user1.guid, key_name: 'dog', value: 'scooby-doo')
+        end
+
+        let!(:sad_user_label) do
+          VCAP::CloudController::UserLabelModel.make(resource_guid: user2.guid, key_name: 'dog', value: 'poodle')
+        end
+
+        let(:results) { UserListFetcher.fetch_all(message, User.dataset).all }
+
+        context 'only the label_selector is present' do
+          let(:message) {
+            UsersListMessage.from_params({ 'label_selector' => 'dog in (chihuahua,scooby-doo)' })
+          }
+          it 'returns only the user whose label matches' do
+            expect(results.length).to eq(1)
+            expect(results[0]).to eq(user1)
+          end
+        end
+
+        context 'and other filters are present' do
+          let!(:happiest_user) { User.make }
+          let(:message) {
+            UsersListMessage.from_params({ 'guids' => happiest_user.guid, 'label_selector' => 'dog in (chihuahua,scooby-doo)' })
+          }
+
+          let!(:happiest_user_label) do
+            VCAP::CloudController::UserLabelModel.make(resource_guid: happiest_user.guid, key_name: 'dog', value: 'scooby-doo')
+          end
+
+          it 'returns the desired app' do
+            expect(results).to contain_exactly(happiest_user)
+          end
+        end
+      end
     end
   end
 end

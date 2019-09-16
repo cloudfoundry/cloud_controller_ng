@@ -15,6 +15,15 @@ module VCAP::CloudController
           dataset = dataset.where(guid: message.guids)
         end
 
+        if message.requested?(:label_selector)
+          dataset = LabelSelectorQueryGenerator.add_selector_queries(
+            label_klass: UserLabelModel,
+            resource_dataset: dataset,
+            requirements: message.requirements,
+            resource_klass: User,
+          )
+        end
+
         dataset
       end
     end

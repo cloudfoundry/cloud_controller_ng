@@ -149,6 +149,31 @@ RSpec.describe 'Users Request' do
 
         it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
       end
+
+      describe 'labels' do
+        let!(:user_label) { VCAP::CloudController::UserLabelModel.make(resource_guid: user.guid, key_name: 'animal', value: 'dog') }
+
+        let!(:other_user_label) { VCAP::CloudController::UserLabelModel.make(resource_guid: other_user.guid, key_name: 'animal', value: 'cow') }
+
+        it 'returns a 200 and the filtered routes for "in" label selector' do
+          get '/v3/users?label_selector=animal in (dog)', nil, admin_header
+
+          parsed_response = MultiJson.load(last_response.body)
+
+          expected_pagination = {
+            'total_results' => 1,
+            'total_pages' => 1,
+            'first' => { 'href' => "#{link_prefix}/v3/users?label_selector=animal+in+%28dog%29&page=1&per_page=50" },
+            'last' => { 'href' => "#{link_prefix}/v3/users?label_selector=animal+in+%28dog%29&page=1&per_page=50" },
+            'next' => nil,
+            'previous' => nil
+          }
+
+          expect(last_response.status).to eq(200)
+          expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(user.guid)
+          expect(parsed_response['pagination']).to eq(expected_pagination)
+        end
+      end
     end
 
     describe 'when the user is not logged in' do
