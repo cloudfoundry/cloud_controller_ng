@@ -180,6 +180,16 @@ module VCAP::CloudController
 
           expect(ServiceUsageEvent.last).to eq(new_event.reload)
         end
+
+        it 'will keep the last record even if before the cutoff age' do
+          expect {
+            repository.delete_events_older_than(cutoff_age_in_days)
+          }.to change {
+            ServiceUsageEvent.count
+          }.to(1)
+
+          expect(ServiceUsageEvent.last.created_at).to be < cutoff_age_in_days.days.ago
+        end
       end
     end
   end

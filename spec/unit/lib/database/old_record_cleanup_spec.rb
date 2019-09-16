@@ -25,5 +25,17 @@ RSpec.describe Database::OldRecordCleanup do
       record_cleanup = Database::OldRecordCleanup.new(VCAP::CloudController::Event, 1)
       record_cleanup.delete
     end
+
+    it 'keeps the last row when :keep_at_least_one_record is true and all rows would be deleted' do
+      record_cleanup = Database::OldRecordCleanup.new(VCAP::CloudController::Event, 0, keep_at_least_one_record: true)
+
+      expect {
+        record_cleanup.delete
+      }.to change { VCAP::CloudController::Event.count }.by(-2)
+
+      expect(fresh_event.reload).to be_present
+      expect { stale_event1.reload }.to raise_error(Sequel::NoExistingObject)
+      expect { stale_event2.reload }.to raise_error(Sequel::NoExistingObject)
+    end
   end
 end
