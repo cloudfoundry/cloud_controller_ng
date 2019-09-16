@@ -77,6 +77,11 @@
         If the file size provided is outside this range, it will not be matched against.
       </p>
 
+      <p class="explanation">
+        If the resource_matching feature flag is disabled,
+        resource matching will always return an empty array.
+      </p>
+
       <h3>Request</h3>
       <h4>Route</h4>
       <pre class="request route highlight">PUT /v2/resource_match</pre>

@@ -137,5 +137,15 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe 'when the resource_matching flag is disabled' do
+      before do
+        FeatureFlag.make(name: 'resource_matching', enabled: false)
+      end
+
+      it 'should return an empty list' do
+        resource_match_request(:put, '/v2/resource_match', [], @descriptors)
+      end
+    end
   end
 end

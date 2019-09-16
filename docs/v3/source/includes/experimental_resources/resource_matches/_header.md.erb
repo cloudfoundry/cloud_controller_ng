@@ -15,4 +15,7 @@ Cloud Foundry operators may set minimum / maximum file sizes to match against.
 If the file size provided is outside this range,
 it will not be matched against.
 
+If the `resource_matching` [feature flag](#the-feature-flag-object) is disabled,
+resource matching will always return an empty array.
+
 [upload-package-bits]: #upload-package-bits

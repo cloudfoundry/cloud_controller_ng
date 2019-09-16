@@ -2,14 +2,6 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe FeatureFlag, type: :model do
-    let(:valid_flags) do
-      [:user_org_creation, :private_domain_creation, :app_bits_upload,
-       :app_scaling, :route_creation, :service_instance_creation,
-       :diego_docker, :set_roles_by_username, :unset_roles_by_username,
-       :task_creation, :env_var_visibility, :space_scoped_private_broker_creation,
-       :space_developer_env_var_visibility, :service_instance_sharing,
-       :hide_marketplace_from_unauthenticated_users]
-    end
     let(:feature_flag) { FeatureFlag.make }
 
     it { is_expected.to have_timestamp_columns }
@@ -227,12 +219,6 @@ module VCAP::CloudController
             FeatureFlag.raise_unless_enabled!(:bogus_feature_flag)
           }.to raise_error(FeatureFlag::UndefinedFeatureFlagError, /bogus_feature_flag/)
         end
-      end
-    end
-
-    describe 'valid feature flags' do
-      it 'includes the expected flags' do
-        expect(FeatureFlag::DEFAULT_FLAGS.keys).to eq(valid_flags)
       end
     end
   end
