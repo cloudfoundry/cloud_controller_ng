@@ -22,13 +22,16 @@ module VCAP::CloudController
           auth_password: message.credentials_data.password,
           space_guid: message.relationships_message.space_guid
         }
-        broker = ServiceBroker.create(params)
 
-        broker.update(
-          service_broker_state: VCAP::CloudController::ServiceBrokerState.new(
-            state: VCAP::CloudController::ServiceBrokerStateEnum::SYNCHRONIZING
+        broker = nil
+        ServiceBroker.db.transaction do
+          broker = ServiceBroker.create(params)
+
+          ServiceBrokerState.create(
+            service_broker_id: broker.id,
+            state: ServiceBrokerStateEnum::SYNCHRONIZING
           )
-        )
+        end
 
         service_event_repository.record_broker_event(:create, broker, params)
 
