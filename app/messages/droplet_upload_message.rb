@@ -47,7 +47,6 @@ module VCAP::CloudController
       return unless bits_name
 
       errors.add(:base, "#{bits_name} is not a tgz") unless File.extname(bits_name) == '.tgz' || bits_name.end_with?('.tar.gz')
-
     end
 
     def missing_file_path
