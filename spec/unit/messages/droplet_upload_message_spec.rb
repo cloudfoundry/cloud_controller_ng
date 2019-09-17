@@ -90,7 +90,16 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the file is not a tgz' do
+      context 'when the file is a .tar.gz' do
+        let(:opts) { { bits_path: '/tmp/bar', bits_name: 'droplet.tar.gz' } }
+
+        it ' is not valid' do
+          upload_message = DropletUploadMessage.new(opts)
+          expect(upload_message).to be_valid
+        end
+      end
+
+      context 'when the file is not a tgz or tar.gz' do
         let(:opts) { { bits_path: '/tmp/bar', bits_name: 'droplet.zip' } }
 
         it ' is not valid' do
