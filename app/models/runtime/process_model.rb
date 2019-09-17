@@ -557,16 +557,15 @@ module VCAP::CloudController
       open_ports = ports || []
 
       if docker?
-        needs_port_assignment = route_mappings.any? { |mapping| !mapping.has_app_port_specified? }
+        has_mapping_without_port = route_mappings.any? { |mapping| !mapping.has_app_port_specified? }
+        needs_docker_ports = docker_ports.present? && (has_mapping_without_port || open_ports.empty?)
 
-        if needs_port_assignment
-          open_ports += if docker_ports.present?
-                          docker_ports
-                        else
-                          DEFAULT_PORTS
-                        end
-        elsif open_ports.empty? && docker_ports.present?
+        if needs_docker_ports
           open_ports += docker_ports
+        end
+
+        if !docker_ports.present? && has_mapping_without_port
+          open_ports += DEFAULT_PORTS
         end
       end
 
