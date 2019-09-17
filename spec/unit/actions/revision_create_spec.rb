@@ -6,13 +6,15 @@ module VCAP::CloudController
     let(:droplet) do
       DropletModel.make(
         app: app,
-      process_types: {
-        'web' => 'droplet_web_command',
-        'worker' => 'droplet_worker_command',
-      })
+        process_types: {
+          'web' => 'droplet_web_command',
+          'worker' => 'droplet_worker_command',
+        })
     end
     let(:app) { AppModel.make(revisions_enabled: true) }
     let(:user_audit_info) { UserAuditInfo.new(user_guid: '456', user_email: 'mona@example.com', user_name: 'mona') }
+    let(:sidecar) { SidecarModel.make(app: app, command: 'sleep infinity', name: 'sleepy') }
+    let!(:sidecar_process_type) { SidecarProcessTypeModel.make(sidecar: sidecar, type: 'web') }
 
     before do
       app.update(droplet: droplet)
@@ -26,7 +28,7 @@ module VCAP::CloudController
             droplet_guid: app.droplet_guid,
             environment_variables: { 'key' => 'value' },
             description: 'foo sorta',
-            commands_by_process_type: { 'web' => 'run my app' },
+            commands_by_process_type: { 'web' => 'run my app', 'worker' => nil },
             user_audit_info: user_audit_info,
           )
         }.to change { RevisionModel.where(app: app).count }.by(1)
@@ -40,6 +42,9 @@ module VCAP::CloudController
           'worker' => nil,
         })
         expect(revision.description).to eq('foo sorta')
+        expect(revision.sidecars.first.name).to eq('sleepy')
+        expect(revision.sidecars.first.command).to eq('sleep infinity')
+        expect(revision.sidecars.first.revision_sidecar_process_types.first.type).to eq('web')
       end
 
       it 'records an audit event for the revision' do

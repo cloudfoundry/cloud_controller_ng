@@ -8,7 +8,7 @@ module VCAP::CloudController
           next_version = calculate_next_version(app)
 
           if (existing_revision_for_version = RevisionModel.find(app: app, version: next_version))
-            existing_revision_for_version.destroy
+            RevisionDelete.delete(existing_revision_for_version)
           end
 
           revision = RevisionModel.create(
@@ -21,6 +21,14 @@ module VCAP::CloudController
 
           commands_by_process_type.
             each { |process_type, command| revision.add_command_for_process_type(process_type, command) }
+
+          # when we roll these back, the sidecars will have to come from somewhere else
+          app.sidecars.each do |sidecar|
+            revision_sidecar = RevisionSidecarModel.create(revision: revision, command: sidecar.command, name: sidecar.name)
+            sidecar.sidecar_process_types.each do |process_type|
+              RevisionSidecarProcessTypeModel.create(revision_sidecar: revision_sidecar, type: process_type.type)
+            end
+          end
 
           record_audit_event(revision, user_audit_info) if user_audit_info
 

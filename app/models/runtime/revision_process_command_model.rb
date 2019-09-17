@@ -5,5 +5,10 @@ module VCAP::CloudController
       primary_key: :guid,
       key: :revision_guid,
       without_guid_generation: true
+
+    def validate
+      super
+      validates_unique([:revision_guid, :process_type])
+    end
   end
 end

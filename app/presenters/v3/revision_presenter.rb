@@ -15,6 +15,7 @@ module VCAP::CloudController
               guid: revision.droplet_guid,
             },
             processes: processes,
+            sidecars: sidecars,
             description: revision.description,
             relationships: {
               app: {
@@ -57,6 +58,17 @@ module VCAP::CloudController
 
         def processes
           revision.commands_by_process_type.map { |k, v| [k, { 'command' => v }] }.to_h
+        end
+
+        def sidecars
+          revision.sidecars.map do |sidecar|
+            {
+              name: sidecar.name,
+              command: sidecar.command,
+              memory_in_mb: sidecar.memory,
+              process_types: sidecar.revision_sidecar_process_types.map(&:type),
+            }
+          end
         end
       end
     end

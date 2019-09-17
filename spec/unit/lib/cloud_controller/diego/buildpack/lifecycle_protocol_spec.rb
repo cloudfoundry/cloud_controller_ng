@@ -294,9 +294,9 @@ module VCAP
                 end
 
                 context 'when revision has specified process command' do
-                  let!(:revision_process_command) {
-                    RevisionProcessCommandModel.make(revision: revision, process_type: 'worker', process_command: 'stop stop stop')
-                  }
+                  before do
+                    RevisionProcessCommandModel.where(revision: revision, process_type: 'worker').update(process_command: 'stop stop stop')
+                  end
 
                   it 'uses the command from the revision' do
                     builder_opts.merge!(start_command: 'stop stop stop', droplet_hash: new_droplet.droplet_hash, checksum_value: new_droplet.sha256_checksum)

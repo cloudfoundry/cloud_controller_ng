@@ -35,14 +35,25 @@ module VCAP::CloudController
       end
 
       it 'deletes associated revision_process_commands' do
-        process_command = revision.add_command_for_process_type('web', 'foo rackup')
+        process_command = revision.add_command_for_process_type('worker', 'foo rackup')
 
         expect {
           revision_delete.delete(revision)
-        }.to change { RevisionProcessCommandModel.count }.by(-1)
+        }.to change { RevisionProcessCommandModel.count }.by(-2)
 
         expect(process_command.exists?).to be_falsey
         expect(revision.exists?).to be_falsey
+      end
+
+      it 'deletes associated revision_sidecars' do
+        # process_command = revision.add_command_for_process_type('worker', 'foo rackup')
+        #
+        # expect {
+        #   revision_delete.delete(revision)
+        # }.to change { RevisionProcessCommandModel.count }.by(-2)
+        #
+        # expect(process_command.exists?).to be_falsey
+        # expect(revision.exists?).to be_falsey
       end
     end
   end

@@ -7,7 +7,7 @@ module VCAP::CloudController
         process_types: {
           'web' => 'droplet_web_command',
           'worker' => 'droplet_worker_command',
-          'nil_process' => 'droplet_nil_process_command',
+          'droplet_only' => 'droplet_only_command',
         })
     end
     let(:revision) { RevisionModel.make(droplet: droplet) }
@@ -24,39 +24,40 @@ module VCAP::CloudController
       end
 
       context 'when a app_guid is not present' do
-        let(:revision) do
-          RevisionModel.make_unsaved(app: nil)
-        end
+        let(:revision) { RevisionModel.make }
 
         it 'it is not valid' do
+          revision.app_guid = nil
           expect(revision.valid?).to be false
         end
       end
     end
 
     describe 'process_commands' do
-      let!(:revision_web_process_command) do
+      let!(:non_droplet_process_command) do
         RevisionProcessCommandModel.make(
           revision: revision,
-          process_type: ProcessTypes::WEB,
-          process_command: 'foo rackup stuff',
+          process_type: 'non_droplet',
+          process_command: 'non_droplet_command',
         )
       end
 
-      let!(:revision_worker_process_command) do
-        RevisionProcessCommandModel.make(
+      before do
+        RevisionProcessCommandModel.where(
           revision: revision,
           process_type: 'worker',
-          process_command: 'on the railroad',
-        )
+        ).update(process_command: 'on the railroad')
       end
 
-      it 'returns a hash of process types to commands' do
-        expect(revision.commands_by_process_type).to eq({
-          'web' => 'foo rackup stuff',
-          'worker' => 'on the railroad',
-          'nil_process' => nil,
-        })
+      describe '#commands_by_process_type' do
+        it 'returns a hash of process types to commands' do
+          expect(revision.commands_by_process_type).to eq({
+            'web' => nil,
+            'worker' => 'on the railroad',
+            'droplet_only' => nil,
+            'non_droplet' => 'non_droplet_command',
+          })
+        end
       end
 
       describe '#add_process_command' do

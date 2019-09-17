@@ -185,7 +185,7 @@ RSpec.describe 'ServiceBindings' do
                         'password' => nil,
                       },
                       'package_updated_at' => iso8601,
-                      'detected_start_command' => '',
+                      'detected_start_command' => '$HOME/boot.sh',
                       'enable_ssh' => true,
                       'ports' => [8080],
                       'space_url' => "/v2/spaces/#{space.guid}",

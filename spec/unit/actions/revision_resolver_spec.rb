@@ -13,7 +13,7 @@ module VCAP::CloudController
     end
     let(:app) { AppModel.make(revisions_enabled: true, environment_variables: { 'key' => 'value' }) }
     let(:user_audit_info) { UserAuditInfo.new(user_guid: '456', user_email: 'mona@example.com', user_name: 'mona') }
-    let!(:older_web_process) { ProcessModel.make(app: app, type: 'web', command: 'run my app', created_at: 2.minutes.ago) }
+    let!(:older_web_process) { ProcessModel.make(app: app, type: 'web', created_at: 2.minutes.ago) }
     let!(:worker_process) { ProcessModel.make(app: app, type: 'worker') }
 
     before do
@@ -59,15 +59,10 @@ module VCAP::CloudController
 
       context 'when the latest revision is out of date' do
         it 'creates a revision from the app values with the appropriate description' do
-          existing_revision = RevisionModel.make(
+          RevisionModel.make(:custom_web_command,
             app: app,
             droplet: app.droplet,
             environment_variables: { 'foo' => 'bar' },
-          )
-          RevisionProcessCommandModel.make(
-            revision_guid: existing_revision.guid,
-            process_type: 'web',
-            process_command: 'bundle exec earlier_app',
           )
 
           expect {
@@ -79,28 +74,40 @@ module VCAP::CloudController
           expect(revision.droplet_guid).to eq(app.droplet.guid)
           expect(revision.environment_variables).to eq(app.environment_variables)
           expect(revision.commands_by_process_type).to eq(app.commands_by_process_type)
-          expect(revision.description).to eq("Custom start command updated for 'web' process. New environment variables deployed.")
+          expect(revision.description).to eq("Custom start command removed for 'web' process. New environment variables deployed.")
+        end
+
+        context 'when sidecars have been added' do
+          let!(:sidecar) { SidecarModel.make(app: app) }
+          it 'creates a revision from the app values' do
+            RevisionModel.make(
+              app: app,
+              droplet: app.droplet,
+              environment_variables: app.environment_variables,
+            )
+
+            expect {
+              RevisionResolver.update_app_revision(app, user_audit_info)
+            }.to change { RevisionModel.where(app: app).count }.by(1)
+            revision = RevisionModel.where(app: app).last
+            expect(revision.sidecars.first.to_hash).to eq(sidecar.to_hash)
+            expect(revision.description).to eq('Sidecars updated.')
+          end
         end
       end
 
       context 'when the latest revisions is up to date' do
         it 'returns the latest_revision' do
-          existing_revision = RevisionModel.make(
-            :revision,
+          RevisionModel.make(
             app: app,
             droplet: app.droplet,
             environment_variables: app.environment_variables,
-          )
-          RevisionProcessCommandModel.make(
-            revision_guid: existing_revision.guid,
-            process_type: 'web',
-            process_command: 'run my app',
           )
 
           revision = nil
           expect {
             revision = RevisionResolver.update_app_revision(app, user_audit_info)
-          }.to change { RevisionModel.where(app: app).count }.by(0)
+          }.to change { RevisionModel.where(app: app).count }.by(0), RevisionModel.last.description
 
           expect(revision).to eq(app.latest_revision)
         end
@@ -109,27 +116,19 @@ module VCAP::CloudController
 
     describe '.rollback_app_revision' do
       let(:initial_revision) do
-        RevisionModel.make(
+        RevisionModel.make(:custom_web_command,
           version: 1,
           droplet: droplet,
           app: app,
           environment_variables: { 'BISH': 'BASH', 'FOO': 'BAR' }
         )
       end
-      let!(:revision_web_process_command) do
-        RevisionProcessCommandModel.make(
-          revision: initial_revision,
-          process_type: ProcessTypes::WEB,
-          process_command: 'foo rackup stuff',
-        )
-      end
 
-      let!(:revision_worker_process_command) do
-        RevisionProcessCommandModel.make(
-          revision: initial_revision,
-          process_type: 'worker',
-          process_command: 'on the railroad',
-        )
+      before do
+        initial_revision.
+          process_commands_dataset.
+          first(process_type: 'worker').
+          update(process_command: 'on the railroad')
       end
 
       context 'when revisions are disabled' do
@@ -146,7 +145,7 @@ module VCAP::CloudController
 
       context 'when revisions are enabled' do
         let!(:latest_revision) {
-          RevisionModel.make(
+          RevisionModel.make(:custom_web_command,
             app: app,
             droplet: app.droplet,
             environment_variables: { 'foo' => 'bar' },
@@ -154,13 +153,7 @@ module VCAP::CloudController
             version: 2
           )
         }
-        let!(:latest_process_commands) {
-          RevisionProcessCommandModel.make(
-            revision_guid: latest_revision.guid,
-            process_type: 'web',
-            process_command: 'bundle exec earlier_app',
-          )
-        }
+
         context 'rolling back' do
           it 'creates a new rollback revision' do
             rollback_revision = RevisionResolver.rollback_app_revision(app, initial_revision, user_audit_info)

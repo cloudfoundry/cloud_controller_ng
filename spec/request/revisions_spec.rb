@@ -16,6 +16,11 @@ RSpec.describe 'Revisions' do
   end
 
   describe 'GET /v3/revisions/:revguid' do
+    let(:droplet) { VCAP::CloudController::DropletModel.make(process_types: { 'web' => 'bake rackup' }) }
+    let(:revision) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 42, droplet: droplet) }
+    let!(:revision_worker_process_command) { VCAP::CloudController::RevisionProcessCommandModel.make(revision: revision, process_type: 'worker', process_command: './work') }
+    let!(:revision_sidecar) { VCAP::CloudController::RevisionSidecarModel.make(revision: revision, name: 'my-sidecar', command: 'run-sidecar', memory: 300) }
+
     it 'gets a specific revision' do
       get "/v3/revisions/#{revision.guid}", nil, user_header
       expect(last_response.status).to eq(200), last_response.body
@@ -50,7 +55,20 @@ RSpec.describe 'Revisions' do
             },
           },
           'metadata' => { 'labels' => {}, 'annotations' => {} },
-          'processes' =>  {},
+          'processes' =>  {
+            'web' => {
+              'command' => nil,
+            },
+            'worker' => {
+              'command' => './work',
+            },
+          },
+          'sidecars' => [{
+            'name' => 'my-sidecar',
+            'command' => 'run-sidecar',
+            'process_types' => ['web'],
+            'memory_in_mb' => 300,
+          }]
         }
       )
     end
@@ -106,7 +124,12 @@ RSpec.describe 'Revisions' do
                 },
               },
               'metadata' => { 'labels' => {}, 'annotations' => {} },
-              'processes' => {},
+              'processes' => {
+                'web' => {
+                  'command' => nil,
+                },
+              },
+              'sidecars' => [],
             },
             {
               'guid' => revision2.guid,
@@ -136,7 +159,12 @@ RSpec.describe 'Revisions' do
                 },
               },
               'metadata' => { 'labels' => {}, 'annotations' => {} },
-              'processes' => {},
+              'processes' => {
+                'web' => {
+                  'command' => nil,
+                },
+              },
+              'sidecars' => [],
             }
           ]
         }
@@ -194,7 +222,12 @@ RSpec.describe 'Revisions' do
                   },
                 },
                 'metadata' => { 'labels' => {}, 'annotations' => {} },
-                'processes' => {},
+                'processes' => {
+                  'web' => {
+                    'command' => nil,
+                  },
+                },
+                'sidecars' => [],
               },
               {
                 'guid' => revision3.guid,
@@ -224,7 +257,12 @@ RSpec.describe 'Revisions' do
                   },
                 },
                 'metadata' => { 'labels' => {}, 'annotations' => {} },
-                'processes' => {},
+                'processes' => {
+                  'web' => {
+                    'command' => nil,
+                  },
+                },
+                'sidecars' => [],
               }
             ]
           }
@@ -307,7 +345,12 @@ RSpec.describe 'Revisions' do
             'labels' => { 'freaky' => 'thursday' },
             'annotations' => { 'quality' => 'p sus' }
           },
-          'processes' => {},
+          'processes' => {
+            'web' => {
+              'command' => nil,
+            },
+          },
+          'sidecars' => [],
         }
       )
     end
@@ -396,7 +439,12 @@ RSpec.describe 'Revisions' do
                 },
               },
               'metadata' => { 'labels' => {}, 'annotations' => {} },
-              'processes' => {},
+              'processes' => {
+                'web' => {
+                  'command' => nil,
+                },
+              },
+              'sidecars' => [],
             },
             {
               'guid' => revision2.guid,
@@ -426,7 +474,12 @@ RSpec.describe 'Revisions' do
                 },
               },
               'metadata' => { 'labels' => {}, 'annotations' => {} },
-              'processes' => {},
+              'processes' => {
+                'web' => {
+                  'command' => nil,
+                },
+              },
+              'sidecars' => [],
             }
           ]
         }

@@ -247,20 +247,12 @@ RSpec.describe DeploymentsController, type: :controller do
 
         context 'when the provided revision specifies start commands' do
           let!(:earlier_revision) do
-            VCAP::CloudController::RevisionModel.make(
+            VCAP::CloudController::RevisionModel.make(:custom_web_command,
               app: app,
               droplet_guid: newer_droplet.guid, # same droplet as currently associated revision
               created_at: 5.days.ago,
               version: 2,
               description: 'reassigned earlier_revision',
-            )
-          end
-
-          let!(:earlier_revision_process_command) do
-            VCAP::CloudController::RevisionProcessCommandModel.make(
-              process_type: 'web',
-              revision_guid: earlier_revision.guid,
-              process_command: 'bundle exec earlier_app',
             )
           end
 
@@ -270,12 +262,12 @@ RSpec.describe DeploymentsController, type: :controller do
             expect {
               post :create, params: request_body, as: :json
             }.to change { VCAP::CloudController::RevisionModel.count }.by(1)
-            expect(VCAP::CloudController::RevisionModel.last.commands_by_process_type).to eq({ 'web' => 'bundle exec earlier_app' })
+            expect(VCAP::CloudController::RevisionModel.last.commands_by_process_type).to eq({ 'web' => 'custom_web_command' })
           end
         end
 
         it 'returns a 422 and an error if the revision does not exist' do
-          earlier_revision.delete
+          earlier_revision.destroy
           post :create, params: request_body, as: :json
 
           expect(response.status).to eq 422
@@ -284,7 +276,7 @@ RSpec.describe DeploymentsController, type: :controller do
         end
 
         it 'returns a 422 and an error if droplet in the revision does not exist' do
-          droplet.delete
+          droplet.destroy
           post :create, params: request_body, as: :json
 
           expect(response.status).to eq 422

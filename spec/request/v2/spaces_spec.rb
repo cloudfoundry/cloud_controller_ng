@@ -282,7 +282,7 @@ RSpec.describe 'Spaces' do
             'debug' => nil,
             'detected_buildpack' => nil,
             'detected_buildpack_guid' => nil,
-            'detected_start_command' => '',
+            'detected_start_command' => '$HOME/boot.sh',
             'diego' => true,
             'disk_quota' => 1024,
             'docker_image' => nil,

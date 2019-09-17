@@ -758,13 +758,9 @@ module VCAP::CloudController
           expect(app.environment_variables).to eq({ 'foo' => 'var2' })
         end
 
-        context 'when the revision has associated process commands' do
-          let!(:revision_process_command) do
-            VCAP::CloudController::RevisionProcessCommandModel.make(
-              revision_guid: rollback_revision.guid,
-              process_type: 'web',
-              process_command: 'bundle exec earlier_app',
-            )
+        context 'when the revision has an process command that didnt come from its droplet' do
+          before do
+            rollback_revision.process_commands_dataset.first(process_type: 'web').update(process_command: 'bundle exec earlier_app')
           end
 
           it 'sets the process command of the new web process to that of the associated revision' do

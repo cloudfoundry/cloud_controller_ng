@@ -57,8 +57,9 @@ module VCAP::CloudController
           process_commands = []
           50.times do |i|
             revision = RevisionModel.make(app: app)
-            process_commands << revision.add_command_for_process_type('web', "foo rackup #{i}")
+            process_commands << revision.process_commands
           end
+          process_commands.flatten!
 
           expect {
             job.perform

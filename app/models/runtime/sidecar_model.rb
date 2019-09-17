@@ -1,5 +1,8 @@
 module VCAP::CloudController
   class SidecarModel < Sequel::Model(:sidecars)
+
+    include SidecarMixin
+
     many_to_one :app,
       class: 'VCAP::CloudController::AppModel',
       key: :app_guid,
@@ -10,10 +13,6 @@ module VCAP::CloudController
       class: 'VCAP::CloudController::SidecarProcessTypeModel',
       key: :sidecar_guid,
       primary_key: :guid
-
-    def process_types
-      sidecar_process_types.map(&:type).sort
-    end
 
     def validate
       super

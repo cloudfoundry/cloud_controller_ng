@@ -9,7 +9,7 @@ module VCAP::CloudController
       without_guid_generation: true
 
     many_to_one :droplet,
-      class:             '::VCAP::CloudController::DropletModel',
+      class: '::VCAP::CloudController::DropletModel',
       key: :droplet_guid,
       primary_key: :guid,
       without_guid_generation: true
@@ -29,6 +29,16 @@ module VCAP::CloudController
       key: :revision_guid,
       primary_key: :guid
 
+    one_to_many :sidecars,
+      class: 'VCAP::CloudController::RevisionSidecarModel',
+      key: :revision_guid,
+      primary_key: :guid
+
+    add_association_dependencies labels: :destroy
+    add_association_dependencies annotations: :destroy
+    add_association_dependencies process_commands: :destroy
+    add_association_dependencies sidecars: :destroy
+
     set_field_as_encrypted :environment_variables, column: :encrypted_environment_variables
     serializes_via_json :environment_variables
 
@@ -42,13 +52,9 @@ module VCAP::CloudController
     end
 
     def commands_by_process_type
-      return {} unless droplet&.process_types # Unsure if this case ever actually happens outside of specs
-
-      # revision_process_commands are not created when the process has not changed from the
-      # droplet's original process_command (would just be storing a NULL for command), so go to
-      # droplet to get all process command types
-      droplet.process_types.keys.
-        map { |k| [k, process_commands_dataset.first(process_type: k)&.process_command] }.to_h
+      process_commands.each_with_object({}) do |revision_process_command, result|
+        result[revision_process_command.process_type] = revision_process_command.process_command
+      end
     end
   end
 end

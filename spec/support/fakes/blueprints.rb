@@ -83,8 +83,9 @@ module VCAP::CloudController
   end
 
   DropletModel.blueprint do
-    guid     { Sham.guid }
-    state    { VCAP::CloudController::DropletModel::STAGED_STATE }
+    guid { Sham.guid }
+    process_types { { 'web' => '$HOME/boot.sh' } }
+    state { VCAP::CloudController::DropletModel::STAGED_STATE }
     app { AppModel.make(droplet_guid: guid) }
     droplet_hash { Sham.guid }
     sha256_checksum { Sham.guid }
@@ -547,10 +548,60 @@ module VCAP::CloudController
     valid_until { Time.now.utc }
   end
 
+  SidecarModel.blueprint do
+    name { Sham.name }
+    command { 'bundle exec rackup' }
+    app { AppModel.make }
+  end
+
+  SidecarProcessTypeModel.blueprint do
+    type { 'web' }
+    sidecar
+    app_guid { sidecar.app_guid }
+  end
+
   RevisionModel.blueprint do
+    app { AppModel.make }
+    droplet { DropletModel.make(app: object.app, process_types: { 'web' => 'default_revision_droplet_web_command' }) }
+    description { 'Initial revision' }
+    process_command_guids do
+      break [] if object.droplet.process_types.blank?
+
+      object.droplet.process_types.map do |type, _|
+        RevisionProcessCommandModel.make(revision: object.save, process_type: type, process_command: nil).guid
+      end
+    end
+  end
+
+  RevisionModel.blueprint(:custom_web_command) do
     app { AppModel.make }
     droplet { DropletModel.make(app: object.app) }
     description { 'Initial revision' }
+    process_command_guids do
+      break [] if object.droplet.process_types.blank?
+
+      object.droplet.process_types.map do |type, _|
+        process_command = RevisionProcessCommandModel.make(revision: object.save, process_type: type, process_command: nil)
+        process_command.update(process_command: 'custom_web_command') if type == 'web'
+        process_command.guid
+      end
+    end
+  end
+
+  RevisionProcessCommandModel.blueprint do
+    process_type { 'web' }
+    process_command { '$HOME/boot.sh' }
+  end
+
+  RevisionSidecarModel.blueprint do
+    name { 'sleepy' }
+    command { 'sleep infinity' }
+    revision { RevisionModel.make }
+    revision_sidecar_process_type_guids { [RevisionSidecarProcessTypeModel.make(revision_sidecar: object.save).guid] }
+  end
+
+  RevisionSidecarProcessTypeModel.blueprint do
+    type { 'web' }
   end
 
   TestModel.blueprint do
@@ -567,20 +618,5 @@ module VCAP::CloudController
   end
 
   TestModelRedact.blueprint do
-  end
-
-  RevisionProcessCommandModel.blueprint do
-  end
-
-  SidecarModel.blueprint do
-    name { Sham.name }
-    command { 'bundle exec rackup' }
-    app { AppModel.make }
-  end
-
-  SidecarProcessTypeModel.blueprint do
-    type { 'web' }
-    sidecar
-    app_guid { sidecar.app_guid }
   end
 end

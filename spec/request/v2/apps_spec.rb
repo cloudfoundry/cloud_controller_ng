@@ -79,7 +79,7 @@ RSpec.describe 'Apps' do
                 'password' => nil
               },
               'package_updated_at'         => iso8601,
-              'detected_start_command'     => '',
+              'detected_start_command'     => '$HOME/boot.sh',
               'enable_ssh'                 => true,
               'ports'                      => [8080],
               'space_url'                  => "/v2/spaces/#{space.guid}",
@@ -246,7 +246,7 @@ RSpec.describe 'Apps' do
                   'password' => nil
                 },
                 'package_updated_at'         => iso8601,
-                'detected_start_command'     => '',
+                'detected_start_command'     => '$HOME/boot.sh',
                 'enable_ssh'                 => true,
                 'ports'                      => [8080],
                 'space_url'                  => "/v2/spaces/#{space.guid}",
@@ -465,7 +465,7 @@ RSpec.describe 'Apps' do
               'password' => nil
             },
             'package_updated_at'         => iso8601,
-            'detected_start_command'     => '',
+            'detected_start_command'     => '$HOME/boot.sh',
             'enable_ssh'                 => true,
             'ports'                      => [8080],
             'space_url'                  => "/v2/spaces/#{process.space.guid}",
@@ -686,7 +686,7 @@ RSpec.describe 'Apps' do
               'password' => nil
             },
             'package_updated_at'         => iso8601,
-            'detected_start_command'     => '',
+            'detected_start_command'     => '$HOME/boot.sh',
             'enable_ssh'                 => true,
             'ports'                      => [8080],
             'space_url'                  => "/v2/spaces/#{space.guid}",
@@ -795,7 +795,7 @@ RSpec.describe 'Apps' do
                 'password' => '***'
               },
               'package_updated_at'         => iso8601,
-              'detected_start_command'     => '',
+              'detected_start_command'     => '$HOME/boot.sh',
               'enable_ssh'                 => true,
               'ports'                      => [8080],
               'space_url'                  => "/v2/spaces/#{space.guid}",
@@ -971,7 +971,7 @@ RSpec.describe 'Apps' do
           'diego'                      => true,
           'docker_image'               => nil,
           'package_updated_at'         => iso8601,
-          'detected_start_command'     => '',
+          'detected_start_command'     => '$HOME/boot.sh',
           'enable_ssh'                 => true,
           'ports'                      => nil
         })
@@ -1522,7 +1522,7 @@ RSpec.describe 'Apps' do
               'password' => nil
             },
             'package_updated_at'         => iso8601,
-            'detected_start_command'     => '',
+            'detected_start_command'     => '$HOME/boot.sh',
             'enable_ssh'                 => true,
             'ports'                      => [8080],
             'space_url'                  => "/v2/spaces/#{space.guid}",

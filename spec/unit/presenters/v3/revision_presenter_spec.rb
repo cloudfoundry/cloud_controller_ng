@@ -13,18 +13,28 @@ module VCAP::CloudController::Presenters::V3
         })
     end
     let(:revision) do
-      VCAP::CloudController::RevisionModel.make(
+      VCAP::CloudController::RevisionModel.make(:custom_web_command,
         app: app_model,
         version: 300,
         droplet_guid: droplet.guid,
         description: 'Initial revision'
       )
     end
-    let!(:revision_web_process_command) do
+
+    let!(:revision_sidecar) do
+      VCAP::CloudController::RevisionSidecarModel.make(
+        revision: revision,
+        name: 'my-sidecar',
+        command: 'bake rackup',
+        memory: 300
+      )
+    end
+
+    let!(:revision_web_process_command2) do
       VCAP::CloudController::RevisionProcessCommandModel.make(
         revision_guid: revision.guid,
-        process_type: 'web',
-        process_command: './start'
+        process_type: 'non_droplet_worker',
+        process_command: './work'
       )
     end
 
@@ -78,8 +88,13 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:links]).to eq(links)
         expect(result[:metadata][:labels]).to eq('release' => 'stable', 'canberra.au/potato' => 'mashed')
         expect(result[:metadata][:annotations]).to eq('altitude' => '14,412', 'maize' => 'hfcs')
-        expect(result[:processes]['web']).to eq('command' => './start')
+        expect(result[:processes]['web']).to eq('command' => 'custom_web_command')
         expect(result[:processes]['worker']).to eq('command' => nil)
+        expect(result[:processes]['non_droplet_worker']).to eq('command' => './work')
+        expect(result[:sidecars][0][:name]).to eq('my-sidecar')
+        expect(result[:sidecars][0][:command]).to eq('bake rackup')
+        expect(result[:sidecars][0][:memory_in_mb]).to eq(300)
+        expect(result[:sidecars][0][:process_types]).to eq(['web'])
         expect(result[:description]).to eq('Initial revision')
       end
     end

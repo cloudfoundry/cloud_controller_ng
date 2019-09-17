@@ -106,13 +106,7 @@ module VCAP::CloudController
         let!(:interim_route_mapping) { RouteMappingModel.make(app: web_process.app, process_type: interim_deploying_web_process.type) }
 
         let!(:non_web_process1) { ProcessModel.make(app: web_process.app, instances: 2, type: 'worker', command: 'something-else') }
-        let!(:revision_non_web_1_process_command) do
-          RevisionProcessCommandModel.make(
-            process_type: 'worker',
-            revision_guid: revision.guid,
-            process_command: 'revision-non-web-1-command',
-          )
-        end
+
         let!(:non_web_process2) { ProcessModel.make(app: web_process.app, instances: 2, type: 'clock') }
 
         let!(:route1) { Route.make(space: space, host: 'hostname1') }
@@ -122,6 +116,10 @@ module VCAP::CloudController
 
         before do
           allow(ProcessRestart).to receive(:restart)
+          RevisionProcessCommandModel.where(
+            process_type: 'worker',
+            revision_guid: revision.guid
+          ).update(process_command: 'revision-non-web-1-command')
         end
 
         it 'replaces the existing web process with the deploying_web_process' do

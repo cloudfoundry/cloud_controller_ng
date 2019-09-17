@@ -54,6 +54,8 @@ module VCAP::CloudController
         )
       end
 
+      private
+
       def revision_reasons(latest_revision, revision_to_create)
         reasons = []
 
@@ -65,9 +67,25 @@ module VCAP::CloudController
           reasons.push('New environment variables deployed.')
         end
 
-        commands_differences = HashDiff.diff(latest_revision.commands_by_process_type, revision_to_create.commands_by_process_type)
+        reasons.push(*list_process_command_changes(
+          latest_revision.commands_by_process_type,
+          revision_to_create.commands_by_process_type
+        ))
 
-        reasons.push(*commands_differences.map do |change_type, process_type, *command_change|
+        sidecars_differences = HashDiff.diff(latest_revision.sidecars.sort(&:name).map(&:to_hash), revision_to_create.sidecars.sort(&:name).map(&:to_hash))
+        reasons << 'Sidecars updated.' if sidecars_differences.present?
+
+        reasons.sort
+      end
+
+      def formatted_revision_reasons(reasons)
+        reasons.join(' ')
+      end
+
+      def list_process_command_changes(commands_by_process_type_a, commands_by_process_type_b)
+        commands_differences = HashDiff.diff(commands_by_process_type_a, commands_by_process_type_b)
+
+        commands_differences.map do |change_type, process_type, *command_change|
           if change_type == '+'
             "New process type '#{process_type}' added."
           elsif change_type == '-'
@@ -80,13 +98,6 @@ module VCAP::CloudController
             "Custom start command updated for '#{process_type}' process."
           end
         end
-        )
-
-        reasons.sort
-      end
-
-      def formatted_revision_reasons(reasons)
-        reasons.join(' ')
       end
     end
   end

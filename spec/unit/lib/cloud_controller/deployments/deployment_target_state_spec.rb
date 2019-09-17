@@ -49,7 +49,7 @@ module VCAP::CloudController
 
         context 'the revision does NOT exist' do
           before do
-            revision.delete
+            revision.destroy
           end
 
           it 'raises an error' do
