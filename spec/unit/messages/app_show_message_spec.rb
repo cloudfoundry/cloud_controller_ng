@@ -15,6 +15,8 @@ module VCAP::CloudController
       expect(message).to be_valid
       message = AppShowMessage.from_params({ 'include' => 'space.organization' })
       expect(message).to be_valid
+      message = AppShowMessage.from_params({ 'include' => 'processes' })
+      expect(message).to be_valid
       message = AppShowMessage.from_params({ 'include' => 'greg\'s buildpack' })
       expect(message).not_to be_valid
     end

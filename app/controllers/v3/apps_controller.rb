@@ -12,6 +12,7 @@ require 'actions/app_stop'
 require 'actions/app_assign_droplet'
 require 'decorators/include_app_space_decorator'
 require 'decorators/include_app_organization_decorator'
+require 'decorators/include_app_processes_decorator'
 require 'decorators/include_space_organization_decorator'
 require 'messages/apps_list_message'
 require 'messages/app_show_message'
@@ -47,6 +48,7 @@ class AppsV3Controller < ApplicationController
     decorators = []
     decorators << IncludeAppSpaceDecorator if IncludeAppSpaceDecorator.match?(message.include)
     decorators << IncludeAppOrganizationDecorator if IncludeAppOrganizationDecorator.match?(message.include)
+    decorators << IncludeAppProcessesDecorator if IncludeAppProcessesDecorator.match?(message.include)
 
     render status: :ok,
            json: Presenters::V3::PaginatedListPresenter.new(
@@ -70,6 +72,7 @@ class AppsV3Controller < ApplicationController
     decorators = []
     decorators << IncludeAppSpaceDecorator if IncludeAppSpaceDecorator.match?(message.include)
     decorators << IncludeAppOrganizationDecorator if IncludeAppOrganizationDecorator.match?(message.include)
+    decorators << IncludeAppProcessesDecorator if IncludeAppProcessesDecorator.match?(message.include)
 
     render status: :ok, json: Presenters::V3::AppPresenter.new(
       app,

@@ -27,11 +27,8 @@ module VCAP::CloudController
               data: app.lifecycle_data.to_hash
             },
             relationships: {
-              space: {
-                data: {
-                  guid: app.space_guid
-                }
-              }
+              processes: { data: process_guids },
+              space: { data: { guid: app.space_guid } }
             },
             links: build_links,
             metadata: {
@@ -47,6 +44,10 @@ module VCAP::CloudController
 
         def app
           @resource
+        end
+
+        def process_guids
+          app.process_guids.map { |guid| { guid: guid } }
         end
 
         def build_links

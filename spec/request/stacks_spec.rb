@@ -266,6 +266,9 @@ RSpec.describe 'Stacks Request' do
                 }
               },
               'relationships' => {
+                'processes' => {
+                  'data' => []
+                },
                 'space' => {
                   'data' => {
                     'guid' => space.guid
@@ -327,6 +330,9 @@ RSpec.describe 'Stacks Request' do
                   }
                 },
                 'relationships' => {
+                  'processes' => {
+                    'data' => []
+                  },
                   'space' => {
                     'data' => {
                       'guid' => space.guid
@@ -364,6 +370,9 @@ RSpec.describe 'Stacks Request' do
                   }
                 },
                 'relationships' => {
+                  'processes' => {
+                    'data' => []
+                  },
                   'space' => {
                     'data' => {
                       'guid' => space2.guid

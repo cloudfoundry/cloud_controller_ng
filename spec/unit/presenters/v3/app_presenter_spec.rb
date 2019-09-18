@@ -51,9 +51,18 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:lifecycle][:type]).to eq('buildpack')
         expect(result[:lifecycle][:data][:stack]).to eq('the-happiest-stack')
         expect(result[:lifecycle][:data][:buildpacks]).to eq(['git://***:***@github.com/repo', 'limabean'])
+        expect(result[:relationships][:processes][:data][0][:guid]).to eq(app.processes.first.guid)
         expect(result[:relationships][:space][:data][:guid]).to eq(app.space.guid)
         expect(result[:metadata][:labels]).to eq({})
         expect(result[:metadata][:annotations]).to eq({})
+      end
+
+      it 'lists multiple processes' do
+        app.add_process({ app: app })
+        app.add_process({ app: app })
+
+        expect(result[:relationships][:processes][:data][0][:guid]).to eq(app.processes.first.guid)
+        expect(result[:relationships][:processes][:data][1][:guid]).to eq(app.processes.second.guid)
       end
 
       context 'when there are labels and annotations for the app' do

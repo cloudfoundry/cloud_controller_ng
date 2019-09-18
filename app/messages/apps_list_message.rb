@@ -13,7 +13,7 @@ module VCAP::CloudController
     ]
 
     validates_with NoAdditionalParamsValidator
-    validates_with IncludeParamValidator, valid_values: ['space', 'org', 'space.organization']
+    validates_with IncludeParamValidator, valid_values: ['space', 'org', 'space.organization', 'processes']
     validates_with LifecycleTypeParamValidator
 
     validates :names, array: true, allow_nil: true
