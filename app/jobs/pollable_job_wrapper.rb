@@ -27,6 +27,10 @@ module VCAP::CloudController
         change_state(job, PollableJobModel::FAILED_STATE)
       end
 
+      def after(job)
+        persist_warnings(job)
+      end
+
       private
 
       def convert_to_v3_api_error(exception)
@@ -35,17 +39,31 @@ module VCAP::CloudController
         YAML.dump(error_presenter.to_hash)
       end
 
+      def find_pollable_job(job)
+        PollableJobModel.where(delayed_job_guid: job.guid)
+      end
+
+      def persist_warnings(job)
+        if handler.respond_to?(:warnings)
+          handler.warnings&.each do |warning|
+            find_pollable_job(job).each do |pollable_job|
+              JobWarningModel.create(job: pollable_job, detail: warning[:detail])
+            end
+          end
+        end
+      end
+
       # Need to update each pollable job instance individually to ensure timestamps are set correctly
       # Doing `ModelClass.where(CONDITION).update(field: value)` bypasses the sequel timestamp updater hook
 
       def save_error(api_error, job)
-        PollableJobModel.where(delayed_job_guid: job.guid).each do |pollable_job|
+        find_pollable_job(job).each do |pollable_job|
           pollable_job.update(cf_api_error: api_error)
         end
       end
 
       def change_state(job, new_state)
-        PollableJobModel.where(delayed_job_guid: job.guid).each do |pollable_job|
+        find_pollable_job(job).each do |pollable_job|
           pollable_job.update(state: new_state)
         end
       end

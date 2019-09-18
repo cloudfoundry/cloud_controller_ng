@@ -1,5 +1,5 @@
 require 'actions/services/database_error_service_resource_cleanup'
-require 'jobs/services/service_instance_state_fetch'
+require 'jobs/v2/services/service_instance_state_fetch'
 
 module VCAP::CloudController
   class ServiceInstanceCreate

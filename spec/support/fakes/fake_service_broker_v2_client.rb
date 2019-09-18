@@ -98,4 +98,28 @@ class FakeServiceBrokerV2Client
       {}
     end
   end
+
+  class WithConflictingUAAClient < FakeServiceBrokerV2Client
+    def catalog
+      {
+        'services' => [{
+          'id'          => 'service_id',
+          'name'        => service_name,
+          'description' => 'some description',
+          'bindable'    => true,
+          'plans'       => [{
+            'id'          => 'fake_plan_id',
+            'name'        => plan_name,
+            'description' => 'fake_plan_description',
+            'schemas'     => plan_schemas
+          }],
+          'dashboard_client' => {
+            'id' => 'some-uaa-id',
+            'secret' => 'my-dashboard-secret',
+            'redirect_uri' => 'http://example.org'
+          }
+        }]
+      }
+    end
+  end
 end

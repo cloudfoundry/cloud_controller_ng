@@ -45,6 +45,8 @@ end
 
 RSpec.shared_examples 'permissions for single object endpoint' do |roles|
   let(:expected_event_hash) { nil }
+  let(:expected_events) { nil }
+  let(:after_request_check) { lambda {} }
 
   roles.each do |role|
     describe "as an #{role}" do
@@ -71,8 +73,17 @@ RSpec.shared_examples 'permissions for single object endpoint' do |roles|
         expect(last_response.status).to eq(expected_response_code),
           "role #{role}: expected #{expected_response_code}, got: #{last_response.status}\nResponse Body: #{last_response.body[0..2000]}"
         if (200...300).cover? expected_response_code
+
+          if expected_response_code == 202
+            job_location = last_response.headers['Location']
+            expect(job_location).to match(%r(http.+/v3/jobs/[a-fA-F0-9-]+))
+          end
+
           expected_response_object = expected_codes_and_responses[role][:response_object]
-          expect(parsed_response).to match_json_response(expected_response_object)
+          expect(parsed_response).to match_json_response(expected_response_object) unless expected_response_object.nil?
+
+          after_request_check.call
+
           if expected_event_hash
             event = VCAP::CloudController::Event.last
             expect(event).not_to be_nil
@@ -82,6 +93,10 @@ RSpec.shared_examples 'permissions for single object endpoint' do |roles|
               actor_name: email,
               actor_username: user_name,
             }))
+          end
+
+          if expected_events
+            expect(expected_events.call(email)).to be_reported_as_events
           end
         end
       end

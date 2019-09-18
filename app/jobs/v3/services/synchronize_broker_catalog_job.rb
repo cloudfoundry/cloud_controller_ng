@@ -1,12 +1,14 @@
 module VCAP::CloudController
   module V3
     class SynchronizeBrokerCatalogJob < VCAP::CloudController::Jobs::CCJob
+      attr_reader :warnings
+
       def initialize(broker_guid)
         @broker_guid = broker_guid
       end
 
       def perform
-        Perform.new(broker_guid).perform
+        @warnings = Perform.new(@broker_guid).perform
       end
 
       def job_name_in_configuration
@@ -40,8 +42,8 @@ module VCAP::CloudController
           @formatter = VCAP::Services::ServiceBrokers::ValidationErrorsFormatter.new
           @service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository::WithBrokerActor.new
           @client_manager = VCAP::Services::SSO::DashboardClientManager.new(broker, service_event_repository)
-          @broker_client = VCAP::Services::ServiceClientProvider.provide(broker: broker)
           @service_manager = VCAP::Services::ServiceBrokers::ServiceManager.new(service_event_repository)
+          @warnings = []
         end
 
         def perform
@@ -53,15 +55,21 @@ module VCAP::CloudController
           raise fail_with_incompatible_catalog(catalog.incompatibility_errors) unless catalog.compatible?
 
           unless client_manager.synchronize_clients_with_catalog(catalog)
-            # TODO: raise some humanized exceptions if it failed
+            raise fail_with_invalid_catalog(client_manager.errors)
           end
 
           service_manager.sync_services_and_plans(catalog)
 
-          # TODO: if service_manager.has_warnings?
-          # TODO: if client_manager.has_warnings?
+          service_manager.warnings.each do |warning|
+            warnings << { detail: warning.message }
+          end
+
+          client_manager.warnings.each do |warning|
+            warnings << { detail: warning }
+          end
 
           available_state
+          warnings
         rescue
           failed_state
           raise
@@ -69,9 +77,13 @@ module VCAP::CloudController
 
         private
 
-        attr_reader :broker_guid, :broker, :broker_client,
-            :formatter, :client_manager, :service_event_repository,
-            :service_manager
+        attr_reader :broker_guid, :broker,
+          :formatter, :client_manager, :service_event_repository,
+          :service_manager, :warnings
+
+        def broker_client
+          @broker_client ||= VCAP::Services::ServiceClientProvider.provide(broker: broker)
+        end
 
         def ensure_state_present
           if broker.service_broker_state.nil?
@@ -84,13 +96,13 @@ module VCAP::CloudController
         def failed_state
           broker.service_broker_state.update(
             state: ServiceBrokerStateEnum::SYNCHRONIZATION_FAILED
-          )
+        )
         end
 
         def available_state
           broker.service_broker_state.update(
             state: ServiceBrokerStateEnum::AVAILABLE
-          )
+        )
         end
 
         def fail_with_invalid_catalog(errors)

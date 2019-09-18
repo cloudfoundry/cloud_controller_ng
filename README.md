@@ -58,6 +58,13 @@ keep it up to date, documenting the purpose of the various types of tests.
 
 By default `rspec` will randomly pick between postgres and mysql.
 
+If postgres is not running on your OSX machine, you can start up a server by doing the following:
+```
+brew services start postgresql
+createuser -s postgres
+DB=postgres rake db:create
+```
+
 It will try to connect to those databases with the following connection string:
 
 * postgres: `postgres://postgres@localhost:5432/cc_test`

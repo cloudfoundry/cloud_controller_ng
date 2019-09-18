@@ -39,8 +39,8 @@ require 'jobs/runtime/prune_completed_deployments'
 require 'jobs/runtime/prune_completed_builds'
 require 'jobs/runtime/prune_excess_app_revisions'
 
-require 'jobs/services/legacy_jobs/service_instance_deletion'
-require 'jobs/services/service_usage_events_cleanup'
+require 'jobs/v2/services/legacy_jobs/service_instance_deletion'
+require 'jobs/v2/services/service_usage_events_cleanup'
 
 require 'jobs/v2/upload_droplet_from_user'
 

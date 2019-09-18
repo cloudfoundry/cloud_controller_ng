@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'jobs/services/service_binding_state_fetch'
+require 'jobs/v2/services/service_binding_state_fetch'
 require_relative 'shared/when_broker_returns_retry_after_header'
 
 module VCAP::CloudController
