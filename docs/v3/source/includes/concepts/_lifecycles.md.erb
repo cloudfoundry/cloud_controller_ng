@@ -41,12 +41,6 @@ Name | Type | Description
 
 ### Docker lifecycle
 
-This allows Cloud Foundry to run Docker images. When staging an app with this lifecycle, the Docker registry is queried for
-metadata about the image, such as ports and start command.  When running an app with this lifecycle, a container is created
-and the Docker image is executed inside of it.
-
-#### Docker lifecycle object
-
 ```
 Example Docker Lifecycle
 ```
@@ -57,6 +51,12 @@ Example Docker Lifecycle
   "data": {}
 }
 ```
+
+This allows Cloud Foundry to run Docker images. When staging an app with this lifecycle, the Docker registry is queried for
+metadata about the image, such as ports and start command.  When running an app with this lifecycle, a container is created
+and the Docker image is executed inside of it.
+
+#### Docker lifecycle object
 
 Name | Type | Description
 ---- | ---- | -----------

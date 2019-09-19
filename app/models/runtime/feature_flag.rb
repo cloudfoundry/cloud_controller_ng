@@ -21,6 +21,7 @@ module VCAP::CloudController
       space_developer_env_var_visibility: true,
       service_instance_sharing: false,
       hide_marketplace_from_unauthenticated_users: false,
+      resource_matching: true,
     }.freeze
 
     ADMIN_SKIPPABLE = [

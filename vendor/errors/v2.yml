@@ -908,6 +908,11 @@
   http_code: 422
   message: "The service broker could not perform this operation in parallel with other running operations"
 
+270019:
+  name: ServiceBrokerCatalogIncompatible
+  http_code: 502
+  message: "Service broker catalog is incompatible: %s"
+
 290000:
   name: BuildpackNameStackTaken
   http_code: 422

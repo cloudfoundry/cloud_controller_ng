@@ -1,8 +1,13 @@
+require 'jobs/v3/synchronize_broker_catalog_job'
+
 module VCAP::CloudController
   module V3
     class ServiceBrokerCreate
-      class InvalidServiceBroker < StandardError; end
-      class SpaceNotFound < StandardError; end
+      class InvalidServiceBroker < StandardError
+      end
+
+      class SpaceNotFound < StandardError
+      end
 
       def initialize(service_event_repository, service_manager)
         @service_event_repository = service_event_repository
@@ -15,29 +20,27 @@ module VCAP::CloudController
           broker_url: message.url,
           auth_username: message.credentials_data.username,
           auth_password: message.credentials_data.password,
+          space_guid: message.relationships_message.space_guid
         }
 
-        if message.space_guid
-          params[:space_id] = Space.first(guid: message.space_guid).id
+        broker = nil
+        ServiceBroker.db.transaction do
+          broker = ServiceBroker.create(params)
+
+          ServiceBrokerState.create(
+            service_broker_id: broker.id,
+            state: ServiceBrokerStateEnum::SYNCHRONIZING
+          )
         end
 
-        broker = VCAP::CloudController::ServiceBroker.new(params)
+        service_event_repository.record_broker_event(:create, broker, params)
 
-        registration = VCAP::Services::ServiceBrokers::ServiceBrokerRegistration.new(
-          broker,
-          service_manager,
-          service_event_repository,
-          route_services_enabled?,
-          volume_services_enabled?,
-        )
+        synchronization_job = SynchronizeBrokerCatalogJob.new(broker.guid)
+        pollable_job = Jobs::Enqueuer.new(synchronization_job, queue: 'cc-generic').enqueue_pollable
 
-        unless registration.create
-          raise InvalidServiceBroker.new(broker.errors.full_messages.join(','))
-        end
-
-        {
-          warnings: registration.warnings
-        }
+        { pollable_job: pollable_job }
+      rescue Sequel::ValidationFailed => e
+        raise InvalidServiceBroker.new(e.errors.full_messages.join(','))
       end
 
       private

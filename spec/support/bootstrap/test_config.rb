@@ -1,5 +1,6 @@
 require 'support/bootstrap/db_config'
 require 'support/paths'
+require 'cloud_controller/config'
 
 module TestConfig
   class << self

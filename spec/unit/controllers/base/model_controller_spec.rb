@@ -537,7 +537,7 @@ module VCAP::CloudController
     describe 'error handling' do
       describe '404' do
         before do
-          CloudController::Errors::Details::HARD_CODED_DETAILS['TestModelNotFound'] = {
+          CloudController::Errors::V2::HardCodedDetails::HARD_CODED_DETAILS['TestModelNotFound'] = {
             'code' => 999999999,
             'http_code' => 404,
             'message' => 'Test Model Not Found',
@@ -569,7 +569,7 @@ module VCAP::CloudController
 
       describe 'model errors' do
         before do
-          CloudController::Errors::Details::HARD_CODED_DETAILS['TestModelValidation'] = {
+          CloudController::Errors::V2::HardCodedDetails::HARD_CODED_DETAILS['TestModelValidation'] = {
             'code' => 999999998,
             'http_code' => 400,
             'message' => 'Validation Error',

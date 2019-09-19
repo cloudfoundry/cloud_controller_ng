@@ -1,0 +1,41 @@
+### List users
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/users" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :paginated_list_of_users, '/v3/users' %>
+```
+
+Retrieve all users that the current user can see. For users without the `admin` or `admin_read_only` roles, this will just return the current user.
+
+#### Definition
+`GET /v3/users`
+
+#### Query parameters
+
+Name | Type | Description
+---- | ---- | ------------
+**guids** | _list of strings_ | Comma-delimited list of user guids to filter by.
+**page** | _integer_ | Page to display. Valid values are integers >= 1.
+**per_page** | _integer_ | Number of results per page. <br>Valid values are 1 through 5000.
+**label_selector**     | _string_          | **Experimental** - A query string containing a list of [label selector](#labels-and-selectors) requirements. |
+
+#### Permitted roles
+ |
+--- | ---
+All Roles |

@@ -9,7 +9,8 @@ module VCAP::CloudController
 
     STATUS_VALUES = [
       DEPLOYING_STATUS_VALUE = 'DEPLOYING'.freeze,
-      FINALIZED_STATUS_VALUE = 'FINALIZED'.freeze
+      FINALIZED_STATUS_VALUE = 'FINALIZED'.freeze,
+      CANCELING_STATUS_VALUE = 'CANCELING'.freeze
     ].freeze
 
     STATUS_REASONS = [
@@ -60,11 +61,6 @@ module VCAP::CloudController
 
     def deploying?
       state == DEPLOYING_STATE
-    end
-
-    def failing?
-      timeout = deploying_web_process.health_check_timeout || Config.config.get(:default_health_check_timeout)
-      state == DEPLOYING_STATE && last_healthy_at < (Time.now - 2 * timeout.seconds)
     end
   end
 end

@@ -2,6 +2,7 @@ require 'sinatra'
 require 'controllers/base/base_controller'
 require 'cloud_controller/internal_api'
 require 'cloud_controller/diego/failure_reason_sanitizer'
+require 'cloud_controller/telemetry_logger'
 
 module VCAP::CloudController
   class StagingCompletionController < RestController::BaseController
@@ -77,6 +78,19 @@ module VCAP::CloudController
         logger.error('diego.staging.completion-controller-error', error: e)
         raise CloudController::Errors::ApiError.new_from_details('ServerError')
       end
+
+      TelemetryLogger.emit(
+        'build-completed',
+        {
+          'app-id' => build.app.guid,
+          'build-id' => build.guid,
+        },
+        {
+          'lifecycle' => build.lifecycle_type,
+          'buildpacks' => build.lifecycle_data&.buildpacks,
+          'stack' => build.lifecycle_data.try(:stack),
+        }
+      )
 
       [200, '{}']
     end

@@ -69,7 +69,7 @@ module VCAP::CloudController
 
     def delete(guid)
       service_plan_visibility = find_guid_and_validate_access(:delete, guid, ServicePlanVisibility)
-      raise_if_has_dependent_associations!(service_plan_visibility) if v2_api? && !recursive_delete?
+      raise_if_has_dependent_associations!(service_plan_visibility) unless recursive_delete?
 
       model_deletion_job = Jobs::Runtime::ModelDeletion.new(ServicePlanVisibility, guid)
       delete_and_audit_job = Jobs::AuditEventJob.new(

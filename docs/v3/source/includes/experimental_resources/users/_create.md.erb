@@ -1,0 +1,49 @@
+### Create a user
+
+Creating a user requires one value, a GUID. This creates a user in the Cloud
+Controller database.
+
+Generally, the GUID should match the GUID of an already-created user in the
+UAA database, though this is not required.
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/users" \
+  -X POST \
+  -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
+  -d '{
+    "guid": "3a5d3d89-3f89-4f05-8188-8a2b298c79d5"
+  }'
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 201 Created
+Content-Type: application/json
+
+<%= yield_content :single_user %>
+```
+
+#### Definition
+`POST /v3/users`
+
+#### Required parameters
+
+Name     | Type     | Description
+-------  | -------  | -----------
+**guid** | _string_ | Unique identifier for the user. For UAA users this will match the user ID of an existing UAA user's GUID. In the case of UAA clients, this will match the UAA client ID.                                                                                             |
+**metadata.labels** _(experimental)_  | [_label object_](#links) | Labels applied to the user.                                                                                                 |
+**metadata.annotations** _(experimental)_| [_annotation object_](#links) | Annotations added to the user.                                                                                      |
+
+#### Permitted roles
+
+Role | Notes
+----- | ---
+Admin |

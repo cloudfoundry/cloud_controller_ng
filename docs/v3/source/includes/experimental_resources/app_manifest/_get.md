@@ -1,7 +1,5 @@
 ### Generate an app manifest
 
-Generate a manifest for an app and its underlying processes.
-
 ```
 Example Request
 ```
@@ -33,6 +31,8 @@ applications:
     disk_quota: 1024M
     health-check-type: port
 ```
+
+Generate a manifest for an app and its underlying processes.
 
 #### Definition
 `GET /v3/apps/:guid/manifest`

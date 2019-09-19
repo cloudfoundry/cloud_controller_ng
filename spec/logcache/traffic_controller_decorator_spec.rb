@@ -399,6 +399,60 @@ RSpec.describe Logcache::TrafficControllerDecorator do
       end
     end
 
+    context 'when given container metrics in separate envelopes' do
+      let(:envelopes) {
+        Loggregator::V2::EnvelopeBatch.new(
+          batch: [
+            Loggregator::V2::Envelope.new(
+              source_id: process_guid,
+              gauge: Loggregator::V2::Gauge.new(metrics: {
+                  'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 10),
+              }),
+              instance_id: '1'
+            ),
+            Loggregator::V2::Envelope.new(
+              source_id: process_guid,
+              gauge: Loggregator::V2::Gauge.new(metrics: {
+                  'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 11),
+              }),
+              instance_id: '1'
+            ),
+            Loggregator::V2::Envelope.new(
+              source_id: process_guid,
+              gauge: Loggregator::V2::Gauge.new(metrics: {
+                  'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 12),
+              }),
+              instance_id: '1'
+            ),
+            Loggregator::V2::Envelope.new(
+              source_id: process_guid,
+              gauge: Loggregator::V2::Gauge.new(metrics: {
+                  'cpu' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 20),
+                  'memory' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 21),
+                  'disk' => Loggregator::V2::GaugeValue.new(unit: 'bytes', value: 22),
+              }),
+              instance_id: '2'
+            )
+          ]
+        )
+      }
+      let(:num_instances) { 2 }
+
+      it 'returns a single envelope per instance' do
+        expect(subject.count).to eq(2)
+
+        expect(subject.first.containerMetric.instanceIndex).to eq(1)
+        expect(subject.first.containerMetric.cpuPercentage).to eq(10)
+        expect(subject.first.containerMetric.memoryBytes).to eq(11)
+        expect(subject.first.containerMetric.diskBytes).to eq(12)
+
+        expect(subject.second.containerMetric.instanceIndex).to eq(2)
+        expect(subject.second.containerMetric.cpuPercentage).to eq(20)
+        expect(subject.second.containerMetric.memoryBytes).to eq(21)
+        expect(subject.second.containerMetric.diskBytes).to eq(22)
+      end
+    end
+
     describe 'walking the log cache' do
       let(:lookback_window) { 2.minutes }
 

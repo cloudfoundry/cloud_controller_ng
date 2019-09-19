@@ -66,7 +66,7 @@ module VCAP
             {
               droplet_uri:        @droplet_url_generator.perma_droplet_download_url(process.guid, checksum_info['value']),
               droplet_hash:       process.actual_droplet.droplet_hash,
-              ports:              Protocol::OpenProcessPorts.new(process).to_a,
+              ports:              process.open_ports,
               process_guid:       ProcessGuid.from_process(process),
               stack:              process.app.lifecycle_data.stack,
               checksum_algorithm: checksum_info['type'],

@@ -1,7 +1,5 @@
 ### Share a domain
 
-This endpoint shares an organization-scoped domain to other organizations specified by a list of organization guids. This will allow any of the other organizations to use the organization-scoped domain.
-
 ```
 Example Request
 ```
@@ -29,6 +27,8 @@ Content-Type: application/json
 
 <%= yield_content :shared_orgs %>
 ```
+
+This endpoint shares an organization-scoped domain to other organizations specified by a list of organization guids. This will allow any of the other organizations to use the organization-scoped domain.
 
 #### Definition
 `POST /v3/domains/:guid/relationships/shared_organizations`

@@ -165,6 +165,25 @@ RSpec.describe 'Space Manifests' do
         to match_array([{ key: 'potato', value: 'idaho' }, { key: 'juice', value: 'newton' },])
     end
 
+    context 'service bindings' do
+      let(:client) { instance_double(VCAP::Services::ServiceBrokers::V2::Client, bind: {}) }
+
+      it 'returns an appropriate error when fail to bind' do
+        allow(VCAP::Services::ServiceClientProvider).to receive(:provide).and_return(client)
+        allow(client).to receive(:bind).and_raise('Failed')
+
+        post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
+        Delayed::Worker.new.work_off
+
+        job_location = last_response.headers['Location']
+        get job_location, nil, user_header
+        parsed_response = MultiJson.load(last_response.body)
+
+        expect(VCAP::CloudController::ServiceBinding.count).to eq(0)
+        expect(parsed_response['errors'].first['detail']).to eq("For application '#{app1_model.name}': For service '#{service_instance.name}': Failed")
+      end
+    end
+
     context 'when one of the apps does not exist' do
       let!(:yml_manifest) do
         {
@@ -270,7 +289,7 @@ RSpec.describe 'Space Manifests' do
       end
 
       it 'maps the new route to the app without a port specified' do
-        post "/v3/spaces/#{space.guid}/actions/apply_manifest?no_route=false", yml_manifest, yml_headers(user_header)
+        post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
         expect(last_response.status).to eq(202), last_response.body
 
         job_guid = VCAP::CloudController::PollableJobModel.last.guid
@@ -285,98 +304,6 @@ RSpec.describe 'Space Manifests' do
         expect(app_destinations.first.app_port).to eq(
           VCAP::CloudController::ProcessModel::NO_APP_PORT_SPECIFIED
         )
-      end
-    end
-
-    context 'when the no_route parameter is provided as a flag override' do
-      let!(:yml_manifest) do
-        {
-          'applications' => [
-            { 'name' => app1_model.name,
-              'instances' => 4,
-              'memory' => '2048MB',
-              'disk_quota' => '1.5GB',
-              'buildpack' => buildpack.name,
-              'stack' => buildpack.stack,
-              'command' => 'new-command',
-              'health_check_type' => 'http',
-              'health_check_http_endpoint' => '/health',
-              'timeout' => 42,
-              'env' => {
-                'k1' => 'mangos',
-                'k2' => 'pears',
-                'k3' => 'watermelon'
-              },
-              'routes' => [
-                { 'route' => "https://#{route.host}.#{route.domain.name}" },
-                { 'route' => "https://#{second_route.host}.#{second_route.domain.name}/path" }
-              ],
-              'services' => [
-                service_instance.name
-              ]
-            },
-            { 'name' => app2_model.name,
-              'instances' => 4,
-              'memory' => '2048MB',
-              'disk_quota' => '1.5GB',
-              'buildpack' => buildpack.name,
-              'stack' => buildpack.stack,
-              'command' => 'new-command',
-              'health_check_type' => 'http',
-              'health_check_http_endpoint' => '/health',
-              'timeout' => 42,
-              'env' => {
-                'k1' => 'mangos',
-                'k2' => 'pears',
-                'k3' => 'watermelon'
-              },
-              'routes' => [
-                { 'route' => "https://#{route.host}.#{route.domain.name}" },
-                { 'route' => "https://#{second_route.host}.#{second_route.domain.name}/path" }
-              ],
-              'services' => [
-                service_instance.name
-              ]
-            }
-          ]
-        }.to_yaml
-      end
-      context 'no_route uri parameter is set to true' do
-        it 'skips/unmaps routes for all apps in manifest' do
-          post "/v3/spaces/#{space.guid}/actions/apply_manifest?no_route=true", yml_manifest, yml_headers(user_header)
-
-          expect(last_response.status).to eq(202)
-          job_guid = VCAP::CloudController::PollableJobModel.last.guid
-          expect(last_response.headers['Location']).to match(%r(/v3/jobs/#{job_guid}))
-
-          Delayed::Worker.new.work_off
-          expect(VCAP::CloudController::PollableJobModel.find(guid: job_guid)).to be_complete
-
-          app1_model.reload
-          expect(app1_model.routes).to be_empty
-
-          app2_model.reload
-          expect(app2_model.routes).to be_empty
-        end
-      end
-
-      context 'no_route uri parameter is set to false' do
-        it 'skips/unmaps routes for all apps in manifest' do
-          post "/v3/spaces/#{space.guid}/actions/apply_manifest?no_route=false", yml_manifest, yml_headers(user_header)
-
-          expect(last_response.status).to eq(202)
-          job_guid = VCAP::CloudController::PollableJobModel.last.guid
-          expect(last_response.headers['Location']).to match(%r(/v3/jobs/#{job_guid}))
-
-          Delayed::Worker.new.work_off
-          expect(VCAP::CloudController::PollableJobModel.find(guid: job_guid)).to be_complete
-
-          app1_model.reload
-          expect(app1_model.routes.length).to eq 2
-
-          app2_model.reload
-          expect(app2_model.routes.length).to eq 2
-        end
       end
     end
 

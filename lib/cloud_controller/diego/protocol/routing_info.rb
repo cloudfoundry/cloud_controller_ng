@@ -59,18 +59,18 @@ module VCAP::CloudController
         private
 
         def route_id_app_ports_map
-          process.route_mappings(reload: true).each_with_object({}) do |route_map, route_app_port_map|
-            route_app_port_map[route_map.route_guid] = [] if route_app_port_map[route_map.route_guid].nil?
-            if route_map.app_port.present? && route_map.app_port != VCAP::CloudController::ProcessModel::NO_APP_PORT_SPECIFIED
-              route_app_port_map[route_map.route_guid].push(route_map.app_port)
-            elsif process.docker? && process.docker_ports.present?
-              route_app_port_map[route_map.route_guid].push(process.docker_ports.first)
-            elsif process.ports.present?
-              route_app_port_map[route_map.route_guid].push(process.ports.first)
-            else
-              route_app_port_map[route_map.route_guid].push(VCAP::CloudController::ProcessModel::DEFAULT_HTTP_PORT)
-            end
+          process.route_mappings(reload: true).each_with_object({}) do |route_mapping, route_app_port_map|
+            route_app_port_map[route_mapping.route_guid] ||= []
+            route_app_port_map[route_mapping.route_guid].push(get_port_to_use(process, route_mapping))
           end
+        end
+
+        def get_port_to_use(process, route_mapping)
+          return route_mapping.app_port if route_mapping.has_app_port_specified?
+          return process.docker_ports.first if process.docker? && process.docker_ports.present?
+          return process.ports.first if process.ports.present?
+
+          VCAP::CloudController::ProcessModel::DEFAULT_HTTP_PORT
         end
       end
     end

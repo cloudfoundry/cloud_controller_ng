@@ -243,42 +243,19 @@ RSpec.describe 'App Manifests' do
     end
 
     context 'service bindings' do
-      let(:yml_manifest) do
-        {
-          'applications' => [
-            {
-              'name' => 'blah',
-              'services' =>
-                [
-                  {
-                    'name' => service_instance.name,
-                    'parameters' => {
-                      'foo' => 'bar'
-                    }
-                  }
-                ]
-            }
-          ]
-        }.to_yaml
-      end
-
-      before do
+      it 'returns an appropriate error when fail to bind' do
         allow(VCAP::Services::ServiceClientProvider).to receive(:provide).and_return(client)
-        allow(client).to receive(:bind).and_return({ async: false, binding: {}, operation: nil })
-      end
+        allow(client).to receive(:bind).and_raise('Failed')
 
-      it 'creates the service bindings with the parameters' do
-        expect {
-          post "/v3/apps/#{app_model.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
-          Delayed::Worker.new.work_off
-        }.to change { VCAP::CloudController::ServiceBinding.count }.from(0).to(1)
+        post "/v3/apps/#{app_model.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
+        Delayed::Worker.new.work_off
 
-        expect(last_response.status).to eq(202)
+        job_location = last_response.headers['Location']
+        get job_location, nil, user_header
+        parsed_response = MultiJson.load(last_response.body)
 
-        service_binding = VCAP::CloudController::ServiceBinding.last
-        expect(client).
-          to have_received(:bind).with(an_instance_of(VCAP::CloudController::ServiceBinding), arbitrary_parameters: { foo: 'bar' }, accepts_incomplete: anything)
-        expect(service_binding.service_instance_name).to eq(service_instance.name)
+        expect(VCAP::CloudController::ServiceBinding.count).to eq(0)
+        expect(parsed_response['errors'].first['detail']).to eq("For service '#{service_instance.name}': Failed")
       end
     end
 
@@ -369,40 +346,6 @@ RSpec.describe 'App Manifests' do
           other_events = VCAP::CloudController::Event.find_all { |event| !event.metadata['manifest_triggered'] }
           expect(other_events.map(&:type)).to eq(['audit.app.apply_manifest',])
         end
-      end
-    end
-
-    describe 'no_route' do
-      let(:yml_manifest) do
-        {
-          'applications' => [
-            { 'name' => 'blah',
-            }
-          ]
-        }.to_yaml
-      end
-      let!(:route_mapping) do
-        VCAP::CloudController::RouteMappingModel.make(
-          app: app_model,
-          route: route,
-          process_type: process.type
-        )
-      end
-
-      it 'deletes the existing route' do
-        expect(app_model.routes).to match_array([route])
-
-        post "/v3/apps/#{app_model.guid}/actions/apply_manifest?no_route=true", yml_manifest, yml_headers(user_header)
-
-        expect(last_response.status).to eq(202)
-        job_guid = VCAP::CloudController::PollableJobModel.last.guid
-        expect(last_response.headers['Location']).to match(%r(/v3/jobs/#{job_guid}))
-
-        Delayed::Worker.new.work_off
-        expect(VCAP::CloudController::PollableJobModel.find(guid: job_guid)).to be_complete
-
-        app_model.reload
-        expect(app_model.routes).to be_empty
       end
     end
 

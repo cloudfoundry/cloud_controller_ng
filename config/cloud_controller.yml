@@ -101,6 +101,9 @@ logcache_tls:
 doppler:
   url: 'wss://doppler.example.com:443'
 
+log_cache:
+  url: 'https://log-cache.example.com'
+
 log_stream:
   url: 'https://log-stream.example.com'
 
@@ -253,13 +256,12 @@ diego:
   lifecycle_bundles:
     "buildpack/cflinuxfs3": "buildpack_app_lifecycle/buildpack_app_lifecycle.tgz"
     "buildpack/windows2012R2": "windows_app_lifecycle/windows_app_lifecycle.tgz"
-    "buildpack/windows2016": "buildpack_app_lifecycle/buildpack_app_lifecycle.tgz"
+    "buildpack/windows": "buildpack_app_lifecycle/buildpack_app_lifecycle.tgz"
     "docker": "docker_app_lifecycle/docker_app_lifecycle.tgz"
   droplet_destinations:
     "cflinuxfs3": "/home/vcap"
     "windows": "/Users/vcap"
     "windows2012R2": "/"
-    "windows2016": "/Users/vcap"
   insecure_docker_registry_list: []
   docker_staging_stack: 'cflinuxfs3'
   bbs:

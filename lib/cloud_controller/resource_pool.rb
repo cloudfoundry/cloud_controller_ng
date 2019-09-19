@@ -7,6 +7,7 @@
 require 'httpclient'
 require 'steno'
 require 'cloud_controller/blobstore/fog/providers'
+require 'cloud_controller/resource_match'
 
 class VCAP::CloudController::ResourcePool
   VALID_SHA_LENGTH = 40
@@ -32,7 +33,7 @@ class VCAP::CloudController::ResourcePool
   end
 
   def match_resources(descriptors)
-    descriptors.select { |h| resource_known?(h) }
+    VCAP::CloudController::ResourceMatch.new(descriptors).match_resources
   end
 
   # Adds everything under source directory +dir+ to the resource pool.
@@ -71,29 +72,23 @@ class VCAP::CloudController::ResourcePool
   end
 
   def copy(descriptor, destination)
-    if resource_known?(descriptor)
-      logger.debug 'resource_pool.sync.start', resource: descriptor, destination: destination
-
-      logger.debug 'resource_pool.download.starting',
-        destination: destination
-
-      start = Time.now.utc
-
-      blobstore.download_from_blobstore(descriptor['sha1'], destination)
-
-      took = Time.now.utc - start
-
-      logger.debug 'resource_pool.download.complete', took: took, destination: destination
-    else
+    if !resource_known?(descriptor)
       logger.warn 'resource_pool.sync.failed', unknown_resource: descriptor, destination: destination
       raise ArgumentError.new("Can not copy bits we do not have #{descriptor}")
     end
-  end
 
-  private
+    logger.debug 'resource_pool.sync.start', resource: descriptor, destination: destination
 
-  def logger
-    @logger ||= Steno.logger('cc.resource_pool')
+    logger.debug 'resource_pool.download.starting',
+      destination: destination
+
+    start = Time.now.utc
+
+    blobstore.download_from_blobstore(descriptor['sha1'], destination)
+
+    took = Time.now.utc - start
+
+    logger.debug 'resource_pool.download.complete', took: took, destination: destination
   end
 
   def resource_known?(descriptor)
@@ -107,16 +102,22 @@ class VCAP::CloudController::ResourcePool
     raise e
   end
 
-  def resource_allowed?(path)
-    stat = File.stat(path)
-    File.file?(path) && !stat.symlink? && size_allowed?(stat.size)
-  end
-
   def size_allowed?(size)
     size && size > minimum_size && size < maximum_size
   end
 
+  private
+
   def valid_sha?(sha1)
     sha1 && sha1.to_s.length == VALID_SHA_LENGTH
+  end
+
+  def logger
+    @logger ||= Steno.logger('cc.resource_pool')
+  end
+
+  def resource_allowed?(path)
+    stat = File.stat(path)
+    File.file?(path) && !stat.symlink? && size_allowed?(stat.size)
   end
 end

@@ -33,14 +33,14 @@ module VCAP::CloudController
         let(:state) { DeploymentModel::DEPLOYING_STATE }
         let(:status_value) { DeploymentModel::DEPLOYING_STATUS_VALUE }
 
-        it 'sets the deployments state to CANCELING' do
+        it 'sets the deployments status to CANCELING' do
           expect(deployment.state).to_not eq(DeploymentModel::CANCELING_STATE)
 
           DeploymentCancel.cancel(deployment: deployment, user_audit_info: user_audit_info)
           deployment.reload
 
           expect(deployment.state).to eq(DeploymentModel::CANCELING_STATE)
-          expect(deployment.status_value).to eq(DeploymentModel::DEPLOYING_STATUS_VALUE)
+          expect(deployment.status_value).to eq(DeploymentModel::CANCELING_STATUS_VALUE)
           expect(deployment.status_reason).to be_nil
         end
 
@@ -106,14 +106,14 @@ module VCAP::CloudController
 
       context 'when the deployment is in the CANCELING state' do
         let(:state) { DeploymentModel::CANCELING_STATE }
-        let(:status_value) { DeploymentModel::DEPLOYING_STATUS_VALUE }
+        let(:status_value) { DeploymentModel::CANCELING_STATUS_VALUE }
 
         it 'does *not* fail (idempotent canceling)' do
           DeploymentCancel.cancel(deployment: deployment, user_audit_info: user_audit_info)
           deployment.reload
 
           expect(deployment.state).to eq(DeploymentModel::CANCELING_STATE)
-          expect(deployment.status_value).to eq(DeploymentModel::DEPLOYING_STATUS_VALUE)
+          expect(deployment.status_value).to eq(DeploymentModel::CANCELING_STATUS_VALUE)
           expect(deployment.status_reason).to be_nil
         end
       end

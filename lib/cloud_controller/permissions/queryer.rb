@@ -49,6 +49,15 @@ class VCAP::CloudController::Permissions::Queryer
     end
   end
 
+  def can_read_secrets_globally?
+    science 'can_read_secrets_globally' do |e|
+      e.use { db_permissions.can_read_secrets_globally? }
+      e.try { perm_permissions.can_read_secrets_globally? }
+
+      e.run_if { false }
+    end
+  end
+
   def readable_org_guids
     science 'readable_org_guids' do |e|
       e.use { db_permissions.readable_org_guids }
@@ -205,7 +214,7 @@ class VCAP::CloudController::Permissions::Queryer
 
   def can_read_space_scoped_service_broker?(service_broker)
     service_broker.space_scoped? &&
-      can_read_secrets_in_space?(service_broker.space_guid, service_broker.space.organization_guid)
+        can_read_secrets_in_space?(service_broker.space_guid, service_broker.space.organization_guid)
   end
 
   def can_write_global_service_broker?

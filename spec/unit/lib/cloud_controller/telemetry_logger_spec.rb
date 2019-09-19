@@ -1,4 +1,3 @@
-require 'digest'
 require 'spec_helper'
 require 'cloud_controller/telemetry_logger'
 
@@ -14,7 +13,8 @@ module VCAP::CloudController
     it 'logs job name, timestamp, and event, anonymizing by default' do
       TelemetryLogger.emit(
         'some-event',
-        { 'bogus_key' => { 'value' => 'bogus_value' } })
+        { 'bogus_key' => 'bogus_value' }
+      )
 
       expect(JSON.parse(file.read)).to match({
         'telemetry-source' => 'cloud_controller_ng',
@@ -26,9 +26,11 @@ module VCAP::CloudController
     end
 
     it 'does not anonymize raw keys' do
-      TelemetryLogger.emit('some-event',
-                                 { 'anonymize_key' => { 'value' => 'anonymize_value' },
-                                         'safe_key' => { 'value' => 'safe-value', 'raw' => true } })
+      TelemetryLogger.emit(
+        'some-event',
+         { 'anonymize_key' => 'anonymize_value' },
+         { 'safe_key' => 'safe-value' }
+      )
 
       expect(JSON.parse(file.read)).to match({
         'telemetry-source' => 'cloud_controller_ng',

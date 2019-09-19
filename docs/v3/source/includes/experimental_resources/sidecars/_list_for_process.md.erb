@@ -5,7 +5,7 @@ Example Request
 ```
 
 ```shell
-curl "https://api.example.org/v3/processes/[guid]/sidecars \
+curl "https://api.example.org/v3/processes/[guid]/sidecars" \
   -X GET \
   -H "Authorization: bearer [token]"
 ```
@@ -24,7 +24,7 @@ Content-Type: application/json
 Retrieves all sidecars associated with a process.
 
 #### Definition
-`GET /v3/processes/:process_guid/sidecars`
+`GET /v3/processes/:guid/sidecars`
 
 #### Query parameters
 

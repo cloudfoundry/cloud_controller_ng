@@ -9,11 +9,11 @@ module VCAP::CloudController
         @logger = ActiveSupport::Logger.new(@telemetry_log_path)
       end
 
-      def emit(event_name, event)
+      def emit(event_name, entries, raw_entries={})
         resp = {
           'telemetry-source' => 'cloud_controller_ng',
           'telemetry-time' => Time.now.to_datetime.rfc3339,
-          event_name => anonymize(event),
+          event_name => raw_entries.merge(anonymize(entries)),
         }
 
         logger.info(JSON.generate(resp))
@@ -23,14 +23,8 @@ module VCAP::CloudController
 
       attr_reader :logger
 
-      def anonymize(raw_event)
-        raw_event.each_with_object({}) do |(key, body), anonymized_event|
-          anonymized_event[key] = if body.fetch('raw', false)
-                                    body['value']
-                                  else
-                                    Digest::SHA256.hexdigest(body['value'])
-                                  end
-        end
+      def anonymize(entries)
+        entries.transform_values { |v| Digest::SHA256.hexdigest(v) }
       end
     end
   end

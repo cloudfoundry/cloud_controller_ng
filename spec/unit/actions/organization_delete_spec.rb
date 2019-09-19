@@ -7,14 +7,17 @@ module VCAP::CloudController
     let(:services_event_repository) { Repositories::ServiceEventRepository.new(user_audit_info) }
     let(:user_audit_info) { UserAuditInfo.new(user_guid: user.guid, user_email: user_email) }
     let(:space_delete) { SpaceDelete.new(user_audit_info, services_event_repository) }
-    subject(:org_delete) { OrganizationDelete.new(space_delete) }
+    subject(:org_delete) { OrganizationDelete.new(space_delete, user_audit_info) }
 
     describe '#delete' do
       let!(:org_1) { Organization.make }
       let!(:org_2) { Organization.make }
+      let!(:org_3) { Organization.make }
       let!(:space) { Space.make(organization: org_1) }
       let!(:space_2) { Space.make(organization: org_1) }
+      let!(:space_3) { Space.make(organization: org_3) }
       let!(:app) { AppModel.make(space_guid: space.guid) }
+      let!(:app_2) { AppModel.make(space_guid: space_3.guid) }
       let!(:service_instance) { ManagedServiceInstance.make(space: space) }
       let!(:service_instance_2) { ManagedServiceInstance.make(space: space_2) }
       let!(:private_domain_1) { PrivateDomain.make(owning_organization: org_1) }
@@ -137,6 +140,38 @@ module VCAP::CloudController
 
           org_delete.delete([org_1])
           expect(user_1.organizations).not_to include(org_1)
+        end
+
+        it 'creates audit events for org deletion and recursive deletes' do
+          org_delete.delete([org_3])
+          expect(VCAP::CloudController::Event.count).to eq(3)
+          org_delete_event = VCAP::CloudController::Event.where(type: 'audit.organization.delete-request').last
+          expect(org_delete_event.values).to include(
+            type: 'audit.organization.delete-request',
+            actor: user_audit_info.user_guid,
+            actor_type: 'user',
+            actor_name: user_audit_info.user_email,
+            actor_username: user_audit_info.user_name,
+            actee: org_3.guid,
+            actee_type: 'organization',
+            actee_name: org_3.name,
+            organization_guid: org_3.guid
+          )
+          expect(org_delete_event.metadata).to eq({ 'request' => { 'recursive' => true } })
+
+          app_delete_event = VCAP::CloudController::Event.where(type: 'audit.app.delete-request').last
+          expect(app_delete_event.values).to include(
+            type: 'audit.app.delete-request',
+            actee: app_2.guid,
+            actee_type: 'app',
+          )
+
+          space_delete_event = VCAP::CloudController::Event.where(type: 'audit.space.delete-request').last
+          expect(space_delete_event.values).to include(
+            type: 'audit.space.delete-request',
+            actee: space_3.guid,
+            actee_type: 'space',
+          )
         end
 
         context 'when owned private domains are shared with other orgs' do

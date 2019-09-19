@@ -1,13 +1,7 @@
 ---
 title: Cloud Controller API Reference
 
-language_tabs:
-  - shell: curl
-
 includes:
- # snippets have to be at the top to be used in other files
-  - snippets/query_params
-  - snippets/object_attributes
   - api_resources/app_features
   - api_resources/app_ssh_enabled
   - api_resources/apps
@@ -32,6 +26,7 @@ includes:
   - api_resources/spaces
   - api_resources/stacks
   - api_resources/tasks
+  - api_resources/users
   - introduction/introduction
   - concepts/concepts
   - concepts/api_resource
@@ -130,6 +125,7 @@ includes:
   - resources/organizations/assign_default_isolation_segment
   - resources/organizations/get_default_isolation_segment
   - resources/organizations/get_default_domain
+  - resources/organizations/get_usage_summary
   - resources/packages/header
   - resources/packages/object
   - resources/packages/create
@@ -241,6 +237,7 @@ includes:
   - experimental_resources/service_brokers/get
   - experimental_resources/service_brokers/list
   - experimental_resources/service_brokers/create
+  - experimental_resources/service_brokers/delete
   - experimental_resources/sidecars/header
   - experimental_resources/sidecars/object
   - experimental_resources/sidecars/create_from_app
@@ -252,6 +249,11 @@ includes:
   - experimental_resources/space_manifest/header
   - experimental_resources/space_manifest/object
   - experimental_resources/space_manifest/apply
+  - experimental_resources/users/header
+  - experimental_resources/users/object
+  - experimental_resources/users/create
+  - experimental_resources/users/list
+  - experimental_resources/users/get
+  - experimental_resources/users/delete
 
-search: true
 ---

@@ -136,6 +136,31 @@ module VCAP::CloudController
           end
         end
       end
+
+      context 'when a lifecycle_type is provided' do
+        let!(:docker_app) { AppModel.make(name: 'docker-app', space_guid: space.guid) }
+
+        before do
+          docker_app.buildpack_lifecycle_data = nil
+          docker_app.save
+        end
+
+        context 'of type buildpack' do
+          let(:filters) { { lifecycle_type: 'buildpack' } }
+
+          it 'returns all of the buildpack apps' do
+            expect(apps.all).to contain_exactly(app, sad_app)
+          end
+        end
+
+        context 'of type docker' do
+          let(:filters) { { lifecycle_type: 'docker' } }
+
+          it 'returns all of the docker apps' do
+            expect(apps.all).to contain_exactly(docker_app)
+          end
+        end
+      end
     end
   end
 end

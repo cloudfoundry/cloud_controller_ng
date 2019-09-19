@@ -242,12 +242,16 @@ module VCAP::CloudController
         },
       ]
       end
+      let(:rails_logger) { instance_double(ActiveSupport::Logger, info: nil) }
 
       before do
         @internal_user     = 'internal_user'
         @internal_password = 'internal_password'
         authorize @internal_user, @internal_password
         build.droplet = droplet
+        allow(ActiveSupport::Logger).to receive(:new).and_return(rails_logger)
+        allow(VCAP::CloudController::TelemetryLogger).to receive(:emit).and_call_original
+        VCAP::CloudController::TelemetryLogger.init('fake-log-path')
       end
 
       it 'calls the stager with the build and response' do
@@ -313,6 +317,27 @@ module VCAP::CloudController
           buildback_lifecycle_buildpack2 = BuildpackLifecycleBuildpackModel.find(buildpack_name: 'launderette')
           expect(droplet_buildpacks).to match_array([buildback_lifecycle_buildpack1,
                                                      buildback_lifecycle_buildpack2])
+        end
+
+        it 'emits a telemetry event for the completed build' do
+          Timecop.freeze do
+            allow_any_instance_of(BuildModel).to receive(:in_final_state?).and_return(false)
+            post url, MultiJson.dump(staging_response)
+
+            expected_json = {
+              'telemetry-source' => 'cloud_controller_ng',
+              'telemetry-time' => Time.now.to_datetime.rfc3339,
+              'build-completed' => {
+                'lifecycle' =>  'buildpack',
+                'buildpacks' =>  %w(the-pleasant-buildpack),
+                'stack' =>  'cflinuxfs3',
+                'app-id' =>  Digest::SHA256.hexdigest(staged_app.guid),
+                'build-id' =>  Digest::SHA256.hexdigest(build.guid),
+              }
+            }
+            expect(last_response.status).to eq(200), last_response.body
+            expect(rails_logger).to have_received(:info).with(JSON.generate(expected_json))
+          end
         end
 
         it 'emits metrics for staging success' do

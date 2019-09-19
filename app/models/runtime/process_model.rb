@@ -537,6 +537,14 @@ module VCAP::CloudController
       super(opts)
     end
 
+    def web?
+      type == ProcessTypes::WEB
+    end
+
+    def legacy_webish?
+      ProcessTypes.legacy_webish?(type)
+    end
+
     def docker_ports
       if !self.needs_staging? && desired_droplet.present?
         return desired_droplet.docker_ports
@@ -545,12 +553,24 @@ module VCAP::CloudController
       []
     end
 
-    def web?
-      type == ProcessTypes::WEB
-    end
+    def open_ports
+      open_ports = ports || []
 
-    def legacy_webish?
-      ProcessTypes.legacy_webish?(type)
+      if docker?
+        has_mapping_without_port = route_mappings.any? { |mapping| !mapping.has_app_port_specified? }
+        needs_docker_ports = docker_ports.present? && (has_mapping_without_port || open_ports.empty?)
+
+        if needs_docker_ports
+          open_ports += docker_ports
+        end
+
+        if !docker_ports.present? && has_mapping_without_port
+          open_ports += DEFAULT_PORTS
+        end
+      end
+
+      open_ports += DEFAULT_PORTS if web? && open_ports.empty?
+      open_ports.uniq
     end
 
     private

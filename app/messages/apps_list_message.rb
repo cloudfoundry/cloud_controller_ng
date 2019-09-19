@@ -9,10 +9,12 @@ module VCAP::CloudController
       :space_guids,
       :stacks,
       :include,
+      :lifecycle_type,
     ]
 
     validates_with NoAdditionalParamsValidator
     validates_with IncludeParamValidator, valid_values: ['space', 'org']
+    validates_with LifecycleTypeParamValidator
 
     validates :names, array: true, allow_nil: true
     validates :guids, array: true, allow_nil: true

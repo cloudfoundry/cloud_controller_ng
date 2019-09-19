@@ -813,6 +813,65 @@ module VCAP::CloudController
       end
     end
 
+    describe 'GET /v3/organizations/:guid/usage_summary' do
+      let!(:org) { Organization.make }
+      let!(:space) { Space.make(organization: org) }
+      let!(:app1) { AppModel.make(space: space) }
+      let!(:app2) { AppModel.make(space: space) }
+      let!(:process1) { ProcessModel.make(:process, state: 'STARTED', app: app1, type: 'web', memory: 101) }
+      let!(:process2) { ProcessModel.make(:process, state: 'STARTED', app: app1, type: 'web', memory: 102, instances: 2) }
+
+      before do
+        ProcessModelFactory.make(space: space, memory: 200, instances: 2, state: 'STARTED', type: 'worker')
+      end
+
+      let(:api_call) { lambda { |user_headers| get "/v3/organizations/#{org.guid}/usage_summary", nil, user_headers } }
+
+      let(:org_summary_json) do
+        {
+          usage_summary: {
+            started_instances: 5,
+            memory_in_mb: 705 # (tasks: 200 * 2) + (processes: 101 + 2 * 102)
+          },
+          links: {
+            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}\/usage_summary) },
+            organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}) }
+          }
+        }
+      end
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(
+          code: 200,
+          response_object: org_summary_json
+        )
+        h['no_role'] = { code: 404 }
+        h.freeze
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+      context 'when the org does not exist' do
+        it 'returns a 404' do
+          get '/v3/organizations/bad-guid/usage_summary', {}, admin_header
+          expect(last_response).to have_status_code(404)
+        end
+      end
+
+      context 'when the user cannot read from the org' do
+        let(:user) { set_current_user(VCAP::CloudController::User.make) }
+
+        before do
+          stub_readable_org_guids_for(user, [])
+        end
+
+        it 'returns a 404' do
+          get '/v3/organizations/bad-guid/usage_summary', {}, headers_for(user)
+          expect(last_response).to have_status_code(404)
+        end
+      end
+    end
+
     describe 'PATCH /v3/organizations/:guid/relationships/default_isolation_segment' do
       let(:isolation_segment) { IsolationSegmentModel.make(name: 'default_seg') }
       let(:update_request) do
@@ -899,6 +958,23 @@ module VCAP::CloudController
 
         organization1.reload
         expect(organization1.name).to eq('New Name World')
+      end
+
+      context 'when the new name is already taken' do
+        before do
+          Organization.make(name: 'new-name')
+        end
+
+        it 'returns a 422 with a helpful error message' do
+          update_request = { name: 'new-name' }.to_json
+
+          expect {
+            patch "/v3/organizations/#{organization1.guid}", update_request, admin_headers_for(user).merge('CONTENT_TYPE' => 'application/json')
+          }.not_to change { organization1.reload.name }
+
+          expect(last_response.status).to eq(422)
+          expect(last_response).to have_error_message("Organization name 'new-name' is already taken.")
+        end
       end
 
       it 'updates the suspended field for the organization' do

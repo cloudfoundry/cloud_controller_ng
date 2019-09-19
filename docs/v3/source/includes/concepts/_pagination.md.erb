@@ -1,9 +1,5 @@
 ## Pagination
 
-Any request that can return multiple resources will be paginated and contain a `pagination` object and list of `resources`.
-Requests for multiple resources can use `page`, `per_page`, and `order_by` in addition to filters specific to the endpoint.
-
-#### The pagination object
 ```
 Example Paginated Response
 ```
@@ -41,6 +37,11 @@ Example Paginated Response
   ]
 }
 ```
+
+Any request that can return multiple resources will be paginated and contain a `pagination` object and list of `resources`.
+Requests for multiple resources can use `page`, `per_page`, and `order_by` in addition to filters specific to the endpoint.
+
+#### The pagination object
 
 Name | Type | Description
 ---- | ---- | -----------

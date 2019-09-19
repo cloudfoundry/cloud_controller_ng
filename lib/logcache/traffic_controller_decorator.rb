@@ -37,8 +37,10 @@ module Logcache
 
       final_envelopes.
         select { |e| has_container_metrics_fields?(e) && logcache_filter.call(e) }.
-        uniq(&:instance_id).
-        map { |e| convert_to_traffic_controller_envelope(source_guid, e) }
+        uniq { |e| e.gauge.metrics.keys << e.instance_id }.
+        sort_by(&:instance_id).
+        chunk(&:instance_id).
+        map { |envelopes_by_instance| convert_to_traffic_controller_envelope(source_guid, envelopes_by_instance) }
     end
 
     private
@@ -60,23 +62,43 @@ module Logcache
       # rubocop seems to think that there is a 'key?' method
       # on envelope.gauge.metrics - but it does not
       # rubocop:disable Style/PreferredHashMethods
-      envelope.gauge.metrics.has_key?('cpu') &&
-      envelope.gauge.metrics.has_key?('memory') &&
+      envelope.gauge.metrics.has_key?('cpu') ||
+      envelope.gauge.metrics.has_key?('memory') ||
       envelope.gauge.metrics.has_key?('disk')
       # rubocop:enable Style/PreferredHashMethods
     end
 
-    def convert_to_traffic_controller_envelope(source_guid, logcache_envelope)
-      TrafficController::Models::Envelope.new(
+    def convert_to_traffic_controller_envelope(source_guid, envelopes_by_instance)
+      tc_envelope = TrafficController::Models::Envelope.new(
         containerMetric: TrafficController::Models::ContainerMetric.new({
           applicationId: source_guid,
-          instanceIndex: logcache_envelope.instance_id,
-          cpuPercentage: logcache_envelope.gauge.metrics['cpu'].value,
-          memoryBytes: logcache_envelope.gauge.metrics['memory'].value,
-          diskBytes: logcache_envelope.gauge.metrics['disk'].value,
+          instanceIndex: envelopes_by_instance.first,
         }),
-        tags: logcache_envelope.tags.map { |k, v| TrafficController::Models::Envelope::TagsEntry.new(key: k, value: v) },
       )
+
+      tags = {}
+      envelopes_by_instance.second.each { |e|
+        tc_envelope.containerMetric.instanceIndex = e.instance_id
+        # rubocop seems to think that there is a 'key?' method
+        # on envelope.gauge.metrics - but it does not
+        # rubocop:disable Style/PreferredHashMethods
+        if e.gauge.metrics.has_key?('cpu')
+          tc_envelope.containerMetric.cpuPercentage = e.gauge.metrics['cpu'].value
+        end
+        if e.gauge.metrics.has_key?('memory')
+          tc_envelope.containerMetric.memoryBytes = e.gauge.metrics['memory'].value
+        end
+        if e.gauge.metrics.has_key?('disk')
+          tc_envelope.containerMetric.diskBytes = e.gauge.metrics['disk'].value
+        end
+        # rubocop:enable Style/PreferredHashMethods
+
+        tags.merge!(e.tags)
+      }
+
+      tc_envelope.tags = tags.map { |k, v| TrafficController::Models::Envelope::TagsEntry.new(key: k, value: v) }
+
+      tc_envelope
     end
 
     def logger

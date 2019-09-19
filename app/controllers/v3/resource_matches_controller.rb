@@ -9,7 +9,11 @@ class ResourceMatchesController < ApplicationController
     message = VCAP::CloudController::ResourceMatchCreateMessage.new(hashed_params)
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    fingerprints_v2_response = resource_pool_wrapper.new(message.v2_fingerprints_body).call
+    fingerprints_v2_response = if FeatureFlag.enabled?(:resource_matching)
+                                 resource_pool_wrapper.new(message.v2_fingerprints_body).call
+                               else
+                                 [].to_json
+                               end
 
     render status: :created, json: Presenters::V3::ResourceMatchPresenter.new(fingerprints_v2_response)
   end

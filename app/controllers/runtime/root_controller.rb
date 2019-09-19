@@ -50,6 +50,10 @@ module VCAP::CloudController
             href: config.get(:doppler, :url)
           },
 
+          log_cache:             {
+              href: config.get(:log_cache, :url)
+          },
+
           log_stream:             {
               href: config.get(:log_stream, :url)
           },

@@ -45,11 +45,9 @@ module VCAP::CloudController::RestController
       @env     = env
       @params  = params
       @body    = body
-      if v2_api? || unversioned_api?
-        common_params = CommonParams.new(logger)
-        query_string = sinatra.request.query_string if sinatra
-        @opts = common_params.parse(params, query_string)
-      end
+      common_params = CommonParams.new(logger)
+      query_string = sinatra.request.query_string if sinatra
+      @opts = common_params.parse(params, query_string)
       @sinatra = sinatra
 
       @queryer = VCAP::CloudController::Permissions::Queryer.build(
@@ -146,14 +144,6 @@ module VCAP::CloudController::RestController
                        "or admin scope. Token hash: #{VCAP::CloudController::SecurityContext.token}"
         raise CloudController::Errors::InvalidAuthToken
       end
-    end
-
-    def v2_api?
-      env['PATH_INFO'] =~ /\A#{V2_ROUTE_PREFIX}/
-    end
-
-    def unversioned_api?
-      env['PATH_INFO'] !~ %r{\A/v\d}
     end
 
     def recursive_delete?

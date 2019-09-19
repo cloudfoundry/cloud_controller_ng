@@ -116,6 +116,17 @@ module VCAP::CloudController
       end
     end
 
+    class LifecycleTypeParamValidator < ActiveModel::Validator
+      def validate(record)
+        if record.requested?(:lifecycle_type)
+          valid_lifecycle_types = [BuildpackLifecycleDataModel::LIFECYCLE_TYPE, DockerLifecycleDataModel::LIFECYCLE_TYPE]
+          unless valid_lifecycle_types.include?(record.lifecycle_type)
+            record.errors[:base] << "Invalid lifecycle_type: '#{record.lifecycle_type}'"
+          end
+        end
+      end
+    end
+
     private
 
     def allowed_keys

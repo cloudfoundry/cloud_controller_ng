@@ -5,6 +5,7 @@ require 'fetchers/build_list_fetcher'
 require 'presenters/v3/build_presenter'
 require 'actions/build_create'
 require 'actions/build_update'
+require 'cloud_controller/telemetry_logger'
 
 class BuildsController < ApplicationController
   def index
@@ -42,6 +43,21 @@ class BuildsController < ApplicationController
     unprocessable!(lifecycle.errors.full_messages) unless lifecycle.valid?
 
     build = BuildCreate.new.create_and_stage(package: package, lifecycle: lifecycle, metadata: message.metadata)
+
+    TelemetryLogger.emit(
+      'create-build',
+      {
+        'app-id' => package.app.guid,
+        'build-id' => build.guid,
+        'user-id' => current_user.guid,
+        # can we get the build guid here?
+      },
+      {
+        'lifecycle' => build.lifecycle_type,
+        'buildpacks' => build.lifecycle_data&.buildpacks,
+        'stack' => build.lifecycle_data.try(:stack),
+      }
+    )
 
     render status: :created, json: Presenters::V3::BuildPresenter.new(build)
   rescue BuildCreate::InvalidPackage => e

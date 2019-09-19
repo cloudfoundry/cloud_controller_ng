@@ -9,5 +9,5 @@ stacks:
     description: "cider-description"
   - name: "windows2012R2"
     description: "windows2012R2-description"
-  - name: "windows2016"
-    description: "windows2016-description"
+  - name: "windows"
+    description: "windows-description"

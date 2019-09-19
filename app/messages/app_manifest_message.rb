@@ -26,9 +26,9 @@ module VCAP::CloudController
       :metadata,
       :memory,
       :no_route,
-      :no_route_flag,
       :processes,
       :random_route,
+      :default_route,
       :routes,
       :services,
       :sidecars,
@@ -38,27 +38,8 @@ module VCAP::CloudController
 
     HEALTH_CHECK_TYPE_MAPPING = { HealthCheckTypes::NONE => HealthCheckTypes::PROCESS }.freeze
 
-    def self.create_from_yml(parsed_yaml, params)
-      msg = self.new(parsed_yaml, underscore_keys(parsed_yaml.deep_symbolize_keys))
-      msg.process_params(params)
-      msg
-    end
-
-    def no_route_override_given(params)
-      params['no_route']
-    end
-
-    def process_params(params)
-      no_route_given_value = no_route_override_given(params)
-      self.no_route_flag = if no_route_given_value == 'true'
-                             true
-                           elsif no_route_given_value == 'false'
-                             false
-                           else
-                             no_route_given_value
-                           end
-
-      self
+    def self.create_from_yml(parsed_yaml)
+      self.new(parsed_yaml, underscore_keys(parsed_yaml.deep_symbolize_keys))
     end
 
     def self.underscore_keys(hash)
@@ -87,7 +68,8 @@ module VCAP::CloudController
     validate :validate_manifest_routes_update_message!,      if: ->(record) {
       record.requested?(:routes) ||
       record.requested?(:no_route) ||
-      record.requested?(:random_route)
+      record.requested?(:random_route) ||
+        record.requested?(:default_route)
     }
 
     def initialize(original_yaml, attrs={})
@@ -248,28 +230,12 @@ module VCAP::CloudController
       mapping
     end
 
-    def manifest_routes_no_route_combo?
-      requested?(:routes) && requested?(:no_route)
-    end
-
-    def enable_route_creation?
-      requested?(:routes) && !self.no_route_flag
-    end
-
-    def apply_no_route_override
-      if self.no_route_flag
-        no_route_flag
-      else
-        no_route
-      end
-    end
-
     def routes_attribute_mapping
       mapping = {}
       mapping[:no_route] = no_route if requested?(:no_route)
-      mapping[:no_route] = apply_no_route_override
-      mapping[:routes] = routes if manifest_routes_no_route_combo? || enable_route_creation?
+      mapping[:routes] = routes if requested?(:routes)
       mapping[:random_route] = random_route if requested?(:random_route)
+      mapping[:default_route] = default_route if requested?(:default_route)
       mapping
     end
 

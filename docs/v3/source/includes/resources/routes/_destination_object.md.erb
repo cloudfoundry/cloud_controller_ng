@@ -1,6 +1,13 @@
 
 ### The destination object
 
+```
+Example Destination object
+```
+```json
+<%= yield_content :single_destination %>
+```
+
 A destination represents the relationship between a route and a resource that can serve traffic (for example, the `web` process of an application).
 
 When a route has destinations, that route will direct traffic to the processes represented by those destinations.
@@ -10,13 +17,6 @@ If a destination is created with a port specified, the route will direct traffic
 Note that when using a custom port, the app process must be listening on the specified port for the mapping to work. Otherwise, visiting the route will result in a 404 error.
 
 If a destination does not specify a port, the default port depends on the app lifecycle type. For buildpack apps, traffic will be directed to port 8080. For Docker apps, the first port specified in the Dockerfile will be used.
-
-```
-Example Destination object
-```
-```json
-<%= yield_content :single_destination %>
-```
 
 | Name                        | Type                     | Description                                                                                                                               |
 | --------------              | ------------------------ | ------------------------------------------------------                                                                                    |

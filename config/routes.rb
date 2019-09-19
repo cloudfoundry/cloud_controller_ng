@@ -130,6 +130,7 @@ Rails.application.routes.draw do
   patch '/organizations/:guid', to: 'organizations_v3#update'
   get '/organizations/:guid/domains', to: 'organizations_v3#index_org_domains'
   get '/organizations/:guid/domains/default', to: 'organizations_v3#show_default_domain'
+  get '/organizations/:guid/usage_summary', to: 'organizations_v3#show_usage_summary'
   get '/organizations', to: 'organizations_v3#index'
   get '/isolation_segments/:isolation_segment_guid/organizations', to: 'organizations_v3#index'
   get '/organizations/:guid/relationships/default_isolation_segment', to: 'organizations_v3#show_default_isolation_segment'
@@ -163,6 +164,7 @@ Rails.application.routes.draw do
   get '/service_brokers', to: 'service_brokers#index'
   get '/service_brokers/:guid', to: 'service_brokers#show'
   post '/service_brokers', to: 'service_brokers#create'
+  delete '/service_brokers/:guid', to: 'service_brokers#destroy'
 
   # space_manifests
   post '/spaces/:guid/actions/apply_manifest', to: 'space_manifests#apply_manifest'
@@ -201,6 +203,13 @@ Rails.application.routes.draw do
   post '/stacks', to: 'stacks#create'
   patch '/stacks/:guid', to: 'stacks#update'
   delete '/stacks/:guid', to: 'stacks#destroy'
+
+  # users
+  get '/users', to: 'users#index'
+  get '/users/:guid', to: 'users#show'
+  post '/users', to: 'users#create'
+  patch '/users/:guid', to: 'users#update'
+  delete '/users/:guid', to: 'users#destroy'
 
   # buildpacks
   get '/buildpacks', to: 'buildpacks#index'

@@ -14,7 +14,7 @@ class MaxAppInstancesPolicy
     return unless @process.scaling_operation?
     return if @quota_definition.app_instance_limit == -1 || @process.stopped?
 
-    other_apps = @space_or_org.apps.reject { |process| process.guid == @process.guid }
+    other_apps = @space_or_org.processes.reject { |process| process.guid == @process.guid }
 
     proposed_instance_count = other_apps.reject { |process| process.state == 'STOPPED' }.sum(&:instances) + @process.instances
 

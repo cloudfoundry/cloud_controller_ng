@@ -1,7 +1,4 @@
 ### Apply a space manifest
-> **Note:** Apply manifest will only trigger an immediate update for the "disk_quota", "instances", and "memory" properties. All other properties will update on app restart.
-
-Apply changes specified in a manifest to the named apps and their underlying processes. These changes are additive and will not modify any unspecified properties or remove any existing environment variables, routes, or services.
 
 ```
 Example Request
@@ -24,14 +21,14 @@ HTTP/1.1 202 Accepted
 Location: https://api.example.org/v3/jobs/[guid]
 ```
 
+Apply changes specified in a manifest to the named apps and their underlying processes. These changes are additive and will not modify any unspecified properties or remove any existing environment variables, routes, or services.
+
+<aside class="notice">
+Apply manifest will only trigger an immediate update for the "disk_quota", "instances", and "memory" properties. All other properties will update on app restart.
+</aside>
+
 #### Definition
 `POST /v3/spaces/:guid/actions/apply_manifest`
-
-#### Query parameters
-
-Name | Type | Description
----- | ---- | ------------
-**no_route** | _boolean_ | Unmaps all existing routes and blocks route creation for apps in the manifest.
 
 #### Permitted roles
  |

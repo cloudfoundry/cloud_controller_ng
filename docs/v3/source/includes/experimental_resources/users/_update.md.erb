@@ -1,0 +1,47 @@
+
+### Update a User
+
+Update a user's metadata.
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/users/24d59a1e-2613-4255-86a2-e0454cc6e261" \
+  -X PATCH \
+  -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
+  -d '{
+  "medtadata": {
+    "labels": {"enviroment": "production"},
+    "annotations": {"note": "detailed information"}
+  }'
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 201 Created
+Content-Type: application/json
+
+<%= yield_content :single_user_with_metadata %>
+```
+
+#### Definition
+`PATCH /v3/users`
+
+#### Required parameters
+
+Name     | Type     | Description
+-------  | -------  | -----------
+**metadata.labels** _(experimental)_  | [_label object_](#links) | Labels applied to the app.                         |
+**metadata.annotations** _(experimental)_| [_annotation object_](#links) | Annotations added to the user.             |
+
+#### Permitted roles
+
+Role | Notes
+----- | ---
+Admin |

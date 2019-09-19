@@ -16,6 +16,7 @@ module VCAP::CloudController
           'order_by' => 'created_at',
           'include' => 'space,org',
           'label_selector' => 'foo in (stuff,things)',
+          'lifecycle_type' => 'buildpack',
         }
       end
 
@@ -36,6 +37,7 @@ module VCAP::CloudController
         expect(message.requirements.first.key).to eq('foo')
         expect(message.requirements.first.operator).to eq(:in)
         expect(message.requirements.first.values).to contain_exactly('stuff', 'things')
+        expect(message.lifecycle_type).to eq('buildpack')
       end
 
       it 'converts requested keys to symbols' do
@@ -50,6 +52,7 @@ module VCAP::CloudController
         expect(message.requested?(:order_by)).to be_truthy
         expect(message.requested?(:include)).to be_truthy
         expect(message.requested?(:label_selector)).to be_truthy
+        expect(message.requested?(:lifecycle_type)).to be_truthy
       end
     end
 
@@ -64,12 +67,13 @@ module VCAP::CloudController
           per_page: 5,
           order_by: 'created_at',
           include: ['space', 'org'],
-          label_selector: 'foo in (stuff,things)'
+          label_selector: 'foo in (stuff,things)',
+          lifecycle_type: 'buildpack'
         }
       end
 
       it 'excludes the pagination keys' do
-        expected_params = [:names, :guids, :organization_guids, :space_guids, :include, :label_selector]
+        expected_params = [:names, :guids, :organization_guids, :space_guids, :include, :label_selector, :lifecycle_type]
         expect(AppsListMessage.from_params(opts).to_param_hash.keys).to match_array(expected_params)
       end
     end
@@ -86,7 +90,8 @@ module VCAP::CloudController
                                 per_page: 5,
                                 order_by: 'created_at',
                                 include: ['space', 'org'],
-                                label_selector: 'foo in (stuff,things)'
+                                label_selector: 'foo in (stuff,things)',
+                                lifecycle_type: 'buildpack',
                               })
         }.not_to raise_error
       end
@@ -173,6 +178,18 @@ module VCAP::CloudController
           expect(message).to be_invalid
           expect(message.errors[:base].length).to eq 1
           expect(message.errors[:base][0]).to match(/Duplicate included resource: 'org'/)
+        end
+
+        it 'validates lifecycle_type is one of two values' do
+          message = AppsListMessage.from_params lifecycle_type: 'not-buildpack-or-docker'
+          expect(message).to be_invalid
+          expect(message.errors[:base].length).to eq 1
+        end
+
+        it 'validates lifecycle_type can be null' do
+          message = AppsListMessage.from_params({})
+          expect(message).to be_valid
+          expect(message.errors[:base].length).to eq 0
         end
       end
     end

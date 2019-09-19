@@ -10,10 +10,14 @@ RSpec.describe 'Apps' do
   let(:stack) { VCAP::CloudController::Stack.make }
   let(:user_email) { Sham.email }
   let(:user_name) { 'some-username' }
+  let(:rails_logger) { instance_double(ActiveSupport::Logger, info: nil) }
 
   before do
     space.organization.add_user(user)
     space.add_developer(user)
+    allow(ActiveSupport::Logger).to receive(:new).and_return(rails_logger)
+    allow(VCAP::CloudController::TelemetryLogger).to receive(:emit).and_call_original
+    VCAP::CloudController::TelemetryLogger.init('fake-log-path')
   end
 
   describe 'POST /v3/apps' do
@@ -128,6 +132,28 @@ RSpec.describe 'Apps' do
       app_guid = parsed_response['guid']
       expect(VCAP::CloudController::AppModel.find(guid: app_guid)).to_not be_nil
       expect(VCAP::CloudController::ProcessModel.find(guid: app_guid)).to_not be_nil
+    end
+
+    context 'telemetry' do
+      it 'should log the required fields when the app is created' do
+        Timecop.freeze do
+          post '/v3/apps', create_request.to_json, user_header
+
+          parsed_response = MultiJson.load(last_response.body)
+          app_guid = parsed_response['guid']
+
+          expected_json = {
+            'telemetry-source' => 'cloud_controller_ng',
+            'telemetry-time' => Time.now.to_datetime.rfc3339,
+            'create-app' => {
+              'app-id' => Digest::SHA256.hexdigest(app_guid),
+              'user-id' => Digest::SHA256.hexdigest(user.guid),
+            }
+          }
+          expect(last_response.status).to eq(201), last_response.body
+          expect(rails_logger).to have_received(:info).with(JSON.generate(expected_json))
+        end
+      end
     end
 
     describe 'Docker app' do
@@ -503,6 +529,32 @@ RSpec.describe 'Apps' do
 
         expect(last_response.status).to eq(200)
         expect(parsed_response['resources'].map { |r| r['name'] }).to eq(['name1'])
+        expect(parsed_response['pagination']).to eq(expected_pagination)
+      end
+
+      it 'filters by lifecycle_type' do
+        VCAP::CloudController::AppModel.make(name: 'name1')
+        docker_app_model = VCAP::CloudController::AppModel.make(name: 'name2')
+        VCAP::CloudController::AppModel.make(name: 'name3')
+
+        docker_app_model.buildpack_lifecycle_data = nil
+        docker_app_model.save
+
+        get '/v3/apps?lifecycle_type=buildpack', nil, admin_header
+
+        expected_pagination = {
+          'total_results' => 2,
+          'total_pages' => 1,
+          'first' => { 'href' => "#{link_prefix}/v3/apps?lifecycle_type=buildpack&page=1&per_page=50" },
+          'last' => { 'href' => "#{link_prefix}/v3/apps?lifecycle_type=buildpack&page=1&per_page=50" },
+          'next' => nil,
+          'previous' => nil
+        }
+
+        parsed_response = MultiJson.load(last_response.body)
+
+        expect(last_response.status).to eq(200)
+        expect(parsed_response['resources'].map { |r| r['name'] }).to eq(['name1', 'name3'])
         expect(parsed_response['pagination']).to eq(expected_pagination)
       end
     end

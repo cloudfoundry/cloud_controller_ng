@@ -32,7 +32,7 @@ end
 
 module VCAP::CloudController
   %w/App Build Buildpack Deployment Domain Droplet IsolationSegment Organization
-     Package Process Revision Route Space Stack Task ServiceInstance /.each do |root|
+     Package Process Revision Route ServiceInstance Space Stack Task User/.each do |root|
     "VCAP::CloudController::#{root}LabelModel".constantize.blueprint do end
     "VCAP::CloudController::#{root}AnnotationModel".constantize.blueprint do end
   end
@@ -374,6 +374,10 @@ module VCAP::CloudController
     broker_url        { Sham.url }
     auth_username     { Sham.auth_username }
     auth_password     { Sham.auth_password }
+  end
+
+  ServiceBrokerState.blueprint do
+    state { ServiceBrokerStateEnum::AVAILABLE }
   end
 
   ServiceDashboardClient.blueprint do

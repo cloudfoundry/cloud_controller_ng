@@ -42,7 +42,7 @@ module CloudController
             'package_updated_at'         => process.package_updated_at,
             'detected_start_command'     => process.detected_start_command,
             'enable_ssh'                 => process.app.enable_ssh,
-            'ports'                      => VCAP::CloudController::Diego::Protocol::OpenProcessPorts.new(process).to_a,
+            'ports'                      => process.open_ports,
           }
 
           entity.merge!(RelationsPresenter.new.to_hash(controller, process, opts, depth, parents, orphans))

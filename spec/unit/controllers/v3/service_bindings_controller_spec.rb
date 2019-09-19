@@ -514,7 +514,7 @@ RSpec.describe ServiceBindingsController, type: :controller do
         end
       end
 
-      context 'when the user has read, but not write persimmons on the space' do
+      context 'when the user has read, but not write permissions on the space' do
         before do
           allow_user_read_access_for(user, spaces: [space])
           disallow_user_write_access(user, space: space)

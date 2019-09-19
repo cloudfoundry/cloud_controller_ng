@@ -3,17 +3,22 @@ require 'database/batch_delete'
 module Database
   class OldRecordCleanup
     class NoCurrentTimestampError < StandardError; end
-    attr_reader :model, :days_ago
+    attr_reader :model, :days_ago, :keep_at_least_one_record
 
-    def initialize(model, days_ago)
+    def initialize(model, days_ago, keep_at_least_one_record: false)
       @model = model
       @days_ago = days_ago
+      @keep_at_least_one_record = keep_at_least_one_record
     end
 
     def delete
       cutoff_date = current_timestamp_from_database - days_ago.to_i.days
 
       old_records = model.dataset.where(Sequel.lit('created_at < ?', cutoff_date))
+      if keep_at_least_one_record
+        last_id = model.order(:id).last.id
+        old_records = old_records.where(Sequel.lit('id < ?', last_id))
+      end
       logger.info("Cleaning up #{old_records.count} #{model.table_name} table rows")
 
       Database::BatchDelete.new(old_records, 1000).delete

@@ -10,6 +10,7 @@ require 'cloud_controller/random_route_generator'
 module VCAP::CloudController
   class AppApplyManifest
     class NoDefaultDomain < StandardError; end
+    class ServiceBindingError < StandardError; end
 
     SERVICE_BINDING_TYPE = 'app'.freeze
 
@@ -95,14 +96,29 @@ module VCAP::CloudController
 
       if update_message.random_route && existing_routes.empty?
         random_host = "#{app.name}-#{RandomRouteGenerator.new.route}"
-        domain_name = app.organization.default_domain&.name
-        raise NoDefaultDomain.new('No domains available for random route') unless domain_name
+        domain_name = get_default_domain_name(app)
 
         route = "#{random_host}.#{domain_name}"
 
         random_route_message = ManifestRoutesUpdateMessage.new(routes: [{ route: route }])
         ManifestRouteUpdate.update(app.guid, random_route_message, @user_audit_info)
       end
+
+      if update_message.default_route && existing_routes.empty?
+        domain_name = get_default_domain_name(app)
+
+        route = "#{app.name}.#{domain_name}"
+
+        random_route_message = ManifestRoutesUpdateMessage.new(routes: [{ route: route }])
+        ManifestRouteUpdate.update(app.guid, random_route_message, @user_audit_info)
+      end
+    end
+
+    def get_default_domain_name(app)
+      domain_name = app.organization.default_domain&.name
+      raise NoDefaultDomain.new('No default domains available') unless domain_name
+
+      domain_name
     end
 
     def create_service_bindings(manifest_service_bindings_message, app)
@@ -112,13 +128,18 @@ module VCAP::CloudController
         service_instance_not_found!(manifest_service_binding.name) unless service_instance
         next if binding_exists?(service_instance, app)
 
-        action.create(
-          app,
-          service_instance,
-          ServiceBindingCreateMessage.new(type: SERVICE_BINDING_TYPE, data: { parameters: manifest_service_binding.parameters }),
-          volume_services_enabled?,
-          false
-        )
+        begin
+          action.create(
+            app,
+            service_instance,
+            ServiceBindingCreateMessage.new(type: SERVICE_BINDING_TYPE, data: { parameters: manifest_service_binding.parameters }),
+            volume_services_enabled?,
+            false
+          )
+        rescue => e
+          error_message = "For service '#{service_instance.name}': #{e.message}"
+          raise ServiceBindingError.new(error_message)
+        end
       end
     end
 

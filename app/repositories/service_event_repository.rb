@@ -169,7 +169,7 @@ module VCAP::CloudController
 
         def metadata_for_broker_params(params)
           request_hash = {}
-          [:name, :broker_url, :auth_username].each do |key|
+          [:name, :broker_url, :auth_username, :space_guid].each do |key|
             request_hash[key] = params[key] unless params[key].nil?
           end
           request_hash[:auth_password] = Presenters::Censorship::REDACTED if params.key? :auth_password

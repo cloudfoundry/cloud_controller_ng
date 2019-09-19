@@ -2,6 +2,7 @@ require 'presenters/v3/app_manifest_presenter'
 require 'repositories/app_event_repository'
 require 'messages/named_app_manifest_message'
 require 'actions/app_find_or_create_skeleton'
+require 'actions/app_create'
 
 class SpaceManifestsController < ApplicationController
   wrap_parameters :body, format: [:yaml]
@@ -13,14 +14,17 @@ class SpaceManifestsController < ApplicationController
     space_not_found! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
     unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
 
-    messages = parsed_app_manifests.map { |app_manifest| NamedAppManifestMessage.create_from_yml(app_manifest, hashed_params) }
+    messages = parsed_app_manifests.map { |app_manifest| NamedAppManifestMessage.create_from_yml(app_manifest) }
     errors = messages.each_with_index.flat_map { |message, i| errors_for_message(message, i) }
     compound_error!(errors) unless errors.empty?
 
     action = AppFindOrCreateSkeleton.new(user_audit_info)
     app_guid_message_hash = messages.map do |m|
-      app = action.find_or_create(message: m, space: space)
-
+      begin
+        app = action.find_or_create(message: m, space: space)
+      rescue AppCreate::InvalidApp => e
+        unprocessable!("For application '#{m.name}': " + e.message)
+      end
       unsupported_for_docker_apps!(m) if incompatible_with_buildpacks(app.lifecycle_type, m)
       unsupported_for_buildpack_apps!(m) if incompatible_with_docker(app.lifecycle_type, m)
 

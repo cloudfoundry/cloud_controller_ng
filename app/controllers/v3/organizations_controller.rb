@@ -10,6 +10,7 @@ require 'messages/orgs_default_iso_seg_update_message'
 require 'messages/orgs_list_message'
 require 'presenters/v3/paginated_list_presenter'
 require 'presenters/v3/organization_presenter'
+require 'presenters/v3/organization_usage_summary_presenter'
 require 'presenters/v3/to_one_relationship_presenter'
 
 class OrganizationsV3Controller < ApplicationController
@@ -46,7 +47,7 @@ class OrganizationsV3Controller < ApplicationController
     message = VCAP::CloudController::OrganizationCreateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    org = OrganizationCreate.new(perm_client: perm_client).create(message)
+    org = OrganizationCreate.new(perm_client: perm_client, user_audit_info: user_audit_info).create(message)
 
     render json: Presenters::V3::OrganizationPresenter.new(org), status: :created
   rescue OrganizationCreate::Error => e
@@ -59,16 +60,18 @@ class OrganizationsV3Controller < ApplicationController
     message = VCAP::CloudController::OrganizationUpdateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    org = OrganizationUpdate.new.update(org, message)
+    org = OrganizationUpdate.new(user_audit_info).update(org, message)
 
     render json: Presenters::V3::OrganizationPresenter.new(org), status: :ok
+  rescue OrganizationUpdate::Error => e
+    unprocessable!(e.message)
   end
 
   def destroy
     org = fetch_deletable_org(hashed_params[:guid])
 
     service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository.new(user_audit_info)
-    delete_action = OrganizationDelete.new(SpaceDelete.new(user_audit_info, service_event_repository))
+    delete_action = OrganizationDelete.new(SpaceDelete.new(user_audit_info, service_event_repository), user_audit_info)
     deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(Organization, org.guid, delete_action)
     pollable_job = Jobs::Enqueuer.new(deletion_job, queue: 'cc-generic').enqueue_pollable
 
@@ -88,6 +91,13 @@ class OrganizationsV3Controller < ApplicationController
       relationship_name: 'default_isolation_segment',
       related_resource_name: 'isolation_segments'
     )
+  end
+
+  def show_usage_summary
+    org = fetch_org(hashed_params[:guid])
+    org_not_found! unless org && permission_queryer.can_read_from_org?(org.guid)
+
+    render status: :ok, json: Presenters::V3::OrganizationUsageSummaryPresenter.new(org)
   end
 
   def update_default_isolation_segment

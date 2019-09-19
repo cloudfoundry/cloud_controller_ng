@@ -3,6 +3,7 @@ module VCAP::CloudController
     one_to_many :services
     one_to_many :service_dashboard_client
     many_to_one :space
+    one_to_one :service_broker_state
 
     import_attributes :name, :broker_url, :auth_username, :auth_password
     export_attributes :name, :broker_url, :auth_username, :space_guid
@@ -30,6 +31,14 @@ module VCAP::CloudController
 
     def space_scoped?
       !!space_id
+    end
+
+    def has_service_instances?
+      services.select do |service|
+        service.service_plans.select { |plan|
+          plan.service_instances.any?
+        }.any?
+      end.any?
     end
 
     def self.user_visibility_filter(user)

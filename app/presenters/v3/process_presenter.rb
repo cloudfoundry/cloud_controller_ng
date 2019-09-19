@@ -1,4 +1,3 @@
-require 'cloud_controller/diego/protocol/open_process_ports'
 require 'presenters/v3/base_presenter'
 require 'models/helpers/health_check_types'
 require 'presenters/mixins/metadata_presentation_helpers'

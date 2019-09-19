@@ -6,7 +6,7 @@ module VCAP::CloudController
       let(:user) { User.make(admin: true) }
       let(:apply_manifest_action) { instance_double(AppApplyManifest) }
       let(:app) { AppModel.make(name: Sham.guid) }
-      let(:parsed_app_manifest) { AppManifestMessage.create_from_yml({ name: 'blah', instances: 4, routes: [{ route: 'foo.example.com' }] }, {}) }
+      let(:parsed_app_manifest) { AppManifestMessage.create_from_yml({ name: 'blah', instances: 4, routes: [{ route: 'foo.example.com' }] }) }
       subject(:job) { AppApplyManifestActionJob.new(app.guid, parsed_app_manifest, apply_manifest_action) }
 
       before do
@@ -118,26 +118,10 @@ module VCAP::CloudController
 
       context 'when an ServiceBindingCreate::InvalidServiceBinding error occurs' do
         it 'wraps the error in an ApiError' do
-          allow(apply_manifest_action).to receive(:apply).and_raise(ServiceBindingCreate::InvalidServiceBinding, 'Invalid binding name')
+          allow(apply_manifest_action).to receive(:apply).and_raise(AppApplyManifest::ServiceBindingError, 'Invalid binding name')
           expect {
             job.perform
           }.to raise_error(CloudController::Errors::ApiError, /Invalid binding name/)
-        end
-
-        context 'subclasses of InvalidServiceBinding' do
-          it 'wraps the error in an ApiError' do
-            [
-              ServiceBindingCreate::ServiceInstanceNotBindable,
-              ServiceBindingCreate::ServiceBrokerInvalidSyslogDrainUrl,
-              ServiceBindingCreate::VolumeMountServiceDisabled,
-              ServiceBindingCreate::SpaceMismatch
-            ].each do |exception|
-              allow(apply_manifest_action).to receive(:apply).and_raise(exception, 'Invalid binding name')
-              expect {
-                job.perform
-              }.to raise_error(CloudController::Errors::ApiError, /Invalid binding name/)
-            end
-          end
         end
       end
 

@@ -30,8 +30,8 @@ Cancel requests are idempotent and will be processed according to the state of t
 Canceling a task that is in `SUCCEEDED` or `FAILED` state will return an error.
 
 #### Definition
-`POST /v3/tasks/:task_guid/actions/cancel` <br>
-`PUT /v3/tasks/:task_guid/cancel` _(Deprecated)_
+`POST /v3/tasks/:guid/actions/cancel` <br>
+`PUT /v3/tasks/:guid/cancel` _(Deprecated)_
 
 #### Permitted roles
  |

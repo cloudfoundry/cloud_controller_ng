@@ -330,6 +330,31 @@ RSpec.describe SpaceManifestsController, type: :controller do
           ])
         end
       end
+
+      context 'when the buildpack does not exist' do
+        let(:request_body) do
+          { 'applications' =>
+            [{ 'name' => 'burger king', 'instances' => 4, 'buildpacks' => ['badpack'] }] }
+        end
+
+        it 'returns a 422 and a useful error to the user' do
+          post :apply_manifest, params: { guid: space.guid }.merge(request_body), as: :yaml
+
+          expect(response.status).to eq(422)
+          space_apply_manifest_jobs = Delayed::Job.where(Sequel.lit("handler like '%SpaceApplyManifest%'"))
+          expect(space_apply_manifest_jobs.count).to eq 0
+
+          errors = parsed_body['errors']
+          expect(errors.size).to eq(1)
+          expect(errors.map { |h| h.reject { |k, _| k == 'test_mode_info' } }).to match_array([
+            {
+              'detail' => "For application 'burger king': Specified unknown buildpack name: \"badpack\"",
+              'title' => 'CF-UnprocessableEntity',
+              'code' => 10008
+            }
+          ])
+        end
+      end
     end
 
     context 'when the request body includes docker' do
