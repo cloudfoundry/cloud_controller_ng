@@ -1,6 +1,5 @@
 module VCAP::CloudController
   class SidecarModel < Sequel::Model(:sidecars)
-
     include SidecarMixin
 
     many_to_one :app,

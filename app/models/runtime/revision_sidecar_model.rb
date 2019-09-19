@@ -1,7 +1,5 @@
-
 module VCAP::CloudController
   class RevisionSidecarModel < Sequel::Model(:revision_sidecars)
-
     include SidecarMixin
 
     many_to_one :revision,
@@ -16,6 +14,8 @@ module VCAP::CloudController
       primary_key: :guid
 
     alias_method :sidecar_process_types, :revision_sidecar_process_types
+
+    add_association_dependencies revision_sidecar_process_types: :destroy
 
     def validate
       super
