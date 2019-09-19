@@ -66,7 +66,7 @@ module VCAP::CloudController
     end
 
     def index?(*_)
-      admin_user? || admin_read_only_user?
+      admin_user? || admin_read_only_user? || global_auditor?
     end
 
     def reset?(*_)
