@@ -10,7 +10,7 @@ module VCAP::CloudController
     ]
 
     validates_with NoAdditionalParamsValidator
-    validates_with IncludeParamValidator, valid_values: ['org']
+    validates_with IncludeParamValidator, valid_values: ['org', 'organization']
 
     validates :names, array: true, allow_nil: true
     validates :organization_guids, array: true, allow_nil: true

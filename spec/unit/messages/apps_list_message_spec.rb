@@ -14,7 +14,7 @@ module VCAP::CloudController
           'page' => 1,
           'per_page' => 5,
           'order_by' => 'created_at',
-          'include' => 'space,org',
+          'include' => 'space,space.organization',
           'label_selector' => 'foo in (stuff,things)',
           'lifecycle_type' => 'buildpack',
         }
@@ -32,7 +32,7 @@ module VCAP::CloudController
         expect(message.page).to eq(1)
         expect(message.per_page).to eq(5)
         expect(message.order_by).to eq('created_at')
-        expect(message.include).to eq(['space', 'org'])
+        expect(message.include).to eq(['space', 'space.organization'])
         expect(message.label_selector).to eq('foo in (stuff,things)')
         expect(message.requirements.first.key).to eq('foo')
         expect(message.requirements.first.operator).to eq(:in)
@@ -66,7 +66,7 @@ module VCAP::CloudController
           page: 1,
           per_page: 5,
           order_by: 'created_at',
-          include: ['space', 'org'],
+          include: ['space', 'space.organization'],
           label_selector: 'foo in (stuff,things)',
           lifecycle_type: 'buildpack'
         }
@@ -89,7 +89,7 @@ module VCAP::CloudController
                                 page: 1,
                                 per_page: 5,
                                 order_by: 'created_at',
-                                include: ['space', 'org'],
+                                include: ['space', 'space.organization'],
                                 label_selector: 'foo in (stuff,things)',
                                 lifecycle_type: 'buildpack',
                               })
@@ -111,9 +111,9 @@ module VCAP::CloudController
       it 'does not accept include that is not space' do
         message = AppsListMessage.from_params({ 'include' => 'space' })
         expect(message).to be_valid
-        message = AppsListMessage.from_params({ 'include' => 'org' })
+        message = AppsListMessage.from_params({ 'include' => 'space.organization' })
         expect(message).to be_valid
-        message = AppsListMessage.from_params({ 'include' => 'space,org' })
+        message = AppsListMessage.from_params({ 'include' => 'space,space.organization' })
         expect(message).to be_valid
         message = AppsListMessage.from_params({ 'include' => 'greg\'s buildpack' })
         expect(message).not_to be_valid
@@ -165,19 +165,19 @@ module VCAP::CloudController
         end
 
         it 'validates possible includes' do
-          message = AppsListMessage.from_params 'include' => 'org,space'
+          message = AppsListMessage.from_params 'include' => 'space.organization,space'
           expect(message).to be_valid
           message = AppsListMessage.from_params 'include' => 'borg,spaceship'
           expect(message).to be_invalid
-          message = AppsListMessage.from_params 'include' => 'org,spaceship'
+          message = AppsListMessage.from_params 'include' => 'space.organization,spaceship'
           expect(message).to be_invalid
         end
 
         it 'invalidates duplicates in the includes field' do
-          message = AppsListMessage.from_params 'include' => 'org,org'
+          message = AppsListMessage.from_params 'include' => 'space.organization,space.organization'
           expect(message).to be_invalid
           expect(message.errors[:base].length).to eq 1
-          expect(message.errors[:base][0]).to match(/Duplicate included resource: 'org'/)
+          expect(message.errors[:base][0]).to match(/Duplicate included resource: 'space.organization'/)
         end
 
         it 'validates lifecycle_type is one of two values' do

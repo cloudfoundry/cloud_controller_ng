@@ -116,7 +116,7 @@ RSpec.describe 'Spaces' do
     end
 
     it 'returns the requested space including org info' do
-      get "/v3/spaces/#{space1.guid}?include=org", nil, user_header
+      get "/v3/spaces/#{space1.guid}?include=organization", nil, user_header
       expect(last_response.status).to eq(200)
 
       parsed_response = MultiJson.load(last_response.body)
@@ -262,7 +262,7 @@ RSpec.describe 'Spaces' do
       let!(:org2)              { VCAP::CloudController::Organization.make name: 'Videogames', created_at: 1.days.ago }
 
       it 'can includes all orgs for spaces' do
-        get '/v3/spaces?include=org', nil, admin_header
+        get '/v3/spaces?include=organization', nil, admin_header
         expect(last_response.status).to eq(200)
         parsed_response = MultiJson.load(last_response.body)
 
@@ -321,7 +321,7 @@ RSpec.describe 'Spaces' do
       end
 
       it 'flags unsupported includes that contain supported ones' do
-        get '/v3/spaces?include=org,not_supported', nil, admin_header
+        get '/v3/spaces?include=organization,not_supported', nil, admin_header
         expect(last_response.status).to eq(400)
       end
 

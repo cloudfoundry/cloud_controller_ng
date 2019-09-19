@@ -25,5 +25,19 @@ module VCAP::CloudController
                                                               Presenters::V3::OrganizationPresenter.new(organization2).to_hash])
       expect(hash[:included][:monkeys]).to match_array(['zach', 'greg'])
     end
+
+    describe '.match?' do
+      it 'matches include arrays containing "org"' do
+        expect(decorator.match?(['potato', 'org', 'turnip'])).to be_truthy
+      end
+
+      it 'matches include arrays containing "space.organization"' do
+        expect(decorator.match?(['potato', 'space.organization', 'turnip'])).to be_truthy
+      end
+
+      it 'does not match other include arrays' do
+        expect(decorator.match?(['potato', 'turnip'])).to be_falsey
+      end
+    end
   end
 end

@@ -1,6 +1,10 @@
 module VCAP::CloudController
   class IncludeSpaceOrganizationDecorator
     class << self
+      def match?(include)
+        include&.any? { |i| %w(org organization).include?(i) }
+      end
+
       def decorate(hash, spaces)
         hash[:included] ||= {}
         organization_guids = spaces.map(&:organization_guid).uniq
