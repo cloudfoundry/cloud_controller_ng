@@ -3,7 +3,7 @@ class SidecarMemoryLessThanProcessMemoryPolicy
 
   # memory represents the amount of memory to add to the total sidecar amount
   def initialize(processes, new_memory=0)
-    @new_memory = new_memory
+    @new_memory = new_memory || 0
     @processes = Array(processes)
   end
 
