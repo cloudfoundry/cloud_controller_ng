@@ -52,6 +52,7 @@ RSpec.describe 'Droplets' do
             image: nil,
             created_at: iso8601,
             updated_at: iso8601,
+            relationships: { app: { data: { guid: app_model.guid } } },
             metadata: {
               labels: {},
               annotations: {}
@@ -233,6 +234,7 @@ RSpec.describe 'Droplets' do
           'image' => nil,
           'created_at' => iso8601,
           'updated_at' => iso8601,
+          'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
           'links' => {
             'self' => { 'href' => "#{link_prefix}/v3/droplets/#{guid}" },
             'package' => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
@@ -297,6 +299,7 @@ RSpec.describe 'Droplets' do
           'image' => 'docker/foobar:baz',
           'created_at' => iso8601,
           'updated_at' => iso8601,
+          'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
           'links' => {
             'self' => { 'href' => "#{link_prefix}/v3/droplets/#{guid}" },
             'package' => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
@@ -389,6 +392,7 @@ RSpec.describe 'Droplets' do
             'process_types' => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
             'created_at' => iso8601,
             'updated_at' => iso8601,
+            'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
             'links' => {
               'self' => { 'href' => "#{link_prefix}/v3/droplets/#{droplet2.guid}" },
               'package' => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
@@ -416,6 +420,7 @@ RSpec.describe 'Droplets' do
             'process_types' => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
             'created_at' => iso8601,
             'updated_at' => iso8601,
+            'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
             'links' => {
               'self' => { 'href' => "#{link_prefix}/v3/droplets/#{droplet1.guid}" },
               'package' => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
@@ -774,6 +779,7 @@ RSpec.describe 'Droplets' do
             'process_types' => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
             'created_at' => iso8601,
             'updated_at' => iso8601,
+            'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
             'links' => {
               'self' => { 'href' => "#{link_prefix}/v3/droplets/#{droplet2.guid}" },
               'package' => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
@@ -803,6 +809,7 @@ RSpec.describe 'Droplets' do
             'process_types' => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
             'created_at' => iso8601,
             'updated_at' => iso8601,
+            'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
             'links' => {
               'self' => { 'href' => "#{link_prefix}/v3/droplets/#{droplet1.guid}" },
               'package' => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
@@ -959,6 +966,7 @@ RSpec.describe 'Droplets' do
             'process_types' => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
             'created_at' => iso8601,
             'updated_at' => iso8601,
+            'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
             'links' => {
               'self' => { 'href' => "#{link_prefix}/v3/droplets/#{droplet2.guid}" },
               'package' => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
@@ -988,6 +996,7 @@ RSpec.describe 'Droplets' do
             'process_types' => { 'redacted_message' => '[PRIVATE DATA HIDDEN IN LISTS]' },
             'created_at' => iso8601,
             'updated_at' => iso8601,
+            'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
             'links' => {
               'self' => { 'href' => "#{link_prefix}/v3/droplets/#{droplet1.guid}" },
               'package' => { 'href' => "#{link_prefix}/v3/packages/#{package_model.guid}" },
@@ -1057,6 +1066,7 @@ RSpec.describe 'Droplets' do
         'process_types' => { 'web' => 'start-command' },
         'created_at' => iso8601,
         'updated_at' => iso8601,
+        'relationships' => { 'app' => { 'data' => { 'guid' => new_app.guid } } },
         'links' => {
           'self' => { 'href' => "#{link_prefix}/v3/droplets/#{copied_droplet.guid}" },
           'app' => { 'href' => "#{link_prefix}/v3/apps/#{new_app.guid}" },
@@ -1104,6 +1114,7 @@ RSpec.describe 'Droplets' do
         image: nil,
         created_at: iso8601,
         updated_at: iso8601,
+        relationships: { app: { data: { guid: app_model.guid } } },
         metadata: {
           labels: {},
           annotations: {}

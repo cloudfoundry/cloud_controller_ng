@@ -66,6 +66,7 @@ RSpec.describe 'Processes' do
           {
             'guid' => web_process.guid,
             'relationships' => {
+              'app' => { 'data' => { 'guid' => app_model.guid } },
               'revision' => {
                 'data' => {
                   'guid' => web_revision.guid
@@ -98,6 +99,7 @@ RSpec.describe 'Processes' do
           {
             'guid' => worker_process.guid,
             'relationships' => {
+              'app' => { 'data' => { 'guid' => app_model.guid } },
               'revision' => nil,
             },
             'type'         => 'worker',
@@ -338,6 +340,7 @@ RSpec.describe 'Processes' do
         'guid'         => process.guid,
         'type'         => 'web',
         'relationships' => {
+          'app' => { 'data' => { 'guid' => app_model.guid } },
           'revision' => { 'data' => { 'guid' => revision.guid } },
         },
         'command'      => 'rackup',
@@ -536,6 +539,7 @@ RSpec.describe 'Processes' do
       expected_response = {
         'guid' => process.guid,
         'relationships' => {
+          'app' => { 'data' => { 'guid' => app_model.guid } },
           'revision' => { 'data' => { 'guid' => revision.guid } },
         },
         'type'         => 'web',
@@ -637,6 +641,7 @@ RSpec.describe 'Processes' do
         'guid'         => process.guid,
         'type'         => 'web',
         'relationships' => {
+          'app' => { 'data' => { 'guid' => app_model.guid } },
           'revision' => nil,
         },
         'command'      => 'rackup',
@@ -814,6 +819,7 @@ RSpec.describe 'Processes' do
           {
             'guid' => process1.guid,
             'relationships' => {
+              'app' => { 'data' => { 'guid' => app_model.guid } },
               'revision' => nil,
             },
             'type'         => 'web',
@@ -842,6 +848,7 @@ RSpec.describe 'Processes' do
           {
             'guid' => process2.guid,
             'relationships' => {
+              'app' => { 'data' => { 'guid' => app_model.guid } },
               'revision' => {
                 'data' => {
                   'guid' => revision2.guid
@@ -948,6 +955,7 @@ RSpec.describe 'Processes' do
       expected_response = {
         'guid' => process.guid,
         'relationships' => {
+          'app' => { 'data' => { 'guid' => app_model.guid } },
           'revision' => { 'data' => { 'guid' => revision.guid } },
         },
         'type'         => 'web',
@@ -1028,6 +1036,7 @@ RSpec.describe 'Processes' do
       expected_response = {
         'guid' => process.guid,
         'relationships' => {
+          'app' => { 'data' => { 'guid' => app_model.guid } },
           'revision' => nil,
         },
         'type'         => 'web',
@@ -1133,6 +1142,7 @@ RSpec.describe 'Processes' do
         'type'         => 'web',
 
         'relationships' => {
+          'app' => { 'data' => { 'guid' => app_model.guid } },
           'revision' => nil,
         },
         'command'      => 'rackup',

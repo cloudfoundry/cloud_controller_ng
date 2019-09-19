@@ -30,6 +30,7 @@ module VCAP::CloudController
               data: health_check_data
             },
             relationships: {
+              app: { data: { guid: process.app_guid } },
               revision:     revision,
             },
             created_at:   process.created_at,

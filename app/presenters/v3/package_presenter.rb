@@ -27,6 +27,7 @@ module VCAP::CloudController
             state:      package.state,
             created_at: package.created_at,
             updated_at: package.updated_at,
+            relationships: { app: { data: { guid: package.app_guid } } },
             links:      build_links,
             metadata: {
               labels: hashified_labels(package.labels),

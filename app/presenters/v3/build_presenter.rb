@@ -27,6 +27,7 @@ module VCAP::CloudController
             },
             package: { guid: build.package_guid },
             droplet: droplet,
+            relationships: { app: { data: { guid: build.app_guid } } },
             metadata: {
               labels: hashified_labels(build.labels),
               annotations: hashified_annotations(build.annotations),

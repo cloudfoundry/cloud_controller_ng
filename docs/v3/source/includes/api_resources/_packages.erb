@@ -10,6 +10,13 @@
   "state": "READY",
   "created_at": "2015-11-03T00:53:54Z",
   "updated_at": "2016-06-08T16:41:26Z",
+  "relationships": {
+    "app": {
+      "data": {
+        "guid": "d8b8148d-5798-44de-821a-64b85b15e968"
+      }
+    }
+  },
   "links": {
     "self": {
       "href": "https://api.example.org/v3/packages/4cb65058-f04f-458f-aca1-5f4e43de6407"
@@ -39,9 +46,12 @@
   "state": "<%= state %>",
   "created_at": "2015-11-13T17:02:56Z",
   "updated_at": "2016-06-08T16:41:26Z",
-  "metadata": {
-    "labels": <%= metadata.fetch(:labels, {}).to_json(space: ' ', object_nl: ' ')%>,
-    "annotations": <%= metadata.fetch(:annotations, {}).to_json(space: ' ', object_nl: ' ')%>
+  "relationships": {
+    "app": {
+      "data": {
+        "guid": "1d3bf0ec-5806-43c4-b64e-8364dba1086a"
+      }
+    }
   },
   "links": {
     "self": {
@@ -58,6 +68,10 @@
     "app": {
       "href": "https://api.example.org/v3/apps/1d3bf0ec-5806-43c4-b64e-8364dba1086a"
     }
+  },
+  "metadata": {
+    "labels": <%= metadata.fetch(:labels, {}).to_json(space: ' ', object_nl: ' ')%>,
+    "annotations": <%= metadata.fetch(:annotations, {}).to_json(space: ' ', object_nl: ' ')%>
   }
 }
 <% end %>
@@ -90,6 +104,13 @@
       "state": "AWAITING_UPLOAD",
       "created_at": "2015-11-03T00:53:54Z",
       "updated_at": "2016-06-08T16:41:26Z",
+      "relationships": {
+        "app": {
+          "data": {
+            "guid": "fa3558ce-1c4d-46fc-9776-54b9c8021745"
+          }
+        }
+      },
       "links": {
         "self": {
           "href": "https://api.example.org/v3/packages/a57fd932-85db-483a-a27e-b00efbb3b0a4"
@@ -122,6 +143,13 @@
       "state": "READY",
       "created_at": "2015-11-03T00:53:54Z",
       "updated_at": "2016-06-08T16:41:26Z",
+      "relationships": {
+        "app": {
+          "data": {
+            "guid": "fa3558ce-1c4d-46fc-9776-54b9c8021745"
+          }
+        }
+      },
       "links": {
         "self": {
           "href": "https://api.example.org/v3/packages/8f1f294d-cef8-4c11-9f0b-3bcdc0bd2691"
@@ -167,6 +195,13 @@
       "state": "READY",
       "created_at": "2016-03-17T21:41:09Z",
       "updated_at": "2016-06-08T16:41:26Z",
+      "relationships": {
+        "app": {
+          "data": {
+            "guid": "f2efe391-2b5b-4836-8518-ad93fa9ebf69"
+          }
+        }
+      },
       "links": {
         "self": {
           "href": "https://api.example.org/v3/packages/752edab0-2147-4f58-9c25-cd72ad8c3561"
@@ -206,6 +241,13 @@ You are being redirected.
   "state": "COPYING",
   "created_at": "2016-03-17T21:41:09Z",
   "updated_at": "2016-06-08T16:41:26Z",
+  "relationships": {
+    "app": {
+      "data": {
+        "guid": "36208a68-562d-4f51-94ea-28bd8553a271"
+      }
+    }
+  },
   "links": {
     "self": {
       "href": "https://api.example.org/v3/packages/fec72fc1-e453-4463-a86d-5df426f337a3"

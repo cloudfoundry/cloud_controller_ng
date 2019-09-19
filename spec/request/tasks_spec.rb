@@ -71,6 +71,7 @@ RSpec.describe 'Tasks' do
               'failure_reason' => nil
             },
             'droplet_guid' => task1.droplet.guid,
+            'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
             'metadata' => { 'labels' => {}, 'annotations' => {} },
             'created_at'   => iso8601,
             'updated_at'   => iso8601,
@@ -101,6 +102,7 @@ RSpec.describe 'Tasks' do
               'failure_reason' => nil
             },
             'droplet_guid' => task2.droplet.guid,
+            'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
             'metadata' => { 'labels' => {}, 'annotations' => {} },
             'created_at'   => iso8601,
             'updated_at'   => iso8601,
@@ -249,6 +251,7 @@ RSpec.describe 'Tasks' do
           'failure_reason' => nil
         },
         'droplet_guid' => task.droplet.guid,
+        'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
         'metadata' => { 'labels' => {}, 'annotations' => {} },
         'created_at'   => iso8601,
         'updated_at'   => iso8601,
@@ -374,6 +377,7 @@ RSpec.describe 'Tasks' do
           'failure_reason' => nil
         },
         'droplet_guid' => task.droplet.guid,
+        'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
         'metadata' =>  {
           'labels' => {
             'potato' => 'yam'
@@ -487,6 +491,7 @@ RSpec.describe 'Tasks' do
                 'failure_reason' => nil
               },
               'droplet_guid' => task1.droplet.guid,
+              'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
               'metadata' => { 'labels' => {}, 'annotations' => {} },
               'created_at'   => iso8601,
               'updated_at'   => iso8601,
@@ -518,6 +523,7 @@ RSpec.describe 'Tasks' do
                 'failure_reason' => nil
               },
               'droplet_guid' => task2.droplet.guid,
+              'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
               'metadata' => { 'labels' => {}, 'annotations' => {} },
               'created_at'   => iso8601,
               'updated_at'   => iso8601,
@@ -686,6 +692,7 @@ RSpec.describe 'Tasks' do
           'failure_reason' => nil
         },
         'droplet_guid' => droplet.guid,
+        'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
         'metadata' => { 'labels' => { 'bananas' => 'gros_michel', },
           'annotations' => { 'wombats' => 'althea' } },
         'created_at'   => iso8601,
@@ -793,6 +800,7 @@ RSpec.describe 'Tasks' do
             'failure_reason' => nil
           },
           'droplet_guid' => droplet.guid,
+          'relationships' => { 'app' => { 'data' => { 'guid' => app_model.guid } } },
           'metadata' => { 'labels' => {}, 'annotations' => {} },
           'created_at'   => iso8601,
           'updated_at'   => iso8601,

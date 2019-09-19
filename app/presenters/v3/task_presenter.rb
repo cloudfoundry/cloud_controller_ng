@@ -20,6 +20,7 @@ module VCAP::CloudController
             created_at:   task.created_at,
             updated_at:   task.updated_at,
             droplet_guid: task.droplet_guid,
+            relationships: { app: { data: { guid: task.app_guid } } },
             metadata: {
               labels: hashified_labels(task.labels),
               annotations: hashified_annotations(task.annotations),

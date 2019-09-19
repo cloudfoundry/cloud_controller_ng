@@ -15,6 +15,7 @@ Name | Type | Description
 **guid** | _uuid_ | Unique identifier for the droplet.
 **created_at** | _datetime_ | The time with zone when the object was created.
 **updated_at** | _datetime_ | The time with zone when the object was last updated.
+**relationships.app** _(experimental)_| [_to-one relationship_](#to-one-relationships) | The app the droplet belongs to.
 **links** | [_links object_](#links) | Links to related resources.
 **execution_metadata** | _string_ | Serialized JSON data resulting from staging for use when executing a droplet.
 **process_types** | _object_ | The process types (keys) and associated start commands (values) that will be created when the droplet is executed.
