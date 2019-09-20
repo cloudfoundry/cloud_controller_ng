@@ -37,6 +37,7 @@ class AppsV3Controller < ApplicationController
   def index
     message = AppsListMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
+    # add_warning_headers(message.warnings) if message.warnings.size > 0
 
     dataset = if permission_queryer.can_read_globally?
                 AppListFetcher.new.fetch_all(message, eager_loaded_associations: Presenters::V3::AppPresenter.associated_resources)

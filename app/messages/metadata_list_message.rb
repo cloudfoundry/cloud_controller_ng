@@ -8,7 +8,9 @@ module VCAP::CloudController
     end
 
     def self.label_selector_requested?
-      @label_selector_requested ||= proc { |a| a.requested?(:label_selector) }
+      @label_selector_requested ||= proc { |a|
+        a.requested?(:label_selector)
+      }
     end
 
     validates_with LabelSelectorRequirementValidator, if: label_selector_requested?

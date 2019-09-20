@@ -4,15 +4,14 @@ require 'messages/metadata_validator_helper'
 
 module VCAP::CloudController::Validators
   class LabelSelectorRequirementValidator < ActiveModel::Validator
-    MISSING_LABEL_SELECTOR_ERROR = 'Missing label_selector value'.freeze
-    INVALID_LABEL_SELECTOR_ERROR = 'Invalid label_selector value'.freeze
-
     def validate(record)
-      if record.requirements.empty?
-        record.errors[:base] << MISSING_LABEL_SELECTOR_ERROR
+      parser = record.label_selector_parser
+      if !parser.errors.empty?
+        parser.errors.each { |err| record.errors[:base] << err }
         return
       end
 
+      # TODO:  These should be warnings because we're just testing bad data, but not adding it
       record.requirements.each do |r|
         res = valid_requirement?(r)
         record.errors[:base] << res.message unless res.is_valid?
@@ -22,8 +21,6 @@ module VCAP::CloudController::Validators
     private
 
     def valid_requirement?(requirement)
-      return VCAP::CloudController::MetadataError.error(INVALID_LABEL_SELECTOR_ERROR) if requirement.nil?
-
       res = MetadataValidatorHelper.new(key: requirement.key).key_error
       return res unless res.is_valid?
 

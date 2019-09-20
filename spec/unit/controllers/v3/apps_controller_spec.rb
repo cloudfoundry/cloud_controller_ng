@@ -204,7 +204,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
         expect(response.status).to eq(400)
 
-        expect(parsed_body['errors'].first['detail']).to match(/Invalid label_selector value/)
+        expect(parsed_body['errors'].first['detail']).to match(/The query parameter is invalid: expecting a ',', operator, or end, got \"buncha <<nonsense>>\"/)
       end
     end
   end

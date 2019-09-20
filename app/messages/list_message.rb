@@ -2,6 +2,8 @@ require 'active_model'
 require 'messages/validators'
 require 'messages/base_message'
 
+require 'cloud_controller/label_selector/label_selector_parser'
+
 module VCAP::CloudController
   class ListMessage < BaseMessage
     include ActiveModel::Model
@@ -17,11 +19,13 @@ module VCAP::CloudController
 
     attr_accessor(*ALLOWED_PAGINATION_KEYS, :pagination_params)
     attr_reader :pagination_options
+    attr_accessor :requirements, :label_selector_parser
 
     def initialize(params={})
       params = params.symbolize_keys
       @pagination_params = params.slice(*ALLOWED_PAGINATION_KEYS)
       @pagination_options = PaginationOptions.from_params(params)
+      @requirements = parse_label_selector(params[:label_selector]) if params[:label_selector]
       super(params)
     end
 
@@ -84,26 +88,12 @@ module VCAP::CloudController
       message
     end
 
-    attr_accessor :requirements
-
-    def self.parse_label_selector(label_selector)
+    def parse_label_selector(label_selector)
+      @label_selector_parser = LabelSelectorParser.new
       return [] unless label_selector
 
-      label_selector.scan(MetadataHelpers::REQUIREMENT_SPLITTER).map { |r| parse_requirement(r) }
-    end
-
-    def self.parse_requirement(requirement)
-      match_data = nil
-      requirement_operator_pair = MetadataHelpers::REQUIREMENT_OPERATOR_PAIRS.find do |rop|
-        match_data = rop[:pattern].match(requirement)
-      end
-      return nil unless requirement_operator_pair
-
-      LabelSelectorRequirement.new(
-        key: match_data[:key],
-        operator: requirement_operator_pair[:operator],
-        values: match_data[:values],
-      )
+      @label_selector_parser.parse(label_selector)
+      @label_selector_parser.requirements
     end
   end
 end

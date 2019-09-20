@@ -5,13 +5,13 @@ module VCAP::CloudController
     subject(:label_selector_parser) { LabelSelectorQueryGenerator }
 
     describe '.add_selector_queries' do
-      let!(:app1) { AppModel.make }
+      let!(:app1) { AppModel.make(guid: 'app1-bar') }
       let!(:app1_label) { AppLabelModel.make(resource_guid: app1.guid, key_name: 'foo', value: 'bar') }
 
-      let!(:app2) { AppModel.make }
+      let!(:app2) { AppModel.make(guid: 'app2-funky') }
       let!(:app2_label) { AppLabelModel.make(resource_guid: app2.guid, key_name: 'foo', value: 'funky') }
 
-      let!(:app3) { AppModel.make }
+      let!(:app3) { AppModel.make(guid: 'app3-town') }
       let!(:app3_label) { AppLabelModel.make(resource_guid: app3.guid, key_name: 'foo', value: 'town') }
       let!(:app3_exclusive_label) { AppLabelModel.make(resource_guid: app3.guid, key_name: 'easter', value: 'bunny') }
 
@@ -23,7 +23,7 @@ module VCAP::CloudController
         let(:operator) { :in }
 
         context 'with a single value' do
-          let(:values) { 'funky' }
+          let(:values) { ['funky'] }
 
           it 'returns the models that satisfy the requirements' do
             dataset = subject.add_selector_queries(
@@ -38,7 +38,7 @@ module VCAP::CloudController
         end
 
         context 'with multiple values' do
-          let(:values) { 'funky,town' }
+          let(:values) { %w/funky town/ }
 
           it 'returns the models that satisfy the requirements' do
             dataset = subject.add_selector_queries(
@@ -94,7 +94,7 @@ module VCAP::CloudController
         let(:operator) { :notin }
 
         context 'with a single value' do
-          let(:values) { 'funky' }
+          let(:values) { ['funky'] }
 
           it 'returns the models that satisfy the requirements' do
             dataset = subject.add_selector_queries(
@@ -109,7 +109,7 @@ module VCAP::CloudController
         end
 
         context 'with multiple values' do
-          let(:values) { 'funky,town' }
+          let(:values) { %w/funky town/ }
 
           it 'returns the models that satisfy the requirements' do
             dataset = subject.add_selector_queries(
@@ -141,7 +141,7 @@ module VCAP::CloudController
 
       describe 'equality requirements' do
         let(:operator) { :equal }
-        let(:values) { 'funky' }
+        let(:values) { ['funky'] }
 
         it 'returns the models that satisfy the "=" requirements' do
           dataset = subject.add_selector_queries(
@@ -203,7 +203,7 @@ module VCAP::CloudController
           dataset = subject.add_selector_queries(
             label_klass: AppLabelModel,
             resource_dataset: AppModel.dataset,
-            requirements: [VCAP::CloudController::LabelSelectorRequirement.new(key: 'easter', operator: :not_exists, values: '')],
+            requirements: [VCAP::CloudController::LabelSelectorRequirement.new(key: 'easter', operator: :not_exists, values: [''])],
             resource_klass: AppModel,
           )
 
@@ -230,8 +230,8 @@ module VCAP::CloudController
             label_klass: AppLabelModel,
             resource_dataset: AppModel.dataset,
             requirements: [
-              VCAP::CloudController::LabelSelectorRequirement.new(key: 'foo', operator: :in, values: 'funky,town'),
-              VCAP::CloudController::LabelSelectorRequirement.new(key: 'foo', operator: :notin, values: 'bar')
+              VCAP::CloudController::LabelSelectorRequirement.new(key: 'foo', operator: :in, values: %w/funky town/),
+              VCAP::CloudController::LabelSelectorRequirement.new(key: 'foo', operator: :notin, values: ['bar'])
             ],
             resource_klass: AppModel,
           )
@@ -244,8 +244,8 @@ module VCAP::CloudController
             label_klass: AppLabelModel,
             resource_dataset: AppModel.dataset,
             requirements: [
-              VCAP::CloudController::LabelSelectorRequirement.new(key: 'foo', operator: :not_equal, values: 'bar'),
-              VCAP::CloudController::LabelSelectorRequirement.new(key: 'foo', operator: :not_equal, values: 'town')
+              VCAP::CloudController::LabelSelectorRequirement.new(key: 'foo', operator: :not_equal, values: ['bar']),
+              VCAP::CloudController::LabelSelectorRequirement.new(key: 'foo', operator: :not_equal, values: ['town'])
             ],
             resource_klass: AppModel,
           )
@@ -258,8 +258,8 @@ module VCAP::CloudController
             label_klass: AppLabelModel,
             resource_dataset: AppModel.dataset,
             requirements: [
-              VCAP::CloudController::LabelSelectorRequirement.new(key: 'foo', operator: :equal, values: 'bar'),
-              VCAP::CloudController::LabelSelectorRequirement.new(key: 'foo', operator: :equal, values: 'town')
+              VCAP::CloudController::LabelSelectorRequirement.new(key: 'foo', operator: :equal, values: ['bar']),
+              VCAP::CloudController::LabelSelectorRequirement.new(key: 'foo', operator: :equal, values: ['town'])
             ],
             resource_klass: AppModel,
           )
@@ -278,8 +278,8 @@ module VCAP::CloudController
             label_klass: AppLabelModel,
             resource_dataset: join_table_dataset,
             requirements: [
-              VCAP::CloudController::LabelSelectorRequirement.new(key: 'foo', operator: :equal, values: 'town'),
-              VCAP::CloudController::LabelSelectorRequirement.new(key: 'easter', operator: :equal, values: 'bunny')
+              VCAP::CloudController::LabelSelectorRequirement.new(key: 'foo', operator: :equal, values: ['town']),
+              VCAP::CloudController::LabelSelectorRequirement.new(key: 'easter', operator: :equal, values: ['bunny'])
             ],
             resource_klass: AppModel,
           )

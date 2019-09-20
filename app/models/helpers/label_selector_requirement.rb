@@ -6,7 +6,7 @@ module VCAP::CloudController
       @key = key
       @key_prefix, @key_name = VCAP::CloudController::MetadataHelpers.extract_prefix(key)
       @operator = operator
-      @values = values.split(',')
+      @values = values
     end
   end
 end
