@@ -74,6 +74,10 @@ RSpec.describe 'v3 root' do
           'users' => {
             'href' => "#{link_prefix}/v3/users",
             'experimental' => true
+          },
+          'audit_events' => {
+            'href' => "#{link_prefix}/v3/audit_events",
+            'experimental' => true
           }
         }
       })
