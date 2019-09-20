@@ -4,7 +4,7 @@ require 'messages/apps_list_message'
 module VCAP::CloudController
   RSpec.describe AppListFetcher do
     let!(:stack) { Stack.make }
-    let(:space) { Space.make }
+    let(:space) { Space.make(guid: 'main-space') }
     let!(:app) { AppModel.make(space_guid: space.guid, name: 'app') }
     let!(:sad_app) { AppModel.make(space_guid: space.guid) }
     let(:org) { space.organization }
@@ -133,6 +133,34 @@ module VCAP::CloudController
 
           it 'returns the desired app' do
             expect(apps.all).to contain_exactly(happiest_app)
+          end
+        end
+
+        context 'labels and spaces' do
+          let!(:happy_space) { Space.make(organization: space.organization, guid: 'happy_space') }
+          let!(:space_guids) { [happy_space.guid] }
+          let!(:happiest_app) { AppModel.make(space_guid: happy_space.guid, name: 'bob2') }
+          let!(:happiest_app_label) do
+            VCAP::CloudController::AppLabelModel.make(resource_guid: happiest_app.guid, key_name: 'dog', value: 'scooby-doo')
+          end
+          let!(:mildly_happy_app) { AppModel.make(space_guid: happy_space.guid, name: 'bob3') }
+          let(:filters) { { space_guids: [happy_space.guid], 'label_selector' => 'dog in (chihuahua,scooby-doo)' } }
+
+          it 'returns the desired app' do
+            expect(apps.all).to contain_exactly(happiest_app)
+          end
+
+          context 'labels and orgs and spaces' do
+            let(:filters) { {
+              space_guids: [happy_space.guid],
+              organization_guids: [happy_space.organization.guid],
+              'label_selector' => 'dog in (chihuahua,scooby-doo)'
+            }
+            }
+
+            it 'returns the desired app' do
+              expect(apps.all).to contain_exactly(happiest_app)
+            end
           end
         end
       end

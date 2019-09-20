@@ -217,6 +217,35 @@ RSpec.describe SpacesV3Controller, type: :controller do
             ])
           end
         end
+
+        describe 'label_selectors' do
+          context 'when there are label-selectors' do
+            let(:params3) do
+              { 'organization_guids' => org1.guid, 'label_selector' => 'jim' }
+            end
+            before do
+              VCAP::CloudController::SpaceLabelModel.make(
+                key_name: 'jim',
+                value: 'stable',
+                resource_guid: org1_space.guid
+              )
+              VCAP::CloudController::SpaceLabelModel.make(
+                key_name: 'hambone',
+                value: 'experimental',
+                resource_guid: org1_other_space.guid
+              )
+            end
+
+            it 'returns the list of matching spaces' do
+              get :index, params: params3
+
+              expect(response.status).to eq(200)
+              expect(parsed_body['resources'].map { |s| s['guid'] }).to match_array([
+                org1_space.guid
+              ])
+            end
+          end
+        end
       end
 
       context 'when the user does NOT have global read access' do

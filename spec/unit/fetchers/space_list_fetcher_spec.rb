@@ -3,8 +3,8 @@ require 'fetchers/space_list_fetcher'
 
 module VCAP::CloudController
   RSpec.describe SpaceListFetcher do
-    let(:org1) { Organization.make }
-    let(:org2) { Organization.make }
+    let(:org1) { Organization.make(name: 'org1') }
+    let(:org2) { Organization.make(name: 'org2') }
 
     let!(:space1) { Space.make(name: 'Lamb', organization: org1) }
     let!(:space2) { Space.make(name: 'Alpaca', organization: org2) }
@@ -91,6 +91,19 @@ module VCAP::CloudController
         it 'includes the spaces belonging to the specified organizations' do
           results = fetcher.fetch_all(message: message).all
           expect(results).to match_array([space2, space4])
+        end
+      end
+
+      context 'when organization_guids  and a label_selector are provided' do
+        let(:message) do SpacesListMessage.from_params(
+          { organization_guids: [org2.guid], 'label_selector' => 'key2=value2' })
+        end
+        let!(:space1label) { SpaceLabelModel.make(key_name: 'key', value: 'value', space: space1) }
+        let!(:space2label) { SpaceLabelModel.make(key_name: 'key2', value: 'value2', space: space2) }
+
+        it 'returns the correct set of spaces' do
+          results = fetcher.fetch_all(message: message).all
+          expect(results).to contain_exactly(space2)
         end
       end
 

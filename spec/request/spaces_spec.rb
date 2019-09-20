@@ -247,12 +247,25 @@ RSpec.describe 'Spaces' do
       let!(:spaceEEnv) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'env', value: 'staging', space: spaceE) }
       let!(:spaceEAnimal) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'animal', value: 'dog', space: spaceE) }
 
+      let!(:orgF) { VCAP::CloudController::Organization.make(name: 'orgF', guid: 'orgF') }
+      let!(:spaceF) { VCAP::CloudController::Space.make(organization: orgF, guid: 'spaceF') }
+      let!(:spaceFEnv) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'env', value: 'prod', space: spaceF) }
+      let!(:spaceFAnimal) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'animal', value: 'cat', space: spaceF) }
+
       it 'returns the correct spaces' do
         get '/v3/spaces?label_selector=!fruit,env=prod,animal in (dog,horse)', nil, admin_header
         expect(last_response.status).to eq(200)
 
         parsed_response = MultiJson.load(last_response.body)
         expect(parsed_response['resources'].map { |space| space['guid'] }).to contain_exactly(spaceB.guid, spaceC.guid)
+      end
+
+      it 'returns the correct spaces when scoped to an org' do
+        get "/v3/spaces?label_selector=!fruit,env=prod,animal in (cat,horse)&organization_guids=#{orgF.guid}", nil, admin_header
+        expect(last_response.status).to eq(200)
+
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response['resources'].map { |space| space['guid'] }).to contain_exactly(spaceF.guid)
       end
     end
 

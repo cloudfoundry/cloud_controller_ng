@@ -26,7 +26,11 @@ module VCAP::CloudController
       end
 
       if message.requested?(:organization_guids)
-        dataset = dataset.where(space_guid: Organization.where(guid: message.organization_guids).map(&:spaces).flatten.map(&:guid))
+        dataset = dataset.
+                  join(:spaces, guid: :space_guid).
+                  join(:organizations, id: :organization_id).
+                  where(Sequel[:organizations][:guid] => message.organization_guids).
+                  qualify(:apps)
       end
 
       if message.requested?(:stacks)
