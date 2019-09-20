@@ -64,74 +64,29 @@ module OPI
 
     private
 
-    class DockerLifecycle
-      def initialize(process)
-        @process = process
-      end
-
-      def to_hash
-        command = if @process.command.presence
-                    ['/bin/sh', '-c', @process.command]
-                  else
-                    []
-                  end
-        {
-          docker_lifecycle: {
-            command: command,
-            image: @process.desired_droplet.docker_receipt_image,
-            registry_username: @process.desired_droplet.docker_receipt_username,
-            registry_password: @process.desired_droplet.docker_receipt_password,
-          }
-        }
-      end
-    end
-
-    class BuildpackLifecycle
-      def initialize(process)
-        @process = process
-      end
-
-      def to_hash
-        {
-          buildpack_lifecycle: {
-            start_command: @process.specified_or_detected_command,
-            droplet_hash: @process.desired_droplet.droplet_hash,
-            droplet_guid: @process.desired_droplet.guid
-          }
-        }
-      end
-    end
-
-    def lifecycle_for(process)
-      if process.app.lifecycle_type == VCAP::CloudController::Lifecycles::DOCKER
-        DockerLifecycle.new(process)
-      elsif process.app.lifecycle_type == VCAP::CloudController::Lifecycles::BUILDPACK
-        BuildpackLifecycle.new(process)
-      else
-        raise("lifecycle type `#{process.app.lifecycle_type}` is invalid")
-      end
-    end
-
     def desire_body(process)
       timeout_ms = (process.health_check_timeout || 0) * 1000
       cpu_weight = VCAP::CloudController::Diego::TaskCpuWeightCalculator.new(memory_in_mb: process.memory).calculate
-      lifecycle = lifecycle_for(process)
+
       body = {
         guid: process.guid,
-        environment: hash_values_to_s(environment_variables(process)),
         version: process.version,
         process_guid: process_guid(process),
+        docker_image: process.desired_droplet.docker_receipt_image,
+        start_command: process.specified_or_detected_command,
+        environment: hash_values_to_s(environment_variables(process)),
         instances: process.desired_instances,
         memory_mb: process.memory,
         cpu_weight: cpu_weight,
+        droplet_hash: process.desired_droplet.droplet_hash,
+        droplet_guid: process.desired_droplet.guid,
         health_check_type: process.health_check_type,
         health_check_http_endpoint: process.health_check_http_endpoint,
         health_check_timeout_ms: timeout_ms,
         last_updated: process.updated_at.to_f.to_s,
         volume_mounts: generate_volume_mounts(process),
         ports: process.open_ports,
-        routes: routes(process),
-        lifecycle: lifecycle.to_hash
+        routes: routes(process)
       }
       MultiJson.dump(body)
     end
@@ -153,8 +108,8 @@ module OPI
       routing_info = VCAP::CloudController::Diego::Protocol::RoutingInfo.new(process).routing_info
       http_routes = (routing_info['http_routes'] || []).map do |i|
         {
-          hostname: i['hostname'],
-          port: i['port']
+          hostname:         i['hostname'],
+          port:              i['port']
         }
       end
 
@@ -191,15 +146,15 @@ module OPI
     end
 
     def generate_volume_mounts(process)
-      app_volume_mounts = VCAP::CloudController::Diego::Protocol::AppVolumeMounts.new(process.app).as_json
+      app_volume_mounts   = VCAP::CloudController::Diego::Protocol::AppVolumeMounts.new(process.app).as_json
       proto_volume_mounts = []
 
       app_volume_mounts.each do |volume_mount|
         if volume_mount['device']['mount_config'].present? && volume_mount['device']['mount_config']['name'].present?
           proto_volume_mount = {
-            volume_id: volume_mount['device']['mount_config']['name'],
-            mount_dir: volume_mount['container_dir']
-          }
+      volume_id: volume_mount['device']['mount_config']['name'],
+      mount_dir: volume_mount['container_dir']
+         }
           proto_volume_mounts.append(proto_volume_mount)
         end
       end
