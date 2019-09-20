@@ -105,6 +105,19 @@ module VCAP::CloudController
           expect(results).to contain_exactly(space1)
         end
       end
+
+      context 'when organization_guids  and a label_selector are provided' do
+        let(:message) do SpacesListMessage.from_params(
+          { organization_guids: [org2.guid], 'label_selector' => 'key2=value2' })
+        end
+        let!(:space1label) { SpaceLabelModel.make(key_name: 'key', value: 'value', space: space1) }
+        let!(:space2label) { SpaceLabelModel.make(key_name: 'key2', value: 'value2', space: space2) }
+
+        it 'returns the correct set of spaces' do
+          results = fetcher.fetch_all(message: message).all
+          expect(results).to contain_exactly(space2)
+        end
+      end
     end
   end
 end

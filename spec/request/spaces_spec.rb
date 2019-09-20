@@ -228,24 +228,29 @@ RSpec.describe 'Spaces' do
     end
 
     context 'when a label_selector is provided' do
-      let!(:spaceA) { VCAP::CloudController::Space.make(organization: org) }
+      let!(:spaceA) { VCAP::CloudController::Space.make(organization: org, guid: 'spaceA') }
       let!(:spaceAFruit) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'fruit', value: 'strawberry', space: spaceA) }
       let!(:spaceAAnimal) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'animal', value: 'horse', space: spaceA) }
 
-      let!(:spaceB) { VCAP::CloudController::Space.make(organization: org) }
+      let!(:spaceB) { VCAP::CloudController::Space.make(organization: org, guid: 'spaceB') }
       let!(:spaceBEnv) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'env', value: 'prod', space: spaceB) }
       let!(:spaceBAnimal) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'animal', value: 'dog', space: spaceB) }
 
-      let!(:spaceC) { VCAP::CloudController::Space.make(organization: org) }
+      let!(:spaceC) { VCAP::CloudController::Space.make(organization: org, guid: 'spaceC') }
       let!(:spaceCEnv) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'env', value: 'prod', space: spaceC) }
       let!(:spaceCAnimal) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'animal', value: 'horse', space: spaceC) }
 
-      let!(:spaceD) { VCAP::CloudController::Space.make(organization: org) }
+      let!(:spaceD) { VCAP::CloudController::Space.make(organization: org, guid: 'spaceD') }
       let!(:spaceDEnv) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'env', value: 'prod', space: spaceD) }
 
-      let!(:spaceE) { VCAP::CloudController::Space.make(organization: org) }
+      let!(:spaceE) { VCAP::CloudController::Space.make(organization: org, guid: 'spaceE') }
       let!(:spaceEEnv) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'env', value: 'staging', space: spaceE) }
       let!(:spaceEAnimal) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'animal', value: 'dog', space: spaceE) }
+
+      let!(:orgF) { VCAP::CloudController::Organization.make(name: 'orgF', guid: 'orgF') }
+      let!(:spaceF) { VCAP::CloudController::Space.make(organization: orgF, guid: 'spaceF') }
+      let!(:spaceFEnv) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'env', value: 'prod', space: spaceF) }
+      let!(:spaceFAnimal) { VCAP::CloudController::SpaceLabelModel.make(key_name: 'animal', value: 'cat', space: spaceF) }
 
       it 'returns the correct spaces' do
         get '/v3/spaces?label_selector=!fruit,env=prod,animal in (dog,horse)', nil, admin_header
@@ -253,6 +258,14 @@ RSpec.describe 'Spaces' do
 
         parsed_response = MultiJson.load(last_response.body)
         expect(parsed_response['resources'].map { |space| space['guid'] }).to contain_exactly(spaceB.guid, spaceC.guid)
+      end
+
+      it 'returns the correct spaces when scoped to an org' do
+        get "/v3/spaces?label_selector=!fruit,env=prod,animal in (cat,horse)&organization_guids=#{orgF.guid}", nil, admin_header
+        expect(last_response.status).to eq(200)
+
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response['resources'].map { |space| space['guid'] }).to contain_exactly(spaceF.guid)
       end
     end
 

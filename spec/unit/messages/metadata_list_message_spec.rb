@@ -21,7 +21,9 @@ module VCAP::CloudController
       end
 
       it 'can return label_selector' do
-        expect(subject.label_selector).to eq('!fruit,env=prod,animal in (dog,horse)')
+        expect(subject).to be_valid?
+        x = subject.label_selector
+        expect(x).to eq('!fruit,env=prod,animal in (dog,horse)')
       end
     end
 
