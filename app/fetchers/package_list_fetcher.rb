@@ -55,10 +55,10 @@ module VCAP::CloudController
 
       if message.requested? :organization_guids
         dataset = dataset.
-          join(:spaces, guid: :space_guid).
-          join(:organizations, id: :organization_id).
-          where(Sequel[:organizations][:guid] => message.organization_guids).
-          qualify(:packages)
+                  join(:spaces, guid: :space_guid).
+                  join(:organizations, id: :organization_id).
+                  where(Sequel[:organizations][:guid] => message.organization_guids).
+                  qualify(:packages)
       end
 
       if message.requested?(:label_selector)
