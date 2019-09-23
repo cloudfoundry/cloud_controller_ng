@@ -97,6 +97,15 @@ module VCAP::CloudController
             expect(results.all).to match_array([package_for_app3])
           end
         end
+
+        context 'filtering org guids & label selectors' do
+          let(:filters) { { 'label_selector' => 'key=value', organization_guids: [org_2_guid, org_3_guid] } }
+          let!(:label) { PackageLabelModel.make(resource_guid: package_for_app3.guid, key_name: 'key', value: 'value') }
+
+          it 'returns the correct set of packages' do
+            expect(results.all).to match_array([package_for_app3])
+          end
+        end
       end
     end
 
