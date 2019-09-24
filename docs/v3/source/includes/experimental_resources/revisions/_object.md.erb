@@ -12,9 +12,52 @@ Name | Type | Description
 **guid** | _uuid_ | Unique identifier for the revision.
 **version** | _integer_ | Human-readable identifier for the revision. Starts at 1, increments by 1 for each new revision of the app, and rolls back over to 1 at 9999.
 **droplet** | _object_ | The droplet used by a process running the revision.
+**processes** | [_process snapshot object_](#the-process-snapshot-object) | An object representing process types at this revision.
+**sidecars** | _array of [sidecar snapshot objects](#the-sidecar-snapshot-object)_ ]| The array of sidecars used by processes running the revision.
 **created_at** | _datetime_ | The time with zone when the object was created.
 **updated_at** | _datetime_ | The time with zone when the object was last updated.
 **description** | _string_ | A short description of the reason for revision.
+**relationships.app** | [_to-one relationship_](#to-one-relationships) | The app the revision is associated with.
 **metadata.labels** _(experimental)_| [_label object_](#labels) | Labels applied to the revision.
 **metadata.annotations** _(experimental)_ | [_annotation object_](#annotations) | Annotations applied to the revision.
 **links** | [_links object_](#links) | Links to related resources.
+
+### The process snapshot object
+
+```
+Example Process Snapshot object
+```
+```json
+{
+  "web": {
+    "command": "bundle exec rackup"
+  },
+  "worker": {
+    "command": "bundle exec work"
+  }
+}
+```
+
+The process snapshot object is a map of process types to objects.
+Each object contains the command that the given process type was running at this revision.
+
+### The sidecar snapshot object
+```
+Example Sidecar Snapshot object
+```
+```json
+{
+  "name": "auth-sidecar",
+  "command": "bundle exec rackup",
+  "process_types": ["web", "worker"],
+  "memory_in_mb": 300
+}
+```
+
+Name | Type | Description
+---- | ---- | -----------
+**name** | _string_ | Human-readable name for the sidecar.
+**command** | _string_ | The command used to start the sidecar.
+**process_types** | _array of strings_  | A list of process types the sidecar applies to.
+**memory_in_mb** | _integer_  | Reserved memory for sidecar.
+

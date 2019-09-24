@@ -3,7 +3,7 @@ module VCAP::CloudController
     include SidecarMixin
 
     many_to_one :revision,
-      class: 'VCAP::CloudController::RevisionSidecarModel',
+      class: 'VCAP::CloudController::RevisionModel',
       key: :revision_guid,
       primary_key: :guid,
       without_guid_generation: true

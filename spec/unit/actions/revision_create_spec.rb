@@ -13,7 +13,7 @@ module VCAP::CloudController
     end
     let(:app) { AppModel.make(revisions_enabled: true) }
     let(:user_audit_info) { UserAuditInfo.new(user_guid: '456', user_email: 'mona@example.com', user_name: 'mona') }
-    let(:sidecar) { SidecarModel.make(app: app, command: 'sleep infinity', name: 'sleepy') }
+    let(:sidecar) { SidecarModel.make(app: app, command: 'sleep infinity', name: 'sleepy', memory: 12) }
     let!(:sidecar_process_type) { SidecarProcessTypeModel.make(sidecar: sidecar, type: 'web') }
 
     before do
@@ -44,6 +44,7 @@ module VCAP::CloudController
         expect(revision.description).to eq('foo sorta')
         expect(revision.sidecars.first.name).to eq('sleepy')
         expect(revision.sidecars.first.command).to eq('sleep infinity')
+        expect(revision.sidecars.first.memory).to eq(12)
         expect(revision.sidecars.first.revision_sidecar_process_types.first.type).to eq('web')
       end
 

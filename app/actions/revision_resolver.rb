@@ -72,7 +72,11 @@ module VCAP::CloudController
           revision_to_create.commands_by_process_type
         ))
 
-        sidecars_differences = HashDiff.diff(latest_revision.sidecars.sort(&:name).map(&:to_hash), revision_to_create.sidecars.sort(&:name).map(&:to_hash))
+        sidecars_differences = HashDiff.diff(
+          latest_revision.sidecars.sort(&:name).map(&:to_hash),
+          revision_to_create.sidecars.sort(&:name).map(&:to_hash)
+        )
+
         reasons << 'Sidecars updated.' if sidecars_differences.present?
 
         reasons.sort

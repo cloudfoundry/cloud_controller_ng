@@ -24,9 +24,15 @@ module VCAP::CloudController
 
           # when we roll these back, the sidecars will have to come from somewhere else
           app.sidecars.each do |sidecar|
-            revision_sidecar = RevisionSidecarModel.create(revision: revision, command: sidecar.command, name: sidecar.name)
-            sidecar.sidecar_process_types.each do |process_type|
-              RevisionSidecarProcessTypeModel.create(revision_sidecar: revision_sidecar, type: process_type.type)
+            revision_sidecar = RevisionSidecarModel.create(
+              revision: revision,
+              command: sidecar.command,
+              name: sidecar.name,
+              memory: sidecar.memory
+            )
+
+            sidecar.sidecar_process_types.each do |pt|
+              RevisionSidecarProcessTypeModel.create(revision_sidecar: revision_sidecar, type: pt.type)
             end
           end
 
