@@ -1,5 +1,4 @@
-
-### Update a User
+### Update a user
 
 Update a user's metadata.
 
@@ -13,9 +12,9 @@ curl "https://api.example.org/v3/users/24d59a1e-2613-4255-86a2-e0454cc6e261" \
   -H "Authorization: bearer [token]" \
   -H "Content-type: application/json" \
   -d '{
-  "medtadata": {
-    "labels": {"enviroment": "production"},
-    "annotations": {"note": "detailed information"}
+  "metadata": {
+    "labels": { "enviroment": "production" },
+    "annotations": { "note": "detailed information" }
   }'
 ```
 
@@ -42,6 +41,6 @@ Name     | Type     | Description
 
 #### Permitted roles
 
-Role | Notes
------ | ---
+ |
+--- | ---
 Admin |
