@@ -2,6 +2,145 @@ require 'spec_helper'
 require 'request_spec_shared_examples'
 
 RSpec.describe 'Events' do
+  describe 'GET /v3/audit_events' do
+    let(:user) { make_user }
+    let(:user_audit_info) {
+      VCAP::CloudController::UserAuditInfo.new(user_guid: user.guid, user_email: 'user@example.com')
+    }
+    let(:space) { VCAP::CloudController::Space.make }
+    let(:org) { space.organization }
+    let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
+
+    let!(:unscoped_event) {
+      VCAP::CloudController::Repositories::OrphanedBlobEventRepository.record_delete('dir', 'key')
+    }
+    let!(:org_scoped_event) {
+      VCAP::CloudController::Repositories::OrganizationEventRepository.new.record_organization_create(
+        org,
+        user_audit_info,
+        { key: 'val' }
+      )
+    }
+    let!(:space_scoped_event) {
+      VCAP::CloudController::Repositories::AppEventRepository.new.record_app_restart(
+        app_model,
+        user_audit_info,
+      )
+    }
+
+    let(:unscoped_event_json) do
+      {
+        guid: unscoped_event.guid,
+        created_at: iso8601,
+        updated_at: iso8601,
+        type: 'blob.remove_orphan',
+        actor: {
+          guid: 'system',
+          type: 'system',
+          name: 'system'
+        },
+        target: {
+          guid: 'dir/key',
+          type: 'blob',
+          name: ''
+        },
+        data: {},
+        space: nil,
+        organization: nil,
+        links: {
+          self: {
+            href: "#{link_prefix}/v3/audit_events/#{unscoped_event.guid}"
+          }
+        }
+      }
+    end
+
+    let(:org_scoped_event_json) do
+      {
+        guid: org_scoped_event.guid,
+        created_at: iso8601,
+        updated_at: iso8601,
+        type: 'audit.organization.create',
+        actor: {
+          guid: user_audit_info.user_guid,
+          type: 'user',
+          name: user_audit_info.user_email
+        },
+        target: {
+          guid: org.guid,
+          type: 'organization',
+          name: org.name
+        },
+        data: {
+          request: {
+            key: 'val'
+          }
+        },
+        space: nil,
+        organization: {
+          guid: org.guid
+        },
+        links: {
+          self: {
+            href: "#{link_prefix}/v3/audit_events/#{org_scoped_event.guid}"
+          }
+        }
+      }
+    end
+
+    let(:space_scoped_event_json) do
+      {
+        guid: space_scoped_event.guid,
+        created_at: iso8601,
+        updated_at: iso8601,
+        type: 'audit.app.restart',
+        actor: {
+          guid: user_audit_info.user_guid,
+          type: 'user',
+          name: user_audit_info.user_email
+        },
+        target: {
+          guid: app_model.guid,
+          type: 'app',
+          name: app_model.name
+        },
+        data: {},
+        space: {
+          guid: space.guid
+        },
+        organization: {
+          guid: org.guid
+        },
+        links: {
+          self: {
+            href: "#{link_prefix}/v3/audit_events/#{space_scoped_event.guid}"
+          }
+        }
+      }
+    end
+
+    context 'without filters' do
+      let(:api_call) { lambda { |user_headers| get '/v3/audit_events', nil, user_headers } }
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 200, response_objects: [])
+
+        h['admin'] = { code: 200, response_objects: [unscoped_event_json, org_scoped_event_json, space_scoped_event_json] }
+        h['admin_read_only'] = { code: 200, response_objects: [unscoped_event_json, org_scoped_event_json, space_scoped_event_json] }
+        h['global_auditor'] = { code: 200, response_objects: [unscoped_event_json, org_scoped_event_json, space_scoped_event_json] }
+
+        h['space_auditor'] = { code: 200, response_objects: [space_scoped_event_json] }
+        h['space_developer'] = { code: 200, response_objects: [space_scoped_event_json] }
+
+        h['org_auditor'] = { code: 200, response_objects: [org_scoped_event_json, space_scoped_event_json] }
+
+        h
+      end
+
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+    end
+  end
+
   describe 'GET /v3/audit_events/:guid' do
     let(:user) { make_user }
     let(:admin_header) { admin_headers_for(user) }
