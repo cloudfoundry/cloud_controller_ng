@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'actions/service_broker_create'
+require 'support/stepper'
 
 module VCAP
   module CloudController
@@ -26,6 +27,20 @@ module VCAP
         })
       end
 
+      let(:message2) do
+        double('create broker message 2', {
+          name: "#{name}-2",
+          url: broker_url + '2',
+          credentials_data: double('credentials 2', {
+            username: auth_username + '2',
+            password: auth_password + '2'
+          }),
+          relationships_message: double('relationships 2', {
+            space_guid: nil
+          })
+        })
+      end
+
       let(:broker) { ServiceBroker.last }
 
       it 'creates a broker' do
@@ -42,6 +57,46 @@ module VCAP
         action.create(message)
 
         expect(broker.service_broker_state.state).to eq(ServiceBrokerStateEnum::SYNCHRONIZING)
+      end
+
+      describe 'concurrent behaviour' do
+        let(:stepper) { Stepper.new(self) }
+
+        before do
+          stepper.instrument(
+            ServiceBroker, :create,
+            before: 'start create broker transaction',
+            after: 'finish create broker and start create broker state'
+          )
+
+          stepper.instrument(
+            ServiceBrokerState, :create,
+            after: 'finish create broker transaction'
+          )
+        end
+
+        20.times do |i|
+          it "works when parallel brokers are created #{i}", isolation: :truncation do
+            stepper.start_thread([
+              'start create broker transaction',
+              'finish create broker and start create broker state',
+              'finish create broker transaction',
+            ]) { subject.create(message) }
+
+            stepper.start_thread([
+              'start create broker transaction',
+              'finish create broker and start create broker state',
+              'finish create broker transaction',
+            ]) { subject.create(message2) }
+
+            stepper.interleave_order
+            stepper.print_order
+            stepper.run
+
+            expect(stepper.errors).to be_empty
+            expect(stepper.steps_left).to be_empty
+          end
+        end
       end
     end
   end
