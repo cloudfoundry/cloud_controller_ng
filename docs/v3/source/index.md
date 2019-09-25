@@ -2,10 +2,10 @@
 title: Cloud Controller API Reference
 
 includes:
-  - api_resources/audit_events
   - api_resources/app_features
   - api_resources/app_ssh_enabled
   - api_resources/apps
+  - api_resources/audit_events
   - api_resources/builds
   - api_resources/buildpacks
   - api_resources/deployments
@@ -200,9 +200,6 @@ includes:
   - resources/tasks/update
   - resources/tasks/cancel
   - experimental_resources/header
-  - experimental_resources/audit_events/header
-  - experimental_resources/audit_events/object
-  - experimental_resources/audit_events/get
   - experimental_resources/app_features/header
   - experimental_resources/app_features/object
   - experimental_resources/app_features/supported_features
@@ -217,6 +214,10 @@ includes:
   - experimental_resources/app_restart/create
   - experimental_resources/app_ssh_enabled/header
   - experimental_resources/app_ssh_enabled/get
+  - experimental_resources/audit_events/header
+  - experimental_resources/audit_events/object
+  - experimental_resources/audit_events/get
+  - experimental_resources/audit_events/list
   - experimental_resources/deployments/header
   - experimental_resources/deployments/object
   - experimental_resources/deployments/create
@@ -224,6 +225,9 @@ includes:
   - experimental_resources/deployments/list
   - experimental_resources/deployments/update
   - experimental_resources/deployments/cancel
+  - experimental_resources/resource_matches/header
+  - experimental_resources/resource_matches/object
+  - experimental_resources/resource_matches/create
   - experimental_resources/revisions/header
   - experimental_resources/revisions/object
   - experimental_resources/revisions/get
