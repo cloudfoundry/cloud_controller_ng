@@ -1,21 +1,19 @@
 ## Resource Matches
 
-This endpoint matches given resource SHA-1 / file size pairs against the Cloud Controller cache,
+This endpoint matches given resource SHA-1/file size pairs against the Cloud Controller cache
 and reports the subset that describes already cached files.
 This is usually used to avoid uploading duplicate files
 when pushing an app which has only been partially changed.
 The `path` and `mode` fields are not used when matching.
 
-When [uploading package bits][upload-package-bits],
+When [uploading package bits](#upload-package-bits),
 the response from this endpoint should be used as the `resources` form field.
 As such, it is useful to include the `path` and `mode` fields for each resource
 even though they are not used when determining a resource match.
 
-Cloud Foundry operators may set minimum / maximum file sizes to match against.
+Cloud Foundry operators may set minimum/maximum file sizes to match against.
 If the file size provided is outside this range,
 it will not be matched against.
 
 If the `resource_matching` [feature flag](#the-feature-flag-object) is disabled,
 resource matching will always return an empty array.
-
-[upload-package-bits]: #upload-package-bits

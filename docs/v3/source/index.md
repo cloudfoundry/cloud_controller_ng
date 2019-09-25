@@ -149,6 +149,9 @@ includes:
   - resources/processes/update
   - resources/processes/scale
   - resources/processes/terminate_instance
+  - resources/resource_matches/header
+  - resources/resource_matches/object
+  - resources/resource_matches/create
   - resources/routes/header
   - resources/routes/object
   - resources/routes/destination_object
@@ -217,9 +220,6 @@ includes:
   - experimental_resources/deployments/list
   - experimental_resources/deployments/update
   - experimental_resources/deployments/cancel
-  - experimental_resources/resource_matches/header
-  - experimental_resources/resource_matches/object
-  - experimental_resources/resource_matches/create
   - experimental_resources/revisions/header
   - experimental_resources/revisions/object
   - experimental_resources/revisions/get
