@@ -4,6 +4,7 @@ require 'request_spec_shared_examples'
 RSpec.describe 'Events' do
   describe 'GET /v3/audit_events' do
     let(:user) { make_user }
+    let(:admin_header) { admin_headers_for(user) }
     let(:user_audit_info) {
       VCAP::CloudController::UserAuditInfo.new(user_guid: user.guid, user_email: 'user@example.com')
     }
@@ -138,6 +139,54 @@ RSpec.describe 'Events' do
       end
 
       it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+    end
+
+    context 'filtering by type' do
+      it 'returns filtered events' do
+        get '/v3/audit_events?types=audit.app.restart', nil, admin_header
+
+        expect({
+          resources: parsed_response['resources']
+        }).to match_json_response({
+          resources: [space_scoped_event_json]
+        })
+      end
+    end
+
+    context 'filtering by target_guid' do
+      it 'returns filtered events' do
+        get "/v3/audit_events?target_guids=#{app_model.guid}", nil, admin_header
+
+        expect({
+          resources: parsed_response['resources']
+        }).to match_json_response({
+          resources: [space_scoped_event_json]
+        })
+      end
+    end
+
+    context 'filtering by space_guid' do
+      it 'returns filtered events' do
+        get "/v3/audit_events?space_guids=#{space.guid}", nil, admin_header
+
+        expect({
+          resources: parsed_response['resources']
+        }).to match_json_response({
+          resources: [space_scoped_event_json]
+        })
+      end
+    end
+
+    context 'filtering by organization_guid' do
+      it 'returns filtered events' do
+        get "/v3/audit_events?organization_guids=#{org.guid}", nil, admin_header
+
+        expect({
+          resources: parsed_response['resources']
+        }).to match_json_response({
+          resources: [org_scoped_event_json, space_scoped_event_json]
+        })
+      end
     end
   end
 

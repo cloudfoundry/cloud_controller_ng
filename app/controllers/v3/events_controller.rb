@@ -33,8 +33,4 @@ class EventsController < ApplicationController
   def readable_event_dataset
     Event.user_visible(current_user, permission_queryer.can_read_globally?)
   end
-
-  def readable_event_dataset
-    Event.user_visible(current_user, permission_queryer.can_read_globally?)
-  end
 end

@@ -12,6 +12,22 @@ module VCAP::CloudController
       private
 
       def filter(message, dataset)
+        if message.requested?(:types)
+          dataset = dataset.where(type: message.types)
+        end
+
+        if message.requested?(:target_guids)
+          dataset = dataset.where(actee: message.target_guids)
+        end
+
+        if message.requested?(:space_guids)
+          dataset = dataset.where(space_guid: message.space_guids)
+        end
+
+        if message.requested?(:organization_guids)
+          dataset = dataset.where(organization_guid: message.organization_guids)
+        end
+
         dataset
       end
     end

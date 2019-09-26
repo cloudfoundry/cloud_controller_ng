@@ -40,6 +40,46 @@ module VCAP::CloudController
       it 'returns all of the events' do
         expect(subject).to match_array([unscoped_event, org_scoped_event, space_scoped_event])
       end
+
+      context 'filtering by type' do
+        let(:filters) do
+          { types: ['audit.app.restart'] }
+        end
+
+        it 'returns filtered events' do
+          expect(subject).to match_array([space_scoped_event])
+        end
+      end
+
+      context 'filtering by target guid' do
+        let(:filters) do
+          { target_guids: [app_model.guid] }
+        end
+
+        it 'returns filtered events' do
+          expect(subject).to match_array([space_scoped_event])
+        end
+      end
+
+      context 'filtering by space guid' do
+        let(:filters) do
+          { space_guids: [space.guid] }
+        end
+
+        it 'returns filtered events' do
+          expect(subject).to match_array([space_scoped_event])
+        end
+      end
+
+      context 'filtering by org guid' do
+        let(:filters) do
+          { organization_guids: [org.guid] }
+        end
+
+        it 'returns filtered events' do
+          expect(subject).to match_array([org_scoped_event, space_scoped_event])
+        end
+      end
     end
   end
 end
