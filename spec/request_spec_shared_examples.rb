@@ -60,7 +60,12 @@ RSpec.shared_examples 'permissions for single object endpoint' do |roles|
           user_name: user_name,
           email: email,
         })
+
         api_call.call(headers)
+
+        if last_response.status == 500
+          expect(false).to be_truthy, "500: #{last_response.body}"
+        end
 
         expected_response_code = expected_codes_and_responses[role][:code]
         expect(last_response.status).to eq(expected_response_code),
