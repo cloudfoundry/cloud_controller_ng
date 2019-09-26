@@ -223,4 +223,7 @@ Rails.application.routes.draw do
   get '/feature_flags', to: 'feature_flags#index'
   get '/feature_flags/:name', to: 'feature_flags#show'
   patch '/feature_flags/:name', to: 'feature_flags#update'
+
+  # audit events
+  get '/audit_events/:guid', to: 'events#show'
 end
