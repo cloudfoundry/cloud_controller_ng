@@ -2,6 +2,7 @@
 title: Cloud Controller API Reference
 
 includes:
+  - api_resources/audit_events
   - api_resources/app_features
   - api_resources/app_ssh_enabled
   - api_resources/apps
@@ -199,6 +200,9 @@ includes:
   - resources/tasks/update
   - resources/tasks/cancel
   - experimental_resources/header
+  - experimental_resources/audit_events/header
+  - experimental_resources/audit_events/object
+  - experimental_resources/audit_events/get
   - experimental_resources/app_features/header
   - experimental_resources/app_features/object
   - experimental_resources/app_features/supported_features

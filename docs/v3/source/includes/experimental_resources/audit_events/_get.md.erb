@@ -1,0 +1,36 @@
+### Get an audit event
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/audit_events/[guid]" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :single_audit_event %>
+```
+
+#### Definition
+`GET /v3/audit_events/:guid` <br>
+
+#### Permitted roles
+
+Role | Notes
+--- | ---
+Admin |
+Admin Read-Only |
+Global Auditor |
+Space Auditor | Cannot see events which occurred in spaces that the user does not belong to.
+Space Developer | Cannot see events which occurred in spaces that the user does not belong to.
+Org Auditor | Cannot see events which occurred in orgs that the user does not belong to.
