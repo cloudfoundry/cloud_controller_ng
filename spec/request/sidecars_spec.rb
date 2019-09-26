@@ -34,6 +34,7 @@ RSpec.describe 'Sidecars' do
         'command' => 'bundle exec rackup',
         'process_types' => ['other_worker', 'web'],
         'memory_in_mb' => 300,
+        'origin' => 'user',
         'created_at' => iso8601,
         'updated_at' => iso8601,
         'relationships' => {
@@ -130,6 +131,7 @@ RSpec.describe 'Sidecars' do
         'command' => 'rackup',
         'process_types' => ['sidecar_process'],
         'memory_in_mb' => 300,
+        'origin' => 'user',
         'created_at' => iso8601,
         'updated_at' => iso8601,
         'relationships' => {
@@ -158,6 +160,7 @@ RSpec.describe 'Sidecars' do
           'command' => 'bundle exec rackup',
           'process_types' => ['other_worker'],
           'memory_in_mb' => 400,
+          'origin' => 'user',
           'created_at' => iso8601,
           'updated_at' => iso8601,
           'relationships' => {
@@ -279,6 +282,7 @@ RSpec.describe 'Sidecars' do
         'command' => 'smarch',
         'process_types' => ['spider', 'web'],
         'memory_in_mb' => 300,
+        'origin' => 'user',
         'created_at' => iso8601,
         'updated_at' => iso8601,
         'relationships' => {
@@ -352,6 +356,7 @@ RSpec.describe 'Sidecars' do
             'command' => 'missile1a',
             'process_types' => ['web', 'worker'],
             'memory_in_mb' => nil,
+            'origin' => 'user',
             'relationships' => {
               'app' => {
                 'data' => {
@@ -368,6 +373,7 @@ RSpec.describe 'Sidecars' do
             'command' => 'missile1b',
             'process_types' => ['web', 'worker'],
             'memory_in_mb' => nil,
+            'origin' => 'user',
             'relationships' => {
               'app' => {
                 'data' => {
@@ -422,6 +428,7 @@ RSpec.describe 'Sidecars' do
               'command' => 'bundle exec rackup',
               'process_types' => ['one'],
               'memory_in_mb' => nil,
+              'origin' => 'user',
               'created_at' => iso8601,
               'updated_at' => iso8601,
               'relationships' => {
@@ -438,6 +445,7 @@ RSpec.describe 'Sidecars' do
               'command' => 'bundle exec rackup',
               'process_types' => ['two'],
               'memory_in_mb' => nil,
+              'origin' => 'user',
               'created_at' => iso8601,
               'updated_at' => iso8601,
               'relationships' => {

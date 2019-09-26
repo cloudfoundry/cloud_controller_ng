@@ -5,6 +5,7 @@
   "command": "bundle exec rackup",
   "process_types": ["web", "worker"],
   "memory_in_mb": 300,
+  "origin": "user",
   "relationships": {
     "app": {
       "data": {
@@ -40,6 +41,7 @@
       "command": "bundle exec rackup",
       "process_types": ["web", "worker"],
       "memory_in_mb": 300,
+      "origin": "user",
       "relationships": {
         "app": {
           "data": {
@@ -56,6 +58,7 @@
       "command": "start-echo-server",
       "process_types": ["web"],
       "memory_in_mb": 300,
+      "origin": "user",
       "relationships": {
         "app": {
           "data": {

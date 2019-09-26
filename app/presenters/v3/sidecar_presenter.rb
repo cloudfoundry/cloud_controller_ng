@@ -14,6 +14,7 @@ module VCAP::CloudController
             command: sidecar.command,
             process_types: sidecar.process_types,
             memory_in_mb: sidecar.memory,
+            origin: sidecar.origin,
             relationships: {
               app: {
                 data: {

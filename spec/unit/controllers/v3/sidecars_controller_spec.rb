@@ -114,6 +114,7 @@ RSpec.describe SidecarsController, type: :controller do
         'created_at' => iso8601,
         'updated_at' => iso8601,
         'memory_in_mb' => nil,
+        'origin' => 'user',
         'relationships' => {
           'app' => {
             'data' => {
