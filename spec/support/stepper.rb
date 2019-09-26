@@ -2,7 +2,7 @@
 # It helps finding race-conditions, DB deadlocks and lock timeouts.
 #
 # To use it, you'll need to instrument some of your methods with steps before and after.
-# Usually, you’ll need to instrument database calls or calls to 3rd party services.
+# Usually, you'll need to instrument database calls or calls to 3rd party services.
 # For example:
 #
 #   let(:stepper) { Stepper.new(self) }
@@ -67,7 +67,7 @@
 # Finally, verify that there were no #errors
 #   and that all steps were executed asserting on #steps_left.
 #
-# When running the test, you’ll see the output similar to the following:
+# When running the test, you'll see the output similar to the following:
 #
 #   ====
 #   [1] start create broker transaction
@@ -91,13 +91,13 @@
 #   expecting [0] finish create broker transaction
 #   done [0] finish create broker transaction
 #
-# This can help you identify what’s happening when there is a timeout, deadlock or race condition.
+# This can help you identify what's happening when there is a timeout, deadlock or race condition.
 # It also may help to reduce the lock timeout to 5s (in MySQL) to catch them much quicker on dev machine.
 class Stepper
   MAX_RETRIES = 1500
   attr_reader :errors
 
-  def initialize(example)
+  def initialize(example, random: Random::DEFAULT)
     @example = example
     @defined_orders = []
     @starts = []
@@ -106,15 +106,24 @@ class Stepper
     @errors = []
     @aborted = false
     @mutex = Mutex.new
+    @random = random
   end
 
   def instrument(target, method_name, before: nil, after: nil, &block)
     example.allow(target).
-      to example.receive(method_name).
-        and_wrap_original do |m, *args, **kwargs, &block|
-      step(before) if before
-      result = m.call(*args, **kwargs, &block)
+      to example.receive(method_name).and_wrap_original do |original_method, *args, &method_block|
+
+      result = nil
+      if before
+        step(before) do
+          result = original_method.call(*args, &method_block)
+        end
+      else
+        result = original_method.call(*args, &method_block)
+      end
+
       step(after) if after
+
       block.call(result) if block
       result
     end
@@ -130,7 +139,8 @@ class Stepper
   def interleave_order
     @expected_order = []
     while defined_orders.any? { |order| !order.empty? }
-      choice = defined_orders.reject(&:empty?).sample
+      options = defined_orders.reject(&:empty?)
+      choice = options[random.rand(options.size)]
       @expected_order << choice.shift
     end
   end
@@ -166,16 +176,20 @@ class Stepper
     puts("expecting #{full_message}")
 
     retries = 0
-    sleep(0.01) while top_expected_message != full_message && (retries += 1) < MAX_RETRIES && !aborted
+    sleep(0.01) while attempt_to_acquire_lock_for(full_message) && (retries += 1) < MAX_RETRIES && !aborted?
 
-    raise "Step #{full_message} has reached max #{retries} retries" if retries >= MAX_RETRIES
+    fail_with_reason("Step #{full_message} has reached max #{retries} retries") if retries >= MAX_RETRIES
+    fail_with_reason('Aborted') if aborted
 
-    raise 'Aborted' if aborted
-
-    advance_to_next_message
     block.call if block
 
+    advance_to_next_message
+
     puts("done #{full_message}")
+  end
+
+  def aborted?
+    aborted
   end
 
   def abort!
@@ -188,19 +202,26 @@ class Stepper
 
   private
 
-  attr_reader :aborted, :mutex, :example, :defined_orders, :starts, :threads, :expected_order
+  attr_reader :aborted, :mutex, :example, :defined_orders, :starts, :threads, :expected_order, :random
 
-  def top_expected_message
+  def attempt_to_acquire_lock_for(expected_message)
     mutex.lock
-    result = expected_order.first
+    return if expected_order.first == expected_message
+
     mutex.unlock
-    result
   end
 
   def advance_to_next_message
-    mutex.lock
+    fail_with_reason('Not locked') unless mutex.locked?
+
     expected_order.shift
     mutex.unlock
+  end
+
+  def fail_with_reason(reason)
+    mutex.unlock if mutex.locked?
+
+    raise(reason)
   end
 
 end
