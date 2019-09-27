@@ -341,14 +341,12 @@ module VCAP::CloudController
 
             calls = 0
             allow(bbs_apps_client).to receive(:desire_app) do
-              begin
-                raise ignorable_error if calls == 0
-                raise non_ignorable_error if calls == 1
+              raise ignorable_error if calls == 0
+              raise non_ignorable_error if calls == 1
 
-                raise non_api_error if calls == 2
-              ensure
-                calls += 1
-              end
+              raise non_api_error if calls == 2
+            ensure
+              calls += 1
             end
           end
 

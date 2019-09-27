@@ -43,16 +43,14 @@ module VCAP::CloudController
         encrypted_fields = klass.all_encrypted_fields
         rows.each do |row|
           row.db.transaction do
-            begin
-              row.lock!
-              encrypt_row(encrypted_fields, row)
-              row.save(validate: false)
-            rescue Sequel::NoExistingObject
-              raise Sequel::Rollback
-            rescue StandardError => e
-              logger.error("Error '#{e.class}' occurred while updating record: #{row.class}, id: #{row.id}")
-              raise
-            end
+            row.lock!
+            encrypt_row(encrypted_fields, row)
+            row.save(validate: false)
+          rescue Sequel::NoExistingObject
+            raise Sequel::Rollback
+          rescue StandardError => e
+            logger.error("Error '#{e.class}' occurred while updating record: #{row.class}, id: #{row.id}")
+            raise
           end
         end
       end

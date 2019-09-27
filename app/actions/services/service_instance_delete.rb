@@ -62,11 +62,9 @@ module VCAP::CloudController
 
       unshare = ServiceInstanceUnshare.new
       service_instance.shared_spaces.each do |target_space|
-        begin
-          unshare.unshare(service_instance, target_space, @event_repository.user_audit_info)
-        rescue => e
-          errors << e
-        end
+        unshare.unshare(service_instance, target_space, @event_repository.user_audit_info)
+      rescue => e
+        errors << e
       end
 
       errors

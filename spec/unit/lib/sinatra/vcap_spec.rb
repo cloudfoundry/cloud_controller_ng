@@ -25,12 +25,10 @@ RSpec.describe 'Sinatra::VCAP', type: :v2_controller do
     end
 
     get '/div_0' do
-      begin
-        1 / 0
-      rescue => e
-        e.set_backtrace(['/foo:1', '/bar:2'])
-        raise e
-      end
+      1 / 0
+    rescue => e
+      e.set_backtrace(['/foo:1', '/bar:2'])
+      raise e
     end
 
     get '/request_id' do

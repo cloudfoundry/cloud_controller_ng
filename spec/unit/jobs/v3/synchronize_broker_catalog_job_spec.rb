@@ -54,17 +54,15 @@ module VCAP
               before { invalid_catalog }
 
               it 'errors when there are validation errors' do
-                begin
-                  job.perform
-                  fail('expected error to be raised')
-                rescue ::CloudController::Errors::ApiError => e
-                  expect(e.message).to include(
-                    'Service broker catalog is invalid',
-                    'Service dashboard_client id must be unique',
-                    'Service service-name',
-                    'nested-error'
-                  )
-                end
+                job.perform
+                fail('expected error to be raised')
+              rescue ::CloudController::Errors::ApiError => e
+                expect(e.message).to include(
+                  'Service broker catalog is invalid',
+                  'Service dashboard_client id must be unique',
+                  'Service service-name',
+                  'nested-error'
+                )
               end
             end
 
@@ -72,16 +70,14 @@ module VCAP
               before { incompatible_catalog }
 
               it 'errors when there are validation errors' do
-                begin
-                  job.perform
-                  fail('expected error to be raised')
-                rescue ::CloudController::Errors::ApiError => e
-                  expect(e.message).to include(
-                    'Service broker catalog is incompatible',
-                    'Service 2 is declared to be a route service but support for route services is disabled.',
-                    'Service 3 is declared to be a volume mount service but support for volume mount services is disabled.'
-                  )
-                end
+                job.perform
+                fail('expected error to be raised')
+              rescue ::CloudController::Errors::ApiError => e
+                expect(e.message).to include(
+                  'Service broker catalog is incompatible',
+                  'Service 2 is declared to be a route service but support for route services is disabled.',
+                  'Service 3 is declared to be a volume mount service but support for volume mount services is disabled.'
+                )
               end
             end
           end

@@ -37,15 +37,13 @@ class WorkPool
     Thread.new do
       catch(:exit) do
         loop do
-          begin
-            job, args = @queue.pop
-            job.call(*args)
-          rescue => e
-            next unless @store_exceptions
+          job, args = @queue.pop
+          job.call(*args)
+        rescue => e
+          next unless @store_exceptions
 
-            @lock.synchronize do
-              @exceptions << e
-            end
+          @lock.synchronize do
+            @exceptions << e
           end
         end
       end

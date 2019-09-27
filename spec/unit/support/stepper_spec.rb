@@ -155,7 +155,6 @@ RSpec.describe 'Stepper' do
         ]) do
           target.method_one
           raise error
-          target.method_two
         end
 
         stepper.interleave_order

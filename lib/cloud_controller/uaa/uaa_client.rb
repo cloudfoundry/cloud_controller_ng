@@ -24,11 +24,9 @@ module VCAP::CloudController
 
     def get_clients(client_ids)
       client_ids.map do |id|
-        begin
-          get(:client, id)
-        rescue CF::UAA::NotFound
-          nil
-        end
+        get(:client, id)
+      rescue CF::UAA::NotFound
+        nil
       end.compact
     end
 

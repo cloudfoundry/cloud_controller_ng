@@ -73,11 +73,9 @@ module VCAP::CloudController
       unshare = ServiceInstanceUnshare.new
       errors = []
       space_model.service_instances_shared_from_other_spaces.each do |service_instance|
-        begin
-          unshare.unshare(service_instance, space_model, @user_audit_info)
-        rescue => e
-          errors.push(e)
-        end
+        unshare.unshare(service_instance, space_model, @user_audit_info)
+      rescue => e
+        errors.push(e)
       end
       errors
     end

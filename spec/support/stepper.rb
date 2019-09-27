@@ -112,7 +112,6 @@ class Stepper
   def instrument(target, method_name, before: nil, after: nil, &block)
     example.allow(target).
       to example.receive(method_name).and_wrap_original do |original_method, *args, &method_block|
-
       result = nil
       if before
         step(before) do
@@ -223,5 +222,4 @@ class Stepper
 
     raise(reason)
   end
-
 end

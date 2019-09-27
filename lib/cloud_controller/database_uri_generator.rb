@@ -19,11 +19,9 @@ module VCAP::CloudController
 
     def bound_relational_database_uri
       @service_uris.each do |service_uri|
-        begin
-          uri = URI.parse(service_uri)
-          return uri if VALID_DB_TYPES.include?(uri.scheme)
-        rescue URI::InvalidURIError
-        end
+        uri = URI.parse(service_uri)
+        return uri if VALID_DB_TYPES.include?(uri.scheme)
+      rescue URI::InvalidURIError
       end
 
       nil

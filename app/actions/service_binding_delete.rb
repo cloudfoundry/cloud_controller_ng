@@ -86,11 +86,9 @@ module VCAP::CloudController
     def each_with_error_aggregation(list)
       errors = []
       list.each do |item|
-        begin
-          yield(item)
-        rescue => e
-          errors << e
-        end
+        yield(item)
+      rescue => e
+        errors << e
       end
       errors
     end

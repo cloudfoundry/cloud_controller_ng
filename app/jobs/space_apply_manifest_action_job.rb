@@ -13,28 +13,26 @@ module VCAP::CloudController
         logger.info("Applying app manifest to app: #{resource_guid}")
 
         app_guid_message_hash.each do |app_guid, message|
-          begin
-            apply_manifest_action.apply(app_guid, message)
-          rescue AppPatchEnvironmentVariables::InvalidApp,
-                 AppUpdate::InvalidApp,
-                 AppApplyManifest::NoDefaultDomain,
-                 ProcessCreate::InvalidProcess,
-                 ProcessScale::InvalidProcess,
-                 ProcessUpdate::InvalidProcess,
-                 ManifestRouteUpdate::InvalidRoute,
-                 Route::InvalidOrganizationRelation,
-                 AppApplyManifest::ServiceBindingError => e
+          apply_manifest_action.apply(app_guid, message)
+        rescue AppPatchEnvironmentVariables::InvalidApp,
+               AppUpdate::InvalidApp,
+               AppApplyManifest::NoDefaultDomain,
+               ProcessCreate::InvalidProcess,
+               ProcessScale::InvalidProcess,
+               ProcessUpdate::InvalidProcess,
+               ManifestRouteUpdate::InvalidRoute,
+               Route::InvalidOrganizationRelation,
+               AppApplyManifest::ServiceBindingError => e
 
-            app_name = AppModel.find(guid: app_guid)&.name
-            error_message = app_name ? "For application '#{app_name}': #{e.message}" : e.message
-            raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', error_message)
-          rescue CloudController::Errors::NotFound,
-                 StructuredError => e
+          app_name = AppModel.find(guid: app_guid)&.name
+          error_message = app_name ? "For application '#{app_name}': #{e.message}" : e.message
+          raise CloudController::Errors::ApiError.new_from_details('UnprocessableEntity', error_message)
+        rescue CloudController::Errors::NotFound,
+               StructuredError => e
 
-            app_name = AppModel.find(guid: app_guid)&.name
-            e.error_prefix = "For application '#{app_name}': " if app_name
-            raise e
-          end
+          app_name = AppModel.find(guid: app_guid)&.name
+          e.error_prefix = "For application '#{app_name}': " if app_name
+          raise e
         end
       end
 

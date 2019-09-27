@@ -61,20 +61,18 @@ module VCAP::CloudController
       create_pidfile
 
       EM.run do
-        begin
-          start_cloud_controller
+        start_cloud_controller
 
-          request_metrics = VCAP::CloudController::Metrics::RequestMetrics.new(statsd_client)
-          gather_periodic_metrics
+        request_metrics = VCAP::CloudController::Metrics::RequestMetrics.new(statsd_client)
+        gather_periodic_metrics
 
-          builder = RackAppBuilder.new
-          app     = builder.build(@config, request_metrics)
+        builder = RackAppBuilder.new
+        app     = builder.build(@config, request_metrics)
 
-          start_thin_server(app)
-        rescue => e
-          logger.error "Encountered error: #{e}\n#{e.backtrace.join("\n")}"
-          raise e
-        end
+        start_thin_server(app)
+      rescue => e
+        logger.error "Encountered error: #{e}\n#{e.backtrace.join("\n")}"
+        raise e
       end
     end
 

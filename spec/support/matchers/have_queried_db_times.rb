@@ -1,25 +1,23 @@
 RSpec::Matchers.define :have_queried_db_times do |query_regex, expected_times|
   match do |actual_blk|
-    begin
-      matched_calls = []
-      stub = allow(Sequel::Model.db).to receive(:_execute)
-      stub.and_call_original
-      calls = stub.and_record_arguments
-      actual_blk.call
-      matched_calls = calls.select { |call| call[1] =~ query_regex }
-      if matched_calls.size != expected_times
-        @matched_calls = matched_calls
-        @calls = calls
-        return false
-      else
-        return true
-      end
-    rescue => e
-      @raised_exception = e
-      false
-    ensure
-      allow(Sequel::Model.db).to receive(:_execute).and_call_original
+    matched_calls = []
+    stub = allow(Sequel::Model.db).to receive(:_execute)
+    stub.and_call_original
+    calls = stub.and_record_arguments
+    actual_blk.call
+    matched_calls = calls.select { |call| call[1] =~ query_regex }
+    if matched_calls.size != expected_times
+      @matched_calls = matched_calls
+      @calls = calls
+      return false
+    else
+      return true
     end
+  rescue => e
+    @raised_exception = e
+    false
+  ensure
+    allow(Sequel::Model.db).to receive(:_execute).and_call_original
   end
 
   failure_message do |_|
