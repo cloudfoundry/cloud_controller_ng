@@ -17,6 +17,7 @@ module VCAP
               auth_password: 'password'
             )
           end
+          let(:service_manager_factory) { Services::ServiceBrokers::ServiceManager }
 
           subject(:job) do
             SynchronizeBrokerCatalogJob.new(broker.guid)
