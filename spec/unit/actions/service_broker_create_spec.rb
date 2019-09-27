@@ -59,7 +59,7 @@ module VCAP
         expect(broker.service_broker_state.state).to eq(ServiceBrokerStateEnum::SYNCHRONIZING)
       end
 
-      describe 'concurrent behaviour' do
+      describe 'concurrent behaviour', stepper: true do
         let(:stepper) { Stepper.new(self) }
 
         before do
