@@ -1800,7 +1800,7 @@ module VCAP::CloudController
                 put "/v2/organizations/#{org.guid}/#{plural_role}", MultiJson.dump({ username: user.username })
 
                 expect(last_response.status).to eq(201), last_response.body
-                expect(org.send("#{plural_role}_dataset").where(guid: user.guid)).to_not be_empty
+                expect(org.send("#{plural_role}_dataset").where(users__guid: user.guid)).to_not be_empty
               end
 
               it 'verifies the user has update access to the org' do

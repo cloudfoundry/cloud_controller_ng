@@ -65,11 +65,11 @@ module VCAP::CloudController
       # use select_map so the query is run now instead of being added as a where filter later. When this instead
       # generates a subselect in the filter query directly, performance degrades significantly in MySQL.
       Sequel.or([
-        [:space_guid, Space.dataset.join_table(:inner, :spaces_developers, space_id: :id, user_id: user.id).select(:guid).
+        [:space_guid, Space.dataset.join_table(:inner, :spaces_developers, space_id: :id, user_id: user.id).select(:spaces__guid).
           union(
-            Space.dataset.join_table(:inner, :spaces_auditors, space_id: :id, user_id: user.id).select(:guid)
+            Space.dataset.join_table(:inner, :spaces_auditors, space_id: :id, user_id: user.id).select(:spaces__guid)
           ).select_map(:guid)],
-        [:organization_guid, Organization.dataset.where(auditors: user).select_map(:guid)]
+        [:organization_guid, Organization.dataset.where(auditors: user).select_map(:organizations__guid)]
       ])
     end
   end
