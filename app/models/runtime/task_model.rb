@@ -24,15 +24,14 @@ module VCAP::CloudController
     set_field_as_encrypted :environment_variables, column: :encrypted_environment_variables
     serializes_via_json :environment_variables
 
-    def after_create
-      super
-      create_start_event
-    end
-
     def after_update
       super
 
-      if column_changed?(:state) && terminal_state?
+      return unless column_changed?(:state)
+
+      if running_state?
+        create_start_event
+      elsif terminal_state?
         create_stop_event
       end
     end
@@ -48,6 +47,10 @@ module VCAP::CloudController
     end
 
     private
+
+    def running_state?
+      state == RUNNING_STATE
+    end
 
     def terminal_state?
       TERMINAL_STATES.include? state
