@@ -29,6 +29,7 @@ require 'credhub/client'
 require 'cloud_controller/opi/apps_client'
 require 'cloud_controller/opi/instances_client'
 require 'cloud_controller/opi/stager_client'
+require 'cloud_controller/opi/task_client'
 
 require 'bits_service_client'
 
@@ -84,7 +85,7 @@ module CloudController
     end
 
     def bbs_task_client
-      @dependencies[:bbs_task_client] || register(:bbs_task_client, build_bbs_task_client)
+      @dependencies[:bbs_task_client] || register(:bbs_task_client, build_task_client)
     end
 
     def bbs_instances_client
@@ -407,6 +408,18 @@ module CloudController
 
     def build_bbs_apps_client
       VCAP::CloudController::Diego::BbsAppsClient.new(build_bbs_client, config)
+    end
+
+    def build_task_client
+      if config.get(:opi, :enabled)
+        build_opi_task_client
+      else
+        build_bbs_task_client
+      end
+    end
+
+    def build_opi_task_client
+      ::OPI::TaskClient.new(config)
     end
 
     def build_bbs_task_client
