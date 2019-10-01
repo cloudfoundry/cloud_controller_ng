@@ -11,11 +11,13 @@ RSpec.describe(OPI::Client) do
     )
   end
 
-  describe 'can desire an app' do
+  describe '#desire_app' do
     subject(:client) { described_class.new(config) }
     let(:img_url) { 'http://example.org/image1234' }
     let(:droplet) { VCAP::CloudController::DropletModel.make(
       docker_receipt_image: 'http://example.org/image1234',
+      docker_receipt_username: 'docker-user',
+      docker_receipt_password: 'docker-password',
       droplet_hash: 'd_haash',
       guid: 'some-droplet-guid',
     )
@@ -80,8 +82,6 @@ RSpec.describe(OPI::Client) do
             guid: 'process-guid',
             version: lrp.version.to_s,
             process_guid: "process-guid-#{lrp.version}",
-            docker_image: 'http://example.org/image1234',
-            start_command: 'ls -la',
             environment: {
               'BISH': 'BASH',
               'FOO': 'BAR',
@@ -116,8 +116,6 @@ RSpec.describe(OPI::Client) do
             instances: 21,
             memory_mb: 128,
             cpu_weight: 1,
-            droplet_hash: lrp.droplet_hash,
-            droplet_guid: 'some-droplet-guid',
             health_check_type: 'port',
             health_check_http_endpoint: nil,
             health_check_timeout_ms: 12000,
@@ -125,126 +123,167 @@ RSpec.describe(OPI::Client) do
             volume_mounts: [],
             ports: [8080],
             routes: {
-              'cf-router' => [
+              "cf-router": [
                 {
-                  'hostname' => 'numero-uno.example.com',
-                  'port' => 8080
+                  hostname: 'numero-uno.example.com',
+                  port: 8080
                 },
                 {
-                  'hostname' => 'numero-dos.example.com',
-                  'port' => 7777
+                  hostname: 'numero-dos.example.com',
+                  port: 7777
                 }
               ]
             }
         }
       }
 
-      it 'sends a PUT request' do
-        response = client.desire_app(lrp)
-
-        expect(response.status_code).to equal(201)
-        expect(WebMock).to have_requested(:put, "#{opi_url}/apps/process-guid-#{lrp.version}").with(body: MultiJson.dump(expected_body))
-      end
-
-      context 'when volume mounts are provided' do
-        let(:service_instance) { ::VCAP::CloudController::ManagedServiceInstance.make space: app_model.space }
-        let(:multiple_volume_mounts) do
-          [
-            {
-              container_dir: '/data/images',
-              mode:          'r',
-              device_type:   'shared',
-              driver:        'cephfs',
-              device:        {
-                volume_id:    'abc',
-                mount_config: {
-                  name: 'volume-one',
-                  key: 'value'
-                }
-              }
-            },
-            {
-              container_dir: '/data/pictures',
-              mode:          'r',
-              device_type:   'shared',
-              driver:        'cephfs',
-              device:        {
-                volume_id:    'abc',
-                mount_config: {
-                  key: 'value'
-                }
-              }
-            },
-            {
-              container_dir: '/data/scratch',
-              mode:          'rw',
-              device_type:   'shared',
-              driver:        'local',
-              device:        {
-                volume_id:    'def'
+      context 'when app belongs to buildpack lifecycle' do
+        let(:lifecycle_type) { :buildpack }
+        let(:buildpack_lifecycle) {
+          {
+            lifecycle: {
+              buildpack_lifecycle: {
+                droplet_hash: lrp.droplet_hash,
+                droplet_guid: 'some-droplet-guid',
+                start_command: 'ls -la',
               }
             }
-          ]
-        end
-
-        let(:binding) { ::VCAP::CloudController::ServiceBinding.make(app: app_model, service_instance: service_instance, volume_mounts: multiple_volume_mounts) }
-        let(:creds) {
-          system_env = SystemEnvPresenter.new([binding]).system_env
-          service_details = system_env[:VCAP_SERVICES][:"#{service_instance.service.label}"]
-          service_credentials = service_details[0].to_hash[:credentials]
-          service_credentials
+          }
         }
-
-        before do
-          creds_json = MultiJson.dump(creds)
-          expected_body[:environment][:VCAP_SERVICES] = %{{"#{service_instance.service.label}":[{
-              "label": "#{service_instance.service.label}",
-              "provider": null,
-              "plan": "#{service_instance.service_plan.name}",
-              "name": "#{service_instance.name}",
-              "tags": [],
-              "instance_name": "#{service_instance.name}",
-              "binding_name": null,
-              "credentials": #{creds_json},
-              "syslog_drain_url": null,
-              "volume_mounts": [
-                {
-                  "container_dir": "/data/images",
-                  "mode": "r",
-                  "device_type": "shared"
-                },
-                {
-                  "container_dir": "/data/pictures",
-                  "mode": "r",
-                  "device_type": "shared"
-                },
-                {
-                  "container_dir": "/data/scratch",
-                  "mode": "rw",
-                  "device_type": "shared"
-                }
-              ]
-            }]}}.delete(' ').delete("\n")
-
-          expected_body[:volume_mounts] = [
-            {
-                  volume_id: 'volume-one',
-                  mount_dir: '/data/images'
-            }
-          ]
-        end
-
         it 'sends a PUT request' do
           response = client.desire_app(lrp)
 
           expect(response.status_code).to equal(201)
-          expect(WebMock).to have_requested(:put, "#{opi_url}/apps/process-guid-#{lrp.version}").with(body: MultiJson.dump(expected_body))
+          expect(WebMock).to have_requested(:put, "#{opi_url}/apps/process-guid-#{lrp.version}").with { |request|
+            actual_body = MultiJson.load(request.body, symbolize_keys: true)
+            actual_body == expected_body.merge(buildpack_lifecycle)
+          }
+        end
+
+        context 'when volume mounts are provided' do
+          let(:service_instance) { ::VCAP::CloudController::ManagedServiceInstance.make space: app_model.space }
+          let(:multiple_volume_mounts) do
+            [
+              {
+                container_dir: '/data/images',
+                mode:          'r',
+                device_type:   'shared',
+                driver:        'cephfs',
+                device:        {
+                  volume_id:    'abc',
+                  mount_config: {
+                    name: 'volume-one',
+                    key: 'value'
+                  }
+                }
+              },
+              {
+                container_dir: '/data/pictures',
+                mode:          'r',
+                device_type:   'shared',
+                driver:        'cephfs',
+                device:        {
+                  volume_id:    'abc',
+                  mount_config: {
+                    key: 'value'
+                  }
+                }
+              },
+              {
+                container_dir: '/data/scratch',
+                mode:          'rw',
+                device_type:   'shared',
+                driver:        'local',
+                device:        {
+                  volume_id:    'def'
+                }
+              }
+            ]
+          end
+
+          let(:binding) { ::VCAP::CloudController::ServiceBinding.make(app: app_model, service_instance: service_instance, volume_mounts: multiple_volume_mounts) }
+          let(:creds) {
+            system_env = SystemEnvPresenter.new([binding]).system_env
+            service_details = system_env[:VCAP_SERVICES][:"#{service_instance.service.label}"]
+            service_credentials = service_details[0].to_hash[:credentials]
+            service_credentials
+          }
+
+          before do
+            creds_json = MultiJson.dump(creds)
+            expected_body[:environment][:VCAP_SERVICES] = %{{"#{service_instance.service.label}":[{
+            "label": "#{service_instance.service.label}",
+            "provider": null,
+            "plan": "#{service_instance.service_plan.name}",
+            "name": "#{service_instance.name}",
+            "tags": [],
+            "instance_name": "#{service_instance.name}",
+            "binding_name": null,
+            "credentials": #{creds_json},
+            "syslog_drain_url": null,
+            "volume_mounts": [
+              {
+                "container_dir": "/data/images",
+                "mode": "r",
+                "device_type": "shared"
+              },
+              {
+                "container_dir": "/data/pictures",
+                "mode": "r",
+                "device_type": "shared"
+              },
+              {
+                "container_dir": "/data/scratch",
+                "mode": "rw",
+                "device_type": "shared"
+              }
+            ]
+          }]}}.delete(' ').delete("\n")
+
+            expected_body[:volume_mounts] = [
+              {
+                volume_id: 'volume-one',
+                mount_dir: '/data/images'
+              }
+            ]
+          end
+
+          it 'sends a PUT request' do
+            response = client.desire_app(lrp)
+
+            expect(response.status_code).to equal(201)
+            expect(WebMock).to have_requested(:put, "#{opi_url}/apps/process-guid-#{lrp.version}").with { |request|
+              actual_body = MultiJson.load(request.body, symbolize_keys: true)
+              actual_body == expected_body.merge(buildpack_lifecycle)
+            }
+          end
+        end
+      end
+
+      context 'when app belongs to docker lifecycle' do
+        let(:lifecycle_type) { :docker }
+        it 'sends a PUT request' do
+          response = client.desire_app(lrp)
+
+          expect(response.status_code).to equal(201)
+          expect(WebMock).to have_requested(:put, "#{opi_url}/apps/process-guid-#{lrp.version}").with { |request|
+            actual_body = MultiJson.load(request.body, symbolize_keys: true)
+            expected_body_with_lifecycle = expected_body.merge(lifecycle: {
+              docker_lifecycle: {
+                image: 'http://example.org/image1234',
+                registry_username: 'docker-user',
+                registry_password: 'docker-password',
+                command: ['/bin/sh', '-c', 'ls -la']
+              }
+            })
+            actual_body == expected_body_with_lifecycle
+          }
         end
       end
     end
   end
 
-  describe 'can fetch scheduling infos' do
+  describe '#fetch_scheduling_infos' do
     let(:expected_body) { { desired_lrp_scheduling_infos: [
       { desired_lrp_key: { process_guid: 'guid_1234', annotation: '1111111111111.1' } },
       { desired_lrp_key: { process_guid: 'guid_5678', annotation: '222222222222222.2' } }
@@ -438,7 +477,7 @@ RSpec.describe(OPI::Client) do
     end
   end
 
-  context 'stop an app' do
+  context '#stop_app' do
     let(:guid) { 'd082417c-c5aa-488c-aaf8-845a580eb11f' }
     let(:version) { 'e2fe80f5-fd0c-4699-a4d1-ae06bc48a923' }
     subject(:client) { described_class.new(config) }
@@ -459,7 +498,7 @@ RSpec.describe(OPI::Client) do
     end
   end
 
-  context 'stop an app instance' do
+  context '#stop_index' do
     let(:guid) { 'd082417c-c5aa-488c-aaf8-845a580eb11f' }
     let(:version) { 'e2fe80f5-fd0c-4699-a4d1-ae06bc48a923' }
     let(:index) { 1 }
