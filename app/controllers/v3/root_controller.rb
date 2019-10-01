@@ -27,6 +27,7 @@ class RootController < ActionController::Base
     links.merge!(create_link(:tasks))
     links.merge!(create_link(:users, experimental: true))
     links.merge!(create_link(:audit_events, experimental: true))
+    links.merge!(create_link(:environment_variable_groups, experimental: true))
 
     render :ok, json: MultiJson.dump({ links: links }, pretty: true)
   end

@@ -77,6 +77,10 @@ RSpec.describe 'v3 root' do
           'audit_events' => {
             'href' => "#{link_prefix}/v3/audit_events",
             'experimental' => true
+          },
+          'environment_variable_groups' => {
+            'href' => "#{link_prefix}/v3/environment_variable_groups",
+            'experimental' => true
           }
         }
       })
