@@ -316,10 +316,9 @@ RSpec.describe 'Stepper' do
   class Target
     attr_reader :calls
 
-    def initialize(slower: false)
+    def initialize
       @calls = []
       @mutex = Mutex.new
-      @slower = slower
     end
 
     def method_one
@@ -342,12 +341,11 @@ RSpec.describe 'Stepper' do
     def record(*args)
       mutex.lock
       calls << args
-      sleep(0.01) if slower
       mutex.unlock
     end
 
     private
 
-    attr_reader :mutex, :slower
+    attr_reader :mutex
   end
 end

@@ -205,9 +205,10 @@ class Stepper
 
   def attempt_to_acquire_lock_for(expected_message)
     mutex.lock
-    return if expected_order.first == expected_message
+    return false if expected_order.first == expected_message
 
     mutex.unlock
+    true
   end
 
   def advance_to_next_message
