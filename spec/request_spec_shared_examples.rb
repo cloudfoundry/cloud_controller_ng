@@ -23,6 +23,10 @@ RSpec.shared_examples 'permissions for list endpoint' do |roles|
         headers = set_user_with_header_as_role(role: role, org: org, space: space, user: user, scopes: expected_codes_and_responses[role][:scopes])
         api_call.call(headers)
 
+        if last_response.status == 500
+          expect(false).to be_truthy, "500: #{last_response.body}"
+        end
+
         expected_response_code = expected_codes_and_responses[role][:code]
         expect(last_response.status).to eq(expected_response_code), "role #{role}: expected #{expected_response_code}, got: #{last_response.status}"
         if (200...300).cover? expected_response_code
