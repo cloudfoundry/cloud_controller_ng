@@ -43,6 +43,10 @@ module VCAP::CloudController
             return 'available'
           end
 
+          if state == VCAP::CloudController::ServiceBrokerStateEnum::DELETE_IN_PROGRESS
+            return 'delete in progress'
+          end
+
           'unknown'
         end
 

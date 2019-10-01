@@ -47,7 +47,7 @@ module VCAP::CloudController
         end
 
         def perform
-          ensure_state_present
+          synchronizing_state
 
           catalog = VCAP::Services::ServiceBrokers::V2::Catalog.new(broker, broker_client.catalog)
 
@@ -85,24 +85,16 @@ module VCAP::CloudController
           @broker_client ||= VCAP::Services::ServiceClientProvider.provide(broker: broker)
         end
 
-        def ensure_state_present
-          if broker.service_broker_state.nil?
-            broker.service_broker_state = ServiceBrokerState.new(
-              state: ServiceBrokerStateEnum::SYNCHRONIZING
-            )
-          end
+        def synchronizing_state
+          broker.update_state(ServiceBrokerStateEnum::SYNCHRONIZING)
         end
 
         def failed_state
-          broker.service_broker_state.update(
-            state: ServiceBrokerStateEnum::SYNCHRONIZATION_FAILED
-        )
+          broker.update_state(ServiceBrokerStateEnum::SYNCHRONIZATION_FAILED)
         end
 
         def available_state
-          broker.service_broker_state.update(
-            state: ServiceBrokerStateEnum::AVAILABLE
-        )
+          broker.update_state(ServiceBrokerStateEnum::AVAILABLE)
         end
 
         def fail_with_invalid_catalog(errors)

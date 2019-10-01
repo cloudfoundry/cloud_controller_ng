@@ -4,6 +4,12 @@ module VCAP::Services::ServiceBrokers
       @services_event_repository = services_event_repository
     end
 
+    def delete(brokers)
+      brokers.each do |b|
+        remove(b)
+      end
+    end
+
     def remove(broker)
       cache = cache_services_and_plans(broker)
 

@@ -835,6 +835,8 @@ RSpec.describe 'V3 service brokers' do
       let(:api_call) { lambda { |user_headers| delete "/v3/service_brokers/#{broker.guid}", nil, user_headers } }
       let(:db_check) {
         lambda do
+          execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
           get "/v3/service_brokers/#{broker.guid}", {}, admin_headers
           expect(last_response.status).to eq(404)
         end
@@ -845,7 +847,7 @@ RSpec.describe 'V3 service brokers' do
         it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS do
           let(:expected_codes_and_responses) {
             Hash.new(code: 404).tap do |h|
-              h['admin'] = { code: 204 }
+              h['admin'] = { code: 202 }
               h['admin_read_only'] = { code: 403 }
               h['global_auditor'] = { code: 403 }
             end
@@ -859,8 +861,8 @@ RSpec.describe 'V3 service brokers' do
         it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS do
           let(:expected_codes_and_responses) {
             Hash.new(code: 403).tap do |h|
-              h['admin'] = { code: 204 }
-              h['space_developer'] = { code: 204 }
+              h['admin'] = { code: 202 }
+              h['space_developer'] = { code: 202 }
               h['org_auditor'] = { code: 404 }
               h['org_billing_manager'] = { code: 404 }
               h['no_role'] = { code: 404 }
@@ -873,45 +875,87 @@ RSpec.describe 'V3 service brokers' do
         before do
           VCAP::CloudController::Event.dataset.destroy
           delete "/v3/service_brokers/#{global_broker.guid}", {}, admin_headers
+          expect(last_response).to have_status_code(202)
         end
 
-        it 'deletes the UAA clients related to this broker' do
-          uaa_client_id = "#{global_broker_id}-uaa-id"
-          expect(VCAP::CloudController::ServiceDashboardClient.find_client_by_uaa_id(uaa_client_id)).to be_nil
+        context 'while the job is processing' do
+          it 'is marked as processing' do
+            job_url = last_response['Location']
+            get job_url, {}, admin_headers
+            expect(last_response).to have_status_code(200)
+            expect(parsed_response).to include({
+                'state' => 'PROCESSING',
+                'operation' => 'service_broker.delete'
+            })
+          end
 
-          expect(a_request(:post, 'https://uaa.service.cf.internal/oauth/clients/tx/modify').
-              with(
-                body: [
-                  {
-                        "client_id": uaa_client_id,
-                        "client_secret": nil,
-                        "redirect_uri": nil,
-                        "scope": %w(openid cloud_controller_service_permissions.read),
-                        "authorities": ['uaa.resource'],
-                        "authorized_grant_types": ['authorization_code'],
-                        "action": 'delete'
-                    }
-                ].to_json
-              )).to have_been_made
+          it 'does not delete the broker' do
+            get "/v3/service_brokers/#{global_broker.guid}", {}, admin_headers
+            expect(last_response.status).to eq(200)
+          end
+
+          it 'marks the broker as deleting' do
+            get "/v3/service_brokers/#{global_broker.guid}", {}, admin_headers
+            expect(parsed_response).to include({
+                'available' => false,
+                'status' => 'delete in progress'
+            })
+          end
         end
 
-        it 'emits service and plan deletion events, and broker deletion event' do
-          expect([
-            { type: 'audit.service.delete', actor: 'broker name' },
-            { type: 'audit.service.delete', actor: 'broker name' },
-            { type: 'audit.service_broker.delete', actor: admin_headers._generated_email },
-            { type: 'audit.service_dashboard_client.delete', actor: 'broker name' },
-            { type: 'audit.service_plan.delete', actor: 'broker name' },
-            { type: 'audit.service_plan.delete', actor: 'broker name' }
-          ]).to be_reported_as_events
-        end
+        context 'when the job is completed' do
+          before do
+            execute_all_jobs(expected_successes: 1, expected_failures: 0)
+          end
 
-        it 'deletes the associated service offerings and plans' do
-          services = VCAP::CloudController::Service.where(id: global_broker_services.map(&:id))
-          expect(services).to have(0).items
+          it 'marks the job as complete' do
+            job_url = last_response['Location']
+            get job_url, {}, admin_headers
+            expect(last_response).to have_status_code(200)
+            expect(parsed_response).to include({
+                'state' => 'COMPLETE',
+                'operation' => 'service_broker.delete'
+            })
+          end
 
-          plans = VCAP::CloudController::ServicePlan.where(id: global_broker_plans.map(&:id))
-          expect(plans).to have(0).items
+          it 'deletes the UAA clients related to this broker' do
+            uaa_client_id = "#{global_broker_id}-uaa-id"
+            expect(VCAP::CloudController::ServiceDashboardClient.find_client_by_uaa_id(uaa_client_id)).to be_nil
+
+            expect(a_request(:post, 'https://uaa.service.cf.internal/oauth/clients/tx/modify').
+                with(
+                  body: [
+                    {
+                          "client_id": uaa_client_id,
+                          "client_secret": nil,
+                          "redirect_uri": nil,
+                          "scope": %w(openid cloud_controller_service_permissions.read),
+                          "authorities": ['uaa.resource'],
+                          "authorized_grant_types": ['authorization_code'],
+                          "action": 'delete'
+                      }
+                  ].to_json
+                )).to have_been_made
+          end
+
+          it 'emits service and plan deletion events, and broker deletion event' do
+            expect([
+              { type: 'audit.service.delete', actor: 'broker name' },
+              { type: 'audit.service.delete', actor: 'broker name' },
+              { type: 'audit.service_broker.delete', actor: admin_headers._generated_email },
+              { type: 'audit.service_dashboard_client.delete', actor: 'broker name' },
+              { type: 'audit.service_plan.delete', actor: 'broker name' },
+              { type: 'audit.service_plan.delete', actor: 'broker name' }
+            ]).to be_reported_as_events
+          end
+
+          it 'deletes the associated service offerings and plans' do
+            services = VCAP::CloudController::Service.where(id: global_broker_services.map(&:id))
+            expect(services).to have(0).items
+
+            plans = VCAP::CloudController::ServicePlan.where(id: global_broker_plans.map(&:id))
+            expect(plans).to have(0).items
+          end
         end
       end
     end
