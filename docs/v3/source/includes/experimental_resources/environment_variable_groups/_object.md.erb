@@ -1,0 +1,15 @@
+### The environment variable group object
+
+```
+Example environment variable group object
+```
+```json
+<%= yield_content :environment_variable_group %>
+```
+
+Name | Type | Description
+---- | ---- | -----------
+**name** | _string_ | The name of the group. Can only be running or staging.
+**updated_at** | _string_ | The time of last update.
+**var** | _object_ | Key value hash of environment variables.
+**links** | [_links object_](#links) | Links to related resources.

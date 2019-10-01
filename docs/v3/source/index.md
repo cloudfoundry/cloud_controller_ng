@@ -11,6 +11,7 @@ includes:
   - api_resources/deployments
   - api_resources/droplets
   - api_resources/domains
+  - api_resources/environment_variable_groups
   - api_resources/feature_flags
   - api_resources/isolation_segments
   - api_resources/jobs
@@ -225,6 +226,9 @@ includes:
   - experimental_resources/deployments/list
   - experimental_resources/deployments/update
   - experimental_resources/deployments/cancel
+  - experimental_resources/environment_variable_groups/header
+  - experimental_resources/environment_variable_groups/object
+  - experimental_resources/environment_variable_groups/get
   - experimental_resources/revisions/header
   - experimental_resources/revisions/object
   - experimental_resources/revisions/get
