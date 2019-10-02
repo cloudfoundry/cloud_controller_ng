@@ -940,6 +940,43 @@ RSpec.describe 'Route Destinations Request' do
         end
       end
     end
+
+    context 'when two different destinations have the same port' do
+      let!(:process_model) { VCAP::CloudController::ProcessModel.make(app: app_model, ports: [9000], type: 'web') }
+      let!(:existing_destination) do
+        VCAP::CloudController::RouteMappingModel.make(
+          app: app_model,
+          route: route,
+          app_port: 9000
+        )
+      end
+
+      let(:params) do
+        {
+          destinations: [
+            {
+              app: {
+                guid: app_model.guid,
+              },
+              weight: 80,
+              port: 8080
+            },
+            {
+              app: {
+                guid: app_model.guid,
+              },
+              weight: 20,
+              port: 9000
+            }
+          ]
+        }
+      end
+
+      it 'successfully updates the process ports' do
+        patch "/v3/routes/#{route.guid}/destinations", params.to_json, admin_header
+        expect(last_response.status).to eq 200
+      end
+    end
   end
 
   describe 'DELETE /v3/routes/:guid/destinations/:destination_guid' do

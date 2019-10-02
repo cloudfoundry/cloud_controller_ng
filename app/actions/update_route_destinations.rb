@@ -90,7 +90,7 @@ module VCAP::CloudController
           ports_to_add = ports_hash[:to_add].uniq.reject { |port| port == ProcessModel::NO_APP_PORT_SPECIFIED }
           ports_to_delete = ports_hash[:to_delete].uniq.reject { |port| port == ProcessModel::NO_APP_PORT_SPECIFIED }
 
-          updated_ports = ((process.ports || []) + ports_to_add - ports_to_delete).uniq
+          updated_ports = ((process.ports || []) - ports_to_delete + ports_to_add).uniq
           if updated_ports.empty?
             updated_ports = if process.app.buildpack?
                               ProcessModel::DEFAULT_PORTS
