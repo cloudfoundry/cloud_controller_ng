@@ -8,6 +8,14 @@ module VCAP::CloudController
   module Presenters
     module V3
       class ServiceBrokerPresenter < BasePresenter
+        STATES = {
+            VCAP::CloudController::ServiceBrokerStateEnum::SYNCHRONIZING => 'synchronization in progress',
+            VCAP::CloudController::ServiceBrokerStateEnum::SYNCHRONIZATION_FAILED => 'synchronization failed',
+            VCAP::CloudController::ServiceBrokerStateEnum::AVAILABLE => 'available',
+            VCAP::CloudController::ServiceBrokerStateEnum::DELETE_IN_PROGRESS => 'delete in progress',
+            VCAP::CloudController::ServiceBrokerStateEnum::DELETE_FAILED => 'delete failed'
+        }.tap { |s| s.default = 'unknown' }.freeze
+
         def to_hash
           {
             guid: broker.guid,
@@ -30,24 +38,7 @@ module VCAP::CloudController
 
         def status
           state = broker.service_broker_state&.state
-
-          if state == VCAP::CloudController::ServiceBrokerStateEnum::SYNCHRONIZING
-            return 'synchronization in progress'
-          end
-
-          if state == VCAP::CloudController::ServiceBrokerStateEnum::SYNCHRONIZATION_FAILED
-            return 'synchronization failed'
-          end
-
-          if state == VCAP::CloudController::ServiceBrokerStateEnum::AVAILABLE
-            return 'available'
-          end
-
-          if state == VCAP::CloudController::ServiceBrokerStateEnum::DELETE_IN_PROGRESS
-            return 'delete in progress'
-          end
-
-          'unknown'
+          STATES[state]
         end
 
         def build_relationships

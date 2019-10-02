@@ -958,6 +958,41 @@ RSpec.describe 'V3 service brokers' do
           end
         end
       end
+
+      context 'when the job fails to execute' do
+        before do
+          allow_any_instance_of(VCAP::Services::ServiceBrokers::ServiceBrokerRemover).to receive(:remove).and_raise('error')
+
+          delete "/v3/service_brokers/#{global_broker.guid}", {}, admin_headers
+          expect(last_response).to have_status_code(202)
+
+          execute_all_jobs(expected_successes: 0, expected_failures: 1)
+        end
+
+        it 'marks the job as failed' do
+          job_url = last_response['Location']
+          get job_url, {}, admin_headers
+          expect(last_response).to have_status_code(200)
+          expect(parsed_response).to include({
+              'state' => 'FAILED',
+              'operation' => 'service_broker.delete',
+              'errors' => [include({ 'detail' => include('An unknown error occurred') })]
+          })
+        end
+
+        it 'does not delete the broker' do
+          get "/v3/service_brokers/#{global_broker.guid}", {}, admin_headers
+          expect(last_response.status).to eq(200)
+        end
+
+        it 'updates the broker state' do
+          get "/v3/service_brokers/#{global_broker.guid}", {}, admin_headers
+          expect(parsed_response).to include({
+              'available' => false,
+              'status' => 'delete failed'
+          })
+        end
+      end
     end
 
     context 'when the broker does not exist' do

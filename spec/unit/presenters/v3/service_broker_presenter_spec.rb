@@ -103,6 +103,24 @@ module VCAP::CloudController
               expect(result[:status]).to eq('synchronization failed')
             end
           end
+
+          context 'when state is delete in progress' do
+            let(:service_broker_state) { double(state: ServiceBrokerStateEnum::DELETE_IN_PROGRESS) }
+
+            it 'is not available and has delete in progress' do
+              expect(result[:available]).to be(false)
+              expect(result[:status]).to eq('delete in progress')
+            end
+          end
+
+          context 'when state is delete failed' do
+            let(:service_broker_state) { double(state: ServiceBrokerStateEnum::DELETE_FAILED) }
+
+            it 'is not available and has delete failed' do
+              expect(result[:available]).to be(false)
+              expect(result[:status]).to eq('delete failed')
+            end
+          end
         end
       end
     end

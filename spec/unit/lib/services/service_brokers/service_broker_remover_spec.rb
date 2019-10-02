@@ -20,7 +20,7 @@ module VCAP::Services::ServiceBrokers
 
     describe '#delete' do
       let(:brokers) {
-        [broker, VCAP::CloudController::ServiceBroker.make, VCAP::CloudController::ServiceBroker.make]
+        [broker]
       }
 
       before do
@@ -38,11 +38,10 @@ module VCAP::Services::ServiceBrokers
       it 'removes all dashboard clients' do
         remover.delete(brokers)
 
-        expect(dashboard_client_manager).to have_received(:remove_clients_for_broker).exactly(3).times
+        expect(dashboard_client_manager).to have_received(:remove_clients_for_broker)
       end
 
       it 'records service and service plan deletion events' do
-        broker = brokers[1]
         service = VCAP::CloudController::Service.make(service_broker: broker)
         plan = VCAP::CloudController::ServicePlan.make(service: service)
 
