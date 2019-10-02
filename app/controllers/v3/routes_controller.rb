@@ -144,6 +144,8 @@ class RoutesController < ApplicationController
     route = UpdateRouteDestinations.replace(message.destinations_array, route, apps_hash, user_audit_info)
 
     render status: :ok, json: Presenters::V3::RouteDestinationsPresenter.new(route)
+  rescue UpdateRouteDestinations::DuplicateDestinationError => e
+    unprocessable!(e.message)
   end
 
   def destroy_destination

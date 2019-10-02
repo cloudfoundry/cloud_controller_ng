@@ -284,6 +284,30 @@ module VCAP::CloudController
           }.to raise_error(UpdateRouteDestinations::Error, /Ports must be in the 1024-65535/)
         end
       end
+
+      context 'when new destinations contains duplicate entries' do
+        let(:params) do
+          [
+            {
+              app_guid: app_model.guid,
+              process_type: 'web',
+              app_port: 8080,
+              weight: nil,
+            },
+            {
+              app_guid: app_model.guid,
+              process_type: 'web',
+              weight: nil,
+            },
+          ]
+        end
+
+        it 'raises a duplicate destination error' do
+          expect {
+            subject.add(params, route, apps_hash, user_audit_info)
+          }.to raise_error(UpdateRouteDestinations::DuplicateDestinationError, 'Destinations cannot contain duplicate entries')
+        end
+      end
     end
 
     describe '#replace' do
@@ -453,6 +477,30 @@ module VCAP::CloudController
             expect(app_event_repo).not_to have_received(:record_map_route)
             expect(app_event_repo).to have_received(:record_unmap_route).once.with(user_audit_info, existing_destination, manifest_triggered: false)
           end
+        end
+      end
+
+      context 'when new destinations contains duplicate entries' do
+        let(:params) do
+          [
+            {
+              app_guid: app_model.guid,
+              process_type: 'web',
+              app_port: 8080,
+              weight: nil,
+            },
+            {
+              app_guid: app_model.guid,
+              process_type: 'web',
+              weight: nil,
+            },
+          ]
+        end
+
+        it 'raises a duplicate destination error' do
+          expect {
+            subject.replace(params, route, apps_hash, user_audit_info)
+          }.to raise_error(UpdateRouteDestinations::DuplicateDestinationError, 'Destinations cannot contain duplicate entries')
         end
       end
     end

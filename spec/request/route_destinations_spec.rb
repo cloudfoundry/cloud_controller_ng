@@ -977,6 +977,60 @@ RSpec.describe 'Route Destinations Request' do
         expect(last_response.status).to eq 200
       end
     end
+
+    context 'when two destinations match a currently existing destination' do
+      let!(:existing_destination_1) do
+        VCAP::CloudController::RouteMappingModel.make(
+          app: app_model,
+          route: route,
+          app_port: 9000,
+          weight: 1
+        )
+      end
+
+      let!(:existing_destination_2) do
+        VCAP::CloudController::RouteMappingModel.make(
+          app: app_model,
+          route: route,
+          app_port: 8080,
+          weight: 99
+        )
+      end
+
+      let(:params) do
+        {
+          destinations: [
+            {
+              app: {
+                guid: app_model.guid,
+              },
+              weight: 1,
+              port: 9000
+            },
+            {
+              app: {
+                guid: app_model.guid,
+              },
+              weight: 1,
+              port: 9000
+            },
+            {
+              app: {
+                guid: app_model.guid,
+              },
+              weight: 98,
+              port: 8080
+            },
+          ]
+        }
+      end
+
+      it 'returns a useful error message' do
+        patch "/v3/routes/#{route.guid}/destinations", params.to_json, admin_header
+        expect(last_response.status).to eq 422
+        expect(parsed_response['errors'][0]['detail']).to eq 'Destinations cannot contain duplicate entries'
+      end
+    end
   end
 
   describe 'DELETE /v3/routes/:guid/destinations/:destination_guid' do

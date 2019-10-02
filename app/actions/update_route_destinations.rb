@@ -3,11 +3,17 @@ module VCAP::CloudController
     class Error < StandardError
     end
 
+    class DuplicateDestinationError < StandardError
+    end
+
     class << self
       def add(new_route_mappings, route, apps_hash, user_audit_info, manifest_triggered: false)
         existing_route_mappings = route_to_mapping_hashes(route)
         new_route_mappings = update_port(new_route_mappings, apps_hash)
         new_route_mappings = add_route(new_route_mappings, route)
+
+        validate_unique!(new_route_mappings)
+
         if existing_route_mappings.any? { |rm| rm[:weight] }
           raise Error.new('Destinations cannot be inserted when there are weighted destinations already configured.')
         end
@@ -21,6 +27,9 @@ module VCAP::CloudController
         existing_route_mappings = route_to_mapping_hashes(route)
         new_route_mappings = update_port(new_route_mappings, apps_hash)
         new_route_mappings = add_route(new_route_mappings, route)
+
+        validate_unique!(new_route_mappings)
+
         to_add = new_route_mappings - existing_route_mappings
         to_delete = existing_route_mappings - new_route_mappings
 
@@ -145,6 +154,10 @@ module VCAP::CloudController
           route: route,
           weight: destination.weight
         }
+      end
+
+      def validate_unique!(new_route_mappings)
+        raise DuplicateDestinationError.new('Destinations cannot contain duplicate entries') if new_route_mappings.any? { |rm| new_route_mappings.count(rm) > 1 }
       end
     end
   end
