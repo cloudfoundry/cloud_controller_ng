@@ -171,7 +171,7 @@ module VCAP::CloudController
 
           expect {
             AppModel.make(name: 'lowerCase', space_guid: space_guid)
-          }.to raise_error(Sequel::ValidationFailed, 'name must be unique in space')
+          }.to raise_error(Sequel::ValidationFailed, "App with the name 'lowerCase' already exists.")
         end
 
         it 'should allow standard ascii characters' do
@@ -232,7 +232,7 @@ module VCAP::CloudController
 
           expect {
             AppModel.make(name: name, space_guid: space.guid)
-          }.to raise_error(Sequel::ValidationFailed, 'name must be unique in space')
+          }.to raise_error(Sequel::ValidationFailed, "App with the name 'zach' already exists.")
         end
       end
 

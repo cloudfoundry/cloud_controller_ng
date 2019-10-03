@@ -67,7 +67,7 @@ module VCAP::CloudController
       validate_environment_variables
       validate_droplet_is_staged
 
-      validates_unique [:space_guid, :name], message: Sequel.lit('name must be unique in space')
+      validates_unique [:space_guid, :name], message: Sequel.lit("App with the name '#{name}' already exists.")
     end
 
     def lifecycle_type
