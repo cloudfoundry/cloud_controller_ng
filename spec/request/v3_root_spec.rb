@@ -13,6 +13,9 @@ RSpec.describe 'v3 root' do
           'apps' => {
             'href' => "#{link_prefix}/v3/apps"
           },
+          'audit_events' => {
+            'href' => "#{link_prefix}/v3/audit_events"
+          },
           'buildpacks' => {
             'href' => "#{link_prefix}/v3/buildpacks"
           },
@@ -72,10 +75,6 @@ RSpec.describe 'v3 root' do
           },
           'users' => {
             'href' => "#{link_prefix}/v3/users",
-            'experimental' => true
-          },
-          'audit_events' => {
-            'href' => "#{link_prefix}/v3/audit_events",
             'experimental' => true
           },
           'environment_variable_groups' => {

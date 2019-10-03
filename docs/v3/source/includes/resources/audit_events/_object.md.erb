@@ -1,0 +1,23 @@
+### The audit event object
+
+```
+Example Audit Event object
+```
+```json
+<%= yield_content :single_audit_event %>
+```
+
+Name | Type | Description
+---- | ---- | -----------
+**guid** | _uuid_ | Unique identifier for the event.
+**type** | _string_ | The type of the event.
+**actor.guid** | _string_ | Unique identifier for the actor (user or system resource that performed the action).
+**actor.type** | _string_ | The actor type.
+**actor.name** | _string_ | The name of the actor.
+**target.guid** | _uuid_ | Unique identifier for the target (resource that the event acted upon).
+**target.type** | _string_ | The target type.
+**target.name** | _string_ | The name of the target.
+**data** | _object_ | Additional information about event.
+**space.guid** | _uuid_ | Unique identifier for the space where the event occurred. If the event did not occur within a space, the `space` field will be `null`.
+**organization.guid** | _uuid_ | Unique identifier for the organization where the event occurred. If the event did not occur within an organization, the `organization` field will be `null`.
+**links** | [_links object_](#links) | Links to related resources.

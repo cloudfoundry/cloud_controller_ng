@@ -60,6 +60,10 @@ includes:
   - resources/apps/start
   - resources/apps/stop
   - resources/apps/update_environment_variables
+  - resources/audit_events/header
+  - resources/audit_events/object
+  - resources/audit_events/get
+  - resources/audit_events/list
   - resources/builds/header
   - resources/builds/object
   - resources/builds/create
@@ -215,10 +219,6 @@ includes:
   - experimental_resources/app_restart/create
   - experimental_resources/app_ssh_enabled/header
   - experimental_resources/app_ssh_enabled/get
-  - experimental_resources/audit_events/header
-  - experimental_resources/audit_events/object
-  - experimental_resources/audit_events/get
-  - experimental_resources/audit_events/list
   - experimental_resources/deployments/header
   - experimental_resources/deployments/object
   - experimental_resources/deployments/create
