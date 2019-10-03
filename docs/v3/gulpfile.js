@@ -16,6 +16,8 @@ function displayErrors(err, stdout, stderr) {
 }
 
 function checkInternalLinksAndExit(htmlPath) {
+  const duplicateHeadingIds = [];
+  const seenHeadingIds = new Set();
   const badLinks = [];
   const $ = cheerio.load(fs.readFileSync(htmlPath, 'utf8'));
 
@@ -34,10 +36,28 @@ function checkInternalLinksAndExit(htmlPath) {
     }
   });
 
+  $('h1,h2,h3').each((index, element) => {
+    const id = $(element).attr('id');
+
+    if (id) {
+      if (seenHeadingIds.has(id)) duplicateHeadingIds.push(id);
+      else seenHeadingIds.add(id);
+    }
+  });
+
   if (badLinks.length) {
-    console.log('Found invalid internal links!');
-    console.log('Make sure these `href`s correspond to the `id`s of real headings in the HTML:');
-    console.log(badLinks.map(({text, href}) => `  - [${text}](${href})`).join('\n'));
+    console.error('v3 docs error: Found invalid internal links');
+    console.error('Make sure these `href`s correspond to the `id`s of real headings in the HTML:');
+    console.error(badLinks.map(({text, href}) => `  - [${text}](${href})`).join('\n'));
+  }
+
+  if (duplicateHeadingIds.length) {
+    console.error('v3 docs error: Found multiple headings with the same `id`');
+    console.error('Make sure `id`s are unique so internal links will work as expected.');
+    console.error(duplicateHeadingIds.map(id => `  - #${id}`).join('\n'))
+  }
+
+  if (badLinks.length || duplicateHeadingIds.length) {
     process.exit(1);
   }
 }
