@@ -33,25 +33,6 @@ RSpec.describe ServiceBrokersController, type: :controller do
       let(:broker) { VCAP::CloudController::ServiceBroker.last }
       let(:job) { VCAP::CloudController::PollableJobModel.last }
 
-      it 'creates a global service broker and responds with 202 Accepted' do
-        expect(response).to have_status_code(202)
-
-        expect(broker.name).to eq(request_body[:name])
-        expect(broker.broker_url).to eq(request_body[:url])
-        expect(broker.auth_username).to eq(request_body.dig(:credentials, :data, :username))
-        expect(broker.auth_password).to eq(request_body.dig(:credentials, :data, :password))
-        expect(broker.space).to be_nil
-      end
-
-      it 'creates a pollable job to synchronize the catalog and responds with its location' do
-        expect(job.state).to eq(VCAP::CloudController::PollableJobModel::PROCESSING_STATE)
-        expect(job.operation).to eq('service_broker.catalog.synchronize')
-        expect(job.resource_guid).to eq(broker.guid)
-        expect(job.resource_type).to eq('service_brokers')
-
-        expect(response.headers['Location']).to end_with("/v3/jobs/#{job.guid}")
-      end
-
       it 'emits an audit event' do
         events = VCAP::CloudController::Event.all.map { |e| { type: e.type, actor: e.actor_name, metadata: e.metadata } }
         expect(events).to eq([
