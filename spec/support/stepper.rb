@@ -78,6 +78,13 @@
 #   [0] finish create broker transaction
 #   ====
 #
+# If you're struggling to understand why and when the failure is occuring,
+# you can create a stepper with `debug: true` option:
+#
+#   let(:stepper) { Stepper.new(self, debug: true) }
+#
+# And you'll see the following additional output:
+#
 #   expecting [0] start create broker transaction
 #   expecting [1] start create broker transaction
 #   done [1] start create broker transaction
@@ -87,9 +94,7 @@
 #   done [0] start create broker transaction
 #   done [1] finish create broker transaction
 #   expecting [0] finish create broker and start create broker state
-#   done [0] finish create broker and start create broker state
-#   expecting [0] finish create broker transaction
-#   done [0] finish create broker transaction
+#   MySQL::TimeoutError: Example error description
 #
 # This can help you identify what's happening when there is a timeout, deadlock or race condition.
 # It also may help to reduce the lock timeout to 5s (in MySQL) to catch them much quicker on dev machine.
@@ -97,7 +102,7 @@ class Stepper
   MAX_RETRIES = 1500
   attr_reader :errors
 
-  def initialize(example, random: Random::DEFAULT)
+  def initialize(example, random: Random::DEFAULT, debug: false)
     @example = example
     @defined_orders = []
     @starts = []
@@ -107,6 +112,7 @@ class Stepper
     @aborted = false
     @mutex = Mutex.new
     @random = random
+    @debug = debug
   end
 
   def instrument(target, method_name, before: nil, after: nil, &block)
@@ -158,7 +164,7 @@ class Stepper
         sleep 0.01
         block.call
       rescue => e
-        puts e
+        puts e if debug
         abort!
         errors << e
       end
@@ -172,7 +178,7 @@ class Stepper
 
   def step(message, &block)
     full_message = "[#{Thread.current.name}] #{message}"
-    puts("expecting #{full_message}")
+    puts("expecting #{full_message}") if debug
 
     retries = 0
     sleep(0.01) while attempt_to_acquire_lock_for(full_message) && (retries += 1) < MAX_RETRIES && !aborted?
@@ -184,7 +190,7 @@ class Stepper
 
     advance_to_next_message
 
-    puts("done #{full_message}")
+    puts("done #{full_message}") if debug
   end
 
   def aborted?
@@ -201,7 +207,7 @@ class Stepper
 
   private
 
-  attr_reader :aborted, :mutex, :example, :defined_orders, :starts, :threads, :expected_order, :random
+  attr_reader :aborted, :mutex, :example, :defined_orders, :starts, :threads, :expected_order, :random, :debug
 
   def attempt_to_acquire_lock_for(expected_message)
     mutex.lock
