@@ -12,9 +12,9 @@ module VCAP::CloudController
         {
           name: 'best-broker',
           url: 'https://the-best-broker.url',
-          credentials: {
+          authentication: {
             type: 'basic',
-            data: {
+            credentials: {
               username: 'user',
               password: 'pass',
             }
@@ -130,7 +130,7 @@ module VCAP::CloudController
           it 'is not valid' do
             message = ServiceBrokerCreateMessage.new(request_body)
             expect(message).not_to be_valid
-            expect(message.errors_on(:url)).to include('must not contain credentials')
+            expect(message.errors_on(:url)).to include('must not contain authentication')
           end
         end
 
@@ -142,28 +142,28 @@ module VCAP::CloudController
           it 'is not valid' do
             message = ServiceBrokerCreateMessage.new(request_body)
             expect(message).not_to be_valid
-            expect(message.errors_on(:url)).to include('must not contain credentials')
+            expect(message.errors_on(:url)).to include('must not contain authentication')
           end
         end
       end
 
-      context 'credentials' do
-        context 'when credentials is not a hash' do
+      context 'authentication' do
+        context 'when authentication is not a hash' do
           let(:request_body) do
-            valid_body.except(:credentials)
+            valid_body.except(:authentication)
           end
 
           it 'is not valid' do
             message = ServiceBrokerCreateMessage.new(request_body)
 
             expect(message).not_to be_valid
-            expect(message.errors_on(:credentials)).to include('must be a hash')
+            expect(message.errors_on(:authentication)).to include('must be a hash')
           end
         end
 
-        context 'when credentials.type is invalid' do
+        context 'when authentication.type is invalid' do
           let(:request_body) do
-            valid_body.merge(credentials: {
+            valid_body.merge(authentication: {
               type: 'oopsie'
             })
           end
@@ -172,13 +172,13 @@ module VCAP::CloudController
             message = ServiceBrokerCreateMessage.new(request_body)
 
             expect(message).not_to be_valid
-            expect(message.errors_on(:credentials_type)).to include('credentials.type must be one of ["basic"]')
+            expect(message.errors_on(:authentication_type)).to include('authentication.type must be one of ["basic"]')
           end
         end
 
-        context 'when username and password are missing from data' do
+        context 'when username and password are missing from credentials' do
           let(:request_body) do
-            valid_body.merge(credentials: {
+            valid_body.merge(authentication: {
               type: 'basic',
               data: {},
             })
@@ -188,13 +188,13 @@ module VCAP::CloudController
             message = ServiceBrokerCreateMessage.new(request_body)
 
             expect(message).not_to be_valid
-            expect(message.errors_on(:credentials_data)).to include(/Field\(s\) \["username", "password"\] must be valid/)
+            expect(message.errors_on(:authentication_credentials)).to include(/Field\(s\) \["username", "password"\] must be valid/)
           end
         end
 
-        context 'when data is missing from credentials' do
+        context 'when data is missing from authentication' do
           let(:request_body) do
-            valid_body.merge(credentials: {
+            valid_body.merge(authentication: {
               type: 'basic'
             })
           end
@@ -203,13 +203,13 @@ module VCAP::CloudController
             message = ServiceBrokerCreateMessage.new(request_body)
 
             expect(message).not_to be_valid
-            expect(message.errors_on(:credentials_data)).to include('must be a hash')
+            expect(message.errors_on(:authentication_credentials)).to include('must be a hash')
           end
         end
 
-        context 'when credentials has extra fields' do
+        context 'when authentication has extra fields' do
           let(:request_body) do
-            valid_body.merge(credentials: {
+            valid_body.merge(authentication: {
               extra: 'value',
               type: 'basic',
             })
@@ -219,7 +219,7 @@ module VCAP::CloudController
             message = ServiceBrokerCreateMessage.new(request_body)
 
             expect(message).not_to be_valid
-            expect(message.errors_on(:credentials)).to include("Unknown field(s): 'extra'")
+            expect(message.errors_on(:authentication)).to include("Unknown field(s): 'extra'")
           end
         end
       end
@@ -227,7 +227,7 @@ module VCAP::CloudController
       context 'space guid relationship' do
         subject { ServiceBrokerCreateMessage.new(request_body) }
 
-        context 'when replationships is structured properly' do
+        context 'when relationships are structured properly' do
           let(:request_body) { valid_body.merge(relationships: { space: { data: { guid: 'space-guid-here' } } }) }
 
           it 'is valid' do
@@ -256,7 +256,7 @@ module VCAP::CloudController
           end
         end
 
-        context 'when replationships.space is not a hash' do
+        context 'when relationships.space is not a hash' do
           let(:request_body) { valid_body.merge(relationships: { space: 42 }) }
 
           it 'is not valid' do
@@ -274,7 +274,7 @@ module VCAP::CloudController
           end
         end
 
-        context 'when replationships.space.data is not a hash' do
+        context 'when relationships.space.data is not a hash' do
           let(:request_body) { valid_body.merge(relationships: { space: { data: 42 } }) }
 
           it 'is not valid' do
@@ -292,7 +292,7 @@ module VCAP::CloudController
           end
         end
 
-        context 'when replationships.space.data.guid is not a string' do
+        context 'when relationships.space.data.guid is not a string' do
           let(:request_body) { valid_body.merge(relationships: { space: { data: { guid: 42 } } }) }
 
           it 'is not valid' do

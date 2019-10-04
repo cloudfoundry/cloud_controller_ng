@@ -17,7 +17,7 @@ module VCAP
         double('create broker message', {
           name: name,
           url: broker_url,
-          credentials_data: double('credentials', {
+          authentication_credentials: double('credentials', {
             username: auth_username,
             password: auth_password
           }),
@@ -31,7 +31,7 @@ module VCAP
         double('create broker message 2', {
           name: "#{name}-2",
           url: broker_url + '2',
-          credentials_data: double('credentials 2', {
+          authentication_credentials: double('credentials 2', {
             username: auth_username + '2',
             password: auth_password + '2'
           }),

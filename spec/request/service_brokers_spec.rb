@@ -88,9 +88,9 @@ RSpec.describe 'V3 service brokers' do
     {
       name: 'broker name',
       url: 'http://example.org/broker-url',
-      credentials: {
+      authentication: {
         type: 'basic',
-        data: {
+        credentials: {
           username: 'admin',
           password: 'welcome',
         }
@@ -102,7 +102,7 @@ RSpec.describe 'V3 service brokers' do
     {
       name: global_broker_request_body[:name],
       url: 'http://example.org/different-broker-url',
-      credentials: global_broker_request_body[:credentials]
+      authentication: global_broker_request_body[:authentication]
     }
   }
 
@@ -110,7 +110,7 @@ RSpec.describe 'V3 service brokers' do
     {
       name: 'different broker name',
       url: global_broker_request_body[:url],
-      credentials: global_broker_request_body[:credentials]
+      authentication: global_broker_request_body[:authentication]
     }
   }
 
@@ -118,9 +118,9 @@ RSpec.describe 'V3 service brokers' do
     {
       name: 'space-scoped broker name',
       url: 'http://example.org/space-broker-url',
-      credentials: {
+      authentication: {
         type: 'basic',
-        data: {
+        credentials: {
           username: 'admin',
           password: 'welcome',
         },
@@ -383,8 +383,8 @@ RSpec.describe 'V3 service brokers' do
         broker = VCAP::CloudController::ServiceBroker.last
         expect(broker.name).to eq(global_broker_request_body[:name])
         expect(broker.broker_url).to eq(global_broker_request_body[:url])
-        expect(broker.auth_username).to eq(global_broker_request_body.dig(:credentials, :data, :username))
-        expect(broker.auth_password).to eq(global_broker_request_body.dig(:credentials, :data, :password))
+        expect(broker.auth_username).to eq(global_broker_request_body.dig(:authentication, :credentials, :username))
+        expect(broker.auth_password).to eq(global_broker_request_body.dig(:authentication, :credentials, :password))
         expect(broker.space).to be_nil
         expect(broker.service_broker_state.state).to eq(VCAP::CloudController::ServiceBrokerStateEnum::SYNCHRONIZING)
       end
@@ -642,9 +642,9 @@ RSpec.describe 'V3 service brokers' do
           {
             name: 'space-scoped broker name',
             url: 'http://example.org/space-broker-url',
-            credentials: {
+            authentication: {
               type: 'basic',
-              data: {
+              credentials: {
                 username: 'admin',
                 password: 'welcome',
               },
@@ -710,8 +710,8 @@ RSpec.describe 'V3 service brokers' do
           broker = VCAP::CloudController::ServiceBroker.last
           expect(broker.name).to eq(space_scoped_broker_request_body[:name])
           expect(broker.broker_url).to eq(space_scoped_broker_request_body[:url])
-          expect(broker.auth_password).to eq(space_scoped_broker_request_body.dig(:credentials, :data, :password))
-          expect(broker.auth_username).to eq(space_scoped_broker_request_body.dig(:credentials, :data, :username))
+          expect(broker.auth_password).to eq(space_scoped_broker_request_body.dig(:authentication, :credentials, :password))
+          expect(broker.auth_username).to eq(space_scoped_broker_request_body.dig(:authentication, :credentials, :username))
           expect(broker.space.guid).to eq(space_scoped_broker_request_body.dig(:relationships, :space, :data, :guid))
         end
 
@@ -793,9 +793,9 @@ RSpec.describe 'V3 service brokers' do
           {
             name: 'space-scoped broker name',
             url: 'http://example.org/space-broker-url',
-            credentials: {
+            authentication: {
               type: 'basic',
-              data: {
+              credentials: {
                 username: 'admin',
                 password: 'welcome',
               },
@@ -845,12 +845,12 @@ RSpec.describe 'V3 service brokers' do
       expect(service_broker).to include(
         'name' => expected_broker[:name],
         'broker_url' => expected_broker[:url],
-        'auth_username' => expected_broker.dig(:credentials, :data, :username),
+        'auth_username' => expected_broker.dig(:authentication, :credentials, :username),
         'space_guid' => expected_broker.dig(:relationships, :space, :data, :guid),
       )
 
       # asserting password separately because it is not exported in to_hash
-      expect(service_broker.auth_password).to eq(expected_broker[:credentials][:data][:password])
+      expect(service_broker.auth_password).to eq(expected_broker[:authentication][:credentials][:password])
     end
 
     def expect_broker_status(available:, status:, with:)
