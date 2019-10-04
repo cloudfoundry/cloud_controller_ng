@@ -418,7 +418,15 @@ RSpec.describe 'V3 service brokers' do
       it 'reports service events' do
         create_broker_successfully(global_broker_request_body, with: admin_headers)
         execute_all_jobs(expected_successes: 1, expected_failures: 0)
-
+        broker_create_metadata = {
+          'request' =>
+            {
+              'name' => 'broker name',
+              'broker_url' => 'http://example.org/broker-url',
+              'auth_username' => 'admin',
+              'auth_password' => '[REDACTED]'
+            }
+        }
         expect([
           { type: 'audit.service.create', actor: 'broker name' },
           { type: 'audit.service.create', actor: 'broker name' },
@@ -427,6 +435,9 @@ RSpec.describe 'V3 service brokers' do
           { type: 'audit.service_plan.create', actor: 'broker name' },
           { type: 'audit.service_plan.create', actor: 'broker name' },
         ]).to be_reported_as_events
+
+        event = VCAP::CloudController::Event.where({ type: 'audit.service_broker.create', actor_name: admin_headers._generated_email }).first
+        expect(event.metadata).to eq(broker_create_metadata)
       end
 
       it 'creates UAA dashboard clients' do
@@ -625,6 +636,38 @@ RSpec.describe 'V3 service brokers' do
           expect_created_broker(global_broker_with_identical_url_body)
         end
       end
+
+      context 'when a space is provided that the user cannot read' do
+        let(:nonexistant_space_broker_body) do
+          {
+            name: 'space-scoped broker name',
+            url: 'http://example.org/space-broker-url',
+            credentials: {
+              type: 'basic',
+              data: {
+                username: 'admin',
+                password: 'welcome',
+              },
+            },
+            relationships: {
+              space: {
+                data: {
+                  guid: 'bad-guid'
+                },
+              },
+            },
+          }
+        end
+
+        before do
+          create_broker(nonexistant_space_broker_body, with: space_developer_headers)
+        end
+
+        it 'returns a error saying the space is invalid' do
+          expect(last_response).to have_status_code(422)
+          expect(last_response.body).to include 'Invalid space. Ensure that the space exists and you have access to it.'
+        end
+      end
     end
 
     context 'as space developer user' do
@@ -661,6 +704,15 @@ RSpec.describe 'V3 service brokers' do
               }
             }
           })
+        end
+
+        it 'creates the broker' do
+          broker = VCAP::CloudController::ServiceBroker.last
+          expect(broker.name).to eq(space_scoped_broker_request_body[:name])
+          expect(broker.broker_url).to eq(space_scoped_broker_request_body[:url])
+          expect(broker.auth_password).to eq(space_scoped_broker_request_body.dig(:credentials, :data, :password))
+          expect(broker.auth_username).to eq(space_scoped_broker_request_body.dig(:credentials, :data, :username))
+          expect(broker.space.guid).to eq(space_scoped_broker_request_body.dig(:relationships, :space, :data, :guid))
         end
 
         it 'creates a service broker entity and does not synchronize the catalog yet' do
@@ -702,6 +754,17 @@ RSpec.describe 'V3 service brokers' do
           end
 
           it 'reports service events' do
+            broker_create_metadata = {
+              'request' =>
+                {
+                  'name' => 'space-scoped broker name',
+                  'broker_url' => 'http://example.org/space-broker-url',
+                  'auth_username' => 'admin',
+                  'auth_password' => '[REDACTED]',
+                  'space_guid' => space.guid
+                }
+            }
+
             expect([
               { type: 'audit.service.create', actor: 'space-scoped broker name' },
               { type: 'audit.service.create', actor: 'space-scoped broker name' },
@@ -710,6 +773,9 @@ RSpec.describe 'V3 service brokers' do
               { type: 'audit.service_plan.create', actor: 'space-scoped broker name' },
               { type: 'audit.service_plan.create', actor: 'space-scoped broker name' },
             ]).to be_reported_as_events
+
+            event = VCAP::CloudController::Event.where({ type: 'audit.service_broker.create', actor_name: space_developer_headers._generated_email }).first
+            expect(event.metadata).to eq(broker_create_metadata)
           end
 
           it 'leaves the broker in an available state' do
@@ -719,6 +785,38 @@ RSpec.describe 'V3 service brokers' do
               with: space_developer_headers
             )
           end
+        end
+      end
+
+      context 'when a space is provided that the user cannot read' do
+        let(:other_space_broker_body) do
+          {
+            name: 'space-scoped broker name',
+            url: 'http://example.org/space-broker-url',
+            credentials: {
+              type: 'basic',
+              data: {
+                username: 'admin',
+                password: 'welcome',
+              },
+            },
+            relationships: {
+              space: {
+                data: {
+                  guid: VCAP::CloudController::Space.make.guid
+                },
+              },
+            },
+          }
+        end
+
+        before do
+          create_broker(other_space_broker_body, with: space_developer_headers)
+        end
+
+        it 'returns a error saying the space is invalid' do
+          expect(last_response).to have_status_code(422)
+          expect(last_response.body).to include 'Invalid space. Ensure that the space exists and you have access to it.'
         end
       end
     end
