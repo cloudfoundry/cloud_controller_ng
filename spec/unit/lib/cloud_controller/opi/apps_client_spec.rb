@@ -81,6 +81,7 @@ RSpec.describe(OPI::Client) do
         {
             guid: 'process-guid',
             version: lrp.version.to_s,
+            process_type: lrp.type,
             process_guid: "process-guid-#{lrp.version}",
             environment: {
               'BISH': 'BASH',

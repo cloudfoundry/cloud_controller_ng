@@ -120,6 +120,7 @@ module OPI
         guid: process.guid,
         environment: hash_values_to_s(environment_variables(process)),
         version: process.version,
+        process_type: process.type,
         process_guid: process_guid(process),
         instances: process.desired_instances,
         memory_mb: process.memory,
