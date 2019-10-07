@@ -20,7 +20,7 @@ module VCAP::CloudController::Presenters::V3
         it 'presents ssh status as disabled globally' do
           result = AppSshStatusPresenter.new(app, globally_enabled).to_hash
           expect(result[:enabled]).to eq(false)
-          expect(result[:reason]).to eq('Disabled globally')
+          expect(result[:reason]).to eq('ssh is disabled globally')
         end
       end
 
@@ -30,7 +30,7 @@ module VCAP::CloudController::Presenters::V3
 
           result = AppSshStatusPresenter.new(app, globally_enabled).to_hash
           expect(result[:enabled]).to eq(false)
-          expect(result[:reason]).to eq("Disabled for space #{app.space.name}")
+          expect(result[:reason]).to eq("ssh is disabled for space '#{app.space.name}'")
         end
 
         context 'and ssh is space enabled' do
@@ -39,7 +39,7 @@ module VCAP::CloudController::Presenters::V3
 
             result = AppSshStatusPresenter.new(app, globally_enabled).to_hash
             expect(result[:enabled]).to eq(false)
-            expect(result[:reason]).to eq('Disabled for app')
+            expect(result[:reason]).to eq('ssh is disabled for app')
           end
 
           it 'presents ssh status as enabled when ssh is enabled for the app' do

@@ -20,11 +20,11 @@ module VCAP::CloudController::Presenters::V3
 
     def reason
       if !globally_enabled
-        'Disabled globally'
+        'ssh is disabled globally'
       elsif !app.space.allow_ssh
-        "Disabled for space #{app.space.name}"
+        "ssh is disabled for space '#{app.space.name}'"
       elsif !app.enable_ssh
-        'Disabled for app'
+        'ssh is disabled for app'
       else
         ''
       end
