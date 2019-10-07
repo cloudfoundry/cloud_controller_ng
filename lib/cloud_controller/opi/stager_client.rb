@@ -9,8 +9,22 @@ module OPI
   class StagerClient < BaseClient
     def stage(staging_guid, staging_details)
       logger.info('stage.request', staging_guid: staging_guid)
-      staging_request = to_request(staging_guid, staging_details)
 
+      if staging_details.lifecycle.type == VCAP::CloudController::Lifecycles::DOCKER
+        complete_staging(staging_guid, staging_details)
+      elsif staging_details.lifecycle.type == VCAP::CloudController::Lifecycles::BUILDPACK
+        staging_request = to_request(staging_guid, staging_details)
+        start_staging(staging_guid, staging_request)
+      else
+        raise("lifecycle type `#{staging_details.lifecycle.type}` is invalid")
+      end
+    end
+
+    def stop_staging(staging_guid); end
+
+    private
+
+    def start_staging(staging_guid, staging_request)
       payload = MultiJson.dump(staging_request)
       response = client.post("/stage/#{staging_guid}", body: payload)
       if response.status_code != 202
@@ -20,9 +34,23 @@ module OPI
       end
     end
 
-    def stop_staging(staging_guid); end
+    def complete_staging(staging_guid, staging_details)
+      build = VCAP::CloudController::BuildModel.find(guid: staging_guid)
+      raise CloudController::Errors::ApiError.new_from_details('ResourceNotFound', 'Build not found') if build.nil?
 
-    private
+      completion_handler = VCAP::CloudController::Diego::Docker::StagingCompletionHandler.new(build)
+      payload = {
+        result: {
+          lifecycle_type: 'docker',
+          lifecycle_metadata: {
+            docker_image: staging_details.package.image
+          },
+          process_types: { web: '' },
+          execution_metadata: '{\"cmd\":[],\"ports\":[{\"Port\":8080,\"Protocol\":\"tcp\"}]}'
+        }
+      }
+      completion_handler.staging_complete(payload, staging_details.start_after_staging)
+    end
 
     def to_request(staging_guid, staging_details)
       lifecycle_type = staging_details.lifecycle.type
