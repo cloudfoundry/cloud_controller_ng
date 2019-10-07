@@ -38,6 +38,7 @@ module VCAP::CloudController
 
     set_field_as_encrypted :docker_receipt_password, salt: :docker_receipt_password_salt, column: :encrypted_docker_receipt_password
     serializes_via_json :process_types
+    serializes_via_json :sidecars
 
     def error
       e = [error_id, error_description].compact.join(' - ')

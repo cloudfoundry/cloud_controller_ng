@@ -61,7 +61,7 @@ module VCAP::CloudController
     post '/internal/v3/staging/:staging_guid/build_completed', :build_completed
     def build_completed(staging_guid)
       staging_response = read_body
-      build            = BuildModel.find(guid: staging_guid)
+      build = BuildModel.find(guid: staging_guid)
       raise CloudController::Errors::ApiError.new_from_details('ResourceNotFound', 'Build not found') if build.nil?
 
       if staging_response.key?(:failed)

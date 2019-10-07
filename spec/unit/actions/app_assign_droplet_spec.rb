@@ -17,6 +17,7 @@ module VCAP::CloudController
         DropletModel.make(
           state: DropletModel::STAGED_STATE,
           process_types: { web: 'x' },
+          sidecars: [{ name: 'sleep infinity', command: 'sleep infinity', process_types: ['web'] }],
           app: app_model
         )
       end
@@ -27,12 +28,26 @@ module VCAP::CloudController
         app_model.add_droplet_by_guid(droplet_guid)
         allow(ProcessCreateFromAppDroplet).to receive(:new).with(user_audit_info).and_return(process_create_from_app_droplet)
         allow(process_create_from_app_droplet).to receive(:create).with(app_model)
+
+        allow(SidecarSynchronizeFromAppDroplet).to receive(:synchronize).with(app_model)
       end
 
       it 'sets the desired droplet guid' do
         updated_app = app_assign_droplet.assign(app_model, droplet)
+
         expect(updated_app.droplet_guid).to eq(droplet_guid)
+      end
+
+      it 'creates processes from the droplet' do
+        app_assign_droplet.assign(app_model, droplet)
+
         expect(process_create_from_app_droplet).to have_received(:create).once
+      end
+
+      it 'creates sidecars from the droplet' do
+        app_assign_droplet.assign(app_model, droplet)
+
+        expect(SidecarSynchronizeFromAppDroplet).to have_received(:synchronize).once
       end
 
       it 'creates an audit event' do

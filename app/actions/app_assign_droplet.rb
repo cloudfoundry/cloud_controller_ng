@@ -1,4 +1,5 @@
 require 'process_create_from_app_droplet'
+require 'sidecar_synchronize_from_app_droplet'
 
 module VCAP::CloudController
   class AppAssignDroplet
@@ -19,6 +20,7 @@ module VCAP::CloudController
         app.update(droplet_guid: droplet.guid)
 
         record_assign_droplet_event(app, droplet)
+        synchronize_sidecars(app)
         create_processes(app)
 
         app.save
@@ -44,6 +46,10 @@ module VCAP::CloudController
 
     def create_processes(app)
       ProcessCreateFromAppDroplet.new(@user_audit_info).create(app)
+    end
+
+    def synchronize_sidecars(app)
+      SidecarSynchronizeFromAppDroplet.synchronize(app)
     end
 
     def droplet_associated?(app, droplet)

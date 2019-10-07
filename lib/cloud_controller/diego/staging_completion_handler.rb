@@ -72,6 +72,7 @@ module VCAP::CloudController
         VCAP::Loggregator.emit_error(build.app_guid, "Failed to stage build: #{payload[:error][:message]}")
       end
 
+      # with_start is true when v2 staging causes apps to start
       def handle_success(payload, with_start)
         begin
           payload[:result][:process_types] ||= {} if payload[:result]
@@ -112,6 +113,10 @@ module VCAP::CloudController
 
           begin
             start_process if with_start
+          rescue SidecarSynchronizeFromAppDroplet::ConflictingSidecarsError => e
+            payload[:error] = { message: e.message, id: DEFAULT_STAGING_ERROR }
+            handle_failure(payload, with_start)
+            return
           rescue => e
             logger.error(logger_prefix + 'starting-process-failed', staging_guid: build.guid, response: payload, error: e.message)
             return
@@ -135,6 +140,7 @@ module VCAP::CloudController
           app.lock!
 
           app.update(droplet: droplet)
+          SidecarSynchronizeFromAppDroplet.synchronize(app)
           revision = RevisionResolver.update_app_revision(app, nil)
 
           app.processes.each do |process|

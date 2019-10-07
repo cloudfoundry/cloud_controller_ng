@@ -27,6 +27,7 @@ module VCAP::CloudController
         expect(sidecar.command).to eq('./start')
         expect(sidecar.process_types).to eq(['web', 'worker'])
         expect(sidecar.memory).to eq(300)
+        expect(sidecar.origin).to eq('user')
       end
 
       context 'sidecar memory allocation' do

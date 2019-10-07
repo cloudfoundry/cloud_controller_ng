@@ -14,11 +14,11 @@ module VCAP::CloudController
 
       context 'when the app has a droplet that has a process type' do
         it 'creates missing processes without setting their commands' do
-          expect(app.processes.count).to eq(0)
+          expect(app.processes).to be_empty
           subject.create(app)
 
           app.reload
-          expect(app.processes.count).to eq(2)
+          expect(app.processes).to have_exactly(2).items
           expect(app.processes[0].command).to be_nil
           expect(app.processes[1].command).to be_nil
         end

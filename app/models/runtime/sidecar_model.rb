@@ -2,6 +2,9 @@ module VCAP::CloudController
   class SidecarModel < Sequel::Model(:sidecars)
     include SidecarMixin
 
+    ORIGIN_USER = 'user'.freeze
+    ORIGIN_BUILDPACK = 'buildpack'.freeze
+
     many_to_one :app,
       class: 'VCAP::CloudController::AppModel',
       key: :app_guid,

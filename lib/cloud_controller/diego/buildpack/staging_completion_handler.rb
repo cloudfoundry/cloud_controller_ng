@@ -26,7 +26,14 @@ module VCAP::CloudController
                     }
                   ]
                 },
-                process_types:      dict(Symbol, String)
+                process_types:      dict(Symbol, String),
+                optional(:sidecars) => enum(nil, [
+                  {
+                    name: String,
+                    command: String,
+                    process_types: [String],
+                  }
+                ])
               }
             }
           }
@@ -67,7 +74,10 @@ module VCAP::CloudController
             build.droplet.reload
             droplet.mark_as_staged
             build.mark_as_staged
-            droplet.process_types      = payload[:result][:process_types]
+            droplet.process_types = payload[:result][:process_types]
+            if payload[:result][:sidecars]
+              droplet.sidecars = payload[:result][:sidecars]
+            end
             droplet.execution_metadata = payload[:result][:execution_metadata]
             build.save_changes(raise_on_save_failure: true)
             droplet.save_changes(raise_on_save_failure: true)

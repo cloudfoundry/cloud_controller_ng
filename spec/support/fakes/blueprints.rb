@@ -554,6 +554,7 @@ module VCAP::CloudController
     name { Sham.name }
     command { 'bundle exec rackup' }
     app { AppModel.make }
+    origin { SidecarModel::ORIGIN_USER }
   end
 
   SidecarProcessTypeModel.blueprint do

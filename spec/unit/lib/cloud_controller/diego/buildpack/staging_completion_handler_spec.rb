@@ -83,6 +83,7 @@ module VCAP::CloudController
 
           before do
             allow(Steno).to receive(:logger).with('cc.stager').and_return(logger)
+            allow(Steno).to receive(:logger).with('cc.action.sidecar_create').and_return(logger)
             allow(VCAP::Loggregator).to receive(:emit_error)
           end
 
@@ -131,14 +132,13 @@ module VCAP::CloudController
               it 'updates the droplet with the metadata' do
                 subject.staging_complete(success_response)
                 droplet.reload
-                data = {
+
+                expect(droplet.execution_metadata).to eq('black-box-string')
+                expect(droplet.process_types).to eq({
                   'web'      => 'start me',
                   'worker'   => 'hello',
                   'anything' => 'hi hi hi'
-                }
-
-                expect(droplet.execution_metadata).to eq('black-box-string')
-                expect(droplet.process_types).to eq(data)
+                })
                 expect(droplet.buildpack_receipt_buildpack).to eq('lifecycle-bp')
                 expect(droplet.buildpack_receipt_buildpack_guid).to eq(buildpack.guid)
                 expect(droplet.buildpack_receipt_detect_output).to eq('INTERCAL')
@@ -147,6 +147,46 @@ module VCAP::CloudController
               it 'expires any old droplets' do
                 expect_any_instance_of(BitsExpiration).to receive(:expire_droplets!)
                 subject.staging_complete(success_response)
+              end
+
+              context 'when there are sidecars in the staging result' do
+                before do
+                  success_response[:result][:sidecars] = [{
+                    name: 'sleepy',
+                    command: 'sleep infinity',
+                    process_types: ['web'],
+                  }]
+                end
+
+                it 'saves the sidecars into the droplet' do
+                  subject.staging_complete(success_response)
+                  droplet.reload
+                  expect(droplet.sidecars).to eq([{
+                    'name' => 'sleepy',
+                    'command' => 'sleep infinity',
+                    'process_types' => ['web'],
+                  }])
+                end
+              end
+
+              context 'when sidecars are NOT present in the staging result' do
+                it 'does not set sidecars on the droplet' do
+                  subject.staging_complete(success_response)
+
+                  expect(droplet.sidecars).to be_nil
+                end
+              end
+
+              context 'when sidecars is null in the staging result' do
+                before do
+                  success_response[:result][:sidecars] = nil
+                end
+
+                it 'does not set sidecars on the droplet' do
+                  subject.staging_complete(success_response)
+
+                  expect(droplet.sidecars).to be_nil
+                end
               end
 
               context 'when process_types is empty' do
@@ -208,6 +248,48 @@ module VCAP::CloudController
                         web_process.reload
                         expect(web_process.revision).to be_nil
                         expect(web_process.actual_droplet).to eq(app.droplet)
+                      end
+                    end
+
+                    context 'when there are sidecars on the droplet' do
+                      before do
+                        droplet.update(sidecars: [{
+                          'name' => 'sleepy',
+                          'command' => 'sleep infinity',
+                          'process_types' => ['web'],
+                        }])
+                      end
+
+                      it 'materializes sidecars' do
+                        expect(SidecarModel.count).to eq(0)
+
+                        subject.staging_complete(success_response, true)
+
+                        expect(SidecarModel.count).to eq(1)
+                        sidecar = SidecarModel.last
+                        expect(sidecar.name).to eq('sleepy')
+                        expect(sidecar.command).to eq('sleep infinity')
+                        expect(sidecar.process_types).to eq(['web'])
+                        expect(sidecar.app_guid).to eq(app.guid)
+                      end
+
+                      context 'but the app has a user-origin sidecar of the same name' do
+                        before do
+                          SidecarModel.make(name: 'sleepy', command: 'sleep infinity', app: app, origin: SidecarModel::ORIGIN_USER)
+                        end
+
+                        it 'errors without materializing sidecars' do
+                          expect do
+                            subject.staging_complete(success_response, true)
+                          end.not_to change { SidecarModel.count }
+
+                          expect(build.state).to eq(BuildModel::FAILED_STATE)
+                          expect(build.error_id).to eq('StagingError')
+                          expect(build.error_description).to eq(
+                            'Staging error: Buildpack defined sidecar \'sleepy\' conflicts with an '\
+                            'existing user-defined sidecar. Consider renaming \'sleepy\'.'
+                          )
+                        end
                       end
                     end
                   end
