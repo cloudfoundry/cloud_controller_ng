@@ -80,28 +80,28 @@
 <% end %>
 
 <% content_for :service_broker_credentials_object do %>
-#### The credentials object
+#### The authentication object
 
 Name | Type | Description
 ---- | ---- | -----------
 **type** | _string_ | Type of the authentication mechanisms that can be used. Valid value is `basic`.
-**data** | _object_ | Data is used to hold the actual credentials depending on the authentication mechanism.
+**credentials** | _object_ | Credentials for given authentication type.
 
 ```
-Example basic credentials
+Example basic authentication
 ```
 
 ```json
 {
   "type": "basic",
-  "data": {
+  "credentials": {
     "username": "admin",
     "password": "secretpassw0rd"
   }
 }
 ```
 
-##### Basic credentials data
+##### Basic authentication credentials
 
 Name | Type | Description
 ---- | ---- | -----------

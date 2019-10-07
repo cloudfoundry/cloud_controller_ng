@@ -18,8 +18,8 @@ module VCAP::CloudController
         params = {
           name: message.name,
           broker_url: message.url,
-          auth_username: message.credentials_data.username,
-          auth_password: message.credentials_data.password,
+          auth_username: message.authentication_credentials.username,
+          auth_password: message.authentication_credentials.password,
           space_guid: message.relationships_message.space_guid
         }
 

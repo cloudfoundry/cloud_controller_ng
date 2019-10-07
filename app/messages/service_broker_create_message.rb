@@ -3,8 +3,8 @@ require 'utils/hash_utils'
 
 module VCAP::CloudController
   class ServiceBrokerCreateMessage < BaseMessage
-    register_allowed_keys [:name, :url, :credentials, :relationships]
-    ALLOWED_CREDENTIAL_TYPES = ['basic'].freeze
+    register_allowed_keys [:name, :url, :authentication, :relationships]
+    ALLOWED_AUTHENTICATION_TYPES = ['basic'].freeze
 
     def self.relationships_requested?
       @relationships_requested ||= proc { |a| a.requested?(:relationships) }
@@ -16,11 +16,11 @@ module VCAP::CloudController
     validates :name, string: true
     validates :url, string: true
 
-    validates :credentials, hash: true
-    validates_inclusion_of :credentials_type, in: ALLOWED_CREDENTIAL_TYPES,
-      message: "credentials.type must be one of #{ALLOWED_CREDENTIAL_TYPES}"
-    validate :validate_credentials
-    validate :validate_credentials_data
+    validates :authentication, hash: true
+    validates_inclusion_of :authentication_type, in: ALLOWED_AUTHENTICATION_TYPES,
+      message: "authentication.type must be one of #{ALLOWED_AUTHENTICATION_TYPES}"
+    validate :validate_authentication
+    validate :validate_authentication_credentials
     validate :validate_url
     validate :validate_name
 
@@ -28,43 +28,43 @@ module VCAP::CloudController
       @relationships_message ||= Relationships.new(relationships&.deep_symbolize_keys)
     end
 
-    def credentials_data_hash
-      HashUtils.dig(credentials, :data)
+    def authentication_credentials_hash
+      HashUtils.dig(authentication, :credentials)
     end
 
-    def credentials_message
-      @credentials_message ||= CredentialsMessage.new(credentials)
+    def authentication_message
+      @authentication_message ||= CredentialsMessage.new(authentication)
     end
 
-    def credentials_data
-      @credentials_data ||= BasicCredentialsMessage.new(credentials_data_hash)
+    def authentication_credentials
+      @authentication_credentials ||= BasicCredentialsMessage.new(authentication_credentials_hash)
     end
 
-    def validate_credentials
-      unless credentials_message.valid?
-        errors.add(:credentials, credentials_message.errors[:base])
+    def validate_authentication
+      unless authentication_message.valid?
+        errors.add(:authentication, authentication_message.errors[:base])
       end
     end
 
-    def credentials_type
-      HashUtils.dig(credentials, :type)
+    def authentication_type
+      HashUtils.dig(authentication, :type)
     end
 
-    def validate_credentials_data
-      unless credentials_data_hash.is_a?(Hash)
-        errors.add(:credentials_data, 'must be a hash')
+    def validate_authentication_credentials
+      unless authentication_credentials_hash.is_a?(Hash)
+        errors.add(:authentication_credentials, 'must be a hash')
       end
-      unless credentials_data.valid?
+      unless authentication_credentials.valid?
         errors.add(
-          :credentials_data,
-          "Field(s) #{credentials_data.errors.keys.map(&:to_s)} must be valid: #{credentials_data.errors.full_messages}"
+          :authentication_credentials,
+          "Field(s) #{authentication_credentials.errors.keys.map(&:to_s)} must be valid: #{authentication_credentials.errors.full_messages}"
         )
       end
     end
 
     def validate_url
       if URI::DEFAULT_PARSER.make_regexp(['https', 'http']).match?(url.to_s)
-        errors.add(:url, 'must not contain credentials') if URI(url).user
+        errors.add(:url, 'must not contain authentication') if URI(url).user
       else
         errors.add(:url, 'must be a valid url')
       end
@@ -79,7 +79,7 @@ module VCAP::CloudController
     delegate :space_guid, to: :relationships_message
 
     class CredentialsMessage < BaseMessage
-      register_allowed_keys [:type, :data]
+      register_allowed_keys [:type, :credentials]
 
       validates_with NoAdditionalKeysValidator
     end
