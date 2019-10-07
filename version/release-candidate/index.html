@@ -18161,35 +18161,12 @@ Deployed revisions are revisions that are linked to started processes in the app
 </code></pre>
 <pre class="highlight plaintext"><code>Example Response
 </code></pre>
-<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">201</span> <span class="ne">Created</span>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">202</span> <span class="ne">Created</span>
 <span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
+<span class="na">Location</span><span class="p">:</span> <span class="s">https://api.example.org/v3/jobs/af5c57f6-8769-41fa-a499-2c84ed896788</span>
+</code></pre>
 
-<span class="p">{</span><span class="w">
-  </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"dde5ad2a-d8f4-44dc-a56f-0452d744f1c3"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my_service_broker"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://example.service-broker.com"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2015-11-13T17:02:56Z"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-06-08T16:41:26Z"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2f35885d-0c9d-4423-83ad-fd05066f8576"</span><span class="w">
-      </span><span class="p">}</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_brokers/dde5ad2a-d8f4-44dc-a56f-0452d744f1c3"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576"</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-  </span><span class="p">}</span><span class="w">
-</span><span class="p">}</span><span class="w">
-
-</span></code></pre>
-
-<p>This endpoint creates a new service broker.</p>
+<p>This endpoint creates a new service broker and a job to synchronize the service offerings and service plans with those in the broker&rsquo;s catalog.  The <code class="prettyprint">Location</code> header refers to the created job which syncs the broker with the catalog.</p>
 
 <h4 id="definition">Definition</h4>
 
@@ -18215,8 +18192,8 @@ Deployed revisions are revisions that are linked to started processes in the app
 <td>URL of the service broker.</td>
 </tr>
 <tr>
-<td><strong>credentials</strong></td>
-<td><a href="#the-credentials-object"><em>credentials</em></a></td>
+<td><strong>authentication</strong></td>
+<td><a href="#the-authentication-object"><em>authentication</em></a></td>
 <td>Credentials used to authenticate against the service broker.</td>
 </tr>
 </tbody></table>
@@ -18239,7 +18216,7 @@ Deployed revisions are revisions that are linked to started processes in the app
 </tr>
 </tbody></table>
 
-<h4 id="the-credentials-object">The credentials object</h4>
+<h4 id="the-authentication-object">The authentication object</h4>
 
 <table><thead>
 <tr>
@@ -18254,23 +18231,23 @@ Deployed revisions are revisions that are linked to started processes in the app
 <td>Type of the authentication mechanisms that can be used. Valid value is <code class="prettyprint">basic</code>.</td>
 </tr>
 <tr>
-<td><strong>data</strong></td>
+<td><strong>credentials</strong></td>
 <td><em>object</em></td>
-<td>Data is used to hold the actual credentials depending on the authentication mechanism.</td>
+<td>Credentials for given authentication type.</td>
 </tr>
 </tbody></table>
-<pre class="highlight plaintext"><code>Example basic credentials
+<pre class="highlight plaintext"><code>Example basic authentication
 </code></pre>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
   </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"basic"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+  </span><span class="nt">"credentials"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"username"</span><span class="p">:</span><span class="w"> </span><span class="s2">"admin"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"password"</span><span class="p">:</span><span class="w"> </span><span class="s2">"secretpassw0rd"</span><span class="w">
   </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
 </span></code></pre>
 
-<h5 id="basic-credentials-data">Basic credentials data</h5>
+<h5 id="basic-authentication-credentials">Basic authentication credentials</h5>
 
 <table><thead>
 <tr>
