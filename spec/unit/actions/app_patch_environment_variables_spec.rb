@@ -20,7 +20,7 @@ module VCAP::CloudController
     describe '#patch' do
       let(:request_environment_variables) { { override: 'new-value', new: 'env' } }
       let(:message) do
-        AppUpdateEnvironmentVariablesMessage.new({
+        UpdateEnvironmentVariablesMessage.new({
           var: request_environment_variables,
         })
       end

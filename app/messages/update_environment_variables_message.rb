@@ -1,7 +1,7 @@
 require 'messages/base_message'
 
 module VCAP::CloudController
-  class AppUpdateEnvironmentVariablesMessage < BaseMessage
+  class UpdateEnvironmentVariablesMessage < BaseMessage
     register_allowed_keys [:var]
 
     validates_with NoAdditionalKeysValidator

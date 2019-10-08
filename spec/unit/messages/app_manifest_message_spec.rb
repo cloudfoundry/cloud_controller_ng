@@ -1757,7 +1757,7 @@ module VCAP::CloudController
 
     describe '#app_update_environment_variables_message' do
       let(:parsed_yaml) { { 'env' => { 'foo' => 'bar', 'baz' => 4.44444444444, 'qux' => false } } }
-      it 'returns a AppUpdateEnvironmentVariablesMessage containing the env vars' do
+      it 'returns a UpdateEnvironmentVariablesMessage containing the env vars' do
         message = AppManifestMessage.create_from_yml(parsed_yaml)
         expect(message).to be_valid
         expect(message.app_update_environment_variables_message.var).

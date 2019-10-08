@@ -94,7 +94,7 @@ module VCAP::CloudController
     end
 
     def app_update_environment_variables_message
-      @app_update_environment_variables_message ||= AppUpdateEnvironmentVariablesMessage.new(env_update_attribute_mapping)
+      @app_update_environment_variables_message ||= UpdateEnvironmentVariablesMessage.new(env_update_attribute_mapping)
     end
 
     def manifest_service_bindings_message

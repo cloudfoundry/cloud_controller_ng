@@ -17,7 +17,7 @@ require 'messages/apps_list_message'
 require 'messages/app_show_message'
 require 'messages/app_update_message'
 require 'messages/app_create_message'
-require 'messages/app_update_environment_variables_message'
+require 'messages/update_environment_variables_message'
 require 'messages/app_manifest_message'
 require 'messages/app_builds_list_message'
 require 'messages/named_app_manifest_message'
@@ -239,7 +239,7 @@ class AppsV3Controller < ApplicationController
     app_not_found! unless app && permission_queryer.can_read_from_space?(space.guid, org.guid)
     unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
 
-    message = AppUpdateEnvironmentVariablesMessage.new(hashed_params[:body])
+    message = UpdateEnvironmentVariablesMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     app = AppPatchEnvironmentVariables.new(user_audit_info).patch(app, message)

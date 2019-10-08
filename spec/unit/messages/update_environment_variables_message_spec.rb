@@ -1,8 +1,8 @@
 require 'spec_helper'
-require 'messages/app_update_environment_variables_message'
+require 'messages/update_environment_variables_message'
 
 module VCAP::CloudController
-  RSpec.describe AppUpdateEnvironmentVariablesMessage do
+  RSpec.describe UpdateEnvironmentVariablesMessage do
     let(:valid_body) {
       {
         'var' => {
@@ -14,7 +14,7 @@ module VCAP::CloudController
 
     describe 'validations' do
       it 'returns no validation errors on a valid request' do
-        message = AppUpdateEnvironmentVariablesMessage.new(valid_body.deep_symbolize_keys)
+        message = UpdateEnvironmentVariablesMessage.new(valid_body.deep_symbolize_keys)
 
         expect(message).to be_valid
       end
@@ -27,7 +27,7 @@ module VCAP::CloudController
             ANOTHER_VAR: 'another-value'
           }
         }
-        message = AppUpdateEnvironmentVariablesMessage.new(invalid_body)
+        message = UpdateEnvironmentVariablesMessage.new(invalid_body)
 
         expect(message).not_to be_valid
         expect(message.errors[:base]).to include("Unknown field(s): 'unexpected'")
@@ -39,7 +39,7 @@ module VCAP::CloudController
             1 => 'foo'
           }
         }
-        message = AppUpdateEnvironmentVariablesMessage.new(invalid_body)
+        message = UpdateEnvironmentVariablesMessage.new(invalid_body)
 
         expect(message).not_to be_valid
         expect(message.errors_on(:var)[0]).to include('key must be a string')
@@ -51,7 +51,7 @@ module VCAP::CloudController
             PORT: 8080
           }
         }
-        message = AppUpdateEnvironmentVariablesMessage.new(invalid_body)
+        message = UpdateEnvironmentVariablesMessage.new(invalid_body)
 
         expect(message).not_to be_valid
         expect(message.errors_on(:var)[0]).to include('PORT')
@@ -63,7 +63,7 @@ module VCAP::CloudController
             VCAP_VAR: 'not-allowed'
           }
         }
-        message = AppUpdateEnvironmentVariablesMessage.new(invalid_body)
+        message = UpdateEnvironmentVariablesMessage.new(invalid_body)
 
         expect(message).not_to be_valid
         expect(message.errors_on(:var)[0]).to include('VCAP_')
@@ -75,7 +75,7 @@ module VCAP::CloudController
             hashes_are: { not: 'allowed' }
           }
         }
-        message = AppUpdateEnvironmentVariablesMessage.new(invalid_body)
+        message = UpdateEnvironmentVariablesMessage.new(invalid_body)
 
         expect(message).not_to be_valid
         expect(message.errors.full_messages[0]).to match("Non-string value in environment variable for key 'hashes_are'")
@@ -87,7 +87,7 @@ module VCAP::CloudController
             arrays_are: ['not', 'allowed']
           }
         }
-        message = AppUpdateEnvironmentVariablesMessage.new(invalid_body)
+        message = UpdateEnvironmentVariablesMessage.new(invalid_body)
 
         expect(message).not_to be_valid
         expect(message.errors.full_messages[0]).to match("Non-string value in environment variable for key 'arrays_are'")
@@ -99,7 +99,7 @@ module VCAP::CloudController
                 some_number: 123
             }
         }
-        message = AppUpdateEnvironmentVariablesMessage.new(invalid_body)
+        message = UpdateEnvironmentVariablesMessage.new(invalid_body)
 
         expect(message).not_to be_valid
         expect(message.errors.full_messages[0]).to match("Non-string value in environment variable for key 'some_number'")
@@ -109,7 +109,7 @@ module VCAP::CloudController
         invalid_body = {
           var: 'sweet potato'
         }
-        message = AppUpdateEnvironmentVariablesMessage.new(invalid_body)
+        message = UpdateEnvironmentVariablesMessage.new(invalid_body)
 
         expect(message).not_to be_valid
         expect(message.errors.full_messages[0]).to match('must be a hash')
@@ -121,7 +121,7 @@ module VCAP::CloudController
             some_nil_value: nil
           }
         }
-        message = AppUpdateEnvironmentVariablesMessage.new(body)
+        message = UpdateEnvironmentVariablesMessage.new(body)
 
         expect(message).to be_valid
       end
