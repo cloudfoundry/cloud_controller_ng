@@ -39,6 +39,28 @@ module VCAP::CloudController
         end
       end
 
+      describe '#after' do
+        context 'when the wrapped job has the after method defined' do
+          it 'should no raise an exception' do
+            handler = double('Job', after: 'after-called')
+            job     = WrappingJob.new(handler)
+
+            expect(handler).to receive(:after)
+            job.after(job)
+          end
+        end
+
+        context 'when the wrapped job does not have the after method defined' do
+          it 'should no raise an exception' do
+            handler = Object.new
+            job     = WrappingJob.new(handler)
+            expect {
+              job.after(job)
+            }.to_not raise_error
+          end
+        end
+      end
+
       describe '#success' do
         context 'when the wrapped job does not have the success method defined' do
           it 'should no raise an exception' do

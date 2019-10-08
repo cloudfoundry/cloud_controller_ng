@@ -27,6 +27,7 @@ module VCAP::CloudController::Presenters::V3
           expect(result[:state]).to eq(VCAP::CloudController::PollableJobModel::COMPLETE_STATE)
           expect(result[:links]).to eq(links)
           expect(result[:errors]).to eq([])
+          expect(result[:warnings]).to eq([])
         end
 
         context 'when the job has not completed' do
@@ -73,8 +74,8 @@ module VCAP::CloudController::Presenters::V3
           let(:api_error) do
             YAML.dump({
               'errors' => [{
-                'title'       => 'CF-BlobstoreError',
-                'code'        => 150007,
+                'title' => 'CF-BlobstoreError',
+                'code' => 150007,
                 'description' => 'Failed to perform blobstore operation after three retries.'
               }]
             })
@@ -102,6 +103,20 @@ module VCAP::CloudController::Presenters::V3
                 description: 'Failed to perform blobstore operation after three retries.'
               }])
             end
+          end
+        end
+
+        context 'when the job has a warning' do
+          before do
+            VCAP::CloudController::JobWarningModel.make(job: job, detail: 'warning one')
+            VCAP::CloudController::JobWarningModel.make(job: job, detail: 'warning two')
+          end
+
+          it 'presents the list of warnings' do
+            expect(result[:warnings]).to match_array([
+              { detail: 'warning one' },
+              { detail: 'warning two' }
+            ])
           end
         end
       end
@@ -132,6 +147,13 @@ module VCAP::CloudController::Presenters::V3
       it_behaves_like JobPresenter do
         let(:resource_type) { 'package' }
         let(:resource) { VCAP::CloudController::PackageModel.make }
+      end
+    end
+
+    context 'for service brokers' do
+      it_behaves_like JobPresenter do
+        let(:resource_type) { 'service_broker' }
+        let(:resource) { VCAP::CloudController::ServiceBroker.make }
       end
     end
   end

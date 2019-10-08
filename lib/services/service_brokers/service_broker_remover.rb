@@ -4,6 +4,16 @@ module VCAP::Services::ServiceBrokers
       @services_event_repository = services_event_repository
     end
 
+    # Necessary for async deletion. See DeleteActionJob
+    def delete(brokers)
+      remove(brokers.first)
+      VCAP::CloudController::Jobs::DeleteActionJob::NO_ERRORS
+    rescue
+      brokers.first.update_state(VCAP::CloudController::ServiceBrokerStateEnum::DELETE_FAILED)
+      raise
+    end
+
+    # Used in v2 service broker deletion
     def remove(broker)
       cache = cache_services_and_plans(broker)
 
@@ -21,8 +31,8 @@ module VCAP::Services::ServiceBrokers
       cached_services_and_plans = {}
       broker.services.each do |service|
         cached_services_and_plans[service.guid] = {
-          service: service,
-          plans: service.service_plans
+            service: service,
+            plans: service.service_plans
         }
       end
 

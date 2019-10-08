@@ -17,10 +17,22 @@ RSpec.describe ServiceBrokersController, type: :controller do
     end
 
     context 'when there are no service instances' do
-      it 'returns a 204' do
+      it 'returns a 202 and a job' do
         delete :destroy, params: { guid: service_broker.guid }
-        expect(response.status).to eq 204
-        expect(service_broker.exists?).to be_falsey
+        expect(response.status).to eq 202
+        expect(response['Location']).to match(%r{.*/v3/jobs/.*})
+      end
+
+      it 'updates the broker availability' do
+        delete :destroy, params: { guid: service_broker.guid }
+        expect(response.status).to eq 202
+
+        get :show, params: { guid: service_broker.guid }
+
+        expect(parsed_body).to include(
+          'available' => false,
+          'status' => 'delete in progress'
+        )
       end
     end
 

@@ -1,6 +1,8 @@
 module VCAP::CloudController
   module Jobs
     class DeleteActionJob < VCAP::CloudController::Jobs::CCJob
+      NO_ERRORS = [].freeze
+
       attr_reader :resource_guid
 
       def initialize(model_class, resource_guid, delete_action)
@@ -20,7 +22,7 @@ module VCAP::CloudController
           errors = delete_action.delete(dataset)
         end
 
-        raise errors.first unless errors.empty?
+        raise errors.first unless errors&.empty?
 
         warnings
       end

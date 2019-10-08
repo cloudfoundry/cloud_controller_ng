@@ -1,7 +1,7 @@
 require 'actions/services/database_error_service_resource_cleanup'
 require 'actions/services/locks/lock_check'
 require 'repositories/service_binding_event_repository'
-require 'jobs/services/service_binding_state_fetch'
+require 'jobs/v2/services/service_binding_state_fetch'
 
 module VCAP::CloudController
   class ServiceBindingCreate

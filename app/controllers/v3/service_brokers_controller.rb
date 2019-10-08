@@ -73,9 +73,15 @@ class ServiceBrokersController < ApplicationController
     broker_has_instances!(service_broker.name) if service_broker.has_service_instances?
 
     service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository.new(user_audit_info)
-    service_broker_remover = VCAP::Services::ServiceBrokers::ServiceBrokerRemover.new(service_event_repository)
+    delete_action = VCAP::Services::ServiceBrokers::ServiceBrokerRemover.new(service_event_repository)
+    deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(ServiceBroker, service_broker.guid, delete_action)
+    pollable_job = Jobs::Enqueuer.new(deletion_job, queue: 'cc-generic').enqueue_pollable
 
-    service_broker_remover.remove(service_broker)
+    url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
+
+    service_broker.update_state(ServiceBrokerStateEnum::DELETE_IN_PROGRESS)
+
+    head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job.guid}")
   end
 
   private

@@ -1,4 +1,4 @@
-require 'jobs/v3/synchronize_broker_catalog_job'
+require 'jobs/v3/services/synchronize_broker_catalog_job'
 
 module VCAP::CloudController
   module V3

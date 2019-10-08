@@ -45,6 +45,14 @@ module VCAP::CloudController
       { space: user.spaces_dataset }
     end
 
+    def update_state(state)
+      if service_broker_state.nil?
+        self.service_broker_state = ServiceBrokerState.new(state: state)
+      else
+        service_broker_state.update(state: state)
+      end
+    end
+
     private
 
     def validates_url_no_basic_auth

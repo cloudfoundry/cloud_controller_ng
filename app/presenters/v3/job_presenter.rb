@@ -16,6 +16,7 @@ module VCAP::CloudController
             links:      build_links,
 
             errors:     build_errors,
+            warnings:   build_warnings,
           }
         end
 
@@ -49,6 +50,12 @@ module VCAP::CloudController
           parsed_last_error = YAML.safe_load(job.cf_api_error)
 
           parsed_last_error['errors'].map(&:deep_symbolize_keys)
+        end
+
+        def build_warnings
+          return [] if job.warnings.nil?
+
+          job.warnings.map { |w| { detail: w[:detail] } }
         end
       end
     end

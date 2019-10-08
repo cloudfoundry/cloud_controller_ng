@@ -13,6 +13,17 @@ module VCAP::CloudController
       end
     end
 
+    describe('.find_by_delayed_job_guid') do
+      let(:delayed_job) { Delayed::Backend::Sequel::Job.create }
+      let!(:pollable_job) { PollableJobModel.create(state: 'PROCESSING', delayed_job_guid: delayed_job.guid) }
+
+      it 'returns the PollableJobModel for the given DelayedJob' do
+        result = PollableJobModel.find_by_delayed_job_guid(delayed_job.guid)
+        expect(result).to be_present
+        expect(result).to eq(pollable_job)
+      end
+    end
+
     describe '#complete?' do
       context 'when the state is complete' do
         let(:job) { PollableJobModel.make(state: 'COMPLETE') }
@@ -43,6 +54,29 @@ module VCAP::CloudController
       it 'returns false if the resource does NOT exist' do
         job = PollableJobModel.make(resource_type: 'app', resource_guid: 'not-a-real-guid')
         expect(job.resource_exists?).to be(false)
+      end
+    end
+
+    describe '#warnings' do
+      it 'returns the warnings for the job' do
+        job = PollableJobModel.make
+        warnings = []
+        warnings << JobWarningModel.make(job: job, detail: 'something is wrong')
+        warnings << JobWarningModel.make(job: job, detail: 'something is really wrong')
+
+        expect(job.warnings.size).to eq(2)
+        expect(job.warnings).to include(*warnings)
+      end
+
+      it 'deletes the warnings when the job is deleted' do
+        job = PollableJobModel.make
+        JobWarningModel.make(job: job, detail: 'something is wrong')
+        JobWarningModel.make(job: job, detail: 'something is really wrong')
+
+        job.destroy
+
+        expect(PollableJobModel.all).to be_empty
+        expect(JobWarningModel.all).to be_empty
       end
     end
   end
