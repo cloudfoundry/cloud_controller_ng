@@ -231,4 +231,7 @@ Rails.application.routes.draw do
   # environment variable groups
   get '/environment_variable_groups/:name', to: 'environment_variable_groups#show'
   patch '/environment_variable_groups/:name', to: 'environment_variable_groups#update'
+
+  # roles
+  post '/roles', to: 'roles#create'
 end

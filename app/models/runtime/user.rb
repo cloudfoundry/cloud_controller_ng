@@ -111,6 +111,14 @@ module VCAP::CloudController
       is_oauth_client
     end
 
+    def presentation_name
+      uaa_client = CloudController::DependencyLocator.instance.uaa_client
+      user_hash = uaa_client.users_for_ids([guid])
+      return guid unless user_hash[guid]
+
+      user_hash[guid]['username']
+    end
+
     def remove_spaces(space)
       remove_space space
       remove_managed_space space
@@ -125,6 +133,14 @@ module VCAP::CloudController
         union(
           Space.join(:spaces_managers, space_id: :id, user_id: id).select(:spaces__id)
         )
+    end
+
+    def self.readable_users_for_current_user(can_read_secrets_globally, current_user)
+      if can_read_secrets_globally
+        User.dataset
+      else
+        User.where(guid: current_user.guid)
+      end
     end
 
     def self.user_visibility_filter(_)

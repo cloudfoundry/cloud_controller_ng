@@ -36,11 +36,12 @@ class UsersController < ApplicationController
   end
 
   def show
-    user = User.find(guid: hashed_params[:guid])
+    user = User.readable_users_for_current_user(
+      permission_queryer.can_read_secrets_globally?,
+      current_user
+    ).first(guid: hashed_params[:guid])
 
     user_not_found! unless user
-    db_user_is_current_user = current_user.guid == user.guid
-    user_not_found! unless permission_queryer.can_read_secrets_globally? || db_user_is_current_user
 
     render status: :ok, json: Presenters::V3::UserPresenter.new(user, uaa_users: uaa_users_info([user.guid]))
   end
@@ -81,11 +82,7 @@ class UsersController < ApplicationController
   private
 
   def fetch_readable_users(message)
-    if permission_queryer.can_read_secrets_globally?
-      UserListFetcher.fetch_all(message, User.dataset)
-    else
-      UserListFetcher.fetch_all(message, User.where(guid: current_user.guid))
-    end
+    UserListFetcher.fetch_all(message, User.readable_users_for_current_user(permission_queryer.can_read_secrets_globally?, current_user))
   end
 
   def uaa_users_info(user_guids)

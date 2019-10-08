@@ -41,9 +41,40 @@ module VCAP::CloudController
     describe 'Serialization' do
       it { is_expected.to export_attributes :admin, :active, :default_space_guid }
       it { is_expected.to import_attributes :guid, :admin, :active, :organization_guids, :managed_organization_guids,
-                                    :billing_managed_organization_guids, :audited_organization_guids, :space_guids,
-                                    :managed_space_guids, :audited_space_guids, :default_space_guid
+        :billing_managed_organization_guids, :audited_organization_guids, :space_guids,
+        :managed_space_guids, :audited_space_guids, :default_space_guid
       }
+    end
+
+    describe '#presentation_name' do
+      let(:user) { VCAP::CloudController::User.make }
+      let(:uaa_client) { double(:uaa_client) }
+
+      context 'when the user is a UAA user' do
+        before do
+          allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
+          allow(uaa_client).to receive(:users_for_ids).with([user.guid]).and_return(
+            { user.guid => { 'username' => 'mona', 'origin' => 'uaa' } }
+          )
+        end
+
+        it 'returns the UAA username' do
+          expect(user.presentation_name).to eq('mona')
+        end
+      end
+
+      context 'when the user is a UAA client' do
+        let(:user) { VCAP::CloudController::User.make(guid: 're-id') }
+
+        before do
+          allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
+          allow(uaa_client).to receive(:users_for_ids).with([user.guid]).and_return({})
+        end
+
+        it 'returns the guid' do
+          expect(user.presentation_name).to eq(user.guid)
+        end
+      end
     end
 
     describe '#remove_spaces' do

@@ -124,3 +124,6 @@ require 'models/services/route_binding'
 
 require 'models/request_count'
 require 'models/orphaned_blob'
+require 'models/runtime/space_auditor'
+require 'models/runtime/space_manager'
+require 'models/runtime/space_developer'

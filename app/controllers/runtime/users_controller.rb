@@ -135,9 +135,28 @@ module VCAP::CloudController
     end
 
     def add_space_role(user_guid, relationship, space_guid)
-      response = add_related(user_guid, relationship, space_guid, User)
+      space = Space.first(guid: space_guid)
       user = User.first(guid: user_guid)
       user.username = @uaa_client.usernames_for_ids([user.guid])[user.guid] || ''
+
+      @request_attrs = { 'space' => space_guid, verb: 'add', relation: relationship, related_guid: space_guid }
+
+      before_update(user)
+
+      user.db.transaction do
+        read_validation = :read_related_object_for_update
+        validate_access(read_validation, user, request_attrs)
+
+        if relationship.eql?(:audited_spaces)
+          SpaceAuditor.create(user_id: user.id, space_id: space.id)
+        elsif relationship.eql?(:managed_spaces)
+          SpaceManager.create(user_id: user.id, space_id: space.id)
+        else
+          SpaceDeveloper.create(user_id: user.id, space_id: space.id)
+        end
+      end
+
+      after_update(user)
 
       role = if relationship.eql?(:audited_spaces)
                'auditor'
@@ -147,9 +166,9 @@ module VCAP::CloudController
                'developer'
              end
 
-      @user_event_repository.record_space_role_add(Space.first(guid: space_guid), user, role, UserAuditInfo.from_context(SecurityContext))
+      @user_event_repository.record_space_role_add(space, user, role, UserAuditInfo.from_context(SecurityContext))
 
-      response
+      [HTTP::CREATED, object_renderer.render_json(self.class, user, @opts)]
     end
 
     def add_organization_role(user_guid, relationship, org_guid)

@@ -18,7 +18,7 @@ ALL_PERMISSIONS = (LOCAL_ROLES + GLOBAL_SCOPES).freeze
 
 RSpec.shared_examples 'permissions for list endpoint' do |roles|
   roles.each do |role|
-    describe "as an #{role}" do
+    describe "as a(n) #{role}" do
       it 'returns the correct response status and resources' do
         headers = set_user_with_header_as_role(role: role, org: org, space: space, user: user, scopes: expected_codes_and_responses[role][:scopes])
         api_call.call(headers)
