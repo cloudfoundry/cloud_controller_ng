@@ -2,6 +2,7 @@ require 'spec_helper'
 require 'request_spec_shared_examples'
 require 'cloud_controller'
 require 'services'
+require 'messages/service_broker_update_message'
 
 RSpec.describe 'V3 service brokers' do
   let(:user) { VCAP::CloudController::User.make }
@@ -385,6 +386,163 @@ RSpec.describe 'V3 service brokers' do
     end
   end
 
+  describe 'PATCH /v3/service_brokers/:guid' do
+    let!(:broker) do
+      VCAP::CloudController::ServiceBroker.make(
+        name: 'old-name',
+        broker_url: 'http://example.org/old-broker-url',
+        auth_username: 'old-admin',
+        auth_password: 'not-welcome'
+      )
+    end
+
+    let!(:service_broker_state) {
+      VCAP::CloudController::ServiceBrokerState.make(
+        service_broker_id: broker.id,
+        state: VCAP::CloudController::ServiceBrokerStateEnum::AVAILABLE
+      )
+    }
+
+    let(:update_request_body) {
+      {
+        name: 'new-name',
+        url: 'http://example.org/new-broker-url',
+        authentication: {
+          type: 'basic',
+          credentials: {
+            username: 'admin',
+            password: 'welcome',
+          }
+        }
+      }
+    }
+
+    it 'updates a service broker in the database' do
+      patch("/v3/service_brokers/#{broker.guid}", update_request_body.to_json, admin_headers)
+
+      broker = VCAP::CloudController::ServiceBroker.last
+      expect(broker.name).to eq('new-name')
+      expect(broker.broker_url).to eq('http://example.org/new-broker-url')
+      expect(broker.auth_username).to eq('admin')
+      expect(broker.auth_password).to eq('welcome')
+      expect(broker.service_broker_state.state).to eq(VCAP::CloudController::ServiceBrokerStateEnum::SYNCHRONIZING)
+    end
+
+    it 'creates a pollable job to synchronize the catalog and responds with the job resource' do
+      patch("/v3/service_brokers/#{broker.guid}", update_request_body.to_json, admin_headers)
+      expect(last_response).to have_status_code(202)
+
+      job = VCAP::CloudController::PollableJobModel.last
+
+      expect(job.state).to eq(VCAP::CloudController::PollableJobModel::PROCESSING_STATE)
+      expect(job.operation).to eq('service_broker.catalog.synchronize')
+      expect(job.resource_guid).to eq(broker.guid)
+      expect(job.resource_type).to eq('service_brokers')
+
+      expect(last_response.headers['Location']).to end_with("/v3/jobs/#{job.guid}")
+    end
+
+    it 'updates url' do
+      patch("/v3/service_brokers/#{broker.guid}", update_request_body.to_json, admin_headers)
+      expect(broker.reload.broker_url).to eq 'http://example.org/new-broker-url'
+    end
+
+    context 'when the message is invalid' do
+      before do
+        allow_any_instance_of(VCAP::CloudController::ServiceBrokerUpdateMessage).to receive(:valid?).and_return false
+
+        dbl = double('Errors', full_messages: ['message is invalid'])
+        allow_any_instance_of(VCAP::CloudController::ServiceBrokerUpdateMessage).to receive(:errors).and_return dbl
+      end
+
+      it 'returns 422 and renders the errors' do
+        patch("/v3/service_brokers/#{broker.guid}", update_request_body.to_json, admin_headers)
+        expect(last_response).to have_status_code(422)
+        expect(last_response.body).to include('UnprocessableEntity')
+        expect(last_response.body).to include('message is invalid')
+      end
+    end
+
+    context 'when broker does not exist' do
+      it 'should return 404' do
+        patch('/v3/service_brokers/some-guid', update_request_body.to_json, admin_headers)
+
+        expect(last_response).to have_status_code(404)
+
+        response = parsed_response['errors'].first
+        expect(response).to include('title' => 'CF-ResourceNotFound')
+        expect(response).to include('detail' => 'Service broker not found')
+      end
+    end
+
+    context 'when a broker with the same name exists' do
+      before do
+        VCAP::CloudController::ServiceBroker.make(name: 'another broker')
+      end
+
+      it 'should return 422 and meaningful error and does not create a broker' do
+        patch("/v3/service_brokers/#{broker.guid}", { name: 'another broker' }.to_json, admin_headers)
+        expect_error(status: 422, error: 'UnprocessableEntity', description: 'Name must be unique')
+        expect(broker.reload.name).to eq 'old-name'
+      end
+    end
+
+    context 'global service broker' do
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+        let(:api_call) { ->(user_headers) { patch "/v3/service_brokers/#{broker.guid}", update_request_body.to_json, user_headers } }
+        let(:expected_codes_and_responses) do
+          Hash.new(code: 403).tap do |h|
+            h['admin'] = { code: 202 }
+          end
+        end
+
+        let(:expected_events) do
+          ->(email) do
+            [
+              { type: 'audit.service_broker.update', actor: email },
+            ]
+          end
+        end
+      end
+    end
+
+    context 'space service broker' do
+      let!(:broker) do
+        VCAP::CloudController::ServiceBroker.make(
+          name: 'old-name',
+          broker_url: 'http://example.org/old-broker-url',
+          auth_username: 'old-admin',
+          auth_password: 'not-welcome',
+          space: space
+        )
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+        let(:api_call) { ->(user_headers) { patch "/v3/service_brokers/#{broker.guid}", update_request_body.to_json, user_headers } }
+
+        let(:expected_codes_and_responses) {
+          Hash.new(code: 422).tap do |h|
+            h['admin'] = { code: 202 }
+            h['admin_read_only'] = { code: 403 }
+            h['global_auditor'] = { code: 403 }
+            h['space_developer'] = { code: 202 }
+            h['space_auditor'] = { code: 403 }
+            h['space_manager'] = { code: 403 }
+            h['org_manager'] = { code: 403 }
+          end
+        }
+
+        let(:expected_events) do
+          ->(email) do
+            [
+              { type: 'audit.service_broker.update', actor: email },
+            ]
+          end
+        end
+      end
+    end
+  end
+
   describe 'POST /v3/service_brokers' do
     let(:global_service_broker) do
       {
@@ -416,7 +574,7 @@ RSpec.describe 'V3 service brokers' do
       expect(broker.service_broker_state.state).to eq(VCAP::CloudController::ServiceBrokerStateEnum::SYNCHRONIZING)
     end
 
-    it 'creates a pollable job to synchronize the catalog and responds with its location' do
+    it 'creates a pollable job to synchronize the catalog and responds with job resource' do
       create_broker_successfully(global_broker_request_body, with: admin_headers)
 
       job = VCAP::CloudController::PollableJobModel.last
@@ -534,11 +692,14 @@ RSpec.describe 'V3 service brokers' do
         }
       end
 
-      it_behaves_like 'permissions for single object endpoint', LOCAL_ROLES do
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
         let(:api_call) { lambda { |user_headers| post '/v3/service_brokers', space_scoped_broker_request_body.to_json, user_headers } }
 
         let(:expected_codes_and_responses) {
           Hash.new(code: 422).tap do |h|
+            h['admin'] = { code: 202 }
+            h['admin_read_only'] = { code: 403 }
+            h['global_auditor'] = { code: 403 }
             h['space_developer'] = { code: 202 }
             h['space_auditor'] = { code: 403 }
             h['space_manager'] = { code: 403 }

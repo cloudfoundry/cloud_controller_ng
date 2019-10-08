@@ -2,6 +2,8 @@ require 'lightweight_spec_helper'
 require 'active_model'
 require 'rspec/collection_matchers'
 require 'messages/service_broker_create_message'
+require 'messages/validators/url_validator'
+require 'messages/validators/authentication_validator'
 
 module VCAP::CloudController
   RSpec.describe ServiceBrokerCreateMessage do
@@ -22,24 +24,12 @@ module VCAP::CloudController
     end
 
     describe 'validations' do
+      let(:message) { ServiceBrokerCreateMessage.new(request_body) }
+
       context 'when all values are correct' do
         let(:request_body) { valid_body }
 
         it 'is valid' do
-          message = ServiceBrokerCreateMessage.new(request_body)
-          expect(message).to be_valid
-        end
-      end
-
-      context 'when all values are correct and the scheme is http' do
-        let(:request_body) do
-          body = valid_body
-          body['url'] = 'http://the-best-broker.url'
-          body
-        end
-
-        it 'is valid' do
-          message = ServiceBrokerCreateMessage.new(request_body)
           expect(message).to be_valid
         end
       end
@@ -50,8 +40,6 @@ module VCAP::CloudController
         end
 
         it 'is not valid' do
-          message = ServiceBrokerCreateMessage.new(request_body)
-
           expect(message).not_to be_valid
           expect(message.errors[:base]).to include("Unknown field(s): 'surprise_key'")
         end
@@ -64,8 +52,6 @@ module VCAP::CloudController
           end
 
           it 'is not valid' do
-            message = ServiceBrokerCreateMessage.new(request_body)
-
             expect(message).not_to be_valid
             expect(message.errors_on(:name)).to include('must be a string')
           end
@@ -77,8 +63,6 @@ module VCAP::CloudController
           end
 
           it 'is not valid' do
-            message = ServiceBrokerCreateMessage.new(request_body)
-
             expect(message).not_to be_valid
             expect(message.errors_on(:name)).to include('must not be empty string')
           end
@@ -92,7 +76,6 @@ module VCAP::CloudController
           end
 
           it 'is not valid' do
-            message = ServiceBrokerCreateMessage.new(request_body)
             expect(message).not_to be_valid
             expect(message.errors_on(:url)).to include('must be a string')
           end
@@ -100,49 +83,20 @@ module VCAP::CloudController
 
         context 'when url is not valid' do
           let(:request_body) do
-            valid_body.merge(url: 'lol.com')
+            body = valid_body
+            body['url'] = 'http://the-best-broker.com'
+            body
+          end
+
+          before do
+            allow_any_instance_of(VCAP::CloudController::Validators::UrlValidator).to receive(:validate) do |_, record|
+              record.errors.add(:url, 'this url is not valid!')
+            end
           end
 
           it 'is not valid' do
-            message = ServiceBrokerCreateMessage.new(request_body)
             expect(message).not_to be_valid
-            expect(message.errors_on(:url)).to include('must be a valid url')
-          end
-        end
-
-        context 'when url has wrong scheme' do
-          let(:request_body) do
-            valid_body.merge(url: 'ftp://the-best-broker.url')
-          end
-
-          it 'is not valid' do
-            message = ServiceBrokerCreateMessage.new(request_body)
-            expect(message).not_to be_valid
-            expect(message.errors_on(:url)).to include('must be a valid url')
-          end
-        end
-
-        context 'when url contains a basic auth user' do
-          let(:request_body) do
-            valid_body.merge(url: 'http://username@lol.com')
-          end
-
-          it 'is not valid' do
-            message = ServiceBrokerCreateMessage.new(request_body)
-            expect(message).not_to be_valid
-            expect(message.errors_on(:url)).to include('must not contain authentication')
-          end
-        end
-
-        context 'when url contains a basic auth password' do
-          let(:request_body) do
-            valid_body.merge(url: 'http://username:password@lol.com')
-          end
-
-          it 'is not valid' do
-            message = ServiceBrokerCreateMessage.new(request_body)
-            expect(message).not_to be_valid
-            expect(message.errors_on(:url)).to include('must not contain authentication')
+            expect(message.errors_on(:url)).to include('this url is not valid!')
           end
         end
       end
@@ -154,72 +108,25 @@ module VCAP::CloudController
           end
 
           it 'is not valid' do
-            message = ServiceBrokerCreateMessage.new(request_body)
-
             expect(message).not_to be_valid
             expect(message.errors_on(:authentication)).to include('must be a hash')
           end
         end
 
-        context 'when authentication.type is invalid' do
+        context 'when authentication is not valid' do
           let(:request_body) do
-            valid_body.merge(authentication: {
-              type: 'oopsie'
-            })
+            valid_body
+          end
+
+          before do
+            allow_any_instance_of(VCAP::CloudController::Validators::AuthenticationValidator).to receive(:validate) do |_, record|
+              record.errors.add(:authentication, 'this authentication is not valid!')
+            end
           end
 
           it 'is not valid' do
-            message = ServiceBrokerCreateMessage.new(request_body)
-
             expect(message).not_to be_valid
-            expect(message.errors_on(:authentication_type)).to include('authentication.type must be one of ["basic"]')
-          end
-        end
-
-        context 'when username and password are missing from credentials' do
-          let(:request_body) do
-            valid_body.merge(authentication: {
-              type: 'basic',
-              data: {},
-            })
-          end
-
-          it 'is not valid' do
-            message = ServiceBrokerCreateMessage.new(request_body)
-
-            expect(message).not_to be_valid
-            expect(message.errors_on(:authentication_credentials)).to include(/Field\(s\) \["username", "password"\] must be valid/)
-          end
-        end
-
-        context 'when data is missing from authentication' do
-          let(:request_body) do
-            valid_body.merge(authentication: {
-              type: 'basic'
-            })
-          end
-
-          it 'is not valid' do
-            message = ServiceBrokerCreateMessage.new(request_body)
-
-            expect(message).not_to be_valid
-            expect(message.errors_on(:authentication_credentials)).to include('must be a hash')
-          end
-        end
-
-        context 'when authentication has extra fields' do
-          let(:request_body) do
-            valid_body.merge(authentication: {
-              extra: 'value',
-              type: 'basic',
-            })
-          end
-
-          it 'is not valid' do
-            message = ServiceBrokerCreateMessage.new(request_body)
-
-            expect(message).not_to be_valid
-            expect(message.errors_on(:authentication)).to include("Unknown field(s): 'extra'")
+            expect(message.errors_on(:authentication)).to include('this authentication is not valid!')
           end
         end
       end
@@ -306,19 +213,10 @@ module VCAP::CloudController
 
     describe '#audit_hash' do
       it 'redacts the password' do
-        message = ServiceBrokerCreateMessage.new(valid_body)
-
-        expect(message.audit_hash).to eq({
-          name: 'best-broker',
-          url: 'https://the-best-broker.url',
-          authentication: {
-            type: 'basic',
-            credentials: {
-              username: 'user',
-              password: '[PRIVATE DATA HIDDEN]',
-            }
-          },
-        }.with_indifferent_access)
+        message = subject.new(valid_body)
+        expect(
+          HashUtils.dig(message.audit_hash, 'authentication', 'credentials', 'password')
+        ).to eq('[PRIVATE DATA HIDDEN]')
       end
     end
   end

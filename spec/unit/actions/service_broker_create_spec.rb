@@ -12,7 +12,7 @@ module VCAP
         dbl
       end
 
-      subject(:action) { V3::ServiceBrokerCreate.new(event_repository, dummy) }
+      subject(:action) { V3::ServiceBrokerCreate.new(event_repository) }
 
       let(:name) { "broker-name-#{Sham.sequence_id}" }
       let(:broker_url) { 'http://broker-url' }
@@ -64,6 +64,15 @@ module VCAP
         action.create(message)
 
         expect(broker.service_broker_state.state).to eq(ServiceBrokerStateEnum::SYNCHRONIZING)
+      end
+
+      it 'creates and returns a synchronization job' do
+        job = action.create(message)[:pollable_job]
+
+        expect(job).to be_a PollableJobModel
+        expect(job.operation).to eq('service_broker.catalog.synchronize')
+        expect(job.resource_guid).to eq(broker.guid)
+        expect(job.resource_type).to eq('service_brokers')
       end
 
       it 'creates an audit event' do

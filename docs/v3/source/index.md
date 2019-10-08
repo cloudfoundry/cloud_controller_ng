@@ -248,9 +248,10 @@ includes:
   - experimental_resources/service_bindings/delete
   - experimental_resources/service_brokers/header
   - experimental_resources/service_brokers/object
+  - experimental_resources/service_brokers/create
   - experimental_resources/service_brokers/get
   - experimental_resources/service_brokers/list
-  - experimental_resources/service_brokers/create
+  - experimental_resources/service_brokers/update
   - experimental_resources/service_brokers/delete
   - experimental_resources/sidecars/header
   - experimental_resources/sidecars/object
