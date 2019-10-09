@@ -449,15 +449,7 @@ RSpec.describe 'V3 service brokers' do
     it 'reports service events' do
       create_broker_successfully(global_broker_request_body, with: admin_headers)
       execute_all_jobs(expected_successes: 1, expected_failures: 0)
-      broker_create_metadata = {
-        'request' =>
-          {
-            'name' => 'broker name',
-            'broker_url' => 'http://example.org/broker-url',
-            'auth_username' => 'admin',
-            'auth_password' => '[REDACTED]'
-          }
-      }
+
       expect([
         { type: 'audit.service.create', actor: 'broker name' },
         { type: 'audit.service.create', actor: 'broker name' },
@@ -468,7 +460,19 @@ RSpec.describe 'V3 service brokers' do
       ]).to be_reported_as_events
 
       event = VCAP::CloudController::Event.where({ type: 'audit.service_broker.create', actor_name: admin_headers._generated_email }).first
-      expect(event.metadata).to eq(broker_create_metadata)
+      expect(event.metadata).to eq({
+        'request' => {
+          'name' => 'broker name',
+          'url' => 'http://example.org/broker-url',
+          'authentication' => {
+            'type' => 'basic',
+            'credentials' => {
+              'username' => 'admin',
+              'password' => '[PRIVATE DATA HIDDEN]'
+            }
+          }
+        }
+      })
     end
 
     it 'creates UAA dashboard clients' do

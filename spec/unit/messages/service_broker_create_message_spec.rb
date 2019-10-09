@@ -7,21 +7,21 @@ module VCAP::CloudController
   RSpec.describe ServiceBrokerCreateMessage do
     subject { ServiceBrokerCreateMessage }
 
-    describe 'validations' do
-      let(:valid_body) do
-        {
-          name: 'best-broker',
-          url: 'https://the-best-broker.url',
-          authentication: {
-            type: 'basic',
-            credentials: {
-              username: 'user',
-              password: 'pass',
-            }
-          },
-        }
-      end
+    let(:valid_body) do
+      {
+        name: 'best-broker',
+        url: 'https://the-best-broker.url',
+        authentication: {
+          type: 'basic',
+          credentials: {
+            username: 'user',
+            password: 'pass',
+          }
+        },
+      }
+    end
 
+    describe 'validations' do
       context 'when all values are correct' do
         let(:request_body) { valid_body }
 
@@ -301,6 +301,24 @@ module VCAP::CloudController
             expect(subject.errors_on(:relationships)).to include('Space guid must be between 1 and 200 characters')
           end
         end
+      end
+    end
+
+    describe '#audit_hash' do
+      it 'redacts the password' do
+        message = ServiceBrokerCreateMessage.new(valid_body)
+
+        expect(message.audit_hash).to eq({
+          name: 'best-broker',
+          url: 'https://the-best-broker.url',
+          authentication: {
+            type: 'basic',
+            credentials: {
+              username: 'user',
+              password: '[PRIVATE DATA HIDDEN]',
+            }
+          },
+        }.with_indifferent_access)
       end
     end
   end

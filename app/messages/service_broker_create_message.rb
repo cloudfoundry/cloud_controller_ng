@@ -1,5 +1,6 @@
 require 'messages/base_message'
 require 'utils/hash_utils'
+require 'presenters/helpers/censorship'
 
 module VCAP::CloudController
   class ServiceBrokerCreateMessage < BaseMessage
@@ -77,6 +78,16 @@ module VCAP::CloudController
     end
 
     delegate :space_guid, to: :relationships_message
+
+    def audit_hash
+      result = super
+
+      if result['authentication'] && result['authentication']['credentials']
+        result['authentication']['credentials']['password'] = VCAP::CloudController::Presenters::Censorship::PRIVATE_DATA_HIDDEN
+      end
+
+      result
+    end
 
     class CredentialsMessage < BaseMessage
       register_allowed_keys [:type, :credentials]
