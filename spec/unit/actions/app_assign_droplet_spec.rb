@@ -98,6 +98,18 @@ module VCAP::CloudController
           end
         end
 
+        context 'when we fail to create missing processes' do
+          before do
+            allow(process_create_from_app_droplet).to receive(:create).and_raise(SidecarSynchronizeFromAppDroplet::ConflictingSidecarsError, 'some message')
+          end
+
+          it 'raises an error' do
+            expect {
+              app_assign_droplet.assign(app_model, droplet)
+            }.to raise_error AppAssignDroplet::InvalidDroplet, 'some message'
+          end
+        end
+
         context 'when we fail to allocate enough memory to go with existing sidecars' do
           before do
             allow(process_create_from_app_droplet).to receive(:create).and_raise(ProcessCreate::SidecarMemoryLessThanProcessMemory, 'some message')
