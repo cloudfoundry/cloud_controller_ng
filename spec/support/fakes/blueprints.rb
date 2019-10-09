@@ -243,6 +243,30 @@ module VCAP::CloudController
     space { Space.make }
   end
 
+  OrganizationManager.blueprint do
+    guid { Sham.guid }
+    user { User.make }
+    organization { Organization.make }
+  end
+
+  OrganizationBillingManager.blueprint do
+    guid { Sham.guid }
+    user { User.make }
+    organization { Organization.make }
+  end
+
+  OrganizationUser.blueprint do
+    guid { Sham.guid }
+    user { User.make }
+    organization { Organization.make }
+  end
+
+  OrganizationAuditor.blueprint do
+    guid { Sham.guid }
+    user { User.make }
+    organization { Organization.make }
+  end
+
   Service.blueprint do
     label                 { Sham.label }
     unique_id             { SecureRandom.uuid }

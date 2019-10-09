@@ -482,7 +482,7 @@ RSpec.describe 'Users Request' do
           expect(last_response.status).to eq(422)
 
           expected_err = [
-            'Guid must be a string',
+            'Guid must be a string, Guid must be between 1 and 200 characters',
           ]
           expect(parsed_response['errors'][0]['detail']).to eq expected_err.join(', ')
         end

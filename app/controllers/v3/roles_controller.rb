@@ -7,15 +7,25 @@ class RolesController < ApplicationController
     message = RoleCreateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    space = Space.find(guid: message.space_guid)
-    unprocessable_space! unless space
-    org = space.organization
-
-    unprocessable_space! if permission_queryer.can_read_from_org?(org.guid) &&
-      !permission_queryer.can_read_from_space?(message.space_guid, org.guid)
-    unauthorized! unless permission_queryer.can_update_space?(message.space_guid, org.guid)
     user = readable_users.first(guid: message.user_guid)
     unprocessable_user! unless user
+
+    if message.space_guid
+      space = Space.find(guid: message.space_guid)
+      unprocessable_space! unless space
+      org = space.organization
+
+      unprocessable_space! if permission_queryer.can_read_from_org?(org.guid) &&
+        !permission_queryer.can_read_from_space?(message.space_guid, org.guid)
+
+      unauthorized! unless permission_queryer.can_update_space?(message.space_guid, org.guid)
+
+    else
+      org = Organization.find(guid: message.organization_guid)
+      unprocessable_organization! unless org
+      unauthorized! unless permission_queryer.can_write_to_org?(message.organization_guid)
+
+    end
 
     role = RoleCreate.create(message: message)
 
@@ -32,6 +42,10 @@ class RolesController < ApplicationController
 
   def unprocessable_space!
     unprocessable!('Invalid space. Ensure that the space exists and you have access to it.')
+  end
+
+  def unprocessable_organization!
+    unprocessable!('Invalid organization. Ensure that the organization exists and you have access to it.')
   end
 
   def unprocessable_user!
