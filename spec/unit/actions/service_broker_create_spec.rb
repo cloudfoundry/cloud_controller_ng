@@ -6,38 +6,45 @@ module VCAP
   module CloudController
     RSpec.describe 'ServiceBrokerCreate' do
       let(:dummy) { double('dummy').as_null_object }
-      subject(:action) { V3::ServiceBrokerCreate.new(dummy, dummy) }
+      let(:event_repository) do
+        dbl = double(Repositories::ServiceEventRepository::WithUserActor)
+        allow(dbl).to receive(:record_broker_event_with_request)
+        dbl
+      end
+
+      subject(:action) { V3::ServiceBrokerCreate.new(event_repository, dummy) }
 
       let(:name) { "broker-name-#{Sham.sequence_id}" }
       let(:broker_url) { 'http://broker-url' }
       let(:auth_username) { 'username' }
       let(:auth_password) { 'password' }
 
-      let(:message) do
-        double('create broker message', {
+      let(:request) do
+        {
           name: name,
           url: broker_url,
-          authentication_credentials: double('credentials', {
-            username: auth_username,
-            password: auth_password
-          }),
-          relationships_message: double('relationships', {
-            space_guid: nil
-          })
-        })
+          authentication: {
+            type: 'basic',
+            credentials: {
+              username: auth_username,
+              password: auth_password
+            }
+          }
+        }
       end
 
+      let(:message) { ServiceBrokerCreateMessage.new(request) }
+
       let(:message2) do
-        double('create broker message 2', {
+        ServiceBrokerCreateMessage.new({
           name: "#{name}-2",
           url: broker_url + '2',
-          authentication_credentials: double('credentials 2', {
-            username: auth_username + '2',
-            password: auth_password + '2'
-          }),
-          relationships_message: double('relationships 2', {
-            space_guid: nil
-          })
+          authentication: {
+            credentials: {
+              username: auth_username + '2',
+              password: auth_password + '2'
+            }
+          }
         })
       end
 
@@ -57,6 +64,19 @@ module VCAP
         action.create(message)
 
         expect(broker.service_broker_state.state).to eq(ServiceBrokerStateEnum::SYNCHRONIZING)
+      end
+
+      it 'creates an audit event' do
+        action.create(message)
+
+        request[:authentication][:credentials][:password] = '[PRIVATE DATA HIDDEN]'
+
+        expect(event_repository).
+          to have_received(:record_broker_event_with_request).with(
+            :create,
+            instance_of(ServiceBroker),
+            request.with_indifferent_access
+          )
       end
 
       describe 'concurrent behaviour', stepper: true do

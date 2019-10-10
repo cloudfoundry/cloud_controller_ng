@@ -16,6 +16,7 @@ module VCAP::CloudController
       delegate(
         :record_service_plan_visibility_event,
         :record_broker_event,
+        :record_broker_event_with_request,
         :record_service_instance_event,
         :record_user_provided_service_instance_event,
         :record_service_key_event,
@@ -91,6 +92,16 @@ module VCAP::CloudController
 
         def record_broker_event(type, broker, params)
           metadata = metadata_for_broker_params(params)
+          actee    = {
+            actee:      broker.guid,
+            actee_type: 'service_broker',
+            actee_name: broker.name,
+          }
+          create_event("audit.service_broker.#{type}", user_actor, actee, metadata)
+        end
+
+        def record_broker_event_with_request(type, broker, request)
+          metadata = { request: request }
           actee    = {
             actee:      broker.guid,
             actee_type: 'service_broker',
