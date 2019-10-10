@@ -21,6 +21,8 @@ module VCAP::CloudController
         user = User.find(guid: user_guid)
         space = Space.find(guid: message.space_guid)
 
+        error!("Users cannot be assigned roles in a space if they do not have a role in that space's organization.") unless space.in_organization?(user)
+
         case message.type
         when RoleTypes::SPACE_AUDITOR
           create_space_auditor(user, space)

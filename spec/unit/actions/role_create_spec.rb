@@ -161,6 +161,30 @@ module VCAP::CloudController
         end
       end
 
+      context 'space roles without org roles' do
+        let(:params) do
+          {
+            type: type,
+            relationships: {
+              user: { data: { guid: user.guid } },
+              space: { data: { guid: space.guid } },
+             }
+          }
+        end
+
+        context 'creating a space manager' do
+          let(:type) { RoleTypes::SPACE_MANAGER }
+
+          context 'when the user does not have a role in the parent organization' do
+            it 'raises an error' do
+              expect {
+                subject.create(message: message)
+              }.to raise_error(RoleCreate::Error, "Users cannot be assigned roles in a space if they do not have a role in that space's organization.")
+            end
+          end
+        end
+      end
+
       context 'organization roles' do
         let(:params) do
           {

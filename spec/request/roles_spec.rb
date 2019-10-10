@@ -67,6 +67,10 @@ RSpec.describe 'Roles Request' do
         h
       end
 
+      before do
+        org.add_user(user_with_role)
+      end
+
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
 
       context 'when user is invalid' do
@@ -122,6 +126,7 @@ RSpec.describe 'Roles Request' do
             { user_with_role.guid => { 'username' => 'mona', 'origin' => 'uaa' } }
           )
 
+          org.add_user(user_with_role)
           post '/v3/roles', params.to_json, admin_header
         end
 
