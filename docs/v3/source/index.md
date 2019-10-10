@@ -20,6 +20,7 @@ includes:
   - api_resources/processes
   - api_resources/resource_matches
   - api_resources/revisions
+  - api_resources/roles
   - api_resources/routes
   - api_resources/service_bindings
   - api_resources/service_brokers
@@ -235,6 +236,10 @@ includes:
   - experimental_resources/revisions/list
   - experimental_resources/revisions/deployed_list
   - experimental_resources/revisions/update
+  - experimental_resources/roles/header
+  - experimental_resources/roles/object
+  - experimental_resources/roles/valid_roles
+  - experimental_resources/roles/create
   - experimental_resources/service_bindings/header
   - experimental_resources/service_bindings/object
   - experimental_resources/service_bindings/create

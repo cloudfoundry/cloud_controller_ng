@@ -1,0 +1,66 @@
+### Create a role
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/roles" \
+  -X POST \
+  -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
+  -d '{
+      "type": "organization_auditor",
+      "relationships": {
+        "user": {
+          "data": {
+            "guid": "user-guid"
+          }
+        },
+        "organization": {
+          "data": {
+            "guid": "org-guid"
+          }
+        }
+      }
+    }'
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 201 Created
+Content-Type: application/json
+
+<%= yield_content :single_role %>
+```
+
+This endpoint creates a new role for an existing user in an organization or space.
+
+To create an organization role you must be an admin or organization manager in the organization associated with the role.
+
+To create a space role you must be an admin, an organization manager in the parent organization of the space associated with the role, or a space manager in the space associated with the role.
+
+For a user to be assigned a space role, the user must already have an organization role in the parent organization.
+
+#### Definition
+`POST /v3/roles`
+
+#### Required parameters
+
+Name | Type | Description
+---- | ---- | -----------
+**type** | _string_ | Role to create. See [valid role types](#valid-role-types).
+**relationships.user** | [_to-one relationship_](#to-one-relationships) | A relationship to a user.
+**relationships.organization** | [_to-one relationship_](#to-one-relationships) | A relationship to an organization. Necessary only when creating an organization role.
+**relationships.space** | [_to-one relationship_](#to-one-relationships) | A relationship to a space. Necessary only when creating a space role.
+
+#### Permitted roles
+ |
+--- | ---
+Admin |
+Space Manager |
+Organization Manager |
+
