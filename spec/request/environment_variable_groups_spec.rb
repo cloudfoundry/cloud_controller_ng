@@ -87,7 +87,6 @@ RSpec.describe 'Environment group variables' do
 
     it 'updates the environment variables for the running group' do
       patch '/v3/environment_variable_groups/running', params.to_json, admin_header
-      puts last_response.body
       expect(last_response.status).to eq(200)
 
       parsed_response = MultiJson.load(last_response.body)
@@ -110,7 +109,6 @@ RSpec.describe 'Environment group variables' do
 
     it 'updates the environment variables for the staging group' do
       patch '/v3/environment_variable_groups/staging', params.to_json, admin_header
-      puts last_response.body
       expect(last_response.status).to eq(200)
 
       parsed_response = MultiJson.load(last_response.body)
