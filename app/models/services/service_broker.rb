@@ -29,6 +29,10 @@ module VCAP::CloudController
       @client ||= VCAP::Services::ServiceBrokers::V2::Client.new(url: broker_url, auth_username: auth_username, auth_password: auth_password)
     end
 
+    def in_transitional_state?
+      [ServiceBrokerStateEnum::SYNCHRONIZING, ServiceBrokerStateEnum::DELETE_IN_PROGRESS].include?(service_broker_state&.state)
+    end
+
     def space_scoped?
       !!space_id
     end

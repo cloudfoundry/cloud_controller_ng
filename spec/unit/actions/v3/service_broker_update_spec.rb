@@ -16,9 +16,11 @@ module VCAP
       let!(:service_broker_state) {
         ServiceBrokerState.make(
           service_broker_id: existing_service_broker.id,
-          state: ServiceBrokerStateEnum::AVAILABLE
+          state: state
         )
       }
+
+      let(:state) { ServiceBrokerStateEnum::AVAILABLE }
 
       let(:event_repository) do
         dbl = double(Repositories::ServiceEventRepository::WithUserActor)
@@ -83,6 +85,44 @@ module VCAP
               }
             }.with_indifferent_access
           )
+      end
+
+      context 'If broker is in transitional state' do
+        let(:expected_error_message) { 'Cannot update a broker when other operation is already in progress' }
+
+        context 'If broker is in SYNCHRONIZING state' do
+          let(:state) { ServiceBrokerStateEnum::SYNCHRONIZING }
+
+          it 'raises an InvalidServiceBroker error' do
+            expect { action.update(message) }.to raise_error(V3::ServiceBrokerUpdate::InvalidServiceBroker, expected_error_message)
+          end
+        end
+
+        context 'If broker is in DELETE_IN_PROGRESS state' do
+          let(:state) { ServiceBrokerStateEnum::DELETE_IN_PROGRESS }
+
+          it 'raises an InvalidServiceBroker error' do
+            expect { action.update(message) }.to raise_error(V3::ServiceBrokerUpdate::InvalidServiceBroker, expected_error_message)
+          end
+        end
+      end
+
+      context 'If broker is in a failed state' do
+        context 'If broker is in SYNCHRONIZATION_FAILED state' do
+          let(:state) { ServiceBrokerStateEnum::SYNCHRONIZATION_FAILED }
+
+          it 'does not raise an error' do
+            expect { action.update(message) }.not_to raise_error
+          end
+        end
+
+        context 'If broker is in DELETE_FAILED state' do
+          let(:state) { ServiceBrokerStateEnum::DELETE_FAILED }
+
+          it 'does not raise an error' do
+            expect { action.update(message) }.not_to raise_error
+          end
+        end
       end
 
       context 'legacy service brokers' do

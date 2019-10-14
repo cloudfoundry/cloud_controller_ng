@@ -447,6 +447,41 @@ RSpec.describe 'V3 service brokers' do
       expect(broker.reload.broker_url).to eq 'http://example.org/new-broker-url'
     end
 
+    context 'when the service broker is in a transitory state' do
+      let!(:broker) do
+        VCAP::CloudController::ServiceBroker.make(
+          name: 'old-name',
+          broker_url: 'http://example.org/old-broker-url',
+          auth_username: 'old-admin',
+          auth_password: 'not-welcome'
+        )
+      end
+
+      let!(:service_broker_state) {
+        VCAP::CloudController::ServiceBrokerState.make(
+          service_broker_id: broker.id,
+          state: VCAP::CloudController::ServiceBrokerStateEnum::SYNCHRONIZING
+        )
+      }
+
+      it 'returns a 422' do
+        patch("/v3/service_brokers/#{broker.guid}", update_request_body.to_json, admin_headers)
+        expect_error(status: 422, error: 'UnprocessableEntity', description: 'Cannot update a broker when other operation is already in progress')
+      end
+
+      it 'does not create a synchronization job' do
+        expect {
+          patch("/v3/service_brokers/#{broker.guid}", update_request_body.to_json, admin_headers)
+        }.not_to change { VCAP::CloudController::PollableJobModel.count }
+      end
+
+      it 'does not update the broker' do
+        expect {
+          patch("/v3/service_brokers/#{broker.guid}", update_request_body.to_json, admin_headers)
+        }.not_to change { broker.reload.values }
+      end
+    end
+
     context 'when the message is invalid' do
       before do
         allow_any_instance_of(VCAP::CloudController::ServiceBrokerUpdateMessage).to receive(:valid?).and_return false

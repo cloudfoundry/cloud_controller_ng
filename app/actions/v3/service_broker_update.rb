@@ -20,6 +20,10 @@ module VCAP::CloudController
           params[:auth_password] = message.password
         end
 
+        if broker.in_transitional_state?
+          raise InvalidServiceBroker.new('Cannot update a broker when other operation is already in progress')
+        end
+
         pollable_job = nil
         ServiceBroker.db.transaction do
           broker.update(params)
