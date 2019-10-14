@@ -14,7 +14,7 @@ class BuildpacksController < ApplicationController
     message = BuildpacksListMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
 
-    dataset = BuildpackListFetcher.new.fetch_all(message)
+    dataset = BuildpackListFetcher.new.fetch_all(message, eager_loaded_associations: Presenters::V3::BuildpackPresenter.associated_resources)
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::BuildpackPresenter,
