@@ -223,24 +223,4 @@ module VCAP::CloudController::Validators
       (hsh.keys.map(&:to_s) == ['guid'])
     end
   end
-
-  class SpaceOrOrgPresentValidator < ActiveModel::Validator
-    def validate(record)
-      if record.space_guid.nil? && record.organization_guid.nil?
-        record.errors[:relationships].concat ['Role must be associated with either a space or an organization.']
-      end
-
-      if record.space_guid && VCAP::CloudController::RoleTypes::ORGANIZATION_ROLES.include?(record.type)
-        record.errors[:type].concat ["Role with type '#{record.type}' cannot be associated with a space."]
-      end
-
-      if record.organization_guid && VCAP::CloudController::RoleTypes::SPACE_ROLES.include?(record.type)
-        record.errors[:type].concat ["Role with type '#{record.type}' cannot be associated with an organization."]
-      end
-
-      if record.space_guid && record.organization_guid
-        record.errors[:relationships].concat ['Role cannot be associated with both an organization and a space.']
-      end
-    end
-  end
 end

@@ -173,14 +173,13 @@ module VCAP::CloudController
             set_current_user_as_admin
           end
 
-          it 'succeeds and creates an appropriate audit event and creates the generated org role a guid' do
+          it 'succeeds and creates an appropriate audit event' do
             put "/v2/users/#{other_user.guid}/audited_organizations/#{org.guid}"
             expect(last_response.status).to eq(201)
 
             event = Event.find(type: event_type, actee: other_user.guid)
             expect(event).not_to be_nil
             expect(event.actee_name).to eq('other_user')
-            expect(OrganizationAuditor.find(user_id: other_user.id, organization_id: org.id).guid).not_to be_nil
           end
         end
 
@@ -212,14 +211,13 @@ module VCAP::CloudController
             set_current_user_as_admin
           end
 
-          it 'succeeds and creates an appropriate audit event creates the org role guid' do
+          it 'succeeds and creates an appropriate audit event' do
             put "/v2/users/#{other_user.guid}/managed_organizations/#{org.guid}"
             expect(last_response.status).to eq(201)
 
             event = Event.find(type: event_type, actee: other_user.guid)
             expect(event).not_to be_nil
             expect(event.actee_name).to eq('other_user')
-            expect(OrganizationManager.find(user_id: other_user.id, organization_id: org.id).guid).not_to be_nil
           end
         end
 
@@ -251,14 +249,13 @@ module VCAP::CloudController
             set_current_user_as_admin
           end
 
-          it 'succeeds and creates an appropriate audit event and creates the org role guid' do
+          it 'succeeds and creates an appropriate audit event' do
             put "/v2/users/#{other_user.guid}/billing_managed_organizations/#{org.guid}"
             expect(last_response.status).to eq(201)
 
             event = Event.find(type: event_type, actee: other_user.guid)
             expect(event).not_to be_nil
             expect(event.actee_name).to eq('other_user')
-            expect(OrganizationBillingManager.find(user_id: other_user.id, organization_id: org.id).guid).not_to be_nil
           end
         end
 
@@ -289,14 +286,12 @@ module VCAP::CloudController
             set_current_user_as_admin
           end
 
-          it 'succeeds and creates an appropriate audit event and creates the org role guid' do
+          it 'succeeds and creates an appropriate audit event' do
             put "/v2/users/#{other_user.guid}/organizations/#{org.guid}"
             expect(last_response.status).to eq(201)
 
             event = Event.find(type: event_type, actee: other_user.guid)
             expect(event).not_to be_nil
-            expect(event.actee_name).to eq('other_user')
-            expect(OrganizationUser.find(user_id: other_user.id, organization_id: org.id).guid).not_to be_nil
           end
         end
 
