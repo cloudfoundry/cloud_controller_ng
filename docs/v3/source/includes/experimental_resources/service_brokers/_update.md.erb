@@ -1,12 +1,12 @@
-### Create a service broker
+### Update a service broker
 
 ```
 Example Request
 ```
 
 ```shell
-curl "https://api.example.org/v3/service_brokers" \
-  -X POST \
+curl "https://api.example.org/v3/service_brokers/[guid]" \
+  -X PATCH \
   -H "Authorization: bearer [token]" \
   -H "Content-type: application/json" \
   -d '{
@@ -17,13 +17,6 @@ curl "https://api.example.org/v3/service_brokers" \
       "credentials": {
         "username": "us3rn4me",
         "password": "p4ssw0rd"
-      }
-    },
-    "relationships": {
-      "space": {
-        "data": {
-          "guid": "2f35885d-0c9d-4423-83ad-fd05066f8576"
-        }
       }
     }
   }'
@@ -39,24 +32,18 @@ Content-Type: application/json
 Location: https://api.example.org/v3/jobs/af5c57f6-8769-41fa-a499-2c84ed896788
 ```
 
-This endpoint creates a new service broker and a job to synchronize the service offerings and service plans with those in the broker's catalog.  The `Location` header refers to the created job which syncs the broker with the catalog.
+This endpoint updates a broker and creates a job to synchronize the service offerings and service plans with those in the broker's catalog.  The `Location` header refers to the created job which syncs the broker with the catalog.
 
 #### Definition
-`POST /v3/service_brokers`
+`PATCH /v3/service_brokers/[guid]`
 
-#### Required parameters
+#### Optional parameters
 
 Name | Type | Description
 ---- | ---- | -----------
 **name** | _string_ | Name of the service broker.
 **url** | _string_ | URL of the service broker.
 **authentication** | [_authentication_](#the-authentication-object) | Credentials used to authenticate against the service broker.
-
-#### Optional parameters
-
-Name | Type | Description | Default
----- | ---- | ----------- | -------
-**space** | [_to-one relationship_](#to-one-relationships) | If set, restricts broker visibility to the specified space. | `null`
 
 <%= yield_content :service_broker_credentials_object %>
 

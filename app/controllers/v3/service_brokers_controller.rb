@@ -1,8 +1,10 @@
 require 'messages/service_brokers_list_message'
 require 'messages/service_broker_create_message'
+require 'messages/service_broker_update_message'
 require 'presenters/v3/service_broker_presenter'
 require 'fetchers/service_broker_list_fetcher'
 require 'actions/service_broker_create'
+require 'actions/v3/service_broker_update'
 
 class ServiceBrokersController < ApplicationController
   def index
@@ -48,13 +50,37 @@ class ServiceBrokersController < ApplicationController
     end
 
     service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository::WithUserActor.new(user_audit_info)
-    service_manager = VCAP::Services::ServiceBrokers::ServiceManager.new(service_event_repository)
-    service_broker_create = VCAP::CloudController::V3::ServiceBrokerCreate.new(service_event_repository, service_manager)
+    service_broker_create = VCAP::CloudController::V3::ServiceBrokerCreate.new(service_event_repository)
     result = service_broker_create.create(message)
 
     url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
     head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{result[:pollable_job].guid}")
   rescue VCAP::CloudController::V3::ServiceBrokerCreate::InvalidServiceBroker => e
+    unprocessable!(e.message)
+  end
+
+  def update
+    message = ServiceBrokerUpdateMessage.new(hashed_params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    service_broker = VCAP::CloudController::ServiceBroker.find(guid: hashed_params[:guid])
+    broker_not_found! unless service_broker
+
+    if service_broker.space_guid
+      space = service_broker.space
+      unprocessable_space! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization_guid)
+      unauthorized! unless permission_queryer.can_write_space_scoped_service_broker?(space.guid)
+    else
+      unauthorized! unless permission_queryer.can_write_global_service_broker?
+    end
+
+    service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository::WithUserActor.new(user_audit_info)
+    service_broker_update = VCAP::CloudController::V3::ServiceBrokerUpdate.new(service_broker, service_event_repository)
+    result = service_broker_update.update(message)
+
+    url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
+    head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{result[:pollable_job].guid}")
+  rescue VCAP::CloudController::V3::ServiceBrokerUpdate::InvalidServiceBroker => e
     unprocessable!(e.message)
   end
 
