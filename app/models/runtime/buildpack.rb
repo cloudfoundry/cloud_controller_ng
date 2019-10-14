@@ -1,6 +1,5 @@
 module VCAP::CloudController
   class Buildpack < Sequel::Model
-    Buildpack.db.loggers << Logger.new($stdout)
     plugin :list
 
     export_attributes :name, :stack, :position, :enabled, :locked, :filename
