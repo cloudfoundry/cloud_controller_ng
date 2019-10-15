@@ -230,6 +230,7 @@ includes:
   - experimental_resources/environment_variable_groups/header
   - experimental_resources/environment_variable_groups/object
   - experimental_resources/environment_variable_groups/get
+  - experimental_resources/environment_variable_groups/update
   - experimental_resources/revisions/header
   - experimental_resources/revisions/object
   - experimental_resources/revisions/get
