@@ -26,6 +26,8 @@ class EnvironmentVariableGroupsController < ApplicationController
       env_group = EnvironmentVariableGroup.running
     end
 
+    environment_variable_group_not_found! unless env_group
+
     env_group = EnvironmentVariableGroupUpdate.new.patch(env_group, message)
 
     render status: :ok, json: Presenters::V3::EnvironmentVariableGroupPresenter.new(env_group)

@@ -201,6 +201,16 @@ RSpec.describe 'Environment group variables' do
       end
     end
 
+    context 'the group name is not staging or running' do
+      it 'returns a 404' do
+        patch '/v3/environment_variable_groups/purple', params.to_json, admin_header
+
+        expect(last_response.status).to eq(404)
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response['errors'][0]['detail']).to include('Environment variable group not found')
+      end
+    end
+
     context 'when the user is not logged in' do
       it 'returns 401 for Unauthenticated requests' do
         patch '/v3/environment_variable_groups/running', params.to_json, base_json_headers
