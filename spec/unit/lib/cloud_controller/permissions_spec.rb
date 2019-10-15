@@ -26,7 +26,7 @@ module VCAP::CloudController
 
       context 'and user is a global auditor' do
         it 'returns true' do
-          set_current_user_as_global_auditor
+          set_current_user_as_global_auditor(user: user)
           expect(permissions.can_read_globally?).to be true
         end
       end
@@ -56,7 +56,7 @@ module VCAP::CloudController
 
       context 'and user is a global auditor' do
         it 'returns false' do
-          set_current_user_as_global_auditor
+          set_current_user_as_global_auditor(user: user)
           expect(permissions.can_write_globally?).to be false
         end
       end
@@ -162,7 +162,7 @@ module VCAP::CloudController
 
         context 'and user is a global auditor' do
           it 'returns true' do
-            set_current_user_as_global_auditor
+            set_current_user_as_global_auditor(user: user)
             expect(permissions.can_read_from_org?(org_guid)).to be true
           end
         end
@@ -216,7 +216,7 @@ module VCAP::CloudController
 
         context 'and user is a global auditor' do
           it 'returns false' do
-            set_current_user_as_global_auditor
+            set_current_user_as_global_auditor(user: user)
             expect(permissions.can_write_to_org?(org_guid)).to be false
           end
         end
@@ -333,7 +333,7 @@ module VCAP::CloudController
 
         context 'and user is a global auditor' do
           it 'returns true' do
-            set_current_user_as_global_auditor
+            set_current_user_as_global_auditor(user: user)
             expect(permissions.can_read_from_space?(space_guid, org_guid)).to be true
           end
         end
@@ -376,21 +376,21 @@ module VCAP::CloudController
       context 'user has no membership' do
         context 'and user is an admin' do
           it 'returns true' do
-            set_current_user_as_admin
+            set_current_user_as_admin(user: user)
             expect(permissions.can_read_secrets_in_space?(space_guid, org_guid)).to be true
           end
         end
 
         context 'and user is admin_read_only' do
           it 'returns true' do
-            set_current_user_as_admin_read_only
+            set_current_user_as_admin_read_only(user: user)
             expect(permissions.can_read_secrets_in_space?(space_guid, org_guid)).to be true
           end
         end
 
         context 'and user is global auditor' do
           it 'return false' do
-            set_current_user_as_global_auditor
+            set_current_user_as_global_auditor(user: user)
             expect(permissions.can_read_secrets_in_space?(space_guid, org_guid)).to be false
           end
         end
@@ -499,14 +499,14 @@ module VCAP::CloudController
 
         context 'and user is admin_read_only' do
           it 'return false' do
-            set_current_user_as_admin_read_only
+            set_current_user_as_admin_read_only(user: user)
             expect(permissions.can_write_to_space?(space_guid)).to be false
           end
         end
 
         context 'and user is global auditor' do
           it 'return false' do
-            set_current_user_as_global_auditor
+            set_current_user_as_global_auditor(user: user)
             expect(permissions.can_write_to_space?(space_guid)).to be false
           end
         end
@@ -565,14 +565,14 @@ module VCAP::CloudController
 
         context 'and user is admin_read_only' do
           it 'return false' do
-            set_current_user_as_admin_read_only
+            set_current_user_as_admin_read_only(user: user)
             expect(permissions.can_update_space?(space_guid, org_guid)).to be false
           end
         end
 
         context 'and user is global auditor' do
           it 'return false' do
-            set_current_user_as_global_auditor
+            set_current_user_as_global_auditor(user: user)
             expect(permissions.can_update_space?(space_guid, org_guid)).to be false
           end
         end
@@ -631,21 +631,21 @@ module VCAP::CloudController
       context 'user has no membership' do
         context 'and user is an admin' do
           it 'returns true' do
-            set_current_user_as_admin
+            set_current_user_as_admin(user: user)
             expect(permissions.can_read_from_isolation_segment?(isolation_segment)).to be true
           end
         end
 
         context 'and user is admin_read_only' do
           it 'returns true' do
-            set_current_user_as_admin_read_only
+            set_current_user_as_admin_read_only(user: user)
             expect(permissions.can_read_from_isolation_segment?(isolation_segment)).to be true
           end
         end
 
         context 'and user is global auditor' do
           it 'return true' do
-            set_current_user_as_global_auditor
+            set_current_user_as_global_auditor(user: user)
             expect(permissions.can_read_from_isolation_segment?(isolation_segment)).to be true
           end
         end
@@ -819,7 +819,7 @@ module VCAP::CloudController
       end
 
       it 'returns true if user is a global auditor' do
-        set_current_user_as_global_auditor
+        set_current_user_as_global_auditor(user: user)
         expect(permissions.can_read_route?(space_guid, org_guid)).to be true
       end
 
@@ -1092,6 +1092,43 @@ module VCAP::CloudController
         route_mapping_guids = permissions.readable_route_mapping_guids
 
         expect(route_mapping_guids).to contain_exactly(developer_route_mapping.guid, manager_route_mapping.guid, auditor_route_mapping.guid)
+      end
+    end
+
+    describe '#can_read_global_service_brokers?' do
+      context 'and user is an admin' do
+        it 'returns true' do
+          set_current_user(user, { admin: true })
+          expect(permissions.can_read_global_service_brokers?).to be true
+        end
+      end
+
+      context 'and the user is a read only admin' do
+        it 'returns true' do
+          set_current_user(user, { admin_read_only: true })
+          expect(permissions.can_read_global_service_brokers?).to be true
+        end
+      end
+
+      context 'and user is a global auditor' do
+        it 'returns true' do
+          set_current_user_as_global_auditor(user: user)
+          expect(permissions.can_read_global_service_brokers?).to be true
+        end
+      end
+
+      context 'and user is a space developer' do
+        it 'returns true' do
+          set_current_user_as_role(role: 'space_developer', space: space, org: space.organization, user: user)
+          expect(permissions.can_read_global_service_brokers?).to be true
+        end
+      end
+
+      context 'and user is none of the above' do
+        it 'returns false' do
+          set_current_user(user)
+          expect(permissions.can_read_global_service_brokers?).to be false
+        end
       end
     end
   end

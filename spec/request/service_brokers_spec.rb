@@ -107,28 +107,28 @@ RSpec.describe 'V3 service brokers' do
 
       let(:global_service_broker1_json) do
         {
-            guid: global_service_broker1.guid,
-            name: global_service_broker1.name,
-            url: global_service_broker1.broker_url,
-            created_at: iso8601,
-            updated_at: iso8601,
-            status: 'available',
-            available: true,
-            relationships: {},
-            links: { self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/service_brokers\/#{global_service_broker1.guid}) } }
+          guid: global_service_broker1.guid,
+          name: global_service_broker1.name,
+          url: global_service_broker1.broker_url,
+          created_at: iso8601,
+          updated_at: iso8601,
+          status: 'available',
+          available: true,
+          relationships: {},
+          links: { self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/service_brokers\/#{global_service_broker1.guid}) } }
         }
       end
       let(:global_service_broker2_json) do
         {
-            guid: global_service_broker2.guid,
-            name: global_service_broker2.name,
-            url: global_service_broker2.broker_url,
-            created_at: iso8601,
-            updated_at: iso8601,
-            status: 'unknown',
-            available: false,
-            relationships: {},
-            links: { self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/service_brokers\/#{global_service_broker2.guid}) } }
+          guid: global_service_broker2.guid,
+          name: global_service_broker2.name,
+          url: global_service_broker2.broker_url,
+          created_at: iso8601,
+          updated_at: iso8601,
+          status: 'unknown',
+          available: false,
+          relationships: {},
+          links: { self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/service_brokers\/#{global_service_broker2.guid}) } }
         }
       end
 
@@ -147,6 +147,7 @@ RSpec.describe 'V3 service brokers' do
         h['admin'] = { code: 200, response_objects: [global_service_broker1_json, global_service_broker2_json] }
         h['admin_read_only'] = { code: 200, response_objects: [global_service_broker1_json, global_service_broker2_json] }
         h['global_auditor'] = { code: 200, response_objects: [global_service_broker1_json, global_service_broker2_json] }
+        h['space_developer'] = { code: 200, response_objects: [global_service_broker1_json, global_service_broker2_json] }
 
         h
       end
@@ -155,58 +156,83 @@ RSpec.describe 'V3 service brokers' do
     end
 
     context 'when there are spaced-scoped service brokers' do
+      let!(:global_service_broker) { VCAP::CloudController::ServiceBroker.make }
       let!(:space_scoped_service_broker) { VCAP::CloudController::ServiceBroker.make(space: space) }
+      let(:global_service_broker_json) do
+        {
+          guid: global_service_broker.guid,
+          name: global_service_broker.name,
+          url: global_service_broker.broker_url,
+          created_at: iso8601,
+          updated_at: iso8601,
+          status: 'unknown',
+          available: false,
+          relationships: {},
+          links: {
+            self: {
+              href: %r(#{Regexp.escape(link_prefix)}\/v3\/service_brokers\/#{global_service_broker.guid})
+            }
+          }
+        }
+      end
       let(:space_scoped_service_broker_json) do
         {
-            guid: space_scoped_service_broker.guid,
-            name: space_scoped_service_broker.name,
-            url: space_scoped_service_broker.broker_url,
-            created_at: iso8601,
-            updated_at: iso8601,
-            status: 'unknown',
-            available: false,
-            relationships: {
-                space: { data: { guid: space.guid } }
+          guid: space_scoped_service_broker.guid,
+          name: space_scoped_service_broker.name,
+          url: space_scoped_service_broker.broker_url,
+          created_at: iso8601,
+          updated_at: iso8601,
+          status: 'unknown',
+          available: false,
+          relationships: {
+            space: { data: { guid: space.guid } }
+          },
+          links: {
+            self: {
+              href: %r(#{Regexp.escape(link_prefix)}\/v3\/service_brokers\/#{space_scoped_service_broker.guid})
             },
-            links: {
-                self: {
-                    href: %r(#{Regexp.escape(link_prefix)}\/v3\/service_brokers\/#{space_scoped_service_broker.guid})
-                },
-                space: {
-                    href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid})
-                }
+            space: {
+              href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid})
             }
+          }
         }
       end
-      let(:expected_codes_and_responses) do
-        h = Hash.new(
-          code: 200,
-          response_objects: []
-        )
 
-        h['admin'] = {
+      describe 'standard permissions' do
+        let(:expected_codes_and_responses) do
+          h = Hash.new(
             code: 200,
-            response_objects: [space_scoped_service_broker_json]
-        }
-        h['admin_read_only'] = {
-            code: 200,
-            response_objects: [space_scoped_service_broker_json]
-        }
-        h['global_auditor'] = {
-            code: 200,
-            response_objects: [space_scoped_service_broker_json]
-        }
-        h['space_developer'] = { code: 200,
-            response_objects: [space_scoped_service_broker_json]
-        }
+            response_objects: []
+          )
 
-        h
+          h['admin'] = {
+            code: 200,
+            response_objects: [global_service_broker_json, space_scoped_service_broker_json]
+          }
+          h['admin_read_only'] = {
+            code: 200,
+            response_objects: [global_service_broker_json, space_scoped_service_broker_json]
+          }
+          h['global_auditor'] = {
+            code: 200,
+            response_objects: [global_service_broker_json, space_scoped_service_broker_json]
+          }
+          h['space_developer'] = { code: 200,
+            response_objects: [global_service_broker_json, space_scoped_service_broker_json]
+          }
+
+          h
+        end
+
+        it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
       end
 
-      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
-
-      it 'returns 200 OK and an empty list of brokers for space developer in another space' do
-        expect_empty_list(space_developer_alternate_space_headers)
+      context 'when current user is a space developer of alternate space' do
+        it 'they can not see not-their-own space-scoped brokers, and can see global ones' do
+          expect_brokers_list(space_developer_alternate_space_headers, [
+            global_service_broker_json
+          ])
+        end
       end
     end
 
@@ -280,6 +306,16 @@ RSpec.describe 'V3 service brokers' do
       expect(parsed_response).to have_key('resources')
       expect(parsed_response['resources'].length).to eq(0)
     end
+
+    def expect_brokers_list(user_headers, brokers)
+      get('/v3/service_brokers', {}, user_headers)
+
+      expect(last_response).to have_status_code(200)
+
+      expect(parsed_response).to have_key('resources')
+      expect({ resources: parsed_response['resources'] }).
+        to match_json_response({ resources: brokers })
+    end
   end
 
   describe 'GET /v3/service_brokers/:guid' do
@@ -295,15 +331,15 @@ RSpec.describe 'V3 service brokers' do
 
       let(:global_service_broker1_json) do
         {
-            guid: global_service_broker1.guid,
-            name: global_service_broker1.name,
-            url: global_service_broker1.broker_url,
-            created_at: iso8601,
-            updated_at: iso8601,
-            status: 'unknown',
-            available: false,
-            relationships: {},
-            links: { self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/service_brokers\/#{global_service_broker1.guid}) } }
+          guid: global_service_broker1.guid,
+          name: global_service_broker1.name,
+          url: global_service_broker1.broker_url,
+          created_at: iso8601,
+          updated_at: iso8601,
+          status: 'unknown',
+          available: false,
+          relationships: {},
+          links: { self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/service_brokers\/#{global_service_broker1.guid}) } }
         }
       end
 
@@ -311,16 +347,20 @@ RSpec.describe 'V3 service brokers' do
         h = Hash.new(code: 404)
 
         h['admin'] = {
-            code: 200,
-            response_object: global_service_broker1_json
+          code: 200,
+          response_object: global_service_broker1_json
         }
         h['admin_read_only'] = {
-            code: 200,
-            response_object: global_service_broker1_json
+          code: 200,
+          response_object: global_service_broker1_json
         }
         h['global_auditor'] = {
-            code: 200,
-            response_object: global_service_broker1_json
+          code: 200,
+          response_object: global_service_broker1_json
+        }
+        h['space_developer'] = {
+          code: 200,
+          response_object: global_service_broker1_json
         }
 
         h
@@ -335,44 +375,44 @@ RSpec.describe 'V3 service brokers' do
 
       let(:space_scoped_service_broker_json) do
         {
-            guid: space_scoped_service_broker.guid,
-            name: space_scoped_service_broker.name,
-            url: space_scoped_service_broker.broker_url,
-            created_at: iso8601,
-            updated_at: iso8601,
-            status: 'unknown',
-            available: false,
-            relationships: {
-                space: { data: { guid: space.guid } }
+          guid: space_scoped_service_broker.guid,
+          name: space_scoped_service_broker.name,
+          url: space_scoped_service_broker.broker_url,
+          created_at: iso8601,
+          updated_at: iso8601,
+          status: 'unknown',
+          available: false,
+          relationships: {
+            space: { data: { guid: space.guid } }
+          },
+          links: {
+            self: {
+              href: %r(#{Regexp.escape(link_prefix)}\/v3\/service_brokers\/#{space_scoped_service_broker.guid})
             },
-            links: {
-                self: {
-                    href: %r(#{Regexp.escape(link_prefix)}\/v3\/service_brokers\/#{space_scoped_service_broker.guid})
-                },
-                space: {
-                    href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid})
-                }
+            space: {
+              href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid})
             }
+          }
         }
       end
       let(:expected_codes_and_responses) do
         h = Hash.new(code: 404)
 
         h['admin'] = {
-            code: 200,
-            response_object: space_scoped_service_broker_json
+          code: 200,
+          response_object: space_scoped_service_broker_json
         }
         h['admin_read_only'] = {
-            code: 200,
-            response_object: space_scoped_service_broker_json
+          code: 200,
+          response_object: space_scoped_service_broker_json
         }
         h['global_auditor'] = {
-            code: 200,
-            response_object: space_scoped_service_broker_json
+          code: 200,
+          response_object: space_scoped_service_broker_json
         }
         h['space_developer'] = {
-            code: 200,
-            response_object: space_scoped_service_broker_json
+          code: 200,
+          response_object: space_scoped_service_broker_json
         }
 
         h
@@ -526,8 +566,11 @@ RSpec.describe 'V3 service brokers' do
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
         let(:api_call) { ->(user_headers) { patch "/v3/service_brokers/#{broker.guid}", update_request_body.to_json, user_headers } }
         let(:expected_codes_and_responses) do
-          Hash.new(code: 403).tap do |h|
+          Hash.new(code: 404).tap do |h|
             h['admin'] = { code: 202 }
+            h['admin_read_only'] = { code: 403 }
+            h['global_auditor'] = { code: 403 }
+            h['space_developer'] = { code: 403 }
           end
         end
 
@@ -541,7 +584,7 @@ RSpec.describe 'V3 service brokers' do
       end
     end
 
-    context 'space service broker' do
+    context 'space-scoped service broker' do
       let!(:broker) do
         VCAP::CloudController::ServiceBroker.make(
           name: 'old-name',
@@ -556,14 +599,11 @@ RSpec.describe 'V3 service brokers' do
         let(:api_call) { ->(user_headers) { patch "/v3/service_brokers/#{broker.guid}", update_request_body.to_json, user_headers } }
 
         let(:expected_codes_and_responses) {
-          Hash.new(code: 422).tap do |h|
+          Hash.new(code: 404).tap do |h|
             h['admin'] = { code: 202 }
+            h['space_developer'] = { code: 202 }
             h['admin_read_only'] = { code: 403 }
             h['global_auditor'] = { code: 403 }
-            h['space_developer'] = { code: 202 }
-            h['space_auditor'] = { code: 403 }
-            h['space_manager'] = { code: 403 }
-            h['org_manager'] = { code: 403 }
           end
         }
 
@@ -575,21 +615,30 @@ RSpec.describe 'V3 service brokers' do
           end
         end
       end
+
+      it 'returns 404 Not Found for space developer in another space' do
+        is_expected.to_not find_broker(
+          method: :patch,
+          body: update_request_body.to_json,
+          broker_guid: broker.guid,
+          with: space_developer_alternate_space_headers
+        )
+      end
     end
   end
 
   describe 'POST /v3/service_brokers' do
     let(:global_service_broker) do
       {
-          guid: UUID_REGEX,
-          name: 'broker name',
-          url: 'http://example.org/broker-url',
-          created_at: iso8601,
-          updated_at: iso8601,
-          status: 'synchronization in progress',
-          available: false,
-          relationships: {},
-          links: { self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/service_brokers\/#{UUID_REGEX}) } }
+        guid: UUID_REGEX,
+        name: 'broker name',
+        url: 'http://example.org/broker-url',
+        created_at: iso8601,
+        updated_at: iso8601,
+        status: 'synchronization in progress',
+        available: false,
+        relationships: {},
+        links: { self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/service_brokers\/#{UUID_REGEX}) } }
       }
     end
 
@@ -706,24 +755,24 @@ RSpec.describe 'V3 service brokers' do
     context 'space-scoped service broker' do
       let(:space_scoped_service_broker) do
         {
-            guid: UUID_REGEX,
-            name: 'space-scoped broker name',
-            url: 'http://example.org/space-broker-url',
-            created_at: iso8601,
-            updated_at: iso8601,
-            status: 'synchronization in progress',
-            available: false,
-            relationships: {
-                space: { data: { guid: space.guid } }
+          guid: UUID_REGEX,
+          name: 'space-scoped broker name',
+          url: 'http://example.org/space-broker-url',
+          created_at: iso8601,
+          updated_at: iso8601,
+          status: 'synchronization in progress',
+          available: false,
+          relationships: {
+            space: { data: { guid: space.guid } }
+          },
+          links: {
+            self: {
+              href: %r(#{Regexp.escape(link_prefix)}\/v3\/service_brokers\/#{UUID_REGEX})
             },
-            links: {
-                self: {
-                    href: %r(#{Regexp.escape(link_prefix)}\/v3\/service_brokers\/#{UUID_REGEX})
-                },
-                space: {
-                    href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid})
-                }
+            space: {
+              href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid})
             }
+          }
         }
       end
 
@@ -731,14 +780,9 @@ RSpec.describe 'V3 service brokers' do
         let(:api_call) { lambda { |user_headers| post '/v3/service_brokers', space_scoped_broker_request_body.to_json, user_headers } }
 
         let(:expected_codes_and_responses) {
-          Hash.new(code: 422).tap do |h|
+          Hash.new(code: 403).tap do |h|
             h['admin'] = { code: 202 }
-            h['admin_read_only'] = { code: 403 }
-            h['global_auditor'] = { code: 403 }
             h['space_developer'] = { code: 202 }
-            h['space_auditor'] = { code: 403 }
-            h['space_manager'] = { code: 403 }
-            h['org_manager'] = { code: 403 }
           end
         }
 
@@ -862,15 +906,15 @@ RSpec.describe 'V3 service brokers' do
             include(
               'code' => 270012,
               'detail' => "Service broker catalog is invalid: \nService service_name-1\n  Service dashboard client id must be unique\n"
-              )
+            )
           ],
           'links' => {
-              'self' => {
-                  'href' => match(%r(http.+/v3/jobs/#{job.guid}))
-              },
-              'service_brokers' => {
-                  'href' => match(%r(http.+/v3/service_brokers/[^/]+))
-              }
+            'self' => {
+              'href' => match(%r(http.+/v3/jobs/#{job.guid}))
+            },
+            'service_brokers' => {
+              'href' => match(%r(http.+/v3/service_brokers/[^/]+))
+            }
           }
         )
       end
@@ -879,7 +923,7 @@ RSpec.describe 'V3 service brokers' do
     context 'when user provides a malformed request' do
       let(:malformed_body) do
         {
-            whatever: 'oopsie'
+          whatever: 'oopsie'
         }
       end
 
@@ -961,9 +1005,9 @@ RSpec.describe 'V3 service brokers' do
         create_broker(other_space_broker_body, with: space_developer_headers)
       end
 
-      it 'returns a error saying the space is invalid' do
-        expect(last_response).to have_status_code(422)
-        expect(last_response.body).to include 'Invalid space. Ensure that the space exists and you have access to it.'
+      it 'returns a error saying the the user is not authorized' do
+        expect(last_response).to have_status_code(403)
+        expect(last_response.body).to include 'You are not authorized to perform the requested action'
       end
     end
 
@@ -1050,24 +1094,32 @@ RSpec.describe 'V3 service brokers' do
               h['admin'] = { code: 202 }
               h['admin_read_only'] = { code: 403 }
               h['global_auditor'] = { code: 403 }
+              h['space_developer'] = { code: 403 }
             end
           }
         end
       end
 
       context 'space-scoped broker' do
-        let(:broker) {  VCAP::CloudController::ServiceBroker.make(space_id: space.id) }
+        let(:broker) { VCAP::CloudController::ServiceBroker.make(space_id: space.id) }
 
         it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS do
           let(:expected_codes_and_responses) {
-            Hash.new(code: 403).tap do |h|
+            Hash.new(code: 404).tap do |h|
               h['admin'] = { code: 202 }
               h['space_developer'] = { code: 202 }
-              h['org_auditor'] = { code: 404 }
-              h['org_billing_manager'] = { code: 404 }
-              h['no_role'] = { code: 404 }
+              h['admin_read_only'] = { code: 403 }
+              h['global_auditor'] = { code: 403 }
             end
           }
+        end
+
+        it 'returns 404 Not Found for space developer in another space' do
+          is_expected.to_not find_broker(
+            method: :delete,
+            broker_guid: broker.guid,
+            with: space_developer_alternate_space_headers
+          )
         end
       end
 
@@ -1084,8 +1136,8 @@ RSpec.describe 'V3 service brokers' do
             get job_url, {}, admin_headers
             expect(last_response).to have_status_code(200)
             expect(parsed_response).to include({
-                'state' => 'PROCESSING',
-                'operation' => 'service_broker.delete'
+              'state' => 'PROCESSING',
+              'operation' => 'service_broker.delete'
             })
           end
 
@@ -1097,8 +1149,8 @@ RSpec.describe 'V3 service brokers' do
           it 'marks the broker as deleting' do
             get "/v3/service_brokers/#{global_broker.guid}", {}, admin_headers
             expect(parsed_response).to include({
-                'available' => false,
-                'status' => 'delete in progress'
+              'available' => false,
+              'status' => 'delete in progress'
             })
           end
         end
@@ -1113,8 +1165,8 @@ RSpec.describe 'V3 service brokers' do
             get job_url, {}, admin_headers
             expect(last_response).to have_status_code(200)
             expect(parsed_response).to include({
-                'state' => 'COMPLETE',
-                'operation' => 'service_broker.delete'
+              'state' => 'COMPLETE',
+              'operation' => 'service_broker.delete'
             })
           end
 
@@ -1123,19 +1175,19 @@ RSpec.describe 'V3 service brokers' do
             expect(VCAP::CloudController::ServiceDashboardClient.find_client_by_uaa_id(uaa_client_id)).to be_nil
 
             expect(a_request(:post, 'https://uaa.service.cf.internal/oauth/clients/tx/modify').
-                with(
-                  body: [
-                    {
-                          "client_id": uaa_client_id,
-                          "client_secret": nil,
-                          "redirect_uri": nil,
-                          "scope": %w(openid cloud_controller_service_permissions.read),
-                          "authorities": ['uaa.resource'],
-                          "authorized_grant_types": ['authorization_code'],
-                          "action": 'delete'
-                      }
-                  ].to_json
-                )).to have_been_made
+              with(
+                body: [
+                  {
+                    "client_id": uaa_client_id,
+                    "client_secret": nil,
+                    "redirect_uri": nil,
+                    "scope": %w(openid cloud_controller_service_permissions.read),
+                    "authorities": ['uaa.resource'],
+                    "authorized_grant_types": ['authorization_code'],
+                    "action": 'delete'
+                  }
+                ].to_json
+              )).to have_been_made
           end
 
           it 'emits service and plan deletion events, and broker deletion event' do
@@ -1174,9 +1226,9 @@ RSpec.describe 'V3 service brokers' do
           get job_url, {}, admin_headers
           expect(last_response).to have_status_code(200)
           expect(parsed_response).to include({
-              'state' => 'FAILED',
-              'operation' => 'service_broker.delete',
-              'errors' => [include({ 'detail' => include('An unknown error occurred') })]
+            'state' => 'FAILED',
+            'operation' => 'service_broker.delete',
+            'errors' => [include({ 'detail' => include('An unknown error occurred') })]
           })
         end
 
@@ -1188,8 +1240,8 @@ RSpec.describe 'V3 service brokers' do
         it 'updates the broker state' do
           get "/v3/service_brokers/#{global_broker.guid}", {}, admin_headers
           expect(parsed_response).to include({
-              'available' => false,
-              'status' => 'delete failed'
+            'available' => false,
+            'status' => 'delete failed'
           })
         end
       end
@@ -1250,84 +1302,84 @@ RSpec.describe 'V3 service brokers' do
     stub_request(:get, "https://uaa.service.cf.internal/oauth/clients/#{broker_id}-uaa-id").
       to_return(
         { status: 404, body: {}.to_json, headers: { 'Content-Type' => 'application/json' } },
-            { status: 200, body: { client_id: dashboard_client(broker_id)['id'] }.to_json, headers: { 'Content-Type' => 'application/json' } }
-        )
+        { status: 200, body: { client_id: dashboard_client(broker_id)['id'] }.to_json, headers: { 'Content-Type' => 'application/json' } }
+      )
 
     stub_request(:post, 'https://uaa.service.cf.internal/oauth/clients/tx/modify').
       with(
         body: [
           {
-                "client_id": "#{broker_id}-uaa-id",
-                "client_secret": 'my-dashboard-secret',
-                "redirect_uri": 'http://example.org',
-                "scope": %w(openid cloud_controller_service_permissions.read),
-                "authorities": ['uaa.resource'],
-                "authorized_grant_types": ['authorization_code'],
-                "action": 'add'
-            }
+            "client_id": "#{broker_id}-uaa-id",
+            "client_secret": 'my-dashboard-secret',
+            "redirect_uri": 'http://example.org',
+            "scope": %w(openid cloud_controller_service_permissions.read),
+            "authorities": ['uaa.resource'],
+            "authorized_grant_types": ['authorization_code'],
+            "action": 'add'
+          }
         ].to_json
-        ).
+      ).
       to_return(status: 201, body: {}.to_json, headers: { 'Content-Type' => 'application/json' })
 
     stub_request(:post, 'https://uaa.service.cf.internal/oauth/clients/tx/modify').
       with(
         body: [
           {
-                "client_id": "#{broker_id}-uaa-id",
-                "client_secret": nil,
-                "redirect_uri": nil,
-                "scope": %w(openid cloud_controller_service_permissions.read),
-                "authorities": ['uaa.resource'],
-                "authorized_grant_types": ['authorization_code'],
-                "action": 'delete'
-            }
+            "client_id": "#{broker_id}-uaa-id",
+            "client_secret": nil,
+            "redirect_uri": nil,
+            "scope": %w(openid cloud_controller_service_permissions.read),
+            "authorities": ['uaa.resource'],
+            "authorized_grant_types": ['authorization_code'],
+            "action": 'delete'
+          }
         ].to_json
-        ).
+      ).
       to_return(status: 200, body: {}.to_json, headers: { 'Content-Type' => 'application/json' })
   end
 
   def catalog(id=global_broker_id)
     {
-        'services' => [
-          {
-              'id' => "#{id}-1",
-              'name' => 'service_name-1',
-              'description' => 'some description 1',
-              'bindable' => true,
-              'plans' => [
-                {
-                      'id' => 'fake_plan_id-1',
-                      'name' => 'plan_name-1',
-                      'description' => 'fake_plan_description 1',
-                      'schemas' => nil
-                }
-              ],
-              'dashboard_client' => dashboard_client(id)
-          },
-          {
-              'id' => "#{id}-2",
-              'name' => 'route_volume_service_name-2',
-              'requires' => ['volume_mount', 'route_forwarding'],
-              'description' => 'some description 2',
-              'bindable' => true,
-              'plans' => [
-                {
-                    'id' => 'fake_plan_id-2',
-                    'name' => 'plan_name-2',
-                    'description' => 'fake_plan_description 2',
-                    'schemas' => nil
-                }
-              ]
-          },
-        ]
+      'services' => [
+        {
+          'id' => "#{id}-1",
+          'name' => 'service_name-1',
+          'description' => 'some description 1',
+          'bindable' => true,
+          'plans' => [
+            {
+              'id' => 'fake_plan_id-1',
+              'name' => 'plan_name-1',
+              'description' => 'fake_plan_description 1',
+              'schemas' => nil
+            }
+          ],
+          'dashboard_client' => dashboard_client(id)
+        },
+        {
+          'id' => "#{id}-2",
+          'name' => 'route_volume_service_name-2',
+          'requires' => ['volume_mount', 'route_forwarding'],
+          'description' => 'some description 2',
+          'bindable' => true,
+          'plans' => [
+            {
+              'id' => 'fake_plan_id-2',
+              'name' => 'plan_name-2',
+              'description' => 'fake_plan_description 2',
+              'schemas' => nil
+            }
+          ]
+        },
+      ]
     }
   end
 
   def dashboard_client(id=global_broker_id)
     {
-        'id' => "#{id}-uaa-id",
-        'secret' => 'my-dashboard-secret',
-        'redirect_uri' => 'http://example.org'
+      'id' => "#{id}-uaa-id",
+      'secret' => 'my-dashboard-secret',
+      'redirect_uri' => 'http://example.org'
     }
   end
 
@@ -1338,9 +1390,9 @@ RSpec.describe 'V3 service brokers' do
     plan.save
 
     request_body = {
-        name: 'my-service-instance',
-        space_guid: space.guid,
-        service_plan_guid: plan.guid
+      name: 'my-service-instance',
+      space_guid: space.guid,
+      service_plan_guid: plan.guid
     }
     # TODO: replace this with v3 once it's implemented
     post('/v2/service_instances', request_body.to_json, with)

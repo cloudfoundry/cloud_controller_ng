@@ -162,6 +162,10 @@ class VCAP::CloudController::Permissions
     VCAP::CloudController::RouteMappingModel.user_visible(@user, can_read_globally?).map(&:guid)
   end
 
+  def can_read_global_service_brokers?
+    can_read_globally? || !readable_secret_space_guids.empty?
+  end
+
   private
 
   def membership

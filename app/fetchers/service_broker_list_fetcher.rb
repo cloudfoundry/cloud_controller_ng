@@ -1,13 +1,20 @@
 module VCAP::CloudController
   class ServiceBrokerListFetcher
-    def fetch(message:, permitted_space_guids: nil)
-      if permitted_space_guids
-        dataset = ServiceBroker.dataset.where(space: spaces_from(permitted_space_guids))
-        return filter(message, dataset)
-      end
-
+    def fetch_all(message:)
       dataset = ServiceBroker.dataset
       filter(message, dataset)
+    end
+
+    def fetch_global_and_space_scoped(message:, space_guids:)
+      dataset = ServiceBroker.dataset.where(
+        Sequel[{ space_id: nil }] |
+          Sequel[{ space_id: spaces_from(space_guids).map(:id) }]
+      )
+      filter(message, dataset)
+    end
+
+    def fetch_none
+      ServiceBroker.dataset.extension(:null_dataset).nullify
     end
 
     private

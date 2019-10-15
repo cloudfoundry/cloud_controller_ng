@@ -1,6 +1,9 @@
 RSpec::Matchers.define :find_broker do |expected|
   match do
-    get("/v3/service_brokers/#{expected[:broker_guid]}", {}, expected[:with] || nil)
+    method = expected.fetch(:method, :get)
+    body = expected.fetch(:body, {})
+    user = expected.fetch(:with, nil)
+    public_send(method, "/v3/service_brokers/#{expected[:broker_guid]}", body, user)
 
     last_response.status == 200
   end

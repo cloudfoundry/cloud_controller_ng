@@ -12,9 +12,14 @@ class ServiceBrokersController < ApplicationController
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     dataset = if permission_queryer.can_read_globally?
-                ServiceBrokerListFetcher.new.fetch(message: message)
+                ServiceBrokerListFetcher.new.fetch_all(message: message)
+              elsif permission_queryer.can_read_global_service_brokers?
+                ServiceBrokerListFetcher.new.fetch_global_and_space_scoped(
+                  message: message,
+                  space_guids: permission_queryer.readable_secret_space_guids
+                )
               else
-                ServiceBrokerListFetcher.new.fetch(message: message, permitted_space_guids: permission_queryer.readable_secret_space_guids)
+                ServiceBrokerListFetcher.new.fetch_none
               end
 
     presenter = Presenters::V3::PaginatedListPresenter.new(
@@ -43,10 +48,11 @@ class ServiceBrokersController < ApplicationController
 
     if message.space_guid
       space = Space.where(guid: message.space_guid).first
-      unprocessable_space! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization_guid)
+      unauthorized! unless space
+      unauthorized! unless permission_queryer.can_read_from_space?(space.guid, space.organization_guid)
       unauthorized! unless permission_queryer.can_write_space_scoped_service_broker?(space.guid)
     else
-      unauthorized! unless permission_queryer.can_write_global_service_broker?
+      unauthorized! unless permission_queryer.can_write_global_service_brokers?
     end
 
     service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository::WithUserActor.new(user_audit_info)
@@ -65,14 +71,7 @@ class ServiceBrokersController < ApplicationController
 
     service_broker = VCAP::CloudController::ServiceBroker.find(guid: hashed_params[:guid])
     broker_not_found! unless service_broker
-
-    if service_broker.space_guid
-      space = service_broker.space
-      unprocessable_space! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization_guid)
-      unauthorized! unless permission_queryer.can_write_space_scoped_service_broker?(space.guid)
-    else
-      unauthorized! unless permission_queryer.can_write_global_service_broker?
-    end
+    ensure_can_mutate_service_broker!(service_broker)
 
     service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository::WithUserActor.new(user_audit_info)
     service_broker_update = VCAP::CloudController::V3::ServiceBrokerUpdate.new(service_broker, service_event_repository)
@@ -87,14 +86,7 @@ class ServiceBrokersController < ApplicationController
   def destroy
     service_broker = VCAP::CloudController::ServiceBroker.find(guid: hashed_params[:guid])
     broker_not_found! unless service_broker
-
-    if service_broker.space.nil?
-      broker_not_found! unless permission_queryer.can_read_globally?
-      unauthorized! unless permission_queryer.can_write_global_service_broker?
-    else
-      broker_not_found! unless permission_queryer.can_read_from_space?(service_broker.space.guid, service_broker.space.organization.guid)
-      unauthorized! unless permission_queryer.can_write_space_scoped_service_broker?(service_broker.space.guid)
-    end
+    ensure_can_mutate_service_broker!(service_broker)
 
     broker_has_instances!(service_broker.name) if service_broker.has_service_instances?
 
@@ -120,7 +112,13 @@ class ServiceBrokersController < ApplicationController
     resource_not_found!(:service_broker)
   end
 
-  def unprocessable_space!
-    unprocessable!('Invalid space. Ensure that the space exists and you have access to it.')
+  def ensure_can_mutate_service_broker!(service_broker)
+    if service_broker.space.nil?
+      broker_not_found! unless permission_queryer.can_read_global_service_brokers?
+      unauthorized! unless permission_queryer.can_write_global_service_brokers?
+    else
+      broker_not_found! unless permission_queryer.can_read_space_scoped_service_broker?(service_broker)
+      unauthorized! unless permission_queryer.can_write_space_scoped_service_broker?(service_broker.space.guid)
+    end
   end
 end

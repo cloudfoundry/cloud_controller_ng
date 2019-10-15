@@ -208,16 +208,24 @@ class VCAP::CloudController::Permissions::Queryer
     end
   end
 
+  def can_read_global_service_brokers?
+    db_permissions.can_read_global_service_brokers?
+  end
+
   def can_read_service_broker?(service_broker)
-    can_read_globally? || can_read_space_scoped_service_broker?(service_broker)
+    if service_broker.space_scoped?
+      can_read_space_scoped_service_broker?(service_broker)
+    else
+      can_read_global_service_brokers?
+    end
   end
 
   def can_read_space_scoped_service_broker?(service_broker)
-    service_broker.space_scoped? &&
-        can_read_secrets_in_space?(service_broker.space_guid, service_broker.space.organization_guid)
+    can_read_globally? ||
+      can_read_secrets_in_space?(service_broker.space_guid, service_broker.space.organization_guid)
   end
 
-  def can_write_global_service_broker?
+  def can_write_global_service_brokers?
     can_write_globally?
   end
 
