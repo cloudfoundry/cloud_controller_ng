@@ -85,52 +85,78 @@ RSpec.describe 'Environment group variables' do
       }
     end
 
-    it 'updates the environment variables for the running group' do
-      patch '/v3/environment_variable_groups/running', params.to_json, admin_header
-      expect(last_response.status).to eq(200)
+    context 'running' do
+      it 'updates the environment variables for the running group' do
+        patch '/v3/environment_variable_groups/running', params.to_json, admin_header
+        expect(last_response.status).to eq(200)
 
-      parsed_response = MultiJson.load(last_response.body)
-      expect(parsed_response).to match_json_response(
-        {
-          'updated_at' => iso8601,
-          'name' => 'running',
-          'var' => {
-            'foo' => 'in-n-out',
-            'boo' => 'mcdonalds',
-          },
-          'links' => {
-            'self' => {
-              'href' => "#{link_prefix}/v3/environment_variable_groups/running"
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response).to match_json_response(
+          {
+            'updated_at' => iso8601,
+            'name' => 'running',
+            'var' => {
+              'foo' => 'in-n-out',
+              'boo' => 'mcdonalds',
+            },
+            'links' => {
+              'self' => {
+                'href' => "#{link_prefix}/v3/environment_variable_groups/running"
+              }
             }
           }
-        }
-      )
+        )
+      end
     end
 
-    it 'updates the environment variables for the staging group' do
-      patch '/v3/environment_variable_groups/staging', params.to_json, admin_header
-      expect(last_response.status).to eq(200)
+    context 'staging' do
+      it 'updates the environment variables for the staging group' do
+        patch '/v3/environment_variable_groups/staging', params.to_json, admin_header
+        expect(last_response.status).to eq(200)
 
-      parsed_response = MultiJson.load(last_response.body)
-      expect(parsed_response).to match_json_response(
-        {
-          'updated_at' => iso8601,
-          'name' => 'staging',
-          'var' => {
-            'foo' => 'in-n-out',
-            'boo' => 'mcdonalds',
-            'baz' => 'whitecastle'
-          },
-          'links' => {
-            'self' => {
-              'href' => "#{link_prefix}/v3/environment_variable_groups/staging"
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response).to match_json_response(
+          {
+            'updated_at' => iso8601,
+            'name' => 'staging',
+            'var' => {
+              'foo' => 'in-n-out',
+              'boo' => 'mcdonalds',
+              'baz' => 'whitecastle'
+            },
+            'links' => {
+              'self' => {
+                'href' => "#{link_prefix}/v3/environment_variable_groups/staging"
+              }
             }
           }
-        }
-      )
+        )
+      end
+
+      context 'when user passes in {}' do
+        let(:params) { {} }
+        it 'does not error' do
+          patch '/v3/environment_variable_groups/staging', params.to_json, admin_header
+
+          parsed_response = MultiJson.load(last_response.body)
+          expect(parsed_response).to match_json_response(
+            {
+              'updated_at' => iso8601,
+              'name' => 'staging',
+              'var' => { 'foo' => 'wendys', 'baz' => 'whitecastle' },
+              'links' => {
+                'self' => {
+                  'href' => "#{link_prefix}/v3/environment_variable_groups/staging"
+                }
+              }
+            }
+          )
+          expect(last_response.status).to eq(200)
+        end
+      end
     end
 
-    context 'when the user logged in' do
+    context 'when the user is logged in' do
       let(:space) { VCAP::CloudController::Space.make }
       let(:org) { space.organization }
       let(:api_call) { lambda { |user_headers| patch '/v3/environment_variable_groups/staging', params.to_json, user_headers } }

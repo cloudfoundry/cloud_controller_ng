@@ -170,7 +170,7 @@ module VCAP::CloudController::Validators
         end
       end
 
-      it 'does not add and error if the environment variables are correct' do
+      it 'does not add an error if the environment variables are correct' do
         fake_class = environment_variables_class.new field: { VARIABLE: 'amazing' }
         expect(fake_class.valid?).to be_truthy
       end

@@ -14,9 +14,17 @@ module VCAP::CloudController
 
     describe 'validations' do
       it 'returns no validation errors on a valid request' do
-        message = UpdateEnvironmentVariablesMessage.new(valid_body.deep_symbolize_keys)
+        message = UpdateEnvironmentVariablesMessage.new(valid_body)
 
         expect(message).to be_valid
+      end
+
+      it 'returns no validation errors given an empty hash and directed to populate the empty hash' do
+        empty_hash = {}
+        message = UpdateEnvironmentVariablesMessage.new(empty_hash, { populate_empty_hash_with_empty_var: true })
+
+        expect(message).to be_valid
+        expect(message.var).to eq({})
       end
 
       it 'returns a validation error when an unexpected key is given' do
@@ -95,9 +103,9 @@ module VCAP::CloudController
 
       it 'returns a validation error when a value is a number' do
         invalid_body = {
-            var: {
-                some_number: 123
-            }
+          var: {
+            some_number: 123
+          }
         }
         message = UpdateEnvironmentVariablesMessage.new(invalid_body)
 
@@ -110,6 +118,14 @@ module VCAP::CloudController
           var: 'sweet potato'
         }
         message = UpdateEnvironmentVariablesMessage.new(invalid_body)
+
+        expect(message).not_to be_valid
+        expect(message.errors.full_messages[0]).to match('must be a hash')
+      end
+
+      it 'returns a validation error when var is not present' do
+        body = {}
+        message = UpdateEnvironmentVariablesMessage.new(body)
 
         expect(message).not_to be_valid
         expect(message.errors.full_messages[0]).to match('must be a hash')
