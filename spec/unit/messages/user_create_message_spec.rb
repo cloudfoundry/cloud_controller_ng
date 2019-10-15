@@ -25,7 +25,7 @@ module VCAP::CloudController
         let(:params) {}
         it 'is not valid' do
           expect(subject).not_to be_valid
-          expect(subject.errors[:guid]).to include("can't be blank")
+          expect(subject.errors[:guid]).to include('must be between 1 and 200 characters')
         end
       end
 
@@ -60,7 +60,7 @@ module VCAP::CloudController
 
           it 'is not valid' do
             expect(subject).to be_invalid
-            expect(subject.errors[:guid]).to include 'is too short (minimum is 1 character)'
+            expect(subject.errors[:guid]).to include 'must be between 1 and 200 characters'
           end
         end
 
@@ -69,7 +69,7 @@ module VCAP::CloudController
 
           it 'is not valid' do
             expect(subject).to be_invalid
-            expect(subject.errors[:guid]).to include 'is too long (maximum is 250 characters)'
+            expect(subject.errors[:guid]).to include 'must be between 1 and 200 characters'
           end
         end
       end

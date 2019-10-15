@@ -5,6 +5,6 @@ module VCAP::CloudController
     register_allowed_keys [:guid]
 
     validates_with NoAdditionalKeysValidator
-    validates :guid, string: true, presence: true, length: { minimum: 1, maximum: 250 }
+    validates :guid, guid: true
   end
 end
