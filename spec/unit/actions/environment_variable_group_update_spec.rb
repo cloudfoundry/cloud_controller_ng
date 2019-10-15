@@ -84,6 +84,28 @@ module VCAP::CloudController
           expect(env_var_group.environment_json).to eq(existing_environment_variables)
         end
       end
+
+      context 'when there is a Sequel database error' do
+        context 'when the environment variable group is too large' do
+          it 'raises an EnvironmentVariableGroupTooLong error' do
+            expect(VCAP::CloudController::EnvironmentVariableGroup).to receive(:db).
+              and_raise(Sequel::DatabaseError.new("Mysql2::Error: Data too long for column 'environment_json'"))
+            expect {
+              subject.patch(env_var_group, message)
+            }.to raise_error(EnvironmentVariableGroupUpdate::EnvironmentVariableGroupTooLong)
+          end
+        end
+
+        context "when it's a different error" do
+          it 're-raises that error' do
+            expect(VCAP::CloudController::EnvironmentVariableGroup).to receive(:db).
+              and_raise(Sequel::DatabaseError.new('hello'))
+            expect {
+              subject.patch(env_var_group, message)
+            }.to raise_error(Sequel::DatabaseError, 'hello')
+          end
+        end
+      end
     end
   end
 end

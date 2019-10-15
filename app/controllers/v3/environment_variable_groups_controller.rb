@@ -31,6 +31,8 @@ class EnvironmentVariableGroupsController < ApplicationController
     env_group = EnvironmentVariableGroupUpdate.new.patch(env_group, message)
 
     render status: :ok, json: Presenters::V3::EnvironmentVariableGroupPresenter.new(env_group)
+  rescue EnvironmentVariableGroupUpdate::EnvironmentVariableGroupTooLong
+    unprocessable!('Environment variable group is too large. Specify fewer variables or reduce key/value lengths.')
   end
 
   private

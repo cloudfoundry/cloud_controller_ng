@@ -211,6 +211,28 @@ RSpec.describe 'Environment group variables' do
       end
     end
 
+    if ENV['DB'] == 'mysql'
+      # This error manifests under MySQL but not PostgreSQL, so we only run it if our DB is MySQL
+      # The 64k on MySQL, 1GB on PostgreSQL. The latency of any request > 2MB is prohibitive (> 10s)
+      fcontext 'the environment json is too large' do
+        let(:big_params) do
+          {
+            var: {
+              too_big: (0...(1024 * 64 + 1)).map { [*'A'..'Z'].sample }.join
+            }
+          }
+        end
+        it 'returns a 422' do
+          patch '/v3/environment_variable_groups/staging', big_params.to_json, admin_header
+
+          expect(last_response.status).to eq(422)
+          parsed_response = MultiJson.load(last_response.body)
+          expect(parsed_response['errors'][0]['detail']).to include(
+            'Environment variable group is too large. Specify fewer variables or reduce key/value lengths.')
+        end
+      end
+    end
+
     context 'when the user is not logged in' do
       it 'returns 401 for Unauthenticated requests' do
         patch '/v3/environment_variable_groups/running', params.to_json, base_json_headers
