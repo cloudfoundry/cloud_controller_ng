@@ -275,7 +275,7 @@ module VCAP::CloudController
       end
 
       describe 'env' do
-        context 'when env is not a hash' do
+        context 'when env is not an object' do
           let(:params_from_yaml) do
             {
               env: 'im a non-hash'
@@ -285,7 +285,7 @@ module VCAP::CloudController
             message = AppManifestMessage.create_from_yml(params_from_yaml)
             expect(message).to_not be_valid
             expect(message.errors.count).to eq(1)
-            expect(message.errors.full_messages).to include('Env must be a hash of keys and values')
+            expect(message.errors.full_messages).to include('Env must be an object of keys and values')
           end
         end
 
@@ -357,7 +357,7 @@ module VCAP::CloudController
             message = AppManifestMessage.create_from_yml(params_from_yaml)
 
             expect(message).not_to be_valid
-            expect(message.errors.full_messages).to match_array(['Routes must be a list of route hashes'])
+            expect(message.errors.full_messages).to match_array(['Routes must be a list of route objects'])
           end
         end
 
@@ -708,7 +708,7 @@ module VCAP::CloudController
       end
 
       describe 'metadata' do
-        context 'when metadata is not a hash' do
+        context 'when metadata is not an object' do
           let(:params_from_yaml) do
             {
               metadata: 'im a non-hash'
@@ -718,11 +718,11 @@ module VCAP::CloudController
             message = AppManifestMessage.create_from_yml(params_from_yaml)
             expect(message).to_not be_valid
             expect(message.errors.count).to eq(1)
-            expect(message.errors.full_messages).to include('Metadata must be a hash')
+            expect(message.errors.full_messages).to include('Metadata must be an object')
           end
         end
 
-        context 'when metadata.labels is not a hash' do
+        context 'when metadata.labels is not an object' do
           let(:params_from_yaml) do
             {
               metadata: {
@@ -734,7 +734,7 @@ module VCAP::CloudController
             message = AppManifestMessage.create_from_yml(params_from_yaml)
             expect(message).to_not be_valid
             expect(message.errors.count).to eq(1)
-            expect(message.errors_on(:metadata)).to include("'labels' is not a hash")
+            expect(message.errors_on(:metadata)).to include("'labels' is not an object")
           end
         end
 
@@ -776,7 +776,7 @@ module VCAP::CloudController
           end
         end
 
-        context 'when metadata.annotations is not a hash' do
+        context 'when metadata.annotations is not an object' do
           let(:params_from_yaml) do
             {
               metadata: {
@@ -788,7 +788,7 @@ module VCAP::CloudController
             message = AppManifestMessage.create_from_yml(params_from_yaml)
             expect(message).to_not be_valid
             expect(message.errors.count).to eq(1)
-            expect(message.errors_on(:metadata)).to include("'annotations' is not a hash")
+            expect(message.errors_on(:metadata)).to include("'annotations' is not an object")
           end
         end
 
@@ -876,7 +876,7 @@ module VCAP::CloudController
             disk_quota: '-120KB',
             buildpack: 99,
             stack: 42,
-            env: %w/not a hash/
+            env: %w/not an object/
           }
         end
 
@@ -891,7 +891,7 @@ module VCAP::CloudController
             'Process "web": Disk quota must be greater than 0MB',
             'Buildpack must be a string',
             'Stack must be a string',
-            'Env must be a hash of keys and values',
+            'Env must be an object of keys and values',
           ])
         end
       end

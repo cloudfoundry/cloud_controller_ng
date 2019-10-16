@@ -65,7 +65,7 @@ module VCAP::CloudController
         end
       end
 
-      context 'when environment_variables is not a hash' do
+      context 'when environment_variables is not an object' do
         let(:params) do
           {
               name: 'name',
@@ -85,7 +85,7 @@ module VCAP::CloudController
           message = AppCreateMessage.new(params)
 
           expect(message).not_to be_valid
-          expect(message.errors_on(:environment_variables)).to include('must be a hash')
+          expect(message.errors_on(:environment_variables)).to include('must be an object')
         end
       end
 
@@ -109,7 +109,7 @@ module VCAP::CloudController
             message = AppCreateMessage.new(params)
 
             expect(message).not_to be_valid
-            expect(message.errors_on(:relationships)).to include("'relationships' is not a hash")
+            expect(message.errors_on(:relationships)).to include("'relationships' is not an object")
           end
         end
 
@@ -131,11 +131,11 @@ module VCAP::CloudController
             message = AppCreateMessage.new(params)
 
             expect(message).not_to be_valid
-            expect(message.errors_on(:relationships)).to include("'relationships' is not a hash")
+            expect(message.errors_on(:relationships)).to include("'relationships' is not an object")
           end
         end
 
-        context 'when relationships is not a hash' do
+        context 'when relationships is not an object' do
           let(:params) do
             {
                 name: 'name',
@@ -154,7 +154,7 @@ module VCAP::CloudController
             message = AppCreateMessage.new(params)
 
             expect(message).not_to be_valid
-            expect(message.errors_on(:relationships)).to include("'relationships' is not a hash")
+            expect(message.errors_on(:relationships)).to include("'relationships' is not an object")
           end
         end
 
@@ -265,11 +265,11 @@ module VCAP::CloudController
               message = AppCreateMessage.new(params)
 
               expect(message).not_to be_valid
-              expect(message.errors_on(:lifecycle_data)).to include('must be a hash')
+              expect(message.errors_on(:lifecycle_data)).to include('must be an object')
             end
           end
 
-          context 'when lifecycle data is not a hash' do
+          context 'when lifecycle data is not an object' do
             let(:params) do
               { lifecycle: { type: 'buildpack', data: 'blah blah' } }
             end
@@ -278,7 +278,7 @@ module VCAP::CloudController
               message = AppCreateMessage.new(params)
 
               expect(message).not_to be_valid
-              expect(message.errors_on(:lifecycle_data)).to include('must be a hash')
+              expect(message.errors_on(:lifecycle_data)).to include('must be an object')
             end
           end
         end

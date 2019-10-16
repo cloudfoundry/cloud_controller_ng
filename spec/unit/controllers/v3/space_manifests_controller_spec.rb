@@ -162,7 +162,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
             'title' => 'CF-UnprocessableEntity',
             'code' => 10008
           }, {
-            'detail' => 'For application \'blah\': Env must be a hash of keys and values',
+            'detail' => 'For application \'blah\': Env must be an object of keys and values',
             'title' => 'CF-UnprocessableEntity',
             'code' => 10008
           }, {

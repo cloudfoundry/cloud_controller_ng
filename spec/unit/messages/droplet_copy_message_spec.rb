@@ -46,13 +46,13 @@ module VCAP::CloudController
         it 'is not valid when app is missing' do
           message = DropletCopyMessage.new({ relationships: {} })
           expect(message).not_to be_valid
-          expect(message.errors_on(:app)).to include('must be a hash')
+          expect(message.errors_on(:app)).to include('must be an object')
         end
 
-        it 'is not valid when app is not a hash' do
+        it 'is not valid when app is not an object' do
           message = DropletCopyMessage.new({ relationships: { app: 'hello' } })
           expect(message).not_to be_valid
-          expect(message.errors_on(:app)).to include('must be a hash')
+          expect(message.errors_on(:app)).to include('must be an object')
         end
 
         it 'is not valid when app_guid has an invalid guid' do

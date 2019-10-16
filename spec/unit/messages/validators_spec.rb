@@ -95,10 +95,10 @@ module VCAP::CloudController::Validators
         end
       end
 
-      it 'adds an error if the field is not a hash' do
-        fake_class = hash_class.new field: 'not a hash'
+      it 'adds an error if the field is not an object' do
+        fake_class = hash_class.new field: 'not an object'
         expect(fake_class.valid?).to be_falsey
-        expect(fake_class.errors[:field]).to include 'must be a hash'
+        expect(fake_class.errors[:field]).to include 'must be an object'
       end
 
       it 'does not add an error if the field is a hash' do
@@ -178,7 +178,7 @@ module VCAP::CloudController::Validators
       it 'validates that the input is a hash' do
         fake_class = environment_variables_class.new field: 4
         expect(fake_class.valid?).to be_falsey
-        expect(fake_class.errors[:field]).to include 'must be a hash'
+        expect(fake_class.errors[:field]).to include 'must be an object'
       end
 
       it 'does not allow variables that start with VCAP_' do
@@ -313,10 +313,10 @@ module VCAP::CloudController::Validators
         expect(message.errors_on(:relationships)).to include('Foo is not a number')
       end
 
-      it 'returns early when base class relationships is not a hash' do
-        message = RelationshipMessage.new({ relationships: 'not a hash' })
+      it 'returns early when base class relationships is not an object' do
+        message = RelationshipMessage.new({ relationships: 'not an object' })
         expect(message).not_to be_valid
-        expect(message.errors_on(:relationships)).to include("'relationships' is not a hash")
+        expect(message.errors_on(:relationships)).to include("'relationships' is not an object")
       end
     end
 
@@ -338,8 +338,8 @@ module VCAP::CloudController::Validators
         expect(message.errors_on(:data)).to include('Foo is not a number')
       end
 
-      it 'returns early when base class data is not a hash' do
-        message = DataMessage.new({ data: 'not a hash' })
+      it 'returns early when base class data is not an object' do
+        message = DataMessage.new({ data: 'not an object' })
         expect(message).to be_valid
         expect(message.errors_on(:data)).to be_empty
       end

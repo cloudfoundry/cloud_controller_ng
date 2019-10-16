@@ -102,14 +102,14 @@ module VCAP::CloudController
       end
 
       context 'authentication' do
-        context 'when authentication is not a hash' do
+        context 'when authentication is not an object' do
           let(:request_body) do
             valid_body.except(:authentication)
           end
 
           it 'is not valid' do
             expect(message).not_to be_valid
-            expect(message.errors_on(:authentication)).to include('must be a hash')
+            expect(message.errors_on(:authentication)).to include('must be an object')
           end
         end
 
@@ -143,12 +143,12 @@ module VCAP::CloudController
           end
         end
 
-        context 'when relationships is not a hash' do
+        context 'when relationships is not an object' do
           let(:request_body) { valid_body.merge(relationships: 42) }
 
           it 'is not valid' do
             expect(subject).not_to be_valid
-            expect(subject.errors_on(:relationships)).to include("'relationships' is not a hash")
+            expect(subject.errors_on(:relationships)).to include("'relationships' is not an object")
           end
         end
 
@@ -163,7 +163,7 @@ module VCAP::CloudController
           end
         end
 
-        context 'when relationships.space is not a hash' do
+        context 'when relationships.space is not an object' do
           let(:request_body) { valid_body.merge(relationships: { space: 42 }) }
 
           it 'is not valid' do
@@ -181,7 +181,7 @@ module VCAP::CloudController
           end
         end
 
-        context 'when relationships.space.data is not a hash' do
+        context 'when relationships.space.data is not an object' do
           let(:request_body) { valid_body.merge(relationships: { space: { data: 42 } }) }
 
           it 'is not valid' do

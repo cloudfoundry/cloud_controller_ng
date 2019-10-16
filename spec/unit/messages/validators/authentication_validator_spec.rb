@@ -53,11 +53,11 @@ module VCAP::CloudController::Validators
 
       it 'is not valid' do
         expect(message).not_to be_valid
-        expect(message.errors_on(:authentication_credentials)).to include('must be a hash')
+        expect(message.errors_on(:authentication_credentials)).to include('must be an object')
       end
     end
 
-    context 'when credentials is not a hash' do
+    context 'when credentials is not an object' do
       let(:authentication) do
         {
           type: 'basic',
@@ -67,7 +67,7 @@ module VCAP::CloudController::Validators
 
       it 'is not valid' do
         expect(message).not_to be_valid
-        expect(message.errors_on(:authentication_credentials)).to include('must be a hash')
+        expect(message.errors_on(:authentication_credentials)).to include('must be an object')
       end
     end
 

@@ -79,7 +79,7 @@ module VCAP::CloudController
     class StringValuesOnlyValidator < ActiveModel::Validator
       def validate(record)
         if !record.var.is_a?(Hash)
-          record.errors[:base] << 'must be a hash'
+          record.errors[:base] << 'must be an object'
         else
           record.var.each do |key, value|
             if ![String, NilClass].include?(value.class)

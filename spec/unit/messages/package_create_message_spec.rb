@@ -60,7 +60,7 @@ module VCAP::CloudController
             message = PackageCreateMessage.new(params)
 
             expect(message).not_to be_valid
-            expect(message.errors_on(:relationships)).to include("'relationships' is not a hash")
+            expect(message.errors_on(:relationships)).to include("'relationships' is not an object")
           end
         end
 
@@ -71,7 +71,7 @@ module VCAP::CloudController
             message = PackageCreateMessage.new(params)
 
             expect(message).not_to be_valid
-            expect(message.errors_on(:relationships)).to include("'relationships' is not a hash")
+            expect(message.errors_on(:relationships)).to include("'relationships' is not an object")
           end
         end
       end

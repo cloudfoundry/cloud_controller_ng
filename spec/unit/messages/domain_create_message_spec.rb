@@ -130,12 +130,12 @@ module VCAP::CloudController
       end
 
       context 'relationships' do
-        context 'relationships is not a hash' do
+        context 'relationships is not an object' do
           let(:params) { { relationships: 'banana' } }
 
           it 'is not valid' do
             expect(subject).to be_invalid
-            expect(subject.errors[:relationships]).to include "'relationships' is not a hash"
+            expect(subject.errors[:relationships]).to include "'relationships' is not an object"
           end
         end
 
@@ -181,7 +181,7 @@ module VCAP::CloudController
           end
         end
 
-        context 'when the shared orgs is not a hash' do
+        context 'when the shared orgs is not an object' do
           let(:params) do
             {
               name: 'my-domain.com',

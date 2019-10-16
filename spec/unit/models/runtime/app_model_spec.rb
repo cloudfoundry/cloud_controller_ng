@@ -240,7 +240,7 @@ module VCAP::CloudController
         it 'validates them' do
           expect {
             AppModel.make(environment_variables: '')
-          }.to raise_error(Sequel::ValidationFailed, /must be a hash/)
+          }.to raise_error(Sequel::ValidationFailed, /must be an object/)
         end
       end
 

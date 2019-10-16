@@ -49,7 +49,7 @@ module VCAP::CloudController
 
       destinations.each_with_index do |dst, index|
         unless dst.is_a?(Hash)
-          add_destination_error(index, 'must be a hash.')
+          add_destination_error(index, 'must be an object.')
           next
         end
 

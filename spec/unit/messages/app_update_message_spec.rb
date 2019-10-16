@@ -95,7 +95,7 @@ module VCAP::CloudController
           it 'is not valid' do
             message = AppUpdateMessage.new(params)
             expect(message).not_to be_valid
-            expect(message.errors_on(:lifecycle_data)).to include('must be a hash')
+            expect(message.errors_on(:lifecycle_data)).to include('must be an object')
           end
         end
 
@@ -130,7 +130,7 @@ module VCAP::CloudController
           end
         end
 
-        context 'when lifecycle data is not a hash' do
+        context 'when lifecycle data is not an object' do
           let(:params) do
             {
                 lifecycle: {
@@ -144,7 +144,7 @@ module VCAP::CloudController
             message = AppUpdateMessage.new(params)
             expect(message).to_not be_valid
 
-            expect(message.errors_on(:lifecycle_data)).to include('must be a hash')
+            expect(message.errors_on(:lifecycle_data)).to include('must be an object')
           end
         end
       end
@@ -171,7 +171,7 @@ module VCAP::CloudController
           }
           message = AppUpdateMessage.new(params)
           expect(message).not_to be_valid
-          expect(message.errors_on(:metadata)).to include("'labels' is not a hash")
+          expect(message.errors_on(:metadata)).to include("'labels' is not an object")
         end
         it 'can parse annotations' do
           params =
@@ -197,7 +197,7 @@ module VCAP::CloudController
           }
           message = AppUpdateMessage.new(params)
           expect(message).not_to be_valid
-          expect(message.errors_on(:metadata)).to include("'annotations' is not a hash")
+          expect(message.errors_on(:metadata)).to include("'annotations' is not an object")
         end
       end
     end

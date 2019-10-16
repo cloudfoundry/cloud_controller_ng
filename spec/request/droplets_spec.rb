@@ -134,7 +134,7 @@ RSpec.describe 'Droplets' do
       it 'returns a 422 with an appropriate error message' do
         post '/v3/droplets', invalid_params.to_json, developer_headers
         expect(last_response.status).to eq(422)
-        expect(last_response).to have_error_message(/must be a hash/)
+        expect(last_response).to have_error_message(/must be an object/)
       end
     end
 

@@ -41,7 +41,7 @@ module VCAP::CloudController
 
         it 'is not valid' do
           expect(message).not_to be_valid
-          expect(message.errors_on(:credentials)).to include('must be a hash')
+          expect(message.errors_on(:credentials)).to include('must be an object')
         end
       end
 

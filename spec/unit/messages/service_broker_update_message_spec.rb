@@ -132,14 +132,14 @@ module VCAP::CloudController
           end
         end
 
-        context 'when authentication is not a hash' do
+        context 'when authentication is not an object' do
           let(:request_body) do
             valid_body.merge(authentication: [])
           end
 
           it 'is not valid' do
             expect(message).not_to be_valid
-            expect(message.errors_on(:authentication)).to include('must be a hash')
+            expect(message.errors_on(:authentication)).to include('must be an object')
           end
         end
 

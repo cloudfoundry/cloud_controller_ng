@@ -13,7 +13,7 @@ module VCAP::CloudController::Validators
       self.record = record
 
       unless record.metadata.is_a? Hash
-        record.errors.add(:metadata, 'must be a hash')
+        record.errors.add(:metadata, 'must be an object')
         return
       end
 
@@ -33,7 +33,7 @@ module VCAP::CloudController::Validators
     private
 
     def validate_annotations
-      return record.errors.add(:metadata, "'annotations' is not a hash") unless annotations.is_a? Hash
+      return record.errors.add(:metadata, "'annotations' is not an object") unless annotations.is_a? Hash
 
       annotations.each do |annotation_key, annotation_value|
         helper = MetadataValidatorHelper.new(key: annotation_key, value: annotation_value)
@@ -46,7 +46,7 @@ module VCAP::CloudController::Validators
     end
 
     def validate_labels
-      return record.errors.add(:metadata, "'labels' is not a hash") unless labels.is_a? Hash
+      return record.errors.add(:metadata, "'labels' is not an object") unless labels.is_a? Hash
 
       labels.each do |key, value|
         helper = MetadataValidatorHelper.new(key: key, value: value)

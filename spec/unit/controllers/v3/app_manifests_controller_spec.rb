@@ -105,7 +105,7 @@ RSpec.describe AppManifestsController, type: :controller do
               'title' => 'CF-UnprocessableEntity',
               'code' => 10008
             }, {
-              'detail' => 'Env must be a hash of keys and values',
+              'detail' => 'Env must be an object of keys and values',
               'title' => 'CF-UnprocessableEntity',
               'code' => 10008
             }, {

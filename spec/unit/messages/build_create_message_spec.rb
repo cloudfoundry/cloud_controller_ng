@@ -104,7 +104,7 @@ module VCAP::CloudController
             message = BuildCreateMessage.new(params)
 
             expect(message).not_to be_valid
-            expect(message.errors[:lifecycle_data]).to include('must be a hash')
+            expect(message.errors[:lifecycle_data]).to include('must be an object')
           end
 
           describe 'buildpack lifecycle' do
