@@ -26,13 +26,16 @@ RSpec.describe(OPI::Client) do
       instance_double(VCAP::CloudController::Diego::Protocol::RoutingInfo)
     }
 
-    let(:cfg) { ::VCAP::CloudController::Config.new({ default_health_check_timeout: 99 }) }
     let(:lifecycle_type) { nil }
+    let(:org) { ::VCAP::CloudController::Organization.make(guid: 'org-guid', name: 'org-name') }
+    let(:space) { ::VCAP::CloudController::Space.make(guid: 'space-guid', name: 'space-name', organization: org) }
     let(:app_model) {
       ::VCAP::CloudController::AppModel.make(lifecycle_type,
                                              guid: 'app-guid',
+                                             name: 'app-name',
                                              droplet: droplet,
                                              enable_ssh: false,
+                                             space: space,
                                              environment_variables: { 'BISH': 'BASH', 'FOO': 'BAR' })
     }
 
@@ -57,6 +60,23 @@ RSpec.describe(OPI::Client) do
     end
 
     context 'when request executes successfully' do
+      let(:egress_rules) { instance_double(VCAP::CloudController::Diego::EgressRules) }
+      let(:protobuf_rules) {
+        [
+          ::Diego::Bbs::Models::SecurityGroupRule.new({
+            protocol:      'udp',
+            ports:         [8080],
+            destinations:  ['1.2.3.4'],
+          }),
+          ::Diego::Bbs::Models::SecurityGroupRule.new({
+            protocol:     'tcp',
+            port_range:   { 'start' => 9090, 'end' => 9095 },
+            destinations: ['5.6.7.8'],
+            log:          true,
+         }),
+        ]
+      }
+
       before do
         routes = {
               'http_routes' => [
@@ -73,6 +93,9 @@ RSpec.describe(OPI::Client) do
 
         allow(routing_info).to receive(:routing_info).and_return(routes)
         allow(VCAP::CloudController::Diego::Protocol::RoutingInfo).to receive(:new).with(lrp).and_return(routing_info)
+        allow(VCAP::CloudController::IsolationSegmentSelector).to receive(:for_space).and_return('placement-tag')
+        allow(VCAP::CloudController::Diego::EgressRules).to receive(:new).and_return(egress_rules)
+        allow(egress_rules).to receive(:running_protobuf_rules).and_return(protobuf_rules)
 
         stub_request(:put, "#{opi_url}/apps/process-guid-#{lrp.version}").to_return(status: 201)
       end
@@ -82,6 +105,13 @@ RSpec.describe(OPI::Client) do
             guid: 'process-guid',
             version: lrp.version.to_s,
             process_guid: "process-guid-#{lrp.version}",
+            process_type: 'web',
+            app_guid: 'app-guid',
+            app_name: 'app-name',
+            space_guid: 'space-guid',
+            space_name: 'space-name',
+            organization_name: 'org-name',
+            organization_guid: 'org-guid',
             environment: {
               'BISH': 'BASH',
               'FOO': 'BAR',
@@ -116,9 +146,25 @@ RSpec.describe(OPI::Client) do
             instances: 21,
             memory_mb: 128,
             cpu_weight: 1,
+            disk_mb: 256,
             health_check_type: 'port',
             health_check_http_endpoint: nil,
             health_check_timeout_ms: 12000,
+            start_timeout_ms: 12000,
+            placement_tags: ['placement-tag'],
+            egress_rules: [
+              {
+                protocol: 'udp',
+                destinations:  ['1.2.3.4'],
+                ports: [8080],
+              },
+              {
+                protocol:     'tcp',
+                destinations: ['5.6.7.8'],
+                portRange:   { start: 9090, end: 9095 },
+                log:          true,
+              },
+            ],
             last_updated: '2.0',
             volume_mounts: [],
             ports: [8080],
@@ -136,6 +182,27 @@ RSpec.describe(OPI::Client) do
             }
         }
       }
+
+      context 'when the process is missing a health check timeout' do
+        let(:config) do
+          TestConfig.override(
+            opi: {
+              url: opi_url
+            },
+            default_health_check_timeout: 99
+          )
+        end
+        it 'uses the default value in the config' do
+          lrp.set_fields({ health_check_timeout: nil }, [:health_check_timeout])
+
+          client.desire_app(lrp)
+
+          expect(WebMock).to have_requested(:put, "#{opi_url}/apps/process-guid-#{lrp.version}").with { |request|
+            actual_body = MultiJson.load(request.body, symbolize_keys: true)
+            actual_body[:start_timeout_ms] == 99000
+          }
+        end
+      end
 
       context 'when app belongs to buildpack lifecycle' do
         let(:lifecycle_type) { :buildpack }
