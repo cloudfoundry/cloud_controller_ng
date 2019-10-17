@@ -214,7 +214,7 @@ RSpec.describe 'Environment group variables' do
     if ENV['DB'] == 'mysql'
       # This error manifests under MySQL but not PostgreSQL, so we only run it if our DB is MySQL
       # The 64k on MySQL, 1GB on PostgreSQL. The latency of any request > 2MB is prohibitive (> 10s)
-      fcontext 'the environment json is too large' do
+      context 'the environment json is too large' do
         let(:big_params) do
           {
             var: {
