@@ -36,6 +36,10 @@ module VCAP::CloudController
         let(:space) { Space.make(organization: org) }
         let(:app_model) { AppModel.make(lifecycle_type, guid: 'app-guid', space: space, droplet: DropletModel.make(state: 'STAGED'), enable_ssh: false) }
         let(:package) { PackageModel.make(lifecycle_type, app: app_model) }
+        let!(:app_label) { AppLabelModel.make(resource_guid: app_model.guid, key_prefix: 'joyofcooking.com', key_name: 'potato', value: 'idaho') }
+        let!(:app_label2) { AppLabelModel.make(resource_guid: app_model.guid, key_name: 'camellid', value: 'alpaca') }
+        let!(:ignored_label) { AppLabelModel.make(resource_guid: app_model.guid, key_name: 'organization_id', value: 'someone-elses-org-id') }
+
         let(:process) do
           process = ProcessModel.make(:process,
             app:                  app_model,
@@ -287,7 +291,9 @@ module VCAP::CloudController
             expect(lrp.memory_mb).to eq(128)
             expect(lrp.metrics_guid).to eq(process.app.guid)
 
-            expect(lrp.metric_tags.keys.size).to eq(11)
+            expect(lrp.metric_tags.keys.size).to eq(13)
+            expect(lrp.metric_tags['joyofcooking.com/potato'].static).to eq('idaho')
+            expect(lrp.metric_tags['camellid'].static).to eq('alpaca')
             expect(lrp.metric_tags['source_id'].static).to eq(process.app.guid)
             expect(lrp.metric_tags['process_id'].static).to eq(process.guid)
             expect(lrp.metric_tags['process_type'].static).to eq(process.type)
@@ -866,7 +872,7 @@ module VCAP::CloudController
             expect(lrp.memory_mb).to eq(128)
             expect(lrp.metrics_guid).to eq(process.app.guid)
 
-            expect(lrp.metric_tags.keys.size).to eq(11)
+            expect(lrp.metric_tags.keys.size).to eq(13)
             expect(lrp.metric_tags['source_id'].static).to eq(process.app.guid)
             expect(lrp.metric_tags['process_id'].static).to eq(process.guid)
             expect(lrp.metric_tags['process_type'].static).to eq(process.type)

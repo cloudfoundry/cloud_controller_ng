@@ -60,6 +60,25 @@ module VCAP::CloudController
             host_fingerprint: ssh_key.fingerprint
           })
         end
+        user_defined_metric_tags = process.app.labels.reduce({}) do |result, label|
+          key = label.key_prefix ? "#{label.key_prefix}/#{label.key_name}" : label.key_name
+          result[key] = METRIC_TAG_VALUE.new(static: label.value)
+          result
+        end
+
+        metric_tags = {
+          'source_id' => METRIC_TAG_VALUE.new(static: process.app.guid),
+          'process_id' => METRIC_TAG_VALUE.new(static: process.guid),
+          'process_type' => METRIC_TAG_VALUE.new(static: process.type),
+          'process_instance_id' => METRIC_TAG_VALUE.new(dynamic: METRIC_TAG_VALUE::DynamicValue::INSTANCE_GUID),
+          'instance_id' => METRIC_TAG_VALUE.new(dynamic: METRIC_TAG_VALUE::DynamicValue::INDEX),
+          'organization_id' => METRIC_TAG_VALUE.new(static: process.organization.guid),
+          'space_id' => METRIC_TAG_VALUE.new(static: process.space.guid),
+          'app_id' => METRIC_TAG_VALUE.new(static: process.app.guid),
+          'organization_name' => METRIC_TAG_VALUE.new(static: process.organization.name),
+          'space_name' => METRIC_TAG_VALUE.new(static: process.space.name),
+          'app_name' => METRIC_TAG_VALUE.new(static: process.app.name),
+        }
         {
           process_guid:                     Diego::ProcessGuid.from_process(process),
           instances:                        process.desired_instances,
@@ -72,19 +91,7 @@ module VCAP::CloudController
           log_source:                       LRP_LOG_SOURCE,
           log_guid:                         process.app.guid,
           metrics_guid:                     process.app.guid,
-          metric_tags:                      {
-            'source_id' => METRIC_TAG_VALUE.new(static: process.app.guid),
-            'process_id' => METRIC_TAG_VALUE.new(static: process.guid),
-            'process_type' => METRIC_TAG_VALUE.new(static: process.type),
-            'process_instance_id' => METRIC_TAG_VALUE.new(dynamic: METRIC_TAG_VALUE::DynamicValue::INSTANCE_GUID),
-            'instance_id' => METRIC_TAG_VALUE.new(dynamic: METRIC_TAG_VALUE::DynamicValue::INDEX),
-            'organization_id' => METRIC_TAG_VALUE.new(static: process.organization.guid),
-            'space_id' => METRIC_TAG_VALUE.new(static: process.space.guid),
-            'app_id' => METRIC_TAG_VALUE.new(static: process.app.guid),
-            'organization_name' => METRIC_TAG_VALUE.new(static: process.organization.name),
-            'space_name' => METRIC_TAG_VALUE.new(static: process.space.name),
-            'app_name' => METRIC_TAG_VALUE.new(static: process.app.name),
-          },
+          metric_tags:                      user_defined_metric_tags.merge(metric_tags),
           annotation:                       process.updated_at.to_f.to_s,
           egress_rules:                     Diego::EgressRules.new.running_protobuf_rules(process),
           cached_dependencies:              desired_lrp_builder.cached_dependencies,
