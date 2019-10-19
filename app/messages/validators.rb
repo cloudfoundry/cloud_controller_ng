@@ -243,4 +243,16 @@ module VCAP::CloudController::Validators
       end
     end
   end
+
+  class UserRoleCreationValidator < ActiveModel::Validator
+    def validate(record)
+      if record.user_guid && record.user_name
+        record.errors[:user_name] << 'cannot be specified when identifying user by guid'
+      end
+
+      if record.user_guid && record.user_origin
+        record.errors[:user_origin] << 'cannot be specified when identifying user by guid'
+      end
+    end
+  end
 end

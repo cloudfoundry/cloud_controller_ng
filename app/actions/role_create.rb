@@ -6,24 +6,10 @@ module VCAP::CloudController
     end
 
     class << self
-      def create(message:)
-        if message.space_guid
-          create_space_role(message)
-        else
-          create_organization_role(message)
-        end
-      end
-
-      private
-
-      def create_space_role(message)
-        user_guid = message.user_guid
-        user = User.find(guid: user_guid)
-        space = Space.find(guid: message.space_guid)
-
+      def create_space_role(type:, user:, space:)
         error!("Users cannot be assigned roles in a space if they do not have a role in that space's organization.") unless space.in_organization?(user)
 
-        case message.type
+        case type
         when RoleTypes::SPACE_AUDITOR
           create_space_auditor(user, space)
         when RoleTypes::SPACE_DEVELOPER
@@ -31,18 +17,14 @@ module VCAP::CloudController
         when RoleTypes::SPACE_MANAGER
           create_space_manager(user, space)
         else
-          error!("Role type '#{message.type}' is invalid.")
+          error!("Role type '#{type}' is invalid.")
         end
       rescue Sequel::ValidationFailed => e
-        space_validation_error!(message, e, user, space)
+        space_validation_error!(type, e, user, space)
       end
 
-      def create_organization_role(message)
-        user_guid = message.user_guid
-        user = User.find(guid: user_guid)
-        organization = Organization.find(guid: message.organization_guid)
-
-        case message.type
+      def create_organization_role(type:, user:, organization:)
+        case type
         when RoleTypes::ORGANIZATION_USER
           create_organization_user(user, organization)
         when RoleTypes::ORGANIZATION_AUDITOR
@@ -52,11 +34,13 @@ module VCAP::CloudController
         when RoleTypes::ORGANIZATION_BILLING_MANAGER
           create_organization_billing_manager(user, organization)
         else
-          error!("Role type '#{message.type}' is invalid.")
+          error!("Role type '#{type}' is invalid.")
         end
       rescue Sequel::ValidationFailed => e
-        organization_validation_error!(message, e, user, organization)
+        organization_validation_error!(type, e, user, organization)
       end
+
+      private
 
       def create_space_auditor(user, space)
         SpaceAuditor.create(user_id: user.id, space_id: space.id)
@@ -86,17 +70,17 @@ module VCAP::CloudController
         OrganizationBillingManager.create(user_id: user.id, organization_id: organization.id)
       end
 
-      def space_validation_error!(message, error, user, space)
+      def space_validation_error!(type, error, user, space)
         if error.errors.on([:space_id, :user_id])&.any? { |e| [:unique].include?(e) }
-          error!("User '#{user.presentation_name}' already has '#{message.type}' role in space '#{space.name}'.")
+          error!("User '#{user.presentation_name}' already has '#{type}' role in space '#{space.name}'.")
         end
 
         error!(error.message)
       end
 
-      def organization_validation_error!(message, error, user, organization)
+      def organization_validation_error!(type, error, user, organization)
         if error.errors.on([:organization_id, :user_id])&.any? { |e| [:unique].include?(e) }
-          error!("User '#{user.presentation_name}' already has '#{message.type}' role in organization '#{organization.name}'.")
+          error!("User '#{user.presentation_name}' already has '#{type}' role in organization '#{organization.name}'.")
         end
 
         error!(error.message)

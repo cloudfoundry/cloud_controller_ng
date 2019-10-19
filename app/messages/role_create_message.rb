@@ -7,7 +7,10 @@ module VCAP::CloudController
 
     validates_with NoAdditionalKeysValidator
     validates_with SpaceOrOrgPresentValidator
-    validates :user_guid, guid: true, presence: true
+    validates_with UserRoleCreationValidator
+    validates :user_guid, guid: true, if: -> { user_name.nil? }
+    validates :user_name, string: true, if: -> { user_guid.nil? }
+    validates :user_origin, string: true, allow_nil: true, if: -> { user_guid.nil? }
     validates :space_guid, guid: true, allow_nil: true
     validates :organization_guid, guid: true, allow_nil: true
     validates :type, inclusion: {
@@ -17,6 +20,14 @@ module VCAP::CloudController
 
     def user_guid
       HashUtils.dig(relationships, :user, :data, :guid)
+    end
+
+    def user_name
+      HashUtils.dig(relationships, :user, :data, :name)
+    end
+
+    def user_origin
+      HashUtils.dig(relationships, :user, :data, :origin)
     end
 
     def space_guid
