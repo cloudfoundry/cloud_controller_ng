@@ -60,7 +60,14 @@ class RolesController < ApplicationController
                given_origin
              else
                origins = uaa_client.origins_for_username(username)
-               unprocessable!("Ambiguous user. User with username '#{username}' exists in the following origins: #{origins.join ', '}. Specify an origin to disambiguate.") unless origins.length < 2
+
+               if origins.length > 1
+                 unprocessable!(
+                   "Ambiguous user. User with username '#{username}' exists in the following origins: "\
+                   "#{origins.join(', ')}. Specify an origin to disambiguate."
+                 )
+               end
+
                origins[0]
              end
 
