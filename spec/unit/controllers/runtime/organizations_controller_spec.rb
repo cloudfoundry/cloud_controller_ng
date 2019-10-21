@@ -25,33 +25,33 @@ module VCAP::CloudController
       it do
         expect(VCAP::CloudController::OrganizationsController).to have_creatable_attributes(
           {
-            name:                  { type: 'string', required: true },
-            billing_enabled:       { type: 'bool', default: false },
-            status:                { type: 'string', default: 'active' },
+            name: { type: 'string', required: true },
+            billing_enabled: { type: 'bool', default: false },
+            status: { type: 'string', default: 'active' },
             quota_definition_guid: { type: 'string' },
-            user_guids:            { type: '[string]' },
-            manager_guids:         { type: '[string]' },
+            user_guids: { type: '[string]' },
+            manager_guids: { type: '[string]' },
             billing_manager_guids: { type: '[string]' },
-            auditor_guids:         { type: '[string]' },
-            app_event_guids:       { type: '[string]' }
+            auditor_guids: { type: '[string]' },
+            app_event_guids: { type: '[string]' }
           })
       end
 
       it do
         expect(VCAP::CloudController::OrganizationsController).to have_updatable_attributes(
           {
-            name:                         { type: 'string' },
-            billing_enabled:              { type: 'bool' },
-            status:                       { type: 'string' },
-            quota_definition_guid:        { type: 'string' },
-            user_guids:                   { type: '[string]' },
-            manager_guids:                { type: '[string]' },
-            billing_manager_guids:        { type: '[string]' },
-            auditor_guids:                { type: '[string]' },
-            app_event_guids:              { type: '[string]' },
-            space_guids:                  { type: '[string]' },
+            name: { type: 'string' },
+            billing_enabled: { type: 'bool' },
+            status: { type: 'string' },
+            quota_definition_guid: { type: 'string' },
+            user_guids: { type: '[string]' },
+            manager_guids: { type: '[string]' },
+            billing_manager_guids: { type: '[string]' },
+            auditor_guids: { type: '[string]' },
+            app_event_guids: { type: '[string]' },
+            space_guids: { type: '[string]' },
             space_quota_definition_guids: { type: '[string]' },
-            default_isolation_segment_guid:       { type: 'string' }
+            default_isolation_segment_guid: { type: 'string' }
           })
       end
 
@@ -138,14 +138,14 @@ module VCAP::CloudController
       it do
         expect(VCAP::CloudController::OrganizationsController).to have_nested_routes(
           {
-            spaces:                  [:get, :put, :delete],
-            domains:                 [:get, :delete],
-            private_domains:         [:get, :put, :delete],
-            users:                   [:get, :put, :delete],
-            managers:                [:get, :put, :delete],
-            billing_managers:        [:get, :put, :delete],
-            auditors:                [:get, :put, :delete],
-            app_events:              [:get, :put, :delete],
+            spaces: [:get, :put, :delete],
+            domains: [:get, :delete],
+            private_domains: [:get, :put, :delete],
+            users: [:get, :put, :delete],
+            managers: [:get, :put, :delete],
+            billing_managers: [:get, :put, :delete],
+            auditors: [:get, :put, :delete],
+            app_events: [:get, :put, :delete],
             space_quota_definitions: [:get, :put, :delete],
           }
         )
@@ -585,6 +585,16 @@ module VCAP::CloudController
               expect(event).to be_nil
             end
           end
+
+          context 'assigning an manager to a user that does not exist' do
+            it 'returns an invalid relations error' do
+              request_body = { name: name, manager_guids: ['bogus-guid'] }.to_json
+              put uri, request_body
+
+              expect(last_response).to have_status_code(400)
+              expect(decoded_response['code']).to eq(1002)
+            end
+          end
         end
 
         context 'deassigning an org manager' do
@@ -626,6 +636,16 @@ module VCAP::CloudController
             event = Event.find(type: 'audit.user.organization_auditor_add', actee: other_user.guid)
             expect(event).not_to be_nil
           end
+
+          context 'assigning an auditor to a user that does not exist' do
+            it 'returns an invalid relations error' do
+              request_body = { name: name, auditor_guids: ['bogus-guid'] }.to_json
+              put uri, request_body
+
+              expect(last_response).to have_status_code(400)
+              expect(decoded_response['code']).to eq(1002)
+            end
+          end
         end
 
         context 'deassigning an auditor' do
@@ -664,6 +684,16 @@ module VCAP::CloudController
             event = Event.find(type: 'audit.user.organization_billing_manager_add', actee: other_user.guid)
             expect(event).not_to be_nil
           end
+
+          context 'assigning an billing_manager to a user that does not exist' do
+            it 'returns an invalid relations error' do
+              request_body = { name: name, billing_manager_guids: ['bogus-guid'] }.to_json
+              put uri, request_body
+
+              expect(last_response).to have_status_code(400)
+              expect(decoded_response['code']).to eq(1002)
+            end
+          end
         end
 
         context 'deassigning a billing manager' do
@@ -701,6 +731,16 @@ module VCAP::CloudController
 
             event = Event.find(type: 'audit.user.organization_user_add', actee: other_user.guid)
             expect(event).not_to be_nil
+          end
+
+          context 'assigning an user to a user that does not exist' do
+            it 'returns an invalid relations error' do
+              request_body = { name: name, user_guids: ['bogus-guid'] }.to_json
+              put uri, request_body
+
+              expect(last_response).to have_status_code(400)
+              expect(decoded_response['code']).to eq(1002)
+            end
           end
         end
 
@@ -1026,7 +1066,7 @@ module VCAP::CloudController
       let(:org) { Organization.make(manager_guids: org_managers, user_guids: org_users) }
       let(:org_managers) { [mgr.guid] }
       let(:org_space_empty) { Space.make(organization: org) }
-      let(:org_space_full)  { Space.make(organization: org, manager_guids: [user.guid], developer_guids: [user.guid], auditor_guids: [user.guid]) }
+      let(:org_space_full) { Space.make(organization: org, manager_guids: [user.guid], developer_guids: [user.guid], auditor_guids: [user.guid]) }
 
       before { set_current_user_as_admin }
 

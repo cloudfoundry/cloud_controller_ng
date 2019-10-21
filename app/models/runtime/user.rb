@@ -119,6 +119,44 @@ module VCAP::CloudController
       user_hash[guid]['username']
     end
 
+    def add_managed_organization(org)
+      validate_organization(org)
+      OrganizationManager.find_or_create(user_id: id, organization_id: org.id)
+      self.reload
+    end
+
+    def add_billing_managed_organization(org)
+      validate_organization(org)
+      OrganizationBillingManager.find_or_create(user_id: id, organization_id: org.id)
+      self.reload
+    end
+
+    def add_audited_organization(org)
+      validate_organization(org)
+      OrganizationAuditor.find_or_create(user_id: id, organization_id: org.id)
+      self.reload
+    end
+
+    def add_organization(org)
+      OrganizationUser.find_or_create(user_id: id, organization_id: org.id)
+      self.reload
+    end
+
+    def add_managed_space(space)
+      SpaceManager.find_or_create(user_id: id, space_id: space.id)
+      self.reload
+    end
+
+    def add_audited_space(space)
+      SpaceAuditor.find_or_create(user_id: id, space_id: space.id)
+      self.reload
+    end
+
+    def add_space(space)
+      SpaceDeveloper.find_or_create(user_id: id, space_id: space.id)
+      self.reload
+    end
+
     def remove_spaces(space)
       remove_space space
       remove_managed_space space

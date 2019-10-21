@@ -139,7 +139,7 @@ module VCAP::CloudController
           expect(user_1.organizations).to include(org_1)
 
           org_delete.delete([org_1])
-          expect(user_1.organizations).not_to include(org_1)
+          expect(user_1.reload.organizations).not_to include(org_1)
         end
 
         it 'creates audit events for org deletion and recursive deletes' do

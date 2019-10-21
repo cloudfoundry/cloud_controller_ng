@@ -1,31 +1,43 @@
 require 'spec_helper'
 
 RSpec.describe 'add role_guid and timestamps to roles join tables', isolation: :truncation do
+  let(:db) { Sequel::Model.db }
   let(:user) { VCAP::CloudController::User.make }
   let(:space) { VCAP::CloudController::Space.make }
-
-  before do
-    space.organization.add_user(user)
-    space.organization.add_billing_manager(user)
-    space.organization.add_auditor(user)
-    space.organization.add_manager(user)
-    space.add_auditor(user)
-    space.add_developer(user)
-    space.add_manager(user)
-  end
-
-  %w{
+  org_roles = %w{
     organizations_auditors
     organizations_billing_managers
     organizations_managers
     organizations_users
+  }
+  space_roles = %w{
     spaces_auditors
     spaces_developers
     spaces_managers
-  }.each do |role_table|
+  }
+
+  before do
+    space_roles.each { |s_role|
+      db[s_role.to_sym].insert({
+        user_id: user.id,
+        space_id: space.id
+      })
+    }
+
+    org_roles.each { |o_role|
+      db[o_role.to_sym].insert({
+        user_id: user.id,
+        organization_id: space.organization.id
+      })
+    }
+  end
+
+  roles = org_roles + space_roles
+
+  roles.each do |role_table|
     context role_table do
       it "adds the columns to the #{role_table} table" do
-        role = VCAP::CloudController::DeploymentModel.db[role_table.to_sym].first(user_id: user.id)
+        role = db[role_table.to_sym].first(user_id: user.id)
 
         expect(role[:role_guid]).to be_nil
         expect(role[:created_at]).to be_a(Time)

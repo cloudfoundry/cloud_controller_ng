@@ -148,11 +148,11 @@ module VCAP::CloudController
         validate_access(read_validation, user, request_attrs)
 
         if relationship.eql?(:audited_spaces)
-          SpaceAuditor.create(user_id: user.id, space_id: space.id)
+          SpaceAuditor.find_or_create(user_id: user.id, space_id: space.id)
         elsif relationship.eql?(:managed_spaces)
-          SpaceManager.create(user_id: user.id, space_id: space.id)
+          SpaceManager.find_or_create(user_id: user.id, space_id: space.id)
         else
-          SpaceDeveloper.create(user_id: user.id, space_id: space.id)
+          SpaceDeveloper.find_or_create(user_id: user.id, space_id: space.id)
         end
       end
 
@@ -185,13 +185,13 @@ module VCAP::CloudController
         validate_access(read_validation, user, request_attrs)
 
         if relationship.eql?(:billing_managed_organizations)
-          OrganizationBillingManager.create(user_id: user.id, organization_id: organization.id)
+          OrganizationBillingManager.find_or_create(user_id: user.id, organization_id: organization.id)
         elsif relationship.eql?(:audited_organizations)
-          OrganizationAuditor.create(user_id: user.id, organization_id: organization.id)
+          OrganizationAuditor.find_or_create(user_id: user.id, organization_id: organization.id)
         elsif relationship.eql?(:managed_organizations)
-          OrganizationManager.create(user_id: user.id, organization_id: organization.id)
+          OrganizationManager.find_or_create(user_id: user.id, organization_id: organization.id)
         else
-          OrganizationUser.create(user_id: user.id, organization_id: organization.id)
+          OrganizationUser.find_or_create(user_id: user.id, organization_id: organization.id)
         end
       end
 
