@@ -5,13 +5,11 @@ module VCAP::CloudController
     let(:parent_app) { AppModel.make }
 
     describe 'after create' do
-      it 'creates a TASK_STARTED event' do
+      it 'does not create a TASK_STARTED event' do
         task = TaskModel.make(app: parent_app, state: TaskModel::PENDING_STATE)
 
         event = AppUsageEvent.find(task_guid: task.guid, state: 'TASK_STARTED')
-        expect(event).not_to be_nil
-        expect(event.task_guid).to eq(task.guid)
-        expect(event.parent_app_guid).to eq(task.app.guid)
+        expect(event).to be_nil
       end
     end
 
@@ -46,6 +44,15 @@ module VCAP::CloudController
 
           event = AppUsageEvent.find(task_guid: task.guid, state: 'TASK_STOPPED')
           expect(event).to be_nil
+        end
+
+        it 'creates a TASK_STARTED event' do
+          task.update(state: TaskModel::RUNNING_STATE)
+
+          event = AppUsageEvent.find(task_guid: task.guid, state: 'TASK_STARTED')
+          expect(event).not_to be_nil
+          expect(event.task_guid).to eq(task.guid)
+          expect(event.parent_app_guid).to eq(task.app.guid)
         end
       end
 
