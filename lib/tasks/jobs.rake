@@ -12,7 +12,7 @@ namespace :jobs do
   task :local, [:name] do |t, args|
     RakeConfig.context = :api
 
-    CloudController::DelayedWorker.new(queues: [VCAP::CloudController::Jobs::LocalQueue.new(RakeConfig.config).to_s],
+    CloudController::DelayedWorker.new(queues: [VCAP::CloudController::Jobs::Queues.local(RakeConfig.config).to_s],
                                        name: args.name).start_working
   end
 
