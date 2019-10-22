@@ -97,7 +97,6 @@ module OPI
             start_command: @process.specified_or_detected_command,
             droplet_hash: @process.desired_droplet.droplet_hash,
             droplet_guid: @process.desired_droplet.guid,
-            # stack: @process.app.lifecycle_data.stack
           }
         }
       end
