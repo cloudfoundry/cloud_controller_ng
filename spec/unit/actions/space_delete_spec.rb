@@ -326,7 +326,6 @@ module VCAP::CloudController
             expect(user_with_role.reload.spaces).not_to include(space)
             expect { role.reload }.to raise_error Sequel::NoExistingObject
 
-
             organization_user = OrganizationUser.find(user_id: user_with_role.id, organization_id: space.organization.id)
             expect(organization_user).not_to be_nil
           end
