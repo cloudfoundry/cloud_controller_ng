@@ -136,7 +136,7 @@ class AppsV3Controller < ApplicationController
     delete_action = AppDelete.new(user_audit_info)
     deletion_job  = VCAP::CloudController::Jobs::DeleteActionJob.new(AppModel, app.guid, delete_action)
 
-    job = Jobs::Enqueuer.new(deletion_job, queue: 'cc-generic').enqueue_pollable do |pollable_job|
+    job = Jobs::Enqueuer.new(deletion_job, queue: Jobs::Queues.generic).enqueue_pollable do |pollable_job|
       DeleteAppErrorTranslatorJob.new(pollable_job)
     end
 

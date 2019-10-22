@@ -23,7 +23,7 @@ module VCAP::CloudController
         if source_package.type == 'bits'
           @enqueued_job = Jobs::Enqueuer.new(
             Jobs::V3::PackageBitsCopier.new(source_package.guid, package.guid),
-            queue: 'cc-generic'
+            queue: Jobs::Queues.generic
           ).enqueue
         end
 

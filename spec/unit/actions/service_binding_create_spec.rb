@@ -328,7 +328,7 @@ module VCAP::CloudController
             }.to change { Delayed::Job.count }.from(0).to(1)
 
             expect(Delayed::Job.first).to be_a_fully_wrapped_job_of Jobs::Services::ServiceBindingStateFetch
-            expect(Delayed::Job.first.queue).to eq('cc-generic')
+            expect(Delayed::Job.first.queue).to eq(Jobs::Queues.generic)
           end
 
           context 'when the create ServiceBindingOperation fails' do

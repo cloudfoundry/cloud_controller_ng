@@ -14,7 +14,7 @@ module VCAP::Services
             service_instance.service_plan.guid
           )
 
-          opts = { queue: 'cc-generic', run_at: Delayed::Job.db_time_now }
+          opts = { queue: VCAP::CloudController::Jobs::Queues.generic, run_at: Delayed::Job.db_time_now }
           VCAP::CloudController::Jobs::Enqueuer.new(orphan_deprovision_job, opts).enqueue
         end
 
@@ -26,7 +26,7 @@ module VCAP::Services
             binding_info
           )
 
-          opts = { queue: 'cc-generic', run_at: Delayed::Job.db_time_now }
+          opts = { queue: VCAP::CloudController::Jobs::Queues.generic, run_at: Delayed::Job.db_time_now }
           VCAP::CloudController::Jobs::Enqueuer.new(unbind_job, opts).enqueue
         end
 
@@ -38,7 +38,7 @@ module VCAP::Services
             service_key.service_instance.guid
           )
 
-          opts = { queue: 'cc-generic', run_at: Delayed::Job.db_time_now }
+          opts = { queue: VCAP::CloudController::Jobs::Queues.generic, run_at: Delayed::Job.db_time_now }
           VCAP::CloudController::Jobs::Enqueuer.new(key_delete_job, opts).enqueue
         end
       end

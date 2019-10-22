@@ -51,7 +51,7 @@ module VCAP::CloudController
 
           binding.save_with_new_operation({ type: 'create', state: 'in progress', broker_provided_operation: binding_result[:operation] })
           job = Jobs::Services::ServiceBindingStateFetch.new(binding.guid, @user_audit_info, message.audit_hash)
-          enqueuer = Jobs::Enqueuer.new(job, queue: 'cc-generic')
+          enqueuer = Jobs::Enqueuer.new(job, queue: Jobs::Queues.generic)
           enqueuer.enqueue
           Repositories::ServiceBindingEventRepository.record_start_create(binding, @user_audit_info, message.audit_hash, manifest_triggered: @manifest_triggered)
         else

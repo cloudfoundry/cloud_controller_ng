@@ -217,7 +217,7 @@ module VCAP::CloudController
           job = delete_buildpack_cache_jobs.last
 
           expect(job.handler).to include(app.guid)
-          expect(job.queue).to eq('cc-generic')
+          expect(job.queue).to eq(Jobs::Queues.generic)
           expect(app.exists?).to be_falsey
         end
 

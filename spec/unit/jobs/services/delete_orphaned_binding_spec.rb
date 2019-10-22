@@ -17,7 +17,7 @@ module VCAP::CloudController
         end
 
         it 'unbinds the binding' do
-          Jobs::Enqueuer.new(job, { queue: 'cc-generic', run_at: Delayed::Job.db_time_now }).enqueue
+          Jobs::Enqueuer.new(job, { queue: Jobs::Queues.generic, run_at: Delayed::Job.db_time_now }).enqueue
           execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
           expect(client).to have_received(:unbind) do |binding|
@@ -56,7 +56,7 @@ module VCAP::CloudController
           allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new).and_return(client)
 
           start = Delayed::Job.db_time_now
-          opts = { queue: 'cc-generic', run_at: start }
+          opts = { queue: Jobs::Queues.generic, run_at: start }
           Jobs::Enqueuer.new(job, opts).enqueue
 
           run_at_time = start

@@ -127,7 +127,7 @@ module VCAP::CloudController
 
           it 'enqueues a job' do
             fake_enqueuer = instance_double(Jobs::Enqueuer)
-            expect(Jobs::Enqueuer).to receive(:new).with(duck_type(:perform), { queue: 'cc-generic' }).and_return(fake_enqueuer)
+            expect(Jobs::Enqueuer).to receive(:new).with(duck_type(:perform), { queue: Jobs::Queues.generic }).and_return(fake_enqueuer)
             expect(fake_enqueuer).to receive(:enqueue).once
 
             deprovisioner.deprovision_service_instance(service_instance, accepts_incomplete, async)

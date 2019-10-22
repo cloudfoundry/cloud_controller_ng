@@ -459,7 +459,7 @@ module VCAP::CloudController
             }
           }
 
-          expect(job.queue).to eq('cc-generic')
+          expect(job.queue).to eq(Jobs::Queues.generic)
           expect(last_response.status).to eq(201)
           expect(decoded_response).to eq(expected_response)
         end

@@ -19,8 +19,9 @@ namespace :jobs do
   desc 'Start a delayed_job worker.'
   task :generic, [:name] do |t, args|
     RakeConfig.context = :worker
+    # TODO: maybe move this array to Jobs::Queues.all
     queues = [
-      'cc-generic',
+      VCAP::CloudController::Jobs::Queues.generic,
       'app_usage_events',
       'audit_events',
       'failed_jobs',

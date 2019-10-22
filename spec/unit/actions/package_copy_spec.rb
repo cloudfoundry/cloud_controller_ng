@@ -62,7 +62,7 @@ module VCAP::CloudController
             }.to change { Delayed::Job.count }.by(1)
 
             job = Delayed::Job.last
-            expect(job.queue).to eq('cc-generic')
+            expect(job.queue).to eq(Jobs::Queues.generic)
             expect(job.handler).to include(package.guid)
             expect(job.handler).to include(source_package.guid)
             expect(job.handler).to include('PackageBitsCopier')

@@ -25,14 +25,14 @@ module VCAP::CloudController
         def enqueue_droplet_delete_job(droplet_guid)
           Jobs::Enqueuer.new(
             Jobs::Runtime::DeleteExpiredDropletBlob.new(droplet_guid),
-            queue: 'cc-generic'
+            queue: Jobs::Queues.generic
           ).enqueue
         end
 
         def enqueue_package_delete_job(package_guid)
           Jobs::Enqueuer.new(
             Jobs::Runtime::DeleteExpiredPackageBlob.new(package_guid),
-            queue: 'cc-generic'
+            queue: Jobs::Queues.generic
           ).enqueue
         end
 
