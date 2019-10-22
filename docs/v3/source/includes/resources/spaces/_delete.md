@@ -1,5 +1,8 @@
 ### Delete a space
 
+When a space is deleted, the user roles associated with the space will be
+deleted.
+
 ```
 Example Request
 ```
