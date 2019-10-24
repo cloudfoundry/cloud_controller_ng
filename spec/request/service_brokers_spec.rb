@@ -942,14 +942,9 @@ RSpec.describe 'V3 service brokers' do
 
         expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
 
-        begin
-          error = YAML.safe_load(job.cf_api_error)
-          expect(error['errors'].first['code']).to eq(270012)
-          expect(error['errors'].first['detail']).to eq("Service broker catalog is invalid: \nService broker must provide at least one service\n")
-        rescue TypeError => ex
-          warn("QQQ: travis error: #{ex}\n yaml input: #{job.cf_api_error}\n backtrace: #{ex.backtrace}")
-          raise
-        end
+        error = YAML.safe_load(job.cf_api_error)
+        expect(error['errors'].first['code']).to eq(270012)
+        expect(error['errors'].first['detail']).to eq("Service broker catalog is invalid: \nService broker must provide at least one service\n")
       end
     end
 
