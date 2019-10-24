@@ -948,7 +948,7 @@ RSpec.describe 'V3 service brokers' do
       end
     end
 
-    context 'when synchronizing UAA clients fails' do
+    context 'when synchronizing UAA clients fails', :focus do
       before do
         VCAP::CloudController::ServiceDashboardClient.make(
           uaa_id: dashboard_client['id']
@@ -970,7 +970,7 @@ RSpec.describe 'V3 service brokers' do
         )
       end
 
-      it 'has failed the job with an appropriate error', :focus do
+      it 'has failed the job with an appropriate error' do
         warn("QQQ: in test, the lazy-eval job guid is #{job.guid}")
         get "/v3/jobs/#{job.guid}", {}, admin_headers
         expect(parsed_response).to include(
