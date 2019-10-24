@@ -912,7 +912,6 @@ RSpec.describe 'V3 service brokers' do
       end
 
       it 'has failed the job with an appropriate error' do
-        sleep 0.001
         job = VCAP::CloudController::PollableJobModel.last
 
         expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
@@ -1285,18 +1284,18 @@ RSpec.describe 'V3 service brokers' do
       end
 
       context 'when the job fails to execute' do
+        job_url = nil
         before do
           allow_any_instance_of(VCAP::Services::ServiceBrokers::ServiceBrokerRemover).to receive(:remove).and_raise('error')
 
           delete "/v3/service_brokers/#{global_broker.guid}", {}, admin_headers
           expect(last_response).to have_status_code(202)
+          job_url = last_response['Location']
 
           execute_all_jobs(expected_successes: 0, expected_failures: 1)
         end
 
         it 'marks the job as failed' do
-          sleep 0.001
-          job_url = last_response['Location']
           get job_url, {}, admin_headers
           expect(last_response).to have_status_code(200)
           expect(parsed_response).to include({
