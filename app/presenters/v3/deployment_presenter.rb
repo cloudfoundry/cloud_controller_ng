@@ -16,6 +16,7 @@ module VCAP::CloudController::Presenters::V3
             last_successful_healthcheck: deployment.last_healthy_at
           }
         },
+        strategy: deployment.strategy,
         droplet: {
           guid: deployment.droplet_guid
         },

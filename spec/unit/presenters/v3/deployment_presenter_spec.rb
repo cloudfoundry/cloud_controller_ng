@@ -30,6 +30,8 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:status][:reason]).to be_nil
         expect(result[:status][:details][:last_successful_healthcheck]).to eq('2019-07-12 19:01:54')
 
+        expect(result[:strategy]).to eq('rolling')
+
         expect(result[:droplet][:guid]).to eq(droplet.guid)
         expect(result[:previous_droplet][:guid]).to eq(previous_droplet.guid)
 
