@@ -16004,6 +16004,7 @@ applications without incurring downtime. This is different from the traditional 
     </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DEPLOYING"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"reason"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
   </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"strategy"</span><span class="p">:</span><span class="w"> </span><span class="s2">"rolling"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"droplet"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"44ccfa61-dbcf-4a0d-82fe-f668e9d2a962"</span><span class="w">
   </span><span class="p">},</span><span class="w">
@@ -16066,6 +16067,11 @@ applications without incurring downtime. This is different from the traditional 
 <td><strong>status.reason</strong></td>
 <td><em>string</em> or <code class="prettyprint">null</code></td>
 <td>The reason for the final status of the deployment. Valid values are <code class="prettyprint">DEPLOYED</code>, <code class="prettyprint">CANCELED</code>, <code class="prettyprint">SUPERSEDED</code> (another deployment created for app before completion), <code class="prettyprint">DEGENERATE</code> (the deployment was created incorrectly by the system). <br><br> This attribute is only set if the deployment has <code class="prettyprint">status.value</code> of <code class="prettyprint">FINALIZED</code>.  If the deployment is still in progress, this field will be set to <code class="prettyprint">null</code>.</td>
+</tr>
+<tr>
+<td><strong>strategy</strong></td>
+<td><em>string</em></td>
+<td>Strategy used for the deployment.  Supported strategies are <code class="prettyprint">rolling</code> only.</td>
 </tr>
 <tr>
 <td><strong>guid</strong></td>
@@ -16134,6 +16140,7 @@ applications without incurring downtime. This is different from the traditional 
   "droplet": {
     "guid": "[droplet-guid]"
   },
+  "strategy": "rolling",
   "relationships": {
     "app": {
       "data": {
@@ -16153,6 +16160,7 @@ applications without incurring downtime. This is different from the traditional 
   "revision": {
     "guid": "[revision-guid]"
   },
+  "strategy": "rolling",
   "relationships": {
     "app": {
       "data": {
@@ -16175,6 +16183,7 @@ applications without incurring downtime. This is different from the traditional 
     </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DEPLOYING"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"reason"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
   </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"strategy"</span><span class="p">:</span><span class="w"> </span><span class="s2">"rolling"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"droplet"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"44ccfa61-dbcf-4a0d-82fe-f668e9d2a962"</span><span class="w">
   </span><span class="p">},</span><span class="w">
@@ -16261,6 +16270,12 @@ applications without incurring downtime. This is different from the traditional 
 <td></td>
 </tr>
 <tr>
+<td><strong>strategy</strong></td>
+<td><em>string</em></td>
+<td>The strategy to use for the deployment</td>
+<td><code class="prettyprint">rolling</code></td>
+</tr>
+<tr>
 <td><strong>metadata.labels</strong> <em>(experimental)</em></td>
 <td><a href="#labels"><em>label object</em></a></td>
 <td>Labels applied to the deployment.</td>
@@ -16310,6 +16325,7 @@ applications without incurring downtime. This is different from the traditional 
     </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DEPLOYING"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"reason"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
   </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"strategy"</span><span class="p">:</span><span class="w"> </span><span class="s2">"rolling"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"droplet"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"44ccfa61-dbcf-4a0d-82fe-f668e9d2a962"</span><span class="w">
   </span><span class="p">},</span><span class="w">
@@ -16417,6 +16433,7 @@ applications without incurring downtime. This is different from the traditional 
         </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"FINALIZED"</span><span class="p">,</span><span class="w">
         </span><span class="nt">"reason"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DEPLOYED"</span><span class="w">
       </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"strategy"</span><span class="p">:</span><span class="w"> </span><span class="s2">"rolling"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"droplet"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"44ccfa61-dbcf-4a0d-82fe-f668e9d2a962"</span><span class="w">
       </span><span class="p">},</span><span class="w">
@@ -16572,6 +16589,7 @@ applications without incurring downtime. This is different from the traditional 
     </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DEPLOYING"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"reason"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
   </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"strategy"</span><span class="p">:</span><span class="w"> </span><span class="s2">"rolling"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"droplet"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"44ccfa61-dbcf-4a0d-82fe-f668e9d2a962"</span><span class="w">
   </span><span class="p">},</span><span class="w">
