@@ -918,7 +918,7 @@ RSpec.describe 'V3 service brokers', :focus do
 
         expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
 
-        10.times do |i|
+        1.times do |i|
           break if job.cf_api_error
           warn("QQQ: no error on attempt #{i + 1}")
           dump_job(job)
@@ -956,7 +956,7 @@ RSpec.describe 'V3 service brokers', :focus do
 
         expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
 
-        10.times do |i|
+        1.times do |i|
           break if job.cf_api_error
           warn("QQQ: no job error on attempt #{i + 1}")
           dump_job(job)
