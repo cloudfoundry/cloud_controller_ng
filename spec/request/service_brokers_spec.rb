@@ -918,7 +918,13 @@ RSpec.describe 'V3 service brokers', :focus do
 
         expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
 
-        dump_job(job)
+        10.times do |i|
+          break if job.cf_api_error
+          warn("QQQ: no error on attempt #{i + 1}")
+          dump_job(job)
+          sleep 1
+        end
+
         expect(job.cf_api_error).not_to be_nil
         begin
         error = YAML.safe_load(job.cf_api_error)
@@ -950,7 +956,13 @@ RSpec.describe 'V3 service brokers', :focus do
 
         expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
 
-        dump_job(job)
+        10.times do |i|
+          break if job.cf_api_error
+          warn("QQQ: no job error on attempt #{i + 1}")
+          dump_job(job)
+          sleep 1.0
+        end
+
         expect(job.cf_api_error).not_to be_nil
         error = YAML.safe_load(job.cf_api_error)
         expect(error['errors'].first['code']).to eq(270012)
