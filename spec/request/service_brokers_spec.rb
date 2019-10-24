@@ -918,7 +918,7 @@ RSpec.describe 'V3 service brokers', :focus do
 
         expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
 
-        expect(job.cf_api_error).not_to be_empty
+        expect(job.cf_api_error).not_to be_nil
         begin
         error = YAML.safe_load(job.cf_api_error)
         expect(error['errors'].first['code']).to eq(10001)
@@ -949,7 +949,7 @@ RSpec.describe 'V3 service brokers', :focus do
 
         expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
 
-        expect(job.cf_api_error).not_to be_empty
+        expect(job.cf_api_error).not_to be_nil
         error = YAML.safe_load(job.cf_api_error)
         expect(error['errors'].first['code']).to eq(270012)
         expect(error['errors'].first['detail']).to eq("Service broker catalog is invalid: \nService broker must provide at least one service\n")
