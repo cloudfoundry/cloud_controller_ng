@@ -918,6 +918,7 @@ RSpec.describe 'V3 service brokers', :focus do
 
         expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
 
+        dump_job(job)
         expect(job.cf_api_error).not_to be_nil
         begin
         error = YAML.safe_load(job.cf_api_error)
@@ -949,6 +950,7 @@ RSpec.describe 'V3 service brokers', :focus do
 
         expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
 
+        dump_job(job)
         expect(job.cf_api_error).not_to be_nil
         error = YAML.safe_load(job.cf_api_error)
         expect(error['errors'].first['code']).to eq(270012)
@@ -1123,6 +1125,15 @@ RSpec.describe 'V3 service brokers', :focus do
 
     def expect_no_broker_created
       expect(VCAP::CloudController::ServiceBroker.count).to eq(@count_before_creation)
+    end
+
+    def dump_job(job)
+      if job.cf_api_error.nil?
+        warn("QQQ: job didn't fail...")
+        job.keys.each do |key|
+          warn("QQQ: job.#{key} = <#{job.send(key)}>")
+        end
+      end
     end
 
     def assert_broker_state(broker_json)
