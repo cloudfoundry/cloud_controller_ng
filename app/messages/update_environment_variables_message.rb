@@ -5,9 +5,8 @@ module VCAP::CloudController
     register_allowed_keys [:var]
 
     validates_with NoAdditionalKeysValidator
-    validates_with StringValuesOnlyValidator
 
-    validates :var, environment_variables: true
+    validates :var, environment_variables_string_values: true
 
     def self.for_env_var_group(params)
       if params == {}

@@ -89,6 +89,32 @@ module VCAP::CloudController::Validators
     end
   end
 
+  class EnvironmentVariablesStringValuesValidator < ActiveModel::EachValidator
+    extend StandaloneValidator
+
+    def validate_each(record, attribute, value)
+      if !value.is_a?(Hash)
+        record.errors.add(attribute, 'must be an object')
+      else
+        value.each do |key, inner_value|
+          if ![String, Symbol].include?(key.class)
+            record.errors.add(attribute, 'key must be a string')
+          elsif key.empty?
+            record.errors.add(attribute, 'key must be a minimum length of 1')
+          elsif key.match?(/\AVCAP_/i)
+            record.errors.add(attribute, 'cannot start with VCAP_')
+          elsif key.match?(/\AVMC/i)
+            record.errors.add(attribute, 'cannot start with VMC_')
+          elsif key.match?(/\APORT\z/i)
+            record.errors.add(attribute, 'cannot set PORT')
+          elsif ![String, NilClass].include?(inner_value.class)
+            record.errors.add(:base, "Non-string value in environment variable for key '#{key}', value '#{inner_value}'")
+          end
+        end
+      end
+    end
+  end
+
   class HealthCheckValidator < ActiveModel::Validator
     def validate(record)
       if record.health_check_type != VCAP::CloudController::HealthCheckTypes::HTTP

@@ -120,7 +120,7 @@ module VCAP::CloudController
         message = UpdateEnvironmentVariablesMessage.new(invalid_body)
 
         expect(message).not_to be_valid
-        expect(message.errors.full_messages[0]).to match('must be an object')
+        expect(message.errors.full_messages).to match(['Var must be an object'])
       end
 
       it 'returns a validation error when var is not present' do

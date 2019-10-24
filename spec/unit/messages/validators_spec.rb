@@ -230,6 +230,79 @@ module VCAP::CloudController::Validators
       end
     end
 
+    describe 'EnvironmentVariablesStringValuesValidator' do
+      let(:environment_variables_class) do
+        Class.new(fake_class) do
+          validates :field, environment_variables_string_values: true
+        end
+      end
+
+      it 'does not add an error if the environment variables are correct' do
+        fake_class = environment_variables_class.new field: { VARIABLE: 'amazing' }
+        expect(fake_class.valid?).to be_truthy
+      end
+
+      it 'validates that the input is a hash' do
+        fake_class = environment_variables_class.new field: 4
+        expect(fake_class.valid?).to be_falsey
+        expect(fake_class.errors[:field]).to include 'must be an object'
+      end
+
+      it 'does not allow variables that start with VCAP_' do
+        fake_class = environment_variables_class.new field: { VCAP_BANANA: 'woo' }
+        expect(fake_class.valid?).to be_falsey
+        expect(fake_class.errors[:field]).to include 'cannot start with VCAP_'
+      end
+
+      it 'does not allow variables that start with vcap_' do
+        fake_class = environment_variables_class.new field: { vcap_donkey: 'hee-haw' }
+        expect(fake_class.valid?).to be_falsey
+        expect(fake_class.errors[:field]).to include 'cannot start with VCAP_'
+      end
+
+      it 'does not allow variables that start with VMC_' do
+        fake_class = environment_variables_class.new field: { VMC_BANANA: 'woo' }
+        expect(fake_class.valid?).to be_falsey
+        expect(fake_class.errors[:field]).to include 'cannot start with VMC_'
+      end
+
+      it 'does not allow variables that start with vmc_' do
+        fake_class = environment_variables_class.new field: { vmc_donkey: 'hee-haw' }
+        expect(fake_class.valid?).to be_falsey
+        expect(fake_class.errors[:field]).to include 'cannot start with VMC_'
+      end
+
+      it 'does not allow variables that are PORT' do
+        fake_class = environment_variables_class.new field: { PORT: 'el lunes nos ponemos camisetas naranjas' }
+        expect(fake_class.valid?).to be_falsey
+        expect(fake_class.errors[:field]).to include 'cannot set PORT'
+      end
+
+      it 'does not allow variables that are port' do
+        fake_class = environment_variables_class.new field: { port: 'el lunes nos ponemos camisetas naranjas' }
+        expect(fake_class.valid?).to be_falsey
+        expect(fake_class.errors[:field]).to include 'cannot set PORT'
+      end
+
+      it 'does not allow variables with zero key length' do
+        fake_class = environment_variables_class.new field: { '': 'el lunes nos ponemos camisetas naranjas' }
+        expect(fake_class.valid?).to be_falsey
+        expect(fake_class.errors[:field]).to include 'key must be a minimum length of 1'
+      end
+
+      it 'does not allow variables with non-string keys' do
+        fake_class = environment_variables_class.new field: { 1 => 'el lunes nos ponemos camisetas naranjas' }
+        expect(fake_class.valid?).to be_falsey
+        expect(fake_class.errors[:field]).to include 'key must be a string'
+      end
+
+      it 'does not allow variables with non-string values' do
+        fake_class = environment_variables_class.new field: { fibonacci: [1, 1, 2, 3, 5, 8] }
+        expect(fake_class.valid?).to be_falsey
+        expect(fake_class.errors[:base]).to eq ["Non-string value in environment variable for key 'fibonacci', value '[1, 1, 2, 3, 5, 8]'"]
+      end
+    end
+
     describe 'HealthCheckValidator' do
       let(:health_check_class) do
         Class.new(fake_class) do
