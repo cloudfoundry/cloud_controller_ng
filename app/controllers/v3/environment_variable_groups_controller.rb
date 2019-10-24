@@ -16,7 +16,7 @@ class EnvironmentVariableGroupsController < ApplicationController
   end
 
   def update
-    message = VCAP::CloudController::UpdateEnvironmentVariablesMessage.new(hashed_params[:body], { populate_empty_hash_with_empty_var: true })
+    message = VCAP::CloudController::UpdateEnvironmentVariablesMessage.for_env_var_group(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
     unauthorized! unless permission_queryer.can_write_globally?
 

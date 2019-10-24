@@ -9,11 +9,11 @@ module VCAP::CloudController
 
     validates :var, environment_variables: true
 
-    def initialize(params, opts={})
-      if (params == {}) && opts[:populate_empty_hash_with_empty_var]
+    def self.for_env_var_group(params)
+      if params == {}
         params = { var: {} }
       end
-      super(params)
+      self.new(params)
     end
 
     def audit_hash

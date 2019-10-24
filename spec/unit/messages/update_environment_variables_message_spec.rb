@@ -21,7 +21,7 @@ module VCAP::CloudController
 
       it 'returns no validation errors given an empty hash and directed to populate the empty hash' do
         empty_hash = {}
-        message = UpdateEnvironmentVariablesMessage.new(empty_hash, { populate_empty_hash_with_empty_var: true })
+        message = UpdateEnvironmentVariablesMessage.for_env_var_group(empty_hash)
 
         expect(message).to be_valid
         expect(message.var).to eq({})
