@@ -970,7 +970,7 @@ RSpec.describe 'V3 service brokers' do
         )
       end
 
-      it 'has failed the job with an appropriate error' do
+      it 'has failed the job with an appropriate error', :focus do
         warn("QQQ: in test, the lazy-eval job guid is #{job.guid}")
         get "/v3/jobs/#{job.guid}", {}, admin_headers
         expect(parsed_response).to include(
