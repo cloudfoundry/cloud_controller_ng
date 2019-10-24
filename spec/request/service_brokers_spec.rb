@@ -897,11 +897,12 @@ RSpec.describe 'V3 service brokers' do
       end
     end
 
-    context 'when fetching broker catalog fails' do
+    context 'when fetching broker catalog fails', :focus do
       before do
         stub_request(:get, 'http://example.org/broker-url/v2/catalog').
           to_return(status: 418, body: {}.to_json)
         create_broker_successfully(global_broker_request_body, with: admin_headers)
+        warn("QQQ: Just created job #{VCAP::CloudController::PollableJobModel.last.guid}")
 
         execute_all_jobs(expected_successes: 0, expected_failures: 1)
       end
@@ -913,13 +914,18 @@ RSpec.describe 'V3 service brokers' do
 
       it 'has failed the job with an appropriate error' do
         job = VCAP::CloudController::PollableJobModel.last
+        warn("QQQ: Testing with job #{job.guid}")
 
         expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
 
+        begin
         error = YAML.safe_load(job.cf_api_error)
         expect(error['errors'].first['code']).to eq(10001)
         expect(error['errors'].first['detail']).
           to eq("The service broker rejected the request to http://example.org/broker-url/v2/catalog. Status Code: 418 I'm a Teapot, Body: {}")
+        rescue => ex
+          warn("QQQ: Errors yaml-loading [has failed the job with an appropriate error]: yaml:#{job.cf_api_error}\n\n, backtrace:#{ex.backtrace}")
+        end
       end
     end
 
@@ -948,7 +954,7 @@ RSpec.describe 'V3 service brokers' do
       end
     end
 
-    context 'when synchronizing UAA clients fails', :focus do
+    context 'when synchronizing UAA clients fails' do
       before do
         VCAP::CloudController::ServiceDashboardClient.make(
           uaa_id: dashboard_client['id']
@@ -957,7 +963,7 @@ RSpec.describe 'V3 service brokers' do
         create_broker_successfully(global_broker_request_body, with: admin_headers)
 
         execute_all_jobs(expected_successes: 0, expected_failures: 1)
-        warn("QQQ: in before-do, current last job guid is #{VCAP::CloudController::PollableJobModel.last&.guid}")
+        # warn("QQQ: in before-do, current last job guid is #{VCAP::CloudController::PollableJobModel.last&.guid}")
       end
 
       let(:job) { VCAP::CloudController::PollableJobModel.last }
@@ -971,7 +977,7 @@ RSpec.describe 'V3 service brokers' do
       end
 
       it 'has failed the job with an appropriate error' do
-        warn("QQQ: in test, the lazy-eval job guid is #{job.guid}")
+        # warn("QQQ: in test, the lazy-eval job guid is #{job.guid}")
         get "/v3/jobs/#{job.guid}", {}, admin_headers
         expect(parsed_response).to include(
           'state' => 'FAILED',
