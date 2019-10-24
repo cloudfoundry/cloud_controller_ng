@@ -354,6 +354,8 @@ module VCAP::CloudController
         expect(visible_services.map(&:label)).to match_array expected_service_names
 
         user = make_user_for_org(space.organization)
+        # Work around a flaky error -- without this, the visible_service sometimes isn't found
+        sleep 0.000_001
         visible_services = Service.space_or_org_visible_for_user(space, user).all
         expect(visible_services.map(&:label)).to match_array [@visible_service.label]
       end
