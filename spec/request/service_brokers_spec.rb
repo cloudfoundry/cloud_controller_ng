@@ -4,7 +4,7 @@ require 'cloud_controller'
 require 'services'
 require 'messages/service_broker_update_message'
 
-RSpec.describe 'V3 service brokers' do
+RSpec.describe 'V3 service brokers', :focus do
   let(:user) { VCAP::CloudController::User.make }
   let(:global_broker_id) { 'global-service-id' }
   let(:space_broker_id) { 'space-service-id' }
@@ -918,6 +918,7 @@ RSpec.describe 'V3 service brokers' do
 
         expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
 
+        expect(job.cf_api_error).not_to be_empty
         begin
         error = YAML.safe_load(job.cf_api_error)
         expect(error['errors'].first['code']).to eq(10001)
@@ -948,6 +949,7 @@ RSpec.describe 'V3 service brokers' do
 
         expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
 
+        expect(job.cf_api_error).not_to be_empty
         error = YAML.safe_load(job.cf_api_error)
         expect(error['errors'].first['code']).to eq(270012)
         expect(error['errors'].first['detail']).to eq("Service broker catalog is invalid: \nService broker must provide at least one service\n")
