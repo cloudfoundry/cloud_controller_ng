@@ -957,6 +957,7 @@ RSpec.describe 'V3 service brokers' do
         create_broker_successfully(global_broker_request_body, with: admin_headers)
 
         execute_all_jobs(expected_successes: 0, expected_failures: 1)
+        warn("QQQ: in before-do, current last job guid is #{VCAP::CloudController::PollableJobModel.last&.guid}")
       end
 
       let(:job) { VCAP::CloudController::PollableJobModel.last }
@@ -970,6 +971,7 @@ RSpec.describe 'V3 service brokers' do
       end
 
       it 'has failed the job with an appropriate error' do
+        warn("QQQ: in test, the lazy-eval job guid is #{job.guid}")
         get "/v3/jobs/#{job.guid}", {}, admin_headers
         expect(parsed_response).to include(
           'state' => 'FAILED',
