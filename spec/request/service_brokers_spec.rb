@@ -914,7 +914,9 @@ RSpec.describe 'V3 service brokers' do
 
       it 'has failed the job with an appropriate error' do
         job = VCAP::CloudController::PollableJobModel.last
-        warn("QQQ: Testing with job #{job.guid}")
+        #debugger
+        warn("QQQ: Testing with job class #{job.class}, id #{job.id}, guid #{job.guid}")
+        warn("QQQ: Testing with job: job.delayed_job_guid: #{job.delayed_job_guid}")
 
         expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
 

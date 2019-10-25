@@ -40,6 +40,7 @@ module VCAP::CloudController
         job.cf_api_error = YAML.dump(error_presenter.to_hash)
         deprioritize_job(job)
         job.save
+        warn("QQQ: save_error: reloaded error for job class #{job.class}, id #{job.id}: guid: #{job.guid}\ncf_api_error: <#{job.reload.cf_api_error}>")
       end
 
       def log_error(error_presenter, job)
