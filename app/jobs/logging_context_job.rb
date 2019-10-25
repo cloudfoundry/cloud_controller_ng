@@ -25,7 +25,8 @@ module VCAP::CloudController
         #idx = caller.find_index{|s| s['spec/request/service_brokers_spec.rb']}
         #pp caller[0..idx].map{|x| x.sub(%r{/Users/\w+}, "...")}
         #debugger
-        warn("QQQ: Jobs::LoggingContextJob.error: job handler: #{job.handler}, e:<#{e}>")
+        spec_line = caller.find{|s| s['spec/request/service_brokers_spec.rb'] }
+        warn("QQQ: Jobs::LoggingContextJob.error:\n  ** spec line: #{spec_line},\n  ** job handler: #{job.handler},\n  ** e: <#{e}>\n\n")
         error_presenter = ErrorPresenter.new(e)
         log_error(error_presenter, job)
         save_error(error_presenter, job)
