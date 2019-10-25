@@ -28,6 +28,7 @@ module VCAP::CloudController
         spec_line = caller.find{|s| s['spec/request/service_brokers_spec.rb'] }
         warn("QQQ: Jobs::LoggingContextJob.error:\n  ** spec line: #{spec_line},\n  ** job handler: #{job.handler},\n  ** e: <#{e}>\n\n")
         error_presenter = ErrorPresenter.new(e)
+        warn("QQQ: error_presenter: <#{error_presenter}>,\nerror_presenter.to_hash:#{error_presenter.to_hash}\n\n")
         log_error(error_presenter, job)
         save_error(error_presenter, job)
         super(job, e)
