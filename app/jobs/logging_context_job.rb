@@ -21,6 +21,9 @@ module VCAP::CloudController
       end
 
       def error(job, e)
+        require 'pp'
+        idx = caller.find_index{|s| s['spec/request/service_brokers_spec.rb']}
+        pp caller[0..idx].map{|x| x.sub(%r{/Users/\w+}, "...")}
         error_presenter = ErrorPresenter.new(e)
         log_error(error_presenter, job)
         save_error(error_presenter, job)
