@@ -927,6 +927,12 @@ RSpec.describe 'V3 service brokers' do
           sleep 1
         end
 
+        if job.cf_api_error.nil?
+          djguid = job.delayed_job_guid
+          dbsj =  Delayed::Backend::Sequel::Job.find(guid: djguid)
+          warn("QQQ: underlying job id: #{dbsj.id}, cf_api_error is nil: #{cf_api_error.nil? ? 'yes!!' : 'no!!'}")
+        end
+
         expect(job.cf_api_error).not_to be_nil
         begin
         error = YAML.safe_load(job.cf_api_error)
