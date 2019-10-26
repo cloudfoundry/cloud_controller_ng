@@ -930,7 +930,7 @@ RSpec.describe 'V3 service brokers' do
         if job.cf_api_error.nil?
           djguid = job.delayed_job_guid
           dbsj =  Delayed::Backend::Sequel::Job.find(guid: djguid)
-          warn("QQQ: underlying job id: #{dbsj.id}, cf_api_error is nil: #{cf_api_error.nil? ? 'yes!!' : 'no!!'}")
+          warn("QQQ: underlying job id: #{dbsj.id}, cf_api_error is nil: #{dbsj.cf_api_error.nil? ? 'yes!!' : 'no!!'}")
         end
 
         expect(job.cf_api_error).not_to be_nil
