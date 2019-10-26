@@ -4,7 +4,7 @@ require 'cloud_controller'
 require 'services'
 require 'messages/service_broker_update_message'
 
-RSpec.describe 'V3 service brokers' do
+RSpec.describe 'V3 service brokers', :focus do
   let(:user) { VCAP::CloudController::User.make }
   let(:global_broker_id) { 'global-service-id' }
   let(:space_broker_id) { 'space-service-id' }
@@ -897,17 +897,17 @@ RSpec.describe 'V3 service brokers' do
       end
     end
 
-    context 'when fetching broker catalog fails', :focus do
+    context 'when fetching broker catalog fails' do
       before do
         stub_request(:get, 'http://example.org/broker-url/v2/catalog').
           to_return(status: 418, body: {}.to_json)
         create_broker_successfully(global_broker_request_body, with: admin_headers)
-        warn("QQQ: Just created job #{VCAP::CloudController::PollableJobModel.last.guid}")
+        #warn("QQQ: Just created job #{VCAP::CloudController::PollableJobModel.last.guid}")
 
         execute_all_jobs(expected_successes: 0, expected_failures: 1)
       end
 
-      xit 'leaves broker in a non-available failed state' do
+      it 'leaves broker in a non-available failed state' do
         broker = VCAP::CloudController::ServiceBroker.last
         expect(broker.service_broker_state.state).to eq(VCAP::CloudController::ServiceBrokerStateEnum::SYNCHRONIZATION_FAILED)
       end
@@ -915,32 +915,21 @@ RSpec.describe 'V3 service brokers' do
       it 'has failed the job with an appropriate error' do
         job = VCAP::CloudController::PollableJobModel.last
         #debugger
-        warn("QQQ: Testing with job class #{job.class}, id #{job.id}, guid #{job.guid}")
-        warn("QQQ: Testing with job: job.delayed_job_guid: #{job.delayed_job_guid}")
+        # warn("QQQ: Testing with job class #{job.class}, id #{job.id}, guid #{job.guid}")
+        # warn("QQQ: Testing with job: job.delayed_job_guid: #{job.delayed_job_guid}")
 
         expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
 
-        1.times do |i|
-          break if job.cf_api_error
-          warn("QQQ: no error on attempt #{i + 1}")
-          dump_job(job)
-          sleep 1
-        end
+        cf_api_error = get_cf_api_error(job)
+        expect(cf_api_error).not_to be_nil
 
-        if job.cf_api_error.nil?
-          djguid = job.delayed_job_guid
-          dbsj =  Delayed::Backend::Sequel::Job.find(guid: djguid)
-          warn("QQQ: underlying job id: #{dbsj.id}, cf_api_error is nil: #{dbsj.cf_api_error.nil? ? 'yes!!' : 'no!!'}")
-        end
-
-        expect(job.cf_api_error).not_to be_nil
         begin
-        error = YAML.safe_load(job.cf_api_error)
-        expect(error['errors'].first['code']).to eq(10001)
-        expect(error['errors'].first['detail']).
-          to eq("The service broker rejected the request to http://example.org/broker-url/v2/catalog. Status Code: 418 I'm a Teapot, Body: {}")
+          error = YAML.safe_load(cf_api_error)
+          expect(error['errors'].first['code']).to eq(10001)
+          expect(error['errors'].first['detail']).
+            to eq("The service broker rejected the request to http://example.org/broker-url/v2/catalog. Status Code: 418 I'm a Teapot, Body: {}")
         rescue => ex
-          warn("QQQ: Errors yaml-loading [has failed the job with an appropriate error]: yaml:#{job.cf_api_error}\n\n, backtrace:#{ex.backtrace}")
+          warn("QQQ: Errors yaml-loading [has failed the job with an appropriate error]: yaml:#{cf_api_error}\n\n, backtrace:#{ex.backtrace}")
         end
       end
     end
@@ -964,15 +953,17 @@ RSpec.describe 'V3 service brokers' do
 
         expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
 
-        1.times do |i|
-          break if job.cf_api_error
-          warn("QQQ: no job error on attempt #{i + 1}")
-          dump_job(job)
-          sleep 1.0
-        end
+        cf_api_error = get_cf_api_error(job)
+        expect(cf_api_error).not_to be_nil
 
-        expect(job.cf_api_error).not_to be_nil
-        error = YAML.safe_load(job.cf_api_error)
+        # 1.times do |i|
+        #   break if job.cf_api_error
+        #   warn("QQQ: no job error on attempt #{i + 1}")
+        #   dump_job(job)
+        #   sleep 1.0
+        # end
+
+        error = YAML.safe_load(cf_api_error)
         expect(error['errors'].first['code']).to eq(270012)
         expect(error['errors'].first['detail']).to eq("Service broker catalog is invalid: \nService broker must provide at least one service\n")
       end
@@ -1154,6 +1145,12 @@ RSpec.describe 'V3 service brokers' do
           warn("QQQ: job.#{key} = <#{job.send(key)}>")
         end
       end
+    end
+
+    def get_cf_api_error(job)
+      return job.cf_api_error if job.cf_api_error
+      djguid = job.delayed_job_guid
+      Delayed::Backend::Sequel::Job.find(guid: djguid).cf_api_error
     end
 
     def assert_broker_state(broker_json)
