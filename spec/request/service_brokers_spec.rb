@@ -4,7 +4,7 @@ require 'cloud_controller'
 require 'services'
 require 'messages/service_broker_update_message'
 
-RSpec.describe 'V3 service brokers', :focus do
+RSpec.describe 'V3 service brokers' do
   let(:user) { VCAP::CloudController::User.make }
   let(:global_broker_id) { 'global-service-id' }
   let(:space_broker_id) { 'space-service-id' }
@@ -902,7 +902,6 @@ RSpec.describe 'V3 service brokers', :focus do
         stub_request(:get, 'http://example.org/broker-url/v2/catalog').
           to_return(status: 418, body: {}.to_json)
         create_broker_successfully(global_broker_request_body, with: admin_headers)
-        #warn("QQQ: Just created job #{VCAP::CloudController::PollableJobModel.last.guid}")
 
         execute_all_jobs(expected_successes: 0, expected_failures: 1)
       end
@@ -914,9 +913,6 @@ RSpec.describe 'V3 service brokers', :focus do
 
       it 'has failed the job with an appropriate error' do
         job = VCAP::CloudController::PollableJobModel.last
-        #debugger
-        # warn("QQQ: Testing with job class #{job.class}, id #{job.id}, guid #{job.guid}")
-        # warn("QQQ: Testing with job: job.delayed_job_guid: #{job.delayed_job_guid}")
 
         expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
 
@@ -955,14 +951,6 @@ RSpec.describe 'V3 service brokers', :focus do
 
         cf_api_error = get_cf_api_error(job)
         expect(cf_api_error).not_to be_nil
-
-        # 1.times do |i|
-        #   break if job.cf_api_error
-        #   warn("QQQ: no job error on attempt #{i + 1}")
-        #   dump_job(job)
-        #   sleep 1.0
-        # end
-
         error = YAML.safe_load(cf_api_error)
         expect(error['errors'].first['code']).to eq(270012)
         expect(error['errors'].first['detail']).to eq("Service broker catalog is invalid: \nService broker must provide at least one service\n")
@@ -1328,14 +1316,21 @@ RSpec.describe 'V3 service brokers', :focus do
 
           delete "/v3/service_brokers/#{global_broker.guid}", {}, admin_headers
           expect(last_response).to have_status_code(202)
+          # debugger
           job_url = last_response['Location']
 
           execute_all_jobs(expected_successes: 0, expected_failures: 1)
         end
 
-        it 'marks the job as failed' do
+        it 'marks the job as failed', :focus do
           get job_url, {}, admin_headers
           expect(last_response).to have_status_code(200)
+          # debugger
+          if !parsed_response['errors'][0]['detail']['An unknown error occurred']
+            warn("QQQ: error failure: parsed_response['errors'].size = #{parsed_response['errors']}")
+            error = parsed_response['errors'][0]
+            warn("QQQ: parsed_response['errors'][0] parts: #{%w/title detail code/.map{|key| "#{key}: <#{error[key]}>"}.join(', ')}")
+          end
           expect(parsed_response).to include({
             'state' => 'FAILED',
             'operation' => 'service_broker.delete',
