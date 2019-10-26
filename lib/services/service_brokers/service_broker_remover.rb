@@ -12,12 +12,12 @@ module VCAP::Services::ServiceBrokers
     rescue
       # debugger
       brokers.first.update_state(VCAP::CloudController::ServiceBrokerStateEnum::DELETE_FAILED)
+      #warn("QQQ: In ServiceBrokerRemover#delete -- raise #{$!}")
       raise
     end
 
     # Used in v2 service broker deletion
     def remove(broker)
-      # debugger
       cache = cache_services_and_plans(broker)
 
       client_manager = VCAP::Services::SSO::DashboardClientManager.new(broker, @services_event_repository)
