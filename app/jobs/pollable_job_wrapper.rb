@@ -65,6 +65,7 @@ module VCAP::CloudController
       def save_error(api_error, job)
         find_pollable_job(job).each do |pollable_job|
           pollable_job.update(cf_api_error: api_error)
+          warn("QQQ: PollableJobWrapper#save_error: saving job #{job.guid} cf_api_error to <<\n#{api_error[0..500]}...>>")
         end
       end
 
