@@ -128,12 +128,10 @@ module VCAP
 
           context 'when service manager returns a warning' do
             let(:service_manager) { instance_double(Services::ServiceBrokers::ServiceManager, sync_services_and_plans: nil) }
-            let(:warning) { Services::ServiceBrokers::ServiceManager::DeactivatedPlansWarning.new }
+            let(:warning) { 'some catalog warning' }
 
             before do
               allow(Services::ServiceBrokers::ServiceManager).to receive(:new).and_return(service_manager)
-
-              warning.add(ServicePlan.make)
 
               allow(service_manager).to receive(:has_warnings?).and_return(true)
               allow(service_manager).to receive(:warnings).and_return([warning])
@@ -142,7 +140,7 @@ module VCAP
             it 'then the warning gets stored' do
               job.perform
 
-              expect(job.warnings).to include({ detail: warning.message })
+              expect(job.warnings).to include({ detail: warning })
             end
           end
 

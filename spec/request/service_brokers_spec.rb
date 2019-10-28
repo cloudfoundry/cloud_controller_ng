@@ -625,6 +625,84 @@ RSpec.describe 'V3 service brokers' do
         )
       end
     end
+
+    context 'when job succeeds with warnings' do
+      context 'when warning is a UAA problem' do
+        let(:broker) do
+          TestConfig.override({ uaa_client_name: nil, uaa_client_secret: nil })
+          create_broker_successfully(global_broker_request_body, with: admin_headers, execute_all_jobs: true)
+        end
+
+        it 'updates the job status and populates warnings field' do
+          patch("/v3/service_brokers/#{broker.guid}", global_broker_request_body.to_json, admin_headers)
+          execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+          job_url = last_response['Location']
+          get job_url, {}, admin_headers
+          expect(parsed_response).to include({
+            'state' => 'COMPLETE',
+            'operation' => 'service_broker.catalog.synchronize',
+            'errors' => [],
+            'warnings' => [
+              include({
+                'detail' => include('Warning: This broker includes configuration for a dashboard client.'),
+              })
+            ],
+          })
+        end
+      end
+
+      context 'when warning is a catalog problem (deactivated plan, but there is a service instance)' do
+        let!(:broker) do
+          TestConfig.override({})
+          create_broker_successfully(global_broker_request_body, with: admin_headers, execute_all_jobs: true)
+        end
+
+        before do
+          catalog_with_plan_deactivated = catalog(global_broker_id)
+          catalog_with_plan_deactivated['services'][0]['plans'][0]['id'] = 'something-else-id'
+          catalog_with_plan_deactivated['services'][0]['plans'][0]['name'] = 'something-else-name'
+
+          WebMock.reset!
+          stub_request(:get, 'http://example.org/broker-url/v2/catalog').
+            to_return(status: 200, body: catalog_with_plan_deactivated.to_json, headers: {})
+
+          token = { token_type: 'Bearer', access_token: 'my-favourite-access-token' }
+          stub_request(:any, 'https://uaa.service.cf.internal/oauth/token').
+            to_return(status: 200, body: token.to_json, headers: { 'Content-Type' => 'application/json' })
+
+          stub_uaa_for(global_broker_id)
+
+          VCAP::CloudController::ManagedServiceInstance.make(
+            service_plan: VCAP::CloudController::ServicePlan.find(name: 'plan_name-1')
+          )
+        end
+
+        it 'updates the job status and populates warnings field' do
+          patch("/v3/service_brokers/#{broker.guid}", global_broker_request_body.to_json, admin_headers)
+          execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+          job_url = last_response['Location']
+          get job_url, {}, admin_headers
+          expect(parsed_response).to include({
+            'state' => 'COMPLETE',
+            'operation' => 'service_broker.catalog.synchronize',
+            'errors' => [],
+            'warnings' => [
+              include({
+                'detail' => include(
+                  'Warning: Service plans are missing from the broker\'s catalog ' \
+                    '(http://example.org/broker-url/v2/catalog) but can not be removed from Cloud Foundry while instances exist.' \
+                    ' The plans have been deactivated to prevent users from attempting to provision new instances of these plans.' \
+                    ' The broker should continue to support bind, unbind, and delete for existing instances; if these operations' \
+                    " fail contact your broker provider.\nservice_name-1\n  plan_name-1\n"
+                ),
+              })
+            ],
+          })
+        end
+      end
+    end
   end
 
   describe 'POST /v3/service_brokers' do
@@ -794,21 +872,15 @@ RSpec.describe 'V3 service brokers' do
       end
     end
 
-    context 'when the job succeeds' do
-      let(:config) { {} }
+    context 'when job succeeds with warnings' do
+      context 'when warning is a UAA problem' do
+        before do
+          TestConfig.override({ uaa_client_name: nil, uaa_client_secret: nil })
+          create_broker_successfully(global_broker_request_body, with: admin_headers)
+          execute_all_jobs(expected_successes: 1, expected_failures: 0)
+        end
 
-      before do
-        TestConfig.override(config)
-        create_broker_successfully(global_broker_request_body, with: admin_headers)
-        execute_all_jobs(expected_successes: 1, expected_failures: 0)
-      end
-
-      context 'but warnings are emitted' do
-        let(:config) {
-          { uaa_client_name: nil, uaa_client_secret: nil }
-        }
-
-        it 'updates the job status' do
+        it 'updates the job status and populates warnings field' do
           job_url = last_response['Location']
           get job_url, {}, admin_headers
           expect(parsed_response).to include({
@@ -1336,6 +1408,21 @@ RSpec.describe 'V3 service brokers' do
         ].to_json
       ).
       to_return(status: 200, body: {}.to_json, headers: { 'Content-Type' => 'application/json' })
+
+    stub_request(:post, 'https://uaa.service.cf.internal/oauth/clients/tx/modify').
+      with(
+        body: [
+          {
+            "client_id": "#{broker_id}-uaa-id",
+            "client_secret": 'my-dashboard-secret',
+            "redirect_uri": 'http://example.org',
+            "scope": %w(openid cloud_controller_service_permissions.read),
+            "authorities": ['uaa.resource'],
+            "authorized_grant_types": ['authorization_code'],
+            "action": 'update,secret'
+          }
+        ].to_json
+      )
   end
 
   def catalog(id=global_broker_id)
