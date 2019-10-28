@@ -63,9 +63,11 @@ module VCAP::CloudController
       # Doing `ModelClass.where(CONDITION).update(field: value)` bypasses the sequel timestamp updater hook
 
       def save_error(api_error, job)
+        warn("QQQ: save_error: job: #{job.guid}")
         find_pollable_job(job).each do |pollable_job|
+          warn("QQQ: save_error: found pollable_job: guid: #{pollable_job.guid}, delayed_job_guid:#{pollable_job.delayed_job_guid}")
           pollable_job.update(cf_api_error: api_error)
-          warn("QQQ: PollableJobWrapper#save_error: saving job #{job.guid} cf_api_error to <<\n#{api_error[0..500]}...>>")
+          warn("QQQ: PollableJobWrapper#save_error: saving cf_api_error <<\n#{api_error[0..500]}...>> from delayed-job #{job.guid} to pollable job #{pollable_job.guid}")
         end
       end
 
