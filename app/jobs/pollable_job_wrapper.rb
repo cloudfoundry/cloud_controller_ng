@@ -68,6 +68,9 @@ module VCAP::CloudController
           warn("QQQ: save_error: found pollable_job: guid: #{pollable_job.guid}, delayed_job_guid:#{pollable_job.delayed_job_guid}")
           pollable_job.update(cf_api_error: api_error)
           warn("QQQ: PollableJobWrapper#save_error: saving cf_api_error <<\n#{api_error[0..500]}...>> from delayed-job #{job.guid} to pollable job #{pollable_job.guid}")
+        rescue Exception => ex
+          warn("QQQ: RRR: error in save_error: #{ex.message}")
+          raise
         end
       end
 
