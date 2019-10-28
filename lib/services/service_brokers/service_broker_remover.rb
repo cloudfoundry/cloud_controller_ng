@@ -12,7 +12,7 @@ module VCAP::Services::ServiceBrokers
     rescue
       # debugger
       brokers.first.update_state(VCAP::CloudController::ServiceBrokerStateEnum::DELETE_FAILED)
-      #warn("QQQ: In ServiceBrokerRemover#delete -- raise #{$!}")
+      # warn("QQQ: In ServiceBrokerRemover#delete -- raise #{$!}")
       raise
     end
 

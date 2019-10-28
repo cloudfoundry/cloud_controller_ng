@@ -916,7 +916,7 @@ RSpec.describe 'V3 service brokers' do
 
         expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
 
-        cf_api_error = get_cf_api_error(job)
+        cf_api_error = job.cf_api_error
         expect(cf_api_error).not_to be_nil
 
         begin
@@ -949,7 +949,7 @@ RSpec.describe 'V3 service brokers' do
 
         expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
 
-        cf_api_error = get_cf_api_error(job)
+        cf_api_error = job.cf_api_error
         expect(cf_api_error).not_to be_nil
         error = YAML.safe_load(cf_api_error)
         expect(error['errors'].first['code']).to eq(270012)
@@ -1137,6 +1137,7 @@ RSpec.describe 'V3 service brokers' do
 
     def get_cf_api_error(job)
       return job.cf_api_error if job.cf_api_error
+
       djguid = job.delayed_job_guid
       Delayed::Backend::Sequel::Job.find(guid: djguid).cf_api_error
     end
@@ -1325,15 +1326,15 @@ RSpec.describe 'V3 service brokers' do
         it 'marks the job as failed', :focus do
           get job_url, {}, admin_headers
           expect(last_response).to have_status_code(200)
-          warn("QQQ: parsed_response:<<\n#{parsed_response.to_s[0..600]}...>>")
-          jguid = parsed_response['guid']
-          job = VCAP::CloudController::PollableJobModel.find(guid: jguid)
-          warn("QQQ: in the test: job.guid: #{job.guid}")
-          djguid = job.delayed_job_guid
-          djob = Delayed::Backend::Sequel::Job.find(guid: djguid)
-          warn("QQQ: in the test: delayed-job.guid: #{djguid}, djob: #{djob}")
+          # warn("QQQ: parsed_response:<<\n#{parsed_response.to_s[0..600]}...>>")
+          # jguid = parsed_response['guid']
+          # job = VCAP::CloudController::PollableJobModel.find(guid: jguid)
+          # warn("QQQ: in the test: job.guid: #{job.guid}")
+          # djguid = job.delayed_job_guid
+          # djob = Delayed::Backend::Sequel::Job.find(guid: djguid)
+          # warn("QQQ: in the test: delayed-job.guid: #{djguid}, djob: #{djob}")
           # debugger
-          #warn("QQQ: parsed_response: #{parsed_response}")
+          # warn("QQQ: parsed_response: #{parsed_response}")
           # if !parsed_response['errors'][0]['detail']['An unknown error occurred']
           #   warn("QQQ: error failure: parsed_response['errors'].size = #{parsed_response['errors']}")
           #   error = parsed_response['errors'][0]

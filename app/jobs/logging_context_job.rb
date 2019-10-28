@@ -21,10 +21,10 @@ module VCAP::CloudController
       end
 
       def error(job, e)
-        #require 'pp'
-        #idx = caller.find_index{|s| s['spec/request/service_brokers_spec.rb']}
-        #pp caller[0..idx].map{|x| x.sub(%r{/Users/\w+}, "...")}
-        #debugger
+        # require 'pp'
+        # idx = caller.find_index{|s| s['spec/request/service_brokers_spec.rb']}
+        # pp caller[0..idx].map{|x| x.sub(%r{/Users/\w+}, "...")}
+        # debugger
         # spec_line = caller.find{|s| s['spec/request/service_brokers_spec.rb'] }
         # warn("QQQ: Jobs::LoggingContextJob.error:\n  ** spec line: #{spec_line},\n  ** job handler: #{job.handler},\n  ** e: <#{e}>\n\n")
         error_presenter = ErrorPresenter.new(e)

@@ -1,4 +1,5 @@
 require 'presenters/error_presenter'
+require 'utils/yaml_utils'
 
 module VCAP::CloudController
   module Jobs
@@ -19,7 +20,7 @@ module VCAP::CloudController
       end
 
       def error(job, exception)
-        #debugger
+        # debugger
         api_error = convert_to_v3_api_error(exception)
         save_error(api_error, job)
       end
@@ -38,7 +39,7 @@ module VCAP::CloudController
         v3_hasher = V3ErrorHasher.new(exception)
         error_presenter = ErrorPresenter.new(exception, Rails.env.test?, v3_hasher)
         res = YAML.dump(error_presenter.to_hash)
-        warn("QQQ: convert_to_v3_api_error:<<\n#{res[0..400]}...>>")
+        # warn("QQQ: convert_to_v3_api_error:<<\n#{res[0..400]}...>>")
         res
       rescue Exception => ex
         warn("QQQ: convert_to_v3_api_error error => #{ex.message}\n traceback: #{ex.backtrace}")
@@ -63,13 +64,13 @@ module VCAP::CloudController
       # Doing `ModelClass.where(CONDITION).update(field: value)` bypasses the sequel timestamp updater hook
 
       def save_error(api_error, job)
-        warn("QQQ: save_error: job: #{job.guid}")
+        # warn("QQQ: save_error: job: #{job.guid}")
         find_pollable_job(job).each do |pollable_job|
-          warn("QQQ: save_error: found pollable_job: guid: #{pollable_job.guid}, delayed_job_guid:#{pollable_job.delayed_job_guid}")
-          pollable_job.update(cf_api_error: api_error)
-          warn("QQQ: PollableJobWrapper#save_error: saving cf_api_error <<\n#{api_error[0..500]}...>> from delayed-job #{job.guid} to pollable job #{pollable_job.guid}")
+          # warn("QQQ: save_error: found pollable_job: guid: #{pollable_job.guid}, delayed_job_guid:#{pollable_job.delayed_job_guid}")
+          pollable_job.update(cf_api_error: YamlUtils.truncate(api_error, 160_000))
+          # warn("QQQ: PollableJobWrapper#save_error: saving cf_api_error <<\n#{api_error[0..500]}...>> from delayed-job #{job.guid} to pollable job #{pollable_job.guid}")
         rescue Exception => ex
-          warn("QQQ: RRR: error in save_error: #{ex.message}")
+          warn("error in PollableJobWrapper.save_error: #{ex.message}")
           raise
         end
       end
