@@ -37,7 +37,7 @@ module VCAP::CloudController::Validators
 
       it 'is not valid' do
         expect(message).not_to be_valid
-        expect(message.errors_on(:url)).to include('must be a valid url')
+        expect(message.errors_on(:url)).to include("'lol.com' must be a valid url")
       end
     end
 
@@ -46,7 +46,7 @@ module VCAP::CloudController::Validators
 
       it 'is not valid' do
         expect(message).not_to be_valid
-        expect(message.errors_on(:url)).to include('must be a valid url')
+        expect(message.errors_on(:url)).to include("'ftp://the-best-broker.url' must be a valid url")
       end
     end
 
