@@ -36,8 +36,12 @@ module VCAP::CloudController
       {
         type: type,
         relationships: {
-          user: { data: user_data },
-          space: { data: space_data },
+          user: {
+            data: user_data
+          },
+          space: {
+            data: space_data
+          },
         }
       }
     end
@@ -46,8 +50,12 @@ module VCAP::CloudController
       {
         type: type,
         relationships: {
-          user: { data: user_data },
-          organization: { data: org_data },
+          user: {
+            data: user_data
+          },
+          organization: {
+            data: org_data
+          },
         }
       }
     end
@@ -140,7 +148,7 @@ module VCAP::CloudController
             it 'is not valid' do
               message = subject.new(space_params)
               expect(message).not_to be_valid
-              expect(message.errors[:type]).to include("Role with type '#{org_type}' cannot be associated with a space.")
+              expect(message.errors[:base]).to include("Role with type '#{org_type}' cannot be associated with a space.")
             end
           end
         end
@@ -165,7 +173,7 @@ module VCAP::CloudController
             it 'is not valid' do
               message = subject.new(org_params)
               expect(message).not_to be_valid
-              expect(message.errors[:type]).to include("Role with type '#{space_type}' cannot be associated with an organization.")
+              expect(message.errors[:base]).to include("Role with type '#{space_type}' cannot be associated with an organization.")
             end
           end
         end
@@ -178,8 +186,11 @@ module VCAP::CloudController
       it 'is not valid' do
         message = subject.new(params)
         expect(message).to be_invalid
-        expect(message.errors[:user_guid]).to include('must be a string', 'must be between 1 and 200 characters')
-        expect(message.errors[:relationships]).to include('Role must be associated with either a space or an organization.')
+        expect(message.errors.full_messages).to include('Role must be associated with either a space or an organization.')
+        expect(message.errors.full_messages).to include(
+          'Type must be one of the allowed types ["organization_auditor", "organization_manager", ' \
+          '"organization_billing_manager", "organization_user", "space_auditor", "space_manager", "space_developer"]'
+        )
       end
     end
 
@@ -211,7 +222,7 @@ module VCAP::CloudController
         it 'is not valid' do
           message = subject.new(space_params)
           expect(message).to be_invalid
-          expect(message.errors[:user_guid]).to include('must be a string')
+          expect(message.errors[:relationships]).to include('User guid must be a string')
         end
       end
 
@@ -221,7 +232,7 @@ module VCAP::CloudController
         it 'is not valid' do
           message = subject.new(space_params)
           expect(message).to be_invalid
-          expect(message.errors[:user_guid]).to include('must be a string')
+          expect(message.errors[:relationships]).to include('User guid must be a string')
         end
       end
 
@@ -235,7 +246,7 @@ module VCAP::CloudController
         it 'is not valid' do
           message = subject.new(space_params)
           expect(message).to be_invalid
-          expect(message.errors[:user_name]).to include('must be a string')
+          expect(message.errors[:relationships]).to include('User name must be a string')
         end
       end
 
@@ -250,7 +261,7 @@ module VCAP::CloudController
         it 'is not valid' do
           message = subject.new(space_params)
           expect(message).to be_invalid
-          expect(message.errors[:user_origin]).to include('must be a string')
+          expect(message.errors[:relationships]).to include('User origin must be a string')
         end
       end
 
@@ -290,7 +301,7 @@ module VCAP::CloudController
         it 'is not valid' do
           message = subject.new(space_params)
           expect(message).to be_invalid
-          expect(message.errors[:user_guid]).to include 'must be between 1 and 200 characters'
+          expect(message.errors[:relationships]).to include 'User guid must be between 1 and 200 characters'
         end
       end
 
@@ -300,9 +311,23 @@ module VCAP::CloudController
         it 'is not valid' do
           message = subject.new(space_params)
           expect(message).to be_invalid
-          expect(message.errors[:user_guid]).to include 'must be between 1 and 200 characters'
+          expect(message.errors[:relationships]).to include('User guid must be between 1 and 200 characters')
         end
       end
+      #
+      # context 'when user relationship is more malformed' do
+      #   let(:user_data) do
+      #     {
+      #       origin: user_origin
+      #     }
+      #   end
+      #
+      #   it 'is not valid' do
+      #     message = subject.new(space_params)
+      #     expect(message).to be_invalid
+      #     expect(message.errors[:user_origin]).to include 'cannot be specified without specifying the user name'
+      #   end
+      # end
     end
 
     context 'space_guid' do
@@ -314,7 +339,7 @@ module VCAP::CloudController
         it 'is not valid' do
           message = subject.new(space_params)
           expect(message).not_to be_valid
-          expect(message.errors[:space_guid]).to include('must be a string')
+          expect(message.errors[:relationships]).to include('Space guid must be a string')
         end
       end
 
@@ -324,7 +349,7 @@ module VCAP::CloudController
         it 'is not valid' do
           message = subject.new(space_params)
           expect(message).to be_invalid
-          expect(message.errors[:space_guid]).to include 'must be between 1 and 200 characters'
+          expect(message.errors[:relationships]).to include('Space guid must be between 1 and 200 characters')
         end
       end
 
@@ -334,7 +359,17 @@ module VCAP::CloudController
         it 'is not valid' do
           message = subject.new(space_params)
           expect(message).to be_invalid
-          expect(message.errors[:space_guid]).to include 'must be between 1 and 200 characters'
+          expect(message.errors[:relationships]).to include 'Space guid must be between 1 and 200 characters'
+        end
+      end
+
+      context 'when space relationship is malformed' do
+        let(:space_data) { 'just-a-string-not-an-object' }
+
+        it 'is not valid' do
+          message = subject.new(space_params)
+          expect(message).to be_invalid
+          expect(message.errors[:relationships]).to include 'Space must be structured like this: "space: {"data": {"guid": "valid-guid"}}"'
         end
       end
     end
@@ -348,7 +383,7 @@ module VCAP::CloudController
         it 'is not valid' do
           message = subject.new(org_params)
           expect(message).not_to be_valid
-          expect(message.errors[:organization_guid]).to include('must be a string')
+          expect(message.errors[:relationships]).to include('Organization guid must be a string')
         end
       end
 
@@ -358,7 +393,7 @@ module VCAP::CloudController
         it 'is not valid' do
           message = subject.new(org_params)
           expect(message).to be_invalid
-          expect(message.errors[:organization_guid]).to include 'must be between 1 and 200 characters'
+          expect(message.errors[:relationships]).to include 'Organization guid must be between 1 and 200 characters'
         end
       end
 
@@ -368,7 +403,17 @@ module VCAP::CloudController
         it 'is not valid' do
           message = subject.new(org_params)
           expect(message).to be_invalid
-          expect(message.errors[:organization_guid]).to include 'must be between 1 and 200 characters'
+          expect(message.errors[:relationships]).to include 'Organization guid must be between 1 and 200 characters'
+        end
+      end
+
+      context 'when organization relationship is malformed' do
+        let(:org_data) { 'just-a-string-not-an-object' }
+
+        it 'is not valid' do
+          message = subject.new(org_params)
+          expect(message).to be_invalid
+          expect(message.errors[:relationships]).to include 'Organization must be structured like this: "organization: {"data": {"guid": "valid-guid"}}"'
         end
       end
     end
@@ -394,7 +439,7 @@ module VCAP::CloudController
       it 'is not valid' do
         message = subject.new(org_and_space_params)
         expect(message).not_to be_valid
-        expect(message.errors[:relationships]).to include('Role cannot be associated with both an organization and a space.')
+        expect(message.errors[:base]).to include('Role cannot be associated with both an organization and a space.')
       end
     end
   end
