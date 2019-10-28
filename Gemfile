@@ -40,10 +40,10 @@ gem 'vmstat', '~> 2.0'
 gem 'yajl-ruby'
 
 # Rails Components
-gem 'actionpack', '~> 5.2.0'
-gem 'actionview', '~> 5.2.0'
+gem 'actionpack', '~> 5.2.2', '>= 5.2.2.1'
+gem 'actionview', '~> 5.2.2', '>= 5.2.2.1'
 gem 'activemodel', '~> 5.2.0'
-gem 'railties', '~> 5.2.0'
+gem 'railties', '~> 5.2.2', '>= 5.2.2.1'
 
 # Blobstore and Bits Service Dependencies
 gem 'azure-storage', '0.14.0.preview' # https://github.com/Azure/azure-storage-ruby/issues/122
@@ -81,7 +81,7 @@ group :test do
   gem 'rspec-collection_matchers'
   gem 'rspec-instafail'
   gem 'rspec-its'
-  gem 'rspec-rails', '~> 3.8.0'
+  gem 'rspec-rails', '~> 3.8.2'
   gem 'rspec-wait'
   gem 'rspec_api_documentation'
   gem 'rubocop'
