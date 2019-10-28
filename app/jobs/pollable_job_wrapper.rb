@@ -19,6 +19,7 @@ module VCAP::CloudController
       end
 
       def error(job, exception)
+        #debugger
         api_error = convert_to_v3_api_error(exception)
         save_error(api_error, job)
       end
@@ -36,7 +37,12 @@ module VCAP::CloudController
       def convert_to_v3_api_error(exception)
         v3_hasher = V3ErrorHasher.new(exception)
         error_presenter = ErrorPresenter.new(exception, Rails.env.test?, v3_hasher)
-        YAML.dump(error_presenter.to_hash)
+        res = YAML.dump(error_presenter.to_hash)
+        warn("QQQ: convert_to_v3_api_error:<<\n#{res[0..400]}...>>")
+        res
+      rescue Exception => ex
+        warn("QQQ: convert_to_v3_api_error error => #{ex.message}\n traceback: #{ex.backtrace}")
+        raise
       end
 
       def find_pollable_job(job)
