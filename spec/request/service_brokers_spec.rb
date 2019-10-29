@@ -826,7 +826,7 @@ RSpec.describe 'V3 service brokers' do
         job = VCAP::CloudController::PollableJobModel.last
 
         expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
-
+        expect(job.cf_api_error).not_to be_nil
         error = YAML.safe_load(job.cf_api_error)
         expect(error['errors'].first['code']).to eq(10001)
         expect(error['errors'].first['detail']).
@@ -853,7 +853,9 @@ RSpec.describe 'V3 service brokers' do
 
         expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
 
-        error = YAML.safe_load(job.cf_api_error)
+        cf_api_error = job.cf_api_error
+        expect(cf_api_error).not_to be_nil
+        error = YAML.safe_load(cf_api_error)
         expect(error['errors'].first['code']).to eq(270012)
         expect(error['errors'].first['detail']).to eq("Service broker catalog is invalid: \nService broker must provide at least one service\n")
       end
@@ -1187,17 +1189,18 @@ RSpec.describe 'V3 service brokers' do
       end
 
       context 'when the job fails to execute' do
+        job_url = nil
         before do
           allow_any_instance_of(VCAP::Services::ServiceBrokers::ServiceBrokerRemover).to receive(:remove).and_raise('error')
 
           delete "/v3/service_brokers/#{global_broker.guid}", {}, admin_headers
           expect(last_response).to have_status_code(202)
+          job_url = last_response['Location']
 
           execute_all_jobs(expected_successes: 0, expected_failures: 1)
         end
 
         it 'marks the job as failed' do
-          job_url = last_response['Location']
           get job_url, {}, admin_headers
           expect(last_response).to have_status_code(200)
           expect(parsed_response).to include({

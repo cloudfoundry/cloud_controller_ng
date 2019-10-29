@@ -1,7 +1,11 @@
 require 'spec_helper'
 require 'jobs/pollable_job_wrapper'
+require 'yaml'
 
 module VCAP::CloudController::Jobs
+  class BigException < StandardError
+  end
+
   RSpec.describe PollableJobWrapper, job_context: :worker do
     let(:job) { double(job_name_in_configuration: 'my-job', max_attempts: 2, perform: nil) }
     let(:pollable_job) { PollableJobWrapper.new(job) }
@@ -115,6 +119,56 @@ module VCAP::CloudController::Jobs
           expect(job_model.state).to eq('COMPLETE')
           warnings = job_model.warnings
           expect(warnings.to_json).to eq('[]')
+        end
+      end
+    end
+
+    describe 'error' do
+      let(:job) { double(job_name_in_configuration: 'my-job', max_attempts: 2, perform: nil, guid: '15') }
+      let!(:actual_pollable_job) { VCAP::CloudController::PollableJobModel.create(delayed_job_guid: job.guid) }
+
+      context 'with a big backtrace' do
+        it 'culls it down' do
+          raise BigException.new
+        rescue BigException => exception
+          count = 256 - exception.backtrace.size
+          count.times do
+            exception.backtrace << '1000 character backtrace: ' + 'x' * 974
+          end
+          pollable_job.error(job, exception)
+          expect(actual_pollable_job.reload.cf_api_error).to_not be_empty
+          block = YAML.safe_load(actual_pollable_job.cf_api_error)
+          errors = block['errors']
+          expect(errors.size).to eq(1)
+          error = errors[0]['test_mode_info']
+          expect(error['detail']).to eq('VCAP::CloudController::Jobs::BigException')
+          # Normally should be 64 on a dev machine, 32 on travis due to longer paths :(
+          expect(error['backtrace'].size).to be >= 32
+          expect(error['backtrace'].size).to be <= 64
+        end
+      end
+
+      context 'with a big message' do
+        # postgres complains with 15,824
+        # mysql complains with 15,825, so test for failure at that point
+        # bracket the values with 100 each way to allow for differences on travis
+
+        it 'squeezes just right one in' do
+          raise BigException.new(message: 'x' * 15_823)
+        rescue BigException => exception
+          expect {
+            pollable_job.error(job, exception)
+          }.to_not raise_error
+        end
+
+        it 'gives up' do
+          raise BigException.new(message: 'x' * 15_825)
+        rescue BigException => exception
+          pg_error = /value too long for type character varying/
+          mysql_error = /Data too long for column 'cf_api_error'/
+          expect {
+            pollable_job.error(job, exception)
+          }.to raise_error(::Sequel::DatabaseError, /#{pg_error}|#{mysql_error}/)
         end
       end
     end
