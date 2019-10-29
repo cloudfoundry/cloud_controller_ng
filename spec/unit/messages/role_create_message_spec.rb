@@ -148,7 +148,9 @@ module VCAP::CloudController
             it 'is not valid' do
               message = subject.new(space_params)
               expect(message).not_to be_valid
-              expect(message.errors[:base]).to include("Role with type '#{org_type}' cannot be associated with a space.")
+              expect(message.errors.full_messages).to eq([
+                "Relationships Space cannot be provided with the organization role type: '#{org_type}'."
+              ])
             end
           end
         end
@@ -173,7 +175,9 @@ module VCAP::CloudController
             it 'is not valid' do
               message = subject.new(org_params)
               expect(message).not_to be_valid
-              expect(message.errors[:base]).to include("Role with type '#{space_type}' cannot be associated with an organization.")
+              expect(message.errors.full_messages).to eq([
+                "Relationships Organization cannot be provided with the space role type: '#{space_type}'."
+              ])
             end
           end
         end
@@ -186,11 +190,28 @@ module VCAP::CloudController
       it 'is not valid' do
         message = subject.new(params)
         expect(message).to be_invalid
-        expect(message.errors.full_messages).to include('Role must be associated with either a space or an organization.')
-        expect(message.errors.full_messages).to include(
+        expect(message.errors.full_messages).to eq([
+          "Relationships 'relationships' is not an object",
           'Type must be one of the allowed types ["organization_auditor", "organization_manager", ' \
           '"organization_billing_manager", "organization_user", "space_auditor", "space_manager", "space_developer"]'
-        )
+        ])
+      end
+    end
+
+    context 'when an empty relationships object is given' do
+      let(:bad_params) do
+        {
+          type: org_type,
+          relationships: {}
+        }
+      end
+
+      it 'is not valid' do
+        message = subject.new(bad_params)
+        expect(message).to be_invalid
+        expect(message.errors.full_messages).to eq([
+          "Relationships 'relationships' must include one or more valid relationships"
+        ])
       end
     end
 
@@ -232,7 +253,10 @@ module VCAP::CloudController
         it 'is not valid' do
           message = subject.new(space_params)
           expect(message).to be_invalid
-          expect(message.errors[:relationships]).to include('User guid must be a string')
+          expect(message.errors.full_messages).to eq([
+            'Relationships User guid must be a string',
+            'Relationships User guid must be between 1 and 200 characters'
+          ])
         end
       end
 
@@ -247,6 +271,26 @@ module VCAP::CloudController
           message = subject.new(space_params)
           expect(message).to be_invalid
           expect(message.errors[:relationships]).to include('User name must be a string')
+        end
+      end
+
+      context 'when the user block is not provided' do
+        let(:invalid_params) do
+          {
+            type: type,
+            relationships: {
+              space: {
+                data: space_data
+              },
+            }
+          }
+        end
+
+        it 'is not valid' do
+          message = subject.new(invalid_params)
+          expect(message).to be_invalid
+          expect(message.errors[:relationships]).to include("User can't be blank")
+          expect(message.errors[:relationships]).to include('User must have a username or guid specified')
         end
       end
 
@@ -276,7 +320,7 @@ module VCAP::CloudController
         it 'is not valid' do
           message = subject.new(space_params)
           expect(message).to be_invalid
-          expect(message.errors[:user_name]).to include('cannot be specified when identifying user by guid')
+          expect(message.errors.full_messages).to eq(['Relationships User name cannot be specified when identifying user by guid'])
         end
       end
 
@@ -291,7 +335,10 @@ module VCAP::CloudController
         it 'is not valid' do
           message = subject.new(space_params)
           expect(message).to be_invalid
-          expect(message.errors[:user_origin]).to include('cannot be specified when identifying user by guid')
+          expect(message.errors.full_messages).to eq([
+            'Relationships User origin cannot be specified when identifying user by guid',
+            'Relationships User origin cannot be specified without specifying the user name'
+          ])
         end
       end
 
@@ -314,20 +361,69 @@ module VCAP::CloudController
           expect(message.errors[:relationships]).to include('User guid must be between 1 and 200 characters')
         end
       end
-      #
-      # context 'when user relationship is more malformed' do
-      #   let(:user_data) do
-      #     {
-      #       origin: user_origin
-      #     }
-      #   end
-      #
-      #   it 'is not valid' do
-      #     message = subject.new(space_params)
-      #     expect(message).to be_invalid
-      #     expect(message.errors[:user_origin]).to include 'cannot be specified without specifying the user name'
-      #   end
-      # end
+
+      context('when the user relationship is malformed') do
+        context 'because there is an origin with no username' do
+          let(:user_data) do
+            {
+              origin: user_origin
+            }
+          end
+
+          it 'is not valid' do
+            message = subject.new(space_params)
+            expect(message).to be_invalid
+            expect(message.errors[:relationships]).to include 'User origin cannot be specified without specifying the user name'
+          end
+        end
+
+        context 'because there is both a origin and a user guid' do
+          let(:user_data) do
+            {
+              guid: user_guid,
+              origin: user_origin
+            }
+          end
+
+          it 'is not valid' do
+            message = subject.new(space_params)
+            expect(message).to be_invalid
+            expect(message.errors.full_messages).to eq([
+              'Relationships User origin cannot be specified when identifying user by guid',
+              'Relationships User origin cannot be specified without specifying the user name'
+            ])
+          end
+        end
+
+        context 'because there is both a username and a user guid' do
+          let(:user_data) do
+            {
+              guid: user_guid,
+              name: user_name,
+            }
+          end
+
+          it 'is not valid' do
+            message = subject.new(space_params)
+            expect(message).to be_invalid
+            expect(message.errors.full_messages).to eq([
+              'Relationships User name cannot be specified when identifying user by guid'
+            ])
+          end
+        end
+
+        context 'because data is not followed by username, origin, or user guid' do
+          let(:user_data) { 'just-a-string-not-an-object' }
+
+          it 'is not valid' do
+            message = subject.new(space_params)
+            expect(message).to be_invalid
+            expect(message.errors.full_messages).to eq([
+              'Relationships User must have a username or guid specified'
+            ])
+          end
+        end
+      end
     end
 
     context 'space_guid' do
@@ -369,7 +465,9 @@ module VCAP::CloudController
         it 'is not valid' do
           message = subject.new(space_params)
           expect(message).to be_invalid
-          expect(message.errors[:relationships]).to include 'Space must be structured like this: "space: {"data": {"guid": "valid-guid"}}"'
+          expect(message.errors.full_messages).to eq([
+            'Relationships Space must be structured like this: "space: {"data": {"guid": "valid-guid"}}"'
+          ])
         end
       end
     end
@@ -413,7 +511,9 @@ module VCAP::CloudController
         it 'is not valid' do
           message = subject.new(org_params)
           expect(message).to be_invalid
-          expect(message.errors[:relationships]).to include 'Organization must be structured like this: "organization: {"data": {"guid": "valid-guid"}}"'
+          expect(message.errors.full_messages).to eq([
+            'Relationships Organization must be structured like this: "organization: {"data": {"guid": "valid-guid"}}"'
+          ])
         end
       end
     end
@@ -439,7 +539,10 @@ module VCAP::CloudController
       it 'is not valid' do
         message = subject.new(org_and_space_params)
         expect(message).not_to be_valid
-        expect(message.errors[:base]).to include('Role cannot be associated with both an organization and a space.')
+        expect(message.errors.full_messages).to eq([
+          "Relationships Space cannot be provided with the organization role type: 'organization_auditor'.",
+          'Relationships cannot specify both an organization and a space.'
+        ])
       end
     end
   end

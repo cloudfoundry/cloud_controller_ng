@@ -249,40 +249,4 @@ module VCAP::CloudController::Validators
       (hsh.keys.map(&:to_s) == ['guid'])
     end
   end
-
-  class SpaceOrOrgPresentValidator < ActiveModel::Validator
-    def validate(record)
-      if record.space_guid.nil? && record.organization_guid.nil?
-        record.errors.add(:base, 'Role must be associated with either a space or an organization.')
-      end
-
-      if record.space_guid && VCAP::CloudController::RoleTypes::ORGANIZATION_ROLES.include?(record.type)
-        record.errors.add(:base, "Role with type '#{record.type}' cannot be associated with a space.")
-      end
-
-      if record.organization_guid && VCAP::CloudController::RoleTypes::SPACE_ROLES.include?(record.type)
-        record.errors.add(:base, "Role with type '#{record.type}' cannot be associated with an organization.")
-      end
-
-      if record.space_guid && record.organization_guid
-        record.errors.add(:base, 'Role cannot be associated with both an organization and a space.')
-      end
-    end
-  end
-
-  class UserRoleCreationValidator < ActiveModel::Validator
-    def validate(record)
-      if record.user_guid && record.user_name
-        record.errors.add(:user_name, 'cannot be specified when identifying user by guid')
-      end
-
-      if record.user_guid && record.user_origin
-        record.errors.add(:user_origin, 'cannot be specified when identifying user by guid')
-      end
-
-      if record.user_name.nil? && record.user_origin
-        record.errors.add(:user_origin, 'cannot be specified without specifying the user name')
-      end
-    end
-  end
 end

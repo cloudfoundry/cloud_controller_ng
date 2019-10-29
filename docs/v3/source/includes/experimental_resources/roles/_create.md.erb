@@ -1,7 +1,7 @@
 ### Create a role
 
 ```
-Example Request
+Example Request (by user guid)
 ```
 
 ```shell
@@ -15,6 +15,44 @@ curl "https://api.example.org/v3/roles" \
         "user": {
           "data": {
             "guid": "user-guid"
+          }
+        },
+        "organization": {
+          "data": {
+            "guid": "org-guid"
+          }
+        }
+      }
+    }'
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 201 Created
+Content-Type: application/json
+
+<%= yield_content :single_role %>
+```
+
+```
+Example Request (by username and origin)
+```
+
+```shell
+curl "https://api.example.org/v3/roles" \
+  -X POST \
+  -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
+  -d '{
+      "type": "organization_auditor",
+      "relationships": {
+        "user": {
+          "data": {
+            "name": "user-name",
+            "origin": "ldap"
           }
         },
         "organization": {
@@ -53,7 +91,7 @@ For a user to be assigned a space role, the user must already have an organizati
 Name | Type | Description
 ---- | ---- | -----------
 **type** | _string_ | Role to create. See [valid role types](#valid-role-types).
-**relationships.user** | [_to-one relationship_](#to-one-relationships) | A relationship to a user.
+**relationships.user** | [_to-one relationship_](#to-one-relationships) | A relationship to a user. The user can be defined by either the user `guid` or the `name` with the option of including the user `origin`.
 **relationships.organization** | [_to-one relationship_](#to-one-relationships) | A relationship to an organization. Necessary only when creating an organization role.
 **relationships.space** | [_to-one relationship_](#to-one-relationships) | A relationship to a space. Necessary only when creating a space role.
 
