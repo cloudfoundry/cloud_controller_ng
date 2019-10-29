@@ -7,7 +7,7 @@ module VCAP::CloudController::Validators
       if URI::DEFAULT_PARSER.make_regexp(['https', 'http']).match?(record.url.to_s)
         record.errors.add(:url, 'must not contain authentication') if URI(record.url).user
       else
-        record.errors.add(:url, 'must be a valid url')
+        record.errors.add(:url, "'#{record.url}' must be a valid url")
       end
     end
   end
