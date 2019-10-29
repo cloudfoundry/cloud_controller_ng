@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'utils/yaml_utils'
 
-RSpec.describe YamlUtils, :focus do
+RSpec.describe YamlUtils do
   describe 'truncate' do
     it 'truncates non-yaml strings' do
       s1 = '{234567890'
@@ -62,7 +62,7 @@ RSpec.describe YamlUtils, :focus do
       )
     end
 
-    it 'burrows through nested objects to find the longest items' do
+    it 'burrows through nested objects to find the longest items', :focus do
       input = {
         'a1' => {
           'a11' => 'scalar',
