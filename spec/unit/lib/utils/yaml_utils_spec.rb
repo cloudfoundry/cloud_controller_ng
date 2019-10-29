@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'utils/yaml_utils'
 
-RSpec.describe YamlUtils do
+RSpec.describe YamlUtils, :focus   do
   describe 'truncate' do
     it 'truncates non-yaml strings' do
       s1 = '{234567890'
@@ -22,6 +22,32 @@ RSpec.describe YamlUtils do
       expect(YAML.safe_load(result)).to match_array(input[0...2])
     end
 
+    # it 'beeps1' do
+    #   input = {
+    #     'a1' => [],
+    #     'c1' => %w/c234567890/,
+    #     'd1' => %w/d234567890 1234567890/,
+    #     'e1' => %w/e234567890/,
+    #   }
+    #   # The max-size allows for the extra punctuation yaml-encoding adds
+    #   result = YAML.safe_load(YamlUtils.truncate(YAML.dump(input), 1))
+    #   expect(result.keys.size).to eq(0)
+    #   expect(result).to match({})
+    # end
+    #
+    # it 'beeps2' do
+    #   input =  {
+    #     'a1' => %w/a234567890/,
+    #     'c1' => %w/c234567890/,
+    #     'd1' => %w/d234567890 1234567890/,
+    #     'e1' => %w/e234567890/,
+    #   }
+    #   # The max-size allows for the extra punctuation yaml-encoding adds
+    #   result = YAML.safe_load(YamlUtils.truncate(YAML.dump(input), 1))
+    #   expect(result.keys.size).to eq(0)
+    #   expect(result).to match({})
+    # end
+
     it 'truncates long arrays in hashes' do
       input = {
         'a1' => %w/a234567890 1234567890 2234567890/,
@@ -31,7 +57,7 @@ RSpec.describe YamlUtils do
         'e1' => %w/e234567890/,
       }
       # The max-size allows for the extra punctuation yaml-encoding adds
-      result = YAML.safe_load(YamlUtils.truncate(YAML.dump(input), 40))
+      result = YAML.safe_load(YamlUtils.truncate(YAML.dump(input), 45))
       expect(result.keys.size).to eq(3)
       expect(result).to match(
         {
@@ -40,7 +66,7 @@ RSpec.describe YamlUtils do
           'e1' => %w/e234567890/,
         }
       )
-      result = YAML.safe_load(YamlUtils.truncate(YAML.dump(input), 72))
+      result = YAML.safe_load(YamlUtils.truncate(YAML.dump(input), 77))
       expect(result.keys.size).to eq(4)
       expect(result).to match(
         {
@@ -50,7 +76,7 @@ RSpec.describe YamlUtils do
           'e1' => %w/e234567890/,
         }
       )
-      result = YAML.safe_load(YamlUtils.truncate(YAML.dump(input), 84))
+      result = YAML.safe_load(YamlUtils.truncate(YAML.dump(input), 87))
       expect(result.keys.size).to eq(4)
       expect(result).to match(
         {
@@ -59,10 +85,10 @@ RSpec.describe YamlUtils do
           'd1' => %w/d234567890 1234567890/,
           'e1' => %w/e234567890/,
         }
-      )
+       )
     end
 
-    it 'burrows through nested objects to find the longest items', :focus do
+    it 'burrows through nested objects to find the longest items' do
       input = {
         'a1' => {
           'a11' => 'scalar',
@@ -75,7 +101,7 @@ RSpec.describe YamlUtils do
           'b1-scalar'
         ],
       }
-      result = YAML.safe_load(YamlUtils.truncate(YAML.dump(input), 35))
+      result = YAML.safe_load(YamlUtils.truncate(YAML.dump(input), 55))
       expect(result.keys.size).to eq(1)
       expect(result).to match(
         {
