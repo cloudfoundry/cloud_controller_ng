@@ -70,7 +70,7 @@ module VCAP::CloudController
           pollable_job.update(cf_api_error: YamlUtils.truncate(api_error, 160_000))
           # warn("QQQ: PollableJobWrapper#save_error: saving cf_api_error <<\n#{api_error[0..500]}...>> from delayed-job #{job.guid} to pollable job #{pollable_job.guid}")
         rescue Exception => ex
-          warn("error in PollableJobWrapper.save_error: #{ex.message}")
+          warn("error in PollableJobWrapper.save_error: #{ex.class}, #{ex.message}")
           raise
         end
       end

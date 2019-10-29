@@ -4,7 +4,7 @@ require 'cloud_controller'
 require 'services'
 require 'messages/service_broker_update_message'
 
-RSpec.describe 'V3 service brokers' do
+RSpec.describe 'V3 service brokers', :focus do
   let(:user) { VCAP::CloudController::User.make }
   let(:global_broker_id) { 'global-service-id' }
   let(:space_broker_id) { 'space-service-id' }

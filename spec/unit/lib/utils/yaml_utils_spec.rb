@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'utils/yaml_utils'
 
-RSpec.describe YamlUtils do
+RSpec.describe YamlUtils, :focus do
   describe 'truncate' do
     it 'truncates non-yaml strings' do
       s1 = '{234567890'
