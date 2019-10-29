@@ -147,6 +147,16 @@ module VCAP::CloudController
             end
           end
 
+          context 'when it contains spaces between ends of a range' do
+            let(:rule) { build_transport_rule('protocol' => protocol, 'destination' => '0.0.0.0  - 0.0.0.4') }
+
+            it 'is not valid' do
+              expect(subject).not_to be_valid
+              expect(subject.errors[:rules].length).to eq 1
+              expect(subject.errors[:rules][0]).to start_with 'rule number 1 contains invalid destination'
+            end
+          end
+
           context 'when it contains a non valid prefix mask' do
             let(:rule) { build_transport_rule('protocol' => protocol, 'destination' => '0.0.0.0/33') }
 
