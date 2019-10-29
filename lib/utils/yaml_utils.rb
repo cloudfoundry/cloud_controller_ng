@@ -4,7 +4,6 @@ module YamlUtils
   # #truncate is a way to limit the size of a yaml-able string, by removing the longest arrays from the end
   # @candidate - a string, doesn't have to be yaml-encodable
   def self.truncate(candidate, max_size)
-    # warn("QQQ: candidate.size:#{candidate.size}, max_size:#{max_size}")
     return candidate if candidate.size < max_size
 
     begin
@@ -12,17 +11,13 @@ module YamlUtils
       @max_size = max_size
       return YAML.dump(truncate_object(@full_object))
     rescue Psych::SyntaxError
-      # Assume it doesn't matter how this gets truncated
+      # Assume it doesn't matter how this gets truncated, as it isn't valid yaml to begin with
       return candidate[0...max_size]
     end
   end
 
   def self.truncate_array(object)
-    # warn("QQQ: truncate_array: object:#{object}, max_size:#{@max_size}, start size: #{object.size}")
-    while !object.empty? && YAML.dump(@full_object).size > @max_size
-      # warn("  QQQ: current array size: #{object.size}, yaml dump:#{YAML.dump(object)}, yaml size:#{YAML.dump(object).size}")
-      # warn("  QQQ: current full object yaml size:#{YAML.dump(@full_object).size}")
-      # warn("  QQQ: underlying yaml dump:#{YAML.dump(@full_object).inspect}")
+    while object.size > 0 && YAML.dump(@full_object).size > @max_size
       last_object = object[-1]
       case last_object
       when Array
@@ -33,8 +28,6 @@ module YamlUtils
         object.delete_at(-1)
       end
     end
-    # warn("  QQQ: finally, current array size: #{object.size}, yaml dump:#{YAML.dump(object)}, yaml size:#{YAML.dump(object).size}")
-
     object
   end
 
@@ -43,12 +36,12 @@ module YamlUtils
     keys_by_size.reverse.each do |k|
       break if YAML.dump(@full_object).size <= @max_size
 
-      temp_obj = object.delete(k)
+      part = object.delete(k)
       next if YAML.dump(@full_object).size > @max_size
 
-      # Reinsert the deleted object and start picking at it
-      object[k] = temp_obj
-      object[k] = truncate_object(object[k])
+      # Reinsert the deleted part and start picking at it
+      object[k] = part
+      object[k] = truncate_object(part)
     end
     object
   end

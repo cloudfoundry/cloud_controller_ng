@@ -915,18 +915,11 @@ RSpec.describe 'V3 service brokers' do
         job = VCAP::CloudController::PollableJobModel.last
 
         expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
-
-        cf_api_error = job.cf_api_error
-        expect(cf_api_error).not_to be_nil
-
-        begin
-          error = YAML.safe_load(cf_api_error)
-          expect(error['errors'].first['code']).to eq(10001)
-          expect(error['errors'].first['detail']).
-            to eq("The service broker rejected the request to http://example.org/broker-url/v2/catalog. Status Code: 418 I'm a Teapot, Body: {}")
-        rescue => ex
-          warn("QQQ: Errors yaml-loading [has failed the job with an appropriate error]: yaml:#{cf_api_error}\n\n, backtrace:#{ex.backtrace}")
-        end
+        expect(job.cf_api_error).not_to be_nil
+        error = YAML.safe_load(job.cf_api_error)
+        expect(error['errors'].first['code']).to eq(10001)
+        expect(error['errors'].first['detail']).
+          to eq("The service broker rejected the request to http://example.org/broker-url/v2/catalog. Status Code: 418 I'm a Teapot, Body: {}")
       end
     end
 
@@ -966,7 +959,6 @@ RSpec.describe 'V3 service brokers' do
         create_broker_successfully(global_broker_request_body, with: admin_headers)
 
         execute_all_jobs(expected_successes: 0, expected_failures: 1)
-        # warn("QQQ: in before-do, current last job guid is #{VCAP::CloudController::PollableJobModel.last&.guid}")
       end
 
       let(:job) { VCAP::CloudController::PollableJobModel.last }
@@ -980,7 +972,6 @@ RSpec.describe 'V3 service brokers' do
       end
 
       it 'has failed the job with an appropriate error' do
-        # warn("QQQ: in test, the lazy-eval job guid is #{job.guid}")
         get "/v3/jobs/#{job.guid}", {}, admin_headers
         expect(parsed_response).to include(
           'state' => 'FAILED',
@@ -1124,22 +1115,6 @@ RSpec.describe 'V3 service brokers' do
 
     def expect_no_broker_created
       expect(VCAP::CloudController::ServiceBroker.count).to eq(@count_before_creation)
-    end
-
-    def dump_job(job)
-      if job.cf_api_error.nil?
-        warn("QQQ: job didn't fail...")
-        job.keys.each do |key|
-          warn("QQQ: job.#{key} = <#{job.send(key)}>")
-        end
-      end
-    end
-
-    def get_cf_api_error(job)
-      return job.cf_api_error if job.cf_api_error
-
-      djguid = job.delayed_job_guid
-      Delayed::Backend::Sequel::Job.find(guid: djguid).cf_api_error
     end
 
     def assert_broker_state(broker_json)
