@@ -70,7 +70,10 @@ module VCAP::CloudController
         rescue Sequel::DatabaseError => ex
           warn("error in PollableJobWrapper.save_error: #{ex.message}")
           begin
-            pollable_job.update(cf_api_error: YamlUtils.truncate(api_error, 160_000))
+            m = /value too long for type character varying\((\d+)\)/.match(ex.message)
+            limit = m ? m[1].to_i - 1 : 15_999 - 2222
+            warn("use a limit of #{limit}")
+            pollable_job.update(cf_api_error: YamlUtils.truncate(api_error, limit))
           rescue StandardError => ex2
             warn("PollableJobWrapper.save_error: further error: #{ex2.class} #{ex2.message}")
             raise
