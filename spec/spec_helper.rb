@@ -92,7 +92,7 @@ each_run_block = proc do
       mocks.verify_partial_doubles = true
     end
     rspec_config.filter_run_excluding :opi, :perm, :stepper
-    rspec_config.filter_run_including :focus
+    # rspec_config.filter_run_including :focus
     rspec_config.expose_dsl_globally = false
     rspec_config.backtrace_exclusion_patterns = [%r{/gems/}, %r{/bin/rspec}]
 

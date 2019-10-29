@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'utils/yaml_utils'
 
-RSpec.describe YamlUtils, :focus   do
+RSpec.describe YamlUtils do
   describe 'truncate' do
     it 'truncates non-yaml strings' do
       s1 = '{234567890'
@@ -21,32 +21,6 @@ RSpec.describe YamlUtils, :focus   do
       result = YamlUtils.truncate(YAML.dump(input), 30)
       expect(YAML.safe_load(result)).to match_array(input[0...2])
     end
-
-    # it 'beeps1' do
-    #   input = {
-    #     'a1' => [],
-    #     'c1' => %w/c234567890/,
-    #     'd1' => %w/d234567890 1234567890/,
-    #     'e1' => %w/e234567890/,
-    #   }
-    #   # The max-size allows for the extra punctuation yaml-encoding adds
-    #   result = YAML.safe_load(YamlUtils.truncate(YAML.dump(input), 1))
-    #   expect(result.keys.size).to eq(0)
-    #   expect(result).to match({})
-    # end
-    #
-    # it 'beeps2' do
-    #   input =  {
-    #     'a1' => %w/a234567890/,
-    #     'c1' => %w/c234567890/,
-    #     'd1' => %w/d234567890 1234567890/,
-    #     'e1' => %w/e234567890/,
-    #   }
-    #   # The max-size allows for the extra punctuation yaml-encoding adds
-    #   result = YAML.safe_load(YamlUtils.truncate(YAML.dump(input), 1))
-    #   expect(result.keys.size).to eq(0)
-    #   expect(result).to match({})
-    # end
 
     it 'truncates long arrays in hashes' do
       input = {
