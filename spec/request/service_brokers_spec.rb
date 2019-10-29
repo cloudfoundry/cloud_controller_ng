@@ -4,7 +4,7 @@ require 'cloud_controller'
 require 'services'
 require 'messages/service_broker_update_message'
 
-RSpec.describe 'V3 service brokers', :focus do
+RSpec.describe 'V3 service brokers' do
   let(:user) { VCAP::CloudController::User.make }
   let(:global_broker_id) { 'global-service-id' }
   let(:space_broker_id) { 'space-service-id' }
@@ -1317,29 +1317,14 @@ RSpec.describe 'V3 service brokers', :focus do
 
           delete "/v3/service_brokers/#{global_broker.guid}", {}, admin_headers
           expect(last_response).to have_status_code(202)
-          # debugger
           job_url = last_response['Location']
 
           execute_all_jobs(expected_successes: 0, expected_failures: 1)
         end
 
-        it 'marks the job as failed', :focus do
+        it 'marks the job as failed' do
           get job_url, {}, admin_headers
           expect(last_response).to have_status_code(200)
-          # warn("QQQ: parsed_response:<<\n#{parsed_response.to_s[0..600]}...>>")
-          # jguid = parsed_response['guid']
-          # job = VCAP::CloudController::PollableJobModel.find(guid: jguid)
-          # warn("QQQ: in the test: job.guid: #{job.guid}")
-          # djguid = job.delayed_job_guid
-          # djob = Delayed::Backend::Sequel::Job.find(guid: djguid)
-          # warn("QQQ: in the test: delayed-job.guid: #{djguid}, djob: #{djob}")
-          # debugger
-          # warn("QQQ: parsed_response: #{parsed_response}")
-          # if !parsed_response['errors'][0]['detail']['An unknown error occurred']
-          #   warn("QQQ: error failure: parsed_response['errors'].size = #{parsed_response['errors']}")
-          #   error = parsed_response['errors'][0]
-          #   warn("QQQ: parsed_response['errors'][0] parts: #{%w/title detail code/.map{|key| "#{key}: <#{error[key]}>"}.join(', ')}")
-          # end
           expect(parsed_response).to include({
             'state' => 'FAILED',
             'operation' => 'service_broker.delete',

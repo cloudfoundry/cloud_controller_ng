@@ -20,7 +20,6 @@ module VCAP::CloudController
       end
 
       def error(job, exception)
-        # debugger
         api_error = convert_to_v3_api_error(exception)
         save_error(api_error, job)
       end
@@ -39,12 +38,10 @@ module VCAP::CloudController
         v3_hasher = V3ErrorHasher.new(exception)
         error_presenter = ErrorPresenter.new(exception, Rails.env.test?, v3_hasher)
         res = YAML.dump(error_presenter.to_hash)
-        warn("QQQ: convert_to_v3_api_error: res size: #{res.size}, exception.backtrace.size: #{exception.backtrace.size}")
-        if res.size > 16_000 && exception.backtrace.size > 1
-          exception.backtrace.slice!((exception.backtrace.size / 2)..-1)
-          return convert_to_v3_api_error(exception)
-        end
-        res
+        return res if res.size <= 16_000 || exception.backtrace.empty?
+
+        exception.backtrace.slice!((exception.backtrace.size / 2)..-1)
+        convert_to_v3_api_error(exception)
       end
 
       def find_pollable_job(job)
@@ -65,23 +62,19 @@ module VCAP::CloudController
       # Doing `ModelClass.where(CONDITION).update(field: value)` bypasses the sequel timestamp updater hook
 
       def save_error(api_error, job)
-        # warn("QQQ: save_error: job: #{job.guid}")
         find_pollable_job(job).each do |pollable_job|
-          # warn("QQQ: save_error: found pollable_job: guid: #{pollable_job.guid}, delayed_job_guid:#{pollable_job.delayed_job_guid}")
           pollable_job.update(cf_api_error: api_error)
-          # warn("QQQ: PollableJobWrapper#save_error: saving cf_api_error <<\n#{api_error[0..500]}...>> from delayed-job #{job.guid} to pollable job #{pollable_job.guid}")
         rescue Sequel::DatabaseError => ex
-          warn("QQQ: Sequel::DatabaseError error in PollableJobWrapper.save_error: #{ex.message}")
           begin
             m = /value too long for type character varying\((\d+)\)/.match(ex.message)
             limit = m ? m[1].to_i - 1 : 15_999
             pollable_job.update(cf_api_error: YamlUtils.truncate(api_error, limit))
           rescue StandardError => ex2
-            warn("PollableJobWrapper.save_error: further error: #{ex2.class} #{ex2.message}")
+            logger.warn("PollableJobWrapper.save_error: pollable_job yaml error: #{ex2.class} #{ex2.message}")
             raise
           end
         rescue StandardError => ex
-          warn("QQQ: misc error in PollableJobWrapper.save_error: #{ex.class}, #{ex.message}")
+          logger.warn("PollableJobWrapper.save_error: pollable_job update error: #{ex.class} #{ex.message}")
           raise
         end
       end

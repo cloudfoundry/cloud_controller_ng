@@ -39,12 +39,13 @@ module YamlUtils
   end
 
   def self.truncate_hash(object)
-    # debugger
     keys_by_size = object.keys.map { |k| [YAML.dump(object[k]).size, k] }.sort { |a, b| a[0] <=> b[0] }.map { |_, k| k }
     keys_by_size.reverse.each do |k|
       break if YAML.dump(@full_object).size <= @max_size
+
       temp_obj = object.delete(k)
       next if YAML.dump(@full_object).size > @max_size
+
       # Reinsert the deleted object and start picking at it
       object[k] = temp_obj
       object[k] = truncate_object(object[k])

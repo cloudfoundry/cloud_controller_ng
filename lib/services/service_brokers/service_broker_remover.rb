@@ -7,12 +7,9 @@ module VCAP::Services::ServiceBrokers
     # Necessary for async deletion. See DeleteActionJob
     def delete(brokers)
       remove(brokers.first)
-      # debugger
       VCAP::CloudController::Jobs::DeleteActionJob::NO_ERRORS
     rescue
-      # debugger
       brokers.first.update_state(VCAP::CloudController::ServiceBrokerStateEnum::DELETE_FAILED)
-      # warn("QQQ: In ServiceBrokerRemover#delete -- raise #{$!}")
       raise
     end
 

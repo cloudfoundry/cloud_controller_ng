@@ -45,17 +45,9 @@ module VCAP::CloudController
         end
 
         def build_errors
-          # debugger
-          #
-          # warn("QQQ: job presenter: job.guid: #{job.guid}, job.cf_api_error:<<\n#{(job.cf_api_error || '')[0..400]}>>")
-          # djguid = job.delayed_job_guid
-          # djob = Delayed::Backend::Sequel::Job.find(guid: djguid)
-          # warn("QQQ djob.guid: #{djguid}, djob.cf_api_error:<<\n#{(djob.cf_api_error || '')[0..400]}>>")
-
           return [] if job.cf_api_error.nil? || job.state == VCAP::CloudController::PollableJobModel::COMPLETE_STATE
 
           parsed_last_error = YAML.safe_load(job.cf_api_error)
-
           parsed_last_error['errors'].map(&:deep_symbolize_keys)
         end
 
