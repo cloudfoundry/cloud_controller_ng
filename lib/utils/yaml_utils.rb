@@ -14,8 +14,6 @@ module YamlUtils
     end
   end
 
-  private
-
   def self.truncate_array(object, max_size)
     while !object.empty? && YAML.dump(object).size > max_size
       last_object = object[-1]

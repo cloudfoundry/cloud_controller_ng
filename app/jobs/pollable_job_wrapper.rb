@@ -38,10 +38,8 @@ module VCAP::CloudController
       def convert_to_v3_api_error(exception)
         v3_hasher = V3ErrorHasher.new(exception)
         error_presenter = ErrorPresenter.new(exception, Rails.env.test?, v3_hasher)
-        res = YAML.dump(error_presenter.to_hash)
-        # warn("QQQ: convert_to_v3_api_error:<<\n#{res[0..400]}...>>")
-        res
-      rescue Exception => ex
+        YAML.dump(error_presenter.to_hash)
+      rescue StandardError => ex
         warn("QQQ: convert_to_v3_api_error error => #{ex.message}\n traceback: #{ex.backtrace}")
         raise
       end
@@ -67,11 +65,16 @@ module VCAP::CloudController
         # warn("QQQ: save_error: job: #{job.guid}")
         find_pollable_job(job).each do |pollable_job|
           # warn("QQQ: save_error: found pollable_job: guid: #{pollable_job.guid}, delayed_job_guid:#{pollable_job.delayed_job_guid}")
-          pollable_job.update(cf_api_error: YamlUtils.truncate(api_error, 160_000))
+          pollable_job.update(cf_api_error: api_error)
           # warn("QQQ: PollableJobWrapper#save_error: saving cf_api_error <<\n#{api_error[0..500]}...>> from delayed-job #{job.guid} to pollable job #{pollable_job.guid}")
-        rescue Exception => ex
-          warn("error in PollableJobWrapper.save_error: #{ex.class}, #{ex.message}")
-          raise
+        rescue Sequel::DatabaseError => ex
+          warn("error in PollableJobWrapper.save_error: #{ex.message}")
+          begin
+            pollable_job.update(cf_api_error: YamlUtils.truncate(api_error, 160_000))
+          rescue StandardError => ex2
+            warn("PollableJobWrapper.save_error: further error: #{ex2.class} #{ex2.message}")
+            raise
+          end
         end
       end
 
