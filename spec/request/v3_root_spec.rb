@@ -32,6 +32,10 @@ RSpec.describe 'v3 root' do
           'droplets' => {
             'href' => "#{link_prefix}/v3/droplets"
           },
+          'environment_variable_groups' => {
+            'href' => "#{link_prefix}/v3/environment_variable_groups",
+            'experimental' => true
+          },
           'feature_flags' => {
             'href' => "#{link_prefix}/v3/feature_flags",
           },
@@ -63,6 +67,10 @@ RSpec.describe 'v3 root' do
           },
           'service_instances' => {
             'href' => "#{link_prefix}/v3/service_instances"
+          },
+          'service_offerings' => {
+            'href' => "#{link_prefix}/v3/service_offerings",
+            'experimental' => true
           },
           'spaces' => {
             'href' => "#{link_prefix}/v3/spaces"
