@@ -79,7 +79,6 @@ RSpec.describe 'v3 root' do
           },
           'environment_variable_groups' => {
             'href' => "#{link_prefix}/v3/environment_variable_groups",
-            'experimental' => true
           }
         }
       })

@@ -101,6 +101,10 @@ includes:
   - resources/droplets/delete
   - resources/droplets/copy
   - resources/droplets/upload_bits
+  - resources/environment_variable_groups/header
+  - resources/environment_variable_groups/object
+  - resources/environment_variable_groups/get
+  - resources/environment_variable_groups/update
   - resources/feature_flags/header
   - resources/feature_flags/object
   - resources/feature_flags/flags
@@ -227,10 +231,6 @@ includes:
   - experimental_resources/deployments/list
   - experimental_resources/deployments/update
   - experimental_resources/deployments/cancel
-  - experimental_resources/environment_variable_groups/header
-  - experimental_resources/environment_variable_groups/object
-  - experimental_resources/environment_variable_groups/get
-  - experimental_resources/environment_variable_groups/update
   - experimental_resources/revisions/header
   - experimental_resources/revisions/object
   - experimental_resources/revisions/get
