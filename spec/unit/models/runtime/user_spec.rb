@@ -289,22 +289,273 @@ module VCAP::CloudController
       end
     end
 
+    describe '.readable_users_for_current_user' do
+      # See Miro board https://miro.com/app/board/o9J_kwAiqsc=/ for graphical explanation of test
+      let(:org_1) { Organization.make }
+      let(:org_2) { Organization.make }
+
+      let(:space_1a) { Space.make(organization: org_1) }
+      let(:space_2a) { Space.make(organization: org_2) }
+      let(:space_2b) { Space.make(organization: org_2) }
+
+      let(:org_1_manager) { User.make(guid: 'org_1_manager') }
+      let(:org_1_billing_manager) { User.make(guid: 'org_1_billing_manager') }
+      let(:org_1_auditor) { User.make(guid: 'org_1_auditor') }
+      let(:org_1_user) { User.make(guid: 'org_1_user') }
+
+      let(:space_1a_manager) { User.make(guid: 'space_1a_manager') }
+      let(:space_1a_auditor) { User.make(guid: 'space_1a_auditor') }
+      let(:space_1a_developer) { User.make(guid: 'space_1a_developer') }
+
+      let(:space_2a_manager) { User.make(guid: 'space_2a_manager') }
+      let(:space_2a_auditor) { User.make(guid: 'space_2a_auditor') }
+      let(:space_2a_developer) { User.make(guid: 'space_2a_developer') }
+
+      let(:space_2b_manager) { User.make(guid: 'space_2b_manager') }
+      let(:space_2b_auditor) { User.make(guid: 'space_2b_auditor') }
+      let(:space_2b_developer) { User.make(guid: 'space_2b_developer') }
+
+      before do
+        OrganizationManager.make(user: org_1_manager, organization: org_1)
+        OrganizationBillingManager.make(user: org_1_billing_manager, organization: org_1)
+        OrganizationAuditor.make(user: org_1_auditor, organization: org_1)
+        OrganizationUser.make(user: org_1_user, organization: org_1)
+
+        SpaceManager.make(user: space_1a_manager, space: space_1a)
+        OrganizationUser.make(user: space_1a_manager, organization: org_1)
+        SpaceAuditor.make(user: space_1a_auditor, space: space_1a)
+        OrganizationUser.make(user: space_1a_auditor, organization: org_1)
+        SpaceDeveloper.make(user: space_1a_developer, space: space_1a)
+        OrganizationUser.make(user: space_1a_developer, organization: org_1)
+
+        SpaceManager.make(user: space_2a_manager, space: space_2a)
+        OrganizationUser.make(user: space_2a_manager, organization: org_2)
+        SpaceAuditor.make(user: space_2a_auditor, space: space_2a)
+        OrganizationUser.make(user: space_2a_auditor, organization: org_2)
+        SpaceDeveloper.make(user: space_2a_developer, space: space_2a)
+        OrganizationUser.make(user: space_2a_developer, organization: org_2)
+
+        SpaceManager.make(user: space_2b_manager, space: space_2b)
+        OrganizationUser.make(user: space_2b_manager, organization: org_2)
+        SpaceAuditor.make(user: space_2b_auditor, space: space_2b)
+        OrganizationUser.make(user: space_2b_auditor, organization: org_2)
+        SpaceDeveloper.make(user: space_2b_developer, space: space_2b)
+        OrganizationUser.make(user: space_2b_developer, organization: org_2)
+      end
+      context 'when an {admin, read_only_admin, global_auditor} lists users' do
+        it 'sees all the org users in managed org' do
+          expect(User.readable_users_for_current_user(true, User.make(guid: 'global-user')).map(&:guid)).
+            to(match_array([
+              'global-user',
+              'org_1_manager',
+              'org_1_billing_manager',
+              'org_1_auditor',
+              'org_1_user',
+              'space_1a_manager',
+              'space_1a_auditor',
+              'space_1a_developer',
+              'space_2a_manager',
+              'space_2a_auditor',
+              'space_2a_developer',
+              'space_2b_manager',
+              'space_2b_auditor',
+              'space_2b_developer',
+            ]
+            ))
+        end
+      end
+
+      shared_examples 'an org_user' do
+        it 'can view all other users in their org' do
+          expect(User.readable_users_for_current_user(false, role).map(&:guid)).
+            to(match_array(%w(
+              org_1_manager
+              org_1_billing_manager
+              org_1_auditor
+              org_1_user
+              space_1a_manager
+              space_1a_auditor
+              space_1a_developer)
+            ))
+        end
+      end
+
+      context 'when the user is an org manager' do
+        let(:role) { org_1_manager }
+        it_behaves_like 'an org_user'
+      end
+
+      context 'when the user is an org billing manager' do
+        let(:role) { org_1_billing_manager }
+        it_behaves_like 'an org_user'
+      end
+
+      context 'when the user is an org auditor' do
+        let(:role) { org_1_auditor }
+        it_behaves_like 'an org_user'
+      end
+
+      context 'when the user is an org user' do
+        let(:role) { org_1_user }
+        it_behaves_like 'an org_user'
+      end
+
+      context 'when the user is a space manager' do
+        let(:role) { space_1a_manager }
+        it_behaves_like 'an org_user'
+      end
+
+      context 'when the user is a space auditor' do
+        let(:role) { space_1a_auditor }
+        it_behaves_like 'an org_user'
+      end
+
+      context 'when the user is a space developer' do
+        let(:role) { space_1a_developer }
+        it_behaves_like 'an org_user'
+      end
+
+      context 'in the 2nd org' do
+        it 'can view the users in their org but not in the first' do
+          expect(User.readable_users_for_current_user(false, space_2a_manager).map(&:guid)).
+            to(match_array([
+              'space_2a_manager',
+              'space_2a_auditor',
+              'space_2a_developer',
+              'space_2b_manager',
+              'space_2b_auditor',
+              'space_2b_developer',
+            ]))
+        end
+      end
+    end
+
     describe '#membership_spaces' do
-      it 'returns a list of spaces that the user is a member of' do
-        user = User.make
-        organization = Organization.make
+      let(:user) { User.make }
+      let(:organization) { Organization.make }
+
+      let(:developer_space) { Space.make organization: organization }
+      let(:auditor_space) { Space.make organization: organization }
+      let(:manager_space) { Space.make organization: organization }
+
+      before do
         organization.add_user user
-        developer_space = Space.make organization: organization
-        auditor_space = Space.make organization: organization
-        manager_space = Space.make organization: organization
 
         manager_space.add_manager user
         auditor_space.add_auditor user
         developer_space.add_developer user
+      end
+
+      it 'returns a list of spaces that the user is a member of' do
+        ids = user.membership_spaces.all.map(&:id)
+        expect(ids).to match_array([developer_space, manager_space, auditor_space].map(&:id))
+      end
+
+      it "omits spaces that the user isn't a member of" do
+        outside_user = User.make guid: 'outside_user_guid'
+        organization.add_user outside_user
+
+        different_space = Space.make organization: organization
+
+        different_space.add_developer outside_user
 
         ids = user.membership_spaces.all.map(&:id)
-
         expect(ids).to match_array([developer_space, manager_space, auditor_space].map(&:id))
+      end
+    end
+
+    describe '#membership_organizations' do
+      let(:user) { User.make }
+      let(:user_organization) { Organization.make }
+      let(:manager_organization) { Organization.make }
+      let(:auditor_organization) { Organization.make }
+      let(:billing_manager_organization) { Organization.make }
+
+      before do
+        user_organization.add_user user
+        manager_organization.add_manager user
+        auditor_organization.add_auditor user
+        billing_manager_organization.add_billing_manager user
+      end
+
+      it 'returns a list of orgs that the user is a member of' do
+        ids = user.membership_organizations.all.map(&:id)
+
+        expect(ids).to match_array([
+          user_organization,
+          manager_organization,
+          auditor_organization,
+          billing_manager_organization
+        ].map(&:id))
+      end
+
+      it "omits orgs that the user isn't a member of" do
+        ids = user.membership_organizations.all.map(&:id)
+        expect(ids).to match_array([
+          user_organization,
+          billing_manager_organization,
+          manager_organization,
+          auditor_organization].map(&:id))
+      end
+    end
+
+    describe '#visible_users_in_my_orgs' do
+      let(:user_organization) { Organization.make }
+      let(:manager_organization) { Organization.make }
+      let(:auditor_organization) { Organization.make }
+      let(:billing_manager_organization) { Organization.make }
+      let(:outside_organization) { Organization.make }
+
+      let(:other_user1) { User.make(guid: 'other_user1-guid') }
+      let(:other_user2) { User.make(guid: 'other_user2-guid') }
+      let(:other_user3) { User.make(guid: 'other_user3-guid') }
+      let(:other_user4) { User.make(guid: 'other_user4-guid') }
+      let(:outside_other_user) { User.make(guid: 'outside_other_user-guid') }
+
+      before do
+        user_organization.add_user(other_user1)
+        manager_organization.add_manager(other_user2)
+        manager_organization.add_user(other_user1)
+        auditor_organization.add_auditor(other_user3)
+        billing_manager_organization.add_billing_manager(other_user4)
+        outside_organization.add_billing_manager(outside_other_user)
+      end
+
+      it 'returns a list of users in orgs that the user is a member of' do
+        user = User.make
+        org_manager = User.make
+        org_auditor = User.make
+        org_billing_manager = User.make
+
+        user_organization.add_user(user)
+        manager_organization.add_manager(org_manager)
+        auditor_organization.add_auditor(org_auditor)
+        billing_manager_organization.add_billing_manager(org_billing_manager)
+
+        user_result = user.visible_users_in_my_orgs.all.map(&:id)
+        expect(user_result).to match_array([user.id, other_user1.id])
+        manager_result = org_manager.visible_users_in_my_orgs.all.map(&:id)
+        expect(manager_result).to match_array(
+          [
+            org_manager.id,
+            other_user1.id,
+            other_user2.id,
+          ],
+        )
+        auditor_result = org_auditor.visible_users_in_my_orgs.all.map(&:id)
+        expect(auditor_result).to match_array(
+          [
+            org_auditor.id,
+            other_user3.id,
+          ],
+        )
+        billing_manager_result = org_billing_manager.visible_users_in_my_orgs.all.map(&:id)
+        expect(billing_manager_result).to match_array(
+          [
+            org_billing_manager.id,
+            other_user4.id
+          ],
+        )
       end
     end
   end

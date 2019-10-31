@@ -2,11 +2,11 @@ require 'spec_helper'
 require 'request_spec_shared_examples'
 
 RSpec.describe 'Roles Request' do
-  let(:user) { VCAP::CloudController::User.make }
+  let(:user) { VCAP::CloudController::User.make(guid: 'user_guid') }
   let(:admin_header) { admin_headers_for(user) }
-  let(:space) { VCAP::CloudController::Space.make }
-  let(:org) { space.organization }
-  let(:user_with_role) { VCAP::CloudController::User.make }
+  let(:org) { VCAP::CloudController::Organization.make(guid: 'big-org') }
+  let(:space) { VCAP::CloudController::Space.make(guid: 'big-space', organization: org) }
+  let(:user_with_role) { VCAP::CloudController::User.make(guid: 'user_with_role') }
   let(:user_guid) { user.guid }
   let(:space_guid) { space.guid }
 
@@ -54,16 +54,21 @@ RSpec.describe 'Roles Request' do
       end
 
       let(:expected_codes_and_responses) do
-        # Note: currently, all users except admins are only able to see
-        # themselves, so they all get 422. When we expand the visibility
-        # of users, some will get 403s and some will get 422s.
-        h = Hash.new(code: 422)
+        h = Hash.new(code: 403)
         h['admin'] = {
           code: 201,
           response_object: expected_response
         }
-        h['global_auditor'] = { code: 403 }
-        h['admin_read_only'] = { code: 403 }
+        h['space_manager'] = {
+          code: 201,
+          response_object: expected_response
+        }
+        h['org_manager'] = {
+          code: 201,
+          response_object: expected_response
+        }
+        h['org_auditor'] = { code: 422 }
+        h['org_billing_manager'] = { code: 422 }
         h
       end
 
@@ -182,18 +187,20 @@ RSpec.describe 'Roles Request' do
       end
 
       let(:expected_codes_and_responses) do
-        h = Hash.new(code: 422)
+        h = Hash.new(code: 403)
         h['admin'] = {
           code: 201,
           response_object: expected_response
         }
-        h['admin_read_only'] = {
-          code: 403,
-        }
-        h['global_auditor'] = {
-          code: 403,
+        h['org_manager'] = {
+          code: 201,
+          response_object: expected_response
         }
         h
+      end
+
+      before do
+        org.add_user(user_with_role)
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -311,16 +318,21 @@ RSpec.describe 'Roles Request' do
         end
 
         let(:expected_codes_and_responses) do
-          # Note: currently, all users except admins are only able to see
-          # themselves, so they all get 422. When we expand the visibility
-          # of users, some will get 403s and some will get 422s.
-          h = Hash.new(code: 422)
+          h = Hash.new(code: 403)
           h['admin'] = {
             code: 201,
             response_object: expected_response
           }
-          h['global_auditor'] = { code: 403 }
-          h['admin_read_only'] = { code: 403 }
+          h['space_manager'] = {
+            code: 201,
+            response_object: expected_response
+          }
+          h['org_manager'] = {
+            code: 201,
+            response_object: expected_response
+          }
+          h['org_auditor'] = { code: 422 }
+          h['org_billing_manager'] = { code: 422 }
           h
         end
 
@@ -414,16 +426,21 @@ RSpec.describe 'Roles Request' do
       end
 
       let(:expected_codes_and_responses) do
-        # Note: currently, all users except admins are only able to see
-        # themselves, so they all get 422. When we expand the visibility
-        # of users, some will get 403s and some will get 422s.
-        h = Hash.new(code: 422)
+        h = Hash.new(code: 403)
         h['admin'] = {
           code: 201,
           response_object: expected_response
         }
-        h['global_auditor'] = { code: 403 }
-        h['admin_read_only'] = { code: 403 }
+        h['space_manager'] = {
+          code: 201,
+          response_object: expected_response
+        }
+        h['org_manager'] = {
+          code: 201,
+          response_object: expected_response
+        }
+        h['org_auditor'] = { code: 422 }
+        h['org_billing_manager'] = { code: 422 }
         h
       end
 

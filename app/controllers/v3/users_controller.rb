@@ -11,6 +11,7 @@ class UsersController < ApplicationController
   def index
     message = UsersListMessage.from_params(query_params)
     unprocessable!(message.errors.full_messages) unless message.valid?
+
     users = fetch_readable_users(message)
     user_guids = users.map(&:guid)
 
@@ -36,23 +37,16 @@ class UsersController < ApplicationController
   end
 
   def show
-    user = User.readable_users_for_current_user(
-      permission_queryer.can_read_secrets_globally?,
-      current_user
-    ).first(guid: hashed_params[:guid])
-
+    user = fetch_user_if_readable(hashed_params[:guid])
     user_not_found! unless user
 
     render status: :ok, json: Presenters::V3::UserPresenter.new(user, uaa_users: uaa_users_info([user.guid]))
   end
 
   def destroy
-    user = User.find(guid: hashed_params[:guid])
+    user = fetch_user_if_readable(hashed_params[:guid])
     user_not_found! unless user
 
-    db_user_is_current_user = current_user.guid == user.guid
-    unauthorized! if db_user_is_current_user && !permission_queryer.can_write_globally?
-    user_not_found! unless permission_queryer.can_read_secrets_globally?
     unauthorized! unless permission_queryer.can_write_globally?
 
     delete_action = UserDeleteAction.new
@@ -64,12 +58,10 @@ class UsersController < ApplicationController
   end
 
   def update
-    user = User.find(guid: hashed_params[:guid])
-
+    user = fetch_user_if_readable(hashed_params[:guid])
     user_not_found! unless user
-    db_user_is_current_user = current_user.guid == user.guid
-    user_not_found! unless permission_queryer.can_read_secrets_globally? || db_user_is_current_user
-    unauthorized! if !permission_queryer.can_write_globally?
+
+    unauthorized! unless permission_queryer.can_write_globally?
 
     message = UserUpdateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
@@ -82,7 +74,13 @@ class UsersController < ApplicationController
   private
 
   def fetch_readable_users(message)
-    UserListFetcher.fetch_all(message, User.readable_users_for_current_user(permission_queryer.can_read_secrets_globally?, current_user))
+    admin_roles = permission_queryer.can_read_globally?
+    UserListFetcher.fetch_all(message, User.readable_users_for_current_user(admin_roles, current_user))
+  end
+
+  def fetch_user_if_readable(desired_guid)
+    readable_users = User.readable_users_for_current_user(permission_queryer.can_read_globally?, current_user)
+    readable_users.first(guid: desired_guid)
   end
 
   def uaa_users_info(user_guids)

@@ -74,6 +74,7 @@ RSpec.shared_examples 'permissions for single object endpoint' do |roles|
         end
 
         expected_response_code = expected_codes_and_responses[role][:code]
+
         expect(last_response.status).to eq(expected_response_code),
           "role #{role}: expected #{expected_response_code}, got: #{last_response.status}\nResponse Body: #{last_response.body[0..2000]}"
         if (200...300).cover? expected_response_code

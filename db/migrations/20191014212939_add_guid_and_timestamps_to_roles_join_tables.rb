@@ -1,3 +1,4 @@
+# /v3/roles/guid
 Sequel.migration do
   change do
     alter_table :spaces_auditors do
