@@ -36,6 +36,14 @@ Name | Type | Description
 **label_selector**     | _string_          | **Experimental** - A query string containing a list of [label selector](#labels-and-selectors) requirements. |
 
 #### Permitted roles
- |
+ Roles | Notes
 --- | ---
-All Roles |
+Admin Read-Only |
+Admin |
+Global Auditor |
+Org Auditor | Can only view users affiliated with their org
+Org Billing Manager | Can only view users affiliated with their org
+Org Manager | Can only view users affiliated with their org
+Space Auditor | Can only view users affiliated with their org
+Space Developer | Can only view users affiliated with their org
+Space Manager | Can only view users affiliated with their org
