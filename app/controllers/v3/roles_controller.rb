@@ -1,5 +1,7 @@
 require 'messages/role_create_message'
+require 'messages/roles_list_message'
 require 'actions/role_create'
+require 'actions/role_guid_populate'
 require 'presenters/v3/role_presenter'
 
 class RolesController < ApplicationController
@@ -35,6 +37,21 @@ class RolesController < ApplicationController
     unprocessable!(e)
   end
 
+  def index
+    message = RolesListMessage.from_params(query_params)
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    RoleGuidPopulate.populate
+    roles = readable_roles
+
+    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
+      presenter: Presenters::V3::RolePresenter,
+      paginated_result: SequelPaginator.new.get_page(roles, message.try(:pagination_options)),
+      path: '/v3/roles',
+      message: message
+    )
+  end
+
   private
 
   def fetch_user(message)
@@ -43,7 +60,33 @@ class RolesController < ApplicationController
   end
 
   def readable_users
-    User.readable_users_for_current_user(permission_queryer.can_read_secrets_globally?, current_user)
+    User.readable_users_for_current_user(permission_queryer.can_read_globally?, current_user)
+  end
+
+  def readable_roles
+    visible_user_ids = readable_users.select(:id)
+
+    roles_for_visible_users = Role.where(user_id: visible_user_ids)
+    roles_in_visible_spaces = roles_for_visible_users.filter(space_id: visible_space_ids)
+    roles_in_visible_orgs = roles_for_visible_users.filter(organization_id: visible_org_ids)
+
+    roles_in_visible_spaces.union(roles_in_visible_orgs)
+  end
+
+  def visible_space_ids
+    if permission_queryer.can_read_globally?
+      Space.dataset.select(:id)
+    else
+      Space.user_visibility_filter(current_user)[:spaces__id]
+    end
+  end
+
+  def visible_org_ids
+    if permission_queryer.can_read_globally?
+      Organization.dataset.select(:id)
+    else
+      Organization.user_visibility_filter(current_user)[:id]
+    end
   end
 
   def unprocessable_space!

@@ -473,4 +473,194 @@ RSpec.describe 'Roles Request' do
       end
     end
   end
+
+  describe 'GET /v3/roles' do
+    let(:api_call) { lambda { |user_headers| get '/v3/roles', nil, user_headers } }
+    let(:other_user) { VCAP::CloudController::User.make }
+
+    let!(:space_auditor) do
+      VCAP::CloudController::SpaceAuditor.make(guid: 'space-role-guid', space: space, user: other_user, created_at: Time.now - 5.minutes)
+    end
+    let!(:organization_auditor) do
+      VCAP::CloudController::OrganizationAuditor.make(guid: 'organization-role-guid', organization: org, user: other_user, created_at: Time.now)
+    end
+
+    let(:space_response_object) do
+      {
+        guid: space_auditor.guid,
+        created_at: iso8601,
+        updated_at: iso8601,
+        type: 'space_auditor',
+        relationships: {
+          user: {
+            data: { guid: other_user.guid }
+          },
+          organization: {
+            data: nil
+          },
+          space: {
+            data: { guid: space.guid }
+          }
+        },
+        links: {
+          self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/roles\/#{UUID_REGEX}) },
+          user: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{other_user.guid}) },
+          space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
+        }
+      }
+    end
+
+    let(:org_response_object) do
+      {
+        guid: organization_auditor.guid,
+        created_at: iso8601,
+        updated_at: iso8601,
+        type: 'organization_auditor',
+        relationships: {
+          user: {
+            data: { guid: other_user.guid }
+          },
+          organization: {
+            data: { guid: org.guid }
+          },
+          space: {
+            data: nil
+          }
+        },
+        links: {
+          self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/roles\/#{UUID_REGEX}) },
+          user: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{other_user.guid}) },
+          organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}) },
+        }
+      }
+    end
+
+    def make_org_role_for_current_user(type)
+      {
+        guid: UUID_REGEX,
+        created_at: iso8601,
+        updated_at: iso8601,
+        type: type,
+        relationships: {
+          user: {
+            data: { guid: user.guid }
+          },
+          organization: {
+            data: { guid: org.guid }
+          },
+          space: {
+            data: nil
+          }
+        },
+        links: {
+          self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/roles\/#{UUID_REGEX}) },
+          user: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{user.guid}) },
+          organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}) },
+        }
+      }
+    end
+
+    def make_space_role_for_current_user(type)
+      {
+        guid: UUID_REGEX,
+        created_at: iso8601,
+        updated_at: iso8601,
+        type: type,
+        relationships: {
+          user: {
+            data: { guid: user.guid }
+          },
+          organization: {
+            data: nil
+          },
+          space: {
+            data: { guid: space.guid }
+          }
+        },
+        links: {
+          self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/roles\/#{UUID_REGEX}) },
+          user: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{user.guid}) },
+          space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
+        }
+      }
+    end
+
+    context 'listing all roles' do
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 200, response_objects: [space_response_object, org_response_object])
+
+        h['org_auditor'] = {
+          code: 200,
+          response_objects: contain_exactly(
+            org_response_object,
+            # TODO: update to include space response object after
+            make_org_role_for_current_user('organization_user'),
+            make_org_role_for_current_user('organization_auditor')
+          )
+        }
+
+        h['org_manager'] = {
+          code: 200,
+          response_objects: contain_exactly(
+            space_response_object,
+            org_response_object,
+            make_org_role_for_current_user('organization_user'),
+            make_org_role_for_current_user('organization_manager')
+          )
+        }
+
+        h['org_billing_manager'] = {
+          code: 200,
+          response_objects: contain_exactly(
+            org_response_object,
+            # TODO: update to include space response object after
+            make_org_role_for_current_user('organization_user'),
+            make_org_role_for_current_user('organization_billing_manager')
+          )
+        }
+
+        h['space_manager'] = {
+          code: 200,
+          response_objects: contain_exactly(
+            space_response_object,
+            org_response_object,
+            make_org_role_for_current_user('organization_user'),
+            make_space_role_for_current_user('space_manager')
+          )
+        }
+
+        h['space_auditor'] = {
+          code: 200,
+          response_objects: contain_exactly(
+            space_response_object,
+            org_response_object,
+            make_org_role_for_current_user('organization_user'),
+            make_space_role_for_current_user('space_auditor')
+          )
+        }
+
+        h['space_developer'] = {
+          code: 200,
+          response_objects: contain_exactly(
+            space_response_object,
+            org_response_object,
+            make_org_role_for_current_user('organization_user'),
+            make_space_role_for_current_user('space_developer')
+          )
+        }
+
+        h['no_role'] = { code: 200, response_objects: [] }
+        h
+      end
+
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+
+      context 'when the user is not logged in' do
+        it 'returns 401 for Unauthenticated requests' do
+          post '/v3/roles', nil, base_json_headers
+          expect(last_response.status).to eq(401)
+        end
+      end
+    end
+  end
 end
