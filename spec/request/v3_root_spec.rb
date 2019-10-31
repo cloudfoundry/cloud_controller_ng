@@ -33,8 +33,7 @@ RSpec.describe 'v3 root' do
             'href' => "#{link_prefix}/v3/droplets"
           },
           'environment_variable_groups' => {
-            'href' => "#{link_prefix}/v3/environment_variable_groups",
-            'experimental' => true
+            'href' => "#{link_prefix}/v3/environment_variable_groups"
           },
           'feature_flags' => {
             'href' => "#{link_prefix}/v3/feature_flags",

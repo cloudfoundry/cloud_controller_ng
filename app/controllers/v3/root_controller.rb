@@ -13,7 +13,7 @@ class RootController < ActionController::Base
     links.merge!(create_link(:deployments, experimental: true))
     links.merge!(create_link(:domains))
     links.merge!(create_link(:droplets))
-    links.merge!(create_link(:environment_variable_groups, experimental: true))
+    links.merge!(create_link(:environment_variable_groups))
     links.merge!(create_link(:feature_flags))
     links.merge!(create_link(:isolation_segments))
     links.merge!(create_link(:organizations))
