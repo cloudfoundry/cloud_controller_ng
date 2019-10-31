@@ -84,9 +84,6 @@ RSpec.describe 'v3 root' do
           'users' => {
             'href' => "#{link_prefix}/v3/users",
             'experimental' => true
-          },
-          'environment_variable_groups' => {
-            'href' => "#{link_prefix}/v3/environment_variable_groups",
           }
         }
       })
