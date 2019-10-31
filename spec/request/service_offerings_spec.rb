@@ -5,14 +5,12 @@ RSpec.describe 'V3 service offerings' do
   let(:user) { VCAP::CloudController::User.make }
 
   describe 'GET /v3/service_offerings/:guid' do
-    let(:guid) { 'service-offering-guid' }
-
     context 'when service plan is not available in any orgs' do
-      context 'when user is admin' do
-        let(:service_plan) { VCAP::CloudController::ServicePlan.make(public: false, active: true) }
-        let(:service_offering) { service_plan.service }
-        let(:guid) { service_offering.guid }
+      let(:service_plan) { VCAP::CloudController::ServicePlan.make(public: false, active: true) }
+      let(:service_offering) { service_plan.service }
+      let(:guid) { service_offering.guid }
 
+      context 'when user is admin' do
         it 'renders a service offering' do
           get "/v3/service_offerings/#{guid}", nil, admin_headers
 
@@ -24,7 +22,11 @@ RSpec.describe 'V3 service offerings' do
       end
 
       context 'when user is not a global read role' do
-        # TODO
+        it 'responds with not found' do
+          get "/v3/service_offerings/#{guid}", nil, headers_for(user)
+
+          expect(last_response).to have_status_code(404)
+        end
       end
     end
 
@@ -59,19 +61,21 @@ RSpec.describe 'V3 service offerings' do
     context 'when a service offering plan is available only in some orgs' do
       let(:org) { VCAP::CloudController::Organization.make }
       let(:service_plan) { VCAP::CloudController::ServicePlan.make(public: false, active: true) }
+      let(:service_offering) { service_plan.service }
       let!(:service_plan_visibility) do
         VCAP::CloudController::ServicePlanVisibility.make(
           service_plan: service_plan,
           organization: org
         )
       end
+      let(:guid) { service_offering.guid }
 
       context 'when user has access to one of these orgs' do
         before do
           org.add_user(user)
         end
 
-        it 'responds with not found' do
+        it 'renders a service offering' do
           get "/v3/service_offerings/#{guid}", nil, headers_for(user)
 
           expect(last_response).to have_status_code(200)
@@ -87,6 +91,10 @@ RSpec.describe 'V3 service offerings' do
 
           expect(last_response).to have_status_code(404)
         end
+      end
+
+      context 'when service offering comes from space scoped broker' do
+        # TODO: Think about this
       end
     end
   end
