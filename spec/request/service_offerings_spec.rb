@@ -15,9 +15,23 @@ RSpec.describe 'V3 service offerings' do
           get "/v3/service_offerings/#{guid}", nil, admin_headers
 
           expect(last_response).to have_status_code(200)
-          expect(parsed_response).to eq({
-            'guid' => guid
-          })
+          expect(parsed_response).to match(
+            hash_including(
+              'guid' => guid,
+              'name' => service_offering.label,
+              'description' => service_offering.description,
+              'available' => true,
+              'bindable' => true,
+              'broker_service_offering_metadata' => service_offering.extra,
+              'broker_service_offering_id' => service_offering.unique_id,
+              'tags' => [],
+              'requires' => [],
+              'created_at' => iso8601,
+              'updated_at' => iso8601,
+              'plan_updateable' => false,
+              'shareable' => true,
+            )
+          )
         end
       end
 
@@ -26,6 +40,13 @@ RSpec.describe 'V3 service offerings' do
           get "/v3/service_offerings/#{guid}", nil, headers_for(user)
 
           expect(last_response).to have_status_code(404)
+          expect(parsed_response).to match({
+            'errors' => [hash_including(
+              'detail' => 'Service offering not found',
+              'title' => 'CF-ResourceNotFound',
+              'code' => 10010
+            )]
+          })
         end
       end
     end
@@ -40,9 +61,10 @@ RSpec.describe 'V3 service offerings' do
           get "/v3/service_offerings/#{guid}", nil, headers_for(user)
 
           expect(last_response).to have_status_code(200)
-          expect(parsed_response).to eq({
-            'guid' => guid
-          })
+          expect(parsed_response).to match(hash_including(
+                                             'guid' => guid,
+                                             'name' => service_offering.label
+          ))
         end
       end
 
@@ -51,9 +73,10 @@ RSpec.describe 'V3 service offerings' do
           get "/v3/service_offerings/#{guid}"
 
           expect(last_response).to have_status_code(200)
-          expect(parsed_response).to eq({
-            'guid' => guid
-          })
+          expect(parsed_response).to match(hash_including(
+                                             'guid' => guid,
+                                             'name' => service_offering.label
+          ))
         end
       end
     end
@@ -79,9 +102,10 @@ RSpec.describe 'V3 service offerings' do
           get "/v3/service_offerings/#{guid}", nil, headers_for(user)
 
           expect(last_response).to have_status_code(200)
-          expect(parsed_response).to eq({
-            'guid' => guid
-          })
+          expect(parsed_response).to match(hash_including(
+                                             'guid' => guid,
+                                             'name' => service_offering.label
+          ))
         end
       end
 
@@ -90,6 +114,13 @@ RSpec.describe 'V3 service offerings' do
           get "/v3/service_offerings/#{guid}", nil, headers_for(user)
 
           expect(last_response).to have_status_code(404)
+          expect(parsed_response).to match({
+            'errors' => [hash_including(
+              'detail' => 'Service offering not found',
+              'title' => 'CF-ResourceNotFound',
+              'code' => 10010
+            )]
+          })
         end
       end
 
