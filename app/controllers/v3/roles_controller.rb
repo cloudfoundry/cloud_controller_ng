@@ -9,28 +9,11 @@ class RolesController < ApplicationController
     message = RoleCreateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    if message.space_guid
-      space = Space.find(guid: message.space_guid)
-      unprocessable_space! unless space
-      org = space.organization
-
-      unprocessable_space! if permission_queryer.can_read_from_org?(org.guid) &&
-        !permission_queryer.can_read_from_space?(message.space_guid, org.guid)
-
-      unauthorized! unless permission_queryer.can_update_space?(message.space_guid, org.guid)
-      user = fetch_user(message)
-      unprocessable_user! unless user
-
-      role = RoleCreate.create_space_role(type: message.type, user: user, space: space)
-    else
-      org = Organization.find(guid: message.organization_guid)
-      unprocessable_organization! unless org
-      unauthorized! unless permission_queryer.can_write_to_org?(message.organization_guid)
-      user = fetch_user(message)
-      unprocessable_user! unless user
-
-      role = RoleCreate.create_organization_role(type: message.type, user: user, organization: org)
-    end
+    role = if message.space_guid
+             create_space_role(message)
+           else
+             create_org_role(message)
+           end
 
     render status: :created, json: Presenters::V3::RolePresenter.new(role)
   rescue RoleCreate::Error => e
@@ -54,8 +37,45 @@ class RolesController < ApplicationController
 
   private
 
-  def fetch_user(message)
+  def create_space_role(message)
+    space = Space.find(guid: message.space_guid)
+    unprocessable_space! unless space
+    org = space.organization
+
+    unprocessable_space! if permission_queryer.can_read_from_org?(org.guid) &&
+      !permission_queryer.can_read_from_space?(message.space_guid, org.guid)
+
+    unauthorized! unless permission_queryer.can_update_space?(message.space_guid, org.guid)
+
     user_guid = message.user_guid || guid_for_uaa_user(message.user_name, message.user_origin)
+    user = fetch_user(user_guid)
+    unprocessable_user! unless user
+
+    RoleCreate.create_space_role(type: message.type, user: user, space: space)
+  end
+
+  def create_org_role(message)
+    org = Organization.find(guid: message.organization_guid)
+    unprocessable_organization! unless org
+    unauthorized! unless permission_queryer.can_write_to_org?(message.organization_guid)
+
+    user_guid = message.user_guid || guid_for_uaa_user(message.user_name, message.user_origin)
+    user = fetch_user_for_create_org_role(user_guid, message)
+    unprocessable_user! unless user
+
+    RoleCreate.create_organization_role(type: message.type, user: user, organization: org)
+  end
+
+  # Org managers can add unaffiliated users to their org by username
+  def fetch_user_for_create_org_role(user_guid, message)
+    if message.user_name && permission_queryer.can_write_to_org?(message.organization_guid)
+      User.dataset.first(guid: user_guid)
+    else
+      fetch_user(user_guid)
+    end
+  end
+
+  def fetch_user(user_guid)
     readable_users.first(guid: user_guid)
   end
 

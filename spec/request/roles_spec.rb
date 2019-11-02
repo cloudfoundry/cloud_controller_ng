@@ -10,6 +10,7 @@ RSpec.describe 'Roles Request' do
   let(:user_guid) { user.guid }
   let(:space_guid) { space.guid }
 
+  let(:user_unaffiliated) { VCAP::CloudController::User.make(guid: 'user_no_role') }
   describe 'POST /v3/roles' do
     let(:api_call) { lambda { |user_headers| post '/v3/roles', params.to_json, user_headers } }
 
@@ -382,6 +383,61 @@ RSpec.describe 'Roles Request' do
       end
     end
 
+    context 'creating role by user GUID as org manager for unaffiliated user' do
+      let(:params) do
+        {
+          type: 'organization_auditor',
+          relationships: {
+            user: {
+              data: { guid: user_unaffiliated.guid }
+            },
+            organization: {
+              data: { guid: org.guid }
+            }
+          }
+        }
+      end
+
+      let(:expected_response) do
+        {
+          guid: UUID_REGEX,
+          created_at: iso8601,
+          updated_at: iso8601,
+          type: 'organization_auditor',
+          relationships: {
+            user: {
+              data: { guid: user_unaffiliated.guid }
+            },
+            space: {
+              data: nil
+            },
+            organization: {
+              data: { guid: org.guid }
+            }
+          },
+          links: {
+            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/roles\/#{UUID_REGEX}) },
+            user: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{user_unaffiliated.guid}) },
+            organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}) },
+          }
+        }
+      end
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 403)
+        h['admin'] = {
+          code: 201,
+          response_object: expected_response
+        }
+        h['org_manager'] = {
+          code: 422
+        }
+        h
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+    end
+
     context 'creating a role by username and origin' do
       let(:params) do
         {
@@ -470,6 +526,74 @@ RSpec.describe 'Roles Request' do
             "No user exists with the username 'uuu' and origin 'okta'."
           )
         end
+      end
+
+      # This has to be an org role, because anyone has to be in the organizations_users table before they can be
+      # granted any space roles
+      context 'as org manager for unaffiliated user' do
+        before do
+          allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
+          allow(uaa_client).to receive(:origins_for_username).with('bob_unaffiliated').and_return(['uaa'])
+          allow(uaa_client).to receive(:id_for_username).with('bob_unaffiliated', origin: 'uaa').and_return(user_unaffiliated.guid)
+        end
+        let(:uaa_client) { double(:uaa_client) }
+        let(:params) do
+          {
+            type: 'organization_auditor',
+            relationships: {
+              user: {
+                data: {
+                  name: 'bob_unaffiliated'
+                }
+              },
+              organization: {
+                data: { guid: org.guid }
+              }
+            }
+          }
+        end
+
+        let(:expected_response) do
+          {
+            guid: UUID_REGEX,
+            created_at: iso8601,
+            updated_at: iso8601,
+            type: 'organization_auditor',
+            relationships: {
+              user: {
+                data: { guid: user_unaffiliated.guid }
+              },
+              space: {
+                data: nil
+              },
+              organization: {
+                data: { guid: org.guid }
+              }
+            },
+            links: {
+              self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/roles\/#{UUID_REGEX}) },
+              user: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{user_unaffiliated.guid}) },
+              organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}) },
+            }
+          }
+        end
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(
+            code: 403,
+          )
+          h['admin'] = {
+            code: 201,
+            response_object: expected_response
+          }
+          h['org_manager'] = {
+            code: 201,
+            response_object: expected_response
+          }
+          h
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
     end
   end
