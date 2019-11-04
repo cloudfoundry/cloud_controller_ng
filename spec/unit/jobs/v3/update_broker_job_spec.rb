@@ -9,7 +9,7 @@ module VCAP
         it_behaves_like 'delayed job', UpdateBrokerJob
 
         describe '#perform' do
-          let(:broker) do
+          let!(:broker) do
             ServiceBroker.create(
               name: 'test-broker',
               broker_url: 'http://example.org/broker-url',
@@ -17,75 +17,192 @@ module VCAP
               auth_password: 'password'
             )
           end
+
+          let(:update_broker_request) do
+            ServiceBrokerUpdateRequest.create(
+              name: 'new-name',
+              broker_url: 'http://example.org/new-broker-url',
+              authentication: '{"credentials":{"username":"new-admin","password":"welcome"}}',
+              service_broker_id: broker.id
+            )
+          end
+
           let(:service_manager_factory) { Services::ServiceBrokers::ServiceManager }
 
+          let(:previous_state) { ServiceBrokerStateEnum::AVAILABLE }
+
           subject(:job) do
-            UpdateBrokerJob.new(broker.guid)
+            UpdateBrokerJob.new(update_broker_request.guid, broker.guid, previous_state)
           end
 
           let(:broker_client) { FakeServiceBrokerV2Client.new }
-          let(:broker_state) { ServiceBrokerState.where(service_broker_id: broker.id).first.state }
+          let(:broker_state) { ServiceBrokerState.where(service_broker_id: broker.id).first&.state }
 
           before do
             allow(Services::ServiceClientProvider).to receive(:provide).
               with(broker: broker).
               and_return(broker_client)
+
+            broker.update_state(ServiceBrokerStateEnum::SYNCHRONIZING)
           end
 
-          context 'when the broker has state' do
-            before do
-              broker.update(
-                service_broker_state: ServiceBrokerState.new(
-                  state: ServiceBrokerStateEnum::SYNCHRONIZING
-                )
-              )
+          it 'updates the service broker and creates the service offerings and plans from the catalog' do
+            job.perform
+
+            broker.reload
+
+            expect(broker.name).to eq('new-name')
+            expect(broker.broker_url).to eq('http://example.org/new-broker-url')
+            expect(broker.auth_username).to eq('new-admin')
+            expect(broker.auth_password).to eq('welcome')
+            expect(broker_state).to eq(ServiceBrokerStateEnum::AVAILABLE)
+
+            service_offerings = Service.where(service_broker_id: broker.id)
+            expect(service_offerings.count).to eq(1)
+            expect(service_offerings.first.label).to eq(broker_client.service_name)
+
+            service_plans = ServicePlan.where(service_id: service_offerings.first.id)
+            expect(service_plans.count).to eq(1)
+            expect(service_plans.first.name).to eq(broker_client.plan_name)
+
+            expect(ServiceBrokerUpdateRequest.where(id: update_broker_request.id).all).to be_empty
+          end
+
+          context 'partial updates' do
+            subject(:job) do
+              UpdateBrokerJob.new(update_broker_request.guid, broker.guid, previous_state)
             end
 
-            it 'creates the service offerings and plans from the catalog' do
+            it 'updates the name' do
+              update_broker_request = ServiceBrokerUpdateRequest.create(name: 'new-name', service_broker_id: broker.id)
+              job = UpdateBrokerJob.new(update_broker_request.guid, broker.guid, previous_state)
+
               job.perform
 
-              service_offerings = Service.where(service_broker_id: broker.id)
-              expect(service_offerings.count).to eq(1)
-              expect(service_offerings.first.label).to eq(broker_client.service_name)
-
-              service_plans = ServicePlan.where(service_id: service_offerings.first.id)
-              expect(service_plans.count).to eq(1)
-              expect(service_plans.first.name).to eq(broker_client.plan_name)
-
-              expect(broker_state).to eq(ServiceBrokerStateEnum::AVAILABLE)
+              broker.reload
+              expect(broker.name).to eq('new-name')
+              expect(broker.broker_url).to eq('http://example.org/broker-url')
+              expect(broker.auth_username).to eq('username')
+              expect(broker.auth_password).to eq('password')
             end
 
-            context 'when catalog returned by broker is invalid' do
-              before { invalid_catalog }
+            it 'updates the url' do
+              update_broker_request = ServiceBrokerUpdateRequest.create(
+                broker_url: 'http://example.org/new-broker-url',
+                service_broker_id: broker.id
+              )
+              job = UpdateBrokerJob.new(update_broker_request.guid, broker.guid, previous_state)
 
-              it 'errors when there are validation errors' do
+              job.perform
+
+              broker.reload
+              expect(broker.name).to eq('test-broker')
+              expect(broker.broker_url).to eq('http://example.org/new-broker-url')
+              expect(broker.auth_username).to eq('username')
+              expect(broker.auth_password).to eq('password')
+            end
+
+            it 'updates the authentication' do
+              update_broker_request = ServiceBrokerUpdateRequest.create(
+                authentication: '{"credentials":{"username":"new-admin","password":"welcome"}}',
+                service_broker_id: broker.id
+              )
+              job = UpdateBrokerJob.new(update_broker_request.guid, broker.guid, previous_state)
+
+              job.perform
+
+              broker.reload
+              expect(broker.name).to eq('test-broker')
+              expect(broker.broker_url).to eq('http://example.org/broker-url')
+              expect(broker.auth_username).to eq('new-admin')
+              expect(broker.auth_password).to eq('welcome')
+            end
+          end
+
+          describe 'when there is a model level validation' do
+            before do
+              allow_any_instance_of(ServiceBroker).to receive(:validate) do |record|
+                record.errors.add(:something, 'is not right')
+              end
+            end
+
+            let(:previous_state) { ServiceBrokerStateEnum::DELETE_FAILED }
+            it 'fails to update and raises InvalidServiceBroker' do
+              expect {
                 job.perform
-                fail('expected error to be raised')
-              rescue ::CloudController::Errors::ApiError => e
-                expect(e.message).to include(
-                  'Service broker catalog is invalid',
+              }.to raise_error(V3::ServiceBrokerUpdate::InvalidServiceBroker, 'something is not right')
+
+              broker.reload
+              expect(broker_state).to eq(ServiceBrokerStateEnum::DELETE_FAILED)
+            end
+          end
+
+          context 'when catalog returned by broker is invalid' do
+            before { setup_broker_with_invalid_catalog }
+
+            it 'errors when there are validation errors' do
+              job.perform
+              fail('expected error to be raised')
+            rescue ::CloudController::Errors::ApiError => e
+              expect(e.message).to include(
+                'Service broker catalog is invalid',
                   'Service dashboard_client id must be unique',
                   'Service service-name',
                   'nested-error'
-                )
-              end
+              )
             end
 
-            context 'when catalog returned by broker is incompatible' do
-              before { incompatible_catalog }
+            it 'rolls back any updates to the broker' do
+              expect { job.perform }.to raise_error(::CloudController::Errors::ApiError)
 
-              it 'errors when there are validation errors' do
-                job.perform
-                fail('expected error to be raised')
-              rescue ::CloudController::Errors::ApiError => e
-                expect(e.message).to include(
-                  'Service broker catalog is incompatible',
+              broker.reload
+
+              expect(broker.name).to eq('test-broker')
+              expect(broker.broker_url).to eq('http://example.org/broker-url')
+              expect(broker.auth_username).to eq('username')
+              expect(broker.auth_password).to eq('password')
+              expect(broker_state).to eq(ServiceBrokerStateEnum::AVAILABLE)
+            end
+
+            it 'removes the service broker update request record' do
+              expect { job.perform }.to raise_error(::CloudController::Errors::ApiError)
+              expect(ServiceBrokerUpdateRequest.where(id: update_broker_request.id).all).to be_empty
+            end
+          end
+
+          context 'when catalog returned by broker is incompatible' do
+            before { incompatible_catalog }
+
+            it 'errors when there are validation errors' do
+              job.perform
+              fail('expected error to be raised')
+            rescue ::CloudController::Errors::ApiError => e
+              expect(e.message).to include(
+                'Service broker catalog is incompatible',
                   'Service 2 is declared to be a route service but support for route services is disabled.',
                   'Service 3 is declared to be a volume mount service but support for volume mount services is disabled.'
-                )
-              end
+              )
             end
 
+            it 'rolls back any updates to the broker' do
+              expect { job.perform }.to raise_error(::CloudController::Errors::ApiError)
+
+              broker.reload
+
+              expect(broker.name).to eq('test-broker')
+              expect(broker.broker_url).to eq('http://example.org/broker-url')
+              expect(broker.auth_username).to eq('username')
+              expect(broker.auth_password).to eq('password')
+              expect(broker_state).to eq(ServiceBrokerStateEnum::AVAILABLE)
+            end
+
+            it 'removes the service broker update request record' do
+              expect { job.perform }.to raise_error(::CloudController::Errors::ApiError)
+              expect(ServiceBrokerUpdateRequest.where(id: update_broker_request.id).all).to be_empty
+            end
+          end
+
+          context 'client manager' do
             context 'when catalog returned by broker causes UAA sync conflicts' do
               before do
                 uaa_conflicting_catalog
@@ -105,61 +222,116 @@ module VCAP
                     'Service dashboard client id must be unique'
                 )
               end
-            end
-          end
 
-          context 'service broker created by legacy code that lacks any state' do
-            it 'creates the state' do
-              expect { job.perform }.to_not raise_error
-
-              expect(broker_state).to eq(ServiceBrokerStateEnum::AVAILABLE)
-            end
-
-            context 'when update fails' do
-              before { invalid_catalog }
-
-              it 'also creates the state' do
+              it 'rolls back any updates to the broker' do
                 expect { job.perform }.to raise_error(::CloudController::Errors::ApiError)
 
-                expect(broker_state).to eq(ServiceBrokerStateEnum::SYNCHRONIZATION_FAILED)
+                broker.reload
+
+                expect(broker.name).to eq('test-broker')
+                expect(broker.broker_url).to eq('http://example.org/broker-url')
+                expect(broker.auth_username).to eq('username')
+                expect(broker.auth_password).to eq('password')
+                expect(broker_state).to eq(ServiceBrokerStateEnum::AVAILABLE)
+              end
+
+              it 'removes the service broker update request record' do
+                expect { job.perform }.to raise_error(::CloudController::Errors::ApiError)
+                expect(ServiceBrokerUpdateRequest.where(id: update_broker_request.id).all).to be_empty
+              end
+            end
+
+            context 'when it returns a warning' do
+              let(:warning) { VCAP::Services::SSO::DashboardClientManager::REQUESTED_FEATURE_DISABLED_WARNING }
+
+              before do
+                allow_any_instance_of(VCAP::Services::SSO::DashboardClientManager).to receive(:has_warnings?).and_return(true)
+                allow_any_instance_of(VCAP::Services::SSO::DashboardClientManager).to receive(:warnings).and_return([warning])
+              end
+
+              it 'then the warning gets stored' do
+                job.perform
+
+                expect(job.warnings).to include({ detail: warning })
               end
             end
           end
 
-          context 'when service manager returns a warning' do
-            let(:service_manager) { instance_double(Services::ServiceBrokers::ServiceManager, sync_services_and_plans: nil) }
-            let(:warning) { 'some catalog warning' }
+          context 'service manager' do
+            context 'when service manager returns an error' do
+              let(:service_manager) { instance_double(Services::ServiceBrokers::ServiceManager, sync_services_and_plans: nil) }
+              let(:error) { StandardError.new('oh') }
 
-            before do
-              allow(Services::ServiceBrokers::ServiceManager).to receive(:new).and_return(service_manager)
+              before do
+                allow(Services::ServiceBrokers::ServiceManager).to receive(:new).and_return(service_manager)
+                allow(service_manager).to receive(:sync_services_and_plans).and_raise(error)
+              end
 
-              allow(service_manager).to receive(:has_warnings?).and_return(true)
-              allow(service_manager).to receive(:warnings).and_return([warning])
+              it 'rolls back any updates to the broker' do
+                expect { job.perform }.to raise_error(error)
+
+                broker.reload
+
+                expect(broker.name).to eq('test-broker')
+                expect(broker.broker_url).to eq('http://example.org/broker-url')
+                expect(broker.auth_username).to eq('username')
+                expect(broker.auth_password).to eq('password')
+                expect(broker_state).to eq(ServiceBrokerStateEnum::AVAILABLE)
+              end
+
+              it 'removes the service broker update request record' do
+                expect { job.perform }.to raise_error(error)
+                expect(ServiceBrokerUpdateRequest.where(id: update_broker_request.id).all).to be_empty
+              end
             end
 
-            it 'then the warning gets stored' do
-              job.perform
+            context 'when service manager returns a warning' do
+              let(:service_manager) { instance_double(Services::ServiceBrokers::ServiceManager, sync_services_and_plans: nil) }
+              let(:warning) { 'some catalog warning' }
 
-              expect(job.warnings).to include({ detail: warning })
+              before do
+                allow(Services::ServiceBrokers::ServiceManager).to receive(:new).and_return(service_manager)
+
+                allow(service_manager).to receive(:has_warnings?).and_return(true)
+                allow(service_manager).to receive(:warnings).and_return([warning])
+              end
+
+              it 'then the warning gets stored' do
+                job.perform
+
+                expect(job.warnings).to include({ detail: warning })
+              end
             end
           end
 
-          context 'when the client manager returns a warning' do
-            let(:warning) { VCAP::Services::SSO::DashboardClientManager::REQUESTED_FEATURE_DISABLED_WARNING }
-
+          context 'when the update fails' do
             before do
-              allow_any_instance_of(VCAP::Services::SSO::DashboardClientManager).to receive(:has_warnings?).and_return(true)
-              allow_any_instance_of(VCAP::Services::SSO::DashboardClientManager).to receive(:warnings).and_return([warning])
+              setup_broker_with_invalid_catalog
+            end
+            context 'and the broker was not available' do
+              let(:previous_state) { ServiceBrokerStateEnum::SYNCHRONIZATION_FAILED }
+
+              it 'rolls back to the previous known state' do
+                expect { job.perform }.to raise_error(::CloudController::Errors::ApiError)
+
+                broker.reload
+                expect(broker_state).to eq(ServiceBrokerStateEnum::SYNCHRONIZATION_FAILED)
+              end
             end
 
-            it 'then the warning gets stored' do
-              job.perform
+            context 'and there is no previous state' do
+              let(:previous_state) { nil }
 
-              expect(job.warnings).to include({ detail: warning })
+              it 'rolls back to the previous known state' do
+                expect { job.perform }.to raise_error(::CloudController::Errors::ApiError)
+
+                broker.reload
+                expect(broker_state).to eq(nil)
+              end
             end
           end
 
-          def invalid_catalog
+          def setup_broker_with_invalid_catalog
             catalog = instance_double(Services::ServiceBrokers::V2::Catalog)
 
             allow(Services::ServiceBrokers::V2::Catalog).to receive(:new).
@@ -170,7 +342,7 @@ module VCAP
 
             validation_errors.add_nested(
               double('double-name', name: 'service-name'),
-              Services::ValidationErrors.new.add('nested-error')
+                Services::ValidationErrors.new.add('nested-error')
             )
 
             allow(catalog).to receive(:valid?).and_return(false)

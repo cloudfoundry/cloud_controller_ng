@@ -20,19 +20,24 @@ module VCAP::CloudController
         params[:authentication] = message.authentication.to_json if message.requested?(:authentication)
         params[:service_broker_id] = broker.id
 
+        if params[:name] && !ServiceBroker.where(name: params[:name]).exclude(guid: broker.guid).empty?
+          raise InvalidServiceBroker.new('Name must be unique')
+        end
+
         if broker.in_transitional_state?
           raise InvalidServiceBroker.new('Cannot update a broker when other operation is already in progress')
         end
 
         pollable_job = nil
+        previous_broker_state = broker.service_broker_state&.state
         ServiceBrokerUpdateRequest.db.transaction do
           broker.update_state(ServiceBrokerStateEnum::SYNCHRONIZING)
 
-          updateRequest = ServiceBrokerUpdateRequest.create(params)
+          update_request = ServiceBrokerUpdateRequest.create(params)
 
           service_event_repository.record_broker_event_with_request(:update, broker, message.audit_hash)
 
-          synchronization_job = UpdateBrokerJob.new(updateRequest.guid)
+          synchronization_job = UpdateBrokerJob.new(update_request.guid, broker.guid, previous_broker_state)
           pollable_job = Jobs::Enqueuer.new(synchronization_job, queue: Jobs::Queues.generic).enqueue_pollable
         end
 

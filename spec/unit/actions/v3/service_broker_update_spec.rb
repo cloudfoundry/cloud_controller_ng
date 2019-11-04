@@ -45,6 +45,10 @@ module VCAP
         )
       end
 
+      let(:service_broker_update_request) {
+        ServiceBrokerUpdateRequest.find(service_broker_id: existing_service_broker.id)
+      }
+
       it 'does not update the broker in the DB' do
         action.update(message)
 
@@ -57,22 +61,33 @@ module VCAP
       it 'creates an entry for the update request in the DB' do
         action.update(message)
 
-        serviceBrokerUpdateRequest = ServiceBrokerUpdateRequest.find(service_broker_id: existing_service_broker.id)
+        service_broker_update_request = ServiceBrokerUpdateRequest.find(service_broker_id: existing_service_broker.id)
 
-        expect(serviceBrokerUpdateRequest.name).to eq('new-name')
-        expect(serviceBrokerUpdateRequest.broker_url).to eq('http://example.org/new-broker-url')
-        expect(serviceBrokerUpdateRequest.authentication).to eq('{"credentials":{"username":"new-admin","password":"welcome"}}')
+        expect(service_broker_update_request.name).to eq('new-name')
+        expect(service_broker_update_request.broker_url).to eq('http://example.org/new-broker-url')
+        expect(service_broker_update_request.authentication).to eq('{"credentials":{"username":"new-admin","password":"welcome"}}')
       end
 
       it 'creates and returns a update job' do
         job = action.update(message)[:pollable_job]
 
-        serviceBrokerUpdateRequest = ServiceBrokerUpdateRequest.find(service_broker_id: existing_service_broker.id)
-
         expect(job).to be_a PollableJobModel
         expect(job.operation).to eq('service_broker.update')
-        expect(job.resource_guid).to eq(serviceBrokerUpdateRequest.guid)
+        expect(job.resource_guid).to eq(existing_service_broker.guid)
         expect(job.resource_type).to eq('service_brokers')
+      end
+
+      it 'creates an update job with the right arguments' do
+        allow(VCAP::CloudController::V3::UpdateBrokerJob).to receive(:new).and_return(spy(VCAP::CloudController::V3::UpdateBrokerJob))
+        previous_state = existing_service_broker.service_broker_state.state
+
+        action.update(message)
+
+        expect(VCAP::CloudController::V3::UpdateBrokerJob).to have_received(:new).with(
+          service_broker_update_request.guid,
+            existing_service_broker.guid,
+            previous_state
+        ).once
       end
 
       it 'sets the state to SYNCHRONIZING' do
@@ -151,69 +166,24 @@ module VCAP
         it 'creates and returns a synchronization job' do
           job = action.update(message)[:pollable_job]
 
-          serviceBrokerUpdateRequest = ServiceBrokerUpdateRequest.find(service_broker_id: existing_service_broker.id)
-
           expect(job).to be_a PollableJobModel
           expect(job.operation).to eq('service_broker.update')
-          expect(job.resource_guid).to eq(serviceBrokerUpdateRequest.guid)
+          expect(job.resource_guid).to eq(existing_service_broker.guid)
           expect(job.resource_type).to eq('service_brokers')
         end
+
+        it 'creates an update job with the right arguments' do
+          allow(VCAP::CloudController::V3::UpdateBrokerJob).to receive(:new).and_return(spy(VCAP::CloudController::V3::UpdateBrokerJob))
+
+          action.update(message)
+
+          expect(VCAP::CloudController::V3::UpdateBrokerJob).to have_received(:new).with(
+            service_broker_update_request.guid,
+              existing_service_broker.guid,
+              nil
+          ).once
+        end
       end
-
-      # describe 'partial updates' do
-      #   it 'updates the name' do
-      #     message = ServiceBrokerUpdateMessage.new(name: 'new-name')
-      #     action.update(message)
-      #
-      #     expect(existing_service_broker.name).to eq('new-name')
-      #     expect(existing_service_broker.broker_url).to eq('http://example.org/old-broker-url')
-      #     expect(existing_service_broker.auth_username).to eq('old-admin')
-      #     expect(existing_service_broker.auth_password).to eq('not-welcome')
-      #   end
-      #
-      #   it 'updates the url' do
-      #     message = ServiceBrokerUpdateMessage.new(url: 'http://example.org/new-broker-url')
-      #
-      #     action.update(message)
-      #
-      #     expect(existing_service_broker.name).to eq('old-name')
-      #     expect(existing_service_broker.broker_url).to eq('http://example.org/new-broker-url')
-      #     expect(existing_service_broker.auth_username).to eq('old-admin')
-      #     expect(existing_service_broker.auth_password).to eq('not-welcome')
-      #   end
-      #
-      #   it 'updates the authentication' do
-      #     message = ServiceBrokerUpdateMessage.new(
-      #       authentication: {
-      #         credentials: {
-      #           username: 'new-admin',
-      #           password: 'welcome'
-      #         }
-      #       }
-      #     )
-      #
-      #     action.update(message)
-      #
-      #     expect(existing_service_broker.name).to eq('old-name')
-      #     expect(existing_service_broker.broker_url).to eq('http://example.org/old-broker-url')
-      #     expect(existing_service_broker.auth_username).to eq('new-admin')
-      #     expect(existing_service_broker.auth_password).to eq('welcome')
-      #   end
-      # end
-
-      # describe 'when there is a model level validation' do
-      #   before do
-      #     allow_any_instance_of(ServiceBroker).to receive(:validate) do |record|
-      #       record.errors.add(:something, 'is not right')
-      #     end
-      #   end
-      #
-      #   it 'fails to update and raises InvalidServiceBroker' do
-      #     expect {
-      #       action.update(message)
-      #     }.to raise_error(V3::ServiceBrokerUpdate::InvalidServiceBroker, 'something is not right')
-      #   end
-      # end
     end
   end
 end

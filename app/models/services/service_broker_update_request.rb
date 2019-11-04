@@ -1,7 +1,6 @@
 module VCAP::CloudController
   class ServiceBrokerUpdateRequest < Sequel::Model
-    import_attributes :name, :broker_url, :authentication
-
+    one_to_one :service_broker
     set_field_as_encrypted :authentication
   end
 end

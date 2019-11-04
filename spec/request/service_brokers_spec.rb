@@ -457,49 +457,77 @@ RSpec.describe 'V3 service brokers' do
       }
     }
 
-    context 'just wanna run those' do
-      it 'does not update a service broker in the database' do
-        patch("/v3/service_brokers/#{broker.guid}", update_request_body.to_json, admin_headers)
+    it 'does not immediately update a service broker in the database' do
+      patch("/v3/service_brokers/#{broker.guid}", update_request_body.to_json, admin_headers)
 
-        broker = VCAP::CloudController::ServiceBroker.last # TODO: get the broker using the api?
+      broker = VCAP::CloudController::ServiceBroker.last # TODO: get the broker using the api?
+      expect(broker.name).to eq('old-name')
+      expect(broker.broker_url).to eq('http://example.org/old-broker-url')
+      expect(broker.auth_username).to eq('old-admin')
+      expect(broker.auth_password).to eq('not-welcome')
+      expect(broker.service_broker_state.state).to eq(VCAP::CloudController::ServiceBrokerStateEnum::SYNCHRONIZING)
+    end
+
+    it 'creates a pollable job to update the service broker' do
+      patch("/v3/service_brokers/#{broker.guid}", update_request_body.to_json, admin_headers)
+      expect(last_response).to have_status_code(202)
+
+      job = VCAP::CloudController::PollableJobModel.last
+
+      expect(job.state).to eq(VCAP::CloudController::PollableJobModel::PROCESSING_STATE)
+      expect(job.operation).to eq('service_broker.update')
+      expect(job.resource_guid).to eq(broker.guid)
+      expect(job.resource_type).to eq('service_brokers')
+
+      expect(last_response.headers['Location']).to end_with("/v3/jobs/#{job.guid}")
+    end
+
+    context 'when the job succeeds' do
+      before do
+        stub_request(:get, 'http://example.org/new-broker-url/v2/catalog').
+          to_return(status: 200, body: catalog(space_broker_id).to_json, headers: {})
+
+        patch("/v3/service_brokers/#{broker.guid}", update_request_body.to_json, admin_headers)
+        execute_all_jobs(expected_successes: 1, expected_failures: 0)
+      end
+
+      it 'updates the service broker and the catalog' do
+        broker = VCAP::CloudController::ServiceBroker.last
+        expect(broker.name).to eq('new-name')
+        expect(broker.broker_url).to eq('http://example.org/new-broker-url')
+        expect(broker.auth_username).to eq('admin')
+        expect(broker.auth_password).to eq('welcome')
+        expect(broker.service_broker_state.state).to eq(VCAP::CloudController::ServiceBrokerStateEnum::AVAILABLE)
+      end
+    end
+
+    context 'when the job fails' do
+      before do
+        stub_request(:get, 'http://example.org/new-broker-url/v2/catalog').
+          to_return(status: 500, body: '', headers: {})
+
+        patch("/v3/service_brokers/#{broker.guid}", update_request_body.to_json, admin_headers)
+        execute_all_jobs(expected_successes: 0, expected_failures: 1)
+      end
+
+      it 'returns failed job' do
+        job_url = last_response['Location']
+        get job_url, {}, admin_headers
+        expect(parsed_response).to include({
+            'state' => 'FAILED',
+            'operation' => 'service_broker.update',
+            'errors' => [include({ 'code' => 10001, 'detail' => include('The service broker returned an invalid response') })],
+            'warnings' => [],
+        })
+      end
+
+      it 'rolls back the broker to its previously known configuration' do
+        broker = VCAP::CloudController::ServiceBroker.last
         expect(broker.name).to eq('old-name')
         expect(broker.broker_url).to eq('http://example.org/old-broker-url')
         expect(broker.auth_username).to eq('old-admin')
         expect(broker.auth_password).to eq('not-welcome')
-        expect(broker.service_broker_state.state).to eq(VCAP::CloudController::ServiceBrokerStateEnum::SYNCHRONIZING)
-      end
-
-      it 'creates a pollable job to update the service broker in DB and synchronize the catalog and responds with the job resource' do
-        patch("/v3/service_brokers/#{broker.guid}", update_request_body.to_json, admin_headers)
-        expect(last_response).to have_status_code(202)
-
-        job = VCAP::CloudController::PollableJobModel.last
-
-        expect(job.state).to eq(VCAP::CloudController::PollableJobModel::PROCESSING_STATE)
-        expect(job.operation).to eq('service_broker.update')
-        expect(job.resource_guid).to eq(broker.guid)
-        expect(job.resource_type).to eq('service_brokers')
-
-        expect(last_response.headers['Location']).to end_with("/v3/jobs/#{job.guid}")
-      end
-
-      context 'when the job succeeds' do
-        before do
-          stub_request(:get, 'http://example.org/new-broker-url/v2/catalog').
-            to_return(status: 200, body: catalog(space_broker_id).to_json, headers: {})
-
-          patch("/v3/service_brokers/#{broker.guid}", update_request_body.to_json, admin_headers)
-          execute_all_jobs(expected_successes: 1, expected_failures: 0)
-        end
-
-        it 'updates the service broker and the catalog' do
-          broker = VCAP::CloudController::ServiceBroker.last
-          expect(broker.name).to eq('new-name')
-          expect(broker.broker_url).to eq('http://example.org/new-broker-url')
-          expect(broker.auth_username).to eq('admin')
-          expect(broker.auth_password).to eq('welcome')
-          expect(broker.service_broker_state.state).to eq(VCAP::CloudController::ServiceBrokerStateEnum::AVAILABLE)
-        end
+        expect(broker.service_broker_state.state).to eq(VCAP::CloudController::ServiceBrokerStateEnum::AVAILABLE)
       end
     end
 
@@ -657,7 +685,7 @@ RSpec.describe 'V3 service brokers' do
           get job_url, {}, admin_headers
           expect(parsed_response).to include({
               'state' => 'COMPLETE',
-              'operation' => 'service_broker.catalog.synchronize',
+              'operation' => 'service_broker.update',
               'errors' => [],
               'warnings' => [
                 include({
@@ -702,7 +730,7 @@ RSpec.describe 'V3 service brokers' do
           get job_url, {}, admin_headers
           expect(parsed_response).to include({
               'state' => 'COMPLETE',
-              'operation' => 'service_broker.catalog.synchronize',
+              'operation' => 'service_broker.update',
               'errors' => [],
               'warnings' => [
                 include({

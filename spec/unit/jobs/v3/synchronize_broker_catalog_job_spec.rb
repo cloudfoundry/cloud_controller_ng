@@ -56,7 +56,7 @@ module VCAP
             end
 
             context 'when catalog returned by broker is invalid' do
-              before { invalid_catalog }
+              before { setup_broker_with_invalid_catalog }
 
               it 'errors when there are validation errors' do
                 job.perform
@@ -116,7 +116,7 @@ module VCAP
             end
 
             context 'when synchronization fails' do
-              before { invalid_catalog }
+              before { setup_broker_with_invalid_catalog }
 
               it 'also creates the state' do
                 expect { job.perform }.to raise_error(::CloudController::Errors::ApiError)
@@ -159,7 +159,7 @@ module VCAP
             end
           end
 
-          def invalid_catalog
+          def setup_broker_with_invalid_catalog
             catalog = instance_double(Services::ServiceBrokers::V2::Catalog)
 
             allow(Services::ServiceBrokers::V2::Catalog).to receive(:new).
