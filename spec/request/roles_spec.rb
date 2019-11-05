@@ -161,7 +161,6 @@ RSpec.describe 'Roles Request' do
           }
         }
       end
-
       let(:expected_response) do
         {
           guid: UUID_REGEX,
@@ -511,6 +510,42 @@ RSpec.describe 'Roles Request' do
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
 
+      context 'when the flag to set roles by username is disabled' do
+        before do
+          VCAP::CloudController::FeatureFlag.make(name: 'set_roles_by_username')
+        end
+
+        let(:params) do
+          {
+            type: 'space_auditor',
+            relationships: {
+              user: {
+                data: {
+                  name: 'uuu',
+                  origin: 'okta'
+                }
+              },
+              space: {
+                data: { guid: space.guid }
+              }
+            }
+          }
+        end
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(code: 403)
+          h['admin'] = {
+            code: 201,
+            response_object: expected_response
+          }
+
+          h['org_auditor'] = { code: 422 }
+          h['org_billing_manager'] = { code: 422 }
+          h
+        end
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
+
       context 'when there is no user with the given username and origin' do
         before do
           allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
@@ -594,6 +629,23 @@ RSpec.describe 'Roles Request' do
         end
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+        context 'when the flag to set roles by username is disabled' do
+          before do
+            VCAP::CloudController::FeatureFlag.make(name: 'set_roles_by_username')
+          end
+
+          let(:expected_codes_and_responses) do
+            h = Hash.new(code: 403)
+            h['admin'] = {
+              code: 201,
+              response_object: expected_response
+            }
+            h
+          end
+
+          it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        end
       end
     end
   end

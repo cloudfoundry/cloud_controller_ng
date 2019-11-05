@@ -201,8 +201,8 @@ module VCAP::CloudController
         distinct
     end
 
-    def self.readable_users_for_current_user(can_read_secrets_globally, current_user)
-      if can_read_secrets_globally
+    def self.readable_users_for_current_user(can_read_globally, current_user)
+      if can_read_globally
         User.dataset
       else
         readable_users = current_user.visible_users_in_my_orgs.union(User.where(id: current_user.id).select(:id))

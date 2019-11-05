@@ -122,6 +122,7 @@ class RolesController < ApplicationController
   end
 
   def guid_for_uaa_user(username, given_origin)
+    FeatureFlag.raise_unless_enabled!(:set_roles_by_username)
     uaa_client = CloudController::DependencyLocator.instance.uaa_client
 
     origin = if given_origin

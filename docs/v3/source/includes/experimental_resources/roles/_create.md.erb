@@ -85,13 +85,13 @@ For a user to be assigned a space role, the user must already have an organizati
 
 #### Definition
 `POST /v3/roles`
-
+;
 #### Required parameters
 
 Name | Type | Description
 ---- | ---- | -----------
 **type** | _string_ | Role to create. See [valid role types](#valid-role-types).
-**relationships.user** | [_to-one relationship_](#to-one-relationships) | A relationship to a user. The user can be defined by either a `guid` or a `name` (with the option of including an `origin` to disambiguate it).
+**relationships.user** | [_to-one relationship_](#to-one-relationships) | A relationship to a user. The user can be defined by either a `guid` or, if the `set_roles_by_username` [feature_flag](#list-of-feature-flags) is enabled, a `name` (with the option of including an `origin` to disambiguate it).
 **relationships.organization** | [_to-one relationship_](#to-one-relationships) | A relationship to an organization. Required only when creating an organization role.
 **relationships.space** | [_to-one relationship_](#to-one-relationships) | A relationship to a space. Required only when creating a space role.
 
@@ -100,6 +100,6 @@ Name | Type | Description
 Role | Notes
 --- | ---
 Admin |
-Org Manager | Can create roles in managed organizations and spaces within those organizations
-Space Manager | Can create roles in managed spaces
+Org Manager | Can create roles in managed organizations and spaces within those organizations. Can create roles for unaffilated users only when `set_roles_by_username` [feature_flag](#list-of-feature-flags) is enabled.
+Space Manager | Can create roles in managed spaces for users in their org.
 
