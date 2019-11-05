@@ -22,7 +22,6 @@ module VCAP::CloudController
           space_guid: message.relationships_message.space_guid
         }
 
-        broker = nil
         pollable_job = nil
         ServiceBroker.db.transaction do
           broker = ServiceBroker.create(params)
