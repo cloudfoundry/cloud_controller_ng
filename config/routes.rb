@@ -237,6 +237,7 @@ Rails.application.routes.draw do
   patch '/environment_variable_groups/:name', to: 'environment_variable_groups#update'
 
   # roles
-  post '/roles', to: 'roles#create'
   get '/roles', to: 'roles#index'
+  get '/roles/:guid', to: 'roles#show'
+  post '/roles', to: 'roles#create'
 end

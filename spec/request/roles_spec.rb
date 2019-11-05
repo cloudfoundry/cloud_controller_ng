@@ -839,4 +839,106 @@ RSpec.describe 'Roles Request' do
       end
     end
   end
+
+  describe 'GET /v3/roles/:guid' do
+    let(:api_call) { lambda { |user_headers| get "/v3/roles/#{role.guid}", nil, user_headers } }
+
+    context 'when getting a space role' do
+      let(:role) { VCAP::CloudController::SpaceAuditor.make(user: user_with_role, space: space) }
+
+      let(:expected_response) do
+        {
+          guid: role.guid,
+          created_at: iso8601,
+          updated_at: iso8601,
+          type: 'space_auditor',
+          relationships: {
+            user: {
+              data: { guid: user_with_role.guid }
+            },
+            space: {
+              data: { guid: space.guid }
+            },
+            organization: {
+              data: nil
+            }
+          },
+          links: {
+            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/roles\/#{role.guid}) },
+            user: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{user_with_role.guid}) },
+            space: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
+          }
+        }
+      end
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 200, response_object: expected_response)
+        h['org_auditor'] = { code: 404 }
+        h['org_billing_manager'] = { code: 404 }
+        h['no_role'] = { code: 404 }
+        h
+      end
+
+      before do
+        org.add_user(user_with_role)
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+    end
+
+    context 'when getting a space role' do
+      let(:role) { VCAP::CloudController::OrganizationAuditor.make(user: user_with_role, organization: org) }
+
+      let(:expected_response) do
+        {
+          guid: role.guid,
+          created_at: iso8601,
+          updated_at: iso8601,
+          type: 'organization_auditor',
+          relationships: {
+            user: {
+              data: { guid: user_with_role.guid }
+            },
+            space: {
+              data: nil
+            },
+            organization: {
+              data: { guid: org.guid }
+            }
+          },
+          links: {
+            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/roles\/#{role.guid}) },
+            user: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{user_with_role.guid}) },
+            organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}) },
+          }
+        }
+      end
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 200, response_object: expected_response)
+        h['no_role'] = { code: 404 }
+        h
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+    end
+
+    context 'when the role does not exist' do
+      it 'returns a 404 with a helpful message' do
+        get '/v3/roles/not-exist', nil, admin_header
+
+        expect(last_response).to have_status_code(404)
+        expect(last_response).to have_error_message('Role not found')
+      end
+    end
+
+    context 'when not logged in' do
+      it 'returns a 401 with a helpful message' do
+        get '/v3/roles/not-exist', nil, {}
+
+        expect(last_response).to have_status_code(401)
+        expect(last_response).to have_error_message('Authentication error')
+      end
+    end
+  end
 end

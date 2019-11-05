@@ -35,6 +35,13 @@ class RolesController < ApplicationController
     )
   end
 
+  def show
+    role = readable_roles.first(guid: hashed_params[:guid])
+    resource_not_found!(:role) unless role
+
+    render status: :ok, json: Presenters::V3::RolePresenter.new(role)
+  end
+
   private
 
   def create_space_role(message)

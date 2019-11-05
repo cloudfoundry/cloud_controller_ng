@@ -1,0 +1,42 @@
+### Get a role
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/roles/[guid]" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :single_role %>
+```
+
+This endpoint gets an individual role resource.
+
+#### Definition
+
+`GET /v3/roles/:guid`
+
+#### Permitted roles
+
+Role | Notes
+--- | ---
+Admin |
+Admin Read-Only |
+Global Auditor |
+Org Manager | Can see roles in managed organizations or spaces in those organizations.
+Org Auditor | Can only see organization roles in audited organizations.
+Org Billing Manager | Can only see organization roles in billing-managed organizations.
+Space Auditor | Can see roles in audited spaces or parent organizations.
+Space Developer | Can see roles in developed spaces or parent organizations.
+Space Manager | Can see roles in managed spaces or parent organizations.

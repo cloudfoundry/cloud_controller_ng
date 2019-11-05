@@ -241,6 +241,7 @@ includes:
   - experimental_resources/roles/object
   - experimental_resources/roles/valid_roles
   - experimental_resources/roles/create
+  - experimental_resources/roles/get
   - experimental_resources/roles/list
   - experimental_resources/service_bindings/header
   - experimental_resources/service_bindings/object
