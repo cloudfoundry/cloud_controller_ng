@@ -102,40 +102,43 @@ RSpec.describe 'V3 service brokers' do
     end
 
     context 'when there are global service brokers' do
-      let!(:global_service_broker1) { VCAP::CloudController::ServiceBroker.make }
-      let!(:global_service_broker2) { VCAP::CloudController::ServiceBroker.make }
+      let(:global_service_broker_v3) do
+        broker = VCAP::CloudController::ServiceBroker.make
+        state = VCAP::CloudController::ServiceBrokerState.make_unsaved
+        broker.update(service_broker_state: state)
+        broker
+      end
 
-      let(:global_service_broker1_json) do
+      let(:global_service_broker_v2) do
+        # Note, no entry for this broker in the service_brokers_state table
+        VCAP::CloudController::ServiceBroker.make
+      end
+
+      let(:global_service_broker_v3_json) do
         {
-            guid: global_service_broker1.guid,
-            name: global_service_broker1.name,
-            url: global_service_broker1.broker_url,
+            guid: global_service_broker_v3.guid,
+            name: global_service_broker_v3.name,
+            url: global_service_broker_v3.broker_url,
             created_at: iso8601,
             updated_at: iso8601,
             status: 'available',
             available: true,
             relationships: {},
-            links: { self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/service_brokers\/#{global_service_broker1.guid}) } }
+            links: { self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/service_brokers\/#{global_service_broker_v3.guid}) } }
         }
       end
-      let(:global_service_broker2_json) do
+      let(:global_service_broker_v2_json) do
         {
-            guid: global_service_broker2.guid,
-            name: global_service_broker2.name,
-            url: global_service_broker2.broker_url,
+            guid: global_service_broker_v2.guid,
+            name: global_service_broker_v2.name,
+            url: global_service_broker_v2.broker_url,
             created_at: iso8601,
             updated_at: iso8601,
-            status: 'unknown',
-            available: false,
+            status: 'available',
+            available: true,
             relationships: {},
-            links: { self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/service_brokers\/#{global_service_broker2.guid}) } }
+            links: { self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/service_brokers\/#{global_service_broker_v2.guid}) } }
         }
-      end
-
-      let!(:broker_state) { VCAP::CloudController::ServiceBrokerState.make_unsaved }
-
-      before do
-        global_service_broker1.update(service_broker_state: broker_state)
       end
 
       let(:expected_codes_and_responses) do
@@ -144,9 +147,9 @@ RSpec.describe 'V3 service brokers' do
           response_objects: []
         )
 
-        h['admin'] = { code: 200, response_objects: [global_service_broker1_json, global_service_broker2_json] }
-        h['admin_read_only'] = { code: 200, response_objects: [global_service_broker1_json, global_service_broker2_json] }
-        h['global_auditor'] = { code: 200, response_objects: [global_service_broker1_json, global_service_broker2_json] }
+        h['admin'] = { code: 200, response_objects: [global_service_broker_v3_json, global_service_broker_v2_json] }
+        h['admin_read_only'] = { code: 200, response_objects: [global_service_broker_v3_json, global_service_broker_v2_json] }
+        h['global_auditor'] = { code: 200, response_objects: [global_service_broker_v3_json, global_service_broker_v2_json] }
 
         h
       end
@@ -163,8 +166,8 @@ RSpec.describe 'V3 service brokers' do
             url: space_scoped_service_broker.broker_url,
             created_at: iso8601,
             updated_at: iso8601,
-            status: 'unknown',
-            available: false,
+            status: 'available',
+            available: true,
             relationships: {
                 space: { data: { guid: space.guid } }
             },
@@ -290,20 +293,20 @@ RSpec.describe 'V3 service brokers' do
     end
 
     context 'when the service broker is global' do
-      let!(:global_service_broker1) { VCAP::CloudController::ServiceBroker.make }
-      let(:api_call) { lambda { |user_headers| get "/v3/service_brokers/#{global_service_broker1.guid}", nil, user_headers } }
+      let!(:global_service_broker_v3) { VCAP::CloudController::ServiceBroker.make }
+      let(:api_call) { lambda { |user_headers| get "/v3/service_brokers/#{global_service_broker_v3.guid}", nil, user_headers } }
 
-      let(:global_service_broker1_json) do
+      let(:global_service_broker_v3_json) do
         {
-            guid: global_service_broker1.guid,
-            name: global_service_broker1.name,
-            url: global_service_broker1.broker_url,
+            guid: global_service_broker_v3.guid,
+            name: global_service_broker_v3.name,
+            url: global_service_broker_v3.broker_url,
             created_at: iso8601,
             updated_at: iso8601,
-            status: 'unknown',
-            available: false,
+            status: 'available',
+            available: true,
             relationships: {},
-            links: { self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/service_brokers\/#{global_service_broker1.guid}) } }
+            links: { self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/service_brokers\/#{global_service_broker_v3.guid}) } }
         }
       end
 
@@ -312,15 +315,15 @@ RSpec.describe 'V3 service brokers' do
 
         h['admin'] = {
             code: 200,
-            response_object: global_service_broker1_json
+            response_object: global_service_broker_v3_json
         }
         h['admin_read_only'] = {
             code: 200,
-            response_object: global_service_broker1_json
+            response_object: global_service_broker_v3_json
         }
         h['global_auditor'] = {
             code: 200,
-            response_object: global_service_broker1_json
+            response_object: global_service_broker_v3_json
 
         }
 
@@ -341,8 +344,8 @@ RSpec.describe 'V3 service brokers' do
             url: space_scoped_service_broker.broker_url,
             created_at: iso8601,
             updated_at: iso8601,
-            status: 'unknown',
-            available: false,
+            status: 'available',
+            available: true,
             relationships: {
                 space: { data: { guid: space.guid } }
             },

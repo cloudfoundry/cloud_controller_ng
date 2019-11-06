@@ -70,10 +70,10 @@ module VCAP::CloudController
         end
 
         describe 'broker status' do
-          context 'when state is unknown (e.g. legacy V2 created broker)' do
-            it 'is unknown and is unavailable' do
-              expect(result[:available]).to be(false)
-              expect(result[:status]).to eq('unknown')
+          context 'when there is no state (e.g. legacy V2 created broker)' do
+            it 'is available' do
+              expect(result[:available]).to be(true)
+              expect(result[:status]).to eq('available')
             end
           end
 
