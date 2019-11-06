@@ -243,6 +243,7 @@ includes:
   - experimental_resources/roles/create
   - experimental_resources/roles/get
   - experimental_resources/roles/list
+  - experimental_resources/roles/delete
   - experimental_resources/service_bindings/header
   - experimental_resources/service_bindings/object
   - experimental_resources/service_bindings/create

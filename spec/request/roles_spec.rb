@@ -9,8 +9,8 @@ RSpec.describe 'Roles Request' do
   let(:user_with_role) { VCAP::CloudController::User.make(guid: 'user_with_role') }
   let(:user_guid) { user.guid }
   let(:space_guid) { space.guid }
-
   let(:user_unaffiliated) { VCAP::CloudController::User.make(guid: 'user_no_role') }
+
   describe 'POST /v3/roles' do
     let(:api_call) { lambda { |user_headers| post '/v3/roles', params.to_json, user_headers } }
 
@@ -886,7 +886,7 @@ RSpec.describe 'Roles Request' do
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
 
-    context 'when getting a space role' do
+    context 'when getting a org role' do
       let(:role) { VCAP::CloudController::OrganizationAuditor.make(user: user_with_role, organization: org) }
 
       let(:expected_response) do
@@ -938,6 +938,76 @@ RSpec.describe 'Roles Request' do
 
         expect(last_response).to have_status_code(401)
         expect(last_response).to have_error_message('Authentication error')
+      end
+    end
+  end
+
+  describe 'DELETE /v3/roles/:guid' do
+    let(:api_call) { lambda { |headers| delete "/v3/roles/#{role.guid}", nil, headers } }
+    let(:db_check) do
+      lambda do
+        expect(last_response.headers['Location']).to match(%r(http.+/v3/jobs/[a-fA-F0-9-]+))
+
+        execute_all_jobs(expected_successes: 1, expected_failures: 0)
+        get "/v3/roles/#{role.guid}", {}, admin_headers
+        expect(last_response.status).to eq(404)
+      end
+    end
+
+    before do
+      org.add_user(user_with_role)
+    end
+
+    context 'when deleting a space role' do
+      let(:role) { VCAP::CloudController::SpaceAuditor.make(user: user_with_role, space: space) }
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 403)
+        h['admin'] = { code: 202 }
+        h['space_manager'] = { code: 202 }
+        h['org_manager'] = { code: 202 }
+        h['org_auditor'] = { code: 404 }
+        h['org_billing_manager'] = { code: 404 }
+        h['no_role'] = { code: 404 }
+        h
+      end
+
+      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
+    end
+
+    context 'when deleting an org role' do
+      let(:role) { VCAP::CloudController::OrganizationAuditor.make(user: user_with_role, organization: org) }
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 403)
+        h['admin'] = { code: 202 }
+        h['org_manager'] = { code: 202 }
+        h['no_role'] = { code: 404 }
+        h
+      end
+
+      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
+    end
+
+    context 'when the user is not logged in' do
+      let(:role) { VCAP::CloudController::SpaceAuditor.make(user: user_with_role, space: space) }
+
+      it 'returns a 401' do
+        delete "/v3/roles/#{role.guid}", nil, base_json_headers
+        expect(last_response.status).to eq(401)
+      end
+    end
+
+    context 'when the requested role does not exist' do
+      let(:headers) { headers_for(user, scopes: %w(cloud_controller.write)) }
+
+      before do
+        set_current_user_as_role(role: 'org_manager', org: org, space: space, user: user)
+      end
+
+      it 'returns a 404 not found' do
+        delete('/v3/roles/does-not-exist', nil, headers)
+        expect(last_response.status).to eq(404)
       end
     end
   end

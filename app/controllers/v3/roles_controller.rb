@@ -2,6 +2,7 @@ require 'messages/role_create_message'
 require 'messages/roles_list_message'
 require 'actions/role_create'
 require 'actions/role_guid_populate'
+require 'actions/role_delete'
 require 'presenters/v3/role_presenter'
 
 class RolesController < ApplicationController
@@ -40,6 +41,27 @@ class RolesController < ApplicationController
     resource_not_found!(:role) unless role
 
     render status: :ok, json: Presenters::V3::RolePresenter.new(role)
+  end
+
+  def destroy
+    role = readable_roles.first(guid: hashed_params[:guid])
+    resource_not_found!(:role) unless role
+
+    if role.space_guid
+      org_guid = Space.find(guid: role.space_guid).organization.guid
+      unauthorized! unless permission_queryer.can_update_space?(role.space_guid, org_guid)
+    end
+
+    if role.organization_guid
+      unauthorized! unless permission_queryer.can_write_to_org?(role.organization_guid)
+    end
+
+    delete_action = RoleDeleteAction.new
+    deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(Role, role.guid, delete_action)
+    pollable_job = Jobs::Enqueuer.new(deletion_job, queue: Jobs::Queues.generic).enqueue_pollable
+
+    url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
+    head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job.guid}")
   end
 
   private

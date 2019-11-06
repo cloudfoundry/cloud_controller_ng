@@ -73,11 +73,11 @@ module VCAP::CloudController
     end
 
     def organization_guid
-      Organization.first(id: organization_id).guid
+      Organization.first(id: organization_id)&.guid
     end
 
     def space_guid
-      Space.first(id: space_id).guid
+      Space.first(id: space_id)&.guid
     end
   end
 end
