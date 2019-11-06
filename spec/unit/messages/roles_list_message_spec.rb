@@ -38,9 +38,9 @@ module VCAP::CloudController
     describe 'fields' do
       it 'accepts a set of fields' do
         message = RolesListMessage.from_params({
-          page:      1,
-          per_page:  5,
-          order_by:  'created_at',
+          'page' => 1,
+          'per_page'  =>  5,
+          'order_by'  =>  'created_at',
         })
         expect(message).to be_valid
       end
@@ -57,9 +57,69 @@ module VCAP::CloudController
         expect(message.errors[:base]).to include("Unknown query parameter(s): 'foobar'")
       end
 
+      it 'accepts a guids param' do
+        message = RolesListMessage.from_params({ guids: %w[guid1 guid2] })
+        expect(message).to be_valid
+        expect(message.guids).to eq(%w[guid1 guid2])
+      end
+
+      it 'does not accept a non-array guids param' do
+        message = RolesListMessage.from_params({ guids: 'not array' })
+        expect(message).to be_invalid
+        expect(message.errors[:guids]).to include('must be an array')
+      end
+
+      it 'accepts a organization_guids param' do
+        message = RolesListMessage.from_params({ organization_guids: %w[organization_guid1 organization_guid2] })
+        expect(message).to be_valid
+        expect(message.organization_guids).to eq(%w[organization_guid1 organization_guid2])
+      end
+
+      it 'does not accept a non-array organization_guids param' do
+        message = RolesListMessage.from_params({ organization_guids: 'not array' })
+        expect(message).to be_invalid
+        expect(message.errors[:organization_guids]).to include('must be an array')
+      end
+
+      it 'accepts a space_guids param' do
+        message = RolesListMessage.from_params({ space_guids: %w[space_guid1 space_guid2] })
+        expect(message).to be_valid
+        expect(message.space_guids).to eq(%w[space_guid1 space_guid2])
+      end
+
+      it 'does not accept a non-array space_guids param' do
+        message = RolesListMessage.from_params({ space_guids: 'not array' })
+        expect(message).to be_invalid
+        expect(message.errors[:space_guids]).to include('must be an array')
+      end
+
+      it 'accepts a user_guids param' do
+        message = RolesListMessage.from_params({ user_guids: %w[user_guid1 user_guid2] })
+        expect(message).to be_valid
+        expect(message.user_guids).to eq(%w[user_guid1 user_guid2])
+      end
+
+      it 'does not accept a non-array user_guids param' do
+        message = RolesListMessage.from_params({ user_guids: 'not array' })
+        expect(message).to be_invalid
+        expect(message.errors[:user_guids]).to include('must be an array')
+      end
+
+      it 'accepts a types param' do
+        message = RolesListMessage.from_params({ types: %w[type1 type2] })
+        expect(message).to be_valid
+        expect(message.types).to eq(%w[type1 type2])
+      end
+
+      it 'does not accept a non-array types param' do
+        message = RolesListMessage.from_params({ types: 'not array' })
+        expect(message).to be_invalid
+        expect(message.errors[:types]).to include('must be an array')
+      end
+
       it 'reject an invalid order_by field' do
         message = RolesListMessage.from_params({
-          order_by:  'fail!',
+          'order_by' =>  'fail!',
         })
         expect(message).not_to be_valid
       end

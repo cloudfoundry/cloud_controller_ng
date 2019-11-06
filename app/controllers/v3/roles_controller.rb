@@ -1,5 +1,6 @@
 require 'messages/role_create_message'
 require 'messages/roles_list_message'
+require 'fetchers/role_list_fetcher'
 require 'actions/role_create'
 require 'actions/role_guid_populate'
 require 'actions/role_delete'
@@ -26,7 +27,7 @@ class RolesController < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     RoleGuidPopulate.populate
-    roles = readable_roles
+    roles = RoleListFetcher.fetch(message, readable_roles)
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::RolePresenter,

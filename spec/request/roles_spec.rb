@@ -655,10 +655,21 @@ RSpec.describe 'Roles Request' do
     let(:other_user) { VCAP::CloudController::User.make }
 
     let!(:space_auditor) do
-      VCAP::CloudController::SpaceAuditor.make(guid: 'space-role-guid', space: space, user: other_user, created_at: Time.now - 5.minutes)
+      VCAP::CloudController::SpaceAuditor.make(
+        guid: 'space-role-guid',
+        space: space,
+        user: other_user,
+        created_at: Time.now - 5.minutes,
+      )
     end
+
     let!(:organization_auditor) do
-      VCAP::CloudController::OrganizationAuditor.make(guid: 'organization-role-guid', organization: org, user: other_user, created_at: Time.now)
+      VCAP::CloudController::OrganizationAuditor.make(
+        guid: 'organization-role-guid',
+        organization: org,
+        user: other_user,
+        created_at: Time.now,
+      )
     end
 
     let(:space_response_object) do
@@ -769,7 +780,6 @@ RSpec.describe 'Roles Request' do
           code: 200,
           response_objects: contain_exactly(
             org_response_object,
-            # TODO: update to include space response object after
             make_org_role_for_current_user('organization_user'),
             make_org_role_for_current_user('organization_auditor')
           )
@@ -789,7 +799,6 @@ RSpec.describe 'Roles Request' do
           code: 200,
           response_objects: contain_exactly(
             org_response_object,
-            # TODO: update to include space response object after
             make_org_role_for_current_user('organization_user'),
             make_org_role_for_current_user('organization_billing_manager')
           )
@@ -837,6 +846,30 @@ RSpec.describe 'Roles Request' do
           expect(last_response.status).to eq(401)
         end
       end
+    end
+
+    context 'listing roles with filters' do
+      let(:api_call) { lambda { |user_headers| get "/v3/roles?user_guids=#{other_user.guid}&order_by=-created_at", nil, user_headers } }
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 200, response_objects: [org_response_object, space_response_object])
+        h['org_auditor'] = {
+          code: 200,
+          response_objects: contain_exactly(
+            org_response_object,
+          )
+        }
+        h['org_billing_manager'] = {
+          code: 200,
+          response_objects: contain_exactly(
+            org_response_object,
+          )
+        }
+        h['no_role'] = { code: 200, response_objects: [] }
+        h
+      end
+
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
     end
   end
 
