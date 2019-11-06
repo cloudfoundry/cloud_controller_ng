@@ -147,7 +147,6 @@ RSpec.describe 'V3 service brokers' do
         h['admin'] = { code: 200, response_objects: [global_service_broker1_json, global_service_broker2_json] }
         h['admin_read_only'] = { code: 200, response_objects: [global_service_broker1_json, global_service_broker2_json] }
         h['global_auditor'] = { code: 200, response_objects: [global_service_broker1_json, global_service_broker2_json] }
-        h['space_developer'] = { code: 200, response_objects: [global_service_broker1_json, global_service_broker2_json] }
 
         h
       end
@@ -156,25 +155,7 @@ RSpec.describe 'V3 service brokers' do
     end
 
     context 'when there are spaced-scoped service brokers' do
-      let!(:global_service_broker) { VCAP::CloudController::ServiceBroker.make }
       let!(:space_scoped_service_broker) { VCAP::CloudController::ServiceBroker.make(space: space) }
-      let(:global_service_broker_json) do
-        {
-            guid: global_service_broker.guid,
-            name: global_service_broker.name,
-            url: global_service_broker.broker_url,
-            created_at: iso8601,
-            updated_at: iso8601,
-            status: 'unknown',
-            available: false,
-            relationships: {},
-            links: {
-                self: {
-                    href: %r(#{Regexp.escape(link_prefix)}\/v3\/service_brokers\/#{global_service_broker.guid})
-                }
-            }
-        }
-      end
       let(:space_scoped_service_broker_json) do
         {
             guid: space_scoped_service_broker.guid,
@@ -197,42 +178,35 @@ RSpec.describe 'V3 service brokers' do
             }
         }
       end
+      let(:expected_codes_and_responses) do
+        h = Hash.new(
+          code: 200,
+          response_objects: []
+        )
 
-      describe 'standard permissions' do
-        let(:expected_codes_and_responses) do
-          h = Hash.new(
-            code: 200,
-            response_objects: []
-          )
-
-          h['admin'] = {
+        h['admin'] = {
               code: 200,
-              response_objects: [global_service_broker_json, space_scoped_service_broker_json]
-          }
-          h['admin_read_only'] = {
+              response_objects: [space_scoped_service_broker_json]
+        }
+        h['admin_read_only'] = {
               code: 200,
-              response_objects: [global_service_broker_json, space_scoped_service_broker_json]
-          }
-          h['global_auditor'] = {
+              response_objects: [space_scoped_service_broker_json]
+        }
+        h['global_auditor'] = {
               code: 200,
-              response_objects: [global_service_broker_json, space_scoped_service_broker_json]
-          }
-          h['space_developer'] = { code: 200,
-              response_objects: [global_service_broker_json, space_scoped_service_broker_json]
-          }
+              response_objects: [space_scoped_service_broker_json]
+        }
+        h['space_developer'] = { code: 200,
+              response_objects: [space_scoped_service_broker_json]
+        }
 
-          h
-        end
-
-        it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+        h
       end
 
-      context 'when current user is a space developer of alternate space' do
-        it 'they can not see not-their-own space-scoped brokers, and can see global ones' do
-          expect_brokers_list(space_developer_alternate_space_headers, [
-            global_service_broker_json
-          ])
-        end
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+
+      it 'returns 200 OK and an empty list of brokers for space developer in another space' do
+        expect_empty_list(space_developer_alternate_space_headers)
       end
     end
 
@@ -306,16 +280,6 @@ RSpec.describe 'V3 service brokers' do
       expect(parsed_response).to have_key('resources')
       expect(parsed_response['resources'].length).to eq(0)
     end
-
-    def expect_brokers_list(user_headers, brokers)
-      get('/v3/service_brokers', {}, user_headers)
-
-      expect(last_response).to have_status_code(200)
-
-      expect(parsed_response).to have_key('resources')
-      expect({ resources: parsed_response['resources'] }).
-        to match_json_response({ resources: brokers })
-    end
   end
 
   describe 'GET /v3/service_brokers/:guid' do
@@ -357,10 +321,7 @@ RSpec.describe 'V3 service brokers' do
         h['global_auditor'] = {
             code: 200,
             response_object: global_service_broker1_json
-        }
-        h['space_developer'] = {
-            code: 200,
-            response_object: global_service_broker1_json
+
         }
 
         h
@@ -526,11 +487,8 @@ RSpec.describe 'V3 service brokers' do
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
         let(:api_call) { ->(user_headers) { patch "/v3/service_brokers/#{broker.guid}", update_request_body.to_json, user_headers } }
         let(:expected_codes_and_responses) do
-          Hash.new(code: 404).tap do |h|
+          Hash.new(code: 403).tap do |h|
             h['admin'] = { code: 202 }
-            h['admin_read_only'] = { code: 403 }
-            h['global_auditor'] = { code: 403 }
-            h['space_developer'] = { code: 403 }
           end
         end
 
@@ -544,7 +502,7 @@ RSpec.describe 'V3 service brokers' do
       end
     end
 
-    context 'space-scoped service broker' do
+    context 'space service broker' do
       let!(:broker) do
         VCAP::CloudController::ServiceBroker.make(
           name: 'old-name',
@@ -559,11 +517,14 @@ RSpec.describe 'V3 service brokers' do
         let(:api_call) { ->(user_headers) { patch "/v3/service_brokers/#{broker.guid}", update_request_body.to_json, user_headers } }
 
         let(:expected_codes_and_responses) {
-          Hash.new(code: 404).tap do |h|
+          Hash.new(code: 422).tap do |h|
             h['admin'] = { code: 202 }
-            h['space_developer'] = { code: 202 }
             h['admin_read_only'] = { code: 403 }
             h['global_auditor'] = { code: 403 }
+            h['space_developer'] = { code: 202 }
+            h['space_auditor'] = { code: 403 }
+            h['space_manager'] = { code: 403 }
+            h['org_manager'] = { code: 403 }
           end
         }
 
@@ -574,15 +535,6 @@ RSpec.describe 'V3 service brokers' do
             ]
           end
         end
-      end
-
-      it 'returns 404 Not Found for space developer in another space' do
-        is_expected.to_not find_broker(
-          method: :patch,
-          body: update_request_body.to_json,
-          broker_guid: broker.guid,
-          with: space_developer_alternate_space_headers
-        )
       end
     end
 
@@ -818,9 +770,14 @@ RSpec.describe 'V3 service brokers' do
         let(:api_call) { lambda { |user_headers| post '/v3/service_brokers', space_scoped_broker_request_body.to_json, user_headers } }
 
         let(:expected_codes_and_responses) {
-          Hash.new(code: 403).tap do |h|
+          Hash.new(code: 422).tap do |h|
             h['admin'] = { code: 202 }
+            h['admin_read_only'] = { code: 403 }
+            h['global_auditor'] = { code: 403 }
             h['space_developer'] = { code: 202 }
+            h['space_auditor'] = { code: 403 }
+            h['space_manager'] = { code: 403 }
+            h['org_manager'] = { code: 403 }
           end
         }
 
@@ -1037,9 +994,9 @@ RSpec.describe 'V3 service brokers' do
         create_broker(other_space_broker_body, with: space_developer_headers)
       end
 
-      it 'returns a error saying the the user is not authorized' do
-        expect(last_response).to have_status_code(403)
-        expect(last_response.body).to include 'You are not authorized to perform the requested action'
+      it 'returns a error saying the space is invalid' do
+        expect(last_response).to have_status_code(422)
+        expect(last_response.body).to include 'Invalid space. Ensure that the space exists and you have access to it.'
       end
     end
 
@@ -1126,32 +1083,24 @@ RSpec.describe 'V3 service brokers' do
               h['admin'] = { code: 202 }
               h['admin_read_only'] = { code: 403 }
               h['global_auditor'] = { code: 403 }
-              h['space_developer'] = { code: 403 }
             end
           }
         end
       end
 
       context 'space-scoped broker' do
-        let(:broker) { VCAP::CloudController::ServiceBroker.make(space_id: space.id) }
+        let(:broker) {  VCAP::CloudController::ServiceBroker.make(space_id: space.id) }
 
         it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS do
           let(:expected_codes_and_responses) {
-            Hash.new(code: 404).tap do |h|
+            Hash.new(code: 403).tap do |h|
               h['admin'] = { code: 202 }
               h['space_developer'] = { code: 202 }
-              h['admin_read_only'] = { code: 403 }
-              h['global_auditor'] = { code: 403 }
+              h['org_auditor'] = { code: 404 }
+              h['org_billing_manager'] = { code: 404 }
+              h['no_role'] = { code: 404 }
             end
           }
-        end
-
-        it 'returns 404 Not Found for space developer in another space' do
-          is_expected.to_not find_broker(
-            method: :delete,
-            broker_guid: broker.guid,
-            with: space_developer_alternate_space_headers
-          )
         end
       end
 
