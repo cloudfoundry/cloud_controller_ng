@@ -100,6 +100,6 @@ Name | Type | Description
 Role | Notes
 --- | ---
 Admin |
-Org Manager | Can create roles in managed organizations and spaces within those organizations. Can create roles for unaffilated users only when `set_roles_by_username` [feature_flag](#list-of-feature-flags) is enabled.
+Org Manager | Can create roles in managed organizations and spaces within those organizations. Can also create roles for users outside of managed organizations when `set_roles_by_username` [feature_flag](#list-of-feature-flags) is enabled. This requires identifying users by username and origin.
 Space Manager | Can create roles in managed spaces for users in their org.
 
