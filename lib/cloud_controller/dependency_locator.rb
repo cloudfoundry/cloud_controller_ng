@@ -4,6 +4,7 @@ require 'repositories/space_event_repository'
 require 'repositories/organization_event_repository'
 require 'repositories/route_event_repository'
 require 'repositories/user_event_repository'
+require 'clients/kubernetes_client'
 require 'cloud_controller/rest_controller/object_renderer'
 require 'cloud_controller/rest_controller/paginated_collection_renderer'
 require 'cloud_controller/upload_handler'
@@ -364,6 +365,15 @@ module CloudController
     def statsd_client
       @dependencies[:statsd_client] ||
         register(:statsd_client, Statsd.new(config.get(:statsd_host), config.get(:statsd_port)))
+    end
+
+    def kubernetes_client
+      kubernetes_creds = VCAP::CloudController::Config.config.get(:kubernetes)
+      @dependencies[:kubernetes_client] ||= Clients::KubernetesClient.new(
+        host_url: kubernetes_creds[:host_url],
+        service_account: kubernetes_creds[:service_account],
+        ca_crt: File.open(kubernetes_creds[:ca_file]).read
+      )
     end
 
     private

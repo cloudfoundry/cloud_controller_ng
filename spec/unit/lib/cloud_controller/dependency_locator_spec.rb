@@ -705,4 +705,37 @@ RSpec.describe CloudController::DependencyLocator do
       end
     end
   end
+
+  describe '#kubernetes_client' do
+    before do
+      file = Tempfile.new('k8s_node_ca.crt')
+      file.write('my crt')
+      file.close
+
+      TestConfig.override({
+        kubernetes: {
+          host_url: 'my_kubernetes.io/api',
+          service_account: {
+            name: 'username',
+            token: 'token',
+          },
+          ca_file: file.path
+        }
+      })
+    end
+
+    it 'creates a kubernetes client from config' do
+      client = locator.kubernetes_client.client
+
+      expect(client.ssl_options).to eq({
+                                         ca: 'my crt'
+                                       })
+
+      expect(client.auth_options).to eq({
+                                          bearer_token: 'token'
+                                        })
+
+      expect(client.api_endpoint.to_s).to eq 'my_kubernetes.io/api'
+    end
+  end
 end
