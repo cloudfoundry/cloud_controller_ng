@@ -6,9 +6,14 @@ module VCAP::CloudController
     describe '.from_params' do
       let(:params) do
         {
-          'page'      => 1,
-          'per_page'  => 5,
-          'order_by'  => 'updated_at',
+          'page' => 1,
+          'per_page' => 5,
+          'order_by' => 'updated_at',
+          'types' => 'space_auditor',
+          'guids' => 'my-role-guid',
+          'user_guids' => 'my-user-guid',
+          'space_guids' => 'my-space-guid',
+          'organization_guids' => 'my-organization-guid',
         }
       end
 
@@ -19,6 +24,10 @@ module VCAP::CloudController
         expect(message.page).to eq(1)
         expect(message.per_page).to eq(5)
         expect(message.order_by).to eq('updated_at')
+        expect(message.guids).to eq(['my-role-guid'])
+        expect(message.user_guids).to eq(['my-user-guid'])
+        expect(message.space_guids).to eq(['my-space-guid'])
+        expect(message.organization_guids).to eq(['my-organization-guid'])
       end
 
       it 'converts requested keys to symbols' do
@@ -27,6 +36,10 @@ module VCAP::CloudController
         expect(message.requested?(:page)).to be true
         expect(message.requested?(:per_page)).to be true
         expect(message.requested?(:order_by)).to be true
+        expect(message.requested?(:guids)).to be true
+        expect(message.requested?(:user_guids)).to be true
+        expect(message.requested?(:space_guids)).to be true
+        expect(message.requested?(:organization_guids)).to be true
       end
 
       it 'defaults the order_by parameter if not provided' do
@@ -39,8 +52,13 @@ module VCAP::CloudController
       it 'accepts a set of fields' do
         message = RolesListMessage.from_params({
           'page' => 1,
-          'per_page'  =>  5,
-          'order_by'  =>  'created_at',
+          'per_page' => 5,
+          'order_by' => 'created_at',
+          'types' => 'space_auditor',
+          'guids' => 'my-role-guid',
+          'user_guids' => 'my-user-guid',
+          'space_guids' => 'my-space-guid',
+          'organization_guids' => 'my-organization-guid',
         })
         expect(message).to be_valid
       end
@@ -119,7 +137,7 @@ module VCAP::CloudController
 
       it 'reject an invalid order_by field' do
         message = RolesListMessage.from_params({
-          'order_by' =>  'fail!',
+          'order_by' => 'fail!',
         })
         expect(message).not_to be_valid
       end
