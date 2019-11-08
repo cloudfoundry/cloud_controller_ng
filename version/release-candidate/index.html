@@ -18011,7 +18011,7 @@ Deployed revisions are revisions that are linked to started processes in the app
 
 <p><code class="prettyprint">GET /v3/roles</code></p>
 
-<h4 id="required-parameters">Required parameters</h4>
+<h4 id="query-parameters">Query parameters</h4>
 
 <table><thead>
 <tr>
@@ -18020,6 +18020,31 @@ Deployed revisions are revisions that are linked to started processes in the app
 <th>Description</th>
 </tr>
 </thead><tbody>
+<tr>
+<td><strong>guids</strong></td>
+<td><em>list of strings</em></td>
+<td>Comma-delimited list of role guids to filter by.</td>
+</tr>
+<tr>
+<td><strong>type</strong></td>
+<td><em>list of strings</em></td>
+<td>Comma-delimited list of <a href="#valid-role-types">role types</a> to filter by.</td>
+</tr>
+<tr>
+<td><strong>space_guids</strong></td>
+<td><em>list of strings</em></td>
+<td>Comma-delimited list of space guids to filter by.</td>
+</tr>
+<tr>
+<td><strong>organization_guids</strong></td>
+<td><em>list of strings</em></td>
+<td>Comma-delimited list of organization guids to filter by.</td>
+</tr>
+<tr>
+<td><strong>user_guids</strong></td>
+<td><em>list of strings</em></td>
+<td>Comma-delimited list of user guids to filter by.</td>
+</tr>
 <tr>
 <td><strong>page</strong></td>
 <td><em>integer</em></td>
