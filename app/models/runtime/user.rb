@@ -201,6 +201,11 @@ module VCAP::CloudController
         distinct
     end
 
+    def self.uaa_users_info(user_guids)
+      uaa_client = CloudController::DependencyLocator.instance.uaa_client
+      uaa_client.users_for_ids(user_guids)
+    end
+
     def self.readable_users_for_current_user(can_read_globally, current_user)
       if can_read_globally
         User.dataset

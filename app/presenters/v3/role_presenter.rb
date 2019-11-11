@@ -3,7 +3,7 @@ require 'presenters/v3/base_presenter'
 module VCAP::CloudController::Presenters::V3
   class RolePresenter < BasePresenter
     def to_hash
-      {
+      hash = {
         guid: role.guid,
         created_at: role.created_at,
         updated_at: role.updated_at,
@@ -11,6 +11,7 @@ module VCAP::CloudController::Presenters::V3
         relationships: build_relationships,
         links: build_links
       }
+      @decorators.reduce(hash) { |memo, d| d.decorate(memo, [role]) }
     end
 
     private

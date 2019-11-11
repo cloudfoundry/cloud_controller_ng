@@ -14,6 +14,7 @@ module VCAP::CloudController
           'user_guids' => 'my-user-guid',
           'space_guids' => 'my-space-guid',
           'organization_guids' => 'my-organization-guid',
+          'include' => 'user',
         }
       end
 
@@ -28,6 +29,7 @@ module VCAP::CloudController
         expect(message.user_guids).to eq(['my-user-guid'])
         expect(message.space_guids).to eq(['my-space-guid'])
         expect(message.organization_guids).to eq(['my-organization-guid'])
+        expect(message.include).to eq(['user'])
       end
 
       it 'converts requested keys to symbols' do
@@ -40,6 +42,7 @@ module VCAP::CloudController
         expect(message.requested?(:user_guids)).to be true
         expect(message.requested?(:space_guids)).to be true
         expect(message.requested?(:organization_guids)).to be true
+        expect(message.requested?(:include)).to be true
       end
 
       it 'defaults the order_by parameter if not provided' do
@@ -59,6 +62,7 @@ module VCAP::CloudController
           'user_guids' => 'my-user-guid',
           'space_guids' => 'my-space-guid',
           'organization_guids' => 'my-organization-guid',
+          'include' => 'user',
         })
         expect(message).to be_valid
       end
@@ -133,6 +137,18 @@ module VCAP::CloudController
         message = RolesListMessage.from_params({ types: 'not array' })
         expect(message).to be_invalid
         expect(message.errors[:types]).to include('must be an array')
+      end
+
+      it 'accepts an include param' do
+        message = RolesListMessage.from_params({ include: ['user'] })
+        expect(message).to be_valid
+        expect(message.include).to eq(['user'])
+      end
+
+      it 'does not accept an include param that is invalid' do
+        message = RolesListMessage.from_params({ include: ['garbage'] })
+        expect(message).to be_invalid
+        expect(message.errors[:base]).to contain_exactly("Invalid included resource: 'garbage'")
       end
 
       it 'reject an invalid order_by field' do

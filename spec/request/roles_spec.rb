@@ -10,6 +10,11 @@ RSpec.describe 'Roles Request' do
   let(:user_guid) { user.guid }
   let(:space_guid) { space.guid }
   let(:user_unaffiliated) { VCAP::CloudController::User.make(guid: 'user_no_role') }
+  let(:uaa_client) { double(:uaa_client) }
+
+  before do
+    allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
+  end
 
   describe 'POST /v3/roles' do
     let(:api_call) { lambda { |user_headers| post '/v3/roles', params.to_json, user_headers } }
@@ -127,11 +132,9 @@ RSpec.describe 'Roles Request' do
         let(:uaa_client) { double(:uaa_client) }
 
         before do
-          allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
           allow(uaa_client).to receive(:users_for_ids).with([user_with_role.guid]).and_return(
             { user_with_role.guid => { 'username' => 'mona', 'origin' => 'uaa' } }
           )
-
           org.add_user(user_with_role)
           post '/v3/roles', params.to_json, admin_header
         end
@@ -253,7 +256,6 @@ RSpec.describe 'Roles Request' do
         let(:uaa_client) { double(:uaa_client) }
 
         before do
-          allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
           allow(uaa_client).to receive(:users_for_ids).with([user_with_role.guid]).and_return(
             { user_with_role.guid => { 'username' => 'mona', 'origin' => 'uaa' } }
           )
@@ -337,7 +339,6 @@ RSpec.describe 'Roles Request' do
         end
 
         before do
-          allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
           allow(uaa_client).to receive(:origins_for_username).with('uuu').and_return(['uaa'])
           allow(uaa_client).to receive(:id_for_username).with('uuu', origin: 'uaa').and_return(user_with_role.guid)
 
@@ -349,7 +350,6 @@ RSpec.describe 'Roles Request' do
 
       context 'when there are multiple users with the same username' do
         before do
-          allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
           allow(uaa_client).to receive(:origins_for_username).with('uuu').and_return(%w(uaa ldap okta))
           allow(uaa_client).to receive(:id_for_username).with('uuu', origin: 'uaa').and_return(user_with_role.guid)
         end
@@ -366,7 +366,6 @@ RSpec.describe 'Roles Request' do
 
       context 'when there is no user with the given username' do
         before do
-          allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
           allow(uaa_client).to receive(:origins_for_username).with('uuu').and_return([])
           allow(uaa_client).to receive(:id_for_username).with('uuu', origin: nil).and_return(nil)
         end
@@ -382,7 +381,7 @@ RSpec.describe 'Roles Request' do
       end
     end
 
-    context 'creating role by user GUID as org manager for unaffiliated user' do
+    context 'creating role by user GUID for unaffiliated user' do
       let(:params) do
         {
           type: 'organization_auditor',
@@ -502,7 +501,6 @@ RSpec.describe 'Roles Request' do
       let(:uaa_client) { double(:uaa_client) }
 
       before do
-        allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
         allow(uaa_client).to receive(:id_for_username).with('uuu', origin: 'okta').and_return(user_with_role.guid)
 
         org.add_user(user_with_role)
@@ -548,7 +546,6 @@ RSpec.describe 'Roles Request' do
 
       context 'when there is no user with the given username and origin' do
         before do
-          allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
           allow(uaa_client).to receive(:origins_for_username).with('uuu').and_return(['something-else'])
           allow(uaa_client).to receive(:id_for_username).with('uuu', origin: 'okta').and_return(nil)
         end
@@ -567,7 +564,6 @@ RSpec.describe 'Roles Request' do
       # granted any space roles
       context 'as org manager for unaffiliated user' do
         before do
-          allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
           allow(uaa_client).to receive(:origins_for_username).with('bob_unaffiliated').and_return(['uaa'])
           allow(uaa_client).to receive(:id_for_username).with('bob_unaffiliated', origin: 'uaa').and_return(user_unaffiliated.guid)
         end
@@ -652,7 +648,7 @@ RSpec.describe 'Roles Request' do
 
   describe 'GET /v3/roles' do
     let(:api_call) { lambda { |user_headers| get '/v3/roles', nil, user_headers } }
-    let(:other_user) { VCAP::CloudController::User.make }
+    let(:other_user) { VCAP::CloudController::User.make(guid: 'other-user-guid') }
 
     let!(:space_auditor) do
       VCAP::CloudController::SpaceAuditor.make(
@@ -871,6 +867,87 @@ RSpec.describe 'Roles Request' do
 
       it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
     end
+
+    context 'listing roles with include' do
+      let(:other_user_response) do
+        {
+          'guid' => other_user.guid,
+          'created_at' => iso8601,
+          'updated_at' => iso8601,
+          'username' => 'other_user_name',
+          'presentation_name' => 'other_user_name', # username is nil, so presenter defaults to guid
+          'origin' => 'uaa',
+          'metadata' => {
+            'labels' => {},
+            'annotations' => {},
+          },
+          'links' => {
+            'self' => { 'href' => %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{other_user.guid}) },
+          }
+        }
+      end
+
+      before do
+        allow(uaa_client).to receive(:users_for_ids).with([other_user.guid]).and_return(
+          { other_user.guid => { 'username' => 'other_user_name', 'origin' => 'uaa' } }
+        )
+      end
+
+      it 'includes the requested users' do
+        get('/v3/roles?include=user', nil, admin_header)
+        expect(last_response.status).to eq(200)
+
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response['included']['users'][0]).to be_a_response_like(other_user_response)
+      end
+
+      context 'when there are multiple users with multiple roles' do
+        let(:another_user) { VCAP::CloudController::User.make(guid: 'another-user-guid') }
+        let(:another_user_response) do
+          {
+            'guid' => another_user.guid,
+            'created_at' => iso8601,
+            'updated_at' => iso8601,
+            'username' => 'another_user_name',
+            'presentation_name' => 'another_user_name', # username is nil, so presenter defaults to guid
+            'origin' => 'uaa',
+            'metadata' => {
+              'labels' => {},
+              'annotations' => {},
+            },
+            'links' => {
+              'self' => { 'href' => %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{another_user.guid}) },
+            }
+          }
+        end
+        let!(:organization_billing_manager) do
+          VCAP::CloudController::OrganizationBillingManager.make(
+            guid: 'organization_billing_manager-guid',
+            organization: org,
+            user: another_user,
+            created_at: Time.now - 3.minutes,
+          )
+        end
+
+        before do
+          allow(uaa_client).to receive(:users_for_ids).with([other_user.guid, another_user.guid]).and_return(
+            {
+              another_user.guid => { 'username' => 'another_user_name', 'origin' => 'uaa' },
+              other_user.guid => { 'username' => 'other_user_name', 'origin' => 'uaa' }
+            }
+          )
+        end
+
+        it 'returns all of the relevant users' do
+          get('/v3/roles?include=user', nil, admin_header)
+          expect(last_response.status).to eq(200)
+
+          parsed_response = MultiJson.load(last_response.body)
+          expect(parsed_response['included']['users'][0]).to be_a_response_like(other_user_response)
+          expect(parsed_response['included']['users'][1]).to be_a_response_like(another_user_response)
+        end
+      end
+    end
   end
 
   describe 'GET /v3/roles/:guid' do
@@ -971,6 +1048,41 @@ RSpec.describe 'Roles Request' do
 
         expect(last_response).to have_status_code(401)
         expect(last_response).to have_error_message('Authentication error')
+      end
+    end
+
+    context 'listing roles with include' do
+      let(:role) { VCAP::CloudController::SpaceAuditor.make(user: user_with_role, space: space) }
+      let(:user_with_role_response) do
+        {
+          'guid' => user_with_role.guid,
+          'created_at' => iso8601,
+          'updated_at' => iso8601,
+          'username' => 'user_name',
+          'presentation_name' => 'user_name', # username is nil, so presenter defaults to guid
+          'origin' => 'uaa',
+          'metadata' => {
+            'labels' => {},
+            'annotations' => {},
+          },
+          'links' => {
+            'self' => { 'href' => %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{user_with_role.guid}) },
+          }
+        }
+      end
+
+      before do
+        allow(uaa_client).to receive(:users_for_ids).with([user_with_role.guid]).and_return(
+          { user_with_role.guid => { 'username' => 'user_name', 'origin' => 'uaa' } }
+        )
+      end
+
+      it 'includes the requested users' do
+        get("/v3/roles/#{role.guid}?include=user", nil, admin_header)
+        expect(last_response.status).to eq(200)
+
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response['included']['users'][0]).to be_a_response_like(user_with_role_response)
       end
     end
   end

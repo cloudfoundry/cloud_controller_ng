@@ -7,10 +7,12 @@ module VCAP::CloudController
       :organization_guids,
       :space_guids,
       :user_guids,
-      :types
+      :types,
+      :include
     ]
 
     validates_with NoAdditionalParamsValidator
+    validates_with IncludeParamValidator, valid_values: ['user']
 
     validates :guids, allow_nil: true, array: true
     validates :organization_guids, allow_nil: true, array: true
@@ -21,7 +23,7 @@ module VCAP::CloudController
     def self.from_params(params)
       params['order_by'] ||= 'created_at'
 
-      super(params, %w(guids organization_guids space_guids user_guids types))
+      super(params, %w(guids organization_guids space_guids user_guids types include))
     end
   end
 end

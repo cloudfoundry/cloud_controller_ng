@@ -20,7 +20,7 @@ class UsersController < ApplicationController
       paginated_result: SequelPaginator.new.get_page(users, message.try(:pagination_options)),
       path: '/v3/users',
       message: message,
-      extra_presenter_args: { uaa_users: uaa_users_info(user_guids) },
+      extra_presenter_args: { uaa_users: User.uaa_users_info(user_guids) },
     )
   end
 
@@ -31,7 +31,7 @@ class UsersController < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
     user = UserCreate.new.create(message: message)
 
-    render status: :created, json: Presenters::V3::UserPresenter.new(user, uaa_users: uaa_users_info([user.guid]))
+    render status: :created, json: Presenters::V3::UserPresenter.new(user, uaa_users: User.uaa_users_info([user.guid]))
   rescue UserCreate::Error => e
     unprocessable!(e)
   end
@@ -40,7 +40,7 @@ class UsersController < ApplicationController
     user = fetch_user_if_readable(hashed_params[:guid])
     user_not_found! unless user
 
-    render status: :ok, json: Presenters::V3::UserPresenter.new(user, uaa_users: uaa_users_info([user.guid]))
+    render status: :ok, json: Presenters::V3::UserPresenter.new(user, uaa_users: User.uaa_users_info([user.guid]))
   end
 
   def destroy
@@ -68,7 +68,7 @@ class UsersController < ApplicationController
 
     user = UserUpdate.new.update(user: user, message: message)
 
-    render status: :ok, json: Presenters::V3::UserPresenter.new(user, uaa_users: uaa_users_info([hashed_params[:guid]]))
+    render status: :ok, json: Presenters::V3::UserPresenter.new(user, uaa_users: User.uaa_users_info([hashed_params[:guid]]))
   end
 
   private
@@ -81,11 +81,6 @@ class UsersController < ApplicationController
   def fetch_user_if_readable(desired_guid)
     readable_users = User.readable_users_for_current_user(permission_queryer.can_read_globally?, current_user)
     readable_users.first(guid: desired_guid)
-  end
-
-  def uaa_users_info(user_guids)
-    uaa_client = CloudController::DependencyLocator.instance.uaa_client
-    uaa_client.users_for_ids(user_guids)
   end
 
   def user_not_found!

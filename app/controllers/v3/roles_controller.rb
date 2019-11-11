@@ -1,10 +1,12 @@
 require 'messages/role_create_message'
 require 'messages/roles_list_message'
+require 'messages/role_show_message'
 require 'fetchers/role_list_fetcher'
 require 'actions/role_create'
 require 'actions/role_guid_populate'
 require 'actions/role_delete'
 require 'presenters/v3/role_presenter'
+require 'decorators/include_role_user_decorator'
 
 class RolesController < ApplicationController
   def create
@@ -29,19 +31,29 @@ class RolesController < ApplicationController
     RoleGuidPopulate.populate
     roles = RoleListFetcher.fetch(message, readable_roles)
 
+    decorators = []
+    decorators << IncludeRoleUserDecorator if IncludeRoleUserDecorator.match?(message.include)
+
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::RolePresenter,
       paginated_result: SequelPaginator.new.get_page(roles, message.try(:pagination_options)),
       path: '/v3/roles',
-      message: message
+      message: message,
+      decorators: decorators,
     )
   end
 
   def show
+    message = RoleShowMessage.from_params(query_params)
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    decorators = []
+    decorators << IncludeRoleUserDecorator if IncludeRoleUserDecorator.match?(message.include)
+
     role = readable_roles.first(guid: hashed_params[:guid])
     resource_not_found!(:role) unless role
 
-    render status: :ok, json: Presenters::V3::RolePresenter.new(role)
+    render status: :ok, json: Presenters::V3::RolePresenter.new(role, decorators: decorators)
   end
 
   def destroy
