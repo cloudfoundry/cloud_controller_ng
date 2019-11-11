@@ -68,7 +68,7 @@ module VCAP::CloudController::Jobs
       end
     end
 
-    describe 'after hook' do
+    describe 'warnings' do
       let(:broker) {
         VCAP::CloudController::ServiceBroker.create(
           name: 'test-broker',
@@ -105,7 +105,7 @@ module VCAP::CloudController::Jobs
 
       context 'when warnings were not issued' do
         let(:expected_warnings) { nil }
-        it 'has empty list of warings ' do
+        it 'has empty list of warnings ' do
           enqueued_job = VCAP::CloudController::Jobs::Enqueuer.new(pollable_job).enqueue
           job_model = VCAP::CloudController::PollableJobModel.make(delayed_job_guid: enqueued_job.guid, state: 'PROCESSING')
 

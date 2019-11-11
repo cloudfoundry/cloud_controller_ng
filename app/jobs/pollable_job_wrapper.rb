@@ -27,10 +27,6 @@ module VCAP::CloudController
         change_state(job, PollableJobModel::FAILED_STATE)
       end
 
-      def after(job)
-        persist_warnings(job)
-      end
-
       private
 
       def convert_to_v3_api_error(exception)
@@ -63,6 +59,7 @@ module VCAP::CloudController
       end
 
       def change_state(job, new_state)
+        persist_warnings(job)
         find_pollable_job(job).each do |pollable_job|
           pollable_job.update(state: new_state)
         end
