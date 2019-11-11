@@ -128,11 +128,10 @@ class RolesController < ApplicationController
   def readable_roles
     visible_user_ids = readable_users.select(:id)
 
-    roles_for_visible_users = Role.where(user_id: visible_user_ids)
-    roles_in_visible_spaces = roles_for_visible_users.filter(space_id: visible_space_ids)
-    roles_in_visible_orgs = roles_for_visible_users.filter(organization_id: visible_org_ids)
-
-    roles_in_visible_spaces.union(roles_in_visible_orgs)
+    Role.where(Sequel.or([
+      [:space_id, visible_space_ids],
+      [:organization_id, visible_org_ids]
+    ]).&(user_id: visible_user_ids))
   end
 
   def visible_space_ids

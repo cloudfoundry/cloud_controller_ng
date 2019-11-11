@@ -1093,9 +1093,13 @@ RSpec.describe 'Roles Request' do
       lambda do
         expect(last_response.headers['Location']).to match(%r(http.+/v3/jobs/[a-fA-F0-9-]+))
 
+        job_guid = last_response.headers['Location'].gsub("#{link_prefix}/v3/jobs/", '')
+        get "/v3/jobs/#{job_guid}", {}, admin_headers
+        expect(last_response).to have_status_code(200)
+
         execute_all_jobs(expected_successes: 1, expected_failures: 0)
         get "/v3/roles/#{role.guid}", {}, admin_headers
-        expect(last_response.status).to eq(404)
+        expect(last_response).to have_status_code(404)
       end
     end
 
