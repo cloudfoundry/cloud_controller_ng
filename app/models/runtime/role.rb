@@ -79,5 +79,30 @@ module VCAP::CloudController
     def space_guid
       Space.first(id: space_id)&.guid
     end
+
+    def for_space?
+      VCAP::CloudController::RoleTypes::SPACE_ROLES.include?(type)
+    end
+
+    def model_class
+      case type
+      when VCAP::CloudController::RoleTypes::SPACE_MANAGER
+        SpaceManager
+      when VCAP::CloudController::RoleTypes::SPACE_AUDITOR
+        SpaceAuditor
+      when VCAP::CloudController::RoleTypes::SPACE_DEVELOPER
+        SpaceDeveloper
+      when VCAP::CloudController::RoleTypes::ORGANIZATION_USER
+        OrganizationUser
+      when VCAP::CloudController::RoleTypes::ORGANIZATION_AUDITOR
+        OrganizationAuditor
+      when VCAP::CloudController::RoleTypes::ORGANIZATION_BILLING_MANAGER
+        OrganizationBillingManager
+      when VCAP::CloudController::RoleTypes::ORGANIZATION_MANAGER
+        OrganizationManager
+      else
+        raise Error.new("Invalid role type: #{type}")
+      end
+    end
   end
 end

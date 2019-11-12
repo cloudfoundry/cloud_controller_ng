@@ -60,12 +60,10 @@ class RolesController < ApplicationController
     role = readable_roles.first(guid: hashed_params[:guid])
     resource_not_found!(:role) unless role
 
-    if role.space_guid
+    if role.for_space?
       org_guid = Space.find(guid: role.space_guid).organization.guid
       unauthorized! unless permission_queryer.can_update_space?(role.space_guid, org_guid)
-    end
-
-    if role.organization_guid
+    else
       unauthorized! unless permission_queryer.can_write_to_org?(role.organization_guid)
     end
 
