@@ -37,8 +37,7 @@ module VCAP::CloudController
         end
 
         def status
-          state = broker.service_broker_state&.state
-          STATES[state]
+          STATES[broker.state]
         end
 
         def build_relationships

@@ -44,33 +44,21 @@ module VCAP::CloudController
         end
 
         def perform
-          synchronizing_state
+          broker.update(state: ServiceBrokerStateEnum::SYNCHRONIZING)
 
           warnings = @catalog_updater.refresh
 
-          set_to_available_state
+          broker.update(state: ServiceBrokerStateEnum::AVAILABLE)
 
           warnings
         rescue
-          failed_state
+          broker.update(state: ServiceBrokerStateEnum::SYNCHRONIZATION_FAILED)
           raise
         end
 
         private
 
         attr_reader :broker, :warnings
-
-        def set_to_available_state
-          broker.update_state(ServiceBrokerStateEnum::AVAILABLE)
-        end
-
-        def synchronizing_state
-          broker.update_state(ServiceBrokerStateEnum::SYNCHRONIZING)
-        end
-
-        def failed_state
-          broker.update_state(ServiceBrokerStateEnum::SYNCHRONIZATION_FAILED)
-        end
       end
     end
   end

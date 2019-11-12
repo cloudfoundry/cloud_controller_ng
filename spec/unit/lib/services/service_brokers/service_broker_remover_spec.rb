@@ -49,6 +49,18 @@ module VCAP::Services::ServiceBrokers
 
         expect_events_for_broker(broker, service, plan)
       end
+
+      context 'when the deletion fails' do
+        before do
+          allow(broker).to receive(:destroy).and_raise('cannot delete!!!')
+        end
+
+        it 'sets the state to failed' do
+          expect { remover.delete(brokers) }.to raise_error('cannot delete!!!')
+
+          expect(broker.reload.state).to eq(VCAP::CloudController::ServiceBrokerStateEnum::DELETE_FAILED)
+        end
+      end
     end
 
     describe '#remove' do

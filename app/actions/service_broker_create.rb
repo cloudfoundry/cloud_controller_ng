@@ -19,17 +19,13 @@ module VCAP::CloudController
           broker_url: message.url,
           auth_username: message.username,
           auth_password: message.password,
-          space_guid: message.relationships_message.space_guid
+          space_guid: message.relationships_message.space_guid,
+          state: ServiceBrokerStateEnum::SYNCHRONIZING
         }
 
         pollable_job = nil
         ServiceBroker.db.transaction do
           broker = ServiceBroker.create(params)
-
-          ServiceBrokerState.create(
-            service_broker_id: broker.id,
-            state: ServiceBrokerStateEnum::SYNCHRONIZING
-          )
 
           service_event_repository.record_broker_event_with_request(:create, broker, message.audit_hash)
 

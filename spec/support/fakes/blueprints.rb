@@ -424,10 +424,6 @@ module VCAP::CloudController
     auth_password     { Sham.auth_password }
   end
 
-  ServiceBrokerState.blueprint do
-    state { ServiceBrokerStateEnum::AVAILABLE }
-  end
-
   ServiceDashboardClient.blueprint do
     uaa_id          { Sham.name }
     service_broker  { ServiceBroker.make }

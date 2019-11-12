@@ -3,7 +3,6 @@ module VCAP::CloudController
     one_to_many :services
     one_to_many :service_dashboard_client
     many_to_one :space
-    one_to_one :service_broker_state
 
     import_attributes :name, :broker_url, :auth_username, :auth_password
     export_attributes :name, :broker_url, :auth_username, :space_guid
@@ -30,7 +29,7 @@ module VCAP::CloudController
     end
 
     def in_transitional_state?
-      [ServiceBrokerStateEnum::SYNCHRONIZING, ServiceBrokerStateEnum::DELETE_IN_PROGRESS].include?(service_broker_state&.state)
+      [ServiceBrokerStateEnum::SYNCHRONIZING, ServiceBrokerStateEnum::DELETE_IN_PROGRESS].include?(self.state)
     end
 
     def space_scoped?
@@ -47,14 +46,6 @@ module VCAP::CloudController
 
     def self.user_visibility_filter(user)
       { space: user.spaces_dataset }
-    end
-
-    def update_state(state)
-      if service_broker_state.nil?
-        self.service_broker_state = ServiceBrokerState.new(state: state)
-      else
-        service_broker_state.update(state: state)
-      end
     end
 
     private

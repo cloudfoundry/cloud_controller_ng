@@ -105,7 +105,7 @@ class ServiceBrokersController < ApplicationController
 
     url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
 
-    service_broker.update_state(ServiceBrokerStateEnum::DELETE_IN_PROGRESS)
+    service_broker.update(state: ServiceBrokerStateEnum::DELETE_IN_PROGRESS)
 
     head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job.guid}")
   end

@@ -103,15 +103,13 @@ RSpec.describe 'V3 service brokers' do
 
     context 'when there are global service brokers' do
       let(:global_service_broker_v3) do
-        broker = VCAP::CloudController::ServiceBroker.make
-        state = VCAP::CloudController::ServiceBrokerState.make_unsaved
-        broker.update(service_broker_state: state)
-        broker
+        # Note, has a state
+        VCAP::CloudController::ServiceBroker.make(state: VCAP::CloudController::ServiceBrokerStateEnum::AVAILABLE)
       end
 
       let(:global_service_broker_v2) do
-        # Note, no entry for this broker in the service_brokers_state table
-        VCAP::CloudController::ServiceBroker.make
+        # Note, no state set
+        VCAP::CloudController::ServiceBroker.make(state: '')
       end
 
       let(:global_service_broker_v3_json) do
@@ -396,16 +394,10 @@ RSpec.describe 'V3 service brokers' do
         name: 'old-name',
         broker_url: 'http://example.org/old-broker-url',
         auth_username: 'old-admin',
-        auth_password: 'not-welcome'
-      )
-    end
-
-    let!(:service_broker_state) {
-      VCAP::CloudController::ServiceBrokerState.make(
-        service_broker_id: broker.id,
+        auth_password: 'not-welcome',
         state: VCAP::CloudController::ServiceBrokerStateEnum::AVAILABLE
       )
-    }
+    end
 
     let(:update_request_body) {
       {
@@ -429,7 +421,7 @@ RSpec.describe 'V3 service brokers' do
       expect(broker.broker_url).to eq('http://example.org/old-broker-url')
       expect(broker.auth_username).to eq('old-admin')
       expect(broker.auth_password).to eq('not-welcome')
-      expect(broker.service_broker_state.state).to eq(VCAP::CloudController::ServiceBrokerStateEnum::SYNCHRONIZING)
+      expect(broker.state).to eq(VCAP::CloudController::ServiceBrokerStateEnum::SYNCHRONIZING)
     end
 
     it 'creates a pollable job to update the service broker' do
@@ -648,7 +640,7 @@ RSpec.describe 'V3 service brokers' do
       expect(broker.auth_username).to eq(global_broker_request_body.dig(:authentication, :credentials, :username))
       expect(broker.auth_password).to eq(global_broker_request_body.dig(:authentication, :credentials, :password))
       expect(broker.space).to be_nil
-      expect(broker.service_broker_state.state).to eq(VCAP::CloudController::ServiceBrokerStateEnum::SYNCHRONIZING)
+      expect(broker.state).to eq(VCAP::CloudController::ServiceBrokerStateEnum::SYNCHRONIZING)
     end
 
     it 'creates a pollable job to synchronize the catalog and responds with job resource' do
@@ -678,7 +670,7 @@ RSpec.describe 'V3 service brokers' do
       expect(broker.services.map(&:label)).to include('route_volume_service_name-2')
       expect(broker.service_plans.map(&:name)).to include('plan_name-1')
       expect(broker.service_plans.map(&:name)).to include('plan_name-2')
-      expect(broker.service_broker_state.state).to eq(VCAP::CloudController::ServiceBrokerStateEnum::AVAILABLE)
+      expect(broker.state).to eq(VCAP::CloudController::ServiceBrokerStateEnum::AVAILABLE)
     end
 
     it 'reports service events' do
@@ -828,7 +820,7 @@ RSpec.describe 'V3 service brokers' do
 
       it 'leaves broker in a non-available failed state' do
         broker = VCAP::CloudController::ServiceBroker.last
-        expect(broker.service_broker_state.state).to eq(VCAP::CloudController::ServiceBrokerStateEnum::SYNCHRONIZATION_FAILED)
+        expect(broker.state).to eq(VCAP::CloudController::ServiceBrokerStateEnum::SYNCHRONIZATION_FAILED)
       end
 
       it 'has failed the job with an appropriate error' do
@@ -854,7 +846,7 @@ RSpec.describe 'V3 service brokers' do
 
       it 'leaves broker in a non-available failed state' do
         broker = VCAP::CloudController::ServiceBroker.last
-        expect(broker.service_broker_state.state).to eq(VCAP::CloudController::ServiceBrokerStateEnum::SYNCHRONIZATION_FAILED)
+        expect(broker.state).to eq(VCAP::CloudController::ServiceBrokerStateEnum::SYNCHRONIZATION_FAILED)
       end
 
       it 'has failed the job with an appropriate error' do

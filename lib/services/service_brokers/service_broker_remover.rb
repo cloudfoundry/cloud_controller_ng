@@ -9,7 +9,7 @@ module VCAP::Services::ServiceBrokers
       remove(brokers.first)
       VCAP::CloudController::Jobs::DeleteActionJob::NO_ERRORS
     rescue
-      brokers.first.update_state(VCAP::CloudController::ServiceBrokerStateEnum::DELETE_FAILED)
+      brokers.first.update(state: VCAP::CloudController::ServiceBrokerStateEnum::DELETE_FAILED)
       raise
     end
 
