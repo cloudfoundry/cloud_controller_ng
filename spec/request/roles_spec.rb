@@ -920,6 +920,7 @@ RSpec.describe 'Roles Request' do
             }
           }
         end
+
         let!(:organization_billing_manager) do
           VCAP::CloudController::OrganizationBillingManager.make(
             guid: 'organization_billing_manager-guid',
@@ -943,8 +944,7 @@ RSpec.describe 'Roles Request' do
           expect(last_response.status).to eq(200)
 
           parsed_response = MultiJson.load(last_response.body)
-          expect(parsed_response['included']['users'][0]).to be_a_response_like(other_user_response)
-          expect(parsed_response['included']['users'][1]).to be_a_response_like(another_user_response)
+          expect(parsed_response['included']['users']).to contain_exactly(other_user_response, another_user_response)
         end
       end
     end
