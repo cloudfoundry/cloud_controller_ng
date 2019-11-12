@@ -69,7 +69,7 @@ class RolesController < ApplicationController
       unauthorized! unless permission_queryer.can_write_to_org?(role.organization_guid)
     end
 
-    delete_action = RoleDeleteAction.new
+    delete_action = RoleDeleteAction.new(user_audit_info)
     deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(Role, role.guid, delete_action)
     pollable_job = Jobs::Enqueuer.new(deletion_job, queue: Jobs::Queues.generic).enqueue_pollable
 
@@ -93,7 +93,7 @@ class RolesController < ApplicationController
     user = fetch_user(user_guid)
     unprocessable_user! unless user
 
-    RoleCreate.create_space_role(type: message.type, user: user, space: space)
+    RoleCreate.new(message, user_audit_info).create_space_role(type: message.type, user: user, space: space)
   end
 
   def create_org_role(message)
@@ -105,7 +105,7 @@ class RolesController < ApplicationController
     user = fetch_user_for_create_org_role(user_guid, message)
     unprocessable_user! unless user
 
-    RoleCreate.create_organization_role(type: message.type, user: user, organization: org)
+    RoleCreate.new(message, user_audit_info).create_organization_role(type: message.type, user: user, organization: org)
   end
 
   # Org managers can add unaffiliated users to their org by username
