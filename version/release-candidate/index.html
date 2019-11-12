@@ -17862,6 +17862,22 @@ Deployed revisions are revisions that are linked to started processes in the app
 
 <p><code class="prettyprint">GET /v3/roles/:guid</code></p>
 
+<h4 id="query-parameters">Query parameters</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>include</strong></td>
+<td><em>string</em></td>
+<td><strong>Experimental</strong> - Optionally include a list of unique related resources in the response. <br>The only valid value is <code class="prettyprint">user</code></td>
+</tr>
+</tbody></table>
+
 <h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
@@ -18059,6 +18075,11 @@ Deployed revisions are revisions that are linked to started processes in the app
 <td><strong>order_by</strong></td>
 <td><em>string</em></td>
 <td>Value to sort by. Defaults to ascending. Prepend with <code class="prettyprint">-</code> to sort descending. <br>Valid values are <code class="prettyprint">created_at</code>, <code class="prettyprint">updated_at</code>.</td>
+</tr>
+<tr>
+<td><strong>include</strong></td>
+<td><em>string</em></td>
+<td><strong>Experimental</strong> - Optionally include a list of unique related resources in the response. <br>The only valid value is <code class="prettyprint">user</code></td>
 </tr>
 </tbody></table>
 
