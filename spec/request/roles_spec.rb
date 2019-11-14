@@ -10,7 +10,7 @@ RSpec.describe 'Roles Request' do
   let(:user_guid) { user.guid }
   let(:space_guid) { space.guid }
   let(:user_unaffiliated) { VCAP::CloudController::User.make(guid: 'user_no_role') }
-  let(:uaa_client) { double(:uaa_client) }
+  let(:uaa_client) { instance_double(VCAP::CloudController::UaaClient) }
 
   before do
     allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
@@ -129,8 +129,6 @@ RSpec.describe 'Roles Request' do
       end
 
       context 'when role already exists' do
-        let(:uaa_client) { double(:uaa_client) }
-
         before do
           allow(uaa_client).to receive(:users_for_ids).with([user_with_role.guid]).and_return(
             { user_with_role.guid => { 'username' => 'mona', 'origin' => 'uaa' } }
@@ -253,8 +251,6 @@ RSpec.describe 'Roles Request' do
       end
 
       context 'when role already exists' do
-        let(:uaa_client) { double(:uaa_client) }
-
         before do
           allow(uaa_client).to receive(:users_for_ids).with([user_with_role.guid]).and_return(
             { user_with_role.guid => { 'username' => 'mona', 'origin' => 'uaa' } }
@@ -290,8 +286,6 @@ RSpec.describe 'Roles Request' do
           }
         }
       end
-
-      let(:uaa_client) { double(:uaa_client) }
 
       context 'when the user exists in a single origin' do
         let(:expected_response) do
@@ -498,8 +492,6 @@ RSpec.describe 'Roles Request' do
         h
       end
 
-      let(:uaa_client) { double(:uaa_client) }
-
       before do
         allow(uaa_client).to receive(:id_for_username).with('uuu', origin: 'okta').and_return(user_with_role.guid)
 
@@ -560,14 +552,28 @@ RSpec.describe 'Roles Request' do
         end
       end
 
-      # This has to be an org role, because anyone has to be in the organizations_users table before they can be
-      # granted any space roles
-      context 'as org manager for unaffiliated user' do
+      context 'when UAA is unavailable' do
+        before do
+          allow(uaa_client).to receive(:id_for_username).and_raise(VCAP::CloudController::UaaUnavailable)
+        end
+
+        it 'raises a 502 with a helpful message' do
+          post '/v3/roles', params.to_json, admin_header
+
+          expect(last_response).to have_status_code(503)
+          expect(last_response).to have_error_message(
+            'UAA service is currently unavailable'
+          )
+        end
+      end
+
+      # This case only applies for creating org roles, any user that would be able to have
+      # a space role must also have at least an org user role
+      context 'when the user is unaffiliated' do
         before do
           allow(uaa_client).to receive(:origins_for_username).with('bob_unaffiliated').and_return(['uaa'])
           allow(uaa_client).to receive(:id_for_username).with('bob_unaffiliated', origin: 'uaa').and_return(user_unaffiliated.guid)
         end
-        let(:uaa_client) { double(:uaa_client) }
         let(:params) do
           {
             type: 'organization_auditor',

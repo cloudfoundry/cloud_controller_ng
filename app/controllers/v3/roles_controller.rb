@@ -22,6 +22,8 @@ class RolesController < ApplicationController
     render status: :created, json: Presenters::V3::RolePresenter.new(role)
   rescue RoleCreate::Error => e
     unprocessable!(e)
+  rescue UaaUnavailable
+    raise CloudController::Errors::ApiError.new_from_details('UaaUnavailable')
   end
 
   def index
