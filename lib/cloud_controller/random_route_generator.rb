@@ -7,7 +7,10 @@ module VCAP::CloudController
     end
 
     def route
-      @adjective_noun_generator.generate
+      ascii_letter_a = 97
+      first_letter = (rand(26) + ascii_letter_a).chr
+      second_letter = (rand(26) + ascii_letter_a).chr
+      @adjective_noun_generator.generate + "-#{first_letter}#{second_letter}"
     end
   end
 end
