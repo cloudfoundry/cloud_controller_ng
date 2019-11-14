@@ -191,7 +191,6 @@ module VCAP::CloudController
             optional(:client_chain_file) => String,
           },
           volume_services_enabled: bool,
-          route_services_enabled: bool,
 
           max_labels_per_resource: Integer,
           max_annotations_per_resource: Integer,
