@@ -108,7 +108,7 @@ RSpec.describe 'Roles Request' do
         it 'returns a 422 with a helpful message' do
           post '/v3/roles', params.to_json, admin_header
           expect(last_response.status).to eq(422)
-          expect(last_response).to have_error_message('Invalid user. Ensure that the user exists and you have access to it.')
+          expect(last_response).to have_error_message("Users cannot be assigned roles in a space if they do not have a role in that space's organization.")
         end
       end
 

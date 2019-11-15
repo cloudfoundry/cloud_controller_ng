@@ -91,7 +91,7 @@ class RolesController < ApplicationController
 
     user_guid = message.user_guid || guid_for_uaa_user(message.user_name, message.user_origin)
     user = fetch_user(user_guid)
-    unprocessable_user! unless user
+    unprocessable_space_user! unless user
 
     RoleCreate.new(message, user_audit_info).create_space_role(type: message.type, user: user, space: space)
   end
@@ -161,6 +161,10 @@ class RolesController < ApplicationController
 
   def unprocessable_user!
     unprocessable!('Invalid user. Ensure that the user exists and you have access to it.')
+  end
+
+  def unprocessable_space_user!
+    unprocessable!("Users cannot be assigned roles in a space if they do not have a role in that space's organization.")
   end
 
   def guid_for_uaa_user(username, given_origin)
