@@ -324,7 +324,6 @@ RSpec.describe 'V3 service brokers' do
         h['global_auditor'] = {
             code: 200,
             response_object: global_service_broker_v3_json
-
         }
 
         h
