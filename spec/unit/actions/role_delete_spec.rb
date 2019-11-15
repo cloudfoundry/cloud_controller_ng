@@ -4,6 +4,15 @@ require 'actions/role_delete'
 module VCAP::CloudController
   RSpec.describe RoleDeleteAction do
     let(:user_audit_info) { UserAuditInfo.new(user_email: 'amelia@cats.com', user_guid: 'gooid') }
+    let(:user_with_role) { User.make(guid: 'i-have-a-role-to-delete') }
+    let(:uaa_client) { instance_double(VCAP::CloudController::UaaClient) }
+
+    before do
+      allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
+      allow(uaa_client).to receive(:usernames_for_ids).with([user_with_role.guid]).and_return(
+        { user_with_role.guid => 'kiwi' }
+      )
+    end
 
     subject { RoleDeleteAction.new(user_audit_info) }
 
@@ -25,11 +34,12 @@ module VCAP::CloudController
           event = Event.last
           expect(event.type).to eq(opts[:event_type])
           expect(event.metadata).to eq({ 'request' => {} })
+          expect(event.target_name).to eq('kiwi')
         end
       end
 
       context 'space auditor' do
-        let!(:role) { SpaceAuditor.make }
+        let!(:role) { SpaceAuditor.make(user: user_with_role) }
 
         it_behaves_like 'deletion', {
           event_type: 'audit.user.space_auditor_remove'
@@ -37,7 +47,7 @@ module VCAP::CloudController
       end
 
       context 'space manager' do
-        let!(:role) { SpaceManager.make }
+        let!(:role) { SpaceManager.make(user: user_with_role) }
 
         it_behaves_like 'deletion', {
           event_type: 'audit.user.space_manager_remove'
@@ -45,7 +55,7 @@ module VCAP::CloudController
       end
 
       context 'space developer' do
-        let!(:role) { SpaceDeveloper.make }
+        let!(:role) { SpaceDeveloper.make(user: user_with_role) }
 
         it_behaves_like 'deletion', {
           event_type: 'audit.user.space_developer_remove'
@@ -53,7 +63,7 @@ module VCAP::CloudController
       end
 
       context 'org manager' do
-        let!(:role) { OrganizationManager.make }
+        let!(:role) { OrganizationManager.make(user: user_with_role) }
 
         it_behaves_like 'deletion', {
           event_type: 'audit.user.organization_manager_remove'
@@ -61,7 +71,7 @@ module VCAP::CloudController
       end
 
       context 'org billing manager' do
-        let!(:role) { OrganizationBillingManager.make }
+        let!(:role) { OrganizationBillingManager.make(user: user_with_role) }
 
         it_behaves_like 'deletion', {
           event_type: 'audit.user.organization_billing_manager_remove'
@@ -69,7 +79,7 @@ module VCAP::CloudController
       end
 
       context 'org auditor' do
-        let!(:role) { OrganizationAuditor.make }
+        let!(:role) { OrganizationAuditor.make(user: user_with_role) }
 
         it_behaves_like 'deletion', {
           event_type: 'audit.user.organization_auditor_remove'
@@ -77,7 +87,7 @@ module VCAP::CloudController
       end
 
       context 'org user' do
-        let!(:role) { OrganizationUser.make }
+        let!(:role) { OrganizationUser.make(user: user_with_role) }
 
         it_behaves_like 'deletion', {
           event_type: 'audit.user.organization_user_remove'

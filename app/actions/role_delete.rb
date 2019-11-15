@@ -49,14 +49,19 @@ module VCAP::CloudController
 
     def record_space_event(role, short_event_type)
       space = Space.first(id: role.space_id)
-      user = User.first(id: role.user_id)
-      event_repo.record_space_role_remove(space, user, short_event_type, @user_audit_info)
+      event_repo.record_space_role_remove(space, fetch_user(role), short_event_type, @user_audit_info)
     end
 
     def record_organization_event(role, short_event_type)
       organization = Organization.first(id: role.organization_id)
+      event_repo.record_organization_role_remove(organization, fetch_user(role), short_event_type, @user_audit_info)
+    end
+
+    def fetch_user(role)
       user = User.first(id: role.user_id)
-      event_repo.record_organization_role_remove(organization, user, short_event_type, @user_audit_info)
+      uaa_client = CloudController::DependencyLocator.instance.uaa_client
+      UsernamePopulator.new(uaa_client).transform(user)
+      user
     end
   end
 end
