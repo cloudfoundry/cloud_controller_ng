@@ -14,6 +14,9 @@ module VCAP::CloudController
     def create_space_role(type:, user:, space:)
       error!("Users cannot be assigned roles in a space if they do not have a role in that space's organization.") unless space.in_organization?(user)
 
+      uaa_client = CloudController::DependencyLocator.instance.uaa_client
+      UsernamePopulator.new(uaa_client).transform(user)
+
       case type
       when RoleTypes::SPACE_AUDITOR
         create_space_auditor(user, space)
@@ -29,6 +32,9 @@ module VCAP::CloudController
     end
 
     def create_organization_role(type:, user:, organization:)
+      uaa_client = CloudController::DependencyLocator.instance.uaa_client
+      UsernamePopulator.new(uaa_client).transform(user)
+
       case type
       when RoleTypes::ORGANIZATION_USER
         create_organization_user(user, organization)

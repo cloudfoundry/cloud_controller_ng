@@ -14,6 +14,12 @@ RSpec.describe 'Roles Request' do
 
   before do
     allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
+    allow(uaa_client).to receive(:usernames_for_ids).with([user_with_role.guid]).and_return(
+      { user_with_role.guid => 'mona' }
+    )
+    allow(uaa_client).to receive(:usernames_for_ids).with([user_unaffiliated.guid]).and_return(
+      { user_with_role.guid => 'bob_unaffiliated' }
+    )
   end
 
   describe 'POST /v3/roles' do
@@ -130,9 +136,6 @@ RSpec.describe 'Roles Request' do
 
       context 'when role already exists' do
         before do
-          allow(uaa_client).to receive(:users_for_ids).with([user_with_role.guid]).and_return(
-            { user_with_role.guid => { 'username' => 'mona', 'origin' => 'uaa' } }
-          )
           org.add_user(user_with_role)
           post '/v3/roles', params.to_json, admin_header
         end
@@ -252,10 +255,6 @@ RSpec.describe 'Roles Request' do
 
       context 'when role already exists' do
         before do
-          allow(uaa_client).to receive(:users_for_ids).with([user_with_role.guid]).and_return(
-            { user_with_role.guid => { 'username' => 'mona', 'origin' => 'uaa' } }
-          )
-
           post '/v3/roles', params.to_json, admin_header
         end
 
@@ -335,7 +334,6 @@ RSpec.describe 'Roles Request' do
         before do
           allow(uaa_client).to receive(:origins_for_username).with('uuu').and_return(['uaa'])
           allow(uaa_client).to receive(:id_for_username).with('uuu', origin: 'uaa').and_return(user_with_role.guid)
-
           org.add_user(user_with_role)
         end
 

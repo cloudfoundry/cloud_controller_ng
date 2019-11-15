@@ -113,11 +113,7 @@ module VCAP::CloudController
     end
 
     def presentation_name
-      uaa_client = CloudController::DependencyLocator.instance.uaa_client
-      user_hash = uaa_client.users_for_ids([guid])
-      return guid unless user_hash[guid]
-
-      user_hash[guid]['username']
+      username || guid
     end
 
     def add_managed_organization(org)

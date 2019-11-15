@@ -9,6 +9,14 @@ module VCAP::CloudController
     let(:org) { space.organization }
     let(:user) { User.make }
     let(:user_audit_info) { UserAuditInfo.new(user_email: 'amelia@cats.com', user_guid: 'gooid') }
+    let(:uaa_client) { instance_double(VCAP::CloudController::UaaClient) }
+
+    before do
+      allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
+      allow(uaa_client).to receive(:usernames_for_ids).with([user.guid]).and_return(
+        { user.guid => 'mona' }
+      )
+    end
 
     subject { RoleCreate.new(message, user_audit_info) }
 
@@ -43,6 +51,7 @@ module VCAP::CloudController
           expect(event.space_guid).to eq(space.guid)
           expect(event.organization_guid).to eq(space.organization.guid)
           expect(event.metadata).to eq({ 'request' => message.audit_hash })
+          expect(event.target_name).to eq('mona')
         end
 
         context 'when a model validation fails' do
@@ -56,14 +65,7 @@ module VCAP::CloudController
           end
 
           context 'when it is a uniqueness error' do
-            let(:uaa_client) { double(:uaa_client) }
-
             before do
-              allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
-              allow(uaa_client).to receive(:users_for_ids).with([user.guid]).and_return(
-                { user.guid => { 'username' => 'mona', 'origin' => 'uaa' } }
-              )
-
               subject.create_space_role(type: type, user: user, space: space)
             end
 
@@ -150,6 +152,7 @@ module VCAP::CloudController
           expect(event.type).to eq(opts[:event_type])
           expect(event.organization_guid).to eq(org.guid)
           expect(event.metadata).to eq({ 'request' => message.audit_hash })
+          expect(event.target_name).to eq('mona')
         end
 
         context 'when a model validation fails' do
@@ -163,14 +166,7 @@ module VCAP::CloudController
           end
 
           context 'when it is a uniqueness error' do
-            let(:uaa_client) { double(:uaa_client) }
-
             before do
-              allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
-              allow(uaa_client).to receive(:users_for_ids).with([user.guid]).and_return(
-                { user.guid => { 'username' => 'mona', 'origin' => 'uaa' } }
-              )
-
               subject.create_organization_role(type: type, user: user, organization: org)
             end
 

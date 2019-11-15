@@ -46,37 +46,6 @@ module VCAP::CloudController
       }
     end
 
-    describe '#presentation_name' do
-      let(:user) { VCAP::CloudController::User.make }
-      let(:uaa_client) { double(:uaa_client) }
-
-      context 'when the user is a UAA user' do
-        before do
-          allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
-          allow(uaa_client).to receive(:users_for_ids).with([user.guid]).and_return(
-            { user.guid => { 'username' => 'mona', 'origin' => 'uaa' } }
-          )
-        end
-
-        it 'returns the UAA username' do
-          expect(user.presentation_name).to eq('mona')
-        end
-      end
-
-      context 'when the user is a UAA client' do
-        let(:user) { VCAP::CloudController::User.make(guid: 're-id') }
-
-        before do
-          allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
-          allow(uaa_client).to receive(:users_for_ids).with([user.guid]).and_return({})
-        end
-
-        it 'returns the guid' do
-          expect(user.presentation_name).to eq(user.guid)
-        end
-      end
-    end
-
     describe '#remove_spaces' do
       let(:org) { Organization.make }
       let(:user) { User.make }
