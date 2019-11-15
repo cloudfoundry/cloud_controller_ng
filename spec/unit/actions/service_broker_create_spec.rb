@@ -63,7 +63,7 @@ module VCAP
       it 'puts it in a SYNCHRONIZING state' do
         action.create(message)
 
-        expect(broker.service_broker_state.state).to eq(ServiceBrokerStateEnum::SYNCHRONIZING)
+        expect(broker.state).to eq(ServiceBrokerStateEnum::SYNCHRONIZING)
       end
 
       it 'creates and returns a synchronization job' do
@@ -95,11 +95,6 @@ module VCAP
           stepper.instrument(
             ServiceBroker, :create,
             before: 'start create broker transaction',
-            after: 'finish create broker and start create broker state'
-          )
-
-          stepper.instrument(
-            ServiceBrokerState, :create,
             after: 'finish create broker transaction'
           )
         end
@@ -108,13 +103,11 @@ module VCAP
           it "works when parallel brokers are created #{i}", isolation: :truncation do
             stepper.start_thread([
               'start create broker transaction',
-              'finish create broker and start create broker state',
               'finish create broker transaction',
             ]) { subject.create(message) }
 
             stepper.start_thread([
               'start create broker transaction',
-              'finish create broker and start create broker state',
               'finish create broker transaction',
             ]) { subject.create(message2) }
 

@@ -36,14 +36,13 @@ module VCAP
           end
 
           let(:broker_client) { FakeServiceBrokerV2Client.new }
-          let(:broker_state) { ServiceBrokerState.where(service_broker_id: broker.id).first&.state }
 
           before do
             allow(Services::ServiceClientProvider).to receive(:provide).
               with(broker: broker).
               and_return(broker_client)
 
-            broker.update_state(ServiceBrokerStateEnum::SYNCHRONIZING)
+            broker.update(state: ServiceBrokerStateEnum::SYNCHRONIZING)
           end
 
           it 'updates the service broker and creates the service offerings and plans from the catalog' do
@@ -55,7 +54,7 @@ module VCAP
             expect(broker.broker_url).to eq('http://example.org/new-broker-url')
             expect(broker.auth_username).to eq('new-admin')
             expect(broker.auth_password).to eq('welcome')
-            expect(broker_state).to eq(ServiceBrokerStateEnum::AVAILABLE)
+            expect(broker.state).to eq(ServiceBrokerStateEnum::AVAILABLE)
 
             service_offerings = Service.where(service_broker_id: broker.id)
             expect(service_offerings.count).to eq(1)
@@ -119,21 +118,25 @@ module VCAP
             end
           end
 
-          describe 'when there is a model level validation' do
+          describe 'when there is a model level validation error' do
             before do
               allow_any_instance_of(ServiceBroker).to receive(:validate) do |record|
-                record.errors.add(:something, 'is not right')
+                # Make setting the state to 'AVAILABLE' fail, but nothing else
+                if record.state == 'AVAILABLE'
+                  record.errors.add(:something, 'is not right')
+                end
               end
             end
 
             let(:previous_state) { ServiceBrokerStateEnum::DELETE_FAILED }
+
             it 'fails to update and raises InvalidServiceBroker' do
               expect {
                 job.perform
               }.to raise_error(V3::ServiceBrokerUpdate::InvalidServiceBroker, 'something is not right')
 
               broker.reload
-              expect(broker_state).to eq(ServiceBrokerStateEnum::DELETE_FAILED)
+              expect(broker.state).to eq(ServiceBrokerStateEnum::DELETE_FAILED)
             end
           end
 
@@ -161,7 +164,7 @@ module VCAP
               expect(broker.broker_url).to eq('http://example.org/broker-url')
               expect(broker.auth_username).to eq('username')
               expect(broker.auth_password).to eq('password')
-              expect(broker_state).to eq(ServiceBrokerStateEnum::AVAILABLE)
+              expect(broker.state).to eq(ServiceBrokerStateEnum::AVAILABLE)
             end
 
             it 'removes the service broker update request record' do
@@ -193,7 +196,7 @@ module VCAP
               expect(broker.broker_url).to eq('http://example.org/broker-url')
               expect(broker.auth_username).to eq('username')
               expect(broker.auth_password).to eq('password')
-              expect(broker_state).to eq(ServiceBrokerStateEnum::AVAILABLE)
+              expect(broker.state).to eq(ServiceBrokerStateEnum::AVAILABLE)
             end
 
             it 'removes the service broker update request record' do
@@ -232,7 +235,7 @@ module VCAP
                 expect(broker.broker_url).to eq('http://example.org/broker-url')
                 expect(broker.auth_username).to eq('username')
                 expect(broker.auth_password).to eq('password')
-                expect(broker_state).to eq(ServiceBrokerStateEnum::AVAILABLE)
+                expect(broker.state).to eq(ServiceBrokerStateEnum::AVAILABLE)
               end
 
               it 'removes the service broker update request record' do
@@ -276,7 +279,7 @@ module VCAP
                 expect(broker.broker_url).to eq('http://example.org/broker-url')
                 expect(broker.auth_username).to eq('username')
                 expect(broker.auth_password).to eq('password')
-                expect(broker_state).to eq(ServiceBrokerStateEnum::AVAILABLE)
+                expect(broker.state).to eq(ServiceBrokerStateEnum::AVAILABLE)
               end
 
               it 'removes the service broker update request record' do
@@ -315,18 +318,18 @@ module VCAP
                 expect { job.perform }.to raise_error(::CloudController::Errors::ApiError)
 
                 broker.reload
-                expect(broker_state).to eq(ServiceBrokerStateEnum::SYNCHRONIZATION_FAILED)
+                expect(broker.state).to eq(ServiceBrokerStateEnum::SYNCHRONIZATION_FAILED)
               end
             end
 
             context 'and there is no previous state' do
-              let(:previous_state) { nil }
+              let(:previous_state) { '' }
 
               it 'rolls back to the previous known state' do
                 expect { job.perform }.to raise_error(::CloudController::Errors::ApiError)
 
                 broker.reload
-                expect(broker_state).to eq(nil)
+                expect(broker.state).to be_empty
               end
             end
           end

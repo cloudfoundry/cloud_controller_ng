@@ -27,7 +27,7 @@ module VCAP::CloudController
           auth_username: 'username',
           auth_password: 'welcome',
           space_guid: space_guid,
-          service_broker_state: service_broker_state,
+          state: service_broker_state,
           created_at: Time.now,
           updated_at: Time.now
         )
@@ -78,7 +78,7 @@ module VCAP::CloudController
           end
 
           context 'when state is available' do
-            let(:service_broker_state) { double(state: ServiceBrokerStateEnum::AVAILABLE) }
+            let(:service_broker_state) { ServiceBrokerStateEnum::AVAILABLE }
 
             it 'is available' do
               expect(result[:available]).to be(true)
@@ -87,7 +87,7 @@ module VCAP::CloudController
           end
 
           context 'when state is synchronizing' do
-            let(:service_broker_state) { double(state: ServiceBrokerStateEnum::SYNCHRONIZING) }
+            let(:service_broker_state) { ServiceBrokerStateEnum::SYNCHRONIZING }
 
             it 'is not available and has synchronization in progress' do
               expect(result[:available]).to be(false)
@@ -96,7 +96,7 @@ module VCAP::CloudController
           end
 
           context 'when state is synchronization failed' do
-            let(:service_broker_state) { double(state: ServiceBrokerStateEnum::SYNCHRONIZATION_FAILED) }
+            let(:service_broker_state) { ServiceBrokerStateEnum::SYNCHRONIZATION_FAILED }
 
             it 'is not available and has synchronization failed' do
               expect(result[:available]).to be(false)
@@ -105,7 +105,7 @@ module VCAP::CloudController
           end
 
           context 'when state is delete in progress' do
-            let(:service_broker_state) { double(state: ServiceBrokerStateEnum::DELETE_IN_PROGRESS) }
+            let(:service_broker_state) { ServiceBrokerStateEnum::DELETE_IN_PROGRESS }
 
             it 'is not available and has delete in progress' do
               expect(result[:available]).to be(false)
@@ -114,7 +114,7 @@ module VCAP::CloudController
           end
 
           context 'when state is delete failed' do
-            let(:service_broker_state) { double(state: ServiceBrokerStateEnum::DELETE_FAILED) }
+            let(:service_broker_state) { ServiceBrokerStateEnum::DELETE_FAILED }
 
             it 'is not available and has delete failed' do
               expect(result[:available]).to be(false)

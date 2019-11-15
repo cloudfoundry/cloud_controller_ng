@@ -51,16 +51,16 @@ module VCAP::CloudController
             broker.update(update_params)
 
             @warnings = @catalog_updater.refresh
-          end
 
-          set_to_available_state
+            broker.update(state: ServiceBrokerStateEnum::AVAILABLE)
+          end
 
           @warnings
         rescue => e
-          reset_to_previous_state
+          broker.update(state: previous_broker_state)
 
           if e.is_a?(Sequel::ValidationFailed)
-            raise V3::ServiceBrokerUpdate::InvalidServiceBroker.new(e.errors.full_messages.join(','))
+            raise V3::ServiceBrokerUpdate::InvalidServiceBroker.new(e.message)
           end
 
           raise e
@@ -69,10 +69,6 @@ module VCAP::CloudController
         end
 
         private
-
-        def set_to_available_state
-          broker.update_state(ServiceBrokerStateEnum::AVAILABLE)
-        end
 
         def update_params
           params = {}
@@ -87,14 +83,6 @@ module VCAP::CloudController
         end
 
         attr_reader :broker, :update_request, :previous_broker_state
-
-        def reset_to_previous_state
-          if previous_broker_state.nil?
-            broker.service_broker_state.destroy
-          else
-            broker.update_state(previous_broker_state)
-          end
-        end
       end
     end
   end

@@ -29,9 +29,9 @@ module VCAP::CloudController
         end
 
         pollable_job = nil
-        previous_broker_state = broker.service_broker_state&.state
+        previous_broker_state = broker.state
         ServiceBrokerUpdateRequest.db.transaction do
-          broker.update_state(ServiceBrokerStateEnum::SYNCHRONIZING)
+          broker.update(state: ServiceBrokerStateEnum::SYNCHRONIZING)
 
           update_request = ServiceBrokerUpdateRequest.create(params)
 

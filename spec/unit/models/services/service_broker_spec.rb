@@ -71,28 +71,24 @@ module VCAP::CloudController
     describe '#in_transitional_state?' do
       let(:broker) { ServiceBroker.make }
 
-      let!(:service_broker_state) {
-        ServiceBrokerState.make(service_broker_id: broker.id)
-      }
-
       it 'returns true when state is SYNCHRONIZING' do
-        broker.service_broker_state.state = ServiceBrokerStateEnum::SYNCHRONIZING
+        broker.state = ServiceBrokerStateEnum::SYNCHRONIZING
         expect(broker.in_transitional_state?).to eq true
       end
       it 'returns false when state is SYNCHRONIZATION_FAILED' do
-        broker.service_broker_state.state = ServiceBrokerStateEnum::SYNCHRONIZATION_FAILED
+        broker.state = ServiceBrokerStateEnum::SYNCHRONIZATION_FAILED
         expect(broker.in_transitional_state?).to eq false
       end
       it 'returns false when state is AVAILABLE' do
-        broker.service_broker_state.state = ServiceBrokerStateEnum::AVAILABLE
+        broker.state = ServiceBrokerStateEnum::AVAILABLE
         expect(broker.in_transitional_state?).to eq false
       end
       it 'returns true when state is DELETE_IN_PROGRESS' do
-        broker.service_broker_state.state = ServiceBrokerStateEnum::DELETE_IN_PROGRESS
+        broker.state = ServiceBrokerStateEnum::DELETE_IN_PROGRESS
         expect(broker.in_transitional_state?).to eq true
       end
       it 'returns false when state is DELETE_FAILED' do
-        broker.service_broker_state.state = ServiceBrokerStateEnum::DELETE_FAILED
+        broker.state = ServiceBrokerStateEnum::DELETE_FAILED
         expect(broker.in_transitional_state?).to eq false
       end
     end

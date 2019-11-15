@@ -24,7 +24,6 @@ module VCAP
           end
 
           let(:broker_client) { FakeServiceBrokerV2Client.new }
-          let(:broker_state) { ServiceBrokerState.where(service_broker_id: broker.id).first.state }
 
           before do
             allow(Services::ServiceClientProvider).to receive(:provide).
@@ -34,11 +33,7 @@ module VCAP
 
           context 'when the broker has state' do
             before do
-              broker.update(
-                service_broker_state: ServiceBrokerState.new(
-                  state: ServiceBrokerStateEnum::SYNCHRONIZING
-                )
-              )
+              broker.update(state: ServiceBrokerStateEnum::SYNCHRONIZING)
             end
 
             it 'creates the service offerings and plans from the catalog' do
@@ -52,7 +47,7 @@ module VCAP
               expect(service_plans.count).to eq(1)
               expect(service_plans.first.name).to eq(broker_client.plan_name)
 
-              expect(broker_state).to eq(ServiceBrokerStateEnum::AVAILABLE)
+              expect(broker.reload.state).to eq(ServiceBrokerStateEnum::AVAILABLE)
             end
 
             context 'when catalog returned by broker is invalid' do
@@ -112,7 +107,7 @@ module VCAP
             it 'creates the state' do
               expect { job.perform }.to_not raise_error
 
-              expect(broker_state).to eq(ServiceBrokerStateEnum::AVAILABLE)
+              expect(broker.reload.state).to eq(ServiceBrokerStateEnum::AVAILABLE)
             end
 
             context 'when synchronization fails' do
@@ -121,7 +116,7 @@ module VCAP
               it 'also creates the state' do
                 expect { job.perform }.to raise_error(::CloudController::Errors::ApiError)
 
-                expect(broker_state).to eq(ServiceBrokerStateEnum::SYNCHRONIZATION_FAILED)
+                expect(broker.reload.state).to eq(ServiceBrokerStateEnum::SYNCHRONIZATION_FAILED)
               end
             end
           end
