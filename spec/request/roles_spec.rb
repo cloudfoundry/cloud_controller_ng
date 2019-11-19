@@ -107,7 +107,7 @@ RSpec.describe 'Roles Request' do
 
         it 'returns a 422 with a helpful message' do
           post '/v3/roles', params.to_json, admin_header
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_status_code(422)
           expect(last_response).to have_error_message("Users cannot be assigned roles in a space if they do not have a role in that space's organization.")
         end
       end
@@ -129,7 +129,7 @@ RSpec.describe 'Roles Request' do
 
         it 'returns a 422 with a helpful message' do
           post '/v3/roles', params.to_json, admin_header
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_status_code(422)
           expect(last_response).to have_error_message('Invalid space. Ensure that the space exists and you have access to it.')
         end
       end
@@ -143,7 +143,7 @@ RSpec.describe 'Roles Request' do
         it 'returns a 422 with a helpful message' do
           post '/v3/roles', params.to_json, admin_header
 
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_status_code(422)
           expect(last_response).to have_error_message(
             "User 'mona' already has 'space_auditor' role in space '#{space.name}'."
           )
@@ -226,7 +226,7 @@ RSpec.describe 'Roles Request' do
 
         it 'returns a 422 with a helpful message' do
           post '/v3/roles', params.to_json, admin_header
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_status_code(422)
           expect(last_response).to have_error_message('Invalid user. Ensure that the user exists and you have access to it.')
         end
       end
@@ -248,7 +248,7 @@ RSpec.describe 'Roles Request' do
 
         it 'returns a 422 with a helpful message' do
           post '/v3/roles', params.to_json, admin_header
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_status_code(422)
           expect(last_response).to have_error_message('Invalid organization. Ensure that the organization exists and you have access to it.')
         end
       end
@@ -261,7 +261,7 @@ RSpec.describe 'Roles Request' do
         it 'returns a 422 with a helpful message' do
           post '/v3/roles', params.to_json, admin_header
 
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_status_code(422)
           expect(last_response).to have_error_message(
             "User 'mona' already has 'organization_auditor' role in organization '#{org.name}'."
           )
@@ -349,7 +349,7 @@ RSpec.describe 'Roles Request' do
         it 'returns a 422 with a helpful message' do
           post '/v3/roles', params.to_json, admin_header
 
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_status_code(422)
           expect(last_response).to have_error_message(
             "User with username 'uuu' exists in the following origins: uaa, ldap, okta. Specify an origin to disambiguate."
           )
@@ -362,13 +362,42 @@ RSpec.describe 'Roles Request' do
           allow(uaa_client).to receive(:id_for_username).with('uuu', origin: nil).and_return(nil)
         end
 
-        it 'returns a 422 with a helpful message' do
-          post '/v3/roles', params.to_json, admin_header
+        context 'for a space role' do
+          it 'returns a 422 with a helpful message' do
+            post '/v3/roles', params.to_json, admin_header
 
-          expect(last_response.status).to eq(422)
-          expect(last_response).to have_error_message(
-            "No user exists with the username 'uuu'."
-          )
+            expect(last_response).to have_status_code(422)
+            expect(last_response).to have_error_message(
+              "Users cannot be assigned roles in a space if they do not have a role in that space's organization."
+            )
+          end
+        end
+
+        context 'for an org role' do
+          let(:params) do
+            {
+              type: 'organization_auditor',
+              relationships: {
+                user: {
+                  data: {
+                    name: 'uuu'
+                  }
+                },
+                organization: {
+                  data: { guid: org.guid }
+                }
+              }
+            }
+          end
+
+          it 'returns a 422 with a helpful message' do
+            post '/v3/roles', params.to_json, admin_header
+
+            expect(last_response).to have_status_code(422)
+            expect(last_response).to have_error_message(
+              "No user exists with the username 'uuu'."
+            )
+          end
         end
       end
     end
@@ -540,13 +569,43 @@ RSpec.describe 'Roles Request' do
           allow(uaa_client).to receive(:id_for_username).with('uuu', origin: 'okta').and_return(nil)
         end
 
-        it 'returns a 422 with a helpful message' do
-          post '/v3/roles', params.to_json, admin_header
+        context 'for a space role' do
+          it 'returns a 422 with a helpful message' do
+            post '/v3/roles', params.to_json, admin_header
 
-          expect(last_response.status).to eq(422)
-          expect(last_response).to have_error_message(
-            "No user exists with the username 'uuu' and origin 'okta'."
-          )
+            expect(last_response).to have_status_code(422)
+            expect(last_response).to have_error_message(
+              "Users cannot be assigned roles in a space if they do not have a role in that space's organization."
+            )
+          end
+        end
+
+        context 'for an org role' do
+          let(:params) do
+            {
+              type: 'organization_auditor',
+              relationships: {
+                user: {
+                  data: {
+                    name: 'uuu',
+                    origin: 'okta'
+                  }
+                },
+                organization: {
+                  data: { guid: org.guid }
+                }
+              }
+            }
+          end
+
+          it 'returns a 422 with a helpful message' do
+            post '/v3/roles', params.to_json, admin_header
+
+            expect(last_response).to have_status_code(422)
+            expect(last_response).to have_error_message(
+              "No user exists with the username 'uuu' and origin 'okta'."
+            )
+          end
         end
       end
 
@@ -843,7 +902,7 @@ RSpec.describe 'Roles Request' do
       context 'when the user is not logged in' do
         it 'returns 401 for Unauthenticated requests' do
           post '/v3/roles', nil, base_json_headers
-          expect(last_response.status).to eq(401)
+          expect(last_response).to have_status_code(401)
         end
       end
     end
@@ -899,7 +958,7 @@ RSpec.describe 'Roles Request' do
 
       it 'includes the requested users' do
         get('/v3/roles?include=user', nil, admin_header)
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_status_code(200)
 
         parsed_response = MultiJson.load(last_response.body)
         expect(parsed_response['included']['users'][0]).to be_a_response_like(other_user_response)
@@ -945,7 +1004,7 @@ RSpec.describe 'Roles Request' do
 
         it 'returns all of the relevant users' do
           get('/v3/roles?include=user', nil, admin_header)
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_status_code(200)
 
           parsed_response = MultiJson.load(last_response.body)
           expect(parsed_response['included']['users']).to contain_exactly(other_user_response, another_user_response)
@@ -1083,7 +1142,7 @@ RSpec.describe 'Roles Request' do
 
       it 'includes the requested users' do
         get("/v3/roles/#{role.guid}?include=user", nil, admin_header)
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_status_code(200)
 
         parsed_response = MultiJson.load(last_response.body)
         expect(parsed_response['included']['users'][0]).to be_a_response_like(user_with_role_response)
@@ -1147,7 +1206,7 @@ RSpec.describe 'Roles Request' do
 
       it 'returns a 401' do
         delete "/v3/roles/#{role.guid}", nil, base_json_headers
-        expect(last_response.status).to eq(401)
+        expect(last_response).to have_status_code(401)
       end
     end
 
@@ -1160,7 +1219,7 @@ RSpec.describe 'Roles Request' do
 
       it 'returns a 404 not found' do
         delete('/v3/roles/does-not-exist', nil, headers)
-        expect(last_response.status).to eq(404)
+        expect(last_response).to have_status_code(404)
       end
     end
   end

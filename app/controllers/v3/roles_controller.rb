@@ -89,7 +89,7 @@ class RolesController < ApplicationController
 
     unauthorized! unless permission_queryer.can_update_space?(message.space_guid, org.guid)
 
-    user_guid = message.user_guid || guid_for_uaa_user(message.user_name, message.user_origin)
+    user_guid = message.user_guid || guid_for_uaa_user(message.user_name, message.user_origin, creating_space_role: true)
     user = fetch_user(user_guid)
     unprocessable_space_user! unless user
 
@@ -167,7 +167,7 @@ class RolesController < ApplicationController
     unprocessable!("Users cannot be assigned roles in a space if they do not have a role in that space's organization.")
   end
 
-  def guid_for_uaa_user(username, given_origin)
+  def guid_for_uaa_user(username, given_origin, creating_space_role: false)
     FeatureFlag.raise_unless_enabled!(:set_roles_by_username)
     uaa_client = CloudController::DependencyLocator.instance.uaa_client
 
@@ -189,7 +189,9 @@ class RolesController < ApplicationController
     guid = uaa_client.id_for_username(username, origin: origin)
 
     unless guid
-      if given_origin
+      if creating_space_role
+        unprocessable_space_user!
+      elsif given_origin
         unprocessable!("No user exists with the username '#{username}' and origin '#{origin}'.")
       else
         unprocessable!("No user exists with the username '#{username}'.")
