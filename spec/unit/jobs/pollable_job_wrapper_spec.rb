@@ -129,12 +129,8 @@ module VCAP::CloudController::Jobs
 
       context 'with a big backtrace' do
         it 'culls it down' do
-          raise BigException.new
-        rescue BigException => exception
-          count = 256 - exception.backtrace.size
-          count.times do
-            exception.backtrace << '1000 character backtrace: ' + 'x' * 974
-          end
+          exception = BigException.new
+          exception.set_backtrace(['1000 character backtrace: ' + 'x' * 974] * 32)
           pollable_job.error(job, exception)
           expect(actual_pollable_job.reload.cf_api_error).to_not be_empty
           block = YAML.safe_load(actual_pollable_job.cf_api_error)
@@ -142,9 +138,7 @@ module VCAP::CloudController::Jobs
           expect(errors.size).to eq(1)
           error = errors[0]['test_mode_info']
           expect(error['detail']).to eq('VCAP::CloudController::Jobs::BigException')
-          # Normally should be 64 on a dev machine, 32 on travis due to longer paths :(
-          expect(error['backtrace'].size).to be >= 32
-          expect(error['backtrace'].size).to be <= 64
+          expect(error['backtrace'].size).to be == 8
         end
       end
 
