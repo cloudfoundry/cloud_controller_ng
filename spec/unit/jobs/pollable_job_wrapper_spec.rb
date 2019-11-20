@@ -143,25 +143,20 @@ module VCAP::CloudController::Jobs
       end
 
       context 'with a big message' do
-        # postgres complains with 15,824
-        # mysql complains with 15,825, so test for failure at that point
-        # bracket the values with 100 each way to allow for differences on travis
+        # postgres complains with 15,826
+        # mysql complains with 15,828, so test for failure at that point
 
         it 'squeezes just right one in' do
-          raise BigException.new(message: 'x' * 15_823)
-        rescue BigException => exception
           expect {
-            pollable_job.error(job, exception)
+            pollable_job.error(job, BigException.new(message: 'x' * 15_825))
           }.to_not raise_error
         end
 
         it 'gives up' do
-          raise BigException.new(message: 'x' * 15_825)
-        rescue BigException => exception
           pg_error = /value too long for type character varying/
           mysql_error = /Data too long for column 'cf_api_error'/
           expect {
-            pollable_job.error(job, exception)
+            pollable_job.error(job, BigException.new(message: 'x' * 15_828))
           }.to raise_error(::Sequel::DatabaseError, /#{pg_error}|#{mysql_error}/)
         end
       end
