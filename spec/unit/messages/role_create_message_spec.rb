@@ -7,7 +7,7 @@ module VCAP::CloudController
     subject { RoleCreateMessage }
 
     let(:user_guid) { 'user-guid' }
-    let(:user_name) { 'user-name' }
+    let(:username) { 'user-name' }
     let(:user_origin) { 'user-origin' }
     let(:space_guid) { 'space-guid' }
     let(:space_type) { 'space_auditor' }
@@ -78,9 +78,9 @@ module VCAP::CloudController
       end
     end
 
-    context 'when creating a space role by user name' do
+    context 'when creating a space role by username' do
       let(:type) { space_type }
-      let(:user_data) { { name: user_name } }
+      let(:user_data) { { username: username } }
 
       it 'is valid' do
         message = subject.new(space_params)
@@ -88,9 +88,9 @@ module VCAP::CloudController
       end
     end
 
-    context 'when creating an org role by user name' do
+    context 'when creating an org role by username' do
       let(:type) { org_type }
-      let(:user_data) { { name: user_name } }
+      let(:user_data) { { username: username } }
 
       it 'is valid' do
         message = subject.new(org_params)
@@ -98,9 +98,9 @@ module VCAP::CloudController
       end
     end
 
-    context 'when creating a space role by user name and origin' do
+    context 'when creating a space role by username and origin' do
       let(:type) { space_type }
-      let(:user_data) { { name: user_name, origin: user_origin } }
+      let(:user_data) { { username: username, origin: user_origin } }
 
       it 'is valid' do
         message = subject.new(space_params)
@@ -108,9 +108,9 @@ module VCAP::CloudController
       end
     end
 
-    context 'when creating an org role by user name and origin' do
+    context 'when creating an org role by username and origin' do
       let(:type) { org_type }
-      let(:user_data) { { name: user_name, origin: user_origin } }
+      let(:user_data) { { username: username, origin: user_origin } }
 
       it 'is valid' do
         message = subject.new(org_params)
@@ -234,7 +234,7 @@ module VCAP::CloudController
       end
     end
 
-    context 'user_guid/user_name/user_origin' do
+    context 'user_guid/username/user_origin' do
       let(:type) { space_type }
 
       context 'when user_guid is not a string' do
@@ -260,17 +260,17 @@ module VCAP::CloudController
         end
       end
 
-      context 'when user_name is not a string' do
+      context 'when username is not a string' do
         let(:user_data) do
           {
-            name: 47
+            username: 47
           }
         end
 
         it 'is not valid' do
           message = subject.new(space_params)
           expect(message).to be_invalid
-          expect(message.errors[:relationships]).to include('User name must be a string')
+          expect(message.errors[:relationships]).to include('Username must be a string')
         end
       end
 
@@ -297,7 +297,7 @@ module VCAP::CloudController
       context 'when user_origin is not a string' do
         let(:user_data) do
           {
-            name: user_name,
+            username: username,
             origin: 47
           }
         end
@@ -309,10 +309,10 @@ module VCAP::CloudController
         end
       end
 
-      context 'when user_guid is combined with user_name' do
+      context 'when user_guid is combined with username' do
         let(:user_data) do
           {
-            name: user_name,
+            username: username,
             guid: user_guid
           }
         end
@@ -320,7 +320,7 @@ module VCAP::CloudController
         it 'is not valid' do
           message = subject.new(space_params)
           expect(message).to be_invalid
-          expect(message.errors.full_messages).to eq(['Relationships User name cannot be specified when identifying user by guid'])
+          expect(message.errors.full_messages).to eq(['Relationships Username cannot be specified when identifying user by guid'])
         end
       end
 
@@ -337,7 +337,7 @@ module VCAP::CloudController
           expect(message).to be_invalid
           expect(message.errors.full_messages).to eq([
             'Relationships User origin cannot be specified when identifying user by guid',
-            'Relationships User origin cannot be specified without specifying the user name'
+            'Relationships User origin cannot be specified without specifying the username'
           ])
         end
       end
@@ -373,7 +373,7 @@ module VCAP::CloudController
           it 'is not valid' do
             message = subject.new(space_params)
             expect(message).to be_invalid
-            expect(message.errors[:relationships]).to include 'User origin cannot be specified without specifying the user name'
+            expect(message.errors[:relationships]).to include 'User origin cannot be specified without specifying the username'
           end
         end
 
@@ -390,7 +390,7 @@ module VCAP::CloudController
             expect(message).to be_invalid
             expect(message.errors.full_messages).to eq([
               'Relationships User origin cannot be specified when identifying user by guid',
-              'Relationships User origin cannot be specified without specifying the user name'
+              'Relationships User origin cannot be specified without specifying the username'
             ])
           end
         end
@@ -399,7 +399,7 @@ module VCAP::CloudController
           let(:user_data) do
             {
               guid: user_guid,
-              name: user_name,
+              username: username,
             }
           end
 
@@ -407,7 +407,7 @@ module VCAP::CloudController
             message = subject.new(space_params)
             expect(message).to be_invalid
             expect(message.errors.full_messages).to eq([
-              'Relationships User name cannot be specified when identifying user by guid'
+              'Relationships Username cannot be specified when identifying user by guid'
             ])
           end
         end

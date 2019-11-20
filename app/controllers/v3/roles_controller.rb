@@ -89,7 +89,7 @@ class RolesController < ApplicationController
 
     unauthorized! unless permission_queryer.can_update_space?(message.space_guid, org.guid)
 
-    user_guid = message.user_guid || guid_for_uaa_user(message.user_name, message.user_origin, creating_space_role: true)
+    user_guid = message.user_guid || guid_for_uaa_user(message.username, message.user_origin, creating_space_role: true)
     user = fetch_user(user_guid)
     unprocessable_space_user! unless user
 
@@ -101,7 +101,7 @@ class RolesController < ApplicationController
     unprocessable_organization! unless org
     unauthorized! unless permission_queryer.can_write_to_org?(message.organization_guid)
 
-    user_guid = message.user_guid || guid_for_uaa_user(message.user_name, message.user_origin)
+    user_guid = message.user_guid || guid_for_uaa_user(message.username, message.user_origin)
     user = fetch_user_for_create_org_role(user_guid, message)
     unprocessable_user! unless user
 
@@ -110,7 +110,7 @@ class RolesController < ApplicationController
 
   # Org managers can add unaffiliated users to their org by username
   def fetch_user_for_create_org_role(user_guid, message)
-    if message.user_name && permission_queryer.can_write_to_org?(message.organization_guid)
+    if message.username && permission_queryer.can_write_to_org?(message.organization_guid)
       User.dataset.first(guid: user_guid)
     else
       fetch_user(user_guid)

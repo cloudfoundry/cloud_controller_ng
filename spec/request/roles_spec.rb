@@ -276,7 +276,7 @@ RSpec.describe 'Roles Request' do
           relationships: {
             user: {
               data: {
-                name: 'uuu'
+                username: 'uuu'
               }
             },
             space: {
@@ -380,7 +380,7 @@ RSpec.describe 'Roles Request' do
               relationships: {
                 user: {
                   data: {
-                    name: 'uuu'
+                    username: 'uuu'
                   }
                 },
                 organization: {
@@ -464,7 +464,7 @@ RSpec.describe 'Roles Request' do
           relationships: {
             user: {
               data: {
-                name: 'uuu',
+                username: 'uuu',
                 origin: 'okta'
               }
             },
@@ -538,7 +538,7 @@ RSpec.describe 'Roles Request' do
             relationships: {
               user: {
                 data: {
-                  name: 'uuu',
+                  username: 'uuu',
                   origin: 'okta'
                 }
               },
@@ -587,7 +587,7 @@ RSpec.describe 'Roles Request' do
               relationships: {
                 user: {
                   data: {
-                    name: 'uuu',
+                    username: 'uuu',
                     origin: 'okta'
                   }
                 },
@@ -637,7 +637,7 @@ RSpec.describe 'Roles Request' do
             relationships: {
               user: {
                 data: {
-                  name: 'bob_unaffiliated'
+                  username: 'bob_unaffiliated'
                 }
               },
               organization: {

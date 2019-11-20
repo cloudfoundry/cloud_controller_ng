@@ -13,7 +13,7 @@ module VCAP::CloudController
       message: "must be one of the allowed types #{VCAP::CloudController::RoleTypes::ALL_ROLES}"
     }
 
-    delegate :space_guid, :user_guid, :organization_guid, :user_name, :user_origin, to: :relationships_message
+    delegate :space_guid, :user_guid, :organization_guid, :username, :user_origin, to: :relationships_message
 
     def relationships_message
       @relationships_message ||= Relationships.new(type, relationships&.deep_symbolize_keys)
@@ -29,7 +29,7 @@ module VCAP::CloudController
       end
 
       def has_user_validation_errors?
-        errors[:user_name].any? || errors[:user_origin].any? || errors[:user].any?
+        errors[:username].any? || errors[:user_origin].any? || errors[:user].any?
       end
 
       def has_org_or_space_validation_errors?
@@ -46,11 +46,11 @@ module VCAP::CloudController
 
       validates :user, to_one_relationship: true, if: -> { !has_user_validation_errors? && has_user_guid? }
 
-      validates :user_name, string: true, if: -> { !has_user_validation_errors? && has_user_name? }
+      validates :username, string: true, if: -> { !has_user_validation_errors? && has_username? }
       validates :user_origin, string: true, allow_nil: true, if: -> { !has_user_validation_errors? && has_user_origin? }
 
-      def user_name
-        HashUtils.dig(user, :data, :name)
+      def username
+        HashUtils.dig(user, :data, :username)
       end
 
       def user_origin
@@ -77,28 +77,38 @@ module VCAP::CloudController
         end
       end
 
-      [:guid, :name, :origin].each do |symbol|
-        define_method "has_user_#{symbol}?" do
-          return false unless user_data && user_data.is_a?(Hash)
+      def has_user_guid?
+        return false unless user_data && user_data.is_a?(Hash)
 
-          user_data.key?(symbol)
-        end
+        user_data.key?(:guid)
+      end
+
+      def has_username?
+        return false unless user_data && user_data.is_a?(Hash)
+
+        user_data.key?(:username)
+      end
+
+      def has_user_origin?
+        return false unless user_data && user_data.is_a?(Hash)
+
+        user_data.key?(:origin)
       end
 
       def user_input_combinations
-        if has_user_guid? && has_user_name?
-          errors.add(:user_name, 'cannot be specified when identifying user by guid')
+        if has_user_guid? && has_username?
+          errors.add(:username, 'cannot be specified when identifying user by guid')
         end
 
         if has_user_guid? && has_user_origin?
           errors.add(:user_origin, 'cannot be specified when identifying user by guid')
         end
 
-        if !has_user_name? && has_user_origin?
-          errors.add(:user_origin, 'cannot be specified without specifying the user name')
+        if !has_username? && has_user_origin?
+          errors.add(:user_origin, 'cannot be specified without specifying the username')
         end
 
-        if !has_user_name? && !has_user_guid?
+        if !has_username? && !has_user_guid?
           errors.add(:user, 'must have a username or guid specified')
         end
       end
