@@ -2,6 +2,9 @@ require 'spec_helper'
 require 'request_spec_shared_examples'
 require 'models/services/service_plan'
 
+ADDITIONAL_ROLES = %w[unauthenticated].freeze
+COMPLETE_PERMISSIONS = (ALL_PERMISSIONS + ADDITIONAL_ROLES).freeze
+
 RSpec.describe 'V3 service offerings' do
   let(:user) { VCAP::CloudController::User.make }
 
@@ -39,7 +42,7 @@ RSpec.describe 'V3 service offerings' do
         Hash.new(code: 404)
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
     end
 
     context 'when service plan is not available in any orgs' do
@@ -55,7 +58,7 @@ RSpec.describe 'V3 service offerings' do
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
     end
 
     context 'when service offering is publicly available' do
@@ -67,7 +70,21 @@ RSpec.describe 'V3 service offerings' do
         Hash.new(successful_response)
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
+
+      context 'when the hide_marketplace_from_unauthenticated_users feature flag is enabled' do
+        before do
+          VCAP::CloudController::FeatureFlag.create(name: 'hide_marketplace_from_unauthenticated_users', enabled: true)
+        end
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(successful_response)
+          h['unauthenticated'] = { code: 401 }
+          h
+        end
+
+        it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
+      end
     end
 
     context 'when a service offering plan is available only in some orgs' do
@@ -85,14 +102,73 @@ RSpec.describe 'V3 service offerings' do
       let(:expected_codes_and_responses) do
         h = Hash.new(successful_response)
         h['no_role'] = { code: 404 }
+        h['unauthenticated'] = { code: 404 }
         h
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
     end
 
     context 'when service offering comes from space scoped broker' do
-      # TODO: Think about this
+      let!(:broker_org) { VCAP::CloudController::Organization.make }
+      let!(:broker_space) { VCAP::CloudController::Space.make(organization: broker_org) }
+      let!(:service_broker) { VCAP::CloudController::ServiceBroker.make(space: broker_space) }
+      let!(:service_offering) { VCAP::CloudController::Service.make(service_broker: service_broker) }
+      let!(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering) }
+      let!(:guid) { service_offering.guid }
+
+      context 'the user is in the same space as the service broker' do
+        let(:user) { VCAP::CloudController::User.make }
+        let(:org) { broker_org }
+        let(:space) { broker_space }
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(successful_response)
+          h['no_role'] = { code: 404 }
+          h['unauthenticated'] = { code: 404 }
+          h['org_manager'] = { code: 404 }
+          h['org_auditor'] = { code: 404 }
+          h['org_billing_manager'] = { code: 404 }
+          h
+        end
+
+        it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
+      end
+
+      context 'the user is in a different space to the service broker' do
+        let(:user) { VCAP::CloudController::User.make }
+        let(:org) { VCAP::CloudController::Organization.make }
+        let(:space) { VCAP::CloudController::Space.make(organization: org) }
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(code: 404)
+          h['admin'] = successful_response
+          h['admin_read_only'] = successful_response
+          h['global_auditor'] = successful_response
+          h
+        end
+
+        it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
+      end
+
+      context 'the user is a SpaceDeveloper in the space of the broker, but is targetting a different space' do
+        let(:user) { VCAP::CloudController::User.make }
+        let(:org) { VCAP::CloudController::Organization.make }
+        let(:space) { VCAP::CloudController::Space.make(organization: org) }
+
+        before do
+          broker_org.add_user(user)
+          broker_space.add_developer(user)
+        end
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(successful_response)
+          h['unauthenticated'] = { code: 404 }
+          h
+        end
+
+        it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
+      end
     end
   end
 end

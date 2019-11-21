@@ -7,98 +7,60 @@ module VCAP::CloudController
     let!(:offering_2) { Service.make }
     let!(:offering_3) { Service.make }
 
-    let!(:org_1) { Organization.make }
-    let!(:org_2) { Organization.make }
-    let!(:org_3) { Organization.make }
-
-    describe '#fetch_one(guid)' do
-      context 'when the specified GUID does not match any existing offerings' do
-        it 'returns nil' do
-          expect(ServiceOfferingsFetcher.fetch_one('does-not-exist')).to be_nil
-        end
-      end
-
-      context 'when the specified GUID matches an existing offering' do
-        it 'returns the service offering' do
-          expect(ServiceOfferingsFetcher.fetch_one(offering_2.guid)).to eq(offering_2)
-        end
+    context 'when the offering does not exist' do
+      it 'returns nil and is not public' do
+        returned_service_offering, returned_space, returned_public = ServiceOfferingsFetcher.fetch('no-such-guid')
+        expect(returned_service_offering).to be_nil
+        expect(returned_space).to be_nil
+        expect(returned_public).to eq(false)
       end
     end
 
-    describe '#fetch_one(guid, org_guids:)' do
-      let(:plan) { ServicePlan.make(public: false) }
-      let(:offering) { plan.service }
-      let!(:visibility) { ServicePlanVisibility.make(service_plan: plan, organization: org_2) }
-
-      context 'when empty org_guids are provided' do
-        it 'returns nil' do
-          expect(ServiceOfferingsFetcher.fetch_one(offering_1.guid, org_guids: [])).to be_nil
-        end
-      end
-
-      context 'when offering is visible in one of the orgs' do
-        let(:org_guids) { [org_1.guid, org_2.guid, org_3.guid] }
-
-        it 'returns that offering' do
-          expect(ServiceOfferingsFetcher.fetch_one(offering.guid, org_guids: org_guids)).to eq(offering)
-        end
-      end
-
-      context 'when offering is not visible in any of the orgs' do
-        let(:org_guids) { [org_1.guid, org_2.guid] }
-
-        it 'returns nil' do
-          expect(ServiceOfferingsFetcher.fetch_one(offering_3.guid, org_guids: org_guids)).to be_nil
-        end
-      end
-
-      context 'when the specified plan is public' do
-        let(:plan) { ServicePlan.make(public: true) }
-        let(:org_guids) { [org_1.guid, org_3.guid] }
-
-        it 'returns the service offering even if org guids is empty' do
-          expect(ServiceOfferingsFetcher.fetch_one(offering.guid, org_guids: [])).to eq(offering)
-        end
-
-        it 'returns the service offering even if org guids does not include where it is enabled' do
-          expect(ServiceOfferingsFetcher.fetch_one(offering.guid, org_guids: org_guids)).to eq(offering)
-        end
-      end
-
-      context 'when there are no service plan visibilites' do
-        let(:plan) { ServicePlan.make(public: true) }
-        let(:offering) { plan.service }
-        let(:visibility) {}
-
-        it 'returns the service offering' do
-          expect(ServiceOfferingsFetcher.fetch_one(offering.guid, org_guids: [])).to eq(offering)
-        end
+    context 'when the service offering exists and has no plans' do
+      it 'returns the correct service offering, nil space, and is not public' do
+        returned_service_offering, returned_space, returned_public = ServiceOfferingsFetcher.fetch(offering_2.guid)
+        expect(returned_service_offering).to eq(offering_2)
+        expect(returned_space).to be_nil
+        expect(returned_public).to eq(false)
       end
     end
 
-    describe '#fetch_one_anonymously(guid)' do
-      let(:plan) { ServicePlan.make(public: true) }
-      let(:offering) { plan.service }
+    context 'when the service offering exists and has private plans' do
+      let!(:private_plan_1) { ServicePlan.make(service: offering_1, public: false) }
+      let!(:private_plan_2) { ServicePlan.make(service: offering_1, public: false) }
 
-      context 'when the specified GUID does not match any existing offerings' do
-        it 'returns nil' do
-          expect(ServiceOfferingsFetcher.fetch_one_anonymously('does-not-exist')).to be_nil
-        end
+      it 'returns the correct service offering, nil space, and is not public' do
+        returned_service_offering, returned_space, returned_public = ServiceOfferingsFetcher.fetch(offering_1.guid)
+        expect(returned_service_offering).to eq(offering_1)
+        expect(returned_space).to be_nil
+        expect(returned_public).to eq(false)
       end
+    end
 
-      context 'when the specified GUID matches an existing offering' do
-        it 'returns the service offering' do
-          expect(ServiceOfferingsFetcher.fetch_one_anonymously(offering.guid)).to eq(offering)
-        end
+    context 'when the service offering exists and has a public plan' do
+      let!(:private_plan_3) { ServicePlan.make(service: offering_3, public: false) }
+      let!(:public_plan_1) { ServicePlan.make(service: offering_3, public: true) }
+
+      it 'returns the correct service offering, nil space, and is public' do
+        returned_service_offering, returned_space, returned_public = ServiceOfferingsFetcher.fetch(offering_3.guid)
+        expect(returned_service_offering).to eq(offering_3)
+        expect(returned_space).to be_nil
+        expect(returned_public).to eq(true)
       end
+    end
 
-      context 'when the specified GUID matches a non-public service offering' do
-        let(:private_plan) { ServicePlan.make(public: false) }
-        let(:private_offering) { private_plan.service }
+    context 'when the service offering comes from a space-scoped service broker' do
+      let!(:broker_org) { VCAP::CloudController::Organization.make }
+      let!(:broker_space) { VCAP::CloudController::Space.make(organization: broker_org) }
+      let!(:service_broker) { VCAP::CloudController::ServiceBroker.make(space: broker_space) }
+      let!(:service_offering) { VCAP::CloudController::Service.make(service_broker: service_broker) }
+      let!(:private_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering) }
 
-        it 'returns nil' do
-          expect(ServiceOfferingsFetcher.fetch_one_anonymously(private_offering.guid)).to be_nil
-        end
+      it 'returns the correct service offering and the space' do
+        returned_service_offering, returned_space, returned_public = ServiceOfferingsFetcher.fetch(service_offering.guid)
+        expect(returned_service_offering).to eq(service_offering)
+        expect(returned_space).to eq(broker_space)
+        expect(returned_public).to eq(false)
       end
     end
   end
