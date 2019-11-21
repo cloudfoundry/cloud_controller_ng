@@ -394,7 +394,7 @@ module VCAP::CloudController
           org.add_private_domain(shared_private_domain)
         end
 
-        describe 'when the org doesnt exist' do
+        describe "when the org doesn't exist" do
           it 'returns 404 for Unauthenticated requests' do
             get '/v3/organizations/esdgth/domains', nil, user_header
             expect(last_response.status).to eq(404)
@@ -653,6 +653,18 @@ module VCAP::CloudController
           expect(last_response.status).to eq(200)
           expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(domain1.guid)
           expect(parsed_response['pagination']).to eq(expected_pagination)
+        end
+
+        it 'returns a 400 when the label selector is missing a value' do
+          get "#{base_link}?label_selector", nil, admin_header
+          expect(last_response.status).to eq(400)
+          expect(parsed_response['errors'].first['detail']).to match(/Missing label_selector value/)
+        end
+
+        it "returns a 400 when the label selector's value is invalid" do
+          get "#{base_link}?label_selector=!", nil, admin_header
+          expect(last_response.status).to eq(400)
+          expect(parsed_response['errors'].first['detail']).to match(/Invalid label_selector value/)
         end
       end
     end
