@@ -55,8 +55,8 @@ GEM
       i18n (>= 0.7, < 2)
       minitest (~> 5.1)
       tzinfo (~> 1.1)
-    addressable (2.6.0)
-      public_suffix (>= 2.0.2, < 4.0)
+    addressable (2.7.0)
+      public_suffix (>= 2.0.2, < 5.0)
     allowy (2.1.0)
       activesupport (>= 3.2)
       i18n
@@ -87,7 +87,7 @@ GEM
       ms_rest_azure (~> 0.7.0)
     azure_mgmt_traffic_manager (0.9.0)
       ms_rest_azure (~> 0.7.0)
-    backport (1.1.1)
+    backport (1.1.2)
     backports (3.11.4)
     beefcake (1.0.0)
     bit-struct (0.16)
@@ -139,8 +139,8 @@ GEM
       eventmachine (>= 1.0.0.beta.4)
     erubi (1.9.0)
     eventmachine (1.0.9.1)
-    excon (0.64.0)
-    faraday (0.15.4)
+    excon (0.68.0)
+    faraday (0.17.0)
       multipart-post (>= 1.2, < 3)
     faraday-cookie_jar (0.0.6)
       faraday (>= 0.7.4)
@@ -236,13 +236,12 @@ GEM
     i18n (1.7.0)
       concurrent-ruby (~> 1.0)
     ipaddress (0.8.3)
-    jaro_winkler (1.5.3)
+    jaro_winkler (1.5.4)
     json (1.8.6)
     json-schema (2.8.0)
       addressable (>= 2.4)
     json_pure (2.1.0)
     jwt (2.2.1)
-    kramdown (1.17.0)
     kubeclient (4.5.0)
       http (>= 3.0, < 5.0)
       recursive-open-struct (~> 1.0, >= 1.0.4)
@@ -258,14 +257,14 @@ GEM
       nokogiri (>= 1.5.9)
     machinist (1.0.6)
     membrane (1.1.0)
-    memoist (0.16.0)
+    memoist (0.16.1)
     method_source (0.9.2)
     middleware (0.1.0)
-    mime-types (3.2.2)
+    mime-types (3.3)
       mime-types-data (~> 3.2015)
-    mime-types-data (3.2019.0331)
+    mime-types-data (3.2019.1009)
     mini_portile2 (2.4.0)
-    minitest (5.12.2)
+    minitest (5.13.0)
     ms_rest (0.6.4)
       concurrent-ruby (~> 1.0)
       faraday (~> 0.9)
@@ -286,14 +285,14 @@ GEM
     netaddr (2.0.4)
     netrc (0.11.0)
     newrelic_rpm (5.3.0.346)
-    nokogiri (1.10.4)
+    nokogiri (1.10.5)
       mini_portile2 (~> 2.4.0)
     os (1.0.1)
     palm_civet (1.1.0)
-    parallel (1.17.0)
+    parallel (1.19.0)
     parallel_tests (2.27.1)
       parallel
-    parser (2.6.3.0)
+    parser (2.6.5.0)
       ast (~> 2.4.0)
     pg (1.0.0)
     posix-spawn (0.3.13)
@@ -308,7 +307,7 @@ GEM
     pry-byebug (3.6.0)
       byebug (~> 10.0)
       pry (~> 0.10)
-    public_suffix (3.1.0)
+    public_suffix (4.0.1)
     rack (2.0.7)
     rack-protection (2.0.5)
       rack
@@ -326,7 +325,7 @@ GEM
       rake (>= 0.8.7)
       thor (>= 0.19.0, < 2.0)
     rainbow (3.0.0)
-    rake (13.0.0)
+    rake (13.0.1)
     rb-fsevent (0.10.3)
     rb-inotify (0.9.10)
       ffi (>= 0.5.0, < 2)
@@ -341,7 +340,7 @@ GEM
       mime-types (>= 1.16, < 4.0)
       netrc (~> 0.8)
     retriable (3.1.2)
-    reverse_markdown (1.1.0)
+    reverse_markdown (1.3.0)
       nokogiri
     rfc822 (0.1.5)
     roodi (5.0.0)
@@ -381,7 +380,7 @@ GEM
       json (~> 1.4, >= 1.4.6)
       mustache (~> 0.99, >= 0.99.4)
       rspec (>= 3.0.0)
-    rubocop (0.73.0)
+    rubocop (0.76.0)
       jaro_winkler (~> 1.5.1)
       parallel (~> 1.10)
       parser (>= 2.6)
@@ -400,7 +399,7 @@ GEM
     scientist (1.1.1)
     sequel (5.22.0)
     sexp_processor (4.7.0)
-    signet (0.11.0)
+    signet (0.12.0)
       addressable (~> 2.3)
       faraday (~> 0.9)
       jwt (>= 1.5, < 3.0)
@@ -422,12 +421,12 @@ GEM
       rack-protection (= 2.0.5)
       sinatra (= 2.0.5)
       tilt (>= 1.3, < 3)
-    solargraph (0.34.3)
+    solargraph (0.37.2)
       backport (~> 1.1)
       bundler (>= 1.17.2)
       htmlentities (~> 4.3, >= 4.3.4)
       jaro_winkler (~> 1.5)
-      kramdown (~> 1.16)
+      nokogiri (~> 1.9, >= 1.9.1)
       parser (~> 2.3)
       reverse_markdown (~> 1.0, >= 1.0.5)
       rubocop (~> 0.52)
@@ -452,7 +451,7 @@ GEM
       rack (>= 1, < 3)
     thor (0.20.3)
     thread_safe (0.3.6)
-    tilt (2.0.9)
+    tilt (2.0.10)
     timecop (0.9.1)
     timeliness (0.3.8)
     tzinfo (1.2.5)
@@ -501,9 +500,9 @@ DEPENDENCIES
   em-http-request (~> 1.1)
   eventmachine (~> 1.0.9)
   fog-aliyun
-  fog-aws
+  fog-aws (>= 2.0.1)
   fog-azure-rm!
-  fog-google
+  fog-google (>= 1.7.1)
   fog-local
   fog-openstack
   googleapis-common-protos
@@ -523,7 +522,7 @@ DEPENDENCIES
   net-ssh
   netaddr
   newrelic_rpm
-  nokogiri
+  nokogiri (>= 1.10.5)
   palm_civet
   parallel_tests
   pg
@@ -540,7 +539,7 @@ DEPENDENCIES
   rspec-collection_matchers
   rspec-instafail
   rspec-its
-  rspec-rails (~> 3.8.2)
+  rspec-rails (~> 3.8.3)
   rspec-wait
   rspec_api_documentation
   rubocop
@@ -550,7 +549,7 @@ DEPENDENCIES
   sequel (~> 5.0)
   sinatra (~> 2.0)
   sinatra-contrib
-  solargraph
+  solargraph (>= 0.34.3)
   spork!
   spring
   spring-commands-rspec
