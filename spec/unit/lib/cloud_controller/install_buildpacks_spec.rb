@@ -99,8 +99,8 @@ module VCAP::CloudController
             it 'enqueues the rest of the buildpack install jobs' do
               allow(canary_job).to receive(:perform)
 
-              expect(Jobs::Enqueuer).to receive(:new).with(enqueued_job1, queue: instance_of(Jobs::LocalQueue)).ordered.and_return(enqueuer)
-              expect(Jobs::Enqueuer).to receive(:new).with(enqueued_job2, queue: instance_of(Jobs::LocalQueue)).ordered.and_return(enqueuer)
+              expect(Jobs::Enqueuer).to receive(:new).with(enqueued_job1, queue: 'cc-api-0').ordered.and_return(enqueuer)
+              expect(Jobs::Enqueuer).to receive(:new).with(enqueued_job2, queue: 'cc-api-0').ordered.and_return(enqueuer)
 
               expect(enqueuer).to receive(:enqueue).twice
 

@@ -41,7 +41,7 @@ module VCAP::CloudController
         }
         message = DropletUpdateMessage.new(params)
         expect(message).not_to be_valid
-        expect(message.errors_on(:metadata)).to match_array(["'annotations' is not a hash", "'labels' is not a hash"])
+        expect(message.errors_on(:metadata)).to match_array(["'annotations' is not an object", "'labels' is not an object"])
       end
     end
   end

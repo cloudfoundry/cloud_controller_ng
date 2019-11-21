@@ -96,7 +96,7 @@ module OPI
           buildpack_lifecycle: {
             start_command: @process.specified_or_detected_command,
             droplet_hash: @process.desired_droplet.droplet_hash,
-            droplet_guid: @process.desired_droplet.guid
+            droplet_guid: @process.desired_droplet.guid,
           }
         }
       end
@@ -118,15 +118,26 @@ module OPI
       lifecycle = lifecycle_for(process)
       body = {
         guid: process.guid,
-        environment: hash_values_to_s(environment_variables(process)),
         version: process.version,
         process_guid: process_guid(process),
+        process_type: process.type,
+        app_guid: process.app.guid,
+        app_name: process.app.name,
+        space_guid: process.space.guid,
+        space_name: process.space.name,
+        organization_guid: process.organization.guid,
+        organization_name: process.organization.name,
+        environment: hash_values_to_s(environment_variables(process)),
+        egress_rules: VCAP::CloudController::Diego::EgressRules.new.running_protobuf_rules(process),
+        placement_tags: Array(VCAP::CloudController::IsolationSegmentSelector.for_space(process.space)),
         instances: process.desired_instances,
         memory_mb: process.memory,
+        disk_mb: process.disk_quota,
         cpu_weight: cpu_weight,
         health_check_type: process.health_check_type,
         health_check_http_endpoint: process.health_check_http_endpoint,
         health_check_timeout_ms: timeout_ms,
+        start_timeout_ms: health_check_timeout_in_seconds(process) * 1000,
         last_updated: process.updated_at.to_f.to_s,
         volume_mounts: generate_volume_mounts(process),
         ports: process.open_ports,
@@ -134,6 +145,10 @@ module OPI
         lifecycle: lifecycle.to_hash
       }
       MultiJson.dump(body)
+    end
+
+    def health_check_timeout_in_seconds(process)
+      process.health_check_timeout || config.get(:default_health_check_timeout)
     end
 
     def update_body(process)

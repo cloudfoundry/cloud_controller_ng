@@ -24,7 +24,6 @@ module VCAP
           end
 
           let(:broker_client) { FakeServiceBrokerV2Client.new }
-          let(:broker_state) { ServiceBrokerState.where(service_broker_id: broker.id).first.state }
 
           before do
             allow(Services::ServiceClientProvider).to receive(:provide).
@@ -34,11 +33,7 @@ module VCAP
 
           context 'when the broker has state' do
             before do
-              broker.update(
-                service_broker_state: ServiceBrokerState.new(
-                  state: ServiceBrokerStateEnum::SYNCHRONIZING
-                )
-              )
+              broker.update(state: ServiceBrokerStateEnum::SYNCHRONIZING)
             end
 
             it 'creates the service offerings and plans from the catalog' do
@@ -52,11 +47,11 @@ module VCAP
               expect(service_plans.count).to eq(1)
               expect(service_plans.first.name).to eq(broker_client.plan_name)
 
-              expect(broker_state).to eq(ServiceBrokerStateEnum::AVAILABLE)
+              expect(broker.reload.state).to eq(ServiceBrokerStateEnum::AVAILABLE)
             end
 
             context 'when catalog returned by broker is invalid' do
-              before { invalid_catalog }
+              before { setup_broker_with_invalid_catalog }
 
               it 'errors when there are validation errors' do
                 job.perform
@@ -112,28 +107,26 @@ module VCAP
             it 'creates the state' do
               expect { job.perform }.to_not raise_error
 
-              expect(broker_state).to eq(ServiceBrokerStateEnum::AVAILABLE)
+              expect(broker.reload.state).to eq(ServiceBrokerStateEnum::AVAILABLE)
             end
 
             context 'when synchronization fails' do
-              before { invalid_catalog }
+              before { setup_broker_with_invalid_catalog }
 
               it 'also creates the state' do
                 expect { job.perform }.to raise_error(::CloudController::Errors::ApiError)
 
-                expect(broker_state).to eq(ServiceBrokerStateEnum::SYNCHRONIZATION_FAILED)
+                expect(broker.reload.state).to eq(ServiceBrokerStateEnum::SYNCHRONIZATION_FAILED)
               end
             end
           end
 
           context 'when service manager returns a warning' do
             let(:service_manager) { instance_double(Services::ServiceBrokers::ServiceManager, sync_services_and_plans: nil) }
-            let(:warning) { Services::ServiceBrokers::ServiceManager::DeactivatedPlansWarning.new }
+            let(:warning) { 'some catalog warning' }
 
             before do
               allow(Services::ServiceBrokers::ServiceManager).to receive(:new).and_return(service_manager)
-
-              warning.add(ServicePlan.make)
 
               allow(service_manager).to receive(:has_warnings?).and_return(true)
               allow(service_manager).to receive(:warnings).and_return([warning])
@@ -142,7 +135,7 @@ module VCAP
             it 'then the warning gets stored' do
               job.perform
 
-              expect(job.warnings).to include({ detail: warning.message })
+              expect(job.warnings).to include({ detail: warning })
             end
           end
 
@@ -161,7 +154,7 @@ module VCAP
             end
           end
 
-          def invalid_catalog
+          def setup_broker_with_invalid_catalog
             catalog = instance_double(Services::ServiceBrokers::V2::Catalog)
 
             allow(Services::ServiceBrokers::V2::Catalog).to receive(:new).

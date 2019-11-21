@@ -1,0 +1,119 @@
+<% content_for :single_role do %>
+{
+   "guid": "40557c70-d1bd-4976-a2ab-a85f5e882418",
+   "created_at": "2019-10-10T17:19:12Z",
+   "updated_at": "2019-10-10T17:19:12Z",
+   "type": "organization_auditor",
+   "relationships": {
+      "user": {
+         "data": {
+            "guid": "59eadb5f-fc13-414f-84ba-77a35e239cc8"
+         }
+      },
+      "organization": {
+         "data": {
+            "guid": "05c5da3b-6cbc-421c-87c3-20bb3c41ab7c"
+         }
+      },
+      "space": {
+         "data": null
+      }
+   },
+   "links": {
+      "self": {
+         "href": "https://api.example.org/v3/roles/40557c70-d1bd-4976-a2ab-a85f5e882418"
+      },
+      "user": {
+         "href": "https://api.example.org/v3/users/59eadb5f-fc13-414f-84ba-77a35e239cc8"
+      },
+      "organization": {
+         "href": "https://api.example.org/v3/organizations/05c5da3b-6cbc-421c-87c3-20bb3c41ab7c"
+      }
+   }
+}
+<% end %>
+
+<% content_for :paginated_list_of_roles do |base_url| %>
+{
+   "pagination": {
+      "total_results": 3,
+      "total_pages": 2,
+      "first": {
+         "href": "https://api.example.org<%= base_url %>?page=1&per_page=2"
+      },
+      "last": {
+         "href": "https://api.example.org<%= base_url %>?page=2&per_page=2"
+      },
+      "next": {
+         "href": "https://api.example.org<%= base_url %>?page=2&per_page=2"
+      },
+      "previous": null
+   },
+   "resources": [
+      {
+         "guid": "40557c70-d1bd-4976-a2ab-a85f5e882418",
+         "created_at": "2019-10-10T17:19:12Z",
+         "updated_at": "2019-10-10T17:19:12Z",
+         "type": "organization_auditor",
+         "relationships": {
+            "user": {
+               "data": {
+                  "guid": "59eadb5f-fc13-414f-84ba-77a35e239cc8"
+               }
+            },
+            "organization": {
+               "data": {
+                  "guid": "05c5da3b-6cbc-421c-87c3-20bb3c41ab7c"
+               }
+            },
+            "space": {
+               "data": null
+            }
+         },
+         "links": {
+            "self": {
+               "href": "https://api.example.org/v3/roles/40557c70-d1bd-4976-a2ab-a85f5e882418"
+            },
+            "user": {
+               "href": "https://api.example.org/v3/users/59eadb5f-fc13-414f-84ba-77a35e239cc8"
+            },
+            "organization": {
+               "href": "https://api.example.org/v3/organizations/05c5da3b-6cbc-421c-87c3-20bb3c41ab7c"
+            }
+         }
+      },
+      {
+         "guid": "12347c70-d1bd-4976-a2ab-a85f5e882418",
+         "created_at": "2047-11-10T17:19:12Z",
+         "updated_at": "2047-11-10T17:19:12Z",
+         "type": "space_auditor",
+         "relationships": {
+            "user": {
+               "data": {
+                  "guid": "47eadb5f-fc13-414f-84ba-47a35e239cc8"
+               }
+            },
+            "organization": {
+               "data": null
+            },
+            "space": {
+               "data": {
+                  "guid": "47c5da3b-6cbc-421c-87c3-20bb3c41ab7c"
+               }
+            }
+         },
+         "links": {
+            "self": {
+               "href": "https://api.example.org/v3/roles/12347c70-d1bd-4976-a2ab-a85f5e882418"
+            },
+            "user": {
+               "href": "https://api.example.org/v3/users/47eadb5f-fc13-414f-84ba-77a35e239cc8"
+            },
+            "space": {
+               "href": "https://api.example.org/v3/spaces/47c5da3b-6cbc-421c-87c3-20bb3c41ab7c"
+            }
+         }
+      }
+   ]
+}
+<% end %>

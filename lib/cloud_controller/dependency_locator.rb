@@ -4,6 +4,7 @@ require 'repositories/space_event_repository'
 require 'repositories/organization_event_repository'
 require 'repositories/route_event_repository'
 require 'repositories/user_event_repository'
+require 'clients/kubernetes_client'
 require 'cloud_controller/rest_controller/object_renderer'
 require 'cloud_controller/rest_controller/paginated_collection_renderer'
 require 'cloud_controller/upload_handler'
@@ -29,6 +30,7 @@ require 'credhub/client'
 require 'cloud_controller/opi/apps_client'
 require 'cloud_controller/opi/instances_client'
 require 'cloud_controller/opi/stager_client'
+require 'cloud_controller/opi/task_client'
 
 require 'bits_service_client'
 
@@ -84,7 +86,7 @@ module CloudController
     end
 
     def bbs_task_client
-      @dependencies[:bbs_task_client] || register(:bbs_task_client, build_bbs_task_client)
+      @dependencies[:bbs_task_client] || register(:bbs_task_client, build_task_client)
     end
 
     def bbs_instances_client
@@ -365,6 +367,15 @@ module CloudController
         register(:statsd_client, Statsd.new(config.get(:statsd_host), config.get(:statsd_port)))
     end
 
+    def kubernetes_client
+      kubernetes_creds = VCAP::CloudController::Config.config.get(:kubernetes)
+      @dependencies[:kubernetes_client] ||= Clients::KubernetesClient.new(
+        host_url: kubernetes_creds[:host_url],
+        service_account: kubernetes_creds[:service_account],
+        ca_crt: File.open(kubernetes_creds[:ca_file]).read
+      )
+    end
+
     private
 
     def build_stager_client
@@ -407,6 +418,18 @@ module CloudController
 
     def build_bbs_apps_client
       VCAP::CloudController::Diego::BbsAppsClient.new(build_bbs_client, config)
+    end
+
+    def build_task_client
+      if config.get(:opi, :enabled)
+        build_opi_task_client
+      else
+        build_bbs_task_client
+      end
+    end
+
+    def build_opi_task_client
+      ::OPI::TaskClient.new(config)
     end
 
     def build_bbs_task_client

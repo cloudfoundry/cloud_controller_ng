@@ -1,3 +1,5 @@
+require 'jobs/v3/services/service_broker_catalog_updater'
+
 module VCAP::CloudController
   module V3
     class SynchronizeBrokerCatalogJob < VCAP::CloudController::Jobs::CCJob
@@ -37,75 +39,26 @@ module VCAP::CloudController
 
       class Perform
         def initialize(broker_guid)
-          @broker_guid = broker_guid
           @broker = ServiceBroker.find(guid: broker_guid)
-          @formatter = VCAP::Services::ServiceBrokers::ValidationErrorsFormatter.new
-          @service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository::WithBrokerActor.new
-          @client_manager = VCAP::Services::SSO::DashboardClientManager.new(broker, service_event_repository)
-          @service_manager = VCAP::Services::ServiceBrokers::ServiceManager.new(service_event_repository)
-          @warnings = []
+          @catalog_updater = VCAP::CloudController::V3::ServiceBrokerCatalogUpdater.new(@broker)
         end
 
         def perform
-          synchronizing_state
+          broker.update(state: ServiceBrokerStateEnum::SYNCHRONIZING)
 
-          catalog = VCAP::Services::ServiceBrokers::V2::Catalog.new(broker, broker_client.catalog)
+          warnings = @catalog_updater.refresh
 
-          raise fail_with_invalid_catalog(catalog.validation_errors) unless catalog.valid?
-          raise fail_with_incompatible_catalog(catalog.incompatibility_errors) unless catalog.compatible?
+          broker.update(state: ServiceBrokerStateEnum::AVAILABLE)
 
-          unless client_manager.synchronize_clients_with_catalog(catalog)
-            raise fail_with_invalid_catalog(client_manager.errors)
-          end
-
-          service_manager.sync_services_and_plans(catalog)
-
-          service_manager.warnings.each do |warning|
-            warnings << { detail: warning.message }
-          end
-
-          client_manager.warnings.each do |warning|
-            warnings << { detail: warning }
-          end
-
-          available_state
           warnings
         rescue
-          failed_state
+          broker.update(state: ServiceBrokerStateEnum::SYNCHRONIZATION_FAILED)
           raise
         end
 
         private
 
-        attr_reader :broker_guid, :broker,
-          :formatter, :client_manager, :service_event_repository,
-          :service_manager, :warnings
-
-        def broker_client
-          @broker_client ||= VCAP::Services::ServiceClientProvider.provide(broker: broker)
-        end
-
-        def synchronizing_state
-          broker.update_state(ServiceBrokerStateEnum::SYNCHRONIZING)
-        end
-
-        def failed_state
-          broker.update_state(ServiceBrokerStateEnum::SYNCHRONIZATION_FAILED)
-        end
-
-        def available_state
-          broker.update_state(ServiceBrokerStateEnum::AVAILABLE)
-        end
-
-        def fail_with_invalid_catalog(errors)
-          full_message = formatter.format(errors)
-          raise CloudController::Errors::ApiError.new_from_details('ServiceBrokerCatalogInvalid', full_message)
-        end
-
-        def fail_with_incompatible_catalog(errors)
-          full_message = formatter.format(errors)
-          raise CloudController::Errors::ApiError.new_from_details('ServiceBrokerCatalogIncompatible', full_message)
-        end
+        attr_reader :broker, :warnings
       end
     end
   end

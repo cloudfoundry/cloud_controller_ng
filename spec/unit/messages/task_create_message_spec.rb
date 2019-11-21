@@ -159,7 +159,7 @@ module VCAP::CloudController
           expect(message).to_not be_valid
         end
 
-        it 'must be a hash' do
+        it 'must be an object' do
           body['template'] = 'abc'
 
           message = TaskCreateMessage.new(body)

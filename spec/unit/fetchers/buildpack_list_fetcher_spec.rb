@@ -20,6 +20,16 @@ module VCAP::CloudController
 
       subject { fetcher.fetch_all(message) }
 
+      describe 'eager loading associated resources' do
+        let(:filters) { {} }
+        it 'eager loads the specified resources for the buildpacks' do
+          results = fetcher.fetch_all(message, eager_loaded_associations: [:labels, :annotations]).all
+
+          expect(results.first.associations.key?(:labels)).to be true
+          expect(results.first.associations.key?(:annotations)).to be true
+        end
+      end
+
       context 'when no filters are specified' do
         let(:filters) { {} }
 

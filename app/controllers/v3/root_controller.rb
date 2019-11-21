@@ -13,6 +13,7 @@ class RootController < ActionController::Base
     links.merge!(create_link(:deployments, experimental: true))
     links.merge!(create_link(:domains))
     links.merge!(create_link(:droplets))
+    links.merge!(create_link(:environment_variable_groups))
     links.merge!(create_link(:feature_flags))
     links.merge!(create_link(:isolation_segments))
     links.merge!(create_link(:organizations))
@@ -23,11 +24,11 @@ class RootController < ActionController::Base
     links.merge!(create_link(:routes))
     links.merge!(create_link(:service_brokers, experimental: true))
     links.merge!(create_link(:service_instances))
+    links.merge!(create_link(:service_offerings, experimental: true))
     links.merge!(create_link(:spaces))
     links.merge!(create_link(:stacks))
     links.merge!(create_link(:tasks))
     links.merge!(create_link(:users, experimental: true))
-    links.merge!(create_link(:environment_variable_groups, experimental: true))
 
     render :ok, json: MultiJson.dump({ links: links }, pretty: true)
   end

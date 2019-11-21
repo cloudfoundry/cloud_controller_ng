@@ -347,8 +347,8 @@ module VCAP::CloudController
     def validate_env_update_message!
       app_update_environment_variables_message.valid?
       app_update_environment_variables_message.errors[:var].each do |error_message|
-        if error_message == 'must be a hash'
-          errors[:base] << 'Env must be a hash of keys and values'
+        if error_message == 'must be an object'
+          errors[:base] << 'Env must be an object of keys and values'
         else
           errors[:env] << error_message
         end

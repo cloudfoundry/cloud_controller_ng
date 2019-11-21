@@ -21,7 +21,7 @@ module VCAP::CloudController
 
         it 'deprovisions the service instance with accepts_incomplete' do
           expect(client).to receive(:deprovision).with(service_instance, accepts_incomplete: true)
-          Jobs::Enqueuer.new(job, { queue: 'cc-generic', run_at: Delayed::Job.db_time_now }).enqueue
+          Jobs::Enqueuer.new(job, { queue: Jobs::Queues.generic, run_at: Delayed::Job.db_time_now }).enqueue
           execute_all_jobs(expected_successes: 1, expected_failures: 0)
           expect(Delayed::Job.count).to eq 0
         end
@@ -54,7 +54,7 @@ module VCAP::CloudController
           allow(VCAP::Services::ServiceBrokers::V2::Client).to receive(:new).and_return(client)
 
           start = Delayed::Job.db_time_now
-          opts = { queue: 'cc-generic', run_at: start }
+          opts = { queue: Jobs::Queues.generic, run_at: start }
           Jobs::Enqueuer.new(job, opts).enqueue
 
           run_at_time = start

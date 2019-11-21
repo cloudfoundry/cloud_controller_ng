@@ -155,6 +155,29 @@ module VCAP::CloudController
       let(:org) { space.organization }
       let(:user) { User.make }
       let(:other_user) { User.make(username: 'other_user') }
+      let(:expected_response) {
+        {
+          'metadata' => {
+            'guid' => other_user.guid,
+            'url' => "/v2/users/#{other_user.guid}",
+            'created_at' => iso8601,
+            'updated_at' => iso8601
+          },
+          'entity' => {
+            'admin' => false,
+            'active' => false,
+            'default_space_guid' => nil,
+            'username' => 'other_user',
+            'spaces_url' => "/v2/users/#{other_user.guid}/spaces",
+            'organizations_url' => "/v2/users/#{other_user.guid}/organizations",
+            'managed_organizations_url' => "/v2/users/#{other_user.guid}/managed_organizations",
+            'billing_managed_organizations_url' => "/v2/users/#{other_user.guid}/billing_managed_organizations",
+            'audited_organizations_url' => "/v2/users/#{other_user.guid}/audited_organizations",
+            'managed_spaces_url' => "/v2/users/#{other_user.guid}/managed_spaces",
+            'audited_spaces_url' => "/v2/users/#{other_user.guid}/audited_spaces"
+          }
+        }
+      }
 
       before do
         allow(uaa_client).to receive(:usernames_for_ids).and_return({ other_user.guid => other_user.username })
@@ -173,13 +196,26 @@ module VCAP::CloudController
             set_current_user_as_admin
           end
 
-          it 'succeeds and creates an appropriate audit event' do
+          it 'succeeds and creates an appropriate audit event and creates the generated org role a guid' do
             put "/v2/users/#{other_user.guid}/audited_organizations/#{org.guid}"
             expect(last_response.status).to eq(201)
 
             event = Event.find(type: event_type, actee: other_user.guid)
             expect(event).not_to be_nil
             expect(event.actee_name).to eq('other_user')
+
+            created_role = OrganizationAuditor.find(user_id: other_user.id, organization_id: org.id)
+            expect(created_role.guid).to be_a_guid
+          end
+
+          context 'when the role already exists' do
+            it 'behaves idempotently by succeeding' do
+              put "/v2/users/#{other_user.guid}/audited_organizations/#{org.guid}"
+              put "/v2/users/#{other_user.guid}/audited_organizations/#{org.guid}"
+              expect(last_response.status).to eq(201)
+              expect(org.auditors).to include(other_user)
+              expect(decoded_response).to be_a_response_like(expected_response)
+            end
           end
         end
 
@@ -211,13 +247,26 @@ module VCAP::CloudController
             set_current_user_as_admin
           end
 
-          it 'succeeds and creates an appropriate audit event' do
+          it 'succeeds and creates an appropriate audit event creates the org role guid' do
             put "/v2/users/#{other_user.guid}/managed_organizations/#{org.guid}"
             expect(last_response.status).to eq(201)
 
             event = Event.find(type: event_type, actee: other_user.guid)
             expect(event).not_to be_nil
             expect(event.actee_name).to eq('other_user')
+
+            created_role = OrganizationManager.find(user_id: other_user.id, organization_id: org.id)
+            expect(created_role.guid).to be_a_guid
+          end
+
+          context 'when the role already exists' do
+            it 'behaves idempotently by succeeding' do
+              put "/v2/users/#{other_user.guid}/managed_organizations/#{org.guid}"
+              put "/v2/users/#{other_user.guid}/managed_organizations/#{org.guid}"
+              expect(last_response.status).to eq(201)
+              expect(org.managers).to include(other_user)
+              expect(decoded_response).to be_a_response_like(expected_response)
+            end
           end
         end
 
@@ -249,13 +298,26 @@ module VCAP::CloudController
             set_current_user_as_admin
           end
 
-          it 'succeeds and creates an appropriate audit event' do
+          it 'succeeds and creates an appropriate audit event and creates the org role guid' do
             put "/v2/users/#{other_user.guid}/billing_managed_organizations/#{org.guid}"
             expect(last_response.status).to eq(201)
 
             event = Event.find(type: event_type, actee: other_user.guid)
             expect(event).not_to be_nil
             expect(event.actee_name).to eq('other_user')
+
+            created_role = OrganizationBillingManager.find(user_id: other_user.id, organization_id: org.id)
+            expect(created_role.guid).to be_a_guid
+          end
+
+          context 'when the role already exists' do
+            it 'behaves idempotently by succeeding' do
+              put "/v2/users/#{other_user.guid}/billing_managed_organizations/#{org.guid}"
+              put "/v2/users/#{other_user.guid}/billing_managed_organizations/#{org.guid}"
+              expect(last_response.status).to eq(201)
+              expect(org.billing_managers).to include(other_user)
+              expect(decoded_response).to be_a_response_like(expected_response)
+            end
           end
         end
 
@@ -286,12 +348,26 @@ module VCAP::CloudController
             set_current_user_as_admin
           end
 
-          it 'succeeds and creates an appropriate audit event' do
+          it 'succeeds and creates an appropriate audit event and creates the org role guid' do
             put "/v2/users/#{other_user.guid}/organizations/#{org.guid}"
             expect(last_response.status).to eq(201)
 
             event = Event.find(type: event_type, actee: other_user.guid)
             expect(event).not_to be_nil
+            expect(event.actee_name).to eq('other_user')
+
+            created_role = OrganizationUser.find(user_id: other_user.id, organization_id: org.id)
+            expect(created_role.guid).to be_a_guid
+          end
+
+          context 'when the role already exists' do
+            it 'behaves idempotently by succeeding' do
+              put "/v2/users/#{other_user.guid}/organizations/#{org.guid}"
+              put "/v2/users/#{other_user.guid}/organizations/#{org.guid}"
+              expect(last_response.status).to eq(201)
+              expect(org.users).to include(other_user)
+              expect(decoded_response).to be_a_response_like(expected_response)
+            end
           end
         end
 
@@ -848,7 +924,7 @@ module VCAP::CloudController
       let(:other_user) { User.make(username: 'other_user') }
       let(:space) { Space.make }
       let(:org) { space.organization }
-      let(:user) { User.make }
+      let(:user)  { User.make }
 
       before do
         allow(uaa_client).to receive(:usernames_for_ids).and_return({ other_user.guid => other_user.username })
@@ -903,8 +979,18 @@ module VCAP::CloudController
           it 'succeeds' do
             put "/v2/users/#{other_user.guid}/audited_spaces/#{space.guid}"
             expect(last_response.status).to eq(201)
-            expect(space.auditors).to include(other_user)
+            auditors = space.auditors
+            expect(auditors).to include(other_user)
             expect(decoded_response).to be_a_response_like(expected_response)
+          end
+
+          context 'when the role already exists' do
+            it 'behaves idempotently by succeeding' do
+              put "/v2/users/#{other_user.guid}/audited_spaces/#{space.guid}"
+              expect(last_response.status).to eq(201)
+              expect(space.auditors).to include(other_user)
+              expect(decoded_response).to be_a_response_like(expected_response)
+            end
           end
 
           it 'creates an appropriate event' do
@@ -912,6 +998,13 @@ module VCAP::CloudController
             event = Event.find(type: event_type, actee: other_user.guid)
             expect(event).not_to be_nil
             expect(event.actee_name).to eq('other_user')
+          end
+
+          it 'creates the appropriate role with a guid' do
+            put "/v2/users/#{other_user.guid}/audited_spaces/#{space.guid}"
+
+            created_role = SpaceAuditor.find(user_id: other_user.id, space_id: space.id)
+            expect(created_role.guid).to be_a_guid
           end
         end
       end
@@ -976,6 +1069,24 @@ module VCAP::CloudController
             expect(event).not_to be_nil
             expect(event.actee_name).to eq('other_user')
           end
+
+          it 'creates the appropriate role with a guid' do
+            put "/v2/users/#{other_user.guid}/managed_spaces/#{space.guid}"
+
+            created_role = SpaceManager.find(user_id: other_user.id, space_id: space.id)
+            expect(created_role.guid).to be_a_guid
+          end
+
+          context 'when the role already exists' do
+            it 'behaves idempotently by succeeding' do
+              put "/v2/users/#{other_user.guid}/managed_spaces/#{space.guid}"
+              put "/v2/users/#{other_user.guid}/managed_spaces/#{space.guid}"
+              expect(last_response.status).to eq(201)
+              space.reload
+              expect(space.managers).to include(other_user)
+              expect(decoded_response).to be_a_response_like(expected_response)
+            end
+          end
         end
       end
 
@@ -1038,6 +1149,24 @@ module VCAP::CloudController
             event = Event.find(type: event_type, actee: other_user.guid)
             expect(event).not_to be_nil
             expect(event.actee_name).to eq('other_user')
+          end
+
+          it 'creates the appropriate role with a guid' do
+            put "/v2/users/#{other_user.guid}/spaces/#{space.guid}"
+
+            created_role = SpaceDeveloper.find(user_id: other_user.id, space_id: space.id)
+            expect(created_role.guid).to be_a_guid
+          end
+
+          context 'when the role already exists' do
+            it 'behaves idempotently by succeeding' do
+              put "/v2/users/#{other_user.guid}/managed_spaces/#{space.guid}"
+              put "/v2/users/#{other_user.guid}/managed_spaces/#{space.guid}"
+              expect(last_response.status).to eq(201)
+              space.reload
+              expect(space.managers).to include(other_user)
+              expect(decoded_response).to be_a_response_like(expected_response)
+            end
           end
         end
       end

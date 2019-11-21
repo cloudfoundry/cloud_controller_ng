@@ -1,5 +1,8 @@
 ### Delete an organization
 
+When an organization is deleted, user roles associated with the organization
+will also be deleted.
+
 ```
 Example Request
 ```

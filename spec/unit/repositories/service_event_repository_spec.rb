@@ -92,6 +92,33 @@ module VCAP::CloudController
         end
       end
 
+      describe '#record_broker_event_with_request' do
+        let(:service_broker) { VCAP::CloudController::ServiceBroker.make }
+        let(:request) do
+          {
+            fake: 'request'
+          }
+        end
+
+        it 'creates an event with the request' do
+          repository.record_broker_event_with_request(:create, service_broker, request)
+
+          event = Event.find(type: 'audit.service_broker.create')
+          expect(event.actor_type).to eq('user')
+          expect(event.timestamp).to be
+          expect(event.actor).to eq(user.guid)
+          expect(event.actor_name).to eq(email)
+          expect(event.actor_username).to eq(user_name)
+          expect(event.actee).to eq(service_broker.guid)
+          expect(event.actee_type).to eq('service_broker')
+          expect(event.actee_name).to eq(service_broker.name)
+          expect(event.space_guid).to be_empty
+          expect(event.organization_guid).to be_empty
+
+          expect(event.metadata['request']).to include('fake' => 'request')
+        end
+      end
+
       describe '#with_service_event' do
         let(:broker) { VCAP::CloudController::ServiceBroker.make }
 

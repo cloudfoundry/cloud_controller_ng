@@ -320,7 +320,6 @@ module VCAP::CloudController
       let(:org) { Organization.make }
       let(:space) { Space.make(organization: org) }
       let(:dev) { make_developer_for_space(space) }
-      let(:outside_dev) { User.make(admin: false, active: true) }
 
       before(:each) do
         @private_broker = ServiceBroker.make(space: space)

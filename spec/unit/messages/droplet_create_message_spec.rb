@@ -51,7 +51,7 @@ module VCAP::CloudController
           expect(message.errors_on(:relationships)).to include(a_string_including('must include one or more valid relationships'))
         end
 
-        it 'is not valid when app is not a hash' do
+        it 'is not valid when app is not an object' do
           message = DropletCreateMessage.new({ relationships: { app: 'hello' } })
           expect(message).not_to be_valid
           expect(message.errors_on(:relationships)).to include(a_string_including('must be structured like'))
@@ -78,11 +78,11 @@ module VCAP::CloudController
           expect(message).to be_valid
         end
 
-        it 'is not valid when process_types is not a hash' do
+        it 'is not valid when process_types is not an object' do
           message = DropletCreateMessage.new({ relationships: { app: { data: { guid: 'app-guid' } } },
             process_types: 867 })
           expect(message).not_to be_valid
-          expect(message.errors_on(:process_types)).to include('must be a hash')
+          expect(message.errors_on(:process_types)).to include('must be an object')
         end
 
         it 'is not valid when process_types has an empty key' do

@@ -39,7 +39,7 @@ RSpec.describe 'Jobs' do
   describe 'running a pollable job that emits warnings' do
     it 'contains these warnings in the job representation' do
       job = TestJob.new(user.guid)
-      pollable_job = VCAP::CloudController::Jobs::Enqueuer.new(job, queue: 'cc-generic').enqueue_pollable
+      pollable_job = VCAP::CloudController::Jobs::Enqueuer.new(job, queue: VCAP::CloudController::Jobs::Queues.generic).enqueue_pollable
       job_guid = pollable_job.guid
 
       execute_all_jobs(expected_successes: 1, expected_failures: 0)

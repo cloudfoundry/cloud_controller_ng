@@ -2,6 +2,7 @@ require 'spec_helper'
 require 'request_spec_shared_examples'
 require 'cloud_controller'
 require 'services'
+require 'messages/service_broker_update_message'
 
 RSpec.describe 'V3 service brokers' do
   let(:user) { VCAP::CloudController::User.make }
@@ -19,52 +20,52 @@ RSpec.describe 'V3 service brokers' do
   }
   let(:global_broker_request_body) do
     {
-      name: 'broker name',
-      url: 'http://example.org/broker-url',
-      authentication: {
-        type: 'basic',
-        credentials: {
-          username: 'admin',
-          password: 'welcome',
+        name: 'broker name',
+        url: 'http://example.org/broker-url',
+        authentication: {
+            type: 'basic',
+            credentials: {
+                username: 'admin',
+                password: 'welcome',
+            }
         }
-      }
     }
   end
 
   let(:global_broker_with_identical_name_body) {
     {
-      name: global_broker_request_body[:name],
-      url: 'http://example.org/different-broker-url',
-      authentication: global_broker_request_body[:authentication]
+        name: global_broker_request_body[:name],
+        url: 'http://example.org/different-broker-url',
+        authentication: global_broker_request_body[:authentication]
     }
   }
 
   let(:global_broker_with_identical_url_body) {
     {
-      name: 'different broker name',
-      url: global_broker_request_body[:url],
-      authentication: global_broker_request_body[:authentication]
+        name: 'different broker name',
+        url: global_broker_request_body[:url],
+        authentication: global_broker_request_body[:authentication]
     }
   }
 
   let(:space_scoped_broker_request_body) do
     {
-      name: 'space-scoped broker name',
-      url: 'http://example.org/space-broker-url',
-      authentication: {
-        type: 'basic',
-        credentials: {
-          username: 'admin',
-          password: 'welcome',
+        name: 'space-scoped broker name',
+        url: 'http://example.org/space-broker-url',
+        authentication: {
+            type: 'basic',
+            credentials: {
+                username: 'admin',
+                password: 'welcome',
+            },
         },
-      },
-      relationships: {
-        space: {
-          data: {
-            guid: space.guid
-          },
+        relationships: {
+            space: {
+                data: {
+                    guid: space.guid
+                },
+            },
         },
-      },
     }
   end
 
@@ -101,40 +102,41 @@ RSpec.describe 'V3 service brokers' do
     end
 
     context 'when there are global service brokers' do
-      let!(:global_service_broker1) { VCAP::CloudController::ServiceBroker.make }
-      let!(:global_service_broker2) { VCAP::CloudController::ServiceBroker.make }
+      let(:global_service_broker_v3) do
+        # Note, has a state
+        VCAP::CloudController::ServiceBroker.make(state: VCAP::CloudController::ServiceBrokerStateEnum::AVAILABLE)
+      end
 
-      let(:global_service_broker1_json) do
+      let(:global_service_broker_v2) do
+        # Note, no state set
+        VCAP::CloudController::ServiceBroker.make(state: '')
+      end
+
+      let(:global_service_broker_v3_json) do
         {
-            guid: global_service_broker1.guid,
-            name: global_service_broker1.name,
-            url: global_service_broker1.broker_url,
+            guid: global_service_broker_v3.guid,
+            name: global_service_broker_v3.name,
+            url: global_service_broker_v3.broker_url,
             created_at: iso8601,
             updated_at: iso8601,
             status: 'available',
             available: true,
             relationships: {},
-            links: { self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/service_brokers\/#{global_service_broker1.guid}) } }
+            links: { self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/service_brokers\/#{global_service_broker_v3.guid}) } }
         }
       end
-      let(:global_service_broker2_json) do
+      let(:global_service_broker_v2_json) do
         {
-            guid: global_service_broker2.guid,
-            name: global_service_broker2.name,
-            url: global_service_broker2.broker_url,
+            guid: global_service_broker_v2.guid,
+            name: global_service_broker_v2.name,
+            url: global_service_broker_v2.broker_url,
             created_at: iso8601,
             updated_at: iso8601,
-            status: 'unknown',
-            available: false,
+            status: 'available',
+            available: true,
             relationships: {},
-            links: { self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/service_brokers\/#{global_service_broker2.guid}) } }
+            links: { self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/service_brokers\/#{global_service_broker_v2.guid}) } }
         }
-      end
-
-      let!(:broker_state) { VCAP::CloudController::ServiceBrokerState.make_unsaved }
-
-      before do
-        global_service_broker1.update(service_broker_state: broker_state)
       end
 
       let(:expected_codes_and_responses) do
@@ -143,9 +145,9 @@ RSpec.describe 'V3 service brokers' do
           response_objects: []
         )
 
-        h['admin'] = { code: 200, response_objects: [global_service_broker1_json, global_service_broker2_json] }
-        h['admin_read_only'] = { code: 200, response_objects: [global_service_broker1_json, global_service_broker2_json] }
-        h['global_auditor'] = { code: 200, response_objects: [global_service_broker1_json, global_service_broker2_json] }
+        h['admin'] = { code: 200, response_objects: [global_service_broker_v3_json, global_service_broker_v2_json] }
+        h['admin_read_only'] = { code: 200, response_objects: [global_service_broker_v3_json, global_service_broker_v2_json] }
+        h['global_auditor'] = { code: 200, response_objects: [global_service_broker_v3_json, global_service_broker_v2_json] }
 
         h
       end
@@ -162,8 +164,8 @@ RSpec.describe 'V3 service brokers' do
             url: space_scoped_service_broker.broker_url,
             created_at: iso8601,
             updated_at: iso8601,
-            status: 'unknown',
-            available: false,
+            status: 'available',
+            available: true,
             relationships: {
                 space: { data: { guid: space.guid } }
             },
@@ -184,19 +186,19 @@ RSpec.describe 'V3 service brokers' do
         )
 
         h['admin'] = {
-            code: 200,
-            response_objects: [space_scoped_service_broker_json]
+              code: 200,
+              response_objects: [space_scoped_service_broker_json]
         }
         h['admin_read_only'] = {
-            code: 200,
-            response_objects: [space_scoped_service_broker_json]
+              code: 200,
+              response_objects: [space_scoped_service_broker_json]
         }
         h['global_auditor'] = {
-            code: 200,
-            response_objects: [space_scoped_service_broker_json]
+              code: 200,
+              response_objects: [space_scoped_service_broker_json]
         }
         h['space_developer'] = { code: 200,
-            response_objects: [space_scoped_service_broker_json]
+              response_objects: [space_scoped_service_broker_json]
         }
 
         h
@@ -289,20 +291,20 @@ RSpec.describe 'V3 service brokers' do
     end
 
     context 'when the service broker is global' do
-      let!(:global_service_broker1) { VCAP::CloudController::ServiceBroker.make }
-      let(:api_call) { lambda { |user_headers| get "/v3/service_brokers/#{global_service_broker1.guid}", nil, user_headers } }
+      let!(:global_service_broker_v3) { VCAP::CloudController::ServiceBroker.make }
+      let(:api_call) { lambda { |user_headers| get "/v3/service_brokers/#{global_service_broker_v3.guid}", nil, user_headers } }
 
-      let(:global_service_broker1_json) do
+      let(:global_service_broker_v3_json) do
         {
-            guid: global_service_broker1.guid,
-            name: global_service_broker1.name,
-            url: global_service_broker1.broker_url,
+            guid: global_service_broker_v3.guid,
+            name: global_service_broker_v3.name,
+            url: global_service_broker_v3.broker_url,
             created_at: iso8601,
             updated_at: iso8601,
-            status: 'unknown',
-            available: false,
+            status: 'available',
+            available: true,
             relationships: {},
-            links: { self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/service_brokers\/#{global_service_broker1.guid}) } }
+            links: { self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/service_brokers\/#{global_service_broker_v3.guid}) } }
         }
       end
 
@@ -311,15 +313,15 @@ RSpec.describe 'V3 service brokers' do
 
         h['admin'] = {
             code: 200,
-            response_object: global_service_broker1_json
+            response_object: global_service_broker_v3_json
         }
         h['admin_read_only'] = {
             code: 200,
-            response_object: global_service_broker1_json
+            response_object: global_service_broker_v3_json
         }
         h['global_auditor'] = {
             code: 200,
-            response_object: global_service_broker1_json
+            response_object: global_service_broker_v3_json
         }
 
         h
@@ -339,8 +341,8 @@ RSpec.describe 'V3 service brokers' do
             url: space_scoped_service_broker.broker_url,
             created_at: iso8601,
             updated_at: iso8601,
-            status: 'unknown',
-            available: false,
+            status: 'available',
+            available: true,
             relationships: {
                 space: { data: { guid: space.guid } }
             },
@@ -385,6 +387,230 @@ RSpec.describe 'V3 service brokers' do
     end
   end
 
+  describe 'PATCH /v3/service_brokers/:guid' do
+    let!(:broker) do
+      VCAP::CloudController::ServiceBroker.make(
+        name: 'old-name',
+        broker_url: 'http://example.org/old-broker-url',
+        auth_username: 'old-admin',
+        auth_password: 'not-welcome',
+        state: VCAP::CloudController::ServiceBrokerStateEnum::AVAILABLE
+      )
+    end
+
+    let(:update_request_body) {
+      {
+          name: 'new-name',
+          url: 'http://example.org/new-broker-url',
+          authentication: {
+              type: 'basic',
+              credentials: {
+                  username: 'admin',
+                  password: 'welcome',
+              }
+          }
+      }
+    }
+
+    it 'does not immediately update a service broker in the database' do
+      patch("/v3/service_brokers/#{broker.guid}", update_request_body.to_json, admin_headers)
+
+      broker = VCAP::CloudController::ServiceBroker.last # TODO: get the broker using the api?
+      expect(broker.name).to eq('old-name')
+      expect(broker.broker_url).to eq('http://example.org/old-broker-url')
+      expect(broker.auth_username).to eq('old-admin')
+      expect(broker.auth_password).to eq('not-welcome')
+      expect(broker.state).to eq(VCAP::CloudController::ServiceBrokerStateEnum::SYNCHRONIZING)
+    end
+
+    it 'creates a pollable job to update the service broker' do
+      patch("/v3/service_brokers/#{broker.guid}", update_request_body.to_json, admin_headers)
+      expect(last_response).to have_status_code(202)
+
+      job = VCAP::CloudController::PollableJobModel.last
+
+      expect(job.state).to eq(VCAP::CloudController::PollableJobModel::PROCESSING_STATE)
+      expect(job.operation).to eq('service_broker.update')
+      expect(job.resource_guid).to eq(broker.guid)
+      expect(job.resource_type).to eq('service_brokers')
+
+      expect(last_response.headers['Location']).to end_with("/v3/jobs/#{job.guid}")
+    end
+
+    context 'when the message is invalid' do
+      before do
+        allow_any_instance_of(VCAP::CloudController::ServiceBrokerUpdateMessage).to receive(:valid?).and_return false
+
+        dbl = double('Errors', full_messages: ['message is invalid'])
+        allow_any_instance_of(VCAP::CloudController::ServiceBrokerUpdateMessage).to receive(:errors).and_return dbl
+      end
+
+      it 'returns 422 and renders the errors' do
+        patch("/v3/service_brokers/#{broker.guid}", update_request_body.to_json, admin_headers)
+        expect(last_response).to have_status_code(422)
+        expect(last_response.body).to include('UnprocessableEntity')
+        expect(last_response.body).to include('message is invalid')
+      end
+    end
+
+    context 'when broker does not exist' do
+      it 'should return 404' do
+        patch('/v3/service_brokers/some-guid', update_request_body.to_json, admin_headers)
+
+        expect(last_response).to have_status_code(404)
+
+        response = parsed_response['errors'].first
+        expect(response).to include('title' => 'CF-ResourceNotFound')
+        expect(response).to include('detail' => 'Service broker not found')
+      end
+    end
+
+    context 'when a broker with the same name exists' do
+      before do
+        VCAP::CloudController::ServiceBroker.make(name: 'another broker')
+      end
+
+      it 'should return 422 and meaningful error and does not create a broker' do
+        patch("/v3/service_brokers/#{broker.guid}", { name: 'another broker' }.to_json, admin_headers)
+        expect_error(status: 422, error: 'UnprocessableEntity', description: 'Name must be unique')
+        expect(broker.reload.name).to eq 'old-name'
+      end
+    end
+
+    context 'global service broker' do
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+        let(:api_call) { ->(user_headers) { patch "/v3/service_brokers/#{broker.guid}", update_request_body.to_json, user_headers } }
+        let(:expected_codes_and_responses) do
+          Hash.new(code: 403).tap do |h|
+            h['admin'] = { code: 202 }
+          end
+        end
+
+        let(:expected_events) do
+          ->(email) do
+            [
+              { type: 'audit.service_broker.update', actor: email },
+            ]
+          end
+        end
+      end
+    end
+
+    context 'space service broker' do
+      let!(:broker) do
+        VCAP::CloudController::ServiceBroker.make(
+          name: 'old-name',
+          broker_url: 'http://example.org/old-broker-url',
+          auth_username: 'old-admin',
+          auth_password: 'not-welcome',
+          space: space
+        )
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
+        let(:api_call) { ->(user_headers) { patch "/v3/service_brokers/#{broker.guid}", update_request_body.to_json, user_headers } }
+
+        let(:expected_codes_and_responses) {
+          Hash.new(code: 422).tap do |h|
+            h['admin'] = { code: 202 }
+            h['admin_read_only'] = { code: 403 }
+            h['global_auditor'] = { code: 403 }
+            h['space_developer'] = { code: 202 }
+            h['space_auditor'] = { code: 403 }
+            h['space_manager'] = { code: 403 }
+            h['org_manager'] = { code: 403 }
+          end
+        }
+
+        let(:expected_events) do
+          ->(email) do
+            [
+              { type: 'audit.service_broker.update', actor: email },
+            ]
+          end
+        end
+      end
+    end
+
+    context 'when job succeeds with warnings' do
+      context 'when warning is a UAA problem' do
+        let(:broker) do
+          TestConfig.override({ uaa_client_name: nil, uaa_client_secret: nil })
+          create_broker_successfully(global_broker_request_body, with: admin_headers, execute_all_jobs: true)
+        end
+
+        it 'updates the job status and populates warnings field' do
+          patch("/v3/service_brokers/#{broker.guid}", global_broker_request_body.to_json, admin_headers)
+          execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+          job_url = last_response['Location']
+          get job_url, {}, admin_headers
+          expect(parsed_response).to include({
+              'state' => 'COMPLETE',
+              'operation' => 'service_broker.update',
+              'errors' => [],
+              'warnings' => [
+                include({
+                    'detail' => include('Warning: This broker includes configuration for a dashboard client.'),
+                })
+              ],
+          })
+        end
+      end
+
+      context 'when warning is a catalog problem (deactivated plan, but there is a service instance)' do
+        let!(:broker) do
+          TestConfig.override({})
+          create_broker_successfully(global_broker_request_body, with: admin_headers, execute_all_jobs: true)
+        end
+
+        before do
+          catalog_with_plan_deactivated = catalog(global_broker_id)
+          catalog_with_plan_deactivated['services'][0]['plans'][0]['id'] = 'something-else-id'
+          catalog_with_plan_deactivated['services'][0]['plans'][0]['name'] = 'something-else-name'
+
+          WebMock.reset!
+          stub_request(:get, 'http://example.org/broker-url/v2/catalog').
+            to_return(status: 200, body: catalog_with_plan_deactivated.to_json, headers: {})
+
+          token = { token_type: 'Bearer', access_token: 'my-favourite-access-token' }
+          stub_request(:any, 'https://uaa.service.cf.internal/oauth/token').
+            to_return(status: 200, body: token.to_json, headers: { 'Content-Type' => 'application/json' })
+
+          stub_uaa_for(global_broker_id)
+
+          VCAP::CloudController::ManagedServiceInstance.make(
+            service_plan: VCAP::CloudController::ServicePlan.find(name: 'plan_name-1')
+          )
+        end
+
+        it 'updates the job status and populates warnings field' do
+          patch("/v3/service_brokers/#{broker.guid}", global_broker_request_body.to_json, admin_headers)
+          execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+          job_url = last_response['Location']
+          get job_url, {}, admin_headers
+          expect(parsed_response).to include({
+              'state' => 'COMPLETE',
+              'operation' => 'service_broker.update',
+              'errors' => [],
+              'warnings' => [
+                include({
+                    'detail' => include(
+                      'Warning: Service plans are missing from the broker\'s catalog ' \
+                  '(http://example.org/broker-url/v2/catalog) but can not be removed from Cloud Foundry while instances exist.' \
+                  ' The plans have been deactivated to prevent users from attempting to provision new instances of these plans.' \
+                  ' The broker should continue to support bind, unbind, and delete for existing instances; if these operations' \
+                  " fail contact your broker provider.\nservice_name-1\n  plan_name-1\n"
+                    ),
+                })
+              ],
+          })
+        end
+      end
+    end
+  end
+
   describe 'POST /v3/service_brokers' do
     let(:global_service_broker) do
       {
@@ -413,10 +639,10 @@ RSpec.describe 'V3 service brokers' do
       expect(broker.auth_username).to eq(global_broker_request_body.dig(:authentication, :credentials, :username))
       expect(broker.auth_password).to eq(global_broker_request_body.dig(:authentication, :credentials, :password))
       expect(broker.space).to be_nil
-      expect(broker.service_broker_state.state).to eq(VCAP::CloudController::ServiceBrokerStateEnum::SYNCHRONIZING)
+      expect(broker.state).to eq(VCAP::CloudController::ServiceBrokerStateEnum::SYNCHRONIZING)
     end
 
-    it 'creates a pollable job to synchronize the catalog and responds with its location' do
+    it 'creates a pollable job to synchronize the catalog and responds with job resource' do
       create_broker_successfully(global_broker_request_body, with: admin_headers)
 
       job = VCAP::CloudController::PollableJobModel.last
@@ -443,21 +669,13 @@ RSpec.describe 'V3 service brokers' do
       expect(broker.services.map(&:label)).to include('route_volume_service_name-2')
       expect(broker.service_plans.map(&:name)).to include('plan_name-1')
       expect(broker.service_plans.map(&:name)).to include('plan_name-2')
-      expect(broker.service_broker_state.state).to eq(VCAP::CloudController::ServiceBrokerStateEnum::AVAILABLE)
+      expect(broker.state).to eq(VCAP::CloudController::ServiceBrokerStateEnum::AVAILABLE)
     end
 
     it 'reports service events' do
       create_broker_successfully(global_broker_request_body, with: admin_headers)
       execute_all_jobs(expected_successes: 1, expected_failures: 0)
-      broker_create_metadata = {
-        'request' =>
-          {
-            'name' => 'broker name',
-            'broker_url' => 'http://example.org/broker-url',
-            'auth_username' => 'admin',
-            'auth_password' => '[REDACTED]'
-          }
-      }
+
       expect([
         { type: 'audit.service.create', actor: 'broker name' },
         { type: 'audit.service.create', actor: 'broker name' },
@@ -468,7 +686,19 @@ RSpec.describe 'V3 service brokers' do
       ]).to be_reported_as_events
 
       event = VCAP::CloudController::Event.where({ type: 'audit.service_broker.create', actor_name: admin_headers._generated_email }).first
-      expect(event.metadata).to eq(broker_create_metadata)
+      expect(event.metadata).to eq({
+          'request' => {
+              'name' => 'broker name',
+              'url' => 'http://example.org/broker-url',
+              'authentication' => {
+                  'type' => 'basic',
+                  'credentials' => {
+                      'username' => 'admin',
+                      'password' => '[PRIVATE DATA HIDDEN]'
+                  }
+              }
+          }
+      })
     end
 
     it 'creates UAA dashboard clients' do
@@ -530,11 +760,14 @@ RSpec.describe 'V3 service brokers' do
         }
       end
 
-      it_behaves_like 'permissions for single object endpoint', LOCAL_ROLES do
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS do
         let(:api_call) { lambda { |user_headers| post '/v3/service_brokers', space_scoped_broker_request_body.to_json, user_headers } }
 
         let(:expected_codes_and_responses) {
           Hash.new(code: 422).tap do |h|
+            h['admin'] = { code: 202 }
+            h['admin_read_only'] = { code: 403 }
+            h['global_auditor'] = { code: 403 }
             h['space_developer'] = { code: 202 }
             h['space_auditor'] = { code: 403 }
             h['space_manager'] = { code: 403 }
@@ -550,32 +783,26 @@ RSpec.describe 'V3 service brokers' do
       end
     end
 
-    context 'when the job succeeds' do
-      let(:config) { {} }
+    context 'when job succeeds with warnings' do
+      context 'when warning is a UAA problem' do
+        before do
+          TestConfig.override({ uaa_client_name: nil, uaa_client_secret: nil })
+          create_broker_successfully(global_broker_request_body, with: admin_headers)
+          execute_all_jobs(expected_successes: 1, expected_failures: 0)
+        end
 
-      before do
-        TestConfig.override(config)
-        create_broker_successfully(global_broker_request_body, with: admin_headers)
-        execute_all_jobs(expected_successes: 1, expected_failures: 0)
-      end
-
-      context 'but warnings are emitted' do
-        let(:config) {
-          { uaa_client_name: nil, uaa_client_secret: nil }
-        }
-
-        it 'updates the job status' do
+        it 'updates the job status and populates warnings field' do
           job_url = last_response['Location']
           get job_url, {}, admin_headers
           expect(parsed_response).to include({
-            'state' => 'COMPLETE',
-            'operation' => 'service_broker.catalog.synchronize',
-            'errors' => [],
-            'warnings' => [
-              include({
-                'detail' => include('Warning: This broker includes configuration for a dashboard client.'),
-              })
-            ],
+              'state' => 'COMPLETE',
+              'operation' => 'service_broker.catalog.synchronize',
+              'errors' => [],
+              'warnings' => [
+                include({
+                    'detail' => include('Warning: This broker includes configuration for a dashboard client.'),
+                })
+              ],
           })
         end
       end
@@ -592,14 +819,14 @@ RSpec.describe 'V3 service brokers' do
 
       it 'leaves broker in a non-available failed state' do
         broker = VCAP::CloudController::ServiceBroker.last
-        expect(broker.service_broker_state.state).to eq(VCAP::CloudController::ServiceBrokerStateEnum::SYNCHRONIZATION_FAILED)
+        expect(broker.state).to eq(VCAP::CloudController::ServiceBrokerStateEnum::SYNCHRONIZATION_FAILED)
       end
 
       it 'has failed the job with an appropriate error' do
         job = VCAP::CloudController::PollableJobModel.last
 
         expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
-
+        expect(job.cf_api_error).not_to be_nil
         error = YAML.safe_load(job.cf_api_error)
         expect(error['errors'].first['code']).to eq(10001)
         expect(error['errors'].first['detail']).
@@ -618,7 +845,7 @@ RSpec.describe 'V3 service brokers' do
 
       it 'leaves broker in a non-available failed state' do
         broker = VCAP::CloudController::ServiceBroker.last
-        expect(broker.service_broker_state.state).to eq(VCAP::CloudController::ServiceBrokerStateEnum::SYNCHRONIZATION_FAILED)
+        expect(broker.state).to eq(VCAP::CloudController::ServiceBrokerStateEnum::SYNCHRONIZATION_FAILED)
       end
 
       it 'has failed the job with an appropriate error' do
@@ -626,7 +853,9 @@ RSpec.describe 'V3 service brokers' do
 
         expect(job.state).to eq(VCAP::CloudController::PollableJobModel::FAILED_STATE)
 
-        error = YAML.safe_load(job.cf_api_error)
+        cf_api_error = job.cf_api_error
+        expect(cf_api_error).not_to be_nil
+        error = YAML.safe_load(cf_api_error)
         expect(error['errors'].first['code']).to eq(270012)
         expect(error['errors'].first['detail']).to eq("Service broker catalog is invalid: \nService broker must provide at least one service\n")
       end
@@ -731,22 +960,22 @@ RSpec.describe 'V3 service brokers' do
     context 'when a space is provided that the user cannot read' do
       let(:other_space_broker_body) do
         {
-          name: 'space-scoped broker name',
-          url: 'http://example.org/space-broker-url',
-          authentication: {
-            type: 'basic',
-            credentials: {
-              username: 'admin',
-              password: 'welcome',
+            name: 'space-scoped broker name',
+            url: 'http://example.org/space-broker-url',
+            authentication: {
+                type: 'basic',
+                credentials: {
+                    username: 'admin',
+                    password: 'welcome',
+                },
             },
-          },
-          relationships: {
-            space: {
-              data: {
-                guid: VCAP::CloudController::Space.make.guid
-              },
+            relationships: {
+                space: {
+                    data: {
+                        guid: VCAP::CloudController::Space.make.guid
+                    },
+                },
             },
-          },
         }
       end
 
@@ -960,17 +1189,18 @@ RSpec.describe 'V3 service brokers' do
       end
 
       context 'when the job fails to execute' do
+        job_url = nil
         before do
           allow_any_instance_of(VCAP::Services::ServiceBrokers::ServiceBrokerRemover).to receive(:remove).and_raise('error')
 
           delete "/v3/service_brokers/#{global_broker.guid}", {}, admin_headers
           expect(last_response).to have_status_code(202)
+          job_url = last_response['Location']
 
           execute_all_jobs(expected_successes: 0, expected_failures: 1)
         end
 
         it 'marks the job as failed' do
-          job_url = last_response['Location']
           get job_url, {}, admin_headers
           expect(last_response).to have_status_code(200)
           expect(parsed_response).to include({
@@ -1084,6 +1314,21 @@ RSpec.describe 'V3 service brokers' do
         ].to_json
         ).
       to_return(status: 200, body: {}.to_json, headers: { 'Content-Type' => 'application/json' })
+
+    stub_request(:post, 'https://uaa.service.cf.internal/oauth/clients/tx/modify').
+      with(
+        body: [
+          {
+                "client_id": "#{broker_id}-uaa-id",
+                "client_secret": 'my-dashboard-secret',
+                "redirect_uri": 'http://example.org',
+                "scope": %w(openid cloud_controller_service_permissions.read),
+                "authorities": ['uaa.resource'],
+                "authorized_grant_types": ['authorization_code'],
+                "action": 'update,secret'
+            }
+        ].to_json
+        )
   end
 
   def catalog(id=global_broker_id)
@@ -1100,7 +1345,7 @@ RSpec.describe 'V3 service brokers' do
                       'name' => 'plan_name-1',
                       'description' => 'fake_plan_description 1',
                       'schemas' => nil
-                }
+                  }
               ],
               'dashboard_client' => dashboard_client(id)
           },

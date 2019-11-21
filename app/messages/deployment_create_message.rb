@@ -6,8 +6,13 @@ module VCAP::CloudController
       :relationships,
       :droplet,
       :revision,
+      :strategy,
     ]
 
+    validates_with NoAdditionalKeysValidator
+    validates :strategy,
+      inclusion: { in: %w(rolling), message: "'%{value}' is not a supported deployment strategy" },
+      allow_nil: true
     validate :mutually_exclusive_droplet_sources
 
     def app_guid

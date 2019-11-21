@@ -25,6 +25,13 @@ module VCAP::CloudController::Presenters::V3
       }
     end
 
+    class << self
+      # :labels and :annotations come from MetadataPresentationHelpers
+      def associated_resources
+        super
+      end
+    end
+
     private
 
     def buildpack

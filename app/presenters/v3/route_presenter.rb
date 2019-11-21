@@ -16,13 +16,14 @@ module VCAP::CloudController::Presenters::V3
     def initialize(
       resource,
         show_secrets: false,
-        censored_message: VCAP::CloudController::Presenters::Censorship::REDACTED_CREDENTIAL
+        censored_message: VCAP::CloudController::Presenters::Censorship::REDACTED_CREDENTIAL,
+        decorators: []
     )
-      super(resource, show_secrets: show_secrets, censored_message: censored_message)
+      super(resource, show_secrets: show_secrets, censored_message: censored_message, decorators: decorators)
     end
 
     def to_hash
-      {
+      hash = {
         guid: route.guid,
         created_at: route.created_at,
         updated_at: route.updated_at,
@@ -43,6 +44,8 @@ module VCAP::CloudController::Presenters::V3
         },
         links: build_links
       }
+
+      @decorators.reduce(hash) { |memo, d| d.decorate(memo, [route]) }
     end
 
     private

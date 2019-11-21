@@ -54,6 +54,7 @@ RSpec.describe 'Deployments' do
               'last_successful_healthcheck' => iso8601
             }
           },
+          'strategy' => 'rolling',
           'droplet' => {
             'guid' => droplet.guid
           },
@@ -121,6 +122,7 @@ RSpec.describe 'Deployments' do
               'last_successful_healthcheck' => iso8601
             }
           },
+          'strategy' => 'rolling',
           'droplet' => {
             'guid' => other_droplet.guid
           },
@@ -197,6 +199,7 @@ RSpec.describe 'Deployments' do
               'last_successful_healthcheck' => iso8601
             }
           },
+          'strategy' => 'rolling',
           'droplet' => {
             'guid' => other_droplet.guid
           },
@@ -307,6 +310,7 @@ RSpec.describe 'Deployments' do
               'last_successful_healthcheck' => iso8601
             }
           },
+          'strategy' => 'rolling',
           'droplet' => {
             'guid' => droplet.guid
           },
@@ -380,6 +384,7 @@ RSpec.describe 'Deployments' do
               'last_successful_healthcheck' => iso8601
             }
           },
+          'strategy' => 'rolling',
           'droplet' => {
             'guid' => other_droplet.guid
           },
@@ -455,6 +460,7 @@ RSpec.describe 'Deployments' do
               'last_successful_healthcheck' => iso8601
             }
           },
+          'strategy' => 'rolling',
           'droplet' => {
             'guid' => other_droplet.guid
           },
@@ -490,6 +496,15 @@ RSpec.describe 'Deployments' do
 
         expect(app_model.reload.desired_state).to eq(VCAP::CloudController::ProcessModel::STARTED)
       end
+
+      context 'when "strategy":"rolling" is provided' do
+        it 'starts the app' do
+          post '/v3/deployments', create_request.merge({ strategy: 'rolling' }).to_json, user_header
+          expect(last_response.status).to eq(201)
+
+          expect(app_model.reload.desired_state).to eq(VCAP::CloudController::ProcessModel::STARTED)
+        end
+      end
     end
 
     context 'telemetry' do
@@ -520,6 +535,149 @@ RSpec.describe 'Deployments' do
           }
           expect(last_response.status).to eq(201), last_response.body
           expect(rails_logger).to have_received(:info).with(JSON.generate(expected_json))
+        end
+      end
+    end
+
+    context 'strategy' do
+      let(:create_request) do
+        {
+          strategy: strategy,
+          relationships: {
+            app: {
+              data: {
+                guid: app_model.guid
+              }
+            },
+          }
+        }
+      end
+
+      context 'when no strategy is provided' do
+        let(:create_request) do
+          {
+            relationships: {
+              app: {
+                data: {
+                  guid: app_model.guid
+                }
+              },
+            }
+          }
+        end
+
+        it 'creates a deployment with strategy "rolling"' do
+          post '/v3/deployments', create_request.to_json, user_header
+          expect(last_response.status).to eq(201)
+
+          deployment = VCAP::CloudController::DeploymentModel.last
+
+          expect(parsed_response).to be_a_response_like({
+            'guid' => deployment.guid,
+            'state' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATE,
+            'status' => {
+              'value' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_VALUE,
+              'reason' => nil,
+              'details' => {
+                'last_successful_healthcheck' => iso8601
+              }
+            },
+            'strategy' => 'rolling',
+            'droplet' => {
+              'guid' => droplet.guid
+            },
+            'revision' => nil,
+            'previous_droplet' => {
+              'guid' => droplet.guid
+            },
+            'new_processes' => [{
+              'guid' => deployment.deploying_web_process.guid,
+              'type' => deployment.deploying_web_process.type
+            }],
+            'created_at' => iso8601,
+            'updated_at' => iso8601,
+            'metadata' => metadata,
+            'relationships' => {
+              'app' => {
+                'data' => {
+                  'guid' => app_model.guid
+                }
+              }
+            },
+            'links' => {
+              'self' => {
+                'href' => "#{link_prefix}/v3/deployments/#{deployment.guid}"
+              },
+              'app' => {
+                'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
+              }
+            }
+          })
+        end
+      end
+
+      context 'when strategy "rolling" is provided' do
+        let(:strategy) { 'rolling' }
+
+        it 'creates a deployment with strategy "rolling" when "strategy":"rolling" is provided' do
+          post '/v3/deployments', create_request.to_json, user_header
+          expect(last_response.status).to eq(201), last_response.body
+
+          deployment = VCAP::CloudController::DeploymentModel.last
+
+          expect(parsed_response).to be_a_response_like({
+            'guid' => deployment.guid,
+            'state' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATE,
+            'status' => {
+              'value' => VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_VALUE,
+              'reason' => nil,
+              'details' => {
+                'last_successful_healthcheck' => iso8601
+              }
+            },
+            'strategy' => 'rolling',
+            'droplet' => {
+              'guid' => droplet.guid
+            },
+            'revision' => nil,
+            'previous_droplet' => {
+              'guid' => droplet.guid
+            },
+            'new_processes' => [{
+              'guid' => deployment.deploying_web_process.guid,
+              'type' => deployment.deploying_web_process.type
+            }],
+            'created_at' => iso8601,
+            'updated_at' => iso8601,
+            'metadata' => metadata,
+            'relationships' => {
+              'app' => {
+                'data' => {
+                  'guid' => app_model.guid
+                }
+              }
+            },
+            'links' => {
+              'self' => {
+                'href' => "#{link_prefix}/v3/deployments/#{deployment.guid}"
+              },
+              'app' => {
+                'href' => "#{link_prefix}/v3/apps/#{app_model.guid}"
+              }
+            }
+          })
+        end
+      end
+
+      context 'when a strategy other than "rolling" is provided' do
+        let(:strategy) { 'potato' }
+
+        it 'returns a 422 and error' do
+          post '/v3/deployments', create_request.to_json, user_header
+          expect(last_response.status).to eq(422)
+
+          parsed_response = MultiJson.load(last_response.body)
+          expect(parsed_response['errors'][0]['detail']).to match("Strategy 'potato' is not a supported deployment strategy")
         end
       end
     end
@@ -560,6 +718,7 @@ RSpec.describe 'Deployments' do
             'last_successful_healthcheck' => iso8601
           }
         },
+        'strategy' => 'rolling',
         'droplet' => {
           'guid' => droplet.guid,
         },
@@ -631,6 +790,7 @@ RSpec.describe 'Deployments' do
         'created_at' => iso8601,
         'updated_at' => iso8601,
         'metadata' => metadata,
+        'strategy' => 'rolling',
         'relationships' => {
           'app' => {
             'data' => {
@@ -724,6 +884,7 @@ RSpec.describe 'Deployments' do
               last_successful_healthcheck: iso8601
             }
           },
+          strategy: 'rolling',
           droplet: {
             guid: droplet.guid
           },
@@ -995,6 +1156,7 @@ RSpec.describe 'Deployments' do
                   'last_successful_healthcheck' => iso8601
                 }
               },
+              'strategy' => 'rolling',
               'droplet' => {
                 'guid' => droplet.guid
               },

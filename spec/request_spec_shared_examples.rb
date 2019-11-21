@@ -24,7 +24,8 @@ RSpec.shared_examples 'permissions for list endpoint' do |roles|
         api_call.call(headers)
 
         expected_response_code = expected_codes_and_responses[role][:code]
-        expect(last_response.status).to eq(expected_response_code), "role #{role}: expected #{expected_response_code}, got: #{last_response.status}"
+        expect(last_response).to have_status_code(expected_response_code)
+
         if (200...300).cover? expected_response_code
           expected_response_objects = expected_codes_and_responses[role][:response_objects]
           expect({ resources: parsed_response['resources'] }).to match_json_response({ resources: expected_response_objects })
@@ -65,15 +66,10 @@ RSpec.shared_examples 'permissions for single object endpoint' do |roles|
 
         api_call.call(headers)
 
-        if last_response.status == 500
-          expect(false).to be_truthy, "500: #{last_response.body}"
-        end
-
         expected_response_code = expected_codes_and_responses[role][:code]
-        expect(last_response.status).to eq(expected_response_code),
-          "role #{role}: expected #{expected_response_code}, got: #{last_response.status}\nResponse Body: #{last_response.body[0..2000]}"
-        if (200...300).cover? expected_response_code
+        expect(last_response).to have_status_code(expected_response_code)
 
+        if (200...300).cover? expected_response_code
           if expected_response_code == 202
             job_location = last_response.headers['Location']
             expect(job_location).to match(%r(http.+/v3/jobs/[a-fA-F0-9-]+))
@@ -124,8 +120,8 @@ RSpec.shared_examples 'permissions for delete endpoint' do |roles|
         api_call.call(headers)
 
         expected_response_code = expected_codes_and_responses[role][:code]
-        expect(last_response.status).to eq(expected_response_code),
-          "role #{role}: expected #{expected_response_code}, got: #{last_response.status}\nResponse Body: #{last_response.body[0..2000]}"
+        expect(last_response).to have_status_code(expected_response_code)
+
         if (200...300).cover? expected_response_code
           db_check.call
 

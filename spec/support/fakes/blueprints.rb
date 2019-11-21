@@ -225,6 +225,48 @@ module VCAP::CloudController
     organization      { Organization.make }
   end
 
+  SpaceAuditor.blueprint do
+    guid { Sham.guid }
+    user { User.make }
+    space { Space.make }
+  end
+
+  SpaceDeveloper.blueprint do
+    guid { Sham.guid }
+    user { User.make }
+    space { Space.make }
+  end
+
+  SpaceManager.blueprint do
+    guid { Sham.guid }
+    user { User.make }
+    space { Space.make }
+  end
+
+  OrganizationManager.blueprint do
+    guid { Sham.guid }
+    user { User.make }
+    organization { Organization.make }
+  end
+
+  OrganizationBillingManager.blueprint do
+    guid { Sham.guid }
+    user { User.make }
+    organization { Organization.make }
+  end
+
+  OrganizationUser.blueprint do
+    guid { Sham.guid }
+    user { User.make }
+    organization { Organization.make }
+  end
+
+  OrganizationAuditor.blueprint do
+    guid { Sham.guid }
+    user { User.make }
+    organization { Organization.make }
+  end
+
   Service.blueprint do
     label                 { Sham.label }
     unique_id             { SecureRandom.uuid }
@@ -380,10 +422,6 @@ module VCAP::CloudController
     broker_url        { Sham.url }
     auth_username     { Sham.auth_username }
     auth_password     { Sham.auth_password }
-  end
-
-  ServiceBrokerState.blueprint do
-    state { ServiceBrokerStateEnum::AVAILABLE }
   end
 
   ServiceDashboardClient.blueprint do

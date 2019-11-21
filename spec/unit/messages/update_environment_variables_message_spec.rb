@@ -14,9 +14,17 @@ module VCAP::CloudController
 
     describe 'validations' do
       it 'returns no validation errors on a valid request' do
-        message = UpdateEnvironmentVariablesMessage.new(valid_body.deep_symbolize_keys)
+        message = UpdateEnvironmentVariablesMessage.new(valid_body)
 
         expect(message).to be_valid
+      end
+
+      it 'returns no validation errors given an empty hash and directed to populate the empty hash' do
+        empty_hash = {}
+        message = UpdateEnvironmentVariablesMessage.for_env_var_group(empty_hash)
+
+        expect(message).to be_valid
+        expect(message.var).to eq({})
       end
 
       it 'returns a validation error when an unexpected key is given' do
@@ -95,9 +103,9 @@ module VCAP::CloudController
 
       it 'returns a validation error when a value is a number' do
         invalid_body = {
-            var: {
-                some_number: 123
-            }
+          var: {
+            some_number: 123
+          }
         }
         message = UpdateEnvironmentVariablesMessage.new(invalid_body)
 
@@ -105,14 +113,22 @@ module VCAP::CloudController
         expect(message.errors.full_messages[0]).to match("Non-string value in environment variable for key 'some_number'")
       end
 
-      it 'returns a validation error when var is not a hash' do
+      it 'returns a validation error when var is not an object' do
         invalid_body = {
           var: 'sweet potato'
         }
         message = UpdateEnvironmentVariablesMessage.new(invalid_body)
 
         expect(message).not_to be_valid
-        expect(message.errors.full_messages[0]).to match('must be a hash')
+        expect(message.errors.full_messages).to match(['Var must be an object'])
+      end
+
+      it 'returns a validation error when var is not present' do
+        body = {}
+        message = UpdateEnvironmentVariablesMessage.new(body)
+
+        expect(message).not_to be_valid
+        expect(message.errors.full_messages[0]).to match('must be an object')
       end
 
       it 'returns successfully when a value is nil' do

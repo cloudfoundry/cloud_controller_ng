@@ -9,34 +9,29 @@ module VCAP::CloudController
       class SpaceNotFound < StandardError
       end
 
-      def initialize(service_event_repository, service_manager)
+      def initialize(service_event_repository)
         @service_event_repository = service_event_repository
-        @service_manager = service_manager
       end
 
       def create(message)
         params = {
           name: message.name,
           broker_url: message.url,
-          auth_username: message.authentication_credentials.username,
-          auth_password: message.authentication_credentials.password,
-          space_guid: message.relationships_message.space_guid
+          auth_username: message.username,
+          auth_password: message.password,
+          space_guid: message.relationships_message.space_guid,
+          state: ServiceBrokerStateEnum::SYNCHRONIZING
         }
 
-        broker = nil
+        pollable_job = nil
         ServiceBroker.db.transaction do
           broker = ServiceBroker.create(params)
 
-          ServiceBrokerState.create(
-            service_broker_id: broker.id,
-            state: ServiceBrokerStateEnum::SYNCHRONIZING
-          )
+          service_event_repository.record_broker_event_with_request(:create, broker, message.audit_hash)
+
+          synchronization_job = SynchronizeBrokerCatalogJob.new(broker.guid)
+          pollable_job = Jobs::Enqueuer.new(synchronization_job, queue: Jobs::Queues.generic).enqueue_pollable
         end
-
-        service_event_repository.record_broker_event(:create, broker, params)
-
-        synchronization_job = SynchronizeBrokerCatalogJob.new(broker.guid)
-        pollable_job = Jobs::Enqueuer.new(synchronization_job, queue: 'cc-generic').enqueue_pollable
 
         { pollable_job: pollable_job }
       rescue Sequel::ValidationFailed => e
@@ -45,7 +40,7 @@ module VCAP::CloudController
 
       private
 
-      attr_reader :service_event_repository, :service_manager
+      attr_reader :service_event_repository
 
       def route_services_enabled?
         VCAP::CloudController::Config.config.get(:route_services_enabled)

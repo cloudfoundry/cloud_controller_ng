@@ -516,7 +516,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
               expect(response.status).to eq(422)
               expect(response.body).to include 'UnprocessableEntity'
-              expect(response.body).to include 'Lifecycle data must be a hash'
+              expect(response.body).to include 'Lifecycle data must be an object'
             end
           end
         end
@@ -541,7 +541,7 @@ RSpec.describe AppsV3Controller, type: :controller do
           end
         end
 
-        context 'when lifecycle data is not a hash' do
+        context 'when lifecycle data is not an object' do
           let(:request_body) do
             {
               name: 'some-name',
@@ -555,7 +555,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
             expect(response.status).to eq(422)
             expect(response.body).to include 'UnprocessableEntity'
-            expect(response.body).to include 'Lifecycle data must be a hash'
+            expect(response.body).to include 'Lifecycle data must be an object'
           end
         end
       end
@@ -924,7 +924,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
             expect(response.status).to eq 422
             expect(response.body).to include 'UnprocessableEntity'
-            expect(response.body).to include('Lifecycle data must be a hash')
+            expect(response.body).to include('Lifecycle data must be an object')
           end
         end
 
@@ -996,7 +996,7 @@ RSpec.describe AppsV3Controller, type: :controller do
 
             expect(response.status).to eq 422
             expect(response.body).to include 'UnprocessableEntity'
-            expect(response.body).to include('Lifecycle data must be a hash')
+            expect(response.body).to include('Lifecycle data must be an object')
           end
         end
       end

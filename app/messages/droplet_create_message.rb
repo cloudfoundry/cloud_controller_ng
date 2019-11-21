@@ -12,7 +12,7 @@ module VCAP::CloudController
     def valid_process_types
       if process_types
         if !process_types.is_a?(Hash)
-          errors.add(:process_types, 'must be a hash')
+          errors.add(:process_types, 'must be an object')
           return
         end
 

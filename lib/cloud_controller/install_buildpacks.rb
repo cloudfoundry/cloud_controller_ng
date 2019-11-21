@@ -72,7 +72,7 @@ module VCAP::CloudController
 
     def enqueue_remaining_jobs(jobs)
       jobs.drop(1).each do |job|
-        VCAP::CloudController::Jobs::Enqueuer.new(job, queue: VCAP::CloudController::Jobs::LocalQueue.new(config)).enqueue
+        VCAP::CloudController::Jobs::Enqueuer.new(job, queue: VCAP::CloudController::Jobs::Queues.local(config)).enqueue
       end
     end
   end

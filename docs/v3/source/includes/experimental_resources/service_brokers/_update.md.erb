@@ -1,0 +1,56 @@
+### Update a service broker
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/service_brokers/[guid]" \
+  -X PATCH \
+  -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
+  -d '{
+    "name": "my_service_broker",
+    "url": "https://example.service-broker.com",
+    "authentication": {
+      "type": "basic",
+      "credentials": {
+        "username": "us3rn4me",
+        "password": "p4ssw0rd"
+      }
+    }
+  }'
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 202 Accepted
+Content-Type: application/json
+Location: https://api.example.org/v3/jobs/af5c57f6-8769-41fa-a499-2c84ed896788
+```
+
+This endpoint updates a broker and creates a job to synchronize the service offerings and service plans with those in the broker's catalog.  The `Location` header refers to the created job which syncs the broker with the catalog.
+Service Brokers that are in the process of being synchronized or deleted cannot be updated by this endpoint.
+
+#### Definition
+`PATCH /v3/service_brokers/[guid]`
+
+#### Optional parameters
+
+Name | Type | Description
+---- | ---- | -----------
+**name** | _string_ | Name of the service broker.
+**url** | _string_ | URL of the service broker.
+**authentication** | [_authentication_](#the-authentication-object) | Credentials used to authenticate against the service broker.
+
+<%= yield_content :service_broker_credentials_object %>
+
+#### Permitted roles
+ |
+--- | ---
+Space Developer |
+Admin |
+

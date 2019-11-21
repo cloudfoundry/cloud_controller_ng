@@ -469,7 +469,7 @@ module VCAP::CloudController
               expect(BlobstoreDelete).to have_received(:new).with('buildpack-to-be-deleted', :buildpack_blobstore)
               expect(BlobstoreDelete).to have_received(:new).with('droplet-to-be-deleted/droplet', :droplet_blobstore)
               expect(BlobstoreDelete).to have_received(:new).with('resource-to-be-deleted', :legacy_global_app_bits_cache)
-              expect(Jobs::Enqueuer).to have_received(:new).exactly(4).times.with(blobstore_delete, hash_including(queue: 'cc-generic', priority: 100))
+              expect(Jobs::Enqueuer).to have_received(:new).exactly(4).times.with(blobstore_delete, hash_including(queue: Jobs::Queues.generic, priority: 100))
               expect(enqueuer).to have_received(:enqueue).exactly(4).times
 
               expect(packages_orphaned_blob.exists?).to be_falsey

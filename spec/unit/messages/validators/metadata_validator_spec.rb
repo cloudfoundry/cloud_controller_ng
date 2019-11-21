@@ -39,12 +39,12 @@ module VCAP::CloudController::Validators
         end
       end
 
-      context 'when metadata is not a hash' do
+      context 'when metadata is not an object' do
         let(:metadata) { 'notahash' }
 
         it 'is invalid' do
           expect(subject).not_to be_valid
-          expect(subject.errors_on(:metadata)).to contain_exactly('must be a hash')
+          expect(subject.errors_on(:metadata)).to contain_exactly('must be an object')
         end
       end
     end
@@ -70,12 +70,12 @@ module VCAP::CloudController::Validators
         end
       end
 
-      context 'when labels are not a hash' do
+      context 'when labels are not an object' do
         let(:labels) { 'potato' }
 
         it 'is invalid' do
           expect(subject).not_to be_valid
-          expect(subject.errors_on(:metadata)).to include("'labels' is not a hash")
+          expect(subject.errors_on(:metadata)).to include("'labels' is not an object")
         end
       end
 
@@ -324,12 +324,12 @@ module VCAP::CloudController::Validators
         end
       end
 
-      context 'when annotations are not a hash' do
+      context 'when annotations are not an object' do
         let(:annotations) { 'potato' }
 
         it 'is invalid' do
           expect(subject).not_to be_valid
-          expect(subject.errors_on(:metadata)).to include("'annotations' is not a hash")
+          expect(subject.errors_on(:metadata)).to include("'annotations' is not an object")
         end
       end
 

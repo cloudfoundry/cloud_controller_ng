@@ -182,7 +182,7 @@ module VCAP::CloudController
         BuildpackLifecycleDataModel.create(droplet: droplet)
 
         droplet_upload_job = Jobs::V2::UploadDropletFromUser.new(droplet_path, droplet.guid)
-        enqueued_job       = Jobs::Enqueuer.new(droplet_upload_job, queue: Jobs::LocalQueue.new(config)).enqueue
+        enqueued_job       = Jobs::Enqueuer.new(droplet_upload_job, queue: Jobs::Queues.local(config)).enqueue
       end
 
       [HTTP::CREATED, JobPresenter.new(enqueued_job).to_json]

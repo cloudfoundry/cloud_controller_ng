@@ -20,6 +20,10 @@ module VCAP::CloudController
       DEGENERATE_STATUS_REASON = 'DEGENERATE'.freeze
     ].freeze
 
+    DEPLOYMENT_STRATEGIES = [
+      ROLLING_STRATEGY = 'rolling'.freeze,
+    ].freeze
+
     many_to_one :app,
       class: 'VCAP::CloudController::AppModel',
       primary_key: :guid,

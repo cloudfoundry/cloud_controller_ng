@@ -60,9 +60,9 @@ module VCAP::CloudController
       end
 
       describe 'Org Level Permissions' do
-        user_sees_empty_enumerate('OrgUser',        :@org_a_member,          :@org_b_member)
+        user_sees_empty_enumerate('OrgUser', :@org_a_member, :@org_b_member)
         user_sees_empty_enumerate('BillingManager', :@org_a_billing_manager, :@org_b_billing_manager)
-        user_sees_empty_enumerate('Auditor',        :@org_a_auditor,         :@org_b_auditor)
+        user_sees_empty_enumerate('Auditor', :@org_a_auditor, :@org_b_auditor)
 
         describe 'OrgManager' do
           let(:member_a) { @org_a_manager }
@@ -467,7 +467,7 @@ module VCAP::CloudController
             create_managed_service_instance(accepts_incomplete: 'false')
             expect(last_response).to have_status_code(201)
             expect(a_request(:put, service_broker_url_regex).
-                                        with(body: hash_including(maintenance_info: { 'version': '2.0.0' }))).
+              with(body: hash_including(maintenance_info: { 'version': '2.0.0' }))).
               to have_been_made.times(1)
           end
         end
@@ -489,7 +489,7 @@ module VCAP::CloudController
             it 'should pass along the parameters to the service broker' do
               expect(last_response).to have_status_code(201)
               expect(a_request(:put, service_broker_url_regex).
-                     with(body: hash_including(parameters: parameters))).
+                with(body: hash_including(parameters: parameters))).
                 to have_been_made.times(1)
             end
           end
@@ -500,7 +500,7 @@ module VCAP::CloudController
             it 'should reject the request' do
               expect(last_response).to have_status_code(400)
               expect(a_request(:put, service_broker_url_regex).
-                     with(body: hash_including(parameters: parameters))).
+                with(body: hash_including(parameters: parameters))).
                 to have_been_made.times(0)
               expect(last_response.body).to include('Error: Expected instance of Hash')
             end
@@ -1534,9 +1534,14 @@ module VCAP::CloudController
       let(:service_broker_url) { "http://example.com/v2/service_instances/#{service_instance.guid}" }
       let(:service_broker) { ServiceBroker.make(broker_url: 'http://example.com', auth_username: 'auth_username', auth_password: 'auth_password') }
       let(:service) { Service.make(plan_updateable: true, service_broker: service_broker) }
-      let(:old_service_plan)  { ServicePlan.make(:v2, service: service) }
-      let(:new_service_plan)  { ServicePlan.make(:v2, service: service) }
-      let(:service_instance)  { ManagedServiceInstance.make(service_plan: old_service_plan, dashboard_url: 'http://dashboard_url.com') }
+      let(:old_service_plan) { ServicePlan.make(:v2, service: service) }
+      let(:new_service_plan) { ServicePlan.make(:v2, service: service) }
+      let(:service_instance) { ManagedServiceInstance.make(
+        service_plan: old_service_plan,
+        dashboard_url: 'http://dashboard_url.com',
+        maintenance_info: { version: '1.2.3' }
+      )
+      }
 
       let(:body) do
         MultiJson.dump(
@@ -1598,9 +1603,12 @@ module VCAP::CloudController
         end
 
         context 'when the request has arbitrary parameters' do
+          subject do
+            put "/v2/service_instances/#{service_instance.guid}", body
+          end
+
           let(:body) do
             {
-              service_plan_guid: new_service_plan.guid,
               parameters: parameters
             }.to_json
           end
@@ -1609,27 +1617,53 @@ module VCAP::CloudController
             { myParam: 'some-value' }
           end
 
+          let(:previous_values) do
+            {
+              maintenance_info: { version: '1.2.3' },
+              plan_id: service_instance.service_plan.broker_provided_id,
+              service_id: service_instance.service.broker_provided_id,
+              organization_id: service_instance.organization.guid,
+              space_id: service_instance.space.guid,
+            }
+          end
+
           it 'should pass along the parameters to the service broker' do
-            put "/v2/service_instances/#{service_instance.guid}", body
+            subject
             expect(last_response).to have_status_code(201)
-            expect(a_request(:patch, service_broker_url_regex).with(body: hash_including(parameters: parameters))).to have_been_made.times(1)
+            expect(a_request(:patch, service_broker_url_regex).
+              with(body: hash_including(parameters: parameters))).
+              to have_been_made.times(1)
+          end
+
+          it 'should include previous values' do
+            subject
+            expect(a_request(:patch, service_broker_url_regex).
+              with(body: hash_including(previous_values: previous_values))).
+              to have_been_made.times(1)
+          end
+
+          it 'does not create an UPDATED service usage event' do
+            expect {
+              subject
+            }.not_to change { ServiceUsageEvent.count }
           end
 
           context 'and the parameter is not a JSON object' do
             let(:parameters) { 'foo' }
 
             it 'should reject the request' do
-              put "/v2/service_instances/#{service_instance.guid}", body
+              subject
               expect(last_response).to have_status_code(400)
               expect(a_request(:put, service_broker_url_regex).
-                     with(body: hash_including(parameters: parameters))).
+                with(body: hash_including(parameters: parameters))).
                 to have_been_made.times(0)
             end
           end
 
-          context 'when only arbitrary parameters are passed' do
+          context 'and a plan is provided' do
             let(:body) do
               {
+                service_plan_guid: new_service_plan.guid,
                 parameters: parameters
               }.to_json
             end
@@ -1639,15 +1673,16 @@ module VCAP::CloudController
             end
 
             it 'should pass along the parameters to the service broker' do
-              put "/v2/service_instances/#{service_instance.guid}", body
+              subject
               expect(last_response).to have_status_code(201)
               expect(a_request(:patch, service_broker_url_regex).with(body: hash_including(parameters: parameters))).to have_been_made.times(1)
             end
 
-            it 'does not create an UPDATED service usage event' do
-              expect {
-                put "/v2/service_instances/#{service_instance.guid}", body
-              }.not_to change { ServiceUsageEvent.count }
+            it 'should include previous values' do
+              subject
+              expect(a_request(:patch, service_broker_url_regex).
+                with(body: hash_including(previous_values: previous_values))).
+                to have_been_made.times(1)
             end
           end
         end
@@ -2250,9 +2285,9 @@ module VCAP::CloudController
 
               stub_request(:get, last_operation_state_url(service_instance)).
                 to_return(status: 200, body: {
-                state: 'succeeded',
-                description: 'Phew, all done'
-              }.to_json)
+                  state: 'succeeded',
+                  description: 'Phew, all done'
+                }.to_json)
             end
 
             it 'updates the description of the service instance last operation' do
@@ -2541,9 +2576,9 @@ module VCAP::CloudController
 
               stub_request(:get, last_operation_state_url(service_instance)).
                 to_return(status: 200, body: {
-                state: 'succeeded',
-                description: 'Done'
-              }.to_json)
+                  state: 'succeeded',
+                  description: 'Done'
+                }.to_json)
 
               Delayed::Job.last.invoke_job
             end
@@ -2703,9 +2738,9 @@ module VCAP::CloudController
             before do
               stub_request(:get, last_operation_state_url(service_instance)).
                 to_return(status: 200, body: {
-                state: 'succeeded',
-                description: 'Done'
-              }.to_json)
+                  state: 'succeeded',
+                  description: 'Done'
+                }.to_json)
               Delayed::Job.last.invoke_job
             end
 
@@ -2765,9 +2800,9 @@ module VCAP::CloudController
           before do
             allow_any_instance_of(ServiceInstanceDeprovisioner).to receive(:deprovision_service_instance).
               and_wrap_original do |m, *args|
-                result, _ = m.call(*args)
-                [result, ['warning-1', 'warning-2']]
-              end
+              result, _ = m.call(*args)
+              [result, ['warning-1', 'warning-2']]
+            end
           end
 
           it 'shows the warnings in the X-Cf-Warnings header' do
@@ -3114,9 +3149,9 @@ module VCAP::CloudController
               broker_uri.password = broker.auth_password
               stub_request(:get, last_operation_state_url(service_instance)).
                 to_return(status: 200, body: {
-                state: 'succeeded',
-                description: 'Done!'
-              }.to_json)
+                  state: 'succeeded',
+                  description: 'Done!'
+                }.to_json)
 
               Timecop.freeze Time.now + 2.minute do
                 Delayed::Job.last.invoke_job
@@ -3158,11 +3193,11 @@ module VCAP::CloudController
 
               stub_request(:get, last_operation_state_url(service_instance)).
                 to_return(status: 200, body: {
-                last_operation: {
-                  state: 'in progress',
-                  description: 'Yep, still working'
-                }
-              }.to_json)
+                  last_operation: {
+                    state: 'in progress',
+                    description: 'Yep, still working'
+                  }
+                }.to_json)
 
               expect(last_response).to have_status_code 202
               Timecop.freeze Time.now + 30.minutes do
@@ -3180,10 +3215,10 @@ module VCAP::CloudController
 
                 stub_request(:get, last_operation_state_url(service_instance)).
                   to_return(status: 200, body: {
-                  last_operation: {
-                    state: 'in progress'
-                  }
-                }.to_json)
+                    last_operation: {
+                      state: 'in progress'
+                    }
+                  }.to_json)
 
                 Delayed::Job.last.invoke_job
 
@@ -3197,9 +3232,9 @@ module VCAP::CloudController
                 delete "/v2/service_instances/#{service_instance.guid}?accepts_incomplete=true"
                 stub_request(:get, last_operation_state_url(service_instance)).
                   to_return(status: 200, body: {
-                  state: 'in progress',
-                  description: 'still going'
-                }.to_json)
+                    state: 'in progress',
+                    description: 'still going'
+                  }.to_json)
               end
 
               it 'updates the description of the service instance last operation' do
@@ -3588,14 +3623,14 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/service_instances/:service_instance_guid/routes' do
-      let(:space)   { Space.make }
+      let(:space) { Space.make }
       let(:manager) { make_manager_for_space(space) }
       let(:auditor) { make_auditor_for_space(space) }
       let(:developer) { make_developer_for_space(space) }
 
       context 'when the user is not a member of the space this instance exists in' do
-        let(:space_a)   { Space.make }
-        let(:instance)  { ManagedServiceInstance.make(space: space_a) }
+        let(:space_a) { Space.make }
+        let(:instance) { ManagedServiceInstance.make(space: space_a) }
 
         def verify_forbidden(user)
           set_current_user(user)
@@ -3617,8 +3652,8 @@ module VCAP::CloudController
       end
 
       context 'when the user is a member of the space this instance exists in' do
-        let(:instance_a)  { ManagedServiceInstance.make(:routing, space: space) }
-        let(:instance_b)  { ManagedServiceInstance.make(:routing, space: space) }
+        let(:instance_a) { ManagedServiceInstance.make(:routing, space: space) }
+        let(:instance_b) { ManagedServiceInstance.make(:routing, space: space) }
         let(:route_a) { Route.make(space: space) }
         let(:route_b) { Route.make(space: space) }
         let(:route_c) { Route.make(space: space) }
@@ -3722,11 +3757,11 @@ module VCAP::CloudController
         put "/v2/service_instances/#{service_instance.guid}/routes/#{route.guid}"
         expect(last_response.status).to eq(201)
 
-        binding             = RouteBinding.last
-        service_plan        = binding.service_plan
-        service             = binding.service
+        binding = RouteBinding.last
+        service_plan = binding.service_plan
+        service = binding.service
         service_binding_uri = service_binding_url(binding)
-        expected_body       = { service_id: service.broker_provided_id, plan_id: service_plan.broker_provided_id, bind_resource: { route: route.uri } }
+        expected_body = { service_id: service.broker_provided_id, plan_id: service_plan.broker_provided_id, bind_resource: { route: route.uri } }
         expect(a_request(:put, service_binding_uri).with(body: hash_including(expected_body))).to have_been_made
       end
 
@@ -3764,12 +3799,12 @@ module VCAP::CloudController
           end
 
           it 'should pass along the parameters to the service broker' do
-            binding             = RouteBinding.last
+            binding = RouteBinding.last
             service_binding_uri = service_binding_url(binding)
 
             expect(last_response).to have_status_code(201)
             expect(a_request(:put, service_binding_uri).
-                       with(body: hash_including(parameters: parameters))).
+              with(body: hash_including(parameters: parameters))).
               to have_been_made.times(1)
           end
         end
@@ -3781,7 +3816,7 @@ module VCAP::CloudController
             expect(last_response).to have_status_code(400)
             expect(last_response.body).to include('Expected instance of Hash, given an instance of String')
             expect(a_request(:put, service_broker_url_regex).
-                       with(body: hash_including(parameters: parameters))).
+              with(body: hash_including(parameters: parameters))).
               to have_been_made.times(0)
           end
         end
@@ -3997,7 +4032,7 @@ module VCAP::CloudController
         let(:opts) do
           {
             status: bind_status,
-            body:   bind_body.to_json
+            body: bind_body.to_json
           }
         end
 
@@ -4111,9 +4146,9 @@ module VCAP::CloudController
           expect(last_response.status).to eq(204)
           expect(last_response.body).to be_empty
 
-          service_plan        = route_binding.service_plan
-          service             = route_binding.service
-          query               = "plan_id=#{service_plan.broker_provided_id}&service_id=#{service.broker_provided_id}"
+          service_plan = route_binding.service_plan
+          service = route_binding.service
+          query = "plan_id=#{service_plan.broker_provided_id}&service_id=#{service.broker_provided_id}"
           service_binding_uri = service_binding_url(route_binding, query)
           expect(a_request(:delete, service_binding_uri)).to have_been_made
         end
@@ -4162,23 +4197,23 @@ module VCAP::CloudController
       context 'when the user is a member of the space this instance exists in' do
         describe 'permissions' do
           {
-            'space_auditor'       => { manage: false, read: true },
-            'space_developer'     => { manage: true, read: true },
-            'space_manager'       => { manage: false, read: true },
-            'org_auditor'         => { manage: false, read: false },
+            'space_auditor' => { manage: false, read: true },
+            'space_developer' => { manage: true, read: true },
+            'space_manager' => { manage: false, read: true },
+            'org_auditor' => { manage: false, read: false },
             'org_billing_manager' => { manage: false, read: false },
-            'org_manager'         => { manage: false, read: true },
-            'admin'               => { manage: true, read: true },
-            'admin_read_only'     => { manage: false, read: true },
-            'global_auditor'      => { manage: false, read: false },
+            'org_manager' => { manage: false, read: true },
+            'admin' => { manage: true, read: true },
+            'admin_read_only' => { manage: false, read: true },
+            'global_auditor' => { manage: false, read: false },
           }.each do |role, expected_return_values|
             context "as an #{role}" do
               before do
                 set_current_user_as_role(
-                  role:   role,
-                  org:    org,
-                  space:  space,
-                  user:   user,
+                  role: role,
+                  org: org,
+                  space: space,
+                  user: user,
                   scopes: ['cloud_controller.read']
                 )
               end
@@ -4187,7 +4222,7 @@ module VCAP::CloudController
                 get "/v2/service_instances/#{instance.guid}/permissions"
                 expect(last_response.status).to eq(200), "Expected 200, got: #{last_response.status}, role: #{role}"
                 manage_response = JSON.parse(last_response.body)['manage']
-                read_response   = JSON.parse(last_response.body)['read']
+                read_response = JSON.parse(last_response.body)['read']
                 expect(manage_response).to eq(expected_return_values[:manage]), "Expected #{expected_return_values[:manage]}, got: #{read_response}, role: #{role}"
                 expect(read_response).to eq(expected_return_values[:read]), "Expected #{expected_return_values[:read]}, got: #{read_response}, role: #{role}"
               end
@@ -4309,23 +4344,23 @@ module VCAP::CloudController
 
           context 'when the user is a member of the org/space this instance exists in' do
             {
-              'admin'               => 200,
-              'space_developer'     => 200,
-              'admin_read_only'     => 200,
-              'global_auditor'      => 200,
-              'space_manager'       => 200,
-              'space_auditor'       => 200,
-              'org_manager'         => 200,
-              'org_auditor'         => 404,
+              'admin' => 200,
+              'space_developer' => 200,
+              'admin_read_only' => 200,
+              'global_auditor' => 200,
+              'space_manager' => 200,
+              'space_auditor' => 200,
+              'org_manager' => 200,
+              'org_auditor' => 404,
               'org_billing_manager' => 404,
             }.each do |role, expected_status|
               context "as an #{role}" do
                 before do
                   set_current_user_as_role(
-                    role:   role,
-                    org:    org,
-                    space:  space,
-                    user:   user,
+                    role: role,
+                    org: org,
+                    space: space,
+                    user: user,
                     scopes: ['cloud_controller.read']
                   )
                 end
@@ -4340,20 +4375,20 @@ module VCAP::CloudController
 
           context 'when the user is a member of the org/space where the service instance was shared to' do
             {
-              'space_developer'     => 200,
-              'space_manager'       => 200,
-              'space_auditor'       => 200,
-              'org_manager'         => 200,
-              'org_auditor'         => 404,
+              'space_developer' => 200,
+              'space_manager' => 200,
+              'space_auditor' => 200,
+              'org_manager' => 200,
+              'org_auditor' => 404,
               'org_billing_manager' => 404,
             }.each do |role, expected_status|
               context "as an #{role}" do
                 before do
                   set_current_user_as_role(
-                    role:   role,
-                    org:    other_org,
-                    space:  other_space,
-                    user:   user,
+                    role: role,
+                    org: other_org,
+                    space: other_space,
+                    user: user,
                     scopes: ['cloud_controller.read']
                   )
                 end
@@ -4471,23 +4506,23 @@ module VCAP::CloudController
 
         context 'when the user is a member of the org/space this instance exists in' do
           {
-            'admin'               => 200,
-            'space_developer'     => 200,
-            'admin_read_only'     => 200,
-            'global_auditor'      => 200,
-            'space_manager'       => 200,
-            'space_auditor'       => 200,
-            'org_manager'         => 200,
-            'org_auditor'         => 404,
+            'admin' => 200,
+            'space_developer' => 200,
+            'admin_read_only' => 200,
+            'global_auditor' => 200,
+            'space_manager' => 200,
+            'space_auditor' => 200,
+            'org_manager' => 200,
+            'org_auditor' => 404,
             'org_billing_manager' => 404,
           }.each do |role, expected_status|
             context "as an #{role}" do
               before do
                 set_current_user_as_role(
-                  role:   role,
-                  org:    org,
-                  space:  space,
-                  user:   user,
+                  role: role,
+                  org: org,
+                  space: space,
+                  user: user,
                 )
               end
 
@@ -4505,10 +4540,10 @@ module VCAP::CloudController
               context "as an #{role}" do
                 before do
                   set_current_user_as_role(
-                    role:   role,
-                    org:    target_org,
-                    space:  target_space,
-                    user:   user,
+                    role: role,
+                    org: target_org,
+                    space: target_space,
+                    user: user,
                   )
                 end
 
@@ -4526,10 +4561,10 @@ module VCAP::CloudController
               context "as an #{role}" do
                 before do
                   set_current_user_as_role(
-                    role:   role,
-                    org:    target_org,
-                    space:  target_space,
-                    user:   user,
+                    role: role,
+                    org: target_org,
+                    space: target_space,
+                    user: user,
                   )
                 end
 
@@ -4548,20 +4583,20 @@ module VCAP::CloudController
           let(:random_space) { Space.make(organization: random_org) }
 
           {
-            'space_developer'     => 404,
-            'space_manager'       => 404,
-            'space_auditor'       => 404,
-            'org_manager'         => 404,
-            'org_auditor'         => 404,
+            'space_developer' => 404,
+            'space_manager' => 404,
+            'space_auditor' => 404,
+            'org_manager' => 404,
+            'org_auditor' => 404,
             'org_billing_manager' => 404,
           }.each do |role, expected_status|
             context "as an #{role}" do
               before do
                 set_current_user_as_role(
-                  role:   role,
-                  org:    random_org,
-                  space:  random_space,
-                  user:   user,
+                  role: role,
+                  org: random_org,
+                  space: random_space,
+                  user: user,
                 )
               end
               it "has a #{expected_status} http status code" do
@@ -4575,14 +4610,14 @@ module VCAP::CloudController
     end
 
     describe 'GET /v2/service_instances/:service_instance_guid/service_keys' do
-      let(:space)   { Space.make }
+      let(:space) { Space.make }
       let(:manager) { make_manager_for_space(space) }
       let(:auditor) { make_auditor_for_space(space) }
       let(:developer) { make_developer_for_space(space) }
 
       context 'when the user is not a member of the space this instance exists in' do
-        let(:space_a)   { Space.make }
-        let(:instance)  { ManagedServiceInstance.make(space: space_a) }
+        let(:space_a) { Space.make }
+        let(:instance) { ManagedServiceInstance.make(space: space_a) }
 
         def verify_forbidden(user)
           set_current_user(user)
@@ -4614,8 +4649,8 @@ module VCAP::CloudController
       end
 
       context 'when the user is a member of the space this instance exists in' do
-        let(:instance_a)  { ManagedServiceInstance.make(space: space) }
-        let(:instance_b)  { ManagedServiceInstance.make(space: space) }
+        let(:instance_a) { ManagedServiceInstance.make(space: space) }
+        let(:instance_b) { ManagedServiceInstance.make(space: space) }
         let!(:service_key_a) { ServiceKey.make(name: 'fake-key-a', service_instance: instance_a) }
         let!(:service_key_b) { ServiceKey.make(name: 'fake-key-b', service_instance: instance_a) }
         let!(:service_key_c) { ServiceKey.make(name: 'fake-key-c', service_instance: instance_b) }
@@ -4841,14 +4876,14 @@ module VCAP::CloudController
 
       describe 'permissions' do
         {
-          'space_auditor'       => 200,
-          'space_developer'     => 200,
-          'space_manager'       => 200,
-          'org_manager'         => 200,
-          'admin'               => 200,
-          'admin_read_only'     => 200,
-          'global_auditor'      => 200,
-          'org_auditor'         => 403,
+          'space_auditor' => 200,
+          'space_developer' => 200,
+          'space_manager' => 200,
+          'org_manager' => 200,
+          'admin' => 200,
+          'admin_read_only' => 200,
+          'global_auditor' => 200,
+          'org_auditor' => 403,
           'org_billing_manager' => 403,
         }.each do |role, expected_return_value|
           let(:service) { Service.make(instances_retrievable: true) }
@@ -4856,9 +4891,9 @@ module VCAP::CloudController
           context "as an #{role}" do
             before do
               set_current_user_as_role(
-                role:   role,
-                org:    space.organization,
-                space:  space,
+                role: role,
+                org: space.organization,
+                space: space,
                 scopes: ['cloud_controller.read']
               )
 
@@ -4887,9 +4922,9 @@ module VCAP::CloudController
             context "as an #{role} in the target space, but with no permissions in the souce space" do
               before do
                 set_current_user_as_role(
-                  role:   role,
-                  org:    target_space.organization,
-                  space:  target_space,
+                  role: role,
+                  org: target_space.organization,
+                  space: target_space,
                   scopes: ['cloud_controller.read']
                 )
               end
@@ -5005,23 +5040,23 @@ module VCAP::CloudController
 
           describe 'permissions' do
             {
-              'admin'               => 200,
-              'admin_read_only'     => 200,
-              'global_auditor'      => 200,
-              'space_developer'     => 200,
-              'space_auditor'       => 200,
-              'space_manager'       => 200,
-              'org_manager'         => 200,
-              'org_auditor'         => 403,
+              'admin' => 200,
+              'admin_read_only' => 200,
+              'global_auditor' => 200,
+              'space_developer' => 200,
+              'space_auditor' => 200,
+              'space_manager' => 200,
+              'org_manager' => 200,
+              'org_auditor' => 403,
               'org_billing_manager' => 403,
-              'org_user'            => 403,
+              'org_user' => 403,
             }.each do |role, expected_return_value|
               context "as a(n) #{role}" do
                 before do
                   set_current_user_as_role(
-                    role:   role,
-                    org:    space.organization,
-                    space:  space,
+                    role: role,
+                    org: space.organization,
+                    space: space,
                     scopes: ['cloud_controller.read']
                   )
                 end
@@ -5043,20 +5078,20 @@ module VCAP::CloudController
 
             describe 'permissions' do
               {
-                'space_developer'     => 403,
-                'space_auditor'       => 403,
-                'space_manager'       => 403,
-                'org_manager'         => 403,
-                'org_auditor'         => 403,
+                'space_developer' => 403,
+                'space_auditor' => 403,
+                'space_manager' => 403,
+                'org_manager' => 403,
+                'org_auditor' => 403,
                 'org_billing_manager' => 403,
-                'org_user'            => 403,
+                'org_user' => 403,
               }.each do |role, expected_return_value|
                 context "as a(n) #{role} in the target org/space" do
                   before do
                     set_current_user_as_role(
-                      role:   role,
-                      org:    target_space.organization,
-                      space:  target_space,
+                      role: role,
+                      org: target_space.organization,
+                      space: target_space,
                       scopes: ['cloud_controller.read']
                     )
                   end

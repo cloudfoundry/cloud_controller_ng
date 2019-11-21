@@ -16,7 +16,7 @@ RSpec.shared_examples 'when brokers return Retry-After header' do |last_operatio
           Timecop.freeze(Time.now)
           first_run_time = Time.now
 
-          VCAP::CloudController::Jobs::Enqueuer.new(job, { queue: 'cc-generic', run_at: first_run_time }).enqueue
+          VCAP::CloudController::Jobs::Enqueuer.new(job, { queue: VCAP::CloudController::Jobs::Queues.generic, run_at: first_run_time }).enqueue
           execute_all_jobs(expected_successes: 1, expected_failures: 0)
           expect(Delayed::Job.count).to eq(1)
 
@@ -39,7 +39,7 @@ RSpec.shared_examples 'when brokers return Retry-After header' do |last_operatio
           Timecop.freeze(Time.now)
           first_run_time = Time.now
 
-          VCAP::CloudController::Jobs::Enqueuer.new(job, { queue: 'cc-generic', run_at: first_run_time }).enqueue
+          VCAP::CloudController::Jobs::Enqueuer.new(job, { queue: VCAP::CloudController::Jobs::Queues.generic, run_at: first_run_time }).enqueue
           execute_all_jobs(expected_successes: 1, expected_failures: 0)
           expect(Delayed::Job.count).to eq(1)
 
@@ -57,7 +57,7 @@ RSpec.shared_examples 'when brokers return Retry-After header' do |last_operatio
           Timecop.freeze(Time.now)
           first_run_time = Time.now
 
-          VCAP::CloudController::Jobs::Enqueuer.new(job, { queue: 'cc-generic', run_at: first_run_time }).enqueue
+          VCAP::CloudController::Jobs::Enqueuer.new(job, { queue: VCAP::CloudController::Jobs::Queues.generic, run_at: first_run_time }).enqueue
           execute_all_jobs(expected_successes: 1, expected_failures: 0)
           expect(Delayed::Job.count).to eq(1)
 

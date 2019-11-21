@@ -141,6 +141,26 @@ module VCAP::CloudController
       remove_auditor(user)
     end
 
+    def add_auditor(user)
+      OrganizationAuditor.find_or_create(user_id: user.id, organization_id: id)
+      self.reload
+    end
+
+    def add_manager(user)
+      OrganizationManager.find_or_create(user_id: user.id, organization_id: id)
+      self.reload
+    end
+
+    def add_billing_manager(user)
+      OrganizationBillingManager.find_or_create(user_id: user.id, organization_id: id)
+      self.reload
+    end
+
+    def add_user(user)
+      OrganizationUser.find_or_create(user_id: user.id, organization_id: id)
+      self.reload
+    end
+
     def self.user_visibility_filter(user)
       {
         id: dataset.join_table(:inner, :organizations_managers, organization_id: :id, user_id: user.id).select(:organizations__id).union(

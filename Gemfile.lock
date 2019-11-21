@@ -116,7 +116,7 @@ GEM
     cookiejar (0.3.3)
     crack (0.4.3)
       safe_yaml (~> 1.0.0)
-    crass (1.0.4)
+    crass (1.0.5)
     daemons (1.2.6)
     debase (0.2.2)
       debase-ruby_core_source (>= 0.10.2)
@@ -137,7 +137,7 @@ GEM
       http_parser.rb (>= 0.6.0)
     em-socksify (0.3.2)
       eventmachine (>= 1.0.0.beta.4)
-    erubi (1.8.0)
+    erubi (1.9.0)
     eventmachine (1.0.9.1)
     excon (0.64.0)
     faraday (0.15.4)
@@ -148,6 +148,9 @@ GEM
     faraday_middleware (0.12.2)
       faraday (>= 0.7.4, < 1.0)
     ffi (1.9.25)
+    ffi-compiler (1.0.1)
+      ffi (>= 1.0.0)
+      rake
     fluent-logger (0.7.2)
       msgpack (>= 1.0.0, < 2)
     fog-aliyun (0.3.5)
@@ -217,11 +220,20 @@ GEM
       googleapis-common-protos-types (~> 1.0.0)
     hashdiff (0.3.8)
     htmlentities (4.3.4)
+    http (4.2.0)
+      addressable (~> 2.3)
+      http-cookie (~> 1.0)
+      http-form_data (~> 2.0)
+      http-parser (~> 1.2.0)
+    http-accept (1.7.0)
     http-cookie (1.0.3)
       domain_name (~> 0.5)
+    http-form_data (2.1.1)
+    http-parser (1.2.1)
+      ffi-compiler (>= 1.0, < 2.0)
     http_parser.rb (0.6.0)
     httpclient (2.8.3)
-    i18n (1.6.0)
+    i18n (1.7.0)
       concurrent-ruby (~> 1.0)
     ipaddress (0.8.3)
     jaro_winkler (1.5.3)
@@ -231,13 +243,17 @@ GEM
     json_pure (2.1.0)
     jwt (2.2.1)
     kramdown (1.17.0)
+    kubeclient (4.5.0)
+      http (>= 3.0, < 5.0)
+      recursive-open-struct (~> 1.0, >= 1.0.4)
+      rest-client (~> 2.0)
     listen (3.1.5)
       rb-fsevent (~> 0.9, >= 0.9.4)
       rb-inotify (~> 0.9, >= 0.9.7)
       ruby_dep (~> 1.2)
     loggregator_emitter (5.2.0)
       beefcake (~> 1.0.0)
-    loofah (2.2.3)
+    loofah (2.3.1)
       crass (~> 1.0.2)
       nokogiri (>= 1.5.9)
     machinist (1.0.6)
@@ -249,7 +265,7 @@ GEM
       mime-types-data (~> 3.2015)
     mime-types-data (3.2019.0331)
     mini_portile2 (2.4.0)
-    minitest (5.11.3)
+    minitest (5.12.2)
     ms_rest (0.6.4)
       concurrent-ruby (~> 1.0)
       faraday (~> 0.9)
@@ -268,8 +284,9 @@ GEM
     mysql2 (0.5.2)
     net-ssh (5.0.2)
     netaddr (2.0.4)
+    netrc (0.11.0)
     newrelic_rpm (5.3.0.346)
-    nokogiri (1.10.4)
+    nokogiri (1.10.5)
       mini_portile2 (~> 2.4.0)
     os (1.0.1)
     palm_civet (1.1.0)
@@ -300,8 +317,8 @@ GEM
     rails-dom-testing (2.0.3)
       activesupport (>= 4.2.0)
       nokogiri (>= 1.6)
-    rails-html-sanitizer (1.0.4)
-      loofah (~> 2.2, >= 2.2.2)
+    rails-html-sanitizer (1.3.0)
+      loofah (~> 2.3)
     railties (5.2.2.1)
       actionpack (= 5.2.2.1)
       activesupport (= 5.2.2.1)
@@ -309,14 +326,20 @@ GEM
       rake (>= 0.8.7)
       thor (>= 0.19.0, < 2.0)
     rainbow (3.0.0)
-    rake (12.3.2)
+    rake (13.0.0)
     rb-fsevent (0.10.3)
     rb-inotify (0.9.10)
       ffi (>= 0.5.0, < 2)
+    recursive-open-struct (1.1.0)
     representable (3.0.4)
       declarative (< 0.1.0)
       declarative-option (< 0.2.0)
       uber (< 0.2.0)
+    rest-client (2.1.0)
+      http-accept (>= 1.7.0, < 2.0)
+      http-cookie (>= 1.0.2, < 2.0)
+      mime-types (>= 1.16, < 4.0)
+      netrc (~> 0.8)
     retriable (3.1.2)
     reverse_markdown (1.1.0)
       nokogiri
@@ -329,9 +352,9 @@ GEM
       rspec-mocks (~> 3.8.0)
     rspec-collection_matchers (1.1.3)
       rspec-expectations (>= 2.99.0.beta1)
-    rspec-core (3.8.0)
+    rspec-core (3.8.2)
       rspec-support (~> 3.8.0)
-    rspec-expectations (3.8.2)
+    rspec-expectations (3.8.6)
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.8.0)
     rspec-instafail (1.0.0)
@@ -339,10 +362,10 @@ GEM
     rspec-its (1.2.0)
       rspec-core (>= 3.0.0)
       rspec-expectations (>= 3.0.0)
-    rspec-mocks (3.8.0)
+    rspec-mocks (3.8.2)
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.8.0)
-    rspec-rails (3.8.2)
+    rspec-rails (3.8.3)
       actionpack (>= 3.0)
       activesupport (>= 3.0)
       railties (>= 3.0)
@@ -350,7 +373,7 @@ GEM
       rspec-expectations (~> 3.8.0)
       rspec-mocks (~> 3.8.0)
       rspec-support (~> 3.8.0)
-    rspec-support (3.8.0)
+    rspec-support (3.8.3)
     rspec-wait (0.0.9)
       rspec (>= 3, < 4)
     rspec_api_documentation (4.4.0)
@@ -458,8 +481,8 @@ PLATFORMS
   x86_64-linux
 
 DEPENDENCIES
-  actionpack (~> 5.2.0)
-  actionview (~> 5.2.0)
+  actionpack (~> 5.2.2, >= 5.2.2.1)
+  actionview (~> 5.2.2, >= 5.2.2.1)
   activemodel (~> 5.2.0)
   addressable
   allowy
@@ -488,6 +511,7 @@ DEPENDENCIES
   httpclient
   json-schema
   json_pure
+  kubeclient
   listen
   loggregator_emitter (~> 5.0)
   machinist (~> 1.0.6)
@@ -499,7 +523,7 @@ DEPENDENCIES
   net-ssh
   netaddr (>= 2.0.4)
   newrelic_rpm
-  nokogiri
+  nokogiri (>= 1.10.5)
   palm_civet
   parallel_tests
   pg
@@ -508,7 +532,7 @@ DEPENDENCIES
   pry-byebug
   public_suffix
   rack-test
-  railties (~> 5.2.0)
+  railties (~> 5.2.2, >= 5.2.2.1)
   rake
   rfc822
   roodi
@@ -516,7 +540,7 @@ DEPENDENCIES
   rspec-collection_matchers
   rspec-instafail
   rspec-its
-  rspec-rails (~> 3.8.0)
+  rspec-rails (~> 3.8.2)
   rspec-wait
   rspec_api_documentation
   rubocop

@@ -16,7 +16,7 @@ class EnvironmentVariableGroupsController < ApplicationController
   end
 
   def update
-    message = VCAP::CloudController::UpdateEnvironmentVariablesMessage.new(hashed_params[:body])
+    message = VCAP::CloudController::UpdateEnvironmentVariablesMessage.for_env_var_group(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
     unauthorized! unless permission_queryer.can_write_globally?
 
@@ -26,9 +26,13 @@ class EnvironmentVariableGroupsController < ApplicationController
       env_group = EnvironmentVariableGroup.running
     end
 
+    environment_variable_group_not_found! unless env_group
+
     env_group = EnvironmentVariableGroupUpdate.new.patch(env_group, message)
 
     render status: :ok, json: Presenters::V3::EnvironmentVariableGroupPresenter.new(env_group)
+  rescue EnvironmentVariableGroupUpdate::EnvironmentVariableGroupTooLong
+    unprocessable!('Environment variable group is too large. Specify fewer variables or reduce key/value lengths.')
   end
 
   private

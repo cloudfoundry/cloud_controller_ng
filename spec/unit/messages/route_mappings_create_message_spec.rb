@@ -107,13 +107,13 @@ module VCAP::CloudController
         it 'is not valid when app is missing' do
           message = RouteMappingsCreateMessage.new({ relationships: {} })
           expect(message).not_to be_valid
-          expect(message.errors_on(:app)).to include('must be a hash')
+          expect(message.errors_on(:app)).to include('must be an object')
         end
 
-        it 'is not valid when app is not a hash' do
+        it 'is not valid when app is not an object' do
           message = RouteMappingsCreateMessage.new({ relationships: { app: 'hello' } })
           expect(message).not_to be_valid
-          expect(message.errors_on(:app)).to include('must be a hash')
+          expect(message.errors_on(:app)).to include('must be an object')
         end
 
         it 'is not valid when app_guid has an invalid guid' do
@@ -127,13 +127,13 @@ module VCAP::CloudController
         it 'is not valid when route is missing' do
           message = RouteMappingsCreateMessage.new({})
           expect(message).not_to be_valid
-          expect(message.errors_on(:route)).to include('must be a hash')
+          expect(message.errors_on(:route)).to include('must be an object')
         end
 
-        it 'is not valid when route is not a hash' do
+        it 'is not valid when route is not an object' do
           message = RouteMappingsCreateMessage.new({ relationships: { route: 'potato' } })
           expect(message).not_to be_valid
-          expect(message.errors_on(:route)).to include('must be a hash')
+          expect(message.errors_on(:route)).to include('must be an object')
         end
 
         it 'is not valid when route_guid has an invalid guid' do
@@ -144,10 +144,10 @@ module VCAP::CloudController
       end
 
       describe 'process' do
-        it 'is not valid when process is not a hash' do
+        it 'is not valid when process is not an object' do
           message = RouteMappingsCreateMessage.new({ relationships: { process: 'not-a-hash' } })
           expect(message).not_to be_valid
-          expect(message.errors_on(:process)).to include('must be a hash')
+          expect(message.errors_on(:process)).to include('must be an object')
         end
 
         it 'is valid when process is missing' do

@@ -14,7 +14,7 @@ module VCAP::CloudController
 
       warnings = []
       if async && !accepts_incomplete
-        enqueued_job = Jobs::Enqueuer.new(delete_job, queue: 'cc-generic').enqueue
+        enqueued_job = Jobs::Enqueuer.new(delete_job, queue: Jobs::Queues.generic).enqueue
       else
         warnings = delete_job.perform
       end

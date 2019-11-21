@@ -61,7 +61,7 @@ module VCAP::CloudController
       new_droplet.buildpack_lifecycle_data(reload: true)
 
       copy_job = Jobs::V3::DropletBitsCopier.new(@source_droplet.guid, new_droplet.guid)
-      Jobs::Enqueuer.new(copy_job, queue: 'cc-generic').enqueue
+      Jobs::Enqueuer.new(copy_job, queue: Jobs::Queues.generic).enqueue
     end
   end
 end

@@ -666,4 +666,76 @@ RSpec.describe CloudController::DependencyLocator do
       end
     end
   end
+
+  describe '#bbs_task_client' do
+    context 'opi is disabled' do
+      let(:diego_client) { double }
+
+      before do
+        allow(::Diego::Client).to receive(:new).and_return(diego_client)
+      end
+
+      it 'uses diego' do
+        expect(VCAP::CloudController::Diego::BbsTaskClient).to receive(:new).with(diego_client)
+        expect(::OPI::TaskClient).to_not receive(:new)
+        locator.bbs_task_client
+      end
+    end
+
+    context 'opi is enabled' do
+      before do
+        TestConfig.override({
+          opi: {
+            enabled: true,
+            url: 'http://custom-opi-url.service.cf.internal'
+          }
+        })
+        allow(::Diego::Client).to receive(:new)
+      end
+
+      it 'uses the opi task client' do
+        expect(VCAP::CloudController::Diego::BbsTaskClient).to_not receive(:new)
+        expect(::OPI::TaskClient).to receive(:new)
+        locator.bbs_task_client
+      end
+
+      it 'uses the configured opi url' do
+        expect(::OPI::TaskClient).to receive(:new).with(locator.config)
+        locator.bbs_task_client
+      end
+    end
+  end
+
+  describe '#kubernetes_client' do
+    before do
+      file = Tempfile.new('k8s_node_ca.crt')
+      file.write('my crt')
+      file.close
+
+      TestConfig.override({
+        kubernetes: {
+          host_url: 'my_kubernetes.io/api',
+          service_account: {
+            name: 'username',
+            token: 'token',
+          },
+          ca_file: file.path
+        }
+      })
+    end
+
+    it 'creates a kubernetes client from config' do
+      client = locator.kubernetes_client.client
+
+      expect(client.ssl_options).to eq({
+                                         ca: 'my crt'
+                                       })
+
+      expect(client.auth_options).to eq({
+                                          bearer_token: 'token'
+                                        })
+
+      expect(client.api_endpoint.to_s).to eq 'my_kubernetes.io/api'
+    end
+  end
 end

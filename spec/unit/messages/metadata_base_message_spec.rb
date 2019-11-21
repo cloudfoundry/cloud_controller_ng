@@ -32,7 +32,7 @@ module VCAP::CloudController
           }
           message = fake_class.new(params)
           expect(message).not_to be_valid
-          expect(message.errors_on(:metadata)).to include("'labels' is not a hash")
+          expect(message.errors_on(:metadata)).to include("'labels' is not an object")
         end
       end
 
@@ -59,7 +59,7 @@ module VCAP::CloudController
           }
           message = fake_class.new(params)
           expect(message).not_to be_valid
-          expect(message.errors_on(:metadata)).to include("'annotations' is not a hash")
+          expect(message.errors_on(:metadata)).to include("'annotations' is not an object")
         end
       end
     end

@@ -14,7 +14,7 @@ module VCAP::CloudController
             VCAP::CloudController::ServiceBrokerStateEnum::AVAILABLE => 'available',
             VCAP::CloudController::ServiceBrokerStateEnum::DELETE_IN_PROGRESS => 'delete in progress',
             VCAP::CloudController::ServiceBrokerStateEnum::DELETE_FAILED => 'delete failed'
-        }.tap { |s| s.default = 'unknown' }.freeze
+        }.tap { |s| s.default = 'available' }.freeze
 
         def to_hash
           {
@@ -37,8 +37,7 @@ module VCAP::CloudController
         end
 
         def status
-          state = broker.service_broker_state&.state
-          STATES[state]
+          STATES[broker.state]
         end
 
         def build_relationships

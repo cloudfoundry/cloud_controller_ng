@@ -13,6 +13,7 @@ curl "https://api.example.org/v3/deployments" \
   "droplet": {
     "guid": "[droplet-guid]"
   },
+  "strategy": "rolling",
   "relationships": {
     "app": {
       "data": {
@@ -36,6 +37,7 @@ curl "https://api.example.org/v3/deployments" \
   "revision": {
     "guid": "[revision-guid]"
   },
+  "strategy": "rolling",
   "relationships": {
     "app": {
       "data": {
@@ -74,6 +76,7 @@ Name | Type | Description | Default
 ---- | ---- | ----------- | -------
 **droplet**<sup>[1]</sup> | _object_ | The droplet to deploy for the app. This will update the app's [current droplet](#get-current-droplet-association-for-an-app) to this droplet | The app's [current droplet](#get-current-droplet-association-for-an-app)
 **revision**<sup>[1]</sup> | _object_ | The [revision](#revisions) whose droplet to deploy for the app. This will update the app's [current droplet](#get-current-droplet-association-for-an-app) to this droplet |
+**strategy** | _string_ | The strategy to use for the deployment | `rolling`
 **metadata.labels** _(experimental)_| [_label object_](#labels) | Labels applied to the deployment.
 **metadata.annotations** _(experimental)_ | [_annotation object_](#annotations) | Annotations applied to the deployment.
 

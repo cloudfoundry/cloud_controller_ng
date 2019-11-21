@@ -4,9 +4,12 @@ require 'fetchers/null_filter_query_generator'
 
 module VCAP::CloudController
   class BuildpackListFetcher
-    def fetch_all(message)
-      dataset = Buildpack.dataset
-      filter(message, dataset)
+    def fetch_all(message, eager_loaded_associations: [])
+      filter(message, buildpacks_dataset(eager_loaded_associations))
+    end
+
+    def buildpacks_dataset(eager_loaded_associations)
+      Buildpack.dataset.eager(eager_loaded_associations)
     end
 
     def filter(message, dataset)

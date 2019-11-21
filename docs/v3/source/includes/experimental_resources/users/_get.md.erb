@@ -25,9 +25,16 @@ Content-Type: application/json
 `GET /v3/users/:guid`
 
 #### Permitted roles
- |
+ Roles | Notes
 --- | ---
-Admin |
 Admin Read-Only |
+Admin |
+Global Auditor |
+Org Auditor | Can only view users affiliated with their org
+Org Billing Manager | Can only view users affiliated with their org
+Org Manager | Can only view users affiliated with their org
+Space Auditor | Can only view users affiliated with their org
+Space Developer | Can only view users affiliated with their org
+Space Manager | Can only view users affiliated with their org
 
 **Note:** A user can always see themselves with this endpoint, regardless of role.

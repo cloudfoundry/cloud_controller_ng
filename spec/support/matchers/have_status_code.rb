@@ -4,7 +4,7 @@ RSpec::Matchers.define :have_status_code do |expected_code|
   end
 
   failure_message do |response|
-    "Expected #{expected_code} response, got:\n code: #{status_code_for(response)}\n body: \"#{response.body}\""
+    "Expected #{expected_code} response, got:\n code: #{status_code_for(response)}\n body: \"#{JSON.pretty_generate(JSON.parse(response.body))}\""
   end
 
   def status_code_for(response)

@@ -85,54 +85,78 @@ RSpec.describe 'Environment group variables' do
       }
     end
 
-    it 'updates the environment variables for the running group' do
-      patch '/v3/environment_variable_groups/running', params.to_json, admin_header
-      puts last_response.body
-      expect(last_response.status).to eq(200)
+    context 'running' do
+      it 'updates the environment variables for the running group' do
+        patch '/v3/environment_variable_groups/running', params.to_json, admin_header
+        expect(last_response.status).to eq(200)
 
-      parsed_response = MultiJson.load(last_response.body)
-      expect(parsed_response).to match_json_response(
-        {
-          'updated_at' => iso8601,
-          'name' => 'running',
-          'var' => {
-            'foo' => 'in-n-out',
-            'boo' => 'mcdonalds',
-          },
-          'links' => {
-            'self' => {
-              'href' => "#{link_prefix}/v3/environment_variable_groups/running"
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response).to match_json_response(
+          {
+            'updated_at' => iso8601,
+            'name' => 'running',
+            'var' => {
+              'foo' => 'in-n-out',
+              'boo' => 'mcdonalds',
+            },
+            'links' => {
+              'self' => {
+                'href' => "#{link_prefix}/v3/environment_variable_groups/running"
+              }
             }
           }
-        }
-      )
+        )
+      end
     end
 
-    it 'updates the environment variables for the staging group' do
-      patch '/v3/environment_variable_groups/staging', params.to_json, admin_header
-      puts last_response.body
-      expect(last_response.status).to eq(200)
+    context 'staging' do
+      it 'updates the environment variables for the staging group' do
+        patch '/v3/environment_variable_groups/staging', params.to_json, admin_header
+        expect(last_response.status).to eq(200)
 
-      parsed_response = MultiJson.load(last_response.body)
-      expect(parsed_response).to match_json_response(
-        {
-          'updated_at' => iso8601,
-          'name' => 'staging',
-          'var' => {
-            'foo' => 'in-n-out',
-            'boo' => 'mcdonalds',
-            'baz' => 'whitecastle'
-          },
-          'links' => {
-            'self' => {
-              'href' => "#{link_prefix}/v3/environment_variable_groups/staging"
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response).to match_json_response(
+          {
+            'updated_at' => iso8601,
+            'name' => 'staging',
+            'var' => {
+              'foo' => 'in-n-out',
+              'boo' => 'mcdonalds',
+              'baz' => 'whitecastle'
+            },
+            'links' => {
+              'self' => {
+                'href' => "#{link_prefix}/v3/environment_variable_groups/staging"
+              }
             }
           }
-        }
-      )
+        )
+      end
+
+      context 'when user passes in {}' do
+        let(:params) { {} }
+        it 'does not error' do
+          patch '/v3/environment_variable_groups/staging', params.to_json, admin_header
+
+          parsed_response = MultiJson.load(last_response.body)
+          expect(parsed_response).to match_json_response(
+            {
+              'updated_at' => iso8601,
+              'name' => 'staging',
+              'var' => { 'foo' => 'wendys', 'baz' => 'whitecastle' },
+              'links' => {
+                'self' => {
+                  'href' => "#{link_prefix}/v3/environment_variable_groups/staging"
+                }
+              }
+            }
+          )
+          expect(last_response.status).to eq(200)
+        end
+      end
     end
 
-    context 'when the user logged in' do
+    context 'when the user is logged in' do
       let(:space) { VCAP::CloudController::Space.make }
       let(:org) { space.organization }
       let(:api_call) { lambda { |user_headers| patch '/v3/environment_variable_groups/staging', params.to_json, user_headers } }
@@ -174,6 +198,38 @@ RSpec.describe 'Environment group variables' do
         patch '/v3/environment_variable_groups/running', request_with_invalid_input.to_json, admin_header
 
         expect(last_response.status).to eq(422)
+      end
+    end
+
+    context 'the group name is not staging or running' do
+      it 'returns a 404' do
+        patch '/v3/environment_variable_groups/purple', params.to_json, admin_header
+
+        expect(last_response.status).to eq(404)
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response['errors'][0]['detail']).to include('Environment variable group not found')
+      end
+    end
+
+    if ENV['DB'] == 'mysql'
+      # This error manifests under MySQL but not PostgreSQL, so we only run it if our DB is MySQL
+      # The 64k on MySQL, 1GB on PostgreSQL. The latency of any request > 2MB is prohibitive (> 10s)
+      context 'the environment json is too large' do
+        let(:big_params) do
+          {
+            var: {
+              too_big: (0...(1024 * 64 + 1)).map { [*'A'..'Z'].sample }.join
+            }
+          }
+        end
+        it 'returns a 422' do
+          patch '/v3/environment_variable_groups/staging', big_params.to_json, admin_header
+
+          expect(last_response.status).to eq(422)
+          parsed_response = MultiJson.load(last_response.body)
+          expect(parsed_response['errors'][0]['detail']).to include(
+            'Environment variable group is too large. Specify fewer variables or reduce key/value lengths.')
+        end
       end
     end
 

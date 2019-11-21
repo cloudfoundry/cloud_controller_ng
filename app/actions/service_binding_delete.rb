@@ -19,7 +19,7 @@ module VCAP::CloudController
     def background_delete_request(service_binding)
       Jobs::Enqueuer.new(
         Jobs::DeleteActionJob.new(ServiceBinding, service_binding.guid, self),
-        queue: 'cc-generic'
+        queue: Jobs::Queues.generic
       ).enqueue
     end
 
@@ -39,7 +39,7 @@ module VCAP::CloudController
           service_binding.save_with_new_operation({ type: 'delete', state: 'in progress', broker_provided_operation: broker_response[:operation] })
 
           job = VCAP::CloudController::Jobs::Services::ServiceBindingStateFetch.new(service_binding.guid, @user_audit_info, {})
-          enqueuer = Jobs::Enqueuer.new(job, queue: 'cc-generic')
+          enqueuer = Jobs::Enqueuer.new(job, queue: Jobs::Queues.generic)
           enqueuer.enqueue
           Repositories::ServiceBindingEventRepository.record_start_delete(service_binding, @user_audit_info)
         else

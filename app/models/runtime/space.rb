@@ -154,6 +154,24 @@ module VCAP::CloudController
       end
     end
 
+    def add_auditor(user)
+      validate_auditor(user)
+      SpaceAuditor.find_or_create(user_id: user.id, space_id: id)
+      self.reload
+    end
+
+    def add_manager(user)
+      validate_manager(user)
+      SpaceManager.find_or_create(user_id: user.id, space_id: id)
+      self.reload
+    end
+
+    def add_developer(user)
+      validate_developer(user)
+      SpaceDeveloper.find_or_create(user_id: user.id, space_id: id)
+      self.reload
+    end
+
     def has_developer?(user)
       user.present? && developers_dataset.where(user_id: user.id).present?
     end

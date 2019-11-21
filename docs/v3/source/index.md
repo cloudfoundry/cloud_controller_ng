@@ -20,6 +20,7 @@ includes:
   - api_resources/processes
   - api_resources/resource_matches
   - api_resources/revisions
+  - api_resources/roles
   - api_resources/routes
   - api_resources/service_bindings
   - api_resources/service_brokers
@@ -43,7 +44,6 @@ includes:
   - concepts/procfiles
   - concepts/relationships
   - concepts/status_codes
-  - workflows/workflows
   - resources/header
   - resources/apps/header
   - resources/apps/object
@@ -100,6 +100,10 @@ includes:
   - resources/droplets/delete
   - resources/droplets/copy
   - resources/droplets/upload_bits
+  - resources/environment_variable_groups/header
+  - resources/environment_variable_groups/object
+  - resources/environment_variable_groups/get
+  - resources/environment_variable_groups/update
   - resources/feature_flags/header
   - resources/feature_flags/object
   - resources/feature_flags/flags
@@ -226,15 +230,19 @@ includes:
   - experimental_resources/deployments/list
   - experimental_resources/deployments/update
   - experimental_resources/deployments/cancel
-  - experimental_resources/environment_variable_groups/header
-  - experimental_resources/environment_variable_groups/object
-  - experimental_resources/environment_variable_groups/get
   - experimental_resources/revisions/header
   - experimental_resources/revisions/object
   - experimental_resources/revisions/get
   - experimental_resources/revisions/list
   - experimental_resources/revisions/deployed_list
   - experimental_resources/revisions/update
+  - experimental_resources/roles/header
+  - experimental_resources/roles/object
+  - experimental_resources/roles/valid_roles
+  - experimental_resources/roles/create
+  - experimental_resources/roles/get
+  - experimental_resources/roles/list
+  - experimental_resources/roles/delete
   - experimental_resources/service_bindings/header
   - experimental_resources/service_bindings/object
   - experimental_resources/service_bindings/create
@@ -243,9 +251,10 @@ includes:
   - experimental_resources/service_bindings/delete
   - experimental_resources/service_brokers/header
   - experimental_resources/service_brokers/object
+  - experimental_resources/service_brokers/create
   - experimental_resources/service_brokers/get
   - experimental_resources/service_brokers/list
-  - experimental_resources/service_brokers/create
+  - experimental_resources/service_brokers/update
   - experimental_resources/service_brokers/delete
   - experimental_resources/sidecars/header
   - experimental_resources/sidecars/object

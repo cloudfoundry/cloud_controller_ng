@@ -20,7 +20,7 @@ module VCAP::Services
           OrphanMitigator.new.cleanup_failed_provision(client_attrs, service_instance)
 
           expect(VCAP::CloudController::Jobs::Enqueuer).to have_received(:new) do |job, opts|
-            expect(opts[:queue]).to eq 'cc-generic'
+            expect(opts[:queue]).to eq VCAP::CloudController::Jobs::Queues.generic
 
             expect(job).to be_a VCAP::CloudController::Jobs::Services::DeleteOrphanedInstance
             expect(job.name).to eq 'service-instance-deprovision'
@@ -53,7 +53,7 @@ module VCAP::Services
           OrphanMitigator.new.cleanup_failed_bind(client_attrs, service_binding)
 
           expect(VCAP::CloudController::Jobs::Enqueuer).to have_received(:new) do |job, opts|
-            expect(opts[:queue]).to eq 'cc-generic'
+            expect(opts[:queue]).to eq VCAP::CloudController::Jobs::Queues.generic
 
             expect(job).to be_a VCAP::CloudController::Jobs::Services::DeleteOrphanedBinding
             expect(job.name).to eq 'service-instance-unbind'
@@ -86,7 +86,7 @@ module VCAP::Services
           OrphanMitigator.new.cleanup_failed_key(client_attrs, service_key)
 
           expect(VCAP::CloudController::Jobs::Enqueuer).to have_received(:new) do |job, opts|
-            expect(opts[:queue]).to eq 'cc-generic'
+            expect(opts[:queue]).to eq VCAP::CloudController::Jobs::Queues.generic
 
             expect(job).to be_a VCAP::CloudController::Jobs::Services::DeleteOrphanedKey
             expect(job.name).to eq 'service-key-delete'

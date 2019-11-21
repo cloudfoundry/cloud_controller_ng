@@ -9,7 +9,7 @@ module VCAP::CloudController
 
       packages.each do |package|
         blobstore_delete = Jobs::Runtime::BlobstoreDelete.new(package.guid, :package_blobstore)
-        Jobs::Enqueuer.new(blobstore_delete, queue: 'cc-generic').enqueue
+        Jobs::Enqueuer.new(blobstore_delete, queue: Jobs::Queues.generic).enqueue
         delete_metadata(package)
         package.destroy
 

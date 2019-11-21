@@ -4,8 +4,8 @@ module VCAP::CloudController
   RSpec.describe UsernamesAndRolesPopulator do
     let(:uaa_client) { double(UaaClient) }
     let(:username_populator) { UsernamesAndRolesPopulator.new(uaa_client) }
-    let(:user1) { User.new(guid: '1') }
-    let(:user2) { User.new(guid: '2') }
+    let(:user1) { User.make(guid: '1') }
+    let(:user2) { User.make(guid: '2') }
     let(:users) { [user1, user2] }
     let(:org) { Organization.make }
     let(:space) { Space.make(organization: org) }

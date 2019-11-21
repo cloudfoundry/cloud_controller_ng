@@ -111,14 +111,14 @@ module VCAP::CloudController
             message = ServiceBindingCreateMessage.new(symbolized_body)
 
             expect(message).not_to be_valid
-            expect(message.errors_on(:relationships)).to include(/'relationships' is not a hash/)
+            expect(message.errors_on(:relationships)).to include(/'relationships' is not an object/)
           end
         end
 
-        context 'when relationships is not a hash' do
+        context 'when relationships is not an object' do
           let(:symbolized_body) do
             valid_body.tap do |hash|
-              hash[:relationships] = 'not a hash'
+              hash[:relationships] = 'not an object'
             end
           end
 
@@ -126,7 +126,7 @@ module VCAP::CloudController
             message = ServiceBindingCreateMessage.new(symbolized_body)
 
             expect(message).not_to be_valid
-            expect(message.errors_on(:relationships)).to include(/'relationships' is not a hash/)
+            expect(message.errors_on(:relationships)).to include(/'relationships' is not an object/)
           end
         end
       end
@@ -297,16 +297,16 @@ module VCAP::CloudController
       end
 
       context 'data' do
-        context 'when data is not a hash' do
+        context 'when data is not an object' do
           let(:symbolized_body) do
-            valid_body.merge(data: 'tricked you not a hash')
+            valid_body.merge(data: 'tricked you not an object')
           end
 
           it 'is not valid' do
             message = ServiceBindingCreateMessage.new(symbolized_body)
 
             expect(message).not_to be_valid
-            expect(message.errors_on(:data)).to include('must be a hash')
+            expect(message.errors_on(:data)).to include('must be an object')
           end
         end
 

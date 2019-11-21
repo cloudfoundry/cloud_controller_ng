@@ -164,7 +164,11 @@ Rails.application.routes.draw do
   get '/service_brokers', to: 'service_brokers#index'
   get '/service_brokers/:guid', to: 'service_brokers#show'
   post '/service_brokers', to: 'service_brokers#create'
+  patch '/service_brokers/:guid', to: 'service_brokers#update'
   delete '/service_brokers/:guid', to: 'service_brokers#destroy'
+
+  # service_offerings
+  get '/service_offerings/:guid', to: 'service_offerings#show'
 
   # space_manifests
   post '/spaces/:guid/actions/apply_manifest', to: 'space_manifests#apply_manifest'
@@ -231,4 +235,10 @@ Rails.application.routes.draw do
   # environment variable groups
   get '/environment_variable_groups/:name', to: 'environment_variable_groups#show'
   patch '/environment_variable_groups/:name', to: 'environment_variable_groups#update'
+
+  # roles
+  get '/roles', to: 'roles#index'
+  get '/roles/:guid', to: 'roles#show'
+  post '/roles', to: 'roles#create'
+  delete '/roles/:guid', to: 'roles#destroy'
 end

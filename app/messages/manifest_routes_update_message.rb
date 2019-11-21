@@ -8,7 +8,7 @@ module VCAP::CloudController
     class ManifestRoutesYAMLValidator < ActiveModel::Validator
       def validate(record)
         if is_not_array?(record.routes) || contains_non_route_hash_values?(record.routes)
-          record.errors[:routes] << 'must be a list of route hashes'
+          record.errors[:routes] << 'must be a list of route objects'
         end
       end
 

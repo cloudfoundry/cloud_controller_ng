@@ -50,7 +50,7 @@ module VCAP::CloudController
 
     def enqueue_and_unlock!(attributes_to_update, job)
       service_instance.save_and_update_operation(attributes_to_update)
-      enqueuer = Jobs::Enqueuer.new(job, queue: 'cc-generic')
+      enqueuer = Jobs::Enqueuer.new(job, queue: Jobs::Queues.generic)
       enqueuer.enqueue
       @needs_unlock = false
     end

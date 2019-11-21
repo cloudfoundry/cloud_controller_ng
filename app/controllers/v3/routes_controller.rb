@@ -4,6 +4,7 @@ require 'messages/route_show_message'
 require 'messages/route_update_message'
 require 'messages/route_update_destinations_message'
 require 'actions/update_route_destinations'
+require 'decorators/include_route_domain_decorator'
 require 'presenters/v3/route_presenter'
 require 'presenters/v3/route_destinations_presenter'
 require 'presenters/v3/paginated_list_presenter'
@@ -24,22 +25,32 @@ class RoutesController < ApplicationController
       eager_loaded_associations: Presenters::V3::RoutePresenter.associated_resources
     )
 
+    decorators = []
+    decorators << IncludeRouteDomainDecorator if IncludeRouteDomainDecorator.match?(message.include)
+
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::RoutePresenter,
       paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
       path: '/v3/routes',
       message: message,
+      decorators: decorators,
     )
   end
 
   def show
-    message = RouteShowMessage.new({ guid: hashed_params['guid'] })
+    message = RouteShowMessage.from_params(query_params.merge(guid: hashed_params[:guid]))
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     route = Route.find(guid: message.guid)
     route_not_found! unless route && permission_queryer.can_read_route?(route.space.guid, route.organization.guid)
 
-    render status: :ok, json: Presenters::V3::RoutePresenter.new(route)
+    decorators = []
+    decorators << IncludeRouteDomainDecorator if IncludeRouteDomainDecorator.match?(message.include)
+
+    render status: :ok, json: Presenters::V3::RoutePresenter.new(
+      route,
+      decorators: decorators,
+    )
   end
 
   def create
@@ -79,7 +90,7 @@ class RoutesController < ApplicationController
   end
 
   def destroy
-    message = RouteShowMessage.new({ guid: hashed_params['guid'] })
+    message = RouteShowMessage.from_params({ guid: hashed_params['guid'] })
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     route = Route.find(guid: message.guid)
@@ -88,14 +99,14 @@ class RoutesController < ApplicationController
 
     delete_action = RouteDeleteAction.new(user_audit_info)
     deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(Route, route.guid, delete_action)
-    pollable_job = Jobs::Enqueuer.new(deletion_job, queue: 'cc-generic').enqueue_pollable
+    pollable_job = Jobs::Enqueuer.new(deletion_job, queue: Jobs::Queues.generic).enqueue_pollable
 
     url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
     head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job.guid}")
   end
 
   def index_destinations
-    message = RouteShowMessage.new({ guid: hashed_params['guid'] })
+    message = RouteShowMessage.from_params({ guid: hashed_params['guid'] })
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     route = Route.find(guid: message.guid)

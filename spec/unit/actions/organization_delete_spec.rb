@@ -134,12 +134,44 @@ module VCAP::CloudController
           expect(isolation_segment.organizations).not_to include(org_1)
         end
 
-        it 'disassociates regular users' do
+        it 'deletes org user roles' do
           org_1.add_user(user_1)
           expect(user_1.organizations).to include(org_1)
+          role = OrganizationUser.find(user_id: user_1.id, organization_id: org_1.id)
 
           org_delete.delete([org_1])
-          expect(user_1.organizations).not_to include(org_1)
+          expect(user_1.reload.organizations).not_to include(org_1)
+          expect { role.reload }.to raise_error Sequel::NoExistingObject
+        end
+
+        it 'deletes org auditor roles' do
+          org_1.add_auditor(user_1)
+          expect(user_1.audited_organizations).to include(org_1)
+          role = OrganizationAuditor.find(user_id: user_1.id, organization_id: org_1.id)
+
+          org_delete.delete([org_1])
+          expect(user_1.reload.audited_organizations).not_to include(org_1)
+          expect { role.reload }.to raise_error Sequel::NoExistingObject
+        end
+
+        it 'deletes org manager roles' do
+          org_1.add_manager(user_1)
+          expect(user_1.managed_organizations).to include(org_1)
+          role = OrganizationManager.find(user_id: user_1.id, organization_id: org_1.id)
+
+          org_delete.delete([org_1])
+          expect(user_1.reload.managed_organizations).not_to include(org_1)
+          expect { role.reload }.to raise_error Sequel::NoExistingObject
+        end
+
+        it 'deletes org billing manager roles' do
+          org_1.add_billing_manager(user_1)
+          expect(user_1.billing_managed_organizations).to include(org_1)
+          role = OrganizationBillingManager.find(user_id: user_1.id, organization_id: org_1.id)
+
+          org_delete.delete([org_1])
+          expect(user_1.reload.billing_managed_organizations).not_to include(org_1)
+          expect { role.reload }.to raise_error Sequel::NoExistingObject
         end
 
         it 'creates audit events for org deletion and recursive deletes' do

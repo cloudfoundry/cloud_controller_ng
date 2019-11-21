@@ -1,0 +1,19 @@
+### The role object
+
+```
+Example Role object
+```
+```json
+<%= yield_content :single_role %>
+```
+
+Name | Type | Description
+---- | ---- | -----------
+| **guid** | _uuid_ | Unique identifier for the role. |
+| **created_at** | _datetime_ | The time with zone when the role was created.|
+| **updated_at**  | _datetime_ | The time with zone when the role was last updated. |
+**type** | _string_ | Role type. See [Valid role types](#valid-role-types).
+**relationships.user** | [_to-one relationship_](#to-one-relationships) | A relationship to the user. This is the user that has the role. |
+| **relationships.space** | [_to-one relationship_](#to-one-relationships) | A relationship to the space the role controls access to. When this is an organization role, `space.data` will be `null`. |
+| **relationships.organization** | [_to-one relationship_](#to-one-relationships) | A relationship to the organization the role controls access to. When this is a space role, `organization.data` will be `null`. |
+| **links** | [_links object_](#links) | Links to related resources. |

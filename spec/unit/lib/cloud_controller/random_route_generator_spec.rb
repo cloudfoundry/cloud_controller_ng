@@ -17,9 +17,9 @@ module VCAP::CloudController
       expect(routes2.difference(routes1)).not_to be_empty
     end
 
-    it 'returns an adjective-noun' do
+    it 'returns an adjective-noun-twoRandomLetters' do
       route = generator.route
-      expect(route).to match(/^\w+-\w+$/)
+      expect(route).to match(/^\w+-\w+-[a-z]{2}$/)
     end
   end
 end

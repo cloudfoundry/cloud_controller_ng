@@ -73,7 +73,7 @@ class OrganizationsV3Controller < ApplicationController
     service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository.new(user_audit_info)
     delete_action = OrganizationDelete.new(SpaceDelete.new(user_audit_info, service_event_repository), user_audit_info)
     deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(Organization, org.guid, delete_action)
-    pollable_job = Jobs::Enqueuer.new(deletion_job, queue: 'cc-generic').enqueue_pollable
+    pollable_job = Jobs::Enqueuer.new(deletion_job, queue: Jobs::Queues.generic).enqueue_pollable
 
     url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
     head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job.guid}")
@@ -125,6 +125,8 @@ class OrganizationsV3Controller < ApplicationController
     org_not_found! unless org && permission_queryer.can_read_from_org?(org.guid)
 
     message = DomainsListMessage.from_params(query_params.except(:guid))
+    invalid_param!(message.errors.full_messages) unless message.valid?
+
     domains = DomainFetcher.fetch(message, domain_readable_org_guids([org.guid]))
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(

@@ -89,7 +89,7 @@ module VCAP::CloudController
       it 'is not valid' do
         expect(subject).to be_invalid
         expect(subject.errors.full_messages).to contain_exactly(
-          'Destinations[0]: must be a hash.'
+          'Destinations[0]: must be an object.'
         )
       end
     end
@@ -116,7 +116,7 @@ module VCAP::CloudController
         end
       end
 
-      context 'when app is not a hash' do
+      context 'when app is not an object' do
         let(:params) { { destinations: [{ app: '' }] } }
 
         it 'is not valid' do
@@ -162,7 +162,7 @@ module VCAP::CloudController
         end
 
         context 'when there is a process specified' do
-          context 'when the process is not a hash' do
+          context 'when the process is not an object' do
             let(:params) { { destinations: [{ app: { guid: 'guid', process: 3 } }] } }
 
             it 'is not valid' do
@@ -225,7 +225,7 @@ module VCAP::CloudController
             expect(subject.errors.full_messages).to contain_exactly(
               'Destinations[1]: process must have the structure {"type": "process_type"}',
               'Destinations[1]: weight must be a positive integer between 1 and 100.',
-              'Destinations[2]: must be a hash.'
+              'Destinations[2]: must be an object.'
             )
           end
         end

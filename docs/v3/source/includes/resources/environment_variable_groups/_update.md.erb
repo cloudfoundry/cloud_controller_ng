@@ -1,0 +1,54 @@
+### Update environment variable group
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/environment_variable_groups/[name]" \
+  -X PATCH \
+  -H "Content-Type: application/json" \
+  -H "Authorization: bearer [token]" \
+  -d '{
+     "var": {
+       "DEBUG": "false"
+       "USER": null
+     }
+   }'
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "var": {
+    "RAILS_ENV": "production",
+    "DEBUG": "false"
+  },
+  "links": {
+    "self": {
+      "href": "https://api.example.org/v3/environment_variable_groups/[name]"
+    }
+  }
+}
+```
+
+Update the environment variable group.
+The variables given in the request will be merged with the existing environment variable group.
+Any requested variables with a value of `null` will be removed from the group.
+Environment variable names may not start with VCAP_. PORT is not a valid environment variable.
+
+<aside class="notice">Variables updated in the <b>running</b> environment variable group will not take effect until apps are restarted.</aside>
+
+#### Definition
+`PATCH /v3/environment_variable_groups/:name`
+
+#### Permitted roles
+ |
+--- | ---
+Admin |

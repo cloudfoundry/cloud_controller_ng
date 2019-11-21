@@ -47,6 +47,7 @@ module VCAP::CloudController
             original_web_process_instance_count: desired_instances(app.oldest_web_process, previous_deployment),
             revision_guid: revision&.guid,
             revision_version: revision&.version,
+            strategy: DeploymentModel::ROLLING_STRATEGY,
           )
           MetadataUpdate.update(deployment, message)
 
@@ -162,7 +163,8 @@ module VCAP::CloudController
           previous_droplet: previous_droplet,
           original_web_process_instance_count: desired_instances(app.oldest_web_process, previous_deployment),
           revision_guid: revision&.guid,
-          revision_version: revision&.version
+          revision_version: revision&.version,
+          strategy: DeploymentModel::ROLLING_STRATEGY,
         )
 
         MetadataUpdate.update(deployment, message)

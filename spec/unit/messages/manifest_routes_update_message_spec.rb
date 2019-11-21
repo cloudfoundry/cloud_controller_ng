@@ -91,7 +91,7 @@ module VCAP::CloudController
         it 'is not valid' do
           msg = ManifestRoutesUpdateMessage.new(body)
           expect(msg.valid?).to eq(false)
-          expect(msg.errors.full_messages).to include('Routes must be a list of route hashes')
+          expect(msg.errors.full_messages).to include('Routes must be a list of route objects')
         end
       end
 
@@ -103,11 +103,11 @@ module VCAP::CloudController
         it 'is not valid' do
           msg = ManifestRoutesUpdateMessage.new(body)
           expect(msg.valid?).to eq(false)
-          expect(msg.errors.full_messages).to include('Routes must be a list of route hashes')
+          expect(msg.errors.full_messages).to include('Routes must be a list of route objects')
         end
       end
 
-      context 'when routes is an array of invalid route hashes' do
+      context 'when routes is an array of invalid route objects' do
         let(:body) do
           { routes: [{ 'route' => 'path.com' }, { 'root' => 'path.com' }] }
         end
@@ -115,7 +115,7 @@ module VCAP::CloudController
         it 'is not valid' do
           msg = ManifestRoutesUpdateMessage.new(body)
           expect(msg.valid?).to eq(false)
-          expect(msg.errors.full_messages).to include('Routes must be a list of route hashes')
+          expect(msg.errors.full_messages).to include('Routes must be a list of route objects')
         end
       end
 

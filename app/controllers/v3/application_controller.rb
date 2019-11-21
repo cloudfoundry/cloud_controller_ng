@@ -36,13 +36,14 @@ class ApplicationController < ActionController::Base
   include V3ErrorsHelper
   include VCAP::CloudController::ParamsHashifier
 
+  ANONYMOUSLY_AVAILABLE = ['not_found', 'internal_error', 'bad_request'].map(&:freeze).freeze
   UNSCOPED_PAGES = ['not_found', 'internal_error', 'bad_request', 'v3_root'].map(&:freeze).freeze
   READ_SCOPE_HTTP_METHODS = ['GET', 'HEAD'].map(&:freeze).freeze
   YAML_CONTENT_TYPE = 'application/x-yaml'.freeze
 
   wrap_parameters :body, format: [:json, :url_encoded_form, :multipart_form]
 
-  before_action :validate_token!, except: [:not_found, :internal_error, :bad_request]
+  before_action :validate_token!, if: :enforce_authentication?
   before_action :check_read_permissions!, if: :enforce_read_scope?
   before_action :check_write_permissions!, if: :enforce_write_scope?
   before_action :hashify_params
@@ -123,6 +124,10 @@ class ApplicationController < ActionController::Base
   ###
   ### FILTERS
   ###
+
+  def enforce_authentication?
+    !ANONYMOUSLY_AVAILABLE.include?(action_name)
+  end
 
   def enforce_read_scope?
     return false if UNSCOPED_PAGES.include?(action_name)

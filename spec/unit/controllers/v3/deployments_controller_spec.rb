@@ -686,7 +686,7 @@ RSpec.describe DeploymentsController, type: :controller do
       it 'displays an informative error' do
         patch :update, params: { guid: deployment.guid }.merge(request_body), as: :json
         expect(response.status).to eq(422)
-        expect(response).to have_error_message("labels' is not a hash")
+        expect(response).to have_error_message("labels' is not an object")
       end
     end
 

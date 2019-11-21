@@ -308,6 +308,56 @@ module VCAP::CloudController
             expect { space.refresh }.to raise_error Sequel::Error, 'Record not found'
           end
         end
+
+        describe 'roles' do
+          let(:user_with_role) { User.make }
+
+          before do
+            space.organization.add_user(user_with_role)
+          end
+
+          it 'deletes space developer roles' do
+            space.add_developer(user_with_role)
+            expect(user_with_role.spaces).to include(space)
+            role = SpaceDeveloper.find(user_id: user_with_role.id, space_id: space.id)
+            expect(role).not_to be_nil
+
+            space_delete.delete([space])
+            expect(user_with_role.reload.spaces).not_to include(space)
+            expect { role.reload }.to raise_error Sequel::NoExistingObject
+
+            organization_user = OrganizationUser.find(user_id: user_with_role.id, organization_id: space.organization.id)
+            expect(organization_user).not_to be_nil
+          end
+
+          it 'deletes space auditor roles' do
+            space.add_auditor(user_with_role)
+            expect(user_with_role.audited_spaces).to include(space)
+            role = SpaceAuditor.find(user_id: user_with_role.id, space_id: space.id)
+            expect(role).not_to be_nil
+
+            space_delete.delete([space])
+            expect(user_with_role.reload.audited_spaces).not_to include(space)
+            expect { role.reload }.to raise_error Sequel::NoExistingObject
+
+            organization_user = OrganizationUser.find(user_id: user_with_role.id, organization_id: space.organization.id)
+            expect(organization_user).not_to be_nil
+          end
+
+          it 'deletes space manager roles' do
+            space.add_manager(user_with_role)
+            expect(user_with_role.managed_spaces).to include(space)
+            role = SpaceManager.find(user_id: user_with_role.id, space_id: space.id)
+            expect(role).not_to be_nil
+
+            space_delete.delete([space])
+            expect(user_with_role.reload.managed_spaces).not_to include(space)
+            expect { role.reload }.to raise_error Sequel::NoExistingObject
+
+            organization_user = OrganizationUser.find(user_id: user_with_role.id, organization_id: space.organization.id)
+            expect(organization_user).not_to be_nil
+          end
+        end
       end
     end
   end
