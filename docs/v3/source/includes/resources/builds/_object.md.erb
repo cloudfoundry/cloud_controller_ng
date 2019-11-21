@@ -11,7 +11,7 @@ Name | Type | Description
 ---- | ---- | -----------
 **state** | _string_ | State of the build. Valid states are `STAGING`, `STAGED`, or `FAILED`.
 **error** | _string_ | A string describing errors during the build process.
-**lifecycle** | [_lifecycle object_](#the-lifecycle-object) | An object describing the lifecycle that was configured or discovered from the app.
+**lifecycle** | [_lifecycle object_](#the-lifecycle-object) | Provides the lifecycle object to use during staging. This will override the build's application's default lifecycle for this build.
 **package** | _object_ | The package that is the input to the staging process.
 **droplet** | _object_ | A resulting droplet from the staging process.
 **guid** | _uuid_ | Unique identifier for the build.
