@@ -53,14 +53,14 @@ A annotation key `prefix` must adhere to the following restrictions:
 A annotation key `name` must adhere to the following restrictions:
 
 * Length: 1-63 characters
-* Allowed characters: alphanumeric , `-`, `_`, and `.`
+* Allowed characters: alphanumeric ( \[a-z0-9A-Z\] ) , `-`, `_`, and `.`
 * Must begin and end with an alphanumeric character
 
 #### Annotation value
 
 Annotation values must adhere to the following restrictions:
 
-* Length: 0-5000 characters
+* Length: 0-5000 unicode characters
 
 ### Labels and selectors
 
@@ -118,13 +118,13 @@ Prefixes are dns names intended to enable namespacing of label keys.
 A label key `prefix` must adhere to the following restrictions:
 
 * Length: 0-253 characters
-* Allowed characters: alphanumeric, `-`, and `.`
+* Allowed characters: alphanumeric ( \[a-z0-9A-Z\] ), `-`, and `.`
 * DNS subdomain format (series of subdomain labels separated by `.`)
 
 A label key `name` must adhere to the following restrictions:
 
 * Length: 1-63 characters
-* Allowed characters: alphanumeric , `-`, `_`, and `.`
+* Allowed characters: alphanumeric ( \[a-z0-9A-Z\] ), `-`, `_`, and `.`
 * Must begin and end with an alphanumeric character
 
 ##### Label values
@@ -132,7 +132,7 @@ A label key `name` must adhere to the following restrictions:
 Label values must adhere to the following restrictions:
 
 * Length: 0-63 characters
-* Allowed characters: alphanumeric , `-`, `_`, and `.`
+* Allowed characters: alphanumeric ( \[a-z0-9A-Z\] ), `-`, `_`, and `.`
 * Must begin and end with an alphanumeric character
 * Empty values are allowed
 
