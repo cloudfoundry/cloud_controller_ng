@@ -286,7 +286,7 @@ GEM
     netaddr (2.0.4)
     netrc (0.11.0)
     newrelic_rpm (5.3.0.346)
-    nokogiri (1.10.4)
+    nokogiri (1.10.5)
       mini_portile2 (~> 2.4.0)
     os (1.0.1)
     palm_civet (1.1.0)
@@ -523,7 +523,7 @@ DEPENDENCIES
   net-ssh
   netaddr
   newrelic_rpm
-  nokogiri
+  nokogiri (>= 1.10.5)
   palm_civet
   parallel_tests
   pg
