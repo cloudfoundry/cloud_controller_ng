@@ -10,7 +10,7 @@ module VCAP::CloudController
       if message.requested?(:label_selector)
         dataset = LabelSelectorQueryGenerator.add_selector_queries(
           label_klass: RevisionLabelModel,
-          resource_dataset: dataset,
+          resource_dataset: dataset.qualify,
           requirements: message.requirements,
           resource_klass: RevisionModel,
         )

@@ -2,7 +2,7 @@ module VCAP::CloudController
   class RouteFetcher
     class << self
       def fetch(message, readable_route_guids, eager_loaded_associations: [])
-        dataset = Route.where(guid: readable_route_guids).eager(eager_loaded_associations)
+        dataset = Route.where(guid: readable_route_guids).eager(eager_loaded_associations).qualify
         filter(message, dataset)
       end
 
@@ -22,35 +22,19 @@ module VCAP::CloudController
           dataset = dataset.where(path: message.paths)
         end
 
-        if !message.requested?(:label_selector)
-          if message.requested?(:organization_guids)
-            dataset = dataset.where(organization: Organization.where(guid: message.organization_guids))
-          end
+        if message.requested?(:organization_guids)
+          dataset = dataset.where(organization: Organization.where(guid: message.organization_guids))
+        end
 
-          if message.requested?(:space_guids)
-            dataset = dataset.where(space: Space.where(guid: message.space_guids))
-          end
+        if message.requested?(:space_guids)
+          dataset = dataset.where(space: Space.where(guid: message.space_guids))
+        end
 
-          if message.requested?(:domain_guids)
-            dataset = dataset.where(domain: Domain.where(guid: message.domain_guids))
-          end
-        else
-          if message.requested?(:organization_guids)
-            # This is a bit rough because routes don't have a direct organization field
-            space_ids = Organization.where(guid: message.organization_guids).map(&:spaces).flatten.map(&:id)
-            dataset = dataset.where(space_id: space_ids)
-          end
+        if message.requested?(:domain_guids)
+          dataset = dataset.where(domain: Domain.where(guid: message.domain_guids))
+        end
 
-          if message.requested?(:space_guids)
-            space_ids = Space.where(guid: message.space_guids).map(&:id)
-            dataset = dataset.where(space_id: space_ids)
-          end
-
-          if message.requested?(:domain_guids)
-            domain_ids = Domain.where(guid: message.domain_guids).map(&:id)
-            dataset = dataset.where(domain_id: domain_ids)
-          end
-
+        if message.requested?(:label_selector)
           dataset = LabelSelectorQueryGenerator.add_selector_queries(
             label_klass: RouteLabelModel,
             resource_dataset: dataset,

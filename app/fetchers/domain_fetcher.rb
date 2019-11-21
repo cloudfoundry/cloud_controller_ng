@@ -17,7 +17,7 @@ module VCAP::CloudController
           [:id, readable_shared_private_domains_filter]
         ]).sql_boolean
 
-        Domain.where(user_visible_domains)
+        Domain.where(user_visible_domains).qualify
       end
 
       def fetch(message, readable_org_guids)
