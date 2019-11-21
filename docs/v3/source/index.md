@@ -44,7 +44,6 @@ includes:
   - concepts/procfiles
   - concepts/relationships
   - concepts/status_codes
-  - workflows/workflows
   - resources/header
   - resources/apps/header
   - resources/apps/object
