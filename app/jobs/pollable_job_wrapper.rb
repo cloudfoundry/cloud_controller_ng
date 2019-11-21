@@ -19,8 +19,20 @@ module VCAP::CloudController
       end
 
       def error(job, exception)
-        api_error = convert_to_v3_api_error(exception)
-        save_error(api_error, job)
+        begin
+          api_error = convert_to_v3_api_error(exception)
+          save_error(api_error, job)
+        rescue Sequel::DatabaseError
+          if (exception.backtrace.size rescue 0) > 0
+            exception.backtrace.slice!((exception.backtrace.size / 2)..-1)
+            retry
+          else
+            raise
+          end
+        end
+      rescue StandardError => ex
+        logger.error("can't yaml-encode exception #{exception}: #{ex.message}")
+        raise
       end
 
       def failure(job)
@@ -63,6 +75,10 @@ module VCAP::CloudController
         find_pollable_job(job).each do |pollable_job|
           pollable_job.update(state: new_state)
         end
+      end
+
+      def logger
+        @logger ||= Steno.logger('cc.pollable.job.wrapper')
       end
     end
   end
