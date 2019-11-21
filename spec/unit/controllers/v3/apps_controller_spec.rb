@@ -646,12 +646,11 @@ RSpec.describe AppsV3Controller, type: :controller do
           disallow_user_write_access(user, space: space)
         end
 
-        it 'returns an Unauthorized error' do
+        it 'returns an unauthorized error' do
           post :create, params: request_body, as: :json
 
-          expect(response.status).to eq(422)
-          expect(response.body).to include 'UnprocessableEntity'
-          expect(response.body).to include('Invalid space. Ensure that the space exists and you have access to it.')
+          expect(response.status).to eq(403)
+          expect(response.body).to include 'NotAuthorized'
         end
       end
     end

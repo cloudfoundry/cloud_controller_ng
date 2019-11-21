@@ -221,7 +221,7 @@ RSpec.describe 'Routes Request' do
           updated_at: iso8601,
           host: '',
           path: '/path1',
-          url: "#{route_without_host_and_with_path.host}.#{domain.name}/path1",
+          url: "#{domain.name}/path1",
           metadata: {
             labels: {},
             annotations: {}
@@ -253,7 +253,7 @@ RSpec.describe 'Routes Request' do
           updated_at: iso8601,
           host: '',
           path: '/path2',
-          url: "#{route1_domain1.host}.#{domain.name}/path2",
+          url: "#{domain.name}/path2",
           metadata: {
             labels: {},
             annotations: {}

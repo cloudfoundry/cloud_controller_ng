@@ -83,8 +83,8 @@ class AppsV3Controller < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     space = Space.where(guid: message.space_guid).first
-    unprocessable_space! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization_guid) && permission_queryer.can_write_to_space?(space.guid)
-
+    unprocessable_space! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization_guid)
+    unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
     if message.lifecycle_type == VCAP::CloudController::PackageModel::DOCKER_TYPE
       FeatureFlag.raise_unless_enabled!(:diego_docker)
     end
