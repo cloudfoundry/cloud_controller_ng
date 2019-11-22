@@ -178,7 +178,7 @@ module VCAP::CloudController
 
           context 'when the route is a tcp route' do
             let(:ra_client) { instance_double(VCAP::CloudController::RoutingApi::Client, router_group: rg) }
-            let(:rg) { instance_double(VCAP::CloudController::RoutingApi::RouterGroup, type: 'tcp', reservable_ports: [1234]) }
+            let(:rg) { instance_double(VCAP::CloudController::RoutingApi::RouterGroup, type: 'tcp', reservable_ports: [1234, 1235]) }
             let!(:tcp_domain) { SharedDomain.make(name: 'tcp.tomato.avocado-toast.com', router_group_guid: '123') }
             let(:message) do
               ManifestRoutesUpdateMessage.new(
@@ -205,6 +205,27 @@ module VCAP::CloudController
               expect(route.host).to eq('')
               expect(route.domain.name).to eq('tcp.tomato.avocado-toast.com')
               expect(route.port).to eq(1234)
+            end
+
+            context 'but there is another tcp route with a different port' do
+              let!(:other_route) { Route.make(domain: tcp_domain, host: '', space: app.space, port: 1235) }
+              let!(:other_route_mapping) {
+                RouteMappingModel.make(app: app, route: other_route)
+              }
+
+              it 'creates and maps the route to the app' do
+                expect {
+                  ManifestRouteUpdate.update(app.guid, message, user_audit_info)
+                }.to change { app.reload.routes.length }.by(1)
+                routes = app.reload.routes
+                expect(routes.length).to eq(2)
+
+                route = routes.last
+
+                expect(route.host).to eq('')
+                expect(route.domain.name).to eq('tcp.tomato.avocado-toast.com')
+                expect(route.port).to eq(1234)
+              end
             end
           end
 

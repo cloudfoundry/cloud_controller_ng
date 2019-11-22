@@ -62,7 +62,13 @@ module VCAP::CloudController
             port: manifest_route[:port] || 0,
             space_guid: app.space.guid
           }
-          route = Route.find(host: host, domain: existing_domain, path: route_hash[:path])
+
+          route = if manifest_route[:port].present?
+                    Route.find(host: host, domain: existing_domain, path: route_hash[:path], port: route_hash[:port])
+                  else
+                    Route.find(host: host, domain: existing_domain, path: route_hash[:path])
+                  end
+
           if !route
             FeatureFlag.raise_unless_enabled!(:route_creation)
             if host == '*' && existing_domain.shared?
