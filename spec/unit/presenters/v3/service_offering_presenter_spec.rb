@@ -13,8 +13,9 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServiceOfferingPresenter d
   let(:tags) { %w(foo bar) }
   let(:requires) { %w(syslog_drain route_forwarding volume_mount) }
   let(:updateable) { true }
+  let(:service_broker) { VCAP::CloudController::ServiceBroker.make }
 
-  let(:model) do
+  let(:service_offering) do
     VCAP::CloudController::Service.make(
       guid: guid,
       label: name,
@@ -25,12 +26,13 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServiceOfferingPresenter d
       unique_id: id,
       tags: tags,
       requires: requires,
-      plan_updateable: updateable
+      plan_updateable: updateable,
+      service_broker: service_broker,
     )
   end
 
   describe '#to_hash' do
-    let(:result) { described_class.new(model).to_hash }
+    let(:result) { described_class.new(service_offering).to_hash }
 
     it 'presents the service offering as JSON' do
       expect(result).to eq({
@@ -43,10 +45,29 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServiceOfferingPresenter d
         'broker_service_offering_id': id,
         'tags': tags,
         'requires': requires,
-        'created_at': model.created_at,
-        'updated_at': model.updated_at,
+        'created_at': service_offering.created_at,
+        'updated_at': service_offering.updated_at,
         'plan_updateable': updateable,
         'shareable': false,
+        'links': {
+          'self': {
+            'href': "#{link_prefix}/v3/service_offerings/#{guid}"
+          },
+          'service_plans': {
+            'href': "#{link_prefix}/v3/service_plans?service_offering_guids=#{guid}"
+          },
+          'service_broker': {
+            'href': "#{link_prefix}/v3/service_brokers/#{service_broker.guid}"
+          },
+        },
+        'relationships': {
+          'service_broker': {
+            'data': {
+              'name': service_broker.name,
+              'guid': service_broker.guid
+            }
+          }
+        }
       })
     end
 

@@ -21,7 +21,9 @@ module VCAP::CloudController
             created_at: service_offering.created_at,
             updated_at: service_offering.updated_at,
             plan_updateable: service_offering.plan_updateable,
-            shareable: shareable
+            shareable: shareable,
+            links: build_links,
+            relationships: build_relationships,
           }
         end
 
@@ -41,6 +43,33 @@ module VCAP::CloudController
           end
 
           false
+        end
+
+        def build_links
+          url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
+
+          {
+            self: {
+              href: url_builder.build_url(path: "/v3/service_offerings/#{service_offering.guid}")
+            },
+            service_plans: {
+              href: url_builder.build_url(path: '/v3/service_plans', query: "service_offering_guids=#{service_offering.guid}")
+            },
+            service_broker: {
+              href: url_builder.build_url(path: "/v3/service_brokers/#{service_offering.service_broker.guid}")
+            }
+          }
+        end
+
+        def build_relationships
+          {
+            service_broker: {
+              data: {
+                name: service_offering.service_broker.name,
+                guid: service_offering.service_broker.guid
+              }
+            }
+          }
         end
       end
     end

@@ -30,7 +30,26 @@ RSpec.describe 'V3 service offerings' do
           'created_at' => iso8601,
           'updated_at' => iso8601,
           'plan_updateable' => false,
-          'shareable' => true
+          'shareable' => true,
+          'links' => {
+            'self' => {
+              'href' => %r(#{Regexp.escape(link_prefix)}\/v3\/service_offerings\/#{guid})
+            },
+            'service_plans' => {
+              'href' => %r(#{Regexp.escape(link_prefix)}\/v3\/service_plans\?service_offering_guids=#{guid})
+            },
+            'service_broker' => {
+              'href' => %r(#{Regexp.escape(link_prefix)}\/v3\/service_brokers\/#{service_offering.service_broker.guid})
+            }
+          },
+          'relationships' => {
+            'service_broker' => {
+              'data' => {
+                'name' => service_offering.service_broker.name,
+                'guid' => service_offering.service_broker.guid
+              }
+            }
+          }
         }
       }
     end
