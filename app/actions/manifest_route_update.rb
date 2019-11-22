@@ -56,13 +56,14 @@ module VCAP::CloudController
 
           host = candidate[:host]
 
-          find_args = {
+          route = Route.find(
             host: host,
             domain: existing_domain,
-            path: manifest_route[:path],
-          }
-          find_args[:port] = manifest_route[:port] if manifest_route[:port].present?
-          route = Route.find(**find_args)
+            **manifest_route.compact.slice(
+              :path,
+              :port,
+            )
+          )
 
           if !route
             FeatureFlag.raise_unless_enabled!(:route_creation)

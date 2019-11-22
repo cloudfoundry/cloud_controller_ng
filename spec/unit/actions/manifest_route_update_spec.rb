@@ -200,11 +200,10 @@ module VCAP::CloudController
               routes = app.reload.routes
               expect(routes.length).to eq(1)
 
-              route = routes.first
+              route = routes.find { |r| r.port == 1234 }
 
               expect(route.host).to eq('')
               expect(route.domain.name).to eq('tcp.tomato.avocado-toast.com')
-              expect(route.port).to eq(1234)
             end
 
             context 'but there is another tcp route with a different port' do
@@ -220,11 +219,10 @@ module VCAP::CloudController
                 routes = app.reload.routes
                 expect(routes.length).to eq(2)
 
-                route = routes.find(port: 1234).first
+                route = routes.find { |r| r.port == 1234 }
 
                 expect(route.host).to eq('')
                 expect(route.domain.name).to eq('tcp.tomato.avocado-toast.com')
-                expect(route.port).to eq(1234)
               end
             end
           end
