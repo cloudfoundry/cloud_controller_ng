@@ -71,26 +71,6 @@ module VCAP::CloudController::Presenters::V3
           expect(subject[:url]).to eq("#{domain.name}#{route.path}")
         end
       end
-
-      context 'when there are decorators' do
-        let(:banana_decorator) do
-          Class.new do
-            class << self
-              def decorate(hash, routes)
-                hash[:included] ||= {}
-                hash[:included][:bananas] = routes.map { |route| "#{route.host} is bananas" }
-                hash
-              end
-            end
-          end
-        end
-
-        subject { RoutePresenter.new(route, decorators: [banana_decorator]).to_hash }
-
-        it 'runs the decorators' do
-          expect(subject[:included][:bananas]).to match_array(['host is bananas'])
-        end
-      end
     end
   end
 end
