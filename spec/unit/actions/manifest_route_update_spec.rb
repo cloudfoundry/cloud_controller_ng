@@ -220,7 +220,7 @@ module VCAP::CloudController
                 routes = app.reload.routes
                 expect(routes.length).to eq(2)
 
-                route = routes.last
+                route = routes.find(port: 1234).first
 
                 expect(route.host).to eq('')
                 expect(route.domain.name).to eq('tcp.tomato.avocado-toast.com')

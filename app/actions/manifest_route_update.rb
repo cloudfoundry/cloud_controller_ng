@@ -55,19 +55,14 @@ module VCAP::CloudController
           next if !existing_domain
 
           host = candidate[:host]
-          route_hash = {
-            host: host,
-            domain_guid: existing_domain.guid,
-            path: manifest_route[:path],
-            port: manifest_route[:port] || 0,
-            space_guid: app.space.guid
-          }
 
-          route = if manifest_route[:port].present?
-                    Route.find(host: host, domain: existing_domain, path: route_hash[:path], port: route_hash[:port])
-                  else
-                    Route.find(host: host, domain: existing_domain, path: route_hash[:path])
-                  end
+          find_args = {
+            host: host,
+            domain: existing_domain,
+            path: manifest_route[:path],
+          }
+          find_args[:port] = manifest_route[:port] if manifest_route[:port].present?
+          route = Route.find(**find_args)
 
           if !route
             FeatureFlag.raise_unless_enabled!(:route_creation)
@@ -75,6 +70,13 @@ module VCAP::CloudController
               raise CloudController::Errors::ApiError.new_from_details('NotAuthorized')
             end
 
+            route_hash = {
+              host: host,
+              domain_guid: existing_domain.guid,
+              path: manifest_route[:path],
+              port: manifest_route[:port] || 0,
+              space_guid: app.space.guid
+            }
             route = V3::RouteCreate.create_route(route_hash: route_hash, user_audit_info: user_audit_info, logger: logger, manifest_triggered: true)
           elsif route.space.guid != app.space.guid
             raise InvalidRoute.new('Routes cannot be mapped to destinations in different spaces')
