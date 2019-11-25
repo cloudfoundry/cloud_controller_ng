@@ -7,6 +7,8 @@ require 'actions/role_guid_populate'
 require 'actions/role_delete'
 require 'presenters/v3/role_presenter'
 require 'decorators/include_role_user_decorator'
+require 'decorators/include_role_organization_decorator'
+require 'decorators/include_role_space_decorator'
 
 class RolesController < ApplicationController
   def create
@@ -35,6 +37,8 @@ class RolesController < ApplicationController
 
     decorators = []
     decorators << IncludeRoleUserDecorator if IncludeRoleUserDecorator.match?(message.include)
+    decorators << IncludeRoleOrganizationDecorator if IncludeRoleOrganizationDecorator.match?(message.include)
+    decorators << IncludeRoleSpaceDecorator if IncludeRoleSpaceDecorator.match?(message.include)
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::RolePresenter,
@@ -51,6 +55,8 @@ class RolesController < ApplicationController
 
     decorators = []
     decorators << IncludeRoleUserDecorator if IncludeRoleUserDecorator.match?(message.include)
+    decorators << IncludeRoleOrganizationDecorator if IncludeRoleOrganizationDecorator.match?(message.include)
+    decorators << IncludeRoleSpaceDecorator if IncludeRoleSpaceDecorator.match?(message.include)
 
     role = readable_roles.first(guid: hashed_params[:guid])
     resource_not_found!(:role) unless role

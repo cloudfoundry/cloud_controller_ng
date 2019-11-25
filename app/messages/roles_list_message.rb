@@ -12,7 +12,7 @@ module VCAP::CloudController
     ]
 
     validates_with NoAdditionalParamsValidator
-    validates_with IncludeParamValidator, valid_values: ['user']
+    validates_with IncludeParamValidator, valid_values: %w(user organization space)
 
     validates :guids, allow_nil: true, array: true
     validates :organization_guids, allow_nil: true, array: true

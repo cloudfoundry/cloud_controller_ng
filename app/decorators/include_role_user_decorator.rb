@@ -1,5 +1,3 @@
-# require 'models/runtime/user'
-
 module VCAP::CloudController
   class IncludeRoleUserDecorator
     class << self

@@ -14,7 +14,7 @@ module VCAP::CloudController
           'user_guids' => 'my-user-guid',
           'space_guids' => 'my-space-guid',
           'organization_guids' => 'my-organization-guid',
-          'include' => 'user',
+          'include' => 'user,organization,space',
         }
       end
 
@@ -29,7 +29,7 @@ module VCAP::CloudController
         expect(message.user_guids).to eq(['my-user-guid'])
         expect(message.space_guids).to eq(['my-space-guid'])
         expect(message.organization_guids).to eq(['my-organization-guid'])
-        expect(message.include).to eq(['user'])
+        expect(message.include).to eq(%w(user organization space))
       end
 
       it 'converts requested keys to symbols' do
@@ -62,7 +62,7 @@ module VCAP::CloudController
           'user_guids' => 'my-user-guid',
           'space_guids' => 'my-space-guid',
           'organization_guids' => 'my-organization-guid',
-          'include' => 'user',
+          'include' => 'user,organization,space',
         })
         expect(message).to be_valid
       end
