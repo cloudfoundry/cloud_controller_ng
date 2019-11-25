@@ -67,6 +67,13 @@ module VCAP::CloudController
     buildpack_lifecycle_data { nil.tap { |_| object.save } }
   end
 
+  BuildModel.blueprint(:kpack) do
+    guid     { Sham.guid }
+    state    { VCAP::CloudController::DropletModel::STAGING_STATE }
+    app { AppModel.make }
+    kpack_lifecycle_data { KpackLifecycleDataModel.make(build: object.save) }
+  end
+
   PackageModel.blueprint do
     guid     { Sham.guid }
     state    { VCAP::CloudController::PackageModel::CREATED_STATE }
@@ -500,6 +507,10 @@ module VCAP::CloudController
   BuildpackLifecycleDataModel.blueprint do
     buildpacks { nil }
     stack { Stack.make.name }
+  end
+
+  KpackLifecycleDataModel.blueprint do
+    build { BuildModel.make }
   end
 
   BuildpackLifecycleBuildpackModel.blueprint do

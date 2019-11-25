@@ -1,9 +1,9 @@
 RSpec.shared_examples_for 'a lifecycle' do
-  let(:droplet) { VCAP::CloudController::DropletModel.make }
+  let(:build) { VCAP::CloudController::BuildModel.make }
 
   it 'creates a lifecycle data model' do
     expect {
-      subject.create_lifecycle_data_model(droplet)
+      subject.create_lifecycle_data_model(build)
     }.not_to raise_error
   end
 

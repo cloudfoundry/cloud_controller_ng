@@ -357,6 +357,11 @@ module VCAP::CloudController
               token: String,
             },
             ca_file: String,
+            optional(:kpack) => {
+              builder_namespace: String,
+              registry_service_account_name: String,
+              registry_tag_base: String,
+            }
           },
         }
       end

@@ -66,7 +66,7 @@ module VCAP::CloudController
 
     before do
       allow(CloudController::DependencyLocator.instance).to receive(:stagers).and_return(stagers)
-      allow(stagers).to receive(:stager_for_app).and_return(stager)
+      allow(stagers).to receive(:stager_for_build).and_return(stager)
       allow(stager).to receive(:stage)
       allow(memory_limit_calculator).to receive(:get_limit).with(staging_memory_in_mb, space, org).and_return(calculated_mem_limit)
       allow(disk_limit_calculator).to receive(:get_limit).with(staging_disk_in_mb).and_return(calculated_staging_disk_in_mb)

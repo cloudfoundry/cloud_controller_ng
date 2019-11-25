@@ -1,13 +1,15 @@
 require 'kubeclient'
+require 'uri'
 
 module Clients
   class KubernetesClient
-    class MissingCredentialsError < StandardError; end
-
+    class Error < StandardError; end
+    class MissingCredentialsError < Error; end
+    class InvalidURIError < Error; end
     attr_reader :client
 
-    def initialize(host_url:, service_account:, ca_crt:)
-      if [host_url, service_account, ca_crt].any?(&:blank?)
+    def initialize(api_group_url:, version:, service_account:, ca_crt:)
+      if [api_group_url, service_account, ca_crt].any?(&:blank?)
         raise MissingCredentialsError.new('Missing credentials for Kubernetes')
       end
 
@@ -18,8 +20,8 @@ module Clients
         ca: ca_crt
       }
       @client = Kubeclient::Client.new(
-        host_url,
-        'v1',
+        api_group_url.to_s,
+        version,
         auth_options: auth_options,
         ssl_options:  ssl_options
       )

@@ -84,24 +84,28 @@ module VCAP::CloudController
     end
 
     describe '#stager_for_app' do
-      let(:lifecycle_type) { 'buildpack' }
-      let(:app) { AppModel.make }
+      let(:lifecycle_type) {'buildpack'}
+      let(:app) {AppModel.make}
 
-      context 'when the app has diego processes' do
-        before do
-          ProcessModel.make(app: app, diego: true)
-        end
+      it 'finds a diego stager' do
+        stager = stagers.stager_for_app
+        expect(stager).to be_a(Diego::Stager)
+      end
+    end
 
-        it 'finds a diego stager' do
-          stager = stagers.stager_for_app
-          expect(stager).to be_a(Diego::Stager)
-        end
+    describe '#stager_for_build' do
+      let(:build) { BuildModel.make }
+
+      it 'finds a diego stager' do
+        stager = stagers.stager_for_build(build)
+        expect(stager).to be_a(Diego::Stager)
       end
 
-      context 'when there are no processes' do
-        it 'finds a diego stager' do
-          stager = stagers.stager_for_app
-          expect(stager).to be_a(Diego::Stager)
+      context 'when the build is a kpack build' do
+        let(:build) { BuildModel.make(:kpack) }
+        it 'finds a kpack stager' do
+          stager = stagers.stager_for_build(build)
+          expect(stager).to be_a(Kpack::Stager)
         end
       end
     end

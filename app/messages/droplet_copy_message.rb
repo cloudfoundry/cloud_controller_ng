@@ -1,6 +1,6 @@
 require 'messages/base_message'
 require 'messages/validators'
-require 'messages/docker_lifecycle_data_message'
+require 'messages/empty_lifecycle_data_message'
 
 module VCAP::CloudController
   class DropletCopyMessage < BaseMessage

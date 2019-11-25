@@ -347,7 +347,7 @@ module VCAP::CloudController::Validators
           message = lifecycle_class.new({ lifecycle: { type: 'not valid', data: {} } })
 
           expect(message).not_to be_valid
-          expect(message.errors_on(:lifecycle_type)).to include('is not included in the list: buildpack, docker')
+          expect(message.errors_on(:lifecycle_type)).to include('is not included in the list: buildpack, docker, kpack')
         end
       end
 
@@ -359,6 +359,14 @@ module VCAP::CloudController::Validators
             expect(message).to_not be_valid
             expect(message.errors_on(:lifecycle)).to include('Buildpacks can only contain strings')
           end
+        end
+      end
+
+      context 'when lifecycle type provided is kpack' do
+        it 'correctly adds the buildpack data message validation errors' do
+          message = lifecycle_class.new({ lifecycle: { type: 'kpack', data: {} } })
+
+          expect(message).to be_valid
         end
       end
     end

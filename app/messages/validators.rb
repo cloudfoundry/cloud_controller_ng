@@ -127,7 +127,8 @@ module VCAP::CloudController::Validators
     def validate(record)
       data_message = {
         VCAP::CloudController::Lifecycles::BUILDPACK => VCAP::CloudController::BuildpackLifecycleDataMessage,
-        VCAP::CloudController::Lifecycles::DOCKER => VCAP::CloudController::DockerLifecycleDataMessage,
+        VCAP::CloudController::Lifecycles::DOCKER => VCAP::CloudController::EmptyLifecycleDataMessage,
+        VCAP::CloudController::Lifecycles::KPACK => VCAP::CloudController::EmptyLifecycleDataMessage,
       }
 
       lifecycle_data_message_class = data_message[record.lifecycle_type]

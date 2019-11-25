@@ -714,7 +714,7 @@ RSpec.describe CloudController::DependencyLocator do
 
       TestConfig.override({
         kubernetes: {
-          host_url: 'my_kubernetes.io/api',
+          host_url: 'https://my.kubernetes.io',
           service_account: {
             name: 'username',
             token: 'token',
@@ -724,8 +724,8 @@ RSpec.describe CloudController::DependencyLocator do
       })
     end
 
-    it 'creates a kubernetes client from config' do
-      client = locator.kubernetes_client.client
+    it 'creates a kpack client from config' do
+      client = locator.kpack_client.client
 
       expect(client.ssl_options).to eq({
                                          ca: 'my crt'
@@ -735,7 +735,7 @@ RSpec.describe CloudController::DependencyLocator do
                                           bearer_token: 'token'
                                         })
 
-      expect(client.api_endpoint.to_s).to eq 'my_kubernetes.io/api'
+      expect(client.api_endpoint.to_s).to eq 'https://my.kubernetes.io/apis/build.pivotal.io'
     end
   end
 end

@@ -188,7 +188,7 @@ RSpec.describe BuildsController, type: :controller do
 
     before do
       allow(CloudController::DependencyLocator.instance).to receive(:stagers).and_return(stagers)
-      allow(stagers).to receive(:stager_for_app).and_return(stager)
+      allow(stagers).to receive(:stager_for_build).and_return(stager)
       app_model.lifecycle_data.update(buildpacks: nil, stack: stack)
       set_current_user_as_admin
     end

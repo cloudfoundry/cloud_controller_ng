@@ -11,8 +11,11 @@ RSpec.describe 'Builds' do
   let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid, name: 'my-app') }
   let(:second_app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid, name: 'my-second-app') }
   let(:rails_logger) { instance_double(ActiveSupport::Logger, info: nil) }
+  let(:kpack_client) { instance_double(Clients::KubernetesKpackClient) }
 
   before do
+    CloudController::DependencyLocator.instance.register(:kpack_client, kpack_client)
+    allow(kpack_client).to receive(:create_image)
     allow(ActiveSupport::Logger).to receive(:new).and_return(rails_logger)
     allow(VCAP::CloudController::TelemetryLogger).to receive(:emit).and_call_original
     VCAP::CloudController::TelemetryLogger.init('fake-log-path')
@@ -127,6 +130,29 @@ RSpec.describe 'Builds' do
         'build_guid' => created_build.guid,
         'package_guid' => package.guid,
       })
+    end
+
+    context 'kpack lifecycle' do
+      let(:kpack_request) do
+        {
+          lifecycle: {
+            type: 'kpack',
+            data: {
+            },
+          },
+          package: {
+            guid: package.guid
+          }
+        }
+      end
+
+      it 'succeeds' do
+        post 'v3/builds', kpack_request.to_json, developer_headers
+
+        expect(last_response.status).to(eq(201), last_response.body)
+        expect(parsed_response['lifecycle']['type']).to eq 'kpack'
+        expect(parsed_response['state']).to eq 'STAGING'
+      end
     end
 
     context 'telemetry' do

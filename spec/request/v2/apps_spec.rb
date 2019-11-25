@@ -1192,7 +1192,7 @@ RSpec.describe 'Apps' do
 
     before do
       allow_any_instance_of(VCAP::CloudController::Stagers).to receive(:validate_process)
-      allow_any_instance_of(VCAP::CloudController::Stagers).to receive(:stager_for_app).and_return(stager)
+      allow_any_instance_of(VCAP::CloudController::Stagers).to receive(:stager_for_build).and_return(stager)
       VCAP::CloudController::Buildpack.make
     end
 

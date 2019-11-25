@@ -1,5 +1,5 @@
 module VCAP::CloudController
-  class DockerLifecycleDataMessage < BaseMessage
+  class EmptyLifecycleDataMessage < BaseMessage
     register_allowed_keys []
 
     validates_with NoAdditionalKeysValidator
