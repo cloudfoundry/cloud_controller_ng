@@ -60,12 +60,12 @@ module VCAP
 
         def can_read_from_org?(org_id)
           can_read_globally? ||
-          has_any_permission?([
-            { action: ORG_MANAGER_ACTION, resource: org_id },
-            { action: ORG_AUDITOR_ACTION, resource: org_id },
-            { action: ORG_USER_ACTION, resource: org_id },
-            { action: ORG_BILLING_MANAGER_ACTION, resource: org_id },
-          ])
+            has_any_permission?([
+              { action: ORG_MANAGER_ACTION, resource: org_id },
+              { action: ORG_AUDITOR_ACTION, resource: org_id },
+              { action: ORG_USER_ACTION, resource: org_id },
+              { action: ORG_BILLING_MANAGER_ACTION, resource: org_id },
+            ])
         end
 
         def can_write_to_org?(org_id)
@@ -87,6 +87,21 @@ module VCAP
               [
                 ORG_MANAGER_ACTION,
               ])
+          end
+        end
+
+        def readable_space_scoped_space_guids
+          if can_read_globally?
+            VCAP::CloudController::Space.select(:guid).all.map(&:guid)
+          else
+            space_guids_for_actions(
+              [
+                SPACE_DEVELOPER_ACTION,
+                SPACE_MANAGER_ACTION,
+                SPACE_AUDITOR_ACTION,
+              ],
+              []
+            )
           end
         end
 

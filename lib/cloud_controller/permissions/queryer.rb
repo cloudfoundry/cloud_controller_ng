@@ -244,6 +244,17 @@ class VCAP::CloudController::Permissions::Queryer
     perm_permissions.can_read_task?(org_guid: org_guid, space_guid: space_guid)
   end
 
+  def readable_space_scoped_space_guids
+    science 'readable_space_scoped_space_guids' do |e|
+      e.use { db_permissions.readable_space_scoped_space_guids }
+      e.try { perm_permissions.readable_space_scoped_space_guids }
+
+      e.compare { |a, b| compare_arrays(a, b) }
+
+      e.run_if { !db_permissions.can_read_globally? }
+    end
+  end
+
   private
 
   attr_reader :perm_permissions, :db_permissions, :statsd_client, :enabled, :current_user_guid

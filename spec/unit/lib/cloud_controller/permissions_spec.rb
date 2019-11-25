@@ -132,7 +132,7 @@ module VCAP::CloudController
             with(Permissions::ORG_ROLES_FOR_READING_DOMAINS_FROM_ORGS).
             and_return([first_org_guid])
           allow(membership).to receive(:space_guids_for_roles).
-            with(Permissions::SPACE_ROLES_FOR_READING_DOMAINS_FROM_ORGS).
+            with(Permissions::SPACE_ROLES).
             and_return([space_guid])
           allow(Membership).to receive(:new).with(user).and_return(membership)
           allow(Space).to receive(:find).with(guid: space_guid).
@@ -483,6 +483,45 @@ module VCAP::CloudController
           and_return(space_guids)
 
         actual_space_guids = permissions.readable_secret_space_guids
+
+        expect(actual_space_guids).to eq(space_guids)
+      end
+    end
+
+    describe '#readable_space_scoped_space_guids' do
+      let!(:space1) { Space.make }
+      let!(:space2) { Space.make }
+
+      it 'returns all the space guids for admins' do
+        user = set_current_user_as_admin
+        space_guids = Permissions.new(user).readable_space_scoped_space_guids
+
+        expect(space_guids).to contain_exactly(space1.guid, space2.guid)
+      end
+
+      it 'returns all the space guids for read-only admins' do
+        user = set_current_user_as_admin_read_only
+        space_guids = Permissions.new(user).readable_space_scoped_space_guids
+
+        expect(space_guids).to contain_exactly(space1.guid, space2.guid)
+      end
+
+      it 'returns all the space guids for global auditors' do
+        user = set_current_user_as_global_auditor
+        space_guids = Permissions.new(user).readable_space_scoped_space_guids
+
+        expect(space_guids).to contain_exactly(space1.guid, space2.guid)
+      end
+
+      it 'returns space guids from membership' do
+        space_guids = double
+        membership = instance_double(Membership)
+        expect(Membership).to receive(:new).with(user).and_return(membership)
+        expect(membership).to receive(:space_guids_for_roles).
+          with(VCAP::CloudController::Permissions::SPACE_ROLES).
+          and_return(space_guids)
+
+        actual_space_guids = permissions.readable_space_scoped_space_guids
 
         expect(actual_space_guids).to eq(space_guids)
       end

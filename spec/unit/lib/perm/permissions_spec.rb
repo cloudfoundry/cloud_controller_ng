@@ -402,6 +402,46 @@ module VCAP::CloudController::Perm
       end
     end
 
+    describe '#readable_space_scoped_space_guids' do
+      before do
+        allow(roles).to receive(:admin?).and_return(false)
+        allow(roles).to receive(:admin_read_only?).and_return(false)
+        allow(roles).to receive(:global_auditor?).and_return(false)
+      end
+
+      it 'returns space guids that the user can read via space roles' do
+        space_actions = %w(space.developer space.manager space.auditor)
+
+        expected_space_guids = [SecureRandom.uuid, SecureRandom.uuid]
+
+        allow(perm_client).to receive(:list_unique_resource_patterns).
+          with(user_id: user_id, issuer: issuer, actions: space_actions).
+          and_return(expected_space_guids)
+
+        allow(perm_client).to receive(:list_unique_resource_patterns).
+          with(user_id: user_id, issuer: issuer, actions: []).
+          and_return([])
+
+        expect(permissions.readable_space_scoped_space_guids).to match_array(expected_space_guids)
+      end
+
+      [:admin?, :admin_read_only?, :global_auditor?].each do |role|
+        it "returns all space guids for #{role}" do
+          allow(roles).to receive(role).and_return(true)
+
+          permissions = VCAP::CloudController::Perm::Permissions.new(perm_client: perm_client, user_id: user_id, issuer: issuer, roles: roles)
+          space1 = VCAP::CloudController::Space.make
+          space2 = VCAP::CloudController::Space.make
+
+          space_guids = permissions.readable_space_scoped_space_guids
+
+          expect(space_guids).to contain_exactly(space1.guid, space2.guid)
+
+          expect(perm_client).not_to receive(:list_unique_resource_patterns)
+        end
+      end
+    end
+
     describe '#can_read_from_space?' do
       before do
         allow(roles).to receive(:admin?).and_return(false)

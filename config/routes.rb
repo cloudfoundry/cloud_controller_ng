@@ -168,6 +168,7 @@ Rails.application.routes.draw do
   delete '/service_brokers/:guid', to: 'service_brokers#destroy'
 
   # service_offerings
+  get '/service_offerings', to: 'service_offerings#index'
   get '/service_offerings/:guid', to: 'service_offerings#show'
 
   # space_manifests

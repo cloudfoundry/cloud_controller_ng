@@ -22,7 +22,7 @@ class VCAP::CloudController::Permissions
     VCAP::CloudController::Membership::ORG_AUDITOR,
   ].freeze
 
-  SPACE_ROLES_FOR_READING_DOMAINS_FROM_ORGS ||= [
+  SPACE_ROLES ||= [
     VCAP::CloudController::Membership::SPACE_DEVELOPER,
     VCAP::CloudController::Membership::SPACE_MANAGER,
     VCAP::CloudController::Membership::SPACE_AUDITOR,
@@ -77,7 +77,7 @@ class VCAP::CloudController::Permissions
       org_guids = membership.org_guids_for_roles(ORG_ROLES_FOR_READING_DOMAINS_FROM_ORGS)
 
       # Getting readable orgs for space-scoped roles
-      space_guids = membership.space_guids_for_roles(SPACE_ROLES_FOR_READING_DOMAINS_FROM_ORGS)
+      space_guids = membership.space_guids_for_roles(SPACE_ROLES)
       org_guids_from_space_guids = space_guids.map { |guid| VCAP::CloudController::Space.find(guid: guid).organization.guid }
 
       (org_guids + org_guids_from_space_guids).uniq
@@ -141,6 +141,14 @@ class VCAP::CloudController::Permissions
       VCAP::CloudController::Space.select(:guid).all.map(&:guid)
     else
       membership.space_guids_for_roles(ROLES_FOR_SPACE_SECRETS_READING)
+    end
+  end
+
+  def readable_space_scoped_space_guids
+    if can_read_globally?
+      VCAP::CloudController::Space.select(:guid).all.map(&:guid)
+    else
+      membership.space_guids_for_roles(SPACE_ROLES)
     end
   end
 
