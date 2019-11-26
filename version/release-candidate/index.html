@@ -424,6 +424,14 @@ query param can be used with a single resource or a list of resources.</p>
 <td><code class="prettyprint">space.organization</code>, <code class="prettyprint">space</code></td>
 </tr>
 <tr>
+<td><strong>roles</strong></td>
+<td><code class="prettyprint">user</code>, <code class="prettyprint">space</code>, <code class="prettyprint">organization</code></td>
+</tr>
+<tr>
+<td><strong>roles/[:guid]</strong></td>
+<td><code class="prettyprint">user</code>, <code class="prettyprint">space</code>, <code class="prettyprint">organization</code></td>
+</tr>
+<tr>
 <td><strong>spaces</strong></td>
 <td><code class="prettyprint">organization</code></td>
 </tr>
@@ -17859,7 +17867,7 @@ Deployed revisions are revisions that are linked to started processes in the app
 </thead><tbody>
 <tr>
 <td><strong>include</strong></td>
-<td><em>string</em></td>
+<td><em>list of strings</em></td>
 <td><strong>Experimental</strong> - Optionally include a list of unique related resources in the response. <br>Valid values are <code class="prettyprint">user</code>, <code class="prettyprint">space</code>, and <code class="prettyprint">organization</code>.</td>
 </tr>
 </tbody></table>
@@ -18064,7 +18072,7 @@ Deployed revisions are revisions that are linked to started processes in the app
 </tr>
 <tr>
 <td><strong>include</strong></td>
-<td><em>string</em></td>
+<td><em>list of strings</em></td>
 <td><strong>Experimental</strong> - Optionally include a list of unique related resources in the response. <br>Valid values are <code class="prettyprint">user</code>, <code class="prettyprint">space</code>, and <code class="prettyprint">organization</code>.</td>
 </tr>
 </tbody></table>
