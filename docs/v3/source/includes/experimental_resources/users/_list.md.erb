@@ -31,9 +31,11 @@ Retrieve all users that the current user can see. For users without the `admin` 
 Name | Type | Description
 ---- | ---- | ------------
 **guids** | _list of strings_ | Comma-delimited list of user guids to filter by.
+**usernames** | _list of strings_ | Comma-delimited list of usernames to filter by.
+**origins** | _list of strings_ | Comma-delimited list of user origins (user stores) to filter by. For example, users authenticated by UAA have the origin "uaa"; users authenticated by an LDAP provider have the origin "ldap". When filtering by origins, usernames must be included.
 **page** | _integer_ | Page to display. Valid values are integers >= 1.
 **per_page** | _integer_ | Number of results per page. <br>Valid values are 1 through 5000.
-**label_selector**     | _string_          | **Experimental** - A query string containing a list of [label selector](#labels-and-selectors) requirements. |
+**label_selector**     | _string_ | **Experimental** - A query string containing a list of [label selector](#labels-and-selectors) requirements. |
 
 #### Permitted roles
  Roles | Notes

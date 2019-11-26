@@ -26,6 +26,34 @@ module VCAP::CloudController
         end
       end
 
+      context 'when the users are filtered by username' do
+        let(:filters) { { 'usernames' => 'user2-username' } }
+        let(:uaa_client) { instance_double(VCAP::CloudController::UaaClient) }
+
+        before do
+          allow(VCAP::CloudController::UaaClient).to receive(:new).and_return(uaa_client)
+          allow(uaa_client).to receive(:ids_for_usernames_and_origins).with(['user2-username'], nil).and_return([user2.guid])
+        end
+
+        it 'returns all of the desired users' do
+          expect(subject).to match_array([user2])
+        end
+      end
+
+      context 'when the users are filtered by username and origin' do
+        let(:filters) { { 'usernames' => 'user2-username', 'origins' => 'user2-origin' } }
+        let(:uaa_client) { instance_double(VCAP::CloudController::UaaClient) }
+
+        before do
+          allow(VCAP::CloudController::UaaClient).to receive(:new).and_return(uaa_client)
+          allow(uaa_client).to receive(:ids_for_usernames_and_origins).with(['user2-username'], ['user2-origin']).and_return([user2.guid])
+        end
+
+        it 'returns all of the desired users' do
+          expect(subject).to match_array([user2])
+        end
+      end
+
       context 'when fetching users by label selector' do
         let!(:org1) { Organization.make(guid: 'org1') }
         let!(:user_label) do
