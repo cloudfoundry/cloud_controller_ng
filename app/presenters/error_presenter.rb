@@ -37,7 +37,7 @@ class ErrorPresenter
 
   def raise_500?
     # `test_mode` can also be set by ENV['CC_TEST'] in some cases
-    Rails.env.test?
+    test_mode && Rails.env.test?
   end
 
   attr_reader :test_mode
