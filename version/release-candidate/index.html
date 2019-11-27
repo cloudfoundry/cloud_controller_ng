@@ -20417,6 +20417,16 @@ UAA database, though this is not required.</p>
 <td>Comma-delimited list of user guids to filter by.</td>
 </tr>
 <tr>
+<td><strong>usernames</strong></td>
+<td><em>list of strings</em></td>
+<td>Comma-delimited list of usernames to filter by.</td>
+</tr>
+<tr>
+<td><strong>origins</strong></td>
+<td><em>list of strings</em></td>
+<td>Comma-delimited list of user origins (user stores) to filter by. For example, users authenticated by UAA have the origin &ldquo;uaa&rdquo;; users authenticated by an LDAP provider have the origin &ldquo;ldap&rdquo;. When filtering by origins, usernames must be included.</td>
+</tr>
+<tr>
 <td><strong>page</strong></td>
 <td><em>integer</em></td>
 <td>Page to display. Valid values are integers &gt;= 1.</td>
