@@ -699,7 +699,7 @@ module VCAP::CloudController
         it "returns a 400 when the label selector's value is invalid" do
           get "#{base_link}?label_selector=!", nil, admin_header
           expect(last_response.status).to eq(400)
-          expect(parsed_response['errors'].first['detail']).to match(/Invalid label_selector value/)
+          expect(parsed_response['errors'].first['detail']).to match(/The query parameter is invalid: expecting a key, got "!<<>>"/)
         end
       end
     end

@@ -25,7 +25,7 @@ module VCAP::CloudController
       params = params.symbolize_keys
       @pagination_params = params.slice(*ALLOWED_PAGINATION_KEYS)
       @pagination_options = PaginationOptions.from_params(params)
-      @requirements = parse_label_selector(params[:label_selector]) if params[:label_selector]
+      @requirements = parse_label_selector(params[:label_selector]) if params.key?(:label_selector)
       super(params)
     end
 
@@ -90,8 +90,6 @@ module VCAP::CloudController
 
     def parse_label_selector(label_selector)
       @label_selector_parser = LabelSelectorParser.new
-      return [] unless label_selector
-
       @label_selector_parser.parse(label_selector)
       @label_selector_parser.requirements
     end

@@ -144,6 +144,7 @@ module VCAP::CloudController
       @nodes = []
       @requirements = []
       @errors = []
+      raise LabelSelectorParseError.new('Missing label_selector value') if input.nil?
       raise LabelSelectorParseError.new('empty label selector not allowed') if input.empty?
 
       @input = input
