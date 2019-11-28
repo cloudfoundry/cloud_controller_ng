@@ -140,6 +140,7 @@ module VCAP::CloudController
     end
     # rubocop:enable Metrics/MethodLength
 
+    # rubocop:disable Metrics/CyclomaticComplexity
     def parse(input)
       @nodes = []
       @requirements = []
@@ -196,5 +197,6 @@ module VCAP::CloudController
       @errors << ex.message
       false
     end
+    # rubocop:enable Metrics/CyclomaticComplexity
   end
 end
