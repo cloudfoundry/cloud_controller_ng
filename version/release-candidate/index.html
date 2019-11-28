@@ -432,6 +432,14 @@ query param can be used with a single resource or a list of resources.</p>
 <td><code class="prettyprint">user</code>, <code class="prettyprint">space</code>, <code class="prettyprint">organization</code></td>
 </tr>
 <tr>
+<td><strong>routes</strong></td>
+<td><code class="prettyprint">domain</code></td>
+</tr>
+<tr>
+<td><strong>routes/[:guid]</strong></td>
+<td><code class="prettyprint">domain</code></td>
+</tr>
+<tr>
 <td><strong>spaces</strong></td>
 <td><code class="prettyprint">organization</code></td>
 </tr>
@@ -11938,6 +11946,22 @@ resource matching will always return an empty array.</p>
 
 <p><code class="prettyprint">GET /v3/routes/:guid</code></p>
 
+<h4 id="query-parameters">Query parameters</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>include</strong></td>
+<td><em>string</em></td>
+<td><strong>Experimental</strong> - Optionally include additional related resources in the response. <br>Valid value is <code class="prettyprint">domain</code></td>
+</tr>
+</tbody></table>
+
 <h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
@@ -12109,6 +12133,11 @@ resource matching will always return an empty array.</p>
 <td><strong>label_selector</strong></td>
 <td><em>string</em></td>
 <td><strong>Experimental</strong> - A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements.</td>
+</tr>
+<tr>
+<td><strong>include</strong></td>
+<td><em>string</em></td>
+<td><strong>Experimental</strong> - Optionally include a list of unique related resources in the response. <br>Valid value is <code class="prettyprint">domain</code></td>
 </tr>
 </tbody></table>
 
