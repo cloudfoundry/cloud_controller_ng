@@ -1,0 +1,28 @@
+### Visibility of Service Offerings
+
+This table shows the Service Offerings that different roles can see.
+The Service Offerings that a user can see relate to their Space and Organization roles,
+regardless of which Space or Organization is being targeted.
+
+A Service Offering can be seen when at least one of its Service Plans can be seen.
+Service Plans may be configured to be Public,
+or they may be configured with a relationship to a restricted list of Organizations.
+
+Service Offerings and Service Plans from a space-scoped Service Broker cannot have their visibility configured.
+They are only visible to members of that Space.
+
+Role | Public Plans | Restricted Plans | From space-scoped Service Brokers
+--- | --- | --- | ---
+Admin | All | All | All
+Admin Read | All | All | All
+Global Auditor | All | All | All
+Org Manager | All | In Organisation | None
+Org Auditor | All | In Organisation | None
+Org Billing | All | In Organisation | None
+Space Manager | All | In Organisation | In Space
+Space Developer | All | In Organisation | In Space
+Space Auditor | All | In Organisation | In Space
+Unauthenticated | All* | None | None
+
+*Unless the `hide_marketplace_from_unauthenticated_users` feature flag is `true`
+
