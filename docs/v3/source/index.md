@@ -24,6 +24,7 @@ includes:
   - api_resources/routes
   - api_resources/service_bindings
   - api_resources/service_brokers
+  - api_resources/service_offerings
   - api_resources/service_instances
   - api_resources/sidecars
   - api_resources/spaces
@@ -256,6 +257,9 @@ includes:
   - experimental_resources/service_brokers/list
   - experimental_resources/service_brokers/update
   - experimental_resources/service_brokers/delete
+  - experimental_resources/service_offerings/header
+  - experimental_resources/service_offerings/visibility
+  - experimental_resources/service_offerings/get
   - experimental_resources/sidecars/header
   - experimental_resources/sidecars/object
   - experimental_resources/sidecars/create_from_app
