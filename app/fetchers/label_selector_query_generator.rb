@@ -29,11 +29,11 @@ module VCAP::CloudController
       private
 
       def evaluate_in(label_klass, resource_dataset, requirement, resource_klass)
-        resource_dataset.where(guid: guids_for_set_inclusion(label_klass, requirement)).qualify(resource_klass.table_name)
+        resource_dataset.where(Sequel.qualify(resource_klass.table_name, :guid) => guids_for_set_inclusion(label_klass, requirement))
       end
 
       def evaluate_notin(label_klass, resource_dataset, requirement, resource_klass)
-        resource_dataset.exclude(guid: guids_for_set_inclusion(label_klass, requirement)).qualify(resource_klass.table_name)
+        resource_dataset.exclude(Sequel.qualify(resource_klass.table_name, :guid) => guids_for_set_inclusion(label_klass, requirement))
       end
 
       def evaluate_equal(label_klass, resource_dataset, requirement, resource_klass)
@@ -45,11 +45,11 @@ module VCAP::CloudController
       end
 
       def evaluate_exists(label_klass, resource_dataset, requirement, resource_klass)
-        resource_dataset.where(guid: guids_for_existence(label_klass, requirement)).qualify(resource_klass.table_name)
+        resource_dataset.where(Sequel.qualify(resource_klass.table_name, :guid) => guids_for_existence(label_klass, requirement))
       end
 
       def evaluate_not_exists(label_klass, resource_dataset, requirement, resource_klass)
-        resource_dataset.exclude(guid: guids_for_existence(label_klass, requirement)).qualify(resource_klass.table_name)
+        resource_dataset.exclude(Sequel.qualify(resource_klass.table_name, :guid) => guids_for_existence(label_klass, requirement))
       end
 
       def guids_for_set_inclusion(label_klass, requirement)

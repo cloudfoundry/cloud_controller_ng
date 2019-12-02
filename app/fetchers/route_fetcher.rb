@@ -2,7 +2,7 @@ module VCAP::CloudController
   class RouteFetcher
     class << self
       def fetch(message, readable_route_guids, eager_loaded_associations: [])
-        dataset = Route.where(guid: readable_route_guids).eager(eager_loaded_associations)
+        dataset = Route.where(guid: readable_route_guids).eager(eager_loaded_associations).qualify
         filter(message, dataset)
       end
 

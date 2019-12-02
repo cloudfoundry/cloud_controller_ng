@@ -51,6 +51,21 @@ module VCAP::CloudController
             expect(dataset.map(&:guid)).to contain_exactly(app2.guid, app3.guid)
           end
         end
+
+        context 'with association in dataset query' do
+          let(:values) { 'funky,town' }
+
+          it 'returns the models that satisfy the requirements' do
+            dataset = subject.add_selector_queries(
+              label_klass: AppLabelModel,
+              resource_dataset: AppModel.dataset.where(space: Space.dataset),
+              requirements: requirements,
+              resource_klass: AppModel,
+            )
+
+            expect(dataset.map(&:guid)).to contain_exactly(app2.guid, app3.guid)
+          end
+        end
       end
 
       describe 'notin set requirements' do
@@ -78,6 +93,21 @@ module VCAP::CloudController
             dataset = subject.add_selector_queries(
               label_klass: AppLabelModel,
               resource_dataset: AppModel.dataset,
+              requirements: requirements,
+              resource_klass: AppModel,
+            )
+
+            expect(dataset.map(&:guid)).to contain_exactly(app1.guid)
+          end
+        end
+
+        context 'with association in dataset query' do
+          let(:values) { 'funky,town' }
+
+          it 'returns the models that satisfy the requirements' do
+            dataset = subject.add_selector_queries(
+              label_klass: AppLabelModel,
+              resource_dataset: AppModel.dataset.where(space: Space.dataset),
               requirements: requirements,
               resource_klass: AppModel,
             )
@@ -115,6 +145,21 @@ module VCAP::CloudController
             expect(dataset.map(&:guid)).to contain_exactly(app1.guid, app3.guid)
           end
         end
+
+        context 'with association in dataset query' do
+          let(:values) { 'funky' }
+
+          it 'returns the models that satisfy the requirements' do
+            dataset = subject.add_selector_queries(
+              label_klass: AppLabelModel,
+              resource_dataset: AppModel.dataset.where(space: Space.dataset),
+              requirements: requirements,
+              resource_klass: AppModel,
+            )
+
+            expect(dataset.map(&:guid)).to contain_exactly(app2.guid)
+          end
+        end
       end
 
       describe 'existence requirements' do
@@ -138,6 +183,19 @@ module VCAP::CloudController
           )
 
           expect(dataset.map(&:guid)).to contain_exactly(app1.guid, app2.guid)
+        end
+
+        context 'with association in dataset query' do
+          it 'returns the models that satisfy the requirements' do
+            dataset = subject.add_selector_queries(
+              label_klass: AppLabelModel,
+              resource_dataset: AppModel.dataset.where(space: Space.dataset),
+              requirements: [VCAP::CloudController::LabelSelectorRequirement.new(key: 'easter', operator: :exists, values: '')],
+              resource_klass: AppModel,
+            )
+
+            expect(dataset.map(&:guid)).to contain_exactly(app3.guid)
+          end
         end
       end
 
