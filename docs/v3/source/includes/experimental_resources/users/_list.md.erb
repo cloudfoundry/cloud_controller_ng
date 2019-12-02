@@ -21,7 +21,7 @@ Content-Type: application/json
 <%= yield_content :paginated_list_of_users, '/v3/users' %>
 ```
 
-Retrieve all users that the current user can see. For users without the `admin` or `admin_read_only` roles, this will just return the current user.
+Retrieve all users that the current user can see.
 
 #### Definition
 `GET /v3/users`
