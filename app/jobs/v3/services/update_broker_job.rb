@@ -57,7 +57,11 @@ module VCAP::CloudController
 
           @warnings
         rescue => e
-          broker.update(state: previous_broker_state)
+          begin
+            broker.update(state: previous_broker_state)
+          rescue
+            raise CloudController::Errors::V3::ApiError.new_from_details('ServiceBrokerGone') if broker.nil?
+          end
 
           if e.is_a?(Sequel::ValidationFailed)
             raise V3::ServiceBrokerUpdate::InvalidServiceBroker.new(e.message)
