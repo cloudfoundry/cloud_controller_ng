@@ -307,6 +307,26 @@ RSpec.describe 'Space Manifests' do
       end
     end
 
+    context 'when the app name is non-conformant (bad!)' do
+      let(:app1_model) { VCAP::CloudController::AppModel.make(name: '/!/invalid', space: space) }
+      let(:yml_manifest) do
+        {
+          'applications' => [
+            { 'name' => app1_model.name },
+          ]
+        }.to_yaml
+      end
+
+      it 'returns a 422 with an informative message' do
+        expect {
+          post "/v3/spaces/#{space.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
+          expect(last_response.status).to eq(422)
+          expect(parsed_response['errors'].first['detail']).to match(
+            /"\/!\/invalid" must contain only alphanumeric characters, "_", or "-" when routes are not present/)
+        }.to change { VCAP::CloudController::AppModel.count }.by(0)
+      end
+    end
+
     describe 'audit events' do
       let!(:process1) { nil }
 

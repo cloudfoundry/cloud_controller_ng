@@ -56,7 +56,7 @@ module VCAP::CloudController
     delegate :domain_guid, to: :relationships_message
 
     def relationships_message
-      # need the & instaed of doing if requested(rel..) because we can't delegate if rl_msg nil
+      # need the & instead of doing if requested(rel..) because we can't delegate if rl_msg nil
       @relationships_message ||= Relationships.new(relationships&.deep_symbolize_keys)
     end
 

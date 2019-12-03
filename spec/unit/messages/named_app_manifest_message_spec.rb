@@ -23,6 +23,36 @@ module VCAP::CloudController
           expect(message.errors.full_messages[0]).to match(/^Name must not be empty/)
         end
       end
+
+      context 'when the name is not a valid hostname' do
+        let(:params) { { name: '%%%', routes: routes } }
+        context "when the 'routes' property is an empty array" do
+          let(:routes) { [] }
+          it 'is not valid' do
+            message = NamedAppManifestMessage.create_from_yml(params)
+
+            expect(message).to_not be_valid
+            expect(message.errors.full_messages[0]).to match(/"%%%" must contain only alphanumeric characters, "_", or "-"/)
+          end
+        end
+        context "when there's no 'routes' property" do
+          let(:params) { { name: '%%%' } }
+          it 'is not valid' do
+            message = NamedAppManifestMessage.create_from_yml(params)
+
+            expect(message).to_not be_valid
+            expect(message.errors.full_messages[0]).to match(/"%%%" must contain only alphanumeric characters, "_", or "-"/)
+          end
+        end
+        context "when there's a valid route specified" do
+          let(:routes) { [{ route: 'a.b.com' }] }
+          it 'is valid' do
+            message = NamedAppManifestMessage.create_from_yml(params)
+
+            expect(message).to be_valid
+          end
+        end
+      end
     end
   end
 end
