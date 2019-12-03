@@ -280,12 +280,25 @@ RSpec.describe 'Users Request' do
         end
 
         it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+
+        context 'when UAA is disabled' do
+          before do
+            allow(uaa_client).to receive(:ids_for_usernames_and_origins).with(['bob-mcjames'], nil).
+              and_raise(VCAP::CloudController::UaaEndpointDisabled)
+          end
+
+          it 'returns an error indicating UAA is unavailable' do
+            get endpoint, nil, admin_header
+            expect(last_response).to have_status_code(503)
+            expect(parsed_response['errors'].first['detail']).to eq('The UAA service is currently unavailable')
+          end
+        end
       end
 
       context 'when filtering by origins' do
         it 'returns 422 for origin queries without usernames' do
           get '/v3/users', 'origins=uaa', admin_header
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_status_code(422)
           expect(parsed_response['errors'].first['detail']).to eq(
             'Origins filter cannot be provided without usernames filter.')
         end
@@ -310,7 +323,7 @@ RSpec.describe 'Users Request' do
             'previous' => nil
           }
 
-          expect(last_response.status).to eq(200)
+          expect(last_response).to have_status_code(200)
           expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(user.guid)
           expect(parsed_response['pagination']).to eq(expected_pagination)
         end
@@ -320,7 +333,7 @@ RSpec.describe 'Users Request' do
     context 'when the user is not logged in' do
       it 'returns 401 for Unauthenticated requests' do
         get '/v3/users', nil, base_json_headers
-        expect(last_response.status).to eq(401)
+        expect(last_response).to have_status_code(401)
       end
     end
   end
@@ -393,7 +406,7 @@ RSpec.describe 'Users Request' do
     context 'when the user is not logged in' do
       it 'returns 401 for Unauthenticated requests' do
         get "/v3/users/#{user.guid}", nil, base_json_headers
-        expect(last_response.status).to eq(401)
+        expect(last_response).to have_status_code(401)
       end
     end
 
@@ -406,14 +419,14 @@ RSpec.describe 'Users Request' do
 
       it 'returns 200 when showing current user' do
         get "/v3/users/#{user.guid}", nil, user_header
-        expect(last_response.status).to eq(200)
+        expect(last_response).to have_status_code(200)
         expect(parsed_response).to include('guid' => user.guid)
       end
 
       context 'when the user is not found' do
         it 'returns 404' do
           get '/v3/users/unknown-user', nil, admin_headers
-          expect(last_response.status).to eq(404)
+          expect(last_response).to have_status_code(404)
           expect(last_response).to have_error_message('User not found')
         end
       end
@@ -480,7 +493,7 @@ RSpec.describe 'Users Request' do
           }.to_json, admin_header
 
           expect(parsed_response).to match_json_response(user_json)
-          expect(last_response.status).to eq(201)
+          expect(last_response).to have_status_code(201)
         end
       end
 
@@ -493,7 +506,7 @@ RSpec.describe 'Users Request' do
             }
           }.to_json, admin_header
 
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_status_code(422)
           expect(parsed_response['errors'][0]['detail']).to match(/label [\w\s]+ error/)
           expect(parsed_response['errors'][0]['detail']).to match(/annotation [\w\s]+ error/)
         end
@@ -637,7 +650,7 @@ RSpec.describe 'Users Request' do
     describe 'when the user is not logged in' do
       it 'returns 401 for Unauthenticated requests' do
         post '/v3/users', params.to_json, base_json_headers
-        expect(last_response.status).to eq(401)
+        expect(last_response).to have_status_code(401)
       end
     end
 
@@ -646,7 +659,7 @@ RSpec.describe 'Users Request' do
 
       it 'returns a 403' do
         post '/v3/users', params.to_json, user_header
-        expect(last_response.status).to eq(403)
+        expect(last_response).to have_status_code(403)
       end
     end
 
@@ -663,7 +676,7 @@ RSpec.describe 'Users Request' do
         it 'returns 422' do
           post '/v3/users', params.to_json, headers
 
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_status_code(422)
 
           expected_err = [
             'Guid must be a string, Guid must be between 1 and 200 characters',
@@ -684,7 +697,7 @@ RSpec.describe 'Users Request' do
         it 'returns 422' do
           post '/v3/users', params.to_json, headers
 
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_status_code(422)
 
           expect(parsed_response['errors'][0]['detail']).to eq "User with guid '#{existing_user.guid}' already exists."
         end
@@ -697,19 +710,19 @@ RSpec.describe 'Users Request' do
       let(:api_call) do
         lambda {
           |user_headers| patch "/v3/users/#{actee.guid}",
-          {
-            metadata: {
-              labels: {
-                'potato': 'yam',
-                'style': 'casserole',
-              },
-              annotations: {
-                'potato': 'russet',
-                'style': 'french',
+            {
+              metadata: {
+                labels: {
+                  'potato': 'yam',
+                  'style': 'casserole',
+                },
+                annotations: {
+                  'potato': 'russet',
+                  'style': 'french',
+                }
               }
-            }
-          }.to_json,
-          user_headers
+            }.to_json,
+            user_headers
         }
       end
 
@@ -791,7 +804,7 @@ RSpec.describe 'Users Request' do
             }
           }.to_json, admin_header
 
-          expect(last_response.status).to eq(422)
+          expect(last_response).to have_status_code(422)
           expect(parsed_response['errors'][0]['detail']).to match(/label [\w\s]+ error/)
           expect(parsed_response['errors'][0]['detail']).to match(/annotation [\w\s]+ error/)
         end
@@ -808,7 +821,7 @@ RSpec.describe 'Users Request' do
 
         execute_all_jobs(expected_successes: 1, expected_failures: 0)
         get "/v3/users/#{user_to_delete.guid}", {}, admin_headers
-        expect(last_response.status).to eq(404)
+        expect(last_response).to have_status_code(404)
       end
     end
 
@@ -843,7 +856,7 @@ RSpec.describe 'Users Request' do
     context 'when the user is not logged in' do
       it 'returns 401 for Unauthenticated requests' do
         delete "/v3/users/#{user_to_delete.guid}", nil, base_json_headers
-        expect(last_response.status).to eq(401)
+        expect(last_response).to have_status_code(401)
       end
     end
 
@@ -856,7 +869,7 @@ RSpec.describe 'Users Request' do
 
         it 'returns 403' do
           delete "/v3/users/#{user_to_delete.guid}", nil, user_header
-          expect(last_response.status).to eq(403)
+          expect(last_response).to have_status_code(403)
         end
       end
 
@@ -865,7 +878,7 @@ RSpec.describe 'Users Request' do
 
         it 'returns 403' do
           delete "/v3/users/#{user_to_delete.guid}", nil, user_header
-          expect(last_response.status).to eq(403)
+          expect(last_response).to have_status_code(403)
         end
       end
 
@@ -878,7 +891,7 @@ RSpec.describe 'Users Request' do
 
         it 'returns 404' do
           delete '/v3/users/unknown-user', nil, user_header
-          expect(last_response.status).to eq(404)
+          expect(last_response).to have_status_code(404)
           expect(last_response).to have_error_message('User not found')
         end
       end

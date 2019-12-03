@@ -548,7 +548,21 @@ module VCAP::CloudController
           allow(uaa_client).to receive(:scim).and_return(scim)
         end
 
-        it 'raises UaaUnavailable' do
+        it 'raises UaaEndpointDisabled' do
+          expect {
+            uaa_client.ids_for_usernames_and_origins([username1], nil)
+          }.to raise_error(UaaEndpointDisabled)
+        end
+      end
+
+      context 'when UAA is down' do
+        before do
+          scim = double('scim')
+          allow(scim).to receive(:query).and_raise(CF::UAA::BadTarget)
+          allow(uaa_client).to receive(:scim).and_return(scim)
+        end
+
+        it 'raises UaaEndpointDisabled' do
           expect {
             uaa_client.ids_for_usernames_and_origins([username1], nil)
           }.to raise_error(UaaEndpointDisabled)

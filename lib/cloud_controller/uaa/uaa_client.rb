@@ -75,7 +75,7 @@ module VCAP::CloudController
       results = query(:user_id, includeInactive: true, filter: filter_string)
 
       results['resources'].map { |r| r['id'] }
-    rescue CF::UAA::TargetError
+    rescue CF::UAA::TargetError, CF::UAA::BadTarget
       raise UaaEndpointDisabled
     end
 
