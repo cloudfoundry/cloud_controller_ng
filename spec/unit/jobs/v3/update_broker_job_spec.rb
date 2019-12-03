@@ -334,6 +334,17 @@ module VCAP
             end
           end
 
+          context 'when the broker ceases to exist during the job' do
+            it 'raises a ServiceBrokerGone error' do
+              broker.destroy
+
+              expect { job.perform }.to raise_error(
+                ::CloudController::Errors::V3::ApiError,
+                  'The service broker was removed before the synchronization completed'
+              )
+            end
+          end
+
           def setup_broker_with_invalid_catalog
             catalog = instance_double(Services::ServiceBrokers::V2::Catalog)
 

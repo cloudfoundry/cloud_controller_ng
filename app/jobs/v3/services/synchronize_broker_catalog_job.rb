@@ -55,9 +55,7 @@ module VCAP::CloudController
           begin
             broker.update(state: ServiceBrokerStateEnum::SYNCHRONIZATION_FAILED)
           rescue
-            if broker.nil?
-              raise CloudController::Errors::V3::ApiError.new_from_details('ServiceBrokerGone')
-            end
+            raise CloudController::Errors::V3::ApiError.new_from_details('ServiceBrokerGone') if broker.nil?
           end
 
           raise e
