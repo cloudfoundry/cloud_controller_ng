@@ -2,3 +2,8 @@
   name: ServiceBrokerNotRemovable
   http_code: 422
   message: "Can not remove brokers that have associated service instances: %s"
+
+270011:
+  name: ServiceBrokerGone
+  http_code: 422
+  message: "The service broker was removed before the synchronization completed"

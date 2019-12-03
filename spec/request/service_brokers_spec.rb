@@ -996,6 +996,30 @@ RSpec.describe 'V3 service brokers' do
       end
     end
 
+    context 'when the broker is deleted during creation using v2 endpoints' do
+      it 'fails gracefully' do
+        create_broker(global_broker_request_body, with: admin_headers)
+
+        job_url = last_response['Location']
+        get job_url, {}, admin_headers
+        expect(parsed_response).to include('state' => 'PROCESSING')
+
+        broker = VCAP::CloudController::ServiceBroker.last
+
+        delete "/v2/service_brokers/#{broker.guid}", {}, admin_headers
+        expect(last_response).to have_status_code(204)
+        expect(VCAP::CloudController::ServiceBroker.all).to be_empty
+
+        execute_all_jobs(expected_successes: 0, expected_failures: 1)
+
+        get job_url, {}, admin_headers
+        expect(parsed_response).to include(
+          'state' => 'FAILED',
+          'errors' => [include({ 'detail' => include('The service broker was removed before the synchronization completed') })]
+        )
+      end
+    end
+
     def expect_created_broker(expected_broker)
       expect(VCAP::CloudController::ServiceBroker.count).to eq(@count_before_creation + 1)
 
