@@ -28,6 +28,10 @@ RSpec.describe 'V3 service brokers' do
                 username: 'admin',
                 password: 'welcome',
             }
+        },
+        metadata: {
+            labels: { potato: 'yam' },
+            annotations: { style: 'mashed' }
         }
     }
   end
@@ -628,6 +632,8 @@ RSpec.describe 'V3 service brokers' do
     context 'when the broker is deleted during update using v2 endpoints' do
       it 'fails gracefully' do
         patch("/v3/service_brokers/#{broker.guid}", global_broker_request_body.to_json, admin_headers)
+        expect(last_response).to have_status_code(202)
+
         job_url = last_response['Location']
         get job_url, {}, admin_headers
         expect(parsed_response).to include('state' => 'PROCESSING')
@@ -676,6 +682,12 @@ RSpec.describe 'V3 service brokers' do
       expect(broker.auth_password).to eq(global_broker_request_body.dig(:authentication, :credentials, :password))
       expect(broker.space).to be_nil
       expect(broker.state).to eq(VCAP::CloudController::ServiceBrokerStateEnum::SYNCHRONIZING)
+
+      expect(broker.labels[0].key_name).to eq('potato')
+      expect(broker.labels[0].value).to eq('yam')
+
+      expect(broker.annotations[0].key_name).to eq('style')
+      expect(broker.annotations[0].value).to eq('mashed')
     end
 
     it 'creates a pollable job to synchronize the catalog and responds with job resource' do
@@ -722,8 +734,8 @@ RSpec.describe 'V3 service brokers' do
       ]).to be_reported_as_events
 
       event = VCAP::CloudController::Event.where({ type: 'audit.service_broker.create', actor_name: admin_headers._generated_email }).first
-      expect(event.metadata).to eq({
-          'request' => {
+      expect(event.metadata).to include({
+          'request' => include({
               'name' => 'broker name',
               'url' => 'http://example.org/broker-url',
               'authentication' => {
@@ -733,7 +745,7 @@ RSpec.describe 'V3 service brokers' do
                       'password' => '[PRIVATE DATA HIDDEN]'
                   }
               }
-          }
+          })
       })
     end
 
@@ -1035,6 +1047,7 @@ RSpec.describe 'V3 service brokers' do
     context 'when the broker is deleted during creation using v2 endpoints' do
       it 'fails gracefully' do
         create_broker(global_broker_request_body, with: admin_headers)
+        expect(last_response).to have_status_code(202)
 
         job_url = last_response['Location']
         get job_url, {}, admin_headers
@@ -1128,6 +1141,9 @@ RSpec.describe 'V3 service brokers' do
 
           get "/v3/service_brokers/#{broker.guid}", {}, admin_headers
           expect(last_response.status).to eq(404)
+
+          expect(VCAP::CloudController::ServiceBrokerLabelModel.where(service_broker: broker).all).to be_empty
+          expect(VCAP::CloudController::ServiceBrokerAnnotationModel.where(service_broker: broker).all).to be_empty
         end
       }
 

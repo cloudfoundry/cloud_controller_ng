@@ -11,15 +11,19 @@ module VCAP::CloudController
 
     let(:valid_body) do
       {
-        name: 'best-broker',
-        url: 'https://the-best-broker.url',
-        authentication: {
-          type: 'basic',
-          credentials: {
-            username: 'user',
-            password: 'pass',
+          name: 'best-broker',
+          url: 'https://the-best-broker.url',
+          authentication: {
+              type: 'basic',
+              credentials: {
+                  username: 'user',
+                  password: 'pass',
+              }
+          },
+          metadata: {
+              labels: { potato: 'yam' },
+              annotations: { style: 'mashed' }
           }
-        },
       }
     end
     describe 'Validate' do

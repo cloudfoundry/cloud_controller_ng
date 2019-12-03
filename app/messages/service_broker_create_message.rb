@@ -1,4 +1,4 @@
-require 'messages/base_message'
+require 'messages/metadata_base_message'
 require 'messages/basic_credentials_message'
 require 'messages/authentication_message'
 require 'messages/validators/url_validator'
@@ -7,7 +7,7 @@ require 'messages/mixins/authentication_message_mixin'
 require 'utils/hash_utils'
 
 module VCAP::CloudController
-  class ServiceBrokerCreateMessage < BaseMessage
+  class ServiceBrokerCreateMessage < MetadataBaseMessage
     include AuthenticationMessageMixin
     register_allowed_keys [:name, :url, :authentication, :relationships]
 
