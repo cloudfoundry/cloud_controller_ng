@@ -1,5 +1,5 @@
 module VCAP::CloudController
-  class ServiceOfferingsFetcher
+  class ServiceOfferingFetcher
     class << self
       def fetch(service_offering_guid)
         service_offering = Service.where(guid: service_offering_guid).eager(:service_plans, :service_broker).first

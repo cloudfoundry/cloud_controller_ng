@@ -415,7 +415,7 @@ RSpec.describe 'V3 service brokers' do
     it 'does not immediately update a service broker in the database' do
       patch("/v3/service_brokers/#{broker.guid}", update_request_body.to_json, admin_headers)
 
-      broker = VCAP::CloudController::ServiceBroker.last # TODO: get the broker using the api?
+      broker = VCAP::CloudController::ServiceBroker.last
       expect(broker.name).to eq('old-name')
       expect(broker.broker_url).to eq('http://example.org/old-broker-url')
       expect(broker.auth_username).to eq('old-admin')

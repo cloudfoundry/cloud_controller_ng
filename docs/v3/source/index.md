@@ -260,6 +260,7 @@ includes:
   - experimental_resources/service_offerings/header
   - experimental_resources/service_offerings/visibility
   - experimental_resources/service_offerings/get
+  - experimental_resources/service_offerings/list
   - experimental_resources/sidecars/header
   - experimental_resources/sidecars/object
   - experimental_resources/sidecars/create_from_app

@@ -958,5 +958,9 @@ module VCAP::CloudController
     describe '#readable_secret_space_guids' do
       it_behaves_like 'readable guids', 'secret_space'
     end
+
+    describe '#readable_space_scoped_guids' do
+      it_behaves_like 'readable guids', 'space_scoped_space'
+    end
   end
 end
