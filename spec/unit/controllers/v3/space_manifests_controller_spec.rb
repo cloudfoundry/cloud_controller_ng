@@ -334,7 +334,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
       context 'when the buildpack does not exist' do
         let(:request_body) do
           { 'applications' =>
-            [{ 'name' => 'burger king', 'instances' => 4, 'buildpacks' => ['badpack'] }] }
+            [{ 'name' => 'burger-king', 'instances' => 4, 'buildpacks' => ['badpack'] }] }
         end
 
         it 'returns a 422 and a useful error to the user' do
@@ -348,7 +348,7 @@ RSpec.describe SpaceManifestsController, type: :controller do
           expect(errors.size).to eq(1)
           expect(errors.map { |h| h.reject { |k, _| k == 'test_mode_info' } }).to match_array([
             {
-              'detail' => "For application 'burger king': Specified unknown buildpack name: \"badpack\"",
+              'detail' => "For application 'burger-king': Specified unknown buildpack name: \"badpack\"",
               'title' => 'CF-UnprocessableEntity',
               'code' => 10008
             }
