@@ -1395,6 +1395,24 @@ RSpec.describe 'Roles Request' do
       end
 
       it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
+
+      context 'and the user still has a role in a space within that org' do
+        let(:org_user_role) { VCAP::CloudController::OrganizationUser.find(user_id: user_with_role.id) }
+
+        before do
+          space.add_manager(user_with_role)
+        end
+
+        it 'should return a 422 when trying to delete the organization_user role' do
+          delete "/v3/roles/#{org_user_role.guid}", nil, admin_headers
+          expect(last_response).to have_status_code(422)
+        end
+
+        it 'should successfully delete any other org role' do
+          delete "/v3/roles/#{role.guid}", nil, admin_headers
+          expect(last_response).to have_status_code(202)
+        end
+      end
     end
 
     context 'when the user is not logged in' do

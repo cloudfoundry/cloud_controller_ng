@@ -73,6 +73,12 @@ class RolesController < ApplicationController
       unauthorized! unless permission_queryer.can_update_space?(role.space_guid, org_guid)
     else
       unauthorized! unless permission_queryer.can_write_to_org?(role.organization_guid)
+
+      if role.type == VCAP::CloudController::RoleTypes::ORGANIZATION_USER
+        org = Organization.find(id: role.organization_id)
+        no_space_role = Role.where(space_id: org.spaces.map(&:id), user_id: role.user_id).empty?
+        unprocessable!('Cannot delete organization_user role while user has roles in spaces in that organization.') unless no_space_role
+      end
     end
 
     role_owner = fetch_role_owner_with_name(role)
