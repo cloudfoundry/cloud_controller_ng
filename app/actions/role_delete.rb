@@ -5,8 +5,9 @@ module VCAP::CloudController
     class RoleDeleteError < StandardError
     end
 
-    def initialize(user_audit_info)
+    def initialize(user_audit_info, role_owner)
       @user_audit_info = user_audit_info
+      @role_owner = role_owner
     end
 
     def delete(roles)
@@ -49,12 +50,12 @@ module VCAP::CloudController
 
     def record_space_event(role, short_event_type)
       space = Space.first(id: role.space_id)
-      event_repo.record_space_role_remove(space, fetch_user(role), short_event_type, @user_audit_info)
+      event_repo.record_space_role_remove(space, @role_owner, short_event_type, @user_audit_info)
     end
 
     def record_organization_event(role, short_event_type)
       organization = Organization.first(id: role.organization_id)
-      event_repo.record_organization_role_remove(organization, fetch_user(role), short_event_type, @user_audit_info)
+      event_repo.record_organization_role_remove(organization, @role_owner, short_event_type, @user_audit_info)
     end
 
     def fetch_user(role)

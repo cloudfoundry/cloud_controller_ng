@@ -9,12 +9,10 @@ module VCAP::CloudController
 
     before do
       allow(CloudController::DependencyLocator.instance).to receive(:uaa_client).and_return(uaa_client)
-      allow(uaa_client).to receive(:usernames_for_ids).with([user_with_role.guid]).and_return(
-        { user_with_role.guid => 'kiwi' }
-      )
+      allow(user_with_role).to receive(:username).and_return('kiwi')
     end
 
-    subject { RoleDeleteAction.new(user_audit_info) }
+    subject { RoleDeleteAction.new(user_audit_info, user_with_role) }
 
     describe '#delete' do
       shared_examples 'deletion' do |opts|

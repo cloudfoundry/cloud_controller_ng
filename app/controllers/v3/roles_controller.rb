@@ -75,7 +75,8 @@ class RolesController < ApplicationController
       unauthorized! unless permission_queryer.can_write_to_org?(role.organization_guid)
     end
 
-    delete_action = RoleDeleteAction.new(user_audit_info)
+    role_owner = fetch_role_owner_with_name(role)
+    delete_action = RoleDeleteAction.new(user_audit_info, role_owner)
     deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(Role, role.guid, delete_action)
     pollable_job = Jobs::Enqueuer.new(deletion_job, queue: Jobs::Queues.generic).enqueue_pollable
 
@@ -125,6 +126,13 @@ class RolesController < ApplicationController
 
   def fetch_user(user_guid)
     readable_users.first(guid: user_guid)
+  end
+
+  def fetch_role_owner_with_name(role)
+    user = User.first(id: role.user_id)
+    uaa_client = CloudController::DependencyLocator.instance.uaa_client
+    UsernamePopulator.new(uaa_client).transform(user)
+    user
   end
 
   def readable_users
