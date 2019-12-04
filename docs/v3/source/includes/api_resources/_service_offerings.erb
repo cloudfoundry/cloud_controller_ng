@@ -39,18 +39,18 @@
 <% content_for :paginated_list_of_service_offerings do |base_url| %>
 {
   "pagination": {
-  "total_results": 3,
-  "total_pages": 2,
-  "first": {
-    "href": "https://api.example.org<%= base_url %>?page=1&per_page=2"
-  },
-  "last": {
-    "href": "https://api.example.org<%= base_url %>?page=2&per_page=2"
-  },
-  "next": {
-    "href": "https://api.example.org<%= base_url %>?page=2&per_page=2"
-  },
-  "previous": null
+    "total_results": 3,
+    "total_pages": 2,
+    "first": {
+      "href": "https://api.example.org<%= base_url %>?page=1&per_page=2"
+    },
+    "last": {
+      "href": "https://api.example.org<%= base_url %>?page=2&per_page=2"
+    },
+    "next": {
+      "href": "https://api.example.org<%= base_url %>?page=2&per_page=2"
+    },
+    "previous": null
   },
   "resources": [
     {
