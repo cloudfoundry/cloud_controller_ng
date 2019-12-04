@@ -16,6 +16,10 @@ RSpec.describe 'V3 service brokers' do
                   username: 'old-admin',
                   password: 'not-welcome',
               }
+          },
+          metadata: {
+            labels: { potato: 'yam' },
+            annotations: { style: 'mashed' }
           }
       }
     }
@@ -29,6 +33,10 @@ RSpec.describe 'V3 service brokers' do
                   username: 'admin',
                   password: 'welcome',
               }
+          },
+          metadata: {
+              labels: { potato: 'sweet' },
+              annotations: { style: 'mashed', amount: 'loads' }
           }
       }
     }
@@ -70,7 +78,11 @@ RSpec.describe 'V3 service brokers' do
           'name' => 'new-name',
           'url' => 'http://example.org/new-broker-url',
           'available' => true,
-          'status' => 'available'
+          'status' => 'available',
+          'metadata' => {
+              'labels' => { 'potato' => 'sweet' },
+              'annotations' => { 'style' => 'mashed', 'amount' => 'loads' }
+          }
       })
     end
 
@@ -100,7 +112,11 @@ RSpec.describe 'V3 service brokers' do
           'name' => 'old-name',
           'url' => 'http://example.org/old-broker-url',
           'available' => true,
-          'status' => 'available'
+          'status' => 'available',
+          'metadata' => {
+              'labels' => { 'potato' => 'yam' },
+              'annotations' => { 'style' => 'mashed' }
+          }
       })
     end
 

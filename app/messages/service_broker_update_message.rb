@@ -28,4 +28,8 @@ module VCAP::CloudController
       end
     end
   end
+
+  class ServiceBrokerUpdateMetadataMessage < MetadataBaseMessage
+    register_allowed_keys []
+  end
 end

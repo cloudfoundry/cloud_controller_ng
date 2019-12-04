@@ -17,11 +17,12 @@ module VCAP::CloudController
         )
       end
 
+      let(:service_broker_guid) { 'some-broker-guid' }
       let(:service_broker_state) { nil }
       let(:space_guid) { nil }
       let(:service_broker) do
         double(
-          guid: 'some-broker-guid',
+          guid: service_broker_guid,
           name: 'greg',
           broker_url: 'https://best-broker.io',
           auth_username: 'username',
@@ -29,7 +30,27 @@ module VCAP::CloudController
           space_guid: space_guid,
           state: service_broker_state,
           created_at: Time.now,
-          updated_at: Time.now
+          updated_at: Time.now,
+          labels: [label],
+          annotations: [annotation]
+        )
+      end
+
+      let(:label) do
+        double(
+          resource_guid: service_broker_guid,
+          key_prefix: 'mr',
+          key_name: 'potato',
+          value: 'baked'
+        )
+      end
+
+      let(:annotation) do
+        double(
+          resource_guid: service_broker_guid,
+          key_prefix: 'u',
+          key_name: 'style',
+          value: 'mashed'
         )
       end
 
@@ -43,6 +64,12 @@ module VCAP::CloudController
 
           expect(result[:created_at]).to eq(service_broker.created_at)
           expect(result[:updated_at]).to eq(service_broker.updated_at)
+
+          expect(result[:metadata][:labels].length).to eq(1)
+          expect(result[:metadata][:labels]).to eq({ 'mr/potato' => 'baked' })
+
+          expect(result[:metadata][:annotations].length).to eq(1)
+          expect(result[:metadata][:annotations]).to eq({ 'u/style' => 'mashed' })
 
           expect(result[:relationships].length).to eq(0)
         end

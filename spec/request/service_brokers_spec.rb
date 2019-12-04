@@ -90,6 +90,12 @@ RSpec.describe 'V3 service brokers' do
   end
 
   describe 'GET /v3/service_brokers' do
+    before do
+      stub_request(:get, 'http://example.org/broker-url-v2/v2/catalog').
+        to_return(status: 200, body: catalog('v2-broker').to_json, headers: {})
+      stub_uaa_for('v2-broker')
+    end
+
     let(:api_call) { lambda { |user_headers| get '/v3/service_brokers', nil, user_headers } }
 
     it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
@@ -121,17 +127,24 @@ RSpec.describe 'V3 service brokers' do
     end
 
     context 'when there are global service brokers' do
+      let(:global_broker_request_body_v2) do
+        {
+            name: 'v2 broker name',
+            broker_url: 'http://example.org/broker-url-v2',
+            auth_username: 'admin',
+            auth_password: 'welcome'
+        }
+      end
+
       let(:global_service_broker_v3) do
-        # Note, has a state
-        VCAP::CloudController::ServiceBroker.make(state: VCAP::CloudController::ServiceBrokerStateEnum::AVAILABLE)
+        create_broker_successfully(global_broker_request_body, with: admin_headers, execute_all_jobs: true)
       end
 
       let(:global_service_broker_v2) do
-        # Note, no state set
-        VCAP::CloudController::ServiceBroker.make(state: '')
+        create_broker_successfully_v2(global_broker_request_body_v2, with: admin_headers)
       end
 
-      let(:global_service_broker_v3_json) do
+      let(:broker_created_with_v3_json) do
         {
             guid: global_service_broker_v3.guid,
             name: global_service_broker_v3.name,
@@ -141,10 +154,11 @@ RSpec.describe 'V3 service brokers' do
             status: 'available',
             available: true,
             relationships: {},
-            links: { self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/service_brokers\/#{global_service_broker_v3.guid}) } }
+            links: { self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/service_brokers\/#{global_service_broker_v3.guid}) } },
+            metadata: { labels: { potato: 'yam' }, annotations: { style: 'mashed' } }
         }
       end
-      let(:global_service_broker_v2_json) do
+      let(:broker_created_with_v2_json) do
         {
             guid: global_service_broker_v2.guid,
             name: global_service_broker_v2.name,
@@ -154,7 +168,8 @@ RSpec.describe 'V3 service brokers' do
             status: 'available',
             available: true,
             relationships: {},
-            links: { self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/service_brokers\/#{global_service_broker_v2.guid}) } }
+            links: { self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/service_brokers\/#{global_service_broker_v2.guid}) } },
+            metadata: { labels: {}, annotations: {} }
         }
       end
 
@@ -164,9 +179,9 @@ RSpec.describe 'V3 service brokers' do
           response_objects: []
         )
 
-        h['admin'] = { code: 200, response_objects: [global_service_broker_v3_json, global_service_broker_v2_json] }
-        h['admin_read_only'] = { code: 200, response_objects: [global_service_broker_v3_json, global_service_broker_v2_json] }
-        h['global_auditor'] = { code: 200, response_objects: [global_service_broker_v3_json, global_service_broker_v2_json] }
+        h['admin'] = { code: 200, response_objects: [broker_created_with_v3_json, broker_created_with_v2_json] }
+        h['admin_read_only'] = { code: 200, response_objects: [broker_created_with_v3_json, broker_created_with_v2_json] }
+        h['global_auditor'] = { code: 200, response_objects: [broker_created_with_v3_json, broker_created_with_v2_json] }
 
         h
       end
@@ -185,6 +200,7 @@ RSpec.describe 'V3 service brokers' do
             updated_at: iso8601,
             status: 'available',
             available: true,
+            metadata: { labels: {}, annotations: {} },
             relationships: {
                 space: { data: { guid: space.guid } }
             },
@@ -322,6 +338,7 @@ RSpec.describe 'V3 service brokers' do
             updated_at: iso8601,
             status: 'available',
             available: true,
+            metadata: { labels: {}, annotations: {} },
             relationships: {},
             links: { self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/service_brokers\/#{global_service_broker_v3.guid}) } }
         }
@@ -362,6 +379,7 @@ RSpec.describe 'V3 service brokers' do
             updated_at: iso8601,
             status: 'available',
             available: true,
+            metadata: { labels: {}, annotations: {} },
             relationships: {
                 space: { data: { guid: space.guid } }
             },
@@ -407,15 +425,9 @@ RSpec.describe 'V3 service brokers' do
   end
 
   describe 'PATCH /v3/service_brokers/:guid' do
-    let!(:broker) do
-      VCAP::CloudController::ServiceBroker.make(
-        name: 'old-name',
-        broker_url: 'http://example.org/old-broker-url',
-        auth_username: 'old-admin',
-        auth_password: 'not-welcome',
-        state: VCAP::CloudController::ServiceBrokerStateEnum::AVAILABLE
-      )
-    end
+    let!(:broker) {
+      create_broker_successfully(global_broker_request_body, with: admin_headers, execute_all_jobs: true)
+    }
 
     let(:update_request_body) {
       {
@@ -424,9 +436,13 @@ RSpec.describe 'V3 service brokers' do
           authentication: {
               type: 'basic',
               credentials: {
-                  username: 'admin',
-                  password: 'welcome',
+                  username: 'new-admin',
+                  password: 'now-welcome',
               }
+          },
+          metadata: {
+              labels: { potato: 'sweet' },
+              annotations: { style: 'mashed', amount: 'all' }
           }
       }
     }
@@ -435,11 +451,18 @@ RSpec.describe 'V3 service brokers' do
       patch("/v3/service_brokers/#{broker.guid}", update_request_body.to_json, admin_headers)
 
       broker = VCAP::CloudController::ServiceBroker.last
-      expect(broker.name).to eq('old-name')
-      expect(broker.broker_url).to eq('http://example.org/old-broker-url')
-      expect(broker.auth_username).to eq('old-admin')
-      expect(broker.auth_password).to eq('not-welcome')
+      expect(broker.name).to eq('broker name')
+      expect(broker.broker_url).to eq('http://example.org/broker-url')
+      expect(broker.auth_username).to eq('admin')
+      expect(broker.auth_password).to eq('welcome')
       expect(broker.state).to eq(VCAP::CloudController::ServiceBrokerStateEnum::SYNCHRONIZING)
+
+      expect(broker.labels[0].key_name).to eq('potato')
+      expect(broker.labels[0].value).to eq('yam')
+
+      expect(broker.annotations.size).to eq(1)
+      expect(broker.annotations[0].key_name).to eq('style')
+      expect(broker.annotations[0].value).to eq('mashed')
     end
 
     it 'creates a pollable job to update the service broker' do
@@ -492,7 +515,7 @@ RSpec.describe 'V3 service brokers' do
       it 'should return 422 and meaningful error and does not create a broker' do
         patch("/v3/service_brokers/#{broker.guid}", { name: 'another broker' }.to_json, admin_headers)
         expect_error(status: 422, error: 'UnprocessableEntity', description: 'Name must be unique')
-        expect(broker.reload.name).to eq 'old-name'
+        expect(broker.reload.name).to eq 'broker name'
       end
     end
 
@@ -663,6 +686,7 @@ RSpec.describe 'V3 service brokers' do
           updated_at: iso8601,
           status: 'synchronization in progress',
           available: false,
+          metadata: { labels: { potato: 'yam' }, annotations: { style: 'mashed' } },
           relationships: {},
           links: { self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/service_brokers\/#{UUID_REGEX}) } }
       }
@@ -794,6 +818,7 @@ RSpec.describe 'V3 service brokers' do
             updated_at: iso8601,
             status: 'synchronization in progress',
             available: false,
+            metadata: { labels: {}, annotations: {} },
             relationships: {
                 space: { data: { guid: space.guid } }
             },
@@ -1344,6 +1369,12 @@ RSpec.describe 'V3 service brokers' do
     execute_all_jobs(expected_successes: 1, expected_failures: 0) if execute_all_jobs
 
     broker
+  end
+
+  def create_broker_successfully_v2(broker_body, with:)
+    post('/v2/service_brokers', broker_body.to_json, with)
+    expect(last_response).to have_status_code(201)
+    VCAP::CloudController::ServiceBroker.last
   end
 
   def expect_error(status:, error: '', description: '')

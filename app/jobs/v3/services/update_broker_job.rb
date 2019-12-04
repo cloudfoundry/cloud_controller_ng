@@ -1,3 +1,5 @@
+require 'presenters/mixins/metadata_presentation_helpers'
+
 module VCAP::CloudController
   module V3
     class UpdateBrokerJob < VCAP::CloudController::Jobs::CCJob
@@ -38,6 +40,8 @@ module VCAP::CloudController
       attr_reader :update_request_guid, :broker_guid
 
       class Perform
+        include VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers
+
         def initialize(update_request_guid, previous_broker_state)
           @update_request_guid = update_request_guid
           @update_request = ServiceBrokerUpdateRequest.find(guid: update_request_guid)
@@ -52,6 +56,7 @@ module VCAP::CloudController
 
             @warnings = @catalog_updater.refresh
 
+            MetadataUpdate.update(broker, ServiceBrokerUpdateMetadataMessage.new(build_metadata_request_params))
             broker.update(state: ServiceBrokerStateEnum::AVAILABLE)
           end
 
@@ -83,7 +88,17 @@ module VCAP::CloudController
             params[:auth_username] = auth.dig('credentials', 'username')
             params[:auth_password] = auth.dig('credentials', 'password')
           end
+
           params
+        end
+
+        def build_metadata_request_params
+          {
+            metadata: {
+              labels: hashified_labels(update_request.labels),
+              annotations: hashified_annotations(update_request.annotations)
+            }
+          }
         end
 
         attr_reader :broker, :update_request, :previous_broker_state
