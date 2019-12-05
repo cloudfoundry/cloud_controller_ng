@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'request_spec_shared_examples'
 
 RSpec.describe 'Packages' do
   let(:email) { 'potato@house.com' }
@@ -319,6 +320,31 @@ RSpec.describe 'Packages' do
     before do
       space.organization.add_user(user)
       space.add_developer(user)
+    end
+
+    it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
+      let(:message) { VCAP::CloudController::PackagesListMessage }
+      let(:request) { '/v3/packages' }
+      let(:excluded_params) {
+        [
+          :app_guid
+        ]
+      }
+
+      let(:params) do
+        {
+          guids: ['foo', 'bar'],
+          space_guids: ['foo', 'bar'],
+          organization_guids: ['foo', 'bar'],
+          app_guids: ['foo', 'bar'],
+          states: ['foo', 'bar'],
+          types: ['foo', 'bar'],
+          page:   '2',
+          per_page:   '10',
+          order_by:   'updated_at',
+          label_selector:   'foo,bar',
+        }
+      end
     end
 
     it 'gets all the packages' do

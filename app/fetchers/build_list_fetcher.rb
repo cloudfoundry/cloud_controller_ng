@@ -37,7 +37,7 @@ module VCAP::CloudController
         dataset = dataset.where(package_guid: message.package_guids)
       end
 
-      dataset.where(app: filter_app_dataset(app_dataset)).eager(eager_loaded_associations)
+      dataset.where(app_guid: filter_app_dataset(app_dataset).select(:guid)).eager(eager_loaded_associations).qualify
     end
 
     def filter_app_dataset(app_dataset)

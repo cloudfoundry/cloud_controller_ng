@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'request_spec_shared_examples'
 
 RSpec.describe 'v3 service bindings' do
   let(:app_model) { VCAP::CloudController::AppModel.make }
@@ -417,6 +418,21 @@ RSpec.describe 'v3 service bindings' do
     end
 
     before { VCAP::CloudController::ServiceBinding.make(service_instance: service_instance3, app: app_model) }
+
+    it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
+      let(:request) { 'v3/service_bindings' }
+      let(:message) { VCAP::CloudController::ServiceBindingsListMessage }
+      let(:user_header) { headers_for(user) }
+      let(:params) do
+        {
+          service_instance_guids: ['foo', 'bar'],
+          app_guids: ['foo', 'bar'],
+          per_page:   '10',
+          page: 2,
+          order_by:   'updated_at',
+        }
+      end
+    end
 
     it 'returns a paginated list of service_bindings' do
       get '/v3/service_bindings?per_page=2', nil, user_headers

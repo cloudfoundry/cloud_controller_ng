@@ -831,6 +831,30 @@ RSpec.describe 'Roles Request' do
       }
     end
 
+    describe 'list query parameters' do
+      before do
+        allow(uaa_client).to receive(:users_for_ids).and_return([])
+      end
+      it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
+        let(:request) { 'v3/roles' }
+        let(:message) { VCAP::CloudController::RolesListMessage }
+        let(:user_header) { headers_for(user) }
+        let(:params) do
+          {
+            guids: ['foo', 'bar'],
+            organization_guids: ['foo', 'bar'],
+            space_guids: ['foo', 'bar'],
+            user_guids: ['foo', 'bar'],
+            types: ['foo', 'bar'],
+            per_page:   '10',
+            page: 2,
+            order_by:   'updated_at',
+            include: 'user, space',
+          }
+        end
+      end
+    end
+
     context 'listing all roles' do
       let(:expected_codes_and_responses) do
         h = Hash.new(code: 200, response_objects: [space_auditor_response_object, org_auditor_response_object])

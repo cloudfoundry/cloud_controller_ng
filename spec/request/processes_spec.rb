@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'request_spec_shared_examples'
 
 RSpec.describe 'Processes' do
   let(:space) { VCAP::CloudController::Space.make }
@@ -49,6 +50,31 @@ RSpec.describe 'Processes' do
     }
 
     before { VCAP::CloudController::ProcessModel.make(:process, app: app_model) }
+
+    it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
+      let(:message) { VCAP::CloudController::ProcessesListMessage }
+      let(:request) { '/v3/processes' }
+      let(:user_header) { developer_headers }
+
+      let(:excluded_params) {
+        [
+          :app_guid
+        ]
+      }
+      let(:params) do
+        {
+          guids: ['foo', 'bar'],
+          space_guids: ['foo', 'bar'],
+          organization_guids: ['foo', 'bar'],
+          types: ['foo', 'bar'],
+          app_guids: ['foo', 'bar'],
+          page:   '2',
+          per_page:   '10',
+          order_by:   'updated_at',
+          label_selector:   'foo,bar',
+        }
+      end
+    end
 
     it 'returns a paginated list of processes' do
       get '/v3/processes?per_page=2', nil, developer_headers

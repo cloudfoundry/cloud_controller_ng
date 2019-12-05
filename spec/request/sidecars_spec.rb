@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'request_spec_shared_examples'
 
 RSpec.describe 'Sidecars' do
   let(:app_model) { VCAP::CloudController::AppModel.make }
@@ -336,6 +337,19 @@ RSpec.describe 'Sidecars' do
       command:    'rackup',
     )
     }
+
+    it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
+      let(:request) { "/v3/processes/#{process1.guid}/sidecars" }
+      let(:message) { VCAP::CloudController::SidecarsListMessage }
+
+      let(:params) do
+        {
+          page:   '2',
+          per_page:   '10',
+          order_by:   'updated_at',
+        }
+      end
+    end
 
     it "retrieves the process' sidecars" do
       get "/v3/processes/#{process1.guid}/sidecars?per_page=2", nil, user_header

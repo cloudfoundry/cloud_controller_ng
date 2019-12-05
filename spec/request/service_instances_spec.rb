@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'request_spec_shared_examples'
 
 RSpec.describe 'Service Instances' do
   let(:user_email) { 'user@email.example.com' }
@@ -15,6 +16,22 @@ RSpec.describe 'Service Instances' do
   let!(:service_instance3) { VCAP::CloudController::ManagedServiceInstance.make(space: another_space, name: 'mysql') }
 
   describe 'GET /v3/service_instances' do
+    it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
+      let(:request) { 'v3/service_instances' }
+      let(:message) { VCAP::CloudController::ServiceInstancesListMessage }
+
+      let(:params) do
+        {
+          names: ['foo', 'bar'],
+          space_guids: ['foo', 'bar'],
+          per_page:   '10',
+          page: 2,
+          order_by:   'updated_at',
+          label_selector:   'foo,bar',
+        }
+      end
+    end
+
     it 'returns a paginated list of service instances the user has access to' do
       set_current_user_as_role(role: 'space_developer', org: space.organization, space: space, user: user)
       set_current_user_as_role(role: 'space_developer', org: another_space.organization, space: another_space, user: user)

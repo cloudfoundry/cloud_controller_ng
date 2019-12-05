@@ -75,6 +75,29 @@ RSpec.describe 'Routes Request' do
       }
     end
 
+    describe 'query list parameters' do
+      it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
+        let(:request) { 'v3/routes' }
+        let(:message) { VCAP::CloudController::RoutesListMessage }
+        let(:user_header) { admin_header }
+
+        let(:params) do
+          {
+            page:   '2',
+            per_page:   '10',
+            order_by:   'updated_at',
+            space_guids: ['foo', 'bar'],
+            organization_guids: ['foo', 'bar'],
+            domain_guids: ['foo', 'bar'],
+            paths: ['foo', 'bar'],
+            hosts: 'foo',
+            include: 'domain',
+            label_selector:   'foo,bar',
+          }
+        end
+      end
+    end
+
     context 'when the user is a member in the routes org' do
       let(:expected_codes_and_responses) do
         h = Hash.new(

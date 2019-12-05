@@ -361,6 +361,58 @@ RSpec.describe 'Droplets' do
       droplet2.buildpack_lifecycle_data.update(buildpacks: ['http://buildpack.git.url.com'], stack: 'stack-2')
     end
 
+    it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
+      let(:request) { 'v3/droplets' }
+      let(:message) { VCAP::CloudController::DropletsListMessage }
+      let(:user_header) { developer_headers }
+      let(:excluded_params) do
+        [
+          :current,
+          :app_guid
+        ]
+      end
+      let(:params) do
+        {
+          page:   '2',
+          per_page:   '10',
+          order_by:   'updated_at',
+          guids:   'foo,bar',
+          app_guids: 'foo,bar',
+          package_guid: package_model.guid,
+          space_guids: 'test',
+          states:  ['test', 'foo'],
+          organization_guids: 'foo,bar',
+          label_selector:   'foo,bar',
+        }
+      end
+    end
+
+    it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
+      let(:request) { 'v3/droplets' }
+      let(:message) { VCAP::CloudController::DropletsListMessage }
+      let(:user_header) { developer_headers }
+      let(:excluded_params) do
+        [
+          :space_guids,
+          :app_guids,
+          :organization_guids
+        ]
+      end
+      let(:params) do
+        {
+          page:   '2',
+          per_page:   '10',
+          order_by:   'updated_at',
+          guids:   'foo,bar',
+          app_guid: app_model.guid,
+          current: true,
+          package_guid: package_model.guid,
+          states:  ['test', 'foo'],
+          label_selector:   'foo,bar',
+        }
+      end
+    end
+
     it 'list all droplets with a buildpack lifecycle' do
       get "/v3/droplets?order_by=#{order_by}&per_page=#{per_page}", nil, developer_headers
       expect(last_response.status).to eq(200)

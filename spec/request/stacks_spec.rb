@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'request_spec_shared_examples'
 
 RSpec.describe 'Stacks Request' do
   describe 'GET /v3/stacks' do
@@ -9,6 +10,22 @@ RSpec.describe 'Stacks Request' do
     it 'returns 200 OK' do
       get '/v3/stacks', nil, headers
       expect(last_response.status).to eq(200)
+    end
+
+    it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
+      let(:request) { 'v3/stacks' }
+      let(:message) { VCAP::CloudController::StacksListMessage }
+      let(:user_header) { headers }
+
+      let(:params) do
+        {
+          names: ['foo', 'bar'],
+          page:   '2',
+          per_page:   '10',
+          order_by:   'updated_at',
+          label_selector:   'foo,bar',
+        }
+      end
     end
 
     context 'When stacks exist' do

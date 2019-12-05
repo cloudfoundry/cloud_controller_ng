@@ -13,6 +13,23 @@ RSpec.describe 'Domains Request' do
   end
 
   describe 'GET /v3/domains' do
+    it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
+      let(:request) { 'v3/domains' }
+      let(:message) { VCAP::CloudController::DomainsListMessage }
+      let(:user_header) { admin_header }
+      let(:params) do
+        {
+          page:   '2',
+          per_page:   '10',
+          order_by:   'updated_at',
+          names:   'foo,bar',
+          guids:   'foo,bar',
+          organization_guids: 'foo,bar',
+          label_selector:   'foo,bar',
+        }
+      end
+    end
+
     describe 'when the user is not logged in' do
       it 'returns 401 for Unauthenticated requests' do
         get '/v3/domains'

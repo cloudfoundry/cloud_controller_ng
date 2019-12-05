@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'actions/process_create_from_app_droplet'
+require 'request_spec_shared_examples'
 
 RSpec.describe 'Apps' do
   let(:user) { VCAP::CloudController::User.make }
@@ -233,6 +234,30 @@ RSpec.describe 'Apps' do
   end
 
   describe 'GET /v3/apps' do
+    describe 'query list parameters' do
+      it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
+        let(:request) { 'v3/apps' }
+
+        let(:message) { VCAP::CloudController::AppsListMessage }
+
+        let(:params) do
+          {
+            page:   '2',
+            per_page:   '10',
+            order_by:   'updated_at',
+            names:   'foo',
+            guids:   'foo',
+            organization_guids:   'foo',
+            space_guids:   'foo',
+            stacks:   'cf',
+            include:   'space',
+            lifecycle_type:   'buildpack',
+            label_selector:   'foo,bar',
+          }
+        end
+      end
+    end
+
     it 'returns a paginated list of apps the user has access to' do
       buildpack = VCAP::CloudController::Buildpack.make(name: 'bp-name')
       stack = VCAP::CloudController::Stack.make(name: 'stack-name')
