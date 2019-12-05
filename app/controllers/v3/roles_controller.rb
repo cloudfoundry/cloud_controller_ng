@@ -114,20 +114,20 @@ class RolesController < ApplicationController
     unprocessable_organization! unless org
     unauthorized! unless permission_queryer.can_write_to_org?(message.organization_guid)
 
-    user_guid = message.user_guid || guid_for_uaa_user(message.username, message.user_origin)
-    user = fetch_user_for_create_org_role(user_guid, message)
+    user_guid_from_uaa = fetch_and_validate_guid(message)
+    user = fetch_or_create_user_for_org_role(user_guid_from_uaa, message)
     unprocessable_user! unless user
 
     RoleCreate.new(message, user_audit_info).create_organization_role(type: message.type, user: user, organization: org)
   end
 
-  # Org managers can add unaffiliated users to their org by username
-  def fetch_user_for_create_org_role(user_guid, message)
-    if message.username && permission_queryer.can_write_to_org?(message.organization_guid)
-      User.dataset.first(guid: user_guid)
-    else
-      fetch_user(user_guid)
-    end
+  # Unaffiliated users can be assigned an org role by username
+  # If a user exists in UAA but not CCDB they will be created
+  def fetch_or_create_user_for_org_role(user_guid, message)
+    user = message.username ? User.dataset.first(guid: user_guid) : fetch_user(user_guid)
+    return user if user
+
+    create_cc_user(user_guid) if User.where(guid: user_guid).empty?
   end
 
   def fetch_user(user_guid)
@@ -139,6 +139,21 @@ class RolesController < ApplicationController
     uaa_client = CloudController::DependencyLocator.instance.uaa_client
     UsernamePopulator.new(uaa_client).transform(user)
     user
+  end
+
+  def fetch_and_validate_guid(message)
+    if message.user_guid
+      uaa_client = CloudController::DependencyLocator.instance.uaa_client
+      unprocessable_user! unless uaa_client.users_for_ids([message.user_guid]).any?
+      message.user_guid
+    else
+      guid_for_uaa_user(message.username, message.user_origin)
+    end
+  end
+
+  def create_cc_user(user_guid)
+    message = UserCreateMessage.new(guid: user_guid)
+    UserCreate.new.create(message: message)
   end
 
   def readable_users
