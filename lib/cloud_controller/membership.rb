@@ -3,7 +3,7 @@ module VCAP::CloudController
     SPACE_DEVELOPER     = 0
     SPACE_MANAGER       = 1
     SPACE_AUDITOR       = 2
-    ORG_MEMBER          = 3
+    ORG_USER            = 3
     ORG_MANAGER         = 4
     ORG_AUDITOR         = 5
     ORG_BILLING_MANAGER = 6
@@ -24,7 +24,7 @@ module VCAP::CloudController
 
       roles.map do |role|
         case role
-        when ORG_MEMBER
+        when ORG_USER
           @user.organizations.map(&:guid)
         when ORG_AUDITOR
           @user.audited_organizations.map(&:guid)
@@ -47,7 +47,7 @@ module VCAP::CloudController
           @user.managed_spaces.map(&:guid)
         when SPACE_AUDITOR
           @user.audited_spaces.map(&:guid)
-        when ORG_MEMBER
+        when ORG_USER
           @user.organizations_dataset.join(
             :spaces, spaces__organization_id: :organizations__id
           ).select(:spaces__guid).map(&:guid)
@@ -84,8 +84,8 @@ module VCAP::CloudController
           @space_auditor ||=
             @user.audited_spaces_dataset.
             association_join(:organization).map(&:guid)
-        when ORG_MEMBER
-          @org_member ||=
+        when ORG_USER
+          @org_user ||=
             @user.organizations_dataset.map(&:guid)
         when ORG_MANAGER
           @org_manager ||=

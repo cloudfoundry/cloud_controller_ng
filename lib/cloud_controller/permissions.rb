@@ -2,7 +2,7 @@ class VCAP::CloudController::Permissions
   ROLES_FOR_ORG_READING ||= [
     VCAP::CloudController::Membership::ORG_MANAGER,
     VCAP::CloudController::Membership::ORG_AUDITOR,
-    VCAP::CloudController::Membership::ORG_MEMBER,
+    VCAP::CloudController::Membership::ORG_USER,
     VCAP::CloudController::Membership::ORG_BILLING_MANAGER,
   ].freeze
 

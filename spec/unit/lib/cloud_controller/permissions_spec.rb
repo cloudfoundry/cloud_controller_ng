@@ -726,7 +726,7 @@ module VCAP::CloudController
           expect(permissions.can_read_from_isolation_segment?(isolation_segment)).to be true
         end
 
-        it 'returns true for org member' do
+        it 'returns true for org user' do
           org.add_user(user)
           expect(permissions.can_read_from_isolation_segment?(isolation_segment)).to be true
         end
@@ -904,7 +904,7 @@ module VCAP::CloudController
         expect(permissions.can_read_route?(space_guid, org_guid)).to be false
       end
 
-      it 'returns false for regular org member' do
+      it 'returns false for regular org user' do
         org.add_user(user)
 
         expect(permissions.can_read_route?(space_guid, org_guid)).to be false

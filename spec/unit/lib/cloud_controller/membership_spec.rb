@@ -153,7 +153,7 @@ module VCAP::CloudController
           organization.add_user(user)
         end
 
-        describe 'ORG_MEMBER' do
+        describe 'ORG_USER' do
           before do
             organization.add_user(user)
           end
@@ -164,7 +164,7 @@ module VCAP::CloudController
             end
 
             it 'returns true' do
-              result = membership.has_any_roles?(Membership::ORG_MEMBER, nil, organization.guid)
+              result = membership.has_any_roles?(Membership::ORG_USER, nil, organization.guid)
               expect(result).to be_truthy
             end
           end
@@ -175,7 +175,7 @@ module VCAP::CloudController
             end
 
             it 'returns false' do
-              result = membership.has_any_roles?(Membership::ORG_MEMBER, nil, organization.guid)
+              result = membership.has_any_roles?(Membership::ORG_USER, nil, organization.guid)
               expect(result).to be_falsey
             end
           end
@@ -293,7 +293,7 @@ module VCAP::CloudController
           end
 
           it 'returns false' do
-            result = membership.has_any_roles?(Membership::ORG_MEMBER, space.guid, nil)
+            result = membership.has_any_roles?(Membership::ORG_USER, space.guid, nil)
             expect(result).to be_falsey
           end
         end
@@ -311,7 +311,7 @@ module VCAP::CloudController
 
           it 'returns true' do
             result = membership.has_any_roles?([
-              Membership::ORG_MEMBER,
+              Membership::ORG_USER,
               Membership::ORG_MANAGER,
               Membership::ORG_AUDITOR,
               Membership::ORG_BILLING_MANAGER],
@@ -372,10 +372,10 @@ module VCAP::CloudController
 
     describe '#org_guids_for_roles' do
       context 'when the user has a role in the organization' do
-        context 'for org members' do
+        context 'for org users' do
           it 'returns all orgs in which the user is a member' do
             organization.add_user(user)
-            guids = membership.org_guids_for_roles(Membership::ORG_MEMBER)
+            guids = membership.org_guids_for_roles(Membership::ORG_USER)
             expect(guids).to eq([organization.guid])
           end
         end
@@ -418,7 +418,7 @@ module VCAP::CloudController
 
       context 'when the user has no role in any organization' do
         it 'should return an empty list' do
-          guids = membership.org_guids_for_roles([Membership::ORG_MEMBER,
+          guids = membership.org_guids_for_roles([Membership::ORG_USER,
                                                   Membership::ORG_AUDITOR,
                                                   Membership::ORG_BILLING_MANAGER,
                                                   Membership::ORG_MANAGER])
@@ -470,9 +470,9 @@ module VCAP::CloudController
         end
       end
 
-      context 'org member' do
+      context 'org user' do
         it 'returns all spaces that the user is in the org' do
-          guids = membership.space_guids_for_roles(Membership::ORG_MEMBER)
+          guids = membership.space_guids_for_roles(Membership::ORG_USER)
 
           expect(guids).to eq([space.guid])
         end
