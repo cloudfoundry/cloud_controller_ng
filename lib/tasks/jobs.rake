@@ -18,7 +18,7 @@ namespace :jobs do
 
   desc 'Start a delayed_job worker.'
   task :generic, [:name] do |t, args|
-    args.with_defaults(:name => ENV['HOSTNAME'])
+    args.with_defaults(name: ENV['HOSTNAME'])
 
     RakeConfig.context = :worker
     queues = [
