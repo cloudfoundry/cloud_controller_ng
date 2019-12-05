@@ -66,6 +66,15 @@ module VCAP::CloudController
           expect(AppAnnotationModel.find(resource_guid: app.guid, key: 'please')).to be_nil
           expect(AppAnnotationModel.count).to eq 1
         end
+
+        it 'preserves label keys and sets values to nil when destroy_nil is false' do
+          app.db.transaction do
+            AnnotationsUpdate.update(app, annotations, AppAnnotationModel, destroy_nil: false)
+          end
+
+          expect(annotation_to_be_deleted.reload.value).to eq nil
+          expect(old_annotation.reload.value).to eq 'stable'
+        end
       end
 
       context 'too many annotations' do
