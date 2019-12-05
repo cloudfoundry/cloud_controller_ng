@@ -13,6 +13,7 @@ includes:
   - api_resources/domains
   - api_resources/environment_variable_groups
   - api_resources/feature_flags
+  - api_resources/info
   - api_resources/isolation_segments
   - api_resources/jobs
   - api_resources/organizations
@@ -231,6 +232,8 @@ includes:
   - experimental_resources/deployments/list
   - experimental_resources/deployments/update
   - experimental_resources/deployments/cancel
+  - experimental_resources/info/header
+  - experimental_resources/info/get
   - experimental_resources/revisions/header
   - experimental_resources/revisions/object
   - experimental_resources/revisions/get

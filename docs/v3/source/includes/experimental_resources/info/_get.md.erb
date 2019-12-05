@@ -1,0 +1,39 @@
+### Get platform info
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/info" \
+  -X GET
+```
+
+```
+Example Response with configured values
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :populated_info %>
+```
+
+```
+Example Response with unconfigured values
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :empty_info %>
+```
+
+#### Definition
+`GET /v3/info` <br>
+
+#### Authentication
+
+No authentication required.

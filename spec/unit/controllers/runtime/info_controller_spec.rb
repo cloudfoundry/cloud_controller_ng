@@ -87,6 +87,8 @@ module VCAP::CloudController
 
       describe 'custom fields' do
         context 'without custom fields in config' do
+          before { TestConfig.override(info: {}) }
+
           it 'does not have custom fields in the hash' do
             get '/v2/info'
             hash = MultiJson.load(last_response.body)

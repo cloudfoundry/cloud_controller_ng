@@ -1,0 +1,37 @@
+<% content_for :populated_info do %>
+{
+  "build": "afa73e3fe",
+  "cli_version": {
+    "minimum": "6.22.0",
+    "recommended": "latest"
+  },
+  "custom": {
+    "arbitrary": "stuff"
+  },
+  "description": "Put your apps here!",
+  "name": "Cloud Foundry",
+  "version": 123,
+  "links": {
+    "self": { "href": "http://api.example.com/v3/info" } ,
+    "support": { "href": "http://support.example.com" }
+  }
+}
+<% end %>
+
+<% content_for :empty_info do %>
+{
+  "build": "",
+  "cli_version": {
+    "minimum": "",
+    "recommended": ""
+  },
+  "custom": {},
+  "description": "",
+  "name": "",
+  "version": 0,
+  "links": {
+    "self": { "href": "http://api.example.com/v3/info" } ,
+    "support": { "href": "" }
+  }
+}
+<% end %>

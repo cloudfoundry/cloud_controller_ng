@@ -242,4 +242,7 @@ Rails.application.routes.draw do
   get '/roles/:guid', to: 'roles#show'
   post '/roles', to: 'roles#create'
   delete '/roles/:guid', to: 'roles#destroy'
+
+  # info
+  get '/info', to: 'info#show'
 end
