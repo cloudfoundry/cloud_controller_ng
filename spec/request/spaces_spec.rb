@@ -152,6 +152,24 @@ RSpec.describe 'Spaces' do
   end
 
   describe 'GET /v3/spaces' do
+    it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
+      let(:request) { 'v3/spaces' }
+      let(:message) { VCAP::CloudController::SpacesListMessage }
+
+      let(:params) do
+        {
+          names: ['foo', 'bar'],
+          organization_guids: ['foo', 'bar'],
+          guids: ['foo', 'bar'],
+          include: 'org',
+          page:   '2',
+          per_page:   '10',
+          order_by:   'updated_at',
+          label_selector:   'foo,bar',
+        }
+      end
+    end
+
     context 'when a label_selector is not provided' do
       it 'returns a paginated list of spaces the user has access to' do
         get '/v3/spaces?per_page=2', nil, user_header

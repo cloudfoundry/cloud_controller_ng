@@ -140,3 +140,16 @@ RSpec.shared_examples 'permissions for delete endpoint' do |roles|
     end
   end
 end
+
+RSpec.shared_examples 'request_spec_shared_examples.rb list query endpoint' do
+  let(:excluded_params) { [] }
+  it 'returns 200 even using all possible query parameters' do
+    expect(user_header).to be_present, 'user header not provided (should be provided in a `let` block)'
+
+    missing_params = message::ALLOWED_KEYS - params.keys - excluded_params
+    expect(missing_params.length).to eq(0), "Parameters #{missing_params.join(' ,')} are not provided."
+
+    get request, params.to_query, user_header
+    expect(last_response.status).to eq(200), JSON.parse(last_response.body)['errors'].try(:first).try(:[], 'detail')
+  end
+end

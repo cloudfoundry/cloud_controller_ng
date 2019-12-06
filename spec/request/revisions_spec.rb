@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'request_spec_shared_examples'
 
 RSpec.describe 'Revisions' do
   let(:user) { VCAP::CloudController::User.make }
@@ -76,6 +77,21 @@ RSpec.describe 'Revisions' do
 
   describe 'GET /v3/apps/:guid/revisions' do
     let!(:revision2) { VCAP::CloudController::RevisionModel.make(app: app_model, version: 43, description: 'New droplet deployed') }
+
+    it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
+      let(:message) { VCAP::CloudController::AppRevisionsListMessage }
+      let(:request) { "/v3/apps/#{app_model.guid}/revisions" }
+      let(:params) do
+        {
+          page:   '2',
+          per_page:   '10',
+          order_by:   'updated_at',
+          versions:   '1,2',
+          label_selector:   'foo,bar',
+        }
+      end
+    end
+
     it 'gets a list of revisions for the app' do
       get "/v3/apps/#{app_model.guid}/revisions?per_page=2", nil, user_header
       expect(last_response.status).to eq(200)

@@ -18,7 +18,7 @@ module VCAP::CloudController
       if message.requested?(:organization_guids) || message.requested?(:space_guids) || message.requested?(:app_guids)
         [app, filter(message, app_dataset)]
       else
-        [app, filter_task_dataset(message, TaskModel.dataset).where(app_guid: message.app_guid)]
+        [app, filter_task_dataset(message, TaskModel.dataset).where(app_guid: message.app_guid).qualify]
       end
     end
 

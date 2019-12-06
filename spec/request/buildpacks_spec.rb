@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'messages/buildpack_upload_message'
+require 'request_spec_shared_examples'
 
 RSpec.describe 'buildpacks' do
   describe 'GET /v3/buildpacks' do
@@ -9,6 +10,23 @@ RSpec.describe 'buildpacks' do
     it 'returns 200 OK' do
       get '/v3/buildpacks', nil, headers
       expect(last_response.status).to eq(200)
+    end
+
+    it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
+      let(:request) { 'v3/buildpacks' }
+
+      let(:message) { VCAP::CloudController::BuildpacksListMessage }
+      let(:user_header) { headers }
+      let(:params) do
+        {
+          page:   '2',
+          per_page:   '10',
+          order_by:   'updated_at',
+          names:   'foo',
+          stacks:   'cf',
+          label_selector:   'foo,bar',
+        }
+      end
     end
 
     context 'when filtered by label_selector' do

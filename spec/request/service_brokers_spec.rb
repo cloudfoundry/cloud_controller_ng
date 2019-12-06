@@ -88,6 +88,21 @@ RSpec.describe 'V3 service brokers' do
   describe 'GET /v3/service_brokers' do
     let(:api_call) { lambda { |user_headers| get '/v3/service_brokers', nil, user_headers } }
 
+    it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
+      let(:request) { 'v3/service_brokers' }
+      let(:message) { VCAP::CloudController::ServiceBrokersListMessage }
+      let(:user_header) { headers_for(user) }
+      let(:params) do
+        {
+          names: ['foo', 'bar'],
+          space_guids: ['foo', 'bar'],
+          per_page:   '10',
+          page: 2,
+          order_by:   'updated_at',
+        }
+      end
+    end
+
     context 'when there are no service brokers' do
       let(:expected_codes_and_responses) do
         h = Hash.new(

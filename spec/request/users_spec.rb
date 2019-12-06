@@ -97,6 +97,30 @@ RSpec.describe 'Users Request' do
       }
     end
 
+    describe 'list query parameters' do
+      before do
+        allow(uaa_client).to receive(:ids_for_usernames_and_origins).and_return([])
+      end
+
+      it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
+        let(:request) { 'v3/users' }
+        let(:message) { VCAP::CloudController::UsersListMessage }
+        let(:user_header) { admin_header }
+
+        let(:params) do
+          {
+            guids: ['foo', 'bar'],
+            usernames: ['foo', 'bar'],
+            origins: ['foo', 'bar'],
+            page:   '2',
+            per_page:   '10',
+            order_by:   'updated_at',
+            label_selector:   'foo,bar',
+          }
+        end
+      end
+    end
+
     describe 'without filters' do
       let(:api_call) { lambda { |user_headers| get '/v3/users', nil, user_headers } }
 

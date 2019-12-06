@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'request_spec_shared_examples'
 
 RSpec.describe 'Tasks' do
   let(:space) { VCAP::CloudController::Space.make }
@@ -23,6 +24,58 @@ RSpec.describe 'Tasks' do
   end
 
   describe 'GET /v3/tasks' do
+    it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
+      let(:request) { 'v3/tasks' }
+      let(:message) { VCAP::CloudController::TasksListMessage }
+      let(:user_header) { developer_headers }
+      let(:excluded_params) do
+        [
+          :app_guid,
+          :sequence_ids
+        ]
+      end
+      let(:params) do
+        {
+          page:   '2',
+          per_page:   '10',
+          order_by:   'updated_at',
+          guids:   'foo,bar',
+          app_guids: 'foo,bar',
+          space_guids: 'test',
+          names: ['foo', 'bar'],
+          states:  ['test', 'foo'],
+          organization_guids: 'foo,bar',
+          label_selector:   'foo,bar',
+        }
+      end
+    end
+
+    it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
+      let(:request) { 'v3/tasks' }
+      let(:message) { VCAP::CloudController::TasksListMessage }
+      let(:user_header) { developer_headers }
+      let(:excluded_params) do
+        [
+          :space_guids,
+          :app_guids,
+          :organization_guids
+        ]
+      end
+      let(:params) do
+        {
+          states: ['foo', 'bar'],
+          guids: ['foo', 'bar'],
+          names: ['foo', 'bar'],
+          app_guid: app_model.guid,
+          sequence_ids: '1,2',
+          page:   '2',
+          per_page:   '10',
+          order_by:   'updated_at',
+          label_selector:   'foo,bar',
+        }
+      end
+    end
+
     it 'returns a paginated list of tasks' do
       task1 = VCAP::CloudController::TaskModel.make(
         name:         'task one',

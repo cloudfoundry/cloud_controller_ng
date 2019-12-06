@@ -96,6 +96,35 @@ module VCAP::CloudController
     end
 
     describe 'GET /v3/organizations' do
+      describe 'query list parameters' do
+        let(:isolation_segment1) { IsolationSegmentModel.make(name: 'seg') }
+        let(:assigner) { IsolationSegmentAssign.new }
+
+        before do
+          assigner.assign(isolation_segment1, [organization1])
+        end
+
+        describe 'query list parameters' do
+          it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
+            let(:message) { VCAP::CloudController::OrgsListMessage }
+            let(:request) { '/v3/organizations' }
+            let(:excluded_params) {
+              [:isolation_segment_guid]
+            }
+            let(:params) do
+              {
+                guids: ['foo', 'bar'],
+                names: ['foo', 'bar'],
+                page:   '2',
+                per_page:   '10',
+                order_by:   'updated_at',
+                label_selector:   'foo,bar',
+              }
+            end
+          end
+        end
+      end
+
       it 'returns a paginated list of orgs the user has access to' do
         get '/v3/organizations?per_page=2', nil, user_header
         expect(last_response.status).to eq(200)

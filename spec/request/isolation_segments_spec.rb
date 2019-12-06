@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'isolation_segment_assign'
+require 'request_spec_shared_examples'
 
 RSpec.describe 'IsolationSegmentModels' do
   let(:user) { VCAP::CloudController::User.make }
@@ -219,6 +220,23 @@ RSpec.describe 'IsolationSegmentModels' do
   describe 'GET /v3/isolation_segments' do
     let(:org1) { VCAP::CloudController::Organization.make }
     let(:org2) { VCAP::CloudController::Organization.make }
+
+    it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
+      let(:message) { VCAP::CloudController::IsolationSegmentsListMessage }
+      let(:request) { '/v3/isolation_segments' }
+
+      let(:params) do
+        {
+          names: ['foo', 'bar'],
+          guids: ['foo', 'bar'],
+          organization_guids: ['foo', 'bar'],
+          page:   '2',
+          per_page:   '10',
+          order_by:   'updated_at',
+          label_selector:   'foo,bar',
+        }
+      end
+    end
 
     it 'returns the seeded isolation segment' do
       get '/v3/isolation_segments', nil, user_header

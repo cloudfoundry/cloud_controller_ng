@@ -23,15 +23,16 @@ module VCAP::CloudController
         end
 
         if message.requested?(:organization_guids)
-          dataset = dataset.where(organization: Organization.where(guid: message.organization_guids))
+          space_ids = Organization.where(guid: message.organization_guids).map(&:spaces).flatten.map(&:id)
+          dataset = dataset.where(space_id: space_ids)
         end
 
         if message.requested?(:space_guids)
-          dataset = dataset.where(space: Space.where(guid: message.space_guids))
+          dataset = dataset.where(space_id: Space.where(guid: message.space_guids).select(:id))
         end
 
         if message.requested?(:domain_guids)
-          dataset = dataset.where(domain: Domain.where(guid: message.domain_guids))
+          dataset = dataset.where(domain_id: Domain.where(guid: message.domain_guids).select(:id))
         end
 
         if message.requested?(:label_selector)

@@ -1127,6 +1127,23 @@ RSpec.describe 'Deployments' do
 
       let(:user_header) { headers_for(user) }
 
+      it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
+        let(:request) { 'v3/deployments' }
+        let(:message) { VCAP::CloudController::DeploymentsListMessage }
+        let(:params) do
+          {
+            page:   '2',
+            per_page:   '10',
+            order_by:   'updated_at',
+            states:   'foo',
+            status_values:   'foo',
+            status_reasons:   'foo',
+            app_guids:   '123',
+            label_selector:   'bar',
+          }
+        end
+      end
+
       it 'should not include the deployments in the other space' do
         get '/v3/deployments', nil, user_header
         expect(last_response.status).to eq(200)

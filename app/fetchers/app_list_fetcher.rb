@@ -44,7 +44,7 @@ module VCAP::CloudController
       end
 
       if message.requested?(:guids)
-        dataset = dataset.where(guid: message.guids)
+        dataset = dataset.where(guid: message.guids).qualify
       end
 
       if message.requested?(:label_selector)

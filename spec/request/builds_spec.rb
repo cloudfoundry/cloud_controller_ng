@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'request_spec_shared_examples'
 
 RSpec.describe 'Builds' do
   let(:bbs_stager_client) { instance_double(VCAP::CloudController::Diego::BbsStagerClient) }
@@ -197,6 +198,23 @@ RSpec.describe 'Builds' do
       VCAP::CloudController::BuildpackLifecycle.new(second_package, staging_message).create_lifecycle_data_model(second_build)
       build.update(state: droplet.state, error_description: droplet.error_description)
       second_build.update(state: second_droplet.state, error_description: second_droplet.error_description)
+    end
+
+    it_behaves_like 'request_spec_shared_examples.rb list query endpoint' do
+      let(:request) { 'v3/builds' }
+      let(:user_header) { developer_headers }
+      let(:message) { VCAP::CloudController::BuildsListMessage }
+      let(:params) do
+        {
+          page:   '2',
+          per_page:   '10',
+          order_by:   'updated_at',
+          states:   'foo',
+          app_guids:   '123',
+          package_guids: '123',
+          label_selector:   'foo,bar',
+        }
+      end
     end
 
     context 'when there are other spaces the developer cannot see' do
