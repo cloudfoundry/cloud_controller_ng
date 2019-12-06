@@ -30,7 +30,7 @@ module VCAP::CloudController
 
       def valid_state?(deployment)
         valid_states_for_cancel = [DeploymentModel::DEPLOYING_STATE,
-                                     DeploymentModel::CANCELING_STATE]
+                                   DeploymentModel::CANCELING_STATE]
         valid_states_for_cancel.include?(deployment.state)
       end
 
