@@ -74,6 +74,12 @@ module VCAP::CloudController
         )
       end
 
+      it 'returns a link to login service' do
+        get '/'
+        hash = MultiJson.load(last_response.body)
+        expect(hash['links']['login']['href']).to eq(TestConfig.config[:login][:url])
+      end
+
       it 'returns a link to UAA' do
         get '/'
         hash = MultiJson.load(last_response.body)

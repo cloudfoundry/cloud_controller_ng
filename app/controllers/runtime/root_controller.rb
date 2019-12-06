@@ -11,7 +11,7 @@ module VCAP::CloudController
 
       response = {
         links: {
-          self:                {
+          self: {
             href: api_url_builder.build_url
           },
 
@@ -31,38 +31,42 @@ module VCAP::CloudController
             }
           },
 
-          network_policy_v0:   {
+          network_policy_v0: {
             href: api_url_builder.build_url(path: '/networking/v0/external'),
           },
 
-          network_policy_v1:   {
+          network_policy_v1: {
             href: api_url_builder.build_url(path: '/networking/v1/external'),
           },
 
-          uaa:                 {
+          login: {
+            href: config.get(:login, :url)
+          },
+
+          uaa: {
             href: config.get(:uaa, :url)
           },
 
           credhub: credhub_link,
           routing: routing_link,
 
-          logging:             {
+          logging: {
             href: config.get(:doppler, :url)
           },
 
-          log_cache:             {
-              href: config.get(:log_cache, :url)
+          log_cache: {
+            href: config.get(:log_cache, :url)
           },
 
-          log_stream:             {
-              href: config.get(:log_stream, :url)
+          log_stream: {
+            href: config.get(:log_stream, :url)
           },
 
-          app_ssh:             {
+          app_ssh: {
             href: config.get(:info, :app_ssh_endpoint),
             meta: {
               host_key_fingerprint: config.get(:info, :app_ssh_host_key_fingerprint),
-              oauth_client:         config.get(:info, :app_ssh_oauth_client)
+              oauth_client: config.get(:info, :app_ssh_oauth_client)
             }
           },
 
