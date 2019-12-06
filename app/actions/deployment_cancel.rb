@@ -1,8 +1,11 @@
 module VCAP::CloudController
   class DeploymentCancel
-    class Error < StandardError; end
-    class InvalidStatus < Error; end
-    class SetCurrentDropletError < Error; end
+    class Error < StandardError;
+    end
+    class InvalidStatus < Error;
+    end
+    class SetCurrentDropletError < Error;
+    end
 
     class << self
       def cancel(deployment:, user_audit_info:)
@@ -26,8 +29,8 @@ module VCAP::CloudController
       private
 
       def valid_status?(deployment)
-        valid_statuses_for_cancel = [DeploymentModel::DEPLOYING_STATUS_VALUE,
-                                     DeploymentModel::CANCELING_STATUS_VALUE]
+        valid_statuses_for_cancel = [DeploymentModel::DEPLOYING_STATE,
+          DeploymentModel::CANCELING_STATE]
         valid_statuses_for_cancel.include?(deployment.status_value)
       end
 
