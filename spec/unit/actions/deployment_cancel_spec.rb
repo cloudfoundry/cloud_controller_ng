@@ -11,10 +11,12 @@ module VCAP::CloudController
     let(:new_droplet) { DropletModel.make(app: app, process_types: { 'web' => 'the net' }) }
     let(:original_web_process) { ProcessModelFactory.make(space: space, instances: 1, state: 'STARTED', app: app) }
     let(:deploying_web_process) { ProcessModelFactory.make(space: space, instances: instance_count, state: 'STARTED', app: app, type: 'web-deployment-deployment-guid') }
+    let(:status_reason) { nil }
     let!(:deployment) do
       VCAP::CloudController::DeploymentModel.make(
         state: state,
         status_value: status_value,
+        status_reason: status_reason,
         app: original_web_process.app,
         deploying_web_process: deploying_web_process,
         droplet: new_droplet,
@@ -121,22 +123,24 @@ module VCAP::CloudController
       context 'when the deployment is in the DEPLOYED state' do
         let(:state) { DeploymentModel::DEPLOYED_STATE }
         let(:status_value) { DeploymentModel::FINALIZED_STATUS_VALUE }
+        let(:status_reason) { DeploymentModel::DEPLOYED_STATUS_REASON }
 
         it 'raises an error' do
           expect {
             DeploymentCancel.cancel(deployment: deployment, user_audit_info: user_audit_info)
-          }.to raise_error(DeploymentCancel::InvalidStatus, 'Cannot cancel a FINALIZED deployment')
+          }.to raise_error(DeploymentCancel::InvalidStatus, 'Cannot cancel a deployment with status: FINALIZED and reason: DEPLOYED')
         end
       end
 
       context 'when the deployment is in the CANCELED state' do
         let(:state) { DeploymentModel::CANCELED_STATE }
         let(:status_value) { DeploymentModel::FINALIZED_STATUS_VALUE }
+        let(:status_reason) { DeploymentModel::CANCELED_STATUS_REASON }
 
         it 'raises an error' do
           expect {
             DeploymentCancel.cancel(deployment: deployment, user_audit_info: user_audit_info)
-          }.to raise_error(DeploymentCancel::InvalidStatus, 'Cannot cancel a FINALIZED deployment')
+          }.to raise_error(DeploymentCancel::InvalidStatus, 'Cannot cancel a deployment with status: FINALIZED and reason: CANCELED')
         end
       end
     end

@@ -35,7 +35,7 @@ module VCAP::CloudController
       end
 
       def reject_invalid_state!(deployment)
-        raise InvalidStatus.new("Cannot cancel a deployment with status: #{deployment.status_value} and reason:#{deployment.status_reason}")
+        raise InvalidStatus.new("Cannot cancel a deployment with status: #{deployment.status_value} and reason: #{deployment.status_reason}")
       end
 
       def record_audit_event(deployment, user_audit_info)
