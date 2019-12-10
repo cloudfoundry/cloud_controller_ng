@@ -26,31 +26,31 @@ module VCAP::CloudController
       end
 
       context 'when the name is too long' do
-        let(:params) { { name: 'x' * 64, routes: routes } }
+        let(:params) { { name: 'x' * 64, 'default-route': default_route } }
 
-        context "when the 'routes' property is an empty array" do
-          let(:routes) { [] }
-          it 'is not valid' do
-            message = NamedAppManifestMessage.create_from_yml(params)
-
-            expect(message).to_not be_valid
-            expect(message.errors.full_messages[0]).to match(/cannot exceed 63 characters when routes are not present/)
-          end
-        end
-
-        context "when there's no 'routes' property" do
-          let(:params) { { name: 'x' * 64 } }
+        context 'when default-route is true' do
+          let(:default_route) { true }
 
           it 'is not valid' do
             message = NamedAppManifestMessage.create_from_yml(params)
 
             expect(message).to_not be_valid
-            expect(message.errors.full_messages[0]).to match(/cannot exceed 63 characters when routes are not present/)
+            expect(message.errors.full_messages[0]).to match(/Host cannot exceed 63 characters/)
           end
         end
 
-        context "when there's a valid route specified" do
-          let(:routes) { [{ route: 'a.b.com' }] }
+        context 'when default-route is false' do
+          let(:default_route) { false }
+
+          it 'is valid' do
+            message = NamedAppManifestMessage.create_from_yml(params)
+
+            expect(message).to be_valid
+          end
+        end
+
+        context 'when default-route is not set' do
+          let(:default_route) { nil }
 
           it 'is valid' do
             message = NamedAppManifestMessage.create_from_yml(params)
@@ -61,32 +61,31 @@ module VCAP::CloudController
       end
 
       context 'when the name contains special characters' do
-        let(:params) { { name: '%%%', routes: routes } }
+        let(:params) { { name: '%%%', 'default-route': default_route } }
 
-        context "when the 'routes' property is an empty array" do
-          let(:routes) { [] }
-
-          it 'is not valid' do
-            message = NamedAppManifestMessage.create_from_yml(params)
-
-            expect(message).to_not be_valid
-            expect(message.errors.full_messages[0]).to match(/must contain only alphanumeric characters, "_", or "-"/)
-          end
-        end
-
-        context "when there's no 'routes' property" do
-          let(:params) { { name: '%%%' } }
+        context 'when default-route is true' do
+          let(:default_route) { true }
 
           it 'is not valid' do
             message = NamedAppManifestMessage.create_from_yml(params)
 
             expect(message).to_not be_valid
-            expect(message.errors.full_messages[0]).to match(/must contain only alphanumeric characters, "_", or "-"/)
+            expect(message.errors.full_messages[0]).to match(/Host must be either "\*" or contain only alphanumeric characters, "_", or "-"/)
           end
         end
 
-        context "when there's a valid route specified" do
-          let(:routes) { [{ route: 'a.b.com' }] }
+        context 'when default-route is false' do
+          let(:default_route) { false }
+
+          it 'is valid' do
+            message = NamedAppManifestMessage.create_from_yml(params)
+
+            expect(message).to be_valid
+          end
+        end
+
+        context 'when default-route is not set' do
+          let(:default_route) { nil }
 
           it 'is valid' do
             message = NamedAppManifestMessage.create_from_yml(params)
