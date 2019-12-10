@@ -76,7 +76,8 @@ module VCAP::CloudController
           deployment.update(
             last_healthy_at: Time.now,
             state: DeploymentModel::DEPLOYING_STATE,
-            status_value: DeploymentModel::DEPLOYING_STATUS_VALUE
+            status_value: DeploymentModel::ACTIVE_STATUS_VALUE,
+            status_reason: DeploymentModel::DEPLOYING_STATUS_REASON,
           )
 
           if deploying_web_process.instances >= deployment.original_web_process_instance_count

@@ -41,7 +41,8 @@ module VCAP::CloudController
           deployment = DeploymentModel.create(
             app: app,
             state: DeploymentModel::DEPLOYING_STATE,
-            status_value: DeploymentModel::DEPLOYING_STATUS_VALUE,
+            status_value: DeploymentModel::ACTIVE_STATUS_VALUE,
+            status_reason: DeploymentModel::DEPLOYING_STATUS_REASON,
             droplet: target_state.droplet,
             previous_droplet: previous_droplet,
             original_web_process_instance_count: desired_instances(app.oldest_web_process, previous_deployment),

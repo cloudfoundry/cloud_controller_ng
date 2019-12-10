@@ -8,14 +8,15 @@ module VCAP::CloudController
     ].freeze
 
     STATUS_VALUES = [
-      DEPLOYING_STATUS_VALUE = 'DEPLOYING'.freeze,
       FINALIZED_STATUS_VALUE = 'FINALIZED'.freeze,
-      CANCELING_STATUS_VALUE = 'CANCELING'.freeze
+      ACTIVE_STATUS_VALUE = 'ACTIVE'.freeze
     ].freeze
 
     STATUS_REASONS = [
       DEPLOYED_STATUS_REASON = 'DEPLOYED'.freeze,
+      DEPLOYING_STATUS_REASON = 'DEPLOYING'.freeze,
       CANCELED_STATUS_REASON = 'CANCELED'.freeze,
+      CANCELING_STATUS_REASON = 'CANCELING'.freeze,
       SUPERSEDED_STATUS_REASON = 'SUPERSEDED'.freeze,
       DEGENERATE_STATUS_REASON = 'DEGENERATE'.freeze
     ].freeze

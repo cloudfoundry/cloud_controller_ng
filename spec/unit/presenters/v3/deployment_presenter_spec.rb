@@ -15,8 +15,8 @@ module VCAP::CloudController::Presenters::V3
         deploying_web_process: process,
         last_healthy_at: '2019-07-12 19:01:54',
         state: VCAP::CloudController::DeploymentModel::DEPLOYING_STATE,
-        status_value: VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_VALUE,
-        status_reason: nil
+        status_value: VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE,
+        status_reason: VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_REASON
       )
     end
 
@@ -26,8 +26,8 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:guid]).to eq(deployment.guid)
 
         expect(result[:state]).to eq(VCAP::CloudController::DeploymentModel::DEPLOYING_STATE)
-        expect(result[:status][:value]).to eq(VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_VALUE)
-        expect(result[:status][:reason]).to be_nil
+        expect(result[:status][:value]).to eq(VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE)
+        expect(result[:status][:reason]).to eq(VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_REASON)
         expect(result[:status][:details][:last_successful_healthcheck]).to eq('2019-07-12 19:01:54')
 
         expect(result[:strategy]).to eq('rolling')
@@ -58,8 +58,9 @@ module VCAP::CloudController::Presenters::V3
             deploying_web_process: process,
             revision_guid: 'totes-a-guid',
             revision_version: 96,
-            status_value: VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_VALUE,
-            status_reason: nil
+            state: VCAP::CloudController::DeploymentModel::DEPLOYING_STATE,
+            status_value: VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE,
+            status_reason: VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_REASON
           )
         end
 
@@ -70,8 +71,8 @@ module VCAP::CloudController::Presenters::V3
           expect(result[:guid]).to eq(deployment.guid)
 
           expect(result[:state]).to eq(VCAP::CloudController::DeploymentModel::DEPLOYING_STATE)
-          expect(result[:status][:value]).to eq(VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_VALUE)
-          expect(result[:status][:reason]).to be_nil
+          expect(result[:status][:value]).to eq(VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE)
+          expect(result[:status][:reason]).to eq(VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_REASON)
 
           expect(result[:droplet][:guid]).to eq(droplet.guid)
           expect(result[:previous_droplet][:guid]).to eq(previous_droplet.guid)

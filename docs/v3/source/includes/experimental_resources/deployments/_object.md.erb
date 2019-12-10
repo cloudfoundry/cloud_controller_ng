@@ -10,8 +10,8 @@ Example Deployment object
 Name | Type | Description
 ---- | ---- | -----------
 **state** | _string_ | **(deprecated)** The state of the deployment. Valid values are `DEPLOYING`, `DEPLOYED`, `CANCELING`, or `CANCELED`. This field will be removed in the future; use the `status` fields to determine deployment state instead.
-**status.value** | _string_ | The current status of the deployment. Valid values are `DEPLOYING`, `CANCELING`, and `FINALIZED` (meaning finished, either successfully or not).
-**status.reason** | _string_ or `null` | The reason for the final status of the deployment. Valid values are `DEPLOYED`, `CANCELED`, `SUPERSEDED` (another deployment created for app before completion), `DEGENERATE` (the deployment was created incorrectly by the system). <br><br> This attribute is only set if the deployment has `status.value` of `FINALIZED`.  If the deployment is still in progress, this field will be set to `null`.
+**status.value** | _string_ | The current status of the deployment. Valid values are `ACTIVE` (meaning in progress) and `FINALIZED` (meaning finished, either successfully or not).
+**status.reason** | _string_ | The reason for the status of the deployment.<br>Following list represents valid values.<br>1. If **status.value** is `ACTIVE`<br>- `DEPLOYING`<br>- `CANCELING`<br>2. If **status.value** is `FINALIZED`<br>- `DEPLOYED`<br>- `CANCELED`<br>- `SUPERSEDED` (another deployment created for app before completion)<br>- `DEGENERATE` (the deployment was created incorrectly by the system)
 **strategy** | _string_ | Strategy used for the deployment.  Supported strategies are `rolling` only.
 **guid** | _uuid_ | Unique identifier for the deployment.
 **relationships.app** | [_to-one relationship_](#to-one-relationships) | The app the deployment is updating.

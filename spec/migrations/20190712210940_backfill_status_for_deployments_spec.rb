@@ -87,7 +87,7 @@ RSpec.describe 'backfill status_value for deployments', isolation: :truncation d
       deployment = VCAP::CloudController::DeploymentModel.where(guid: deployment_with_state_deploying.guid).first
 
       expect(deployment.state).to eq(VCAP::CloudController::DeploymentModel::DEPLOYING_STATE)
-      expect(deployment.status_value).to eq(VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_VALUE)
+      expect(deployment.status_value).to eq('DEPLOYING')
       expect(deployment.status_reason).to be_nil
     end
   end
@@ -107,7 +107,7 @@ RSpec.describe 'backfill status_value for deployments', isolation: :truncation d
       deployment = VCAP::CloudController::DeploymentModel.where(guid: deployment_with_state_canceling.guid).first
 
       expect(deployment.state).to eq(VCAP::CloudController::DeploymentModel::CANCELING_STATE)
-      expect(deployment.status_value).to eq(VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_VALUE)
+      expect(deployment.status_value).to eq('DEPLOYING')
       expect(deployment.status_reason).to be_nil
     end
   end
@@ -127,7 +127,7 @@ RSpec.describe 'backfill status_value for deployments', isolation: :truncation d
       deployment = VCAP::CloudController::DeploymentModel.where(guid: deployment_with_state_failing.guid).first
 
       expect(deployment.state).to eq(VCAP::CloudController::DeploymentModel::DEPLOYING_STATE)
-      expect(deployment.status_value).to eq(VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_VALUE)
+      expect(deployment.status_value).to eq('DEPLOYING')
       expect(deployment.status_reason).to be_nil
     end
   end

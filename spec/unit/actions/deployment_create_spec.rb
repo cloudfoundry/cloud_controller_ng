@@ -67,8 +67,8 @@ module VCAP::CloudController
             }.to change { DeploymentModel.count }.by(1)
 
             expect(deployment.state).to eq(DeploymentModel::DEPLOYING_STATE)
-            expect(deployment.status_value).to eq(DeploymentModel::DEPLOYING_STATUS_VALUE)
-            expect(deployment.status_reason).to be_nil
+            expect(deployment.status_value).to eq(DeploymentModel::ACTIVE_STATUS_VALUE)
+            expect(deployment.status_reason).to eq(DeploymentModel::DEPLOYING_STATUS_REASON)
             expect(deployment.app_guid).to eq(app.guid)
             expect(deployment.droplet_guid).to eq(next_droplet.guid)
             expect(deployment.previous_droplet).to eq(original_droplet)
@@ -402,8 +402,8 @@ module VCAP::CloudController
                 }.to change { DeploymentModel.count }.by(1)
 
                 expect(deployment.state).to eq(DeploymentModel::DEPLOYING_STATE)
-                expect(deployment.status_value).to eq(DeploymentModel::DEPLOYING_STATUS_VALUE)
-                expect(deployment.status_reason).to be_nil
+                expect(deployment.status_value).to eq(DeploymentModel::ACTIVE_STATUS_VALUE)
+                expect(deployment.status_reason).to eq(DeploymentModel::DEPLOYING_STATUS_REASON)
                 expect(deployment.app_guid).to eq(app.guid)
                 expect(deployment.droplet_guid).to eq(next_droplet.guid)
                 expect(deployment.previous_droplet).to eq(original_droplet)

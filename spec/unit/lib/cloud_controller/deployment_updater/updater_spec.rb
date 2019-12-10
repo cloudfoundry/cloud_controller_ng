@@ -318,8 +318,8 @@ module VCAP::CloudController
               subject.scale
               expect(deployment.reload.last_healthy_at).to be > previous_last_healthy_at
               expect(deployment.state).to eq(DeploymentModel::DEPLOYING_STATE)
-              expect(deployment.status_value).to eq(DeploymentModel::DEPLOYING_STATUS_VALUE)
-              expect(deployment.status_reason).to be_nil
+              expect(deployment.status_value).to eq(DeploymentModel::ACTIVE_STATUS_VALUE)
+              expect(deployment.status_reason).to eq(DeploymentModel::DEPLOYING_STATUS_REASON)
             end
           end
         end
@@ -337,8 +337,8 @@ module VCAP::CloudController
             subject.scale
             expect(deployment.reload.last_healthy_at).to eq previous_last_healthy_at
             expect(deployment.state).to eq(DeploymentModel::DEPLOYING_STATE)
-            expect(deployment.status_value).to eq(DeploymentModel::DEPLOYING_STATUS_VALUE)
-            expect(deployment.status_reason).to be_nil
+            expect(deployment.status_value).to eq(DeploymentModel::ACTIVE_STATUS_VALUE)
+            expect(deployment.status_reason).to eq(DeploymentModel::DEPLOYING_STATUS_REASON)
           end
         end
       end

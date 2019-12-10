@@ -33,7 +33,8 @@ module VCAP::CloudController
     describe '.cancel' do
       context 'when the deployment is in the DEPLOYING state' do
         let(:state) { DeploymentModel::DEPLOYING_STATE }
-        let(:status_value) { DeploymentModel::DEPLOYING_STATUS_VALUE }
+        let(:status_value) { DeploymentModel::ACTIVE_STATUS_VALUE }
+        let(:status_reason) { DeploymentModel::DEPLOYING_STATUS_REASON }
 
         it 'sets the deployments status to CANCELING' do
           expect(deployment.state).to_not eq(DeploymentModel::CANCELING_STATE)
@@ -42,8 +43,8 @@ module VCAP::CloudController
           deployment.reload
 
           expect(deployment.state).to eq(DeploymentModel::CANCELING_STATE)
-          expect(deployment.status_value).to eq(DeploymentModel::CANCELING_STATUS_VALUE)
-          expect(deployment.status_reason).to be_nil
+          expect(deployment.status_value).to eq(DeploymentModel::ACTIVE_STATUS_VALUE)
+          expect(deployment.status_reason).to eq(DeploymentModel::CANCELING_STATUS_REASON)
         end
 
         it "resets the app's current droplet to the previous droplet from the deploy" do
@@ -108,15 +109,16 @@ module VCAP::CloudController
 
       context 'when the deployment is in the CANCELING state' do
         let(:state) { DeploymentModel::CANCELING_STATE }
-        let(:status_value) { DeploymentModel::CANCELING_STATUS_VALUE }
+        let(:status_value) { DeploymentModel::ACTIVE_STATUS_VALUE }
+        let(:status_reason) { DeploymentModel::CANCELING_STATUS_REASON }
 
         it 'does *not* fail (idempotent canceling)' do
           DeploymentCancel.cancel(deployment: deployment, user_audit_info: user_audit_info)
           deployment.reload
 
           expect(deployment.state).to eq(DeploymentModel::CANCELING_STATE)
-          expect(deployment.status_value).to eq(DeploymentModel::CANCELING_STATUS_VALUE)
-          expect(deployment.status_reason).to be_nil
+          expect(deployment.status_value).to eq(DeploymentModel::ACTIVE_STATUS_VALUE)
+          expect(deployment.status_reason).to eq(DeploymentModel::CANCELING_STATUS_REASON)
         end
       end
 

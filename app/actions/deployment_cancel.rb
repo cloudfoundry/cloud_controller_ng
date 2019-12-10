@@ -21,7 +21,8 @@ module VCAP::CloudController
           record_audit_event(deployment, user_audit_info)
           deployment.update(
             state: DeploymentModel::CANCELING_STATE,
-            status_value: DeploymentModel::CANCELING_STATUS_VALUE
+            status_value: DeploymentModel::ACTIVE_STATUS_VALUE,
+            status_reason: DeploymentModel::CANCELING_STATUS_REASON
           )
         end
       end

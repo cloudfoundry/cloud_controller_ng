@@ -16,29 +16,34 @@ module VCAP::CloudController
     let(:app4_in_space3) { AppModel.make(space_guid: space3.guid, guid: 'app4') }
 
     let!(:deployment_for_app1_space1) { DeploymentModel.make(guid: 'deployment_for_app1_space1',
-      app_guid: app_in_space1.guid, state: 'DEPLOYED',
+      app_guid: app_in_space1.guid,
+      state: VCAP::CloudController::DeploymentModel::DEPLOYED_STATE,
       status_value: VCAP::CloudController::DeploymentModel::FINALIZED_STATUS_VALUE,
       status_reason: VCAP::CloudController::DeploymentModel::DEPLOYED_STATUS_REASON)
     }
     let!(:deployment_for_app1_space1_superseded) { DeploymentModel.make(guid: 'deployment_for_app1_space1_superseded',
-      app_guid: app_in_space1.guid, state: 'DEPLOYED',
+      app_guid: app_in_space1.guid,
+      state: VCAP::CloudController::DeploymentModel::DEPLOYED_STATE,
       status_value: VCAP::CloudController::DeploymentModel::FINALIZED_STATUS_VALUE,
       status_reason: VCAP::CloudController::DeploymentModel::SUPERSEDED_STATUS_REASON)
     }
     let!(:deployment_for_app2_space1) { DeploymentModel.make(guid: 'deployment_for_app2_space1',
-      app_guid: app2_in_space1.guid, state: 'CANCELING',
-      status_value: VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_VALUE,
-      status_reason: nil)
+      app_guid: app2_in_space1.guid,
+      state: VCAP::CloudController::DeploymentModel::CANCELING_STATE,
+      status_value: VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE,
+      status_reason: VCAP::CloudController::DeploymentModel::CANCELING_STATUS_REASON)
     }
     let!(:deployment_for_app3_space2) { DeploymentModel.make(guid: 'deployment_for_app3_space2',
-      app_guid: app3_in_space2.guid, state: 'CANCELED',
+      app_guid: app3_in_space2.guid,
+      state: VCAP::CloudController::DeploymentModel::CANCELED_STATE,
       status_value: VCAP::CloudController::DeploymentModel::FINALIZED_STATUS_VALUE,
       status_reason: VCAP::CloudController::DeploymentModel::CANCELED_STATUS_REASON)
     }
     let!(:deployment_for_app4_space3) { DeploymentModel.make(guid: 'deployment_for_app4_space3',
-      app_guid: app4_in_space3.guid, state: 'DEPLOYING',
-      status_value: VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_VALUE,
-      status_reason: nil)
+      app_guid: app4_in_space3.guid,
+      state: VCAP::CloudController::DeploymentModel::DEPLOYING_STATE,
+      status_value: VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE,
+      status_reason: VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_REASON)
     }
 
     subject(:fetcher) { DeploymentListFetcher.new(message: message) }
@@ -86,7 +91,7 @@ module VCAP::CloudController
       end
 
       context 'filtering nil status reasons' do
-        let(:filters) { { status_reasons: [''] } }
+        let(:filters) { { status_reasons: %w/DEPLOYING CANCELING/ } }
 
         it 'returns all of the deployments with the requested states' do
           results = fetcher.fetch_all.all
@@ -95,7 +100,7 @@ module VCAP::CloudController
       end
 
       context 'filtering a mix of nil and non-nil status reasons' do
-        let(:filters) { { status_reasons: ['CANCELED', ''] } }
+        let(:filters) { { status_reasons: %w(CANCELED CANCELING DEPLOYING) } }
 
         it 'returns all of the deployments with the requested states' do
           results = fetcher.fetch_all.all
