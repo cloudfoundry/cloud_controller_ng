@@ -261,7 +261,7 @@ module VCAP::CloudController
         end
       end
 
-      context 'relationships with internal' do
+      context 'relationships with internal: true' do
         let(:params) do
           {
             name: 'name.com',
@@ -275,6 +275,22 @@ module VCAP::CloudController
         it 'should be invalid' do
           expect(subject).to_not be_valid
           expect(subject.errors[:base]).to include('Can not associate an internal domain with an organization')
+        end
+      end
+
+      context 'relationships with internal: false' do
+        let(:params) do
+          {
+            name: 'name.com',
+            relationships: {
+              organization: { data: { guid: 'guid' } }
+            },
+            internal: false
+          }
+        end
+
+        it 'should be valid' do
+          expect(subject).to be_valid
         end
       end
     end

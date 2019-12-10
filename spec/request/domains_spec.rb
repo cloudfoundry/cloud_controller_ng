@@ -1203,6 +1203,29 @@ RSpec.describe 'Domains Request' do
         end
       end
     end
+
+    describe 'when specifying internal: false with an organization' do
+      let(:user_header) { admin_headers_for(user) }
+      let(:domain_params) do
+        {
+          name: 'my-domain.com',
+          internal: false,
+          relationships: {
+            organization: {
+              data: {
+                guid: org.guid
+              }
+            }
+          }
+        }
+      end
+
+      it 'succeeds' do
+        post '/v3/domains', domain_params.to_json, user_header
+        puts last_response.body
+        expect(last_response.status).to eq 201
+      end
+    end
   end
 
   describe 'POST /v3/domains/:guid/relationships/shared_organizations' do
