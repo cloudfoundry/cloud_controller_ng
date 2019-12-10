@@ -154,7 +154,13 @@ class AppsV3Controller < ApplicationController
     end
 
     AppStart.start(app: app, user_audit_info: user_audit_info)
-
+    TelemetryLogger.emit(
+      'start-app',
+      {
+        'app-id' => app.guid,
+        'user-id' => current_user.guid
+      }
+    )
     render status: :ok, json: Presenters::V3::AppPresenter.new(app)
   rescue AppStart::InvalidApp => e
     unprocessable!(e.message)
@@ -166,6 +172,13 @@ class AppsV3Controller < ApplicationController
     unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
 
     AppStop.stop(app: app, user_audit_info: user_audit_info)
+    TelemetryLogger.emit(
+      'stop-app',
+      {
+        'app-id' => app.guid,
+        'user-id' => current_user.guid
+      }
+    )
 
     render status: :ok, json: Presenters::V3::AppPresenter.new(app)
   rescue AppStop::InvalidApp => e
@@ -182,7 +195,13 @@ class AppsV3Controller < ApplicationController
     end
 
     AppRestart.restart(app: app, config: Config.config, user_audit_info: user_audit_info)
-
+    TelemetryLogger.emit(
+      'restart-app',
+      {
+        'app-id' => app.guid,
+        'user-id' => current_user.guid
+      }
+    )
     render status: :ok, json: Presenters::V3::AppPresenter.new(app)
   rescue AppRestart::Error => e
     unprocessable!(e.message)

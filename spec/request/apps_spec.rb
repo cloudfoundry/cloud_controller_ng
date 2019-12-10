@@ -1565,6 +1565,36 @@ RSpec.describe 'Apps' do
                                       })
     end
 
+    context 'telemetry' do
+      it 'should log the required fields when the app starts' do
+        app_model.lifecycle_data.buildpacks = ['http://example.com/git']
+        app_model.lifecycle_data.stack = stack.name
+        app_model.lifecycle_data.save
+
+        droplet = VCAP::CloudController::DropletModel.make(:buildpack, app: app_model, state: VCAP::CloudController::DropletModel::STAGED_STATE)
+        app_model.droplet = droplet
+        app_model.save
+
+        Timecop.freeze do
+          post "/v3/apps/#{app_model.guid}/actions/start", nil, user_header
+
+          parsed_response = MultiJson.load(last_response.body)
+          app_guid = parsed_response['guid']
+
+          expected_json = {
+            'telemetry-source' => 'cloud_controller_ng',
+            'telemetry-time' => Time.now.to_datetime.rfc3339,
+            'start-app' => {
+              'app-id' => Digest::SHA256.hexdigest(app_guid),
+              'user-id' => Digest::SHA256.hexdigest(user.guid),
+            }
+          }
+          expect(last_response.status).to eq(200), last_response.body
+          expect(rails_logger).to have_received(:info).with(JSON.generate(expected_json))
+        end
+      end
+    end
+
     describe 'when there is a new desired droplet and revision feature is turned on' do
       let(:droplet) {
         VCAP::CloudController::DropletModel.make(
@@ -1594,23 +1624,29 @@ RSpec.describe 'Apps' do
   end
 
   describe 'POST /v3/apps/:guid/actions/stop' do
-    it 'stops the app' do
-      stack = VCAP::CloudController::Stack.make(name: 'stack-name')
-      app_model = VCAP::CloudController::AppModel.make(
-        :buildpack,
-          name: 'app-name',
-          space: space,
-          desired_state: 'STARTED',
+    let(:stack) { VCAP::CloudController::Stack.make(name: 'stack-name') }
+    let(:app_model) { VCAP::CloudController::AppModel.make(
+      :buildpack,
+      name: 'app-name',
+      space: space,
+      desired_state: 'STARTED',
+    )
+    }
+    let!(:droplet) do
+      VCAP::CloudController::DropletModel.make(:buildpack,
+        app: app_model,
+        state: VCAP::CloudController::DropletModel::STAGED_STATE
       )
+    end
 
+    before do
       app_model.lifecycle_data.buildpacks = ['http://example.com/git']
       app_model.lifecycle_data.stack = stack.name
       app_model.lifecycle_data.save
-
-      droplet = VCAP::CloudController::DropletModel.make(:buildpack, app: app_model, state: VCAP::CloudController::DropletModel::STAGED_STATE)
       app_model.droplet = droplet
       app_model.save
-
+    end
+    it 'stops the app' do
       post "/v3/apps/#{app_model.guid}/actions/stop", nil, user_header
       expect(last_response.status).to eq(200)
 
@@ -1652,8 +1688,7 @@ RSpec.describe 'Apps' do
                 'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/deployed" },
             }
         }
-                                 )
-
+      )
       event = VCAP::CloudController::Event.last
       expect(event.values).to include({
                                           type: 'audit.app.stop',
@@ -1668,26 +1703,54 @@ RSpec.describe 'Apps' do
                                           organization_guid: space.organization.guid,
                                       })
     end
+    context 'telemetry' do
+      it 'should log the required fields when the app starts' do
+        Timecop.freeze do
+          post "/v3/apps/#{app_model.guid}/actions/stop", nil, user_header
+
+          parsed_response = MultiJson.load(last_response.body)
+          app_guid = parsed_response['guid']
+
+          expected_json = {
+            'telemetry-source' => 'cloud_controller_ng',
+            'telemetry-time' => Time.now.to_datetime.rfc3339,
+            'stop-app' => {
+              'app-id' => Digest::SHA256.hexdigest(app_guid),
+              'user-id' => Digest::SHA256.hexdigest(user.guid),
+            }
+          }
+          expect(last_response.status).to eq(200), last_response.body
+          expect(rails_logger).to have_received(:info).with(JSON.generate(expected_json))
+        end
+      end
+    end
   end
 
   describe 'POST /v3/apps/:guid/actions/restart' do
-    it 'restart the app' do
-      stack = VCAP::CloudController::Stack.make(name: 'stack-name')
-      app_model = VCAP::CloudController::AppModel.make(
-        :buildpack,
-          name: 'app-name',
-          space: space,
-          desired_state: 'STARTED',
+    let(:stack) { VCAP::CloudController::Stack.make(name: 'stack-name') }
+    let(:app_model) { VCAP::CloudController::AppModel.make(
+      :buildpack,
+        name: 'app-name',
+        space: space,
+        desired_state: 'STARTED',
       )
-
+    }
+    let!(:droplet) do
+      VCAP::CloudController::DropletModel.make(
+        :buildpack,
+        app: app_model,
+        state: VCAP::CloudController::DropletModel::STAGED_STATE
+      )
+    end
+    before do
       app_model.lifecycle_data.buildpacks = ['http://example.com/git']
       app_model.lifecycle_data.stack = stack.name
       app_model.lifecycle_data.save
-
-      droplet = VCAP::CloudController::DropletModel.make(:buildpack, app: app_model, state: VCAP::CloudController::DropletModel::STAGED_STATE)
       app_model.droplet = droplet
       app_model.save
+    end
 
+    it 'restarts the app' do
       post "/v3/apps/#{app_model.guid}/actions/restart", nil, user_header
       expect(last_response.status).to eq(200)
 
@@ -1729,7 +1792,28 @@ RSpec.describe 'Apps' do
                 'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/deployed" },
             }
         }
-                                 )
+      )
+    end
+    context 'telemetry' do
+      it 'should log the required fields when the app is restarted' do
+        Timecop.freeze do
+          post "/v3/apps/#{app_model.guid}/actions/restart", nil, user_header
+
+          parsed_response = MultiJson.load(last_response.body)
+          app_guid = parsed_response['guid']
+
+          expected_json = {
+            'telemetry-source' => 'cloud_controller_ng',
+            'telemetry-time' => Time.now.to_datetime.rfc3339,
+            'restart-app' => {
+              'app-id' => Digest::SHA256.hexdigest(app_guid),
+              'user-id' => Digest::SHA256.hexdigest(user.guid),
+            }
+          }
+          expect(last_response.status).to eq(200), last_response.body
+          expect(rails_logger).to have_received(:info).with(JSON.generate(expected_json))
+        end
+      end
     end
   end
 
