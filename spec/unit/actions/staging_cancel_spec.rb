@@ -9,7 +9,7 @@ module VCAP::CloudController
     let(:usage_event_repo) { instance_double(Repositories::AppUsageEventRepository, create_from_build: nil) }
 
     before do
-      allow(stagers).to receive(:stager_for_app).and_return(stager)
+      allow(stagers).to receive(:stager_for_build).and_return(stager)
       allow(stager).to receive(:stop_stage)
       allow(Repositories::AppUsageEventRepository).to receive(:new).and_return(usage_event_repo)
     end

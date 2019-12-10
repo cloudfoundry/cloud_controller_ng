@@ -142,10 +142,6 @@ class DropletsController < ApplicationController
     unprocessable!("Uploaded droplet file is invalid: #{messages.join(', ')}")
   end
 
-  def stagers
-    CloudController::DependencyLocator.instance.stagers
-  end
-
   def unprocessable_app!(app_guid)
     unprocessable!("App with guid \"#{app_guid}\" does not exist, or you do not have access to it.")
   end

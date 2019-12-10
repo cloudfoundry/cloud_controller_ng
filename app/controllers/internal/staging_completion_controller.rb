@@ -47,7 +47,7 @@ module VCAP::CloudController
       end
 
       begin
-        stagers.stager_for_app.staging_complete(build, staging_response, params['start'] == 'true')
+        stagers.stager_for_build(build).staging_complete(build, staging_response, params['start'] == 'true')
       rescue CloudController::Errors::ApiError => api_err
         raise api_err
       rescue => e
@@ -70,7 +70,7 @@ module VCAP::CloudController
       end
 
       begin
-        stagers.stager_for_app.staging_complete(build, staging_response, params['start'] == 'true')
+        stagers.stager_for_build(build).staging_complete(build, staging_response, params['start'] == 'true')
       rescue CloudController::Errors::ApiError => api_err
         logger.error('diego.staging.completion-controller-api_err-error', error: api_err)
         raise api_err

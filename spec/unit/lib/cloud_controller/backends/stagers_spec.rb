@@ -83,16 +83,6 @@ module VCAP::CloudController
       end
     end
 
-    describe '#stager_for_app' do
-      let(:lifecycle_type) {'buildpack'}
-      let(:app) {AppModel.make}
-
-      it 'finds a diego stager' do
-        stager = stagers.stager_for_app
-        expect(stager).to be_a(Diego::Stager)
-      end
-    end
-
     describe '#stager_for_build' do
       let(:build) { BuildModel.make }
 

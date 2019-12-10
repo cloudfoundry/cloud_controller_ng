@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module VCAP::CloudController
   RSpec.describe ProcessObserver do
-    let(:stagers) { double(:stagers, stager_for_app: stager) }
+    let(:stagers) { double(:stagers, stager_for_build: stager) }
     let(:runners) { instance_double(Runners, runner_for_process: runner) }
     let(:stager) { double(:stager) }
     let(:runner) { instance_double(Diego::Runner, stop: nil, start: nil) }

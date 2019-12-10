@@ -659,7 +659,7 @@ module VCAP::CloudController
           let(:stager) { instance_double(Diego::Stager) }
 
           before do
-            allow(stagers).to receive(:stager_for_app).and_return(stager)
+            allow(stagers).to receive(:stager_for_build).and_return(stager)
             allow(stager).to receive(:stop_stage)
           end
 

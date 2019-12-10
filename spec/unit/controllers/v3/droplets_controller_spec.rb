@@ -3,7 +3,6 @@ require 'rails_helper'
 RSpec.describe DropletsController, type: :controller do
   describe '#create' do
     let(:app_model) { VCAP::CloudController::AppModel.make }
-    let(:stagers) { instance_double(VCAP::CloudController::Stagers) }
     let(:package) do
       VCAP::CloudController::PackageModel.make(app_guid: app_model.guid,
         type: VCAP::CloudController::PackageModel::BITS_TYPE,
@@ -15,8 +14,6 @@ RSpec.describe DropletsController, type: :controller do
     before do
       allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space: space)
-      allow(CloudController::DependencyLocator.instance).to receive(:stagers).and_return(stagers)
-      allow(stagers).to receive(:stager_for_app).and_return(double(:stager, stage: nil))
       app_model.lifecycle_data.update(buildpack: nil, stack: VCAP::CloudController::Stack.default.name)
     end
   end
@@ -205,13 +202,10 @@ RSpec.describe DropletsController, type: :controller do
     let(:droplet) { VCAP::CloudController::DropletModel.make }
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
     let(:space) { droplet.space }
-    let(:stagers) { instance_double(VCAP::CloudController::Stagers, stager_for_app: stager) }
-    let(:stager) { instance_double(VCAP::CloudController::Diego::Stager, stop_stage: nil) }
 
     before do
       allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space: space)
-      CloudController::DependencyLocator.instance.register(:stagers, stagers)
     end
 
     it 'returns a 202 ACCEPTED and the job link in header' do
@@ -535,12 +529,9 @@ RSpec.describe DropletsController, type: :controller do
     let(:droplet) { VCAP::CloudController::DropletModel.make }
     let(:user) { set_current_user(VCAP::CloudController::User.make) }
     let(:space) { droplet.space }
-    let(:stagers) { instance_double(VCAP::CloudController::Stagers, stager_for_app: stager) }
-    let(:stager) { instance_double(VCAP::CloudController::Diego::Stager, stop_stage: nil) }
     before do
       allow_user_read_access_for(user, spaces: [space])
       allow_user_write_access(user, space: space)
-      CloudController::DependencyLocator.instance.register(:stagers, stagers)
     end
 
     context 'when there is an invalid message validation failure' do
