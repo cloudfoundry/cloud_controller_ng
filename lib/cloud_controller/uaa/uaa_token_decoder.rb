@@ -43,7 +43,16 @@ module VCAP::CloudController
     end
 
     def decode_token_with_symmetric_key(auth_token)
-      decode_token_with_key(auth_token, skey: symmetric_key)
+      last_error = nil
+
+      thekeys = [ symmetric_key, symmetric_key2 ]
+
+      thekeys.each do |key|
+        return decode_token_with_key(auth_token, skey: key)
+      rescue CF::UAA::InvalidSignature => e
+        last_error = e
+      end
+      raise last_error
     end
 
     def decode_token_with_asymmetric_key(auth_token)
@@ -83,6 +92,10 @@ module VCAP::CloudController
 
     def symmetric_key
       config[:symmetric_secret]
+    end
+
+    def symmetric_key2
+      config[:symmetric_secret2]
     end
 
     def asymmetric_key
