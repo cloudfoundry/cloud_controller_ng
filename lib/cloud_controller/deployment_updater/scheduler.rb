@@ -11,13 +11,14 @@ module VCAP::CloudController
             config = CloudController::DependencyLocator.instance.config
             statsd_client = CloudController::DependencyLocator.instance.statsd_client
 
-            update_step = Proc.new {|| update(
+            update_step = proc { update(
               update_frequency: config.get(:deployment_updater, :update_frequency_in_seconds),
               statsd_client: statsd_client
-            )}
+            )
+            }
 
             if config.get(:locket).nil?
-              loop &update_step
+              loop(&update_step)
               return
             end
 
@@ -32,7 +33,7 @@ module VCAP::CloudController
             )
             lock_worker = Locket::LockWorker.new(lock_runner)
 
-            lock_worker.acquire_lock_and_repeatedly_call &update_step
+            lock_worker.acquire_lock_and_repeatedly_call(&update_step)
           end
         end
 
