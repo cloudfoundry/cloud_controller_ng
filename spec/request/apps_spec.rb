@@ -1345,15 +1345,42 @@ RSpec.describe 'Apps' do
   end
 
   describe 'PATCH /v3/apps/:guid' do
-    it 'updates an app' do
-      app_model = VCAP::CloudController::AppModel.make(
-        :buildpack,
-          name: 'original_name',
-          space: space,
-          environment_variables: { 'ORIGINAL' => 'ENVAR' },
-          desired_state: 'STOPPED'
-      )
+    let(:app_model) { VCAP::CloudController::AppModel.make(
+      :buildpack,
+        name: 'original_name',
+        space: space,
+        environment_variables: { 'ORIGINAL' => 'ENVAR' },
+        desired_state: 'STOPPED'
+    )
+    }
+    let(:stack) { VCAP::CloudController::Stack.make(name: 'redhat') }
 
+    let(:update_request) do
+      {
+        name: 'new-name',
+        lifecycle: {
+          type: 'buildpack',
+          data: {
+            buildpacks: ['http://gitwheel.org/my-app'],
+            stack: stack.name
+          }
+        },
+        metadata: {
+          labels: {
+            'release' => 'stable',
+            'code.cloudfoundry.org/cloud_controller_ng' => 'awesome',
+            'delete-me' => nil,
+          },
+          annotations: {
+            'contacts' => 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)',
+            'anno1' => 'new-value',
+            'please' => nil,
+          }
+        }
+    }
+    end
+
+    before do
       VCAP::CloudController::AppLabelModel.make(
         resource_guid: app_model.guid,
         key_name: 'delete-me',
@@ -1371,32 +1398,8 @@ RSpec.describe 'Apps' do
         key: 'please',
         value: 'delete this',
       )
-      stack = VCAP::CloudController::Stack.make(name: 'redhat')
-
-      update_request = {
-          name: 'new-name',
-          lifecycle: {
-              type: 'buildpack',
-              data: {
-                  buildpacks: ['http://gitwheel.org/my-app'],
-                  stack: stack.name
-              }
-          },
-          metadata: {
-              labels: {
-                  'release' => 'stable',
-                  'code.cloudfoundry.org/cloud_controller_ng' => 'awesome',
-                  'delete-me' => nil,
-              },
-              annotations: {
-                  'contacts' => 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)',
-                  'anno1' => 'new-value',
-                  'please' => nil,
-              }
-          }
-
-      }
-
+    end
+    it 'updates an app' do
       patch "/v3/apps/#{app_model.guid}", update_request.to_json, user_header
       expect(last_response.status).to eq(200)
 
@@ -1405,65 +1408,65 @@ RSpec.describe 'Apps' do
       parsed_response = MultiJson.load(last_response.body)
       expect(parsed_response).to be_a_response_like(
         {
-            'name' => 'new-name',
-            'guid' => app_model.guid,
-            'state' => 'STOPPED',
-            'lifecycle' => {
-                'type' => 'buildpack',
-                'data' => {
-                    'buildpacks' => ['http://gitwheel.org/my-app'],
-                    'stack' => stack.name,
-                }
-            },
-            'relationships' => {
-                'space' => {
-                    'data' => {
-                        'guid' => space.guid
-                    }
-                }
-            },
-            'created_at' => iso8601,
-            'updated_at' => iso8601,
-            'metadata' => {
-              'labels' => {
-                  'release' => 'stable',
-                  'code.cloudfoundry.org/cloud_controller_ng' => 'awesome'
-                },
-              'annotations' => {
-                  'contacts' => 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)',
-                  'anno1' => 'new-value'
-              }
-            },
-            'links' => {
-                'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
-                'processes' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/processes" },
-                'packages' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/packages" },
-                'environment_variables' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/environment_variables" },
-                'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
-                'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets/current" },
-                'droplets' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets" },
-                'tasks' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks" },
-                'start' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/start", 'method' => 'POST' },
-                'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/stop", 'method' => 'POST' },
-                'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions" },
-                'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/deployed" },
+          'name' => 'new-name',
+          'guid' => app_model.guid,
+          'state' => 'STOPPED',
+          'lifecycle' => {
+            'type' => 'buildpack',
+            'data' => {
+              'buildpacks' => ['http://gitwheel.org/my-app'],
+              'stack' => stack.name,
             }
+          },
+          'relationships' => {
+            'space' => {
+              'data' => {
+                'guid' => space.guid
+              }
+            }
+          },
+          'created_at' => iso8601,
+          'updated_at' => iso8601,
+          'metadata' => {
+            'labels' => {
+              'release' => 'stable',
+              'code.cloudfoundry.org/cloud_controller_ng' => 'awesome'
+            },
+            'annotations' => {
+              'contacts' => 'Bill tel(1111111) email(bill@fixme), Bob tel(222222) pager(3333333#555) email(bob@fixme)',
+              'anno1' => 'new-value'
+            }
+          },
+          'links' => {
+            'self' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}" },
+            'processes' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/processes" },
+            'packages' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/packages" },
+            'environment_variables' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/environment_variables" },
+            'space' => { 'href' => "#{link_prefix}/v3/spaces/#{space.guid}" },
+            'current_droplet' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets/current" },
+            'droplets' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/droplets" },
+            'tasks' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/tasks" },
+            'start' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/start", 'method' => 'POST' },
+            'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/stop", 'method' => 'POST' },
+            'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions" },
+            'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/deployed" },
+          }
         }
-                                 )
+      )
 
       event = VCAP::CloudController::Event.last
       expect(event.values).to include({
-                                          type: 'audit.app.update',
-                                          actee: app_model.guid,
-                                          actee_type: 'app',
-                                          actee_name: 'new-name',
-                                          actor: user.guid,
-                                          actor_type: 'user',
-                                          actor_name: user_email,
-                                          actor_username: user_name,
-                                          space_guid: space.guid,
-                                          organization_guid: space.organization.guid
-                                      })
+        type: 'audit.app.update',
+        actee: app_model.guid,
+        actee_type: 'app',
+        actee_name: 'new-name',
+        actor: user.guid,
+        actor_type: 'user',
+        actor_name: user_email,
+        actor_username: user_name,
+        space_guid: space.guid,
+        organization_guid: space.organization.guid
+      })
       metadata_request = {
         'name' => 'new-name',
         'lifecycle' => {
@@ -1487,6 +1490,28 @@ RSpec.describe 'Apps' do
         }
       }
       expect(event.metadata['request']).to eq(metadata_request)
+    end
+    context 'telemetry' do
+      it 'should log the required fields when the app gets updated' do
+        Timecop.freeze do
+          patch "/v3/apps/#{app_model.guid}", update_request.to_json, user_header
+          expect(last_response.status).to eq(200)
+
+          parsed_response = MultiJson.load(last_response.body)
+          app_guid = parsed_response['guid']
+
+          expected_json = {
+            'telemetry-source' => 'cloud_controller_ng',
+            'telemetry-time' => Time.now.to_datetime.rfc3339,
+            'update-app' => {
+              'app-id' => Digest::SHA256.hexdigest(app_guid),
+              'user-id' => Digest::SHA256.hexdigest(user.guid),
+            }
+          }
+          expect(last_response.status).to eq(200), last_response.body
+          expect(rails_logger).to have_received(:info).with(JSON.generate(expected_json))
+        end
+      end
     end
   end
 

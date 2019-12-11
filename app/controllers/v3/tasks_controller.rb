@@ -54,7 +54,13 @@ class TasksController < ApplicationController
     droplet_not_found! if message.requested?(:droplet_guid) && droplet.nil?
 
     task = TaskCreate.new(configuration).create(app, message, user_audit_info, droplet: droplet)
-
+    TelemetryLogger.emit(
+      'create-task',
+      {
+        'app-id' => app.guid,
+        'user-id' => current_user.guid
+      }
+    )
     render status: :accepted, json: Presenters::V3::TaskPresenter.new(task)
   rescue TaskCreate::InvalidTask, TaskCreate::TaskCreateError => e
     unprocessable!(e)

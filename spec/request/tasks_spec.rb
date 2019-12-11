@@ -15,12 +15,17 @@ RSpec.describe 'Tasks' do
   let(:user_email) { 'user@email.example.com' }
   let(:user_name) { 'Task McNamara' }
   let(:bbs_task_client) { instance_double(VCAP::CloudController::Diego::BbsTaskClient) }
+  let(:rails_logger) { instance_double(ActiveSupport::Logger, info: nil) }
 
   before do
     VCAP::CloudController::FeatureFlag.make(name: 'task_creation', enabled: true, error_message: nil)
 
     app_model.droplet = droplet
     app_model.save
+
+    allow(VCAP::CloudController::TelemetryLogger).to receive(:emit).and_call_original
+    allow(ActiveSupport::Logger).to receive(:new).and_return(rails_logger)
+    VCAP::CloudController::TelemetryLogger.init('fake-log-path')
   end
 
   describe 'GET /v3/tasks' do
@@ -704,6 +709,21 @@ RSpec.describe 'Tasks' do
   end
 
   describe 'POST /v3/apps/:guid/tasks' do
+    let(:body) do {
+      name:         'best task ever',
+      command:      'be rake && true',
+      memory_in_mb: 1234,
+      disk_in_mb:   1000,
+      metadata: {
+        labels: {
+          bananas: 'gros_michel',
+        },
+        annotations: {
+          'wombats' => 'althea',
+        }
+      },
+    }
+    end
     before do
       CloudController::DependencyLocator.instance.register(:bbs_task_client, bbs_task_client)
       allow(bbs_task_client).to receive(:desire_task)
@@ -712,21 +732,6 @@ RSpec.describe 'Tasks' do
     end
 
     it 'creates a task for an app with an assigned current droplet' do
-      body = {
-        name:         'best task ever',
-        command:      'be rake && true',
-        memory_in_mb: 1234,
-        disk_in_mb:   1000,
-        metadata: {
-          labels: {
-            bananas: 'gros_michel',
-          },
-          annotations: {
-            'wombats' => 'althea',
-          }
-        },
-      }
-
       post "/v3/apps/#{app_model.guid}/tasks", body.to_json, developer_headers
 
       parsed_response = MultiJson.load(last_response.body)
@@ -876,6 +881,24 @@ RSpec.describe 'Tasks' do
 
         expect(last_response.status).to eq(202)
         expect(parsed_response).to be_a_response_like(expected_response)
+      end
+    end
+    context 'telemetry' do
+      it 'should log the required fields when the task is created' do
+        Timecop.freeze do
+          post "/v3/apps/#{app_model.guid}/tasks", body.to_json, developer_headers
+
+          expected_json = {
+            'telemetry-source' => 'cloud_controller_ng',
+            'telemetry-time' => Time.now.to_datetime.rfc3339,
+            'create-task' => {
+              'app-id' => Digest::SHA256.hexdigest(app_model.guid),
+              'user-id' => Digest::SHA256.hexdigest(user.guid),
+            }
+          }
+          expect(last_response.status).to eq(202)
+          expect(rails_logger).to have_received(:info).with(JSON.generate(expected_json))
+        end
       end
     end
   end

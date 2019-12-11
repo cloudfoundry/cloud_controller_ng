@@ -73,6 +73,13 @@ class PackagesController < ApplicationController
       unprocessable!(e.message)
     end
 
+    TelemetryLogger.emit(
+      'upload-package',
+      {
+        'app-id' => package.app_guid,
+        'user-id' => current_user.guid
+      }
+    )
     render status: :ok, json: Presenters::V3::PackagePresenter.new(package, show_bits_service_upload_link: true)
   end
 

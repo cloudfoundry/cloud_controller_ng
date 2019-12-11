@@ -17,9 +17,13 @@ RSpec.describe 'Processes' do
     annotations: { 'checksum' => 'SHA' },
   }
   }
+  let(:rails_logger) { instance_double(ActiveSupport::Logger, info: nil) }
 
   before do
     allow_any_instance_of(::Diego::Client).to receive(:build_client).and_return(build_client)
+    allow(VCAP::CloudController::TelemetryLogger).to receive(:emit).and_call_original
+    allow(ActiveSupport::Logger).to receive(:new).and_return(rails_logger)
+    VCAP::CloudController::TelemetryLogger.init('fake-log-path')
   end
 
   describe 'GET /v3/processes' do
@@ -758,6 +762,49 @@ RSpec.describe 'Processes' do
       process.reload
       expect(process.memory).to eq(1024)
     end
+    context 'telemetry' do
+      let (:process) { VCAP::CloudController::ProcessModel.make(
+        :process,
+        app:        app_model,
+        type:       'web',
+        instances:  2,
+        memory:     1024,
+        disk_quota: 1024,
+        command:    'rackup',
+      )
+      }
+
+      let(:scale_request) do {
+          instances:    5,
+          memory_in_mb: 10,
+          disk_in_mb:   20,
+        }
+      end
+      it 'should log the required fields when the process gets scaled' do
+        Timecop.freeze do
+          post "/v3/processes/#{process.guid}/actions/scale", scale_request.to_json, developer_headers
+          expect(last_response.status).to eq(202)
+
+          parsed_response = MultiJson.load(last_response.body)
+          app_guid = parsed_response['relationships']['app']['data']['guid']
+
+          expected_json = {
+            'telemetry-source' => 'cloud_controller_ng',
+            'telemetry-time' => Time.now.to_datetime.rfc3339,
+            'scale-app' => {
+              'instance-count' => 5,
+              'memory-in-mb' => 10,
+              'disk-in-mb' => 20,
+              'process-type' => 'web',
+              'app-id' => Digest::SHA256.hexdigest(app_guid),
+              'user-id' => Digest::SHA256.hexdigest(developer.guid),
+            }
+          }
+          expect(last_response.status).to eq(202), last_response.body
+          expect(rails_logger).to have_received(:info).with(JSON.generate(expected_json))
+        end
+      end
+    end
   end
 
   describe 'DELETE /v3/processes/:guid/instances/:index' do
@@ -1144,25 +1191,24 @@ RSpec.describe 'Processes' do
   end
 
   describe 'POST /v3/apps/:guid/processes/:type/actions/scale' do
+    let!(:process) { VCAP::CloudController::ProcessModel.make(
+      :process,
+      app:        app_model,
+      type:       'web',
+      instances:  2,
+      memory:     1024,
+      disk_quota: 1024,
+      command:    'rackup',
+    )
+    }
+    let(:scale_request) do {
+      instances:    5,
+      memory_in_mb: 10,
+      disk_in_mb:   20,
+    }
+    end
     it 'scales the process belonging to an app' do
-      process = VCAP::CloudController::ProcessModel.make(
-        :process,
-        app:        app_model,
-        type:       'web',
-        instances:  2,
-        memory:     1024,
-        disk_quota: 1024,
-        command:    'rackup',
-      )
-
-      scale_request = {
-        instances:    5,
-        memory_in_mb: 10,
-        disk_in_mb:   20,
-      }
-
       post "/v3/apps/#{app_model.guid}/processes/web/actions/scale", scale_request.to_json, developer_headers
-
       expected_response = {
         'guid'         => process.guid,
         'type'         => 'web',
@@ -1227,6 +1273,32 @@ RSpec.describe 'Processes' do
           'disk_in_mb'   => 20
         }
       })
+    end
+    context 'telemetry' do
+      it 'should log the required fields when the process gets scaled' do
+        Timecop.freeze do
+          post "/v3/apps/#{app_model.guid}/processes/web/actions/scale", scale_request.to_json, developer_headers
+          expect(last_response.status).to eq(202)
+
+          parsed_response = MultiJson.load(last_response.body)
+          app_guid = parsed_response['relationships']['app']['data']['guid']
+
+          expected_json = {
+            'telemetry-source' => 'cloud_controller_ng',
+            'telemetry-time' => Time.now.to_datetime.rfc3339,
+            'scale-app' => {
+              'instance-count' => 5,
+              'memory-in-mb' => 10,
+              'disk-in-mb' => 20,
+              'process-type' => 'web',
+              'app-id' => Digest::SHA256.hexdigest(app_guid),
+              'user-id' => Digest::SHA256.hexdigest(developer.guid),
+            }
+          }
+          expect(last_response.status).to eq(202), last_response.body
+          expect(rails_logger).to have_received(:info).with(JSON.generate(expected_json))
+        end
+      end
     end
   end
 

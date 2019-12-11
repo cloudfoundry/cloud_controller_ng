@@ -24,6 +24,13 @@ class AppManifestsController < ApplicationController
 
     record_apply_manifest_audit_event(app, message, space)
     job = Jobs::Enqueuer.new(apply_manifest_job, queue: Jobs::Queues.generic).enqueue_pollable
+    TelemetryLogger.emit(
+      'apply-manifest',
+      {
+        'app-id' => app.guid,
+        'user-id' => current_user.guid
+      }
+    )
 
     url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
     head HTTP::ACCEPTED, 'Location' => url_builder.build_url(path: "/v3/jobs/#{job.guid}")

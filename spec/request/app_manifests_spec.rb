@@ -10,12 +10,15 @@ RSpec.describe 'App Manifests' do
     VCAP::CloudController::Route.make(domain: shared_domain, space: space, path: '/path', host: 'b_host')
   }
   let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
-
   let!(:process) { VCAP::CloudController::ProcessModel.make(app: app_model) }
+  let(:rails_logger) { instance_double(ActiveSupport::Logger, info: nil) }
 
   before do
     space.organization.add_user(user)
     space.add_developer(user)
+    allow(VCAP::CloudController::TelemetryLogger).to receive(:emit).and_call_original
+    allow(ActiveSupport::Logger).to receive(:new).and_return(rails_logger)
+    VCAP::CloudController::TelemetryLogger.init('fake-log-path')
   end
 
   describe 'POST /v3/apps/:guid/actions/apply_manifest' do
@@ -181,6 +184,23 @@ RSpec.describe 'App Manifests' do
           it 'returns 422' do
             post "/v3/apps/#{app_model.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
             expect(last_response.status).to eq(422)
+          end
+        end
+      end
+      context 'telemetry' do
+        it 'should log the required fields when the app manifest is applied' do
+          Timecop.freeze do
+            post "/v3/apps/#{app_model.guid}/actions/apply_manifest", yml_manifest, yml_headers(user_header)
+            expected_json = {
+              'telemetry-source' => 'cloud_controller_ng',
+              'telemetry-time' => Time.now.to_datetime.rfc3339,
+              'apply-manifest' => {
+                'app-id' => Digest::SHA256.hexdigest(app_model.guid),
+                'user-id' => Digest::SHA256.hexdigest(user.guid),
+              }
+            }
+            expect(last_response.status).to eq(202), last_response.body
+            expect(rails_logger).to have_received(:info).with(JSON.generate(expected_json))
           end
         end
       end

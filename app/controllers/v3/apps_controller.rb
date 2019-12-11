@@ -119,6 +119,13 @@ class AppsV3Controller < ApplicationController
     unprocessable!(lifecycle.errors.full_messages) unless lifecycle.valid?
 
     app = AppUpdate.new(user_audit_info).update(app, message, lifecycle)
+    TelemetryLogger.emit(
+      'update-app',
+      {
+        'app-id' => app.guid,
+        'user-id' => current_user.guid
+      }
+    )
 
     render status: :ok, json: Presenters::V3::AppPresenter.new(app)
   rescue AppUpdate::DropletNotFound

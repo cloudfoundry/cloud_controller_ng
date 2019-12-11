@@ -15,7 +15,6 @@ module VCAP::CloudController
           'telemetry-time' => Time.now.to_datetime.rfc3339,
           event_name => raw_entries.merge(anonymize(entries)),
         }
-
         logger.info(JSON.generate(resp))
       end
 

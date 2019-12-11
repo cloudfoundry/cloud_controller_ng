@@ -77,7 +77,19 @@ class ProcessesController < ApplicationController
     unprocessable!(message.errors.full_messages) if message.invalid?
 
     ProcessScale.new(user_audit_info, @process, message).scale
-
+    TelemetryLogger.emit(
+      'scale-app',
+      {
+        'app-id' => @process.app.guid,
+        'user-id' => current_user.guid
+      },
+      {
+        'instance-count' => message.instances,
+        'memory-in-mb' => message.memory_in_mb,
+        'disk-in-mb' => message.disk_in_mb,
+        'process-type' => @process.type
+      }
+    )
     render status: :accepted, json: Presenters::V3::ProcessPresenter.new(@process)
   rescue ProcessScale::SidecarMemoryLessThanProcessMemory, ProcessScale::InvalidProcess => e
     unprocessable!(e.message)
