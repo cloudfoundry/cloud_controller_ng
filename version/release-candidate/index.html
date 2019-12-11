@@ -366,7 +366,8 @@ Use the cf cli to obtain a bearer token: cf oauth-token
 </tbody></table>
 <h2 id="filters">Filters</h2>
 
-<p>Endpoints that return lists of resources support filtering down the returned resources using query parameters.</p>
+<p>Endpoints that return lists of resources support filtering down the returned resources using query parameters.
+The available filter parameters are described in a resource&rsquo;s &ldquo;list&rdquo; endpoint in the section &ldquo;Query parameters&rdquo;.</p>
 
 <h4 id="examples">Examples</h4>
 
@@ -381,6 +382,12 @@ Use the cf cli to obtain a bearer token: cf oauth-token
 <p><code class="prettyprint">GET /v3/apps?names=first_name,second_name</code></p>
 
 <p>This will return all apps with name <code class="prettyprint">the_name</code> OR <code class="prettyprint">second_name</code>.</p>
+
+<h5 id="multiple-value-request-2"><strong>Multiple value request</strong> #2</h5>
+
+<p><code class="prettyprint">GET /v3/spaces?label_selector=production,east_coast</code></p>
+
+<p>This will return all spaces whose metadata has labels with keys <code class="prettyprint">production</code> AND <code class="prettyprint">east_coast</code>.</p>
 
 <h5 id="combined-filters"><strong>Combined filters</strong></h5>
 
@@ -1065,12 +1072,19 @@ If a Procfile is provided that also contains a <code class="prettyprint">worker<
 The <code class="prettyprint">web</code> <code class="prettyprint">PROCESS_TYPE</code> must be specified by either the buildpack or the Procfile.</p>
 <h2 id="relationships">Relationships</h2>
 
-<p>Relationships represent associations between resources. They can be used to create, read, update, and delete these associations.</p>
+<p>Relationships represent associations between resources. They can be used to
+create, read, update, and delete these associations.  For example, an app has a
+relationship to a space (every app belongs in one space); a space has a
+relationship with an organization (every space belongs in one organization).</p>
 
 <p>Relationships do not affect the fundamental properties of a resource, but may affect their behavior and permissions logic.
-Relationships are tied to the lifecycles of the associated resources and will be removed if either of the associated resources are deleted.</p>
+Relationships are tied to the lifecycles of the associated resources and will be removed if either of the associated resources are deleted. For example, if a user is removed from an organization, both the user and the organization persist, but the relationship between them does not.</p>
 
 <p>Not all resources implement every relationship operation listed below. See the docs for each resource to see how it interacts with its relationships.</p>
+
+<p>Many endpoints return the status of its relationships. For example, <code class="prettyprint">GET
+/v3/spaces/:guid</code> returns a JSON response with a <code class="prettyprint">relationships</code> key with the
+GUID of the organization to which the space belongs.</p>
 
 <h4 id="the-relationship-object">The relationship object</h4>
 
@@ -4636,7 +4650,7 @@ Buildpacks can also be explicitly specified on <a href="#apps">apps</a> and <a h
 <tr>
 <td><strong>organization</strong></td>
 <td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
-<td>A relationship to the organization the domain will be scoped to. <br><em>Note: can not be used with the internal param</em></td>
+<td>A relationship to the organization the domain will be scoped to. <br><em>Note: can not be used when <code class="prettyprint">internal</code> is set to <code class="prettyprint">true</code></em></td>
 <td></td>
 </tr>
 <tr>
