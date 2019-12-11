@@ -763,7 +763,7 @@ RSpec.describe 'Processes' do
       expect(process.memory).to eq(1024)
     end
     context 'telemetry' do
-      let (:process) { VCAP::CloudController::ProcessModel.make(
+      let(:process) { VCAP::CloudController::ProcessModel.make(
         :process,
         app:        app_model,
         type:       'web',
