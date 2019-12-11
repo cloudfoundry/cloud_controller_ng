@@ -1,11 +1,18 @@
 ## Relationships
 
-Relationships represent associations between resources. They can be used to create, read, update, and delete these associations.
+Relationships represent associations between resources. They can be used to
+create, read, update, and delete these associations.  For example, an app has a
+relationship to a space (every app belongs in one space); a space has a
+relationship with an organization (every space belongs in one organization).
 
 Relationships do not affect the fundamental properties of a resource, but may affect their behavior and permissions logic.
-Relationships are tied to the lifecycles of the associated resources and will be removed if either of the associated resources are deleted.
+Relationships are tied to the lifecycles of the associated resources and will be removed if either of the associated resources are deleted. For example, if a user is removed from an organization, both the user and the organization persist, but the relationship between them does not.
 
 Not all resources implement every relationship operation listed below. See the docs for each resource to see how it interacts with its relationships.
+
+Many endpoints return the status of its relationships. For example, `GET
+/v3/spaces/:guid` returns a JSON response with a `relationships` key with the
+GUID of the organization to which the space belongs.
 
 #### The relationship object
 

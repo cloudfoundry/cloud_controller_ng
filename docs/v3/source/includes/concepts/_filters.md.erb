@@ -1,6 +1,7 @@
 ## Filters
 
 Endpoints that return lists of resources support filtering down the returned resources using query parameters.
+The available filter parameters are described in a resource's "list" endpoint in the section "Query parameters".
 
 #### Examples
 
@@ -13,6 +14,11 @@ This will return all apps with name `the_name`.
 `GET /v3/apps?names=first_name,second_name`
 
 This will return all apps with name `the_name` OR `second_name`.
+
+##### **Multiple value request** #2
+`GET /v3/spaces?label_selector=production,east_coast`
+
+This will return all spaces whose metadata has labels with keys `production` AND `east_coast`.
 
 ##### **Combined filters**
 `GET /v3/apps?names=the_name&state=STARTED`
