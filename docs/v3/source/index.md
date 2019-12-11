@@ -112,6 +112,8 @@ includes:
   - resources/feature_flags/get
   - resources/feature_flags/list
   - resources/feature_flags/update
+  - resources/info/header
+  - resources/info/get
   - resources/isolation_segments/header
   - resources/isolation_segments/object
   - resources/isolation_segments/create
@@ -232,8 +234,6 @@ includes:
   - experimental_resources/deployments/list
   - experimental_resources/deployments/update
   - experimental_resources/deployments/cancel
-  - experimental_resources/info/header
-  - experimental_resources/info/get
   - experimental_resources/revisions/header
   - experimental_resources/revisions/object
   - experimental_resources/revisions/get

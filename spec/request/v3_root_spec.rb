@@ -38,6 +38,9 @@ RSpec.describe 'v3 root' do
           'feature_flags' => {
             'href' => "#{link_prefix}/v3/feature_flags",
           },
+          'info' => {
+            'href' => "#{link_prefix}/v3/info"
+          },
           'isolation_segments' => {
             'href' => "#{link_prefix}/v3/isolation_segments"
           },
