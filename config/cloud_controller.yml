@@ -288,7 +288,7 @@ kubernetes:
   service_account:
     name: 'fake-opi-service-account'
     token: 'fake-token'
-  ca_file: /var/vcap/jobs/cloud_controller_ng/config/certs/kubernetes_ca.crt
+  ca_file: "spec/fixtures/certs/kubernetes_ca.crt"
   kpack:
     builder_namespace: 'cf-workloads'
     registry_service_account_name: 'fake-registry-service-account'

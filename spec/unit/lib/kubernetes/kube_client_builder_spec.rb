@@ -1,7 +1,7 @@
 require 'spec_helper'
-require 'clients/kubernetes_client'
+require 'kubernetes/kube_client_builder'
 
-RSpec.describe Clients::KubernetesClient do
+RSpec.describe Kubernetes::KubeClientBuilder do
   let(:kubernetes_creds) do
     {
       api_group_url: 'https://my.kubernetes.io/apis/whatever',
@@ -15,7 +15,7 @@ RSpec.describe Clients::KubernetesClient do
   end
 
   it 'loads kubernetes creds from the config' do
-    client = Clients::KubernetesClient.new(kubernetes_creds).client
+    client = Kubernetes::KubeClientBuilder.build(kubernetes_creds)
 
     expect(client.ssl_options).to eq({
       ca: 'k8s_node_ca'
@@ -42,7 +42,7 @@ RSpec.describe Clients::KubernetesClient do
     }
 
     it 'raises an error' do
-      expect { Clients::KubernetesClient.new(kubernetes_creds) }.to raise_error(Clients::KubernetesClient::MissingCredentialsError)
+      expect { Kubernetes::KubeClientBuilder.build(kubernetes_creds) }.to raise_error(Kubernetes::KubeClientBuilder::MissingCredentialsError)
     end
   end
 end

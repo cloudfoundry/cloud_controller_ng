@@ -4,7 +4,7 @@ require 'repositories/space_event_repository'
 require 'repositories/organization_event_repository'
 require 'repositories/route_event_repository'
 require 'repositories/user_event_repository'
-require 'clients/kubernetes_kpack_client'
+require 'kubernetes/kpack_client'
 require 'cloud_controller/rest_controller/object_renderer'
 require 'cloud_controller/rest_controller/paginated_collection_renderer'
 require 'cloud_controller/upload_handler'
@@ -368,12 +368,15 @@ module CloudController
     end
 
     def kpack_client
-      kubernetes_creds = VCAP::CloudController::Config.config.get(:kubernetes)
-      @dependencies[:kpack_client] ||= Clients::KubernetesKpackClient.new(
-        host_url: kubernetes_creds[:host_url],
-        service_account: kubernetes_creds[:service_account],
-        ca_crt: File.open(kubernetes_creds[:ca_file]).read
-      )
+      kubernetes_config = VCAP::CloudController::Config.config.get(:kubernetes)
+      kube_client = Kubernetes::KubeClientBuilder.build({
+        api_group_url: "#{kubernetes_config[:host_url]}/apis/build.pivotal.io",
+        version: 'v1alpha1',
+        service_account: kubernetes_config[:service_account],
+        ca_crt: File.open(kubernetes_config[:ca_file]).read
+      })
+
+      @dependencies[:kpack_client] ||= Kubernetes::KpackClient.new(kube_client)
     end
 
     private

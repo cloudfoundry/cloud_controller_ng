@@ -1,6 +1,6 @@
 require 'spec_helper'
 require 'cloud_controller/kpack/stager'
-require 'clients/kubernetes_kpack_client'
+require 'kubernetes/kpack_client'
 
 module Kpack
   RSpec.describe Stager do
@@ -19,7 +19,7 @@ module Kpack
         package_download_url: 'package-download-url',
       )
     end
-    let(:client) { instance_double(Clients::KubernetesKpackClient) }
+    let(:client) { instance_double(Kubernetes::KpackClient) }
     before do
       allow(CloudController::DependencyLocator.instance).to receive(:kpack_client).and_return(client)
       allow(CloudController::DependencyLocator.instance).to receive(:blobstore_url_generator).and_return(blobstore_url_generator)

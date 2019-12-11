@@ -11,7 +11,7 @@ RSpec.describe 'Builds' do
   let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid, name: 'my-app') }
   let(:second_app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid, name: 'my-second-app') }
   let(:rails_logger) { instance_double(ActiveSupport::Logger, info: nil) }
-  let(:kpack_client) { instance_double(Clients::KubernetesKpackClient) }
+  let(:kpack_client) { instance_double(Kubernetes::KpackClient) }
 
   before do
     CloudController::DependencyLocator.instance.register(:kpack_client, kpack_client)

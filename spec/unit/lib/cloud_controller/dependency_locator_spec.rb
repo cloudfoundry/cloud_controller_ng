@@ -706,7 +706,7 @@ RSpec.describe CloudController::DependencyLocator do
     end
   end
 
-  describe '#kubernetes_client' do
+  describe '#kpack_client' do
     before do
       file = Tempfile.new('k8s_node_ca.crt')
       file.write('my crt')
@@ -725,17 +725,14 @@ RSpec.describe CloudController::DependencyLocator do
     end
 
     it 'creates a kpack client from config' do
-      client = locator.kpack_client.client
+      kube_client = nil
+      allow(Kubernetes::KpackClient).to receive(:new) { |arg| kube_client = arg }
 
-      expect(client.ssl_options).to eq({
-                                         ca: 'my crt'
-                                       })
+      locator.kpack_client
 
-      expect(client.auth_options).to eq({
-                                          bearer_token: 'token'
-                                        })
-
-      expect(client.api_endpoint.to_s).to eq 'https://my.kubernetes.io/apis/build.pivotal.io'
+      expect(kube_client.ssl_options).to eq({ ca: 'my crt' })
+      expect(kube_client.auth_options).to eq({ bearer_token: 'token' })
+      expect(kube_client.api_endpoint.to_s).to eq 'https://my.kubernetes.io/apis/build.pivotal.io'
     end
   end
 end
