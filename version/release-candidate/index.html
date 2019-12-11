@@ -16177,8 +16177,8 @@ applications without incurring downtime. This is different from the traditional 
   </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"59c3d133-2b83-46f3-960e-7765a129aea4"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DEPLOYING"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DEPLOYING"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"reason"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+    </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ACTIVE"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"reason"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DEPLOYING"</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"strategy"</span><span class="p">:</span><span class="w"> </span><span class="s2">"rolling"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"droplet"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -16237,12 +16237,12 @@ applications without incurring downtime. This is different from the traditional 
 <tr>
 <td><strong>status.value</strong></td>
 <td><em>string</em></td>
-<td>The current status of the deployment. Valid values are <code class="prettyprint">DEPLOYING</code>, <code class="prettyprint">CANCELING</code>, and <code class="prettyprint">FINALIZED</code> (meaning finished, either successfully or not).</td>
+<td>The current status of the deployment. Valid values are <code class="prettyprint">ACTIVE</code> (meaning in progress) and <code class="prettyprint">FINALIZED</code> (meaning finished, either successfully or not).</td>
 </tr>
 <tr>
 <td><strong>status.reason</strong></td>
-<td><em>string</em> or <code class="prettyprint">null</code></td>
-<td>The reason for the final status of the deployment. Valid values are <code class="prettyprint">DEPLOYED</code>, <code class="prettyprint">CANCELED</code>, <code class="prettyprint">SUPERSEDED</code> (another deployment created for app before completion), <code class="prettyprint">DEGENERATE</code> (the deployment was created incorrectly by the system). <br><br> This attribute is only set if the deployment has <code class="prettyprint">status.value</code> of <code class="prettyprint">FINALIZED</code>.  If the deployment is still in progress, this field will be set to <code class="prettyprint">null</code>.</td>
+<td><em>string</em></td>
+<td>The reason for the status of the deployment.<br>Following list represents valid values.<br>1. If <strong>status.value</strong> is <code class="prettyprint">ACTIVE</code><br>- <code class="prettyprint">DEPLOYING</code><br>- <code class="prettyprint">CANCELING</code><br>2. If <strong>status.value</strong> is <code class="prettyprint">FINALIZED</code><br>- <code class="prettyprint">DEPLOYED</code><br>- <code class="prettyprint">CANCELED</code><br>- <code class="prettyprint">SUPERSEDED</code> (another deployment created for app before completion)<br>- <code class="prettyprint">DEGENERATE</code> (the deployment was created incorrectly by the system)</td>
 </tr>
 <tr>
 <td><strong>strategy</strong></td>
@@ -16356,8 +16356,8 @@ applications without incurring downtime. This is different from the traditional 
   </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"59c3d133-2b83-46f3-960e-7765a129aea4"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DEPLOYING"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DEPLOYING"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"reason"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+    </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ACTIVE"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"reason"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DEPLOYING"</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"strategy"</span><span class="p">:</span><span class="w"> </span><span class="s2">"rolling"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"droplet"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -16498,8 +16498,8 @@ applications without incurring downtime. This is different from the traditional 
   </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"59c3d133-2b83-46f3-960e-7765a129aea4"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DEPLOYING"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DEPLOYING"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"reason"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+    </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ACTIVE"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"reason"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DEPLOYING"</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"strategy"</span><span class="p">:</span><span class="w"> </span><span class="s2">"rolling"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"droplet"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -16681,12 +16681,12 @@ applications without incurring downtime. This is different from the traditional 
 <tr>
 <td><strong>status_reasons</strong></td>
 <td><em>list of strings</em></td>
-<td>Comma-delimited list of status reasons to filter by.<br>Valid values include <code class="prettyprint">DEPLOYED</code>, <code class="prettyprint">CANCELED</code>, <code class="prettyprint">SUPERSEDED</code>, and a blank value.</td>
+<td>Comma-delimited list of status reasons to filter by.<br>Valid values include <code class="prettyprint">DEPLOYING</code>, <code class="prettyprint">CANCELING</code>, <code class="prettyprint">DEPLOYED</code>, <code class="prettyprint">CANCELED</code>, <code class="prettyprint">SUPERSEDED</code>, and <code class="prettyprint">DEGENERATE</code>.</td>
 </tr>
 <tr>
 <td><strong>status_values</strong></td>
 <td><em>list of strings</em></td>
-<td>Comma-delimited list of status values to filter by.<br>Valid values include <code class="prettyprint">DEPLOYING</code> and <code class="prettyprint">FINALIZED</code>.</td>
+<td>Comma-delimited list of status values to filter by.<br>Valid values include <code class="prettyprint">ACTIVE</code> and <code class="prettyprint">FINALIZED</code>.</td>
 </tr>
 <tr>
 <td><strong>page</strong></td>
@@ -16762,8 +16762,8 @@ applications without incurring downtime. This is different from the traditional 
   </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"59c3d133-2b83-46f3-960e-7765a129aea4"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DEPLOYING"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DEPLOYING"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"reason"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+    </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ACTIVE"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"reason"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DEPLOYING"</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"strategy"</span><span class="p">:</span><span class="w"> </span><span class="s2">"rolling"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"droplet"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
