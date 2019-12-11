@@ -9,8 +9,19 @@ module VCAP::CloudController
         def start
           with_error_logging('cc.deployment_updater') do
             config = CloudController::DependencyLocator.instance.config
-            if config.locket
-              lock_runner = Locket::LockRunner.new(
+            statsd_client = CloudController::DependencyLocator.instance.statsd_client
+
+            update_step = Proc.new {|| update(
+              update_frequency: config.get(:deployment_updater, :update_frequency_in_seconds),
+              statsd_client: statsd_client
+            )}
+
+            if config.get(:locket).nil?
+              loop &update_step
+              return
+            end
+
+            lock_runner = Locket::LockRunner.new(
               key: config.get(:deployment_updater, :lock_key),
               owner: config.get(:deployment_updater, :lock_owner),
               host: config.get(:locket, :host),
@@ -18,19 +29,10 @@ module VCAP::CloudController
               client_ca_path: config.get(:locket, :ca_file),
               client_key_path: config.get(:locket, :key_file),
               client_cert_path: config.get(:locket, :cert_file),
-              )
-              lock_worker = Locket::LockWorker.new(lock_runner)
-            end
-            statsd_client = CloudController::DependencyLocator.instance.statsd_client
+            )
+            lock_worker = Locket::LockWorker.new(lock_runner)
 
-            if config.locket
-              lock_worker.acquire_lock_and_repeatedly_call do
-                update(
-                  update_frequency: config.get(:deployment_updater, :update_frequency_in_seconds),
-                  statsd_client: statsd_client
-                )
-              end
-            end
+            lock_worker.acquire_lock_and_repeatedly_call &update_step
           end
         end
 

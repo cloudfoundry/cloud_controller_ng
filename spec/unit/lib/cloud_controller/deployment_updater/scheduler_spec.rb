@@ -58,15 +58,37 @@ module VCAP::CloudController
 
       context 'when locket is not configured' do
         before do
-          TestConfig.override(locket: nil)
+          TestConfig.override(
+            deployment_updater: {
+              update_frequency_in_seconds: update_frequency,
+            },
+            locket: nil
+          )
+          allow(DeploymentUpdater::Scheduler).to receive(:loop).and_yield
         end
 
         it 'doesnt start any lock machinery' do
           DeploymentUpdater::Scheduler.start
 
           expect(Locket::LockRunner).not_to have_received(:new)
-
           expect(Locket::LockWorker).not_to have_received(:new).with(lock_runner)
+        end
+
+        it 'runs the DeploymentUpdater::Dispatcher sleeps for the configured frequency' do
+          update_duration = 5
+          Timecop.freeze do
+            allow(DeploymentUpdater::Dispatcher).to receive(:dispatch) do
+              Timecop.travel(update_duration)
+              true
+            end
+
+            DeploymentUpdater::Scheduler.start
+
+            expect(logger).to have_received(:info).with(start_with('Update loop took'))
+            expect(DeploymentUpdater::Scheduler).to have_received(:sleep).
+              with(be_within(0.01).of(update_frequency - update_duration))
+            expect(logger).to have_received(:info).with(start_with('Sleeping'))
+          end
         end
       end
 
