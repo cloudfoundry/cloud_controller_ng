@@ -282,5 +282,6 @@ includes:
   - experimental_resources/users/list
   - experimental_resources/users/update
   - experimental_resources/users/delete
+  - upgrade_guide/upgrade_guide
 
 ---
