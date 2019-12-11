@@ -80,11 +80,11 @@ module VCAP::CloudController
 
           deployment_updater: {
             update_frequency_in_seconds: Integer,
-            lock_key: String,
-            lock_owner: String
+            optional(:lock_key) => String,
+            optional(:lock_owner) => String
           },
 
-          locket: {
+          optional(:locket) => {
             host: String,
             port: Integer,
             ca_file: String,
