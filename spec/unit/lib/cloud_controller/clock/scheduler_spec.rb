@@ -173,6 +173,22 @@ module VCAP::CloudController
 
         schedule.start
       end
+
+      context 'when the diego sync frequency is zero' do
+        before do
+          TestConfig.override({
+            diego_sync: { frequency_in_seconds: 0 },
+          })
+        end
+
+        it 'does not run diego sync' do
+          allow(clock).to receive(:schedule_daily_job)
+          allow(clock).to receive(:schedule_frequent_worker_job)
+          expect(clock).not_to receive(:schedule_frequent_inline_job)
+
+          schedule.start
+        end
+      end
     end
   end
 end

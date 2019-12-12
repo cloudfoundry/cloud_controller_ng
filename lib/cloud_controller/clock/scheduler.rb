@@ -50,6 +50,8 @@ module VCAP::CloudController
     private
 
     def start_inline_jobs
+      return if @config.get(:diego_sync, :frequency_in_seconds).zero?
+
       clock_opts = {
         name: 'diego_sync',
         interval: @config.get(:diego_sync, :frequency_in_seconds),
