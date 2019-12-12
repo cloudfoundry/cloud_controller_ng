@@ -47,6 +47,10 @@ RSpec.describe 'v3 root' do
           'organizations' => {
             'href' => "#{link_prefix}/v3/organizations"
           },
+          'organization_quotas' => {
+            'href' => "#{link_prefix}/v3/organization_quotas",
+            'experimental' => true
+          },
           'packages' => {
             'href' => "#{link_prefix}/v3/packages"
           },

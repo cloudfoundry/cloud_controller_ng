@@ -18,6 +18,7 @@ class RootController < ActionController::Base
     links.merge!(create_link(:info))
     links.merge!(create_link(:isolation_segments))
     links.merge!(create_link(:organizations))
+    links.merge!(create_link(:organization_quotas, experimental: true))
     links.merge!(create_link(:packages))
     links.merge!(create_link(:processes))
     links.merge!(create_link(:resource_matches))
