@@ -102,11 +102,15 @@ class RolesController < ApplicationController
 
     unauthorized! unless permission_queryer.can_update_space?(message.space_guid, org.guid)
 
-    user_guid = message.user_guid || guid_for_uaa_user(message.username, message.user_origin, creating_space_role: true)
-    user = fetch_user(user_guid)
+    user_guid = message.user_guid || lookup_user_guid_in_uaa(message.username, message.user_origin, creating_space_role: true)
+    user = fetch_readable_user(user_guid)
     unprocessable_space_user! unless user
 
-    RoleCreate.new(message, user_audit_info).create_space_role(type: message.type, user: user, space: space)
+    RoleCreate.new(message, user_audit_info).create_space_role(
+      type: message.type,
+      user: user,
+      space: space
+    )
   end
 
   def create_org_role(message)
@@ -114,23 +118,32 @@ class RolesController < ApplicationController
     unprocessable_organization! unless org
     unauthorized! unless permission_queryer.can_write_to_org?(message.organization_guid)
 
-    user_guid = message.user_guid || guid_for_uaa_user(message.username, message.user_origin)
-    user = fetch_user_for_create_org_role(user_guid, message)
-    unprocessable_user! unless user
-
-    RoleCreate.new(message, user_audit_info).create_organization_role(type: message.type, user: user, organization: org)
-  end
-
-  # Org managers can add unaffiliated users to their org by username
-  def fetch_user_for_create_org_role(user_guid, message)
-    if message.username && permission_queryer.can_write_to_org?(message.organization_guid)
-      User.dataset.first(guid: user_guid)
+    if message.user_guid
+      user_guid = message.user_guid
+      unprocessable_user! if user_in_db?(user_guid) && !user_is_readable?(user_guid)
     else
-      fetch_user(user_guid)
+      user_guid = lookup_user_guid_in_uaa(message.username, message.user_origin)
+      unprocessable_user! unless user_guid
     end
+
+    user = User.first(guid: user_guid) || create_cc_user(user_guid)
+
+    RoleCreate.new(message, user_audit_info).create_organization_role(
+      type: message.type,
+      user: user,
+      organization: org
+    )
   end
 
-  def fetch_user(user_guid)
+  def user_in_db?(user_guid)
+    !User.where(guid: user_guid).empty?
+  end
+
+  def user_is_readable?(user_guid)
+    !readable_users.where(guid: user_guid).empty?
+  end
+
+  def fetch_readable_user(user_guid)
     readable_users.first(guid: user_guid)
   end
 
@@ -139,6 +152,11 @@ class RolesController < ApplicationController
     uaa_client = CloudController::DependencyLocator.instance.uaa_client
     UsernamePopulator.new(uaa_client).transform(user)
     user
+  end
+
+  def create_cc_user(user_guid)
+    message = UserCreateMessage.new(guid: user_guid)
+    UserCreate.new.create(message: message)
   end
 
   def readable_users
@@ -187,7 +205,7 @@ class RolesController < ApplicationController
     unprocessable!("Users cannot be assigned roles in a space if they do not have a role in that space's organization.")
   end
 
-  def guid_for_uaa_user(username, given_origin, creating_space_role: false)
+  def lookup_user_guid_in_uaa(username, given_origin, creating_space_role: false)
     FeatureFlag.raise_unless_enabled!(:set_roles_by_username)
     uaa_client = CloudController::DependencyLocator.instance.uaa_client
 

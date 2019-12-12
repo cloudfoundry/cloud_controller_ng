@@ -209,28 +209,6 @@ RSpec.describe 'Roles Request' do
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
 
-      context 'when user is invalid' do
-        let(:params) do
-          {
-            type: 'organization_auditor',
-            relationships: {
-              user: {
-                data: { guid: 'not-a-real-user' }
-              },
-              organization: {
-                data: { guid: org.guid }
-              }
-            }
-          }
-        end
-
-        it 'returns a 422 with a helpful message' do
-          post '/v3/roles', params.to_json, admin_header
-          expect(last_response).to have_status_code(422)
-          expect(last_response).to have_error_message('Invalid user. Ensure that the user exists and you have access to it.')
-        end
-      end
-
       context 'when organization is invalid' do
         let(:params) do
           {
@@ -454,6 +432,11 @@ RSpec.describe 'Roles Request' do
         h
       end
 
+      before do
+        allow(uaa_client).to receive(:users_for_ids).with([user_unaffiliated.guid]).and_return({ user_unaffiliated.guid => { 'username' => user_unaffiliated.username } })
+        allow(uaa_client).to receive(:usernames_for_ids).with([user_unaffiliated.guid]).and_return({ user_unaffiliated.guid => 'bob_unaffiliated' })
+      end
+
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
 
@@ -630,7 +613,9 @@ RSpec.describe 'Roles Request' do
         before do
           allow(uaa_client).to receive(:origins_for_username).with('bob_unaffiliated').and_return(['uaa'])
           allow(uaa_client).to receive(:id_for_username).with('bob_unaffiliated', origin: 'uaa').and_return(user_unaffiliated.guid)
+          allow(uaa_client).to receive(:usernames_for_ids).with([user_unaffiliated.guid]).and_return({ user_unaffiliated.guid => 'bob_unaffiliated' })
         end
+
         let(:params) do
           {
             type: 'organization_auditor',
@@ -704,6 +689,114 @@ RSpec.describe 'Roles Request' do
           end
 
           it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        end
+      end
+    end
+
+    context 'creating a role for a user that does not exist' do
+      let(:expected_response) do
+        {
+          guid: UUID_REGEX,
+          created_at: iso8601,
+          updated_at: iso8601,
+          type: 'organization_auditor',
+          relationships: {
+            user: {
+              data: { guid: 'a-new-user-guid' }
+            },
+            space: {
+              data: nil
+            },
+            organization: {
+              data: { guid: org.guid }
+            }
+          },
+          links: {
+            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/roles\/#{UUID_REGEX}) },
+            user: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{'a-new-user-guid'}) },
+            organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}) },
+          }
+        }
+      end
+
+      before do
+        allow(uaa_client).to receive(:usernames_for_ids).with(['a-new-user-guid']).and_return({ 'a-new-user-guid' => 'a-new-user-name' })
+        allow(uaa_client).to receive(:id_for_username).with('a-new-user-name', origin: 'uaa').and_return('a-new-user-guid')
+        allow(uaa_client).to receive(:users_for_ids).with(['a-new-user-guid']).and_return({ 'a-new-user-guid' => { 'username' => 'a-new-user-name' } })
+      end
+
+      context 'by user guid' do
+        let(:params) do
+          {
+            type: 'organization_auditor',
+            relationships: {
+              user: {
+                data: { guid: 'a-new-user-guid' }
+              },
+              organization: {
+                data: { guid: org.guid }
+              }
+            }
+          }
+        end
+
+        it 'creates the user and the role' do
+          expect(VCAP::CloudController::User.where(guid: 'a-new-user-guid').empty?).to be true
+          post '/v3/roles', params.to_json, admin_headers
+
+          expect(last_response).to have_status_code(201)
+          expect(parsed_response).to match_json_response(expected_response)
+          expect(VCAP::CloudController::User.where(guid: 'a-new-user-guid').empty?).to be false
+        end
+      end
+
+      context 'by user name' do
+        let(:params) do
+          {
+            type: 'organization_auditor',
+            relationships: {
+              user: {
+                data: { username: 'a-new-user-name', origin: 'uaa' }
+              },
+              organization: {
+                data: { guid: org.guid }
+              }
+            }
+          }
+        end
+
+        it 'creates the user and the role' do
+          expect(VCAP::CloudController::User.where(guid: 'a-new-user-guid').empty?).to be true
+          post '/v3/roles', params.to_json, admin_headers
+
+          expect(last_response).to have_status_code(201)
+          expect(parsed_response).to match_json_response(expected_response)
+          expect(VCAP::CloudController::User.where(guid: 'a-new-user-guid').empty?).to be false
+        end
+      end
+
+      context 'when the request is for a space role' do
+        let(:params) do
+          {
+            type: 'space_auditor',
+            relationships: {
+              user: {
+                data: { guid: 'a-new-user-guid' }
+              },
+              space: {
+                data: { guid: space.guid }
+              }
+            }
+          }
+        end
+
+        it 'raises the same error as a user that does not exist at all, without creating a new user' do
+          expect(VCAP::CloudController::User.where(guid: 'a-new-user-guid').empty?).to be true
+          post '/v3/roles', params.to_json, admin_headers
+
+          expect(last_response).to have_status_code(422)
+          expect(last_response).to have_error_message("Users cannot be assigned roles in a space if they do not have a role in that space's organization.")
+          expect(VCAP::CloudController::User.where(guid: 'a-new-user-guid').empty?).to be true
         end
       end
     end
