@@ -9,6 +9,20 @@ module VCAP::CloudController
         @logger = ActiveSupport::Logger.new(@telemetry_log_path)
       end
 
+      def v2_emit(event_name, entries, raw_entries={})
+        emit(event_name, entries, { 'api-version' => 'v2' }.merge(raw_entries))
+      end
+
+      def v3_emit(event_name, entries, raw_entries={})
+        emit(event_name, entries, { 'api-version' => 'v3' }.merge(raw_entries))
+      end
+
+      def internal_emit(event_name, entries, raw_entries={})
+        emit(event_name, entries, { 'api-version' => 'internal' }.merge(raw_entries))
+      end
+
+      private
+
       def emit(event_name, entries, raw_entries={})
         resp = {
           'telemetry-source' => 'cloud_controller_ng',
@@ -17,8 +31,6 @@ module VCAP::CloudController
         }
         logger.info(JSON.generate(resp))
       end
-
-      private
 
       attr_reader :logger
 

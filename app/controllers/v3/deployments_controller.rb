@@ -41,7 +41,7 @@ class DeploymentsController < ApplicationController
       deployment = DeploymentCreate.create(app: app, user_audit_info: user_audit_info, message: message)
       logger.info("Created deployment #{deployment.guid} for app #{app.guid}")
 
-      TelemetryLogger.emit(
+      TelemetryLogger.v3_emit(
         'create-deployment',
         {
           'app-id' => app.guid,

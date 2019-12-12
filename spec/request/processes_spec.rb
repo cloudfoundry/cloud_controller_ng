@@ -21,8 +21,8 @@ RSpec.describe 'Processes' do
 
   before do
     allow_any_instance_of(::Diego::Client).to receive(:build_client).and_return(build_client)
-    allow(VCAP::CloudController::TelemetryLogger).to receive(:emit).and_call_original
     allow(ActiveSupport::Logger).to receive(:new).and_return(rails_logger)
+    allow(VCAP::CloudController::TelemetryLogger).to receive(:v3_emit).and_call_original
     VCAP::CloudController::TelemetryLogger.init('fake-log-path')
   end
 
@@ -792,6 +792,7 @@ RSpec.describe 'Processes' do
             'telemetry-source' => 'cloud_controller_ng',
             'telemetry-time' => Time.now.to_datetime.rfc3339,
             'scale-app' => {
+              'api-version' => 'v3',
               'instance-count' => 5,
               'memory-in-mb' => 10,
               'disk-in-mb' => 20,
@@ -1287,6 +1288,7 @@ RSpec.describe 'Processes' do
             'telemetry-source' => 'cloud_controller_ng',
             'telemetry-time' => Time.now.to_datetime.rfc3339,
             'scale-app' => {
+              'api-version' => 'v3',
               'instance-count' => 5,
               'memory-in-mb' => 10,
               'disk-in-mb' => 20,

@@ -17,8 +17,8 @@ RSpec.describe 'Apps' do
     space.organization.add_user(user)
     space.add_developer(user)
     allow(ActiveSupport::Logger).to receive(:new).and_return(rails_logger)
-    allow(VCAP::CloudController::TelemetryLogger).to receive(:emit).and_call_original
     VCAP::CloudController::TelemetryLogger.init('fake-log-path')
+    allow(VCAP::CloudController::TelemetryLogger).to receive(:v3_emit).and_call_original
   end
 
   describe 'POST /v3/apps' do
@@ -147,6 +147,7 @@ RSpec.describe 'Apps' do
             'telemetry-source' => 'cloud_controller_ng',
             'telemetry-time' => Time.now.to_datetime.rfc3339,
             'create-app' => {
+              'api-version' => 'v3',
               'app-id' => Digest::SHA256.hexdigest(app_guid),
               'user-id' => Digest::SHA256.hexdigest(user.guid),
             }
@@ -1504,6 +1505,7 @@ RSpec.describe 'Apps' do
             'telemetry-source' => 'cloud_controller_ng',
             'telemetry-time' => Time.now.to_datetime.rfc3339,
             'update-app' => {
+              'api-version' => 'v3',
               'app-id' => Digest::SHA256.hexdigest(app_guid),
               'user-id' => Digest::SHA256.hexdigest(user.guid),
             }
@@ -1610,6 +1612,7 @@ RSpec.describe 'Apps' do
             'telemetry-source' => 'cloud_controller_ng',
             'telemetry-time' => Time.now.to_datetime.rfc3339,
             'start-app' => {
+              'api-version' => 'v3',
               'app-id' => Digest::SHA256.hexdigest(app_guid),
               'user-id' => Digest::SHA256.hexdigest(user.guid),
             }
@@ -1740,6 +1743,7 @@ RSpec.describe 'Apps' do
             'telemetry-source' => 'cloud_controller_ng',
             'telemetry-time' => Time.now.to_datetime.rfc3339,
             'stop-app' => {
+              'api-version' => 'v3',
               'app-id' => Digest::SHA256.hexdigest(app_guid),
               'user-id' => Digest::SHA256.hexdigest(user.guid),
             }
@@ -1831,6 +1835,7 @@ RSpec.describe 'Apps' do
             'telemetry-source' => 'cloud_controller_ng',
             'telemetry-time' => Time.now.to_datetime.rfc3339,
             'restart-app' => {
+              'api-version' => 'v3',
               'app-id' => Digest::SHA256.hexdigest(app_guid),
               'user-id' => Digest::SHA256.hexdigest(user.guid),
             }

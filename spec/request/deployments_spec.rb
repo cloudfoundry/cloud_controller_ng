@@ -20,7 +20,7 @@ RSpec.describe 'Deployments' do
     app_model.update(droplet_guid: droplet.guid)
 
     allow(ActiveSupport::Logger).to receive(:new).and_return(rails_logger)
-    allow(VCAP::CloudController::TelemetryLogger).to receive(:emit).and_call_original
+    allow(VCAP::CloudController::TelemetryLogger).to receive(:v3_emit).and_call_original
     VCAP::CloudController::TelemetryLogger.init('fake-log-path')
   end
 
@@ -528,6 +528,7 @@ RSpec.describe 'Deployments' do
             'telemetry-source' => 'cloud_controller_ng',
             'telemetry-time' => Time.now.to_datetime.rfc3339,
             'create-deployment' => {
+              'api-version' => 'v3',
               'strategy' => 'rolling',
               'app-id' => Digest::SHA256.hexdigest(app_model.guid),
               'user-id' => Digest::SHA256.hexdigest(user.guid),

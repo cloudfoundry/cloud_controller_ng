@@ -79,7 +79,7 @@ module VCAP::CloudController
         raise CloudController::Errors::ApiError.new_from_details('ServerError')
       end
 
-      TelemetryLogger.emit(
+      TelemetryLogger.internal_emit(
         'build-completed',
         {
           'app-id' => build.app.guid,

@@ -12,9 +12,9 @@ RSpec.describe 'Packages' do
   let(:rails_logger) { instance_double(ActiveSupport::Logger, info: nil) }
 
   before do
-    allow(VCAP::CloudController::TelemetryLogger).to receive(:emit).and_call_original
     allow(ActiveSupport::Logger).to receive(:new).and_return(rails_logger)
     VCAP::CloudController::TelemetryLogger.init('fake-log-path')
+    allow(VCAP::CloudController::TelemetryLogger).to receive(:v3_emit).and_call_original
   end
 
   describe 'POST /v3/packages' do
@@ -826,6 +826,7 @@ RSpec.describe 'Packages' do
             'telemetry-source' => 'cloud_controller_ng',
             'telemetry-time' => Time.now.to_datetime.rfc3339,
             'upload-package' => {
+              'api-version' => 'v3',
               'app-id' => Digest::SHA256.hexdigest(app_guid),
               'user-id' => Digest::SHA256.hexdigest(user.guid),
             }

@@ -11,7 +11,7 @@ RSpec.describe 'v3 service bindings' do
 
   before do
     allow(ActiveSupport::Logger).to receive(:new).and_return(rails_logger)
-    allow(VCAP::CloudController::TelemetryLogger).to receive(:emit).and_call_original
+    allow(VCAP::CloudController::TelemetryLogger).to receive(:v3_emit).and_call_original
     VCAP::CloudController::TelemetryLogger.init('fake-log-path')
   end
 
@@ -148,6 +148,7 @@ RSpec.describe 'v3 service bindings' do
               'telemetry-source' => 'cloud_controller_ng',
               'telemetry-time' => Time.now.to_datetime.rfc3339,
               'bind-service' => {
+                'api-version' => 'v3',
                 'service-id' => Digest::SHA256.hexdigest(service_instance.service_plan.service.guid),
                 'service-instance-id' => Digest::SHA256.hexdigest(service_instance.guid),
                 'app-id' => Digest::SHA256.hexdigest(app_model.guid),
@@ -250,6 +251,7 @@ RSpec.describe 'v3 service bindings' do
               'telemetry-source' => 'cloud_controller_ng',
               'telemetry-time' => Time.now.to_datetime.rfc3339,
               'bind-service' => {
+                'api-version' => 'v3',
                 'service-id' => Digest::SHA256.hexdigest('user-provided'),
                 'service-instance-id' => Digest::SHA256.hexdigest(service_instance.guid),
                 'app-id' => Digest::SHA256.hexdigest(app_model.guid),

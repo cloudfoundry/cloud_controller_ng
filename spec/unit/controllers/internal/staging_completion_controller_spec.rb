@@ -250,7 +250,7 @@ module VCAP::CloudController
         authorize @internal_user, @internal_password
         build.droplet = droplet
         allow(ActiveSupport::Logger).to receive(:new).and_return(rails_logger)
-        allow(VCAP::CloudController::TelemetryLogger).to receive(:emit).and_call_original
+        allow(VCAP::CloudController::TelemetryLogger).to receive(:internal_emit).and_call_original
         VCAP::CloudController::TelemetryLogger.init('fake-log-path')
       end
 
@@ -328,6 +328,7 @@ module VCAP::CloudController
               'telemetry-source' => 'cloud_controller_ng',
               'telemetry-time' => Time.now.to_datetime.rfc3339,
               'build-completed' => {
+                'api-version' => 'internal',
                 'lifecycle' =>  'buildpack',
                 'buildpacks' =>  %w(the-pleasant-buildpack),
                 'stack' =>  'cflinuxfs3',

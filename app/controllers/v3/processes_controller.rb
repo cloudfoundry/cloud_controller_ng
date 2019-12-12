@@ -77,7 +77,7 @@ class ProcessesController < ApplicationController
     unprocessable!(message.errors.full_messages) if message.invalid?
 
     ProcessScale.new(user_audit_info, @process, message).scale
-    TelemetryLogger.emit(
+    TelemetryLogger.v3_emit(
       'scale-app',
       {
         'app-id' => @process.app.guid,

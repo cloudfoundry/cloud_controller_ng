@@ -93,7 +93,7 @@ class AppsV3Controller < ApplicationController
     unprocessable!(lifecycle.errors.full_messages) unless lifecycle.valid?
 
     app = AppCreate.new(user_audit_info).create(message, lifecycle)
-    TelemetryLogger.emit(
+    TelemetryLogger.v3_emit(
       'create-app',
       {
         'app-id' => app.guid,
@@ -119,7 +119,7 @@ class AppsV3Controller < ApplicationController
     unprocessable!(lifecycle.errors.full_messages) unless lifecycle.valid?
 
     app = AppUpdate.new(user_audit_info).update(app, message, lifecycle)
-    TelemetryLogger.emit(
+    TelemetryLogger.v3_emit(
       'update-app',
       {
         'app-id' => app.guid,
@@ -161,7 +161,7 @@ class AppsV3Controller < ApplicationController
     end
 
     AppStart.start(app: app, user_audit_info: user_audit_info)
-    TelemetryLogger.emit(
+    TelemetryLogger.v3_emit(
       'start-app',
       {
         'app-id' => app.guid,
@@ -179,7 +179,7 @@ class AppsV3Controller < ApplicationController
     unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
 
     AppStop.stop(app: app, user_audit_info: user_audit_info)
-    TelemetryLogger.emit(
+    TelemetryLogger.v3_emit(
       'stop-app',
       {
         'app-id' => app.guid,
@@ -202,7 +202,7 @@ class AppsV3Controller < ApplicationController
     end
 
     AppRestart.restart(app: app, config: Config.config, user_audit_info: user_audit_info)
-    TelemetryLogger.emit(
+    TelemetryLogger.v3_emit(
       'restart-app',
       {
         'app-id' => app.guid,

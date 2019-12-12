@@ -73,7 +73,7 @@ class PackagesController < ApplicationController
       unprocessable!(e.message)
     end
 
-    TelemetryLogger.emit(
+    TelemetryLogger.v3_emit(
       'upload-package',
       {
         'app-id' => package.app_guid,

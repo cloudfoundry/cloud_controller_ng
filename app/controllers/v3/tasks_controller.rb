@@ -54,7 +54,7 @@ class TasksController < ApplicationController
     droplet_not_found! if message.requested?(:droplet_guid) && droplet.nil?
 
     task = TaskCreate.new(configuration).create(app, message, user_audit_info, droplet: droplet)
-    TelemetryLogger.emit(
+    TelemetryLogger.v3_emit(
       'create-task',
       {
         'app-id' => app.guid,

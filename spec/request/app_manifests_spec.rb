@@ -16,9 +16,10 @@ RSpec.describe 'App Manifests' do
   before do
     space.organization.add_user(user)
     space.add_developer(user)
-    allow(VCAP::CloudController::TelemetryLogger).to receive(:emit).and_call_original
+
     allow(ActiveSupport::Logger).to receive(:new).and_return(rails_logger)
     VCAP::CloudController::TelemetryLogger.init('fake-log-path')
+    allow(VCAP::CloudController::TelemetryLogger).to receive(:v3_emit).and_call_original
   end
 
   describe 'POST /v3/apps/:guid/actions/apply_manifest' do
@@ -195,8 +196,9 @@ RSpec.describe 'App Manifests' do
               'telemetry-source' => 'cloud_controller_ng',
               'telemetry-time' => Time.now.to_datetime.rfc3339,
               'apply-manifest' => {
+                'api-version' => 'v3',
                 'app-id' => Digest::SHA256.hexdigest(app_model.guid),
-                'user-id' => Digest::SHA256.hexdigest(user.guid),
+                'user-id' => Digest::SHA256.hexdigest(user.guid)
               }
             }
             expect(last_response.status).to eq(202), last_response.body

@@ -23,7 +23,7 @@ class ServiceBindingsController < ApplicationController
     accepts_incomplete = false
     begin
       service_binding = ServiceBindingCreate.new(user_audit_info).create(app, service_instance, message, volume_services_enabled?, accepts_incomplete)
-      TelemetryLogger.emit(
+      TelemetryLogger.v3_emit(
         'bind-service',
         {
           'service-id' =>  service_instance.managed_instance? ? service_instance.service_plan.service.guid : 'user-provided',

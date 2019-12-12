@@ -24,7 +24,7 @@ class AppManifestsController < ApplicationController
 
     record_apply_manifest_audit_event(app, message, space)
     job = Jobs::Enqueuer.new(apply_manifest_job, queue: Jobs::Queues.generic).enqueue_pollable
-    TelemetryLogger.emit(
+    TelemetryLogger.v3_emit(
       'apply-manifest',
       {
         'app-id' => app.guid,

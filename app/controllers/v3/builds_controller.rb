@@ -44,7 +44,7 @@ class BuildsController < ApplicationController
 
     build = BuildCreate.new.create_and_stage(package: package, lifecycle: lifecycle, metadata: message.metadata)
 
-    TelemetryLogger.emit(
+    TelemetryLogger.v3_emit(
       'create-build',
       {
         'app-id' => package.app.guid,

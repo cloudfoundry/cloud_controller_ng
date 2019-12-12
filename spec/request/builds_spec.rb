@@ -17,7 +17,7 @@ RSpec.describe 'Builds' do
     CloudController::DependencyLocator.instance.register(:kpack_client, kpack_client)
     allow(kpack_client).to receive(:create_image)
     allow(ActiveSupport::Logger).to receive(:new).and_return(rails_logger)
-    allow(VCAP::CloudController::TelemetryLogger).to receive(:emit).and_call_original
+    allow(VCAP::CloudController::TelemetryLogger).to receive(:v3_emit).and_call_original
     VCAP::CloudController::TelemetryLogger.init('fake-log-path')
   end
 
@@ -164,6 +164,7 @@ RSpec.describe 'Builds' do
             'telemetry-source' => 'cloud_controller_ng',
             'telemetry-time' => Time.now.to_datetime.rfc3339,
             'create-build' => {
+                'api-version' => 'v3',
                 'lifecycle' =>  'buildpack',
                 'buildpacks' =>  ['http://github.com/myorg/awesome-buildpack'],
                 'stack' =>  'cflinuxfs3',
