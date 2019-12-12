@@ -7,6 +7,7 @@ module VCAP::CloudController::Presenters::V3
     let(:previous_droplet) { VCAP::CloudController::DropletModel.make }
     let(:app) { VCAP::CloudController::AppModel.make }
     let(:process) { VCAP::CloudController::ProcessModel.make(guid: 'deploying-process-guid', type: 'web-deployment-guid-type') }
+    let(:deployment_state) { VCAP::CloudController::DeploymentModel::DEPLOYING_STATE }
     let!(:deployment) do
       VCAP::CloudController::DeploymentModelTestFactory.make(
         app: app,
@@ -14,7 +15,7 @@ module VCAP::CloudController::Presenters::V3
         previous_droplet: previous_droplet,
         deploying_web_process: process,
         last_healthy_at: '2019-07-12 19:01:54',
-        state: VCAP::CloudController::DeploymentModel::DEPLOYING_STATE,
+        state: deployment_state,
         status_value: VCAP::CloudController::DeploymentModel::ACTIVE_STATUS_VALUE,
         status_reason: VCAP::CloudController::DeploymentModel::DEPLOYING_STATUS_REASON
       )
@@ -102,6 +103,29 @@ module VCAP::CloudController::Presenters::V3
         it 'keeps the new_processes around for posterity' do
           result = DeploymentPresenter.new(deployment).to_hash
           expect(result[:new_processes]).to eq([{ guid: 'deploying-process-guid', type: 'web-deployment-guid-type' }])
+        end
+      end
+
+      describe 'cancel link' do
+        context 'when the deployment is cancelable' do
+          let(:deployment_state) { VCAP::CloudController::DeploymentModel::DEPLOYING_STATE }
+
+          it 'presents the cancel link' do
+            result = DeploymentPresenter.new(deployment).to_hash
+
+            expect(result[:links][:cancel][:href]).to eq("#{link_prefix}/v3/deployments/#{deployment.guid}/actions/cancel")
+            expect(result[:links][:cancel][:method]).to eq('POST')
+          end
+        end
+
+        context 'when the deployment is NOT cancelable' do
+          let(:deployment_state) { VCAP::CloudController::DeploymentModel::CANCELED_STATE }
+
+          it 'does NOT present the cancel link' do
+            result = DeploymentPresenter.new(deployment).to_hash
+
+            expect(result[:links][:cancel]).to be_nil
+          end
         end
       end
     end

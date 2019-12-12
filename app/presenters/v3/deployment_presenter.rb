@@ -69,7 +69,14 @@ module VCAP::CloudController::Presenters::V3
         app: {
           href: url_builder.build_url(path: "/v3/apps/#{deployment.app.guid}")
         },
-      }
+      }.tap do |links|
+        if deployment.cancelable?
+          links[:cancel] = {
+            href: url_builder.build_url(path: "/v3/deployments/#{deployment.guid}/actions/cancel"),
+            method: 'POST'
+          }
+        end
+      end
     end
   end
 end
