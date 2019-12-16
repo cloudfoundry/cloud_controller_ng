@@ -1222,7 +1222,6 @@ RSpec.describe 'Domains Request' do
 
       it 'succeeds' do
         post '/v3/domains', domain_params.to_json, user_header
-        puts last_response.body
         expect(last_response.status).to eq 201
       end
     end
