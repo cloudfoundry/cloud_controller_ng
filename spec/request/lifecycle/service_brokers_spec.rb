@@ -16,6 +16,10 @@ RSpec.describe 'V3 service brokers' do
                   username: 'old-admin',
                   password: 'not-welcome',
               }
+          },
+          metadata: {
+            labels: { to_update: 'value', to_delete: 'value' },
+            annotations: { to_update: 'value', to_delete: 'value' }
           }
       }
     }
@@ -29,49 +33,68 @@ RSpec.describe 'V3 service brokers' do
                   username: 'admin',
                   password: 'welcome',
               }
+          },
+          metadata: {
+              labels: { to_update: 'changed-value', to_delete: nil, to_add: 'new-value' },
+              annotations: { to_update: 'changed-value', to_delete: nil, to_add: 'new-value' }
           }
       }
     }
 
     let(:broker) { create_service_broker }
 
-    it 'successfully updates the service broker' do
-      stub_request(:get, 'http://example.org/new-broker-url/v2/catalog').
-        with(basic_auth: ['admin', 'welcome']).
-        to_return(status: 200, body: catalog.to_json, headers: {})
+    context 'is successful' do
+      before do
+        stub_request(:get, 'http://example.org/new-broker-url/v2/catalog').
+          with(basic_auth: ['admin', 'welcome']).
+          to_return(status: 200, body: catalog.to_json, headers: {})
 
-      patch "/v3/service_brokers/#{broker['guid']}", update_request_body.to_json, admin_headers
-      expect(last_response).to have_status_code(202)
+        patch "/v3/service_brokers/#{broker['guid']}", update_request_body.to_json, admin_headers
+        expect(last_response).to have_status_code(202)
 
-      job_url = last_response['Location']
-      get job_url, {}, admin_headers
-      expect(last_response).to have_status_code(200)
-      expect(parsed_response).to include({
-          'state' => 'PROCESSING',
-          'operation' => 'service_broker.update',
-          'errors' => [],
-          'warnings' => [],
-      })
+        job_url = last_response['Location']
+        get job_url, {}, admin_headers
+        expect(last_response).to have_status_code(200)
+        expect(parsed_response).to include({
+            'state' => 'PROCESSING',
+            'operation' => 'service_broker.update',
+            'errors' => [],
+            'warnings' => [],
+        })
 
-      execute_all_jobs(expected_successes: 1, expected_failures: 0)
+        execute_all_jobs(expected_successes: 1, expected_failures: 0)
 
-      get job_url, {}, admin_headers
-      expect(last_response).to have_status_code(200)
-      expect(parsed_response).to include({
-          'state' => 'COMPLETE',
-          'operation' => 'service_broker.update',
-          'errors' => [],
-          'warnings' => [],
-      })
+        get job_url, {}, admin_headers
+        expect(last_response).to have_status_code(200)
+        expect(parsed_response).to include({
+            'state' => 'COMPLETE',
+            'operation' => 'service_broker.update',
+            'errors' => [],
+            'warnings' => [],
+        })
+      end
 
-      get "/v3/service_brokers/#{broker['guid']}", {}, admin_headers
-      expect(last_response).to have_status_code(200)
-      expect(parsed_response).to include({
-          'name' => 'new-name',
-          'url' => 'http://example.org/new-broker-url',
-          'available' => true,
-          'status' => 'available'
-      })
+      it 'successfully updates the service broker' do
+        get "/v3/service_brokers/#{broker['guid']}", {}, admin_headers
+        expect(last_response).to have_status_code(200)
+        expect(parsed_response).to include({
+            'name' => 'new-name',
+            'url' => 'http://example.org/new-broker-url',
+            'available' => true,
+            'status' => 'available',
+        })
+      end
+
+      it 'adds, removes and updates metadata when the request contains metadata changes' do
+        get "/v3/service_brokers/#{broker['guid']}", {}, admin_headers
+        expect(last_response).to have_status_code(200)
+        expect(parsed_response).to include({
+            'metadata' => {
+                'labels' => { 'to_update' => 'changed-value', 'to_add' => 'new-value' },
+                'annotations' => { 'to_update' => 'changed-value', 'to_add' => 'new-value' }
+            }
+        })
+      end
     end
 
     it 'fails to update the service broker' do
@@ -100,7 +123,17 @@ RSpec.describe 'V3 service brokers' do
           'name' => 'old-name',
           'url' => 'http://example.org/old-broker-url',
           'available' => true,
-          'status' => 'available'
+          'status' => 'available',
+          'metadata' => {
+              'annotations' => {
+                  'to_delete' => 'value',
+                  'to_update' => 'value'
+              },
+              'labels' => {
+                  'to_delete' => 'value',
+                  'to_update' => 'value'
+              }
+          }
       })
     end
 

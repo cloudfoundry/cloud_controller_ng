@@ -18,6 +18,22 @@ module VCAP
             )
           end
 
+          let!(:label) {
+            ServiceBrokerLabelModel.create(
+              service_broker: broker,
+              key_name: 'potato',
+              value: 'yam'
+            )
+          }
+
+          let!(:annotation) {
+            ServiceBrokerAnnotationModel.create(
+              service_broker: broker,
+              key: 'style',
+              value: 'mashed'
+            )
+          }
+
           let(:update_broker_request) do
             ServiceBrokerUpdateRequest.create(
               name: 'new-name',
@@ -26,6 +42,22 @@ module VCAP
               service_broker_id: broker.id
             )
           end
+
+          let!(:update_broker_label_request) {
+            ServiceBrokerUpdateRequestLabelModel.create(
+              service_broker_update_request: update_broker_request,
+              key_name: 'potato',
+              value: 'sweet'
+            )
+          }
+
+          let!(:update_broker_annotation_request) {
+            ServiceBrokerUpdateRequestAnnotationModel.create(
+              service_broker_update_request: update_broker_request,
+              key: 'style',
+              value: 'baked'
+            )
+          }
 
           let(:service_manager_factory) { Services::ServiceBrokers::ServiceManager }
 
@@ -56,6 +88,15 @@ module VCAP
             expect(broker.auth_password).to eq('welcome')
             expect(broker.state).to eq(ServiceBrokerStateEnum::AVAILABLE)
 
+            expect(broker.labels.size).to eq(1)
+            expect(broker.annotations.size).to eq(1)
+
+            expect(broker.labels[0][:key_name]).to eq('potato')
+            expect(broker.labels[0][:value]).to eq('sweet')
+
+            expect(broker.annotations[0][:key]).to eq('style')
+            expect(broker.annotations[0][:value]).to eq('baked')
+
             service_offerings = Service.where(service_broker_id: broker.id)
             expect(service_offerings.count).to eq(1)
             expect(service_offerings.first.label).to eq(broker_client.service_name)
@@ -65,6 +106,8 @@ module VCAP
             expect(service_plans.first.name).to eq(broker_client.plan_name)
 
             expect(ServiceBrokerUpdateRequest.where(id: update_broker_request.id).all).to be_empty
+            expect(ServiceBrokerUpdateRequestLabelModel.where(id: update_broker_request.id).all).to be_empty
+            expect(ServiceBrokerUpdateRequestAnnotationModel.where(id: update_broker_request.id).all).to be_empty
           end
 
           context 'partial updates' do
@@ -311,6 +354,35 @@ module VCAP
             before do
               setup_broker_with_invalid_catalog
             end
+
+            it 'rolls back the broker to its previous configuration' do
+              expect { job.perform }.to raise_error(::CloudController::Errors::ApiError)
+
+              broker.reload
+
+              expect(broker.name).to eq('test-broker')
+              expect(broker.broker_url).to eq('http://example.org/broker-url')
+              expect(broker.auth_username).to eq('username')
+              expect(broker.auth_password).to eq('password')
+              expect(broker.state).to eq(ServiceBrokerStateEnum::AVAILABLE)
+
+              expect(broker.labels.size).to eq(1)
+              expect(broker.annotations.size).to eq(1)
+
+              expect(broker.labels[0][:key_name]).to eq('potato')
+              expect(broker.labels[0][:value]).to eq('yam')
+
+              expect(broker.annotations[0][:key]).to eq('style')
+              expect(broker.annotations[0][:value]).to eq('mashed')
+
+              service_offerings = Service.where(service_broker_id: broker.id)
+              expect(service_offerings.count).to eq(0)
+
+              expect(ServiceBrokerUpdateRequest.where(id: update_broker_request.id).all).to be_empty
+              expect(ServiceBrokerUpdateRequestLabelModel.where(id: update_broker_request.id).all).to be_empty
+              expect(ServiceBrokerUpdateRequestAnnotationModel.where(id: update_broker_request.id).all).to be_empty
+            end
+
             context 'and the broker was not available' do
               let(:previous_state) { ServiceBrokerStateEnum::SYNCHRONIZATION_FAILED }
 

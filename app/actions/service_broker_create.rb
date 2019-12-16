@@ -26,6 +26,7 @@ module VCAP::CloudController
         pollable_job = nil
         ServiceBroker.db.transaction do
           broker = ServiceBroker.create(params)
+          MetadataUpdate.update(broker, message)
 
           service_event_repository.record_broker_event_with_request(:create, broker, message.audit_hash)
 

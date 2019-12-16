@@ -2,6 +2,12 @@ module VCAP::CloudController
   class ServiceBroker < Sequel::Model
     one_to_many :services
     one_to_many :service_dashboard_client
+    one_to_many :labels, class: 'VCAP::CloudController::ServiceBrokerLabelModel', key: :resource_guid, primary_key: :guid
+    one_to_many :annotations, class: 'VCAP::CloudController::ServiceBrokerAnnotationModel', key: :resource_guid, primary_key: :guid
+
+    add_association_dependencies labels: :destroy
+    add_association_dependencies annotations: :destroy
+
     many_to_one :space
 
     import_attributes :name, :broker_url, :auth_username, :auth_password

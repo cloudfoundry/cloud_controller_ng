@@ -1,4 +1,4 @@
-require 'messages/base_message'
+require 'messages/metadata_base_message'
 require 'messages/validators/url_validator'
 require 'messages/validators/authentication_validator'
 require 'messages/basic_credentials_message'
@@ -7,7 +7,7 @@ require 'messages/mixins/authentication_message_mixin'
 require 'utils/hash_utils'
 
 module VCAP::CloudController
-  class ServiceBrokerUpdateMessage < BaseMessage
+  class ServiceBrokerUpdateMessage < MetadataBaseMessage
     include AuthenticationMessageMixin
 
     register_allowed_keys [:name, :url, :authentication]
@@ -27,5 +27,9 @@ module VCAP::CloudController
         errors.add(:name, 'must not be empty string')
       end
     end
+  end
+
+  class ServiceBrokerUpdateMetadataMessage < MetadataBaseMessage
+    register_allowed_keys []
   end
 end

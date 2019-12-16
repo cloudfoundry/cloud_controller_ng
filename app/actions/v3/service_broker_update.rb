@@ -34,6 +34,7 @@ module VCAP::CloudController
           broker.update(state: ServiceBrokerStateEnum::SYNCHRONIZING)
 
           update_request = ServiceBrokerUpdateRequest.create(params)
+          MetadataUpdate.update(update_request, message, destroy_nil: false)
 
           service_event_repository.record_broker_event_with_request(:update, broker, message.audit_hash)
 

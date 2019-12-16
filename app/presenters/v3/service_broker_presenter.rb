@@ -8,6 +8,8 @@ module VCAP::CloudController
   module Presenters
     module V3
       class ServiceBrokerPresenter < BasePresenter
+        include VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers
+
         STATES = {
             VCAP::CloudController::ServiceBrokerStateEnum::SYNCHRONIZING => 'synchronization in progress',
             VCAP::CloudController::ServiceBrokerStateEnum::SYNCHRONIZATION_FAILED => 'synchronization failed',
@@ -27,6 +29,10 @@ module VCAP::CloudController
             updated_at: broker.updated_at,
             relationships: build_relationships,
             links: build_links,
+            metadata: {
+                labels: hashified_labels(broker.labels),
+                annotations: hashified_annotations(broker.annotations)
+            }
           }
         end
 

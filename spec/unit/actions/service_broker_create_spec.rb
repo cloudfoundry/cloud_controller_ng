@@ -29,6 +29,10 @@ module VCAP
               username: auth_username,
               password: auth_password
             }
+          },
+          metadata: {
+              labels: { potato: 'yam' },
+              annotations: { style: 'mashed' }
           }
         }
       end
@@ -58,6 +62,12 @@ module VCAP
         expect(broker.auth_username).to eq(auth_username)
         expect(broker.auth_password).to eq(auth_password)
         expect(broker.space_guid).to eq(nil)
+
+        expect(broker.labels[0].key_name).to eq('potato')
+        expect(broker.labels[0].value).to eq('yam')
+
+        expect(broker.annotations[0].key_name).to eq('style')
+        expect(broker.annotations[0].value).to eq('mashed')
       end
 
       it 'puts it in a SYNCHRONIZING state' do

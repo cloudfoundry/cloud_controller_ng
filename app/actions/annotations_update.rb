@@ -1,14 +1,14 @@
 module VCAP::CloudController
   module AnnotationsUpdate
     class << self
-      def update(resource, annotations, annotation_klass)
+      def update(resource, annotations, annotation_klass, destroy_nil: true)
         starting_annotation_count_for_resource = annotation_klass.where(resource_guid: resource.guid).count
 
         annotations ||= {}
         annotations.each do |key, value|
           key = key.to_s
           prefix, key_name = VCAP::CloudController::MetadataHelpers.extract_prefix(key)
-          if value.nil? # this is delete
+          if value.nil? && destroy_nil # this is delete
             annotation_klass.find(resource_guid: resource.guid, key: key).try(:destroy)
             next
           end
@@ -21,7 +21,7 @@ module VCAP::CloudController
           end
 
           annotation = annotation_klass.find_or_create(resource_guid: resource.guid, key: key_name, key_prefix: prefix)
-          annotation.update(value: value.to_s)
+          annotation.update(value: value)
         end
 
         ending_annotation_count_for_resource = annotation_klass.where(resource_guid: resource.guid).count

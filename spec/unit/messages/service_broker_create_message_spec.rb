@@ -20,6 +20,10 @@ module VCAP::CloudController
             password: 'pass',
           }
         },
+        metadata: {
+            labels: { potato: 'yam' },
+            annotations: { style: 'mashed' }
+        }
       }
     end
 

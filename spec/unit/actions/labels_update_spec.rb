@@ -164,6 +164,15 @@ module VCAP::CloudController
           expect(AppLabelModel.find(resource_guid: app.guid, key_name: delete_me_label.key_name)).to be_nil
           expect(keep_me_label.reload.value).to eq 'mashed'
         end
+
+        it 'preserves label keys and sets values to nil when destroy_nil is false' do
+          app.db.transaction do
+            LabelsUpdate.update(app, labels, AppLabelModel, destroy_nil: false)
+          end
+
+          expect(delete_me_label.reload.value).to eq nil
+          expect(keep_me_label.reload.value).to eq 'mashed'
+        end
       end
     end
 
