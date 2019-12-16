@@ -39,7 +39,7 @@ In V2, there were two types of domains exposed via different endpoints: private 
 
 In V3, there is only one domain resource. A domain is "shared" if it has an "owning organization", which is the organization in which the domain is accessible. This is represented as a relationship to this organization. A domain is "private" if it doesn't have this relationship.
 
-Read more about the [domain resource](http://v3-apidocs.cloudfoundry.org#domains).
+Read more about the [domain resource](#domains).
 
 ### Routes in V3
 
@@ -47,7 +47,7 @@ In V2, the route resource represented a URL that could be mapped to an app, and 
 
 In V3, these concepts have been collapsed into a single route resource. Now, a route can have one or more "destinations" listed on it. These represent a mapping from the route to a resource that can serve traffic (e.g. a process of an app).
 
-Read more about [routes and destinations](http://v3-apidocs.cloudfoundry.org#routes).
+Read more about [routes and destinations](#routes).
 
 ### Users and Roles in V3
 
@@ -55,7 +55,7 @@ The user resource remains largely unchanged from the v2 API. On v2, `GET /v2/use
 
 In V2, roles were modeled as associations between organization and space endpoints. In V3, roles have a dedicated resource: `/v3/roles`. This has changed the manner in which roles are assigned. For example, in V2, to assign a user the `org_manager` role, one would `PUT /v2/organizations/:org_guid/managers/:user_id`. In V3, one would `POST /v3/roles` with the role type and relationships to the user and organization.
 
-Read more about [users](http://v3-apidocs.cloudfoundry.org#users) and [roles](http://v3-apidocs.cloudfoundry.org#roles).
+Read more about [users](#users) and [roles](#roles).
 
 ## Conceptual Changes
 
@@ -87,11 +87,12 @@ Unlike V2, clients cannot opt-in for asynchronous responses from endpoints. Inst
 
 For clients that want to report the outcome of an asynchronous operation, the expected pattern is to poll the job in the Location header until its `state` is no longer `PROCESSING`. If the job's `state` is `FAILED`, the `errors` field will contain any errors that occurred during the operation.
 
-An example of an asynchronous endpoint is the [delete app endpoint](https://v3-apidocs.cloudfoundry.org#delete-an-app).
+An example of an asynchronous endpoint is the [delete app endpoint](#delete-an-app).
 
-Read more about [the job resource](https://v3-apidocs.cloudfoundry.org#jobs).
+Read more about [the job resource](#jobs).
 
-### Errors
+<!-- We need to use plain html here to specify different ids. Otherwise the framework will mess up urls -->
+<h3 id="errors-v3">Errors</h3>
 
 ```
 Example Request
@@ -182,7 +183,7 @@ A few common filters have been also renamed in V3:
 
 <sup>1</sup> In V3, order is ascending by default. Prefix the `order_by` value with `-` to make it descending. For example, `?order_by=-name` would order a list of resources by `name` in descending order.
 
-Read more about [filtering in V3](https://v3-apidocs.cloudfoundry.org#filtering).
+Read more about [filtering in V3](#filtering).
 
 ### Including Associated Resources
 
@@ -193,7 +194,7 @@ For example, to include an app's space in the response:
 cf curl /v3/apps/:guid?include=space
 ```
 
-Read more about [the `include` parameter](https://v3-apidocs.cloudfoundry.org#include).
+Read more about [the `include` parameter](#include).
 
 ## New Concepts
 
@@ -206,7 +207,8 @@ Example:
 POST /v3/apps/:guid/actions/start
 ```
 
-### Links
+<!-- We need to use plain html here to specify different ids. Otherwise the framework will mess up urls -->
+<h3 id="links-v3">Links</h3>
 
 ```
 Example Request
@@ -239,8 +241,8 @@ Example Response
 Links provide URLs to associated resources, relationships, and actions for a resource.
 The example links to both the app itself and the space in which it resides.
 
-### Metadata
-
+<!-- We need to use plain html here to specify different ids. Otherwise the framework will mess up urls -->
+<h3 id="metadata-v3">Metadata</h3>
 
 ```
 Example Request
@@ -273,12 +275,12 @@ Example Response
 
 Metadata allows you to tag and query certain API resources with information; metadata does not affect the resource's functionality.
 
-For more details and usage examples, see [metadata](https://v3-apidocs.cloudfoundry.org#metadata) or [official CF docs](https://docs.cloudfoundry.org/adminguide/metadata.html).
+For more details and usage examples, see [metadata](#metadata) or [official CF docs](https://docs.cloudfoundry.org/adminguide/metadata.html).
 
-Note that metadata consists of two keys, `labels` and `annotations`, each of which consists of key-value pairs. API V3 allows filtering by labels (see [label_selector](https://v3-apidocs.cloudfoundry.org/#labels-and-selectors)) but not by annotations.
+Note that metadata consists of two keys, `labels` and `annotations`, each of which consists of key-value pairs. API V3 allows filtering by labels (see [label_selector](#labels-and-selectors)) but not by annotations.
 
-### Relationships
-
+<!-- We need to use plain html here to specify different ids. Otherwise the framework will mess up urls -->
+<h3 id="relationships-v3">Relationships</h3>
 
 
 ```
@@ -303,57 +305,63 @@ In the example request we create an app with a relationship to a specific space.
 
 One can retrieve or update a resource's relationships. For example, to retrieve an app's relationship to its space with the `/v3/apps/:app_guid/relationships/space` endpoint.
 
-For more information, refer to the [relationships](https://v3-apidocs.cloudfoundry.org/#relationships).
+For more information, refer to the [relationships](#relationships).
 
 ## New Resources
 
 The V3 API introduces new resources that are not available on the V2 API. Below are brief descriptions of these resources. This is not intended to be an exhaustive list and may not be updated as new resources are added to V3.
 
-**Note:** Some of these resources may still be experimental and are subject to change or removal without warning. For up to date information on which resources are still experimental see [Experimental Resources](https://v3-apidocs.cloudfoundry.org/#experimental-resources).
+**Note:** Some of these resources may still be experimental and are subject to change or removal without warning. For up to date information on which resources are still experimental see [Experimental Resources](#experimental-resources).
 
-### App Features
+<!-- We need to use plain html here to specify different ids. Otherwise the framework will mess up urls -->
+<h3 id="app-features-v3">App Features</h3>
 
 App features support enabling/disabling behaviors for an individual app.
 
-Read more about the [app feature resource](https://v3-apidocs.cloudfoundry.org#app-features).
+Read more about the [app feature resource](#app-features).
 
-### Deployments
+<!-- We need to use plain html here to specify different ids. Otherwise the framework will mess up urls -->
+<h3 id="deployments-v3">Deployments</h3>
 
 Deployments are objects that manage updates to applications with zero downtime.
 
-Read more about the [deployment resource](https://v3-apidocs.cloudfoundry.org#deployments).
+Read more about the [deployment resource](#deployments).
 
-### Isolation Segments
+<!-- We need to use plain html here to specify different ids. Otherwise the framework will mess up urls -->
+<h3 id="isolation-segments-v3">Isolation Segments</h3>
 
 Isolation segments provide dedicated pools of resources to which apps can be deployed to isolate workloads.
 
-Read more about the [isolation segment resource](https://v3-apidocs.cloudfoundry.org#isolation-segments).
+Read more about the [isolation segment resource](#isolation-segments).
 
 ### Manifests
 
 Manifests are a method for providing bulk configuration to applications and other resources in a space.
 
-Read more about the [app manifest](https://v3-apidocs.cloudfoundry.org#app-manifest) and [space manifest](https://v3-apidocs.cloudfoundry.org#space-manifest) resources.
+Read more about the [app manifest](#app-manifest) and [space manifest](#space-manifest) resources.
 
-### Revisions
+<!-- We need to use plain html here to specify different ids. Otherwise the framework will mess up urls -->
+<h3 id="revisions-v3">Revisions</h3>
 
 Revisions represent code and configuration used by an application at a specific time. The most recent revision for a running application represents the code and configuration currently running in Cloud Foundry.
 
-Read more about the [revision resource](https://v3-apidocs.cloudfoundry.org#revisions).
+Read more about the [revision resource](#revisions).
 
-### Sidecars
+<!-- We need to use plain html here to specify different ids. Otherwise the framework will mess up urls -->
+<h3 id="sidecars-v3">Sidecars</h3>
 
 Sidecars are additional programs that are run in the same container as a process.
 
-Read more about the [sidecar resource](https://v3-apidocs.cloudfoundry.org#sidecars).
+Read more about the [sidecar resource](#sidecars).
 
-### Tasks
+<!-- We need to use plain html here to specify different ids. Otherwise the framework will mess up urls -->
+<h3 id="tasks-v3">Tasks</h3>
 
 Tasks are one-off jobs that are intended to execute a droplet, stop, and be cleaned up, freeing up resources.
 
 Examples of this include database migrations and running batch jobs.
 
-Read more about the [task resource](https://v3-apidocs.cloudfoundry.org#tasks).
+Read more about the [task resource](#tasks).
 
 ## Useful Links
 
