@@ -57,12 +57,5 @@ module VCAP::CloudController
       organization = Organization.first(id: role.organization_id)
       event_repo.record_organization_role_remove(organization, @role_owner, short_event_type, @user_audit_info)
     end
-
-    def fetch_user(role)
-      user = User.first(id: role.user_id)
-      uaa_client = CloudController::DependencyLocator.instance.uaa_client
-      UsernamePopulator.new(uaa_client).transform(user)
-      user
-    end
   end
 end

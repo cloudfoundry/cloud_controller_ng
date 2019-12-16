@@ -77,11 +77,11 @@ class UsersController < ApplicationController
 
   def fetch_readable_users(message)
     admin_roles = permission_queryer.can_read_globally?
-    UserListFetcher.fetch_all(message, User.readable_users_for_current_user(admin_roles, current_user))
+    UserListFetcher.fetch_all(message, current_user.readable_users(admin_roles))
   end
 
   def fetch_user_if_readable(desired_guid)
-    readable_users = User.readable_users_for_current_user(permission_queryer.can_read_globally?, current_user)
+    readable_users = current_user.readable_users(permission_queryer.can_read_globally?)
     readable_users.first(guid: desired_guid)
   end
 
