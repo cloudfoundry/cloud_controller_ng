@@ -21,7 +21,7 @@ module VCAP::CloudController
       validates_presence :memory_limit
       validate_total_reserved_route_ports
 
-      errors.add(:memory_limit, :less_than_zero) if memory_limit && memory_limit < 0
+      errors.add(:memory_limit, :invalid_memory_limit) if memory_limit && memory_limit < UNLIMITED
       errors.add(:instance_memory_limit, :invalid_instance_memory_limit) if instance_memory_limit && instance_memory_limit < UNLIMITED
       errors.add(:total_private_domains, :invalid_total_private_domains) if total_private_domains && total_private_domains < UNLIMITED
       errors.add(:app_instance_limit, :invalid_app_instance_limit) if app_instance_limit && app_instance_limit < UNLIMITED

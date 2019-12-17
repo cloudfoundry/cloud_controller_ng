@@ -21,8 +21,8 @@ module VCAP::CloudController
       memory_limit_errors = quota_definition.errors.on(:memory_limit)
       if name_errors && name_errors.include?(:unique)
         CloudController::Errors::ApiError.new_from_details('QuotaDefinitionNameTaken', attributes['name'])
-      elsif memory_limit_errors && memory_limit_errors.include?(:less_than_zero)
-        CloudController::Errors::ApiError.new_from_details('QuotaDefinitionMemoryLimitNegative')
+      elsif memory_limit_errors && memory_limit_errors.include?(:invalid_memory_limit)
+        CloudController::Errors::ApiError.new_from_details('QuotaDefinitionMemoryLimitInvalid')
       else
         CloudController::Errors::ApiError.new_from_details('QuotaDefinitionInvalid', quota_definition.errors.full_messages)
       end

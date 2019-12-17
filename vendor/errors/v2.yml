@@ -809,9 +809,9 @@
   message: "Quota Definition is invalid: %s"
 
 240004:
-  name: QuotaDefinitionMemoryLimitNegative
+  name: QuotaDefinitionMemoryLimitInvalid
   http_code: 400
-  message: "Quota Definition memory limit cannot be negative"
+  message: "Quota Definition memory limit cannot be less than -1"
 
 250001:
   name: StackInvalid

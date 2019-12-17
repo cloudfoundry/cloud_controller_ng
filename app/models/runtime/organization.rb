@@ -224,7 +224,7 @@ module VCAP::CloudController
     end
 
     def has_remaining_memory(mem)
-      memory_remaining >= mem
+      quota_definition.memory_limit == -1 || memory_remaining >= mem
     end
 
     def instance_memory_limit

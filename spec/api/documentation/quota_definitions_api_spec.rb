@@ -25,7 +25,8 @@ RSpec.resource 'Organization Quota Definitions', type: [:api, :legacy_api] do
     field :total_private_domains,
       'How many private domains an organization can have. (-1 represents an unlimited amount)',
       example_values: [-1, 10, 23], default: -1
-    field :memory_limit, 'How much memory in megabyte an organization can have.', required: opts[:required], example_values: [5_120, 9999]
+    field :memory_limit, 'The maximum amount of memory in megabytes an application instance can have. (-1 represents an unlimited amount)',
+      required: opts[:required], example_values: [5_120, 9999]
 
     field :instance_memory_limit,
       'The maximum amount of memory in megabyte an application instance can have. (-1 represents an unlimited amount)',

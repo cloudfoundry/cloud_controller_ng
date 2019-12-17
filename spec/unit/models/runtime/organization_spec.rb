@@ -478,6 +478,18 @@ module VCAP::CloudController
         expect(org.has_remaining_memory(201)).to eq(false)
       end
 
+      context 'when memory quota is unlimited (-1)' do
+        let(:quota) do
+          QuotaDefinition.make(memory_limit: -1)
+        end
+
+        it "indicates that there's more memory remaining" do
+          org = Organization.make(quota_definition: quota)
+
+          expect(org.has_remaining_memory(1 << 63)).to eq(true) # a very big number
+        end
+      end
+
       it 'does NOT include non-RUNNING tasks when returning remaining memory' do
         org = Organization.make(quota_definition: quota)
         space = Space.make(organization: org)

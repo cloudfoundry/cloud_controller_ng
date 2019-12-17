@@ -23,16 +23,16 @@ module VCAP::CloudController
       it { is_expected.to validate_uniqueness :name }
 
       describe 'memory_limits' do
-        it 'total memory_limit cannot be less than zero' do
-          quota_definition.memory_limit = -1
+        it 'total memory_limit cannot be less than -1 ("unlimited")' do
+          quota_definition.memory_limit = -2
           expect(quota_definition).not_to be_valid
-          expect(quota_definition.errors.on(:memory_limit)).to include(:less_than_zero)
+          expect(quota_definition.errors.on(:memory_limit)).to include(:invalid_memory_limit)
 
-          quota_definition.memory_limit = 0
+          quota_definition.memory_limit = -1
           expect(quota_definition).to be_valid
         end
 
-        it 'instance_memory_limit cannot be less than -1' do
+        it 'instance_memory_limit cannot be less than -1 ("unlimited")' do
           quota_definition.instance_memory_limit = -2
           expect(quota_definition).not_to be_valid
           expect(quota_definition.errors.on(:instance_memory_limit)).to include(:invalid_instance_memory_limit)
@@ -42,7 +42,7 @@ module VCAP::CloudController
         end
       end
 
-      it 'total_private_domains cannot be less than -1' do
+      it 'total_private_domains cannot be less than -1 ("unlimited")' do
         quota_definition.total_private_domains = -2
         expect(quota_definition).not_to be_valid
         expect(quota_definition.errors.on(:total_private_domains)).to include(:invalid_total_private_domains)
@@ -75,7 +75,7 @@ module VCAP::CloudController
           expect(quota_definition).to be_valid
         end
 
-        it 'total_reserved_route_ports cannot be less than -1' do
+        it 'total_reserved_route_ports cannot be less than -1 ("unlimited")' do
           quota_definition.total_reserved_route_ports = -2
           expect(quota_definition).not_to be_valid
           expect(quota_definition.errors.on(:total_reserved_route_ports)).to include(err_msg)
@@ -101,7 +101,7 @@ module VCAP::CloudController
         end
       end
 
-      it 'app_instance_limit cannot be less than -1' do
+      it 'app_instance_limit cannot be less than -1 ("unlimited")' do
         quota_definition.app_instance_limit = -2
         expect(quota_definition).not_to be_valid
         expect(quota_definition.errors.on(:app_instance_limit)).to include(:invalid_app_instance_limit)
@@ -110,7 +110,7 @@ module VCAP::CloudController
         expect(quota_definition).to be_valid
       end
 
-      it 'app_task_limit cannot be less than -1' do
+      it 'app_task_limit cannot be less than -1 ("unlimited")' do
         quota_definition.app_task_limit = -2
         expect(quota_definition).not_to be_valid
         expect(quota_definition.errors.on(:app_task_limit)).to include(:invalid_app_task_limit)
@@ -120,7 +120,7 @@ module VCAP::CloudController
       end
     end
 
-    it 'total_service_keys cannot be less than -1' do
+    it 'total_service_keys cannot be less than -1 ("unlimited")' do
       quota_definition.total_service_keys = -2
       expect(quota_definition).not_to be_valid
       expect(quota_definition.errors.on(:total_service_keys)).to include(:invalid_total_service_keys)
