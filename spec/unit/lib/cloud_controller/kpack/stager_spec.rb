@@ -52,6 +52,7 @@ module Kpack
             namespace: 'namespace',
             labels: {
               Stager::APP_GUID_LABEL_KEY => package.app.guid,
+              Stager::BUILD_GUID_LABEL_KEY => build.guid,
             }
           },
           spec: {
