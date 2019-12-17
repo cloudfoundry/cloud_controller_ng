@@ -221,6 +221,18 @@ module VCAP::CloudController
           expect(message.requirements.third.values).to contain_exactly('fork', 'spoon')
         end
       end
+
+      context 'input form' do
+        it 'handles ruby strings' do
+          message = list_message_klass.from_params('label_selector' => 'example.com/foo==bar')
+          expect(message.requirements.first.key).to eq('example.com/foo')
+        end
+
+        it 'handles ruby symbols' do
+          message = list_message_klass.from_params(label_selector: 'example.com/foo==bar')
+          expect(message.requirements.first.key).to eq('example.com/foo')
+        end
+      end
     end
   end
 end

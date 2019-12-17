@@ -144,6 +144,51 @@ module VCAP::CloudController
             expect(brokers).to be_empty
           end
         end
+
+        context 'when all filters are provided' do
+          let(:permitted_space_guids) { [space_1.guid] }
+          let(:filters) do
+            {
+              space_guids: [space_2.guid],
+              label_selector: 'dog in (poodle,scooby-doo)',
+              names: [space_scoped_broker_1.name],
+            }
+          end
+
+          it 'includes no brokers' do
+            brokers = fetcher.fetch(message: message, permitted_space_guids: permitted_space_guids).all
+            expect(brokers).to be_empty
+          end
+        end
+      end
+
+      context 'when filtering with a label_selector' do
+        let(:filters) { { 'label_selector' => 'dog in (chihuahua,scooby-doo)' } }
+
+        before do
+          ServiceBrokerLabelModel.create(service_broker: broker, key_name: 'dog', value: 'scooby-doo')
+          ServiceBrokerLabelModel.create(service_broker: space_scoped_broker_1, key_name: 'dog', value: 'poodle')
+        end
+
+        it 'includes the relevant brokers' do
+          brokers = fetcher.fetch(message: message).all
+          expect(brokers).to contain_exactly(broker)
+        end
+
+        context 'when combining label_selector with other filters' do
+          let(:filters) do
+            {
+              space_guids: [space_1.guid, space_2.guid],
+              label_selector: 'dog in (poodle,scooby-doo)',
+              names: [space_scoped_broker_1.name],
+            }
+          end
+
+          it 'includes the relevant brokers' do
+            brokers = fetcher.fetch(message: message).all
+            expect(brokers).to contain_exactly(space_scoped_broker_1)
+          end
+        end
       end
     end
   end

@@ -2,7 +2,7 @@ module VCAP::CloudController
   class ServiceBrokerListFetcher
     def fetch(message:, permitted_space_guids: nil)
       if permitted_space_guids
-        dataset = ServiceBroker.dataset.where(space: spaces_from(permitted_space_guids))
+        dataset = ServiceBroker.dataset.where(Sequel[:service_brokers][:space_id] => spaces_from(permitted_space_guids))
         return filter(message, dataset)
       end
 
@@ -15,7 +15,7 @@ module VCAP::CloudController
     def filter(message, dataset)
       if message.requested?(:space_guids)
         dataset = dataset.where(
-          space: spaces_from(message.space_guids)
+          Sequel[:service_brokers][:space_id] => spaces_from(message.space_guids)
         )
       end
 
@@ -25,11 +25,20 @@ module VCAP::CloudController
         )
       end
 
+      if message.requested?(:label_selector)
+        dataset = LabelSelectorQueryGenerator.add_selector_queries(
+          label_klass: ServiceBrokerLabelModel,
+          resource_dataset: dataset,
+          requirements: message.requirements,
+          resource_klass: ServiceBroker,
+        )
+      end
+
       dataset
     end
 
     def spaces_from(space_guids)
-      Space.where(guid: space_guids)
+      Space.where(guid: space_guids).select(:id)
     end
   end
 end
