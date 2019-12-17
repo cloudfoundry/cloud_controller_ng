@@ -20,7 +20,7 @@ RSpec.resource 'Apps', type: [:api, :legacy_api] do
   post '/v2/apps/:guid/restage' do
     example 'Restage an App' do
       client.post "/v2/apps/#{process.guid}/restage", {}, headers
-      expect(status).to eq(201), parsed_response
+      expect(status).to eq(201), parsed_response.to_s
     end
   end
 end
