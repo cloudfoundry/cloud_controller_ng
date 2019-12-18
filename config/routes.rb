@@ -249,4 +249,8 @@ Rails.application.routes.draw do
 
   # info
   get '/info', to: 'info#show'
+
+  namespace :internal do
+    patch '/builds/:guid', to: 'builds#update'
+  end
 end
