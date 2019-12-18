@@ -1,0 +1,46 @@
+### Create an Organization Quota
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/organization_quotas" \
+  -X POST \
+  -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
+  -d '{
+        "name": "production"
+      }'
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 201 Created
+Content-Type: application/json
+
+<%= yield_content :single_organization_quota %>
+```
+
+
+This endpoint creates a new organization quota, but does not assign it to a specific organization.
+
+To create an organization quota you must be an admin.
+
+#### Definition
+`POST /v3/organization_quotas`
+
+#### Required parameters
+
+Name | Type | Description
+---- | ---- | -----------
+**name** | _string_ | Name of the quota.
+
+#### Permitted organization_quotas
+
+Role | Notes
+--- | ---
+Admin |

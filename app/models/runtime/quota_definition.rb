@@ -2,6 +2,12 @@ module VCAP::CloudController
   class QuotaDefinition < Sequel::Model
     UNLIMITED = -1
 
+    # Default values
+    DEFAULT_NON_BASIC_SERVICES_ALLOWED = true
+    DEFAULT_MEMORY_LIMIT = UNLIMITED
+    DEFAULT_TOTAL_SERVICES = UNLIMITED
+    DEFAULT_TOTAL_ROUTES = UNLIMITED
+
     one_to_many :organizations
 
     export_attributes :name, :non_basic_services_allowed, :total_services, :total_routes,

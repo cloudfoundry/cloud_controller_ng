@@ -137,6 +137,9 @@ Rails.application.routes.draw do
   patch '/organizations/:guid/relationships/default_isolation_segment', to: 'organizations_v3#update_default_isolation_segment'
   delete '/organizations/:guid', to: 'organizations_v3#destroy'
 
+  # organization_quotas
+  post '/organization_quotas', to: 'organization_quotas#create'
+
   # resource_matches
   post '/resource_matches', to: 'resource_matches#create'
 

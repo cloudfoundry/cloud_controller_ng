@@ -17,6 +17,7 @@ includes:
   - api_resources/isolation_segments
   - api_resources/jobs
   - api_resources/organizations
+  - api_resources/organization_quotas
   - api_resources/packages
   - api_resources/processes
   - api_resources/resource_matches
@@ -234,6 +235,8 @@ includes:
   - experimental_resources/deployments/list
   - experimental_resources/deployments/update
   - experimental_resources/deployments/cancel
+  - experimental_resources/organization_quotas/header
+  - experimental_resources/organization_quotas/create
   - experimental_resources/revisions/header
   - experimental_resources/revisions/object
   - experimental_resources/revisions/get
