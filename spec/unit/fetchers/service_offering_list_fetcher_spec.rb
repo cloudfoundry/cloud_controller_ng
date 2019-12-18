@@ -49,6 +49,20 @@ module VCAP::CloudController
           expect(service_offerings).to contain_exactly(service_offering_1, service_offering_2)
         end
       end
+
+      context 'uniqueness of service offerings' do
+        let(:service_offering) { Service.make }
+
+        before do
+          2.times { ServicePlan.make(service: service_offering, public: true, active: true) }
+        end
+
+        it 'de-duplicates service offerings' do
+          service_offerings = ServiceOfferingListFetcher.new.fetch_public.all
+
+          expect(service_offerings).to contain_exactly(service_offering)
+        end
+      end
     end
 
     describe '#fetch' do
