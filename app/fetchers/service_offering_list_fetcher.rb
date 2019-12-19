@@ -8,6 +8,7 @@ module VCAP::CloudController
       Service.dataset.
         join(:service_plans, service_id: Sequel[:services][:id]).
         where { Sequel[:service_plans][:public] =~ true }.
+        group(Sequel[:services][:id]).
         select_all(:services)
     end
 
