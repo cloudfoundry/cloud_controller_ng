@@ -109,6 +109,7 @@ RSpec.describe 'V3 service brokers' do
           per_page:   '10',
           page: 2,
           order_by:   'updated_at',
+          label_selector: 'foo==bar',
         }
       end
     end
@@ -276,23 +277,31 @@ RSpec.describe 'V3 service brokers' do
             expect_filtered_brokers('order_by=-name', [global_service_broker, space_scoped_service_broker])
           end
         end
+      end
 
-        context 'when requesting with a space guid filter' do
-          it 'returns 200 OK and a body containing one broker matching the space guid filter' do
-            expect_filtered_brokers("space_guids=#{space.guid}", [space_scoped_service_broker])
-          end
+      context 'when requesting with a space guid filter' do
+        it 'returns 200 OK and a body containing one broker matching the space guid filter' do
+          expect_filtered_brokers("space_guids=#{space.guid}", [space_scoped_service_broker])
         end
+      end
 
-        context 'when requesting with a space guid filter for another space guid' do
-          it 'returns 200 OK and a body containing no brokers' do
-            expect_filtered_brokers('space_guids=random-space-guid', [])
-          end
+      context 'when requesting with a space guid filter for another space guid' do
+        it 'returns 200 OK and a body containing no brokers' do
+          expect_filtered_brokers('space_guids=random-space-guid', [])
         end
+      end
 
-        context 'when requesting with a names filter' do
-          it 'returns 200 OK and a body containing one broker matching the names filter' do
-            expect_filtered_brokers("names=#{global_service_broker.name}", [global_service_broker])
-          end
+      context 'when requesting with a names filter' do
+        it 'returns 200 OK and a body containing one broker matching the names filter' do
+          expect_filtered_brokers("names=#{global_service_broker.name}", [global_service_broker])
+        end
+      end
+
+      context 'when filtering on labels' do
+        it 'filters by label selectors' do
+          VCAP::CloudController::ServiceBrokerLabelModel.create(key_name: 'boomerang', value: 'gel', service_broker: global_service_broker)
+
+          expect_filtered_brokers('label_selector=boomerang=gel', [global_service_broker])
         end
       end
     end

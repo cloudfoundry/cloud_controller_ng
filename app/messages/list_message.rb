@@ -79,7 +79,7 @@ module VCAP::CloudController
       end
 
       message = new(opts.symbolize_keys)
-      message.requirements = parse_label_selector(params['label_selector']) if message.requested?(:label_selector)
+      message.requirements = parse_label_selector(opts.symbolize_keys[:label_selector]) if message.requested?(:label_selector)
 
       message
     end
