@@ -45,7 +45,7 @@ module VCAP::CloudController
     def decode_token_with_symmetric_key(auth_token)
       last_error = nil
 
-      thekeys = [ symmetric_key, symmetric_key2 ]
+      thekeys = [symmetric_key, symmetric_key2]
 
       thekeys.each do |key|
         return decode_token_with_key(auth_token, skey: key)
