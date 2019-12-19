@@ -1,4 +1,4 @@
-require 'messages/list_message'
+require 'messages/metadata_list_message'
 require 'messages/validators/label_selector_requirement_validator'
 
 module VCAP::CloudController
