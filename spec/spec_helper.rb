@@ -152,8 +152,6 @@ each_run_block = proc do
 
       VCAP::CloudController::SecurityContext.clear
       allow_any_instance_of(VCAP::CloudController::UaaTokenDecoder).to receive(:uaa_issuer).and_return(UAAIssuer::ISSUER)
-      allow(VCAP::CloudController::TelemetryLogger).to receive(:v2_emit)
-      allow(VCAP::CloudController::TelemetryLogger).to receive(:v3_emit)
     end
 
     rspec_config.around :each do |example|

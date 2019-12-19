@@ -554,6 +554,45 @@ RSpec.describe 'Apps' do
       )
     end
 
+    context 'telemetry' do
+      let(:logger_spy) { spy('logger') }
+
+      before do
+        allow(VCAP::CloudController::TelemetryLogger).to receive(:logger).and_return(logger_spy)
+      end
+
+      let(:post_params) do
+        stack = VCAP::CloudController::Stack.make
+        {
+          name:             'maria',
+          space_guid:       space.guid,
+          stack_guid:       stack.guid,
+          environment_json: { 'KEY' => 'val' },
+        }
+      end
+
+      it 'should log the required fields when the app is created' do
+        Timecop.freeze do
+          post '/v2/apps', post_params.to_json, headers_for(user)
+
+          parsed_response = MultiJson.load(last_response.body)
+          app_guid = parsed_response['metadata']['guid']
+
+          expected_json = {
+            'telemetry-source' => 'cloud_controller_ng',
+            'telemetry-time' => Time.now.to_datetime.rfc3339,
+            'create-app' => {
+              'api-version' => 'v2',
+              'app-id' => Digest::SHA256.hexdigest(app_guid),
+              'user-id' => Digest::SHA256.hexdigest(user.guid),
+            }
+          }
+          expect(last_response.status).to eq(201), last_response.body
+          expect(logger_spy).to have_received(:info).with(JSON.generate(expected_json))
+        end
+      end
+    end
+
     describe 'docker apps' do
       it 'creates the app' do
         post_params = MultiJson.dump({
@@ -632,15 +671,16 @@ RSpec.describe 'Apps' do
         command:          'hello_world',
       )
     }
-
-    it 'updates an app' do
-      update_params = MultiJson.dump({
+    let(:update_params) do
+      MultiJson.dump({
         name:                   'maria',
         environment_json:       { 'RAILS_ENV' => 'production' },
         state:                  'STARTED',
         detected_start_command: 'argh'
       })
+    end
 
+    it 'updates an app' do
       put "/v2/apps/#{process.guid}", update_params, headers_for(user)
 
       process.reload
@@ -698,6 +738,105 @@ RSpec.describe 'Apps' do
           }
         }
       )
+    end
+
+    context 'telemetry' do
+      context 'update app' do
+        it 'should log the required fields' do
+          Timecop.freeze do
+            expected_json = {
+              'telemetry-source' => 'cloud_controller_ng',
+              'telemetry-time' => Time.now.to_datetime.rfc3339,
+              'update-app' => {
+                'api-version' => 'v2',
+                'app-id' => Digest::SHA256.hexdigest(process.app.guid),
+                'user-id' => Digest::SHA256.hexdigest(user.guid),
+              }
+            }
+
+            expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
+
+            put "/v2/apps/#{process.app.guid}", update_params, headers_for(user)
+
+            expect(last_response.status).to eq(201), last_response.body
+          end
+        end
+      end
+
+      context 'scaling app' do
+        let(:instances) { process.instances }
+        let(:memory) { process.memory }
+        let(:disk_quota) { process.disk_quota }
+        let(:expected_scale_json) do
+          {
+            'telemetry-source' => 'cloud_controller_ng',
+            'telemetry-time'   => Time.now.to_datetime.rfc3339,
+            'scale-app' => {
+              'api-version'    => 'v2',
+              'instance-count' => instances,
+              'memory-in-mb'   => memory,
+              'disk-in-mb'     => disk_quota,
+              'process-type'   => 'web',
+              'app-id'         => Digest::SHA256.hexdigest(process.app.guid),
+              'user-id'        => Digest::SHA256.hexdigest(user.guid),
+            }
+          }
+        end
+
+        context 'scaling instances' do
+          let(:instances) { 5 }
+          let(:update_params) do
+            MultiJson.dump({ instances: instances })
+          end
+
+          it 'should log the required fields' do
+            Timecop.freeze do
+              expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(anything).once
+              expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_scale_json))
+
+              put "/v2/apps/#{process.app.guid}", update_params, headers_for(user)
+
+              expect(last_response.status).to eq(201), last_response.body
+            end
+          end
+        end
+
+        context 'scaling memory' do
+          let(:memory) { 532 }
+          let(:update_params) do
+            MultiJson.dump({ memory: memory })
+          end
+
+          it 'should log the required fields' do
+            Timecop.freeze do
+              expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(anything).once
+              expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_scale_json))
+
+              put "/v2/apps/#{process.app.guid}", update_params, headers_for(user)
+
+              expect(last_response.status).to eq(201), last_response.body
+            end
+          end
+        end
+
+        context 'scaling disk' do
+          let(:disk_quota) { 1010 }
+          let(:update_params) do
+            MultiJson.dump({ disk_quota: disk_quota })
+          end
+
+          it 'should log the required fields' do
+            Timecop.freeze do
+              expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(anything).once
+              expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_scale_json))
+
+              put "/v2/apps/#{process.app.guid}", update_params, headers_for(user)
+
+              expect(last_response.status).to eq(201), last_response.body
+            end
+          end
+        end
+      end
     end
 
     context 'when process memory is being decreased and the new memory allocation is lower than memory of associated sidecars' do
@@ -901,6 +1040,27 @@ RSpec.describe 'Apps' do
       parsed_response = MultiJson.load(last_response.body)
 
       expect(parsed_response['error_code']).to eq 'CF-AppNotFound'
+    end
+
+    context 'telemetry' do
+      it 'should log the required fields when the app is deleted' do
+        Timecop.freeze do
+          expected_json = {
+            'telemetry-source' => 'cloud_controller_ng',
+            'telemetry-time' => Time.now.to_datetime.rfc3339,
+            'delete-app' => {
+              'api-version' => 'v2',
+              'app-id' => Digest::SHA256.hexdigest(process.app.guid),
+              'user-id' => Digest::SHA256.hexdigest(user.guid),
+            }
+          }
+          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
+
+          delete "/v2/apps/#{process.app.guid}", nil, headers_for(user)
+
+          expect(last_response.status).to eq(204), last_response.body
+        end
+      end
     end
 
     describe 'docker apps' do
@@ -1249,6 +1409,56 @@ RSpec.describe 'Apps' do
         }
       )
     end
+
+    context 'telemetry' do
+      it 'should log the required fields when the app is restaged' do
+        Timecop.freeze do
+          expected_json = {
+            'telemetry-source' => 'cloud_controller_ng',
+            'telemetry-time' => Time.now.to_datetime.rfc3339,
+            'restage-app' => {
+              'api-version' => 'v2',
+              'lifecycle' => 'buildpack',
+              'buildpacks' => process.app.buildpack_lifecycle_data.buildpacks,
+              'stack' => process.app.buildpack_lifecycle_data.stack,
+              'app-id' => Digest::SHA256.hexdigest(process.app.guid),
+              'user-id' => Digest::SHA256.hexdigest(user.guid),
+            }
+          }
+          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(anything).once
+          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
+          post "/v2/apps/#{process.app.guid}/restage", nil, headers_for(user)
+          expect(last_response.status).to eq(201), last_response.body
+        end
+      end
+
+      context 'docker app' do
+        let(:process) { VCAP::CloudController::ProcessModelFactory.make(name: 'maria', space: space, docker_image: 'some-image') }
+        before do
+          VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: true, error_message: nil)
+        end
+        it 'should log the required fields when the app is restaged' do
+          Timecop.freeze do
+            expected_json = {
+              'telemetry-source' => 'cloud_controller_ng',
+              'telemetry-time' => Time.now.to_datetime.rfc3339,
+              'restage-app' => {
+                'api-version' => 'v2',
+                'lifecycle' => 'docker',
+                'buildpacks' => [],
+                'stack' => nil,
+                'app-id' => Digest::SHA256.hexdigest(process.app.guid),
+                'user-id' => Digest::SHA256.hexdigest(user.guid),
+              }
+            }
+            expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(anything).once
+            expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
+            post "/v2/apps/#{process.app.guid}/restage", nil, headers_for(user)
+            expect(last_response.status).to eq(201), last_response.body
+          end
+        end
+      end
+    end
   end
 
   describe 'PUT /v2/apps/:guid/bits' do
@@ -1265,21 +1475,46 @@ RSpec.describe 'Apps' do
       TestConfig.config[:directories][:tmpdir] = File.dirname(valid_zip.path)
     end
 
-    it 'uploads the application bits' do
-      upload_params = {
+    let(:upload_params) do
+      {
         application: valid_zip,
         resources:   [
           { fn: 'path/to/content.txt', size: 123, sha1: 'b907173290db6a155949ab4dc9b2d019dea0c901' },
           { fn: 'path/to/code.jar', size: 123, sha1: 'ff84f89760317996b9dd180ab996b079f418396f' }
         ].to_json,
       }
+    end
 
+    it 'uploads the application bits' do
       put "/v2/apps/#{process.guid}/bits?async=true", upload_params, headers_for(user)
 
       parsed_response = MultiJson.load(last_response.body)
 
       expect(last_response.status).to eq 201
       expect(parsed_response['entity']['status']).to eq 'queued'
+    end
+
+    context 'telemetry' do
+      let(:expected_json) do
+        {
+          'telemetry-source' => 'cloud_controller_ng',
+          'telemetry-time'   => Time.now.to_datetime.rfc3339,
+          'upload-package' => {
+            'api-version'    => 'v2',
+            'app-id'         => Digest::SHA256.hexdigest(process.app.guid),
+            'user-id'        => Digest::SHA256.hexdigest(user.guid),
+          }
+        }
+      end
+
+      it 'should log the required fields' do
+        Timecop.freeze do
+          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
+          put "/v2/apps/#{process.guid}/bits?async=true", upload_params, headers_for(user)
+
+          expect(last_response.status).to eq(201), last_response.body
+        end
+      end
     end
   end
 

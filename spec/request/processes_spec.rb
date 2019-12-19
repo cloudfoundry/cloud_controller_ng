@@ -9,21 +9,17 @@ RSpec.describe 'Processes' do
   let(:developer_headers) { headers_for(developer, user_name: user_name) }
   let(:user_name) { 'ProcHudson' }
   let(:build_client) { instance_double(HTTPClient, post: nil) }
-  let(:metadata) { {
-    labels: {
-      release: 'stable',
-      'seriouseats.com/potato' => 'mashed'
-    },
-    annotations: { 'checksum' => 'SHA' },
-  }
-  }
-  let(:rails_logger) { instance_double(ActiveSupport::Logger, info: nil) }
-
+  let(:metadata) do
+    {
+      labels: {
+        release: 'stable',
+        'seriouseats.com/potato' => 'mashed'
+      },
+      annotations: { 'checksum' => 'SHA' },
+    }
+  end
   before do
     allow_any_instance_of(::Diego::Client).to receive(:build_client).and_return(build_client)
-    allow(ActiveSupport::Logger).to receive(:new).and_return(rails_logger)
-    allow(VCAP::CloudController::TelemetryLogger).to receive(:v3_emit).and_call_original
-    VCAP::CloudController::TelemetryLogger.init('fake-log-path')
   end
 
   describe 'GET /v3/processes' do
@@ -763,15 +759,16 @@ RSpec.describe 'Processes' do
       expect(process.memory).to eq(1024)
     end
     context 'telemetry' do
-      let(:process) { VCAP::CloudController::ProcessModel.make(
-        :process,
-        app:        app_model,
-        type:       'web',
-        instances:  2,
-        memory:     1024,
-        disk_quota: 1024,
-        command:    'rackup',
-      )
+      let(:process) {
+        VCAP::CloudController::ProcessModel.make(
+          :process,
+          app:        app_model,
+          type:       'web',
+          instances:  2,
+          memory:     1024,
+          disk_quota: 1024,
+          command:    'rackup',
+        )
       }
 
       let(:scale_request) do {
@@ -780,14 +777,9 @@ RSpec.describe 'Processes' do
           disk_in_mb:   20,
         }
       end
+
       it 'should log the required fields when the process gets scaled' do
         Timecop.freeze do
-          post "/v3/processes/#{process.guid}/actions/scale", scale_request.to_json, developer_headers
-          expect(last_response.status).to eq(202)
-
-          parsed_response = MultiJson.load(last_response.body)
-          app_guid = parsed_response['relationships']['app']['data']['guid']
-
           expected_json = {
             'telemetry-source' => 'cloud_controller_ng',
             'telemetry-time' => Time.now.to_datetime.rfc3339,
@@ -797,12 +789,14 @@ RSpec.describe 'Processes' do
               'memory-in-mb' => 10,
               'disk-in-mb' => 20,
               'process-type' => 'web',
-              'app-id' => Digest::SHA256.hexdigest(app_guid),
+              'app-id' => Digest::SHA256.hexdigest(process.app.guid),
               'user-id' => Digest::SHA256.hexdigest(developer.guid),
             }
           }
+          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
+          post "/v3/processes/#{process.guid}/actions/scale", scale_request.to_json, developer_headers
+
           expect(last_response.status).to eq(202), last_response.body
-          expect(rails_logger).to have_received(:info).with(JSON.generate(expected_json))
         end
       end
     end
@@ -1275,15 +1269,10 @@ RSpec.describe 'Processes' do
         }
       })
     end
+
     context 'telemetry' do
       it 'should log the required fields when the process gets scaled' do
         Timecop.freeze do
-          post "/v3/apps/#{app_model.guid}/processes/web/actions/scale", scale_request.to_json, developer_headers
-          expect(last_response.status).to eq(202)
-
-          parsed_response = MultiJson.load(last_response.body)
-          app_guid = parsed_response['relationships']['app']['data']['guid']
-
           expected_json = {
             'telemetry-source' => 'cloud_controller_ng',
             'telemetry-time' => Time.now.to_datetime.rfc3339,
@@ -1293,12 +1282,15 @@ RSpec.describe 'Processes' do
               'memory-in-mb' => 10,
               'disk-in-mb' => 20,
               'process-type' => 'web',
-              'app-id' => Digest::SHA256.hexdigest(app_guid),
+              'app-id' => Digest::SHA256.hexdigest(app_model.guid),
               'user-id' => Digest::SHA256.hexdigest(developer.guid),
             }
           }
+          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
+
+          post "/v3/apps/#{app_model.guid}/processes/web/actions/scale", scale_request.to_json, developer_headers
+
           expect(last_response.status).to eq(202), last_response.body
-          expect(rails_logger).to have_received(:info).with(JSON.generate(expected_json))
         end
       end
     end

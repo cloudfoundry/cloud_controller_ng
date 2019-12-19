@@ -153,6 +153,14 @@ module VCAP::CloudController
         UserAuditInfo.from_context(SecurityContext),
         recursive_delete?)
 
+      TelemetryLogger.v2_emit(
+        'delete-app',
+        {
+          'app-id' => process.app.guid,
+          'user-id' => current_user.guid,
+        }
+      )
+
       [HTTP::NO_CONTENT, nil]
     end
 
@@ -284,6 +292,30 @@ module VCAP::CloudController
 
       after_update(process)
 
+      TelemetryLogger.v2_emit(
+        'update-app',
+        {
+          'app-id' => process.app.guid,
+          'user-id' => current_user.guid,
+        }
+      )
+
+      if %w(instances memory disk_quota).any? { |k| @request_attrs.key?(k) }
+        TelemetryLogger.v2_emit(
+          'scale-app',
+          {
+            'app-id' => process.app.guid,
+            'user-id' => current_user.guid,
+          },
+          {
+            'instance-count' => process.instances,
+            'memory-in-mb' => process.memory,
+            'disk-in-mb' => process.disk_quota,
+            'process-type' => process.type,
+          }
+        )
+      end
+
       [HTTP::CREATED, object_renderer.render_json(self.class, process, @opts)]
     rescue PackageCreate::InvalidPackage => e
       unprocessable!(e.message)
@@ -304,6 +336,14 @@ module VCAP::CloudController
         process.space,
         user_audit_info,
         request_attrs)
+
+      TelemetryLogger.v2_emit(
+        'create-app',
+        {
+          'app-id' => process.app.guid,
+          'user-id' => current_user.guid,
+        }
+      )
 
       [
         HTTP::CREATED,

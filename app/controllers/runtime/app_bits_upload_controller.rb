@@ -63,6 +63,12 @@ module VCAP::CloudController
         result = [HTTP::CREATED, '{}']
       end
       record_upload_bits(package)
+      TelemetryLogger.v2_emit(
+        'upload-package',
+        {
+          'app-id' => process.app.guid,
+          'user-id' => current_user.guid,
+        })
       result
     end
 

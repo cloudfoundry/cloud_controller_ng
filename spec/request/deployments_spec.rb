@@ -13,15 +13,10 @@ RSpec.describe 'Deployments' do
   let(:user_email) { Sham.email }
   let(:user_name) { 'some-username' }
   let(:metadata) { { 'labels' => {}, 'annotations' => {} } }
-  let(:rails_logger) { instance_double(ActiveSupport::Logger, info: nil) }
 
   before do
     TestConfig.override(temporary_disable_deployments: false)
     app_model.update(droplet_guid: droplet.guid)
-
-    allow(ActiveSupport::Logger).to receive(:new).and_return(rails_logger)
-    allow(VCAP::CloudController::TelemetryLogger).to receive(:v3_emit).and_call_original
-    VCAP::CloudController::TelemetryLogger.init('fake-log-path')
   end
 
   describe 'POST /v3/deployments' do
@@ -520,6 +515,12 @@ RSpec.describe 'Deployments' do
         }
       end
 
+      let(:logger_spy) { spy('logger') }
+
+      before do
+        allow(VCAP::CloudController::TelemetryLogger).to receive(:logger).and_return(logger_spy)
+      end
+
       it 'should log the required fields when a deployment is created' do
         Timecop.freeze do
           post '/v3/deployments', create_request.to_json, user_header
@@ -534,8 +535,8 @@ RSpec.describe 'Deployments' do
               'user-id' => Digest::SHA256.hexdigest(user.guid),
             }
           }
+          expect(logger_spy).to have_received(:info).with(JSON.generate(expected_json))
           expect(last_response.status).to eq(201), last_response.body
-          expect(rails_logger).to have_received(:info).with(JSON.generate(expected_json))
         end
       end
     end

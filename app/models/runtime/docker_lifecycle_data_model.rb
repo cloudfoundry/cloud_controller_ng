@@ -26,6 +26,10 @@ module VCAP::CloudController
       true
     end
 
+    def stack
+      nil
+    end
+
     def to_hash
       {}
     end

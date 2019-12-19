@@ -9,15 +9,22 @@ module VCAP::CloudController
       subject(:action) { AppStage.new(stagers: stagers) }
 
       describe '#stage' do
-        let(:build_create) { instance_double(BuildCreate, create_and_stage_without_event: nil, staging_response: 'staging-response') }
+        let(:buildpack) { BuildpackLifecycleBuildpackModel.make(:custom_buildpack, buildpack_url: 'http://github.com/myorg/awesome-buildpack') }
+        let(:buildpack_lifecycle_data) { BuildpackLifecycleDataModel.make(stack: 'my_stack', buildpack_lifecycle_buildpack_guids: [buildpack.guid]) }
+
+        let(:app) { AppModel.make }
+
+        let(:package) { PackageModel.make(app: app, state: PackageModel::READY_STATE) }
+        let(:build) { BuildModel.make(:buildpack, app: app, package: package, created_by_user_guid: 'user-guid') }
+        let(:build_create) { instance_double(BuildCreate, create_and_stage_without_event: build, staging_response: 'staging-response') }
 
         before do
           allow(BuildCreate).to receive(:new).with(memory_limit_calculator: an_instance_of(NonQuotaValidatingStagingMemoryCalculator)).and_return(build_create)
+          build.buildpack_lifecycle_data = buildpack_lifecycle_data
         end
 
         it 'delegates to BuildCreate with a BuildCreateMessage based on the process' do
-          process = ProcessModel.make(memory: 765, disk_quota: 1234)
-          package = PackageModel.make(app: process.app, state: PackageModel::READY_STATE)
+          process = ProcessModel.make(memory: 765, disk_quota: 1234, app: app)
           process.reload
 
           action.stage(process)
@@ -78,7 +85,7 @@ module VCAP::CloudController
           expect(build_create).not_to have_received(:create_and_stage_without_event)
         end
 
-        describe 'handling BuildCreate errors' do
+        context 'handling BuildCreate errors' do
           let(:process) { ProcessModelFactory.make }
 
           context 'when BuildError error is raised' do
@@ -132,6 +139,53 @@ module VCAP::CloudController
               expect { action.stage(process) }.to raise_error(CloudController::Errors::ApiError, /too much disk requested/) do |err|
                 expect(err.details.name).to eq('AppInvalid')
               end
+            end
+          end
+        end
+
+        context 'telemetry' do
+          let(:user_audit_info) do
+            UserAuditInfo.new(
+              user_email: 'my@email.com',
+              user_name:  'user name',
+              user_guid:  'userguid'
+            )
+          end
+          let(:logger_spy) { spy('logger') }
+
+          before do
+            allow(VCAP::CloudController::TelemetryLogger).to receive(:logger).and_return(logger_spy)
+            allow(UserAuditInfo).to receive(:from_context).and_return(user_audit_info)
+            allow(BuildCreate).to receive(:new).and_call_original
+            allow_any_instance_of(Diego::Stager).to receive(:stage).and_return 'staging-complete'
+          end
+
+          it 'logs build creates' do
+            Timecop.freeze do
+              buildpack = BuildpackLifecycleBuildpackModel.make(:custom_buildpack, buildpack_url: 'http://github.com/myorg/awesome-buildpack')
+              buildpack_lifecycle_data = BuildpackLifecycleDataModel.make(stack: 'my_stack', buildpack_lifecycle_buildpack_guids: [buildpack.guid])
+
+              app = AppModel.make
+              app.buildpack_lifecycle_data = buildpack_lifecycle_data
+              app.save
+              process = ProcessModel.make(memory: 765, disk_quota: 1234, app: app)
+              PackageModel.make(app: process.app, state: PackageModel::READY_STATE)
+
+              action.stage(process)
+              expected_json = {
+                'telemetry-source' => 'cloud_controller_ng',
+                'telemetry-time' => Time.now.to_datetime.rfc3339,
+                'create-build' => {
+                  'api-version' => 'v2',
+                  'lifecycle' =>  'buildpack',
+                  'buildpacks' =>  ['http://github.com/myorg/awesome-buildpack'],
+                  'stack' =>  'my_stack',
+                  'app-id' =>  Digest::SHA256.hexdigest(process.app.guid),
+                  'build-id' =>  Digest::SHA256.hexdigest(process.latest_build.guid),
+                  'user-id' =>  Digest::SHA256.hexdigest('userguid'),
+                }
+              }
+              expect(logger_spy).to have_received(:info).with(JSON.generate(expected_json))
             end
           end
         end

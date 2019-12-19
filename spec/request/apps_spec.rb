@@ -11,14 +11,10 @@ RSpec.describe 'Apps' do
   let(:stack) { VCAP::CloudController::Stack.make }
   let(:user_email) { Sham.email }
   let(:user_name) { 'some-username' }
-  let(:rails_logger) { instance_double(ActiveSupport::Logger, info: nil) }
 
   before do
     space.organization.add_user(user)
     space.add_developer(user)
-    allow(ActiveSupport::Logger).to receive(:new).and_return(rails_logger)
-    VCAP::CloudController::TelemetryLogger.init('fake-log-path')
-    allow(VCAP::CloudController::TelemetryLogger).to receive(:v3_emit).and_call_original
   end
 
   describe 'POST /v3/apps' do
@@ -136,6 +132,12 @@ RSpec.describe 'Apps' do
     end
 
     context 'telemetry' do
+      let(:logger_spy) { spy('logger') }
+
+      before do
+        allow(VCAP::CloudController::TelemetryLogger).to receive(:logger).and_return(logger_spy)
+      end
+
       it 'should log the required fields when the app is created' do
         Timecop.freeze do
           post '/v3/apps', create_request.to_json, user_header
@@ -151,9 +153,9 @@ RSpec.describe 'Apps' do
               'app-id' => Digest::SHA256.hexdigest(app_guid),
               'user-id' => Digest::SHA256.hexdigest(user.guid),
             }
-          }
+          }.to_json
+          expect(logger_spy).to have_received(:info).with(expected_json)
           expect(last_response.status).to eq(201), last_response.body
-          expect(rails_logger).to have_received(:info).with(JSON.generate(expected_json))
         end
       end
     end
@@ -1492,26 +1494,23 @@ RSpec.describe 'Apps' do
       }
       expect(event.metadata['request']).to eq(metadata_request)
     end
+
     context 'telemetry' do
       it 'should log the required fields when the app gets updated' do
         Timecop.freeze do
-          patch "/v3/apps/#{app_model.guid}", update_request.to_json, user_header
-          expect(last_response.status).to eq(200)
-
-          parsed_response = MultiJson.load(last_response.body)
-          app_guid = parsed_response['guid']
-
           expected_json = {
             'telemetry-source' => 'cloud_controller_ng',
             'telemetry-time' => Time.now.to_datetime.rfc3339,
             'update-app' => {
               'api-version' => 'v3',
-              'app-id' => Digest::SHA256.hexdigest(app_guid),
+              'app-id' => Digest::SHA256.hexdigest(app_model.guid),
               'user-id' => Digest::SHA256.hexdigest(user.guid),
             }
           }
+          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
+
+          patch "/v3/apps/#{app_model.guid}", update_request.to_json, user_header
           expect(last_response.status).to eq(200), last_response.body
-          expect(rails_logger).to have_received(:info).with(JSON.generate(expected_json))
         end
       end
     end
@@ -1603,22 +1602,19 @@ RSpec.describe 'Apps' do
         app_model.save
 
         Timecop.freeze do
-          post "/v3/apps/#{app_model.guid}/actions/start", nil, user_header
-
-          parsed_response = MultiJson.load(last_response.body)
-          app_guid = parsed_response['guid']
-
           expected_json = {
             'telemetry-source' => 'cloud_controller_ng',
             'telemetry-time' => Time.now.to_datetime.rfc3339,
             'start-app' => {
               'api-version' => 'v3',
-              'app-id' => Digest::SHA256.hexdigest(app_guid),
+              'app-id' => Digest::SHA256.hexdigest(app_model.guid),
               'user-id' => Digest::SHA256.hexdigest(user.guid),
             }
           }
+          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
+          post "/v3/apps/#{app_model.guid}/actions/start", nil, user_header
+
           expect(last_response.status).to eq(200), last_response.body
-          expect(rails_logger).to have_received(:info).with(JSON.generate(expected_json))
         end
       end
     end
@@ -1731,25 +1727,24 @@ RSpec.describe 'Apps' do
                                           organization_guid: space.organization.guid,
                                       })
     end
+
     context 'telemetry' do
       it 'should log the required fields when the app starts' do
         Timecop.freeze do
-          post "/v3/apps/#{app_model.guid}/actions/stop", nil, user_header
-
-          parsed_response = MultiJson.load(last_response.body)
-          app_guid = parsed_response['guid']
-
           expected_json = {
             'telemetry-source' => 'cloud_controller_ng',
             'telemetry-time' => Time.now.to_datetime.rfc3339,
             'stop-app' => {
               'api-version' => 'v3',
-              'app-id' => Digest::SHA256.hexdigest(app_guid),
+              'app-id' => Digest::SHA256.hexdigest(app_model.guid),
               'user-id' => Digest::SHA256.hexdigest(user.guid),
             }
           }
+          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
+
+          post "/v3/apps/#{app_model.guid}/actions/stop", nil, user_header
+
           expect(last_response.status).to eq(200), last_response.body
-          expect(rails_logger).to have_received(:info).with(JSON.generate(expected_json))
         end
       end
     end
@@ -1826,22 +1821,20 @@ RSpec.describe 'Apps' do
     context 'telemetry' do
       it 'should log the required fields when the app is restarted' do
         Timecop.freeze do
-          post "/v3/apps/#{app_model.guid}/actions/restart", nil, user_header
-
-          parsed_response = MultiJson.load(last_response.body)
-          app_guid = parsed_response['guid']
-
           expected_json = {
             'telemetry-source' => 'cloud_controller_ng',
             'telemetry-time' => Time.now.to_datetime.rfc3339,
             'restart-app' => {
               'api-version' => 'v3',
-              'app-id' => Digest::SHA256.hexdigest(app_guid),
+              'app-id' => Digest::SHA256.hexdigest(app_model.guid),
               'user-id' => Digest::SHA256.hexdigest(user.guid),
             }
           }
+          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
+
+          post "/v3/apps/#{app_model.guid}/actions/restart", nil, user_header
+
           expect(last_response.status).to eq(200), last_response.body
-          expect(rails_logger).to have_received(:info).with(JSON.generate(expected_json))
         end
       end
     end

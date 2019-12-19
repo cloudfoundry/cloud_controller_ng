@@ -9,13 +9,6 @@ RSpec.describe 'Packages' do
   let(:space) { VCAP::CloudController::Space.make }
   let(:space_guid) { space.guid }
   let(:app_model) { VCAP::CloudController::AppModel.make(:docker, space_guid: space_guid) }
-  let(:rails_logger) { instance_double(ActiveSupport::Logger, info: nil) }
-
-  before do
-    allow(ActiveSupport::Logger).to receive(:new).and_return(rails_logger)
-    VCAP::CloudController::TelemetryLogger.init('fake-log-path')
-    allow(VCAP::CloudController::TelemetryLogger).to receive(:v3_emit).and_call_original
-  end
 
   describe 'POST /v3/packages' do
     let(:guid) { app_model.guid }
@@ -679,7 +672,6 @@ RSpec.describe 'Packages' do
       space.organization.add_user(user)
       space.add_developer(user)
       TestConfig.override(directories: { tmpdir: tmpdir })
-      VCAP::CloudController::TelemetryLogger.init('fake-log-path')
     end
 
     let(:packages_params) do
@@ -817,21 +809,18 @@ RSpec.describe 'Packages' do
     context 'telemetry' do
       it 'should log the required fields when the package uploads' do
         Timecop.freeze do
-          post "/v3/packages/#{guid}/upload", packages_params.to_json, user_header
-          expect(last_response.status).to eq(200)
-          parsed_response = MultiJson.load(last_response.body)
-          app_guid = parsed_response['relationships']['app']['data']['guid']
-
           expected_json = {
             'telemetry-source' => 'cloud_controller_ng',
             'telemetry-time' => Time.now.to_datetime.rfc3339,
             'upload-package' => {
               'api-version' => 'v3',
-              'app-id' => Digest::SHA256.hexdigest(app_guid),
+              'app-id' => Digest::SHA256.hexdigest(app_model.guid),
               'user-id' => Digest::SHA256.hexdigest(user.guid),
             }
           }
-          expect(rails_logger).to have_received(:info).with(JSON.generate(expected_json))
+          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
+          post "/v3/packages/#{guid}/upload", packages_params.to_json, user_header
+          expect(last_response.status).to eq(200)
         end
       end
     end

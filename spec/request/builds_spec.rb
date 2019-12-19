@@ -10,15 +10,12 @@ RSpec.describe 'Builds' do
   let(:parsed_response) { MultiJson.load(last_response.body) }
   let(:app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid, name: 'my-app') }
   let(:second_app_model) { VCAP::CloudController::AppModel.make(space_guid: space.guid, name: 'my-second-app') }
-  let(:rails_logger) { instance_double(ActiveSupport::Logger, info: nil) }
   let(:kpack_client) { instance_double(Kubernetes::KpackClient) }
+  let(:rails_logger) { double('rails_logger', info: nil) }
 
   before do
     CloudController::DependencyLocator.instance.register(:kpack_client, kpack_client)
     allow(kpack_client).to receive(:create_image)
-    allow(ActiveSupport::Logger).to receive(:new).and_return(rails_logger)
-    allow(VCAP::CloudController::TelemetryLogger).to receive(:v3_emit).and_call_original
-    VCAP::CloudController::TelemetryLogger.init('fake-log-path')
   end
 
   describe 'POST /v3/builds' do
@@ -156,6 +153,12 @@ RSpec.describe 'Builds' do
     end
 
     context 'telemetry' do
+      let(:logger_spy) { spy('logger') }
+
+      before do
+        allow(VCAP::CloudController::TelemetryLogger).to receive(:logger).and_return(logger_spy)
+      end
+
       it 'should log the required fields when the build is created' do
         Timecop.freeze do
           post '/v3/builds', create_request.merge(metadata: metadata).to_json, developer_headers
@@ -173,8 +176,8 @@ RSpec.describe 'Builds' do
                 'user-id' =>  Digest::SHA256.hexdigest(developer.guid),
             }
           }
+          expect(logger_spy).to have_received(:info).with(JSON.generate(expected_json))
           expect(last_response.status).to eq(201), last_response.body
-          expect(rails_logger).to have_received(:info).with(JSON.generate(expected_json))
         end
       end
     end

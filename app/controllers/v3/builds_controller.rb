@@ -50,7 +50,6 @@ class BuildsController < ApplicationController
         'app-id' => package.app.guid,
         'build-id' => build.guid,
         'user-id' => current_user.guid,
-        # can we get the build guid here?
       },
       {
         'lifecycle' => build.lifecycle_type,

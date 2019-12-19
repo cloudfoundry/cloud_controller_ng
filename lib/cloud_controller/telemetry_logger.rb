@@ -4,9 +4,8 @@ require 'json'
 module VCAP::CloudController
   class TelemetryLogger
     class << self
-      def init(path)
-        @telemetry_log_path = path
-        @logger = ActiveSupport::Logger.new(@telemetry_log_path)
+      def init(logger)
+        @logger = logger
       end
 
       def v2_emit(event_name, entries, raw_entries={})
@@ -23,6 +22,8 @@ module VCAP::CloudController
 
       private
 
+      attr_reader :logger
+
       def emit(event_name, entries, raw_entries={})
         resp = {
           'telemetry-source' => 'cloud_controller_ng',
@@ -31,8 +32,6 @@ module VCAP::CloudController
         }
         logger.info(JSON.generate(resp))
       end
-
-      attr_reader :logger
 
       def anonymize(entries)
         entries.transform_values { |v| Digest::SHA256.hexdigest(v) }

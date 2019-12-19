@@ -6,10 +6,7 @@ module VCAP::CloudController
     let(:file) { Tempfile.new('telemetry.log') }
 
     before do
-      TelemetryLogger.init(file.path)
-      allow(VCAP::CloudController::TelemetryLogger).to receive(:v2_emit).and_call_original
-      allow(VCAP::CloudController::TelemetryLogger).to receive(:v3_emit).and_call_original
-      allow(VCAP::CloudController::TelemetryLogger).to receive(:internal_emit).and_call_original
+      TelemetryLogger.init(ActiveSupport::Logger.new(file.path))
     end
 
     it 'logs job name, timestamp, and event, anonymizing by default' do
