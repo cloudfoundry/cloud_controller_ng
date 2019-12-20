@@ -5,8 +5,13 @@ module VCAP::CloudController
   class OrganizationQuotasCreateMessage < BaseMessage
     MAX_ORGANIZATION_QUOTA_NAME_LENGTH = 250
 
-    register_allowed_keys [:name, :total_memory_in_mb, :paid_services_allowed, :total_service_instances, :total_routes]
+    def self.relationships_requested?
+      @relationships_requested ||= proc { |a| a.requested?(:relationships) }
+    end
+
+    register_allowed_keys [:name, :total_memory_in_mb, :paid_services_allowed, :total_service_instances, :total_routes, :relationships]
     validates_with NoAdditionalKeysValidator
+    validates_with RelationshipValidator, if: relationships_requested?
 
     validates :name,
       string: true,
@@ -29,5 +34,26 @@ module VCAP::CloudController
     validates :paid_services_allowed,
       inclusion: { in: [true, false], message: 'must be a boolean' },
       allow_nil: true
+
+    delegate :organization_guids, to: :relationships_message
+
+    def relationships_message
+      @relationships_message ||= Relationships.new(relationships&.deep_symbolize_keys)
+    end
+
+    class Relationships < BaseMessage
+      register_allowed_keys [:organizations]
+
+      validates :organizations, allow_nil: true, to_many_relationship: true
+
+      def initialize(params)
+        super(params)
+      end
+
+      def organization_guids
+        orgs = HashUtils.dig(organizations, :data)
+        orgs ? orgs.map { |org| org[:guid] } : []
+      end
+    end
   end
 end

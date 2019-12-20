@@ -8,6 +8,8 @@ module VCAP::CloudController
       subject(:org_quotas_create) { OrganizationQuotasCreate.new }
 
       context 'when creating a organization quota' do
+        let(:org) { VCAP::CloudController::Organization.make }
+
         let(:message) do
           VCAP::CloudController::OrganizationQuotasCreateMessage.new({
             name: 'my-name',
@@ -15,22 +17,33 @@ module VCAP::CloudController
             paid_services_allowed: false,
             total_service_instances: 1,
             total_routes: 0,
+            relationships: { organizations: { data: [] } },
           })
         end
 
         let(:minimum_message) do
           VCAP::CloudController::OrganizationQuotasCreateMessage.new({
-            'name' => 'my-name'
+            'name' => 'my-name',
+            'relationships' => { organizations: { data: [] } },
+          })
+        end
+
+        let(:message_with_org) do
+          VCAP::CloudController::OrganizationQuotasCreateMessage.new({
+            'name' => 'my-name',
+            'relationships' => { organizations: { data: [{ guid: org.guid }] } },
           })
         end
 
         it 'creates a organization quota with the correct values' do
           organization_quota = org_quotas_create.create(message)
+
           expect(organization_quota.name).to eq('my-name')
           expect(organization_quota.non_basic_services_allowed).to eq(false)
           expect(organization_quota.memory_limit).to eq(10)
           expect(organization_quota.total_services).to eq(1)
           expect(organization_quota.total_routes).to eq(0)
+          expect(organization_quota.organizations.count).to eq(0)
         end
 
         it 'provides defaults if the parameters are not provided' do
@@ -41,6 +54,15 @@ module VCAP::CloudController
           expect(organization_quota.memory_limit).to eq(-1)
           expect(organization_quota.total_services).to eq(-1)
           expect(organization_quota.total_routes).to eq(-1)
+          expect(organization_quota.organizations.count).to eq(0)
+        end
+
+        it 'supports associating orgs with the quota' do
+          organization_quota = org_quotas_create.create(message_with_org)
+
+          expect(organization_quota.name).to eq('my-name')
+          expect(organization_quota.organizations.count).to eq(1)
+          expect(organization_quota.organizations[0].guid).to eq(org.guid)
         end
       end
 
@@ -69,6 +91,20 @@ module VCAP::CloudController
             expect {
               org_quotas_create.create(message)
             }.to raise_error(OrganizationQuotasCreate::Error, "Organization Quota '#{name}' already exists.")
+          end
+        end
+        context 'when the org guid is invalid' do
+          let(:invalid_org_guid) { 'invalid_org_guid' }
+          let(:message_with_invalid_org_guid) do
+            VCAP::CloudController::OrganizationQuotasCreateMessage.new({
+              'name' => 'my-name',
+              'relationships' => { organizations: { data: [{ guid: invalid_org_guid }] } },
+            })
+          end
+          it 'raises a human-friendly error' do
+            expect {
+              org_quotas_create.create(message_with_invalid_org_guid)
+            }.to raise_error(OrganizationQuotasCreate::Error, "Organization with guid '#{invalid_org_guid}' does not exist, or you do not have access to it.")
           end
         end
       end

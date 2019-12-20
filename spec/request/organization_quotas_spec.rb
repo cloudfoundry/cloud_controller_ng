@@ -3,16 +3,24 @@ require 'request_spec_shared_examples'
 
 module VCAP::CloudController
   RSpec.describe 'organization_quotas' do
-    let(:user) { VCAP::CloudController::User.make(guid: 'user') }
-    let(:space) { VCAP::CloudController::Space.make }
-    let(:org) { space.organization }
+    let(:user) { VCAP::CloudController::User.make(guid: 'user-guid') }
+    let!(:org) { VCAP::CloudController::Organization.make(guid: 'organization-guid') }
+    let(:space) { VCAP::CloudController::Space.make(guid: 'space-guid', organization: org) }
     let(:admin_header) { headers_for(user, scopes: %w(cloud_controller.admin)) }
+
     describe 'POST /v3/organization_quotas' do
       let(:api_call) { lambda { |user_headers| post '/v3/organization_quotas', params.to_json, user_headers } }
 
       let(:params) do
         {
-        'name': 'org1',
+          'name': 'quota1',
+          'relationships': {
+            'organizations': {
+              'data': [
+                { 'guid': org.guid },
+              ]
+            }
+          }
         }
       end
 
@@ -22,6 +30,11 @@ module VCAP::CloudController
           created_at: iso8601,
           updated_at: iso8601,
           name: params[:name],
+          relationships: {
+            organizations: {
+              data: [{ 'guid': 'organization-guid' }],
+            }
+          },
           links: {
             self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organization_quotas\/#{params[:guid]}) },
           }
@@ -62,7 +75,7 @@ module VCAP::CloudController
         context 'when provided invalid arguments' do
           let(:params) do
             {
-              name: 555
+              name: 555,
             }
           end
 
@@ -70,11 +83,7 @@ module VCAP::CloudController
             post '/v3/organization_quotas', params.to_json, headers
 
             expect(last_response).to have_status_code(422)
-
-            expected_err = [
-              'Name must be a string',
-            ]
-            expect(parsed_response['errors'][0]['detail']).to eq expected_err.join(', ')
+            expect(last_response).to include_error_message('Name must be a string')
           end
         end
 

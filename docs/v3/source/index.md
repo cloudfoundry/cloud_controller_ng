@@ -236,6 +236,7 @@ includes:
   - experimental_resources/deployments/update
   - experimental_resources/deployments/cancel
   - experimental_resources/organization_quotas/header
+  - experimental_resources/organization_quotas/object
   - experimental_resources/organization_quotas/create
   - experimental_resources/revisions/header
   - experimental_resources/revisions/object

@@ -1,0 +1,16 @@
+### The organization quota object
+
+```
+Example Organization Quota object
+```
+```json
+<%= yield_content :single_organization_quota%>
+```
+
+Name | Type | Description
+---- | ---- | -----------
+| **guid** | _uuid_ | Unique identifier for the role. |
+| **created_at** | _datetime_ | The time with zone when the role was created.|
+| **updated_at**  | _datetime_ | The time with zone when the role was last updated. |
+**relationships.organizations** | [_to-many relationship_](#to-many-relationships) | A relationship to the organizations the quota applies to. |
+| **links** | [_links object_](#links) | Links to related resources. |

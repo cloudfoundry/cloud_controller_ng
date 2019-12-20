@@ -4,6 +4,13 @@ require 'messages/organization_quotas_create_message'
 module VCAP::CloudController
   RSpec.describe OrganizationQuotasCreateMessage do
     subject { OrganizationQuotasCreateMessage.new(params) }
+    let(:relationships) do
+      {
+        organizations: {
+          data: []
+        },
+      }
+    end
 
     describe 'validations' do
       context 'when no params are given' do
@@ -26,31 +33,31 @@ module VCAP::CloudController
 
       describe 'name' do
         context 'when it is non-alphanumeric' do
-          let(:params) { { name: 'thë-name' } }
+          let(:params) { { name: 'thë-name', relationships: relationships } }
 
           it { is_expected.to be_valid }
         end
 
         context 'when it contains hyphens' do
-          let(:params) { { name: 'a-z' } }
+          let(:params) { { name: 'a-z', relationships: relationships } }
 
           it { is_expected.to be_valid }
         end
 
         context 'when it contains capital ascii' do
-          let(:params) { { name: 'AZ' } }
+          let(:params) { { name: 'AZ', relationships: relationships } }
 
           it { is_expected.to be_valid }
         end
 
         context 'when it is at max length' do
-          let(:params) { { name: 'B' * OrganizationQuotasCreateMessage::MAX_ORGANIZATION_QUOTA_NAME_LENGTH } }
+          let(:params) { { name: 'B' * OrganizationQuotasCreateMessage::MAX_ORGANIZATION_QUOTA_NAME_LENGTH, relationships: relationships } }
 
           it { is_expected.to be_valid }
         end
 
         context 'when it is too long' do
-          let(:params) { { name: 'B' * (OrganizationQuotasCreateMessage::MAX_ORGANIZATION_QUOTA_NAME_LENGTH + 1) } }
+          let(:params) { { name: 'B' * (OrganizationQuotasCreateMessage::MAX_ORGANIZATION_QUOTA_NAME_LENGTH + 1), relationships: relationships } }
 
           it 'is not valid' do
             expect(subject).to be_invalid
@@ -65,6 +72,7 @@ module VCAP::CloudController
             {
               name: 'my-name',
               total_memory_in_mb: 'bob',
+              relationships: relationships,
             }
           }
 
@@ -78,6 +86,7 @@ module VCAP::CloudController
             {
               name: 'my-name',
               total_memory_in_mb: 1.1,
+              relationships: relationships,
             }
           }
 
@@ -91,6 +100,7 @@ module VCAP::CloudController
             {
               name: 'my-name',
               total_memory_in_mb: -1,
+              relationships: relationships,
             }
           }
 
@@ -104,6 +114,7 @@ module VCAP::CloudController
             {
               name: 'my-name',
               total_memory_in_mb: 0,
+              relationships: relationships,
             }
           }
 
@@ -114,6 +125,7 @@ module VCAP::CloudController
             {
               name: 'my-name',
               total_memory_in_mb: nil,
+              relationships: relationships,
             }
           }
 
@@ -127,6 +139,7 @@ module VCAP::CloudController
             {
               name: 'my-name',
               total_service_instances: 'bob',
+              relationships: relationships,
             }
           }
 
@@ -140,6 +153,7 @@ module VCAP::CloudController
             {
               name: 'my-name',
               total_service_instances: 1.1,
+              relationships: relationships,
             }
           }
 
@@ -153,6 +167,7 @@ module VCAP::CloudController
             {
               name: 'my-name',
               total_service_instances: -1,
+              relationships: relationships,
             }
           }
 
@@ -166,6 +181,7 @@ module VCAP::CloudController
             {
               name: 'my-name',
               total_service_instances: 0,
+              relationships: relationships,
             }
           }
 
@@ -176,6 +192,7 @@ module VCAP::CloudController
             {
               name: 'my-name',
               total_service_instances: nil,
+              relationships: relationships,
             }
           }
 
@@ -189,6 +206,7 @@ module VCAP::CloudController
             {
               name: 'my-name',
               total_routes: 'bob',
+              relationships: relationships,
             }
           }
 
@@ -202,6 +220,7 @@ module VCAP::CloudController
             {
               name: 'my-name',
               total_routes: 1.1,
+              relationships: relationships,
             }
           }
 
@@ -215,6 +234,7 @@ module VCAP::CloudController
             {
               name: 'my-name',
               total_routes: -1,
+              relationships: relationships,
             }
           }
 
@@ -228,6 +248,7 @@ module VCAP::CloudController
             {
               name: 'my-name',
               total_routes: 0,
+              relationships: relationships,
             }
           }
 
@@ -238,6 +259,7 @@ module VCAP::CloudController
             {
               name: 'my-name',
               total_routes: nil,
+              relationships: relationships,
             }
           }
 
@@ -247,26 +269,90 @@ module VCAP::CloudController
 
       describe 'paid_services_allowed' do
         context 'when it is a boolean' do
-          let(:params) { {
-            name: 'thë-name',
-            paid_services_allowed: false
-          }
+          let(:params) {
+            {
+              name: 'thë-name',
+              paid_services_allowed: false,
+              relationships: relationships,
+            }
           }
 
           it { is_expected.to be_valid }
         end
 
         context 'when it is not a boolean' do
-          let(:params) { {
-            name: 'thë-name',
-            paid_services_allowed: 'b'
-          }
+          let(:params) {
+            {
+              name: 'thë-name',
+              paid_services_allowed: 'b',
+              relationships: relationships,
+            }
           }
 
           it 'is not valid' do
             expect(subject).to be_invalid
             expect(subject.errors[:paid_services_allowed]).to contain_exactly('must be a boolean')
           end
+        end
+      end
+
+      describe 'relationships' do
+        context 'given no organization guids' do
+          let(:params) do
+            {
+              name: 'kris',
+            }
+          end
+
+          it { is_expected.to be_valid }
+        end
+
+        context 'given mulitple organization guids' do
+          let(:params) do
+            {
+              name: 'kim',
+              relationships: {
+                organizations: {
+                  data: [
+                    { guid: 'KKW-beauty' },
+                    { guid: 'skims' },
+                  ]
+                },
+              }
+            }
+          end
+
+          it { is_expected.to be_valid }
+        end
+
+        context 'given malformed data array' do
+          let(:params) do
+            {
+              name: 'kourtney',
+              relationships: {
+                organizations: { guid: 'poosh' },
+              }
+            }
+          end
+
+          it { is_expected.to be_invalid }
+        end
+
+        context 'given malformed organization guids' do
+          let(:params) do
+            {
+              name: 'rob',
+              relationships: {
+                organizations: {
+                  data: [
+                    { guid: 150000 },
+                  ]
+                }
+              }
+            }
+          end
+
+          it { is_expected.to be_invalid }
         end
       end
     end

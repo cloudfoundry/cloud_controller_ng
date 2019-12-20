@@ -5,6 +5,7 @@ module VCAP::CloudController
 
     def create(message)
       org_quota = nil
+
       QuotaDefinition.db.transaction do
         org_quota = VCAP::CloudController::QuotaDefinition.create(
           name: message.name,
@@ -13,6 +14,11 @@ module VCAP::CloudController
           total_services: message.total_service_instances || QuotaDefinition::DEFAULT_TOTAL_SERVICES,
           total_routes: message.total_routes || QuotaDefinition::DEFAULT_TOTAL_ROUTES,
         )
+
+        message.organization_guids.each do |guid|
+          org = organization_guid_validation(guid)
+          org_quota.add_organization(org)
+        end
       end
 
       org_quota
@@ -26,7 +32,16 @@ module VCAP::CloudController
       if error.errors.on(:name)&.include?(:unique)
         error!("Organization Quota '#{message.name}' already exists.")
       end
+
       error!(error.message)
+    end
+
+    def organization_guid_validation(guid)
+      org = Organization.first(guid: guid)
+      if !org
+        error!("Organization with guid '#{guid}' does not exist, or you do not have access to it.")
+      end
+      org
     end
 
     def error!(message)

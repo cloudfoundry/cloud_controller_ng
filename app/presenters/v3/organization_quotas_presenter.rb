@@ -9,6 +9,11 @@ module VCAP::CloudController::Presenters::V3
         created_at: organization_quota.created_at,
         updated_at: organization_quota.updated_at,
         name: organization_quota.name,
+        relationships: {
+          organizations: {
+            data: organization_quota.organizations.map { |organization| { guid: organization.guid } }
+          }
+        },
         links: build_links,
       }
     end
