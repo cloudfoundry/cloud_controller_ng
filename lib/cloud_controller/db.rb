@@ -167,5 +167,13 @@ module VCAP
         index [id_attr, :user_id], unique: true, name: idx_name
       end
     end
+
+    def self.uuid_function(migration)
+      if migration.class.name.match?(/mysql/i)
+        Sequel.function(:UUID)
+      elsif migration.class.name.match?(/postgres/i)
+        Sequel.function(:get_uuid)
+      end
+    end
   end
 end
