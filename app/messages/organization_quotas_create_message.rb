@@ -36,42 +36,42 @@ module VCAP::CloudController
     def relationships_message
       @relationships_message ||= Relationships.new(relationships&.deep_symbolize_keys)
     end
+  end
+
+  class AppsLimitsMessage < BaseMessage
+    register_allowed_keys [:total_memory_in_mb, :per_process_memory_in_mb, :total_instances, :per_app_tasks]
+
+    validates_with NoAdditionalKeysValidator
+
+    validates :total_memory_in_mb,
+      numericality: { only_integer: true, greater_than_or_equal_to: 0 },
+      allow_nil: true
+
+    validates :per_process_memory_in_mb,
+      numericality: { only_integer: true, greater_than_or_equal_to: 0 },
+      allow_nil: true
+
+    validates :total_instances,
+      numericality: { only_integer: true, greater_than_or_equal_to: 0 },
+      allow_nil: true
+
+    validates :per_app_tasks,
+      numericality: { only_integer: true, greater_than_or_equal_to: 0 },
+      allow_nil: true
+  end
+
+  class Relationships < BaseMessage
+    register_allowed_keys [:organizations]
+
+    validates :organizations, allow_nil: true, to_many_relationship: true
+
+    def initialize(params)
+      super(params)
     end
 
-    class AppsLimitsMessage < BaseMessage
-      register_allowed_keys [:total_memory_in_mb, :per_process_memory_in_mb, :total_instances, :per_app_tasks]
-
-      validates_with NoAdditionalKeysValidator
-
-      validates :total_memory_in_mb,
-        numericality: { only_integer: true, greater_than_or_equal_to: 0 },
-        allow_nil: true
-
-      validates :per_process_memory_in_mb,
-        numericality: { only_integer: true, greater_than_or_equal_to: 0 },
-        allow_nil: true
-
-      validates :total_instances,
-        numericality: { only_integer: true, greater_than_or_equal_to: 0 },
-        allow_nil: true
-
-      validates :per_app_tasks,
-        numericality: { only_integer: true, greater_than_or_equal_to: 0 },
-        allow_nil: true
+    def organization_guids
+      orgs = HashUtils.dig(organizations, :data)
+      orgs ? orgs.map { |org| org[:guid] } : []
     end
-
-    class Relationships < BaseMessage
-      register_allowed_keys [:organizations]
-
-      validates :organizations, allow_nil: true, to_many_relationship: true
-
-      def initialize(params)
-        super(params)
-      end
-
-      def organization_guids
-        orgs = HashUtils.dig(organizations, :data)
-        orgs ? orgs.map { |org| org[:guid] } : []
-      end
-    end
+  end
 end

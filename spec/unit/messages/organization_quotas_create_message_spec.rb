@@ -89,7 +89,7 @@ module VCAP::CloudController
                 apps: { total_memory_in_mb: 'bob' },
               relationships: relationships,
             }
-          }
+            }
 
             it 'is not valid' do
               expect(subject).to be_invalid
@@ -104,7 +104,7 @@ module VCAP::CloudController
                 apps: { total_memory_in_mb: 1.1 },
               relationships: relationships,
             }
-          }
+            }
 
             it 'is not valid' do
               expect(subject).to be_invalid
@@ -118,7 +118,7 @@ module VCAP::CloudController
                 apps: { total_memory_in_mb: -1 },
               relationships: relationships,
             }
-          }
+            }
 
             it 'is not valid because "unlimited" is set with null, not -1, in V3' do
               expect(subject).to be_invalid
@@ -133,7 +133,7 @@ module VCAP::CloudController
                 apps: { total_memory_in_mb: 0 },
               relationships: relationships,
             }
-          }
+            }
 
             it { is_expected.to be_valid }
           end
@@ -144,7 +144,7 @@ module VCAP::CloudController
                 apps: { total_memory_in_mb: nil },
               relationships: relationships,
             }
-          }
+            }
 
             it { is_expected.to be_valid }
           end
@@ -158,7 +158,7 @@ module VCAP::CloudController
                 apps: { per_process_memory_in_mb: 'bob' },
               relationships: relationships,
             }
-          }
+            }
 
             it 'is not valid' do
               expect(subject).to be_invalid
@@ -173,7 +173,7 @@ module VCAP::CloudController
                 apps: { per_process_memory_in_mb: 1.1 },
               relationships: relationships,
             }
-          }
+            }
 
             it 'is not valid' do
               expect(subject).to be_invalid
@@ -187,7 +187,7 @@ module VCAP::CloudController
                 apps: { per_process_memory_in_mb: -1 },
               relationships: relationships,
             }
-          }
+            }
 
             it 'is not valid because "unlimited" is set with null, not -1, in V3' do
               expect(subject).to be_invalid
@@ -202,7 +202,7 @@ module VCAP::CloudController
                 apps: { per_process_memory_in_mb: 0 },
               relationships: relationships,
             }
-          }
+            }
 
             it { is_expected.to be_valid }
           end
@@ -213,7 +213,7 @@ module VCAP::CloudController
                 apps: { per_process_memory_in_mb: nil },
               relationships: relationships,
             }
-          }
+            }
 
             it { is_expected.to be_valid }
           end
@@ -227,7 +227,7 @@ module VCAP::CloudController
                 apps: { total_instances: 'bob' },
               relationships: relationships,
             }
-          }
+            }
 
             it 'is not valid' do
               expect(subject).to be_invalid
@@ -242,7 +242,7 @@ module VCAP::CloudController
                 apps: { total_instances: 1.1 },
               relationships: relationships,
             }
-          }
+            }
 
             it 'is not valid' do
               expect(subject).to be_invalid
@@ -256,7 +256,7 @@ module VCAP::CloudController
                 apps: { total_instances: -1 },
               relationships: relationships,
             }
-          }
+            }
 
             it 'is not valid because "unlimited" is set with null, not -1, in V3' do
               expect(subject).to be_invalid
@@ -271,7 +271,7 @@ module VCAP::CloudController
                 apps: { total_instances: 0 },
               relationships: relationships,
             }
-          }
+            }
 
             it { is_expected.to be_valid }
           end
@@ -282,7 +282,7 @@ module VCAP::CloudController
                 apps: { total_instances: nil },
               relationships: relationships,
             }
-          }
+            }
 
             it { is_expected.to be_valid }
           end
