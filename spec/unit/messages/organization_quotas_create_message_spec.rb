@@ -66,232 +66,289 @@ module VCAP::CloudController
         end
       end
 
-      describe 'total_memory_in_mb' do
-        context 'when the type is a string' do
+      describe 'apps' do
+        context 'invalid keys are passed in' do
           let(:params) {
             {
               name: 'my-name',
-              total_memory_in_mb: 'bob',
-              relationships: relationships,
+              apps: { bad_key: 'bob' },
             }
           }
 
           it 'is not valid' do
             expect(subject).to be_invalid
-            expect(subject.errors[:total_memory_in_mb]).to contain_exactly('is not a number')
+            expect(subject.errors.full_messages[0]).to include("Unknown field(s): 'bad_key'")
           end
         end
-        context 'when the type is decimal' do
-          let(:params) {
-            {
-              name: 'my-name',
-              total_memory_in_mb: 1.1,
+
+        describe 'total_memory_in_mb' do
+          context 'when the type is a string' do
+            let(:params) {
+              {
+                name: 'my-name',
+                apps: { total_memory_in_mb: 'bob' },
               relationships: relationships,
             }
           }
 
-          it 'is not valid' do
-            expect(subject).to be_invalid
-            expect(subject.errors[:total_memory_in_mb]).to contain_exactly('must be an integer')
+            it 'is not valid' do
+              expect(subject).to be_invalid
+              p subject.errors
+              expect(subject.errors[:apps]).to contain_exactly('Total memory in mb is not a number')
+            end
+          end
+          context 'when the type is decimal' do
+            let(:params) {
+              {
+                name: 'my-name',
+                apps: { total_memory_in_mb: 1.1 },
+              relationships: relationships,
+            }
+          }
+
+            it 'is not valid' do
+              expect(subject).to be_invalid
+              expect(subject.errors[:apps]).to contain_exactly('Total memory in mb must be an integer')
+            end
+          end
+          context 'when the type is a negative integer' do
+            let(:params) {
+              {
+                name: 'my-name',
+                apps: { total_memory_in_mb: -1 },
+              relationships: relationships,
+            }
+          }
+
+            it 'is not valid because "unlimited" is set with null, not -1, in V3' do
+              expect(subject).to be_invalid
+              expect(subject.errors[:apps]).to contain_exactly('Total memory in mb must be greater than or equal to 0')
+            end
+          end
+
+          context 'when the type is zero' do
+            let(:params) {
+              {
+                name: 'my-name',
+                apps: { total_memory_in_mb: 0 },
+              relationships: relationships,
+            }
+          }
+
+            it { is_expected.to be_valid }
+          end
+          context 'when the type is nil (unlimited)' do
+            let(:params) {
+              {
+                name: 'my-name',
+                apps: { total_memory_in_mb: nil },
+              relationships: relationships,
+            }
+          }
+
+            it { is_expected.to be_valid }
           end
         end
-        context 'when the type is a negative integer' do
-          let(:params) {
-            {
-              name: 'my-name',
-              total_memory_in_mb: -1,
+
+        describe 'per_process_memory_in_mb' do
+          context 'when the type is a string' do
+            let(:params) {
+              {
+                name: 'my-name',
+                apps: { per_process_memory_in_mb: 'bob' },
               relationships: relationships,
             }
           }
 
-          it 'is not valid because "unlimited" is set with null, not -1, in V3' do
-            expect(subject).to be_invalid
-            expect(subject.errors[:total_memory_in_mb]).to contain_exactly('must be greater than or equal to 0')
+            it 'is not valid' do
+              expect(subject).to be_invalid
+              p subject.errors
+              expect(subject.errors[:apps]).to contain_exactly('Per process memory in mb is not a number')
+            end
+          end
+          context 'when the type is decimal' do
+            let(:params) {
+              {
+                name: 'my-name',
+                apps: { per_process_memory_in_mb: 1.1 },
+              relationships: relationships,
+            }
+          }
+
+            it 'is not valid' do
+              expect(subject).to be_invalid
+              expect(subject.errors[:apps]).to contain_exactly('Per process memory in mb must be an integer')
+            end
+          end
+          context 'when the type is a negative integer' do
+            let(:params) {
+              {
+                name: 'my-name',
+                apps: { per_process_memory_in_mb: -1 },
+              relationships: relationships,
+            }
+          }
+
+            it 'is not valid because "unlimited" is set with null, not -1, in V3' do
+              expect(subject).to be_invalid
+              expect(subject.errors[:apps]).to contain_exactly('Per process memory in mb must be greater than or equal to 0')
+            end
+          end
+
+          context 'when the type is zero' do
+            let(:params) {
+              {
+                name: 'my-name',
+                apps: { per_process_memory_in_mb: 0 },
+              relationships: relationships,
+            }
+          }
+
+            it { is_expected.to be_valid }
+          end
+          context 'when the type is nil (unlimited)' do
+            let(:params) {
+              {
+                name: 'my-name',
+                apps: { per_process_memory_in_mb: nil },
+              relationships: relationships,
+            }
+          }
+
+            it { is_expected.to be_valid }
           end
         end
-        context 'when the type is zero' do
-          let(:params) {
-            {
-              name: 'my-name',
-              total_memory_in_mb: 0,
+
+        describe 'total_instances' do
+          context 'when the type is a string' do
+            let(:params) {
+              {
+                name: 'my-name',
+                apps: { total_instances: 'bob' },
               relationships: relationships,
             }
           }
 
-          it { is_expected.to be_valid }
-        end
-        context 'when the type is nil (unlimited)' do
-          let(:params) {
-            {
-              name: 'my-name',
-              total_memory_in_mb: nil,
+            it 'is not valid' do
+              expect(subject).to be_invalid
+              p subject.errors
+              expect(subject.errors[:apps]).to contain_exactly('Total instances is not a number')
+            end
+          end
+          context 'when the type is decimal' do
+            let(:params) {
+              {
+                name: 'my-name',
+                apps: { total_instances: 1.1 },
               relationships: relationships,
             }
           }
 
-          it { is_expected.to be_valid }
-        end
-      end
-
-      describe 'total_service_instances' do
-        context 'when the type is a string' do
-          let(:params) {
-            {
-              name: 'my-name',
-              total_service_instances: 'bob',
+            it 'is not valid' do
+              expect(subject).to be_invalid
+              expect(subject.errors[:apps]).to contain_exactly('Total instances must be an integer')
+            end
+          end
+          context 'when the type is a negative integer' do
+            let(:params) {
+              {
+                name: 'my-name',
+                apps: { total_instances: -1 },
               relationships: relationships,
             }
           }
 
-          it 'is not valid' do
-            expect(subject).to be_invalid
-            expect(subject.errors[:total_service_instances]).to contain_exactly('is not a number')
+            it 'is not valid because "unlimited" is set with null, not -1, in V3' do
+              expect(subject).to be_invalid
+              expect(subject.errors[:apps]).to contain_exactly('Total instances must be greater than or equal to 0')
+            end
+          end
+
+          context 'when the type is zero' do
+            let(:params) {
+              {
+                name: 'my-name',
+                apps: { total_instances: 0 },
+              relationships: relationships,
+            }
+          }
+
+            it { is_expected.to be_valid }
+          end
+          context 'when the type is nil (unlimited)' do
+            let(:params) {
+              {
+                name: 'my-name',
+                apps: { total_instances: nil },
+              relationships: relationships,
+            }
+          }
+
+            it { is_expected.to be_valid }
           end
         end
-        context 'when the type is decimal' do
-          let(:params) {
-            {
-              name: 'my-name',
-              total_service_instances: 1.1,
-              relationships: relationships,
-            }
-          }
 
-          it 'is not valid' do
-            expect(subject).to be_invalid
-            expect(subject.errors[:total_service_instances]).to contain_exactly('must be an integer')
+        describe 'per_app_tasks' do
+          context 'when the type is a string' do
+            let(:params) {
+              {
+                name: 'my-name',
+                apps: { per_app_tasks: 'bob' },
+              }
+            }
+
+            it 'is not valid' do
+              expect(subject).to be_invalid
+              p subject.errors
+              expect(subject.errors[:apps]).to contain_exactly('Per app tasks is not a number')
+            end
           end
-        end
-        context 'when the type is a negative integer' do
-          let(:params) {
-            {
-              name: 'my-name',
-              total_service_instances: -1,
-              relationships: relationships,
+          context 'when the type is decimal' do
+            let(:params) {
+              {
+                name: 'my-name',
+                apps: { per_app_tasks: 1.1 },
+              }
             }
-          }
 
-          it 'is not valid because "unlimited" is set with null, not -1, in V3' do
-            expect(subject).to be_invalid
-            expect(subject.errors[:total_service_instances]).to contain_exactly('must be greater than or equal to 0')
+            it 'is not valid' do
+              expect(subject).to be_invalid
+              expect(subject.errors[:apps]).to contain_exactly('Per app tasks must be an integer')
+            end
           end
-        end
-        context 'when the type is zero' do
-          let(:params) {
-            {
-              name: 'my-name',
-              total_service_instances: 0,
-              relationships: relationships,
+          context 'when the type is a negative integer' do
+            let(:params) {
+              {
+                name: 'my-name',
+                apps: { per_app_tasks: -1 },
+              }
             }
-          }
 
-          it { is_expected.to be_valid }
-        end
-        context 'when the type is nil (unlimited)' do
-          let(:params) {
-            {
-              name: 'my-name',
-              total_service_instances: nil,
-              relationships: relationships,
-            }
-          }
-
-          it { is_expected.to be_valid }
-        end
-      end
-
-      describe 'total_routes' do
-        context 'when the type is a string' do
-          let(:params) {
-            {
-              name: 'my-name',
-              total_routes: 'bob',
-              relationships: relationships,
-            }
-          }
-
-          it 'is not valid' do
-            expect(subject).to be_invalid
-            expect(subject.errors[:total_routes]).to contain_exactly('is not a number')
+            it 'is not valid because "unlimited" is set with null, not -1, in V3' do
+              expect(subject).to be_invalid
+              expect(subject.errors[:apps]).to contain_exactly('Per app tasks must be greater than or equal to 0')
+            end
           end
-        end
-        context 'when the type is decimal' do
-          let(:params) {
-            {
-              name: 'my-name',
-              total_routes: 1.1,
-              relationships: relationships,
-            }
-          }
 
-          it 'is not valid' do
-            expect(subject).to be_invalid
-            expect(subject.errors[:total_routes]).to contain_exactly('must be an integer')
+          context 'when the type is zero' do
+            let(:params) {
+              {
+                name: 'my-name',
+                apps: { per_app_tasks: 0 },
+              }
+            }
+
+            it { is_expected.to be_valid }
           end
-        end
-        context 'when the type is a negative integer' do
-          let(:params) {
-            {
-              name: 'my-name',
-              total_routes: -1,
-              relationships: relationships,
+          context 'when the type is nil (unlimited)' do
+            let(:params) {
+              {
+                name: 'my-name',
+                apps: { per_app_tasks: nil },
+              }
             }
-          }
 
-          it 'is not valid because "unlimited" is set with null, not -1, in V3' do
-            expect(subject).to be_invalid
-            expect(subject.errors[:total_routes]).to contain_exactly('must be greater than or equal to 0')
-          end
-        end
-        context 'when the type is zero' do
-          let(:params) {
-            {
-              name: 'my-name',
-              total_routes: 0,
-              relationships: relationships,
-            }
-          }
-
-          it { is_expected.to be_valid }
-        end
-        context 'when the type is nil (unlimited)' do
-          let(:params) {
-            {
-              name: 'my-name',
-              total_routes: nil,
-              relationships: relationships,
-            }
-          }
-
-          it { is_expected.to be_valid }
-        end
-      end
-
-      describe 'paid_services_allowed' do
-        context 'when it is a boolean' do
-          let(:params) {
-            {
-              name: 'thë-name',
-              paid_services_allowed: false,
-              relationships: relationships,
-            }
-          }
-
-          it { is_expected.to be_valid }
-        end
-
-        context 'when it is not a boolean' do
-          let(:params) {
-            {
-              name: 'thë-name',
-              paid_services_allowed: 'b',
-              relationships: relationships,
-            }
-          }
-
-          it 'is not valid' do
-            expect(subject).to be_invalid
-            expect(subject.errors[:paid_services_allowed]).to contain_exactly('must be a boolean')
+            it { is_expected.to be_valid }
           end
         end
       end

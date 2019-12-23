@@ -9,10 +9,13 @@ module VCAP::CloudController
       QuotaDefinition.db.transaction do
         org_quota = VCAP::CloudController::QuotaDefinition.create(
           name: message.name,
-          non_basic_services_allowed: message.paid_services_allowed.nil? ? QuotaDefinition::DEFAULT_NON_BASIC_SERVICES_ALLOWED : message.paid_services_allowed,
+          non_basic_services_allowed: QuotaDefinition::DEFAULT_NON_BASIC_SERVICES_ALLOWED,
           memory_limit: message.total_memory_in_mb || QuotaDefinition::DEFAULT_MEMORY_LIMIT,
-          total_services: message.total_service_instances || QuotaDefinition::DEFAULT_TOTAL_SERVICES,
-          total_routes: message.total_routes || QuotaDefinition::DEFAULT_TOTAL_ROUTES,
+          instance_memory_limit: message.per_process_memory_in_mb || QuotaDefinition::UNLIMITED,
+          app_instance_limit: message.total_instances || QuotaDefinition::UNLIMITED,
+          app_task_limit: message.per_app_tasks || QuotaDefinition::UNLIMITED,
+          total_services: QuotaDefinition::DEFAULT_TOTAL_SERVICES,
+          total_routes: QuotaDefinition::DEFAULT_TOTAL_ROUTES,
         )
 
         message.organization_guids.each do |guid|

@@ -14,6 +14,12 @@ module VCAP::CloudController::Presenters::V3
             data: organization_quota.organizations.map { |organization| { guid: organization.guid } }
           }
         },
+        apps: {
+          total_memory_in_mb: convert_unlimited_to_nil(organization_quota.memory_limit),
+          per_process_memory_in_mb: convert_unlimited_to_nil(organization_quota.instance_memory_limit),
+          total_instances: convert_unlimited_to_nil(organization_quota.app_instance_limit),
+          per_app_tasks: convert_unlimited_to_nil(organization_quota.app_task_limit),
+        },
         links: build_links,
       }
     end
@@ -22,6 +28,10 @@ module VCAP::CloudController::Presenters::V3
 
     def organization_quota
       @resource
+    end
+
+    def convert_unlimited_to_nil(value)
+      value == -1 ? nil : value
     end
 
     def build_links

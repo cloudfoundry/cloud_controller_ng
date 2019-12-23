@@ -7,7 +7,6 @@ module VCAP::CloudController
     let!(:org) { VCAP::CloudController::Organization.make(guid: 'organization-guid') }
     let(:space) { VCAP::CloudController::Space.make(guid: 'space-guid', organization: org) }
     let(:admin_header) { headers_for(user, scopes: %w(cloud_controller.admin)) }
-
     describe 'POST /v3/organization_quotas' do
       let(:api_call) { lambda { |user_headers| post '/v3/organization_quotas', params.to_json, user_headers } }
 
@@ -30,6 +29,12 @@ module VCAP::CloudController
           created_at: iso8601,
           updated_at: iso8601,
           name: params[:name],
+          apps: {
+            total_memory_in_mb: nil,
+            per_process_memory_in_mb: nil,
+            total_instances: nil,
+            per_app_tasks: nil
+          },
           relationships: {
             organizations: {
               data: [{ 'guid': 'organization-guid' }],
@@ -52,15 +57,61 @@ module VCAP::CloudController
         h.freeze
       end
 
-      it 'creates a organization_quota' do
-        expect {
-          api_call.call(admin_header)
-        }.to change {
-          QuotaDefinition.count
-        }.by 1
+      context 'using the default params' do
+        it 'creates a organization_quota' do
+          expect {
+            api_call.call(admin_header)
+          }.to change {
+            QuotaDefinition.count
+          }.by 1
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
 
-      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      context 'using provided params' do
+        let(:params) do
+          {
+            'name': 'org1',
+            'apps': {
+              'total_memory_in_mb': 5120,
+              'per_process_memory_in_mb': 1024,
+              'total_instances': 10,
+              'per_app_tasks': 5
+            }
+          }
+        end
+
+        let(:expected_response) do
+          {
+            'guid': UUID_REGEX,
+            'created_at': iso8601,
+            'updated_at': iso8601,
+            'name': 'org1',
+            'apps': {
+              'total_memory_in_mb': 5120,
+              'per_process_memory_in_mb': 1024,
+              'total_instances': 10,
+              'per_app_tasks': 5
+            },
+            'relationships': {
+              'organizations': {
+                'data': [],
+              },
+            },
+            'links': {
+              self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organization_quotas\/#{params[:guid]}) },
+            }
+          }
+        end
+
+        it 'responds with the expected code and response' do
+          api_call.call(admin_header)
+          expect(last_response).to have_status_code(201)
+          # TODO: is this how we write tests when we don't use shared example??????
+          expect(parsed_response).to match_json_response(expected_response)
+        end
+      end
 
       context 'when the user is not logged in' do
         it 'returns 401 for Unauthenticated requests' do

@@ -12,5 +12,8 @@ Name | Type | Description
 | **guid** | _uuid_ | Unique identifier for the role. |
 | **created_at** | _datetime_ | The time with zone when the role was created.|
 | **updated_at**  | _datetime_ | The time with zone when the role was last updated. |
-**relationships.organizations** | [_to-many relationship_](#to-many-relationships) | A relationship to the organizations the quota applies to. |
+| **apps.per_process_memory_in_mb** | _integer_ | Maximum memory a single process or task can use. |
+| **apps.total_instances** | _integer_ | Total instances all the started processes in an organization can have |
+| **apps.per_app_tasks** | _integer_ | Maximum number of running tasks a single application can have. |
+| **relationships.organizations** | [_to-many relationship_](#to-many-relationships) | A relationship to the organizations the quota applies to. |
 | **links** | [_links object_](#links) | Links to related resources. |
