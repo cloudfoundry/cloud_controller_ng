@@ -11,6 +11,10 @@
 * [V2 API Docs](http://apidocs.cloudfoundry.org)
 * [Continuous Integration Pipelines](https://capi.ci.cf-app.com)
 
+## To start with a fully configured IDE:
+
+[![Open in Gitpod](http://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io#https://github.com/FloThinksPi-Forks/cloud_controller_ng)
+
 ## Components
 
 ### Cloud Controller

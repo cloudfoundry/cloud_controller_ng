@@ -7,6 +7,7 @@
 .\#*
 .bundle
 bundler
+vendor/bundle
 spec/artifacts
 spec/examples.txt
 ci-artifacts-dir

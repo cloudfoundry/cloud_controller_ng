@@ -1,0 +1,8 @@
+{
+   "editor.autoSave": "on",
+   "ruby.useBundler": true,
+   "solargraph.useBundler": true,
+   "ruby.rubocop.useBundler": true,
+   "rubyTestExplorer.rspecCommand": "bundle exec rspec",
+   "ruby.format": "rubocop" // use rubocop for formatting
+}

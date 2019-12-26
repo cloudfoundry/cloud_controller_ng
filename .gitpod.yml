@@ -1,0 +1,18 @@
+image:
+  file: .gitpod.Dockerfile
+
+ports:
+  - port: 8181
+
+tasks:
+    - init: rm -rf /workspace/.rvm && ln -s -T ~/.rvm /workspace/.rvm && cp -a $HOME/cloud_controller_ng/vendor/bundle /workspace/cloud_controller_ng/vendor/bundle && bundle install -j 16 --path vendor/bundle && createuser -s postgres && bundle exec rake db:create && bundle exec rake db:migrate && echo -e "\e[31mPlease Reload the website so Gitpod Plugins pick up the newly installed Ruby Gems\e[0m"
+
+vscode:
+  extensions:
+    - misogi.ruby-rubocop@0.8.1:KH35ddXdyhTnQ9F/btiBoQ==
+    - rebornix.ruby@0.26.0:RN+gv0dPjYfMqlcEEralhg==
+    - kaiwood.endwise@1.4.2:b9UKVcoO63LrGqSpDkA2mg==
+    - castwide.solargraph@0.21.1:kJz6aC6XZbI/EeYHUPNCmQ==
+    - hbenl.vscode-test-explorer@2.15.0:koqDUMWDPJzELp/hdS/lWw==
+    - connorshea.vscode-ruby-test-adapter@0.6.1:HO9rpcRv7bmRIuo7Mty/zg==
+    - wingrunr21.vscode-ruby@0.26.0:VakXVw0C77hAQ3U3AZTn1Q==

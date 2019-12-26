@@ -1,0 +1,19 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "Ruby",
+      "request": "launch",
+      "name": "Run/Debug CloudController",
+      "cwd": "${workspaceRoot}",
+      "useBundler": true,
+      "program": "${workspaceRoot}/bin/cloud_controller",
+      "args": [
+        "-c",
+        "${workspaceRoot}/config/cloud_controller.yml"
+      ]
+    }
+  ]
+}
