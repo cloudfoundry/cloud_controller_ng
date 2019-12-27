@@ -93,7 +93,6 @@ module VCAP::CloudController
 
             it 'is not valid' do
               expect(subject).to be_invalid
-              p subject.errors
               expect(subject.errors[:apps]).to contain_exactly('Total memory in mb is not a number')
             end
           end
@@ -162,7 +161,6 @@ module VCAP::CloudController
 
             it 'is not valid' do
               expect(subject).to be_invalid
-              p subject.errors
               expect(subject.errors[:apps]).to contain_exactly('Per process memory in mb is not a number')
             end
           end
@@ -231,7 +229,6 @@ module VCAP::CloudController
 
             it 'is not valid' do
               expect(subject).to be_invalid
-              p subject.errors
               expect(subject.errors[:apps]).to contain_exactly('Total instances is not a number')
             end
           end
@@ -299,7 +296,6 @@ module VCAP::CloudController
 
             it 'is not valid' do
               expect(subject).to be_invalid
-              p subject.errors
               expect(subject.errors[:apps]).to contain_exactly('Per app tasks is not a number')
             end
           end
