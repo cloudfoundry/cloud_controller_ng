@@ -20,6 +20,11 @@ module VCAP::CloudController::Presenters::V3
           total_instances: convert_unlimited_to_nil(organization_quota.app_instance_limit),
           per_app_tasks: convert_unlimited_to_nil(organization_quota.app_task_limit),
         },
+        services: {
+          paid_services_allowed: organization_quota.non_basic_services_allowed,
+          total_service_instances: convert_unlimited_to_nil(organization_quota.total_services),
+          total_service_keys: convert_unlimited_to_nil(organization_quota.total_service_keys)
+        },
         links: build_links,
       }
     end

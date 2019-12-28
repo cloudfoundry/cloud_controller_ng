@@ -14,10 +14,15 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:created_at]).to eq(organization_quota.created_at)
         expect(result[:updated_at]).to eq(organization_quota.updated_at)
         expect(result[:name]).to eq(organization_quota.name)
+
         expect(result[:apps][:total_memory_in_mb]).to eq(20480)
         expect(result[:apps][:per_process_memory_in_mb]).to eq(nil)
         expect(result[:apps][:total_instances]).to eq(nil)
         expect(result[:apps][:per_app_tasks]).to eq(nil)
+
+        expect(result[:services][:paid_services_allowed]).to eq(true)
+        expect(result[:services][:total_service_instances]).to eq(60)
+        expect(result[:services][:total_service_keys]).to eq(nil)
 
         expect(result[:links][:self][:href]).to match(%r{/v3/organization_quotas/#{organization_quota.guid}$})
         expect(result[:relationships][:organizations][:data]).to eq([])

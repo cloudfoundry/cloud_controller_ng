@@ -349,6 +349,185 @@ module VCAP::CloudController
         end
       end
 
+      describe 'services' do
+        context 'invalid keys are passed in' do
+          let(:params) {
+            {
+              name: 'my-name',
+              services: { bad_key: 'billy' },
+            }
+          }
+
+          it 'is not valid' do
+            expect(subject).to be_invalid
+            expect(subject.errors.full_messages[0]).to include("Unknown field(s): 'bad_key'")
+          end
+        end
+
+        describe 'total_service_instances' do
+          context 'when the type is a string' do
+            let(:params) {
+              {
+                name: 'my-name',
+                services: { total_service_instances: 'bob' },
+              relationships: relationships,
+            }
+            }
+
+            it 'is not valid' do
+              expect(subject).to be_invalid
+              p subject.errors
+              expect(subject.errors[:services]).to contain_exactly('Total service instances is not a number')
+            end
+          end
+          context 'when the type is decimal' do
+            let(:params) {
+              {
+                name: 'my-name',
+                services: { total_service_instances: 1.1 },
+              relationships: relationships,
+            }
+            }
+
+            it 'is not valid' do
+              expect(subject).to be_invalid
+              expect(subject.errors[:services]).to contain_exactly('Total service instances must be an integer')
+            end
+          end
+          context 'when the type is a negative integer' do
+            let(:params) {
+              {
+                name: 'my-name',
+                services: { total_service_instances: -1 },
+              relationships: relationships,
+            }
+            }
+
+            it 'is not valid because "unlimited" is set with null, not -1, in V3' do
+              expect(subject).to be_invalid
+              expect(subject.errors[:services]).to contain_exactly('Total service instances must be greater than or equal to 0')
+            end
+          end
+
+          context 'when the type is zero' do
+            let(:params) {
+              {
+                name: 'my-name',
+                services: { total_service_instances: 0 },
+              relationships: relationships,
+            }
+            }
+
+            it { is_expected.to be_valid }
+          end
+          context 'when the type is nil (unlimited)' do
+            let(:params) {
+              {
+                name: 'my-name',
+                services: { total_service_instances: nil },
+              relationships: relationships,
+            }
+            }
+
+            it { is_expected.to be_valid }
+          end
+        end
+
+        describe 'total_service_keys' do
+          context 'when the type is a string' do
+            let(:params) {
+              {
+                name: 'my-name',
+                services: { total_service_keys: 'bob' },
+              relationships: relationships,
+            }
+            }
+
+            it 'is not valid' do
+              expect(subject).to be_invalid
+              p subject.errors
+              expect(subject.errors[:services]).to contain_exactly('Total service keys is not a number')
+            end
+          end
+          context 'when the type is decimal' do
+            let(:params) {
+              {
+                name: 'my-name',
+                services: { total_service_keys: 1.1 },
+              relationships: relationships,
+            }
+            }
+
+            it 'is not valid' do
+              expect(subject).to be_invalid
+              expect(subject.errors[:services]).to contain_exactly('Total service keys must be an integer')
+            end
+          end
+          context 'when the type is a negative integer' do
+            let(:params) {
+              {
+                name: 'my-name',
+                services: { total_service_keys: -1 },
+              relationships: relationships,
+            }
+            }
+
+            it 'is not valid because "unlimited" is set with null, not -1, in V3' do
+              expect(subject).to be_invalid
+              expect(subject.errors[:services]).to contain_exactly('Total service keys must be greater than or equal to 0')
+            end
+          end
+
+          context 'when the type is zero' do
+            let(:params) {
+              {
+                name: 'my-name',
+                services: { total_service_keys: 0 },
+              relationships: relationships,
+            }
+            }
+
+            it { is_expected.to be_valid }
+          end
+          context 'when the type is nil (unlimited)' do
+            let(:params) {
+              {
+                name: 'my-name',
+                services: { total_service_keys: nil },
+              relationships: relationships,
+            }
+            }
+
+            it { is_expected.to be_valid }
+          end
+        end
+
+        describe 'paid_services_allowed' do
+          context 'when it is a boolean' do
+            let(:params) { {
+              name: 'thë-name',
+              services: { paid_services_allowed: false },
+            }
+            }
+
+            it { is_expected.to be_valid }
+          end
+
+          context 'when it is not a boolean' do
+            let(:params) { {
+              name: 'thë-name',
+              services: { paid_services_allowed: 'b' },
+            }
+            }
+
+            it 'is not valid' do
+              expect(subject).to be_invalid
+              expect(subject.errors[:services]).to contain_exactly('Paid services allowed must be a boolean')
+            end
+          end
+        end
+      end
+
       describe 'relationships' do
         context 'given no organization guids' do
           let(:params) do

@@ -9,7 +9,7 @@ module VCAP::CloudController
       @relationships_requested ||= proc { |a| a.requested?(:relationships) }
     end
 
-    register_allowed_keys [:name, :apps, :relationships]
+    register_allowed_keys [:name, :apps, :relationships, :services]
     validates_with NoAdditionalKeysValidator
     validates_with RelationshipValidator, if: relationships_requested?
 
@@ -20,6 +20,7 @@ module VCAP::CloudController
       length: { maximum: MAX_ORGANIZATION_QUOTA_NAME_LENGTH }
 
     validate :apps_validator
+    validate :services_validator
 
     delegate :total_memory_in_mb, :per_process_memory_in_mb, :total_instances, :per_app_tasks, to: :apps_limits_message
 
@@ -31,11 +32,39 @@ module VCAP::CloudController
       @apps_limits_message ||= AppsLimitsMessage.new(apps&.deep_symbolize_keys)
     end
 
+    delegate :total_service_keys, :total_service_instances, :paid_services_allowed, to: :service_limits_message
+
+    def services_validator
+      errors[:services].concat(service_limits_message.errors.full_messages) unless service_limits_message.valid?
+    end
+
+    def service_limits_message
+      @service_limits_message ||= ServiceLimitsMessage.new(services&.deep_symbolize_keys)
+    end
+
     delegate :organization_guids, to: :relationships_message
 
     def relationships_message
       @relationships_message ||= Relationships.new(relationships&.deep_symbolize_keys)
     end
+  end
+
+  class ServiceLimitsMessage < BaseMessage
+    register_allowed_keys [:total_service_instances, :total_service_keys, :paid_services_allowed]
+
+    validates_with NoAdditionalKeysValidator
+
+    validates :total_service_keys,
+      numericality: { only_integer: true, greater_than_or_equal_to: 0 },
+      allow_nil: true
+
+    validates :total_service_instances,
+      numericality: { only_integer: true, greater_than_or_equal_to: 0 },
+      allow_nil: true
+
+    validates :paid_services_allowed,
+      inclusion: { in: [true, false], message: 'must be a boolean' },
+      allow_nil: true
   end
 
   class AppsLimitsMessage < BaseMessage

@@ -9,12 +9,20 @@ module VCAP::CloudController
       QuotaDefinition.db.transaction do
         org_quota = VCAP::CloudController::QuotaDefinition.create(
           name: message.name,
-          non_basic_services_allowed: QuotaDefinition::DEFAULT_NON_BASIC_SERVICES_ALLOWED,
+
+          # Apps
           memory_limit: message.total_memory_in_mb || QuotaDefinition::DEFAULT_MEMORY_LIMIT,
           instance_memory_limit: message.per_process_memory_in_mb || QuotaDefinition::UNLIMITED,
           app_instance_limit: message.total_instances || QuotaDefinition::UNLIMITED,
           app_task_limit: message.per_app_tasks || QuotaDefinition::UNLIMITED,
-          total_services: QuotaDefinition::DEFAULT_TOTAL_SERVICES,
+
+          # Services
+          total_services: message.total_service_instances || QuotaDefinition::DEFAULT_TOTAL_SERVICES,
+          total_service_keys: message.total_service_keys || QuotaDefinition::UNLIMITED,
+          non_basic_services_allowed: message.paid_services_allowed.nil? ?
+            QuotaDefinition::DEFAULT_NON_BASIC_SERVICES_ALLOWED : message.paid_services_allowed,
+
+          # Routes
           total_routes: QuotaDefinition::DEFAULT_TOTAL_ROUTES,
         )
 
@@ -23,7 +31,6 @@ module VCAP::CloudController
           org_quota.add_organization(org)
         end
       end
-
       org_quota
     rescue Sequel::ValidationFailed => e
       validation_error!(e, message)
