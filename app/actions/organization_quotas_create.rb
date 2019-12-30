@@ -24,6 +24,9 @@ module VCAP::CloudController
           # Routes
           total_routes: message.total_routes || QuotaDefinition::DEFAULT_TOTAL_ROUTES,
           total_reserved_route_ports: message.total_reserved_ports || QuotaDefinition::UNLIMITED,
+
+          # Domains
+          total_private_domains: message.total_domains || QuotaDefinition::UNLIMITED,
         )
 
         message.organization_guids.each do |guid|

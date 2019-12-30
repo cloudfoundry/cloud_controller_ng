@@ -30,6 +30,10 @@ module VCAP::CloudController::Presenters::V3
           total_reserved_ports: convert_unlimited_to_nil(organization_quota.total_reserved_route_ports)
         },
 
+        domains: {
+          total_domains: convert_unlimited_to_nil(organization_quota.total_private_domains)
+        },
+
         links: build_links,
       }
     end

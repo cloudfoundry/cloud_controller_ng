@@ -376,7 +376,6 @@ module VCAP::CloudController
 
             it 'is not valid' do
               expect(subject).to be_invalid
-              p subject.errors
               expect(subject.errors[:services]).to contain_exactly('Total service instances is not a number')
             end
           end
@@ -445,7 +444,6 @@ module VCAP::CloudController
 
             it 'is not valid' do
               expect(subject).to be_invalid
-              p subject.errors
               expect(subject.errors[:services]).to contain_exactly('Total service keys is not a number')
             end
           end
@@ -554,7 +552,6 @@ module VCAP::CloudController
 
             it 'is not valid' do
               expect(subject).to be_invalid
-              p subject.errors
               expect(subject.errors[:routes]).to contain_exactly('Total routes is not a number')
             end
           end
@@ -617,7 +614,6 @@ module VCAP::CloudController
 
             it 'is not valid' do
               expect(subject).to be_invalid
-              p subject.errors
               expect(subject.errors[:routes]).to contain_exactly('Total reserved ports is not a number')
             end
           end
@@ -666,6 +662,84 @@ module VCAP::CloudController
             }
 
             it { is_expected.to be_valid }
+          end
+        end
+      end
+
+      describe 'domains' do
+        context 'invalid keys are passed in' do
+          let(:params) {
+            {
+              name: 'my-name',
+              domains: { bad_key: 'billy' },
+            }
+          }
+
+          it 'is not valid' do
+            expect(subject).to be_invalid
+            expect(subject.errors.full_messages[0]).to include("Unknown field(s): 'bad_key'")
+          end
+
+          describe 'total_domains' do
+            context 'when the type is a string' do
+              let(:params) {
+                {
+                  name: 'my-name',
+                  domains: { total_domains: 'bob' },
+                }
+              }
+
+              it 'is not valid' do
+                expect(subject).to be_invalid
+                expect(subject.errors[:domains]).to contain_exactly('Total domains is not a number')
+              end
+            end
+            context 'when the type is decimal' do
+              let(:params) {
+                {
+                  name: 'my-name',
+                  domains: { total_domains: 1.1 },
+                }
+              }
+
+              it 'is not valid' do
+                expect(subject).to be_invalid
+                expect(subject.errors[:domains]).to contain_exactly('Total domains must be an integer')
+              end
+            end
+            context 'when the type is a negative integer' do
+              let(:params) {
+                {
+                  name: 'my-name',
+                  domains: { total_domains: -1 },
+                }
+              }
+
+              it 'is not valid because "unlimited" is set with null, not -1, in V3' do
+                expect(subject).to be_invalid
+                expect(subject.errors[:domains]).to contain_exactly('Total domains must be greater than or equal to 0')
+              end
+            end
+            context 'when the type is zero' do
+              let(:params) {
+                {
+                  name: 'my-name',
+                  domains: { total_domains: 0 },
+                }
+              }
+
+              it { is_expected.to be_valid }
+            end
+            context 'when the type is nil (unlimited)' do
+              let(:params) {
+                {
+                  name: 'my-name',
+                  domains: { total_domains: nil },
+                }
+              }
+
+              it { is_expected.to be_valid }
+            end
           end
         end
       end

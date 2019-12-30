@@ -9,7 +9,7 @@ module VCAP::CloudController
       @relationships_requested ||= proc { |a| a.requested?(:relationships) }
     end
 
-    register_allowed_keys [:name, :apps, :relationships, :services, :routes]
+    register_allowed_keys [:name, :apps, :relationships, :services, :routes, :domains]
     validates_with NoAdditionalKeysValidator
     validates_with RelationshipValidator, if: relationships_requested?
 
@@ -22,6 +22,7 @@ module VCAP::CloudController
     validate :apps_validator
     validate :services_validator
     validate :routes_validator
+    validate :domains_validator
 
     # Apps validations
     delegate :total_memory_in_mb, :per_process_memory_in_mb, :total_instances, :per_app_tasks, to: :apps_limits_message
@@ -54,6 +55,17 @@ module VCAP::CloudController
 
     def routes_limits_message
       @routes_limits_message ||= RoutesLimitsMessage.new(routes&.deep_symbolize_keys)
+    end
+
+    # domains validations
+    delegate :total_domains, to: :domains_limits_message
+
+    def domains_validator
+      errors[:domains].concat(domains_limits_message.errors.full_messages) unless domains_limits_message.valid?
+    end
+
+    def domains_limits_message
+      @domains_limits_message ||= DomainsLimitsMessage.new(domains&.deep_symbolize_keys)
     end
 
     # Relationships validations
@@ -114,6 +126,16 @@ module VCAP::CloudController
       allow_nil: true
 
     validates :total_reserved_ports,
+      numericality: { only_integer: true, greater_than_or_equal_to: 0 },
+      allow_nil: true
+  end
+
+  class DomainsLimitsMessage < BaseMessage
+    register_allowed_keys [:total_domains]
+
+    validates_with NoAdditionalKeysValidator
+
+    validates :total_domains,
       numericality: { only_integer: true, greater_than_or_equal_to: 0 },
       allow_nil: true
   end

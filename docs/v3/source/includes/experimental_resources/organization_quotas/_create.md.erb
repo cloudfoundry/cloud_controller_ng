@@ -50,7 +50,8 @@ Name | Type | Description | Default |
 | **services.total_service_keys** | _integer_ | Total number of service keys that an organization can have. | null (infinite) |
 | **routes.total_routes** | _integer_ | Total number of routes that an organization can have. | null (infinite) |
 | **routes.total_reserved_ports** | _integer_ | Total number of ports that all routes in an organization can reserve. | null (infinite) |
-| **relationships.organizations** | [_to-many relationship_](#to-many-relationships) | A relationship to the organizations the quota applies to. | null (infinite) |
+| **domains.total_domains** | _integer_ | Total number of domains that can be scoped to an organization. | null (infinite) |
+| **relationships.organizations** | [_to-many relationship_](#to-many-relationships) | A relationship to the organizations the quota applies to. | [] |
 
 #### Permitted roles
 

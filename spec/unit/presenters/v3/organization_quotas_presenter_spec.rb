@@ -27,6 +27,8 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:routes][:total_routes]).to eq(1000)
         expect(result[:routes][:total_reserved_ports]).to eq(5)
 
+        expect(result[:domains][:total_domains]).to eq(nil)
+
         expect(result[:links][:self][:href]).to match(%r{/v3/organization_quotas/#{organization_quota.guid}$})
         expect(result[:relationships][:organizations][:data]).to eq([])
       end

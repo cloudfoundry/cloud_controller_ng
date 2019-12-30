@@ -44,6 +44,9 @@ module VCAP::CloudController
             total_routes: nil,
             total_reserved_ports: nil,
           },
+          domains: {
+            total_domains: nil,
+          },
           relationships: {
             organizations: {
               data: [{ 'guid': 'organization-guid' }],
@@ -97,6 +100,9 @@ module VCAP::CloudController
               "total_routes": 8,
               "total_reserved_ports": 4
             },
+            'domains': {
+              'total_domains': 7,
+            },
           }
         end
 
@@ -120,6 +126,9 @@ module VCAP::CloudController
             "routes": {
               "total_routes": 8,
               "total_reserved_ports": 4
+            },
+            'domains': {
+              'total_domains': 7,
             },
             'relationships': {
               'organizations': {

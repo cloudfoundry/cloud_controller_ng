@@ -27,6 +27,9 @@ module VCAP::CloudController
             routes: {
               total_reserved_ports: 7,
               total_routes: 8
+            },
+            domains: {
+              total_domains: 9
             }
           })
         end
@@ -62,6 +65,8 @@ module VCAP::CloudController
           expect(organization_quota.total_reserved_route_ports).to eq(7)
           expect(organization_quota.total_routes).to eq(8)
 
+          expect(organization_quota.total_private_domains).to eq(9)
+
           expect(organization_quota.organizations.count).to eq(0)
         end
 
@@ -80,6 +85,9 @@ module VCAP::CloudController
           expect(organization_quota.non_basic_services_allowed).to eq(true)
 
           expect(organization_quota.total_routes).to eq(-1)
+          expect(organization_quota.total_reserved_route_ports).to eq(-1)
+
+          expect(organization_quota.total_private_domains).to eq(-1)
 
           expect(organization_quota.organizations.count).to eq(0)
         end
