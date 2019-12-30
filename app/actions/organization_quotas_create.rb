@@ -19,8 +19,7 @@ module VCAP::CloudController
           # Services
           total_services: message.total_service_instances || QuotaDefinition::DEFAULT_TOTAL_SERVICES,
           total_service_keys: message.total_service_keys || QuotaDefinition::UNLIMITED,
-          non_basic_services_allowed: message.paid_services_allowed.nil? ?
-            QuotaDefinition::DEFAULT_NON_BASIC_SERVICES_ALLOWED : message.paid_services_allowed,
+          non_basic_services_allowed: message.paid_services_allowed.nil? ? QuotaDefinition::DEFAULT_NON_BASIC_SERVICES_ALLOWED : message.paid_services_allowed,
 
           # Routes
           total_routes: QuotaDefinition::DEFAULT_TOTAL_ROUTES,
