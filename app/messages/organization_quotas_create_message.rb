@@ -64,24 +64,6 @@ module VCAP::CloudController
     end
   end
 
-  class ServiceLimitsMessage < BaseMessage
-    register_allowed_keys [:total_service_instances, :total_service_keys, :paid_services_allowed]
-
-    validates_with NoAdditionalKeysValidator
-
-    validates :total_service_keys,
-      numericality: { only_integer: true, greater_than_or_equal_to: 0 },
-      allow_nil: true
-
-    validates :total_service_instances,
-      numericality: { only_integer: true, greater_than_or_equal_to: 0 },
-      allow_nil: true
-
-    validates :paid_services_allowed,
-      inclusion: { in: [true, false], message: 'must be a boolean' },
-      allow_nil: true
-  end
-
   class AppsLimitsMessage < BaseMessage
     register_allowed_keys [:total_memory_in_mb, :per_process_memory_in_mb, :total_instances, :per_app_tasks]
 
@@ -101,6 +83,24 @@ module VCAP::CloudController
 
     validates :per_app_tasks,
       numericality: { only_integer: true, greater_than_or_equal_to: 0 },
+      allow_nil: true
+  end
+
+  class ServiceLimitsMessage < BaseMessage
+    register_allowed_keys [:total_service_instances, :total_service_keys, :paid_services_allowed]
+
+    validates_with NoAdditionalKeysValidator
+
+    validates :total_service_keys,
+      numericality: { only_integer: true, greater_than_or_equal_to: 0 },
+      allow_nil: true
+
+    validates :total_service_instances,
+      numericality: { only_integer: true, greater_than_or_equal_to: 0 },
+      allow_nil: true
+
+    validates :paid_services_allowed,
+      inclusion: { in: [true, false], message: 'must be a boolean' },
       allow_nil: true
   end
 
