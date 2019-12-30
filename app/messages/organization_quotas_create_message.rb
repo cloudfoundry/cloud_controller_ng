@@ -42,7 +42,7 @@ module VCAP::CloudController
     end
 
     def services_limits_message
-      @service_limits_message ||= ServicesLimitsMessage.new(services&.deep_symbolize_keys)
+      @services_limits_message ||= ServicesLimitsMessage.new(services&.deep_symbolize_keys)
     end
 
     # Routes validations
@@ -53,7 +53,7 @@ module VCAP::CloudController
     end
 
     def routes_limits_message
-      @route_limits_message ||= RoutesLimitsMessage.new(routes&.deep_symbolize_keys)
+      @routes_limits_message ||= RoutesLimitsMessage.new(routes&.deep_symbolize_keys)
     end
 
     # Relationships validations
