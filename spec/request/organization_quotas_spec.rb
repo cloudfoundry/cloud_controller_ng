@@ -40,6 +40,10 @@ module VCAP::CloudController
             total_service_instances: nil,
             total_service_keys: nil
           },
+          routes: {
+            total_routes: nil,
+            total_reserved_ports: nil,
+          },
           relationships: {
             organizations: {
               data: [{ 'guid': 'organization-guid' }],
@@ -89,6 +93,10 @@ module VCAP::CloudController
               "total_service_instances": 10,
               "total_service_keys": 20
             },
+            "routes": {
+              "total_routes": 8,
+              "total_reserved_ports": 4
+            },
           }
         end
 
@@ -108,6 +116,10 @@ module VCAP::CloudController
               "paid_services_allowed": false,
               "total_service_instances": 10,
               "total_service_keys": 20
+            },
+            "routes": {
+              "total_routes": 8,
+              "total_reserved_ports": 4
             },
             'relationships': {
               'organizations': {

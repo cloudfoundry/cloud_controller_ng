@@ -12,18 +12,22 @@ module VCAP::CloudController
 
         let(:message) do
           VCAP::CloudController::OrganizationQuotasCreateMessage.new({
-              name: 'my-name',
-              apps: {
-                total_memory_in_mb: 1,
-                per_process_memory_in_mb: 2,
-                total_instances: 3,
-                per_app_tasks: 4
-              },
-              services: {
-                paid_services_allowed: false,
-                total_service_instances: 5,
-                total_service_keys: 6
-              },
+            name: 'my-name',
+            apps: {
+              total_memory_in_mb: 1,
+              per_process_memory_in_mb: 2,
+              total_instances: 3,
+              per_app_tasks: 4
+            },
+            services: {
+              paid_services_allowed: false,
+              total_service_instances: 5,
+              total_service_keys: 6
+            },
+            routes: {
+              total_reserved_ports: 7,
+              total_routes: 8
+            }
           })
         end
 
@@ -55,10 +59,10 @@ module VCAP::CloudController
           expect(organization_quota.total_service_keys).to eq(6)
           expect(organization_quota.non_basic_services_allowed).to eq(false)
 
-          expect(organization_quota.organizations.count).to eq(0)
+          expect(organization_quota.total_reserved_route_ports).to eq(7)
+          expect(organization_quota.total_routes).to eq(8)
 
-          # default values yet to be implemented
-          expect(organization_quota.total_routes).to eq(-1)
+          expect(organization_quota.organizations.count).to eq(0)
         end
 
         it 'provides defaults if the parameters are not provided' do

@@ -25,6 +25,11 @@ module VCAP::CloudController::Presenters::V3
           total_service_instances: convert_unlimited_to_nil(organization_quota.total_services),
           total_service_keys: convert_unlimited_to_nil(organization_quota.total_service_keys)
         },
+        routes: {
+          total_routes: convert_unlimited_to_nil(organization_quota.total_routes),
+          total_reserved_ports: convert_unlimited_to_nil(organization_quota.total_reserved_route_ports)
+        },
+
         links: build_links,
       }
     end

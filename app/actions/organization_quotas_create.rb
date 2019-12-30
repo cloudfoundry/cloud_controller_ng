@@ -22,7 +22,8 @@ module VCAP::CloudController
           non_basic_services_allowed: message.paid_services_allowed.nil? ? QuotaDefinition::DEFAULT_NON_BASIC_SERVICES_ALLOWED : message.paid_services_allowed,
 
           # Routes
-          total_routes: QuotaDefinition::DEFAULT_TOTAL_ROUTES,
+          total_routes: message.total_routes || QuotaDefinition::DEFAULT_TOTAL_ROUTES,
+          total_reserved_route_ports: message.total_reserved_ports || QuotaDefinition::UNLIMITED,
         )
 
         message.organization_guids.each do |guid|
