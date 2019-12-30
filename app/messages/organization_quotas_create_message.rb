@@ -35,24 +35,24 @@ module VCAP::CloudController
     end
 
     # Services validations
-    delegate :total_service_keys, :total_service_instances, :paid_services_allowed, to: :service_limits_message
+    delegate :total_service_keys, :total_service_instances, :paid_services_allowed, to: :services_limits_message
 
     def services_validator
-      errors[:services].concat(service_limits_message.errors.full_messages) unless service_limits_message.valid?
+      errors[:services].concat(services_limits_message.errors.full_messages) unless services_limits_message.valid?
     end
 
-    def service_limits_message
-      @service_limits_message ||= ServiceLimitsMessage.new(services&.deep_symbolize_keys)
+    def services_limits_message
+      @service_limits_message ||= ServicesLimitsMessage.new(services&.deep_symbolize_keys)
     end
 
     # Routes validations
-    delegate :total_routes, :total_reserved_ports, to: :route_limits_message
+    delegate :total_routes, :total_reserved_ports, to: :routes_limits_message
 
     def routes_validator
-      errors[:routes].concat(route_limits_message.errors.full_messages) unless route_limits_message.valid?
+      errors[:routes].concat(routes_limits_message.errors.full_messages) unless routes_limits_message.valid?
     end
 
-    def route_limits_message
+    def routes_limits_message
       @route_limits_message ||= RoutesLimitsMessage.new(routes&.deep_symbolize_keys)
     end
 
@@ -86,7 +86,7 @@ module VCAP::CloudController
       allow_nil: true
   end
 
-  class ServiceLimitsMessage < BaseMessage
+  class ServicesLimitsMessage < BaseMessage
     register_allowed_keys [:total_service_instances, :total_service_keys, :paid_services_allowed]
 
     validates_with NoAdditionalKeysValidator
