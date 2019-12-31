@@ -17909,7 +17909,14 @@ Deployed revisions are revisions that are linked to started processes in the app
 </tbody></table>
 <h2 id="roles">Roles</h2>
 
-<p>Roles are used to control access to resources in organizations and spaces.</p>
+<p>Roles control access to resources in organizations and spaces.
+Roles are assigned to users.</p>
+
+<p>For example, a user with the <code class="prettyprint">space_developer</code> role is able to push
+applications to their space. A <code class="prettyprint">space_manager</code> user can also add roles to users
+within that space (e.g. making a user a <code class="prettyprint">space_auditor</code>). An
+<code class="prettyprint">organization_manager</code> has wide-reaching privileges, able to create &amp; delete
+spaces, and assign &amp; unassign roles to users.</p>
 <h3 id="the-role-object">The role object</h3>
 <pre class="highlight plaintext"><code>Example Role object
 </code></pre>
