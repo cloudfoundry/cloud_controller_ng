@@ -17008,7 +17008,7 @@ applications without incurring downtime. This is different from the traditional 
 <tr>
 <td><strong>apps.total_instances</strong></td>
 <td><em>integer</em></td>
-<td>Total instances all the started processes in an organization can have</td>
+<td>Total instances all the started processes in an organization can have.</td>
 </tr>
 <tr>
 <td><strong>apps.per_app_tasks</strong></td>
@@ -17018,17 +17018,27 @@ applications without incurring downtime. This is different from the traditional 
 <tr>
 <td><strong>services.paid_services_allowed</strong></td>
 <td><em>boolean</em></td>
-<td>If instances of paid service plans can be created</td>
+<td>If instances of paid service plans can be created.</td>
 </tr>
 <tr>
 <td><strong>services.total_service_instances</strong></td>
 <td><em>integer</em></td>
-<td>Total number of service instances that an organization can have</td>
+<td>Total number of service instances that an organization can have.</td>
 </tr>
 <tr>
 <td><strong>services.total_service_keys</strong></td>
 <td><em>integer</em></td>
-<td>Total number of service keys that an organization can have</td>
+<td>Total number of service keys that an organization can have.</td>
+</tr>
+<tr>
+<td><strong>routes.total_routes</strong></td>
+<td><em>integer</em></td>
+<td>Total number of routes that an organization can have.</td>
+</tr>
+<tr>
+<td><strong>routes.total_reserved_ports</strong></td>
+<td><em>integer</em></td>
+<td>Total number of ports that all routes in an organization can reserve.</td>
 </tr>
 <tr>
 <td><strong>relationships.organizations</strong></td>
@@ -17095,7 +17105,73 @@ applications without incurring downtime. This is different from the traditional 
 </tr>
 </tbody></table>
 
-<h4 id="permitted-organization_quotas">Permitted organization_quotas</h4>
+<h4 id="optional-parameters">Optional parameters</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>apps.per_process_memory_in_mb</strong></td>
+<td><em>integer</em></td>
+<td>Maximum memory a single process or task can use.</td>
+<td>null (infinite)</td>
+</tr>
+<tr>
+<td><strong>apps.total_instances</strong></td>
+<td><em>integer</em></td>
+<td>Total instances all the started processes in an organization can have.</td>
+<td>null (infinite)</td>
+</tr>
+<tr>
+<td><strong>apps.per_app_tasks</strong></td>
+<td><em>integer</em></td>
+<td>Maximum number of running tasks a single application can have.</td>
+<td>null (infinite)</td>
+</tr>
+<tr>
+<td><strong>services.paid_services_allowed</strong></td>
+<td><em>boolean</em></td>
+<td>If instances of paid service plans can be created.</td>
+<td>true</td>
+</tr>
+<tr>
+<td><strong>services.total_service_instances</strong></td>
+<td><em>integer</em></td>
+<td>Total number of service instances that an organization can have.</td>
+<td>null (infinite)</td>
+</tr>
+<tr>
+<td><strong>services.total_service_keys</strong></td>
+<td><em>integer</em></td>
+<td>Total number of service keys that an organization can have.</td>
+<td>null (infinite)</td>
+</tr>
+<tr>
+<td><strong>routes.total_routes</strong></td>
+<td><em>integer</em></td>
+<td>Total number of routes that an organization can have.</td>
+<td>null (infinite)</td>
+</tr>
+<tr>
+<td><strong>routes.total_reserved_ports</strong></td>
+<td><em>integer</em></td>
+<td>Total number of ports that all routes in an organization can reserve.</td>
+<td>null (infinite)</td>
+</tr>
+<tr>
+<td><strong>relationships.organizations</strong></td>
+<td><a href="#to-many-relationships"><em>to-many relationship</em></a></td>
+<td>A relationship to the organizations the quota applies to.</td>
+<td>null (infinite)</td>
+</tr>
+</tbody></table>
+
+<h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
 <tr>
