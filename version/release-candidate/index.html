@@ -17001,6 +17001,11 @@ applications without incurring downtime. This is different from the traditional 
 <td>The time with zone when the role was last updated.</td>
 </tr>
 <tr>
+<td><strong>apps</strong></td>
+<td><em>object</em></td>
+<td>Quotas that affect applications and application sub-resources.</td>
+</tr>
+<tr>
 <td><strong>apps.per_process_memory_in_mb</strong></td>
 <td><em>integer</em></td>
 <td>Maximum memory a single process or task can use.</td>
@@ -17014,6 +17019,11 @@ applications without incurring downtime. This is different from the traditional 
 <td><strong>apps.per_app_tasks</strong></td>
 <td><em>integer</em></td>
 <td>Maximum number of running tasks a single application can have.</td>
+</tr>
+<tr>
+<td><strong>services</strong></td>
+<td><em>object</em></td>
+<td>Quotas that affect services.</td>
 </tr>
 <tr>
 <td><strong>services.paid_services_allowed</strong></td>
@@ -17031,6 +17041,11 @@ applications without incurring downtime. This is different from the traditional 
 <td>Total number of service keys that an organization can have.</td>
 </tr>
 <tr>
+<td><strong>routes</strong></td>
+<td><em>object</em></td>
+<td>Quotas that affect routes.</td>
+</tr>
+<tr>
 <td><strong>routes.total_routes</strong></td>
 <td><em>integer</em></td>
 <td>Total number of routes that an organization can have.</td>
@@ -17039,6 +17054,16 @@ applications without incurring downtime. This is different from the traditional 
 <td><strong>routes.total_reserved_ports</strong></td>
 <td><em>integer</em></td>
 <td>Total number of ports that all routes in an organization can reserve.</td>
+</tr>
+<tr>
+<td><strong>domains</strong></td>
+<td><em>object</em></td>
+<td>Quotas that affect domains.</td>
+</tr>
+<tr>
+<td><strong>domains.total_domains</strong></td>
+<td><em>integer</em></td>
+<td>Total number of domains that can be scoped to an organization.</td>
 </tr>
 <tr>
 <td><strong>relationships.organizations</strong></td>
@@ -17116,6 +17141,12 @@ applications without incurring downtime. This is different from the traditional 
 </tr>
 </thead><tbody>
 <tr>
+<td><strong>apps</strong></td>
+<td><em>object</em></td>
+<td>Quotas that affect applications and application sub-resources.</td>
+<td></td>
+</tr>
+<tr>
 <td><strong>apps.per_process_memory_in_mb</strong></td>
 <td><em>integer</em></td>
 <td>Maximum memory a single process or task can use.</td>
@@ -17132,6 +17163,12 @@ applications without incurring downtime. This is different from the traditional 
 <td><em>integer</em></td>
 <td>Maximum number of running tasks a single application can have.</td>
 <td>null (infinite)</td>
+</tr>
+<tr>
+<td><strong>services</strong></td>
+<td><em>object</em></td>
+<td>Quotas that affect services.</td>
+<td></td>
 </tr>
 <tr>
 <td><strong>services.paid_services_allowed</strong></td>
@@ -17152,6 +17189,12 @@ applications without incurring downtime. This is different from the traditional 
 <td>null (infinite)</td>
 </tr>
 <tr>
+<td><strong>routes</strong></td>
+<td><em>object</em></td>
+<td>Quotas that affect routes.</td>
+<td></td>
+</tr>
+<tr>
 <td><strong>routes.total_routes</strong></td>
 <td><em>integer</em></td>
 <td>Total number of routes that an organization can have.</td>
@@ -17164,10 +17207,22 @@ applications without incurring downtime. This is different from the traditional 
 <td>null (infinite)</td>
 </tr>
 <tr>
+<td><strong>domains</strong></td>
+<td><em>object</em></td>
+<td>Quotas that affect domains.</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>domains.total_domains</strong></td>
+<td><em>integer</em></td>
+<td>Total number of domains that can be scoped to an organization.</td>
+<td>null (infinite)</td>
+</tr>
+<tr>
 <td><strong>relationships.organizations</strong></td>
 <td><a href="#to-many-relationships"><em>to-many relationship</em></a></td>
 <td>A relationship to the organizations the quota applies to.</td>
-<td>null (infinite)</td>
+<td>[]</td>
 </tr>
 </tbody></table>
 
