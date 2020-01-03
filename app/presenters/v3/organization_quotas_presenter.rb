@@ -3,6 +3,11 @@ require 'presenters/mixins/metadata_presentation_helpers'
 
 module VCAP::CloudController::Presenters::V3
   class OrganizationQuotasPresenter < BasePresenter
+    def initialize(resource, visible_organizations: nil)
+      super(resource)
+      @visible_organizations = visible_organizations || resource.organizations
+    end
+
     def to_hash
       {
         guid: organization_quota.guid,
@@ -11,7 +16,7 @@ module VCAP::CloudController::Presenters::V3
         name: organization_quota.name,
         relationships: {
           organizations: {
-            data: organization_quota.organizations.map { |organization| { guid: organization.guid } }
+            data: @visible_organizations.map { |organization| { guid: organization.guid } }
           }
         },
         apps: {

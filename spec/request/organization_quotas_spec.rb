@@ -4,9 +4,11 @@ require 'request_spec_shared_examples'
 module VCAP::CloudController
   RSpec.describe 'organization_quotas' do
     let(:user) { VCAP::CloudController::User.make(guid: 'user-guid') }
-    let!(:org) { VCAP::CloudController::Organization.make(guid: 'organization-guid') }
+    let(:organization_quota) { VCAP::CloudController::QuotaDefinition.make }
+    let!(:org) { VCAP::CloudController::Organization.make(guid: 'organization-guid', quota_definition: organization_quota) }
     let(:space) { VCAP::CloudController::Space.make(guid: 'space-guid', organization: org) }
     let(:admin_header) { headers_for(user, scopes: %w(cloud_controller.admin)) }
+
     describe 'POST /v3/organization_quotas' do
       let(:api_call) { lambda { |user_headers| post '/v3/organization_quotas', params.to_json, user_headers } }
 
@@ -190,5 +192,89 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe 'GET /v3/organization_quotas/:guid' do
+      let(:api_call) { lambda { |user_headers| get "/v3/organization_quotas/#{organization_quota.guid}", nil, user_headers } }
+
+      context 'when getting an organization_quota' do
+        let!(:other_org) { VCAP::CloudController::Organization.make(guid: 'other-organization-guid', quota_definition: organization_quota) }
+        let(:other_org_response) { { 'guid': 'other-organization-guid' } }
+        let(:org_response) { { 'guid': 'organization-guid' } }
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(code: 200, response_object: generate_response_org_quota([org_response]))
+          h['admin'] = { code: 200, response_object: generate_response_org_quota([org_response, other_org_response]) }
+          h['admin_read_only'] = { code: 200, response_object: generate_response_org_quota([org_response, other_org_response]) }
+          h['global_auditor'] = { code: 200, response_object: generate_response_org_quota([org_response, other_org_response]) }
+          h['no_role'] = { code: 200, response_object: generate_response_org_quota([]) }
+          h
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
+
+      context 'when the organization_quota had no associated organizations' do
+        let(:unused_organization_quota) { VCAP::CloudController::QuotaDefinition.make }
+
+        it 'returns a quota with an empty array of org guids' do
+          get "/v3/organization_quotas/#{unused_organization_quota.guid}", nil, admin_header
+
+          expect(last_response).to have_status_code(200)
+          expect(parsed_response['relationships']['organizations']['data']).to eq([])
+        end
+      end
+
+      context 'when the organization_quota does not exist' do
+        it 'returns a 404 with a helpful message' do
+          get '/v3/organization_quotas/not-exist', nil, admin_header
+
+          expect(last_response).to have_status_code(404)
+          expect(last_response).to have_error_message('Organization quota not found')
+        end
+      end
+
+      context 'when not logged in' do
+        it 'returns a 401 with a helpful message' do
+          get '/v3/organization_quotas/not-exist', nil, {}
+          expect(last_response).to have_status_code(401)
+          expect(last_response).to have_error_message('Authentication error')
+        end
+      end
+    end
   end
+end
+
+def generate_response_org_quota(list_of_orgs)
+  {
+    guid: organization_quota.guid,
+    created_at: iso8601,
+    updated_at: iso8601,
+    name: organization_quota.name,
+    apps: {
+      total_memory_in_mb: 20480,
+      per_process_memory_in_mb: nil,
+      total_instances: nil,
+      per_app_tasks: nil
+    },
+    services: {
+      paid_services_allowed: true,
+      total_service_instances: 60,
+      total_service_keys: nil,
+    },
+    routes: {
+      total_routes: 1000,
+      total_reserved_ports: 5
+    },
+    domains: {
+      total_domains: nil
+    },
+    relationships: {
+      organizations: {
+        data: list_of_orgs
+      }
+    },
+    links: {
+      self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organization_quotas\/#{organization_quota.guid}) },
+    }
+  }
 end
