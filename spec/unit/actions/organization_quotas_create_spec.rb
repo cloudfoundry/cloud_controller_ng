@@ -12,14 +12,25 @@ module VCAP::CloudController
 
         let(:message) do
           VCAP::CloudController::OrganizationQuotasCreateMessage.new({
-              name: 'my-name',
-              apps: {
-                total_memory_in_mb: 1,
-                per_process_memory_in_mb: 2,
-                total_instances: 3,
-                per_app_tasks: 4
-              },
-            relationships: { organizations: { data: [] } },
+            name: 'my-name',
+            apps: {
+              total_memory_in_mb: 1,
+              per_process_memory_in_mb: 2,
+              total_instances: 3,
+              per_app_tasks: 4
+            },
+            services: {
+              paid_services_allowed: false,
+              total_service_instances: 5,
+              total_service_keys: 6
+            },
+            routes: {
+              total_reserved_ports: 7,
+              total_routes: 8
+            },
+            domains: {
+              total_domains: 9
+            }
           })
         end
 
@@ -41,15 +52,21 @@ module VCAP::CloudController
           organization_quota = org_quotas_create.create(message)
 
           expect(organization_quota.name).to eq('my-name')
+
           expect(organization_quota.memory_limit).to eq(1)
           expect(organization_quota.instance_memory_limit).to eq(2)
           expect(organization_quota.app_instance_limit).to eq(3)
           expect(organization_quota.app_task_limit).to eq(4)
 
-          # default values yet to be implemented
-          expect(organization_quota.non_basic_services_allowed).to eq(true)
-          expect(organization_quota.total_services).to eq(-1)
-          expect(organization_quota.total_routes).to eq(-1)
+          expect(organization_quota.total_services).to eq(5)
+          expect(organization_quota.total_service_keys).to eq(6)
+          expect(organization_quota.non_basic_services_allowed).to eq(false)
+
+          expect(organization_quota.total_reserved_route_ports).to eq(7)
+          expect(organization_quota.total_routes).to eq(8)
+
+          expect(organization_quota.total_private_domains).to eq(9)
+
           expect(organization_quota.organizations.count).to eq(0)
         end
 
@@ -57,12 +74,22 @@ module VCAP::CloudController
           organization_quota = org_quotas_create.create(minimum_message)
 
           expect(organization_quota.name).to eq('my-name')
-          expect(organization_quota.non_basic_services_allowed).to eq(true)
+
           expect(organization_quota.memory_limit).to eq(-1)
-          expect(organization_quota.total_services).to eq(-1)
-          expect(organization_quota.total_routes).to eq(-1)
-          expect(organization_quota.organizations.count).to eq(0)
+          expect(organization_quota.instance_memory_limit).to eq(-1)
           expect(organization_quota.app_instance_limit).to eq(-1)
+          expect(organization_quota.app_task_limit).to eq(-1)
+
+          expect(organization_quota.total_services).to eq(-1)
+          expect(organization_quota.total_service_keys).to eq(-1)
+          expect(organization_quota.non_basic_services_allowed).to eq(true)
+
+          expect(organization_quota.total_routes).to eq(-1)
+          expect(organization_quota.total_reserved_route_ports).to eq(-1)
+
+          expect(organization_quota.total_private_domains).to eq(-1)
+
+          expect(organization_quota.organizations.count).to eq(0)
         end
 
         it 'supports associating orgs with the quota' do

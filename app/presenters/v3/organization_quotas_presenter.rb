@@ -20,6 +20,20 @@ module VCAP::CloudController::Presenters::V3
           total_instances: convert_unlimited_to_nil(organization_quota.app_instance_limit),
           per_app_tasks: convert_unlimited_to_nil(organization_quota.app_task_limit),
         },
+        services: {
+          paid_services_allowed: organization_quota.non_basic_services_allowed,
+          total_service_instances: convert_unlimited_to_nil(organization_quota.total_services),
+          total_service_keys: convert_unlimited_to_nil(organization_quota.total_service_keys)
+        },
+        routes: {
+          total_routes: convert_unlimited_to_nil(organization_quota.total_routes),
+          total_reserved_ports: convert_unlimited_to_nil(organization_quota.total_reserved_route_ports)
+        },
+
+        domains: {
+          total_domains: convert_unlimited_to_nil(organization_quota.total_private_domains)
+        },
+
         links: build_links,
       }
     end

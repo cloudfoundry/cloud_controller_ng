@@ -35,6 +35,18 @@ module VCAP::CloudController
             total_instances: nil,
             per_app_tasks: nil
           },
+          services: {
+            paid_services_allowed: true,
+            total_service_instances: nil,
+            total_service_keys: nil
+          },
+          routes: {
+            total_routes: nil,
+            total_reserved_ports: nil,
+          },
+          domains: {
+            total_domains: nil,
+          },
           relationships: {
             organizations: {
               data: [{ 'guid': 'organization-guid' }],
@@ -78,7 +90,19 @@ module VCAP::CloudController
               'per_process_memory_in_mb': 1024,
               'total_instances': 10,
               'per_app_tasks': 5
-            }
+            },
+            "services": {
+              "paid_services_allowed": false,
+              "total_service_instances": 10,
+              "total_service_keys": 20
+            },
+            "routes": {
+              "total_routes": 8,
+              "total_reserved_ports": 4
+            },
+            'domains': {
+              'total_domains': 7,
+            },
           }
         end
 
@@ -94,6 +118,18 @@ module VCAP::CloudController
               'total_instances': 10,
               'per_app_tasks': 5
             },
+            "services": {
+              "paid_services_allowed": false,
+              "total_service_instances": 10,
+              "total_service_keys": 20
+            },
+            "routes": {
+              "total_routes": 8,
+              "total_reserved_ports": 4
+            },
+            'domains': {
+              'total_domains': 7,
+            },
             'relationships': {
               'organizations': {
                 'data': [],
@@ -108,7 +144,6 @@ module VCAP::CloudController
         it 'responds with the expected code and response' do
           api_call.call(admin_header)
           expect(last_response).to have_status_code(201)
-          # TODO: is this how we write tests when we don't use shared example??????
           expect(parsed_response).to match_json_response(expected_response)
         end
       end

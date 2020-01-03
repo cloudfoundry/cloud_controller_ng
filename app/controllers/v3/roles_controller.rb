@@ -15,11 +15,7 @@ class RolesController < ApplicationController
     message = RoleCreateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    role = if message.space_guid
-             create_space_role(message)
-           else
-             create_org_role(message)
-           end
+    role = message.space_guid ? create_space_role(message) : create_org_role(message)
 
     render status: :created, json: Presenters::V3::RolePresenter.new(role)
   rescue RoleCreate::Error => e
@@ -160,15 +156,12 @@ class RolesController < ApplicationController
   end
 
   def readable_users
-    User.readable_users_for_current_user(permission_queryer.can_read_globally?, current_user)
+    current_user.readable_users(permission_queryer.can_read_globally?)
   end
 
   def readable_roles
-    visible_user_ids = readable_users.select(:id)
-
-    roles_for_visible_users = Role.where(user_id: visible_user_ids)
-    roles_in_visible_spaces = roles_for_visible_users.filter(space_id: visible_space_ids)
-    roles_in_visible_orgs = roles_for_visible_users.filter(organization_id: visible_org_ids)
+    roles_in_visible_spaces = Role.filter(space_id: visible_space_ids)
+    roles_in_visible_orgs = Role.filter(organization_id: visible_org_ids)
 
     roles_in_visible_spaces.union(roles_in_visible_orgs)
   end
@@ -209,33 +202,24 @@ class RolesController < ApplicationController
     FeatureFlag.raise_unless_enabled!(:set_roles_by_username)
     uaa_client = CloudController::DependencyLocator.instance.uaa_client
 
-    origin = if given_origin
-               given_origin
-             else
-               origins = uaa_client.origins_for_username(username)
+    origin = given_origin
+    if given_origin.nil?
+      origins = uaa_client.origins_for_username(username)
 
-               if origins.length > 1
-                 unprocessable!(
-                   "Ambiguous user. User with username '#{username}' exists in the following origins: "\
-                   "#{origins.join(', ')}. Specify an origin to disambiguate."
-                 )
-               end
-
-               origins[0]
-             end
-
-    guid = uaa_client.id_for_username(username, origin: origin)
-
-    unless guid
-      if creating_space_role
-        unprocessable_space_user!
-      elsif given_origin
-        unprocessable!("No user exists with the username '#{username}' and origin '#{origin}'.")
-      else
-        unprocessable!("No user exists with the username '#{username}'.")
+      if origins.length > 1
+        unprocessable!(
+          "Ambiguous user. User with username '#{username}' exists in the following origins: "\
+          "#{origins.join(', ')}. Specify an origin to disambiguate."
+        )
       end
+      origin = origins[0]
     end
 
-    guid
+    guid = uaa_client.id_for_username(username, origin: origin)
+    return guid if guid
+
+    unprocessable_space_user! if creating_space_role
+    unprocessable!("No user exists with the username '#{username}' and origin '#{origin}'.") if given_origin
+    unprocessable!("No user exists with the username '#{username}'.")
   end
 end
