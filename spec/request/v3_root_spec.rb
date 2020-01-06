@@ -4,7 +4,7 @@ RSpec.describe 'v3 root' do
   describe 'GET /v3' do
     it 'returns a list of links to resources available on the v3 API' do
       get '/v3'
-      expect(last_response.status).to eq(200)
+      expect(last_response).to have_status_code(200)
       expect(parsed_response).to be_a_response_like({
         'links' => {
           'self' => {
@@ -61,8 +61,7 @@ RSpec.describe 'v3 root' do
             'href' => "#{link_prefix}/v3/resource_matches"
           },
           'roles' => {
-            'href' => "#{link_prefix}/v3/roles",
-            'experimental' => true
+            'href' => "#{link_prefix}/v3/roles"
           },
           'routes' => {
             'href' => "#{link_prefix}/v3/routes",
@@ -88,8 +87,7 @@ RSpec.describe 'v3 root' do
             'href' => "#{link_prefix}/v3/tasks"
           },
           'users' => {
-            'href' => "#{link_prefix}/v3/users",
-            'experimental' => true
+            'href' => "#{link_prefix}/v3/users"
           }
         }
       })

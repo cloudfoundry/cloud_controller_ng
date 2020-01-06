@@ -167,6 +167,13 @@ includes:
   - resources/resource_matches/header
   - resources/resource_matches/object
   - resources/resource_matches/create
+  - resources/roles/header
+  - resources/roles/object
+  - resources/roles/valid_roles
+  - resources/roles/create
+  - resources/roles/get
+  - resources/roles/list
+  - resources/roles/delete
   - resources/routes/header
   - resources/routes/object
   - resources/routes/destination_object
@@ -213,6 +220,13 @@ includes:
   - resources/tasks/list_for_app
   - resources/tasks/update
   - resources/tasks/cancel
+  - resources/users/header
+  - resources/users/object
+  - resources/users/create
+  - resources/users/get
+  - resources/users/list
+  - resources/users/update
+  - resources/users/delete
   - experimental_resources/header
   - experimental_resources/app_features/header
   - experimental_resources/app_features/object
@@ -245,13 +259,6 @@ includes:
   - experimental_resources/revisions/list
   - experimental_resources/revisions/deployed_list
   - experimental_resources/revisions/update
-  - experimental_resources/roles/header
-  - experimental_resources/roles/object
-  - experimental_resources/roles/valid_roles
-  - experimental_resources/roles/create
-  - experimental_resources/roles/get
-  - experimental_resources/roles/list
-  - experimental_resources/roles/delete
   - experimental_resources/service_bindings/header
   - experimental_resources/service_bindings/object
   - experimental_resources/service_bindings/create
@@ -280,13 +287,6 @@ includes:
   - experimental_resources/space_manifest/header
   - experimental_resources/space_manifest/object
   - experimental_resources/space_manifest/apply
-  - experimental_resources/users/header
-  - experimental_resources/users/object
-  - experimental_resources/users/create
-  - experimental_resources/users/get
-  - experimental_resources/users/list
-  - experimental_resources/users/update
-  - experimental_resources/users/delete
   - upgrade_guide/upgrade_guide
 
 ---
