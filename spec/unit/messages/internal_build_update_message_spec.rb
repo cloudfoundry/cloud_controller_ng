@@ -18,7 +18,7 @@ module VCAP::CloudController
       end
 
       context 'null error' do
-        let (:body) do
+        let(:body) do
           {
             state: 'STAGED'
           }
