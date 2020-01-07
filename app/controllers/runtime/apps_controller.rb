@@ -316,6 +316,27 @@ module VCAP::CloudController
         )
       end
 
+      if @request_attrs.key?('state')
+        if @request_attrs['state'] == 'STARTED'
+          TelemetryLogger.v2_emit(
+            'start-app',
+            {
+              'app-id' => process.app.guid,
+              'user-id' => current_user.guid,
+            }
+          )
+        end
+        if @request_attrs['state'] == 'STOPPED'
+          TelemetryLogger.v2_emit(
+            'stop-app',
+            {
+              'app-id' => process.app.guid,
+              'user-id' => current_user.guid,
+            }
+          )
+        end
+      end
+
       [HTTP::CREATED, object_renderer.render_json(self.class, process, @opts)]
     rescue PackageCreate::InvalidPackage => e
       unprocessable!(e.message)

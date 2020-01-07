@@ -753,8 +753,9 @@ RSpec.describe 'Apps' do
                 'user-id' => Digest::SHA256.hexdigest(user.guid),
               }
             }
-
+            # start-app telemetry will be logged because of the 'state:STARTED' update param. skip checking this.
             expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
+            expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(anything).once
 
             put "/v2/apps/#{process.app.guid}", update_params, headers_for(user)
 
@@ -834,6 +835,62 @@ RSpec.describe 'Apps' do
 
               expect(last_response.status).to eq(201), last_response.body
             end
+          end
+        end
+      end
+
+      context 'start app' do
+        let(:expected_start_json) do
+          {
+            'telemetry-source' => 'cloud_controller_ng',
+            'telemetry-time'   => Time.now.to_datetime.rfc3339,
+            'start-app' => {
+              'api-version'    => 'v2',
+              'app-id'         => Digest::SHA256.hexdigest(process.app.guid),
+              'user-id'        => Digest::SHA256.hexdigest(user.guid),
+            }
+          }
+        end
+        let(:update_params) do
+          MultiJson.dump({ state: 'STARTED' })
+        end
+
+        it 'should log the required fields' do
+          Timecop.freeze do
+            expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(anything).once
+            expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_start_json))
+
+            put "/v2/apps/#{process.app.guid}", update_params, headers_for(user)
+
+            expect(last_response.status).to eq(201), last_response.body
+          end
+        end
+      end
+
+      context 'stop app' do
+        let(:expected_stop_json) do
+          {
+            'telemetry-source' => 'cloud_controller_ng',
+            'telemetry-time'   => Time.now.to_datetime.rfc3339,
+            'stop-app' => {
+              'api-version'    => 'v2',
+              'app-id'         => Digest::SHA256.hexdigest(process.app.guid),
+              'user-id'        => Digest::SHA256.hexdigest(user.guid),
+            }
+          }
+        end
+        let(:update_params) do
+          MultiJson.dump({ state: 'STOPPED' })
+        end
+
+        it 'should log the required fields' do
+          Timecop.freeze do
+            expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(anything).once
+            expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_stop_json))
+
+            put "/v2/apps/#{process.app.guid}", update_params, headers_for(user)
+
+            expect(last_response.status).to eq(201), last_response.body
           end
         end
       end
