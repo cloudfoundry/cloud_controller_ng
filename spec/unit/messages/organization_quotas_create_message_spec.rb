@@ -67,6 +67,20 @@ module VCAP::CloudController
       end
 
       describe 'apps' do
+        context 'value for apps is not a hash' do
+          let(:params) {
+            {
+              name: 'my-name',
+              apps: true,
+            }
+          }
+
+          it 'is not valid' do
+            expect(subject).to be_invalid
+            expect(subject.errors.full_messages[0]).to include('Apps must be an object')
+          end
+        end
+
         context 'invalid keys are passed in' do
           let(:params) {
             {
@@ -350,6 +364,19 @@ module VCAP::CloudController
       end
 
       describe 'services' do
+        context 'value for services is not a hash' do
+          let(:params) {
+            {
+              name: 'my-name',
+              services: true,
+            }
+          }
+
+          it 'is not valid' do
+            expect(subject).to be_invalid
+            expect(subject.errors.full_messages[0]).to include('Services must be an object')
+          end
+        end
         context 'invalid keys are passed in' do
           let(:params) {
             {
@@ -527,6 +554,19 @@ module VCAP::CloudController
       end
 
       describe 'routes' do
+        context 'value for routes is not a hash' do
+          let(:params) {
+            {
+              name: 'my-name',
+              routes: true,
+            }
+          }
+
+          it 'is not valid' do
+            expect(subject).to be_invalid
+            expect(subject.errors.full_messages[0]).to include('Routes must be an object')
+          end
+        end
         context 'invalid keys are passed in' do
           let(:params) {
             {
@@ -667,6 +707,19 @@ module VCAP::CloudController
       end
 
       describe 'domains' do
+        context 'value for domains is not a hash' do
+          let(:params) {
+            {
+              name: 'my-name',
+              domains: true,
+            }
+          }
+
+          it 'is not valid' do
+            expect(subject).to be_invalid
+            expect(subject.errors.full_messages[0]).to include('Domains must be an object')
+          end
+        end
         context 'invalid keys are passed in' do
           let(:params) {
             {

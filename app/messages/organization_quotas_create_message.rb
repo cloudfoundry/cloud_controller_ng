@@ -5,13 +5,13 @@ module VCAP::CloudController
   class OrganizationQuotasCreateMessage < BaseMessage
     MAX_ORGANIZATION_QUOTA_NAME_LENGTH = 250
 
-    def self.relationships_requested?
-      @relationships_requested ||= proc { |a| a.requested?(:relationships) }
+    def self.key_requested?(key)
+      proc { |a| a.requested?(key) }
     end
 
     register_allowed_keys [:name, :apps, :relationships, :services, :routes, :domains]
     validates_with NoAdditionalKeysValidator
-    validates_with RelationshipValidator, if: relationships_requested?
+    validates_with RelationshipValidator, if: key_requested?(:relationships)
 
     validates :name,
       string: true,
@@ -19,15 +19,24 @@ module VCAP::CloudController
       allow_nil: false,
       length: { maximum: MAX_ORGANIZATION_QUOTA_NAME_LENGTH }
 
-    validate :apps_validator
-    validate :services_validator
-    validate :routes_validator
-    validate :domains_validator
+    validate :apps_validator, if: key_requested?(:apps)
+    validate :services_validator, if: key_requested?(:services)
+    validate :routes_validator, if: key_requested?(:routes)
+    validate :domains_validator, if: key_requested?(:domains)
 
     # Apps validations
     delegate :total_memory_in_mb, :per_process_memory_in_mb, :total_instances, :per_app_tasks, to: :apps_limits_message
 
+    def validates_hash(key, sym)
+      return true if key.is_a?(Hash)
+
+      errors[sym].concat(['must be an object'])
+      false
+    end
+
     def apps_validator
+      return unless validates_hash(apps, :apps)
+
       errors[:apps].concat(apps_limits_message.errors.full_messages) unless apps_limits_message.valid?
     end
 
@@ -39,6 +48,8 @@ module VCAP::CloudController
     delegate :total_service_keys, :total_service_instances, :paid_services_allowed, to: :services_limits_message
 
     def services_validator
+      return unless validates_hash(services, :services)
+
       errors[:services].concat(services_limits_message.errors.full_messages) unless services_limits_message.valid?
     end
 
@@ -50,6 +61,8 @@ module VCAP::CloudController
     delegate :total_routes, :total_reserved_ports, to: :routes_limits_message
 
     def routes_validator
+      return unless validates_hash(routes, :routes)
+
       errors[:routes].concat(routes_limits_message.errors.full_messages) unless routes_limits_message.valid?
     end
 
@@ -61,6 +74,8 @@ module VCAP::CloudController
     delegate :total_domains, to: :domains_limits_message
 
     def domains_validator
+      return unless validates_hash(domains, :domains)
+
       errors[:domains].concat(domains_limits_message.errors.full_messages) unless domains_limits_message.valid?
     end
 

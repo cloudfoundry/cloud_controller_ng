@@ -51,6 +51,7 @@ Name | Type | Description | Default |
 ---- | ---- | ----------- | ------- |
 | **apps** | _object_ | Quotas that affect applications and application sub-resources. |
 | **apps.per_process_memory_in_mb** | _integer_ | Maximum memory a single process or task can use. | null (infinite) |
+| **apps.total_memory_in_mb** | _integer_ | Total memory all the started processes and running tasks in an organization can use. | null (infinite) |
 | **apps.total_instances** | _integer_ | Total instances all the started processes in an organization can have. | null (infinite) |
 | **apps.per_app_tasks** | _integer_ | Maximum number of running tasks a single application can have. | null (infinite) |
 | **services** | _object_ | Quotas that affect services. |
