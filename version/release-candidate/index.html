@@ -19637,6 +19637,10 @@ Deployed revisions are revisions that are linked to started processes in the app
 <h2 id="service-brokers">Service Brokers</h2>
 
 <p>Service brokers manage the lifecycle of services. On behalf of users, Cloud Controller will interact with service brokers to provision, get access to and manage access to the service offerings and plans they offer.</p>
+
+<p>Admins can create and manage service brokers that are globally available, i.e., the service broker and its associated resources (service offerings and plans) can be made available to all users.</p>
+
+<p>Space Developers can create and manage space-scoped service brokers. A space-scoped broker and its associated resources will only be available in the space the service broker was created.</p>
 <h3 id="the-service-broker-object">The service broker object</h3>
 <pre class="highlight plaintext"><code>Example Service Broker object
 </code></pre>
@@ -19644,6 +19648,8 @@ Deployed revisions are revisions that are linked to started processes in the app
   </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"dde5ad2a-d8f4-44dc-a56f-0452d744f1c3"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my_service_broker"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://example.service-broker.com"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"available"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"available"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2015-11-13T17:02:56Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-06-08T16:41:26Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -19660,6 +19666,12 @@ Deployed revisions are revisions that are linked to started processes in the app
     </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576"</span><span class="w">
     </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"dev"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
   </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
 
@@ -19688,6 +19700,16 @@ Deployed revisions are revisions that are linked to started processes in the app
 <td>URL of the service broker.</td>
 </tr>
 <tr>
+<td><strong>available</strong></td>
+<td><em>boolean</em></td>
+<td>Whether or not the service broker is available.</td>
+</tr>
+<tr>
+<td><strong>status</strong></td>
+<td><em>string</em></td>
+<td>Availability status of the service broker.</td>
+</tr>
+<tr>
 <td><strong>created_at</strong></td>
 <td><em>datetime</em></td>
 <td>The time with zone when the object was created.</td>
@@ -19698,9 +19720,24 @@ Deployed revisions are revisions that are linked to started processes in the app
 <td>The time with zone when the object was last updated.</td>
 </tr>
 <tr>
+<td><strong>relationships.space</strong></td>
+<td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
+<td>The space the service broker is restricted to. Omitted for globally available service brokers.</td>
+</tr>
+<tr>
 <td><strong>links</strong></td>
 <td><a href="#links"><em>links object</em></a></td>
 <td>Links to related resources.</td>
+</tr>
+<tr>
+<td><strong>metadata.labels</strong> <em>(experimental)</em></td>
+<td><a href="#links"><em>label object</em></a></td>
+<td>Labels applied to the service broker.</td>
+</tr>
+<tr>
+<td><strong>metadata.annotations</strong> <em>(experimental)</em></td>
+<td><a href="#links"><em>annotation object</em></a></td>
+<td>Annotations added to the service broker.</td>
 </tr>
 </tbody></table>
 <h3 id="create-a-service-broker">Create a service broker</h3>
@@ -19775,14 +19812,22 @@ Deployed revisions are revisions that are linked to started processes in the app
 <th>Name</th>
 <th>Type</th>
 <th>Description</th>
-<th>Default</th>
 </tr>
 </thead><tbody>
 <tr>
-<td><strong>space</strong></td>
+<td><strong>relationships.space</strong></td>
 <td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
-<td>If set, restricts broker visibility to the specified space.</td>
-<td><code class="prettyprint">null</code></td>
+<td>If set, restricts the service broker to the specified space.</td>
+</tr>
+<tr>
+<td><strong>metadata.labels</strong> <em>(experimental)</em></td>
+<td><a href="#labels"><em>label object</em></a></td>
+<td>Labels applied to the service broker.</td>
+</tr>
+<tr>
+<td><strong>metadata.annotations</strong> <em>(experimental)</em></td>
+<td><a href="#annotations"><em>annotation object</em></a></td>
+<td>Annotations applied to the service broker.</td>
 </tr>
 </tbody></table>
 
@@ -19868,6 +19913,8 @@ Deployed revisions are revisions that are linked to started processes in the app
   </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"dde5ad2a-d8f4-44dc-a56f-0452d744f1c3"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my_service_broker"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://example.service-broker.com"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"available"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"available"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2015-11-13T17:02:56Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-06-08T16:41:26Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -19884,6 +19931,12 @@ Deployed revisions are revisions that are linked to started processes in the app
     </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576"</span><span class="w">
     </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"dev"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
   </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
 
@@ -19947,6 +20000,8 @@ Deployed revisions are revisions that are linked to started processes in the app
       </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"dde5ad2a-d8f4-44dc-a56f-0452d744f1c3"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my_service_broker"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://example.service-broker.com"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"available"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"available"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2015-11-13T17:02:56Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-06-08T16:41:26Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w"> </span><span class="p">,</span><span class="w">
@@ -19954,12 +20009,18 @@ Deployed revisions are revisions that are linked to started processes in the app
         </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
           </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_brokers/dde5ad2a-d8f4-44dc-a56f-0452d744f1c3"</span><span class="w">
         </span><span class="p">}</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+        </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
       </span><span class="p">}</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="p">{</span><span class="w">
       </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"7aa37bad-6ccb-4ef9-ba48-9ce3a91b2b62"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"another_service_broker"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://another-example.service-broker.com"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"available"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"available"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2015-11-13T17:02:56Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-06-08T16:41:26Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -19976,6 +20037,10 @@ Deployed revisions are revisions that are linked to started processes in the app
         </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
           </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576"</span><span class="w">
         </span><span class="p">}</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+        </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
       </span><span class="p">}</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">]</span><span class="w">
@@ -20072,7 +20137,7 @@ Deployed revisions are revisions that are linked to started processes in the app
 </code></pre>
 
 <p>This endpoint updates a broker and creates a job to synchronize the service offerings and service plans with those in the broker&rsquo;s catalog.  The <code class="prettyprint">Location</code> header refers to the created job which syncs the broker with the catalog.
-Service Brokers that are in the process of being synchronized or deleted cannot be updated by this endpoint.</p>
+Service Brokers that are in the process of being synchronized or deleted cannot be updated.</p>
 
 <h4 id="definition">Definition</h4>
 
@@ -20101,6 +20166,16 @@ Service Brokers that are in the process of being synchronized or deleted cannot 
 <td><strong>authentication</strong></td>
 <td><a href="#the-authentication-object"><em>authentication</em></a></td>
 <td>Credentials used to authenticate against the service broker.</td>
+</tr>
+<tr>
+<td><strong>metadata.labels</strong> <em>(experimental)</em></td>
+<td><a href="#labels"><em>label object</em></a></td>
+<td>Labels applied to the service broker.</td>
+</tr>
+<tr>
+<td><strong>metadata.annotations</strong> <em>(experimental)</em></td>
+<td><a href="#annotations"><em>annotation object</em></a></td>
+<td>Annotations applied to the service broker.</td>
 </tr>
 </tbody></table>
 
@@ -20179,11 +20254,13 @@ Service Brokers that are in the process of being synchronized or deleted cannot 
 </code></pre>
 <pre class="highlight plaintext"><code>Example Response
 </code></pre>
-<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">204</span> <span class="ne">No Content</span>
+<pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">202</span> <span class="ne">Accepted</span>
 <span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
+<span class="na">Location</span><span class="p">:</span> <span class="s">https://api.example.org/v3/jobs/af5c57f6-8769-41fa-a499-2c84ed896788</span>
 </code></pre>
 
-<p>This endpoint deletes an existing service broker.</p>
+<p>This endpoint deletes an existing service broker.
+This endpoint creates a job to delete an existing service broker. The <code class="prettyprint">Location</code> header refers to the created job.</p>
 
 <h4 id="definition">Definition</h4>
 
