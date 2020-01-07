@@ -12,6 +12,11 @@ Name | Type | Description
 **guid** | _uuid_ | Unique identifier for the service broker.
 **name** | _string_ | Name of the service broker.
 **url** | _string_ | URL of the service broker.
+**available** | _boolean_ | Whether or not the service broker is available.
+**status** | _string_ | Availability status of the service broker.
 **created_at** | _datetime_ | The time with zone when the object was created.
 **updated_at** | _datetime_ | The time with zone when the object was last updated.
+**relationships.space** | [_to-one relationship_](#to-one-relationships) | The space the service broker is restricted to. Omitted for globally available service brokers.
 **links** | [_links object_](#links) | Links to related resources.
+**metadata.labels** _(experimental)_      | [_label object_](#links)      | Labels applied to the service broker.                                                                                                   |
+**metadata.annotations** _(experimental)_ | [_annotation object_](#links) | Annotations added to the service broker.                                                                                                |

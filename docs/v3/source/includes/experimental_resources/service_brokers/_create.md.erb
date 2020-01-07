@@ -54,9 +54,11 @@ Name | Type | Description
 
 #### Optional parameters
 
-Name | Type | Description | Default
----- | ---- | ----------- | -------
-**space** | [_to-one relationship_](#to-one-relationships) | If set, restricts broker visibility to the specified space. | `null`
+Name | Type | Description |
+---- | ---- | ----------- |
+**relationships.space** | [_to-one relationship_](#to-one-relationships) | If set, restricts the service broker to the specified space.
+**metadata.labels** _(experimental)_| [_label object_](#labels) | Labels applied to the service broker.
+**metadata.annotations** _(experimental)_ | [_annotation object_](#annotations) | Annotations applied to the service broker.
 
 <%= yield_content :service_broker_credentials_object %>
 
@@ -65,4 +67,3 @@ Name | Type | Description | Default
 --- | ---
 Admin |
 Space Developer (only space-scoped brokers) |
-
