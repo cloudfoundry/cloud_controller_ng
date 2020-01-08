@@ -2,6 +2,8 @@ require 'messages/internal_build_update_message'
 
 class Internal::BuildsController < ApplicationController
   def update
+    unauthorized! unless permission_queryer.can_write_globally? # TODO: more specific scope!
+
     build = BuildModel.find(guid: params[:guid])
     resource_not_found!(:build) unless build
 
@@ -16,16 +18,5 @@ class Internal::BuildsController < ApplicationController
     end
 
     render status: :ok, json: Presenters::V3::BuildPresenter.new(build)
-  end
-
-  private
-
-  # TODO: Remove these and figure out internal component auth
-  def enforce_authentication?
-    false
-  end
-
-  def enforce_write_scope?
-    false
   end
 end
