@@ -9,9 +9,10 @@ Example Organization Quota object
 
 Name | Type | Description|
 ---- | ---- | -----------
-| **guid** | _uuid_ | Unique identifier for the role. |
-| **created_at** | _datetime_ | The time with zone when the role was created.|
-| **updated_at**  | _datetime_ | The time with zone when the role was last updated. |
+| **guid** | _uuid_ | Unique identifier for the organization quota. |
+| **created_at** | _datetime_ | The time with zone when the organization quota was created.|
+| **updated_at**  | _datetime_ | The time with zone when the organization quota was last updated. |
+| **name**  | _string_ | Name of the quota. |
 | **apps** | _object_ | Quotas that affect applications and application sub-resources. |
 | **apps.per_process_memory_in_mb** | _integer_ | Maximum memory a single process or task can use. |
 | **apps.total_memory_in_mb** | _integer_ | Total memory all the started processes and running tasks in an organization can use. |

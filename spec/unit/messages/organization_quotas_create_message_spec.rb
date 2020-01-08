@@ -18,7 +18,7 @@ module VCAP::CloudController
 
         it 'is not valid' do
           expect(subject).not_to be_valid
-          expect(subject.errors[:name]).to include("can't be blank")
+          expect(subject.errors[:name]).to eq ['must be a string', "can't be blank"]
         end
       end
 
@@ -62,6 +62,15 @@ module VCAP::CloudController
           it 'is not valid' do
             expect(subject).to be_invalid
             expect(subject.errors[:name]).to contain_exactly('is too long (maximum is 250 characters)')
+          end
+        end
+
+        context 'when it is blank' do
+          let(:params) { { name: '', relationships: relationships } }
+
+          it 'is not valid' do
+            expect(subject).to be_invalid
+            expect(subject.errors[:name]).to eq ["can't be blank"]
           end
         end
       end

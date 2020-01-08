@@ -8,10 +8,11 @@ module VCAP::CloudController
     validates_with NoAdditionalKeysValidator
     validates_with RelationshipValidator
 
-    validates :type, inclusion: {
-      in: VCAP::CloudController::RoleTypes::ALL_ROLES,
-      message: "must be one of the allowed types #{VCAP::CloudController::RoleTypes::ALL_ROLES}"
-    }
+    validates :type,
+      inclusion: {
+        in: VCAP::CloudController::RoleTypes::ALL_ROLES,
+        message: "must be one of the allowed types #{VCAP::CloudController::RoleTypes::ALL_ROLES}"
+      }
 
     delegate :space_guid, :user_guid, :organization_guid, :username, :user_origin, to: :relationships_message
 
