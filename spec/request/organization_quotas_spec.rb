@@ -120,12 +120,12 @@ module VCAP::CloudController
               'total_instances': 10,
               'per_app_tasks': 5
             },
-            "services": {
+            'services': {
               "paid_services_allowed": false,
               "total_service_instances": 10,
               "total_service_keys": 20
             },
-            "routes": {
+            'routes': {
               "total_routes": 8,
               "total_reserved_ports": 4
             },
@@ -193,6 +193,35 @@ module VCAP::CloudController
       end
     end
 
+    describe 'GET /v3/organization_quotas' do
+      let(:api_call) { lambda { |user_headers| get '/v3/organization_quotas', nil, user_headers } }
+
+      context 'when listing organization_quotas' do
+        let!(:other_org) { VCAP::CloudController::Organization.make(guid: 'other-organization-guid', quota_definition: organization_quota) }
+        let(:other_org_response) { { 'guid': 'other-organization-guid' } }
+        let(:org_response) { { 'guid': 'organization-guid' } }
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(code: 200, response_objects: generate_org_quota_list_response([org_response], false))
+          h['admin'] = { code: 200, response_objects: generate_org_quota_list_response([org_response, other_org_response], true) }
+          h['admin_read_only'] = { code: 200, response_objects: generate_org_quota_list_response([org_response, other_org_response], true) }
+          h['global_auditor'] = { code: 200, response_objects: generate_org_quota_list_response([org_response, other_org_response], true) }
+          h['no_role'] = { code: 200, response_objects: generate_org_quota_list_response([], false) }
+          h
+        end
+
+        it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+      end
+
+      context 'when not logged in' do
+        it 'returns a 401 with a helpful message' do
+          get '/v3/organization_quotas', nil, {}
+          expect(last_response).to have_status_code(401)
+          expect(last_response).to have_error_message('Authentication error')
+        end
+      end
+    end
+
     describe 'GET /v3/organization_quotas/:guid' do
       let(:api_call) { lambda { |user_headers| get "/v3/organization_quotas/#{organization_quota.guid}", nil, user_headers } }
 
@@ -202,11 +231,11 @@ module VCAP::CloudController
         let(:org_response) { { 'guid': 'organization-guid' } }
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(code: 200, response_object: generate_response_org_quota([org_response]))
-          h['admin'] = { code: 200, response_object: generate_response_org_quota([org_response, other_org_response]) }
-          h['admin_read_only'] = { code: 200, response_object: generate_response_org_quota([org_response, other_org_response]) }
-          h['global_auditor'] = { code: 200, response_object: generate_response_org_quota([org_response, other_org_response]) }
-          h['no_role'] = { code: 200, response_object: generate_response_org_quota([]) }
+          h = Hash.new(code: 200, response_object: generate_org_quota_single_response([org_response]))
+          h['admin'] = { code: 200, response_object: generate_org_quota_single_response([org_response, other_org_response]) }
+          h['admin_read_only'] = { code: 200, response_object: generate_org_quota_single_response([org_response, other_org_response]) }
+          h['global_auditor'] = { code: 200, response_object: generate_org_quota_single_response([org_response, other_org_response]) }
+          h['no_role'] = { code: 200, response_object: generate_org_quota_single_response([]) }
           h
         end
 
@@ -244,7 +273,7 @@ module VCAP::CloudController
   end
 end
 
-def generate_response_org_quota(list_of_orgs)
+def generate_org_quota_single_response(list_of_orgs)
   {
     guid: organization_quota.guid,
     created_at: iso8601,
@@ -275,6 +304,54 @@ def generate_response_org_quota(list_of_orgs)
     },
     links: {
       self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organization_quotas\/#{organization_quota.guid}) },
+    }
+  }
+end
+
+def generate_org_quota_list_response(list_of_orgs, global_read)
+  [
+    generate_default_org_quota_response(global_read),
+    generate_org_quota_single_response(list_of_orgs),
+  ]
+end
+
+def generate_default_org_quota_response(global_read)
+  # our request specs are seeded with an org that uses the default org quota
+  # the visibility of this org depends on the user's permissions
+  seeded_org_guid = VCAP::CloudController::Organization.where(name: 'the-system_domain-org-name').first.guid
+  seeded_org = global_read ? [{ 'guid': seeded_org_guid }] : []
+
+  default_quota = VCAP::CloudController::QuotaDefinition.default
+  {
+    guid: default_quota.guid,
+    created_at: iso8601,
+    updated_at: iso8601,
+    name: default_quota.name,
+    apps: {
+      total_memory_in_mb: 10240,
+      per_process_memory_in_mb: nil,
+      total_instances: nil,
+      per_app_tasks: nil
+    },
+    services: {
+      paid_services_allowed: true,
+      total_service_instances: 100,
+      total_service_keys: nil,
+    },
+    routes: {
+      total_routes: 1000,
+      total_reserved_ports: 0
+    },
+    domains: {
+      total_domains: nil
+    },
+    relationships: {
+      organizations: {
+        data: seeded_org
+      }
+    },
+    links: {
+      self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organization_quotas\/#{default_quota.guid}) },
     }
   }
 end

@@ -3,9 +3,14 @@ require 'presenters/mixins/metadata_presentation_helpers'
 
 module VCAP::CloudController::Presenters::V3
   class OrganizationQuotasPresenter < BasePresenter
-    def initialize(resource, visible_organizations: nil)
-      super(resource)
-      @visible_organizations = visible_organizations || resource.organizations
+    def initialize(
+      resource,
+        show_secrets: false,
+        censored_message: VCAP::CloudController::Presenters::Censorship::REDACTED_CREDENTIAL,
+        visible_org_guids: nil
+    )
+      super(resource, show_secrets: show_secrets, censored_message: censored_message)
+      @visible_org_guids = visible_org_guids
     end
 
     def to_hash
@@ -16,7 +21,7 @@ module VCAP::CloudController::Presenters::V3
         name: organization_quota.name,
         relationships: {
           organizations: {
-            data: @visible_organizations.map { |organization| { guid: organization.guid } }
+            data: filtered_visible_orgs.map { |organization| { guid: organization.guid } }
           }
         },
         apps: {
@@ -44,6 +49,14 @@ module VCAP::CloudController::Presenters::V3
     end
 
     private
+
+    def filtered_visible_orgs
+      if @visible_org_guids.nil?
+        return @resource.organizations
+      end
+
+      VCAP::CloudController::Organization.where(quota_definition_id: @resource.id, guid: @visible_org_guids).all
+    end
 
     def organization_quota
       @resource

@@ -1,0 +1,42 @@
+### List Organization Quotas
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/organization_quotas" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :list_organization_quotas %>
+```
+
+This endpoint lists all organization quota resources.
+
+#### Definition
+
+`GET /v3/organization_quotas`
+
+#### Permitted roles
+
+Role | Notes
+--- | ---
+Admin |
+Admin Read-Only |
+Global Auditor |
+Org Manager | Response will only include guids of managed organizations.
+Org Auditor | Response will only include guids of audited organizations.
+Org Billing Manager | Response will only include guids of billing-managed organizations.
+Space Auditor | Response will only include guids of parent organizations.
+Space Developer | Response will only include guids of parent organizations.
+Space Manager | Response will only include guids of parent organizations.

@@ -253,6 +253,7 @@ includes:
   - experimental_resources/organization_quotas/object
   - experimental_resources/organization_quotas/create
   - experimental_resources/organization_quotas/get
+  - experimental_resources/organization_quotas/list
   - experimental_resources/revisions/header
   - experimental_resources/revisions/object
   - experimental_resources/revisions/get

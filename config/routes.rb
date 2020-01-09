@@ -140,6 +140,7 @@ Rails.application.routes.draw do
   # organization_quotas
   post '/organization_quotas', to: 'organization_quotas#create'
   get  '/organization_quotas/:guid', to: 'organization_quotas#show'
+  get  '/organization_quotas', to: 'organization_quotas#index'
 
   # resource_matches
   post '/resource_matches', to: 'resource_matches#create'

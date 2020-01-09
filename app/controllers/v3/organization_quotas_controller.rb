@@ -1,5 +1,6 @@
 require 'actions/organization_quotas_create'
 require 'messages/organization_quotas_create_message'
+require 'messages/organization_quotas_list_message'
 require 'presenters/v3/organization_quotas_presenter'
 
 class OrganizationQuotasController < ApplicationController
@@ -20,15 +21,25 @@ class OrganizationQuotasController < ApplicationController
     organization_quota = QuotaDefinition.first(guid: hashed_params[:guid])
     resource_not_found!(:organization_quota) unless organization_quota
 
-    if permission_queryer.can_read_globally?
-      visible_orgs = organization_quota.organizations
-    else
-      visible_org_ids = Organization.user_visibility_filter(current_user)[:id]
-      visible_orgs = Organization.where(quota_definition_id: organization_quota.id, id: visible_org_ids).all
-    end
+    visible_organizations_guids = permission_queryer.readable_org_guids
 
-    render json: Presenters::V3::OrganizationQuotasPresenter.new(organization_quota, visible_organizations: visible_orgs), status: :ok
+    render json: Presenters::V3::OrganizationQuotasPresenter.new(organization_quota, visible_org_guids: visible_organizations_guids), status: :ok
   rescue OrganizationQuotasCreate::Error => e
     unprocessable!(e.message)
+  end
+
+  def index
+    message = OrganizationQuotasListMessage.from_params(query_params)
+    invalid_param!(message.errors.full_messages) unless message.valid?
+
+    dataset = QuotaDefinition.dataset
+
+    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
+      presenter: Presenters::V3::OrganizationQuotasPresenter,
+      paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
+      path: '/v3/organization_quotas',
+      message: message,
+      extra_presenter_args: { visible_org_guids: permission_queryer.readable_org_guids },
+    )
   end
 end
