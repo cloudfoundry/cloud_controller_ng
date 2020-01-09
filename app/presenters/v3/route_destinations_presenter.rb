@@ -1,10 +1,11 @@
 require 'presenters/v3/base_presenter'
+require 'presenters/v3/route_destination_presenter'
 
 module VCAP::CloudController::Presenters::V3
   class RouteDestinationsPresenter < BasePresenter
     def to_hash
       {
-        destinations: build_destinations,
+        destinations: presented_destinations,
         links: build_links
       }
     end
@@ -15,19 +16,9 @@ module VCAP::CloudController::Presenters::V3
       @resource
     end
 
-    def build_destinations
+    def presented_destinations
       route.route_mappings.map do |route_mapping|
-        {
-          guid: route_mapping.guid,
-          app: {
-            guid: route_mapping.app_guid,
-            process: {
-              type: route_mapping.process_type
-            }
-          },
-          weight: route_mapping.weight,
-          port: route_mapping.presented_port
-        }
+        RouteDestinationPresenter.new(route_mapping).to_hash
       end
     end
 

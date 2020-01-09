@@ -1,4 +1,5 @@
 require 'presenters/v3/base_presenter'
+require 'presenters/v3/route_destination_presenter'
 require 'presenters/mixins/metadata_presentation_helpers'
 require 'presenters/helpers/censorship'
 
@@ -9,15 +10,15 @@ module VCAP::CloudController::Presenters::V3
     class << self
       # :labels and :annotations come from MetadataPresentationHelpers
       def associated_resources
-        [:domain, :space].concat(super)
+        [:domain, :space, :route_mappings].concat(super)
       end
     end
 
     def initialize(
       resource,
-        show_secrets: false,
-        censored_message: VCAP::CloudController::Presenters::Censorship::REDACTED_CREDENTIAL,
-        decorators: []
+      show_secrets: false,
+      censored_message: VCAP::CloudController::Presenters::Censorship::REDACTED_CREDENTIAL,
+      decorators: []
     )
       super(resource, show_secrets: show_secrets, censored_message: censored_message, decorators: decorators)
     end
@@ -30,6 +31,7 @@ module VCAP::CloudController::Presenters::V3
         host: route.host,
         path: route.path,
         url: build_url,
+        destinations: route.route_mappings.map { |rm| RouteDestinationPresenter.new(rm).to_hash },
         metadata: {
           labels: hashified_labels(route.labels),
           annotations: hashified_annotations(route.annotations),

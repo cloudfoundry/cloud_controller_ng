@@ -31,6 +31,89 @@ module VCAP::CloudController
       end
     end
 
+    describe '#presented_port' do
+      let!(:app) { VCAP::CloudController::AppModel.make }
+      let!(:app_docker) { VCAP::CloudController::AppModel.make(:docker, droplet: droplet_docker) }
+      let!(:app_docker_without_process) { VCAP::CloudController::AppModel.make(:docker, droplet: droplet_docker) }
+      let!(:unstaged_app_docker) { VCAP::CloudController::AppModel.make(:docker, droplet: nil) }
+      let!(:process) { VCAP::CloudController::ProcessModel.make(app: app, type: 'some-type') }
+      let!(:unstaged_process) { VCAP::CloudController::ProcessModel.make(app: unstaged_app_docker, type: 'test') }
+      let!(:route) { VCAP::CloudController::Route.make(space: app.space) }
+      let!(:process_docker) { VCAP::CloudController::ProcessModel.make(app: app_docker, type: 'some-type') }
+      let!(:route_docker) { VCAP::CloudController::Route.make(space: app_docker.space) }
+      let!(:droplet_docker) do
+        VCAP::CloudController::DropletModel.make(
+          :docker,
+          state: VCAP::CloudController::DropletModel::STAGED_STATE,
+          execution_metadata: '{"ports":[{"Port":1024, "Protocol":"tcp"}]}'
+        )
+      end
+
+      context 'destination for buildpack app with specified port' do
+        let!(:route_mapping) do
+          VCAP::CloudController::RouteMappingModel.make(
+            app: app,
+            app_port: 1234,
+            route: route,
+            process_type: process.type,
+            weight: 55
+          )
+        end
+
+        it 'uses app port as presented port' do
+          expect(route_mapping.presented_port).to eq(route_mapping.app_port)
+        end
+      end
+
+      context 'destination for staged docker app' do
+        let!(:route_mapping) do
+          VCAP::CloudController::RouteMappingModel.make(
+            app: app_docker,
+            route: route_docker,
+            app_port: VCAP::CloudController::ProcessModel::NO_APP_PORT_SPECIFIED,
+            process_type: process.type,
+            weight: 55
+          )
+        end
+
+        it 'uses the port from the execution metadata as presented port' do
+          expect(route_mapping.presented_port).to eq(1024)
+        end
+      end
+
+      context 'destination for unstaged docker app' do
+        let!(:route_mapping) do
+          VCAP::CloudController::RouteMappingModel.make(
+            app: unstaged_app_docker,
+            route: route_docker,
+            app_port: VCAP::CloudController::ProcessModel::NO_APP_PORT_SPECIFIED,
+            process_type: unstaged_process.type,
+            weight: 55
+          )
+        end
+
+        it 'uses default HTTP port as presented port' do
+          expect(route_mapping.presented_port).to eq(8080)
+        end
+      end
+
+      context 'destination for staged docker app without process' do
+        let!(:route_mapping) do
+          VCAP::CloudController::RouteMappingModel.make(
+            app: app_docker_without_process,
+            route: route_docker,
+            app_port: VCAP::CloudController::ProcessModel::NO_APP_PORT_SPECIFIED,
+            process_type: 'web',
+            weight: 55
+          )
+        end
+
+        it 'uses the port from the execution metadata as presented port' do
+          expect(route_mapping.presented_port).to eq(1024)
+        end
+      end
+    end
+
     describe 'validations' do
       let(:space) { VCAP::CloudController::Space.make }
       let(:route) { VCAP::CloudController::Route.make(space: space) }
