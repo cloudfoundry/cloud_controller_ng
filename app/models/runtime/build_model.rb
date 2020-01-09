@@ -43,7 +43,7 @@ module VCAP::CloudController
     one_to_many :labels, class: 'VCAP::CloudController::BuildLabelModel', key: :resource_guid, primary_key: :guid
     one_to_many :annotations, class: 'VCAP::CloudController::BuildAnnotationModel', key: :resource_guid, primary_key: :guid
 
-    add_association_dependencies buildpack_lifecycle_data: :destroy
+    add_association_dependencies buildpack_lifecycle_data: :destroy, kpack_lifecycle_data: :destroy
 
     def before_destroy
       LabelDelete.delete(labels)

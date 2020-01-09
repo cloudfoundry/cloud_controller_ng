@@ -73,6 +73,16 @@ module VCAP::CloudController
             and change { BuildpackLifecycleBuildpackModel.count }.by(-2)
         end
       end
+
+      context 'kpack dependencies' do
+        let!(:lifecycle_data) { KpackLifecycleDataModel.make(build: build_model) }
+
+        it 'deletes the dependent kpack_lifecycle_data_models when a build is deleted' do
+          expect {
+            build_model.destroy
+          }.to change { KpackLifecycleDataModel.count }.by(-1)
+        end
+      end
     end
 
     describe '#staged?' do
