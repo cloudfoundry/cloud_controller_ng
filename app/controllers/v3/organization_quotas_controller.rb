@@ -1,6 +1,7 @@
 require 'actions/organization_quotas_create'
 require 'messages/organization_quotas_create_message'
 require 'messages/organization_quotas_list_message'
+require 'fetchers/organization_quota_list_fetcher'
 require 'presenters/v3/organization_quotas_presenter'
 
 class OrganizationQuotasController < ApplicationController
@@ -32,7 +33,7 @@ class OrganizationQuotasController < ApplicationController
     message = OrganizationQuotasListMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
 
-    dataset = QuotaDefinition.dataset
+    dataset = OrganizationQuotaListFetcher.fetch(message: message, readable_org_guids: permission_queryer.readable_org_guids)
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::OrganizationQuotasPresenter,

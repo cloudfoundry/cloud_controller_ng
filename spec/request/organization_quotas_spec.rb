@@ -4,7 +4,7 @@ require 'request_spec_shared_examples'
 module VCAP::CloudController
   RSpec.describe 'organization_quotas' do
     let(:user) { VCAP::CloudController::User.make(guid: 'user-guid') }
-    let(:organization_quota) { VCAP::CloudController::QuotaDefinition.make }
+    let(:organization_quota) { VCAP::CloudController::QuotaDefinition.make(guid: 'org-quota-guid') }
     let!(:org) { VCAP::CloudController::Organization.make(guid: 'organization-guid', quota_definition: organization_quota) }
     let(:space) { VCAP::CloudController::Space.make(guid: 'space-guid', organization: org) }
     let(:admin_header) { headers_for(user, scopes: %w(cloud_controller.admin)) }
@@ -211,6 +211,36 @@ module VCAP::CloudController
         end
 
         it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+
+        context 'with filters' do
+          let!(:organization_quota_2) { VCAP::CloudController::QuotaDefinition.make(guid: 'second-guid', name: 'second-name') }
+          let!(:organization_quota_3) { VCAP::CloudController::QuotaDefinition.make(guid: 'third-guid', name: 'third-name') }
+
+          before do
+            org.quota_definition = organization_quota
+            org.save
+
+            other_org.quota_definition = organization_quota
+            other_org.save
+          end
+
+          it 'returns the list of quotas filtered by names and guids' do
+            get "/v3/organization_quotas?guids=#{organization_quota.guid},second-guid&names=#{organization_quota.name},third_name", nil, admin_header
+
+            expect(last_response).to have_status_code(200)
+            expect(parsed_response['resources'].length).to eq(1)
+            expect(parsed_response['resources'][0]['guid']).to eq(organization_quota.guid)
+          end
+
+          it 'returns the list of quotas filtered by organization guids' do
+            get "/v3/organization_quotas?organization_guids=#{org.guid},#{other_org.guid}", nil, admin_header
+
+            expect(last_response).to have_status_code(200)
+            expect(
+              parsed_response['resources'].map { |org_quota| org_quota['guid'] }
+            ).to eq([organization_quota.guid])
+          end
+        end
       end
 
       context 'when not logged in' do
