@@ -411,6 +411,47 @@ RSpec.describe 'V3 service offerings' do
         expect(parsed_response['pagination']['total_pages']).to eq(2)
       end
     end
+
+    context 'filters and sorting' do
+      context 'when filtering on the `available` property' do
+        let(:api_call) { lambda { |user_headers| get "/v3/service_offerings?available=#{available}", nil, user_headers } }
+
+        let!(:service_offering_available) { VCAP::CloudController::ServicePlan.make(public: true, active: true).service }
+        let!(:service_offering_unavailable) do
+          offering = VCAP::CloudController::Service.make(active: false)
+          VCAP::CloudController::ServicePlan.make(public: true, active: true, service: offering)
+          offering
+        end
+
+        context 'filtering for available offerings' do
+          let(:available) { true }
+          let(:expected_codes_and_responses) do
+            Hash.new(
+              code: 200,
+              response_objects: [
+                create_offering_json(service_offering_available),
+              ]
+            )
+          end
+
+          it_behaves_like 'permissions for list endpoint', COMPLETE_PERMISSIONS
+        end
+
+        context 'filtering for unavailable offerings' do
+          let(:available) { false }
+          let(:expected_codes_and_responses) do
+            Hash.new(
+              code: 200,
+              response_objects: [
+                create_offering_json(service_offering_unavailable),
+              ]
+            )
+          end
+
+          it_behaves_like 'permissions for list endpoint', COMPLETE_PERMISSIONS
+        end
+      end
+    end
   end
 
   def create_offering_json(service_offering)
@@ -418,7 +459,7 @@ RSpec.describe 'V3 service offerings' do
       'guid' => service_offering.guid,
       'name' => service_offering.label,
       'description' => service_offering.description,
-      'available' => true,
+      'available' => service_offering.active,
       'bindable' => true,
       'broker_service_offering_metadata' => service_offering.extra,
       'broker_service_offering_id' => service_offering.unique_id,
