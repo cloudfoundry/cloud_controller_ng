@@ -1,6 +1,5 @@
 require 'spec_helper'
-require 'presenters/v3/route_mapping_presenter'
-require 'messages/route_mappings_list_message'
+require 'presenters/v3/route_destination_presenter'
 
 module VCAP::CloudController::Presenters::V3
   RSpec.describe RouteDestinationPresenter do

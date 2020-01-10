@@ -1,10 +1,10 @@
 require 'spec_helper'
-require 'presenters/v3/route_mapping_presenter'
-require 'messages/route_mappings_list_message'
+require 'presenters/v3/route_destination_presenter'
+require 'messages/route_destinations_list_message'
 
 module VCAP::CloudController::Presenters::V3
   RSpec.describe RouteDestinationsPresenter do
-    subject(:presenter) { RouteDestinationsPresenter.new(route) }
+    subject(:presenter) { RouteDestinationsPresenter.new(route.route_mappings, route: route) }
 
     let!(:app) { VCAP::CloudController::AppModel.make }
     let!(:process) { VCAP::CloudController::ProcessModel.make(app: app, type: 'some-type') }

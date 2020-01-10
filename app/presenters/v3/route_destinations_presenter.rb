@@ -3,6 +3,16 @@ require 'presenters/v3/route_destination_presenter'
 
 module VCAP::CloudController::Presenters::V3
   class RouteDestinationsPresenter < BasePresenter
+    def initialize(
+      resource,
+      show_secrets: false,
+      censored_message: VCAP::CloudController::Presenters::Censorship::REDACTED_CREDENTIAL,
+      route:
+    )
+      @route = route
+      super(resource, show_secrets: show_secrets, censored_message: censored_message, decorators: [])
+    end
+
     def to_hash
       {
         destinations: presented_destinations,
@@ -12,12 +22,14 @@ module VCAP::CloudController::Presenters::V3
 
     private
 
-    def route
+    attr_reader :route
+
+    def destinations
       @resource
     end
 
     def presented_destinations
-      route.route_mappings.map do |route_mapping|
+      destinations.map do |route_mapping|
         RouteDestinationPresenter.new(route_mapping).to_hash
       end
     end
