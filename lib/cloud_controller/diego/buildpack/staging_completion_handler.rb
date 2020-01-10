@@ -32,6 +32,7 @@ module VCAP::CloudController
                     name: String,
                     command: String,
                     process_types: [String],
+                    optional(:memory) => Integer,
                   }
                 ])
               }

@@ -154,6 +154,7 @@ module VCAP::CloudController
                   success_response[:result][:sidecars] = [{
                     name: 'sleepy',
                     command: 'sleep infinity',
+                    memory: 1000,
                     process_types: ['web'],
                   }]
                 end
@@ -164,6 +165,7 @@ module VCAP::CloudController
                   expect(droplet.sidecars).to eq([{
                     'name' => 'sleepy',
                     'command' => 'sleep infinity',
+                    'memory' => 1000,
                     'process_types' => ['web'],
                   }])
                 end

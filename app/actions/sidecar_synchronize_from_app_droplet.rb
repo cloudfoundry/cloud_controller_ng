@@ -11,6 +11,7 @@ module VCAP::CloudController
           SidecarDelete.delete(app.sidecars_dataset.where(origin: SidecarModel::ORIGIN_BUILDPACK))
 
           app.droplet.sidecars&.each do |sidecar_params|
+            translate_memory_for_message(sidecar_params)
             sidecar_create_message = SidecarCreateMessage.new(sidecar_params)
             raise_error_if_sidecar_names_conflict(app, sidecar_create_message)
             SidecarCreate.create(app.guid, sidecar_create_message, SidecarModel::ORIGIN_BUILDPACK)
@@ -26,6 +27,12 @@ module VCAP::CloudController
             " Consider renaming \'#{sidecar_create_message.name}\'."
           )
         end
+      end
+
+      private
+
+      def translate_memory_for_message(sidecar_params)
+        sidecar_params['memory_in_mb'] = sidecar_params['memory']
       end
     end
   end
