@@ -68,7 +68,10 @@ module OPI
               droplet_upload_uri: droplet_upload_uri,
               app_bits_download_uri: lifecycle_data[:app_bits_download_uri],
               buildpacks: lifecycle_data[:buildpacks]
-          }
+          },
+          cpu_weight: VCAP::CloudController::Diego::STAGING_TASK_CPU_WEIGHT,
+          disk_mb: staging_details.staging_disk_in_mb,
+          memory_mb: staging_details.staging_memory_in_mb
       }
     end
 
