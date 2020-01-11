@@ -51,6 +51,25 @@ RSpec.describe 'Sidecars' do
       expect(parsed_response).to be_a_response_like(expected_response)
     end
 
+    it 'logs sidecar create params to telemetry' do
+      Timecop.freeze do
+        expected_json = {
+          'telemetry-source' => 'cloud_controller_ng',
+          'telemetry-time' => Time.now.to_datetime.rfc3339,
+          'create-sidecar' => {
+            'api-version' => 'v3',
+            'origin' => 'user',
+            'memory-in-mb' => 300,
+            'process-types' => ['other_worker', 'web'],
+            'app-id' => Digest::SHA256.hexdigest(app_model.guid),
+            'user-id' => Digest::SHA256.hexdigest(user.guid),
+          }
+        }
+        expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
+        post "/v3/apps/#{app_model.guid}/sidecars", sidecar_params.to_json, user_header
+        expect(last_response.status).to eq(201), last_response.body
+      end
+    end
     describe 'deleting an app with a sidecar' do
       it 'deletes the sidecar' do
         post "/v3/apps/#{app_model.guid}/sidecars", sidecar_params.to_json, user_header
