@@ -652,7 +652,7 @@ RSpec.describe 'V3 service brokers' do
                   '(http://example.org/broker-url/v2/catalog) but can not be removed from Cloud Foundry while instances exist.' \
                   ' The plans have been deactivated to prevent users from attempting to provision new instances of these plans.' \
                   ' The broker should continue to support bind, unbind, and delete for existing instances; if these operations' \
-                  " fail contact your broker provider.\nservice_name-1\n  plan_name-1\n"
+                  " fail contact your broker provider.\n\nService Offering: service_name-1\nPlans deactivated: plan_name-1\n"
                     ),
                 })
               ],
