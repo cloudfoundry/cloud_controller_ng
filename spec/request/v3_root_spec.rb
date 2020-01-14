@@ -80,6 +80,10 @@ RSpec.describe 'v3 root' do
           'spaces' => {
             'href' => "#{link_prefix}/v3/spaces"
           },
+          'space_quotas' => {
+            'href' => "#{link_prefix}/v3/space_quotas",
+            'experimental' => true
+          },
           'stacks' => {
             'href' => "#{link_prefix}/v3/stacks"
           },
