@@ -14,7 +14,19 @@ module VCAP::CloudController
             translate_memory_for_message(sidecar_params)
             sidecar_create_message = SidecarCreateMessage.new(sidecar_params)
             raise_error_if_sidecar_names_conflict(app, sidecar_create_message)
-            SidecarCreate.create(app.guid, sidecar_create_message, SidecarModel::ORIGIN_BUILDPACK)
+            sidecar = SidecarCreate.create(app.guid, sidecar_create_message, SidecarModel::ORIGIN_BUILDPACK)
+            TelemetryLogger.v3_emit(
+              'create-sidecar',
+              {
+                'app-id' => sidecar.app.guid,
+              },
+              {
+                'api-version' => 'v3',
+                'origin' => 'buildpack',
+                'memory-in-mb' => sidecar.memory,
+                'process-types' => sidecar.process_types,
+              }
+            )
           end
         end
       end

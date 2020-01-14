@@ -2062,6 +2062,71 @@ RSpec.describe 'Apps' do
                                                     })
       expect(other_process_event.metadata).to eq({ 'process_guid' => other_process.guid, 'process_type' => 'other' })
     end
+
+    it 'creates sidecars that were saved on the droplet' do
+      droplet = VCAP::CloudController::DropletModel.make(:docker,
+        app: app_model,
+        process_types: { web: 'rackup' },
+        state: VCAP::CloudController::DropletModel::STAGED_STATE,
+        package: VCAP::CloudController::PackageModel.make,
+        sidecars:
+          [
+            {
+              name: 'sidecar_one',
+              command: 'bundle exec rackup',
+              process_types: ['web'],
+              memory_in_mb: 300,
+          }
+          ])
+
+      request_body = { data: { guid: droplet.guid } }
+
+      patch "/v3/apps/#{app_model.guid}/relationships/current_droplet", request_body.to_json, user_header
+
+      expect(last_response.status).to eq(200)
+
+      expect(app_model.reload.processes.count).to eq(1)
+      expect(app_model.reload.sidecars.count).to eq(1)
+    end
+
+    context 'telemetry' do
+      it 'logs the create-sidecar event' do
+        droplet = VCAP::CloudController::DropletModel.make(:docker,
+          app: app_model,
+          process_types: { web: 'rackup' },
+          state: VCAP::CloudController::DropletModel::STAGED_STATE,
+          package: VCAP::CloudController::PackageModel.make,
+          sidecars:
+            [
+              {
+                name: 'sidecar_one',
+                command: 'bundle exec rackup',
+                process_types: ['web'],
+                memory: 300,
+              }
+            ])
+
+        request_body = { data: { guid: droplet.guid } }
+
+        Timecop.freeze do
+          expected_json = {
+            'telemetry-source' => 'cloud_controller_ng',
+            'telemetry-time' => Time.now.to_datetime.rfc3339,
+            'create-sidecar' => {
+              'api-version' => 'v3',
+              'origin' => 'buildpack',
+              'memory-in-mb' => 300,
+              'process-types' => ['web'],
+              'app-id' => Digest::SHA256.hexdigest(app_model.guid),
+            }
+          }
+          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
+
+          patch "/v3/apps/#{app_model.guid}/relationships/current_droplet", request_body.to_json, user_header
+          expect(last_response.status).to eq(200), last_response.body
+        end
+      end
+    end
   end
 
   describe 'PATCH /v3/apps/:guid/environment_variables' do
