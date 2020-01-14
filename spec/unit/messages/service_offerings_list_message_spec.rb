@@ -8,6 +8,7 @@ module VCAP::CloudController
         {
           'available' => 'true',
           'service_broker_guids' => 'one,two',
+          'service_broker_names' => 'zhou,qin',
         }.with_indifferent_access
       end
 
@@ -17,6 +18,7 @@ module VCAP::CloudController
         expect(message).to be_a(ServiceOfferingsListMessage)
         expect(message.available).to eq('true')
         expect(message.service_broker_guids).to eq(%w(one two))
+        expect(message.service_broker_names).to eq(%w(zhou qin))
       end
 
       it 'converts requested keys to symbols' do

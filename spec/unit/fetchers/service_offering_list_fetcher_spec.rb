@@ -51,7 +51,34 @@ module VCAP::CloudController
         expect(service_offerings).to contain_exactly(
           service_offering_1,
           service_offering_2,
-          service_offering_3
+          service_offering_3,
+        )
+      end
+    end
+
+    describe 'the `service_broker_names` filter' do
+      let!(:service_broker) { VCAP::CloudController::ServiceBroker.make }
+      let!(:service_offering_1) do
+        offering = VCAP::CloudController::Service.make(service_broker: service_broker)
+        VCAP::CloudController::ServicePlan.make(public: true, service: offering)
+        offering
+      end
+      let!(:service_offering_2) do
+        offering = VCAP::CloudController::Service.make(service_broker: service_broker)
+        VCAP::CloudController::ServicePlan.make(public: true, service: offering)
+        offering
+      end
+      let!(:service_offering_3) { VCAP::CloudController::ServicePlan.make.service }
+      let!(:service_offering_4) { VCAP::CloudController::ServicePlan.make.service }
+
+      let(:service_broker_names) { [service_broker.name, service_offering_4.service_broker.name] }
+      let(:message) { ServiceOfferingsListMessage.from_params({ service_broker_names: service_broker_names.join(',') }.with_indifferent_access) }
+
+      it 'filters the service offerings with matching service broker GUIDs' do
+        expect(service_offerings).to contain_exactly(
+          service_offering_1,
+          service_offering_2,
+          service_offering_4,
         )
       end
     end

@@ -483,6 +483,38 @@ RSpec.describe 'V3 service offerings' do
 
         it_behaves_like 'permissions for list endpoint', COMPLETE_PERMISSIONS
       end
+
+      context 'when filtering on the service broker name' do
+        let(:api_call) { lambda { |user_headers| get "/v3/service_offerings?service_broker_names=#{service_broker_names.join(',')}", nil, user_headers } }
+        let(:service_broker_names) { [service_broker.name, service_offering_4.service_broker.name] }
+
+        let(:expected_codes_and_responses) do
+          Hash.new(
+            code: 200,
+            response_objects: [
+              create_offering_json(service_offering_1),
+              create_offering_json(service_offering_2),
+              create_offering_json(service_offering_4),
+            ]
+          )
+        end
+
+        let!(:service_broker) { VCAP::CloudController::ServiceBroker.make }
+        let!(:service_offering_1) do
+          offering = VCAP::CloudController::Service.make(service_broker: service_broker)
+          VCAP::CloudController::ServicePlan.make(public: true, service: offering)
+          offering
+        end
+        let!(:service_offering_2) do
+          offering = VCAP::CloudController::Service.make(service_broker: service_broker)
+          VCAP::CloudController::ServicePlan.make(public: true, service: offering)
+          offering
+        end
+        let!(:service_offering_3) { VCAP::CloudController::ServicePlan.make.service }
+        let!(:service_offering_4) { VCAP::CloudController::ServicePlan.make.service }
+
+        it_behaves_like 'permissions for list endpoint', COMPLETE_PERMISSIONS
+      end
     end
   end
 
