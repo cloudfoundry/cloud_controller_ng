@@ -20,19 +20,19 @@ module VCAP::CloudController
     def relationships_message
       @relationships_message ||= Relationships.new(relationships&.deep_symbolize_keys)
     end
-  end
 
-  class Relationships < BaseMessage
-    register_allowed_keys [:organization]
+    class Relationships < BaseMessage
+      register_allowed_keys [:organization]
 
-    validates :organization, allow_nil: false, to_one_relationship: true
+      validates :organization, allow_nil: false, to_one_relationship: true
 
-    def initialize(params)
-      super(params)
-    end
+      def initialize(params)
+        super(params)
+      end
 
-    def organization_guid
-      HashUtils.dig(organization, :data, :guid)
+      def organization_guid
+        HashUtils.dig(organization, :data, :guid)
+      end
     end
   end
 end
