@@ -321,6 +321,8 @@ module VCAP::CloudController
       let(:space) { Space.make(organization: org) }
       let(:dev) { make_developer_for_space(space) }
 
+      let(:expected_service_names) { [@private_service, @visible_service].map(&:label) }
+
       before(:each) do
         @private_broker = ServiceBroker.make(space: space)
         @private_service = Service.make(service_broker: @private_broker, active: true, label: 'Private Service')
@@ -339,20 +341,24 @@ module VCAP::CloudController
         expect(visible_services.map(&:label)).to match_array expected_service_names
       end
 
-      it 'only returns private broker services to Space<Managers/Auditors/Developers>' do
-        expected_service_names = [@private_service, @visible_service].map(&:label)
-
+      it 'only returns private broker services to Space<Users>' do
         visible_services = Service.space_or_org_visible_for_user(space, dev).all
         expect(visible_services.map(&:label)).to match_array expected_service_names
+      end
 
+      it 'only returns private broker services to Space</Developers>' do
         auditor = make_developer_for_space(space)
         visible_services = Service.space_or_org_visible_for_user(space, auditor).all
         expect(visible_services.map(&:label)).to match_array expected_service_names
+      end
 
+      it 'only returns private broker services to Space<Managers>' do
         manager = make_manager_for_space(space)
         visible_services = Service.space_or_org_visible_for_user(space, manager).all
         expect(visible_services.map(&:label)).to match_array expected_service_names
+      end
 
+      it 'only returns private broker services to Organization<Users>' do
         user = make_user_for_org(space.organization)
         visible_services = Service.space_or_org_visible_for_user(space, user).all
         expect(visible_services.map(&:label)).to match_array [@visible_service.label]
