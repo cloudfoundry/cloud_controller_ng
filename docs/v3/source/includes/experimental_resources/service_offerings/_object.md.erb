@@ -1,0 +1,31 @@
+### The Service Offering object
+
+```
+Example Service Offering object
+```
+```json
+<%= yield_content :single_service_offering %>
+```
+
+Name | Type | Description
+---- | ---- | -----------
+**guid** | _uuid_ | Unique identifier for the Service Offering.
+**name** | _string_ | Name of the Service Offering.
+**description** | _string_ | Description of the Service Offering.
+**available** | _boolean_ | Whether or not the Service Offering is available.
+**tags** | _list of strings_ | Descriptive tags for the Service Offering.
+**requires** | _list_of_strings_ | A list of permissions that the user would have to give the service, if they provision it. The only permissions currently supported are syslog_drain, route_forwarding and volume_mount.
+**created_at** | _datetime_ | The time with zone when the object was created.
+**updated_at** | _datetime_ | The time with zone when the object was last updated.
+**shareable** | _boolean_ | Whether or not Service Instances of this Service Offering can be shared across Organizations and Spaces.
+**broker_catalog** | _object_ | This object contains information obtained from the Service Broker Catalog.
+**broker_catalog.id** | _string_ | The identifier that the Service Broker provided for this Service Offering.
+**broker_catalog.metadata** | _object_ | Additional information provided by the Service Broker.
+**broker_catalog.features.plan_updateable** | _boolean_ | Whether the Service Offering supports upgrade/downgrade for Service Plans by default 
+**broker_catalog.features.bindable** | _boolean_ | Specifies whether Service Instances of the service can be bound to applications.
+**broker_catalog.features.instances_retrievable** | _boolean_ | Specifies whether the Fetching a Service Instance endpoint is supported for all Service Plans.
+**broker_catalog.features.bindings_retrievable** | _boolean_ | Specifies whether the Fetching a Service Binding endpoint is supported for all Service Plans.
+**relationships.service_broker** | [_to-one relationship_](#to-one-relationships) | The Service Broker that provides this Service Offering.
+**links** | [_links object_](#links) | Links to related resources.
+**metadata.labels** _(experimental)_      | [_label object_](#links)      | Labels applied to the Service Offering.                                                                                                   |
+**metadata.annotations** _(experimental)_ | [_annotation object_](#links) | Annotations added to the Service Offering.                                                                                                |
