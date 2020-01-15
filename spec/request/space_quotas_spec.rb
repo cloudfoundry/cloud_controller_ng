@@ -49,6 +49,10 @@ module VCAP::CloudController
           code: 201,
           response_object: space_quota_json
         }
+        h['org_manager'] = {
+          code: 201,
+          response_object: space_quota_json
+        }
         h.freeze
       end
 
@@ -100,6 +104,26 @@ module VCAP::CloudController
           api_call.call(admin_header)
           expect(last_response).to have_status_code(201)
           expect(parsed_response).to match_json_response(expected_response)
+        end
+      end
+
+      context 'when the org guid is invalid' do
+        let(:params) do
+          {
+            name: 'quota-with-bad-org',
+            relationships: {
+              organization: {
+                data: { guid: 'not-real' }
+              }
+            }
+          }
+        end
+
+        it 'returns 422' do
+          post '/v3/space_quotas', params.to_json, admin_header
+
+          expect(last_response).to have_status_code(422)
+          expect(last_response).to include_error_message('Organization with guid \'not-real\' does not exist, or you do not have access to it.')
         end
       end
 
