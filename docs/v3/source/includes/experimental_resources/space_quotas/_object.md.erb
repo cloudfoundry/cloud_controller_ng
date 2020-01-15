@@ -1,0 +1,17 @@
+### The space quota object
+
+```
+Example Space Quota object
+```
+```json
+<%= yield_content :single_space_quota %>
+```
+
+Name | Type | Description|
+---- | ---- | -----------
+| **guid** | _uuid_ | Unique identifier for the space quota. |
+| **created_at** | _datetime_ | The time with zone when the space quota was created.|
+| **updated_at**  | _datetime_ | The time with zone when the space quota was last updated. |
+| **name**  | _string_ | Name of the quota. |
+| **relationships.organization** | [_to-one relationship_](#to-one-relationships) | A relationship to the organization where the quota belongs. |
+| **links** | [_links object_](#links) | Links to related resources. |

@@ -30,6 +30,7 @@ includes:
   - api_resources/service_instances
   - api_resources/sidecars
   - api_resources/spaces
+  - api_resources/space_quotas
   - api_resources/stacks
   - api_resources/tasks
   - api_resources/users
@@ -289,6 +290,9 @@ includes:
   - experimental_resources/space_manifest/header
   - experimental_resources/space_manifest/object
   - experimental_resources/space_manifest/apply
+  - experimental_resources/space_quotas/header
+  - experimental_resources/space_quotas/object
+  - experimental_resources/space_quotas/create
   - upgrade_guide/upgrade_guide
 
 ---
