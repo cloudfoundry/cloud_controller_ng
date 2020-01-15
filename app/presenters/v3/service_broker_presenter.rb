@@ -65,7 +65,10 @@ module VCAP::CloudController
           links = {
             self: {
               href: url_builder.build_url(path: "/v3/service_brokers/#{broker.guid}")
-            }
+            },
+            service_offerings: {
+              href: url_builder.build_url(path: '/v3/service_offerings', query: "service_broker_guids=#{broker.guid}")
+            },
           }
 
           if broker.space_guid

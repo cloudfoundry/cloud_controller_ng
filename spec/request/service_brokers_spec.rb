@@ -155,7 +155,14 @@ RSpec.describe 'V3 service brokers' do
             status: 'available',
             available: true,
             relationships: {},
-            links: { self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/service_brokers\/#{global_service_broker_v3.guid}) } },
+            links: {
+              self: {
+                href: %r(#{Regexp.escape(link_prefix)}/v3/service_brokers/#{global_service_broker_v3.guid})
+              },
+              service_offerings: {
+                href: %r(#{Regexp.escape(link_prefix)}/v3/service_offerings\?service_broker_guids=#{global_service_broker_v3.guid})
+              },
+            },
             metadata: { labels: { potato: 'yam' }, annotations: { style: 'mashed' } }
         }
       end
@@ -169,7 +176,14 @@ RSpec.describe 'V3 service brokers' do
             status: 'available',
             available: true,
             relationships: {},
-            links: { self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/service_brokers\/#{global_service_broker_v2.guid}) } },
+            links: {
+              self: {
+                href: %r(#{Regexp.escape(link_prefix)}/v3/service_brokers/#{global_service_broker_v2.guid})
+              },
+              service_offerings: {
+                href: %r(#{Regexp.escape(link_prefix)}/v3/service_offerings\?service_broker_guids=#{global_service_broker_v2.guid})
+              },
+            },
             metadata: { labels: {}, annotations: {} }
         }
       end
@@ -208,6 +222,9 @@ RSpec.describe 'V3 service brokers' do
             links: {
                 self: {
                     href: %r(#{Regexp.escape(link_prefix)}\/v3\/service_brokers\/#{space_scoped_service_broker.guid})
+                },
+                service_offerings: {
+                  href: %r(#{Regexp.escape(link_prefix)}\/v3\/service_offerings\?service_broker_guids=#{space_scoped_service_broker.guid})
                 },
                 space: {
                     href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid})
@@ -349,7 +366,14 @@ RSpec.describe 'V3 service brokers' do
             available: true,
             metadata: { labels: {}, annotations: {} },
             relationships: {},
-            links: { self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/service_brokers\/#{global_service_broker_v3.guid}) } }
+            links: {
+              self: {
+                href: %r(#{Regexp.escape(link_prefix)}/v3/service_brokers/#{global_service_broker_v3.guid})
+              },
+              service_offerings: {
+                href: %r(#{Regexp.escape(link_prefix)}/v3/service_offerings\?service_broker_guids=#{global_service_broker_v3.guid})
+              },
+            }
         }
       end
 
@@ -396,7 +420,10 @@ RSpec.describe 'V3 service brokers' do
                 self: {
                     href: %r(#{Regexp.escape(link_prefix)}\/v3\/service_brokers\/#{space_scoped_service_broker.guid})
                 },
-                space: {
+                service_offerings: {
+                  href: %r(#{Regexp.escape(link_prefix)}/v3/service_offerings\?service_broker_guids=#{space_scoped_service_broker.guid})
+                },
+               space: {
                     href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid})
                 }
             }
@@ -697,7 +724,14 @@ RSpec.describe 'V3 service brokers' do
           available: false,
           metadata: { labels: { potato: 'yam' }, annotations: { style: 'mashed' } },
           relationships: {},
-          links: { self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/service_brokers\/#{UUID_REGEX}) } }
+          links: {
+            self: {
+              href: %r(#{Regexp.escape(link_prefix)}/v3/service_brokers/#{UUID_REGEX})
+            },
+            service_offerings: {
+              href: %r(#{Regexp.escape(link_prefix)}/v3/service_offerings\?service_broker_guids=#{UUID_REGEX})
+            },
+          }
       }
     end
 
@@ -833,10 +867,13 @@ RSpec.describe 'V3 service brokers' do
             },
             links: {
                 self: {
-                    href: %r(#{Regexp.escape(link_prefix)}\/v3\/service_brokers\/#{UUID_REGEX})
+                    href: %r(#{Regexp.escape(link_prefix)}/v3/service_brokers/#{UUID_REGEX})
+                },
+                service_offerings: {
+                  href: %r(#{Regexp.escape(link_prefix)}/v3/service_offerings\?service_broker_guids=#{UUID_REGEX})
                 },
                 space: {
-                    href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid})
+                    href: %r(#{Regexp.escape(link_prefix)}/v3/spaces/#{space.guid})
                 }
             }
         }
