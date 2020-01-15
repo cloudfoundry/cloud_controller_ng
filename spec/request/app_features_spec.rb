@@ -27,8 +27,8 @@ RSpec.describe 'App Features' do
             },
             {
               'name' => 'revisions',
-              'description' => 'Enable versioning of an application (experimental)',
-              'enabled' => false
+              'description' => 'Enable versioning of an application',
+              'enabled' => true
             }
           ],
           'pagination' =>

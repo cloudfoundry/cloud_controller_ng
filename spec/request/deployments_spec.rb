@@ -53,7 +53,10 @@ RSpec.describe 'Deployments' do
           'droplet' => {
             'guid' => droplet.guid
           },
-          'revision' => nil,
+          'revision' => {
+            'guid' => app_model.latest_revision.guid,
+            'version' => app_model.latest_revision.version,
+          },
           'previous_droplet' => {
             'guid' => droplet.guid
           },
@@ -121,7 +124,10 @@ RSpec.describe 'Deployments' do
           'droplet' => {
             'guid' => other_droplet.guid
           },
-          'revision' => nil,
+          'revision' => {
+            'guid' => app_model.latest_revision.guid,
+            'version' => app_model.latest_revision.version,
+          },
           'previous_droplet' => {
             'guid' => droplet.guid
           },
@@ -172,8 +178,6 @@ RSpec.describe 'Deployments' do
       end
 
       it 'should create a deployment object using the droplet associated with the revision' do
-        app_model.update(revisions_enabled: true)
-
         revision_count = VCAP::CloudController::RevisionModel.count
         post '/v3/deployments', create_request.to_json, user_header
         expect(last_response.status).to eq(201), last_response.body
@@ -251,8 +255,6 @@ RSpec.describe 'Deployments' do
       end
 
       it 'fails' do
-        app_model.update(revisions_enabled: true)
-
         post '/v3/deployments', create_request.to_json, user_header
         expect(last_response.status).to eq(422)
 
@@ -309,7 +311,10 @@ RSpec.describe 'Deployments' do
           'droplet' => {
             'guid' => droplet.guid
           },
-          'revision' => nil,
+          'revision' => {
+            'guid' => app_model.latest_revision.guid,
+            'version' => app_model.latest_revision.version,
+          },
           'previous_droplet' => {
             'guid' => droplet.guid
           },
@@ -354,10 +359,6 @@ RSpec.describe 'Deployments' do
             },
           }
         }
-      end
-
-      before do
-        app_model.update(revisions_enabled: true)
       end
 
       it 'creates a deployment with a reference to the new revision' do
@@ -459,7 +460,10 @@ RSpec.describe 'Deployments' do
           'droplet' => {
             'guid' => other_droplet.guid
           },
-          'revision' => nil,
+          'revision' => {
+            'guid' => app_model.latest_revision.guid,
+            'version' => app_model.latest_revision.version,
+          },
           'previous_droplet' => {
             'guid' => droplet.guid
           },
@@ -588,7 +592,10 @@ RSpec.describe 'Deployments' do
             'droplet' => {
               'guid' => droplet.guid
             },
-            'revision' => nil,
+            'revision' => {
+            'guid' => app_model.latest_revision.guid,
+            'version' => app_model.latest_revision.version,
+          },
             'previous_droplet' => {
               'guid' => droplet.guid
             },
@@ -641,7 +648,10 @@ RSpec.describe 'Deployments' do
             'droplet' => {
               'guid' => droplet.guid
             },
-            'revision' => nil,
+            'revision' => {
+            'guid' => app_model.latest_revision.guid,
+            'version' => app_model.latest_revision.version,
+          },
             'previous_droplet' => {
               'guid' => droplet.guid
             },

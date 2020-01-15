@@ -100,38 +100,38 @@ RSpec.describe DeploymentsController, type: :controller do
           }
         end
 
-        it 'creates a deployment' do
-          expect(VCAP::CloudController::DeploymentCreate).
-            to receive(:create).
-            with(
-              app: app,
-              user_audit_info: instance_of(VCAP::CloudController::UserAuditInfo),
-              message: instance_of(VCAP::CloudController::DeploymentCreateMessage),
-              ).and_call_original
-
-          expect {
-            post :create, params: request_body, as: :json
-          }.not_to change { VCAP::CloudController::RevisionModel.count }
-        end
-
-        context 'when revisions are enabled on the app' do
+        context 'when revisions are disabled' do
           before do
-            app.update(revisions_enabled: true)
+            app.update(revisions_enabled: false)
           end
 
-          it 'creates a revision' do
+          it 'creates a deployment' do
             expect(VCAP::CloudController::DeploymentCreate).
               to receive(:create).
-              with(
-                app: app,
-                user_audit_info: instance_of(VCAP::CloudController::UserAuditInfo),
-                message: instance_of(VCAP::CloudController::DeploymentCreateMessage),
+                with(
+                  app: app,
+                  user_audit_info: instance_of(VCAP::CloudController::UserAuditInfo),
+                  message: instance_of(VCAP::CloudController::DeploymentCreateMessage),
                 ).and_call_original
 
             expect {
               post :create, params: request_body, as: :json
-            }.to change { VCAP::CloudController::RevisionModel.count }.by(1)
+            }.not_to change { VCAP::CloudController::RevisionModel.count }
           end
+        end
+
+        it 'creates a revision' do
+          expect(VCAP::CloudController::DeploymentCreate).
+            to receive(:create).
+              with(
+                app: app,
+                user_audit_info: instance_of(VCAP::CloudController::UserAuditInfo),
+                message: instance_of(VCAP::CloudController::DeploymentCreateMessage),
+              ).and_call_original
+
+          expect {
+            post :create, params: request_body, as: :json
+          }.to change { VCAP::CloudController::RevisionModel.count }.by(1)
         end
 
         it 'sets the app droplet to the provided droplet' do
@@ -226,10 +226,6 @@ RSpec.describe DeploymentsController, type: :controller do
           }
         end
 
-        before do
-          app.update(revisions_enabled: true)
-        end
-
         it 'uses the droplet from the revision to create a new revision' do
           expect(VCAP::CloudController::DeploymentCreate).
             to receive(:create).
@@ -314,8 +310,6 @@ RSpec.describe DeploymentsController, type: :controller do
         end
 
         it 'returns 422 with an error message' do
-          app.update(revisions_enabled: true)
-
           post :create, params: request_body, as: :json
           expect(response.status).to eq 422
           expect(response.body).to include("Cannot set both fields 'droplet' and 'revision'")

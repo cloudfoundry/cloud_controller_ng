@@ -7,7 +7,7 @@ RSpec.describe AppFeaturesController, type: :controller do
   let(:org) { space.organization }
   let(:user) { VCAP::CloudController::User.make }
   let(:app_feature_ssh_response) { { 'name' => 'ssh', 'description' => 'Enable SSHing into the app.', 'enabled' => true } }
-  let(:app_feature_revisions_response) { { 'name' => 'revisions', 'description' => 'Enable versioning of an application (experimental)', 'enabled' => false } }
+  let(:app_feature_revisions_response) { { 'name' => 'revisions', 'description' => 'Enable versioning of an application', 'enabled' => true } }
 
   before do
     space.update(allow_ssh: true)
@@ -102,12 +102,12 @@ RSpec.describe AppFeaturesController, type: :controller do
     context 'updating revisions to true' do
       it 'enables revisions for the app' do
         expect(VCAP::CloudController::Permissions::Queryer).to receive(:new).and_call_original.exactly(:once)
-        patch :update, params: { app_guid: app_model.guid, name: 'revisions', enabled: true }, as: :json
+        patch :update, params: { app_guid: app_model.guid, name: 'revisions', enabled: false }, as: :json
 
         expect(response.status).to eq(200)
         expect(parsed_body['name']).to eq('revisions')
-        expect(parsed_body['description']).to eq('Enable versioning of an application (experimental)')
-        expect(parsed_body['enabled']).to eq(true)
+        expect(parsed_body['description']).to eq('Enable versioning of an application')
+        expect(parsed_body['enabled']).to eq(false)
       end
     end
 

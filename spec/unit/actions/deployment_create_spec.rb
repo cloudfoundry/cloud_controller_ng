@@ -76,86 +76,80 @@ module VCAP::CloudController
             expect(deployment.last_healthy_at).to eq(deployment.created_at)
           end
 
-          context 'when revisions are enabled' do
-            before do
-              app.update(revisions_enabled: true)
-            end
-
-            it 'creates a revision associated with the provided droplet' do
-              expect {
-                DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
-              }.to change { RevisionModel.count }.by(1)
-
-              revision = RevisionModel.last
-              expect(revision.droplet_guid).to eq(next_droplet.guid)
-
-              deploying_web_process = app.reload.newest_web_process
-              expect(deploying_web_process.revision).to eq(app.latest_revision)
-            end
-
-            it 'records the created revision on the deployment' do
-              deployment = DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
-
-              revision = RevisionModel.last
-
-              expect(deployment.revision_guid).to eq(revision.guid)
-              expect(deployment.revision_version).to eq(revision.version)
-            end
-
-            it 'has the reason for the initial revision' do
+          it 'creates a revision associated with the provided droplet' do
+            expect {
               DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+            }.to change { RevisionModel.count }.by(1)
 
-              revision = RevisionModel.last
+            revision = RevisionModel.last
+            expect(revision.droplet_guid).to eq(next_droplet.guid)
 
-              expect(revision.description).to eq('Initial revision.')
-            end
+            deploying_web_process = app.reload.newest_web_process
+            expect(deploying_web_process.revision).to eq(app.latest_revision)
+          end
 
-            it 'has the reason for a droplet changed' do
-              RevisionModel.make(app: app, droplet_guid: app.droplet.guid, environment_variables: app.environment_variables)
-              DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+          it 'records the created revision on the deployment' do
+            deployment = DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
 
-              revision = RevisionModel.last
+            revision = RevisionModel.last
 
-              expect(revision.description).to eq('New droplet deployed.')
-            end
+            expect(deployment.revision_guid).to eq(revision.guid)
+            expect(deployment.revision_version).to eq(revision.version)
+          end
 
-            it 'keeps a record of the revision even if it is deleted' do
-              deployment = DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+          it 'has the reason for the initial revision' do
+            DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
 
-              revision = RevisionModel.last
-              revision_guid = revision.guid
-              revision_version = revision.version
-              RevisionDelete.delete(revision)
+            revision = RevisionModel.last
 
-              deployment.reload
+            expect(revision.description).to eq('Initial revision.')
+          end
 
-              expect(deployment.revision_guid).to eq(revision_guid)
-              expect(deployment.revision_version).to eq(revision_version)
-            end
+          it 'has the reason for a droplet changed' do
+            RevisionModel.make(app: app, droplet_guid: app.droplet.guid, environment_variables: app.environment_variables)
+            DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
 
-            it 'records an audit event for the deployment with the revision' do
-              deployment = DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+            revision = RevisionModel.last
 
-              event = VCAP::CloudController::Event.find(type: 'audit.app.deployment.create')
-              expect(event).not_to be_nil
-              expect(event.actor).to eq('123')
-              expect(event.actor_type).to eq('user')
-              expect(event.actor_name).to eq('connor@example.com')
-              expect(event.actor_username).to eq('braa')
-              expect(event.actee).to eq(app.guid)
-              expect(event.actee_type).to eq('app')
-              expect(event.actee_name).to eq(app.name)
-              expect(event.timestamp).to be
-              expect(event.space_guid).to eq(app.space_guid)
-              expect(event.organization_guid).to eq(app.space.organization.guid)
-              expect(event.metadata).to eq({
-                'droplet_guid' => next_droplet.guid,
-                'deployment_guid' => deployment.guid,
-                'type' =>  nil,
-                'revision_guid' => RevisionModel.last.guid,
-                'request' => message.audit_hash
-              })
-            end
+            expect(revision.description).to eq('New droplet deployed.')
+          end
+
+          it 'keeps a record of the revision even if it is deleted' do
+            deployment = DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+
+            revision = RevisionModel.last
+            revision_guid = revision.guid
+            revision_version = revision.version
+            RevisionDelete.delete(revision)
+
+            deployment.reload
+
+            expect(deployment.revision_guid).to eq(revision_guid)
+            expect(deployment.revision_version).to eq(revision_version)
+          end
+
+          it 'records an audit event for the deployment with the revision' do
+            deployment = DeploymentCreate.create(app: app, message: message, user_audit_info: user_audit_info)
+
+            event = VCAP::CloudController::Event.find(type: 'audit.app.deployment.create')
+            expect(event).not_to be_nil
+            expect(event.actor).to eq('123')
+            expect(event.actor_type).to eq('user')
+            expect(event.actor_name).to eq('connor@example.com')
+            expect(event.actor_username).to eq('braa')
+            expect(event.actee).to eq(app.guid)
+            expect(event.actee_type).to eq('app')
+            expect(event.actee_name).to eq(app.name)
+            expect(event.timestamp).to be
+            expect(event.space_guid).to eq(app.space_guid)
+            expect(event.organization_guid).to eq(app.space.organization.guid)
+            expect(event.metadata).to eq({
+              'droplet_guid' => next_droplet.guid,
+              'deployment_guid' => deployment.guid,
+              'type' =>  nil,
+              'revision_guid' => RevisionModel.last.guid,
+              'request' => message.audit_hash
+            })
           end
 
           it 'sets the current droplet of the app to be the provided droplet' do
@@ -296,7 +290,7 @@ module VCAP::CloudController
               'droplet_guid' => next_droplet.guid,
               'deployment_guid' => deployment.guid,
               'type' =>  nil,
-              'revision_guid' => nil,
+              'revision_guid' => app.latest_revision.guid,
               'request' => message.audit_hash
             })
           end
@@ -353,7 +347,7 @@ module VCAP::CloudController
                 'droplet_guid' => next_droplet.guid,
                 'deployment_guid' => deployment.guid,
                 'type' => nil,
-                'revision_guid' => nil,
+                'revision_guid' => app_without_current_droplet.latest_revision.guid,
                 'request' => message.audit_hash
               })
             end
@@ -499,7 +493,7 @@ module VCAP::CloudController
                 'droplet_guid' => next_droplet.guid,
                 'deployment_guid' => deployment.guid,
                 'type' =>  nil,
-                'revision_guid' => nil,
+                'revision_guid' => app.latest_revision.guid,
                 'request' => message.audit_hash
               })
             end
@@ -653,7 +647,7 @@ module VCAP::CloudController
                 'droplet_guid' => next_droplet.guid,
                 'deployment_guid' => deployment.guid,
                 'type' =>  nil,
-                'revision_guid' => nil,
+                'revision_guid' =>  app.latest_revision.guid,
                 'request' => message.audit_hash
               })
             end

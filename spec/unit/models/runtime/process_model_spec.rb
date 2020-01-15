@@ -723,7 +723,6 @@ module VCAP::CloudController
         let!(:revision) { RevisionModel.make(app: parent_app, environment_variables: { 'key' => 'value2' }) }
 
         before do
-          parent_app.update(revisions_enabled: true)
           process.update(revision: revision)
         end
 
@@ -923,6 +922,7 @@ module VCAP::CloudController
       end
 
       context 'when revisions are disabled' do
+        let(:parent_app) { AppModel.make(space: space, revisions_enabled: false) }
         it 'returns desired_droplet' do
           expect(process.actual_droplet).to eq(second_droplet)
           expect(process.actual_droplet).to eq(process.latest_droplet)
@@ -931,8 +931,6 @@ module VCAP::CloudController
       end
 
       context 'when revisions are present and enabled' do
-        let(:parent_app) { AppModel.make(space: space, revisions_enabled: true) }
-
         it 'returns the droplet from the latest revision' do
           expect(process.actual_droplet).to eq(first_droplet)
           expect(process.actual_droplet).to eq(process.revision.droplet)

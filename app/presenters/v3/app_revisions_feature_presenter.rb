@@ -5,7 +5,7 @@ module VCAP::CloudController::Presenters::V3
     def to_hash
       {
         name:        'revisions',
-        description: 'Enable versioning of an application (experimental)',
+        description: 'Enable versioning of an application',
         enabled:     app.revisions_enabled,
       }
     end
