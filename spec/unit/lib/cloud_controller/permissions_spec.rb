@@ -39,6 +39,43 @@ module VCAP::CloudController
       end
     end
 
+    describe '#can_update_build_state?' do
+      context 'and user is an admin' do
+        it 'returns true' do
+          set_current_user(user, { admin: true })
+          expect(permissions.can_update_build_state?).to be true
+        end
+      end
+
+      context 'and the user is has the update_build_state scope' do
+        it 'returns true' do
+          set_current_user(user, { update_build_state: true })
+          expect(permissions.can_update_build_state?).to be true
+        end
+      end
+
+      context 'and the user is a read only admin' do
+        it 'returns false' do
+          set_current_user(user, { admin_read_only: true })
+          expect(permissions.can_update_build_state?).to be false
+        end
+      end
+
+      context 'and user is a global auditor' do
+        it 'returns false' do
+          set_current_user_as_global_auditor
+          expect(permissions.can_update_build_state?).to be false
+        end
+      end
+
+      context 'and user is none of the above' do
+        it 'returns false' do
+          set_current_user(user)
+          expect(permissions.can_update_build_state?).to be false
+        end
+      end
+    end
+
     describe '#can_write_globally?' do
       context 'and user is an admin' do
         it 'returns true' do

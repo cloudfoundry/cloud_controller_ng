@@ -64,7 +64,7 @@ RSpec.describe 'Builds' do
 
     before do
       stack = (VCAP::CloudController::Stack.find(name: create_request[:lifecycle][:data][:stack]) ||
-               VCAP::CloudController::Stack.make(name: create_request[:lifecycle][:data][:stack]))
+        VCAP::CloudController::Stack.make(name: create_request[:lifecycle][:data][:stack]))
       # putting stack in the App.make call leads to an "App doesn't have a primary key" error
       # message from sequel.
       process = VCAP::CloudController::ProcessModel.make(app: app_model, memory: 1024, disk_quota: 1536)
@@ -167,13 +167,13 @@ RSpec.describe 'Builds' do
             'telemetry-source' => 'cloud_controller_ng',
             'telemetry-time' => Time.now.to_datetime.rfc3339,
             'create-build' => {
-                'api-version' => 'v3',
-                'lifecycle' =>  'buildpack',
-                'buildpacks' =>  ['http://github.com/myorg/awesome-buildpack'],
-                'stack' =>  'cflinuxfs3',
-                'app-id' =>  Digest::SHA256.hexdigest(app_model.guid),
-                'build-id' =>  Digest::SHA256.hexdigest(created_build.guid),
-                'user-id' =>  Digest::SHA256.hexdigest(developer.guid),
+              'api-version' => 'v3',
+              'lifecycle' => 'buildpack',
+              'buildpacks' => ['http://github.com/myorg/awesome-buildpack'],
+              'stack' => 'cflinuxfs3',
+              'app-id' => Digest::SHA256.hexdigest(app_model.guid),
+              'build-id' => Digest::SHA256.hexdigest(created_build.guid),
+              'user-id' => Digest::SHA256.hexdigest(developer.guid),
             }
           }
           expect(logger_spy).to have_received(:info).with(JSON.generate(expected_json))
@@ -219,7 +219,7 @@ RSpec.describe 'Builds' do
     }
     let(:body) do
       { lifecycle: { type: 'buildpack', data: { buildpacks: ['http://github.com/myorg/awesome-buildpack'],
-                                                stack: 'cflinuxfs3' } } }
+        stack: 'cflinuxfs3' } } }
     end
     let(:staging_message) { VCAP::CloudController::BuildCreateMessage.new(body) }
 
@@ -236,13 +236,13 @@ RSpec.describe 'Builds' do
       let(:message) { VCAP::CloudController::BuildsListMessage }
       let(:params) do
         {
-          page:   '2',
-          per_page:   '10',
-          order_by:   'updated_at',
-          states:   'foo',
-          app_guids:   '123',
+          page: '2',
+          per_page: '10',
+          order_by: 'updated_at',
+          states: 'foo',
+          app_guids: '123',
           package_guids: '123',
-          label_selector:   'foo,bar',
+          label_selector: 'foo,bar',
         }
       end
     end
@@ -266,11 +266,11 @@ RSpec.describe 'Builds' do
         expect(parsed_response).to be_a_response_like({
           'pagination' => {
             'total_results' => 2,
-            'total_pages'   => 1,
-            'first'         => { 'href' => "#{link_prefix}/v3/builds?order_by=#{order_by}&page=1&per_page=2" },
-            'last'          => { 'href' => "#{link_prefix}/v3/builds?order_by=#{order_by}&page=1&per_page=2" },
-            'next'          => nil,
-            'previous'      => nil,
+            'total_pages' => 1,
+            'first' => { 'href' => "#{link_prefix}/v3/builds?order_by=#{order_by}&page=1&per_page=2" },
+            'last' => { 'href' => "#{link_prefix}/v3/builds?order_by=#{order_by}&page=1&per_page=2" },
+            'next' => nil,
+            'previous' => nil,
           },
           'resources' => [
             {
@@ -377,7 +377,7 @@ RSpec.describe 'Builds' do
     }
     let(:body) do
       { lifecycle: { type: 'buildpack', data: { buildpacks: ['http://github.com/myorg/awesome-buildpack'],
-                                                stack: 'cflinuxfs3' } } }
+        stack: 'cflinuxfs3' } } }
     end
     let(:staging_message) { VCAP::CloudController::BuildCreateMessage.new(body) }
 
@@ -435,12 +435,8 @@ RSpec.describe 'Builds' do
   end
 
   describe 'PATCH /v3/builds/:guid' do
-    let(:package_model) do
-      VCAP::CloudController::PackageModel.make(app_guid: app_model.guid)
-    end
-    let(:build_model) do
-      VCAP::CloudController::BuildModel.make(package: package_model)
-    end
+    let(:package_model) { VCAP::CloudController::PackageModel.make(app_guid: app_model.guid) }
+    let(:build_model) { VCAP::CloudController::BuildModel.make(package: package_model) }
     let(:metadata) do
       {
         labels: {
@@ -451,20 +447,120 @@ RSpec.describe 'Builds' do
       }
     end
 
-    it 'updates build metadata' do
-      patch "/v3/builds/#{build_model.guid}", { metadata: metadata }.to_json, developer_headers
-      expect(last_response.status).to eq(200), last_response.body
+    context 'when the build does not exist' do
+      it 'returns a 404' do
+        patch '/v3/builds/POTATO', { metadata: metadata }.to_json, developer_headers
+        expect(last_response).to have_status_code(404)
+      end
+    end
 
-      expected_metadata = {
-        'labels' => {
-          'release' => 'stable',
-          'seriouseats.com/potato' => 'mashed',
-        },
-        'annotations' => { 'checksum' => 'SHA' },
-      }
+    context 'the build exists' do
+      context 'when the message is invalid' do
+        let(:request) do
+          {}
+        end
 
-      parsed_response = MultiJson.load(last_response.body)
-      expect(parsed_response['metadata']).to eq(expected_metadata)
+        it 'returns 422 and renders the errors' do
+          patch "/v3/builds/#{build_model.guid}", { state: 'NO_WAY' }.to_json, admin_headers
+          expect(last_response).to have_status_code(422)
+          expect(last_response.body).to include('UnprocessableEntity')
+          expect(last_response.body).to include('not a valid state')
+        end
+      end
+
+      it 'updates build metadata' do
+        patch "/v3/builds/#{build_model.guid}", { metadata: metadata }.to_json, developer_headers
+        expect(last_response.status).to eq(200), last_response.body
+
+        expected_metadata = {
+          'labels' => {
+            'release' => 'stable',
+            'seriouseats.com/potato' => 'mashed',
+          },
+          'annotations' => { 'checksum' => 'SHA' },
+        }
+
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response['metadata']).to eq(expected_metadata)
+      end
+
+      it 'cloud_controller returns 403 if not admin and not build_state_updater' do
+        patch "/v3/builds/#{build_model.guid}", { metadata: metadata }.to_json, headers_for(make_auditor_for_space(space), user_name: user_name, email: 'bob@loblaw.com')
+        expect(last_response.status).to eq(403), last_response.body
+      end
+
+      context 'updating state' do
+        let(:build_model) { VCAP::CloudController::BuildModel.make(package: package_model, state: VCAP::CloudController::BuildModel::STAGING_STATE) }
+
+        context 'when the cloud_controller.admin scope is present' do
+          it 'updates the state' do
+            patch "/v3/builds/#{build_model.guid}", { state: 'STAGED' }.to_json, admin_headers
+            expect(last_response.status).to eq(200), last_response.body
+            expect(build_model.reload.state).to eq('STAGED')
+            parsed_response = MultiJson.load(last_response.body)
+            expect(parsed_response['state']).to eq('STAGED')
+          end
+        end
+
+        context 'when the cloud_controller.update_build_state scope is present' do
+          context 'when a build was successfully completed' do
+            let(:request) do
+              {
+                state: 'STAGED',
+              }
+            end
+
+            it 'returns 200' do
+              patch "/v3/builds/#{build_model.guid}", request.to_json, build_state_updater_headers
+              expect(last_response.status).to eq(200)
+            end
+
+            it 'updates the state to STAGED' do
+              patch "/v3/builds/#{build_model.guid}", request.to_json, build_state_updater_headers
+              parsed_response = MultiJson.load(last_response.body)
+
+              expect(build_model.reload.state).to eq 'STAGED'
+              expect(parsed_response['state']).to eq 'STAGED'
+            end
+          end
+
+          context 'when a build failed to complete' do
+            let(:request) do
+              {
+                state: 'FAILED',
+                error: 'failed to stage build'
+              }
+            end
+
+            it 'returns 200' do
+              patch "/v3/builds/#{build_model.guid}", request.to_json, build_state_updater_headers
+              expect(last_response.status).to eq(200)
+            end
+
+            it 'updates the state to FAILED' do
+              patch "/v3/builds/#{build_model.guid}", request.to_json, build_state_updater_headers
+              parsed_response = MultiJson.load(last_response.body)
+
+              expect(build_model.reload.state).to eq 'FAILED'
+              expect(parsed_response['state']).to eq 'FAILED'
+            end
+
+            it 'updates the error' do
+              patch "/v3/builds/#{build_model.guid}", request.to_json, build_state_updater_headers
+              parsed_response = MultiJson.load(last_response.body)
+
+              expect(parsed_response['error']).to include 'failed to stage build'
+            end
+          end
+        end
+
+        context 'when the cloud_controller.update_build_state scope is NOT present' do
+          it '403s' do
+            patch "/v3/builds/#{build_model.guid}", { state: 'STAGED' }.to_json, developer_headers
+            expect(last_response.status).to eq(403), last_response.body
+          end
+        end
+      end
     end
   end
 end

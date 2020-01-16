@@ -170,6 +170,10 @@ class VCAP::CloudController::Permissions
     VCAP::CloudController::RouteMappingModel.user_visible(@user, can_read_globally?).map(&:guid)
   end
 
+  def can_update_build_state?
+    can_write_globally? || roles.build_state_updater?
+  end
+
   private
 
   def membership

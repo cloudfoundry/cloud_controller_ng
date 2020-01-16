@@ -134,6 +134,10 @@ module UserHelpers
         scopes << 'cloud_controller.global_auditor'
       end
 
+      if opts[:update_build_state]
+        scopes << 'cloud_controller.update_build_state'
+      end
+
       encoding_opts = {
         user_id: user ? user.guid : (rand * 1_000_000_000).ceil,
         email: opts[:email],

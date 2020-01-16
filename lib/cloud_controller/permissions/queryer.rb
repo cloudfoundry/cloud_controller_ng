@@ -255,6 +255,10 @@ class VCAP::CloudController::Permissions::Queryer
     end
   end
 
+  def can_update_build_state?
+    db_permissions.can_update_build_state?
+  end
+
   private
 
   attr_reader :perm_permissions, :db_permissions, :statsd_client, :enabled, :current_user_guid
