@@ -51,9 +51,7 @@ module VCAP::CloudController::Presenters::V3
     private
 
     def filtered_visible_orgs
-      if @visible_org_guids.nil?
-        return @resource.organizations
-      end
+      return @resource.organizations if @visible_org_guids.nil?
 
       VCAP::CloudController::Organization.where(quota_definition_id: @resource.id, guid: @visible_org_guids).all
     end

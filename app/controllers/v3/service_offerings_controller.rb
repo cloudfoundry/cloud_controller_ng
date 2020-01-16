@@ -2,17 +2,22 @@ require 'fetchers/service_offering_fetcher'
 require 'fetchers/service_offering_list_fetcher'
 require 'fetchers/service_plan_visibility_fetcher'
 require 'presenters/v3/service_offering_presenter'
+require 'messages/service_offerings_list_message'
 
 class ServiceOfferingsController < ApplicationController
   def index
     not_authenticated! if user_cannot_see_marketplace?
 
+    message = ServiceOfferingsListMessage.from_params(query_params)
+    invalid_param!(message.errors.full_messages) unless message.valid?
+
     dataset = if !current_user
-                ServiceOfferingListFetcher.new.fetch_public
+                ServiceOfferingListFetcher.new.fetch_public(message)
               elsif permission_queryer.can_read_globally?
-                ServiceOfferingListFetcher.new.fetch_all
+                ServiceOfferingListFetcher.new.fetch(message)
               else
-                ServiceOfferingListFetcher.new.fetch(
+                ServiceOfferingListFetcher.new.fetch_visible(
+                  message,
                   permission_queryer.readable_org_guids,
                   permission_queryer.readable_space_scoped_space_guids,
                 )

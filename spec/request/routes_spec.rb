@@ -9,6 +9,7 @@ RSpec.describe 'Routes Request' do
 
   describe 'GET /v3/routes' do
     let(:other_space) { VCAP::CloudController::Space.make }
+    let(:app_model) { VCAP::CloudController::AppModel.make(space: space) }
     let(:domain) { VCAP::CloudController::PrivateDomain.make(owning_organization: space.organization) }
     let!(:route_in_org) do
       VCAP::CloudController::Route.make(space: space, domain: domain, host: 'host-1', path: '/path1', guid: 'route-in-org-guid')
@@ -16,6 +17,8 @@ RSpec.describe 'Routes Request' do
     let!(:route_in_other_org) do
       VCAP::CloudController::Route.make(space: other_space, host: 'host-2', path: '/path2', guid: 'route-in-other-org-guid')
     end
+    let!(:route_in_org_dest_web) { VCAP::CloudController::RouteMappingModel.make(app: app_model, route: route_in_org, process_type: 'web') }
+    let!(:route_in_org_dest_worker) { VCAP::CloudController::RouteMappingModel.make(app: app_model, route: route_in_org, process_type: 'worker') }
     let(:api_call) { lambda { |user_headers| get '/v3/routes', nil, user_headers } }
     let(:route_in_org_json) do
       {
@@ -25,6 +28,30 @@ RSpec.describe 'Routes Request' do
         url: "#{route_in_org.host}.#{route_in_org.domain.name}#{route_in_org.path}",
         created_at: iso8601,
         updated_at: iso8601,
+        destinations: [
+          {
+            guid: route_in_org_dest_web.guid,
+            app: {
+              guid: app_model.guid,
+              process: {
+                type: route_in_org_dest_web.process_type
+              }
+            },
+            weight: route_in_org_dest_web.weight,
+            port: route_in_org_dest_web.presented_port
+          },
+          {
+            guid: route_in_org_dest_worker.guid,
+            app: {
+              guid: app_model.guid,
+              process: {
+                type: route_in_org_dest_worker.process_type
+              }
+            },
+            weight: route_in_org_dest_worker.weight,
+            port: route_in_org_dest_worker.presented_port
+          }
+        ],
         relationships: {
           space: {
             data: { guid: route_in_org.space.guid }
@@ -54,6 +81,7 @@ RSpec.describe 'Routes Request' do
         url: "#{route_in_other_org.host}.#{route_in_other_org.domain.name}#{route_in_other_org.path}",
         created_at: iso8601,
         updated_at: iso8601,
+        destinations: [],
         relationships: {
           space: {
             data: { guid: route_in_other_org.space.guid }
@@ -184,6 +212,7 @@ RSpec.describe 'Routes Request' do
             host: route1_domain1.host,
             path: route1_domain1.path,
             url: "#{route1_domain1.host}.#{domain1.name}#{route1_domain1.path}",
+            destinations: [],
             metadata: {
               labels: {},
               annotations: {}
@@ -242,6 +271,7 @@ RSpec.describe 'Routes Request' do
           guid: 'route-without-host',
           created_at: iso8601,
           updated_at: iso8601,
+          destinations: [],
           host: '',
           path: '/path1',
           url: "#{domain.name}/path1",
@@ -274,6 +304,7 @@ RSpec.describe 'Routes Request' do
           guid: 'route-without-host2',
           created_at: iso8601,
           updated_at: iso8601,
+          destinations: [],
           host: '',
           path: '/path2',
           url: "#{domain.name}/path2",
@@ -309,6 +340,7 @@ RSpec.describe 'Routes Request' do
           guid: 'route-without-path',
           created_at: iso8601,
           updated_at: iso8601,
+          destinations: [],
           host: 'host-1',
           path: '',
           url: "host-1.#{domain.name}",
@@ -696,7 +728,7 @@ RSpec.describe 'Routes Request' do
         expect(VCAP::CloudController::RouteFetcher).to receive(:fetch).with(
           anything,
           anything,
-          hash_including(eager_loaded_associations: [:domain, :space, :labels, :annotations])
+          hash_including(eager_loaded_associations: [:domain, :space, :route_mappings, :labels, :annotations])
         ).and_call_original
 
         get '/v3/routes', nil, admin_header
@@ -732,6 +764,7 @@ RSpec.describe 'Routes Request' do
         url: "#{route.host}.#{route.domain.name}#{route.path}",
         created_at: iso8601,
         updated_at: iso8601,
+        destinations: [],
         relationships: {
           space: {
             data: { guid: route.space.guid }
@@ -812,6 +845,7 @@ RSpec.describe 'Routes Request' do
             url: "#{route.host}.#{route.domain.name}#{route.path}",
             created_at: iso8601,
             updated_at: iso8601,
+            destinations: [],
             relationships: {
               space: {
                 data: { guid: route.space.guid }
@@ -869,6 +903,7 @@ RSpec.describe 'Routes Request' do
             url: domain.name,
             created_at: iso8601,
             updated_at: iso8601,
+            destinations: [],
             relationships: {
               space: {
                 data: { guid: space.guid }
@@ -940,6 +975,7 @@ RSpec.describe 'Routes Request' do
             url: "some-host.#{domain.name}/some-path",
             created_at: iso8601,
             updated_at: iso8601,
+            destinations: [],
             relationships: {
               space: {
                 data: { guid: space.guid }
@@ -1018,6 +1054,7 @@ RSpec.describe 'Routes Request' do
             url: "*.#{domain.name}",
             created_at: iso8601,
             updated_at: iso8601,
+            destinations: [],
             relationships: {
               space: {
                 data: { guid: space.guid }
@@ -1109,6 +1146,7 @@ RSpec.describe 'Routes Request' do
             url: "some-host.#{domain.name}",
             created_at: iso8601,
             updated_at: iso8601,
+            destinations: [],
             relationships: {
               space: {
                 data: { guid: space.guid }
@@ -1175,6 +1213,7 @@ RSpec.describe 'Routes Request' do
             url: "*.#{domain.name}",
             created_at: iso8601,
             updated_at: iso8601,
+            destinations: [],
             relationships: {
               space: {
                 data: { guid: space.guid }
@@ -1248,6 +1287,7 @@ RSpec.describe 'Routes Request' do
           url: "some-host.#{domain.name}",
           created_at: iso8601,
           updated_at: iso8601,
+          destinations: [],
           relationships: {
             space: {
               data: { guid: space.guid }
@@ -1363,6 +1403,7 @@ RSpec.describe 'Routes Request' do
             url: "some-host.#{domain.name}",
             created_at: iso8601,
             updated_at: iso8601,
+            destinations: [],
             relationships: {
               space: {
                 data: { guid: space.guid }
@@ -1589,6 +1630,7 @@ RSpec.describe 'Routes Request' do
           url: "#{params[:host]}.#{domain.name}",
           created_at: iso8601,
           updated_at: iso8601,
+          destinations: [],
           relationships: {
             space: {
               data: { guid: space.guid }
@@ -1813,6 +1855,7 @@ RSpec.describe 'Routes Request' do
         url: domain.name,
         created_at: iso8601,
         updated_at: iso8601,
+        destinations: [],
         relationships: {
           space: {
             data: { guid: space.guid }
@@ -1869,6 +1912,7 @@ RSpec.describe 'Routes Request' do
           url: domain.name,
           created_at: iso8601,
           updated_at: iso8601,
+          destinations: [],
           relationships: {
             space: {
               data: { guid: other_space.guid }
@@ -2030,6 +2074,19 @@ RSpec.describe 'Routes Request' do
         url: "#{route1.host}.#{route1.domain.name}#{route1.path}",
         created_at: iso8601,
         updated_at: iso8601,
+        destinations: [
+          {
+            guid: route_mapping1.guid,
+            app: {
+              guid: app_model.guid,
+              process: {
+                type: route_mapping1.process_type
+              }
+            },
+            weight: route_mapping1.weight,
+            port: route_mapping1.presented_port
+          },
+        ],
         relationships: {
           space: {
             data: { guid: route1.space.guid }
@@ -2059,6 +2116,19 @@ RSpec.describe 'Routes Request' do
         url: "#{route2.host}.#{route2.domain.name}#{route2.path}",
         created_at: iso8601,
         updated_at: iso8601,
+        destinations: [
+          {
+            guid: route_mapping2.guid,
+            app: {
+              guid: app_model.guid,
+              process: {
+                type: route_mapping2.process_type
+              }
+            },
+            weight: route_mapping2.weight,
+            port: route_mapping2.presented_port
+          },
+        ],
         relationships: {
           space: {
             data: { guid: route2.space.guid }
@@ -2101,7 +2171,7 @@ RSpec.describe 'Routes Request' do
         expect(VCAP::CloudController::RouteFetcher).to receive(:fetch).with(
           anything,
           anything,
-          hash_including(eager_loaded_associations: [:domain, :space, :labels, :annotations])
+          hash_including(eager_loaded_associations: [:domain, :space, :route_mappings, :labels, :annotations])
         ).and_call_original
 
         get "/v3/apps/#{app_model.guid}/routes", nil, admin_header

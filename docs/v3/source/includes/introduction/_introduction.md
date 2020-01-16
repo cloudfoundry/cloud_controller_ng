@@ -12,9 +12,9 @@ key features:
 ## Getting help
 The CAPI team can most easily be reached from our [Slack channel](https://cloudfoundry.slack.com/messages/capi/) for
 questions and issues regarding the API. To report an issue with the docs or API, please feel free to file a GitHub
-issue on our API repo [cloud_controller_ng](https://github.com/cloudfoundry/cloud_controller_ng).
+issue on our API repo, [cloud_controller_ng](https://github.com/cloudfoundry/cloud_controller_ng).
 
-We recommend reaching out to slack first as the team will be most responsive there.
+We recommend reaching out to Slack first as the team will be most responsive there.
 
 
 ## More resources

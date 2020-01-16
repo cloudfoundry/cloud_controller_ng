@@ -1,0 +1,53 @@
+### Create a space quota
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/space_quotas" \
+  -X POST \
+  -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
+  -d '{
+        "name": "production",
+        "relationships": {
+          "organization": {
+            "data": {
+              "guid": "[org-guid]"
+            }
+          }
+      }'
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 201 Created
+Content-Type: application/json
+
+<%= yield_content :single_space_quota %>
+```
+
+This endpoint creates a new space quota scoped to a specific organization.
+
+To create a space quota you must be an admin.
+
+#### Definition
+`POST /v3/space_quotas`
+
+#### Required parameters
+
+Name | Type | Description
+---- | ---- | -----------
+**name** | _string_ | Name of the quota.
+**relationships.organization** | [_to-one relationship_](#to-one-relationships) | A relationship to the organization to which the quota belongs. | |
+
+#### Permitted roles
+
+Role | Notes
+--- | ---
+Admin |
+Org Manager | Org managers can create space quotas in their managed organizations.

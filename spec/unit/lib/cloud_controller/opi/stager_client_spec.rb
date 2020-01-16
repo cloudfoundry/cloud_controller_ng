@@ -60,11 +60,15 @@ RSpec.describe(OPI::StagerClient) do
           environment: [{ name: 'VCAP_APPLICATION', value: '{"wow":"pants"}' },
                         { name: 'MEMORY_LIMIT', value: '256m' },
                         { name: 'VCAP_SERVICES', value: '{}' }],
-           completion_callback: 'https://internal_user:internal_password@api.internal.cf:8182/internal/v3/staging//build_completed?start=',
+          completion_callback: 'https://internal_user:internal_password@api.internal.cf:8182/internal/v3/staging//build_completed?start=',
           lifecycle_data: { droplet_upload_uri: 'http://cc-uploader.service.cf.internal:9091/v1/droplet/guid?cc-droplet-upload-uri=http://upload.me',
                             app_bits_download_uri: 'http://download.me',
                             buildpacks: [{ name: 'ruby', key: 'idk', url: 'www.com', skip_detect: false }]
-        } }.to_json
+          },
+          cpu_weight: VCAP::CloudController::Diego::STAGING_TASK_CPU_WEIGHT,
+          disk_mb: 100,
+          memory_mb: 200
+        }.to_json
         )
       end
 
@@ -81,11 +85,15 @@ RSpec.describe(OPI::StagerClient) do
                           { name: 'VCAP_APPLICATION', value: '{"wow":"pants"}' },
                           { name: 'MEMORY_LIMIT', value: '256m' },
                           { name: 'VCAP_SERVICES', value: '{}' }],
-             completion_callback: 'https://internal_user:internal_password@api.internal.cf:8182/internal/v3/staging//build_completed?start=',
+            completion_callback: 'https://internal_user:internal_password@api.internal.cf:8182/internal/v3/staging//build_completed?start=',
             lifecycle_data: { droplet_upload_uri: 'http://cc-uploader.service.cf.internal:9091/v1/droplet/guid?cc-droplet-upload-uri=http://upload.me',
                               app_bits_download_uri: 'http://download.me',
                               buildpacks: [{ name: 'ruby', key: 'idk', url: 'www.com', skip_detect: false }]
-          } }.to_json
+            },
+            cpu_weight: VCAP::CloudController::Diego::STAGING_TASK_CPU_WEIGHT,
+            disk_mb: 100,
+            memory_mb: 200
+          }.to_json
           )
         end
       end
@@ -162,6 +170,8 @@ RSpec.describe(OPI::StagerClient) do
     staging_details                                 = VCAP::CloudController::Diego::StagingDetails.new
     staging_details.package                         = double(app_guid: 'thor', image: 'docker.io/some/image')
     staging_details.lifecycle                       = double(type: lifecycle_type)
+    staging_details.staging_disk_in_mb              = 100
+    staging_details.staging_memory_in_mb            = 200
     staging_details
   end
 

@@ -26,6 +26,13 @@ Retrieve all destinations associated with a route.
 #### Definition
 `GET /v3/routes/:guid/destinations`
 
+#### Query parameters
+
+Name | Type | Description
+---- | ---- | ------------
+**guids** | _list of strings_ | Comma-delimited list of destination guids to filter by.
+**app_guids** | _list of strings_ | Comma-delimited list of app guids to filter by.
+
 #### Permitted roles
 
 Role  | Notes

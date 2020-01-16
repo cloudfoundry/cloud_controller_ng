@@ -13,7 +13,7 @@ module VCAP::CloudController
       end
 
       let(:app_sidecars) { [] }
-      let(:droplet_sidecars) { [{ name: 'sleepy-sidecar', command: 'sleep infinity', process_types: ['web'] }] }
+      let(:droplet_sidecars) { [{ name: 'sleepy-sidecar', command: 'sleep infinity', memory: 1000, process_types: ['web'] }] }
 
       context 'the app has no sidecars' do
         context 'when droplet has sidecars' do
@@ -25,6 +25,7 @@ module VCAP::CloudController
             expect(app.sidecars.count).to eq(1), "sidecars: #{app.sidecars}"
             expect(app.sidecars.first.name).to eq('sleepy-sidecar')
             expect(app.sidecars.first.command).to eq('sleep infinity')
+            expect(app.sidecars.first.memory).to eq(1000)
             expect(app.sidecars.first.process_types).to eq(['web'])
             expect(app.sidecars.first.origin).to eq('buildpack')
           end

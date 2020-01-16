@@ -817,7 +817,7 @@ module VCAP::CloudController
           it { is_expected.to be_valid }
         end
 
-        context 'given mulitple organization guids' do
+        context 'given multiple organization guids' do
           let(:params) do
             {
               name: 'kim',

@@ -507,6 +507,10 @@ RSpec.describe 'Deployments' do
     end
 
     context 'telemetry' do
+      let!(:other_droplet) { VCAP::CloudController::DropletModel.make(app: app_model, process_types: { 'web': 'webboo' }) }
+      let!(:revision) { VCAP::CloudController::RevisionModel.make(app: app_model, droplet: other_droplet, created_at: 5.days.ago) }
+      let!(:revision2) { VCAP::CloudController::RevisionModel.make(app: app_model, droplet: droplet) }
+
       let(:create_request) do
         {
           relationships: {
@@ -518,17 +522,23 @@ RSpec.describe 'Deployments' do
           }
         }
       end
-
-      let(:logger_spy) { spy('logger') }
-
-      before do
-        allow(VCAP::CloudController::TelemetryLogger).to receive(:logger).and_return(logger_spy)
+      let(:revision_create_request) do
+        {
+          revision: {
+            guid: revision.guid
+          },
+          relationships: {
+            app: {
+              data: {
+                guid: app_model.guid
+              }
+            },
+          }
+        }
       end
 
       it 'should log the required fields when a deployment is created' do
         Timecop.freeze do
-          post '/v3/deployments', create_request.to_json, user_header
-
           expected_json = {
             'telemetry-source' => 'cloud_controller_ng',
             'telemetry-time' => Time.now.to_datetime.rfc3339,
@@ -539,7 +549,30 @@ RSpec.describe 'Deployments' do
               'user-id' => Digest::SHA256.hexdigest(user.guid),
             }
           }
-          expect(logger_spy).to have_received(:info).with(JSON.generate(expected_json))
+          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json))
+
+          post '/v3/deployments', create_request.to_json, user_header
+          expect(last_response.status).to eq(201), last_response.body
+        end
+      end
+      it 'should log the roll back app request' do
+        app_model.update(revisions_enabled: true)
+        Timecop.freeze do
+          expected_json = {
+            'telemetry-source' => 'cloud_controller_ng',
+            'telemetry-time' => Time.now.to_datetime.rfc3339,
+            'rolled-back-app' => {
+              'api-version' => 'v3',
+              'strategy' => 'rolling',
+              'app-id' => Digest::SHA256.hexdigest(app_model.guid),
+              'user-id' => Digest::SHA256.hexdigest(user.guid),
+              'revision-id' => Digest::SHA256.hexdigest(revision.guid),
+            }
+          }
+          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).twice
+          expect_any_instance_of(ActiveSupport::Logger).to receive(:info).with(JSON.generate(expected_json)).at_most(:once)
+
+          post '/v3/deployments', revision_create_request.to_json, user_header
           expect(last_response.status).to eq(201), last_response.body
         end
       end

@@ -10,12 +10,13 @@ Example Route object
 
 | Name                                      | Type                                           | Description                                                                                                                     |
 | --------------                            | ------------------------                       | ------------------------------------------------------                                                                          |
-| **guid**                                  | _uuid_                                         | Unique identifier for the route.                                                                                               |
+| **guid**                                  | _uuid_                                         | Unique identifier for the route.
+| **created_at**                            | _datetime_                                     | The time with zone when the object was created.                                                                                 |
+| **updated_at**                            | _datetime_                                     | The time with zone when the object was last updated.                                                                         |
 | **host**                                  | _string_                                       | The hostname for the route.<br>Must be under 63 character long and only contain letters, numbers, dashes (-) or underscores(_). |
 | **path**                                  | _string_                                       | The path for the route.<br>Must be under 128 character long and not contain question marks (?), begin with a slash (/) and not be exactly a slash (/). Must conform to path components from [RFC 2396](https://tools.ietf.org/html/rfc2396). |
 | **url**                                   | _string_                                       | The URL for the route. Combination of host, domain name, and path.
-| **created_at**                            | _datetime_                                     | The time with zone when the object was created.                                                                                 |
-| **updated_at**                            | _datetime_                                     | The time with zone when the object was last updated.                                                                            |
+| **destinations**                          | array of [_destination objects_](#the-destination-object) | List of destinations for the route. |
 | **space**                                 | [_to-one relationship_](#to-one-relationships) | A relationship to the space containing the route. Routes can only be mapped to destinations in that space.                      |
 | **domain**                                | [_to-one relationship_](#to-one-relationships) | A relationship to the domain of the route.                                                                                      |
 | **links**                                 | [_links object_](#links)                       | Links to related resources.                                                                                                     |
