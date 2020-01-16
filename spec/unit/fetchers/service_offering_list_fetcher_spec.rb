@@ -3,6 +3,60 @@ require 'fetchers/service_offering_list_fetcher'
 require 'messages/service_offerings_list_message'
 
 module VCAP::CloudController
+  RSpec.shared_examples 'filtered service offering fetcher' do
+    describe 'the `available` filter' do
+      let!(:service_offering_available) { ServicePlan.make(public: true, active: true).service }
+      let!(:service_offering_unavailable) do
+        offering = Service.make(active: false)
+        ServicePlan.make(public: true, active: true, service: offering)
+        offering
+      end
+
+      context 'filtering available offerings' do
+        let(:message) { ServiceOfferingsListMessage.from_params({ available: 'true' }.with_indifferent_access) }
+
+        it 'filters the available offerings' do
+          expect(service_offerings).to contain_exactly(service_offering_available)
+        end
+      end
+
+      context 'filtering unavailable offerings' do
+        let(:message) { ServiceOfferingsListMessage.from_params({ available: 'false' }.with_indifferent_access) }
+
+        it 'filters the available offerings' do
+          expect(service_offerings).to contain_exactly(service_offering_unavailable)
+        end
+      end
+    end
+
+    describe 'the `service_broker_guids` filter' do
+      let!(:service_broker) { VCAP::CloudController::ServiceBroker.make }
+      let!(:service_offering_1) do
+        offering = VCAP::CloudController::Service.make(service_broker: service_broker)
+        VCAP::CloudController::ServicePlan.make(public: true, service: offering)
+        offering
+      end
+      let!(:service_offering_2) do
+        offering = VCAP::CloudController::Service.make(service_broker: service_broker)
+        VCAP::CloudController::ServicePlan.make(public: true, service: offering)
+        offering
+      end
+      let!(:service_offering_3) { VCAP::CloudController::ServicePlan.make.service }
+      let!(:service_offering_4) { VCAP::CloudController::ServicePlan.make.service }
+
+      let(:service_broker_guids) { [service_broker.guid, service_offering_3.service_broker.guid] }
+      let(:message) { ServiceOfferingsListMessage.from_params({ service_broker_guids: service_broker_guids.join(',') }.with_indifferent_access) }
+
+      it 'filters the service offerings with matching service broker GUIDs' do
+        expect(service_offerings).to contain_exactly(
+          service_offering_1,
+          service_offering_2,
+          service_offering_3
+        )
+      end
+    end
+  end
+
   RSpec.describe ServiceOfferingListFetcher do
     let(:message) { ServiceOfferingsListMessage.from_params({}) }
 
@@ -30,32 +84,9 @@ module VCAP::CloudController
       end
 
       context 'when filters are provided' do
-        context 'the `available` filter' do
-          let!(:service_offering_available) { ServicePlan.make(public: true, active: true).service }
-          let!(:service_offering_unavailable) do
-            offering = Service.make(active: false)
-            ServicePlan.make(public: true, active: true, service: offering)
-            offering
-          end
+        let(:service_offerings) { ServiceOfferingListFetcher.new.fetch(message).all }
 
-          context 'filtering available offerings' do
-            let(:message) { ServiceOfferingsListMessage.from_params({ available: 'true' }) }
-
-            it 'filters the available offerings' do
-              service_offerings = ServiceOfferingListFetcher.new.fetch(message).all
-              expect(service_offerings).to contain_exactly(service_offering_available)
-            end
-          end
-
-          context 'filtering unavailable offerings' do
-            let(:message) { ServiceOfferingsListMessage.from_params({ available: 'false' }) }
-
-            it 'filters the available offerings' do
-              service_offerings = ServiceOfferingListFetcher.new.fetch(message).all
-              expect(service_offerings).to contain_exactly(service_offering_unavailable)
-            end
-          end
-        end
+        it_behaves_like 'filtered service offering fetcher'
       end
     end
 
@@ -97,32 +128,9 @@ module VCAP::CloudController
       end
 
       context 'when filters are provided' do
-        context 'the `available` filter' do
-          let!(:service_offering_available) { ServicePlan.make(public: true, active: true).service }
-          let!(:service_offering_unavailable) do
-            offering = Service.make(active: false)
-            ServicePlan.make(public: true, active: true, service: offering)
-            offering
-          end
+        let(:service_offerings) { ServiceOfferingListFetcher.new.fetch_public(message).all }
 
-          context 'filtering available offerings' do
-            let(:message) { ServiceOfferingsListMessage.from_params({ available: 'true' }) }
-
-            it 'filters the available offerings' do
-              service_offerings = ServiceOfferingListFetcher.new.fetch_public(message).all
-              expect(service_offerings).to contain_exactly(service_offering_available)
-            end
-          end
-
-          context 'filtering unavailable offerings' do
-            let(:message) { ServiceOfferingsListMessage.from_params({ available: 'false' }) }
-
-            it 'filters the available offerings' do
-              service_offerings = ServiceOfferingListFetcher.new.fetch_public(message).all
-              expect(service_offerings).to contain_exactly(service_offering_unavailable)
-            end
-          end
-        end
+        it_behaves_like 'filtered service offering fetcher'
       end
     end
 
@@ -250,32 +258,9 @@ module VCAP::CloudController
       end
 
       context 'when filters are provided' do
-        context 'the `available` filter' do
-          let!(:service_offering_available) { ServicePlan.make(public: true, active: true).service }
-          let!(:service_offering_unavailable) do
-            offering = Service.make(active: false)
-            ServicePlan.make(public: true, active: true, service: offering)
-            offering
-          end
+        let(:service_offerings) { ServiceOfferingListFetcher.new.fetch_visible(message, [], []).all }
 
-          context 'filtering available offerings' do
-            let(:message) { ServiceOfferingsListMessage.from_params({ available: 'true' }) }
-
-            it 'filters the available offerings' do
-              service_offerings = ServiceOfferingListFetcher.new.fetch_visible(message, [], []).all
-              expect(service_offerings).to contain_exactly(service_offering_available)
-            end
-          end
-
-          context 'filtering unavailable offerings' do
-            let(:message) { ServiceOfferingsListMessage.from_params({ available: 'false' }) }
-
-            it 'filters the available offerings' do
-              service_offerings = ServiceOfferingListFetcher.new.fetch_visible(message, [], []).all
-              expect(service_offerings).to contain_exactly(service_offering_unavailable)
-            end
-          end
-        end
+        it_behaves_like 'filtered service offering fetcher'
       end
     end
   end
