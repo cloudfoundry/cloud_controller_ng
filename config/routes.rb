@@ -175,6 +175,7 @@ Rails.application.routes.draw do
   # service_offerings
   get '/service_offerings', to: 'service_offerings#index'
   get '/service_offerings/:guid', to: 'service_offerings#show'
+  delete '/service_offerings/:guid', to: 'service_offerings#destroy'
 
   # space_manifests
   post '/spaces/:guid/actions/apply_manifest', to: 'space_manifests#apply_manifest'

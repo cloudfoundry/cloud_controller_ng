@@ -454,6 +454,81 @@ RSpec.describe 'V3 service offerings' do
     end
   end
 
+  describe 'DELETE /v3/service_offerings/:guid' do
+    let(:api_call) { lambda { |user_headers| delete "/v3/service_offerings/#{guid}", nil, user_headers } }
+
+    let(:db_check) {
+      lambda do
+        get "/v3/service_offerings/#{guid}", {}, admin_headers
+        expect(last_response.status).to eq(404), 'expected database entry to be deleted'
+      end
+    }
+
+    context 'when the service offering does not exist' do
+      let(:guid) { 'non-existing-guid' }
+
+      let(:expected_codes_and_responses) do
+        Hash.new(code: 404).tap do |h|
+          h['admin_read_only'] = { code: 403 }
+          h['global_auditor'] = { code: 403 }
+          h['unauthenticated'] = { code: 401 }
+        end
+      end
+
+      it_behaves_like 'permissions for delete endpoint', COMPLETE_PERMISSIONS
+    end
+
+    context 'when the service offering exists and has no plans' do
+      let!(:service_offering) { VCAP::CloudController::Service.make }
+      let(:guid) { service_offering.guid }
+
+      let(:expected_codes_and_responses) do
+        Hash.new(code: 404).tap do |h|
+          h['admin'] = { code: 204 }
+          h['admin_read_only'] = { code: 403 }
+          h['global_auditor'] = { code: 403 }
+          h['unauthenticated'] = { code: 401 }
+        end
+      end
+
+      it_behaves_like 'permissions for delete endpoint', COMPLETE_PERMISSIONS
+    end
+
+    context 'when the service offering exists and has public plans' do
+      let!(:service_offering) { VCAP::CloudController::ServicePlan.make(public: true).service }
+      let(:guid) { service_offering.guid }
+
+      let(:expected_codes_and_responses) do
+        Hash.new(code: 403).tap do |h|
+          h['admin'] = { code: 422 }
+          h['unauthenticated'] = { code: 401 }
+        end
+      end
+
+      it_behaves_like 'permissions for delete endpoint', COMPLETE_PERMISSIONS
+    end
+
+    context 'when the service offering exists and has org-scoped plans' do
+      let(:org) { VCAP::CloudController::Organization.make }
+      let!(:service_plan) { VCAP::CloudController::ServicePlan.make(public: false) }
+      let(:guid) { service_plan.service.guid }
+
+      before do
+        VCAP::CloudController::ServicePlanVisibility.make(service_plan: service_plan, organization: org)
+      end
+
+      let(:expected_codes_and_responses) do
+        Hash.new(code: 403).tap do |h|
+          h['admin'] = { code: 422 }
+          h['no_role'] = { code: 404 }
+          h['unauthenticated'] = { code: 401 }
+        end
+      end
+
+      it_behaves_like 'permissions for delete endpoint', COMPLETE_PERMISSIONS
+    end
+  end
+
   def create_offering_json(service_offering)
     {
       'guid' => service_offering.guid,
