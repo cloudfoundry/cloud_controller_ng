@@ -32,6 +32,9 @@ module VCAP::CloudController
           relationships: {
             organization: {
               data: { 'guid': org.guid },
+            },
+            spaces: {
+              data: []
             }
           },
           links: {
@@ -75,6 +78,11 @@ module VCAP::CloudController
             'relationships': {
               'organization': {
                 'data': { 'guid': org.guid }
+              },
+              'spaces': {
+                'data': [
+                  { 'guid': space.guid }
+                ]
               }
             }
           }
@@ -91,6 +99,11 @@ module VCAP::CloudController
                 'data': {
                   'guid': org.guid
                 }
+              },
+              'spaces': {
+                'data': [
+                  { 'guid': space.guid }
+                ]
               }
             },
             'links': {
@@ -124,6 +137,31 @@ module VCAP::CloudController
 
           expect(last_response).to have_status_code(422)
           expect(last_response).to include_error_message('Organization with guid \'not-real\' does not exist, or you do not have access to it.')
+        end
+      end
+
+      context 'when the space guid is invalid' do
+        let(:params) do
+          {
+            name: 'quota-with-bad-space',
+            relationships: {
+              organization: {
+                data: { guid: org.guid }
+              },
+              spaces: {
+                data: [
+                  { guid: 'not-real' }
+                ]
+              }
+            }
+          }
+        end
+
+        it 'returns 422' do
+          post '/v3/space_quotas', params.to_json, admin_header
+
+          expect(last_response).to have_status_code(422)
+          expect(last_response).to include_error_message('Spaces with guids ["not-real"] do not exist, or you do not have access to them.')
         end
       end
 

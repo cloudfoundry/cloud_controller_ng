@@ -4,6 +4,9 @@ require 'messages/space_quotas_create_message'
 module VCAP::CloudController
   RSpec.describe SpaceQuotasCreateMessage do
     subject { SpaceQuotasCreateMessage.new(params) }
+
+    let(:params) { { name: 'basic', relationships: relationships } }
+
     let(:relationships) do
       {
         organization: {
@@ -11,7 +14,19 @@ module VCAP::CloudController
             guid: 'some-org-guid'
           }
         },
+        spaces: {
+          data: [
+            { guid: 'some-space-guid' }
+          ]
+        },
       }
+    end
+
+    it 'is valid' do
+      expect(subject).to be_valid
+      expect(subject.name).to eq('basic')
+      expect(subject.organization_guid).to eq('some-org-guid')
+      expect(subject.space_guids).to eq(['some-space-guid'])
     end
 
     describe 'validations' do
@@ -78,7 +93,7 @@ module VCAP::CloudController
       end
 
       describe 'relationships' do
-        context 'given no organization guid' do
+        context 'given no relationships' do
           let(:params) do
             {
               name: 'kris',
@@ -88,7 +103,7 @@ module VCAP::CloudController
           it { is_expected.to be_invalid }
         end
 
-        context 'given unexpected relationship data (not one-to-one relationship)' do
+        context 'given unexpected org relationship data (not one-to-one relationship)' do
           let(:params) do
             {
               name: 'kim',
@@ -115,6 +130,46 @@ module VCAP::CloudController
                   data: {
                     guid: 150000
                   },
+                }
+              }
+            }
+          end
+
+          it { is_expected.to be_invalid }
+        end
+
+        context 'given unexpected spaces relationship data (not one-to-many relationship)' do
+          let(:params) do
+            {
+              name: 'kim',
+              relationships: {
+                organization: {
+                  data: { guid: 'KKW-beauty' }
+                },
+                spaces: {
+                  data: { guid: 'skims' }
+                }
+              }
+            }
+          end
+
+          it { is_expected.to be_invalid }
+        end
+
+        context 'given a malformed space guid' do
+          let(:params) do
+            {
+              name: 'rob',
+              relationships: {
+                organization: {
+                  data: {
+                    guid: 'socks'
+                  },
+                },
+                spaces: {
+                  data: [
+                    { guid: 150000 }
+                  ]
                 }
               }
             }

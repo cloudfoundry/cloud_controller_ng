@@ -7,8 +7,9 @@ class SpaceQuotasController < ApplicationController
     message = VCAP::CloudController::SpaceQuotasCreateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    org = Organization.find(guid: message.organization_guid)
     unauthorized! unless permission_queryer.can_write_to_org?(message.organization_guid)
+
+    org = Organization.find(guid: message.organization_guid)
     unprocessable_organization!(message.organization_guid) unless org
 
     space_quota = SpaceQuotasCreate.new.create(message, organization: org)

@@ -26,6 +26,9 @@ module VCAP::CloudController
           total_routes: SpaceQuotaDefinition::DEFAULT_TOTAL_ROUTES,
           total_reserved_route_ports: SpaceQuotaDefinition::UNLIMITED,
         )
+
+        spaces = valid_spaces(message.space_guids, organization)
+        spaces.each { |space| space_quota.add_space(space) }
       end
 
       space_quota
@@ -41,6 +44,14 @@ module VCAP::CloudController
       end
 
       error!(error.message)
+    end
+
+    def valid_spaces(space_guids, organization)
+      spaces = Space.filter(organization_id: organization.id).where(guid: space_guids).all
+      return spaces if spaces.length == space_guids.length
+
+      invalid_space_guids = space_guids - spaces.map(&:guid)
+      error!("Spaces with guids #{invalid_space_guids} do not exist, or you do not have access to them.")
     end
 
     def error!(message)

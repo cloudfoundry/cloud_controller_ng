@@ -29,10 +29,8 @@ module VCAP::CloudController
           total_private_domains: message.total_domains || QuotaDefinition::UNLIMITED,
         )
 
-        message.organization_guids.each do |guid|
-          org = organization_guid_validation(guid)
-          org_quota.add_organization(org)
-        end
+        orgs = valid_orgs(message.organization_guids)
+        orgs.each { |org| org_quota.add_organization(org) }
       end
       org_quota
     rescue Sequel::ValidationFailed => e
@@ -49,12 +47,12 @@ module VCAP::CloudController
       error!(error.message)
     end
 
-    def organization_guid_validation(guid)
-      org = Organization.first(guid: guid)
-      if !org
-        error!("Organization with guid '#{guid}' does not exist, or you do not have access to it.")
-      end
-      org
+    def valid_orgs(org_guids)
+      orgs = Organization.where(guid: org_guids).all
+      return orgs if orgs.length == org_guids.length
+
+      invalid_org_guids = org_guids - orgs.map(&:guid)
+      error!("Organizations with guids #{invalid_org_guids} do not exist, or you do not have access to them.")
     end
 
     def error!(message)

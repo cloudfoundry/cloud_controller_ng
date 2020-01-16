@@ -12,6 +12,9 @@ module VCAP::CloudController::Presenters::V3
         relationships: {
           organization: {
             data: { guid: space_quota.organization.guid }
+          },
+          spaces: {
+            data: space_data
           }
         },
         links: build_links,
@@ -22,6 +25,12 @@ module VCAP::CloudController::Presenters::V3
 
     def space_quota
       @resource
+    end
+
+    def space_data
+      space_quota.spaces.map do |space|
+        { guid: space.guid }
+      end
     end
 
     def build_links
