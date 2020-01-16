@@ -1220,6 +1220,7 @@ RSpec.describe 'V3 service brokers' do
 
       context 'global broker' do
         let(:broker) { global_broker }
+
         it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS do
           let(:expected_codes_and_responses) {
             Hash.new(code: 404).tap do |h|

@@ -3,6 +3,7 @@ require 'fetchers/service_offering_list_fetcher'
 require 'fetchers/service_plan_visibility_fetcher'
 require 'presenters/v3/service_offering_presenter'
 require 'messages/service_offerings_list_message'
+require 'actions/service_offering_delete'
 
 class ServiceOfferingsController < ApplicationController
   def index
@@ -35,16 +36,30 @@ class ServiceOfferingsController < ApplicationController
   def show
     not_authenticated! if user_cannot_see_marketplace?
 
-    guid = hashed_params[:guid]
-    offering, space, public = ServiceOfferingFetcher.fetch(guid)
-    service_offering_not_found! if offering.nil?
+    service_offering, space, public = ServiceOfferingFetcher.fetch(hashed_params[:guid])
+    service_offering_not_found! if service_offering.nil?
 
-    if permission_queryer.can_read_globally? || public || visible_space_scoped?(space) || visible_in_readable_orgs?(offering)
-      presenter = Presenters::V3::ServiceOfferingPresenter.new(offering)
+    if permission_queryer.can_read_globally? || public || visible_space_scoped?(space) || visible_in_readable_orgs?(service_offering)
+      presenter = Presenters::V3::ServiceOfferingPresenter.new(service_offering)
       render status: :ok, json: presenter.to_json
     else
       service_offering_not_found!
     end
+  end
+
+  def destroy
+    service_offering, _space, public = ServiceOfferingFetcher.fetch(hashed_params[:guid])
+    service_offering_not_found! if service_offering.nil?
+
+    if (public || visible_in_readable_orgs?(service_offering)) && !permission_queryer.can_write_globally?
+      unauthorized!
+    end
+    service_offering_not_found! unless permission_queryer.can_write_globally?
+
+    ServiceOfferingDelete.new.delete(service_offering)
+    head :no_content
+  rescue ServiceOfferingDelete::AssociationNotEmptyError => e
+    unprocessable!(e.message)
   end
 
   private
