@@ -108,10 +108,10 @@ RSpec.describe DeploymentsController, type: :controller do
           it 'creates a deployment' do
             expect(VCAP::CloudController::DeploymentCreate).
               to receive(:create).
-                with(
-                  app: app,
-                  user_audit_info: instance_of(VCAP::CloudController::UserAuditInfo),
-                  message: instance_of(VCAP::CloudController::DeploymentCreateMessage),
+              with(
+                app: app,
+                user_audit_info: instance_of(VCAP::CloudController::UserAuditInfo),
+                message: instance_of(VCAP::CloudController::DeploymentCreateMessage),
                 ).and_call_original
 
             expect {
@@ -123,10 +123,10 @@ RSpec.describe DeploymentsController, type: :controller do
         it 'creates a revision' do
           expect(VCAP::CloudController::DeploymentCreate).
             to receive(:create).
-              with(
-                app: app,
-                user_audit_info: instance_of(VCAP::CloudController::UserAuditInfo),
-                message: instance_of(VCAP::CloudController::DeploymentCreateMessage),
+            with(
+              app: app,
+              user_audit_info: instance_of(VCAP::CloudController::UserAuditInfo),
+              message: instance_of(VCAP::CloudController::DeploymentCreateMessage),
               ).and_call_original
 
           expect {
