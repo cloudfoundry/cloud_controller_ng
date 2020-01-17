@@ -17,6 +17,7 @@ RSpec.describe(OPI::StagerClient) do
     )
   end
   let(:eirini_url) { 'http://eirini.loves.heimdall:777' }
+  let(:staging_guid) { 'some_staging_guid' }
 
   let(:staging_details) { stub_staging_details(lifecycle_type) }
   let(:lifecycle_data) { stub_lifecycle_data }
@@ -47,21 +48,27 @@ RSpec.describe(OPI::StagerClient) do
     before do
       allow(VCAP::CloudController::Diego::Buildpack::LifecycleProtocol).to receive(:new).and_return(lifecycle_protocol)
 
-      stub_request(:post, "#{eirini_url}/stage/guid").
+      stub_request(:post, "#{eirini_url}/stage/#{staging_guid}").
         to_return(status: 202)
     end
 
     context 'when lifecycle type is buildpack' do
       let(:lifecycle_type) { VCAP::CloudController::Lifecycles::BUILDPACK }
       it 'should send the expected request' do
-        stager_client.stage('guid', staging_details)
-        expect(WebMock).to have_requested(:post, "#{eirini_url}/stage/guid").with(body: {
+        stager_client.stage(staging_guid, staging_details)
+        expect(WebMock).to have_requested(:post, "#{eirini_url}/stage/#{staging_guid}").with(body: {
           app_guid: 'thor',
+          app_name: 'the_thor',
+          staging_guid: staging_guid,
+          org_name: 'some-org',
+          org_guid: 'some-org-guid',
+          space_name: 'outer',
+          space_guid: 'outer-guid',
           environment: [{ name: 'VCAP_APPLICATION', value: '{"wow":"pants"}' },
                         { name: 'MEMORY_LIMIT', value: '256m' },
                         { name: 'VCAP_SERVICES', value: '{}' }],
           completion_callback: 'https://internal_user:internal_password@api.internal.cf:8182/internal/v3/staging//build_completed?start=',
-          lifecycle_data: { droplet_upload_uri: 'http://cc-uploader.service.cf.internal:9091/v1/droplet/guid?cc-droplet-upload-uri=http://upload.me',
+          lifecycle_data: { droplet_upload_uri: "http://cc-uploader.service.cf.internal:9091/v1/droplet/#{staging_guid}?cc-droplet-upload-uri=http://upload.me",
                             app_bits_download_uri: 'http://download.me',
                             buildpacks: [{ name: 'ruby', key: 'idk', url: 'www.com', skip_detect: false }]
           },
@@ -78,15 +85,21 @@ RSpec.describe(OPI::StagerClient) do
         end
 
         it 'should include the staging details env vars in the request' do
-          stager_client.stage('guid', staging_details)
-          expect(WebMock).to have_requested(:post, "#{eirini_url}/stage/guid").with(body: {
+          stager_client.stage(staging_guid, staging_details)
+          expect(WebMock).to have_requested(:post, "#{eirini_url}/stage/#{staging_guid}").with(body: {
             app_guid: 'thor',
+            app_name: 'the_thor',
+            staging_guid: staging_guid,
+            org_name: 'some-org',
+            org_guid: 'some-org-guid',
+            space_name: 'outer',
+            space_guid: 'outer-guid',
             environment: [{ name: 'GOPACKAGE', value: 'github.com/some/go/pkg' },
                           { name: 'VCAP_APPLICATION', value: '{"wow":"pants"}' },
                           { name: 'MEMORY_LIMIT', value: '256m' },
                           { name: 'VCAP_SERVICES', value: '{}' }],
             completion_callback: 'https://internal_user:internal_password@api.internal.cf:8182/internal/v3/staging//build_completed?start=',
-            lifecycle_data: { droplet_upload_uri: 'http://cc-uploader.service.cf.internal:9091/v1/droplet/guid?cc-droplet-upload-uri=http://upload.me',
+            lifecycle_data: { droplet_upload_uri: "http://cc-uploader.service.cf.internal:9091/v1/droplet/#{staging_guid}?cc-droplet-upload-uri=http://upload.me",
                               app_bits_download_uri: 'http://download.me',
                               buildpacks: [{ name: 'ruby', key: 'idk', url: 'www.com', skip_detect: false }]
             },
@@ -100,12 +113,12 @@ RSpec.describe(OPI::StagerClient) do
 
       context 'when the response contains an error' do
         before do
-          stub_request(:post, "#{eirini_url}/stage/guid").
+          stub_request(:post, "#{eirini_url}/stage/#{staging_guid}").
             to_return(status: 501, body: { 'message' => 'failed to stage' }.to_json)
         end
 
         it 'should raise an error' do
-          expect { stager_client.stage('guid', staging_details) }.to raise_error(CloudController::Errors::ApiError, 'Runner error: failed to stage')
+          expect { stager_client.stage(staging_guid, staging_details) }.to raise_error(CloudController::Errors::ApiError, 'Runner error: failed to stage')
         end
       end
     end
@@ -132,24 +145,24 @@ RSpec.describe(OPI::StagerClient) do
         allow(VCAP::CloudController::Diego::Docker::StagingCompletionHandler).to receive(:new).and_return(staging_completion_handler)
         allow(staging_completion_handler).to receive(:staging_complete)
 
-        stager_client.stage('some_staging_guid', staging_details)
-        expect(WebMock).not_to have_requested(:any, "#{eirini_url}/stage/some_staging_guid")
+        stager_client.stage(staging_guid, staging_details)
+        expect(WebMock).not_to have_requested(:any, "#{eirini_url}/stage/#{staging_guid}")
       end
 
       it 'should mark staging as completed' do
-        expect(VCAP::CloudController::BuildModel).to receive(:find).with(guid: 'some_staging_guid').and_return(build_model)
+        expect(VCAP::CloudController::BuildModel).to receive(:find).with(guid: staging_guid).and_return(build_model)
         expect(VCAP::CloudController::Diego::Docker::StagingCompletionHandler).to receive(:new).with(build_model).and_return(staging_completion_handler)
         expect(staging_completion_handler).to receive(:staging_complete).with(payload, true)
 
         staging_details.start_after_staging = true
-        stager_client.stage('some_staging_guid', staging_details)
+        stager_client.stage(staging_guid, staging_details)
       end
 
       context 'when build is not found' do
         it 'should raise an error' do
-          expect(VCAP::CloudController::BuildModel).to receive(:find).with(guid: 'some_staging_guid').and_return(nil)
+          expect(VCAP::CloudController::BuildModel).to receive(:find).with(guid: staging_guid).and_return(nil)
           expect {
-            stager_client.stage('some_staging_guid', staging_details)
+            stager_client.stage(staging_guid, staging_details)
           }.to raise_error(CloudController::Errors::ApiError, 'Build not found')
         end
       end
@@ -160,15 +173,30 @@ RSpec.describe(OPI::StagerClient) do
 
       it 'should raise an error' do
         expect {
-          stager_client.stage('some_staging_guid', staging_details)
+          stager_client.stage(staging_guid, staging_details)
         }.to raise_error(RuntimeError, 'lifecycle type `dockerpack` is invalid')
       end
     end
   end
 
   def stub_staging_details(lifecycle_type)
+    space = VCAP::CloudController::Space.make(
+      name: 'outer',
+      guid: 'outer-guid',
+      organization: VCAP::CloudController::Organization.make(name: 'some-org', guid: 'some-org-guid'))
+
+    app_model = VCAP::CloudController::AppModel.make(
+      guid: 'thor',
+      name: 'the_thor',
+      space: space)
+
+    package_model = VCAP::CloudController::PackageModel.make(
+      type: 'docker',
+      docker_image: 'docker.io/some/image',
+      app: app_model)
+
     staging_details                                 = VCAP::CloudController::Diego::StagingDetails.new
-    staging_details.package                         = double(app_guid: 'thor', image: 'docker.io/some/image')
+    staging_details.package                         = package_model
     staging_details.lifecycle                       = double(type: lifecycle_type)
     staging_details.staging_disk_in_mb              = 100
     staging_details.staging_memory_in_mb            = 200
