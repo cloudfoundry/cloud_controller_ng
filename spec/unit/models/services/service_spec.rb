@@ -463,5 +463,24 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe '#public' do
+      it 'is false when there are no service plans' do
+        service_offering = Service.make
+        expect(service_offering.public?).to be false
+      end
+
+      it 'is false when there are non-public service plans' do
+        service_offering = Service.make
+        ServicePlan.make(public: false, service: service_offering)
+        expect(service_offering.public?).to be false
+      end
+
+      it 'is true when there are public service plans' do
+        service_offering = Service.make
+        ServicePlan.make(public: true, service: service_offering)
+        expect(service_offering.public?).to be true
+      end
+    end
   end
 end

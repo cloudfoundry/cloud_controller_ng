@@ -145,6 +145,10 @@ module VCAP::CloudController
       nil
     end
 
+    def public?
+      self.service_plans.any?(&:public)
+    end
+
     alias_method :provider, :deleted_field
     alias_method :url, :deleted_field
     alias_method :version, :deleted_field

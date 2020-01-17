@@ -9,19 +9,15 @@ module VCAP::CloudController
 
     context 'when the offering does not exist' do
       it 'returns nil and is not public' do
-        returned_service_offering, returned_space, returned_public = ServiceOfferingFetcher.fetch('no-such-guid')
+        returned_service_offering = ServiceOfferingFetcher.fetch('no-such-guid')
         expect(returned_service_offering).to be_nil
-        expect(returned_space).to be_nil
-        expect(returned_public).to eq(false)
       end
     end
 
     context 'when the service offering exists and has no plans' do
       it 'returns the correct service offering, nil space, and is not public' do
-        returned_service_offering, returned_space, returned_public = ServiceOfferingFetcher.fetch(offering_2.guid)
+        returned_service_offering = ServiceOfferingFetcher.fetch(offering_2.guid)
         expect(returned_service_offering).to eq(offering_2)
-        expect(returned_space).to be_nil
-        expect(returned_public).to eq(false)
       end
     end
 
@@ -30,10 +26,8 @@ module VCAP::CloudController
       let!(:private_plan_2) { ServicePlan.make(service: offering_1, public: false) }
 
       it 'returns the correct service offering, nil space, and is not public' do
-        returned_service_offering, returned_space, returned_public = ServiceOfferingFetcher.fetch(offering_1.guid)
+        returned_service_offering = ServiceOfferingFetcher.fetch(offering_1.guid)
         expect(returned_service_offering).to eq(offering_1)
-        expect(returned_space).to be_nil
-        expect(returned_public).to eq(false)
       end
     end
 
@@ -42,10 +36,8 @@ module VCAP::CloudController
       let!(:public_plan_1) { ServicePlan.make(service: offering_3, public: true) }
 
       it 'returns the correct service offering, nil space, and is public' do
-        returned_service_offering, returned_space, returned_public = ServiceOfferingFetcher.fetch(offering_3.guid)
+        returned_service_offering = ServiceOfferingFetcher.fetch(offering_3.guid)
         expect(returned_service_offering).to eq(offering_3)
-        expect(returned_space).to be_nil
-        expect(returned_public).to eq(true)
       end
     end
 
@@ -57,10 +49,8 @@ module VCAP::CloudController
       let!(:private_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering) }
 
       it 'returns the correct service offering and the space' do
-        returned_service_offering, returned_space, returned_public = ServiceOfferingFetcher.fetch(service_offering.guid)
+        returned_service_offering = ServiceOfferingFetcher.fetch(service_offering.guid)
         expect(returned_service_offering).to eq(service_offering)
-        expect(returned_space).to eq(broker_space)
-        expect(returned_public).to eq(false)
       end
     end
   end
