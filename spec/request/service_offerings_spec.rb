@@ -559,6 +559,48 @@ RSpec.describe 'V3 service offerings' do
 
       it_behaves_like 'permissions for delete endpoint', COMPLETE_PERMISSIONS
     end
+
+    context 'when the service offering is from a space-scoped service broker' do
+      let(:org) { VCAP::CloudController::Organization.make }
+      let(:space) { VCAP::CloudController::Space.make(organization: org) }
+      let(:service_broker) { VCAP::CloudController::ServiceBroker.make(space: space) }
+      let!(:service_offering) { VCAP::CloudController::Service.make(service_broker: service_broker) }
+      let(:guid) { service_offering.guid }
+
+      before do
+        # Being a SpaceDeveloper in another space should make no difference
+        alternative_org = VCAP::CloudController::Organization.make
+        alternative_org.add_user(user)
+        alternative_space = VCAP::CloudController::Space.make(organization: alternative_org)
+        alternative_space.add_developer(user)
+      end
+
+      let(:expected_codes_and_responses) do
+        Hash.new(code: 404).tap do |h|
+          h['admin'] = { code: 204 }
+          h['admin_read_only'] = { code: 403 }
+          h['global_auditor'] = { code: 403 }
+          h['space_manager'] = { code: 403 }
+          h['space_auditor'] = { code: 403 }
+          h['space_developer'] = { code: 204 }
+          h['unauthenticated'] = { code: 401 }
+        end
+      end
+
+      it_behaves_like 'permissions for delete endpoint', COMPLETE_PERMISSIONS
+    end
+
+    describe 'audit events' do
+      let(:service_offering) { VCAP::CloudController::Service.make }
+
+      it 'emits an audit event' do
+        delete "/v3/service_offerings/#{service_offering.guid}", {}, admin_headers
+
+        expect([
+          { type: 'audit.service.delete', actor: service_offering.service_broker.name },
+        ]).to be_reported_as_events
+      end
+    end
   end
 
   def create_offering_json(service_offering)

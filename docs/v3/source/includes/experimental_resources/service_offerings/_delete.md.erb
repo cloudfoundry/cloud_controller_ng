@@ -15,12 +15,15 @@ Example Response
 ```
 
 ```http
-HTTP/1.1 202 Accepted
-Content-Type: application/json
-Location: https://api.example.org/v3/jobs/af5c57f6-8769-41fa-a499-2c84ed896788
+HTTP/1.1 204 No Content
 ```
 
-This endpoint creates a job to delete an existing service offering. The `Location` header refers to the created job.
+This endpoint deletes a Service Offering. This is typically used to remove orphan Service Offerings from the Cloud
+Foundry database when they have been removed from the Service Broker catalog, or when the Service Broker has been
+removed.
+
+Note that this operation only affects the Cloud Foundry database, and no attempt is made to contact the Service
+Broker.
 
 #### Definition
 `DELETE /v3/service_offerings/:guid`
@@ -29,7 +32,7 @@ This endpoint creates a job to delete an existing service offering. The `Locatio
 
 Name | Type | Description
 ---- | ---- | ------------
-**purge** | _boolean_ | If `true`, any service plans, instances, and bindings associated with this service offering will also be deleted
+**purge** | _boolean_ | If `true`, any service plans, instances, and bindings associated with this service offering will also be deleted.
 
 #### Permitted roles
  |
