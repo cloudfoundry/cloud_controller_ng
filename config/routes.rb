@@ -176,6 +176,10 @@ Rails.application.routes.draw do
   get '/service_offerings', to: 'service_offerings#index'
   get '/service_offerings/:guid', to: 'service_offerings#show'
 
+  # service_plans
+  get '/service_plans', to: 'service_plans#index'
+  get '/service_plans/:guid', to: 'service_plans#show'
+
   # space_manifests
   post '/spaces/:guid/actions/apply_manifest', to: 'space_manifests#apply_manifest'
 
