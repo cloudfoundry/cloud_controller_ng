@@ -141,6 +141,7 @@ Rails.application.routes.draw do
   post '/organization_quotas', to: 'organization_quotas#create'
   get  '/organization_quotas/:guid', to: 'organization_quotas#show'
   get  '/organization_quotas', to: 'organization_quotas#index'
+  patch '/organization_quotas/:guid', to: 'organization_quotas#update'
 
   # resource_matches
   post '/resource_matches', to: 'resource_matches#create'

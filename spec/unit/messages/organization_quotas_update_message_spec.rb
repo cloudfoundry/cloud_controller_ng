@@ -1,27 +1,18 @@
 require 'spec_helper'
-require 'messages/organization_quotas_create_message'
+require 'messages/organization_quotas_update_message'
 
 module VCAP::CloudController
-  RSpec.describe OrganizationQuotasCreateMessage do
-    subject { OrganizationQuotasCreateMessage.new(params) }
-    let(:relationships) do
-      {
-        organizations: {
-          data: []
-        },
-      }
-    end
+  RSpec.describe OrganizationQuotasUpdateMessage do
+    subject { OrganizationQuotasUpdateMessage.new(params) }
 
     describe 'validations' do
       context 'when no params are given' do
         let(:params) {}
 
-        it 'is not valid' do
-          expect(subject).not_to be_valid
-          expect(subject.errors[:name]).to eq ["can't be blank"]
+        it 'is valid' do
+          expect(subject).to be_valid
         end
       end
-
       context 'when unexpected keys are requested' do
         let(:params) { { unexpected: 'meow', name: 'the-name' } }
 
@@ -33,31 +24,31 @@ module VCAP::CloudController
 
       describe 'name' do
         context 'when it is non-alphanumeric' do
-          let(:params) { { name: 'thë-name', relationships: relationships } }
+          let(:params) { { name: 'thë-name' } }
 
           it { is_expected.to be_valid }
         end
 
         context 'when it contains hyphens' do
-          let(:params) { { name: 'a-z', relationships: relationships } }
+          let(:params) { { name: 'a-z' } }
 
           it { is_expected.to be_valid }
         end
 
         context 'when it contains capital ascii' do
-          let(:params) { { name: 'AZ', relationships: relationships } }
+          let(:params) { { name: 'AZ' } }
 
           it { is_expected.to be_valid }
         end
 
         context 'when it is at max length' do
-          let(:params) { { name: 'B' * OrganizationQuotasCreateMessage::MAX_ORGANIZATION_QUOTA_NAME_LENGTH, relationships: relationships } }
+          let(:params) { { name: 'B' * OrganizationQuotasUpdateMessage::MAX_ORGANIZATION_QUOTA_NAME_LENGTH, } }
 
           it { is_expected.to be_valid }
         end
 
         context 'when it is too long' do
-          let(:params) { { name: 'B' * (OrganizationQuotasCreateMessage::MAX_ORGANIZATION_QUOTA_NAME_LENGTH + 1), relationships: relationships } }
+          let(:params) { { name: 'B' * (OrganizationQuotasUpdateMessage::MAX_ORGANIZATION_QUOTA_NAME_LENGTH + 1), } }
 
           it 'is not valid' do
             expect(subject).to be_invalid
@@ -66,11 +57,11 @@ module VCAP::CloudController
         end
 
         context 'when it is blank' do
-          let(:params) { { name: '', relationships: relationships } }
+          let(:params) { { name: '', } }
 
           it 'is not valid' do
             expect(subject).to be_invalid
-            expect(subject.errors[:name]).to include("can't be blank")
+            expect(subject.errors[:name]).to eq ['is too short (minimum is 1 character)']
           end
         end
       end
@@ -110,7 +101,7 @@ module VCAP::CloudController
               {
                 name: 'my-name',
                 apps: { total_memory_in_mb: 'bob' },
-                relationships: relationships,
+
               }
             }
 
@@ -124,7 +115,7 @@ module VCAP::CloudController
               {
                 name: 'my-name',
                 apps: { total_memory_in_mb: 1.1 },
-                relationships: relationships,
+
               }
             }
 
@@ -138,7 +129,7 @@ module VCAP::CloudController
               {
                 name: 'my-name',
                 apps: { total_memory_in_mb: -1 },
-                relationships: relationships,
+
               }
             }
 
@@ -153,7 +144,7 @@ module VCAP::CloudController
               {
                 name: 'my-name',
                 apps: { total_memory_in_mb: 0 },
-                relationships: relationships,
+
               }
             }
 
@@ -164,7 +155,7 @@ module VCAP::CloudController
               {
                 name: 'my-name',
                 apps: { total_memory_in_mb: nil },
-                relationships: relationships,
+
               }
             }
 
@@ -178,7 +169,7 @@ module VCAP::CloudController
               {
                 name: 'my-name',
                 apps: { per_process_memory_in_mb: 'bob' },
-                relationships: relationships,
+
               }
             }
 
@@ -192,7 +183,7 @@ module VCAP::CloudController
               {
                 name: 'my-name',
                 apps: { per_process_memory_in_mb: 1.1 },
-                relationships: relationships,
+
               }
             }
 
@@ -206,7 +197,7 @@ module VCAP::CloudController
               {
                 name: 'my-name',
                 apps: { per_process_memory_in_mb: -1 },
-                relationships: relationships,
+
               }
             }
 
@@ -221,7 +212,7 @@ module VCAP::CloudController
               {
                 name: 'my-name',
                 apps: { per_process_memory_in_mb: 0 },
-                relationships: relationships,
+
               }
             }
 
@@ -232,7 +223,7 @@ module VCAP::CloudController
               {
                 name: 'my-name',
                 apps: { per_process_memory_in_mb: nil },
-                relationships: relationships,
+
               }
             }
 
@@ -246,7 +237,7 @@ module VCAP::CloudController
               {
                 name: 'my-name',
                 apps: { total_instances: 'bob' },
-                relationships: relationships,
+
               }
             }
 
@@ -260,7 +251,7 @@ module VCAP::CloudController
               {
                 name: 'my-name',
                 apps: { total_instances: 1.1 },
-                relationships: relationships,
+
               }
             }
 
@@ -274,7 +265,7 @@ module VCAP::CloudController
               {
                 name: 'my-name',
                 apps: { total_instances: -1 },
-                relationships: relationships,
+
               }
             }
 
@@ -289,7 +280,7 @@ module VCAP::CloudController
               {
                 name: 'my-name',
                 apps: { total_instances: 0 },
-                relationships: relationships,
+
               }
             }
 
@@ -300,7 +291,7 @@ module VCAP::CloudController
               {
                 name: 'my-name',
                 apps: { total_instances: nil },
-                relationships: relationships,
+
               }
             }
 
@@ -406,7 +397,7 @@ module VCAP::CloudController
               {
                 name: 'my-name',
                 services: { total_service_instances: 'bob' },
-                relationships: relationships,
+
               }
             }
 
@@ -420,7 +411,7 @@ module VCAP::CloudController
               {
                 name: 'my-name',
                 services: { total_service_instances: 1.1 },
-                relationships: relationships,
+
               }
             }
 
@@ -434,7 +425,7 @@ module VCAP::CloudController
               {
                 name: 'my-name',
                 services: { total_service_instances: -1 },
-                relationships: relationships,
+
               }
             }
 
@@ -449,7 +440,7 @@ module VCAP::CloudController
               {
                 name: 'my-name',
                 services: { total_service_instances: 0 },
-                relationships: relationships,
+
               }
             }
 
@@ -460,7 +451,7 @@ module VCAP::CloudController
               {
                 name: 'my-name',
                 services: { total_service_instances: nil },
-                relationships: relationships,
+
               }
             }
 
@@ -474,7 +465,7 @@ module VCAP::CloudController
               {
                 name: 'my-name',
                 services: { total_service_keys: 'bob' },
-                relationships: relationships,
+
               }
             }
 
@@ -488,7 +479,7 @@ module VCAP::CloudController
               {
                 name: 'my-name',
                 services: { total_service_keys: 1.1 },
-                relationships: relationships,
+
               }
             }
 
@@ -502,7 +493,7 @@ module VCAP::CloudController
               {
                 name: 'my-name',
                 services: { total_service_keys: -1 },
-                relationships: relationships,
+
               }
             }
 
@@ -517,7 +508,7 @@ module VCAP::CloudController
               {
                 name: 'my-name',
                 services: { total_service_keys: 0 },
-                relationships: relationships,
+
               }
             }
 
@@ -528,7 +519,7 @@ module VCAP::CloudController
               {
                 name: 'my-name',
                 services: { total_service_keys: nil },
-                relationships: relationships,
+
               }
             }
 
@@ -817,7 +808,7 @@ module VCAP::CloudController
           it { is_expected.to be_valid }
         end
 
-        context 'given multiple organization guids' do
+        context 'given mulitple organization guids' do
           let(:params) do
             {
               name: 'kim',

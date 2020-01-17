@@ -1,0 +1,53 @@
+### Update an organization quota
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/organization_quotas/[guid]" \
+  -X PATCH \
+  -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
+  -d '{
+    "name": "don-quixote",
+    "apps": {
+      "total_memory_in_mb": 5120,
+      "per_process_memory_in_mb": 1024,
+      "total_instances": 10,
+      "per_app_tasks": 5
+    },
+    "services": {
+      "paid_services_allowed": true,
+      "total_service_instances": 10,
+      "total_service_keys": 20,
+    },
+    "routes": {
+      "total_routes": 8,
+      "total_reserved_ports": 4
+    },
+    "domains": {
+      "total_private_domains": 7
+    }
+  }'
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :single_organization_quota %>
+```
+
+#### Definition
+`PATCH /v3/organization_quota/:guid`
+
+#### Permitted roles
+
+Role | Notes
+----- | ---
+Admin |

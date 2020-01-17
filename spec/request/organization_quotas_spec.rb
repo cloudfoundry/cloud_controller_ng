@@ -300,6 +300,124 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe 'PATCH /v3/organization_quotas/:guid' do
+      let(:api_call) { lambda { |user_headers| patch "/v3/organization_quotas/#{organization_quota.guid}", params.to_json, user_headers } }
+
+      let(:params) do
+        {
+          "name": 'don-quixote',
+          "apps": {
+            "total_memory_in_mb": 5120,
+            "per_process_memory_in_mb": 1024,
+            "total_instances": 10,
+            "per_app_tasks": 5
+          },
+          "services": {
+            "paid_services_allowed": true,
+            "total_service_instances": 10,
+            "total_service_keys": 20,
+          },
+          "routes": {
+            "total_routes": 8,
+            "total_reserved_ports": 4
+          },
+          "domains": {
+            "total_domains": 7
+          }
+        }
+      end
+
+      let(:organization_quota_json) do
+        {
+          guid: organization_quota.guid,
+          created_at: iso8601,
+          updated_at: iso8601,
+          name: params[:name],
+          apps: {
+            total_memory_in_mb: 5120,
+            per_process_memory_in_mb: 1024,
+            total_instances: 10,
+            per_app_tasks: 5
+          },
+          services: {
+            paid_services_allowed: true,
+            total_service_instances: 10,
+            total_service_keys: 20,
+          },
+          routes: {
+            total_routes: 8,
+            total_reserved_ports: 4
+          },
+          domains: {
+            total_domains: 7,
+          },
+          relationships: {
+            organizations: {
+              data: [{ 'guid': 'organization-guid' }],
+            }
+          },
+          links: {
+            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organization_quotas\/#{params[:guid]}) },
+          }
+        }
+      end
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(
+          code: 403,
+        )
+        h['admin'] = {
+          code: 200,
+          response_object: organization_quota_json
+        }
+        h.freeze
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+      context 'when the organization_quota does not exist' do
+        it 'returns a 404 with a helpful message' do
+          patch '/v3/organization_quotas/not-exist', params.to_json, admin_header
+
+          expect(last_response).to have_status_code(404)
+          expect(last_response).to have_error_message('Organization quota not found')
+        end
+      end
+
+      context 'update partial values' do
+        let(:partial_params) do
+          {
+            "name": 'don-quixote',
+            "apps": {
+              "per_app_tasks": 9
+            },
+            "services": {
+              "total_service_instances": 14,
+            },
+          }
+        end
+
+        before do
+          patch "/v3/organization_quotas/#{organization_quota.guid}", partial_params.to_json, admin_header
+        end
+
+        it 'only updates the requested fields' do
+          expect(organization_quota.reload.app_task_limit).to eq(9)
+          expect(organization_quota.reload.total_services).to eq(14)
+        end
+
+        context 'patching with empty params' do
+          it 'succeeds without changing the quota' do
+            patch "/v3/organization_quotas/#{organization_quota.guid}", {}, admin_header
+
+            expect(last_response).to have_status_code(200)
+            expect(organization_quota.reload.app_task_limit).to eq(9)
+            expect(organization_quota.reload.total_services).to eq(14)
+          end
+        end
+      end
+    end
   end
 end
 
