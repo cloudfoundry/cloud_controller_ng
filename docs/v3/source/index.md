@@ -277,6 +277,7 @@ includes:
   - experimental_resources/service_brokers/delete
   - experimental_resources/service_offerings/header
   - experimental_resources/service_offerings/visibility
+  - experimental_resources/service_offerings/object
   - experimental_resources/service_offerings/get
   - experimental_resources/service_offerings/list
   - experimental_resources/service_offerings/delete

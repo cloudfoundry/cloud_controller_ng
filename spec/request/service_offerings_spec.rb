@@ -641,15 +641,21 @@ RSpec.describe 'V3 service offerings' do
       'name' => service_offering.label,
       'description' => service_offering.description,
       'available' => service_offering.active,
-      'bindable' => true,
-      'broker_service_offering_metadata' => service_offering.extra,
-      'broker_service_offering_id' => service_offering.unique_id,
       'tags' => [],
       'requires' => [],
       'created_at' => iso8601,
       'updated_at' => iso8601,
-      'plan_updateable' => false,
       'shareable' => true,
+      'broker_catalog' => {
+        'id' => service_offering.unique_id,
+        'metadata' => JSON.parse(service_offering.extra),
+        'features' => {
+          'plan_updateable' => false,
+          'bindable' => true,
+          'instances_retrievable' => false,
+          'bindings_retrievable' => false
+        }
+      },
       'links' => {
         'self' => {
           'href' => %r(#{Regexp.escape(link_prefix)}\/v3\/service_offerings\/#{service_offering.guid})

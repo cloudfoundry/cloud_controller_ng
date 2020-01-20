@@ -8,20 +8,28 @@ module VCAP::CloudController
     module V3
       class ServiceOfferingPresenter < BasePresenter
         def to_hash
+          metadata = broker_metadata
+
           {
             guid: service_offering.guid,
             name: service_offering.label,
             description: service_offering.description,
             available: service_offering.active,
-            bindable: service_offering.bindable,
-            broker_service_offering_metadata: service_offering.extra,
-            broker_service_offering_id: service_offering.unique_id,
             tags: service_offering.tags,
             requires: service_offering.requires,
             created_at: service_offering.created_at,
             updated_at: service_offering.updated_at,
-            plan_updateable: service_offering.plan_updateable,
-            shareable: shareable,
+            shareable: shareable(metadata),
+            broker_catalog: {
+              id: service_offering.unique_id,
+              metadata: metadata,
+              features: {
+                plan_updateable: service_offering.plan_updateable,
+                bindable: service_offering.bindable,
+                instances_retrievable: service_offering.instances_retrievable,
+                bindings_retrievable: service_offering.bindings_retrievable,
+              }
+            },
             links: build_links,
             relationships: build_relationships,
           }
@@ -33,16 +41,13 @@ module VCAP::CloudController
           @resource
         end
 
-        def shareable
-          begin
-            metadata = JSON.parse(service_offering.extra)
-            if metadata['shareable'] == true
-              return true
-            end
-          rescue JSON::ParserError
-          end
+        def shareable(metadata)
+          metadata.nil? ? false : metadata['shareable'] == true
+        end
 
-          false
+        def broker_metadata
+          JSON.parse(service_offering.extra)
+        rescue JSON::ParserError
         end
 
         def build_links
