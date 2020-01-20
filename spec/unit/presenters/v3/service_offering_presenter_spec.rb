@@ -152,6 +152,14 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServiceOfferingPresenter d
       end
     end
 
+    context 'when `metadata` is not set' do
+      let(:metadata) { nil }
+
+      it 'displays shareable as `false``' do
+        expect(result[:shareable]).to be false
+      end
+    end
+
     # Note that the metadata is saved as a serialized JSON string, so it should always
     # be possible to parse it.
     context 'when the broker metadata cannot be parsed' do
@@ -161,8 +169,8 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServiceOfferingPresenter d
         expect(result[:shareable]).to be false
       end
 
-      it 'defaults `metadata` to nil' do
-        expect(result.dig(:broker_catalog, :metadata)).to be_nil
+      it 'defaults `metadata` to empty' do
+        expect(result.dig(:broker_catalog, :metadata)).to be_empty
       end
     end
   end

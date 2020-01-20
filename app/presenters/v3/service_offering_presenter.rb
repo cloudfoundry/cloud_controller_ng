@@ -42,12 +42,13 @@ module VCAP::CloudController
         end
 
         def shareable(metadata)
-          metadata.nil? ? false : metadata['shareable'] == true
+          metadata['shareable'] == true
         end
 
         def broker_metadata
           JSON.parse(service_offering.extra)
         rescue JSON::ParserError
+          {}
         end
 
         def build_links

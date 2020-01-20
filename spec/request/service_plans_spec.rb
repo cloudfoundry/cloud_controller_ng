@@ -123,7 +123,31 @@ RSpec.describe 'V3 service plans' do
 
   def create_plan_json(service_plan)
     {
-      guid: service_plan.guid
+      guid: service_plan.guid,
+      created_at: iso8601,
+      updated_at: iso8601,
+      public: match(boolean),
+      available: match(boolean),
+      name: service_plan.name,
+      free: match(boolean),
+      description: service_plan.description,
+      broker_catalog: {
+        id: service_plan.unique_id,
+        metadata: {},
+        features: {
+          bindable: match(boolean),
+          plan_updateable: match(boolean)
+        }
+      },
+      schemas: {
+        service_instance: {
+          create: {},
+          update: {}
+        },
+        service_binding: {
+          create: {}
+        }
+      }
     }
   end
 end
