@@ -27,6 +27,7 @@ class RootController < ActionController::Base
     links.merge!(create_link(:service_brokers, experimental: true))
     links.merge!(create_link(:service_instances))
     links.merge!(create_link(:service_offerings, experimental: true))
+    links.merge!(create_link(:service_plans, experimental: true))
     links.merge!(create_link(:spaces))
     links.merge!(create_link(:space_quotas, experimental: true))
     links.merge!(create_link(:stacks))
