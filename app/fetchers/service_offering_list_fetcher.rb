@@ -46,6 +46,10 @@ module VCAP::CloudController
         dataset = dataset.where(Sequel[:service_brokers][:guid] =~ message.service_broker_guids)
       end
 
+      if message.requested?(:service_broker_names)
+        dataset = dataset.where(Sequel[:service_brokers][:name] =~ message.service_broker_names)
+      end
+
       dataset
     end
 

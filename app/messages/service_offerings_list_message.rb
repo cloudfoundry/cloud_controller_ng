@@ -6,13 +6,14 @@ module VCAP::CloudController
     register_allowed_keys [
       :available,
       :service_broker_guids,
+      :service_broker_names,
     ]
 
     validates_with NoAdditionalParamsValidator
     validates :available, inclusion: { in: %w(true false), message: "only accepts values 'true' or 'false'" }, allow_nil: true
 
     def self.from_params(params)
-      super(params, %w(service_broker_guids))
+      super(params, %w(service_broker_guids service_broker_names))
     end
   end
 end
