@@ -1,0 +1,47 @@
+### Apply an organization quota to an organization
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/organization_quotas/:quota_guid/relationships/organizations" \
+-X POST \
+-H "Authorization: bearer [token]" \
+-H "Content-type: application/json" \
+-d '{
+  "data": [{ "guid": "org-guid1" }, { "guid": "org-guid2" }]
+}'
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 201 Created
+Content-Type: application/json
+
+<%= yield_content :apply_organization_quota %>
+```
+
+
+This endpoint applies an organization quota to one or more organizations.
+
+To apply an organization quota to an organization you must be an admin.
+
+#### Definition
+`POST /v3/organization_quotas/:quota_guid/relationships/organizations`
+
+#### Required parameters
+
+Name | Type | Description
+---- | ---- | -----------
+**data** | [_to-many relationship_](#to-many-relationships) | Organization guids that the quota will apply to.
+
+
+#### Permitted roles
+
+Role | Notes
+--- | ---
+Admin |

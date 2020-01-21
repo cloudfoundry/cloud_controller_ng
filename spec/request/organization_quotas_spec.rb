@@ -418,6 +418,54 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe 'POST /v3/organization_quotas/:guid/relationships/organizations' do
+      let(:api_call) { lambda { |user_headers| post "/v3/organization_quotas/#{org_quota.guid}/relationships/organizations", params.to_json, user_headers } }
+
+      let(:org) { VCAP::CloudController::Organization.make }
+      let(:org_quota) { VCAP::CloudController::QuotaDefinition.make }
+
+      let(:params) do
+        {
+          data: [{ guid: org.guid }]
+        }
+      end
+
+      context 'when applying quota to an organization' do
+        let(:data_json) do
+          {
+            data: [
+              { guid: org.guid }
+            ],
+            links: {
+              self: { href: "#{link_prefix}/v3/organization_quotas/#{org_quota.guid}/relationships/organizations" },
+            }
+          }
+        end
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(code: 403)
+          h['admin'] = { code: 200, response_object: data_json }
+          h
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
+
+      context 'when an org guid is invalid' do
+        let(:params) do
+          {
+            data: [{ guid: 'not a real guid' }]
+          }
+        end
+
+        it 'returns a 422 with a helpful message' do
+          post "/v3/organization_quotas/#{org_quota.guid}/relationships/organizations", params.to_json, admin_header
+          expect(last_response).to have_status_code(422)
+          expect(last_response).to have_error_message('Organizations with guids ["not a real guid"] do not exist, or you do not have access to them.')
+        end
+      end
+    end
   end
 end
 

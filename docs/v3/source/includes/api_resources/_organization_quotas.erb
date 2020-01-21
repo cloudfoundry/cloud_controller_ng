@@ -35,6 +35,19 @@
   }
 <% end %>
 
+<% content_for :apply_organization_quota do %>
+  {
+    "data": [
+      { "guid": "org-guid1" },
+      { "guid": "org-guid2" },
+      { "guid": "previous-org-guid" }
+    ],
+    "links": {
+      "self": { "href": "https://api.example.org/v3/organization_quotas/quota-guid/relationships/organizations" }
+    }
+  }
+<% end %>
+
 <% content_for :list_organization_quotas do %>
   {
     "pagination": {
