@@ -282,6 +282,7 @@ includes:
   - experimental_resources/service_offerings/object
   - experimental_resources/service_offerings/get
   - experimental_resources/service_offerings/list
+  - experimental_resources/service_offerings/update
   - experimental_resources/service_offerings/delete
   - experimental_resources/service_plans/header
   - experimental_resources/service_plans/object

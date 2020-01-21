@@ -99,6 +99,23 @@ module VCAP::CloudController
         )
       end
     end
+
+    describe 'the `label_selector` filter' do
+      let!(:service_offering_1) { VCAP::CloudController::ServicePlan.make(public: true, active: true).service }
+      let!(:service_offering_2) { VCAP::CloudController::ServicePlan.make(public: true, active: true).service }
+      let!(:service_offering_3) { VCAP::CloudController::ServicePlan.make(public: true, active: true).service }
+      let(:message) { ServiceOfferingsListMessage.from_params({ label_selector: 'flavor=orange' }.with_indifferent_access) }
+
+      before do
+        VCAP::CloudController::ServiceOfferingLabelModel.make(resource_guid: service_offering_1.guid, key_name: 'flavor', value: 'orange')
+        VCAP::CloudController::ServiceOfferingLabelModel.make(resource_guid: service_offering_2.guid, key_name: 'flavor', value: 'orange')
+        VCAP::CloudController::ServiceOfferingLabelModel.make(resource_guid: service_offering_3.guid, key_name: 'flavor', value: 'apple')
+      end
+
+      it 'filters the matching service offerings' do
+        expect(service_offerings).to contain_exactly(service_offering_1, service_offering_2)
+      end
+    end
   end
 
   RSpec.describe ServiceOfferingListFetcher do

@@ -7,6 +7,8 @@ module VCAP::CloudController
   module Presenters
     module V3
       class ServiceOfferingPresenter < BasePresenter
+        include VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers
+
         def to_hash
           metadata = broker_metadata
 
@@ -29,6 +31,10 @@ module VCAP::CloudController
                 instances_retrievable: service_offering.instances_retrievable,
                 bindings_retrievable: service_offering.bindings_retrievable,
               }
+            },
+            metadata: {
+              labels: hashified_labels(service_offering.labels),
+              annotations: hashified_annotations(service_offering.annotations),
             },
             links: build_links,
             relationships: build_relationships,

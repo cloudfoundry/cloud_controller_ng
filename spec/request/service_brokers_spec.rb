@@ -316,7 +316,8 @@ RSpec.describe 'V3 service brokers' do
 
       context 'when filtering on labels' do
         it 'filters by label selectors' do
-          VCAP::CloudController::ServiceBrokerLabelModel.create(key_name: 'boomerang', value: 'gel', service_broker: global_service_broker)
+          VCAP::CloudController::ServiceBrokerLabelModel.make(resource_guid: global_service_broker.guid, key_name: 'boomerang', value: 'gel')
+          VCAP::CloudController::ServiceBrokerLabelModel.make(resource_guid: space_scoped_service_broker.guid, key_name: 'boomerang', value: 'soi')
 
           expect_filtered_brokers('label_selector=boomerang=gel', [global_service_broker])
         end

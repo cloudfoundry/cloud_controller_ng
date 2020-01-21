@@ -37,6 +37,23 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServiceOfferingPresenter d
     )
   end
 
+  let!(:potato_label) do
+    VCAP::CloudController::ServiceOfferingLabelModel.make(
+      key_prefix: 'canberra.au',
+      key_name: 'potato',
+      value: 'mashed',
+      resource_guid: service_offering.guid
+    )
+  end
+
+  let!(:mountain_annotation) do
+    VCAP::CloudController::ServiceOfferingAnnotationModel.make(
+      key: 'altitude',
+      value: '14,412',
+      resource_guid: service_offering.guid,
+    )
+  end
+
   describe '#to_hash' do
     let(:result) { described_class.new(service_offering).to_hash.deep_symbolize_keys }
 
@@ -64,6 +81,14 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServiceOfferingPresenter d
             'bindable': bindable,
             'instances_retrievable': instances_retrievable,
             'bindings_retrievable': bindings_retrievable
+          }
+        },
+        'metadata': {
+          'labels': {
+            'canberra.au/potato': 'mashed'
+          },
+          'annotations': {
+            'altitude': '14,412'
           }
         },
         'links': {
