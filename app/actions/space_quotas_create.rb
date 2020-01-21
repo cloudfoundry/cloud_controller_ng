@@ -12,10 +12,10 @@ module VCAP::CloudController
           organization: organization,
 
           # Apps
-          memory_limit: SpaceQuotaDefinition::DEFAULT_MEMORY_LIMIT,
-          instance_memory_limit: SpaceQuotaDefinition::UNLIMITED,
-          app_instance_limit: SpaceQuotaDefinition::UNLIMITED,
-          app_task_limit: SpaceQuotaDefinition::UNLIMITED,
+          memory_limit: message.total_memory_in_mb || SpaceQuotaDefinition::DEFAULT_MEMORY_LIMIT,
+          instance_memory_limit: message.per_process_memory_in_mb || SpaceQuotaDefinition::UNLIMITED,
+          app_instance_limit: message.total_instances || SpaceQuotaDefinition::UNLIMITED,
+          app_task_limit: message.per_app_tasks || SpaceQuotaDefinition::UNLIMITED,
 
           # Services
           total_services: SpaceQuotaDefinition::DEFAULT_TOTAL_SERVICES,

@@ -5,7 +5,7 @@ module VCAP::CloudController
   RSpec.describe SpaceQuotasCreateMessage do
     subject { SpaceQuotasCreateMessage.new(params) }
 
-    let(:params) { { name: 'basic', relationships: relationships } }
+    let(:params) { { name: 'basic', relationships: relationships, apps: apps } }
 
     let(:relationships) do
       {
@@ -22,11 +22,22 @@ module VCAP::CloudController
       }
     end
 
-    it 'is valid' do
-      expect(subject).to be_valid
-      expect(subject.name).to eq('basic')
-      expect(subject.organization_guid).to eq('some-org-guid')
-      expect(subject.space_guids).to eq(['some-space-guid'])
+    let(:apps) do
+      {
+        total_memory_in_mb: 2048,
+        per_process_memory_in_mb: 1024,
+        total_instances: 2,
+        per_app_tasks: 4,
+      }
+    end
+
+    context 'when given correct & well-formed params' do
+      it 'successfully validates the inputs' do
+        expect(subject).to be_valid
+        expect(subject.name).to eq('basic')
+        expect(subject.organization_guid).to eq('some-org-guid')
+        expect(subject.space_guids).to eq(['some-space-guid'])
+      end
     end
 
     describe 'validations' do
@@ -88,6 +99,46 @@ module VCAP::CloudController
           it 'is not valid' do
             expect(subject).to be_invalid
             expect(subject.errors[:name]).to eq ["can't be blank"]
+          end
+        end
+      end
+
+      describe 'apps' do
+        context 'value for apps is not a hash' do
+          let(:params) {
+            {
+              name: 'my-name',
+              relationships: relationships,
+              apps: true,
+            }
+          }
+
+          it 'is not valid' do
+            expect(subject).to be_invalid
+            expect(subject.errors.full_messages[0]).to include('Apps must be an object')
+          end
+        end
+
+        context 'when apps is well-formed (a hash)' do
+          let(:params) {
+            {
+              name: 'my-name',
+              relationships: relationships,
+              apps: {},
+            }
+          }
+
+          let(:quota_app_message) { instance_double(QuotasAppsMessage) }
+
+          before do
+            allow(QuotasAppsMessage).to receive(:new).and_return(quota_app_message)
+            allow(quota_app_message).to receive(:valid?).and_return(false)
+            allow(quota_app_message).to receive_message_chain(:errors, :full_messages).and_return(['invalid_app_limits'])
+          end
+
+          it 'delegates validation to QuotasAppsMessage and returns any errors' do
+            expect(subject).to be_invalid
+            expect(subject.errors[:apps]).to include('invalid_app_limits')
           end
         end
       end

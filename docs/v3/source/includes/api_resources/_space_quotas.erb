@@ -1,24 +1,36 @@
 <% content_for :single_space_quota do %>
-  {
-    "guid": "9b370018-c38e-44c9-86d6-155c76801104",
-    "created_at": "2016-05-04T17:00:41Z",
-    "updated_at": "2016-05-04T17:00:41Z",
-    "name": "don-quixote",
-    "relationships": {
-      "organization": {
-        "data": {
-          "guid": "9b370018-c38e-44c9-86d6-155c76801104"
-        }
-      },
-      "spaces": {
-        "data": [
-          { "guid": "f026552b-19db-4caa-9313-277342d97f29" }
-        ]
+{
+  "guid": "9b370018-c38e-44c9-86d6-155c76801104",
+  "created_at": "2016-05-04T17:00:41Z",
+  "updated_at": "2016-05-04T17:00:41Z",
+  "name": "don-quixote",
+  "apps": {
+    "total_memory_in_mb": 5120,
+    "per_process_memory_in_mb": 1024,
+    "total_instances": 10,
+    "per_app_tasks": null
+  },
+  "relationships": {
+    "organizations": {
+      "data": {
+        "guid": "9b370018-c38e-44c9-86d6-155c76801104"
       }
     },
-    "links": {
-      "self": { "href": "https://api.example.org/v3/organization_quotas/9b370018-c38e-44c9-86d6-155c76801104" },
-      "organization": { "href": "https://api.example.org/v3/organizations/9b370018-c38e-44c9-86d6-155c76801104" }
+    "spaces": {
+      "data": [
+        {
+          "guid": "45bb0018-c38e-44c9-86d6-155c76803600"
+        }
+      ]
+    }
+  },
+  "links": {
+    "self": {
+      "href": "https://api.example.org/v3/organization_quotas/9b370018-c38e-44c9-86d6-155c76801104"
+    },
+    "organization": {
+      "href": "https://api.example.org/v3/organizations/9b370018-c38e-44c9-86d6-155c76801104"
     }
   }
+}
 <% end %>

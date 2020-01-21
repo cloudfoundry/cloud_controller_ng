@@ -9,6 +9,12 @@ module VCAP::CloudController::Presenters::V3
         created_at: space_quota.created_at,
         updated_at: space_quota.updated_at,
         name: space_quota.name,
+        apps: {
+          total_memory_in_mb: unlimited_to_nil(space_quota.memory_limit),
+          per_process_memory_in_mb: unlimited_to_nil(space_quota.instance_memory_limit),
+          total_instances: unlimited_to_nil(space_quota.app_instance_limit),
+          per_app_tasks: unlimited_to_nil(space_quota.app_task_limit),
+        },
         relationships: {
           organization: {
             data: { guid: space_quota.organization.guid }
@@ -40,6 +46,10 @@ module VCAP::CloudController::Presenters::V3
         self: { href: url_builder.build_url(path: "/v3/space_quotas/#{space_quota.guid}") },
         organization: { href: url_builder.build_url(path: "/v3/organizations/#{space_quota.organization.guid}") },
       }
+    end
+
+    def unlimited_to_nil(value)
+      value == -1 ? nil : value
     end
   end
 end

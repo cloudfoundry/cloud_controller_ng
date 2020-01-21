@@ -29,6 +29,12 @@ module VCAP::CloudController
           created_at: iso8601,
           updated_at: iso8601,
           name: params[:name],
+          apps: {
+            total_memory_in_mb: nil,
+            per_process_memory_in_mb: nil,
+            total_instances: nil,
+            per_app_tasks: nil
+          },
           relationships: {
             organization: {
               data: { 'guid': org.guid },
@@ -75,6 +81,12 @@ module VCAP::CloudController
         let(:params) do
           {
             'name': 'my-space-quota',
+            'apps': {
+              'total_memory_in_mb': 5120,
+              'per_process_memory_in_mb': 1024,
+              'total_instances': 10,
+              'per_app_tasks': 5
+            },
             'relationships': {
               'organization': {
                 'data': { 'guid': org.guid }
@@ -94,6 +106,12 @@ module VCAP::CloudController
             'created_at': iso8601,
             'updated_at': iso8601,
             'name': 'my-space-quota',
+            'apps': {
+              'total_memory_in_mb': 5120,
+              'per_process_memory_in_mb': 1024,
+              'total_instances': 10,
+              'per_app_tasks': 5
+            },
             'relationships': {
               'organization': {
                 'data': {
@@ -113,7 +131,7 @@ module VCAP::CloudController
           }
         end
 
-        it 'responds with the expected code and response' do
+        it 'creates a space quota with the requested limits' do
           api_call.call(admin_header)
           expect(last_response).to have_status_code(201)
           expect(parsed_response).to match_json_response(expected_response)

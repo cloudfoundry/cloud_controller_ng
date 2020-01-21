@@ -24,6 +24,12 @@ module VCAP::CloudController
       let(:message_with_params) do
         VCAP::CloudController::SpaceQuotasCreateMessage.new({
           name: 'my-name',
+          apps: {
+            total_memory_in_mb: 5,
+            per_process_memory_in_mb: 6,
+            total_instances: 7,
+            per_app_tasks: 8
+          },
           relationships: {
             organization: {
               data: {
@@ -69,6 +75,11 @@ module VCAP::CloudController
             space_quota = space_quotas_create.create(message_with_params, organization: org)
 
             expect(space_quota.name).to eq('my-name')
+
+            expect(space_quota.memory_limit).to eq(5)
+            expect(space_quota.instance_memory_limit).to eq(6)
+            expect(space_quota.app_instance_limit).to eq(7)
+            expect(space_quota.app_task_limit).to eq(8)
 
             expect(space_quota.organization).to eq(org)
 
