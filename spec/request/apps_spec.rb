@@ -875,6 +875,9 @@ RSpec.describe 'Apps' do
             'domains' => {
               'href' => "#{link_prefix}/v3/organizations/#{org1.guid}/domains",
             },
+            'quota' => {
+              'href' => "#{link_prefix}/v3/organization_quotas/#{org1.quota_definition.guid}"
+            }
           },
           'relationships' => { 'quota' => { 'data' => { 'guid' => org1.quota_definition.guid } } },
         })
@@ -898,6 +901,9 @@ RSpec.describe 'Apps' do
               'domains' => {
                 'href' => "#{link_prefix}/v3/organizations/#{org2.guid}/domains",
               },
+              'quota' => {
+                'href' => "#{link_prefix}/v3/organization_quotas/#{org2.quota_definition.guid}"
+              }
             },
             'relationships' => { 'quota' => { 'data' => { 'guid' => org2.quota_definition.guid } } },
           })
@@ -1083,6 +1089,9 @@ RSpec.describe 'Apps' do
             'domains' => {
               'href' => "#{link_prefix}/v3/organizations/#{org.guid}/domains",
             },
+            'quota' => {
+              'href' => "#{link_prefix}/v3/organization_quotas/#{org.quota_definition.guid}"
+            }
           },
           'relationships' => { 'quota' => { 'data' => { 'guid' => org.quota_definition.guid } } },
         }

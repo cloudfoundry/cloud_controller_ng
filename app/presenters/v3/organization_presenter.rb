@@ -46,7 +46,8 @@ module VCAP::CloudController::Presenters::V3
       {
         self: { href: url_builder.build_url(path: "/v3/organizations/#{organization.guid}") },
         domains: { href: url_builder.build_url(path: "/v3/organizations/#{organization.guid}/domains") },
-        default_domain: { href: url_builder.build_url(path: "/v3/organizations/#{organization.guid}/domains/default") }
+        default_domain: { href: url_builder.build_url(path: "/v3/organizations/#{organization.guid}/domains/default") },
+        quota: { href: url_builder.build_url(path: "/v3/organization_quotas/#{organization.quota_definition.guid}") }
       }
     end
   end

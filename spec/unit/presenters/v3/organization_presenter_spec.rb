@@ -53,6 +53,7 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:links][:self][:href]).to match(%r{/v3/organizations/#{organization.guid}$})
         expect(result[:links][:domains][:href]).to match(%r{/v3/organizations/#{organization.guid}/domains$})
         expect(result[:links][:default_domain][:href]).to match(%r{/v3/organizations/#{organization.guid}/domains/default$})
+        expect(result[:links][:quota][:href]).to match(%r{/v3/organization_quotas/#{organization_quota.guid}$})
         expect(result[:metadata][:labels]).to eq('release' => 'stable', 'maine.gov/potato' => 'mashed')
         expect(result[:metadata][:annotations]).to eq('city' => 'Monticello', 'state' => 'Indiana')
         expect(result[:relationships][:quota][:data][:guid]).to eq('quota-guid')

@@ -53,7 +53,8 @@ module VCAP::CloudController
             'links' => {
               'self' => { 'href' => "#{link_prefix}/v3/organizations/#{created_org.guid}" },
               'domains' => { 'href' => "http://api2.vcap.me/v3/organizations/#{created_org.guid}/domains" },
-              'default_domain' => { 'href' => "http://api2.vcap.me/v3/organizations/#{created_org.guid}/domains/default" }
+              'default_domain' => { 'href' => "http://api2.vcap.me/v3/organizations/#{created_org.guid}/domains/default" },
+              'quota' => { 'href' => "http://api2.vcap.me/v3/organization_quotas/#{created_org.quota_definition.guid}" }
             },
             'relationships' => { 'quota' => { 'data' => { 'guid' => created_org.quota_definition.guid } } },
             'metadata' => {
@@ -85,7 +86,8 @@ module VCAP::CloudController
             'links' => {
               'self' => { 'href' => "#{link_prefix}/v3/organizations/#{created_org.guid}" },
               'domains' => { 'href' => "http://api2.vcap.me/v3/organizations/#{created_org.guid}/domains" },
-              'default_domain' => { 'href' => "http://api2.vcap.me/v3/organizations/#{created_org.guid}/domains/default" }
+              'default_domain' => { 'href' => "http://api2.vcap.me/v3/organizations/#{created_org.guid}/domains/default" },
+              'quota' => { 'href' => "http://api2.vcap.me/v3/organization_quotas/#{created_org.quota_definition.guid}" }
             },
             'metadata' => { 'labels' => {}, 'annotations' => {} },
             'relationships' => { 'quota' => { 'data' => { 'guid' => created_org.quota_definition.guid } } },
@@ -115,10 +117,10 @@ module VCAP::CloudController
               {
                 guids: ['foo', 'bar'],
                 names: ['foo', 'bar'],
-                page:   '2',
-                per_page:   '10',
-                order_by:   'updated_at',
-                label_selector:   'foo,bar',
+                page: '2',
+                per_page: '10',
+                order_by: 'updated_at',
+                label_selector: 'foo,bar',
               }
             end
           end
@@ -158,7 +160,8 @@ module VCAP::CloudController
                     'href' => "#{link_prefix}/v3/organizations/#{organization1.guid}"
                   },
                   'domains' => { 'href' => "http://api2.vcap.me/v3/organizations/#{organization1.guid}/domains" },
-                  'default_domain' => { 'href' => "http://api2.vcap.me/v3/organizations/#{organization1.guid}/domains/default" }
+                  'default_domain' => { 'href' => "http://api2.vcap.me/v3/organizations/#{organization1.guid}/domains/default" },
+                  'quota' => { 'href' => "http://api2.vcap.me/v3/organization_quotas/#{organization1.quota_definition.guid}" }
                 },
                 'metadata' => {
                   'labels' => {},
@@ -177,7 +180,8 @@ module VCAP::CloudController
                     'href' => "#{link_prefix}/v3/organizations/#{organization2.guid}"
                   },
                   'domains' => { 'href' => "http://api2.vcap.me/v3/organizations/#{organization2.guid}/domains" },
-                  'default_domain' => { 'href' => "http://api2.vcap.me/v3/organizations/#{organization2.guid}/domains/default" }
+                  'default_domain' => { 'href' => "http://api2.vcap.me/v3/organizations/#{organization2.guid}/domains/default" },
+                  'quota' => { 'href' => "http://api2.vcap.me/v3/organization_quotas/#{organization2.quota_definition.guid}" }
                 },
                 'metadata' => {
                   'labels' => {},
@@ -259,7 +263,8 @@ module VCAP::CloudController
                     'href' => "#{link_prefix}/v3/organizations/#{organization2.guid}"
                   },
                   'domains' => { 'href' => "http://api2.vcap.me/v3/organizations/#{organization2.guid}/domains" },
-                  'default_domain' => { 'href' => "http://api2.vcap.me/v3/organizations/#{organization2.guid}/domains/default" }
+                  'default_domain' => { 'href' => "http://api2.vcap.me/v3/organizations/#{organization2.guid}/domains/default" },
+                  'quota' => { 'href' => "http://api2.vcap.me/v3/organization_quotas/#{organization2.quota_definition.guid}" }
                 },
                 'metadata' => {
                   'labels' => {},
@@ -278,7 +283,8 @@ module VCAP::CloudController
                     'href' => "#{link_prefix}/v3/organizations/#{organization3.guid}"
                   },
                   'domains' => { 'href' => "http://api2.vcap.me/v3/organizations/#{organization3.guid}/domains" },
-                  'default_domain' => { 'href' => "http://api2.vcap.me/v3/organizations/#{organization3.guid}/domains/default" }
+                  'default_domain' => { 'href' => "http://api2.vcap.me/v3/organizations/#{organization3.guid}/domains/default" },
+                  'quota' => { 'href' => "http://api2.vcap.me/v3/organization_quotas/#{organization3.quota_definition.guid}" }
                 },
                 'metadata' => {
                   'labels' => {},
@@ -981,7 +987,8 @@ module VCAP::CloudController
           'links' => {
             'self' => { 'href' => "http://api2.vcap.me/v3/organizations/#{organization1.guid}" },
             'domains' => { 'href' => "http://api2.vcap.me/v3/organizations/#{organization1.guid}/domains" },
-            'default_domain' => { 'href' => "http://api2.vcap.me/v3/organizations/#{organization1.guid}/domains/default" }
+            'default_domain' => { 'href' => "http://api2.vcap.me/v3/organizations/#{organization1.guid}/domains/default" },
+            'quota' => { 'href' => "http://api2.vcap.me/v3/organization_quotas/#{organization1.quota_definition.guid}" }
           },
           'created_at' => iso8601,
           'updated_at' => iso8601,
@@ -1033,7 +1040,8 @@ module VCAP::CloudController
           'links' => {
             'self' => { 'href' => "http://api2.vcap.me/v3/organizations/#{organization1.guid}" },
             'domains' => { 'href' => "http://api2.vcap.me/v3/organizations/#{organization1.guid}/domains" },
-            'default_domain' => { 'href' => "http://api2.vcap.me/v3/organizations/#{organization1.guid}/domains/default" }
+            'default_domain' => { 'href' => "http://api2.vcap.me/v3/organizations/#{organization1.guid}/domains/default" },
+            'quota' => { 'href' => "http://api2.vcap.me/v3/organization_quotas/#{organization1.quota_definition.guid}" }
           },
           'created_at' => iso8601,
           'updated_at' => iso8601,
@@ -1074,7 +1082,8 @@ module VCAP::CloudController
             'links' => {
               'self' => { 'href' => "http://api2.vcap.me/v3/organizations/#{organization1.guid}" },
               'domains' => { 'href' => "http://api2.vcap.me/v3/organizations/#{organization1.guid}/domains" },
-              'default_domain' => { 'href' => "http://api2.vcap.me/v3/organizations/#{organization1.guid}/domains/default" }
+              'default_domain' => { 'href' => "http://api2.vcap.me/v3/organizations/#{organization1.guid}/domains/default" },
+              'quota' => { 'href' => "http://api2.vcap.me/v3/organization_quotas/#{organization1.quota_definition.guid}" }
             },
             'created_at' => iso8601,
             'updated_at' => iso8601,
@@ -1123,7 +1132,7 @@ module VCAP::CloudController
           expect(last_response.status).to eq(404)
           get "/v3/spaces/#{space.guid}", {}, admin_headers
           expect(last_response.status).to eq(404)
-        }.to  change { Organization.count }.by(-1).
+        }.to change { Organization.count }.by(-1).
           and change { Space.count }.by(-1).
           and change { AppModel.count }.by(-1).
           and change { Route.count }.by(-1).
