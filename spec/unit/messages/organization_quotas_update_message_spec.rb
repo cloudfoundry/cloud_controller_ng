@@ -89,9 +89,8 @@ module VCAP::CloudController
             }
           }
 
-          let(:quota_app_message) { instance_double(QuotasAppsMessage) }
-
           before do
+            quota_app_message = instance_double(QuotasAppsMessage)
             allow(QuotasAppsMessage).to receive(:new).and_return(quota_app_message)
             allow(quota_app_message).to receive(:valid?).and_return(false)
             allow(quota_app_message).to receive_message_chain(:errors, :full_messages).and_return(['invalid_app_limits'])
@@ -118,178 +117,25 @@ module VCAP::CloudController
             expect(subject.errors.full_messages[0]).to include('Services must be an object')
           end
         end
-        context 'invalid keys are passed in' do
+
+        context 'when services is well-formed (a hash)' do
           let(:params) {
             {
               name: 'my-name',
-              services: { bad_key: 'billy' },
+              services: {},
             }
           }
 
-          it 'is not valid' do
+          before do
+            quota_services_message = instance_double(QuotasServicesMessage)
+            allow(QuotasServicesMessage).to receive(:new).and_return(quota_services_message)
+            allow(quota_services_message).to receive(:valid?).and_return(false)
+            allow(quota_services_message).to receive_message_chain(:errors, :full_messages).and_return(['invalid_services_limits'])
+          end
+
+          it 'delegates validation to QuotasServicesMessage and returns any errors' do
             expect(subject).to be_invalid
-            expect(subject.errors.full_messages[0]).to include("Unknown field(s): 'bad_key'")
-          end
-        end
-
-        describe 'total_service_instances' do
-          context 'when the type is a string' do
-            let(:params) {
-              {
-                name: 'my-name',
-                services: { total_service_instances: 'bob' },
-
-              }
-            }
-
-            it 'is not valid' do
-              expect(subject).to be_invalid
-              expect(subject.errors[:services]).to contain_exactly('Total service instances is not a number')
-            end
-          end
-          context 'when the type is decimal' do
-            let(:params) {
-              {
-                name: 'my-name',
-                services: { total_service_instances: 1.1 },
-
-              }
-            }
-
-            it 'is not valid' do
-              expect(subject).to be_invalid
-              expect(subject.errors[:services]).to contain_exactly('Total service instances must be an integer')
-            end
-          end
-          context 'when the type is a negative integer' do
-            let(:params) {
-              {
-                name: 'my-name',
-                services: { total_service_instances: -1 },
-
-              }
-            }
-
-            it 'is not valid because "unlimited" is set with null, not -1, in V3' do
-              expect(subject).to be_invalid
-              expect(subject.errors[:services]).to contain_exactly('Total service instances must be greater than or equal to 0')
-            end
-          end
-
-          context 'when the type is zero' do
-            let(:params) {
-              {
-                name: 'my-name',
-                services: { total_service_instances: 0 },
-
-              }
-            }
-
-            it { is_expected.to be_valid }
-          end
-          context 'when the type is nil (unlimited)' do
-            let(:params) {
-              {
-                name: 'my-name',
-                services: { total_service_instances: nil },
-
-              }
-            }
-
-            it { is_expected.to be_valid }
-          end
-        end
-
-        describe 'total_service_keys' do
-          context 'when the type is a string' do
-            let(:params) {
-              {
-                name: 'my-name',
-                services: { total_service_keys: 'bob' },
-
-              }
-            }
-
-            it 'is not valid' do
-              expect(subject).to be_invalid
-              expect(subject.errors[:services]).to contain_exactly('Total service keys is not a number')
-            end
-          end
-          context 'when the type is decimal' do
-            let(:params) {
-              {
-                name: 'my-name',
-                services: { total_service_keys: 1.1 },
-
-              }
-            }
-
-            it 'is not valid' do
-              expect(subject).to be_invalid
-              expect(subject.errors[:services]).to contain_exactly('Total service keys must be an integer')
-            end
-          end
-          context 'when the type is a negative integer' do
-            let(:params) {
-              {
-                name: 'my-name',
-                services: { total_service_keys: -1 },
-
-              }
-            }
-
-            it 'is not valid because "unlimited" is set with null, not -1, in V3' do
-              expect(subject).to be_invalid
-              expect(subject.errors[:services]).to contain_exactly('Total service keys must be greater than or equal to 0')
-            end
-          end
-
-          context 'when the type is zero' do
-            let(:params) {
-              {
-                name: 'my-name',
-                services: { total_service_keys: 0 },
-
-              }
-            }
-
-            it { is_expected.to be_valid }
-          end
-          context 'when the type is nil (unlimited)' do
-            let(:params) {
-              {
-                name: 'my-name',
-                services: { total_service_keys: nil },
-
-              }
-            }
-
-            it { is_expected.to be_valid }
-          end
-        end
-
-        describe 'paid_services_allowed' do
-          context 'when it is a boolean' do
-            let(:params) { {
-              name: 'thë-name',
-              services: { paid_services_allowed: false },
-            }
-            }
-
-            it { is_expected.to be_valid }
-          end
-
-          context 'when it is not a boolean' do
-            let(:params) { {
-              name: 'thë-name',
-              services: { paid_services_allowed: 'b' },
-            }
-            }
-
-            it 'is not valid' do
-              expect(subject).to be_invalid
-              expect(subject.errors[:services]).to contain_exactly('Paid services allowed must be a boolean')
-            end
+            expect(subject.errors[:services]).to include('invalid_services_limits')
           end
         end
       end
