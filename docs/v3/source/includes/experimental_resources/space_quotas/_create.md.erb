@@ -16,6 +16,11 @@ curl "https://api.example.org/v3/space_quotas" \
             "data": {
               "guid": "[org-guid]"
             }
+          },
+          "spaces": {
+            "data": [
+              { "guid": "[space-guid]" }
+            ]
           }
       }'
 ```
@@ -42,6 +47,7 @@ Name | Type | Description
 ---- | ---- | -----------
 **name** | _string_ | Name of the quota.
 **relationships.organization** | [_to-one relationship_](#to-one-relationships) | A relationship to the organization to which the quota belongs. | |
+| **relationships.spaces** | [_to-many relationship_](#to-many-relationships) | A relationship to the spaces to which the quota is applied. |
 
 #### Permitted roles
 
