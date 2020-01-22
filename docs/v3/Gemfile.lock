@@ -151,11 +151,11 @@ PLATFORMS
 
 DEPENDENCIES
   json (>= 1.8.6)
-  middleman
-  middleman-autoprefixer
+  middleman (>= 3.4.1)
+  middleman-autoprefixer (>= 2.6.1)
   middleman-gh-pages
-  middleman-livereload
-  middleman-syntax
+  middleman-livereload (>= 3.4.6)
+  middleman-syntax (>= 2.0.0)
   nokogiri
   rake
   redcarpet
