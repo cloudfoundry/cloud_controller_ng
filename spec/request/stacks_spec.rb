@@ -288,6 +288,7 @@ RSpec.describe 'Stacks Request' do
                 'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/actions/stop", 'method' => 'POST' },
                 'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/revisions" },
                 'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/revisions/deployed" },
+                'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/features" },
               }
             },
           ]
@@ -348,6 +349,7 @@ RSpec.describe 'Stacks Request' do
                   'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/actions/stop", 'method' => 'POST' },
                   'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/revisions" },
                   'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/revisions/deployed" },
+                  'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/features" },
                 }
               },
               {
@@ -384,6 +386,7 @@ RSpec.describe 'Stacks Request' do
                   'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/actions/stop", 'method' => 'POST' },
                   'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/revisions" },
                   'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/revisions/deployed" },
+                  'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/features" },
                 }
               }
             ]

@@ -102,6 +102,7 @@ RSpec.describe 'Apps' do
                 'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/actions/stop", 'method' => 'POST' },
                 'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/revisions" },
                 'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/revisions/deployed" },
+                'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_guid}/features" },
             }
         }
                                  )
@@ -212,6 +213,7 @@ RSpec.describe 'Apps' do
                 'stop' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/actions/stop", 'method' => 'POST' },
                 'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/revisions" },
                 'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/revisions/deployed" },
+                'features' => { 'href' => "#{link_prefix}/v3/apps/#{created_app.guid}/features" },
             }
         }
 
@@ -329,6 +331,7 @@ RSpec.describe 'Apps' do
                         'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/actions/stop", 'method' => 'POST' },
                         'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/revisions" },
                         'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/revisions/deployed" },
+                        'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_model1.guid}/features" },
                     }
                 },
               {
@@ -362,6 +365,7 @@ RSpec.describe 'Apps' do
                       'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/actions/stop", 'method' => 'POST' },
                       'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/revisions" },
                       'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/revisions/deployed" },
+                      'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_model2.guid}/features" },
                   }
               }
             ],
@@ -983,6 +987,7 @@ RSpec.describe 'Apps' do
                 'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/stop", 'method' => 'POST' },
                 'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions" },
                 'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/deployed" },
+                'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/features" },
             }
         }
       )
@@ -1028,6 +1033,7 @@ RSpec.describe 'Apps' do
                 'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/stop", 'method' => 'POST' },
                 'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions" },
                 'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/deployed" },
+                'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/features" },
             },
             'included' => {
                 'spaces' => [{
@@ -1462,6 +1468,7 @@ RSpec.describe 'Apps' do
             'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/stop", 'method' => 'POST' },
             'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions" },
             'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/deployed" },
+            'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/features" },
           }
         }
       )
@@ -1582,6 +1589,7 @@ RSpec.describe 'Apps' do
                                                             'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/stop", 'method' => 'POST' },
                                                             'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions" },
                                                             'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/deployed" },
+                                                            'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/features" },
                                                         }
                                                     })
 
@@ -1719,6 +1727,7 @@ RSpec.describe 'Apps' do
                 'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/stop", 'method' => 'POST' },
                 'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions" },
                 'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/deployed" },
+                'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/features" },
             }
         }
       )
@@ -1823,6 +1832,7 @@ RSpec.describe 'Apps' do
                 'stop' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/actions/stop", 'method' => 'POST' },
                 'revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions" },
                 'deployed_revisions' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/revisions/deployed" },
+                'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/features" },
             }
         }
       )
