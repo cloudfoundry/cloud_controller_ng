@@ -16,8 +16,9 @@ class OrganizationQuotasController < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     organization_quota = OrganizationQuotasCreate.new.create(message)
+    visible_organizations_guids = permission_queryer.readable_org_guids
 
-    render json: Presenters::V3::OrganizationQuotasPresenter.new(organization_quota), status: :created
+    render json: Presenters::V3::OrganizationQuotasPresenter.new(organization_quota, visible_org_guids: visible_organizations_guids), status: :created
   rescue OrganizationQuotasCreate::Error => e
     unprocessable!(e.message)
   end
@@ -32,8 +33,9 @@ class OrganizationQuotasController < ApplicationController
     resource_not_found!(:organization_quota) unless organization_quota
 
     organization_quota = OrganizationQuotasUpdate.update(organization_quota, message)
+    visible_organizations_guids = permission_queryer.readable_org_guids
 
-    render json: Presenters::V3::OrganizationQuotasPresenter.new(organization_quota), status: :ok
+    render json: Presenters::V3::OrganizationQuotasPresenter.new(organization_quota, visible_org_guids: visible_organizations_guids), status: :ok
   rescue OrganizationQuotasCreate::Error => e
     unprocessable!(e.message)
   end

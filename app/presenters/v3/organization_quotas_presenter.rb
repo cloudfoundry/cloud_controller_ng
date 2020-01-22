@@ -7,7 +7,7 @@ module VCAP::CloudController::Presenters::V3
       resource,
         show_secrets: false,
         censored_message: VCAP::CloudController::Presenters::Censorship::REDACTED_CREDENTIAL,
-        visible_org_guids: nil
+        visible_org_guids:
     )
       super(resource, show_secrets: show_secrets, censored_message: censored_message)
       @visible_org_guids = visible_org_guids
@@ -21,7 +21,7 @@ module VCAP::CloudController::Presenters::V3
         name: organization_quota.name,
         relationships: {
           organizations: {
-            data: filtered_visible_orgs.map { |organization| { guid: organization.guid } }
+            data: filtered_visible_orgs
           }
         },
         apps: {
@@ -49,9 +49,9 @@ module VCAP::CloudController::Presenters::V3
     private
 
     def filtered_visible_orgs
-      return @resource.organizations if @visible_org_guids.nil?
-
-      VCAP::CloudController::Organization.where(quota_definition_id: @resource.id, guid: @visible_org_guids).all
+      VCAP::CloudController::Organization.where(quota_definition_id: @resource.id, guid: @visible_org_guids).select(:guid).map do |org|
+        { guid: org[:guid] }
+      end
     end
 
     def organization_quota

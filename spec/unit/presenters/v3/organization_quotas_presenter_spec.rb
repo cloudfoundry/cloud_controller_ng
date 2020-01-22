@@ -3,11 +3,12 @@ require 'presenters/v3/organization_quotas_presenter'
 
 module VCAP::CloudController::Presenters::V3
   RSpec.describe OrganizationQuotasPresenter do
-    let(:organization_quota) do
-      VCAP::CloudController::QuotaDefinition.make(guid: 'quota-guid')
-    end
+    let(:organization_quota) { VCAP::CloudController::QuotaDefinition.make(guid: 'quota-guid') }
+    let(:org) { VCAP::CloudController::Organization.make }
+    let(:visible_org_guids) { [org.guid] }
+
     describe '#to_hash' do
-      let(:result) { OrganizationQuotasPresenter.new(organization_quota).to_hash }
+      let(:result) { OrganizationQuotasPresenter.new(organization_quota, visible_org_guids: visible_org_guids).to_hash }
 
       it 'presents the org as json' do
         expect(result[:guid]).to eq(organization_quota.guid)
@@ -34,8 +35,6 @@ module VCAP::CloudController::Presenters::V3
       end
 
       context 'when there are associated orgs' do
-        let(:org) { VCAP::CloudController::Organization.make }
-
         before do
           organization_quota.add_organization(org)
         end
