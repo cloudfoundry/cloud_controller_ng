@@ -14,14 +14,17 @@ Name | Type | Description|
 | **updated_at**  | _datetime_ | The time with zone when the space quota was last updated. |
 | **name**  | _string_ | Name of the quota. |
 | **apps** | _object_ | Quotas that affect applications and application sub-resources. |
-| **apps.per_process_memory_in_mb** | _integer_ | Maximum memory for a single process or task. |
-| **apps.total_memory_in_mb** | _integer_ | Total memory of all the started processes and running tasks in a space. |
-| **apps.total_instances** | _integer_ | Total instances of all the started processes in a space. |
-| **apps.per_app_tasks** | _integer_ | Maximum number of running tasks in a single application. |
+| **apps.per_process_memory_in_mb** | _integer_ or `null` | Maximum memory for a single process or task. |
+| **apps.total_memory_in_mb** | _integer_ or `null` | Total memory of all the started processes and running tasks that a space can have. |
+| **apps.total_instances** | _integer_ or `null` | Total instances of all the started processes that a space can have. |
+| **apps.per_app_tasks** | _integer_ or `null` | Maximum number of running tasks in a single application. |
 | **services** | _object_ | Quotas that affect services. |
 | **services.paid_services_allowed** | _boolean_ | If instances of paid service plans can be created. |
-| **services.total_service_instances** | _integer_ | Total number of service instances in a space. |
-| **services.total_service_keys** | _integer_ | Total number of service keys in a space. |
+| **services.total_service_instances** | _integer_ or `null` | Total number of service instances that a space can have. |
+| **services.total_service_keys** | _integer_ or `null` | Total number of service keys that a space can have. |
+| **routes** | _object_ | Quotas that affect routes. |
+| **routes.total_routes** | _integer_ or `null` | Total number of routes that a space can have. |
+| **routes.total_reserved_ports** | _integer_ or `null` | Total number of ports that can be reserved by routes in a space. |
 | **relationships.organization** | [_to-one relationship_](#to-one-relationships) | A relationship to the organization where the quota belongs. |
 | **relationships.spaces** | [_to-many relationship_](#to-many-relationships) | A relationship to the spaces to which the quota is applied. |
 | **links** | [_links object_](#links) | Links to related resources. |

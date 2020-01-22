@@ -10,6 +10,7 @@ module VCAP::CloudController
         name: 'basic',
         apps: apps,
         services: services,
+        routes: routes,
         relationships: relationships,
       }
     end
@@ -31,6 +32,13 @@ module VCAP::CloudController
       }
     end
 
+    let(:routes) do
+      {
+        total_routes: 47,
+        total_reserved_ports: 28,
+      }
+    end
+
     let(:relationships) do
       {
         organization: {
@@ -49,6 +57,9 @@ module VCAP::CloudController
     context 'when given correct & well-formed params' do
       it 'successfully validates the inputs' do
         expect(subject).to be_valid
+      end
+
+      it 'populates the fields on the message' do
         expect(subject.name).to eq('basic')
         expect(subject.organization_guid).to eq('some-org-guid')
         expect(subject.space_guids).to eq(['some-space-guid'])
@@ -59,6 +70,8 @@ module VCAP::CloudController
         expect(subject.paid_services_allowed).to be_truthy
         expect(subject.total_service_instances).to eq(17)
         expect(subject.total_service_keys).to eq(19)
+        expect(subject.total_routes).to eq(47)
+        expect(subject.total_reserved_ports).to eq(28)
       end
     end
 
@@ -180,7 +193,7 @@ module VCAP::CloudController
           end
         end
 
-        context 'when services is well-formed (a hash)' do
+        context 'when the services validator returns errors' do
           let(:params) {
             {
               name: 'my-name',
@@ -196,9 +209,48 @@ module VCAP::CloudController
             allow(quota_services_message).to receive_message_chain(:errors, :full_messages).and_return(['invalid_services_limits'])
           end
 
-          it 'delegates validation to QuotasAppsMessage and returns any errors' do
+          it 'delegates validation to QuotasServicesMessage and returns any errors' do
             expect(subject).to be_invalid
             expect(subject.errors[:services]).to include('invalid_services_limits')
+          end
+        end
+      end
+
+      describe 'routes' do
+        context 'value for routes is not a hash' do
+          let(:params) {
+            {
+              name: 'my-name',
+              relationships: relationships,
+              routes: true,
+            }
+          }
+
+          it 'is not valid' do
+            expect(subject).to be_invalid
+            expect(subject.errors.full_messages[0]).to include('Routes must be an object')
+          end
+        end
+
+        context 'when the routes validator returns errors' do
+          let(:params) {
+            {
+              name: 'my-name',
+              relationships: relationships,
+              routes: {},
+            }
+          }
+
+          before do
+            quota_routes_message = instance_double(QuotasRoutesMessage)
+            allow(QuotasRoutesMessage).to receive(:new).and_return(quota_routes_message)
+            allow(quota_routes_message).to receive(:valid?).and_return(false)
+            allow(quota_routes_message).to receive_message_chain(:errors, :full_messages).and_return(['invalid_routes_limits'])
+          end
+
+          it 'delegates validation to QuotasRoutesMessage and returns any errors' do
+            expect(subject).to be_invalid
+            expect(subject.errors[:routes]).to include('invalid_routes_limits')
           end
         end
       end

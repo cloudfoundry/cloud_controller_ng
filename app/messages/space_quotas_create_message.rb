@@ -9,7 +9,7 @@ module VCAP::CloudController
       proc { |a| a.requested?(key) }
     end
 
-    register_allowed_keys [:name, :relationships, :apps, :services]
+    register_allowed_keys [:name, :relationships, :apps, :services, :routes]
     validates_with NoAdditionalKeysValidator
     validates_with RelationshipValidator
 
@@ -20,9 +20,11 @@ module VCAP::CloudController
 
     validate :apps_validator, if: key_requested?(:apps)
     validate :services_validator, if: key_requested?(:services)
+    validate :routes_validator, if: key_requested?(:routes)
 
     delegate :total_memory_in_mb, :per_process_memory_in_mb, :total_instances, :per_app_tasks, to: :apps_limits_message
     delegate :paid_services_allowed, :total_service_instances, :total_service_keys, to: :services_limits_message
+    delegate :total_routes, :total_reserved_ports, to: :routes_limits_message
 
     def validates_hash(key, sym)
       return true if key.is_a?(Hash)
@@ -49,6 +51,16 @@ module VCAP::CloudController
 
     def services_limits_message
       @services_limits_message ||= QuotasServicesMessage.new(services&.deep_symbolize_keys)
+    end
+
+    def routes_validator
+      return unless validates_hash(routes, :routes)
+
+      errors[:routes].concat(routes_limits_message.errors.full_messages) unless routes_limits_message.valid?
+    end
+
+    def routes_limits_message
+      @routes_limits_message ||= QuotasRoutesMessage.new(routes&.deep_symbolize_keys)
     end
 
     # Relationships validations

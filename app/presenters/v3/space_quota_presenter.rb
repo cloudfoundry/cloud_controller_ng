@@ -20,6 +20,10 @@ module VCAP::CloudController::Presenters::V3
           total_service_instances: unlimited_to_nil(space_quota.total_services),
           total_service_keys: unlimited_to_nil(space_quota.total_service_keys),
         },
+        routes: {
+          total_routes: unlimited_to_nil(space_quota.total_routes),
+          total_reserved_ports: unlimited_to_nil(space_quota.total_reserved_route_ports),
+        },
         relationships: {
           organization: {
             data: { guid: space_quota.organization.guid }

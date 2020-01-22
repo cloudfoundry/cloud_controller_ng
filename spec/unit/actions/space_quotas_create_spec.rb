@@ -35,6 +35,10 @@ module VCAP::CloudController
             total_service_instances: 9,
             total_service_keys: 10,
           },
+          routes: {
+            total_routes: 47,
+            total_reserved_ports: 5,
+          },
           relationships: {
             organization: {
               data: {
@@ -51,7 +55,7 @@ module VCAP::CloudController
       end
 
       context 'when creating a space quota' do
-        context 'using the default params' do
+        context 'using only the required params' do
           it 'creates a organization quota with the correct values' do
             space_quota = space_quotas_create.create(message, organization: org)
 
@@ -89,6 +93,9 @@ module VCAP::CloudController
             expect(space_quota.total_services).to eq(9)
             expect(space_quota.total_service_keys).to eq(10)
             expect(space_quota.non_basic_services_allowed).to eq(false)
+
+            expect(space_quota.total_routes).to eq(47)
+            expect(space_quota.total_reserved_route_ports).to eq(5)
 
             expect(space_quota.organization).to eq(org)
 

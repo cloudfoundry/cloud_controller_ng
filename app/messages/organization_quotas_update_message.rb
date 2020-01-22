@@ -2,6 +2,7 @@ require 'messages/metadata_base_message'
 require 'messages/validators'
 require 'messages/quotas_apps_message'
 require 'messages/quotas_services_message'
+require 'messages/quotas_routes_message'
 
 module VCAP::CloudController
   class OrganizationQuotasUpdateMessage < BaseMessage
