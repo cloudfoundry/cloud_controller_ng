@@ -1,4 +1,4 @@
-### Get app SSH enabled
+### Get SSH enabled for an app
 
 ```
 Example Request
@@ -20,6 +20,11 @@ Content-Type: application/json
 
 <%= yield_content :single_app_ssh_enabled %>
 ```
+
+Returns if an application's runtime environment will accept ssh connections.
+If ssh is disabled,
+the `reason` field will describe
+whether it is disabled globally, at the space level, or at the app level.
 
 #### Definition
 `GET /v3/apps/:guid/ssh_enabled` <br>

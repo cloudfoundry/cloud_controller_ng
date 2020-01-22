@@ -61,6 +61,7 @@ includes:
   - resources/apps/env
   - resources/apps/environment_variables
   - resources/apps/current_droplet
+  - resources/apps/ssh_enabled
   - resources/apps/start
   - resources/apps/stop
   - resources/apps/update_environment_variables
@@ -241,8 +242,6 @@ includes:
   - experimental_resources/app_manifest/apply
   - experimental_resources/app_restart/header
   - experimental_resources/app_restart/create
-  - experimental_resources/app_ssh_enabled/header
-  - experimental_resources/app_ssh_enabled/get
   - experimental_resources/deployments/header
   - experimental_resources/deployments/object
   - experimental_resources/deployments/create
