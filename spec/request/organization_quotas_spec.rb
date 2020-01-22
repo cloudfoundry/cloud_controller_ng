@@ -466,6 +466,62 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe 'DELETE /v3/organization_quotas/:guid/' do
+      let(:org_quota) { VCAP::CloudController::QuotaDefinition.make }
+      let(:api_call) { lambda { |user_headers| delete "/v3/organization_quotas/#{org_quota.guid}", nil, user_headers } }
+      let(:db_check) do
+        lambda do
+          expect(last_response.headers['Location']).to match(%r(http.+/v3/jobs/[a-fA-F0-9-]+))
+
+          execute_all_jobs(expected_successes: 1, expected_failures: 0)
+        end
+      end
+
+      context 'when deleting an organization quota' do
+        let(:expected_codes_and_responses) do
+          h = Hash.new(code: 403)
+          h['admin'] = { code: 202 }
+          h
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
+
+      context 'when the user is not logged in' do
+        it 'returns 401 for Unauthenticated requests' do
+          delete "/v3/organization_quotas/#{org_quota.guid}", nil, base_json_headers
+          expect(last_response.status).to eq(401)
+        end
+      end
+
+      context 'when an organization quota is applied to an organization' do
+        let(:org) { VCAP::CloudController::Organization.make }
+
+        let(:params) do
+          {
+            data: [{ guid: org.guid }]
+          }
+        end
+
+        it 'the org quota is not  deleted and returns a 422' do
+          post "/v3/organization_quotas/#{org_quota.guid}/relationships/organizations", params.to_json, admin_headers
+
+          delete "/v3/organization_quotas/#{org_quota.guid}", nil, admin_headers
+          expect(last_response).to have_status_code(422)
+
+          get "/v3/organization_quotas/#{org_quota.guid}", {}, admin_headers
+          expect(last_response.status).to eq(200)
+        end
+      end
+
+      context 'when an organization_quota guid is invalid' do
+        it 'returns a 404 with a helpful message' do
+          delete '/v3/organization_quotas/fake_org_quota', nil, admin_headers
+          expect(last_response).to have_status_code(404)
+        end
+      end
+    end
   end
 end
 

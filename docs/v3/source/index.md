@@ -257,6 +257,7 @@ includes:
   - experimental_resources/organization_quotas/get
   - experimental_resources/organization_quotas/list 
   - experimental_resources/organization_quotas/apply
+  - experimental_resources/organization_quotas/delete
   - experimental_resources/organization_quotas/update
   - experimental_resources/revisions/header
   - experimental_resources/revisions/object

@@ -142,6 +142,7 @@ Rails.application.routes.draw do
   get  '/organization_quotas/:guid', to: 'organization_quotas#show'
   get  '/organization_quotas', to: 'organization_quotas#index'
   patch '/organization_quotas/:guid', to: 'organization_quotas#update'
+  delete '/organization_quotas/:guid', to: 'organization_quotas#destroy'
   post '/organization_quotas/:guid/relationships/organizations', to: 'organization_quotas#apply_to_organizations'
 
   # resource_matches

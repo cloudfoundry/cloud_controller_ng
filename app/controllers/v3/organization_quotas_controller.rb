@@ -1,4 +1,5 @@
 require 'actions/organization_quota_apply'
+require 'actions/organization_quota_delete'
 require 'actions/organization_quotas_create'
 require 'actions/organization_quotas_update'
 require 'messages/organization_quota_apply_message'
@@ -64,6 +65,25 @@ class OrganizationQuotasController < ApplicationController
       message: message,
       extra_presenter_args: { visible_org_guids: permission_queryer.readable_org_guids },
     )
+  end
+
+  def destroy
+    unauthorized! unless permission_queryer.can_write_globally?
+
+    organization_quota = QuotaDefinition.first(guid: hashed_params[:guid])
+    resource_not_found!(:organization_quota) unless organization_quota
+
+    if Organization.find(quota_definition_id: organization_quota.id)
+      unprocessable!('This quota is applied to one or more organizations. Apply different quotas to those organizations before deleting.')
+    end
+
+    delete_action = OrganizationQuotaDeleteAction.new
+
+    deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(QuotaDefinition, organization_quota.guid, delete_action)
+    pollable_job = Jobs::Enqueuer.new(deletion_job, queue: Jobs::Queues.generic).enqueue_pollable
+
+    url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
+    head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job.guid}")
   end
 
   def apply_to_organizations
