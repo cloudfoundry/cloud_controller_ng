@@ -5,7 +5,31 @@ module VCAP::CloudController
   RSpec.describe SpaceQuotasCreateMessage do
     subject { SpaceQuotasCreateMessage.new(params) }
 
-    let(:params) { { name: 'basic', relationships: relationships, apps: apps } }
+    let(:params) do
+      {
+        name: 'basic',
+        apps: apps,
+        services: services,
+        relationships: relationships,
+      }
+    end
+
+    let(:apps) do
+      {
+        total_memory_in_mb: 2048,
+        per_process_memory_in_mb: 1024,
+        total_instances: 2,
+        per_app_tasks: 4,
+      }
+    end
+
+    let(:services) do
+      {
+        paid_services_allowed: true,
+        total_service_instances: 17,
+        total_service_keys: 19,
+      }
+    end
 
     let(:relationships) do
       {
@@ -22,21 +46,19 @@ module VCAP::CloudController
       }
     end
 
-    let(:apps) do
-      {
-        total_memory_in_mb: 2048,
-        per_process_memory_in_mb: 1024,
-        total_instances: 2,
-        per_app_tasks: 4,
-      }
-    end
-
     context 'when given correct & well-formed params' do
       it 'successfully validates the inputs' do
         expect(subject).to be_valid
         expect(subject.name).to eq('basic')
         expect(subject.organization_guid).to eq('some-org-guid')
         expect(subject.space_guids).to eq(['some-space-guid'])
+        expect(subject.total_memory_in_mb).to eq(2048)
+        expect(subject.per_process_memory_in_mb).to eq(1024)
+        expect(subject.total_instances).to eq(2)
+        expect(subject.per_app_tasks).to eq(4)
+        expect(subject.paid_services_allowed).to be_truthy
+        expect(subject.total_service_instances).to eq(17)
+        expect(subject.total_service_keys).to eq(19)
       end
     end
 
@@ -128,9 +150,8 @@ module VCAP::CloudController
             }
           }
 
-          let(:quota_app_message) { instance_double(QuotasAppsMessage) }
-
           before do
+            quota_app_message = instance_double(QuotasAppsMessage)
             allow(QuotasAppsMessage).to receive(:new).and_return(quota_app_message)
             allow(quota_app_message).to receive(:valid?).and_return(false)
             allow(quota_app_message).to receive_message_chain(:errors, :full_messages).and_return(['invalid_app_limits'])
@@ -139,6 +160,45 @@ module VCAP::CloudController
           it 'delegates validation to QuotasAppsMessage and returns any errors' do
             expect(subject).to be_invalid
             expect(subject.errors[:apps]).to include('invalid_app_limits')
+          end
+        end
+      end
+
+      describe 'services' do
+        context 'value for services is not a hash' do
+          let(:params) {
+            {
+              name: 'my-name',
+              relationships: relationships,
+              services: true,
+            }
+          }
+
+          it 'is not valid' do
+            expect(subject).to be_invalid
+            expect(subject.errors.full_messages[0]).to include('Services must be an object')
+          end
+        end
+
+        context 'when services is well-formed (a hash)' do
+          let(:params) {
+            {
+              name: 'my-name',
+              relationships: relationships,
+              services: {},
+            }
+          }
+
+          before do
+            quota_services_message = instance_double(QuotasServicesMessage)
+            allow(QuotasServicesMessage).to receive(:new).and_return(quota_services_message)
+            allow(quota_services_message).to receive(:valid?).and_return(false)
+            allow(quota_services_message).to receive_message_chain(:errors, :full_messages).and_return(['invalid_services_limits'])
+          end
+
+          it 'delegates validation to QuotasAppsMessage and returns any errors' do
+            expect(subject).to be_invalid
+            expect(subject.errors[:services]).to include('invalid_services_limits')
           end
         end
       end

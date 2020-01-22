@@ -15,6 +15,11 @@ module VCAP::CloudController::Presenters::V3
           total_instances: unlimited_to_nil(space_quota.app_instance_limit),
           per_app_tasks: unlimited_to_nil(space_quota.app_task_limit),
         },
+        services: {
+          paid_services_allowed: space_quota.non_basic_services_allowed,
+          total_service_instances: unlimited_to_nil(space_quota.total_services),
+          total_service_keys: unlimited_to_nil(space_quota.total_service_keys),
+        },
         relationships: {
           organization: {
             data: { guid: space_quota.organization.guid }

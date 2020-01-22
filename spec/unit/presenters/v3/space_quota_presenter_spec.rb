@@ -15,6 +15,9 @@ module VCAP::CloudController::Presenters::V3
         instance_memory_limit: 3,
         app_instance_limit: 4,
         app_task_limit: 5,
+        non_basic_services_allowed: false,
+        total_services: 6,
+        total_service_keys: 7,
       )
     end
 
@@ -35,6 +38,9 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:apps][:per_process_memory_in_mb]).to eq(space_quota.instance_memory_limit)
         expect(result[:apps][:total_instances]).to eq(space_quota.app_instance_limit)
         expect(result[:apps][:per_app_tasks]).to eq(space_quota.app_task_limit)
+        expect(result[:services][:paid_services_allowed]).to eq(space_quota.non_basic_services_allowed)
+        expect(result[:services][:total_service_instances]).to eq(space_quota.total_services)
+        expect(result[:services][:total_service_keys]).to eq(space_quota.total_service_keys)
 
         expect(result[:relationships][:organization][:data][:guid]).to eq(org.guid)
         expect(result[:relationships][:spaces][:data]).to eq([
@@ -55,6 +61,8 @@ module VCAP::CloudController::Presenters::V3
             instance_memory_limit: -1,
             app_instance_limit: -1,
             app_task_limit: -1,
+            total_services: -1,
+            total_service_keys: -1,
           )
         end
 
@@ -63,6 +71,8 @@ module VCAP::CloudController::Presenters::V3
           expect(result[:apps][:per_process_memory_in_mb]).to be_nil
           expect(result[:apps][:total_instances]).to be_nil
           expect(result[:apps][:per_app_tasks]).to be_nil
+          expect(result[:services][:total_service_instances]).to be_nil
+          expect(result[:services][:total_service_keys]).to be_nil
         end
       end
     end

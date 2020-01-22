@@ -9,7 +9,7 @@ module VCAP::CloudController
       proc { |a| a.requested?(key) }
     end
 
-    register_allowed_keys [:name, :relationships, :apps]
+    register_allowed_keys [:name, :relationships, :apps, :services]
     validates_with NoAdditionalKeysValidator
     validates_with RelationshipValidator
 
@@ -19,9 +19,10 @@ module VCAP::CloudController
       length: { maximum: MAX_SPACE_QUOTA_NAME_LENGTH }
 
     validate :apps_validator, if: key_requested?(:apps)
+    validate :services_validator, if: key_requested?(:services)
 
-    # Apps validations
     delegate :total_memory_in_mb, :per_process_memory_in_mb, :total_instances, :per_app_tasks, to: :apps_limits_message
+    delegate :paid_services_allowed, :total_service_instances, :total_service_keys, to: :services_limits_message
 
     def validates_hash(key, sym)
       return true if key.is_a?(Hash)
@@ -38,6 +39,16 @@ module VCAP::CloudController
 
     def apps_limits_message
       @apps_limits_message ||= QuotasAppsMessage.new(apps&.deep_symbolize_keys)
+    end
+
+    def services_validator
+      return unless validates_hash(services, :services)
+
+      errors[:services].concat(services_limits_message.errors.full_messages) unless services_limits_message.valid?
+    end
+
+    def services_limits_message
+      @services_limits_message ||= QuotasServicesMessage.new(services&.deep_symbolize_keys)
     end
 
     # Relationships validations

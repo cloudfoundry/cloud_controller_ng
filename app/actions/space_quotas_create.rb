@@ -18,9 +18,9 @@ module VCAP::CloudController
           app_task_limit: message.per_app_tasks || SpaceQuotaDefinition::UNLIMITED,
 
           # Services
-          total_services: SpaceQuotaDefinition::DEFAULT_TOTAL_SERVICES,
-          total_service_keys: SpaceQuotaDefinition::UNLIMITED,
-          non_basic_services_allowed: SpaceQuotaDefinition::DEFAULT_NON_BASIC_SERVICES_ALLOWED,
+          total_services: message.total_service_instances || SpaceQuotaDefinition::DEFAULT_TOTAL_SERVICES,
+          total_service_keys: message.total_service_keys || SpaceQuotaDefinition::UNLIMITED,
+          non_basic_services_allowed: message.paid_services_allowed.nil? ? SpaceQuotaDefinition::DEFAULT_NON_BASIC_SERVICES_ALLOWED : message.paid_services_allowed,
 
           # Routes
           total_routes: SpaceQuotaDefinition::DEFAULT_TOTAL_ROUTES,
