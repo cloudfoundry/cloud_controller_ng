@@ -23,8 +23,7 @@ RSpec.describe 'v3 root' do
             'href' => "#{link_prefix}/v3/builds"
           },
           'deployments' => {
-            'href' => "#{link_prefix}/v3/deployments",
-            'experimental' => true
+            'href' => "#{link_prefix}/v3/deployments"
           },
           'domains' => {
             'href' => "#{link_prefix}/v3/domains"

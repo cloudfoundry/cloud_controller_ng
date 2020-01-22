@@ -84,6 +84,13 @@ includes:
   - resources/buildpacks/update
   - resources/buildpacks/delete
   - resources/buildpacks/upload_bits
+  - resources/deployments/header
+  - resources/deployments/object
+  - resources/deployments/create
+  - resources/deployments/get
+  - resources/deployments/list
+  - resources/deployments/update
+  - resources/deployments/cancel
   - resources/domains/header
   - resources/domains/object
   - resources/domains/create
@@ -242,13 +249,8 @@ includes:
   - experimental_resources/app_manifest/apply
   - experimental_resources/app_restart/header
   - experimental_resources/app_restart/create
-  - experimental_resources/deployments/header
-  - experimental_resources/deployments/object
-  - experimental_resources/deployments/create
-  - experimental_resources/deployments/get
-  - experimental_resources/deployments/list
-  - experimental_resources/deployments/update
-  - experimental_resources/deployments/cancel
+  - experimental_resources/app_ssh_enabled/header
+  - experimental_resources/app_ssh_enabled/get
   - experimental_resources/organization_quotas/header
   - experimental_resources/organization_quotas/object
   - experimental_resources/organization_quotas/create
