@@ -1207,12 +1207,24 @@ RSpec.describe 'Apps' do
       )
     end
 
+    let!(:revision) do
+      VCAP::CloudController::RevisionModel.make(
+        app: process.app,
+        environment_variables: {
+
+        }
+      )
+    end
+
     before do
       VCAP::CloudController::RouteMappingModel.make(
         app:          process.app,
         process_type: process.type,
         route:        VCAP::CloudController::Route.make(space: space, host: 'potato', domain: VCAP::CloudController::SharedDomain.first)
       )
+
+      process.revision_guid = revision.guid
+      process.save
 
       group                  = VCAP::CloudController::EnvironmentVariableGroup.staging
       group.environment_json = { STAGING_ENV: 'staging_value' }
