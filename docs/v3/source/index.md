@@ -65,6 +65,12 @@ includes:
   - resources/apps/start
   - resources/apps/stop
   - resources/apps/update_environment_variables
+  - resources/app_features/header
+  - resources/app_features/object
+  - resources/app_features/supported_features
+  - resources/app_features/get
+  - resources/app_features/list
+  - resources/app_features/update
   - resources/audit_events/header
   - resources/audit_events/object
   - resources/audit_events/get
@@ -237,12 +243,6 @@ includes:
   - resources/users/update
   - resources/users/delete
   - experimental_resources/header
-  - experimental_resources/app_features/header
-  - experimental_resources/app_features/object
-  - experimental_resources/app_features/supported_features
-  - experimental_resources/app_features/get
-  - experimental_resources/app_features/list
-  - experimental_resources/app_features/update
   - experimental_resources/app_manifest/header
   - experimental_resources/app_manifest/object
   - experimental_resources/app_manifest/get
