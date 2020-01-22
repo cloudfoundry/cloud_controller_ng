@@ -8,6 +8,8 @@ require 'cloud_controller/opi/helpers'
 require 'cloud_controller/opi/base_client'
 
 module OPI
+  PROMETHEUS_PREFIX = 'prometheus.io'.freeze
+
   class Client < BaseClient
     def desire_app(process)
       process_guid = process_guid(process)
@@ -142,9 +144,19 @@ module OPI
         volume_mounts: generate_volume_mounts(process),
         ports: process.open_ports,
         routes: routes(process),
-        lifecycle: lifecycle.to_hash
+        lifecycle: lifecycle.to_hash,
+        user_defined_annotations: filter_annotations(process.app.annotations)
       }
       MultiJson.dump(body)
+    end
+
+    def filter_annotations(annotations)
+      annotations.select { |anno| is_prometheus?(anno)
+      }.map { |anno| ["#{anno.key_prefix}/#{anno.key}", anno.value] }.to_h
+    end
+
+    def is_prometheus?(anno)
+      !anno.key_prefix.nil? && anno.key_prefix.start_with?(PROMETHEUS_PREFIX)
     end
 
     def health_check_timeout_in_seconds(process)
