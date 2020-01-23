@@ -56,6 +56,9 @@ Name | Type | Description | Default |
 | **services.paid_services_allowed** | _boolean_ | If instances of paid service plans can be created. | true |
 | **services.total_service_instances** | _integer_ | Total number of service instances in a space. | null (infinite) |
 | **services.total_service_keys** | _integer_ | Total number of service keys in a space. | null (infinite) |
+| **routes** | _object_ | Quotas that affect routes. |
+| **routes.total_routes** | _integer_ | Total number of routes that a space can have. | null (infinite) |
+| **routes.total_reserved_ports** | _integer_ | Total number of ports that all routes in a space can reserve. | null (infinite) |
 | **relationships.spaces** | [_to-many relationship_](#to-many-relationships) | A relationship to the spaces to which the quota is applied. |
 
 #### Permitted roles
