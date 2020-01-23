@@ -43,6 +43,23 @@ module VCAP::CloudController
       })
     end
 
+    it 'converts specified raw fields to int' do
+      TelemetryLogger.v3_emit(
+        'some-event',
+        {},
+        { 'memory-in-mb' => '1234' }
+      )
+
+      expect(JSON.parse(file.read)).to match({
+        'telemetry-source' => 'cloud_controller_ng',
+        'telemetry-time' => rfc3339,
+        'some-event' => {
+          'api-version' => 'v3',
+          'memory-in-mb' => 1234
+        }
+      })
+    end
+
     describe 'v2 emit' do
       it 'logs v2 api version' do
         TelemetryLogger.v2_emit(
