@@ -551,7 +551,7 @@ def generate_org_quota_single_response(list_of_orgs)
     },
     relationships: {
       organizations: {
-        data: list_of_orgs
+        data: contain_exactly(*list_of_orgs)
       }
     },
     links: {
