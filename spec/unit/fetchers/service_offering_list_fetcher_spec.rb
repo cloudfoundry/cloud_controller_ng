@@ -74,11 +74,28 @@ module VCAP::CloudController
       let(:service_broker_names) { [service_broker.name, service_offering_4.service_broker.name] }
       let(:message) { ServiceOfferingsListMessage.from_params({ service_broker_names: service_broker_names.join(',') }.with_indifferent_access) }
 
-      it 'filters the service offerings with matching service broker GUIDs' do
+      it 'filters the service offerings with matching service broker names' do
         expect(service_offerings).to contain_exactly(
           service_offering_1,
           service_offering_2,
           service_offering_4,
+        )
+      end
+    end
+
+    describe 'the `names` filter' do
+      let!(:service_offering_1) { VCAP::CloudController::ServicePlan.make(public: true).service }
+      let!(:service_offering_2) { VCAP::CloudController::ServicePlan.make(public: true).service }
+      let!(:service_offering_3) { VCAP::CloudController::ServicePlan.make(public: true).service }
+      let!(:service_offering_4) { VCAP::CloudController::ServicePlan.make(public: true).service }
+
+      let(:service_offering_names) { [service_offering_1.name, service_offering_3.name] }
+      let(:message) { ServiceOfferingsListMessage.from_params({ names: service_offering_names.join(',') }.with_indifferent_access) }
+
+      it 'filters the service offerings with matching names' do
+        expect(service_offerings).to contain_exactly(
+          service_offering_1,
+          service_offering_3,
         )
       end
     end
@@ -87,7 +104,7 @@ module VCAP::CloudController
   RSpec.describe ServiceOfferingListFetcher do
     let(:message) { ServiceOfferingsListMessage.from_params({}) }
 
-    describe '#fetch_all' do
+    describe '#fetch' do
       context 'when there are no service offerings' do
         it 'is empty' do
           service_offerings = ServiceOfferingListFetcher.new.fetch(message).all
@@ -99,7 +116,7 @@ module VCAP::CloudController
       context 'when there are public, non-public and space-scoped service offerings' do
         let!(:public_service_offering) { ServicePlan.make(public: true, active: true).service }
 
-        let!(:non_public_service_offering) { ServicePlan.make(public: false, active: true).service }
+        let!(:non_public_service_offering) { Service.make(active: true) }
 
         let!(:space_scoped_service_broker) { ServiceBroker.make(space: Space.make) }
         let!(:space_scoped_service_offering) { Service.make(service_broker: space_scoped_service_broker) }
@@ -209,10 +226,10 @@ module VCAP::CloudController
         let!(:space_1) { Space.make }
         let!(:space_2) { Space.make }
 
-        let!(:service_offering_1) { ServicePlan.make(public: false, active: true).service }
-        let!(:service_offering_2) { ServicePlan.make(public: false, active: true).service }
-        let!(:service_offering_3) { ServicePlan.make(public: false, active: true).service }
-        let!(:service_offering_4) { ServicePlan.make(public: false, active: true).service }
+        let!(:service_offering_1) { Service.make(active: true) }
+        let!(:service_offering_2) { Service.make(active: true) }
+        let!(:service_offering_3) { Service.make(active: true) }
+        let!(:service_offering_4) { Service.make(active: true) }
 
         before do
           service_offering_1.service_broker.space = space_1

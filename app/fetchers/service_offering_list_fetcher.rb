@@ -21,7 +21,7 @@ module VCAP::CloudController
 
     def fetch_visible(message, org_guids, space_guids)
       dataset = Service.dataset.
-                join(:service_plans, service_id: Sequel[:services][:id]).
+                left_join(:service_plans, service_id: Sequel[:services][:id]).
                 join(:service_brokers, id: Sequel[:services][:service_broker_id]).
                 left_join(:spaces, id: Sequel[:service_brokers][:space_id]).
                 left_join(:service_plan_visibilities, service_plan_id: Sequel[:service_plans][:id]).
@@ -37,6 +37,8 @@ module VCAP::CloudController
       filter(message, dataset)
     end
 
+    private
+
     def filter(message, dataset)
       if message.requested?(:available)
         dataset = dataset.where(Sequel[:services][:active] =~ string_to_boolean(message.available))
@@ -48,6 +50,10 @@ module VCAP::CloudController
 
       if message.requested?(:service_broker_names)
         dataset = dataset.where(Sequel[:service_brokers][:name] =~ message.service_broker_names)
+      end
+
+      if message.requested?(:names)
+        dataset = dataset.where(Sequel[:services][:label] =~ message.names)
       end
 
       dataset

@@ -21,6 +21,8 @@ module VCAP::CloudController
 
     strip_attributes :label
 
+    alias_method :name, :label
+
     class << self
       def public_visible
         public_active_plans = ServicePlan.where(active: true, public: true).all

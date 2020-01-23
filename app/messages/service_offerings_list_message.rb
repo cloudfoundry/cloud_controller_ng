@@ -7,13 +7,14 @@ module VCAP::CloudController
       :available,
       :service_broker_guids,
       :service_broker_names,
+      :names,
     ]
 
     validates_with NoAdditionalParamsValidator
     validates :available, inclusion: { in: %w(true false), message: "only accepts values 'true' or 'false'" }, allow_nil: true
 
     def self.from_params(params)
-      super(params, %w(service_broker_guids service_broker_names))
+      super(params, %w(service_broker_guids service_broker_names names))
     end
   end
 end
