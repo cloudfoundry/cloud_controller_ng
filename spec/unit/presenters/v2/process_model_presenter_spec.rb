@@ -41,7 +41,8 @@ module CloudController::Presenters::V2
       let(:buildpacks) { [buildpack] }
       let(:revision) { VCAP::CloudController::RevisionModel.make(
         environment_variables: {}
-      ) }
+      )
+      }
 
       before do
         VCAP::CloudController::Buildpack.make(name: 'schmuby')
