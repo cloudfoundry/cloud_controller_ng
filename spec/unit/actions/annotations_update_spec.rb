@@ -49,6 +49,7 @@ module VCAP::CloudController
           {
             release: 'stable',
             please: nil,
+            'pre.fix/release': nil
           }
         end
 
@@ -60,10 +61,15 @@ module VCAP::CloudController
           AppAnnotationModel.create(resource_guid: app.guid, key: 'please', value: 'delete me')
         end
 
+        let!(:prefixed_annotation_to_be_deleted) do
+          AppAnnotationModel.create(resource_guid: app.guid, key_prefix: 'pre.fix', key: 'release', value: 'delete me')
+        end
+
         it 'updates the old annotation' do
           subject
           expect(old_annotation.reload.value).to eq 'stable'
           expect(AppAnnotationModel.find(resource_guid: app.guid, key: 'please')).to be_nil
+          expect(AppAnnotationModel.find(resource_guid: app.guid, key_prefix: 'pre.fix', key: 'release')).to be_nil
           expect(AppAnnotationModel.count).to eq 1
         end
 
@@ -73,6 +79,7 @@ module VCAP::CloudController
           end
 
           expect(annotation_to_be_deleted.reload.value).to eq nil
+          expect(prefixed_annotation_to_be_deleted.reload.value).to eq nil
           expect(old_annotation.reload.value).to eq 'stable'
         end
       end

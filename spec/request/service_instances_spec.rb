@@ -11,6 +11,7 @@ RSpec.describe 'Service Instances' do
   let(:another_space) { VCAP::CloudController::Space.make }
   let(:target_space) { VCAP::CloudController::Space.make }
   let(:feature_flag) { VCAP::CloudController::FeatureFlag.make(name: 'service_instance_sharing', enabled: false, error_message: nil) }
+  let!(:annotations) { VCAP::CloudController::ServiceInstanceAnnotationModel.make(key_prefix: 'pre.fix', key_name: 'to_delete', value: 'value') }
   let!(:service_instance1) { VCAP::CloudController::ManagedServiceInstance.make(space: space, name: 'rabbitmq') }
   let!(:service_instance2) { VCAP::CloudController::ManagedServiceInstance.make(space: space, name: 'redis') }
   let!(:service_instance3) { VCAP::CloudController::ManagedServiceInstance.make(space: another_space, name: 'mysql') }
@@ -367,6 +368,9 @@ RSpec.describe 'Service Instances' do
   end
 
   describe 'PATCH /v3/service_instances/:guid' do
+    before do
+      service_instance1.annotation_ids = [annotations.id]
+    end
     let(:metadata_request) do
       {
         "metadata": {
@@ -376,11 +380,13 @@ RSpec.describe 'Service Instances' do
           },
           "annotations": {
             "potato": 'idaho',
-            "style": 'mashed'
+            "style": 'mashed',
+            "pre.fix/to_delete": nil
           }
         }
       }
     end
+
     it 'updates metadata on a service instance' do
       patch "/v3/service_instances/#{service_instance1.guid}", metadata_request.to_json, admin_header
 

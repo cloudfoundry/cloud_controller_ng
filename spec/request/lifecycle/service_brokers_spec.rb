@@ -18,8 +18,8 @@ RSpec.describe 'V3 service brokers' do
               }
           },
           metadata: {
-            labels: { to_update: 'value', to_delete: 'value' },
-            annotations: { to_update: 'value', to_delete: 'value' }
+            labels: { to_update: 'value', to_delete: 'value', 'to.delete/with_prefix' => 'value' },
+            annotations: { to_update: 'value', to_delete: 'value', 'to.delete/with_prefix' => 'value' }
           }
       }
     }
@@ -35,8 +35,8 @@ RSpec.describe 'V3 service brokers' do
               }
           },
           metadata: {
-              labels: { to_update: 'changed-value', to_delete: nil, to_add: 'new-value' },
-              annotations: { to_update: 'changed-value', to_delete: nil, to_add: 'new-value' }
+              labels: { to_update: 'changed-value', to_delete: nil, to_add: 'new-value', 'to.delete/with_prefix' => nil },
+              annotations: { to_update: 'changed-value', to_delete: nil, to_add: 'new-value', 'to.delete/with_prefix' => nil }
           }
       }
     }
@@ -78,10 +78,10 @@ RSpec.describe 'V3 service brokers' do
         get "/v3/service_brokers/#{broker['guid']}", {}, admin_headers
         expect(last_response).to have_status_code(200)
         expect(parsed_response).to include({
-            'name' => 'new-name',
-            'url' => 'http://example.org/new-broker-url',
-            'available' => true,
-            'status' => 'available',
+          'name' => 'new-name',
+          'url' => 'http://example.org/new-broker-url',
+          'available' => true,
+          'status' => 'available',
         })
       end
 
@@ -127,11 +127,13 @@ RSpec.describe 'V3 service brokers' do
           'metadata' => {
               'annotations' => {
                   'to_delete' => 'value',
-                  'to_update' => 'value'
+                  'to_update' => 'value',
+                  'to.delete/with_prefix' => 'value'
               },
               'labels' => {
                   'to_delete' => 'value',
-                  'to_update' => 'value'
+                  'to_update' => 'value',
+                  'to.delete/with_prefix' => 'value'
               }
           }
       })
