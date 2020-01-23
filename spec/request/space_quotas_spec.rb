@@ -351,7 +351,7 @@ module VCAP::CloudController
           post '/v3/space_quotas', params.to_json, admin_header
 
           expect(last_response).to have_status_code(422)
-          expect(last_response).to include_error_message('Spaces with guids ["not-real"] do not exist, or you do not have access to them.')
+          expect(last_response).to include_error_message('Spaces with guids ["not-real"] do not exist within the organization specified, or you do not have access to them.')
         end
       end
 

@@ -6,6 +6,7 @@ module VCAP::CloudController
   RSpec.describe SpaceQuotasCreate do
     describe 'create' do
       subject(:space_quotas_create) { SpaceQuotasCreate.new }
+
       let(:org) { VCAP::CloudController::Organization.make(guid: 'some-org') }
       let(:space) { VCAP::CloudController::Space.make(guid: 'some-space', organization: org) }
       let(:message) do
@@ -120,7 +121,8 @@ module VCAP::CloudController
           it 'raises a human-friendly error' do
             expect {
               space_quotas_create.create(message_with_invalid_space_guid, organization: org)
-            }.to raise_error(SpaceQuotasCreate::Error, "Spaces with guids [\"#{invalid_space_guid}\"] do not exist, or you do not have access to them.")
+            }.to raise_error(SpaceQuotasCreate::Error, "Spaces with guids [\"#{invalid_space_guid}\"] do not exist " \
+                'within the organization specified, or you do not have access to them.')
           end
         end
 
@@ -140,7 +142,8 @@ module VCAP::CloudController
           it 'raises a human-friendly error' do
             expect {
               space_quotas_create.create(message_with_invalid_space_guid, organization: org)
-            }.to raise_error(SpaceQuotasCreate::Error, "Spaces with guids [\"#{invalid_space.guid}\"] do not exist, or you do not have access to them.")
+            }.to raise_error(SpaceQuotasCreate::Error, "Spaces with guids [\"#{invalid_space.guid}\"] do not exist " \
+                'within the organization specified, or you do not have access to them.')
           end
         end
       end
