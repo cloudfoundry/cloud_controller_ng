@@ -56,6 +56,9 @@ RSpec.describe 'Spaces' do
           'relationships' => {
             'organization' => {
               'data' => { 'guid' => created_space.organization_guid }
+            },
+            'quota' => {
+              'data' => nil
             }
           },
           'links' => {
@@ -97,6 +100,9 @@ RSpec.describe 'Spaces' do
             'relationships' => {
               'organization' => {
                 'data' => { 'guid' => space1.organization_guid }
+              },
+              'quota' => {
+                'data' => nil
               }
             },
             'metadata' => {
@@ -152,6 +158,52 @@ RSpec.describe 'Spaces' do
         }
       )
     end
+
+    context 'when the space has a quota applied to it' do
+      let(:space_quota) { VCAP::CloudController::SpaceQuotaDefinition.make(organization: space1.organization) }
+
+      before do
+        space_quota.add_space(space1)
+      end
+
+      it 'returns the requested space including quota relationship and link' do
+        get "/v3/spaces/#{space1.guid}", nil, user_header
+        expect(last_response.status).to eq(200)
+
+        parsed_response = MultiJson.load(last_response.body)
+        expect(parsed_response).to be_a_response_like(
+          {
+            'guid' => space1.guid,
+            'name' => 'Catan',
+            'created_at' => iso8601,
+            'updated_at' => iso8601,
+            'relationships' => {
+              'organization' => {
+                'data' => { 'guid' => space1.organization_guid }
+              },
+              'quota' => {
+                'data' => { 'guid' => space_quota.guid }
+              }
+            },
+            'metadata' => {
+              'labels' => {},
+              'annotations' => {},
+            },
+            'links' => {
+              'self' => {
+                'href' => "#{link_prefix}/v3/spaces/#{space1.guid}"
+              },
+              'organization' => {
+                'href' => "#{link_prefix}/v3/organizations/#{space1.organization_guid}"
+              },
+              'quota' => {
+                'href' => "#{link_prefix}/v3/space_quotas/#{space_quota.guid}"
+              }
+            },
+          }
+        )
+      end
+    end
   end
 
   describe 'GET /v3/spaces' do
@@ -204,6 +256,9 @@ RSpec.describe 'Spaces' do
               'relationships' => {
                 'organization' => {
                   'data' => { 'guid' => space1.organization_guid }
+                },
+                'quota' => {
+                  'data' => nil
                 }
               },
               'metadata' => {
@@ -227,6 +282,9 @@ RSpec.describe 'Spaces' do
               'relationships' => {
                 'organization' => {
                   'data' => { 'guid' => space2.organization_guid }
+                },
+                'quota' => {
+                  'data' => nil
                 }
               },
               'metadata' => {
@@ -410,6 +468,9 @@ RSpec.describe 'Spaces' do
             relationships: {
                 organization: {
                     data: { guid: space.organization_guid }
+                },
+                quota: {
+                    data: nil
                 }
             },
             metadata: {
@@ -500,6 +561,9 @@ RSpec.describe 'Spaces' do
             'relationships' => {
               'organization' => {
                 'data' => { 'guid' => space1.organization_guid }
+              },
+              'quota' => {
+                'data' => nil
               }
             },
             'metadata' => {
@@ -538,6 +602,9 @@ RSpec.describe 'Spaces' do
             'relationships' => {
               'organization' => {
                 'data' => { 'guid' => space1.organization_guid }
+              },
+              'quota' => {
+                'data' => nil
               }
             },
             'metadata' => {

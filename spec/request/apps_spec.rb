@@ -379,6 +379,9 @@ RSpec.describe 'Apps' do
                                      'organization' => {
                                          'data' => {
                                              'guid' => space.organization.guid }
+                                     },
+                                     'quota' => {
+                                         'data' => nil
                                      }
                                  },
                                  'metadata' => {
@@ -1045,6 +1048,9 @@ RSpec.describe 'Apps' do
                                      'organization' => {
                                          'data' => {
                                              'guid' => space.organization.guid }
+                                     },
+                                     'quota' => {
+                                         'data' => nil
                                      }
                                  },
                                  'metadata' => {

@@ -23,6 +23,9 @@ module VCAP::CloudController::Presenters::V3
             data: {
               guid: space.organization_guid
             }
+          },
+          quota: {
+            data: space.space_quota_definition ? { guid: space.space_quota_definition_guid } : nil
           }
         },
         links: build_links,
@@ -44,7 +47,7 @@ module VCAP::CloudController::Presenters::V3
     def build_links
       url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
 
-      {
+      links = {
         self: {
           href: url_builder.build_url(path: "/v3/spaces/#{space.guid}")
         },
@@ -52,6 +55,10 @@ module VCAP::CloudController::Presenters::V3
           href: url_builder.build_url(path: "/v3/organizations/#{space.organization_guid}")
         },
       }
+
+      links[:quota] = { href: url_builder.build_url(path: "/v3/space_quotas/#{space.space_quota_definition_guid}") } if space.space_quota_definition
+
+      links
     end
   end
 end

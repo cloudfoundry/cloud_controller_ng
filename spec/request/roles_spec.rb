@@ -939,9 +939,9 @@ RSpec.describe 'Roles Request' do
             space_guids: ['foo', 'bar'],
             user_guids: ['foo', 'bar'],
             types: ['foo', 'bar'],
-            per_page:   '10',
+            per_page: '10',
             page: 2,
-            order_by:   'updated_at',
+            order_by: 'updated_at',
             include: 'user, space',
           }
         end
@@ -1101,6 +1101,9 @@ RSpec.describe 'Roles Request' do
           relationships: {
             organization: {
               data: { guid: org.guid }
+            },
+            quota: {
+              data: nil
             }
           },
           metadata: {
@@ -1162,6 +1165,9 @@ RSpec.describe 'Roles Request' do
             relationships: {
               organization: {
                 data: { guid: another_space.organization.guid }
+              },
+              quota: {
+                data: nil
               }
             },
             metadata: {
@@ -1421,6 +1427,9 @@ RSpec.describe 'Roles Request' do
           relationships: {
             organization: {
               data: { guid: org.guid }
+            },
+            quota: {
+              data: nil
             }
           },
           metadata: {

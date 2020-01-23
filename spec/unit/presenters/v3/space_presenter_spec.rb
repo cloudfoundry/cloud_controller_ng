@@ -4,6 +4,7 @@ require 'presenters/v3/space_presenter'
 module VCAP::CloudController::Presenters::V3
   RSpec.describe SpacePresenter do
     let(:space) { VCAP::CloudController::Space.make }
+
     let!(:release_label) do
       VCAP::CloudController::SpaceLabelModel.make(
         key_name: 'release',
@@ -48,9 +49,24 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:links][:self][:href]).to match(%r{/v3/spaces/#{space.guid}$})
         expect(result[:links][:self][:href]).to eq("#{link_prefix}/v3/spaces/#{space.guid}")
         expect(result[:links][:organization][:href]).to eq("#{link_prefix}/v3/organizations/#{space.organization_guid}")
+        expect(result[:links][:quota]).to be_nil
         expect(result[:relationships][:organization][:data][:guid]).to eq(space.organization_guid)
+        expect(result[:relationships][:quota][:data]).to be_nil
         expect(result[:metadata][:labels]).to eq('release' => 'stable', 'maine.gov/potato' => 'mashed')
         expect(result[:metadata][:annotations]).to eq('altitude' => '14,411', 'grass' => 'yes')
+      end
+
+      context 'when the space has a space quota applied to it' do
+        let!(:space_quota) { VCAP::CloudController::SpaceQuotaDefinition.make(organization: space.organization) }
+
+        before do
+          space_quota.add_space(space)
+        end
+
+        it 'presents the space with a quota relationship and link' do
+          expect(result[:links][:quota][:href]).to eq("#{link_prefix}/v3/space_quotas/#{space_quota.guid}")
+          expect(result[:relationships][:quota][:data][:guid]).to eq(space_quota.guid)
+        end
       end
     end
   end
