@@ -32,12 +32,16 @@ module CloudController::Presenters::V2
           enable_ssh:       true,
           diego:            diego,
           created_at: Time.now,
-          updated_at: Time.now
+          updated_at: Time.now,
+          revision: revision
         )
       end
       let(:diego) { true }
       let(:buildpack) { 'https://github.com/custombuildpack' }
       let(:buildpacks) { [buildpack] }
+      let(:revision) { VCAP::CloudController::RevisionModel.make(
+        environment_variables: {}
+      ) }
 
       before do
         VCAP::CloudController::Buildpack.make(name: 'schmuby')
