@@ -6,6 +6,7 @@ module VCAP::CloudController::Presenters::V3
     let(:org) { VCAP::CloudController::Organization.make }
     let(:space_1) { VCAP::CloudController::Space.make(organization: org) }
     let(:space_2) { VCAP::CloudController::Space.make(organization: org) }
+    let(:visible_space_guids) { [space_1.guid, space_2.guid] }
 
     let(:space_quota) do
       VCAP::CloudController::SpaceQuotaDefinition.make(
@@ -29,7 +30,7 @@ module VCAP::CloudController::Presenters::V3
     end
 
     describe '#to_hash' do
-      let(:result) { SpaceQuotaPresenter.new(space_quota).to_hash }
+      let(:result) { SpaceQuotaPresenter.new(space_quota, visible_space_guids: visible_space_guids).to_hash }
 
       it 'presents the org as json' do
         expect(result[:guid]).to eq(space_quota.guid)

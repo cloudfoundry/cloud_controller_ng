@@ -9,6 +9,75 @@ module VCAP::CloudController
     let(:space) { VCAP::CloudController::Space.make(guid: 'space-guid', organization: org, space_quota_definition: space_quota) }
     let(:admin_header) { headers_for(user, scopes: %w(cloud_controller.admin)) }
 
+    describe 'GET /v3/space_quotas/:guid' do
+      let(:api_call) { lambda { |user_headers| get "/v3/space_quotas/#{space_quota.guid}", nil, user_headers } }
+
+      context 'when the space quota is applied to the space where the current user has a role' do
+        let(:expected_codes_and_responses) do
+          h = Hash.new(code: 404)
+          h['admin'] = { code: 200, response_object: make_space_quota_json(space_quota) }
+          h['admin_read_only'] = { code: 200, response_object: make_space_quota_json(space_quota) }
+          h['global_auditor'] = { code: 200, response_object: make_space_quota_json(space_quota) }
+          h['org_manager'] = { code: 200, response_object: make_space_quota_json(space_quota) }
+          h['space_manager'] = { code: 200, response_object: make_space_quota_json(space_quota) }
+          h['space_auditor'] = { code: 200, response_object: make_space_quota_json(space_quota) }
+          h['space_developer'] = { code: 200, response_object: make_space_quota_json(space_quota) }
+          h.freeze
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
+
+      context 'when the space quota has no associated spaces' do
+        let(:api_call) { lambda { |user_headers| get "/v3/space_quotas/#{unapplied_space_quota.guid}", nil, user_headers } }
+        let(:unapplied_space_quota) { VCAP::CloudController::SpaceQuotaDefinition.make(organization: org) }
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(code: 404)
+          h['admin'] = { code: 200, response_object: make_space_quota_json(unapplied_space_quota) }
+          h['admin_read_only'] = { code: 200, response_object: make_space_quota_json(unapplied_space_quota) }
+          h['global_auditor'] = { code: 200, response_object: make_space_quota_json(unapplied_space_quota) }
+          h['org_manager'] = { code: 200, response_object: make_space_quota_json(unapplied_space_quota) }
+          h.freeze
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
+
+      context 'when the space quota is owned by an org where the current user does not have a role' do
+        let(:api_call) { lambda { |user_headers| get "/v3/space_quotas/#{other_space_quota.guid}", nil, user_headers } }
+        let(:other_org) { VCAP::CloudController::Organization.make }
+        let(:other_space_quota) { VCAP::CloudController::SpaceQuotaDefinition.make(organization: other_org) }
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(code: 404)
+          h['admin'] = { code: 200, response_object: make_space_quota_json(other_space_quota) }
+          h['admin_read_only'] = { code: 200, response_object: make_space_quota_json(other_space_quota) }
+          h['global_auditor'] = { code: 200, response_object: make_space_quota_json(other_space_quota) }
+          h.freeze
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
+
+      context 'when the space quota does not exist' do
+        it 'returns a 404 with a helpful message' do
+          get '/v3/space_quotas/not-exist', nil, admin_header
+
+          expect(last_response).to have_status_code(404)
+          expect(last_response).to have_error_message('Space quota not found')
+        end
+      end
+
+      context 'when not logged in' do
+        it 'returns a 401 with a helpful message' do
+          get '/v3/space_quotas/not-exist', nil, {}
+          expect(last_response).to have_status_code(401)
+          expect(last_response).to have_error_message('Authentication error')
+        end
+      end
+    end
+
     describe 'POST /v3/space_quotas' do
       let(:api_call) { lambda { |user_headers| post '/v3/space_quotas', params.to_json, user_headers } }
       let(:params) do
@@ -332,6 +401,42 @@ module VCAP::CloudController
           end
         end
       end
+    end
+
+    def make_space_quota_json(space_quota)
+      {
+        guid: space_quota.guid,
+        created_at: iso8601,
+        updated_at: iso8601,
+        name: space_quota.name,
+        apps: {
+          total_memory_in_mb: 20480,
+          per_process_memory_in_mb: nil,
+          total_instances: nil,
+          per_app_tasks: 5
+        },
+        services: {
+          paid_services_allowed: true,
+          total_service_instances: 60,
+          total_service_keys: 600
+        },
+        routes: {
+          total_routes: 1000,
+          total_reserved_ports: nil
+        },
+        relationships: {
+          organization: {
+            data: { guid: space_quota.organization.guid },
+          },
+          spaces: {
+            data: space_quota.spaces.map { |space| { guid: space.guid } }
+          }
+        },
+        links: {
+          self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/space_quotas\/#{space_quota.guid}) },
+          organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{space_quota.organization.guid}) },
+        }
+      }
     end
   end
 end

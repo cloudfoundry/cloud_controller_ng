@@ -13,9 +13,30 @@ class SpaceQuotasController < ApplicationController
     unprocessable_organization!(message.organization_guid) unless org
 
     space_quota = SpaceQuotasCreate.new.create(message, organization: org)
-    render json: Presenters::V3::SpaceQuotaPresenter.new(space_quota), status: :created
+
+    render status: :created, json: Presenters::V3::SpaceQuotaPresenter.new(
+      space_quota,
+      visible_space_guids: permission_queryer.readable_space_guids
+    )
   rescue SpaceQuotasCreate::Error => e
     unprocessable!(e.message)
+  end
+
+  def show
+    space_quota = SpaceQuotaDefinition.first(guid: hashed_params[:guid])
+    resource_not_found!(:space_quota) unless space_quota
+
+    owning_org = Organization.first(id: space_quota.organization_id).guid
+    readable_space_guids = permission_queryer.readable_space_guids
+
+    resource_not_found!(:space_quota) unless permission_queryer.can_read_globally? ||
+      permission_queryer.can_write_to_org?(owning_org) ||
+      !space_quota.spaces_dataset.where(guid: readable_space_guids).empty?
+
+    render status: :ok, json: Presenters::V3::SpaceQuotaPresenter.new(
+      space_quota,
+      visible_space_guids: readable_space_guids
+    )
   end
 
   private

@@ -3,6 +3,16 @@ require 'presenters/mixins/metadata_presentation_helpers'
 
 module VCAP::CloudController::Presenters::V3
   class SpaceQuotaPresenter < BasePresenter
+    def initialize(
+      resource,
+      show_secrets: false,
+      censored_message: VCAP::CloudController::Presenters::Censorship::REDACTED_CREDENTIAL,
+      visible_space_guids:
+    )
+      super(resource, show_secrets: show_secrets, censored_message: censored_message)
+      @visible_space_guids = visible_space_guids
+    end
+
     def to_hash
       {
         guid: space_quota.guid,
@@ -29,7 +39,7 @@ module VCAP::CloudController::Presenters::V3
             data: { guid: space_quota.organization.guid }
           },
           spaces: {
-            data: space_data
+            data: filtered_visible_spaces
           }
         },
         links: build_links,
@@ -42,9 +52,9 @@ module VCAP::CloudController::Presenters::V3
       @resource
     end
 
-    def space_data
-      space_quota.spaces.map do |space|
-        { guid: space.guid }
+    def filtered_visible_spaces
+      VCAP::CloudController::Space.where(space_quota_definition_id: space_quota.id, guid: @visible_space_guids).select(:guid).map do |space|
+        { guid: space[:guid] }
       end
     end
 

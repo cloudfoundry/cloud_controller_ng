@@ -296,6 +296,7 @@ includes:
   - experimental_resources/space_quotas/header
   - experimental_resources/space_quotas/object
   - experimental_resources/space_quotas/create
+  - experimental_resources/space_quotas/get
   - upgrade_guide/upgrade_guide
 
 ---
