@@ -117,28 +117,28 @@ module VCAP::CloudController
       end
 
       context 'invalid operators' do
-        it 'parses incorrect "in" operations as nil requirement' do
+        it 'parses incorrect "in" operations as empty array of requirements' do
           message = list_message_klass.from_params('label_selector' => 'foo inn (bar,baz)')
 
-          expect(message.requirements).to contain_exactly(nil)
+          expect(message.requirements).to be_empty
         end
 
-        it 'parses incorrect "notin" operations as nil requirement' do
+        it 'parses incorrect "notin" operations as empty array of requirements' do
           message = list_message_klass.from_params('label_selector' => 'foo notinn (bar,baz)')
 
-          expect(message.requirements).to contain_exactly(nil)
+          expect(message.requirements).to be_empty
         end
 
-        it 'parses incorrect set operations as nil requirement' do
+        it 'parses incorrect set operations as empty array of requirements' do
           message = list_message_klass.from_params('label_selector' => 'foo == (bar,baz)')
 
-          expect(message.requirements).to contain_exactly(nil)
+          expect(message.requirements).to be_empty
         end
 
-        it 'parses multiple incorrect operations as nil requirements' do
+        it 'parses multiple incorrect operations as empty array of requirementss' do
           message = list_message_klass.from_params('label_selector' => 'foo == (bar,baz),foo narp doggie,bar inn (bat)')
 
-          expect(message.requirements).to contain_exactly(nil, nil, nil)
+          expect(message.requirements).to be_empty
         end
       end
 

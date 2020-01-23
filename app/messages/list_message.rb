@@ -81,11 +81,7 @@ module VCAP::CloudController
       to_array_keys.each do |attribute|
         to_array! opts, attribute
       end
-
-      message = new(opts.symbolize_keys)
-      message.requirements = parse_label_selector(opts.symbolize_keys[:label_selector]) if message.requested?(:label_selector)
-
-      message
+      new(opts.symbolize_keys)
     end
 
     def parse_label_selector(label_selector)
