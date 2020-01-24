@@ -37,7 +37,7 @@ class OrganizationQuotasController < ApplicationController
     visible_organizations_guids = permission_queryer.readable_org_guids
 
     render json: Presenters::V3::OrganizationQuotasPresenter.new(organization_quota, visible_org_guids: visible_organizations_guids), status: :ok
-  rescue OrganizationQuotasCreate::Error => e
+  rescue OrganizationQuotasUpdate::Error => e
     unprocessable!(e.message)
   end
 
