@@ -1,0 +1,29 @@
+### The Service Plan object
+
+```
+Example Service Plan object
+```
+```json
+<%= yield_content :single_service_plan %>
+```
+
+Name | Type | Description
+---- | ---- | -----------
+**guid** | _uuid_ | Unique identifier for the Service Plan.
+**name** | _string_ | Name of the Service Plan.
+**description** | _string_ | Description of the Service Plan.
+**available** | _boolean_ | Whether or not the Service Plan is available.
+**created_at** | _datetime_ | The time with zone when the object was created.
+**updated_at** | _datetime_ | The time with zone when the object was last updated.
+**broker_catalog** | _object_ | This object contains information obtained from the Service Broker Catalog.
+**broker_catalog.id** | _string_ | The identifier that the Service Broker provided for this Service Plan.
+**broker_catalog.metadata** | _object_ | Additional information provided by the Service Broker.
+**broker_catalog.features.plan_updateable** | _boolean_ | Whether the Service Plan supports upgrade/downgrade for Service Plans by default
+**broker_catalog.features.bindable** | _boolean_ | Specifies whether Service Instances of the service can be bound to applications.
+**schemas** | _object_ | Schema definitions for Service Instances and Service Bindings for the Service Plan.
+**schemas.service_instance.create** | _object_ | Schema definition for Service Instance creation.
+**schemas.service_instance.create.parameters** | _JSON Schema object_ | The schema definition for the input parameters. Each input parameter is expressed as a property within a JSON object.
+**schemas.service_instance.update** | _object_ | Schema definition for Service Instance update.
+**schemas.service_instance.update.parameters** | _JSON Schema object_ | The schema definition for the input parameters. Each input parameter is expressed as a property within a JSON object.
+**schemas.service_binding.create** | _object_ | Schema definition for Service Binding creation.
+**schemas.service_binding.create.parameters** | _JSON Schema object_ | The schema definition for the input parameters. Each input parameter is expressed as a property within a JSON object.

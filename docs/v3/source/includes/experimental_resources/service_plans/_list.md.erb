@@ -1,0 +1,34 @@
+### List service plans
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/service_plans" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :paginated_list_of_service_plans, '/v3/service_plans' %>
+```
+
+This endpoint retrieves the service plans the user has access to.
+
+#### Definition
+`GET /v3/service_plans`
+
+
+#### Permitted roles
+ |
+--- | ---
+All Roles |
+Unauthenticated Users (for public plans, unless `hide_marketplace_from_unauthenticated_users` is set) |

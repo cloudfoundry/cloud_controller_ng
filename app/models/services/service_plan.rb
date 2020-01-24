@@ -134,6 +134,12 @@ module VCAP::CloudController
       service.bindable?
     end
 
+    def plan_updateable?
+      return plan_updateable unless plan_updateable.nil?
+
+      !!service.plan_updateable
+    end
+
     def service_broker
       service.service_broker if service
     end
