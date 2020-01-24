@@ -44,6 +44,23 @@ module VCAP::CloudController
       }
     end
 
+    describe '#destroy' do
+      let(:service_offering) { Service.make }
+
+      it 'deletes associated resources' do
+        label = ServiceOfferingLabelModel.make(resource_guid: service_offering.guid, key_name: 'foo', value: 'bar')
+        annotation = ServiceOfferingAnnotationModel.make(resource_guid: service_offering.guid, key: 'alpha', value: 'beta')
+        expect {
+          begin
+            service_offering.destroy
+          rescue Sequel::ForeignKeyConstraintViolation
+          end
+        }.to change {
+          ServiceOfferingLabelModel.where(id: label.id).any? || ServiceOfferingAnnotationModel.where(id: annotation.id).any?
+        }.to(false)
+      end
+    end
+
     describe '#user_visibility_filter' do
       let(:private_service) { Service.make }
       let(:public_service) { Service.make }

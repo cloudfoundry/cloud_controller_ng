@@ -96,15 +96,21 @@ module VCAP::CloudController
     describe '#destroy' do
       let(:service_broker) { ServiceBroker.make }
 
-      it 'destroys all services associated with the broker' do
+      it 'destroys all resources associated with the broker' do
         service = Service.make(service_broker: service_broker)
+        service_plan = ServicePlan.make(service: service)
+        label = ServiceBrokerLabelModel.make(resource_guid: service_broker.guid, key_name: 'foo', value: 'bar')
+        annotation = ServiceBrokerAnnotationModel.make(resource_guid: service_broker.guid, key: 'alpha', value: 'beta')
         expect {
           begin
             service_broker.destroy
           rescue Sequel::ForeignKeyConstraintViolation
           end
         }.to change {
-          Service.where(id: service.id).any?
+          Service.where(id: service.id).any? ||
+            ServicePlan.where(id: service_plan.id).any? ||
+            ServiceBrokerLabelModel.where(id: label.id).any? ||
+            ServiceBrokerAnnotationModel.where(id: annotation.id).any?
         }.to(false)
       end
 

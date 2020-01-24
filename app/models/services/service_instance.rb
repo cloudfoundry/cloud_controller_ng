@@ -27,8 +27,11 @@ module VCAP::CloudController
 
     one_to_many :service_bindings, before_add: :validate_service_binding, key: :service_instance_guid, primary_key: :guid
     one_to_many :service_keys
+
     one_to_many :labels, class: 'VCAP::CloudController::ServiceInstanceLabelModel', key: :resource_guid, primary_key: :guid
     one_to_many :annotations, class: 'VCAP::CloudController::ServiceInstanceAnnotationModel', key: :resource_guid, primary_key: :guid
+    add_association_dependencies labels: :destroy
+    add_association_dependencies annotations: :destroy
 
     many_to_many :shared_spaces,
           left_key:          :service_instance_guid,

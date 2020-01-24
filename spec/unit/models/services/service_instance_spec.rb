@@ -173,6 +173,19 @@ module VCAP::CloudController
     describe '#destroy' do
       let!(:service_instance) { ServiceInstance.create(service_instance_attrs) }
 
+      it 'deletes associated resources' do
+        label = ServiceInstanceLabelModel.make(resource_guid: service_instance.guid, key_name: 'foo', value: 'bar')
+        annotation = ServiceInstanceAnnotationModel.make(resource_guid: service_instance.guid, key: 'alpha', value: 'beta')
+        expect {
+          begin
+            service_instance.destroy
+          rescue Sequel::ForeignKeyConstraintViolation
+          end
+        }.to change {
+          ServiceInstanceLabelModel.where(id: label.id).any? || ServiceInstanceAnnotationModel.where(id: annotation.id).any?
+        }.to(false)
+      end
+
       it 'creates a DELETED service usage event' do
         expect {
           service_instance.destroy
