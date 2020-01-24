@@ -9,6 +9,6 @@ module VCAP::CloudController
     validates_numericality_of :weight, only_integer: true, allow_nil: true,
                                        greater_than_or_equal_to: 1,
                                        less_than_or_equal_to: 128,
-                                       message: '%{value} must be an integer between 1 and 128'
+                                       message: '%<value>i must be an integer between 1 and 128'
   end
 end

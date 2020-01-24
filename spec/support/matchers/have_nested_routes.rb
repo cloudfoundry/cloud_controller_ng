@@ -8,7 +8,7 @@ RSpec::Matchers.define :have_nested_routes do |association_routes, options={}|
       expected_actions_for_association = Array(expected_to_manies[association_name])
 
       actual_actions = Array(attr.route_for)
-      extra_actions   = actual_actions - expected_actions_for_association
+      extra_actions = actual_actions - expected_actions_for_association
       missing_actions = expected_actions_for_association - actual_actions
 
       handle_errors(extra_actions, missing_actions, controller, association_name, errors)
@@ -21,7 +21,7 @@ RSpec::Matchers.define :have_nested_routes do |association_routes, options={}|
         route_should_exist_error(missing_route, errors)
       else
         actual_actions = Array(actual_to_manies[association_name].route_for)
-        extra_actions   = expected_actions - actual_actions
+        extra_actions = expected_actions - actual_actions
         missing_actions = actual_actions - expected_actions
 
         handle_errors(missing_actions, extra_actions, controller, association_name, errors)

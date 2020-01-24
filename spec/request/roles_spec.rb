@@ -713,7 +713,7 @@ RSpec.describe 'Roles Request' do
           },
           links: {
             self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/roles\/#{UUID_REGEX}) },
-            user: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/#{'a-new-user-guid'}) },
+            user: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/users\/a-new-user-guid) },
             organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}) },
           }
         }

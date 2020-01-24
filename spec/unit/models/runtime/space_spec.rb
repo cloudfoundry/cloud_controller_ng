@@ -393,8 +393,8 @@ module VCAP::CloudController
       describe 'apps which is the process relationship' do
         it 'has apps' do
           space = Space.make
-          process1  = ProcessModelFactory.make(space: space)
-          process2  = ProcessModelFactory.make(space: space)
+          process1 = ProcessModelFactory.make(space: space)
+          process2 = ProcessModelFactory.make(space: space)
           expect(space.apps).to match_array([process1, process2])
         end
 
@@ -453,7 +453,7 @@ module VCAP::CloudController
 
         describe 'eager loading' do
           it 'loads only web processes' do
-            # rubocop:disable UselessAssignment
+            # rubocop:disable Lint/UselessAssignment
             space1 = Space.make
             space2 = Space.make
             space3 = Space.make
@@ -486,11 +486,11 @@ module VCAP::CloudController
             queried_space_3 = spaces.select { |s| s.guid == space3.guid }.first
             expect(queried_space_1.associations[:apps]).to match_array([process1_space1, process2_space1, process3_space1])
             expect(queried_space_3.associations[:apps]).to match_array([process1_space3, process2_space3, process3_space3])
-            # rubocop:enable UselessAssignment
+            # rubocop:enable Lint/UselessAssignment
           end
 
           it 'respects when an eager block is passed in' do
-            # rubocop:disable UselessAssignment
+            # rubocop:disable Lint/UselessAssignment
             space1 = Space.make
             space2 = Space.make
             space3 = Space.make
@@ -527,7 +527,7 @@ module VCAP::CloudController
             queried_space_3 = spaces.select { |s| s.guid == space3.guid }.first
             expect(queried_space_1.associations[:apps]).to match_array([scaled_process_space1])
             expect(queried_space_3.associations[:apps]).to match_array([scaled_process_space3])
-            # rubocop:enable UselessAssignment
+            # rubocop:enable Lint/UselessAssignment
           end
         end
       end

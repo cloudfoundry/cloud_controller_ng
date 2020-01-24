@@ -637,7 +637,7 @@ module VCAP::Services
           }
         end
 
-        # rubocop:disable Metrics/LineLength
+        # rubocop:disable Layout/LineLength
         test_case(:provision, 200, broker_partial_json,                                         error: Errors::ServiceBrokerResponseMalformed, description: invalid_json_error(broker_partial_json, instance_uri))
         test_case(:provision, 200, broker_malformed_json,                                       error: Errors::ServiceBrokerResponseMalformed, expect_warning: true, description: invalid_json_error(broker_malformed_json, instance_uri))
         test_case(:provision, 200, broker_empty_json,                                           result: client_result_with_state('succeeded'))
@@ -1005,7 +1005,7 @@ module VCAP::Services
         test_case(:fetch_service_binding_last_operation, 422, broker_malformed_json,                                     error: Errors::ServiceBrokerBadResponse)
         test_case(:fetch_service_binding_last_operation, 422, broker_empty_json,                                         error: Errors::ServiceBrokerBadResponse)
         test_common_error_cases(:fetch_service_binding_last_operation)
-        # rubocop:enable Metrics/LineLength
+        # rubocop:enable Layout/LineLength
       end
     end
   end

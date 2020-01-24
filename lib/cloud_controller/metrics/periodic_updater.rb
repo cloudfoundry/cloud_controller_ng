@@ -5,7 +5,7 @@ module VCAP::CloudController::Metrics
   class PeriodicUpdater
     def initialize(start_time, log_counter, logger=Steno.logger, updaters=[StatsdUpdater.new])
       @start_time = start_time
-      @updaters    = updaters
+      @updaters = updaters
       @log_counter = log_counter
       @logger = logger
     end

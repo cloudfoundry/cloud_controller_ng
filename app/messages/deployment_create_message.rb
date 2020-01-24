@@ -11,7 +11,7 @@ module VCAP::CloudController
 
     validates_with NoAdditionalKeysValidator
     validates :strategy,
-      inclusion: { in: %w(rolling), message: "'%{value}' is not a supported deployment strategy" },
+      inclusion: { in: %w(rolling), message: "'%<value>s' is not a supported deployment strategy" },
       allow_nil: true
     validate :mutually_exclusive_droplet_sources
 

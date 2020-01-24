@@ -48,7 +48,7 @@ module VCAP::CloudController
 
       def app_lrp_arguments
         desired_lrp_builder = LifecycleProtocol.protocol_for_type(process.app.lifecycle_type).desired_lrp_builder(config, process)
-        ports  = desired_lrp_builder.ports.dup
+        ports = desired_lrp_builder.ports.dup
         routes = generate_routes(routing_info)
 
         if allow_ssh?

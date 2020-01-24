@@ -3,7 +3,7 @@ module VCAP::CloudController
     class Error < ::StandardError
     end
 
-    # rubocop:disable CyclomaticComplexity
+    # rubocop:disable Metrics/CyclomaticComplexity
     def self.update(quota, message)
       quota.db.transaction do
         quota.lock!
@@ -27,7 +27,7 @@ module VCAP::CloudController
 
         quota.save
       end
-      # rubocop:enable CyclomaticComplexity
+      # rubocop:enable Metrics/CyclomaticComplexity
 
       quota
     rescue Sequel::ValidationFailed => e

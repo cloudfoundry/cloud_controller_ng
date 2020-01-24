@@ -532,7 +532,7 @@ module VCAP::CloudController
 
               it 'defaults the HTTP invocation timeout to zero' do
                 process.health_check_invocation_timeout = nil
-                lrp        = builder.build_app_lrp
+                lrp = builder.build_app_lrp
                 http_check = lrp.check_definition.checks.first.http_check
                 expect(http_check.port).to eq(4444)
                 expect(http_check.path).to eq('http-endpoint')

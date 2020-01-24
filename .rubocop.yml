@@ -14,13 +14,13 @@ AllCops:
 Bundler/DuplicatedGem:
   Enabled: false
 
-Layout/AlignArguments:
+Layout/ArgumentAlignment:
   Enabled: false
 
-Layout/AlignHash:
+Layout/HashAlignment:
   Enabled: false
 
-Layout/AlignParameters:
+Layout/ParameterAlignment:
   Enabled: false
 
 Layout/ClosingParenthesisIndentation:
@@ -29,10 +29,10 @@ Layout/ClosingParenthesisIndentation:
 Layout/DotPosition:
   EnforcedStyle: trailing
 
-Layout/IndentFirstArrayElement:
+Layout/FirstArrayElementIndentation:
   EnforcedStyle: consistent
 
-Layout/IndentFirstHashElement:
+Layout/FirstHashElementIndentation:
   Enabled: false
 
 Layout/MultilineArrayBraceLayout:
@@ -62,7 +62,7 @@ Lint/AmbiguousBlockAssociation:
 Lint/AmbiguousRegexpLiteral:
   Enabled: false
 
-Lint/HandleExceptions:
+Lint/SuppressedException:
   Enabled: false
 
 Lint/ShadowedException:
@@ -75,11 +75,11 @@ Lint/UnifiedInteger:
   Exclude:
     - db/migrations/**/*
 
-Lint/UnneededCopDisableDirective:
+Lint/RedundantCopDisableDirective:
   Exclude:
     - db/migrations/201[3-7]*
 
-Lint/UnneededCopEnableDirective:
+Lint/RedundantCopEnableDirective:
   Exclude:
     - db/migrations/20130806175100_support_30char_identifiers_for_oracle.rb
 
@@ -112,7 +112,7 @@ Metrics/ClassLength:
 Metrics/CyclomaticComplexity:
   Max: 12
 
-Metrics/LineLength:
+Layout/LineLength:
   Max: 180
 
 Metrics/MethodLength:
@@ -161,7 +161,7 @@ Naming/PredicateName:
 Naming/RescuedExceptionsVariableName:
   Enabled: false
 
-Naming/UncommunicativeMethodParamName:
+Naming/MethodParameterName:
   # Parameter names may be equal to or greater than this value
   MinNameLength: 3
   AllowNamesEndingInNumbers: true
@@ -257,6 +257,9 @@ Style/RaiseArgs:
   EnforcedStyle: compact
 
 Style/RedundantSelf:
+  Enabled: false
+
+Style/RedundantReturn:
   Enabled: false
 
 Style/RescueModifier:

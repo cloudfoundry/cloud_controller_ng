@@ -8,8 +8,8 @@ module VCAP::CloudController
         def initialize(presenter:, paginated_result:, path:, message: nil, show_secrets: false, decorators: [], extra_presenter_args: {})
           @presenter = presenter
           @paginated_result = paginated_result
-          @path         = path
-          @message      = message
+          @path = path
+          @message = message
           @show_secrets = show_secrets
           @decorators = decorators
           @extra_presenter_args = extra_presenter_args

@@ -84,7 +84,7 @@ each_run_block = proc do
   # Moving this line into the init-block means that changes in code files aren't detected.
   VCAP::CloudController::SpecBootstrap.init
 
-  Dir[File.expand_path('support/**/*.rb', File.dirname(__FILE__))].each { |file| require file }
+  Dir[File.expand_path('support/**/*.rb', File.dirname(__FILE__))].sort.each { |file| require file }
 
   # each-run here?
   RSpec.configure do |rspec_config|
