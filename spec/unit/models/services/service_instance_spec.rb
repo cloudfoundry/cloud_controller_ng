@@ -176,14 +176,11 @@ module VCAP::CloudController
       it 'deletes associated resources' do
         label = ServiceInstanceLabelModel.make(resource_guid: service_instance.guid, key_name: 'foo', value: 'bar')
         annotation = ServiceInstanceAnnotationModel.make(resource_guid: service_instance.guid, key: 'alpha', value: 'beta')
-        expect {
-          begin
-            service_instance.destroy
-          rescue Sequel::ForeignKeyConstraintViolation
-          end
-        }.to change {
-          ServiceInstanceLabelModel.where(id: label.id).any? || ServiceInstanceAnnotationModel.where(id: annotation.id).any?
-        }.to(false)
+
+        service_instance.destroy
+
+        expect(ServiceInstanceLabelModel.where(id: label.id)).to be_empty
+        expect(ServiceInstanceAnnotationModel.where(id: annotation.id)).to be_empty
       end
 
       it 'creates a DELETED service usage event' do

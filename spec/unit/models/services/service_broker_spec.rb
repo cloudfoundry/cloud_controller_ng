@@ -101,17 +101,14 @@ module VCAP::CloudController
         service_plan = ServicePlan.make(service: service)
         label = ServiceBrokerLabelModel.make(resource_guid: service_broker.guid, key_name: 'foo', value: 'bar')
         annotation = ServiceBrokerAnnotationModel.make(resource_guid: service_broker.guid, key: 'alpha', value: 'beta')
-        expect {
-          begin
-            service_broker.destroy
-          rescue Sequel::ForeignKeyConstraintViolation
-          end
-        }.to change {
-          Service.where(id: service.id).any? ||
-            ServicePlan.where(id: service_plan.id).any? ||
-            ServiceBrokerLabelModel.where(id: label.id).any? ||
-            ServiceBrokerAnnotationModel.where(id: annotation.id).any?
-        }.to(false)
+
+        service_broker.destroy
+
+        expect(ServiceBroker.where(id: service_broker.id)).to be_empty
+        expect(Service.where(id: service.id)).to be_empty
+        expect(ServicePlan.where(id: service_plan.id)).to be_empty
+        expect(ServiceBrokerLabelModel.where(id: label.id)).to be_empty
+        expect(ServiceBrokerAnnotationModel.where(id: annotation.id)).to be_empty
       end
 
       context 'when a service instance exists' do
