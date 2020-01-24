@@ -8,7 +8,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServiceOfferingPresenter d
   let(:description) { 'some offering description' }
   let(:available) { false }
   let(:bindable) { false }
-  let(:metadata) { '{"foo": "bar", "baz": {"answer": 42}' }
+  let(:extra) { '{"foo": "bar", "baz": {"answer": 42}' }
   let(:id) { 'broker-id' }
   let(:tags) { %w(foo bar) }
   let(:requires) { %w(syslog_drain route_forwarding volume_mount) }
@@ -25,7 +25,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServiceOfferingPresenter d
       description: description,
       active: available,
       bindable: bindable,
-      extra: metadata,
+      extra: extra,
       unique_id: id,
       tags: tags,
       requires: requires,
@@ -129,7 +129,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServiceOfferingPresenter d
     end
 
     context 'when `shareable` is true' do
-      let(:metadata) { '{"shareable": true}' }
+      let(:extra) { '{"shareable": true}' }
 
       it 'displays `true``' do
         expect(result[:shareable]).to be true
@@ -137,7 +137,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServiceOfferingPresenter d
     end
 
     context 'when `shareable` is non-boolean' do
-      let(:metadata) { '{"shareable": "invalid value"}' }
+      let(:extra) { '{"shareable": "invalid value"}' }
 
       it 'displays `false``' do
         expect(result[:shareable]).to be false
@@ -145,7 +145,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServiceOfferingPresenter d
     end
 
     context 'when `shareable` is explicitly false' do
-      let(:metadata) { '{"shareable": false}' }
+      let(:extra) { '{"shareable": false}' }
 
       it 'displays `false``' do
         expect(result[:shareable]).to be false
@@ -153,7 +153,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServiceOfferingPresenter d
     end
 
     context 'when `metadata` is not set' do
-      let(:metadata) { nil }
+      let(:extra) { nil }
 
       it 'displays shareable as `false``' do
         expect(result[:shareable]).to be false
@@ -163,7 +163,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServiceOfferingPresenter d
     # Note that the metadata is saved as a serialized JSON string, so it should always
     # be possible to parse it.
     context 'when the broker metadata cannot be parsed' do
-      let(:metadata) { 'this will cause a JSON parse error' }
+      let(:extra) { 'this will cause a JSON parse error' }
 
       it 'defaults `shareable` to false' do
         expect(result[:shareable]).to be false
