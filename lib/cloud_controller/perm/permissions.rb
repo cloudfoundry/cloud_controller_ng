@@ -58,6 +58,16 @@ module VCAP
           end
         end
 
+        def readable_org_contents_org_guids
+          if can_read_globally?
+            VCAP::CloudController::Organization.select(:guid).all.map(&:guid)
+          else
+            resource_identifiers_for_action([
+              ORG_MANAGER_ACTION,
+            ])
+          end
+        end
+
         def can_read_from_org?(org_id)
           can_read_globally? ||
             has_any_permission?([

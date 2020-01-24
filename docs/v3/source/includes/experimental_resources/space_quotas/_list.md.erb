@@ -1,0 +1,43 @@
+### List space quotas
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/space_quotas" \
+  -X GET \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :list_space_quotas %>
+```
+
+This endpoint lists all space quota resources that the user has permission to view (see [getting a space quota](#get-a-space-quota)).
+
+#### Definition
+
+`GET /v3/space_quotas`
+
+
+Name | Type | Description
+---- | ---- | -----------
+**page** | _integer_ | Page to display. Valid values are integers >= 1.
+**per_page** | _integer_ | Number of results per page. <br>Valid values are 1 through 5000.
+**order_by** | _string_ | Value to sort by. Defaults to ascending. Prepend with `-` to sort descending. <br>Valid values are `created_at`, `updated_at`.
+
+#### Permitted roles
+
+Role |
+--- |
+All Roles |
+
+**Note:** Space quotas in the response will not show any space guids that a user would not otherwise be able to see (see [space view permissions](#get-a-space)).

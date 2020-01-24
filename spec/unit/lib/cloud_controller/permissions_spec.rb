@@ -235,6 +235,36 @@ module VCAP::CloudController
       end
     end
 
+    describe '#readable_org_contents_org_guids' do
+      it 'returns all the org guids for admins' do
+        user = set_current_user_as_admin
+        subject = Permissions.new(user)
+
+        # add more organizations to database
+        Organization.make.guid
+        Organization.make.guid
+
+        org_guids = subject.readable_org_contents_org_guids
+
+        expect(org_guids.count).to eq(Organization.count)
+        expect(org_guids).to contain_exactly(*Organization.all.map(&:guid))
+      end
+
+      context 'when the user has an org role' do
+        let(:other_org) { Organization.make }
+
+        before do
+          set_current_user_as_role(user: user, role: 'org_manager', org: org)
+          set_current_user_as_role(user: user, role: 'org_auditor', org: other_org)
+        end
+
+        it 'returns the org guids for orgs where the user has full read access to the org contents' do
+          readable_org_guids = permissions.readable_org_contents_org_guids
+          expect(readable_org_guids).to eq([org_guid])
+        end
+      end
+    end
+
     describe '#can_write_to_org?' do
       context 'user has no membership' do
         context 'and user is an admin' do
@@ -1168,6 +1198,72 @@ module VCAP::CloudController
         route_mapping_guids = permissions.readable_route_mapping_guids
 
         expect(route_mapping_guids).to contain_exactly(developer_route_mapping.guid, manager_route_mapping.guid, auditor_route_mapping.guid)
+      end
+    end
+
+    describe '#readable_space_quota_guids' do
+      let(:org1) { Organization.make }
+      let(:org2) { Organization.make }
+      let(:squota1) { SpaceQuotaDefinition.make(organization: org1, guid: 'q1') }
+      let!(:squota2) { SpaceQuotaDefinition.make(organization: org1, guid: 'q2') }
+      let(:squota3) { SpaceQuotaDefinition.make(organization: org2, guid: 'q3') }
+      let!(:space1) { Space.make(organization: org1, space_quota_definition: squota1) }
+      let!(:space2) { Space.make(organization: org2, space_quota_definition: squota3) }
+
+      it 'returns all the space quota guids for any global read role' do
+        global_roles = [set_current_user_as_admin, set_current_user_as_global_auditor, set_current_user_as_admin_read_only]
+        global_roles.each { |user|
+          subject = Permissions.new(user)
+
+          space_quota_guids = subject.readable_space_quota_guids
+
+          expect(space_quota_guids).to include(squota1.guid)
+          expect(space_quota_guids).to include(squota2.guid)
+          expect(space_quota_guids).to include(squota3.guid)
+        }
+      end
+
+      it 'returns space quota guids when the user is an org_manager' do
+        user = set_current_user_as_role(role: 'org_manager', org: org1)
+        subject = Permissions.new(user)
+
+        space_quota_guids = subject.readable_space_quota_guids
+
+        expect(space_quota_guids).to contain_exactly(squota1.guid, squota2.guid)
+        expect(space_quota_guids).not_to include(squota3.guid)
+      end
+
+      it 'does not return any space quotas when the user has a non org manager org role' do
+        org_roles = [
+          set_current_user_as_role(role: 'org_billing_manager', org: org2),
+          set_current_user_as_role(role: 'org_user', org: org2),
+          set_current_user_as_role(role: 'org_auditor', org: org2)
+        ]
+        org_roles.each { |user|
+          subject = Permissions.new(user)
+
+          space_quota_guids = subject.readable_space_quota_guids
+          expect(space_quota_guids).not_to include(squota1.guid)
+          expect(space_quota_guids).not_to include(squota2.guid)
+          expect(space_quota_guids).not_to include(squota3.guid)
+        }
+      end
+
+      it 'returns space quotas when the user has an appropriate space membership' do
+        space_roles = [
+          set_current_user_as_role(role: 'space_manager', org: org2, space: space2),
+          set_current_user_as_role(role: 'space_developer', org: org2, space: space2),
+          set_current_user_as_role(role: 'space_auditor', org: org2, space: space2)
+        ]
+
+        space_roles.each { |user|
+          subject = Permissions.new(user)
+
+          space_quota_guids = subject.readable_space_quota_guids
+          expect(space_quota_guids).to contain_exactly(squota3.guid)
+          expect(space_quota_guids).not_to include(squota1.guid)
+          expect(space_quota_guids).not_to include(squota2.guid)
+        }
       end
     end
   end

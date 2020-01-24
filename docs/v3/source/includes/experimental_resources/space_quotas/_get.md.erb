@@ -31,7 +31,9 @@ Role | Notes
 Admin |
 Admin Read-Only |
 Global Auditor |
-Org Manager | Can see space quotas owned by the organization where they have this role
-Space Auditor | Can see space quotas applied to the space where they have this role
-Space Developer | Can see space quotas applied to the space where they have this role
-Space Manager | Can see space quotas applied to the space where they have this role
+Org Manager | Can only query space quotas owned by affiliated organizations
+Space Auditor | Can only query space quotas applied to affiliated spaces
+Space Developer | Can only query space quotas applied to affiliated spaces
+Space Manager | Can only query space quotas applied to affiliated spaces
+
+**Note:** Response will not show any space guids that a user would not otherwise be able to see (see [space view permissions](#get-a-space)).

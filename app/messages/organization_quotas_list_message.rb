@@ -1,7 +1,7 @@
 require 'messages/metadata_list_message'
 
 module VCAP::CloudController
-  class OrganizationQuotasListMessage < MetadataListMessage
+  class OrganizationQuotasListMessage < ListMessage
     validates_with NoAdditionalParamsValidator
 
     register_allowed_keys [:guids, :names, :organization_guids]

@@ -254,7 +254,7 @@ includes:
   - experimental_resources/organization_quotas/object
   - experimental_resources/organization_quotas/create
   - experimental_resources/organization_quotas/get
-  - experimental_resources/organization_quotas/list 
+  - experimental_resources/organization_quotas/list
   - experimental_resources/organization_quotas/apply
   - experimental_resources/organization_quotas/delete
   - experimental_resources/organization_quotas/update
@@ -302,6 +302,7 @@ includes:
   - experimental_resources/space_quotas/object
   - experimental_resources/space_quotas/create
   - experimental_resources/space_quotas/get
+  - experimental_resources/space_quotas/list
   - upgrade_guide/upgrade_guide
 
 ---

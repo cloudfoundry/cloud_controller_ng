@@ -1,5 +1,4 @@
 require 'spec_helper'
-require 'messages/users_list_message'
 
 module VCAP::CloudController
   RSpec.describe OrganizationQuotasListMessage do
