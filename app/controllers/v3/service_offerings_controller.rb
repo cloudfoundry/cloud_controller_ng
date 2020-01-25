@@ -3,7 +3,9 @@ require 'fetchers/service_offering_list_fetcher'
 require 'fetchers/service_plan_visibility_fetcher'
 require 'presenters/v3/service_offering_presenter'
 require 'messages/service_offerings_list_message'
+require 'messages/service_offering_update_message'
 require 'actions/service_offering_delete'
+require 'actions/service_offering_update'
 
 class ServiceOfferingsController < ApplicationController
   def index
@@ -44,11 +46,26 @@ class ServiceOfferingsController < ApplicationController
     render status: :ok, json: presenter.to_json
   end
 
+  def update
+    service_offering = ServiceOfferingFetcher.fetch(hashed_params[:guid])
+    service_offering_not_found! if service_offering.nil?
+
+    cannot_write!(service_offering) unless current_user_can_write?(service_offering)
+
+    message = ServiceOfferingUpdateMessage.new(hashed_params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    updated_service_offering = ServiceOfferingUpdate.update(service_offering, message)
+    presenter = Presenters::V3::ServiceOfferingPresenter.new(updated_service_offering)
+
+    render :ok, json: presenter.to_json
+  end
+
   def destroy
     service_offering = ServiceOfferingFetcher.fetch(hashed_params[:guid])
     service_offering_not_found! if service_offering.nil?
 
-    cannot_destroy!(service_offering) unless current_user_can_destroy?(service_offering)
+    cannot_write!(service_offering) unless current_user_can_write?(service_offering)
 
     ServiceOfferingDelete.new.delete(service_offering)
 
@@ -80,7 +97,7 @@ class ServiceOfferingsController < ApplicationController
     current_user && space && space.has_member?(current_user)
   end
 
-  def destroyable_space_scoped?(space)
+  def writable_space_scoped?(space)
     space && space.has_developer?(current_user)
   end
 
@@ -96,8 +113,8 @@ class ServiceOfferingsController < ApplicationController
     !current_user && VCAP::CloudController::FeatureFlag.enabled?(:hide_marketplace_from_unauthenticated_users)
   end
 
-  def current_user_can_destroy?(service_offering)
-    permission_queryer.can_write_globally? || destroyable_space_scoped?(service_offering.service_broker.space)
+  def current_user_can_write?(service_offering)
+    permission_queryer.can_write_globally? || writable_space_scoped?(service_offering.service_broker.space)
   end
 
   def visible_to_current_user?(service_offering)
@@ -107,7 +124,7 @@ class ServiceOfferingsController < ApplicationController
       visible_space_scoped?(service_offering.service_broker.space)
   end
 
-  def cannot_destroy!(service_offering)
+  def cannot_write!(service_offering)
     unauthorized! if visible_to_current_user?(service_offering)
     service_offering_not_found!
   end

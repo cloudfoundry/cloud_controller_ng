@@ -106,6 +106,8 @@ require 'models/runtime/task_annotation_model'
 require 'models/runtime/user_annotation_model'
 
 require 'models/services/service'
+require 'models/services/service_offering_label_model'
+require 'models/services/service_offering_annotation_model'
 require 'models/services/service_binding'
 require 'models/services/route_binding'
 require 'models/services/service_dashboard_client'

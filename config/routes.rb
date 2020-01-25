@@ -178,6 +178,7 @@ Rails.application.routes.draw do
   # service_offerings
   get '/service_offerings', to: 'service_offerings#index'
   get '/service_offerings/:guid', to: 'service_offerings#show'
+  patch '/service_offerings/:guid', to: 'service_offerings#update'
   delete '/service_offerings/:guid', to: 'service_offerings#destroy'
 
   # service_plans

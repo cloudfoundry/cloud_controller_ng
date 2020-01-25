@@ -56,6 +56,15 @@ module VCAP::CloudController
         dataset = dataset.where(Sequel[:services][:label] =~ message.names)
       end
 
+      if message.requested?(:label_selector)
+        dataset = LabelSelectorQueryGenerator.add_selector_queries(
+          label_klass: ServiceOfferingLabelModel,
+          resource_dataset: dataset,
+          requirements: message.requirements,
+          resource_klass: Service,
+        )
+      end
+
       dataset
     end
 

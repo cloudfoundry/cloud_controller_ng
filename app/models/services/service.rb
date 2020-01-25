@@ -4,6 +4,8 @@ module VCAP::CloudController
 
     many_to_one :service_broker
     one_to_many :service_plans
+    one_to_many :labels, class: 'VCAP::CloudController::ServiceOfferingLabelModel', key: :resource_guid, primary_key: :guid
+    one_to_many :annotations, class: 'VCAP::CloudController::ServiceOfferingAnnotationModel', key: :resource_guid, primary_key: :guid
 
     add_association_dependencies service_plans: :destroy
 
