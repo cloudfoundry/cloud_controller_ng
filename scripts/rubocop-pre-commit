@@ -9,32 +9,6 @@ CLEAR_LINE='\r\033[K'
 
 REPO_BASE_DIR="$(git rev-parse --show-toplevel)"
 
-function add_corrections_to_commit() {
-    # if a file is both a suspect and an innocent, this script is gonna need a lawyer
-    if [ -n "$(comm -12 <(echo "${INNOCENTS}") <(echo "${SUSPECTS}"))" ]; then
-      printf "\n${CLEAR_LINE}${GREEN}❓ But some of your files are only partially staged, so you'll need to add the fixes yourself and try again.${NO_COLOR}\n"
-      exit 1
-    fi
-
-    # reopen stdin to make this interactive
-    exec < /dev/tty
-    trap "exec <&-" EXIT # close stdin when this script exits
-
-    while read -p "Would you like to add those corrections to this commit? (Y/n) " yn; do
-      case $yn in
-        "") break;;
-        [Yy] ) break;;
-        [Nn] ) echo "Then add them yourself!"; exit 1;;
-        * ) echo "Please answer y (yes) or n (no):" && continue;
-      esac
-    done
-
-    # updating the index directly is not the safest thing,
-    # but because we only add SUSPECTS and guard against situations
-    # where files are partially committed, it should be alright
-    git add -u ${SUSPECTS}
-}
-
 if ! command -v rubocop > /dev/null; then
   printf "${CLEAR_LINE}💀${RED} Install Rubocop and be sure it is available on your PATH.${NO_COLOR}\n"
   printf "ℹ️  Try 'gem install rubocop'\n"
@@ -64,7 +38,29 @@ pushd "${REPO_BASE_DIR}"
 
   printf "\n${CLEAR_LINE}${GREEN}🚔  Rubocop has autocorrected your transgressions!${NO_COLOR}\n"
 
-  add_corrections_to_commit
+  # if a file is both a suspect and an innocent, this script is gonna need a lawyer
+  if [ -n "$(comm -12 <(echo "${INNOCENTS}") <(echo "${SUSPECTS}"))" ]; then
+    printf "\n${CLEAR_LINE}${GREEN}❓ Some of your files are partially staged- add the corrections yourself and commit with -n.${NO_COLOR}\n"
+    exit 1
+  fi
+
+  # reopen stdin to make this interactive
+  exec < /dev/tty
+  trap "exec <&-" EXIT # close stdin when this script exits
+
+  while read -p "Would you like to add those corrections to this commit? (Y/n) " yn; do
+    case $yn in
+      "") break;;
+      [Yy] ) break;;
+      [Nn] ) echo "Then add them yourself!"; exit 1;;
+      * ) echo "Please answer y (yes) or n (no):" && continue;
+    esac
+  done
+
+  # updating the index directly is not the safest thing,
+  # but because we only add SUSPECTS and guard against situations
+  # where files are partially committed, it should be alright
+  git add -u ${SUSPECTS}
 
   printf "${CLEAR_LINE}🎉${GREEN} Rubocop is appeased.${NO_COLOR}\n"
 popd
