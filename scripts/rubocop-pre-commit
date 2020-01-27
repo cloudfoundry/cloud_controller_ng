@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -e
+set -ex
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -24,7 +24,7 @@ pushd "${REPO_BASE_DIR}"
 
   printf "\n🚔 Linting with Rubocop...\n"
 
-  if rubocop --parallel --cache=true ${SUSPECTS}; then
+  if rubocop --parallel --cache=true --format autogenconf ${SUSPECTS}; then
     printf "${CLEAR_LINE}🎉${GREEN} Rubocop is appeased.${NO_COLOR}\n"
     exit 0
   fi
