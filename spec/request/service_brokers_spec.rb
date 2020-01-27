@@ -901,6 +901,39 @@ RSpec.describe 'V3 service brokers' do
           end
         end
       end
+
+      context 'when feature flag space_scoped_private_broker_creation is set' do
+        before do
+          VCAP::CloudController::FeatureFlag.create(name: 'space_scoped_private_broker_creation', enabled: false)
+          create_broker(space_scoped_broker_request_body, with: headers)
+        end
+
+        context 'space developer' do
+          let(:headers) do
+            org.add_user(user)
+            space.add_developer(user)
+            headers_for(user)
+          end
+
+          it 'returns an error saying the feature is disabled' do
+            expect(last_response).to have_status_code(403)
+            expect(last_response.body).to include('Feature Disabled: space_scoped_private_broker_creation')
+          end
+        end
+
+        context 'space manager' do
+          let(:headers) do
+            org.add_user(user)
+            space.add_manager(user)
+            headers_for(user)
+          end
+
+          it 'returns an error saying the feature is disabled' do
+            expect(last_response).to have_status_code(403)
+            expect(last_response.body).to include('Feature Disabled: space_scoped_private_broker_creation')
+          end
+        end
+      end
     end
 
     context 'when job succeeds with warnings' do

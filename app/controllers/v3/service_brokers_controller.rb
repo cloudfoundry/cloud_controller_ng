@@ -42,6 +42,7 @@ class ServiceBrokersController < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     if message.space_guid
+      FeatureFlag.raise_unless_enabled!(:space_scoped_private_broker_creation)
       space = Space.where(guid: message.space_guid).first
       unprocessable_space! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization_guid)
       unauthorized! unless permission_queryer.can_write_space_scoped_service_broker?(space.guid)
