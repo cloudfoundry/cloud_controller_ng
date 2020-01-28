@@ -64,12 +64,17 @@ module VCAP::CloudController
         it 'deletes the keys when values are nil' do
           expect(message).to be_valid
           ServiceInstanceUpdate.update(service_instance, message)
-
           service_instance.reload
-          expect(service_instance.labels.map { |label| { key: label.key_name, value: label.value } }).
-            to match_array([{ key: 'freaky', value: 'wednesday' }])
-          expect(service_instance.annotations.map { |a| { key: a.key, value: a.value } }).
-            to match_array([{ key: 'tokyo', value: 'grapes' }])
+          expect(service_instance).to contain_metadata({
+            metadata: {
+              labels: {
+                freaky: 'wednesday',
+              },
+              annotations: {
+                tokyo: 'grapes',
+              },
+            },
+          })
         end
       end
     end

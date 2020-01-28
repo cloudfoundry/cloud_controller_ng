@@ -22,7 +22,7 @@ RSpec::Matchers.define :contain_metadata do |expected|
   failure_message do
     error_message = []
     error_message << "Labels don't match: Expected #{expected_labels} got #{actual_labels}" unless labels_match
-    error_message << "Annotations don't match: Expected #{expected_annotations} got #{actual_annotations}" unless labels_match
+    error_message << "Annotations don't match: Expected #{expected_annotations} got #{actual_annotations}" unless annotations_match
 
     error_message.join("\n")
   end
