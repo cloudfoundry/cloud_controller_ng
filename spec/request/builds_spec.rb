@@ -560,16 +560,6 @@ RSpec.describe 'Builds' do
             expect(last_response.status).to eq(403), last_response.body
           end
         end
-
-        context 'when the the developer is looking in the wrong space' do
-          let(:wrong_developer) { make_developer_for_space(VCAP::CloudController::Space.make) }
-          let(:wrong_developer_headers) { headers_for(wrong_developer, user_name: user_name, email: 'bob@loblaw.com') }
-
-          it '404s' do
-            patch "/v3/builds/#{build_model.guid}", { state: 'STAGED' }.to_json, wrong_developer_headers
-            expect(last_response.status).to eq(404), last_response.body
-          end
-        end
       end
     end
   end

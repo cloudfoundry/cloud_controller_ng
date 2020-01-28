@@ -76,16 +76,14 @@ class BuildsController < ApplicationController
   def update
     build = BuildModel.find(guid: hashed_params[:guid])
     build_not_found! unless build
-    space = build.package.space
-    unless permission_queryer.can_read_from_space?(space.guid, space.organization.guid) || permission_queryer.can_update_build_state?
-      build_not_found!
-    end
 
     if hashed_params[:body].key?(:state)
       unauthorized! unless permission_queryer.can_update_build_state?
 
       build = update_build_state(build, create_valid_update_message)
     else
+      space = build.package.space
+      build_not_found! unless permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
       unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
 
       build = BuildUpdate.new.update(build, create_valid_update_message)
