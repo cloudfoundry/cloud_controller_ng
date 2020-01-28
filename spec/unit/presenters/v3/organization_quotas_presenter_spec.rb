@@ -30,8 +30,8 @@ module VCAP::CloudController::Presenters::V3
 
         expect(result[:domains][:total_domains]).to eq(nil)
 
-        expect(result[:links][:self][:href]).to match(%r{/v3/organization_quotas/#{organization_quota.guid}$})
         expect(result[:relationships][:organizations][:data]).to eq([])
+        expect(result[:links][:self][:href]).to match(%r{/v3/organization_quotas/#{organization_quota.guid}$})
       end
 
       context 'when there are associated orgs' do
