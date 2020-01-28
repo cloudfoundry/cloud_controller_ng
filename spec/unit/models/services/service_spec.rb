@@ -44,6 +44,20 @@ module VCAP::CloudController
       }
     end
 
+    describe '#destroy' do
+      let(:service_offering) { Service.make }
+
+      it 'deletes associated resources' do
+        label = ServiceOfferingLabelModel.make(resource_guid: service_offering.guid, key_name: 'foo', value: 'bar')
+        annotation = ServiceOfferingAnnotationModel.make(resource_guid: service_offering.guid, key: 'alpha', value: 'beta')
+
+        service_offering.destroy
+
+        expect(ServiceOfferingLabelModel.where(id: label.id)).to be_empty
+        expect(ServiceOfferingAnnotationModel.where(id: annotation.id)).to be_empty
+      end
+    end
+
     describe '#user_visibility_filter' do
       let(:private_service) { Service.make }
       let(:public_service) { Service.make }
