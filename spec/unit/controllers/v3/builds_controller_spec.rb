@@ -733,6 +733,7 @@ RSpec.describe BuildsController, type: :controller do
         context 'when the user cannot read the app' do
           before do
             disallow_user_read_access(user, space: space)
+            disallow_user_build_update_access(user)
           end
 
           it 'returns a 404 ResourceNotFound error' do

@@ -251,6 +251,10 @@ module UserHelpers
     allow(permissions_double(user)).to receive(:can_read_from_space?).with(space.guid, space.organization_guid).and_return(false)
   end
 
+  def disallow_user_build_update_access(user)
+    allow(permissions_double(user)).to receive(:can_update_build_state?).and_return(false)
+  end
+
   def disallow_user_secret_access(user, space:)
     allow(permissions_double(user)).to receive(:can_read_secrets_in_space?).with(space.guid, space.organization_guid).and_return(false)
   end
