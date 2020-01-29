@@ -632,8 +632,7 @@ RSpec.describe 'V3 service offerings' do
 
     let(:db_check) {
       lambda do
-        get "/v3/service_offerings/#{guid}", {}, admin_headers
-        expect(last_response.status).to eq(404), 'expected database entry to be deleted'
+        expect(VCAP::CloudController::Service.all).to be_empty
       end
     }
 
@@ -735,10 +734,41 @@ RSpec.describe 'V3 service offerings' do
       let(:service_offering) { VCAP::CloudController::Service.make }
 
       it 'emits an audit event' do
-        delete "/v3/service_offerings/#{service_offering.guid}", {}, admin_headers
+        delete "/v3/service_offerings/#{service_offering.guid}", nil, admin_headers
 
         expect([
           { type: 'audit.service.delete', actor: service_offering.service_broker.name },
+        ]).to be_reported_as_events
+      end
+    end
+
+    context 'when purge=true' do
+      let!(:service_instance) { VCAP::CloudController::ManagedServiceInstance.make }
+      let!(:service_binding) { VCAP::CloudController::ServiceBinding.make(service_instance: service_instance) }
+      let!(:service_key) { VCAP::CloudController::ServiceKey.make(service_instance: service_instance) }
+      let(:guid) { service_instance.service_plan.service.guid }
+      let(:email) { Sham.email }
+      let(:admin_header) { admin_headers_for(user, email: email) }
+
+
+      it 'deletes the service offering and its dependencies' do
+        delete "/v3/service_offerings/#{guid}?purge=true", nil, admin_header
+
+        expect(last_response).to have_status_code(204)
+        expect(VCAP::CloudController::Service.all).to be_empty
+        expect(VCAP::CloudController::ServicePlan.all).to be_empty
+        expect(VCAP::CloudController::ManagedServiceInstance.all).to be_empty
+        expect(VCAP::CloudController::ServiceBinding.all).to be_empty
+      end
+
+      it 'emits audit events for all the deleted resources' do
+        delete "/v3/service_offerings/#{guid}?purge=true", nil, admin_header
+
+        expect([
+          { type: 'audit.service.delete', actor: email },
+          { type: 'audit.service_instance.purge', actor: email },
+          { type: 'audit.service_binding.delete', actor: email },
+          { type: 'audit.service_key.delete', actor: email },
         ]).to be_reported_as_events
       end
     end

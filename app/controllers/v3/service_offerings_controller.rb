@@ -4,6 +4,7 @@ require 'fetchers/service_plan_visibility_fetcher'
 require 'presenters/v3/service_offering_presenter'
 require 'messages/service_offerings_list_message'
 require 'messages/service_offering_update_message'
+require 'messages/purge_message'
 require 'actions/service_offering_delete'
 require 'actions/service_offering_update'
 
@@ -15,20 +16,20 @@ class ServiceOfferingsController < ApplicationController
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     dataset = if !current_user
-                ServiceOfferingListFetcher.new.fetch_public(message)
-              elsif permission_queryer.can_read_globally?
-                ServiceOfferingListFetcher.new.fetch(message)
-              else
-                ServiceOfferingListFetcher.new.fetch_visible(
-                  message,
-                  permission_queryer.readable_org_guids,
-                  permission_queryer.readable_space_scoped_space_guids,
-                )
-              end
+      ServiceOfferingListFetcher.new.fetch_public(message)
+    elsif permission_queryer.can_read_globally?
+      ServiceOfferingListFetcher.new.fetch(message)
+    else
+      ServiceOfferingListFetcher.new.fetch_visible(
+        message,
+        permission_queryer.readable_org_guids,
+        permission_queryer.readable_space_scoped_space_guids,
+      )
+    end
 
     presenter = Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::ServiceOfferingPresenter,
-      paginated_result: SequelPaginator.new.get_page(dataset, VCAP::CloudController::ListMessage.from_params(query_params, []).try(:pagination_options)),
+      paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
       path: '/v3/service_offerings',
     )
 
@@ -62,15 +63,25 @@ class ServiceOfferingsController < ApplicationController
   end
 
   def destroy
+    message = PurgeMessage.from_params(query_params)
+    invalid_param!(message.errors.full_messages) unless message.valid?
+
     service_offering = ServiceOfferingFetcher.fetch(hashed_params[:guid])
     service_offering_not_found! if service_offering.nil?
 
     cannot_write!(service_offering) unless current_user_can_write?(service_offering)
 
-    ServiceOfferingDelete.new.delete(service_offering)
-
     service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository.new(user_audit_info)
-    service_event_repository.record_service_event(:delete, service_offering)
+
+    if message.purge?
+      service_offering.purge(service_event_repository)
+      service_event_repository.record_service_purge_event(service_offering)
+    else
+      ServiceOfferingDelete.new.delete(service_offering)
+      service_event_repository.record_service_event(:delete, service_offering)
+    end
+
+
 
     head :no_content
   rescue ServiceOfferingDelete::AssociationNotEmptyError => e

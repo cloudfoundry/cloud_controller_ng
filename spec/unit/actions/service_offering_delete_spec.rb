@@ -7,6 +7,7 @@ module VCAP::CloudController
 
     it 'can delete service offerings' do
       subject.delete(service_offering_model)
+
       expect {
         service_offering_model.reload
       }.to raise_error(Sequel::Error, 'Record not found')
