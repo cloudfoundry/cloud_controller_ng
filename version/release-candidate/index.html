@@ -4139,6 +4139,16 @@ resource can be created to initiate the staging process. A successful build resu
 <td><a href="#annotations"><em>annotation object</em></a></td>
 <td>Annotations applied to the build.</td>
 </tr>
+<tr>
+<td><strong>state</strong> <em>(experimental)</em></td>
+<td><em>string</em></td>
+<td>Build status (FAILED, STAGED). **</td>
+</tr>
+<tr>
+<td><strong>lifecycle.data.image</strong> <em>(experimental)</em></td>
+<td><em>string</em></td>
+<td>Image reference tag where the built complete image was stored. **</td>
+</tr>
 </tbody></table>
 
 <h4 id="permitted-roles">Permitted roles</h4>
@@ -4153,6 +4163,24 @@ resource can be created to initiate the staging process. A successful build resu
 </tr>
 <tr>
 <td>Space Developer</td>
+</tr>
+</tbody></table>
+
+<h4 id="special-permitted-roles">Special Permitted roles **</h4>
+
+<table><thead>
+<tr>
+<th></th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Admin</td>
+</tr>
+<tr>
+<td>Space Developer</td>
+</tr>
+<tr>
+<td>Build State Updater</td>
 </tr>
 </tbody></table>
 <h2 id="buildpacks">Buildpacks</h2>
