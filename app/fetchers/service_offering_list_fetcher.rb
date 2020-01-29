@@ -3,6 +3,8 @@ module VCAP::CloudController
     def fetch(message)
       dataset = Service.dataset.
                 join(:service_brokers, id: Sequel[:services][:service_broker_id]).
+                left_join(:service_plans, service_id: Sequel[:services][:id]).
+                left_join(:spaces, id: Sequel[:service_brokers][:space_id]).
                 select_all(:services)
 
       filter(message, dataset)
@@ -12,6 +14,7 @@ module VCAP::CloudController
       dataset = Service.dataset.
                 join(:service_plans, service_id: Sequel[:services][:id]).
                 join(:service_brokers, id: Sequel[:services][:service_broker_id]).
+                left_join(:spaces, id: Sequel[:service_brokers][:space_id]).
                 where { Sequel[:service_plans][:public] =~ true }.
                 group(Sequel[:services][:id]).
                 select_all(:services)
@@ -54,6 +57,10 @@ module VCAP::CloudController
 
       if message.requested?(:names)
         dataset = dataset.where(Sequel[:services][:label] =~ message.names)
+      end
+
+      if message.requested?(:space_guids)
+        dataset = dataset.where((Sequel[:spaces][:guid] =~ message.space_guids) | (Sequel[:service_plans][:public] =~ true))
       end
 
       if message.requested?(:label_selector)

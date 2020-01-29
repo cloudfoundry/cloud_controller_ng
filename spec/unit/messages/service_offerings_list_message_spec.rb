@@ -10,6 +10,7 @@ module VCAP::CloudController
           'service_broker_guids' => 'one,two',
           'service_broker_names' => 'zhou,qin',
           'names' => 'service_offering1,other_2',
+          'space_guids' => 'space_1,space_2'
         }.with_indifferent_access
       end
 
@@ -22,6 +23,7 @@ module VCAP::CloudController
         expect(message.service_broker_guids).to eq(%w(one two))
         expect(message.service_broker_names).to eq(%w(zhou qin))
         expect(message.names).to eq(%w(service_offering1 other_2))
+        expect(message.space_guids).to eq(%w(space_1 space_2))
       end
 
       it 'converts requested keys to symbols' do
@@ -31,6 +33,7 @@ module VCAP::CloudController
         expect(message.requested?(:names)).to be_truthy
         expect(message.requested?(:service_broker_guids)).to be_truthy
         expect(message.requested?(:service_broker_names)).to be_truthy
+        expect(message.requested?(:space_guids)).to be_truthy
       end
 
       it 'accepts an empty set' do

@@ -513,21 +513,32 @@ RSpec.describe 'V3 service offerings' do
         end
       end
 
-      context 'when filtering on the service broker GUID' do
-        let(:api_call) { lambda { |user_headers| get "/v3/service_offerings?service_broker_guids=#{service_broker_guids.join(',')}", nil, user_headers } }
-        let(:service_broker_guids) { [service_broker.guid, service_offering_3.service_broker.guid] }
+      context 'when filtering by space GUID' do
+        let!(:service_broker_1) { VCAP::CloudController::ServiceBroker.make(space: space) }
+        let!(:service_offering_1) { VCAP::CloudController::Service.make(service_broker: service_broker_1) }
 
-        let(:expected_codes_and_responses) do
-          Hash.new(
-            code: 200,
-            response_objects: [
-              create_offering_json(service_offering_1),
-              create_offering_json(service_offering_2),
-              create_offering_json(service_offering_3),
-            ]
+        let(:space_2) { VCAP::CloudController::Space.make(organization: org) }
+        let(:service_broker_2) { VCAP::CloudController::ServiceBroker.make(space: space_2) }
+        let!(:service_offering_2) { VCAP::CloudController::Service.make(service_broker: service_broker_2) }
+
+        let(:space_3) { VCAP::CloudController::Space.make(organization: org) }
+        let(:service_broker_3) { VCAP::CloudController::ServiceBroker.make(space: space_3) }
+        let!(:service_offering_3) { VCAP::CloudController::Service.make(service_broker: service_broker_3) }
+
+        let!(:public_plan) { VCAP::CloudController::ServicePlan.make(public: true) }
+        let!(:public_service_offering) { public_plan.service }
+
+        let!(:space_guids) { [space.guid, space_2.guid] }
+
+        it 'returns the right offerings' do
+          expect_filtered_service_offerings(
+            "space_guids=#{space_guids.join(',')}",
+            [service_offering_1, service_offering_2, public_service_offering]
           )
         end
+      end
 
+      context 'when filtering on the service broker GUID' do
         let!(:service_broker) { VCAP::CloudController::ServiceBroker.make }
         let!(:service_offering_1) do
           offering = VCAP::CloudController::Service.make(service_broker: service_broker)
@@ -541,6 +552,20 @@ RSpec.describe 'V3 service offerings' do
         end
         let!(:service_offering_3) { VCAP::CloudController::ServicePlan.make.service }
         let!(:service_offering_4) { VCAP::CloudController::ServicePlan.make.service }
+
+        let(:api_call) { lambda { |user_headers| get "/v3/service_offerings?service_broker_guids=#{service_broker_guids.join(',')}", nil, user_headers } }
+        let(:service_broker_guids) { [service_broker.guid, service_offering_3.service_broker.guid] }
+
+        let(:expected_codes_and_responses) do
+          Hash.new(
+            code: 200,
+            response_objects: [
+              create_offering_json(service_offering_1),
+              create_offering_json(service_offering_2),
+              create_offering_json(service_offering_3),
+            ]
+          )
+        end
 
         it_behaves_like 'permissions for list endpoint', COMPLETE_PERMISSIONS
       end

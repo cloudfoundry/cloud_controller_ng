@@ -3,7 +3,7 @@ require 'fetchers/service_offering_list_fetcher'
 require 'messages/service_offerings_list_message'
 
 module VCAP::CloudController
-  RSpec.shared_examples 'filtered service offering fetcher' do
+  RSpec.shared_examples 'filtered service offering fetcher' do |current_method|
     describe 'the `available` filter' do
       let!(:service_offering_available) { ServicePlan.make(public: true, active: true).service }
       let!(:service_offering_unavailable) do
@@ -116,6 +116,40 @@ module VCAP::CloudController
         expect(service_offerings).to contain_exactly(service_offering_1, service_offering_2)
       end
     end
+
+    describe 'the `space_guids` filter' do
+      let(:space_1) { VCAP::CloudController::Space.make }
+      let!(:service_broker_1) { VCAP::CloudController::ServiceBroker.make(space: space_1) }
+      let!(:service_offering_1) { VCAP::CloudController::Service.make(service_broker: service_broker_1) }
+
+      let(:space_2) { VCAP::CloudController::Space.make }
+      let(:service_broker_2) { VCAP::CloudController::ServiceBroker.make(space: space_2) }
+      let!(:service_offering_2) { VCAP::CloudController::Service.make(service_broker: service_broker_2) }
+
+      let(:space_3) { VCAP::CloudController::Space.make }
+      let(:service_broker_3) { VCAP::CloudController::ServiceBroker.make(space: space_3) }
+      let!(:service_offering_3) { VCAP::CloudController::Service.make(service_broker: service_broker_3) }
+
+      let!(:public_plan) { VCAP::CloudController::ServicePlan.make(public: true) }
+      let!(:public_service_offering) { public_plan.service }
+
+      let(:filter_space_guids) { [space_1.guid, space_2.guid] }
+      let(:space_guids) { [space_1.guid] }
+      let(:message) { ServiceOfferingsListMessage.from_params({ space_guids: filter_space_guids.join(',') }.with_indifferent_access) }
+
+      it 'filters the matching service offerings' do
+        case current_method
+        when :fetch
+          expect(service_offerings).to contain_exactly(service_offering_1, service_offering_2, public_service_offering)
+        when :fetch_public
+          expect(service_offerings).to contain_exactly(public_service_offering)
+        when :fetch_visible
+          expect(service_offerings).to contain_exactly(service_offering_1, public_service_offering)
+        else
+          fail('unexpected method')
+        end
+      end
+    end
   end
 
   RSpec.describe ServiceOfferingListFetcher do
@@ -147,7 +181,7 @@ module VCAP::CloudController
       context 'when filters are provided' do
         let(:service_offerings) { ServiceOfferingListFetcher.new.fetch(message).all }
 
-        it_behaves_like 'filtered service offering fetcher'
+        it_behaves_like 'filtered service offering fetcher', :fetch
       end
     end
 
@@ -191,7 +225,7 @@ module VCAP::CloudController
       context 'when filters are provided' do
         let(:service_offerings) { ServiceOfferingListFetcher.new.fetch_public(message).all }
 
-        it_behaves_like 'filtered service offering fetcher'
+        it_behaves_like 'filtered service offering fetcher', :fetch_public
       end
     end
 
@@ -319,9 +353,11 @@ module VCAP::CloudController
       end
 
       context 'when filters are provided' do
-        let(:service_offerings) { ServiceOfferingListFetcher.new.fetch_visible(message, [], []).all }
+        let(:org_guids) { [] }
+        let(:space_guids) { [] }
+        let(:service_offerings) { ServiceOfferingListFetcher.new.fetch_visible(message, org_guids, space_guids).all }
 
-        it_behaves_like 'filtered service offering fetcher'
+        it_behaves_like 'filtered service offering fetcher', :fetch_visible
       end
     end
   end
