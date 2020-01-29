@@ -748,6 +748,7 @@ RSpec.describe BuildsController, type: :controller do
           before do
             allow_user_read_access_for(user, spaces: [space])
             disallow_user_write_access(user, space: space)
+            disallow_user_build_update_access(user)
           end
 
           it 'raises ApiError NotAuthorized' do

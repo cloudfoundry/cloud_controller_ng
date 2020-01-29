@@ -43,7 +43,9 @@ module VCAP::CloudController
 
       context 'when there is no current metadata' do
         context 'when no metadata is specified' do
-          let(:body) do {} end
+          let(:body) do
+            {}
+          end
 
           it 'adds no metadata' do
             expect(message).to be_valid
@@ -79,7 +81,9 @@ module VCAP::CloudController
         end
 
         context 'when no metadata is specified' do
-          let(:body) do {} end
+          let(:body) do
+            {}
+          end
 
           it 'adds no metadata' do
             expect(message).to be_valid
@@ -123,6 +127,45 @@ module VCAP::CloudController
                 { key: 'potato', value: 'idaho' },
                 { key: 'asparagus', value: 'crunchy' },
               ])
+          end
+        end
+      end
+
+      context 'when updating state' do
+        let(:build) { BuildModel.make(:kpack) }
+        context 'when a build was successfully completed' do
+          let(:body) do
+            {
+              state: 'STAGED',
+              lifecycle: {
+                type: 'kpack',
+                data: {
+                  image: 'some-fake-image:tag',
+                }
+              }
+            }
+          end
+
+          it 'updates the state to STAGED' do
+            build_update.update(build, message)
+
+            expect(build.state).to eq('STAGED')
+            expect(build.droplet.docker_receipt_image).to eq('some-fake-image:tag')
+          end
+        end
+
+        context 'when the state is FAILED' do
+          let(:body) do
+            {
+              state: 'FAILED',
+              error: 'failed to stage build'
+            }
+          end
+
+          it 'updates the state to FAILED' do
+            build_update.update(build, message)
+            expect(build.state).to eq 'FAILED'
+            expect(build.error_description).to include 'failed to stage build'
           end
         end
       end

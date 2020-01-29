@@ -43,7 +43,13 @@ module VCAP::CloudController
         let(:body) do
           {
             state: 'STAGED',
-            error: 'error'
+            error: 'error',
+            lifecycle: {
+              type: 'kpack',
+              data: {
+                image: 'some-image:tag',
+              }
+            }
           }
         end
 
@@ -56,7 +62,13 @@ module VCAP::CloudController
         context 'null error' do
           let(:body) do
             {
-              state: 'STAGED'
+              state: 'STAGED',
+              lifecycle: {
+                type: 'kpack',
+                data: {
+                  image: 'some-image:tag',
+                }
+              }
             }
           end
 
@@ -114,6 +126,76 @@ module VCAP::CloudController
           message = BuildUpdateMessage.new(newbody)
 
           expect(message).not_to be_valid
+        end
+
+        context 'kpack lifecycle data omits image reference' do
+          let(:body) do
+            {
+              state: 'STAGED',
+              error: 'error',
+              lifecycle: {
+                type: 'kpack',
+                data: {
+                  image: '',
+                }
+              }
+            }
+          end
+
+          it 'complains' do
+            message = BuildUpdateMessage.new(body)
+            expect(message).not_to be_valid
+
+            expect(message.errors[:lifecycle]).to include("'kpack' lifecycle builds require the resulting image in data")
+          end
+        end
+
+        context 'staged state update omits lifecycle data' do
+          let(:body) do
+            {
+              state: 'STAGED',
+            }
+          end
+
+          it 'complains' do
+            message = BuildUpdateMessage.new(body)
+            expect(message).not_to be_valid
+
+            expect(message.errors[:lifecycle]).to include("'STAGED' builds require lifecycle data")
+          end
+        end
+
+        context 'lifecycle type is invalid' do
+          let(:body) do
+            {
+              state: 'STAGED',
+              lifecycle: {
+                type: 'invalid'
+              }
+            }
+          end
+
+          it 'complains' do
+            message = BuildUpdateMessage.new(body)
+            expect(message).not_to be_valid
+
+            expect(message.errors[:lifecycle]).to include('lifecycle type must be kpack')
+          end
+        end
+
+        context 'build is in a failed state' do
+          let(:body) do
+            {
+              state: 'FAILED',
+              error: 'failed to stage build'
+            }
+          end
+
+          it 'allows failed state message' do
+            message = BuildUpdateMessage.new(body)
+
+            expect(message).to be_valid
+          end
         end
       end
     end

@@ -33,9 +33,18 @@ Name | Type | Description
 ---- | ---- | -----------
 **metadata.labels** _(experimental)_| [_label object_](#labels) | Labels applied to the build.
 **metadata.annotations** _(experimental)_ | [_annotation object_](#annotations) | Annotations applied to the build.
+**state** _(experimental)_ | _string_ | Build status (FAILED, STAGED). **
+**lifecycle.data.image** _(experimental)_ | _string_ | Image reference tag where the built complete image was stored. **
 
 #### Permitted roles
  |
 --- | ---
 Admin |
 Space Developer |
+
+#### Special Permitted roles **
+ |
+--- | ---
+Admin |
+Space Developer |
+Build State Updater |

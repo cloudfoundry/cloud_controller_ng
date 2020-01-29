@@ -72,6 +72,7 @@ module VCAP::CloudController
     state    { VCAP::CloudController::DropletModel::STAGING_STATE }
     app { AppModel.make }
     kpack_lifecycle_data { KpackLifecycleDataModel.make(build: object.save) }
+    package { PackageModel.make(app: app) }
   end
 
   BuildModel.blueprint(:buildpack) do

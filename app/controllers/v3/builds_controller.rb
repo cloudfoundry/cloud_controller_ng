@@ -75,21 +75,18 @@ class BuildsController < ApplicationController
 
   def update
     build = BuildModel.find(guid: hashed_params[:guid])
-    build_not_found! unless build
+    build_not_found! unless build.present?
+
     space = build.package.space
-    unless permission_queryer.can_read_from_space?(space.guid, space.organization.guid) || permission_queryer.can_update_build_state?
-      build_not_found!
-    end
+    build_not_found! unless can_read_build?(space)
 
     if hashed_params[:body].key?(:state)
       unauthorized! unless permission_queryer.can_update_build_state?
-
-      build = update_build_state(build, create_valid_update_message)
     else
       unauthorized! unless permission_queryer.can_write_to_space?(space.guid)
-
-      build = BuildUpdate.new.update(build, create_valid_update_message)
     end
+
+    build = BuildUpdate.new.update(build, create_valid_update_message)
 
     render status: :ok, json: Presenters::V3::BuildPresenter.new(build)
   end
@@ -104,21 +101,14 @@ class BuildsController < ApplicationController
 
   private
 
+  def can_read_build?(space)
+    permission_queryer.can_update_build_state? || permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
+  end
+
   def create_valid_update_message
     message = VCAP::CloudController::BuildUpdateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
     message
-  end
-
-  def update_build_state(build, message)
-    build = if message.state == VCAP::CloudController::BuildModel::FAILED_STATE
-              build.fail_to_stage!('StagerError', message.error)
-            else
-              build.mark_as_staged
-              build.save_changes
-            end
-
-    build
   end
 
   def build_not_found!
