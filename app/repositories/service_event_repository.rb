@@ -21,7 +21,6 @@ module VCAP::CloudController
         :record_user_provided_service_instance_event,
         :record_service_key_event,
         :record_service_purge_event,
-
         to: :with_user_actor,
       )
 
@@ -31,7 +30,6 @@ module VCAP::CloudController
         :record_service_dashboard_client_event,
         :with_service_event,
         :with_service_plan_event,
-
         to: :with_broker_actor,
       )
 

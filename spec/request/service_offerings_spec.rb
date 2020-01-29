@@ -750,7 +750,6 @@ RSpec.describe 'V3 service offerings' do
       let(:email) { Sham.email }
       let(:admin_header) { admin_headers_for(user, email: email) }
 
-
       it 'deletes the service offering and its dependencies' do
         delete "/v3/service_offerings/#{guid}?purge=true", nil, admin_header
 

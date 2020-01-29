@@ -16,16 +16,16 @@ class ServiceOfferingsController < ApplicationController
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     dataset = if !current_user
-      ServiceOfferingListFetcher.new.fetch_public(message)
-    elsif permission_queryer.can_read_globally?
-      ServiceOfferingListFetcher.new.fetch(message)
-    else
-      ServiceOfferingListFetcher.new.fetch_visible(
-        message,
-        permission_queryer.readable_org_guids,
-        permission_queryer.readable_space_scoped_space_guids,
-      )
-    end
+                ServiceOfferingListFetcher.new.fetch_public(message)
+              elsif permission_queryer.can_read_globally?
+                ServiceOfferingListFetcher.new.fetch(message)
+              else
+                ServiceOfferingListFetcher.new.fetch_visible(
+                  message,
+                  permission_queryer.readable_org_guids,
+                  permission_queryer.readable_space_scoped_space_guids,
+                )
+              end
 
     presenter = Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::ServiceOfferingPresenter,
@@ -80,8 +80,6 @@ class ServiceOfferingsController < ApplicationController
       ServiceOfferingDelete.new.delete(service_offering)
       service_event_repository.record_service_event(:delete, service_offering)
     end
-
-
 
     head :no_content
   rescue ServiceOfferingDelete::AssociationNotEmptyError => e
