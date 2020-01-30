@@ -527,6 +527,7 @@ RSpec.describe 'Builds' do
               patch "/v3/builds/#{build_model.guid}", request.to_json, build_state_updater_headers
 
               expect(build_model.reload.droplet.docker_receipt_image).to eq('some-fake-image:tag')
+              expect(build_model.reload.droplet.state).to eq('STAGED')
             end
           end
 

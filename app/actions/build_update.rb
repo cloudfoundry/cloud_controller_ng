@@ -18,7 +18,8 @@ module VCAP::CloudController
           droplet = VCAP::CloudController::DropletCreate.new.create_docker_droplet(build)
           droplet.lock!
           droplet.update(docker_receipt_image: message.lifecycle.dig(:data, :image))
-
+          droplet.mark_as_staged
+          droplet.save_changes
           build.mark_as_staged
           build.save_changes
         end
