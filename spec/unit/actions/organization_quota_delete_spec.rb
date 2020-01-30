@@ -3,12 +3,16 @@ require 'actions/organization_quota_delete'
 
 module VCAP::CloudController
   RSpec.describe OrganizationQuotaDeleteAction do
-    let(:org_quota) { QuotaDefinition.make }
+    subject(:org_quota_delete) { OrganizationQuotaDeleteAction.new }
 
     describe '#delete' do
+      let!(:quota) { QuotaDefinition.make }
       it 'deletes the organization quota' do
-        OrganizationQuotaDeleteAction.new.delete(org_quota)
-        expect { org_quota.refresh }.to raise_error Sequel::Error, 'Record not found'
+        expect {
+          org_quota_delete.delete([quota])
+        }.to change { QuotaDefinition.count }.by(-1)
+
+        expect { quota.refresh }.to raise_error Sequel::Error, 'Record not found'
       end
     end
   end

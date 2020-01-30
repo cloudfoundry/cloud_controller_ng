@@ -502,7 +502,7 @@ module VCAP::CloudController
           h
         end
 
-        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+        it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
       end
 
       context 'when the user is not logged in' do

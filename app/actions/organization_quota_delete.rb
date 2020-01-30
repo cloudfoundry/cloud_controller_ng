@@ -1,9 +1,12 @@
 module VCAP::CloudController
   class OrganizationQuotaDeleteAction
     def delete(organization_quota)
-      QuotaDefinition.db.transaction do
-        organization_quota.destroy
+      organization_quota.each do |org_quota|
+        QuotaDefinition.db.transaction do
+          org_quota.destroy
+        end
       end
+      []
     end
   end
 end
