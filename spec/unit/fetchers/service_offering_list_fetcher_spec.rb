@@ -150,6 +150,45 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe 'the `organization_guids` filter' do
+      let!(:org_1) { VCAP::CloudController::Organization.make }
+      let!(:service_broker_1) { VCAP::CloudController::ServiceBroker.make }
+      let!(:service_offering_1) { VCAP::CloudController::Service.make(service_broker: service_broker_1) }
+      let!(:service_plan_1) { VCAP::CloudController::ServicePlan.make(public: false, service: service_offering_1) }
+      let!(:visibility_1) { VCAP::CloudController::ServicePlanVisibility.make(service_plan: service_plan_1, organization: org_1) }
+
+      let!(:org_2) { VCAP::CloudController::Organization.make }
+      let!(:service_broker_2) { VCAP::CloudController::ServiceBroker.make }
+      let!(:service_offering_2) { VCAP::CloudController::Service.make(service_broker: service_broker_2) }
+      let!(:service_plan_2) { VCAP::CloudController::ServicePlan.make(public: false, service: service_offering_2) }
+      let!(:visibility_2) { VCAP::CloudController::ServicePlanVisibility.make(service_plan: service_plan_2, organization: org_2) }
+
+      let(:space_3) { VCAP::CloudController::Space.make }
+      let(:service_broker_3) { VCAP::CloudController::ServiceBroker.make(space: space_3) }
+      let!(:service_offering_3) { VCAP::CloudController::Service.make(service_broker: service_broker_3) }
+
+      let!(:public_plan) { VCAP::CloudController::ServicePlan.make(public: true) }
+      let!(:public_service_offering) { public_plan.service }
+
+      let(:filter_org_guids) { [org_1.guid, org_2.guid] }
+      let(:org_guids) { [org_1.guid] }
+      let(:message) { ServiceOfferingsListMessage.from_params({ organization_guids: filter_org_guids.join(',') }.with_indifferent_access) }
+
+      it 'filters the matching service offerings' do
+        case current_method
+        when :fetch
+          expect(service_offerings).to contain_exactly(service_offering_1, service_offering_2, public_service_offering)
+        when :fetch_public
+          expect(service_offerings).to contain_exactly(public_service_offering)
+        when :fetch_visible
+          expect(service_offerings.size).to eq(2)
+          expect(service_offerings).to contain_exactly(service_offering_1, public_service_offering)
+        else
+          fail('unexpected method')
+        end
+      end
+    end
   end
 
   RSpec.describe ServiceOfferingListFetcher do

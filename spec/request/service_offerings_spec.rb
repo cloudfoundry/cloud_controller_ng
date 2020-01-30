@@ -538,6 +538,33 @@ RSpec.describe 'V3 service offerings' do
         end
       end
 
+      context 'when filtering by org GUID' do
+        let!(:service_broker_1) { VCAP::CloudController::ServiceBroker.make(space: space) }
+        let!(:service_offering_1) { VCAP::CloudController::Service.make(service_broker: service_broker_1) }
+
+        let(:org_2) { VCAP::CloudController::Organization.make }
+        let(:space_2) { VCAP::CloudController::Space.make(organization: org_2) }
+        let(:service_broker_2) { VCAP::CloudController::ServiceBroker.make(space: space_2) }
+        let!(:service_offering_2) { VCAP::CloudController::Service.make(service_broker: service_broker_2) }
+
+        let(:org_3) { VCAP::CloudController::Organization.make }
+        let(:space_3) { VCAP::CloudController::Space.make(organization: org_3) }
+        let(:service_broker_3) { VCAP::CloudController::ServiceBroker.make(space: space_3) }
+        let!(:service_offering_3) { VCAP::CloudController::Service.make(service_broker: service_broker_3) }
+
+        let!(:public_plan) { VCAP::CloudController::ServicePlan.make(public: true) }
+        let!(:public_service_offering) { public_plan.service }
+
+        let!(:org_guids) { [org.guid, org_2.guid] }
+
+        it 'returns the right offerings' do
+          expect_filtered_service_offerings(
+            "organization_guids=#{org_guids.join(',')}",
+            [service_offering_1, service_offering_2, public_service_offering]
+          )
+        end
+      end
+
       context 'when filtering on the service broker GUID' do
         let!(:service_broker) { VCAP::CloudController::ServiceBroker.make }
         let!(:service_offering_1) do

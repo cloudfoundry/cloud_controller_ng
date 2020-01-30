@@ -5,9 +5,14 @@ module VCAP::CloudController
                 join(:service_brokers, id: Sequel[:services][:service_broker_id]).
                 left_join(:service_plans, service_id: Sequel[:services][:id]).
                 left_join(:spaces, id: Sequel[:service_brokers][:space_id]).
+                left_join(:organizations, id: Sequel[:spaces][:organization_id]).
                 select_all(:services)
 
-      filter(message, dataset)
+      dataset = filter(message, dataset)
+
+      return dataset unless message.requested?(:organization_guids)
+
+      dataset_with_visibilities(dataset, message)
     end
 
     def fetch_public(message)
@@ -15,6 +20,7 @@ module VCAP::CloudController
                 join(:service_plans, service_id: Sequel[:services][:id]).
                 join(:service_brokers, id: Sequel[:services][:service_broker_id]).
                 left_join(:spaces, id: Sequel[:service_brokers][:space_id]).
+                left_join(:organizations, id: Sequel[:spaces][:organization_id]).
                 where { Sequel[:service_plans][:public] =~ true }.
                 group(Sequel[:services][:id]).
                 select_all(:services)
@@ -42,6 +48,20 @@ module VCAP::CloudController
 
     private
 
+    def dataset_with_visibilities(dataset, message)
+      dataset_with_visibilities = Service.dataset.
+                                  join(:service_brokers, id: Sequel[:services][:service_broker_id]).
+                                  join(:service_plans, service_id: Sequel[:services][:id]).
+                                  left_join(:spaces, id: Sequel[:service_brokers][:space_id]).
+                                  join(:service_plan_visibilities, service_plan_id: Sequel[:service_plans][:id]).
+                                  join(:organizations, id: Sequel[:service_plan_visibilities][:organization_id]).
+                                  select_all(:services)
+
+      dataset_with_visibilities = filter(message, dataset_with_visibilities)
+
+      dataset.union(dataset_with_visibilities, alias: :services)
+    end
+
     def filter(message, dataset)
       if message.requested?(:available)
         dataset = dataset.where(Sequel[:services][:active] =~ string_to_boolean(message.available))
@@ -61,6 +81,10 @@ module VCAP::CloudController
 
       if message.requested?(:space_guids)
         dataset = dataset.where((Sequel[:spaces][:guid] =~ message.space_guids) | (Sequel[:service_plans][:public] =~ true))
+      end
+
+      if message.requested?(:organization_guids)
+        dataset = dataset.where((Sequel[:organizations][:guid] =~ message.organization_guids) | (Sequel[:service_plans][:public] =~ true))
       end
 
       if message.requested?(:label_selector)
