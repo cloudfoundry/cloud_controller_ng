@@ -431,7 +431,7 @@ module VCAP::CloudController
           patch "/v3/organization_quotas/#{new_org_quota.guid}", params.to_json, admin_header
 
           expect(last_response).to have_status_code(422)
-          expect(last_response).to include_error_message("Organization Quota name '#{organization_quota.name}' already exists.")
+          expect(last_response).to include_error_message("Organization Quota '#{organization_quota.name}' already exists.")
         end
       end
     end

@@ -96,7 +96,7 @@ module VCAP::CloudController
             it 'raises a human-friendly error' do
               expect {
                 OrganizationQuotasUpdate.update(org_quota, update_message)
-              }.to raise_error(OrganizationQuotasUpdate::Error, "Organization Quota name '#{name}' already exists.")
+              }.to raise_error(OrganizationQuotasUpdate::Error, "Organization Quota '#{name}' already exists.")
             end
           end
         end

@@ -32,7 +32,7 @@ module VCAP::CloudController
       quota
     rescue Sequel::ValidationFailed => e
       if e.errors.on(:name)&.include?(:unique)
-        raise Error.new("Organization Quota name '#{message.name}' already exists.")
+        raise Error.new("Organization Quota '#{message.name}' already exists.")
       end
 
       raise Error.new(e.message)
