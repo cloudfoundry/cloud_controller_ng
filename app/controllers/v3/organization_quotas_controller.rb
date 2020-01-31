@@ -2,6 +2,7 @@ require 'actions/organization_quota_apply'
 require 'actions/organization_quota_delete'
 require 'actions/organization_quotas_create'
 require 'actions/organization_quotas_update'
+require 'jobs/v3/organization_quota_delete_job'
 require 'messages/organization_quota_apply_message'
 require 'messages/organization_quotas_create_message'
 require 'messages/organization_quotas_list_message'
@@ -77,9 +78,7 @@ class OrganizationQuotasController < ApplicationController
       unprocessable!('This quota is applied to one or more organizations. Apply different quotas to those organizations before deleting.')
     end
 
-    delete_action = OrganizationQuotaDeleteAction.new
-
-    deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(QuotaDefinition, organization_quota.guid, delete_action)
+    deletion_job = VCAP::CloudController::Jobs::V3::OrganizationQuotaDeleteJob.new(organization_quota.guid)
     pollable_job = Jobs::Enqueuer.new(deletion_job, queue: Jobs::Queues.generic).enqueue_pollable
 
     url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
