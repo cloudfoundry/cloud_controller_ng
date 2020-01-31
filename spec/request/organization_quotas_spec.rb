@@ -502,10 +502,7 @@ module VCAP::CloudController
       let(:api_call) { lambda { |user_headers| delete "/v3/organization_quotas/#{org_quota.guid}", nil, user_headers } }
       let(:db_check) do
         lambda do
-          last_job = VCAP::CloudController::PollableJobModel.last
-          expect(last_response.headers['Location']).to match(%r(/v3/jobs/#{last_job.guid}))
-
-          expect(last_job.resource_type).to eq('organization_quota')
+          expect(last_response.headers['Location']).to match(%r(http.+/v3/jobs/[a-fA-F0-9-]+))
 
           execute_all_jobs(expected_successes: 1, expected_failures: 0)
         end
