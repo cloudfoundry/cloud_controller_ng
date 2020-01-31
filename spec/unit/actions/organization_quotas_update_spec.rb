@@ -5,8 +5,8 @@ require 'messages/organization_quotas_update_message'
 module VCAP::CloudController
   RSpec.describe OrganizationQuotasUpdate do
     describe 'update' do
-      context 'when updating a organization quota' do
-        let!(:org_quota) { VCAP::CloudController::QuotaDefinition.make(name: 'org_quota_name') }
+      context 'when updating an organization quota' do
+        let!(:org_quota) { VCAP::CloudController::QuotaDefinition.make(name: 'org_quota_name', non_basic_services_allowed: true) }
 
         let(:message) do
           VCAP::CloudController::OrganizationQuotasUpdateMessage.new({
@@ -15,10 +15,10 @@ module VCAP::CloudController
                 total_memory_in_mb: 5120,
                 per_process_memory_in_mb: 1024,
                 total_instances: 8,
-                per_app_tasks: 5
+                per_app_tasks: nil
               },
               services: {
-                paid_services_allowed: true,
+                paid_services_allowed: false,
                 total_service_instances: 10,
                 total_service_keys: 20,
               },
@@ -48,11 +48,11 @@ module VCAP::CloudController
           expect(updated_organization_quota.memory_limit).to eq(5120)
           expect(updated_organization_quota.instance_memory_limit).to eq(1024)
           expect(updated_organization_quota.app_instance_limit).to eq(8)
-          expect(updated_organization_quota.app_task_limit).to eq(5)
+          expect(updated_organization_quota.app_task_limit).to eq(-1)
 
           expect(updated_organization_quota.total_services).to eq(10)
           expect(updated_organization_quota.total_service_keys).to eq(20)
-          expect(updated_organization_quota.non_basic_services_allowed).to eq(true)
+          expect(updated_organization_quota.non_basic_services_allowed).to eq(false)
 
           expect(updated_organization_quota.total_reserved_route_ports).to eq(6)
           expect(updated_organization_quota.total_routes).to eq(8)

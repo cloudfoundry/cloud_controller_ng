@@ -2,28 +2,27 @@ module VCAP::CloudController
   class OrganizationQuotasUpdate
     class Error < ::StandardError
     end
-
     # rubocop:disable Metrics/CyclomaticComplexity
     def self.update(quota, message)
       quota.db.transaction do
         quota.lock!
 
-        quota.name = message.name if message.name
 
-        quota.memory_limit = message.total_memory_in_mb if message.total_memory_in_mb
+        quota.name = message.name if message.requested? :name
 
-        quota.instance_memory_limit = message.per_process_memory_in_mb if message.per_process_memory_in_mb
-        quota.app_instance_limit = message.total_instances if message.total_instances
-        quota.app_task_limit = message.per_app_tasks if message.per_app_tasks
+        quota.memory_limit = memory_limit(message) if message.apps_limits_message.requested? :total_memory_in_mb
+        quota.instance_memory_limit = instance_memory_limit(message) if message.apps_limits_message.requested? :per_process_memory_in_mb
+        quota.app_instance_limit = app_instance_limit(message) if message.apps_limits_message.requested? :total_instances
+        quota.app_task_limit = app_task_limit(message) if message.apps_limits_message.requested? :per_app_tasks
 
-        quota.total_services = message.total_service_instances if message.total_service_instances
-        quota.total_service_keys = message.total_service_keys if message.total_service_keys
-        quota.non_basic_services_allowed = message.paid_services_allowed if message.paid_services_allowed
+        quota.total_services = total_services(message) if message.services_limits_message.requested? :total_service_instances
+        quota.total_service_keys = total_service_keys(message) if message.services_limits_message.requested? :total_service_keys
+        quota.non_basic_services_allowed = non_basic_services_allowed(message) if message.services_limits_message.requested? :paid_services_allowed
 
-        quota.total_reserved_route_ports = message.total_reserved_ports if message.total_reserved_ports
-        quota.total_routes = message.total_routes if message.total_routes
+        quota.total_reserved_route_ports = total_reserved_route_ports(message) if message.routes_limits_message.requested? :total_reserved_ports
+        quota.total_routes = total_routes(message) if message.routes_limits_message.requested? :total_routes
 
-        quota.total_private_domains = message.total_domains if message.total_domains
+        quota.total_private_domains = total_private_domains(message) if message.domains_limits_message.requested? :total_domains
 
         quota.save
       end
@@ -37,5 +36,51 @@ module VCAP::CloudController
 
       raise Error.new(e.message)
     end
+
+    def self.default_if_nil(message_value, default)
+      return message_value.nil? ? default : message_value
+    end
+
+    def self.memory_limit(message)
+      default_if_nil(message.total_memory_in_mb, QuotaDefinition::UNLIMITED)
+    end
+
+    def self.instance_memory_limit(message)
+      default_if_nil(message.per_process_memory_in_mb, QuotaDefinition::UNLIMITED)
+    end
+
+    def self.app_instance_limit(message)
+      default_if_nil(message.total_instances, QuotaDefinition::UNLIMITED)
+    end
+
+    def self.app_task_limit(message)
+      default_if_nil(message.per_app_tasks, QuotaDefinition::UNLIMITED)
+    end
+
+    def self.total_services(message)
+      default_if_nil(message.total_service_instances, QuotaDefinition::UNLIMITED)
+    end
+
+    def self.total_service_keys(message)
+      default_if_nil(message.total_service_keys, QuotaDefinition::UNLIMITED)
+    end
+
+    def self.non_basic_services_allowed(message)
+      default_if_nil(message.paid_services_allowed, QuotaDefinition::DEFAULT_NON_BASIC_SERVICES_ALLOWED)
+    end
+
+    def self.total_reserved_route_ports(message)
+      default_if_nil(message.total_reserved_ports, QuotaDefinition::UNLIMITED)
+    end
+
+    def self.total_routes(message)
+      default_if_nil(message.total_routes, QuotaDefinition::UNLIMITED)
+    end
+
+    def self.total_private_domains(message)
+      default_if_nil(message.total_domains, QuotaDefinition::UNLIMITED)
+    end
+
+
   end
 end

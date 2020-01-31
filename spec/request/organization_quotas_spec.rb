@@ -310,11 +310,11 @@ module VCAP::CloudController
           "apps": {
             "total_memory_in_mb": 5120,
             "per_process_memory_in_mb": 1024,
-            "total_instances": 10,
+            "total_instances": nil,
             "per_app_tasks": 5
           },
           "services": {
-            "paid_services_allowed": true,
+            "paid_services_allowed": false,
             "total_service_instances": 10,
             "total_service_keys": 20,
           },
@@ -337,11 +337,11 @@ module VCAP::CloudController
           apps: {
             total_memory_in_mb: 5120,
             per_process_memory_in_mb: 1024,
-            total_instances: 10,
+            total_instances: nil,
             per_app_tasks: 5
           },
           services: {
-            paid_services_allowed: true,
+            paid_services_allowed: false,
             total_service_instances: 10,
             total_service_keys: 20,
           },
@@ -386,34 +386,47 @@ module VCAP::CloudController
       end
 
       context 'update partial values' do
+        let(:org_quota_to_update) { VCAP::CloudController::QuotaDefinition.make(
+          guid: 'org_quota_to_update_guid',
+          name: 'update-me',
+          memory_limit: 8,
+          non_basic_services_allowed: true)
+        }
         let(:partial_params) do
           {
             "name": 'don-quixote',
             "apps": {
-              "per_app_tasks": 9
+              "per_app_tasks": 9,
+              "total_memory_in_mb": nil,
             },
             "services": {
               "total_service_instances": 14,
+              "paid_services_allowed": false,
             },
           }
         end
 
         before do
-          patch "/v3/organization_quotas/#{organization_quota.guid}", partial_params.to_json, admin_header
+          patch "/v3/organization_quotas/#{org_quota_to_update.guid}", partial_params.to_json, admin_header
         end
 
         it 'only updates the requested fields' do
-          expect(organization_quota.reload.app_task_limit).to eq(9)
-          expect(organization_quota.reload.total_services).to eq(14)
+          expect(last_response).to have_status_code(200)
+          expect(org_quota_to_update.reload.app_task_limit).to eq(9)
+          expect(org_quota_to_update.reload.memory_limit).to eq(-1)
+          expect(org_quota_to_update.reload.total_services).to eq(14)
+          expect(org_quota_to_update.reload.non_basic_services_allowed).to be_falsey
         end
 
         context 'patching with empty params' do
           it 'succeeds without changing the quota' do
-            patch "/v3/organization_quotas/#{organization_quota.guid}", {}, admin_header
+            patch "/v3/organization_quotas/#{org_quota_to_update.guid}", {}, admin_header
 
             expect(last_response).to have_status_code(200)
-            expect(organization_quota.reload.app_task_limit).to eq(9)
-            expect(organization_quota.reload.total_services).to eq(14)
+            expect(org_quota_to_update.reload.app_task_limit).to eq(9)
+            expect(org_quota_to_update.reload.memory_limit).to eq(-1)
+            expect(org_quota_to_update.reload.total_services).to eq(14)
+            expect(org_quota_to_update.reload.non_basic_services_allowed).to be_falsey
           end
         end
       end

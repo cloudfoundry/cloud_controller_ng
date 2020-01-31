@@ -12,9 +12,8 @@ module VCAP::CloudController
       proc { |a| a.requested?(key) }
     end
 
-    register_allowed_keys [:name, :apps, :relationships, :services, :routes, :domains]
+    register_allowed_keys [:name, :apps, :services, :routes, :domains]
     validates_with NoAdditionalKeysValidator
-    validates_with RelationshipValidator, if: key_requested?(:relationships)
 
     validates :name,
       string: true,
@@ -84,13 +83,6 @@ module VCAP::CloudController
     def domains_limits_message
       @domains_limits_message ||= DomainsLimitsMessage.new(domains&.deep_symbolize_keys)
     end
-
-    # Relationships validations
-    delegate :organization_guids, to: :relationships_message
-
-    def relationships_message
-      @relationships_message ||= Relationships.new(relationships&.deep_symbolize_keys)
-    end
   end
 
   class RoutesLimitsMessage < BaseMessage
@@ -115,20 +107,5 @@ module VCAP::CloudController
     validates :total_domains,
       numericality: { only_integer: true, greater_than_or_equal_to: 0 },
       allow_nil: true
-  end
-
-  class Relationships < BaseMessage
-    register_allowed_keys [:organizations]
-
-    validates :organizations, allow_nil: true, to_many_relationship: true
-
-    def initialize(params)
-      super(params)
-    end
-
-    def organization_guids
-      orgs = HashUtils.dig(organizations, :data)
-      orgs ? orgs.map { |org| org[:guid] } : []
-    end
   end
 end
