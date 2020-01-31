@@ -7,7 +7,6 @@ module VCAP::CloudController
       quota.db.transaction do
         quota.lock!
 
-
         quota.name = message.name if message.requested? :name
 
         quota.memory_limit = memory_limit(message) if message.apps_limits_message.requested? :total_memory_in_mb
@@ -80,7 +79,5 @@ module VCAP::CloudController
     def self.total_private_domains(message)
       default_if_nil(message.total_domains, QuotaDefinition::UNLIMITED)
     end
-
-
   end
 end
