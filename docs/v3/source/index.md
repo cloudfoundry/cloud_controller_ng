@@ -286,6 +286,7 @@ includes:
   - experimental_resources/service_offerings/delete
   - experimental_resources/service_plans/header
   - experimental_resources/service_plans/object
+  - experimental_resources/service_plans/get
   - experimental_resources/service_plans/list
   - experimental_resources/sidecars/header
   - experimental_resources/sidecars/object
