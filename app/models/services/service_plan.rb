@@ -45,6 +45,8 @@ module VCAP::CloudController
 
     strip_attributes :name
 
+    alias_method :public?, :public
+
     alias_method :active?, :active
 
     alias_method :broker_provided_id, :unique_id

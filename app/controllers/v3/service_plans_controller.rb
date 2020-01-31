@@ -2,11 +2,14 @@ require 'presenters/v3/service_plan_presenter'
 require 'fetchers/service_plan_list_fetcher'
 
 class ServicePlansController < ApplicationController
+  include ServicePermissions
+
   def show
     not_authenticated! if user_cannot_see_marketplace?
 
-    service_plan = ServicePlan.where(public: true, guid: hashed_params[:guid]).first
+    service_plan = ServicePlan.where(guid: hashed_params[:guid]).first
     service_plan_not_found! if service_plan.nil?
+    service_plan_not_found! unless visible_to_current_user?(service: nil, plan: service_plan)
 
     presenter = Presenters::V3::ServicePlanPresenter.new(service_plan)
     render status: :ok, json: presenter.to_json
@@ -38,13 +41,5 @@ class ServicePlansController < ApplicationController
 
   def service_plan_not_found!
     resource_not_found!(:service_plan)
-  end
-
-  def not_authenticated!
-    raise CloudController::Errors::NotAuthenticated
-  end
-
-  def user_cannot_see_marketplace?
-    !current_user && VCAP::CloudController::FeatureFlag.enabled?(:hide_marketplace_from_unauthenticated_users)
   end
 end

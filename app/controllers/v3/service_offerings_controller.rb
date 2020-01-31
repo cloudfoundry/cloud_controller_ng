@@ -9,6 +9,8 @@ require 'actions/service_offering_delete'
 require 'actions/service_offering_update'
 
 class ServiceOfferingsController < ApplicationController
+  include ServicePermissions
+
   def index
     not_authenticated! if user_cannot_see_marketplace?
 
@@ -41,7 +43,7 @@ class ServiceOfferingsController < ApplicationController
 
     service_offering = ServiceOfferingFetcher.fetch(hashed_params[:guid])
     service_offering_not_found! if service_offering.nil?
-    service_offering_not_found! unless visible_to_current_user?(service_offering)
+    service_offering_not_found! unless visible_to_current_user?(service: service_offering)
 
     presenter = Presenters::V3::ServiceOfferingPresenter.new(service_offering)
     render status: :ok, json: presenter.to_json
@@ -96,45 +98,20 @@ class ServiceOfferingsController < ApplicationController
     %w(show index).include?(action_name) ? false : super
   end
 
-  def visible_in_readable_orgs?(service_offering)
-    return false if !current_user
-
-    ServicePlanVisibilityFetcher.service_plans_visible_in_orgs?(service_offering.service_plans.map(&:guid), permission_queryer.readable_org_guids)
-  end
-
-  def visible_space_scoped?(space)
-    current_user && space && space.has_member?(current_user)
+  def service_offering_not_found!
+    resource_not_found!(:service_offering)
   end
 
   def writable_space_scoped?(space)
     space && space.has_developer?(current_user)
   end
 
-  def service_offering_not_found!
-    resource_not_found!(:service_offering)
-  end
-
-  def not_authenticated!
-    raise CloudController::Errors::NotAuthenticated
-  end
-
-  def user_cannot_see_marketplace?
-    !current_user && VCAP::CloudController::FeatureFlag.enabled?(:hide_marketplace_from_unauthenticated_users)
-  end
-
   def current_user_can_write?(service_offering)
     permission_queryer.can_write_globally? || writable_space_scoped?(service_offering.service_broker.space)
   end
 
-  def visible_to_current_user?(service_offering)
-    permission_queryer.can_read_globally? ||
-      service_offering.public? ||
-      visible_in_readable_orgs?(service_offering) ||
-      visible_space_scoped?(service_offering.service_broker.space)
-  end
-
   def cannot_write!(service_offering)
-    unauthorized! if visible_to_current_user?(service_offering)
+    unauthorized! if visible_to_current_user?(service: service_offering)
     service_offering_not_found!
   end
 end

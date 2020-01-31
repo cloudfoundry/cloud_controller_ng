@@ -56,14 +56,38 @@ RSpec.describe 'V3 service plans' do
     end
 
     context 'when there is a non-public service plan' do
-      let!(:service_plan) { VCAP::CloudController::ServicePlan.make(public: false) }
-      let(:guid) { service_plan.guid }
+      context 'global broker' do
+        let!(:visibility) { VCAP::CloudController::ServicePlanVisibility.make(service_plan: service_plan, organization: org) }
+        let!(:service_plan) { VCAP::CloudController::ServicePlan.make(public: false) }
+        let(:guid) { service_plan.guid }
 
-      let(:expected_codes_and_responses) do
-        Hash.new(code: 404)
+        let(:expected_codes_and_responses) do
+          Hash.new(code: 200, response_objects: create_plan_json(service_plan)).tap do |r|
+            r['unauthenticated'] = { code: 404 }
+            r['no_role'] = { code: 404 }
+          end
+        end
+
+        it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
       end
+      context 'space scoped broker' do
+        let!(:broker) { VCAP::CloudController::ServiceBroker.make(space: space) }
+        let!(:service_offering) { VCAP::CloudController::Service.make(service_broker: broker) }
+        let!(:service_plan) { VCAP::CloudController::ServicePlan.make(public: false, service: service_offering) }
+        let(:guid) { service_plan.guid }
 
-      it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
+        let(:expected_codes_and_responses) do
+          Hash.new(code: 200, response_objects: create_plan_json(service_plan)).tap do |r|
+            r['unauthenticated'] = { code: 404 }
+            r['no_role'] = { code: 404 }
+            r['org_billing_manager'] = { code: 404 }
+            r['org_auditor'] = { code: 404 }
+            r['org_manager'] = { code: 404 }
+          end
+        end
+
+        it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
+      end
     end
   end
 
