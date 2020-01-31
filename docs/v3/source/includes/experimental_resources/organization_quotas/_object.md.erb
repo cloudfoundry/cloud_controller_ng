@@ -15,17 +15,17 @@ Name | Type | Description|
 | **name**  | _string_ | Name of the quota. |
 | **apps** | _object_ | Quotas that affect applications and application sub-resources. |
 | **apps.per_process_memory_in_mb** | _integer_ or `null` | Maximum memory for a single process or task. |
-| **apps.total_memory_in_mb** | _integer_ or `null` | Total memory of all the started processes and running tasks in an organization. |
-| **apps.total_instances** | _integer_ or `nul` | Total instances of all the started processes in an organization. |
-| **apps.per_app_tasks** | _integer_ or `nul` | Maximum number of running tasks in a single application. |
+| **apps.total_memory_in_mb** | _integer_ or `null` | Total memory allowed for all the started processes and running tasks in an organization. |
+| **apps.total_instances** | _integer_ or `null` | Total instances of all the started processes allowed in an organization. |
+| **apps.per_app_tasks** | _integer_ or `null` | Maximum number of running tasks in a single application. |
 | **services** | _object_ | Quotas that affect services. |
-| **services.paid_services_allowed** | _boolean_ | If instances of paid service plans can be created. |
-| **services.total_service_instances** | _integer_ or `nul` | Total number of service instances in an organization. |
-| **services.total_service_keys** | _integer_ or `null` | Total number of service keys in an organization. |
+| **services.paid_services_allowed** | _boolean_ | Specifies whether instances of paid service plans can be created. |
+| **services.total_service_instances** | _integer_ or `null` | Total number of service instances allowed in an organization. |
+| **services.total_service_keys** | _integer_ or `null` | Total number of service keys allowed in an organization. |
 | **routes** | _object_ | Quotas that affect routes. |
-| **routes.total_routes** | _integer_ or `null` | Total number of routes that an organization can have. |
-| **routes.total_reserved_ports** | _integer_ or `null` | Total number of ports that all routes in an organization can reserve. |
+| **routes.total_routes** | _integer_ or `null` | Total number of routes allowed in an organization. |
+| **routes.total_reserved_ports** | _integer_ or `null` | Total number of ports that are reservable by routes in an organization. |
 | **domains** | _object_ | Quotas that affect domains. |
 | **domains.total_domains** | _integer_ or `null` | Total number of domains that can be scoped to an organization. |
-| **relationships.organizations** | [_to-many relationship_](#to-many-relationships) | A relationship to the organizations the quota applies to. |
+| **relationships.organizations** | [_to-many relationship_](#to-many-relationships) | A relationship to the organizations where the quota is applied. |
 | **links** | [_links object_](#links) | Links to related resources. |
