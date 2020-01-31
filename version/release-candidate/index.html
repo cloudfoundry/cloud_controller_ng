@@ -18471,16 +18471,16 @@ Apply manifest will only trigger an immediate update for the &ldquo;disk_quota&r
 <tr>
 <td><strong>apps.total_memory_in_mb</strong></td>
 <td><em>integer</em> or <code class="prettyprint">null</code></td>
-<td>Total memory of all the started processes and running tasks in an organization.</td>
+<td>Total memory allowed for all the started processes and running tasks in an organization.</td>
 </tr>
 <tr>
 <td><strong>apps.total_instances</strong></td>
-<td><em>integer</em> or <code class="prettyprint">nul</code></td>
-<td>Total instances of all the started processes in an organization.</td>
+<td><em>integer</em> or <code class="prettyprint">null</code></td>
+<td>Total instances of all the started processes allowed in an organization.</td>
 </tr>
 <tr>
 <td><strong>apps.per_app_tasks</strong></td>
-<td><em>integer</em> or <code class="prettyprint">nul</code></td>
+<td><em>integer</em> or <code class="prettyprint">null</code></td>
 <td>Maximum number of running tasks in a single application.</td>
 </tr>
 <tr>
@@ -18491,17 +18491,17 @@ Apply manifest will only trigger an immediate update for the &ldquo;disk_quota&r
 <tr>
 <td><strong>services.paid_services_allowed</strong></td>
 <td><em>boolean</em></td>
-<td>If instances of paid service plans can be created.</td>
+<td>Specifies whether instances of paid service plans can be created.</td>
 </tr>
 <tr>
 <td><strong>services.total_service_instances</strong></td>
-<td><em>integer</em> or <code class="prettyprint">nul</code></td>
-<td>Total number of service instances in an organization.</td>
+<td><em>integer</em> or <code class="prettyprint">null</code></td>
+<td>Total number of service instances allowed in an organization.</td>
 </tr>
 <tr>
 <td><strong>services.total_service_keys</strong></td>
 <td><em>integer</em> or <code class="prettyprint">null</code></td>
-<td>Total number of service keys in an organization.</td>
+<td>Total number of service keys allowed in an organization.</td>
 </tr>
 <tr>
 <td><strong>routes</strong></td>
@@ -18511,12 +18511,12 @@ Apply manifest will only trigger an immediate update for the &ldquo;disk_quota&r
 <tr>
 <td><strong>routes.total_routes</strong></td>
 <td><em>integer</em> or <code class="prettyprint">null</code></td>
-<td>Total number of routes that an organization can have.</td>
+<td>Total number of routes allowed in an organization.</td>
 </tr>
 <tr>
 <td><strong>routes.total_reserved_ports</strong></td>
 <td><em>integer</em> or <code class="prettyprint">null</code></td>
-<td>Total number of ports that all routes in an organization can reserve.</td>
+<td>Total number of ports that are reservable by routes in an organization.</td>
 </tr>
 <tr>
 <td><strong>domains</strong></td>
@@ -18531,7 +18531,7 @@ Apply manifest will only trigger an immediate update for the &ldquo;disk_quota&r
 <tr>
 <td><strong>relationships.organizations</strong></td>
 <td><a href="#to-many-relationships"><em>to-many relationship</em></a></td>
-<td>A relationship to the organizations the quota applies to.</td>
+<td>A relationship to the organizations where the quota is applied.</td>
 </tr>
 <tr>
 <td><strong>links</strong></td>
@@ -18641,13 +18641,13 @@ Apply manifest will only trigger an immediate update for the &ldquo;disk_quota&r
 <tr>
 <td><strong>apps.total_memory_in_mb</strong></td>
 <td><em>integer</em></td>
-<td>Total memory of all the started processes and running tasks in an organization.</td>
+<td>Total memory allowed for all the started processes and running tasks in an organization.</td>
 <td>null (infinite)</td>
 </tr>
 <tr>
 <td><strong>apps.total_instances</strong></td>
 <td><em>integer</em></td>
-<td>Total instances of all the started processes in an organization.</td>
+<td>Total instances of all the started processes allowed in an organization.</td>
 <td>null (infinite)</td>
 </tr>
 <tr>
@@ -18665,19 +18665,19 @@ Apply manifest will only trigger an immediate update for the &ldquo;disk_quota&r
 <tr>
 <td><strong>services.paid_services_allowed</strong></td>
 <td><em>boolean</em></td>
-<td>If instances of paid service plans can be created.</td>
+<td>Specifies whether instances of paid service plans can be created.</td>
 <td>true</td>
 </tr>
 <tr>
 <td><strong>services.total_service_instances</strong></td>
 <td><em>integer</em></td>
-<td>Total number of service instances in an organization.</td>
+<td>Total number of service instances allowed in an organization.</td>
 <td>null (infinite)</td>
 </tr>
 <tr>
 <td><strong>services.total_service_keys</strong></td>
 <td><em>integer</em></td>
-<td>Total number of service keys in an organization.</td>
+<td>Total number of service keys allowed in an organization.</td>
 <td>null (infinite)</td>
 </tr>
 <tr>
@@ -18689,13 +18689,13 @@ Apply manifest will only trigger an immediate update for the &ldquo;disk_quota&r
 <tr>
 <td><strong>routes.total_routes</strong></td>
 <td><em>integer</em></td>
-<td>Total number of routes that an organization can have.</td>
+<td>Total number of routes allowed in an organization.</td>
 <td>null (infinite)</td>
 </tr>
 <tr>
 <td><strong>routes.total_reserved_ports</strong></td>
 <td><em>integer</em></td>
-<td>Total number of ports that all routes in an organization can reserve.</td>
+<td>Total number of ports that are reservable by routes in an organization.</td>
 <td>null (infinite)</td>
 </tr>
 <tr>
@@ -18713,7 +18713,7 @@ Apply manifest will only trigger an immediate update for the &ldquo;disk_quota&r
 <tr>
 <td><strong>relationships.organizations</strong></td>
 <td><a href="#to-many-relationships"><em>to-many relationship</em></a></td>
-<td>A relationship to the organizations the quota applies to.</td>
+<td>A relationship to the organizations where the quota is applied.</td>
 <td>[]</td>
 </tr>
 </tbody></table>
@@ -22968,12 +22968,12 @@ Apply manifest will only trigger an immediate update for the &ldquo;disk_quota&r
 <tr>
 <td><strong>apps.total_memory_in_mb</strong></td>
 <td><em>integer</em> or <code class="prettyprint">null</code></td>
-<td>Total memory of all the started processes and running tasks that a space can have.</td>
+<td>Total memory allowed for all the started processes and running tasks in a space.</td>
 </tr>
 <tr>
 <td><strong>apps.total_instances</strong></td>
 <td><em>integer</em> or <code class="prettyprint">null</code></td>
-<td>Total instances of all the started processes that a space can have.</td>
+<td>Total instances of all the started processes allowed in a space.</td>
 </tr>
 <tr>
 <td><strong>apps.per_app_tasks</strong></td>
@@ -22988,17 +22988,17 @@ Apply manifest will only trigger an immediate update for the &ldquo;disk_quota&r
 <tr>
 <td><strong>services.paid_services_allowed</strong></td>
 <td><em>boolean</em></td>
-<td>If instances of paid service plans can be created.</td>
+<td>Specifies whether instances of paid service plans can be created.</td>
 </tr>
 <tr>
 <td><strong>services.total_service_instances</strong></td>
 <td><em>integer</em> or <code class="prettyprint">null</code></td>
-<td>Total number of service instances that a space can have.</td>
+<td>Total number of service instances allowed in a space.</td>
 </tr>
 <tr>
 <td><strong>services.total_service_keys</strong></td>
 <td><em>integer</em> or <code class="prettyprint">null</code></td>
-<td>Total number of service keys that a space can have.</td>
+<td>Total number of service keys allowed in a space.</td>
 </tr>
 <tr>
 <td><strong>routes</strong></td>
@@ -23008,12 +23008,12 @@ Apply manifest will only trigger an immediate update for the &ldquo;disk_quota&r
 <tr>
 <td><strong>routes.total_routes</strong></td>
 <td><em>integer</em> or <code class="prettyprint">null</code></td>
-<td>Total number of routes that a space can have.</td>
+<td>Total number of routes allowed in a space.</td>
 </tr>
 <tr>
 <td><strong>routes.total_reserved_ports</strong></td>
 <td><em>integer</em> or <code class="prettyprint">null</code></td>
-<td>Total number of ports that can be reserved by routes in a space.</td>
+<td>Total number of ports that are reservable by routes in a space.</td>
 </tr>
 <tr>
 <td><strong>relationships.organization</strong></td>
@@ -23023,7 +23023,7 @@ Apply manifest will only trigger an immediate update for the &ldquo;disk_quota&r
 <tr>
 <td><strong>relationships.spaces</strong></td>
 <td><a href="#to-many-relationships"><em>to-many relationship</em></a></td>
-<td>A relationship to the spaces to which the quota is applied.</td>
+<td>A relationship to the spaces where the quota is applied.</td>
 </tr>
 <tr>
 <td><strong>links</strong></td>
@@ -23123,7 +23123,7 @@ Apply manifest will only trigger an immediate update for the &ldquo;disk_quota&r
 <tr>
 <td><strong>relationships.organization</strong></td>
 <td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
-<td>A relationship to the organization to which the quota belongs.</td>
+<td>A relationship to the organization where the quota belongs.</td>
 </tr>
 </tbody></table>
 
@@ -23152,13 +23152,13 @@ Apply manifest will only trigger an immediate update for the &ldquo;disk_quota&r
 <tr>
 <td><strong>apps.total_memory_in_mb</strong></td>
 <td><em>integer</em></td>
-<td>Total memory of all the started processes and running tasks in a space.</td>
+<td>Total memory allowed for all the started processes and running tasks in a space.</td>
 <td>null (infinite)</td>
 </tr>
 <tr>
 <td><strong>apps.total_instances</strong></td>
 <td><em>integer</em></td>
-<td>Total instances of all the started processes in a space.</td>
+<td>Total instances of all the started processes allowed in a space.</td>
 <td>null (infinite)</td>
 </tr>
 <tr>
@@ -23176,19 +23176,19 @@ Apply manifest will only trigger an immediate update for the &ldquo;disk_quota&r
 <tr>
 <td><strong>services.paid_services_allowed</strong></td>
 <td><em>boolean</em></td>
-<td>If instances of paid service plans can be created.</td>
+<td>Specifies whether instances of paid service plans can be created.</td>
 <td>true</td>
 </tr>
 <tr>
 <td><strong>services.total_service_instances</strong></td>
 <td><em>integer</em></td>
-<td>Total number of service instances in a space.</td>
+<td>Total number of service instances allowed in a space.</td>
 <td>null (infinite)</td>
 </tr>
 <tr>
 <td><strong>services.total_service_keys</strong></td>
 <td><em>integer</em></td>
-<td>Total number of service keys in a space.</td>
+<td>Total number of service keys allowed in a space.</td>
 <td>null (infinite)</td>
 </tr>
 <tr>
@@ -23200,19 +23200,19 @@ Apply manifest will only trigger an immediate update for the &ldquo;disk_quota&r
 <tr>
 <td><strong>routes.total_routes</strong></td>
 <td><em>integer</em></td>
-<td>Total number of routes that a space can have.</td>
+<td>Total number of routes allowed in a space.</td>
 <td>null (infinite)</td>
 </tr>
 <tr>
 <td><strong>routes.total_reserved_ports</strong></td>
 <td><em>integer</em></td>
-<td>Total number of ports that all routes in a space can reserve.</td>
+<td>Total number of ports that are reservable by routes in a space.</td>
 <td>null (infinite)</td>
 </tr>
 <tr>
 <td><strong>relationships.spaces</strong></td>
 <td><a href="#to-many-relationships"><em>to-many relationship</em></a></td>
-<td>A relationship to the spaces to which the quota is applied.</td>
+<td>A relationship to the spaces where the quota is applied.</td>
 <td></td>
 </tr>
 </tbody></table>
