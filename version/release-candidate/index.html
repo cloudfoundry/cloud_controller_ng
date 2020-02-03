@@ -20430,6 +20430,12 @@ Deployed revisions are revisions that are linked to started processes in the app
       </span><span class="p">}</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"dev"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
   </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_brokers/dde5ad2a-d8f4-44dc-a56f-0452d744f1c3"</span><span class="w">
@@ -20440,12 +20446,6 @@ Deployed revisions are revisions that are linked to started processes in the app
     </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576"</span><span class="w">
     </span><span class="p">}</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"dev"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
   </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
 
@@ -20499,11 +20499,6 @@ Deployed revisions are revisions that are linked to started processes in the app
 <td>The space the service broker is restricted to. Omitted for globally available service brokers.</td>
 </tr>
 <tr>
-<td><strong>links</strong></td>
-<td><a href="#links"><em>links object</em></a></td>
-<td>Links to related resources.</td>
-</tr>
-<tr>
 <td><strong>metadata.labels</strong> <em>(experimental)</em></td>
 <td><a href="#links"><em>label object</em></a></td>
 <td>Labels applied to the service broker.</td>
@@ -20512,6 +20507,11 @@ Deployed revisions are revisions that are linked to started processes in the app
 <td><strong>metadata.annotations</strong> <em>(experimental)</em></td>
 <td><a href="#links"><em>annotation object</em></a></td>
 <td>Annotations added to the service broker.</td>
+</tr>
+<tr>
+<td><strong>links</strong></td>
+<td><a href="#links"><em>links object</em></a></td>
+<td>Links to related resources.</td>
 </tr>
 </tbody></table>
 <h3 id="create-a-service-broker">Create a service broker</h3>
@@ -20700,6 +20700,12 @@ Deployed revisions are revisions that are linked to started processes in the app
       </span><span class="p">}</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"dev"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
   </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_brokers/dde5ad2a-d8f4-44dc-a56f-0452d744f1c3"</span><span class="w">
@@ -20710,12 +20716,6 @@ Deployed revisions are revisions that are linked to started processes in the app
     </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576"</span><span class="w">
     </span><span class="p">}</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"dev"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
   </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
 
@@ -20784,6 +20784,10 @@ Deployed revisions are revisions that are linked to started processes in the app
       </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2015-11-13T17:02:56Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-06-08T16:41:26Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w"> </span><span class="p">,</span><span class="w">
+      </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+        </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+      </span><span class="p">},</span><span class="w">
       </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
           </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_brokers/dde5ad2a-d8f4-44dc-a56f-0452d744f1c3"</span><span class="w">
@@ -20791,10 +20795,6 @@ Deployed revisions are revisions that are linked to started processes in the app
         </span><span class="nt">"service_offerings"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
           </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_offerings?service_broker_guids=dde5ad2a-d8f4-44dc-a56f-0452d744f1c3"</span><span class="w">
         </span><span class="p">}</span><span class="w">
-      </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
-        </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
       </span><span class="p">}</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="p">{</span><span class="w">
@@ -20812,6 +20812,10 @@ Deployed revisions are revisions that are linked to started processes in the app
           </span><span class="p">}</span><span class="w">
         </span><span class="p">}</span><span class="w">
       </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+        </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+      </span><span class="p">},</span><span class="w">
       </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
           </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_brokers/7aa37bad-6ccb-4ef9-ba48-9ce3a91b2b62"</span><span class="w">
@@ -20822,10 +20826,6 @@ Deployed revisions are revisions that are linked to started processes in the app
         </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
           </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/spaces/2f35885d-0c9d-4423-83ad-fd05066f8576"</span><span class="w">
         </span><span class="p">}</span><span class="w">
-      </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
-        </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
       </span><span class="p">}</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">]</span><span class="w">
@@ -21188,17 +21188,6 @@ They are only visible to members of that Space.</p>
       </span><span class="nt">"bindings_retrievable"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_offerings/bf7eb420-11e5-11ea-b7db-4b5d5e7976a"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"service_plans"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_plans?service_offering_guids=bf7eb420-11e5-11ea-b7db-4b5d5e7976a"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"service_broker"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_brokers/13c60e38-11e7-11ea-9106-33ee3c5bd4d7"</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-  </span><span class="p">},</span><span class="w">
   </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"service_broker"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -21210,6 +21199,17 @@ They are only visible to members of that Space.</p>
   </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
     </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_offerings/bf7eb420-11e5-11ea-b7db-4b5d5e7976a"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"service_plans"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_plans?service_offering_guids=bf7eb420-11e5-11ea-b7db-4b5d5e7976a"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"service_broker"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_brokers/13c60e38-11e7-11ea-9106-33ee3c5bd4d7"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
   </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
 
@@ -21309,11 +21309,6 @@ They are only visible to members of that Space.</p>
 <td>The Service Broker that provides this Service Offering.</td>
 </tr>
 <tr>
-<td><strong>links</strong></td>
-<td><a href="#links"><em>links object</em></a></td>
-<td>Links to related resources.</td>
-</tr>
-<tr>
 <td><strong>metadata.labels</strong> <em>(experimental)</em></td>
 <td><a href="#links"><em>label object</em></a></td>
 <td>Labels applied to the Service Offering.</td>
@@ -21322,6 +21317,11 @@ They are only visible to members of that Space.</p>
 <td><strong>metadata.annotations</strong> <em>(experimental)</em></td>
 <td><a href="#links"><em>annotation object</em></a></td>
 <td>Annotations added to the Service Offering.</td>
+</tr>
+<tr>
+<td><strong>links</strong></td>
+<td><a href="#links"><em>links object</em></a></td>
+<td>Links to related resources.</td>
 </tr>
 </tbody></table>
 <h3 id="get-a-service-offering">Get a Service Offering</h3>
@@ -21358,17 +21358,6 @@ They are only visible to members of that Space.</p>
       </span><span class="nt">"bindings_retrievable"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_offerings/bf7eb420-11e5-11ea-b7db-4b5d5e7976a"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"service_plans"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_plans?service_offering_guids=bf7eb420-11e5-11ea-b7db-4b5d5e7976a"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"service_broker"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_brokers/13c60e38-11e7-11ea-9106-33ee3c5bd4d7"</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-  </span><span class="p">},</span><span class="w">
   </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"service_broker"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -21380,6 +21369,17 @@ They are only visible to members of that Space.</p>
   </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
     </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_offerings/bf7eb420-11e5-11ea-b7db-4b5d5e7976a"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"service_plans"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_plans?service_offering_guids=bf7eb420-11e5-11ea-b7db-4b5d5e7976a"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"service_broker"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_brokers/13c60e38-11e7-11ea-9106-33ee3c5bd4d7"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
   </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
 
@@ -21456,17 +21456,6 @@ They are only visible to members of that Space.</p>
           </span><span class="nt">"bindings_retrievable"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
         </span><span class="p">}</span><span class="w">
       </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_offerings/bf7eb420-11e5-11ea-b7db-4b5d5e7976a"</span><span class="w">
-        </span><span class="p">},</span><span class="w">
-        </span><span class="nt">"service_plans"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_plans?service_offering_guids=bf7eb420-11e5-11ea-b7db-4b5d5e7976a"</span><span class="w">
-        </span><span class="p">},</span><span class="w">
-        </span><span class="nt">"service_broker"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_brokers/13c60e38-11e7-11ea-9106-33ee3c5bd4d7"</span><span class="w">
-        </span><span class="p">}</span><span class="w">
-      </span><span class="p">},</span><span class="w">
       </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"service_broker"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
           </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -21478,6 +21467,17 @@ They are only visible to members of that Space.</p>
       </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
         </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_offerings/bf7eb420-11e5-11ea-b7db-4b5d5e7976a"</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nt">"service_plans"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_plans?service_offering_guids=bf7eb420-11e5-11ea-b7db-4b5d5e7976a"</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nt">"service_broker"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_brokers/13c60e38-11e7-11ea-9106-33ee3c5bd4d7"</span><span class="w">
+        </span><span class="p">}</span><span class="w">
       </span><span class="p">}</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="p">{</span><span class="w">
@@ -21502,17 +21502,6 @@ They are only visible to members of that Space.</p>
           </span><span class="nt">"bindings_retrievable"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
         </span><span class="p">}</span><span class="w">
       </span><span class="p">},</span><span class="w">
-      </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_offerings/20e6cd62-12bb-11ea-90d1-7bfec2c75bcd"</span><span class="w">
-        </span><span class="p">},</span><span class="w">
-        </span><span class="nt">"service_plans"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_plans?service_offering_guids=20e6cd62-12bb-11ea-90d1-7bfec2c75bcd"</span><span class="w">
-        </span><span class="p">},</span><span class="w">
-        </span><span class="nt">"service_broker"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_brokers/13c60e38-11e7-11ea-9106-33ee3c5bd4d7"</span><span class="w">
-        </span><span class="p">}</span><span class="w">
-      </span><span class="p">},</span><span class="w">
       </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"service_broker"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
           </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -21524,6 +21513,17 @@ They are only visible to members of that Space.</p>
       </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
         </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_offerings/20e6cd62-12bb-11ea-90d1-7bfec2c75bcd"</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nt">"service_plans"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_plans?service_offering_guids=20e6cd62-12bb-11ea-90d1-7bfec2c75bcd"</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nt">"service_broker"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_brokers/13c60e38-11e7-11ea-9106-33ee3c5bd4d7"</span><span class="w">
+        </span><span class="p">}</span><span class="w">
       </span><span class="p">}</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">]</span><span class="w">
@@ -21638,17 +21638,6 @@ They are only visible to members of that Space.</p>
       </span><span class="nt">"bindings_retrievable"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_offerings/bf7eb420-11e5-11ea-b7db-4b5d5e7976a"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"service_plans"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_plans?service_offering_guids=bf7eb420-11e5-11ea-b7db-4b5d5e7976a"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"service_broker"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_brokers/13c60e38-11e7-11ea-9106-33ee3c5bd4d7"</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-  </span><span class="p">},</span><span class="w">
   </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"service_broker"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -21660,6 +21649,17 @@ They are only visible to members of that Space.</p>
   </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
     </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_offerings/bf7eb420-11e5-11ea-b7db-4b5d5e7976a"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"service_plans"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_plans?service_offering_guids=bf7eb420-11e5-11ea-b7db-4b5d5e7976a"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"service_broker"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_brokers/13c60e38-11e7-11ea-9106-33ee3c5bd4d7"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
   </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
 
@@ -21777,6 +21777,10 @@ Service Offerings and Service Plans are created and updated when a Service Broke
   </span><span class="nt">"free"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
   </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-11-28T13:44:02Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-11-28T13:44:02Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"maintenance_info"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1.0.0+dev4"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Database version 7.8.0"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
   </span><span class="nt">"broker_catalog"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"db730a8c-11e5-11ea-838a-0f4fff3b1cfb"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -21860,6 +21864,21 @@ Service Offerings and Service Plans are created and updated when a Service Broke
 <td>The time with zone when the object was last updated.</td>
 </tr>
 <tr>
+<td><strong>maintenance_info</strong></td>
+<td><em>object</em></td>
+<td>Maintenance information for a Service Instance which is provisioned using this Service Plan.</td>
+</tr>
+<tr>
+<td><strong>maintenance_info.version</strong></td>
+<td><em>semver</em></td>
+<td>Maintenance information about the version of this Service Plan. This field is used to determine whether a maintenance update is available for a Service Instance.</td>
+</tr>
+<tr>
+<td><strong>maintenance_info.description</strong></td>
+<td><em>string</em></td>
+<td>Description of the impact of this maintenance update, for example, important version changes, configuration changes, default value changes, etc.</td>
+</tr>
+<tr>
 <td><strong>broker_catalog</strong></td>
 <td><em>object</em></td>
 <td>This object contains information obtained from the Service Broker Catalog.</td>
@@ -21941,6 +21960,10 @@ Service Offerings and Service Plans are created and updated when a Service Broke
   </span><span class="nt">"free"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
   </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-11-28T13:44:02Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-11-28T13:44:02Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"maintenance_info"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1.0.0+dev4"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Database version 7.8.0"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
   </span><span class="nt">"broker_catalog"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"db730a8c-11e5-11ea-838a-0f4fff3b1cfb"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -22033,6 +22056,10 @@ Service Offerings and Service Plans are created and updated when a Service Broke
       </span><span class="nt">"free"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
       </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-11-28T13:44:02Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-11-28T13:44:02Z"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"maintenance_info"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1.0.0+dev4"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Database version 7.8.0"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
       </span><span class="nt">"broker_catalog"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"db730a8c-11e5-11ea-838a-0f4fff3b1cfb"</span><span class="p">,</span><span class="w">
         </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -22073,6 +22100,7 @@ Service Offerings and Service Plans are created and updated when a Service Broke
       </span><span class="nt">"free"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
       </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-11-29T16:44:02Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-11-29T16:44:02Z"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"maintenance_info"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
       </span><span class="nt">"broker_catalog"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3cb11822-12bb-11ea-beb1-a350dc7453b9"</span><span class="p">,</span><span class="w">
         </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
