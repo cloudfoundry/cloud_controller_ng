@@ -7,6 +7,7 @@ require 'messages/service_offering_update_message'
 require 'messages/purge_message'
 require 'actions/service_offering_delete'
 require 'actions/service_offering_update'
+require 'controllers/v3/mixins/service_permissions'
 
 class ServiceOfferingsController < ApplicationController
   include ServicePermissions

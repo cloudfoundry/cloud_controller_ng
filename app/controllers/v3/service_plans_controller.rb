@@ -1,5 +1,6 @@
 require 'presenters/v3/service_plan_presenter'
 require 'fetchers/service_plan_list_fetcher'
+require 'controllers/v3/mixins/service_permissions'
 
 class ServicePlansController < ApplicationController
   include ServicePermissions
