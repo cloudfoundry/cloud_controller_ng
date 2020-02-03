@@ -21,6 +21,9 @@ module VCAP::CloudController
     one_to_many :labels, class: 'VCAP::CloudController::TaskLabelModel', key: :resource_guid, primary_key: :guid
     one_to_many :annotations, class: 'VCAP::CloudController::TaskAnnotationModel', key: :resource_guid, primary_key: :guid
 
+    add_association_dependencies labels: :destroy
+    add_association_dependencies annotations: :destroy
+
     set_field_as_encrypted :environment_variables, column: :encrypted_environment_variables
     serializes_via_json :environment_variables
 
@@ -39,11 +42,6 @@ module VCAP::CloudController
     def after_destroy
       super
       create_stop_event unless terminal_state?
-    end
-
-    def before_destroy
-      LabelDelete.delete(labels)
-      AnnotationDelete.delete(annotations)
     end
 
     private

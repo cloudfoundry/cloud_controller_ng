@@ -25,6 +25,9 @@ module VCAP::CloudController
     one_to_many :labels, class: 'VCAP::CloudController::PackageLabelModel', key: :resource_guid, primary_key: :guid
     one_to_many :annotations, class: 'VCAP::CloudController::PackageAnnotationModel', key: :resource_guid, primary_key: :guid
 
+    add_association_dependencies labels: :destroy
+    add_association_dependencies annotations: :destroy
+
     set_field_as_encrypted :docker_password, salt: :docker_password_salt, column: :encrypted_docker_password
 
     def validate

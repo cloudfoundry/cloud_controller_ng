@@ -546,5 +546,14 @@ RSpec.describe 'Stacks Request' do
       expect(last_response.status).to eq(204)
       expect(stack).to_not exist
     end
+
+    context 'deleting metadata' do
+      it_behaves_like 'resource with metadata' do
+        let(:resource) { stack }
+        let(:api_call) do
+          -> { delete "/v3/stacks/#{resource.guid}", nil, headers }
+        end
+      end
+    end
   end
 end

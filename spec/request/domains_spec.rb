@@ -1399,6 +1399,15 @@ RSpec.describe 'Domains Request' do
       end
 
       it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
+
+      context 'deleting metadata' do
+        it_behaves_like 'resource with metadata' do
+          let(:resource) { shared_domain }
+          let(:api_call) do
+            -> { delete "/v3/domains/#{resource.guid}", nil, admin_headers }
+          end
+        end
+      end
     end
 
     describe 'when deleting a private domain' do

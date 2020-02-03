@@ -125,6 +125,8 @@ module VCAP::CloudController
     one_to_many :route_mappings, class: 'VCAP::CloudController::RouteMappingModel', primary_key: [:app_guid, :type], key: [:app_guid, :process_type]
 
     add_association_dependencies events: :delete
+    add_association_dependencies labels: :destroy
+    add_association_dependencies annotations: :destroy
 
     export_attributes :name, :production, :space_guid, :stack_guid, :buildpack,
                       :detected_buildpack, :detected_buildpack_guid, :environment_json, :memory, :instances, :disk_quota,
@@ -368,8 +370,6 @@ module VCAP::CloudController
     def before_destroy
       lock!
       self.state = 'STOPPED'
-      LabelDelete.delete(labels)
-      AnnotationDelete.delete(annotations)
       super
     end
 

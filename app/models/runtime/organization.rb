@@ -190,6 +190,12 @@ module VCAP::CloudController
     def before_destroy
       @destroying = true
 
+      # Unfortunately, because v2 non-recursive deletes expect labels and annotations to be
+      # recursively deleted, we can't use association_dependencies like most other models.
+      # The reason they are still deleted is because they would be stale metadata.
+      # TODO: Change this to use add_association_dependencies when v2 is removed
+      LabelDelete.delete(labels)
+      AnnotationDelete.delete(annotations)
       # This is a Database.update(default_isolation_segment_guid), not a
       # Model.update(default_isolation_segment_model). This way our model guards
       # do not block us from removing the default_isolation_segment.

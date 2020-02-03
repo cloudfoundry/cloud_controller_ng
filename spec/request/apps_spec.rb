@@ -1366,6 +1366,15 @@ RSpec.describe 'Apps' do
                                           organization_guid: space.organization.guid
                                       })
     end
+
+    context 'deleting metadata' do
+      it_behaves_like 'resource with metadata' do
+        let(:resource) { app_model }
+        let(:api_call) do
+          -> { delete "/v3/apps/#{resource.guid}", nil, user_header }
+        end
+      end
+    end
   end
 
   describe 'PATCH /v3/apps/:guid' do

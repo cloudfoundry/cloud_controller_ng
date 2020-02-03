@@ -24,7 +24,6 @@ module VCAP::CloudController
         if instance_delete_errors.empty? && instance_unshare_errors.empty?
           Space.db.transaction do
             delete_apps(space_model)
-            delete_labels(space_model)
             space_model.destroy
             Repositories::SpaceEventRepository.new.record_space_delete_request(space_model, @user_audit_info, true)
           end
@@ -82,10 +81,6 @@ module VCAP::CloudController
 
     def delete_apps(space_model)
       AppDelete.new(@user_audit_info).delete(space_model.app_models)
-    end
-
-    def delete_labels(space_model)
-      LabelDelete.delete(space_model.labels)
     end
 
     def delete_service_brokers(space_model)

@@ -32,6 +32,9 @@ module VCAP::CloudController
     export_attributes :host, :path, :domain_guid, :space_guid, :service_instance_guid, :port
     import_attributes :host, :path, :domain_guid, :space_guid, :app_guids, :port
 
+    add_association_dependencies labels: :destroy
+    add_association_dependencies annotations: :destroy
+
     def fqdn
       host.empty? ? domain.name : "#{host}.#{domain.name}"
     end
@@ -198,8 +201,6 @@ module VCAP::CloudController
 
     def before_destroy
       destroy_route_bindings
-      LabelDelete.delete(labels)
-      AnnotationDelete.delete(annotations)
       super
     end
 

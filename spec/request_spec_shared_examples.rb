@@ -153,3 +153,41 @@ RSpec.shared_examples 'request_spec_shared_examples.rb list query endpoint' do
     expect(last_response.status).to eq(200), JSON.parse(last_response.body)['errors'].try(:first).try(:[], 'detail')
   end
 end
+
+RSpec.shared_examples 'resource with metadata' do
+  # override these
+  let(:resource) {
+    # e.g:
+    # Space.make
+  }
+  let(:api_call) do
+    # e.g:
+    # -> { delete "/v3/spaces/#{space.guid}", nil, admin_header }
+  end
+
+  it 'can be deleted when it has associated annotations' do
+    resource.add_annotation(key: 'foo', key_prefix: 'bar', value: 'some value')
+    api_call.call
+    expect(last_response.status).to eq(202).or eq(204)
+    if last_response.status == 202
+      expect(last_response.headers['Location']).to match(%r(http.+/v3/jobs/[a-fA-F0-9-]+))
+      successes, failures = Delayed::Worker.new.work_off
+      expect(successes).to be >= 1
+      expect(failures).to be 0
+    end
+    expect(resource).to_not exist
+  end
+
+  it 'can be deleted when it has associated labels' do
+    resource.add_label(key_name: 'foo', key_prefix: 'bar', value: 'some value')
+    api_call.call
+    expect(last_response.status).to eq(202).or eq(204)
+    if last_response.status == 202
+      expect(last_response.headers['Location']).to match(%r(http.+/v3/jobs/[a-fA-F0-9-]+))
+      successes, failures = Delayed::Worker.new.work_off
+      expect(successes).to be >= 1
+      expect(failures).to be 0
+    end
+    expect(resource).to_not exist
+  end
+end

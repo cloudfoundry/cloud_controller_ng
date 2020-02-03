@@ -55,6 +55,8 @@ module VCAP::CloudController
     add_association_dependencies audited_organizations: :nullify
     add_association_dependencies spaces: :nullify
     add_association_dependencies managed_spaces: :nullify
+    add_association_dependencies labels: :destroy
+    add_association_dependencies annotations: :destroy
 
     export_attributes :admin, :active, :default_space_guid
 
@@ -67,12 +69,6 @@ module VCAP::CloudController
       :managed_space_guids,
       :audited_space_guids,
       :default_space_guid
-
-    def before_destroy
-      LabelDelete.delete(labels)
-      AnnotationDelete.delete(annotations)
-      super
-    end
 
     def validate
       validates_presence :guid

@@ -2022,6 +2022,15 @@ RSpec.describe 'Routes Request' do
       end
     end
 
+    context 'deleting metadata' do
+      it_behaves_like 'resource with metadata' do
+        let(:resource) { route }
+        let(:api_call) do
+          -> { delete "/v3/routes/#{route.guid}", nil, admin_header }
+        end
+      end
+    end
+
     context 'when the user is a member in the routes org' do
       let(:expected_codes_and_responses) do
         h = Hash.new(code: 403)

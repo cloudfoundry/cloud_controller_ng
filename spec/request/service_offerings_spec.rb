@@ -715,6 +715,15 @@ RSpec.describe 'V3 service offerings' do
         end
       end
 
+      context 'deleting metadata' do
+        it_behaves_like 'resource with metadata' do
+          let(:resource) { service_offering }
+          let(:api_call) do
+            -> { delete "/v3/service_offerings/#{service_offering.guid}", nil, admin_headers }
+          end
+        end
+      end
+
       it_behaves_like 'permissions for delete endpoint', COMPLETE_PERMISSIONS
     end
 

@@ -968,6 +968,15 @@ RSpec.describe 'Packages' do
         organization_guid: space.organization.guid
       })
     end
+
+    context 'deleting metadata' do
+      it_behaves_like 'resource with metadata' do
+        let(:resource) { package_model }
+        let(:api_call) do
+          -> { delete "/v3/packages/#{resource.guid}", nil, user_header }
+        end
+      end
+    end
   end
 
   describe 'PATCH /internal/v4/packages/:guid' do

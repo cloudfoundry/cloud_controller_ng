@@ -676,6 +676,15 @@ RSpec.describe 'Spaces' do
       end
     end
 
+    context 'deleting metadata' do
+      it_behaves_like 'resource with metadata' do
+        let(:resource) { space }
+        let(:api_call) do
+          -> { delete "/v3/spaces/#{space.guid}", nil, admin_header }
+        end
+      end
+    end
+
     context 'when the user is a member in the spaces org' do
       let(:expected_codes_and_responses) do
         h = Hash.new(code: 403)

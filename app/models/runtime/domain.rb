@@ -82,11 +82,8 @@ module VCAP::CloudController
     import_attributes :name, :owning_organization_guid
     strip_attributes :name
 
-    def before_destroy
-      LabelDelete.delete(labels)
-      AnnotationDelete.delete(annotations)
-      super
-    end
+    add_association_dependencies labels: :destroy
+    add_association_dependencies annotations: :destroy
 
     def validate
       validates_presence :name

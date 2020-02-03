@@ -24,7 +24,6 @@ module VCAP::CloudController
         )
 
         DropletModel.db.transaction do
-          LabelDelete.delete(droplet.labels)
           droplet.destroy
         end
       end

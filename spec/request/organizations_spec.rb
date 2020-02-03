@@ -1143,6 +1143,15 @@ module VCAP::CloudController
           and change { shared_service_instance.reload.shared_spaces }.to(be_empty)
       end
 
+      context 'deleting metadata' do
+        it_behaves_like 'resource with metadata' do
+          let(:resource) { org }
+          let(:api_call) do
+            -> { delete "/v3/organizations/#{org.guid}", nil, admin_header }
+          end
+        end
+      end
+
       let(:api_call) { lambda { |user_headers| delete "/v3/organizations/#{org.guid}", nil, user_headers } }
       let(:db_check) do
         lambda do

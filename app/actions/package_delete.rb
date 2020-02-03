@@ -10,7 +10,6 @@ module VCAP::CloudController
       packages.each do |package|
         blobstore_delete = Jobs::Runtime::BlobstoreDelete.new(package.guid, :package_blobstore)
         Jobs::Enqueuer.new(blobstore_delete, queue: Jobs::Queues.generic).enqueue
-        delete_metadata(package)
         package.destroy
 
         Repositories::PackageEventRepository.record_app_package_delete(
@@ -19,13 +18,6 @@ module VCAP::CloudController
       end
 
       []
-    end
-
-    private
-
-    def delete_metadata(package)
-      LabelDelete.delete(package.labels)
-      AnnotationDelete.delete(package.annotations)
     end
   end
 end

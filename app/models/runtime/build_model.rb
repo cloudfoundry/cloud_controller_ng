@@ -45,11 +45,8 @@ module VCAP::CloudController
 
     add_association_dependencies buildpack_lifecycle_data: :destroy, kpack_lifecycle_data: :destroy
 
-    def before_destroy
-      LabelDelete.delete(labels)
-      AnnotationDelete.delete(annotations)
-      super
-    end
+    add_association_dependencies labels: :destroy
+    add_association_dependencies annotations: :destroy
 
     def lifecycle_type
       return Lifecycles::BUILDPACK if buildpack_lifecycle_data

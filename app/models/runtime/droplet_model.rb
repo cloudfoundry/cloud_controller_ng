@@ -35,6 +35,8 @@ module VCAP::CloudController
     one_to_many :annotations, class: 'VCAP::CloudController::DropletAnnotationModel', key: :resource_guid, primary_key: :guid
 
     add_association_dependencies buildpack_lifecycle_data: :destroy
+    add_association_dependencies labels: :destroy
+    add_association_dependencies annotations: :destroy
 
     set_field_as_encrypted :docker_receipt_password, salt: :docker_receipt_password_salt, column: :encrypted_docker_receipt_password
     serializes_via_json :process_types

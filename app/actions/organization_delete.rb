@@ -33,7 +33,6 @@ module VCAP::CloudController
         end
 
         Organization.db.transaction do
-          delete_metadata(org)
           unshare_private_domains(domains_to_unshare, org)
           org.destroy
 
@@ -48,11 +47,6 @@ module VCAP::CloudController
     end
 
     private
-
-    def delete_metadata(org_model)
-      LabelDelete.delete(org_model.labels)
-      AnnotationDelete.delete(org_model.annotations)
-    end
 
     def unshare_private_domains(domains_to_unshare, org_model)
       # find all private domains that are shared with this org

@@ -1237,6 +1237,15 @@ RSpec.describe 'V3 service brokers' do
     let!(:global_broker_services) { VCAP::CloudController::Service.where(service_broker_id: global_broker.id) }
     let!(:global_broker_plans) { VCAP::CloudController::ServicePlan.where(service_id: global_broker_services.map(&:id)) }
 
+    context 'deleting metadata' do
+      it_behaves_like 'resource with metadata' do
+        let(:resource) { global_broker }
+        let(:api_call) do
+          -> { delete "/v3/service_brokers/#{global_broker.guid}", nil, admin_headers }
+        end
+      end
+    end
+
     context 'when there are no service instances' do
       let(:broker) { global_broker }
       let(:api_call) { lambda { |user_headers| delete "/v3/service_brokers/#{broker.guid}", nil, user_headers } }
