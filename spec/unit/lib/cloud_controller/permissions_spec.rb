@@ -382,7 +382,7 @@ module VCAP::CloudController
         membership = instance_double(Membership, space_guids_for_roles: space_guids)
         expect(Membership).to receive(:new).with(user).and_return(membership)
         expect(permissions.readable_space_guids).to eq(space_guids)
-        expect(membership).to have_received(:space_guids_for_roles).with(VCAP::CloudController::Permissions::ROLES_FOR_SPACE_READING)
+        expect(membership).to have_received(:space_guids_for_roles).with(VCAP::CloudController::Permissions::ROLES_FOR_SPACE_APPLICATION_SUPPORTER_READING)
       end
     end
 

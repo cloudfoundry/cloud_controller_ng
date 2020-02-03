@@ -133,7 +133,7 @@ class VCAP::CloudController::Permissions
     if can_read_globally?
       VCAP::CloudController::Space.select(:guid).all.map(&:guid)
     else
-      membership.space_guids_for_roles(ROLES_FOR_SPACE_READING)
+      membership.space_guids_for_roles(ROLES_FOR_SPACE_APPLICATION_SUPPORTER_READING)
     end
   end
 

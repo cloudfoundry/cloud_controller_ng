@@ -90,7 +90,7 @@ GEM
       ms_rest_azure (~> 0.7.0)
     azure_mgmt_traffic_manager (0.9.0)
       ms_rest_azure (~> 0.7.0)
-    backport (1.1.2)
+    backport (1.2.0)
     backports (3.18.1)
     beefcake (1.0.0)
     benchmark (0.1.1)
@@ -454,10 +454,11 @@ GEM
       rack-protection (= 2.0.8.1)
       sinatra (= 2.0.8.1)
       tilt (~> 2.0)
-    solargraph (0.41.1)
-      backport (~> 1.1)
+    solargraph (0.42.3)
+      backport (~> 1.2)
       benchmark
       bundler (>= 1.17.2)
+      diff-lcs (~> 1.4)
       e2mmap
       jaro_winkler (~> 1.5)
       kramdown (~> 2.3)
@@ -604,4 +605,4 @@ DEPENDENCIES
   yajl-ruby
 
 BUNDLED WITH
-   2.1.4
+   2.2.6
