@@ -21810,6 +21810,21 @@ Service Offerings and Service Plans are created and updated when a Service Broke
     </span><span class="nt">"service_binding"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"create"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
     </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"service_offering"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"13c60e38-11e7-11ea-9106-33ee3c5bd4d7"</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_plans/bf7eb420-11e5-11ea-b7db-4b5d5e7976a9"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"service_offering"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_offerings/13c60e38-11e7-11ea-9106-33ee3c5bd4d7"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
   </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
 
@@ -21938,6 +21953,21 @@ Service Offerings and Service Plans are created and updated when a Service Broke
 <td><em>JSON Schema object</em></td>
 <td>The schema definition for the input parameters. Each input parameter is expressed as a property within a JSON object.</td>
 </tr>
+<tr>
+<td><strong>relationships.service_offering</strong></td>
+<td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
+<td>The Service Offering that this Service Plan relates to.</td>
+</tr>
+<tr>
+<td><strong>relationships.space</strong></td>
+<td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
+<td>The Space of the Service Broker, if this Service Plan is from a Space-Scoped Service Broker.</td>
+</tr>
+<tr>
+<td><strong>links</strong></td>
+<td><a href="#links"><em>links object</em></a></td>
+<td>Links to related resources.</td>
+</tr>
 </tbody></table>
 <h3 id="get-a-service-plan">Get a Service Plan</h3>
 <pre class="highlight plaintext"><code>Example Request
@@ -21992,6 +22022,21 @@ Service Offerings and Service Plans are created and updated when a Service Broke
     </span><span class="p">},</span><span class="w">
     </span><span class="nt">"service_binding"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"create"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"service_offering"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"13c60e38-11e7-11ea-9106-33ee3c5bd4d7"</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_plans/bf7eb420-11e5-11ea-b7db-4b5d5e7976a9"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"service_offering"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_offerings/13c60e38-11e7-11ea-9106-33ee3c5bd4d7"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
@@ -22089,6 +22134,21 @@ Service Offerings and Service Plans are created and updated when a Service Broke
         </span><span class="nt">"service_binding"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
           </span><span class="nt">"create"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
         </span><span class="p">}</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"service_offering"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"13c60e38-11e7-11ea-9106-33ee3c5bd4d7"</span><span class="w">
+          </span><span class="p">}</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_plans/bf7eb420-11e5-11ea-b7db-4b5d5e7976a9"</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nt">"service_offering"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_offerings/13c60e38-11e7-11ea-9106-33ee3c5bd4d7"</span><span class="w">
+        </span><span class="p">}</span><span class="w">
       </span><span class="p">}</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="p">{</span><span class="w">
@@ -22118,6 +22178,21 @@ Service Offerings and Service Plans are created and updated when a Service Broke
         </span><span class="p">},</span><span class="w">
         </span><span class="nt">"service_binding"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
           </span><span class="nt">"create"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"service_offering"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"13c60e38-11e7-11ea-9106-33ee3c5bd4d7"</span><span class="w">
+          </span><span class="p">}</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_plans/20e6cd62-12bb-11ea-90d1-7bfec2c75bcd"</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nt">"service_offering"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_offerings/13c60e38-11e7-11ea-9106-33ee3c5bd4d7"</span><span class="w">
         </span><span class="p">}</span><span class="w">
       </span><span class="p">}</span><span class="w">
     </span><span class="p">}</span><span class="w">
