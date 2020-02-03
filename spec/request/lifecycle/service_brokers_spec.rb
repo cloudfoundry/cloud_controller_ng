@@ -20,8 +20,8 @@ RSpec.describe 'V3 service brokers' do
               }
           },
           metadata: {
-              labels: {to_update: 'value', to_delete: 'value', 'to.delete/with_prefix' => 'value'},
-              annotations: {to_update: 'value', to_delete: 'value', 'to.delete/with_prefix' => 'value'}
+              labels: { to_update: 'value', to_delete: 'value', 'to.delete/with_prefix' => 'value' },
+              annotations: { to_update: 'value', to_delete: 'value', 'to.delete/with_prefix' => 'value' }
           }
       }
     end
@@ -35,8 +35,8 @@ RSpec.describe 'V3 service brokers' do
     describe 'successful creation' do
       before do
         stub_request(:get, 'http://example.org/my-service-broker-url/v2/catalog').
-            with(basic_auth: %w(admin password)).
-            to_return(status: 200, body: catalog, headers: {})
+          with(basic_auth: %w(admin password)).
+          to_return(status: 200, body: catalog, headers: {})
       end
 
       it 'creates a service broker' do
@@ -50,9 +50,9 @@ RSpec.describe 'V3 service brokers' do
         get broker, {}, admin_headers
         expect(last_response).to have_status_code(200)
         expect(parsed_response).to include(
-            'name' => 'my-service-broker',
-            'url' => 'http://example.org/my-service-broker-url',
-            'status' => 'synchronization in progress',
+          'name' => 'my-service-broker',
+          'url' => 'http://example.org/my-service-broker-url',
+          'status' => 'synchronization in progress',
         )
 
         # Check it finishes
@@ -65,9 +65,9 @@ RSpec.describe 'V3 service brokers' do
         get broker, {}, admin_headers
         expect(last_response).to have_status_code(200)
         expect(parsed_response).to include(
-            'name' => 'my-service-broker',
-            'url' => 'http://example.org/my-service-broker-url',
-            'status' => 'available',
+          'name' => 'my-service-broker',
+          'url' => 'http://example.org/my-service-broker-url',
+          'status' => 'available',
         )
       end
     end
@@ -75,8 +75,8 @@ RSpec.describe 'V3 service brokers' do
     describe 'failed creation' do
       before do
         stub_request(:get, 'http://example.org/my-service-broker-url/v2/catalog').
-            with(basic_auth: %w(admin password)).
-            to_return(status: 404)
+          with(basic_auth: %w(admin password)).
+          to_return(status: 404)
       end
 
       it 'creates a service broker in failed state' do
@@ -95,9 +95,9 @@ RSpec.describe 'V3 service brokers' do
         get parsed_response.dig('links', 'service_brokers', 'href'), {}, admin_headers
         expect(last_response).to have_status_code(200)
         expect(parsed_response).to include(
-            'name' => 'my-service-broker',
-            'url' => 'http://example.org/my-service-broker-url',
-            'status' => 'synchronization failed',
+          'name' => 'my-service-broker',
+          'url' => 'http://example.org/my-service-broker-url',
+          'status' => 'synchronization failed',
         )
       end
     end
@@ -106,8 +106,8 @@ RSpec.describe 'V3 service brokers' do
       describe 'creation during creation' do
         before do
           stub_request(:get, 'http://example.org/my-service-broker-url/v2/catalog').
-              with(basic_auth: %w(admin password)).
-              to_return(status: 200, body: catalog, headers: {})
+            with(basic_auth: %w(admin password)).
+            to_return(status: 200, body: catalog, headers: {})
         end
 
         it 'rejects a duplicate name' do
@@ -123,7 +123,7 @@ RSpec.describe 'V3 service brokers' do
           post '/v3/service_brokers', create_request_body.to_json, admin_headers
           expect(last_response).to have_status_code(202)
 
-          other_request_body = create_request_body.merge({'name' => 'my-other-broker'}).to_json
+          other_request_body = create_request_body.merge({ 'name' => 'my-other-broker' }).to_json
           post '/v3/service_brokers', other_request_body, admin_headers
           expect(last_response).to have_status_code(202)
         end
@@ -132,8 +132,8 @@ RSpec.describe 'V3 service brokers' do
       describe 'deletion during creation' do
         before do
           stub_request(:get, 'http://example.org/my-service-broker-url/v2/catalog').
-              with(basic_auth: %w(admin password)).
-              to_return(status: 200, body: catalog, headers: {})
+            with(basic_auth: %w(admin password)).
+            to_return(status: 200, body: catalog, headers: {})
         end
 
         it 'allows deletion during creation' do
@@ -160,8 +160,8 @@ RSpec.describe 'V3 service brokers' do
       describe 'update during creation' do
         before do
           stub_request(:get, 'http://example.org/my-service-broker-url/v2/catalog').
-              with(basic_auth: %w(admin password)).
-              to_return(status: 200, body: catalog, headers: {})
+            with(basic_auth: %w(admin password)).
+            to_return(status: 200, body: catalog, headers: {})
         end
 
         it 'blocks update during creation' do
@@ -193,8 +193,8 @@ RSpec.describe 'V3 service brokers' do
               }
           },
           metadata: {
-              labels: {to_update: 'value', to_delete: 'value', 'to.delete/with_prefix' => 'value'},
-              annotations: {to_update: 'value', to_delete: 'value', 'to.delete/with_prefix' => 'value'}
+              labels: { to_update: 'value', to_delete: 'value', 'to.delete/with_prefix' => 'value' },
+              annotations: { to_update: 'value', to_delete: 'value', 'to.delete/with_prefix' => 'value' }
           }
       }
     }
@@ -211,8 +211,8 @@ RSpec.describe 'V3 service brokers' do
               }
           },
           metadata: {
-              labels: {to_update: 'changed-value', to_delete: nil, to_add: 'new-value', 'to.delete/with_prefix' => nil},
-              annotations: {to_update: 'changed-value', to_delete: nil, to_add: 'new-value', 'to.delete/with_prefix' => nil}
+              labels: { to_update: 'changed-value', to_delete: nil, to_add: 'new-value', 'to.delete/with_prefix' => nil },
+              annotations: { to_update: 'changed-value', to_delete: nil, to_add: 'new-value', 'to.delete/with_prefix' => nil }
           }
       }
     }
@@ -222,8 +222,8 @@ RSpec.describe 'V3 service brokers' do
     context 'is successful' do
       before do
         stub_request(:get, 'http://example.org/new-broker-url/v2/catalog').
-            with(basic_auth: ['admin', 'welcome']).
-            to_return(status: 200, body: catalog, headers: {})
+          with(basic_auth: ['admin', 'welcome']).
+          to_return(status: 200, body: catalog, headers: {})
 
         patch "/v3/service_brokers/#{broker['guid']}", update_request_body.to_json, admin_headers
         expect(last_response).to have_status_code(202)
@@ -266,8 +266,8 @@ RSpec.describe 'V3 service brokers' do
         expect(last_response).to have_status_code(200)
         expect(parsed_response).to include({
             'metadata' => {
-                'labels' => {'to_update' => 'changed-value', 'to_add' => 'new-value'},
-                'annotations' => {'to_update' => 'changed-value', 'to_add' => 'new-value'}
+                'labels' => { 'to_update' => 'changed-value', 'to_add' => 'new-value' },
+                'annotations' => { 'to_update' => 'changed-value', 'to_add' => 'new-value' }
             }
         })
       end
@@ -275,8 +275,8 @@ RSpec.describe 'V3 service brokers' do
 
     it 'fails to update the service broker' do
       stub_request(:get, 'http://example.org/new-broker-url/v2/catalog').
-          with(basic_auth: ['admin', 'welcome']).
-          to_return(status: 500, body: '', headers: {})
+        with(basic_auth: ['admin', 'welcome']).
+        to_return(status: 500, body: '', headers: {})
 
       patch "/v3/service_brokers/#{broker['guid']}", update_request_body.to_json, admin_headers
       expect(last_response).to have_status_code(202)
@@ -289,7 +289,7 @@ RSpec.describe 'V3 service brokers' do
       expect(parsed_response).to include({
           'state' => 'FAILED',
           'operation' => 'service_broker.update',
-          'errors' => [include({'code' => 10001, 'detail' => include('The service broker returned an invalid response')})],
+          'errors' => [include({ 'code' => 10001, 'detail' => include('The service broker returned an invalid response') })],
           'warnings' => []
       })
 
@@ -323,10 +323,10 @@ RSpec.describe 'V3 service brokers' do
         patch "/v3/service_brokers/#{broker['guid']}", update_request_body.to_json, admin_headers
         expect(last_response).to have_status_code(422)
         expect(parsed_response).to include(
-            'errors' => [include({
-                'code' => 10008,
-                'detail' => include('Cannot update a broker when other operation is already in progress')
-            })],
+          'errors' => [include({
+              'code' => 10008,
+              'detail' => include('Cannot update a broker when other operation is already in progress')
+          })],
         )
         expect(last_response['Location']).to be_nil
       end
@@ -341,10 +341,10 @@ RSpec.describe 'V3 service brokers' do
       patch "/v3/service_brokers/#{broker['guid']}", update_request_body.to_json, admin_headers
       expect(last_response).to have_status_code(422)
       expect(parsed_response).to include(
-          'errors' => [include({
-              'code' => 10008,
-              'detail' => include('Cannot update a broker when other operation is already in progress')
-          })],
+        'errors' => [include({
+            'code' => 10008,
+            'detail' => include('Cannot update a broker when other operation is already in progress')
+        })],
       )
       expect(last_response['Location']).to be_nil
     end
@@ -353,35 +353,35 @@ RSpec.describe 'V3 service brokers' do
   let(:catalog) do
     {
         'services' => [
-            {
-                'id' => 'catalog1',
-                'name' => 'service_name-1',
-                'description' => 'some description 1',
-                'bindable' => true,
-                'plans' => [
-                    {
-                        'id' => 'fake_plan_id-1',
-                        'name' => 'plan_name-1',
-                        'description' => 'fake_plan_description 1',
-                        'schemas' => nil
-                    }
-                ]
-            },
-            {
-                'id' => 'catalog2',
-                'name' => 'route_volume_service_name-2',
-                'requires' => %w(volume_mount route_forwarding),
-                'description' => 'some description 2',
-                'bindable' => true,
-                'plans' => [
-                    {
-                        'id' => 'fake_plan_id-2',
-                        'name' => 'plan_name-2',
-                        'description' => 'fake_plan_description 2',
-                        'schemas' => nil
-                    }
-                ]
-            },
+          {
+              'id' => 'catalog1',
+              'name' => 'service_name-1',
+              'description' => 'some description 1',
+              'bindable' => true,
+              'plans' => [
+                {
+                      'id' => 'fake_plan_id-1',
+                      'name' => 'plan_name-1',
+                      'description' => 'fake_plan_description 1',
+                      'schemas' => nil
+                  }
+              ]
+          },
+          {
+              'id' => 'catalog2',
+              'name' => 'route_volume_service_name-2',
+              'requires' => %w(volume_mount route_forwarding),
+              'description' => 'some description 2',
+              'bindable' => true,
+              'plans' => [
+                {
+                    'id' => 'fake_plan_id-2',
+                    'name' => 'plan_name-2',
+                    'description' => 'fake_plan_description 2',
+                    'schemas' => nil
+                }
+              ]
+          },
         ]
     }.to_json
   end
@@ -398,8 +398,8 @@ RSpec.describe 'V3 service brokers' do
 
   def create_service_broker
     stub_request(:get, 'http://example.org/old-broker-url/v2/catalog').
-        with(basic_auth: ['old-admin', 'not-welcome']).
-        to_return(status: 200, body: catalog, headers: {})
+      with(basic_auth: ['old-admin', 'not-welcome']).
+      to_return(status: 200, body: catalog, headers: {})
 
     post '/v3/service_brokers', create_request_body.to_json, admin_headers
     expect(last_response).to have_status_code(202)

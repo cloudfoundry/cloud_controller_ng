@@ -8,8 +8,8 @@ require 'messages/service_broker_update_message'
 RSpec.describe 'V3 services synoptic' do
   before do
     stub_request(:get, 'http://example.org/amazing-service-broker/v2/catalog').
-        with(basic_auth: %w(admin password)).
-        to_return(status: 200, body: catalog, headers: {})
+      with(basic_auth: %w(admin password)).
+      to_return(status: 200, body: catalog, headers: {})
   end
 
   it 'works end to end' do
@@ -20,10 +20,10 @@ RSpec.describe 'V3 services synoptic' do
     get '/v3/service_offerings', {}, admin_headers
     expect(last_response).to have_status_code(200)
     expect(parsed_response['resources'][0]).to include(
-        'name' => 'service_name-1'
+      'name' => 'service_name-1'
     )
     expect(parsed_response['resources'][1]).to include(
-        'name' => 'route_volume_service_name-20'
+      'name' => 'route_volume_service_name-20'
     )
 
     # TODO: enable service access once those endpoints are written
@@ -43,8 +43,8 @@ RSpec.describe 'V3 services synoptic' do
             }
         },
         metadata: {
-            labels: {to_update: 'value', to_delete: 'value', 'to.delete/with_prefix' => 'value'},
-            annotations: {to_update: 'value', to_delete: 'value', 'to.delete/with_prefix' => 'value'}
+            labels: { to_update: 'value', to_delete: 'value', 'to.delete/with_prefix' => 'value' },
+            annotations: { to_update: 'value', to_delete: 'value', 'to.delete/with_prefix' => 'value' }
         }
     }
   end
@@ -52,35 +52,35 @@ RSpec.describe 'V3 services synoptic' do
   let(:catalog) do
     {
         'services' => [
-            {
-                'id' => 'catalog1',
-                'name' => 'service_name-1',
-                'description' => 'some description 1',
-                'bindable' => true,
-                'plans' => [
-                    {
-                        'id' => 'fake_plan_id-1',
-                        'name' => 'plan_name-1',
-                        'description' => 'fake_plan_description 1',
-                        'schemas' => nil
-                    }
-                ]
-            },
-            {
-                'id' => 'catalog2',
-                'name' => 'route_volume_service_name-2',
-                'requires' => ['volume_mount', 'route_forwarding'],
-                'description' => 'some description 2',
-                'bindable' => true,
-                'plans' => [
-                    {
-                        'id' => 'fake_plan_id-2',
-                        'name' => 'plan_name-2',
-                        'description' => 'fake_plan_description 2',
-                        'schemas' => nil
-                    }
-                ]
-            },
+          {
+              'id' => 'catalog1',
+              'name' => 'service_name-1',
+              'description' => 'some description 1',
+              'bindable' => true,
+              'plans' => [
+                {
+                      'id' => 'fake_plan_id-1',
+                      'name' => 'plan_name-1',
+                      'description' => 'fake_plan_description 1',
+                      'schemas' => nil
+                  }
+              ]
+          },
+          {
+              'id' => 'catalog2',
+              'name' => 'route_volume_service_name-2',
+              'requires' => ['volume_mount', 'route_forwarding'],
+              'description' => 'some description 2',
+              'bindable' => true,
+              'plans' => [
+                {
+                    'id' => 'fake_plan_id-2',
+                    'name' => 'plan_name-2',
+                    'description' => 'fake_plan_description 2',
+                    'schemas' => nil
+                }
+              ]
+          },
         ]
     }.to_json
   end
