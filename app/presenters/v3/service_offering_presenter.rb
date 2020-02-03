@@ -32,12 +32,12 @@ module VCAP::CloudController
                 bindings_retrievable: service_offering.bindings_retrievable,
               }
             },
+            relationships: build_relationships,
             metadata: {
               labels: hashified_labels(service_offering.labels),
               annotations: hashified_annotations(service_offering.annotations),
             },
             links: build_links,
-            relationships: build_relationships,
           }
         end
 
