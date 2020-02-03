@@ -161,6 +161,7 @@ class RoutesController < ApplicationController
 
     unauthorized! unless permission_queryer.untrusted_can_write_to_space?(route.space.guid)
 
+
     desired_app_guids = message.destinations.map { |dst| HashUtils.dig(dst, :app, :guid) }.compact
 
     apps_hash = AppModel.where(guid: desired_app_guids).each_with_object({}) { |app, apps_hsh| apps_hsh[app.guid] = app; }
