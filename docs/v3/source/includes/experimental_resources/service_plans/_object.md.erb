@@ -32,3 +32,6 @@ Name | Type | Description
 **schemas.service_instance.update.parameters** | _JSON Schema object_ | The schema definition for the input parameters. Each input parameter is expressed as a property within a JSON object.
 **schemas.service_binding.create** | _object_ | Schema definition for Service Binding creation.
 **schemas.service_binding.create.parameters** | _JSON Schema object_ | The schema definition for the input parameters. Each input parameter is expressed as a property within a JSON object.
+**relationships.service_offering** | [_to-one relationship_](#to-one-relationships) | The Service Offering that this Service Plan relates to.
+**relationships.space** | [_to-one relationship_](#to-one-relationships) | The Space of the Service Broker, if this Service Plan is from a Space-Scoped Service Broker.
+**links** | [_links object_](#links) | Links to related resources.

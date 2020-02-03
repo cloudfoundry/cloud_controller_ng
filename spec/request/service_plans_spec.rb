@@ -175,7 +175,22 @@ RSpec.describe 'V3 service plans' do
           create: {}
         }
       },
-      maintenance_info: service_plan.maintenance_info_as_hash
+      maintenance_info: service_plan.maintenance_info_as_hash,
+      relationships: {
+        service_offering: {
+            data: {
+                guid: service_plan.service.guid
+            }
+        }
+      },
+      links: {
+        self: {
+          href: "#{link_prefix}/v3/service_plans/#{service_plan.guid}"
+        },
+        service_offering: {
+          href: "#{link_prefix}/v3/service_offerings/#{service_plan.service.guid}"
+        }
+      }
     }
   end
 end

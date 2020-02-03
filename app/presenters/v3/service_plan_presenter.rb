@@ -31,7 +31,9 @@ module VCAP::CloudController
               service_binding: {
                 create: parse_schema(service_plan.create_binding_schema)
               }
-            }
+            },
+            relationships: relationships,
+            links: links
           }
         end
 
@@ -55,6 +57,40 @@ module VCAP::CloudController
 
         def service_plan
           @resource
+        end
+
+        def relationships
+          relationships = {
+            service_offering: {
+              data: {
+                guid: service_plan.service.guid
+              }
+            }
+          }
+
+          if service_plan.service.service_broker.space_guid
+            relationships[:space] = { data: { guid: service_plan.service.service_broker.space_guid } }
+          end
+
+          relationships
+        end
+
+        def links
+          url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
+          links = {
+            self: {
+              href: url_builder.build_url(path: "/v3/service_plans/#{service_plan.guid}")
+            },
+            service_offering: {
+              href: url_builder.build_url(path: "/v3/service_offerings/#{service_plan.service.guid}")
+            },
+          }
+
+          if service_plan.service.service_broker.space_guid
+            links[:space] = { href: url_builder.build_url(path: "/v3/spaces/#{service_plan.service.service_broker.space_guid}") }
+          end
+
+          links
         end
       end
     end
