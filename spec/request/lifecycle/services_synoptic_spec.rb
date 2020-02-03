@@ -23,7 +23,7 @@ RSpec.describe 'V3 services synoptic' do
       'name' => 'service_name-1'
     )
     expect(parsed_response['resources'][1]).to include(
-      'name' => 'route_volume_service_name-20'
+      'name' => 'route_volume_service_name-2'
     )
 
     # TODO: enable service access once those endpoints are written
