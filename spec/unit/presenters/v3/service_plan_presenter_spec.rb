@@ -3,9 +3,9 @@ require 'presenters/v3/service_plan_presenter'
 
 RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
   let(:guid) { 'some-plan-guid' }
-
+  let(:maintenance_info_str) { '{"version": "1.0.0", "description":"best plan ever"}' }
   let(:service_plan) do
-    VCAP::CloudController::ServicePlan.make(guid: guid)
+    VCAP::CloudController::ServicePlan.make(guid: guid, maintenance_info: maintenance_info_str)
   end
 
   describe '#to_hash' do
@@ -21,6 +21,10 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
         name: service_plan.name,
         free: false,
         description: service_plan.description,
+        maintenance_info: {
+          version: '1.0.0',
+          description: 'best plan ever'
+        },
         broker_catalog: {
           metadata: {},
           id: service_plan.unique_id,
@@ -97,7 +101,17 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
       end
 
       it 'presents the service plan with metadata' do
-        expect(result[:broker_catalog][:metadata]['some_key']).to eq('some-value')
+        expect(result[:broker_catalog][:metadata][:some_key]).to eq('some-value')
+      end
+    end
+
+    context 'when plan has no `maintenance_info`' do
+      let(:service_plan) do
+        VCAP::CloudController::ServicePlan.make(guid: guid)
+      end
+
+      it 'presents the service plan with empty maintenance_info' do
+        expect(result[:maintenance_info]).to be_empty
       end
     end
 

@@ -14,6 +14,7 @@ module VCAP::CloudController
             name: service_plan.name,
             free: service_plan.free,
             description: service_plan.description,
+            maintenance_info: service_plan.maintenance_info_as_hash,
             broker_catalog: {
               id: service_plan.unique_id,
               metadata: metadata,
@@ -37,13 +38,17 @@ module VCAP::CloudController
         private
 
         def metadata
-          JSON.parse(service_plan.extra)
-        rescue JSON::ParserError
-          {}
+          parse(service_plan.extra)
         end
 
         def parse_schema(schema)
           { parameters: JSON.parse(schema) }
+        rescue JSON::ParserError
+          {}
+        end
+
+        def parse(json)
+          JSON.parse(json).deep_symbolize_keys
         rescue JSON::ParserError
           {}
         end

@@ -51,6 +51,12 @@ module VCAP::CloudController
 
     alias_method :broker_provided_id, :unique_id
 
+    def maintenance_info_as_hash
+      JSON.parse(maintenance_info).deep_symbolize_keys
+    rescue JSON::ParserError
+      {}
+    end
+
     def validate
       validates_presence :name,                message: 'is required'
       validates_presence :description,         message: 'is required'

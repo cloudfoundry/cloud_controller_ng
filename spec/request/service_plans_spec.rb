@@ -10,6 +10,7 @@ RSpec.describe 'V3 service plans' do
   let(:user) { VCAP::CloudController::User.make }
   let(:org) { VCAP::CloudController::Organization.make }
   let(:space) { VCAP::CloudController::Space.make(organization: org) }
+  let(:maintenance_info_str) { '{"version": "1.0.0", "description":"best plan ever"}' }
 
   describe 'GET /v3/service_plans/:guid' do
     let(:api_call) { lambda { |user_headers| get "/v3/service_plans/#{guid}", nil, user_headers } }
@@ -25,7 +26,7 @@ RSpec.describe 'V3 service plans' do
     end
 
     context 'when there is a public service plan' do
-      let!(:service_plan) { VCAP::CloudController::ServicePlan.make(public: true) }
+      let!(:service_plan) { VCAP::CloudController::ServicePlan.make(public: true, maintenance_info: maintenance_info_str) }
       let(:guid) { service_plan.guid }
 
       let(:expected_codes_and_responses) do
@@ -58,7 +59,7 @@ RSpec.describe 'V3 service plans' do
     context 'when there is a non-public service plan' do
       context 'global broker' do
         let!(:visibility) { VCAP::CloudController::ServicePlanVisibility.make(service_plan: service_plan, organization: org) }
-        let!(:service_plan) { VCAP::CloudController::ServicePlan.make(public: false) }
+        let!(:service_plan) { VCAP::CloudController::ServicePlan.make(public: false, maintenance_info: maintenance_info_str) }
         let(:guid) { service_plan.guid }
 
         let(:expected_codes_and_responses) do
@@ -73,7 +74,7 @@ RSpec.describe 'V3 service plans' do
       context 'space scoped broker' do
         let!(:broker) { VCAP::CloudController::ServiceBroker.make(space: space) }
         let!(:service_offering) { VCAP::CloudController::Service.make(service_broker: broker) }
-        let!(:service_plan) { VCAP::CloudController::ServicePlan.make(public: false, service: service_offering) }
+        let!(:service_plan) { VCAP::CloudController::ServicePlan.make(public: false, service: service_offering, maintenance_info: maintenance_info_str) }
         let(:guid) { service_plan.guid }
 
         let(:expected_codes_and_responses) do
@@ -106,9 +107,11 @@ RSpec.describe 'V3 service plans' do
     end
 
     context 'visibility of service plans' do
+      let(:another_maintenance_info) { '{"version": "0.9.0", "description":"not quite good as the other one"}' }
+
       context 'when they are public' do
-        let!(:service_plan_1) { VCAP::CloudController::ServicePlan.make(public: true) }
-        let!(:service_plan_2) { VCAP::CloudController::ServicePlan.make(public: true) }
+        let!(:service_plan_1) { VCAP::CloudController::ServicePlan.make(public: true, maintenance_info: maintenance_info_str) }
+        let!(:service_plan_2) { VCAP::CloudController::ServicePlan.make(public: true, maintenance_info: another_maintenance_info) }
 
         let(:expected_codes_and_responses) do
           Hash.new(
@@ -171,7 +174,8 @@ RSpec.describe 'V3 service plans' do
         service_binding: {
           create: {}
         }
-      }
+      },
+      maintenance_info: service_plan.maintenance_info_as_hash
     }
   end
 end

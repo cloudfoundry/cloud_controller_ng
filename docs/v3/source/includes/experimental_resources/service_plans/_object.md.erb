@@ -17,6 +17,9 @@ Name | Type | Description
 **free** | _boolean_ | Whether or not the Service Plan is free of charge.
 **created_at** | _datetime_ | The time with zone when the object was created.
 **updated_at** | _datetime_ | The time with zone when the object was last updated.
+**maintenance_info** | _object_ | Maintenance information for a Service Instance which is provisioned using this Service Plan.
+**maintenance_info.version** | _semver_ | Maintenance information about the version of this Service Plan. This field is used to determine whether a maintenance update is available for a Service Instance.
+**maintenance_info.description** | _string_ | Description of the impact of this maintenance update, for example, important version changes, configuration changes, default value changes, etc.
 **broker_catalog** | _object_ | This object contains information obtained from the Service Broker Catalog.
 **broker_catalog.id** | _string_ | The identifier that the Service Broker provided for this Service Plan.
 **broker_catalog.metadata** | _object_ | Additional information provided by the Service Broker.
