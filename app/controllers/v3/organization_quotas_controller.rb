@@ -79,7 +79,7 @@ class OrganizationQuotasController < ApplicationController
 
     delete_action = OrganizationQuotaDeleteAction.new
 
-    deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(QuotaDefinition, organization_quota.guid, delete_action)
+    deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(QuotaDefinition, organization_quota.guid, delete_action, 'organization_quota')
     pollable_job = Jobs::Enqueuer.new(deletion_job, queue: Jobs::Queues.generic).enqueue_pollable
 
     url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new

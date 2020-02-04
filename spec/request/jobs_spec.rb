@@ -5,10 +5,40 @@ RSpec.describe 'Jobs' do
   let(:user_headers) { headers_for(user, email: 'some_email@example.com', user_name: 'Mr. Freeze') }
 
   describe 'when getting a job that exists' do
-    it 'returns a json representation of the job' do
+    it 'returns a json representation of a generic job' do
       operation = 'app.delete'
       job = VCAP::CloudController::PollableJobModel.make(
         resource_type: 'app',
+        state: VCAP::CloudController::PollableJobModel::COMPLETE_STATE,
+        operation: operation,
+      )
+      job_guid = job.guid
+
+      get "/v3/jobs/#{job_guid}", nil, user_headers
+
+      expected_response = {
+        'guid' => job_guid,
+        'created_at' => iso8601,
+        'updated_at' => iso8601,
+        'operation' => operation,
+        'state' => 'COMPLETE',
+        'errors' => [],
+        'warnings' => [],
+        'links' => {
+          'self' => { 'href' => "#{link_prefix}/v3/jobs/#{job_guid}" }
+        }
+      }
+
+      parsed_response = MultiJson.load(last_response.body)
+
+      expect(last_response.status).to eq(200)
+      expect(parsed_response).to be_a_response_like(expected_response)
+    end
+
+    it 'returns a json representation of a special case' do
+      operation = 'app.delete'
+      job = VCAP::CloudController::PollableJobModel.make(
+        resource_type: 'organization_quota',
         state: VCAP::CloudController::PollableJobModel::COMPLETE_STATE,
         operation: operation,
       )

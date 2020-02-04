@@ -1158,6 +1158,10 @@ module VCAP::CloudController
           expect(last_response.headers['Location']).to match(%r(http.+/v3/jobs/[a-fA-F0-9-]+))
 
           execute_all_jobs(expected_successes: 2, expected_failures: 0)
+          last_job = VCAP::CloudController::PollableJobModel.last
+          expect(last_response.headers['Location']).to match(%r(/v3/jobs/#{last_job.guid}))
+          expect(last_job.resource_type).to eq('organization')
+
           get "/v3/organizations/#{org.guid}", {}, admin_headers
           expect(last_response.status).to eq(404)
         end

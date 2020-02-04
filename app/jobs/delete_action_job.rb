@@ -5,10 +5,11 @@ module VCAP::CloudController
 
       attr_reader :resource_guid
 
-      def initialize(model_class, resource_guid, delete_action)
+      def initialize(model_class, resource_guid, delete_action, resource_type=nil)
         @model_class    = model_class
         @resource_guid  = resource_guid
         @delete_action  = delete_action
+        @resource_type = resource_type || model_class.name.demodulize.gsub('Model', '').underscore
       end
 
       def perform
@@ -45,7 +46,7 @@ module VCAP::CloudController
       end
 
       def resource_type
-        @model_class.name.demodulize.gsub('Model', '').underscore
+        @resource_type
       end
 
       def display_name

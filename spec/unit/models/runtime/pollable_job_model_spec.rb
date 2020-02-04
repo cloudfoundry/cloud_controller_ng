@@ -55,6 +55,31 @@ module VCAP::CloudController
         job = PollableJobModel.make(resource_type: 'app', resource_guid: 'not-a-real-guid')
         expect(job.resource_exists?).to be(false)
       end
+
+      context 'when the resource is a special case' do
+        it 'returns true if the resource exists' do
+          organization_quota = QuotaDefinition.make
+          job = PollableJobModel.make(resource_type: 'organization_quota', resource_guid: organization_quota.
+            guid)
+          expect(job.resource_exists?).to be(true)
+        end
+
+        it 'returns false if the resource does NOT exist' do
+          job = PollableJobModel.make(resource_type: 'organization_quota', resource_guid: 'not-a-real-guid')
+          expect(job.resource_exists?).to be(false)
+        end
+
+        it 'returns true if the resource exists' do
+          role = OrganizationManager.make
+          job = PollableJobModel.make(resource_type: 'role', resource_guid: role.guid)
+          expect(job.resource_exists?).to be(true)
+        end
+
+        it 'returns false if the resource does NOT exist' do
+          job = PollableJobModel.make(resource_type: 'role', resource_guid: 'not-a-real-guid')
+          expect(job.resource_exists?).to be(false)
+        end
+      end
     end
 
     describe '#warnings' do
