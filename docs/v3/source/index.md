@@ -304,6 +304,7 @@ includes:
   - experimental_resources/space_quotas/create
   - experimental_resources/space_quotas/get
   - experimental_resources/space_quotas/list
+  - experimental_resources/space_quotas/update
   - upgrade_guide/upgrade_guide
 
 ---

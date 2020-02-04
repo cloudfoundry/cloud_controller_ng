@@ -192,6 +192,7 @@ Rails.application.routes.draw do
   post '/space_quotas', to: 'space_quotas#create'
   get '/space_quotas/:guid', to: 'space_quotas#show'
   get '/space_quotas', to: 'space_quotas#index'
+  patch '/space_quotas/:guid', to: 'space_quotas#update'
 
   # spaces
   post '/spaces', to: 'spaces_v3#create'

@@ -22,10 +22,6 @@ module VCAP::CloudController
 
     validates :organizations, allow_nil: true, to_many_relationship: true
 
-    def initialize(params)
-      super(params)
-    end
-
     def organization_guids
       orgs = HashUtils.dig(organizations, :data)
       orgs ? orgs.map { |org| org[:guid] } : []

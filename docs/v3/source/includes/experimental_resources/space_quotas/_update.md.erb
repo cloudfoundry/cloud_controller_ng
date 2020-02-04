@@ -1,0 +1,68 @@
+### Update a space quota
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/space_quotas/[guid]" \
+  -X PATCH \
+  -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
+  -d '{
+    "name": "don-quixote",
+    "apps": {
+      "total_memory_in_mb": 5120,
+      "per_process_memory_in_mb": 1024,
+      "total_instances": 10,
+      "per_app_tasks": 5
+    },
+    "services": {
+      "paid_services_allowed": true,
+      "total_service_instances": 10,
+      "total_service_keys": 20,
+    },
+    "routes": {
+      "total_routes": 8,
+      "total_reserved_ports": 4
+    }
+  }'
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :single_space_quota %>
+```
+
+#### Definition
+`PATCH /v3/space_quotas/:guid`
+
+#### Optional parameters
+Name | Type | Description
+---- | ---- | -----------
+| **name** | _string_ | Name of the quota.
+| **apps** | _object_ | Quotas that affect applications and application sub-resources.
+| **apps.per_process_memory_in_mb** | _integer_ or `null` | Maximum memory for a single process or task.
+| **apps.total_memory_in_mb** | _integer_ or `null` | Total memory of all the started processes and running tasks in a space.
+| **apps.total_instances** | _integer_ or `null` | Total instances of all the started processes in a space.
+| **apps.per_app_tasks** | _integer_ or `null` | Maximum number of running tasks in a single application.
+| **services** | _object_ | Quotas that affect services.
+| **services.paid_services_allowed** | _boolean_ | If instances of paid service plans can be created.
+| **services.total_service_instances** | _integer_ or `null` | Total number of service instances in a space.
+| **services.total_service_keys** | _integer_ or `null` | Total number of service keys in a space.
+| **routes** | _object_ | Quotas that affect routes.
+| **routes.total_routes** | _integer_ or `null` | Total number of routes that a space can have.
+| **routes.total_reserved_ports** | _integer_ or `null` | Total number of ports that all routes in a space can reserve.
+
+#### Permitted roles
+
+Role | Notes
+----- | ---
+Admin |
+Org Manager | Can update space quotas in the organization where they have this role.

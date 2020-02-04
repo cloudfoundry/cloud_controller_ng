@@ -1,9 +1,9 @@
 require 'spec_helper'
-require 'messages/space_quotas_create_message'
+require 'messages/space_quota_update_message'
 
 module VCAP::CloudController
-  RSpec.describe SpaceQuotasCreateMessage do
-    subject { SpaceQuotasCreateMessage.new(params) }
+  RSpec.describe SpaceQuotaUpdateMessage do
+    subject { SpaceQuotaUpdateMessage.new(params) }
 
     let(:params) do
       {
@@ -11,7 +11,6 @@ module VCAP::CloudController
         apps: apps,
         services: services,
         routes: routes,
-        relationships: relationships,
       }
     end
 
@@ -39,21 +38,6 @@ module VCAP::CloudController
       }
     end
 
-    let(:relationships) do
-      {
-        organization: {
-          data: {
-            guid: 'some-org-guid'
-          }
-        },
-        spaces: {
-          data: [
-            { guid: 'some-space-guid' }
-          ]
-        },
-      }
-    end
-
     context 'when given correct & well-formed params' do
       it 'successfully validates the inputs' do
         expect(subject).to be_valid
@@ -61,8 +45,6 @@ module VCAP::CloudController
 
       it 'populates the fields on the message' do
         expect(subject.name).to eq('basic')
-        expect(subject.organization_guid).to eq('some-org-guid')
-        expect(subject.space_guids).to eq(['some-space-guid'])
         expect(subject.total_memory_in_mb).to eq(2048)
         expect(subject.per_process_memory_in_mb).to eq(1024)
         expect(subject.total_instances).to eq(2)
@@ -79,9 +61,8 @@ module VCAP::CloudController
       context 'when no params are given' do
         let(:params) {}
 
-        it 'is not valid' do
-          expect(subject).not_to be_valid
-          expect(subject.errors[:name]).to eq ["can't be blank"]
+        it 'is valid' do
+          expect(subject).to be_valid
         end
       end
 
@@ -96,31 +77,31 @@ module VCAP::CloudController
 
       describe 'name' do
         context 'when it is non-alphanumeric' do
-          let(:params) { { name: 'thë-name', relationships: relationships } }
+          let(:params) { { name: 'thë-name' } }
 
           it { is_expected.to be_valid }
         end
 
         context 'when it contains hyphens' do
-          let(:params) { { name: 'a-z', relationships: relationships } }
+          let(:params) { { name: 'a-z' } }
 
           it { is_expected.to be_valid }
         end
 
         context 'when it contains capital ascii' do
-          let(:params) { { name: 'AZ', relationships: relationships } }
+          let(:params) { { name: 'AZ' } }
 
           it { is_expected.to be_valid }
         end
 
         context 'when it is at max length' do
-          let(:params) { { name: 'B' * SpaceQuotasCreateMessage::MAX_SPACE_QUOTA_NAME_LENGTH, relationships: relationships } }
+          let(:params) { { name: 'B' * SpaceQuotaUpdateMessage::MAX_SPACE_QUOTA_NAME_LENGTH } }
 
           it { is_expected.to be_valid }
         end
 
         context 'when it is too long' do
-          let(:params) { { name: 'B' * (SpaceQuotasCreateMessage::MAX_SPACE_QUOTA_NAME_LENGTH + 1), relationships: relationships } }
+          let(:params) { { name: 'B' * (SpaceQuotaUpdateMessage::MAX_SPACE_QUOTA_NAME_LENGTH + 1) } }
 
           it 'is not valid' do
             expect(subject).to be_invalid
@@ -129,7 +110,7 @@ module VCAP::CloudController
         end
 
         context 'when it is blank' do
-          let(:params) { { name: '', relationships: relationships } }
+          let(:params) { { name: '' } }
 
           it 'is not valid' do
             expect(subject).to be_invalid
@@ -143,7 +124,6 @@ module VCAP::CloudController
           let(:params) {
             {
               name: 'my-name',
-              relationships: relationships,
               apps: true,
             }
           }
@@ -158,7 +138,6 @@ module VCAP::CloudController
           let(:params) {
             {
               name: 'my-name',
-              relationships: relationships,
               apps: {},
             }
           }
@@ -182,7 +161,6 @@ module VCAP::CloudController
           let(:params) {
             {
               name: 'my-name',
-              relationships: relationships,
               services: true,
             }
           }
@@ -197,7 +175,6 @@ module VCAP::CloudController
           let(:params) {
             {
               name: 'my-name',
-              relationships: relationships,
               services: {},
             }
           }
@@ -221,7 +198,6 @@ module VCAP::CloudController
           let(:params) {
             {
               name: 'my-name',
-              relationships: relationships,
               routes: true,
             }
           }
@@ -236,7 +212,6 @@ module VCAP::CloudController
           let(:params) {
             {
               name: 'my-name',
-              relationships: relationships,
               routes: {},
             }
           }
@@ -252,93 +227,6 @@ module VCAP::CloudController
             expect(subject).to be_invalid
             expect(subject.errors[:routes]).to include('invalid_routes_limits')
           end
-        end
-      end
-
-      describe 'relationships' do
-        context 'given no relationships' do
-          let(:params) do
-            {
-              name: 'kris',
-            }
-          end
-
-          it { is_expected.to be_invalid }
-        end
-
-        context 'given unexpected org relationship data (not one-to-one relationship)' do
-          let(:params) do
-            {
-              name: 'kim',
-              relationships: {
-                organization: {
-                  data: [
-                    { guid: 'KKW-beauty' },
-                    { guid: 'skims' },
-                  ]
-                },
-              }
-            }
-          end
-
-          it { is_expected.to be_invalid }
-        end
-
-        context 'given a malformed organization guid' do
-          let(:params) do
-            {
-              name: 'rob',
-              relationships: {
-                organizations: {
-                  data: {
-                    guid: 150000
-                  },
-                }
-              }
-            }
-          end
-
-          it { is_expected.to be_invalid }
-        end
-
-        context 'given unexpected spaces relationship data (not one-to-many relationship)' do
-          let(:params) do
-            {
-              name: 'kim',
-              relationships: {
-                organization: {
-                  data: { guid: 'KKW-beauty' }
-                },
-                spaces: {
-                  data: { guid: 'skims' }
-                }
-              }
-            }
-          end
-
-          it { is_expected.to be_invalid }
-        end
-
-        context 'given a malformed space guid' do
-          let(:params) do
-            {
-              name: 'rob',
-              relationships: {
-                organization: {
-                  data: {
-                    guid: 'socks'
-                  },
-                },
-                spaces: {
-                  data: [
-                    { guid: 150000 }
-                  ]
-                }
-              }
-            }
-          end
-
-          it { is_expected.to be_invalid }
         end
       end
     end

@@ -78,6 +78,166 @@ module VCAP::CloudController
       end
     end
 
+    describe 'PATCH /v3/space_quotas/:guid' do
+      let(:api_call) { lambda { |user_headers| patch "/v3/space_quotas/#{space_quota.guid}", params.to_json, user_headers } }
+
+      let(:params) do
+        {
+          "name": 'don-quixote',
+          "apps": {
+            "total_memory_in_mb": 5120,
+            "per_process_memory_in_mb": 1024,
+            "total_instances": nil,
+            "per_app_tasks": 5
+          },
+          "services": {
+            "paid_services_allowed": false,
+            "total_service_instances": 10,
+            "total_service_keys": 20,
+          },
+          "routes": {
+            "total_routes": 8,
+            "total_reserved_ports": 4
+          }
+        }
+      end
+
+      let(:updated_space_quota_json) do
+        {
+          guid: space_quota.guid,
+          created_at: iso8601,
+          updated_at: iso8601,
+          name: 'don-quixote',
+          apps: {
+            total_memory_in_mb: 5120,
+            per_process_memory_in_mb: 1024,
+            total_instances: nil,
+            per_app_tasks: 5
+          },
+          services: {
+            paid_services_allowed: false,
+            total_service_instances: 10,
+            total_service_keys: 20
+          },
+          routes: {
+            total_routes: 8,
+            total_reserved_ports: 4
+          },
+          relationships: {
+            organization: {
+              data: { guid: space_quota.organization.guid },
+            },
+            spaces: {
+              data: [{ guid: space.guid }]
+            }
+          },
+          links: {
+            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/space_quotas\/#{space_quota.guid}) },
+            organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{space_quota.organization.guid}) },
+          }
+        }
+      end
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 403)
+        h['admin'] = { code: 200, response_object: updated_space_quota_json }
+        h['org_manager'] = { code: 200, response_object: updated_space_quota_json }
+        h.freeze
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+      context 'when the space quota does not exist' do
+        it 'returns a 404 with a helpful message' do
+          patch '/v3/space_quotas/not-exist', params.to_json, admin_header
+
+          expect(last_response).to have_status_code(404)
+          expect(last_response).to have_error_message('Space quota not found')
+        end
+      end
+
+      context 'update partial values' do
+        let(:space_quota_to_update) do
+          VCAP::CloudController::SpaceQuotaDefinition.make(
+            organization: org,
+            guid: 'space_quota_to_update_guid',
+            name: 'update-me',
+            memory_limit: 8,
+            non_basic_services_allowed: true)
+        end
+
+        let(:partial_params) do
+          {
+            "name": 'don-quixote',
+            "apps": {
+              "per_app_tasks": 9,
+              "total_memory_in_mb": nil,
+            },
+            "services": {
+              "total_service_instances": 14,
+              "paid_services_allowed": false,
+            },
+          }
+        end
+
+        before do
+          patch "/v3/space_quotas/#{space_quota_to_update.guid}", partial_params.to_json, admin_header
+        end
+
+        it 'only updates the requested fields' do
+          expect(last_response).to have_status_code(200)
+          expect(space_quota_to_update.reload.app_task_limit).to eq(9)
+          expect(space_quota_to_update.reload.memory_limit).to eq(-1)
+          expect(space_quota_to_update.reload.total_services).to eq(14)
+          expect(space_quota_to_update.reload.non_basic_services_allowed).to be_falsey
+        end
+
+        context 'patching with empty params' do
+          it 'succeeds without changing the quota' do
+            patch "/v3/space_quotas/#{space_quota_to_update.guid}", {}, admin_header
+
+            expect(last_response).to have_status_code(200)
+            expect(space_quota_to_update.reload.app_task_limit).to eq(9)
+            expect(space_quota_to_update.reload.memory_limit).to eq(-1)
+            expect(space_quota_to_update.reload.total_services).to eq(14)
+            expect(space_quota_to_update.reload.non_basic_services_allowed).to be_falsey
+          end
+        end
+      end
+
+      context 'when trying to update name to a pre-existing name' do
+        let!(:new_space_quota) { SpaceQuotaDefinition.make(organization: org) }
+
+        let(:params) do
+          {
+            name: space_quota.name,
+          }
+        end
+
+        it 'returns 422' do
+          patch "/v3/space_quotas/#{new_space_quota.guid}", params.to_json, admin_header
+
+          expect(last_response).to have_status_code(422)
+          expect(last_response).to include_error_message("Space Quota '#{space_quota.name}' already exists.")
+        end
+      end
+
+      context 'when trying to update name with invalid params' do
+        let(:params) do
+          {
+            wat: 'idk'
+          }
+        end
+
+        it 'returns 422' do
+          patch "/v3/space_quotas/#{space_quota.guid}", params.to_json, admin_header
+
+          expect(last_response).to have_status_code(422)
+          expect(last_response).to include_error_message("Unknown field(s): 'wat'")
+        end
+      end
+    end
+
     describe 'GET /v3/space_quotas' do
       let(:api_call) { lambda { |user_headers| get '/v3/space_quotas', nil, user_headers } }
 
