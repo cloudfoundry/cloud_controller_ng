@@ -6,7 +6,7 @@ require 'messages/organization_quota_apply_message'
 require 'messages/organization_quotas_create_message'
 require 'messages/organization_quotas_list_message'
 require 'fetchers/organization_quota_list_fetcher'
-require 'presenters/v3/organization_quotas_presenter'
+require 'presenters/v3/organization_quota_presenter'
 require 'presenters/v3/to_many_relationship_presenter'
 
 class OrganizationQuotasController < ApplicationController
@@ -19,7 +19,7 @@ class OrganizationQuotasController < ApplicationController
     organization_quota = OrganizationQuotasCreate.new.create(message)
     visible_organizations_guids = permission_queryer.readable_org_guids
 
-    render json: Presenters::V3::OrganizationQuotasPresenter.new(organization_quota, visible_org_guids: visible_organizations_guids), status: :created
+    render json: Presenters::V3::OrganizationQuotaPresenter.new(organization_quota, visible_org_guids: visible_organizations_guids), status: :created
   rescue OrganizationQuotasCreate::Error => e
     unprocessable!(e.message)
   end
@@ -36,7 +36,7 @@ class OrganizationQuotasController < ApplicationController
     organization_quota = OrganizationQuotasUpdate.update(organization_quota, message)
     visible_organizations_guids = permission_queryer.readable_org_guids
 
-    render json: Presenters::V3::OrganizationQuotasPresenter.new(organization_quota, visible_org_guids: visible_organizations_guids), status: :ok
+    render json: Presenters::V3::OrganizationQuotaPresenter.new(organization_quota, visible_org_guids: visible_organizations_guids), status: :ok
   rescue OrganizationQuotasUpdate::Error => e
     unprocessable!(e.message)
   end
@@ -47,7 +47,7 @@ class OrganizationQuotasController < ApplicationController
 
     visible_organizations_guids = permission_queryer.readable_org_guids
 
-    render json: Presenters::V3::OrganizationQuotasPresenter.new(organization_quota, visible_org_guids: visible_organizations_guids), status: :ok
+    render json: Presenters::V3::OrganizationQuotaPresenter.new(organization_quota, visible_org_guids: visible_organizations_guids), status: :ok
   rescue OrganizationQuotasCreate::Error => e
     unprocessable!(e.message)
   end
@@ -59,7 +59,7 @@ class OrganizationQuotasController < ApplicationController
     dataset = OrganizationQuotaListFetcher.fetch(message: message, readable_org_guids: permission_queryer.readable_org_guids)
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
-      presenter: Presenters::V3::OrganizationQuotasPresenter,
+      presenter: Presenters::V3::OrganizationQuotaPresenter,
       paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
       path: '/v3/organization_quotas',
       message: message,

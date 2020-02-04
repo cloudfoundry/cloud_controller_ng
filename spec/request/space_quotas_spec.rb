@@ -289,6 +289,43 @@ module VCAP::CloudController
         it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
       end
 
+      context 'with filters' do
+        let!(:space_quota_2) { VCAP::CloudController::SpaceQuotaDefinition.make(guid: 'second-guid', name: 'second-name', organization: org) }
+        let(:space_2) { VCAP::CloudController::Space.make(guid: 'space-2-guid', organization: org, space_quota_definition: space_quota_2) }
+
+        let!(:space_quota_3) { VCAP::CloudController::SpaceQuotaDefinition.make(guid: 'third-guid', name: 'third-name', organization: org) }
+        let(:space_3) { VCAP::CloudController::Space.make(guid: 'space-3-guid', organization: org, space_quota_definition: space_quota_3) }
+
+        let(:org_alien) { VCAP::CloudController::Organization.make(guid: 'organization-alien-guid') }
+        let!(:space_quota_alien) { VCAP::CloudController::SpaceQuotaDefinition.make(guid: 'space-quota-alien-guid', organization: org_alien) }
+
+        it 'returns the list of quotas filtered by names and guids' do
+          get "/v3/space_quotas?guids=#{space_quota.guid},second-guid&names=#{space_quota.name},third-name", nil, admin_header
+
+          expect(last_response).to have_status_code(200)
+          expect(parsed_response['resources'].length).to eq(1)
+          expect(parsed_response['resources'][0]['guid']).to eq(space_quota.guid)
+        end
+
+        it 'returns the list of quotas filtered by org guids' do
+          get "/v3/space_quotas?organization_guids=#{org_alien.guid}", nil, admin_header
+
+          expect(last_response).to have_status_code(200)
+          expect(
+            parsed_response['resources'].map { |space_quota| space_quota['guid'] }
+          ).to eq([space_quota_alien.guid])
+        end
+
+        it 'returns the list of quotas filtered by space guids' do
+          get "/v3/space_quotas?space_guids=#{space.guid},#{space_2.guid}", nil, admin_header
+
+          expect(last_response).to have_status_code(200)
+          expect(
+            parsed_response['resources'].map { |space_quota| space_quota['guid'] }
+          ).to eq([space_quota.guid, space_quota_2.guid])
+        end
+      end
+
       context 'when the user is not logged in' do
         it 'returns 401 for Unauthenticated requests' do
           get '/v3/space_quotas', nil, base_json_headers

@@ -225,7 +225,7 @@ module VCAP::CloudController
           end
 
           it 'returns the list of quotas filtered by names and guids' do
-            get "/v3/organization_quotas?guids=#{organization_quota.guid},second-guid&names=#{organization_quota.name},third_name", nil, admin_header
+            get "/v3/organization_quotas?guids=#{organization_quota.guid},second-guid&names=#{organization_quota.name},third-name", nil, admin_header
 
             expect(last_response).to have_status_code(200)
             expect(parsed_response['resources'].length).to eq(1)

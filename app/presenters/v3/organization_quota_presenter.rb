@@ -2,7 +2,7 @@ require 'presenters/v3/base_presenter'
 require 'presenters/mixins/metadata_presentation_helpers'
 
 module VCAP::CloudController::Presenters::V3
-  class OrganizationQuotasPresenter < BasePresenter
+  class OrganizationQuotaPresenter < BasePresenter
     def initialize(
       resource,
         show_secrets: false,

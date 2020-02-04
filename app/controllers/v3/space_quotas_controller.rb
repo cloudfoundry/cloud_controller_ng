@@ -1,5 +1,6 @@
 require 'actions/space_quotas_create'
 require 'actions/space_quota_update'
+require 'fetchers/space_quota_list_fetcher'
 require 'messages/space_quotas_create_message'
 require 'messages/space_quotas_list_message'
 require 'messages/space_quota_update_message'
@@ -39,7 +40,8 @@ class SpaceQuotasController < ApplicationController
     message = VCAP::CloudController::SpaceQuotasListMessage.from_params(query_params)
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    dataset = SpaceQuotaDefinition.where(guid: readable_space_quota_guids)
+    dataset = SpaceQuotaListFetcher.fetch(message: message, readable_space_quota_guids: readable_space_quota_guids)
+
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::SpaceQuotaPresenter,
       paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),

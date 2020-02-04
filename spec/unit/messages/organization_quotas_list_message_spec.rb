@@ -10,7 +10,6 @@ module VCAP::CloudController
           'guids' => 'org-quota1-guid,org-quota2-guid',
           'names' => 'org-quota1-name,org-quota2-name',
           'organization_guids' => 'org1-guid,org2-guid',
-
         }
       end
 
@@ -48,23 +47,39 @@ module VCAP::CloudController
           message = OrganizationQuotasListMessage.from_params(params)
           expect(message).to be_valid
         end
+      end
 
-        context 'guids, names, organization_guids must be arrays' do
-          let(:params) do
-            {
-              guids: 'a',
-              names: { 'not' => 'an array' },
-              organization_guids: 3.14159,
-            }
-          end
+      context 'guids, names, organization_guids must be arrays' do
+        let(:params) do
+          {
+            guids: 'a',
+            names: { 'not' => 'an array' },
+            organization_guids: 3.14159,
+          }
+        end
 
-          it 'is invalid' do
-            message = OrganizationQuotasListMessage.from_params(params)
-            expect(message).to be_invalid
-            expect(message.errors.details[:guids].first[:error]).to eq('must be an array')
-            expect(message.errors.details[:names].first[:error]).to eq('must be an array')
-            expect(message.errors.details[:organization_guids].first[:error]).to eq('must be an array')
-          end
+        it 'is invalid' do
+          message = OrganizationQuotasListMessage.from_params(params)
+          expect(message).to be_invalid
+          expect(message.errors.details[:guids].first[:error]).to eq('must be an array')
+          expect(message.errors.details[:names].first[:error]).to eq('must be an array')
+          expect(message.errors.details[:organization_guids].first[:error]).to eq('must be an array')
+        end
+      end
+
+      context 'when there are additional keys' do
+        let(:params) do
+          {
+            'page' => 1,
+            'per_page' => 5,
+            'foobar' => 'pants',
+          }
+        end
+
+        it 'fails to validate' do
+          message = OrganizationQuotasListMessage.from_params(params)
+
+          expect(message).to be_invalid
         end
       end
     end
