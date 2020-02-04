@@ -52,9 +52,7 @@ module VCAP::CloudController
         end
 
         def broker_metadata
-          JSON.parse(service_offering.extra)
-        rescue JSON::ParserError
-          {}
+          service_offering.extra
         end
 
         def build_links
