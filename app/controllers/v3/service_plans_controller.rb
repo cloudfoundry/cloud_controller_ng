@@ -10,7 +10,7 @@ class ServicePlansController < ApplicationController
 
     service_plan = ServicePlan.where(guid: hashed_params[:guid]).first
     service_plan_not_found! if service_plan.nil?
-    service_plan_not_found! unless visible_to_current_user?(plan: service_plan)
+    service_plan_not_found! unless visible_to_current_user?(service: nil, plan: service_plan)
 
     presenter = Presenters::V3::ServicePlanPresenter.new(service_plan)
     render status: :ok, json: presenter.to_json
@@ -19,16 +19,7 @@ class ServicePlansController < ApplicationController
   def index
     not_authenticated! if user_cannot_see_marketplace?
 
-    dataset = if !current_user
-                ServicePlanListFetcher.new.fetch
-              elsif permission_queryer.can_read_globally?
-                ServicePlanListFetcher.new.fetch(omniscient: true)
-              else
-                ServicePlanListFetcher.new.fetch(
-                  org_guids: permission_queryer.readable_org_guids,
-                  space_guids: permission_queryer.readable_space_scoped_space_guids,
-                )
-              end
+    dataset = ServicePlanListFetcher.new.fetch_public
 
     presenter = Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::ServicePlanPresenter,
