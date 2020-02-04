@@ -6,6 +6,7 @@ module VCAP::CloudController
                 left_join(:service_plans, service_id: Sequel[:services][:id]).
                 left_join(:spaces, id: Sequel[:service_brokers][:space_id]).
                 left_join(:organizations, id: Sequel[:spaces][:organization_id]).
+                group(Sequel[:services][:id]).
                 select_all(:services)
 
       dataset = filter(message, dataset)

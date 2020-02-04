@@ -221,6 +221,22 @@ module VCAP::CloudController
         let(:service_offerings) { ServiceOfferingListFetcher.new.fetch(message).all }
 
         it_behaves_like 'filtered service offering fetcher', :fetch
+
+        context 'uniqueness of service offerings' do
+          let!(:service_broker) { VCAP::CloudController::ServiceBroker.make }
+          let!(:service_offering) do
+            offering = VCAP::CloudController::Service.make(service_broker: service_broker)
+            VCAP::CloudController::ServicePlan.make(public: true, service: offering)
+            VCAP::CloudController::ServicePlan.make(public: true, service: offering)
+            VCAP::CloudController::ServicePlan.make(public: true, service: offering)
+            offering
+          end
+
+          it 'de-duplicates service offerings' do
+            service_offerings = ServiceOfferingListFetcher.new.fetch(message).all
+            expect(service_offerings).to contain_exactly(service_offering)
+          end
+        end
       end
     end
 
