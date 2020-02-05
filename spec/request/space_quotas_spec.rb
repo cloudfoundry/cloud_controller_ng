@@ -142,6 +142,9 @@ module VCAP::CloudController
         h = Hash.new(code: 403)
         h['admin'] = { code: 200, response_object: updated_space_quota_json }
         h['org_manager'] = { code: 200, response_object: updated_space_quota_json }
+        h['org_auditor'] = { code: 404 }
+        h['org_billing_manager'] = { code: 404 }
+        h['no_role'] = { code: 404 }
         h.freeze
       end
 
@@ -705,6 +708,9 @@ module VCAP::CloudController
           h = Hash.new(code: 403)
           h['admin'] = { code: 200, response_object: data_json }
           h['org_manager'] = { code: 200, response_object: data_json }
+          h['org_auditor'] = { code: 404 }
+          h['org_billing_manager'] = { code: 404 }
+          h['no_role'] = { code: 404 }
           h
         end
 

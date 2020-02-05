@@ -55,9 +55,12 @@ class SpaceQuotasController < ApplicationController
 
   def update
     space_quota = SpaceQuotaDefinition.first(guid: hashed_params[:guid])
+
+    resource_not_found!(:space_quota) unless space_quota &&
+      readable_space_quota_guids.include?(space_quota.guid)
+
     unauthorized! unless permission_queryer.can_write_globally? ||
       (space_quota && permission_queryer.can_write_to_org?(space_quota.organization_guid))
-    resource_not_found!(:space_quota) unless space_quota
 
     message = VCAP::CloudController::OrganizationQuotasUpdateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
@@ -74,9 +77,12 @@ class SpaceQuotasController < ApplicationController
 
   def apply_to_spaces
     space_quota = SpaceQuotaDefinition.first(guid: hashed_params[:guid])
+
+    resource_not_found!(:space_quota) unless space_quota &&
+      readable_space_quota_guids.include?(space_quota.guid)
+
     unauthorized! unless permission_queryer.can_write_globally? ||
       (space_quota && permission_queryer.can_write_to_org?(space_quota.organization_guid))
-    resource_not_found!(:space_quota) unless space_quota
 
     message = SpaceQuotaApplyMessage.new(hashed_params[:body])
     invalid_param!(message.errors.full_messages) unless message.valid?
