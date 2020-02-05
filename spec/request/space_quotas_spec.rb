@@ -678,6 +678,56 @@ module VCAP::CloudController
       end
     end
 
+    describe 'POST /v3/space_quotas/:guid/relationships/spaces' do
+      let(:api_call) { lambda { |user_headers| post "/v3/space_quotas/#{space_quota.guid}/relationships/spaces", params.to_json, user_headers } }
+      let(:other_space) { VCAP::CloudController::Space.make(organization: org, guid: 'other-space-guid') }
+
+      let(:params) do
+        {
+          data: [{ guid: other_space.guid }]
+        }
+      end
+
+      context 'when applying quota to a space' do
+        let(:data_json) do
+          {
+            data: [
+              { guid: space.guid },
+              { guid: other_space.guid }
+            ],
+            links: {
+              self: { href: "#{link_prefix}/v3/space_quotas/#{space_quota.guid}/relationships/spaces" },
+            }
+          }
+        end
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(code: 403)
+          h['admin'] = { code: 200, response_object: data_json }
+          h['org_manager'] = { code: 200, response_object: data_json }
+          h
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
+
+      context 'when a space guid is invalid' do
+        let(:params) do
+          {
+            data: [
+              { guid: 'not a real guid' }
+            ]
+          }
+        end
+
+        it 'returns a 422 with a helpful message' do
+          post "/v3/space_quotas/#{space_quota.guid}/relationships/spaces", params.to_json, admin_header
+          expect(last_response).to have_status_code(422)
+          expect(last_response).to have_error_message('Spaces with guids ["not a real guid"] do not exist, or you do not have access to them.')
+        end
+      end
+    end
+
     def make_space_quota_json(space_quota, associated_spaces=space_quota.spaces)
       {
         guid: space_quota.guid,

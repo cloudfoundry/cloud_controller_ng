@@ -143,3 +143,17 @@
     ]
 }
 <% end %>
+
+
+<% content_for :apply_space_quota do %>
+  {
+    "data": [
+      { "guid": "space-guid1" },
+      { "guid": "space-guid2" },
+      { "guid": "previous-space-guid" }
+    ],
+    "links": {
+      "self": { "href": "https://api.example.org/v3/space_quotas/quota-guid/relationships/spaces" }
+    }
+  }
+<% end %>

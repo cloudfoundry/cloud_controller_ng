@@ -1,9 +1,11 @@
 require 'actions/space_quotas_create'
 require 'actions/space_quota_update'
+require 'actions/space_quota_apply'
 require 'fetchers/space_quota_list_fetcher'
 require 'messages/space_quotas_create_message'
 require 'messages/space_quotas_list_message'
 require 'messages/space_quota_update_message'
+require 'messages/space_quota_apply_message'
 require 'presenters/v3/space_quota_presenter'
 
 class SpaceQuotasController < ApplicationController
@@ -67,6 +69,27 @@ class SpaceQuotasController < ApplicationController
       visible_space_guids: readable_space_guids
     )
   rescue SpaceQuotaUpdate::Error => e
+    unprocessable!(e.message)
+  end
+
+  def apply_to_spaces
+    space_quota = SpaceQuotaDefinition.first(guid: hashed_params[:guid])
+    unauthorized! unless permission_queryer.can_write_globally? ||
+      (space_quota && permission_queryer.can_write_to_org?(space_quota.organization_guid))
+    resource_not_found!(:space_quota) unless space_quota
+
+    message = SpaceQuotaApplyMessage.new(hashed_params[:body])
+    invalid_param!(message.errors.full_messages) unless message.valid?
+
+    SpaceQuotaApply.new.apply(space_quota, message)
+
+    render status: :ok, json: Presenters::V3::ToManyRelationshipPresenter.new(
+      "space_quotas/#{space_quota.guid}",
+      space_quota.spaces,
+      'spaces',
+      build_related: false
+    )
+  rescue SpaceQuotaApply::Error => e
     unprocessable!(e.message)
   end
 
