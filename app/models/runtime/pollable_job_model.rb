@@ -19,6 +19,8 @@ module VCAP::CloudController
                 Role
               when 'organization_quota'
                 QuotaDefinition
+              when 'space_quota'
+                SpaceQuotaDefinition
               else
                 Sequel::Model(ActiveSupport::Inflector.pluralize(resource_type).to_sym)
               end

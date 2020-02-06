@@ -2,6 +2,7 @@ require 'actions/space_quotas_create'
 require 'actions/space_quota_update'
 require 'actions/space_quota_apply'
 require 'actions/space_quota_unapply'
+require 'actions/space_quota_delete'
 require 'fetchers/space_quota_list_fetcher'
 require 'messages/space_quotas_create_message'
 require 'messages/space_quotas_list_message'
@@ -119,6 +120,26 @@ class SpaceQuotasController < ApplicationController
     SpaceQuotaUnapply.unapply(space_quota, space)
   rescue SpaceQuotaUnapply::Error => e
     unprocessable!(e.message)
+  end
+
+  def destroy
+    space_quota = SpaceQuotaDefinition.first(guid: hashed_params[:guid])
+
+    resource_not_found!(:space_quota) unless space_quota &&
+      readable_space_quota_guids.include?(space_quota.guid)
+
+    unauthorized! unless permission_queryer.can_write_globally? ||
+      (space_quota && permission_queryer.can_write_to_org?(space_quota.organization_guid))
+
+    unprocessable!('This quota is applied to one or more spaces. Remove this quota from all spaces before deleting.') unless space_quota.spaces.empty?
+
+    delete_action = SpaceQuotaDeleteAction.new
+
+    deletion_job = VCAP::CloudController::Jobs::DeleteActionJob.new(SpaceQuotaDefinition, space_quota.guid, delete_action, 'space_quota')
+    pollable_job = Jobs::Enqueuer.new(deletion_job, queue: Jobs::Queues.generic).enqueue_pollable
+
+    url_builder = VCAP::CloudController::Presenters::ApiUrlBuilder.new
+    head :accepted, 'Location' => url_builder.build_url(path: "/v3/jobs/#{pollable_job.guid}")
   end
 
   private

@@ -195,6 +195,7 @@ Rails.application.routes.draw do
   patch '/space_quotas/:guid', to: 'space_quotas#update'
   post '/space_quotas/:guid/relationships/spaces', to: 'space_quotas#apply_to_spaces'
   delete '/space_quotas/:guid/relationships/spaces/:space_guid', to: 'space_quotas#remove_from_space'
+  delete '/space_quotas/:guid', to: 'space_quotas#destroy'
 
   # spaces
   post '/spaces', to: 'spaces_v3#create'

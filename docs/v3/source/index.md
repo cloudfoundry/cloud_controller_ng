@@ -305,6 +305,7 @@ includes:
   - experimental_resources/space_quotas/get
   - experimental_resources/space_quotas/list
   - experimental_resources/space_quotas/update
+  - experimental_resources/space_quotas/delete
   - experimental_resources/space_quotas/apply
   - experimental_resources/space_quotas/remove
   - upgrade_guide/upgrade_guide

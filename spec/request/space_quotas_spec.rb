@@ -781,6 +781,86 @@ module VCAP::CloudController
       end
     end
 
+    describe 'DELETE /v3/space_quotas/:guid' do
+      context 'when deleting a space quota that is not applied to any spaces' do
+        let(:api_call) { lambda { |user_headers| delete "/v3/space_quotas/#{unapplied_space_quota.guid}", {}, user_headers } }
+        let!(:unapplied_space_quota) { VCAP::CloudController::SpaceQuotaDefinition.make(organization: org, guid: 'unapplied-space-quota') }
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(code: 404)
+          h['admin'] = { code: 202 }
+          h['org_manager'] = { code: 202 }
+          h['admin_read_only'] = { code: 403 }
+          h['global_auditor'] = { code: 403 }
+          h
+        end
+
+        let(:db_check) do
+          lambda do
+            last_job = VCAP::CloudController::PollableJobModel.last
+            expect(last_response.headers['Location']).to match(%r(/v3/jobs/#{last_job.guid}))
+            expect(last_job.resource_type).to eq('space_quota')
+
+            get "/v3/jobs/#{last_job.guid}", nil, admin_header
+            expect(last_response).to have_status_code(200)
+            expect(parsed_response['operation']).to eq('space_quota.delete')
+            expect(parsed_response['links']['space_quota']['href']).to match(%r(/v3/space_quotas/#{unapplied_space_quota.guid}))
+
+            execute_all_jobs(expected_successes: 1, expected_failures: 0)
+
+            get "/v3/space_quotas/#{unapplied_space_quota.guid}", nil, admin_header
+            expect(last_response).to have_status_code(404)
+          end
+        end
+
+        it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
+      end
+
+      context 'when the space quota does not exist' do
+        let(:fake_space_quota_guid) { 'does-not-exist' }
+
+        it 'returns a 404 with a helpful error message' do
+          delete "/v3/space_quotas/#{fake_space_quota_guid}", {}, admin_header
+
+          expect(last_response).to have_status_code(404)
+          expect(last_response).to have_error_message('Space quota not found')
+        end
+      end
+
+      context 'when the space quota is still applied to a space' do
+        let!(:space) { VCAP::CloudController::Space.make(space_quota_definition: space_quota, organization: org) }
+        let(:api_call) { lambda { |user_headers| delete "/v3/space_quotas/#{space_quota.guid}", {}, user_headers } }
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(code: 403)
+          h['admin'] = { code: 422 }
+          h['org_manager'] = { code: 422 }
+          h['org_auditor'] = { code: 404 }
+          h['org_billing_manager'] = { code: 404 }
+          h['no_role'] = { code: 404 }
+          h
+        end
+
+        let(:db_check) do
+          lambda do
+            get "/v3/space_quotas/#{space_quota.guid}", nil, admin_header
+            expect(last_response).to have_status_code(200)
+          end
+        end
+
+        it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
+
+        context 'when the user has sufficient permissions to delete a space quota' do
+          it 'returns a 422 with a helpful error message' do
+            delete "/v3/space_quotas/#{space_quota.guid}", {}, admin_header
+
+            expect(last_response).to have_status_code(422)
+            expect(last_response).to have_error_message('This quota is applied to one or more spaces. Remove this quota from all spaces before deleting.')
+          end
+        end
+      end
+    end
+
     def make_space_quota_json(space_quota, associated_spaces=space_quota.spaces)
       {
         guid: space_quota.guid,
