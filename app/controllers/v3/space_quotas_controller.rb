@@ -1,6 +1,7 @@
 require 'actions/space_quotas_create'
 require 'actions/space_quota_update'
 require 'actions/space_quota_apply'
+require 'actions/space_quota_unapply'
 require 'fetchers/space_quota_list_fetcher'
 require 'messages/space_quotas_create_message'
 require 'messages/space_quotas_list_message'
@@ -96,6 +97,27 @@ class SpaceQuotasController < ApplicationController
       build_related: false
     )
   rescue SpaceQuotaApply::Error => e
+    unprocessable!(e.message)
+  end
+
+  def remove_from_space
+    space_quota = SpaceQuotaDefinition.first(guid: hashed_params[:guid])
+
+    resource_not_found!(:space_quota) unless space_quota &&
+      readable_space_quota_guids.include?(space_quota.guid)
+
+    unauthorized! unless permission_queryer.can_write_globally? ||
+      (space_quota && permission_queryer.can_write_to_org?(space_quota.organization_guid))
+
+    space_guid = hashed_params[:space_guid]
+    space = Space.first(guid: space_guid)
+
+    unless space && space.space_quota_definition_guid == space_quota.guid
+      unprocessable!("Unable to remove quota from space with guid '#{space_guid}'. Ensure the space quota is applied to this space.")
+    end
+
+    SpaceQuotaUnapply.unapply(space_quota, space)
+  rescue SpaceQuotaUnapply::Error => e
     unprocessable!(e.message)
   end
 

@@ -734,6 +734,53 @@ module VCAP::CloudController
       end
     end
 
+    describe 'DELETE /v3/space_quotas/:guid/relationships/spaces' do
+      let(:api_call) { lambda { |user_headers| delete "/v3/space_quotas/#{space_quota.guid}/relationships/spaces/#{space.guid}", {}, user_headers } }
+
+      context 'when removing a space quota from a space' do
+        let(:expected_codes_and_responses) do
+          h = Hash.new(code: 403)
+          h['admin'] = { code: 204 }
+          h['org_manager'] = { code: 204 }
+          h['org_auditor'] = { code: 404 }
+          h['org_billing_manager'] = { code: 404 }
+          h['no_role'] = { code: 404 }
+          h
+        end
+
+        let(:db_check) do
+          lambda do
+            expect(space_quota.reload.spaces.count).to eq(0)
+            expect(space.reload.space_quota_definition_guid).to be_nil
+          end
+        end
+
+        it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
+      end
+
+      context 'when the space does not exist' do
+        let(:fake_space_guid) { 'does-not-exist' }
+
+        it 'returns a helpful error message' do
+          delete "/v3/space_quotas/#{space_quota.guid}/relationships/spaces/#{fake_space_guid}", {}, admin_header
+
+          expect(last_response).to have_status_code(422)
+          expect(last_response).to include_error_message("Unable to remove quota from space with guid 'does-not-exist'. Ensure the space quota is applied to this space.")
+        end
+      end
+
+      context 'when the space is not associated with the quota' do
+        let(:other_space) { VCAP::CloudController::Space.make(guid: 'not-related-space') }
+
+        it 'returns a helpful error message' do
+          delete "/v3/space_quotas/#{space_quota.guid}/relationships/spaces/#{other_space.guid}", {}, admin_header
+
+          expect(last_response).to have_status_code(422)
+          expect(last_response).to include_error_message("Unable to remove quota from space with guid 'not-related-space'. Ensure the space quota is applied to this space.")
+        end
+      end
+    end
+
     def make_space_quota_json(space_quota, associated_spaces=space_quota.spaces)
       {
         guid: space_quota.guid,
