@@ -17,7 +17,7 @@ module VCAP::CloudController
       current_user && space && space.has_member?(current_user)
     end
 
-    def visible_to_current_user?(service:, plan: nil)
+    def visible_to_current_user?(service: nil, plan: nil)
       if service
         space = service.service_broker.space
         plans = service.service_plans
