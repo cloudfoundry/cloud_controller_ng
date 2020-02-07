@@ -105,9 +105,9 @@ module OPI
     end
 
     def lifecycle_for(process)
-      if process.app.lifecycle_type == VCAP::CloudController::Lifecycles::DOCKER
+      if process.app.droplet.lifecycle_type == VCAP::CloudController::Lifecycles::DOCKER
         DockerLifecycle.new(process)
-      elsif process.app.lifecycle_type == VCAP::CloudController::Lifecycles::BUILDPACK
+      elsif process.app.droplet.lifecycle_type == VCAP::CloudController::Lifecycles::BUILDPACK
         BuildpackLifecycle.new(process)
       else
         raise("lifecycle type `#{process.app.lifecycle_type}` is invalid")

@@ -15,6 +15,8 @@ RSpec.describe(OPI::Client) do
     subject(:client) { described_class.new(config) }
     let(:img_url) { 'http://example.org/image1234' }
     let(:droplet) { VCAP::CloudController::DropletModel.make(
+      lifecycle_type,
+      state: VCAP::CloudController::DropletModel::STAGED_STATE,
       docker_receipt_image: 'http://example.org/image1234',
       docker_receipt_username: 'docker-user',
       docker_receipt_password: 'docker-password',
@@ -237,7 +239,7 @@ RSpec.describe(OPI::Client) do
         end
       end
 
-      context 'when app belongs to buildpack lifecycle' do
+      context 'when droplet belongs to buildpack lifecycle' do
         let(:lifecycle_type) { :buildpack }
         let(:buildpack_lifecycle) {
           {
@@ -360,7 +362,7 @@ RSpec.describe(OPI::Client) do
         end
       end
 
-      context 'when app belongs to docker lifecycle' do
+      context 'when droplet belongs to docker lifecycle' do
         let(:lifecycle_type) { :docker }
         it 'sends a PUT request' do
           response = client.desire_app(lrp)
