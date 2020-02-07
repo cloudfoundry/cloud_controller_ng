@@ -1,7 +1,9 @@
 require 'presenters/v3/service_plan_presenter'
 require 'fetchers/service_plan_list_fetcher'
+require 'fetchers/service_plan_fetcher'
 require 'controllers/v3/mixins/service_permissions'
 require 'messages/service_plans_list_message'
+require 'actions/service_plan_delete'
 
 class ServicePlansController < ApplicationController
   include ServicePermissions
@@ -9,7 +11,7 @@ class ServicePlansController < ApplicationController
   def show
     not_authenticated! if user_cannot_see_marketplace?
 
-    service_plan = ServicePlan.where(guid: hashed_params[:guid]).first
+    service_plan = ServicePlanFetcher.fetch(hashed_params[:guid])
     service_plan_not_found! if service_plan.nil?
     service_plan_not_found! unless visible_to_current_user?(plan: service_plan)
 
@@ -44,6 +46,21 @@ class ServicePlansController < ApplicationController
     render status: :ok, json: presenter.to_json
   end
 
+  def destroy
+    service_plan = ServicePlanFetcher.fetch(hashed_params[:guid])
+    service_plan_not_found! if service_plan.nil?
+    cannot_write!(service_plan) unless current_user_can_write?(service_plan)
+
+    service_event_repository = VCAP::CloudController::Repositories::ServiceEventRepository.new(user_audit_info)
+
+    ServicePlanDelete.new.delete(service_plan)
+    service_event_repository.record_service_plan_event(:delete, service_plan)
+
+    head :no_content
+  rescue ServicePlanDelete::AssociationNotEmptyError => e
+    unprocessable!(e.message)
+  end
+
   private
 
   def enforce_authentication?
@@ -56,5 +73,10 @@ class ServicePlansController < ApplicationController
 
   def service_plan_not_found!
     resource_not_found!(:service_plan)
+  end
+
+  def cannot_write!(service_plan)
+    unauthorized! if visible_to_current_user?(plan: service_plan)
+    service_plan_not_found!
   end
 end

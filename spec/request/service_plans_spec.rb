@@ -248,6 +248,123 @@ RSpec.describe 'V3 service plans' do
     end
   end
 
+  describe 'DELETE /v3/service_plans/:guid' do
+    let(:api_call) { lambda { |user_headers| delete "/v3/service_plans/#{guid}", nil, user_headers } }
+
+    let(:db_check) {
+      lambda do
+        expect(VCAP::CloudController::ServicePlan.all).to be_empty
+      end
+    }
+
+    context 'when the service plan does not exist' do
+      let(:guid) { 'non-existing-guid' }
+
+      let(:expected_codes_and_responses) do
+        Hash.new(code: 404).tap do |h|
+          h['admin_read_only'] = { code: 403 }
+          h['global_auditor'] = { code: 403 }
+          h['unauthenticated'] = { code: 401 }
+        end
+      end
+
+      it_behaves_like 'permissions for delete endpoint', COMPLETE_PERMISSIONS
+    end
+
+    context 'when the service plan exists and has no service instances' do
+      let(:guid) { service_plan.guid }
+
+      context 'when the plan is only visible to global scope users' do
+        let!(:service_plan) { VCAP::CloudController::ServicePlan.make(public: false) }
+
+        let(:expected_codes_and_responses) do
+          Hash.new(code: 404).tap do |h|
+            h['admin'] = { code: 204 }
+            h['admin_read_only'] = { code: 403 }
+            h['global_auditor'] = { code: 403 }
+            h['unauthenticated'] = { code: 401 }
+          end
+        end
+
+        it_behaves_like 'permissions for delete endpoint', COMPLETE_PERMISSIONS
+      end
+
+      context 'when the plan is public' do
+        let!(:service_plan) { VCAP::CloudController::ServicePlan.make }
+
+        let(:expected_codes_and_responses) do
+          Hash.new(code: 403).tap do |h|
+            h['admin'] = { code: 204 }
+            h['unauthenticated'] = { code: 401 }
+          end
+        end
+
+        it_behaves_like 'permissions for delete endpoint', COMPLETE_PERMISSIONS
+      end
+
+      context 'when the plan is visible only on some orgs' do
+        let!(:service_plan) { VCAP::CloudController::ServicePlan.make(public: false) }
+
+        before do
+          VCAP::CloudController::ServicePlanVisibility.make(service_plan: service_plan, organization: org)
+        end
+
+        let(:expected_codes_and_responses) do
+          Hash.new(code: 403).tap do |h|
+            h['admin'] = { code: 204 }
+            h['no_role'] = { code: 404 }
+            h['unauthenticated'] = { code: 401 }
+          end
+        end
+
+        it_behaves_like 'permissions for delete endpoint', COMPLETE_PERMISSIONS
+      end
+
+      context 'when the plan is from a space-scoped service broker' do
+        let(:service_broker) { VCAP::CloudController::ServiceBroker.make(space: space) }
+        let(:service_offering) { VCAP::CloudController::Service.make(service_broker: service_broker) }
+        let!(:service_plan) { VCAP::CloudController::ServicePlan.make(service: service_offering, public: false) }
+
+        let(:expected_codes_and_responses) do
+          Hash.new(code: 404).tap do |h|
+            h['admin'] = { code: 204 }
+            h['admin_read_only'] = { code: 403 }
+            h['global_auditor'] = { code: 403 }
+            h['space_developer'] = { code: 204 }
+            h['space_manager'] = { code: 403 }
+            h['space_auditor'] = { code: 403 }
+            h['unauthenticated'] = { code: 401 }
+          end
+        end
+
+        it_behaves_like 'permissions for delete endpoint', COMPLETE_PERMISSIONS
+      end
+    end
+
+    context 'when the service plan exists and has service instances' do
+      let!(:service_plan) { VCAP::CloudController::ManagedServiceInstance.make.service_plan }
+
+      it 'fails with a 422 unprocessable entity' do
+        delete "/v3/service_plans/#{service_plan.guid}", {}, admin_headers
+
+        expect(last_response).to have_status_code(422)
+        expect(parsed_response['errors'][0]['detail']).to match(/Please delete the service_instances associations for your service_plans/)
+      end
+    end
+
+    describe 'audit events' do
+      let(:service_plan) { VCAP::CloudController::ServicePlan.make }
+
+      it 'emits an audit event' do
+        delete "/v3/service_plans/#{service_plan.guid}", nil, admin_headers
+
+        expect([
+          { type: 'audit.service_plan.delete', actor: service_plan.service_broker.name },
+        ]).to be_reported_as_events
+      end
+    end
+  end
+
   def create_plan_json(service_plan)
     plan = {
       guid: service_plan.guid,

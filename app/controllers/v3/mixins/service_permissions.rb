@@ -13,6 +13,14 @@ module VCAP::CloudController
       ServicePlanVisibilityFetcher.service_plans_visible_in_orgs?(service_plans.map(&:guid), permission_queryer.readable_org_guids)
     end
 
+    def writable_space_scoped?(space)
+      space && space.has_developer?(current_user)
+    end
+
+    def current_user_can_write?(resource)
+      permission_queryer.can_write_globally? || writable_space_scoped?(resource.service_broker.space)
+    end
+
     def visible_space_scoped?(space)
       current_user && space && space.has_member?(current_user)
     end

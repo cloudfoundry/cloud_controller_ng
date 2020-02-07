@@ -103,14 +103,6 @@ class ServiceOfferingsController < ApplicationController
     resource_not_found!(:service_offering)
   end
 
-  def writable_space_scoped?(space)
-    space && space.has_developer?(current_user)
-  end
-
-  def current_user_can_write?(service_offering)
-    permission_queryer.can_write_globally? || writable_space_scoped?(service_offering.service_broker.space)
-  end
-
   def cannot_write!(service_offering)
     unauthorized! if visible_to_current_user?(service: service_offering)
     service_offering_not_found!
