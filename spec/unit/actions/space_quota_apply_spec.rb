@@ -39,8 +39,25 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the space guid is invalid' do
-        let(:invalid_space_guid) { 'invalid_space_guid' }
+      context 'when the space does not exist' do
+        let(:invalid_space_guid) { 'nonexistent-space-guid' }
+
+        let(:message_with_invalid_space_guid) do
+          VCAP::CloudController::SpaceQuotaApplyMessage.new({
+            data: [{ guid: invalid_space_guid }]
+          })
+        end
+
+        it 'raises a human-friendly error' do
+          expect {
+            subject.apply(space_quota, message_with_invalid_space_guid)
+          }.to raise_error(SpaceQuotaApply::Error, "Spaces with guids [\"#{invalid_space_guid}\"] do not exist, or you do not have access to them.")
+        end
+      end
+
+      context 'when the space does not belong in the same organization as the space quota' do
+        let(:other_space) { VCAP::CloudController::Space.make }
+        let(:invalid_space_guid) { other_space.guid }
 
         let(:message_with_invalid_space_guid) do
           VCAP::CloudController::SpaceQuotaApplyMessage.new({

@@ -717,7 +717,7 @@ module VCAP::CloudController
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
 
-      context 'when a space guid is invalid' do
+      context 'when a space does not exist' do
         let(:params) do
           {
             data: [
@@ -730,6 +730,24 @@ module VCAP::CloudController
           post "/v3/space_quotas/#{space_quota.guid}/relationships/spaces", params.to_json, admin_header
           expect(last_response).to have_status_code(422)
           expect(last_response).to have_error_message('Spaces with guids ["not a real guid"] do not exist, or you do not have access to them.')
+        end
+      end
+
+      context 'when the space is not associated with the quota' do
+        let(:other_space) { VCAP::CloudController::Space.make(guid: 'not-related-space') }
+        let(:params) do
+          {
+            data: [
+              { guid: other_space.guid }
+            ]
+          }
+        end
+
+        it 'returns a helpful error message' do
+          post "/v3/space_quotas/#{space_quota.guid}/relationships/spaces", params.to_json, admin_header
+
+          expect(last_response).to have_status_code(422)
+          expect(last_response).to have_error_message('Spaces with guids ["not-related-space"] do not exist, or you do not have access to them.')
         end
       end
     end

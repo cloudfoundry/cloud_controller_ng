@@ -4,8 +4,9 @@ module VCAP::CloudController
     end
 
     def apply(space_quota, message)
+      spaces = valid_spaces(message.space_guids, space_quota.organization_id)
+
       SpaceQuotaDefinition.db.transaction do
-        spaces = valid_spaces(message.space_guids)
         spaces.each { |space| space_quota.add_space(space) }
       end
     rescue Sequel::ValidationFailed => e
@@ -14,12 +15,16 @@ module VCAP::CloudController
 
     private
 
-    def valid_spaces(space_guids)
-      spaces = Space.where(guid: space_guids).all
-      return spaces if spaces.length == space_guids.length
+    def valid_spaces(requested_space_guids, space_quota_org_id)
+      existing_spaces = Space.where(guid: requested_space_guids).all
 
-      invalid_space_guids = space_guids - spaces.map(&:guid)
-      error!("Spaces with guids #{invalid_space_guids} do not exist, or you do not have access to them.")
+      nonexistent_space_guids = requested_space_guids - existing_spaces.map(&:guid)
+      error!("Spaces with guids #{nonexistent_space_guids} do not exist, or you do not have access to them.") if nonexistent_space_guids.any?
+
+      invalid_spaces = existing_spaces.reject { |space| space.organization_id == space_quota_org_id }
+      error!("Spaces with guids #{invalid_spaces.map(&:guid)} do not exist, or you do not have access to them.") if invalid_spaces.any?
+
+      existing_spaces
     end
 
     def error!(message)
