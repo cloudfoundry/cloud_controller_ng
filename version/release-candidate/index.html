@@ -22193,6 +22193,56 @@ Service Offerings and Service Plans are created and updated when a Service Broke
 
 <p><code class="prettyprint">GET /v3/service_plans</code></p>
 
+<h4 id="query-parameters">Query parameters</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>names</strong></td>
+<td><em>list of strings</em></td>
+<td>Comma-delimited list of names to filter by.</td>
+</tr>
+<tr>
+<td><strong>available</strong></td>
+<td><em>boolean</em></td>
+<td>Filter by the <code class="prettyprint">available</code> property. Valid values are <code class="prettyprint">true</code> or <code class="prettyprint">false</code>.</td>
+</tr>
+<tr>
+<td><strong>service_broker_guids</strong></td>
+<td><em>list of strings</em></td>
+<td>Comma-delimited list of Service Broker GUIDs to filter by.</td>
+</tr>
+<tr>
+<td><strong>space_guids</strong></td>
+<td><em>list of strings</em></td>
+<td>Comma-delimited list of Space GUIDs to filter by.</td>
+</tr>
+<tr>
+<td><strong>organization_guids</strong></td>
+<td><em>list of strings</em></td>
+<td>Comma-delimited list of Organization GUIDs to filter by.</td>
+</tr>
+<tr>
+<td><strong>service_offering_guids</strong></td>
+<td><em>list of strings</em></td>
+<td>Comma-delimited list of Service Offering GUIDs to filter by.</td>
+</tr>
+<tr>
+<td><strong>broker_catalog_id</strong></td>
+<td><em>list of strings</em></td>
+<td>Comma-delimited list of IDs provided by the Service Broker to filter by.</td>
+</tr>
+</tbody></table>
+
+<p>The <strong>organization_guids</strong> and <strong>space_guids</strong> filters do not filter plans that are public.
+They both act on plans that are restricted to certain Organizations, and to plans from Space-Scoped
+Service Brokers.</p>
+
 <h4 id="permitted-roles">Permitted roles</h4>
 
 <table><thead>
