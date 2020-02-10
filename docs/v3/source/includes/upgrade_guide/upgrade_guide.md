@@ -20,7 +20,7 @@ This table shows how V2 resources map to their respective V3 counterparts. Note 
 |Feature Flags|Feature Flags|
 |Jobs|Jobs|
 |Organizations|Organizations|
-|Quota Definitions|Organization Quotas|
+|Quota Definitions|Organization Quotas|[Organization Quotas in V3](#organization-quotas-in-v3)
 |Resource Matches|Resource Matches|
 |Routes, Route Mappings|Routes|[Routes in V3](#routes-in-v3)|
 |Security Groups|Security Groups|
@@ -28,7 +28,7 @@ This table shows how V2 resources map to their respective V3 counterparts. Note 
 |Service Brokers|Service Brokers|
 |Service Instances, User-Provided Service Instances|Service Instances|
 |Spaces|Spaces|
-|Space Quota Definitions|Space Quotas|
+|Space Quota Definitions|Space Quotas|[Space Quotas in V3](#space-quotas-in-v3)
 |Stacks|Stacks|
 |Usage Events|Usage Events|
 |Users|Roles, Users|[Users and Roles in V3](#users-and-roles-in-v3)|
@@ -41,6 +41,29 @@ In V3, there is only one domain resource. A domain is "shared" if it has an "own
 
 Read more about the [domain resource](#domains).
 
+### Organization Quotas in V3
+
+In V2, `-1` represented an unlimited value for a quota limit.
+
+In V3, `null` is used to represent an unlimited value.
+
+The names of the limit fields have changed from V2 to V3.
+
+|**V2**|**V3**|
+|---|---|
+non_basic_services_allowed | services.paid_services_allowed
+total_services | services.total_service_instances
+total_service_keys | services.total_service_keys
+total_routes | routes.total_routes
+total_reserved_route_ports | routes.total_reserved_ports
+total_private_domains | domains.total_domains
+memory_limit | apps.total_memory_in_mb
+instance_memory_limit | apps.per_process_memory_in_mb
+app_instance_limit | apps.total_instances
+app_task_limit | apps.per_app_tasks
+
+Read more about the [organization quota resource](#organization-quotas).
+
 ### Routes in V3
 
 In V2, the route resource represented a URL that could be mapped to an app, and the route mapping resource represented a mapping between a route and an app.
@@ -48,6 +71,28 @@ In V2, the route resource represented a URL that could be mapped to an app, and 
 In V3, these concepts have been collapsed into a single route resource. Now, a route can have one or more "destinations" listed on it. These represent a mapping from the route to a resource that can serve traffic (e.g. a process of an app).
 
 Read more about [routes and destinations](#routes).
+
+### Space Quotas in V3
+
+In V2, `-1` represented an unlimited value for a quota limit.
+
+In V3, `null` is used to represent an unlimited value.
+
+The names of the limit fields have changed from V2 to V3.
+
+|**V2**|**V3**|
+|---|---|
+non_basic_services_allowed | services.paid_services_allowed
+total_services | services.total_service_instances
+total_service_keys | services.total_service_keys
+total_routes | routes.total_routes
+total_reserved_route_ports | routes.total_reserved_ports
+memory_limit | apps.total_memory_in_mb
+instance_memory_limit | apps.per_process_memory_in_mb
+app_instance_limit | apps.total_instances
+app_task_limit | apps.per_app_tasks
+
+Read more about the [space quota resource](#space-quotas).
 
 ### Users and Roles in V3
 
