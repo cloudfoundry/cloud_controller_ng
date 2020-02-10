@@ -28,6 +28,7 @@ includes:
   - api_resources/service_brokers
   - api_resources/service_offerings
   - api_resources/service_plans
+  - api_resources/service_plan_visibility
   - api_resources/service_instances
   - api_resources/sidecars
   - api_resources/spaces
@@ -290,6 +291,10 @@ includes:
   - experimental_resources/service_plans/get
   - experimental_resources/service_plans/list
   - experimental_resources/service_plans/delete
+  - experimental_resources/service_plan_visibility/header
+  - experimental_resources/service_plan_visibility/object
+  - experimental_resources/service_plan_visibility/visibility_types
+  - experimental_resources/service_plan_visibility/get
   - experimental_resources/sidecars/header
   - experimental_resources/sidecars/object
   - experimental_resources/sidecars/create_from_app

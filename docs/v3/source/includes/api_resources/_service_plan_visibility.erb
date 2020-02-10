@@ -1,0 +1,27 @@
+<% content_for :public_service_plan_visibility do | metadata={} | %>
+{
+  "type": "public"
+}
+<% end %>
+
+<% content_for :org_service_plan_visibility do | metadata={} | %>
+{
+  "type": "organization",
+  "organizations": [
+    {
+      "guid": "bf7eb420-11e5-11ea-b7db-4b5d5e7976a9",
+      "name": "my_org"
+    }
+  ]
+}
+<% end %>
+
+<% content_for :space_service_plan_visibility do | metadata={} | %>
+{
+  "type": "space",
+  "space": {
+    "guid": "ab7eb420-11e5-11ea-b7db-4b5d5e7975ad",
+    "name": "my_space"
+  }
+}
+<% end %>

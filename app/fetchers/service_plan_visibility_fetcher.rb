@@ -1,15 +1,26 @@
 module VCAP::CloudController
   class ServicePlanVisibilityFetcher
-    class << self
-      def service_plans_visible_in_orgs?(service_plan_guids, readable_org_guids)
-        empty = ServicePlanVisibility.dataset.
-                left_join(:organizations, id: Sequel[:service_plan_visibilities][:organization_id]).
-                left_join(:service_plans, id: Sequel[:service_plan_visibilities][:service_plan_id]).
-                where { (Sequel[:service_plans][:guid] =~ service_plan_guids) & (Sequel[:organizations][:guid] =~ readable_org_guids) }.
-                empty?
+    def initialize(permission_queryer)
+      @permission_queryer = permission_queryer
+    end
 
-        !empty
+    def fetch_orgs(service_plan_guids:)
+      omniscient = @permission_queryer.can_read_globally?
+      readable_org_guids = @permission_queryer.readable_org_guids unless omniscient
+
+      dataset = Organization.dataset.
+                join(:service_plan_visibilities, organization_id: Sequel[:organizations][:id]).
+                join(:service_plans, id: Sequel[:service_plan_visibilities][:service_plan_id]).
+                where { Sequel[:service_plans][:guid] =~ service_plan_guids }
+
+      unless omniscient
+        dataset = dataset.where { Sequel[:organizations][:guid] =~ readable_org_guids }
       end
+
+      dataset.
+        select_all(:organizations).
+        distinct.
+        all
     end
   end
 end
