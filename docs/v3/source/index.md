@@ -288,6 +288,7 @@ includes:
   - experimental_resources/service_plans/object
   - experimental_resources/service_plans/get
   - experimental_resources/service_plans/list
+  - experimental_resources/service_plans/delete
   - experimental_resources/sidecars/header
   - experimental_resources/sidecars/object
   - experimental_resources/sidecars/create_from_app
