@@ -20486,12 +20486,12 @@ Deployed revisions are revisions that are linked to started processes in the app
 </tr>
 <tr>
 <td><strong>metadata.labels</strong> <em>(experimental)</em></td>
-<td><a href="#links"><em>label object</em></a></td>
+<td><a href="#labels"><em>label object</em></a></td>
 <td>Labels applied to the service broker.</td>
 </tr>
 <tr>
 <td><strong>metadata.annotations</strong> <em>(experimental)</em></td>
-<td><a href="#links"><em>annotation object</em></a></td>
+<td><a href="#annotations"><em>annotation object</em></a></td>
 <td>Annotations added to the service broker.</td>
 </tr>
 <tr>
@@ -21296,12 +21296,12 @@ They are only visible to members of that Space.</p>
 </tr>
 <tr>
 <td><strong>metadata.labels</strong> <em>(experimental)</em></td>
-<td><a href="#links"><em>label object</em></a></td>
+<td><a href="#labels"><em>label object</em></a></td>
 <td>Labels applied to the Service Offering.</td>
 </tr>
 <tr>
 <td><strong>metadata.annotations</strong> <em>(experimental)</em></td>
-<td><a href="#links"><em>annotation object</em></a></td>
+<td><a href="#annotations"><em>annotation object</em></a></td>
 <td>Annotations added to the Service Offering.</td>
 </tr>
 <tr>
@@ -21804,6 +21804,10 @@ Service Offerings and Service Plans are created and updated when a Service Broke
       </span><span class="p">}</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
   </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_plans/bf7eb420-11e5-11ea-b7db-4b5d5e7976a9"</span><span class="w">
@@ -21950,6 +21954,16 @@ Service Offerings and Service Plans are created and updated when a Service Broke
 <td>The Space of the Service Broker, if this Service Plan is from a Space-Scoped Service Broker.</td>
 </tr>
 <tr>
+<td><strong>metadata.labels</strong> <em>(experimental)</em></td>
+<td><a href="#labels"><em>label object</em></a></td>
+<td>Labels applied to the Service Plan.</td>
+</tr>
+<tr>
+<td><strong>metadata.annotations</strong> <em>(experimental)</em></td>
+<td><a href="#annotations"><em>annotation object</em></a></td>
+<td>Annotations added to the Service Plan.</td>
+</tr>
+<tr>
 <td><strong>links</strong></td>
 <td><a href="#links"><em>links object</em></a></td>
 <td>Links to related resources.</td>
@@ -22016,6 +22030,10 @@ Service Offerings and Service Plans are created and updated when a Service Broke
         </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"13c60e38-11e7-11ea-9106-33ee3c5bd4d7"</span><span class="w">
       </span><span class="p">}</span><span class="w">
     </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -22128,6 +22146,10 @@ Service Offerings and Service Plans are created and updated when a Service Broke
           </span><span class="p">}</span><span class="w">
         </span><span class="p">}</span><span class="w">
       </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+        </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+      </span><span class="p">},</span><span class="w">
       </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
           </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_plans/bf7eb420-11e5-11ea-b7db-4b5d5e7976a9"</span><span class="w">
@@ -22172,6 +22194,10 @@ Service Offerings and Service Plans are created and updated when a Service Broke
             </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"13c60e38-11e7-11ea-9106-33ee3c5bd4d7"</span><span class="w">
           </span><span class="p">}</span><span class="w">
         </span><span class="p">}</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+        </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -22236,6 +22262,11 @@ Service Offerings and Service Plans are created and updated when a Service Broke
 <td><strong>broker_catalog_id</strong></td>
 <td><em>list of strings</em></td>
 <td>Comma-delimited list of IDs provided by the Service Broker to filter by.</td>
+</tr>
+<tr>
+<td><strong>label_selector</strong></td>
+<td><em>string</em></td>
+<td><strong>Experimental</strong> - A query string containing a list of <a href="#labels-and-selectors">label selector</a> requirements.</td>
 </tr>
 </tbody></table>
 
