@@ -2,11 +2,17 @@ module VCAP::CloudController
   class ServicePlan < Sequel::Model
     many_to_one :service
     one_to_many :service_instances
+
     one_to_many :service_plan_visibilities
+    add_association_dependencies service_plan_visibilities: :destroy
+
+    one_to_many :labels, class: 'VCAP::CloudController::ServicePlanLabelModel', key: :resource_guid, primary_key: :guid
+    add_association_dependencies labels: :destroy
+
+    one_to_many :annotations, class: 'VCAP::CloudController::ServicePlanAnnotationModel', key: :resource_guid, primary_key: :guid
+    add_association_dependencies annotations: :destroy
 
     plugin :serialization
-
-    add_association_dependencies service_plan_visibilities: :destroy
 
     export_attributes :name,
                       :free,

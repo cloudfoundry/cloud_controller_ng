@@ -4,6 +4,8 @@ require 'fetchers/service_plan_fetcher'
 require 'controllers/v3/mixins/service_permissions'
 require 'messages/service_plans_list_message'
 require 'actions/service_plan_delete'
+require 'messages/metadata_update_message'
+require 'actions/transactional_metadata_update'
 
 class ServicePlansController < ApplicationController
   include ServicePermissions
@@ -44,6 +46,20 @@ class ServicePlansController < ApplicationController
     )
 
     render status: :ok, json: presenter.to_json
+  end
+
+  def update
+    service_plan = ServicePlanFetcher.fetch(hashed_params[:guid])
+    service_plan_not_found! if service_plan.nil?
+    cannot_write!(service_plan) unless current_user_can_write?(service_plan)
+
+    message = MetadataUpdateMessage.new(hashed_params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    updated_service_plan = TransactionalMetadataUpdate.update(service_plan, message)
+    presenter = Presenters::V3::ServicePlanPresenter.new(updated_service_plan)
+
+    render :ok, json: presenter.to_json
   end
 
   def destroy

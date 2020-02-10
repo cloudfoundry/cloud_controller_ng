@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'fetchers/service_plan_list_fetcher'
+require 'messages/service_plans_list_message'
 
 module VCAP::CloudController
   RSpec.describe ServicePlanListFetcher do
@@ -296,88 +297,105 @@ module VCAP::CloudController
         end
       end
 
-      RSpec.shared_examples 'filtered service plans fetcher' do
-        let(:message) { ServicePlansListMessage.from_params(params.with_indifferent_access) }
+      describe 'other filters' do
+        RSpec.shared_examples 'filtered service plans fetcher' do
+          let(:message) { ServicePlansListMessage.from_params(params.with_indifferent_access) }
 
-        describe 'available' do
-          let!(:available_plan) { ServicePlan.make(public: true, active: true) }
-          let!(:unavailable_plan) { ServicePlan.make(public: true, active: false) }
-          let(:params) { {} }
+          describe 'available' do
+            let!(:available_plan) { ServicePlan.make(public: true, active: true) }
+            let!(:unavailable_plan) { ServicePlan.make(public: true, active: false) }
+            let(:params) { {} }
 
-          it 'returns both when there is no filter' do
-            expect(service_plans).to contain_exactly(available_plan, unavailable_plan)
-          end
+            it 'returns both when there is no filter' do
+              expect(service_plans).to contain_exactly(available_plan, unavailable_plan)
+            end
 
-          context 'when `available=true`' do
-            let(:params) { { available: 'true' } }
+            context 'when `available=true`' do
+              let(:params) { { available: 'true' } }
 
-            it 'can filter on available plans' do
-              expect(service_plans).to contain_exactly(available_plan)
+              it 'can filter on available plans' do
+                expect(service_plans).to contain_exactly(available_plan)
+              end
+            end
+
+            context 'when `available=false`' do
+              let(:params) { { available: 'false' } }
+
+              it 'can filter on unavailable plans' do
+                expect(service_plans).to contain_exactly(unavailable_plan)
+              end
             end
           end
 
-          context 'when `available=false`' do
-            let(:params) { { available: 'false' } }
+          describe 'service_broker_guids' do
+            let(:service_broker) { ServiceBroker.make }
+            let(:service_offering) { Service.make(service_broker: service_broker) }
+            let!(:plan_1) { ServicePlan.make(service: service_offering) }
+            let!(:plan_2) { ServicePlan.make(service: service_offering) }
+            let!(:plan_3) { ServicePlan.make }
+            let!(:plan_4) { ServicePlan.make }
+            let(:params) { { service_broker_guids: [service_broker.guid, plan_4.service.service_broker.guid].join(',') } }
 
-            it 'can filter on unavailable plans' do
-              expect(service_plans).to contain_exactly(unavailable_plan)
+            it 'can filter by service broker guids' do
+              expect(service_plans).to contain_exactly(plan_1, plan_2, plan_4)
+            end
+          end
+
+          describe 'service_offering_guids' do
+            let(:service_offering) { Service.make }
+            let!(:plan_1) { ServicePlan.make(service: service_offering) }
+            let!(:plan_2) { ServicePlan.make(service: service_offering) }
+            let!(:plan_3) { ServicePlan.make }
+            let!(:plan_4) { ServicePlan.make }
+            let(:params) { { service_offering_guids: [service_offering.guid, plan_3.service.guid].join(',') } }
+
+            it 'can filter by service broker guids' do
+              expect(service_plans).to contain_exactly(plan_1, plan_2, plan_3)
+            end
+          end
+
+          describe 'broker_catalog_ids' do
+            let(:service_offering) { Service.make }
+            let!(:plan_1) { ServicePlan.make(service: service_offering) }
+            let!(:plan_2) { ServicePlan.make(service: service_offering) }
+            let!(:plan_3) { ServicePlan.make }
+            let!(:plan_4) { ServicePlan.make }
+            let(:params) { { broker_catalog_ids: [service_offering.unique_id, plan_4.service.unique_id].join(',') } }
+
+            it 'can filter by service broker guids' do
+              expect(service_plans).to contain_exactly(plan_1, plan_2, plan_4)
+            end
+          end
+
+          describe 'names' do
+            let!(:plan_one) { ServicePlan.make(name: 'one', public: true) }
+            let!(:plan_two) { ServicePlan.make(name: 'two', public: true) }
+            let!(:plan_three) { ServicePlan.make(name: 'three', public: true) }
+            let(:params) { { names: 'one,three' } }
+
+            it 'can filter by names' do
+              expect(service_plans).to contain_exactly(plan_one, plan_three)
+            end
+          end
+
+          describe 'label_selector' do
+            let!(:service_plan_1) { VCAP::CloudController::ServicePlan.make(public: true, active: true) }
+            let!(:service_plan_2) { VCAP::CloudController::ServicePlan.make(public: true, active: true) }
+            let!(:service_plan_3) { VCAP::CloudController::ServicePlan.make(public: true, active: true) }
+            let(:message) { ServicePlansListMessage.from_params({ label_selector: 'flavor=orange' }.with_indifferent_access) }
+
+            before do
+              VCAP::CloudController::ServicePlanLabelModel.make(resource_guid: service_plan_1.guid, key_name: 'flavor', value: 'orange')
+              VCAP::CloudController::ServicePlanLabelModel.make(resource_guid: service_plan_2.guid, key_name: 'flavor', value: 'orange')
+              VCAP::CloudController::ServicePlanLabelModel.make(resource_guid: service_plan_3.guid, key_name: 'flavor', value: 'apple')
+            end
+
+            it 'filters the matching service plans' do
+              expect(service_plans).to contain_exactly(service_plan_1, service_plan_2)
             end
           end
         end
 
-        describe 'service_broker_guids' do
-          let(:service_broker) { ServiceBroker.make }
-          let(:service_offering) { Service.make(service_broker: service_broker) }
-          let!(:plan_1) { ServicePlan.make(service: service_offering) }
-          let!(:plan_2) { ServicePlan.make(service: service_offering) }
-          let!(:plan_3) { ServicePlan.make }
-          let!(:plan_4) { ServicePlan.make }
-          let(:params) { { service_broker_guids: [service_broker.guid, plan_4.service.service_broker.guid].join(',') } }
-
-          it 'can filter by service broker guids' do
-            expect(service_plans).to contain_exactly(plan_1, plan_2, plan_4)
-          end
-        end
-
-        describe 'service_offering_guids' do
-          let(:service_offering) { Service.make }
-          let!(:plan_1) { ServicePlan.make(service: service_offering) }
-          let!(:plan_2) { ServicePlan.make(service: service_offering) }
-          let!(:plan_3) { ServicePlan.make }
-          let!(:plan_4) { ServicePlan.make }
-          let(:params) { { service_offering_guids: [service_offering.guid, plan_3.service.guid].join(',') } }
-
-          it 'can filter by service broker guids' do
-            expect(service_plans).to contain_exactly(plan_1, plan_2, plan_3)
-          end
-        end
-
-        describe 'broker_catalog_ids' do
-          let(:service_offering) { Service.make }
-          let!(:plan_1) { ServicePlan.make(service: service_offering) }
-          let!(:plan_2) { ServicePlan.make(service: service_offering) }
-          let!(:plan_3) { ServicePlan.make }
-          let!(:plan_4) { ServicePlan.make }
-          let(:params) { { broker_catalog_ids: [service_offering.unique_id, plan_4.service.unique_id].join(',') } }
-
-          it 'can filter by service broker guids' do
-            expect(service_plans).to contain_exactly(plan_1, plan_2, plan_4)
-          end
-        end
-
-        describe 'names' do
-          let!(:plan_one) { ServicePlan.make(name: 'one', public: true) }
-          let!(:plan_two) { ServicePlan.make(name: 'two', public: true) }
-          let!(:plan_three) { ServicePlan.make(name: 'three', public: true) }
-          let(:params) { { names: 'one,three' } }
-
-          it 'can filter by names' do
-            expect(service_plans).to contain_exactly(plan_one, plan_three)
-          end
-        end
-      end
-
-      describe 'other filters by example' do
         context 'when omniscient' do
           let(:service_plans) { ServicePlanListFetcher.new.fetch(message, omniscient: true).all }
 

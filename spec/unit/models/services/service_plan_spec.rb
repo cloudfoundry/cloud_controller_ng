@@ -8,6 +8,8 @@ module VCAP::CloudController
       it { is_expected.to have_associated :service }
       it { is_expected.to have_associated :service_instances, class: ManagedServiceInstance }
       it { is_expected.to have_associated :service_plan_visibilities }
+      it { is_expected.to have_associated :labels, class: ServicePlanLabelModel }
+      it { is_expected.to have_associated :annotations, class: ServicePlanAnnotationModel }
     end
 
     describe 'Validations' do
@@ -151,11 +153,16 @@ module VCAP::CloudController
     describe '#destroy' do
       let(:service_plan) { ServicePlan.make }
 
-      it 'destroys all service plan visibilities' do
+      it 'destroys associated dependencies' do
         service_plan_visibility = ServicePlanVisibility.make(service_plan: service_plan)
-        expect { service_plan.destroy }.to change {
-          ServicePlanVisibility.where(id: service_plan_visibility.id).any?
-        }.to(false)
+        service_plan_label = ServicePlanLabelModel.make(resource_guid: service_plan.guid, key_name: 'flavor', value: 'pear')
+        service_plan_annotation = ServicePlanAnnotationModel.make(resource_guid: service_plan.guid, key_name: 'colour', value: 'purple')
+
+        service_plan.destroy
+
+        expect(ServicePlanVisibility.where(id: service_plan_visibility.id)).to be_empty
+        expect(ServiceOfferingLabelModel.where(id: service_plan_label.id)).to be_empty
+        expect(ServicePlanAnnotationModel.where(id: service_plan_annotation.id)).to be_empty
       end
 
       it 'cannot be destroyed if associated service_instances exist' do

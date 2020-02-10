@@ -32,7 +32,8 @@ end
 
 module VCAP::CloudController
   %w/App Build Buildpack Deployment Domain Droplet IsolationSegment Organization Package
-     Process Revision Route ServiceInstance ServiceOffering ServiceBroker Space Stack Task User/.each do |root|
+     Process Revision Route ServiceInstance ServiceOffering ServiceBroker Space Stack
+     ServicePlan Task User/.each do |root|
     "VCAP::CloudController::#{root}LabelModel".constantize.blueprint do end
     "VCAP::CloudController::#{root}AnnotationModel".constantize.blueprint do end
   end

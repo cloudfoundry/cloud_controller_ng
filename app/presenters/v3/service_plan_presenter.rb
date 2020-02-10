@@ -1,9 +1,12 @@
 require 'presenters/v3/base_presenter'
+require 'presenters/mixins/metadata_presentation_helpers'
 
 module VCAP::CloudController
   module Presenters
     module V3
       class ServicePlanPresenter < BasePresenter
+        include VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers
+
         def to_hash
           {
             guid: service_plan.guid,
@@ -33,6 +36,10 @@ module VCAP::CloudController
               }
             },
             relationships: relationships,
+            metadata: {
+              labels: hashified_labels(service_plan.labels),
+              annotations: hashified_annotations(service_plan.annotations),
+            },
             links: links
           }
         end

@@ -3,10 +3,10 @@ require 'fetchers/service_offering_list_fetcher'
 require 'fetchers/service_plan_visibility_fetcher'
 require 'presenters/v3/service_offering_presenter'
 require 'messages/service_offerings_list_message'
-require 'messages/service_offering_update_message'
+require 'messages/metadata_update_message'
 require 'messages/purge_message'
 require 'actions/service_offering_delete'
-require 'actions/service_offering_update'
+require 'actions/transactional_metadata_update'
 require 'controllers/v3/mixins/service_permissions'
 
 class ServiceOfferingsController < ApplicationController
@@ -56,10 +56,10 @@ class ServiceOfferingsController < ApplicationController
 
     cannot_write!(service_offering) unless current_user_can_write?(service_offering)
 
-    message = ServiceOfferingUpdateMessage.new(hashed_params[:body])
+    message = MetadataUpdateMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    updated_service_offering = ServiceOfferingUpdate.update(service_offering, message)
+    updated_service_offering = TransactionalMetadataUpdate.update(service_offering, message)
     presenter = Presenters::V3::ServiceOfferingPresenter.new(updated_service_offering)
 
     render :ok, json: presenter.to_json

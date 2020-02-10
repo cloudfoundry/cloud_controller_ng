@@ -184,6 +184,7 @@ Rails.application.routes.draw do
   # service_plans
   get '/service_plans', to: 'service_plans#index'
   get '/service_plans/:guid', to: 'service_plans#show'
+  patch '/service_plans/:guid', to: 'service_plans#update'
   delete '/service_plans/:guid', to: 'service_plans#destroy'
 
   # space_manifests

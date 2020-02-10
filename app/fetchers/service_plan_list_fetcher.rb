@@ -116,6 +116,15 @@ module VCAP::CloudController
         dataset = dataset.where { Sequel[:services][:unique_id] =~ message.broker_catalog_ids }
       end
 
+      if message.requested?(:label_selector)
+        dataset = LabelSelectorQueryGenerator.add_selector_queries(
+          label_klass: ServicePlanLabelModel,
+          resource_dataset: dataset,
+          requirements: message.requirements,
+          resource_klass: ServicePlan,
+        )
+      end
+
       dataset
     end
 

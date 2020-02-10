@@ -8,8 +8,25 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
     VCAP::CloudController::ServicePlan.make(maintenance_info: maintenance_info_str)
   end
 
+  let!(:potato_label) do
+    VCAP::CloudController::ServicePlanLabelModel.make(
+      key_prefix: 'canberra.au',
+      key_name: 'potato',
+      value: 'mashed',
+      resource_guid: service_plan.guid
+    )
+  end
+
+  let!(:mountain_annotation) do
+    VCAP::CloudController::ServicePlanAnnotationModel.make(
+      key: 'altitude',
+      value: '14,412',
+      resource_guid: service_plan.guid,
+    )
+  end
+
   describe '#to_hash' do
-    let(:result) { described_class.new(service_plan).to_hash }
+    let(:result) { described_class.new(service_plan).to_hash.deep_symbolize_keys }
 
     it 'presents the service plan' do
       expect(result).to eq({
@@ -40,6 +57,14 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
           },
           service_binding: {
             create: {}
+          }
+        },
+        metadata: {
+          labels: {
+            'canberra.au/potato': 'mashed'
+          },
+          annotations: {
+            altitude: '14,412'
           }
         },
         relationships: {
@@ -144,13 +169,15 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
           }'
       }
 
+      let(:parsed_schema) { JSON.parse(schema).deep_symbolize_keys }
+
       context 'when plan has create service_instance schema' do
         let(:service_plan) do
           VCAP::CloudController::ServicePlan.make(create_instance_schema: schema)
         end
 
         it 'presents the service plan create service_instance with the schema' do
-          expect(result[:schemas][:service_instance][:create][:parameters]).to eq(JSON.parse(schema))
+          expect(result[:schemas][:service_instance][:create][:parameters]).to eq(parsed_schema)
           expect(result[:schemas][:service_instance][:update]).to be_empty
           expect(result[:schemas][:service_binding][:create]).to be_empty
         end
@@ -162,7 +189,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
         end
 
         it 'presents the service plan update service_instance with the schema' do
-          expect(result[:schemas][:service_instance][:update][:parameters]).to eq(JSON.parse(schema))
+          expect(result[:schemas][:service_instance][:update][:parameters]).to eq(parsed_schema)
           expect(result[:schemas][:service_instance][:create]).to be_empty
           expect(result[:schemas][:service_binding][:create]).to be_empty
         end
@@ -176,7 +203,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
         it 'presents the service plan update service_instance with the schema' do
           expect(result[:schemas][:service_instance][:update]).to be_empty
           expect(result[:schemas][:service_instance][:create]).to be_empty
-          expect(result[:schemas][:service_binding][:create][:parameters]).to eq(JSON.parse(schema))
+          expect(result[:schemas][:service_binding][:create][:parameters]).to eq(parsed_schema)
         end
       end
     end
