@@ -22,7 +22,7 @@ module VCAP::CloudController
 
         it 'logs its parameters' do
           logging_context_job.perform
-          expect(background_logger).to have_received(:info).with("about to run job #{handler.inspect}")
+          expect(background_logger).to have_received(:info).with("about to run job #{handler.class.name}")
         end
 
         it "sets the thread-local VCAP Request ID during execution of the wrapped job's perform method" do
