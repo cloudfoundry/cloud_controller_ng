@@ -47,9 +47,40 @@ module VCAP::CloudController
       space_roles = roles && SPACE_ROLES
       org_roles = roles && ORG_ROLES
 
-      space_role_datset = Role.where(type: space_roles, user_id: @user.id).map(&:space_guid).uniq
-      org_role_based_space_guids =  Role.where(type: org_roles, user_id: @user.id).map(&:organization_guid)
-      #org_role_dataset = Organization.where() --> find a way to get the spaces guids through their belonging relationship to orgs
+      # space_role_datset = Role.where(type: space_roles, user_id: @user.id).map(&:space_guid).uniq
+      # org_role_based_space_guids =  Role.where(type: org_roles, user_id: @user.id).map(&:organization_guid)
+      # #org_role_dataset = Organization.where() --> find a way to get the spaces guids through their belonging relationship to orgs
+      #
+      # Role.where(type: roles)
+      # space_roles = roles && SPACE_ROLES
+      # org_roles = roles && ORG_ROLES
+      #
+      # space_role_datset = Role.where(type: space_roles, user_id: @user.id).map(&:space_guid).uniq
+      # org_role_based_space_guids =  Role.where(type: org_roles, user_id: @user.id).map(&:organization_guid)
+      # #org_role_dataset = Organization.where() --> find a way to get the spaces guids through their belonging relationship to orgs
+      #
+      # Role.where(type: roles)
+
+      space_roles = roles && SPACE_ROLES
+      org_roles = roles && ORG_ROLES
+
+      # table of space roles with _ids_ of spaces that user can see
+      space_role_dataset = Role.where(type: space_roles, user_id: @user.id)
+      # table of _spaces_ that the usr can see
+      space_dataset = Space.join(space_role_dataset, space_id: :id).distinct.qualify(:spaces)
+      # ^ Instead of -> Space.where(id: space_role_dataset.map(&:space_id)) OR  space_role_dataset.join(:spaces, id: :space_id).distinct.qualify(:spaces)
+
+      # table of org roles with _ids_ of orgs that the user can see
+      org_role_dataset = Role.where(type: org_roles, user_id: @user.id)
+      # Based on the org roles that the current user has, what spaces can they see?
+      space_dataset_for_org_roles = Space.join(org_role_dataset, organization_id: :organization_id).distinct.qualify(:spaces)
+      # ^ Instead of Space.where(organization_id: org_role_dataset.map(&:organization_id))
+
+      space_guids_user_can_see = space_dataset_for_org_roles.union(space_dataset)
+
+      # Space.join(:space_role_datset, space_id: :id).where(id: org_role_dataset.map(&:id)).map(&:guid)
+      # organizations.id ON spaces.organization_id => space.guids
+      #Space.join(:organizations, id: :organization_id).where(id: org_role_dataset.map(&:id)).map(&:guid)
 
       Role.where(type: roles)
 
@@ -81,6 +112,8 @@ module VCAP::CloudController
           ).select(:spaces__guid).map(&:guid)
         end
       end.flatten.compact.uniq
+
+      space_guids_user_can_see.map(&:guid)
     end
     # rubocop:enable Metrics/CyclomaticComplexity
 
