@@ -135,7 +135,7 @@ RSpec.describe(OPI::StagerClient) do
             docker_image: 'docker.io/some/image'
           },
           process_types: { web: '' },
-          execution_metadata: '{\"cmd\":[],\"ports\":[{\"Port\":8080,\"Protocol\":\"tcp\"}]}'
+          execution_metadata: '{"cmd":[],"ports":[{"Port":8080,"Protocol":"tcp"}]}'
         }
       }
       }

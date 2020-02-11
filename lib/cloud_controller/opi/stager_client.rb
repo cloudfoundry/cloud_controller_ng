@@ -46,7 +46,7 @@ module OPI
             docker_image: staging_details.package.image
           },
           process_types: { web: '' },
-          execution_metadata: '{\"cmd\":[],\"ports\":[{\"Port\":8080,\"Protocol\":\"tcp\"}]}'
+          execution_metadata: '{"cmd":[],"ports":[{"Port":8080,"Protocol":"tcp"}]}'
         }
       }
       completion_handler.staging_complete(payload, staging_details.start_after_staging)
