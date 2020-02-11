@@ -1113,6 +1113,7 @@ RSpec.describe 'Roles Request' do
           links: {
             self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
             organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}) },
+            features: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}/features), experimental: true }
           }
         }
       end
@@ -1177,6 +1178,7 @@ RSpec.describe 'Roles Request' do
             links: {
               self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{another_space.guid}) },
               organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{another_space.organization.guid}) },
+              features: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{another_space.guid}\/features), experimental: true },
             }
           }
         end
@@ -1439,6 +1441,7 @@ RSpec.describe 'Roles Request' do
           links: {
             self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}) },
             organization: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/organizations\/#{org.guid}) },
+            features: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}/features), experimental: true }
           }
         }
       end

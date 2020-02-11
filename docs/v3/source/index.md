@@ -31,6 +31,7 @@ includes:
   - api_resources/service_instances
   - api_resources/sidecars
   - api_resources/spaces
+  - api_resources/space_features
   - api_resources/space_quotas
   - api_resources/stacks
   - api_resources/tasks
@@ -297,6 +298,9 @@ includes:
   - experimental_resources/sidecars/list_for_app
   - experimental_resources/sidecars/list_for_process
   - experimental_resources/sidecars/delete
+  - experimental_resources/space_features/header
+  - experimental_resources/space_features/object
+  - experimental_resources/space_features/get
   - experimental_resources/space_manifest/header
   - experimental_resources/space_manifest/object
   - experimental_resources/space_manifest/apply

@@ -370,36 +370,37 @@ RSpec.describe 'Apps' do
               }
             ],
             'included' => {
-                'spaces' => [{
-                                 'guid' => space.guid,
-                                 'created_at' => iso8601,
-                                 'updated_at' => iso8601,
-                                 'name' => space.name,
-                                 'relationships' => {
-                                     'organization' => {
-                                         'data' => {
-                                             'guid' => space.organization.guid }
-                                     },
-                                     'quota' => {
-                                         'data' => nil
-                                     }
-                                 },
-                                 'metadata' => {
-                                     'labels' => {},
-                                     'annotations' => {},
-                                 },
-                                 'links' => {
-                                     'self' => {
-                                         'href' => "#{link_prefix}/v3/spaces/#{space.guid}",
-                                     },
-                                     'organization' => {
-                                         'href' => "#{link_prefix}/v3/organizations/#{space.organization.guid}"
-                                     }
-                                 }
-                             }]
+              'spaces' => [{
+                'guid' => space.guid,
+                'created_at' => iso8601,
+                'updated_at' => iso8601,
+                'name' => space.name,
+                'relationships' => {
+                  'organization' => {
+                    'data' => {
+                      'guid' => space.organization.guid }
+                  },
+                  'quota' => {
+                    'data' => nil
+                  }
+                },
+                'metadata' => {
+                  'labels' => {},
+                  'annotations' => {},
+                },
+                'links' => {
+                  'self' => {
+                    'href' => "#{link_prefix}/v3/spaces/#{space.guid}",
+                  },
+                  'organization' => {
+                    'href' => "#{link_prefix}/v3/organizations/#{space.organization.guid}"
+                  },
+                  'features' => { 'href' => %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}\/features), 'experimental' => true },
+                }
+              }]
             }
         }
-                                 )
+      )
     end
 
     context 'faceted search' do
@@ -1039,36 +1040,37 @@ RSpec.describe 'Apps' do
                 'features' => { 'href' => "#{link_prefix}/v3/apps/#{app_model.guid}/features" },
             },
             'included' => {
-                'spaces' => [{
-                                 'guid' => space.guid,
-                                 'created_at' => iso8601,
-                                 'updated_at' => iso8601,
-                                 'name' => space.name,
-                                 'relationships' => {
-                                     'organization' => {
-                                         'data' => {
-                                             'guid' => space.organization.guid }
-                                     },
-                                     'quota' => {
-                                         'data' => nil
-                                     }
-                                 },
-                                 'metadata' => {
-                                     'labels' => {},
-                                     'annotations' => {},
-                                 },
-                                 'links' => {
-                                     'self' => {
-                                         'href' => "#{link_prefix}/v3/spaces/#{space.guid}",
-                                     },
-                                     'organization' => {
-                                         'href' => "#{link_prefix}/v3/organizations/#{space.organization.guid}"
-                                     }
-                                 }
-                             }]
+              'spaces' => [{
+                'guid' => space.guid,
+                'created_at' => iso8601,
+                'updated_at' => iso8601,
+                'name' => space.name,
+                'relationships' => {
+                  'organization' => {
+                    'data' => {
+                      'guid' => space.organization.guid }
+                  },
+                  'quota' => {
+                    'data' => nil
+                  }
+                },
+                'metadata' => {
+                  'labels' => {},
+                  'annotations' => {},
+                },
+                'links' => {
+                  'self' => {
+                    'href' => "#{link_prefix}/v3/spaces/#{space.guid}",
+                  },
+                  'organization' => {
+                    'href' => "#{link_prefix}/v3/organizations/#{space.organization.guid}"
+                  },
+                  'features' => { 'href' => %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}\/features), 'experimental' => true },
+                }
+              }]
             }
         }
-                                 )
+      )
     end
 
     it 'gets a specific app including space and org' do

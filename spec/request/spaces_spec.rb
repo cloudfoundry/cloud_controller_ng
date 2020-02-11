@@ -61,10 +61,7 @@ RSpec.describe 'Spaces' do
               'data' => nil
             }
           },
-          'links' => {
-            'self'         => { 'href' => "#{link_prefix}/v3/spaces/#{created_space.guid}" },
-            'organization' => { 'href' => "#{link_prefix}/v3/organizations/#{created_space.organization_guid}" },
-          },
+          'links' => build_space_links(created_space),
           'metadata' => {
               'labels' => { 'hocus' => 'pocus' },
               'annotations' => { 'boo' => 'urns' },
@@ -109,14 +106,7 @@ RSpec.describe 'Spaces' do
                 'labels' => {},
                 'annotations' => {},
             },
-            'links' => {
-              'self' => {
-                'href' => "#{link_prefix}/v3/spaces/#{space1.guid}"
-              },
-              'organization' => {
-                'href' => "#{link_prefix}/v3/organizations/#{space1.organization_guid}"
-              }
-            },
+            'links' => build_space_links(space1),
         }
       )
     end
@@ -189,17 +179,11 @@ RSpec.describe 'Spaces' do
               'labels' => {},
               'annotations' => {},
             },
-            'links' => {
-              'self' => {
-                'href' => "#{link_prefix}/v3/spaces/#{space1.guid}"
-              },
-              'organization' => {
-                'href' => "#{link_prefix}/v3/organizations/#{space1.organization_guid}"
-              },
+            'links' => build_space_links(space1).merge({
               'quota' => {
                 'href' => "#{link_prefix}/v3/space_quotas/#{space_quota.guid}"
               }
-            },
+            }),
           }
         )
       end
@@ -233,75 +217,61 @@ RSpec.describe 'Spaces' do
         parsed_response = MultiJson.load(last_response.body)
         expect(parsed_response).to be_a_response_like(
           {
-          'pagination' => {
-            'total_results' => 3,
-            'total_pages' => 2,
-            'first' => {
-              'href' => "#{link_prefix}/v3/spaces?page=1&per_page=2"
-            },
-            'last' => {
-              'href' => "#{link_prefix}/v3/spaces?page=2&per_page=2"
-            },
-            'next' => {
-              'href' => "#{link_prefix}/v3/spaces?page=2&per_page=2"
-            },
-            'previous' => nil
-          },
-          'resources' => [
-            {
-              'guid' => space1.guid,
-              'name' => 'Catan',
-              'created_at' => iso8601,
-              'updated_at' => iso8601,
-              'relationships' => {
-                'organization' => {
-                  'data' => { 'guid' => space1.organization_guid }
-                },
-                'quota' => {
-                  'data' => nil
-                }
+            'pagination' => {
+              'total_results' => 3,
+              'total_pages' => 2,
+              'first' => {
+                'href' => "#{link_prefix}/v3/spaces?page=1&per_page=2"
               },
-              'metadata' => {
+              'last' => {
+                'href' => "#{link_prefix}/v3/spaces?page=2&per_page=2"
+              },
+              'next' => {
+                'href' => "#{link_prefix}/v3/spaces?page=2&per_page=2"
+              },
+              'previous' => nil
+            },
+            'resources' => [
+              {
+                'guid' => space1.guid,
+                'name' => 'Catan',
+                'created_at' => iso8601,
+                'updated_at' => iso8601,
+                'relationships' => {
+                  'organization' => {
+                    'data' => { 'guid' => space1.organization_guid }
+                  },
+                  'quota' => {
+                    'data' => nil
+                  }
+                },
+                'metadata' => {
                   'labels' => {},
                   'annotations' => {},
-              },
-              'links' => {
-                'self' => {
-                  'href' => "#{link_prefix}/v3/spaces/#{space1.guid}"
                 },
-                'organization' => {
-                  'href' => "#{link_prefix}/v3/organizations/#{space1.organization_guid}"
-                }
-              }
-            },
-            {
-              'guid' => space2.guid,
-              'name' => 'Ticket to Ride',
-              'created_at' => iso8601,
-              'updated_at' => iso8601,
-              'relationships' => {
-                'organization' => {
-                  'data' => { 'guid' => space2.organization_guid }
-                },
-                'quota' => {
-                  'data' => nil
-                }
+                'links' => build_space_links(space1)
               },
-              'metadata' => {
+              {
+                'guid' => space2.guid,
+                'name' => 'Ticket to Ride',
+                'created_at' => iso8601,
+                'updated_at' => iso8601,
+                'relationships' => {
+                  'organization' => {
+                    'data' => { 'guid' => space2.organization_guid }
+                  },
+                  'quota' => {
+                    'data' => nil
+                  }
+                },
+                'metadata' => {
                   'labels' => {},
                   'annotations' => {},
-              },
-              'links' => {
-                'self' => {
-                  'href' => "#{link_prefix}/v3/spaces/#{space2.guid}"
                 },
-                'organization' => {
-                  'href' => "#{link_prefix}/v3/organizations/#{space2.organization_guid}"
-                }
+                'links' => build_space_links(space2)
               }
-            }
-          ]
-        }
+            ]
+          }
         )
       end
     end
@@ -481,14 +451,7 @@ RSpec.describe 'Spaces' do
                   potato: 'yellow'
                 }
             },
-            links: {
-                self: {
-                    href: "#{link_prefix}/v3/spaces/#{space.guid}"
-                },
-                organization: {
-                    href: "#{link_prefix}/v3/organizations/#{space.organization_guid}"
-                }
-            },
+            links: build_space_links(space)
         }
       end
 
@@ -572,14 +535,7 @@ RSpec.describe 'Spaces' do
               },
               'annotations' => {},
             },
-            'links' => {
-              'self' => {
-                'href' => "#{link_prefix}/v3/spaces/#{space1.guid}"
-              },
-              'organization' => {
-                'href' => "#{link_prefix}/v3/organizations/#{space1.organization_guid}"
-              }
-            },
+            'links' => build_space_links(space1)
           }
         )
       end
@@ -613,14 +569,7 @@ RSpec.describe 'Spaces' do
               },
               'annotations' => {},
             },
-            'links' => {
-              'self' => {
-                'href' => "#{link_prefix}/v3/spaces/#{space1.guid}"
-              },
-              'organization' => {
-                'href' => "#{link_prefix}/v3/organizations/#{space1.organization_guid}"
-              }
-            },
+            'links' => build_space_links(space1)
           }
         )
       end
@@ -769,5 +718,20 @@ RSpec.describe 'Spaces' do
         expect(last_response).to have_error_message("Mass delete not supported for routes. Use 'unmapped=true' parameter to delete all unmapped routes.")
       end
     end
+  end
+
+  def build_space_links(space)
+    {
+      'self' => {
+        'href' => "#{link_prefix}/v3/spaces/#{space.guid}"
+      },
+      'features' => {
+        'href' => "#{link_prefix}/v3/spaces/#{space.guid}/features",
+        'experimental' => true
+      },
+      'organization' => {
+        'href' => "#{link_prefix}/v3/organizations/#{space.organization_guid}"
+      }
+    }
   end
 end
