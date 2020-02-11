@@ -192,7 +192,7 @@ Rails.application.routes.draw do
 
   # space_features
   get '/spaces/:guid/features/:name', to: 'space_features#show'
-  
+
   # space_manifests
   post '/spaces/:guid/actions/apply_manifest', to: 'space_manifests#apply_manifest'
 

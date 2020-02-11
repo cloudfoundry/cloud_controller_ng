@@ -2,9 +2,7 @@ require 'spec_helper'
 require 'presenters/v3/service_plan_visibility_presenter'
 
 RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanVisibilityPresenter do
-
   describe '#to_hash' do
-
     let(:result) { described_class.new(service_plan, []).to_hash.deep_symbolize_keys }
 
     context 'when service plan is public' do
@@ -21,7 +19,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanVisibilityPrese
 
     context 'when service plan is space scoped' do
       let(:space) do
-        VCAP::CloudController::Space.make()
+        VCAP::CloudController::Space.make
       end
 
       let!(:service_plan) do
@@ -63,7 +61,6 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanVisibilityPrese
       end
 
       let(:result) { described_class.new(service_plan, [org]).to_hash.deep_symbolize_keys }
-
 
       it 'should return type admin' do
         expect(result).to eq({
