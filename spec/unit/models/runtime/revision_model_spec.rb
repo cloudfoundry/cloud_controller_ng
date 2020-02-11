@@ -74,5 +74,14 @@ module VCAP::CloudController
         end
       end
     end
+
+    describe 'when the env vars on the big side of the encrypted column' do
+      let(:env_vars) { { 'foo' => SecureRandom.base64(12000) } }
+      let(:app) { AppModel.make(environment_variables: env_vars) }
+      let(:revision) { RevisionModel.make(environment_variables: env_vars) }
+      it 'allows it' do
+        expect(app.environment_variables).to eq(revision.environment_variables)
+      end
+    end
   end
 end
