@@ -750,6 +750,24 @@ module VCAP::CloudController
           expect(last_response).to have_error_message('Spaces with guids ["not-related-space"] do not exist, or you do not have access to them.')
         end
       end
+
+      context 'when a guid in the request body is the wrong type' do
+        let(:bad_params) do
+          {
+            data: [
+              { guid: space.guid },
+              { guid: 6 }
+            ]
+          }
+        end
+
+        it 'returns a helpful error message' do
+          post "/v3/space_quotas/#{space_quota.guid}/relationships/spaces", bad_params.to_json, admin_header
+
+          expect(last_response).to have_status_code(422)
+          expect(parsed_response['errors'][0]['detail']).to eq('Invalid data type: Data[1] guid should be a string.')
+        end
+      end
     end
 
     describe 'DELETE /v3/space_quotas/:guid/relationships/spaces' do

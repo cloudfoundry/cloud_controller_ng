@@ -482,7 +482,7 @@ module VCAP::CloudController
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
       end
 
-      context 'when an org guid is invalid' do
+      context 'when an org guid does not exist' do
         let(:params) do
           {
             data: [{ guid: 'not a real guid' }]
@@ -493,6 +493,20 @@ module VCAP::CloudController
           post "/v3/organization_quotas/#{org_quota.guid}/relationships/organizations", params.to_json, admin_header
           expect(last_response).to have_status_code(422)
           expect(last_response).to have_error_message('Organizations with guids ["not a real guid"] do not exist, or you do not have access to them.')
+        end
+      end
+
+      context 'when an org guid is the wrong type' do
+        let(:params) do
+          {
+            data: [{ guid: 8 }]
+          }
+        end
+
+        it 'returns a 422 with a helpful message' do
+          post "/v3/organization_quotas/#{org_quota.guid}/relationships/organizations", params.to_json, admin_header
+          expect(last_response).to have_status_code(422)
+          expect(parsed_response['errors'][0]['detail']).to eq('Invalid data type: Data[0] guid should be a string.')
         end
       end
     end

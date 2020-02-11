@@ -87,7 +87,7 @@ class SpaceQuotasController < ApplicationController
       (space_quota && permission_queryer.can_write_to_org?(space_quota.organization_guid))
 
     message = SpaceQuotaApplyMessage.new(hashed_params[:body])
-    invalid_param!(message.errors.full_messages) unless message.valid?
+    unprocessable!(message.errors.full_messages) unless message.valid?
 
     SpaceQuotaApply.new.apply(space_quota, message)
 

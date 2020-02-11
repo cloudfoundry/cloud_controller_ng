@@ -90,7 +90,7 @@ class OrganizationQuotasController < ApplicationController
     unauthorized! unless permission_queryer.can_write_globally?
 
     message = OrganizationQuotaApplyMessage.new(hashed_params[:body])
-    invalid_param!(message.errors.full_messages) unless message.valid?
+    unprocessable!(message.errors.full_messages) unless message.valid?
 
     organization_quota = QuotaDefinition.first(guid: hashed_params[:guid])
     resource_not_found!(:organization_quota) unless organization_quota
