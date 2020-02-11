@@ -1,6 +1,6 @@
 require 'spec_helper'
 require 'request_spec_shared_examples'
-require 'controllers/space_features_controller'
+require 'controllers/v3/space_features_controller'
 
 RSpec.describe 'Space Features' do
   let(:user) { VCAP::CloudController::User.make }
@@ -8,7 +8,35 @@ RSpec.describe 'Space Features' do
   let(:space) { VCAP::CloudController::Space.make(allow_ssh: true) }
   let(:org) { space.organization }
 
-  describe 'GET /v3/spaces/:guid/features/:name' do
+  describe 'GET /v3/spaces/:guid/features' do
+      let(:api_call) do
+        ->(user_header) { get "/v3/spaces/#{space.guid}/features", nil, user_header }
+      end
+
+      let(:space_features_json) do
+        {
+          resources: [
+            {
+              'name' => 'ssh',
+              'description' => 'Enable SSHing into apps in the space.',
+              'enabled' => true
+            }
+          ]
+        }
+      end
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 200, response_object: space_features_json)
+        h['org_auditor'] = { code: 404 }
+        h['org_billing_manager'] = { code: 404 }
+        h['no_role'] = { code: 404 }
+        h
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+    end
+
+    describe 'GET /v3/spaces/:guid/features/:name' do
     let(:api_call) do
       ->(user_header) { get "/v3/spaces/#{space.guid}/features/ssh", nil, user_header }
     end

@@ -192,6 +192,7 @@ Rails.application.routes.draw do
 
   # space_features
   get '/spaces/:guid/features/:name', to: 'space_features#show'
+  get '/spaces/:guid/features', to: 'space_features#index'
   patch '/spaces/:guid/features/:name', to: 'space_features#update'
 
   # space_manifests

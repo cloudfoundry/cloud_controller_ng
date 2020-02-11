@@ -306,6 +306,7 @@ includes:
   - experimental_resources/space_features/header
   - experimental_resources/space_features/object
   - experimental_resources/space_features/get
+  - experimental_resources/space_features/list
   - experimental_resources/space_features/update
   - experimental_resources/space_manifest/header
   - experimental_resources/space_manifest/object
