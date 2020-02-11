@@ -434,5 +434,34 @@ module VCAP::CloudController
         expect(plan.broker_space_scoped?).to be_falsey
       end
     end
+
+    describe '.visibility_type' do
+      it 'returns "public" for public plans' do
+        plan = ServicePlan.make(public: true)
+
+        expect(plan.visibility_type).to eq('public')
+      end
+
+      it 'returns "admin" for private plans' do
+        plan = ServicePlan.make(public: false)
+
+        expect(plan.visibility_type).to eq('admin')
+      end
+
+      it 'returns "space" for plans from space-scoped brokers' do
+        plan = ServicePlan.make(service: Service.make(service_broker: ServiceBroker.make(space: Space.make)))
+
+        expect(plan.visibility_type).to eq('space')
+      end
+
+      it 'returns "organization" for org restricted plans' do
+        plan = ServicePlanVisibility.make(
+          service_plan: ServicePlan.make(public: false),
+          organization: Organization.make
+        ).service_plan
+
+        expect(plan.visibility_type).to eq('organization')
+      end
+    end
   end
 end

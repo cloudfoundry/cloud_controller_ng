@@ -12,7 +12,7 @@ module VCAP::CloudController
             guid: service_plan.guid,
             created_at: service_plan.created_at,
             updated_at: service_plan.updated_at,
-            public: service_plan.public,
+            visibility_type: service_plan.visibility_type,
             available: service_plan.active?,
             name: service_plan.name,
             free: service_plan.free,

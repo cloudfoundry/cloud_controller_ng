@@ -53,7 +53,9 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanVisibilityPrese
 
     context 'when service plan is visible for a set of orgs only' do
       let(:service_plan) do
-        VCAP::CloudController::ServicePlan.make(public: false)
+        plan = VCAP::CloudController::ServicePlan.make(public: false)
+        VCAP::CloudController::ServicePlanVisibility.make(service_plan: plan, organization: org)
+        plan
       end
 
       let(:org) do
@@ -62,7 +64,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanVisibilityPrese
 
       let(:result) { described_class.new(service_plan, [org]).to_hash.deep_symbolize_keys }
 
-      it 'should return type admin' do
+      it 'should return type organization' do
         expect(result).to eq({
           type: 'organization',
           organizations: [

@@ -516,7 +516,7 @@ RSpec.describe 'V3 service plans' do
       guid: service_plan.guid,
       created_at: iso8601,
       updated_at: iso8601,
-      public: match(boolean),
+      visibility_type: service_plan.visibility_type,
       available: match(boolean),
       name: service_plan.name,
       free: match(boolean),

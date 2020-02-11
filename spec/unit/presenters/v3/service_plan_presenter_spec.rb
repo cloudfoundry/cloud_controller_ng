@@ -33,7 +33,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
         guid: guid,
         created_at: service_plan.created_at,
         updated_at: service_plan.updated_at,
-        public: true,
+        visibility_type: 'public',
         available: true,
         name: service_plan.name,
         free: false,
@@ -83,16 +83,6 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
           }
         }
       })
-    end
-
-    context 'when `public` is false' do
-      let(:service_plan) do
-        VCAP::CloudController::ServicePlan.make(public: false)
-      end
-
-      it 'presents the service plan with public false' do
-        expect(result[:public]).to eq(false)
-      end
     end
 
     context 'when `active` is false' do

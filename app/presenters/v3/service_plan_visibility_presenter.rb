@@ -10,24 +10,20 @@ module VCAP::CloudController
         end
 
         def to_hash
-          if service_plan.public?
-            { type: 'public' }
-          elsif service_plan.broker_space_scoped?
-            {
-              type: 'space',
-              space: {
-                name: service_plan.service_broker.space.name,
-                guid: service_plan.service_broker.space.guid,
-              }
+          visibility = { type: service_plan.visibility_type }
+
+          if visibility[:type] == VCAP::CloudController::ServicePlanVisibilityTypes::SPACE
+            visibility[:space] = {
+              name: service_plan.service_broker.space.name,
+              guid: service_plan.service_broker.space.guid,
             }
-          elsif @visible_in_orgs.any?
-            {
-              type: 'organization',
-              organizations: @visible_in_orgs.map { |org| { name: org.name, guid: org.guid } }
-            }
-          else
-            { type: 'admin' }
           end
+
+          if visibility[:type] == VCAP::CloudController::ServicePlanVisibilityTypes::ORGANIZATION
+            visibility[:organizations] = @visible_in_orgs.map { |org| { name: org.name, guid: org.guid } }
+          end
+
+          return visibility
         end
 
         private

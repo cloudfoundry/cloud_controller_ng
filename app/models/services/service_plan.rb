@@ -167,6 +167,16 @@ module VCAP::CloudController
       visible_plans.include?(self)
     end
 
+    def visibility_type
+      return ServicePlanVisibilityTypes::PUBLIC if public?
+
+      return ServicePlanVisibilityTypes::SPACE if broker_space_scoped?
+
+      return ServicePlanVisibilityTypes::ORGANIZATION if service_plan_visibilities.any?
+
+      return ServicePlanVisibilityTypes::ADMIN
+    end
+
     private
 
     def before_validation
@@ -184,5 +194,12 @@ module VCAP::CloudController
         errors.add(:public, 'may not be true for plans belonging to private service brokers')
       end
     end
+  end
+
+  class ServicePlanVisibilityTypes
+    PUBLIC = 'public'.freeze
+    ADMIN = 'admin'.freeze
+    SPACE = 'space'.freeze
+    ORGANIZATION = 'organization'.freeze
   end
 end
