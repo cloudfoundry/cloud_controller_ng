@@ -1,4 +1,4 @@
-### Get a space feature
+### Update space features
 
 ```
 Example Request
@@ -6,8 +6,9 @@ Example Request
 
 ```shell
 curl "https://api.example.org/v3/spaces/[guid]/features/[name]" \
-  -X GET \
+  -X PATCH \
   -H "Authorization: bearer [token]"
+  -d '{ "enabled": true }'
 ```
 
 ```
@@ -22,15 +23,11 @@ Content-Type: application/json
 ```
 
 #### Definition
-`GET /v3/spaces/:guid/features/:name`
+`PATCH /v3/spaces/:guid/features/:name`
 
 #### Permitted roles
  |
 --- | ---
 Admin |
-Admin Read-Only |
-Global Auditor |
 Org Manager |
-Space Auditor |
-Space Developer |
 Space Manager |
