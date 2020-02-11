@@ -341,6 +341,20 @@ module VCAP::CloudController
             end
           end
 
+          describe 'service_broker_names' do
+            let(:service_broker) { ServiceBroker.make }
+            let(:service_offering) { Service.make(service_broker: service_broker) }
+            let!(:plan_1) { ServicePlan.make(service: service_offering) }
+            let!(:plan_2) { ServicePlan.make(service: service_offering) }
+            let!(:plan_3) { ServicePlan.make }
+            let!(:plan_4) { ServicePlan.make }
+            let(:params) { { service_broker_names: [service_broker.name, plan_3.service.service_broker.name].join(',') } }
+
+            it 'can filter by service broker names' do
+              expect(service_plans).to contain_exactly(plan_1, plan_2, plan_3)
+            end
+          end
+
           describe 'service_offering_guids' do
             let(:service_offering) { Service.make }
             let!(:plan_1) { ServicePlan.make(service: service_offering) }

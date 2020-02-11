@@ -36,7 +36,7 @@ module VCAP::CloudController
 
     def join_tables(dataset, message, omniscient)
       need_all_tables = !omniscient || [:space_guids, :organization_guids].any? { |filter| message.requested?(filter) }
-      need_broker_and_offering_tables = [:service_broker_guids, :service_offering_guids, :broker_catalog_ids].any? { |filter| message.requested?(filter) }
+      need_broker_and_offering_tables = [:service_broker_guids, :service_broker_names, :service_offering_guids, :broker_catalog_ids].any? { |filter| message.requested?(filter) }
 
       if need_all_tables
 
@@ -106,6 +106,10 @@ module VCAP::CloudController
 
       if message.requested?(:service_broker_guids)
         dataset = dataset.where { Sequel[:service_brokers][:guid] =~ message.service_broker_guids }
+      end
+
+      if message.requested?(:service_broker_names)
+        dataset = dataset.where { Sequel[:service_brokers][:name] =~ message.service_broker_names }
       end
 
       if message.requested?(:service_offering_guids)

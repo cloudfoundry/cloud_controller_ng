@@ -11,6 +11,7 @@ module VCAP::CloudController
           'space_guids' => 'space_guid_1,space_guid_2',
           'organization_guids' => 'org_guid_1,org_guid_2',
           'service_broker_guids' => 'broker_guid_1,broker_guid_2',
+          'service_broker_names' => 'broker_name_1,broker_name_2',
           'service_offering_guids' => 'offering_guid_1,offering_guid_2',
           'broker_catalog_ids' => 'broker_catalog_id_1,broker_catalog_id_2',
         }.with_indifferent_access
@@ -26,6 +27,7 @@ module VCAP::CloudController
         expect(message.space_guids).to contain_exactly('space_guid_1', 'space_guid_2')
         expect(message.organization_guids).to contain_exactly('org_guid_1', 'org_guid_2')
         expect(message.service_broker_guids).to contain_exactly('broker_guid_1', 'broker_guid_2')
+        expect(message.service_broker_names).to contain_exactly('broker_name_1', 'broker_name_2')
         expect(message.service_offering_guids).to contain_exactly('offering_guid_1', 'offering_guid_2')
         expect(message.broker_catalog_ids).to contain_exactly('broker_catalog_id_1', 'broker_catalog_id_2')
       end
@@ -38,6 +40,7 @@ module VCAP::CloudController
         expect(message.requested?(:space_guids)).to be_truthy
         expect(message.requested?(:organization_guids)).to be_truthy
         expect(message.requested?(:service_broker_guids)).to be_truthy
+        expect(message.requested?(:service_broker_names)).to be_truthy
         expect(message.requested?(:service_offering_guids)).to be_truthy
         expect(message.requested?(:broker_catalog_ids)).to be_truthy
       end
