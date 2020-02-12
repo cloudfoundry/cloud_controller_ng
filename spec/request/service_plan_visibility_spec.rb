@@ -136,4 +136,71 @@ RSpec.describe 'V3 service plan visibility' do
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
     end
   end
+
+  describe 'PATCH /v3/service_plans/:guid/visibility' do
+    let(:api_call) { lambda { |user_headers| patch "/v3/service_plans/#{guid}/visibility", req_body.to_json, user_headers } }
+    let(:guid) { service_plan.guid }
+
+    context 'when the plan current visibility is "admin"' do
+      let(:service_plan) { VCAP::CloudController::ServicePlan.make(public: false) }
+
+      context 'and its being updated to public' do
+        let(:req_body) { { type: 'public' } }
+        let(:successful_response) { { code: 200, response_object: { type: 'public' } } }
+
+        let(:expected_codes_and_responses) do
+          Hash.new(code: 404).tap do |h|
+            h['admin'] = successful_response
+            h['admin_read_only'] = { code: 403 }
+            h['global_auditor'] = { code: 403 }
+            h['unauthenticated'] = { code: 401 }
+          end
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
+    end
+
+    context 'when the plan current visibility is "public"' do
+      let(:service_plan) { VCAP::CloudController::ServicePlan.make(public: true) }
+
+      context 'and its being updated to "admin"' do
+        let(:req_body) { { type: 'admin' } }
+        let(:successful_response) { { code: 200, response_object: { type: 'admin' } } }
+
+        let(:expected_codes_and_responses) do
+          Hash.new(code: 403).tap do |h|
+            h['admin'] = successful_response
+            h['unauthenticated'] = { code: 401 }
+          end
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
+    end
+
+    context 'when the plan does not exist' do
+      let(:guid) { 'invalid-plan-guid' }
+      let(:req_body) { { type: 'public' } }
+
+      it 'returns a 404 not found' do
+        api_call.call(admin_headers)
+
+        expect(last_response).to have_status_code(404)
+      end
+    end
+
+    context 'when the update request body is invalid' do
+      let(:service_plan) { VCAP::CloudController::ServicePlan.make(public: false) }
+      let(:req_body) { { type: 'space' } }
+
+      it 'returns a 400 bad request' do
+        api_call.call(admin_headers)
+
+        expect(last_response).to have_status_code(400)
+        p parsed_response
+        expect(parsed_response['errors'][0]['detail']).to match(/must be one of 'public', 'admin', 'organization'/)
+      end
+    end
+  end
 end

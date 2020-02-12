@@ -18,6 +18,11 @@
   http_code: 400
   message: "Invalid content type, expected: %s"
 
+1004:
+  name: BadRequest
+  http_code: 400
+  message: "Bad request: %s"
+
 10000:
   name: NotFound
   http_code: 404
