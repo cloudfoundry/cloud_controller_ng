@@ -307,6 +307,57 @@ RSpec.describe 'V3 service plans' do
         end
       end
 
+      describe 'service_offering_names' do
+        let(:org_system) { VCAP::CloudController::Organization.make(name: 'system') }
+        let!(:org_dev) { VCAP::CloudController::Organization.make(name: 'dev') }
+
+        let(:space_1) do
+          space = VCAP::CloudController::Space.make(organization: org_system)
+          space.organization.add_user(user)
+          space.add_developer(user)
+          space
+        end
+
+        let(:global_broker) { VCAP::CloudController::ServiceBroker.make(name: 'global_broker') }
+        let(:service_offering) { VCAP::CloudController::Service.make(service_broker: global_broker) }
+        let!(:plan_1) { VCAP::CloudController::ServicePlan.make(public: true, service: service_offering) }
+        let!(:plan_2) { VCAP::CloudController::ServicePlan.make(public: false, service: service_offering) }
+        let(:plan_3) { VCAP::CloudController::ServicePlan.make(public: false, service: service_offering) }
+        let(:plan_4) { VCAP::CloudController::ServicePlan.make(public: false, service: service_offering) }
+
+        let(:space_broker) { VCAP::CloudController::ServiceBroker.make(name: 'space_broker') }
+        let(:space_offering) { VCAP::CloudController::Service.make(service_broker: space_broker) }
+        let!(:space_plan_1) { VCAP::CloudController::ServicePlan.make(public: false, service: space_offering) }
+        let!(:space_plan_2) { VCAP::CloudController::ServicePlan.make(public: false, service: space_offering) }
+
+        let(:global_broker2) { VCAP::CloudController::ServiceBroker.make(name: 'global_broker2') }
+        let(:global_offering) { VCAP::CloudController::Service.make(service_broker: global_broker2) }
+        let!(:filtered_out_plan) { VCAP::CloudController::ServicePlan.make(public: true, service: global_offering) }
+
+        let(:user) { VCAP::CloudController::User.make }
+
+        before do
+          VCAP::CloudController::ServicePlanVisibility.make(service_plan: plan_3, organization: org_system)
+          VCAP::CloudController::ServicePlanVisibility.make(service_plan: plan_4, organization: org_dev)
+
+          space_1.add_service_broker(space_broker)
+        end
+
+        context 'space developer' do
+          it 'filters by offering name' do
+            get "/v3/service_plans?service_offering_names=#{service_offering.name},#{space_offering.name}", {}, headers_for(user)
+            check_filtered_plans(plan_1, space_plan_1, space_plan_2, plan_3)
+          end
+        end
+
+        context 'admin' do
+          it 'filters by offering name' do
+            get "/v3/service_plans?service_offering_names=#{space_offering.name}", {}, admin_headers
+            check_filtered_plans(space_plan_1, space_plan_2)
+          end
+        end
+      end
+
       describe 'labels' do
         let!(:service_plan_1) { VCAP::CloudController::ServicePlan.make(public: true, active: true) }
         let!(:service_plan_2) { VCAP::CloudController::ServicePlan.make(public: true, active: true) }

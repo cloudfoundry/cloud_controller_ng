@@ -363,7 +363,20 @@ module VCAP::CloudController
             let!(:plan_4) { ServicePlan.make }
             let(:params) { { service_offering_guids: [service_offering.guid, plan_3.service.guid].join(',') } }
 
-            it 'can filter by service broker guids' do
+            it 'can filter by service offering guids' do
+              expect(service_plans).to contain_exactly(plan_1, plan_2, plan_3)
+            end
+          end
+
+          describe 'service_offering_names' do
+            let(:service_offering) { Service.make }
+            let!(:plan_1) { ServicePlan.make(service: service_offering) }
+            let!(:plan_2) { ServicePlan.make(service: service_offering) }
+            let!(:plan_3) { ServicePlan.make }
+            let!(:plan_4) { ServicePlan.make }
+            let(:params) { { service_offering_names: [service_offering.name, plan_3.service.name].join(',') } }
+
+            it 'can filter by service offering names' do
               expect(service_plans).to contain_exactly(plan_1, plan_2, plan_3)
             end
           end
