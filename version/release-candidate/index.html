@@ -4826,7 +4826,10 @@ applications without incurring downtime. This is different from the traditional 
   </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DEPLOYING"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ACTIVE"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"reason"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DEPLOYING"</span><span class="w">
+    </span><span class="nt">"reason"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DEPLOYING"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"details"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"last_successful_healthcheck"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-04-25T22:42:10Z"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"strategy"</span><span class="p">:</span><span class="w"> </span><span class="s2">"rolling"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"droplet"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -4891,6 +4894,11 @@ applications without incurring downtime. This is different from the traditional 
 <td><strong>status.reason</strong></td>
 <td><em>string</em></td>
 <td>The reason for the status of the deployment.<br>Following list represents valid values.<br>1. If <strong>status.value</strong> is <code class="prettyprint">ACTIVE</code><br>- <code class="prettyprint">DEPLOYING</code><br>- <code class="prettyprint">CANCELING</code><br>2. If <strong>status.value</strong> is <code class="prettyprint">FINALIZED</code><br>- <code class="prettyprint">DEPLOYED</code><br>- <code class="prettyprint">CANCELED</code><br>- <code class="prettyprint">SUPERSEDED</code> (another deployment created for app before completion)<br>- <code class="prettyprint">DEGENERATE</code> (the deployment was created incorrectly by the system)</td>
+</tr>
+<tr>
+<td><strong>status.details</strong></td>
+<td><em>object</em></td>
+<td>The details for the status of the deployment shows a timestamp of the last successful healthcheck.</td>
 </tr>
 <tr>
 <td><strong>strategy</strong></td>
@@ -5005,7 +5013,10 @@ applications without incurring downtime. This is different from the traditional 
   </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DEPLOYING"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ACTIVE"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"reason"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DEPLOYING"</span><span class="w">
+    </span><span class="nt">"reason"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DEPLOYING"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"details"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"last_successful_healthcheck"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-04-25T22:42:10Z"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"strategy"</span><span class="p">:</span><span class="w"> </span><span class="s2">"rolling"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"droplet"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -5147,7 +5158,10 @@ applications without incurring downtime. This is different from the traditional 
   </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DEPLOYING"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ACTIVE"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"reason"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DEPLOYING"</span><span class="w">
+    </span><span class="nt">"reason"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DEPLOYING"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"details"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"last_successful_healthcheck"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-04-25T22:42:10Z"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"strategy"</span><span class="p">:</span><span class="w"> </span><span class="s2">"rolling"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"droplet"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -5411,7 +5425,10 @@ applications without incurring downtime. This is different from the traditional 
   </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DEPLOYING"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ACTIVE"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"reason"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DEPLOYING"</span><span class="w">
+    </span><span class="nt">"reason"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DEPLOYING"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"details"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"last_successful_healthcheck"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2018-04-25T22:42:10Z"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"strategy"</span><span class="p">:</span><span class="w"> </span><span class="s2">"rolling"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"droplet"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
