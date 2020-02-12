@@ -91,6 +91,9 @@ module VCAP::CloudController
             service_offering: {
               href: url_builder.build_url(path: "/v3/service_offerings/#{service_plan.service.guid}")
             },
+            visibility: {
+              href: url_builder.build_url(path: "/v3/service_plans/#{service_plan.guid}/visibility")
+            }
           }
 
           if service_plan.service.service_broker.space_guid

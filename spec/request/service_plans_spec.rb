@@ -90,6 +90,42 @@ RSpec.describe 'V3 service plans' do
         it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
       end
     end
+
+    context 'validity of links' do
+      let!(:service_plan) { VCAP::CloudController::ServicePlan.make(public: true) }
+      let(:guid) { service_plan.guid }
+
+      before do
+        api_call.call(admin_headers)
+      end
+
+      it 'links to self' do
+        get_plan_response = parsed_response
+
+        get parsed_response['links']['self']['href'], {}, admin_headers
+        expect(last_response).to have_status_code(200)
+        expect(parsed_response).to eq(get_plan_response)
+      end
+
+      it 'links to service offerings' do
+        get parsed_response['links']['service_offering']['href'], {}, admin_headers
+        expect(last_response).to have_status_code(200)
+        link_response = parsed_response
+
+        get "/v3/service_offerings/#{service_plan.service.guid}", {}, admin_headers
+        expect(parsed_response).to eq(link_response)
+      end
+
+      it 'links to visibilities' do
+        get parsed_response['links']['visibility']['href'], {}, admin_headers
+        expect(last_response).to have_status_code(200)
+        link_response = parsed_response
+
+        get "/v3/service_plans/#{service_plan.guid}/visibility", {}, admin_headers
+        expect(last_response).to have_status_code(200)
+        expect(parsed_response).to eq(link_response)
+      end
+    end
   end
 
   describe 'GET /v3/service_plans' do
@@ -552,6 +588,9 @@ RSpec.describe 'V3 service plans' do
         },
         service_offering: {
           href: "#{link_prefix}/v3/service_offerings/#{service_plan.service.guid}"
+        },
+        visibility: {
+          href: "#{link_prefix}/v3/service_plans/#{service_plan.guid}/visibility"
         }
       },
       metadata: {

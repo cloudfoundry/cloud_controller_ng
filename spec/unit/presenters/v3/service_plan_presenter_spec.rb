@@ -80,6 +80,9 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
           },
           service_offering: {
             href: "#{link_prefix}/v3/service_offerings/#{service_plan.service.guid}"
+          },
+          visibility: {
+            href: "#{link_prefix}/v3/service_plans/#{service_plan.guid}/visibility"
           }
         }
       })
