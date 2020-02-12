@@ -89,7 +89,7 @@ class SpaceQuotasController < ApplicationController
     message = SpaceQuotaApplyMessage.new(hashed_params[:body])
     unprocessable!(message.errors.full_messages) unless message.valid?
 
-    SpaceQuotaApply.new.apply(space_quota, message)
+    SpaceQuotaApply.new.apply(space_quota, message, readable_space_guids)
 
     render status: :ok, json: Presenters::V3::ToManyRelationshipPresenter.new(
       "space_quotas/#{space_quota.guid}",
