@@ -50,7 +50,9 @@ module VCAP::CloudController
       end
 
       def space_or_org_visible_for_user(space, user)
-        organization_visible(space.organization).union(space_visible(space, user), alias: :services)
+        org_visible = organization_visible(space.organization)
+        space_visible = space_visible(space, user)
+        org_visible.union(space_visible, alias: :services, from_self: false)
       end
 
       def organization_visible(organization)
