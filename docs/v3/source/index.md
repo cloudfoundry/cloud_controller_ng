@@ -223,6 +223,11 @@ includes:
   - resources/spaces/delete
   - resources/spaces/get_assigned_isolation_segment
   - resources/spaces/manage_isolation_segment
+  - resources/space_features/header
+  - resources/space_features/object
+  - resources/space_features/get
+  - resources/space_features/list
+  - resources/space_features/update
   - resources/stacks/header
   - resources/stacks/object
   - resources/stacks/create
@@ -305,11 +310,6 @@ includes:
   - experimental_resources/sidecars/list_for_app
   - experimental_resources/sidecars/list_for_process
   - experimental_resources/sidecars/delete
-  - experimental_resources/space_features/header
-  - experimental_resources/space_features/object
-  - experimental_resources/space_features/get
-  - experimental_resources/space_features/list
-  - experimental_resources/space_features/update
   - experimental_resources/space_manifest/header
   - experimental_resources/space_manifest/object
   - experimental_resources/space_manifest/apply
