@@ -43,6 +43,8 @@ Content-Type: application/json
 <%= yield_content :single_organization_quota %>
 ```
 
+This endpoint will only update the parameters specified in the request body. Any unspecified parameters will retain their existing values.
+
 #### Definition
 `PATCH /v3/organization_quotas/:guid`
 

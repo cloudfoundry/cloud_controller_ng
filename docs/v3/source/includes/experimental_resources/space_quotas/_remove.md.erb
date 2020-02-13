@@ -21,7 +21,7 @@ HTTP/1.1 204 No Content
 
 This endpoint removes a space quota from a space.
 
-To remove a space quota from a space you must be an admin or an org manager in the quota's parent organization.
+Only an admin or an org manager in the quota's parent organization can remove a space quota from a space.
 
 #### Definition
 `DELETE /v3/space_quotas/:quota_guid/relationships/spaces/:space_guid`
