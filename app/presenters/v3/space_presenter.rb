@@ -55,8 +55,7 @@ module VCAP::CloudController::Presenters::V3
           href: url_builder.build_url(path: "/v3/organizations/#{space.organization_guid}")
         },
         features: {
-          href: url_builder.build_url(path: "/v3/spaces/#{space.guid}/features"),
-          experimental: true
+          href: url_builder.build_url(path: "/v3/spaces/#{space.guid}/features")
         }
       }
 

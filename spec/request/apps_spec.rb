@@ -395,7 +395,7 @@ RSpec.describe 'Apps' do
                   'organization' => {
                     'href' => "#{link_prefix}/v3/organizations/#{space.organization.guid}"
                   },
-                  'features' => { 'href' => %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}\/features), 'experimental' => true },
+                  'features' => { 'href' => %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}\/features) },
                 }
               }]
             }
@@ -1065,7 +1065,7 @@ RSpec.describe 'Apps' do
                   'organization' => {
                     'href' => "#{link_prefix}/v3/organizations/#{space.organization.guid}"
                   },
-                  'features' => { 'href' => %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}\/features), 'experimental' => true },
+                  'features' => { 'href' => %r(#{Regexp.escape(link_prefix)}\/v3\/spaces\/#{space.guid}\/features) },
                 }
               }]
             }

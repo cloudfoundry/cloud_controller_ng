@@ -9,7 +9,6 @@ RSpec.describe 'Spaces' do
   let!(:space1)            { VCAP::CloudController::Space.make name: 'Catan', organization: org }
   let!(:space2)            { VCAP::CloudController::Space.make name: 'Ticket to Ride', organization: org }
   let!(:space3)            { VCAP::CloudController::Space.make name: 'Agricola', organization: org }
-  let!(:unaccesable_space) { VCAP::CloudController::Space.make name: 'Ghost Stories', organization: org }
 
   before do
     org.add_user(user)
@@ -726,8 +725,7 @@ RSpec.describe 'Spaces' do
         'href' => "#{link_prefix}/v3/spaces/#{space.guid}"
       },
       'features' => {
-        'href' => "#{link_prefix}/v3/spaces/#{space.guid}/features",
-        'experimental' => true
+        'href' => "#{link_prefix}/v3/spaces/#{space.guid}/features"
       },
       'organization' => {
         'href' => "#{link_prefix}/v3/organizations/#{space.organization_guid}"
