@@ -389,7 +389,7 @@ RSpec.describe 'V3 service plans' do
             "names=#{selected_plan.name}",
             "service_broker_guids=#{selected_plan.service.service_broker.guid}",
             "service_offering_guids=#{selected_plan.service.guid}",
-            "broker_catalog_ids=#{selected_plan.service.unique_id}",
+            "broker_catalog_ids=#{selected_plan.unique_id}",
           ].each do |filter|
             get "/v3/service_plans?#{filter}", {}, admin_headers
             check_filtered_plans(selected_plan)

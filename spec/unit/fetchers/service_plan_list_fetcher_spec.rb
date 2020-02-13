@@ -387,10 +387,10 @@ module VCAP::CloudController
             let!(:plan_2) { ServicePlan.make(service: service_offering) }
             let!(:plan_3) { ServicePlan.make }
             let!(:plan_4) { ServicePlan.make }
-            let(:params) { { broker_catalog_ids: [service_offering.unique_id, plan_4.service.unique_id].join(',') } }
+            let(:params) { { broker_catalog_ids: [plan_1.unique_id, plan_4.unique_id].join(',') } }
 
             it 'can filter by service broker guids' do
-              expect(service_plans).to contain_exactly(plan_1, plan_2, plan_4)
+              expect(service_plans).to contain_exactly(plan_1, plan_4)
             end
           end
 

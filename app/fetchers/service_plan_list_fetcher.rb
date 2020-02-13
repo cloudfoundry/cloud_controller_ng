@@ -128,7 +128,7 @@ module VCAP::CloudController
       end
 
       if message.requested?(:broker_catalog_ids)
-        dataset = dataset.where { Sequel[:services][:unique_id] =~ message.broker_catalog_ids }
+        dataset = dataset.where { Sequel[:service_plans][:unique_id] =~ message.broker_catalog_ids }
       end
 
       if message.requested?(:label_selector)
