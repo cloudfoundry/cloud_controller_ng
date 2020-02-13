@@ -1,0 +1,46 @@
+### Apply a Service Plan Visibility
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/service_plans/[guid]/visibility" \
+  -X POST \
+  -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
+  -d '{
+    "type": "organization",
+    "organizations": [
+      "0fc1ad4f-e1d7-4436-8e23-6b20f03c6482"
+    ]
+  }'
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+<%= yield_content :service_plan_visibility_with_new_org %>
+```
+
+This endpoint applies a Service Plan Visibility. It behaves similar to the [PATCH Service Plan Visibility endpoint](#update-a-service-plan-visibility) but this endpoint will append to the existing list of organizations when the Service Plan is `organization` visible.
+
+#### Definition
+`POST /v3/service_plans/[guid]/visibility`
+
+#### Parameters
+
+Name | Type | Description
+---- | ---- | -----------
+**type** | _string_ | Denotes the visibility of the plan. Can be `public`, `admin`, `organization`. See [_list of visibility types_](#list-of-visibility-types).
+**organizations** | _array of strings_ | Desired list of organizations GUIDs where the plan will be accessible. Required if `type` is `organization`.
+
+#### Permitted roles
+ |
+--- | ---
+Admin |

@@ -190,6 +190,7 @@ Rails.application.routes.draw do
   # service_plan_visibility
   get '/service_plans/:guid/visibility', to: 'service_plan_visibility#show'
   patch '/service_plans/:guid/visibility', to: 'service_plan_visibility#update'
+  post '/service_plans/:guid/visibility', to: 'service_plan_visibility#apply'
 
   # space_features
   get '/spaces/:guid/features/:name', to: 'space_features#show'

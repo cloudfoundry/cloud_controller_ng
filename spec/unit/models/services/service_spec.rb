@@ -344,7 +344,7 @@ module VCAP::CloudController
 
         @public_broker = ServiceBroker.make
         @visible_service = Service.make(service_broker: @public_broker, active: true, label: 'Visible Service')
-        @visible_plan = ServicePlan.make(service: @visible_service, name: 'Visible Plan')
+        @visible_plan = ServicePlan.make(service: @visible_service, public: true, active: true, name: 'Visible Plan')
         @hidden_service = Service.make(service_broker: @public_broker, active: true, label: 'Hidden Service')
         @hidden_plan = ServicePlan.make(service: @hidden_service, public: false, name: 'Hidden Plan')
       end

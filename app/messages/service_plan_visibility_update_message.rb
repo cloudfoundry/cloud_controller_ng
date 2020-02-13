@@ -4,11 +4,25 @@ require 'messages/validators/label_selector_requirement_validator'
 module VCAP::CloudController
   class ServicePlanVisibilityUpdateMessage < BaseMessage
     register_allowed_keys [
-      :type
+      :type,
+      :organizations
     ]
 
     validates_with NoAdditionalParamsValidator
-    validates :type, inclusion: { in: %w(public admin organization), message: "must be one of 'public', 'admin', 'organization'" }, allow_nil: false
+
+    validates :type,
+      allow_nil: false,
+      inclusion: {
+        in: %w(public admin organization),
+        message: "must be one of 'public', 'admin', 'organization'"
+      }
+    validates :organizations,
+      if: -> { type == 'organization' },
+      array: true,
+      presence: true
+    validates :organizations,
+      unless: -> { type == 'organization' },
+      absence: true
 
     def self.from_params(params)
       super(params, [])

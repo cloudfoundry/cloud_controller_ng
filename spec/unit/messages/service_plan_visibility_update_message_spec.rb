@@ -4,6 +4,7 @@ require 'messages/service_plan_visibility_update_message'
 module VCAP::CloudController
   RSpec.describe ServicePlanVisibilityUpdateMessage do
     let(:subject) { ServicePlanVisibilityUpdateMessage }
+
     describe '.from_params' do
       let(:params) { { 'type' => 'public' }.with_indifferent_access }
 
@@ -17,7 +18,7 @@ module VCAP::CloudController
       it 'errors with an empty set' do
         message = subject.from_params({})
         expect(message).not_to be_valid
-        expect(message.errors[:type]).to include("Type must be one of 'public', 'admin', 'organization'")
+        expect(message.errors[:type]).to include("must be one of 'public', 'admin', 'organization'")
       end
 
       it 'converts requested keys to symbols' do
@@ -49,7 +50,7 @@ module VCAP::CloudController
         end
 
         it 'accepts `organization`' do
-          message = subject.from_params({ 'type' => 'organization' })
+          message = subject.from_params({ 'type' => 'organization', organizations: ['org-1'] })
 
           expect(message).to be_valid
           expect(message.type).to eq('organization')
@@ -59,8 +60,23 @@ module VCAP::CloudController
           message = subject.from_params({ 'type' => 'space' })
 
           expect(message).not_to be_valid
-          expect(message.errors[:type]).to include("Type must be one of 'public', 'admin', 'organization'")
+          expect(message.errors[:type]).to include("must be one of 'public', 'admin', 'organization'")
         end
+      end
+
+      context 'when `type` is "organization"' do
+        it 'accepts `organizations` key with an array of orgs' do
+          message = subject.from_params({ type: 'organization', organizations: %w(some-org another-org) })
+          expect(message).to be_valid
+          expect(message.type).to eq('organization')
+          expect(message.organizations).to eq(%w(some-org another-org))
+        end
+      end
+
+      it 'errors when `organizations` is defined but `type` is not "organization"' do
+        message = subject.from_params({ type: 'public', organizations: %w(some-org another-org) })
+        expect(message).not_to be_valid
+        expect(message.errors[:organizations]).to include('must be blank')
       end
     end
   end
