@@ -733,41 +733,6 @@ module VCAP::CloudController
         end
       end
 
-      context "when the space is outside the space quota's org" do
-        let(:other_space) { Space.make(guid: 'not-related-space') }
-        let(:other_org) { other_space.organization }
-        let(:params) do
-          {
-            data: [
-              { guid: other_space.guid }
-            ]
-          }
-        end
-        let(:user_headers) { set_user_with_header_as_role(role: 'org_manager', user: user, org: org) }
-
-        context 'and the space is visible to the user' do
-          before do
-            other_org.add_manager(user)
-          end
-
-          it 'returns a helpful error message' do
-            post "/v3/space_quotas/#{space_quota.guid}/relationships/spaces", params.to_json, user_headers
-
-            expect(last_response).to have_status_code(422)
-            expect(last_response).to have_error_message('Space quotas cannot be applied outside of their owning organization.')
-          end
-        end
-
-        context 'and the space is not visible to the user' do
-          it 'returns a helpful error message' do
-            post "/v3/space_quotas/#{space_quota.guid}/relationships/spaces", params.to_json, user_headers
-
-            expect(last_response).to have_status_code(422)
-            expect(last_response).to have_error_message('Spaces with guids ["not-related-space"] do not exist, or you do not have access to them.')
-          end
-        end
-      end
-
       context 'when a guid in the request body is the wrong type' do
         let(:bad_params) do
           {

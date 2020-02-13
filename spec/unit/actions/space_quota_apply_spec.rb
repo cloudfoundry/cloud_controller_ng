@@ -4,7 +4,7 @@ require 'messages/space_quota_apply_message'
 
 module VCAP::CloudController
   RSpec.describe SpaceQuotaApply do
-    describe '#create' do
+    describe '#apply' do
       subject { SpaceQuotaApply.new }
 
       let(:org) { VCAP::CloudController::Organization.make }
@@ -59,7 +59,7 @@ module VCAP::CloudController
         end
       end
 
-      context 'when the space does not belong to the same organization as the space quota' do
+      context "when the space is outside the space quota's org" do
         let(:other_space) { VCAP::CloudController::Space.make }
         let(:invalid_space_guid) { other_space.guid }
 
@@ -69,21 +69,21 @@ module VCAP::CloudController
           })
         end
 
-        context 'when the space is not readable by the user' do
-          it 'displays an access error' do
-            expect {
-              subject.apply(space_quota, message_with_invalid_space_guid, readable_space_guids)
-            }.to raise_error(SpaceQuotaApply::Error, "Spaces with guids [\"#{invalid_space_guid}\"] do not exist, or you do not have access to them.")
-          end
-        end
-
         context 'when the space is readable by the user' do
           let(:readable_space_guids) { [invalid_space_guid] }
 
-          it "display an error indicating that the space is outside the quota's purview" do
+          it "displays an error indicating that the space is outside the quota's purview" do
             expect {
               subject.apply(space_quota, message_with_invalid_space_guid, readable_space_guids)
             }.to raise_error(SpaceQuotaApply::Error, 'Space quotas cannot be applied outside of their owning organization.')
+          end
+        end
+
+        context 'when the space is not readable by the user' do
+          it 'displays an error indicating that the space may not exist' do
+            expect {
+              subject.apply(space_quota, message_with_invalid_space_guid, readable_space_guids)
+            }.to raise_error(SpaceQuotaApply::Error, "Spaces with guids [\"#{invalid_space_guid}\"] do not exist, or you do not have access to them.")
           end
         end
       end
