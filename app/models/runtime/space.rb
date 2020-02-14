@@ -257,7 +257,7 @@ module VCAP::CloudController
     def has_remaining_memory(mem)
       return true unless space_quota_definition
 
-      memory_remaining >= mem
+      space_quota_definition.memory_limit == SpaceQuotaDefinition::UNLIMITED || memory_remaining >= mem
     end
 
     def instance_memory_limit

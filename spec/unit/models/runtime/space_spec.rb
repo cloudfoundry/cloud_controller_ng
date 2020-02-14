@@ -648,6 +648,15 @@ module VCAP::CloudController
         expect(space.has_remaining_memory(100)).to eq(true)
         expect(space.has_remaining_memory(101)).to eq(false)
       end
+
+      context 'when the instance_memory is unlimited' do
+        let(:space_quota) { SpaceQuotaDefinition.make(memory_limit: SpaceQuotaDefinition::UNLIMITED) }
+        let(:space) { Space.make(space_quota_definition: space_quota, organization: space_quota.organization) }
+
+        it 'there is always more remaining memory' do
+          expect(space.has_remaining_memory(1234567890)).to eq(true)
+        end
+      end
     end
 
     describe '#instance_memory_limit' do
