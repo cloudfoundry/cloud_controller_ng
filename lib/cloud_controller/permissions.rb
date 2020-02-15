@@ -244,6 +244,7 @@ class VCAP::CloudController::Permissions
   end
 
   def readable_space_quota_guids
+    # VCAP::CloudController::SpaceQuotaDefinition.where(space_guid: readable_space_guids).select(:guid).map(&:guid)
     VCAP::CloudController::SpaceQuotaDefinition.user_visible(@user, can_read_globally?).map(&:guid)
   end
 
