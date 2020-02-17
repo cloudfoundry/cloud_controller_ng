@@ -3,7 +3,10 @@ module VCAP::CloudController
     many_to_one :service
     one_to_many :service_instances
 
-    one_to_many :service_plan_visibilities
+    one_to_many :service_plan_visibilities, clearer: (lambda do
+      service_plan_visibilities_dataset.delete
+    end)
+
     add_association_dependencies service_plan_visibilities: :destroy
 
     one_to_many :labels, class: 'VCAP::CloudController::ServicePlanLabelModel', key: :resource_guid, primary_key: :guid

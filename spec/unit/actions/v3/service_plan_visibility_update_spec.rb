@@ -170,17 +170,6 @@ module VCAP
             end
           end
 
-          context 'when the message is invalid' do
-            let(:service_plan) { ServicePlan.make(public: false) }
-            let(:message) { ServicePlanVisibilityUpdateMessage.new({ type: 'what' }) }
-
-            it 'errors nicely' do
-              expect {
-                subject.update(service_plan, message)
-              }.to raise_error(ServicePlanVisibilityUpdate::Error, "Type must be one of 'public', 'admin', 'organization'")
-            end
-          end
-
           context 'when the model fails to update' do
             let(:service_plan) { ServicePlan.make(public: false) }
             let(:message) { ServicePlanVisibilityUpdateMessage.new({ type: 'public' }) }
