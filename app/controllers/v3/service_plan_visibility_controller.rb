@@ -4,6 +4,7 @@ require 'fetchers/service_plan_fetcher'
 require 'controllers/v3/mixins/service_permissions'
 require 'messages/service_plan_visibility_update_message'
 require 'actions/v3/service_plan_visibility_update'
+require 'actions/v3/service_plan_visibility_delete'
 
 class ServicePlanVisibilityController < ApplicationController
   include ServicePermissions
@@ -26,6 +27,23 @@ class ServicePlanVisibilityController < ApplicationController
 
   def apply
     update_visibility(append_organizations: true)
+  end
+
+  def destroy
+    service_plan = ServicePlanFetcher.fetch(hashed_params[:guid])
+    service_plan_not_found! unless service_plan.present? && visible_to_current_user?(plan: service_plan)
+    unauthorized! unless current_user_can_write?(service_plan)
+    unprocessable!('Cannot delete visibilities from non-org-restricted plans') unless service_plan.visibility_type == ServicePlanVisibilityTypes::ORGANIZATION
+
+    org = Organization.where(guid: hashed_params[:org_guid]).first
+    resource_not_found!(:organization) unless org.present?
+
+    to_delete = ServicePlanVisibility.where(service_plan: service_plan, organization: org).first
+    resource_not_found!(:service_plan_visibility) unless to_delete.present?
+
+    ServicePlanVisibilityDelete.delete(to_delete)
+
+    head :no_content
   end
 
   private

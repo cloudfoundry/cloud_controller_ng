@@ -191,6 +191,7 @@ Rails.application.routes.draw do
   get '/service_plans/:guid/visibility', to: 'service_plan_visibility#show'
   patch '/service_plans/:guid/visibility', to: 'service_plan_visibility#update'
   post '/service_plans/:guid/visibility', to: 'service_plan_visibility#apply'
+  delete '/service_plans/:guid/visibility/:org_guid', to: 'service_plan_visibility#destroy'
 
   # space_features
   get '/spaces/:guid/features/:name', to: 'space_features#show'

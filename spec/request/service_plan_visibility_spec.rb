@@ -530,4 +530,74 @@ RSpec.describe 'V3 service plan visibility' do
       end
     end
   end
+
+  describe 'DELETE /v3/service_plans/:guid/visibility/:org_guid' do
+    let(:api_url) { "/v3/service_plans/#{guid}/visibility/#{org_guid}" }
+    let(:api_call) { lambda { |user_headers| delete api_url, {}, user_headers } }
+    let(:guid) { service_plan.guid }
+    let(:org_guid) { org.guid }
+
+    let(:service_plan) do
+      plan = VCAP::CloudController::ServicePlan.make(public: false)
+      VCAP::CloudController::ServicePlanVisibility.make(organization: org, service_plan: plan)
+      VCAP::CloudController::ServicePlanVisibility.make(organization: other_org, service_plan: plan)
+      plan
+    end
+
+    context 'when the plan does not exist' do
+      let(:guid) { 'invalid-plan-guid' }
+
+      it 'returns 404' do
+        delete api_url, {}, admin_headers
+        expect(last_response).to have_status_code(404)
+      end
+    end
+
+    context 'when the plan is not visible on the organization' do
+      let(:third_org) { VCAP::CloudController::Organization.make }
+      let(:org_guid) { third_org.guid }
+
+      it 'returns a 404' do
+        delete api_url, {}, admin_headers
+        expect(last_response).to have_status_code(404)
+      end
+    end
+
+    context 'when the organization does not exist' do
+      let(:org_guid) { 'some-invalid-org-guid' }
+
+      it 'returns a 404' do
+        delete api_url, {}, admin_headers
+        expect(last_response).to have_status_code(404)
+      end
+    end
+
+    context 'when the plan is not org restricted' do
+      let(:service_plan) { VCAP::CloudController::ServicePlan.make(public: true) }
+
+      it 'returns a 422' do
+        delete api_url, {}, admin_headers
+        expect(last_response).to have_status_code(422)
+      end
+    end
+
+    context 'permissions' do
+      let(:db_check) do
+        lambda do
+          expect(VCAP::CloudController::ServicePlanVisibility.all.map(&:organization_id)).to eq([other_org.id])
+        end
+      end
+
+      let(:successful_response) { { code: 204 } }
+      let(:expected_codes_and_responses) do
+        Hash.new(code: 403).tap do |h|
+          h['admin'] = successful_response
+          h['unauthenticated'] = { code: 401 }
+          h['no_role'] = { code: 404 }
+        end
+      end
+
+      it_behaves_like 'permissions for delete endpoint', ALL_PERMISSIONS
+    end
+  end
 end

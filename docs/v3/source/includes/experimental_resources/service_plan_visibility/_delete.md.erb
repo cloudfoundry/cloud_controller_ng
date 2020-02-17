@@ -1,0 +1,29 @@
+### Remove Organization from a Service Plan Visibility
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/service_plans/[guid]/visibility/[organization_guid]" \
+  -X DELETE \
+  -H "Authorization: bearer [token]"
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 204 No Content
+```
+
+This endpoint removes an Organization from a Service Plan Visibility list of Organizations. It is only defined for Service Plans which are org-restricted. It will fail with a HTTP Status Code of 422 for any other visibility type (e.g. Public).
+
+#### Definition
+`DELETE /v3/service_plans/[guid]/visibility/[organization_guid]`
+
+#### Permitted roles
+ |
+--- | ---
+Admin |
