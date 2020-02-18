@@ -162,6 +162,9 @@ Rails.application.routes.draw do
   patch '/routes/:guid/destinations', to: 'routes#replace_destinations'
   delete '/routes/:guid/destinations/:destination_guid', to: 'routes#destroy_destination'
 
+  # security_groups
+  post '/security_groups', to: 'security_groups#create'
+
   # service_bindings
   post '/service_bindings', to: 'service_bindings#create'
   get '/service_bindings/:guid', to: 'service_bindings#show'
