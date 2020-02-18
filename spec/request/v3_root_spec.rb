@@ -47,8 +47,7 @@ RSpec.describe 'v3 root' do
             'href' => "#{link_prefix}/v3/organizations"
           },
           'organization_quotas' => {
-            'href' => "#{link_prefix}/v3/organization_quotas",
-            'experimental' => true
+            'href' => "#{link_prefix}/v3/organization_quotas"
           },
           'packages' => {
             'href' => "#{link_prefix}/v3/packages"
@@ -88,8 +87,7 @@ RSpec.describe 'v3 root' do
             'href' => "#{link_prefix}/v3/spaces"
           },
           'space_quotas' => {
-            'href' => "#{link_prefix}/v3/space_quotas",
-            'experimental' => true
+            'href' => "#{link_prefix}/v3/space_quotas"
           },
           'stacks' => {
             'href' => "#{link_prefix}/v3/stacks"

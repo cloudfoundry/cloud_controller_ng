@@ -159,6 +159,14 @@ includes:
   - resources/organizations/get_default_isolation_segment
   - resources/organizations/get_default_domain
   - resources/organizations/get_usage_summary
+  - resources/organization_quotas/header
+  - resources/organization_quotas/object
+  - resources/organization_quotas/create
+  - resources/organization_quotas/get
+  - resources/organization_quotas/list
+  - resources/organization_quotas/apply
+  - resources/organization_quotas/delete
+  - resources/organization_quotas/update
   - resources/packages/header
   - resources/packages/object
   - resources/packages/create
@@ -228,6 +236,15 @@ includes:
   - resources/space_features/get
   - resources/space_features/list
   - resources/space_features/update
+  - resources/space_quotas/header
+  - resources/space_quotas/object
+  - resources/space_quotas/create
+  - resources/space_quotas/get
+  - resources/space_quotas/list
+  - resources/space_quotas/update
+  - resources/space_quotas/delete
+  - resources/space_quotas/apply
+  - resources/space_quotas/remove
   - resources/stacks/header
   - resources/stacks/object
   - resources/stacks/create
@@ -257,14 +274,6 @@ includes:
   - experimental_resources/app_manifest/apply
   - experimental_resources/app_restart/header
   - experimental_resources/app_restart/create
-  - experimental_resources/organization_quotas/header
-  - experimental_resources/organization_quotas/object
-  - experimental_resources/organization_quotas/create
-  - experimental_resources/organization_quotas/get
-  - experimental_resources/organization_quotas/list
-  - experimental_resources/organization_quotas/apply
-  - experimental_resources/organization_quotas/delete
-  - experimental_resources/organization_quotas/update
   - experimental_resources/revisions/header
   - experimental_resources/revisions/object
   - experimental_resources/revisions/get
@@ -314,15 +323,6 @@ includes:
   - experimental_resources/space_manifest/header
   - experimental_resources/space_manifest/object
   - experimental_resources/space_manifest/apply
-  - experimental_resources/space_quotas/header
-  - experimental_resources/space_quotas/object
-  - experimental_resources/space_quotas/create
-  - experimental_resources/space_quotas/get
-  - experimental_resources/space_quotas/list
-  - experimental_resources/space_quotas/update
-  - experimental_resources/space_quotas/delete
-  - experimental_resources/space_quotas/apply
-  - experimental_resources/space_quotas/remove
   - upgrade_guide/upgrade_guide
 
 ---
