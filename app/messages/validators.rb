@@ -166,6 +166,30 @@ module VCAP::CloudController::Validators
     end
   end
 
+  class IpProtocolValidator < ActiveModel::EachValidator
+    extend StandaloneValidator
+
+    def validate_each(record, attribute, value)
+      record.errors.add attribute, "must be 'tcp', 'udp', 'icmp', or 'all'" unless \
+        value.is_a?(String) && ['tcp', 'udp', 'icmp', 'all'].include?(value)
+    end
+  end
+
+  class IcmpValidator < ActiveModel::EachValidator
+    extend StandaloneValidator
+
+    def validate_each(record, attribute, value)
+      record.errors.add attribute, "must be an integer between -1 and 255 (inclusive)" unless \
+        value.is_a?(Integer) && value >= -1 && value <= 255
+    end
+  end
+
+  class IpDestinationValidator < ActiveModel::EachValidator
+    def validate_each(record, attribute, value)
+      record.errors.add attribute, "contains an invalid destination" unless value.is_a?(String) && (/\s/ !~ value)
+    end
+  end
+
   class DataValidator < ActiveModel::Validator
     def validate(record)
       return if !record.data.is_a?(Hash)

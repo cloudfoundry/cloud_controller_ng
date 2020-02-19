@@ -401,6 +401,133 @@ module VCAP::CloudController::Validators
       end
     end
 
+    describe 'IpProtocolValidator' do
+      let(:ip_protocol_class) do
+        Class.new(fake_class) do
+          validates :field, ip_protocol: true
+        end
+      end
+
+      it 'adds an error if the field is not a string' do
+        fake_class = ip_protocol_class.new field: 4
+        expect(fake_class.valid?).to be_falsey
+        expect(fake_class.errors[:field]).to include "must be 'tcp', 'udp', 'icmp', or 'all'"
+      end
+
+      it 'adds an error if the field is nil' do
+        fake_class = ip_protocol_class.new field: nil
+        expect(fake_class.valid?).to be_falsey
+        expect(fake_class.errors[:field]).to include "must be 'tcp', 'udp', 'icmp', or 'all'"
+      end
+
+      it 'adds an error if it is an unknown type' do
+        fake_class = ip_protocol_class.new field: 'arp'
+        expect(fake_class.valid?).to be_falsey
+        expect(fake_class.errors[:field]).to include "must be 'tcp', 'udp', 'icmp', or 'all'"
+      end
+
+      %w(tcp icmp udp all).each do |proto|
+        it "accepts the valid protocol '#{proto}'" do
+          fake_class = ip_protocol_class.new field: proto
+          expect(fake_class.valid?).to be_truthy
+          expect(fake_class.errors[:field]).to be_empty
+        end
+      end
+    end
+
+    describe 'IcmpValidator' do
+      let(:icmp_class) do
+        Class.new(fake_class) do
+          validates :field, icmp: true
+        end
+      end
+
+      it '-1 (all ICMP types/code) is a valid lower bound' do
+        fake_class = icmp_class.new field: -1
+        expect(fake_class.valid?).to be_truthy
+      end
+      it '255 is a valid upper bound' do
+        fake_class = icmp_class.new field: 255
+        expect(fake_class.valid?).to be_truthy
+      end
+      it 'Below -1 is not valid' do
+        fake_class = icmp_class.new field: -2
+        expect(fake_class.valid?).to be_falsey
+        expect(fake_class.errors[:field]).to include "must be an integer between -1 and 255 (inclusive)"
+      end
+      it '> 255 is not valid (1-byte field)' do
+        fake_class = icmp_class.new field: 256
+        expect(fake_class.valid?).to be_falsey
+        expect(fake_class.errors[:field]).to include "must be an integer between -1 and 255 (inclusive)"
+      end
+      it 'must be an int' do
+        fake_class = icmp_class.new field: "a string"
+        expect(fake_class.valid?).to be_falsey
+        expect(fake_class.errors[:field]).to include "must be an integer between -1 and 255 (inclusive)"
+      end
+    end
+
+    describe 'IpDestinationValidator' do
+      let(:ip_destination_class) do
+        Class.new(fake_class) do
+          validates :field, ip_destination: true
+        end
+      end
+      it 'a non-string (an array) is invalid' do
+        fake_class = ip_destination_class.new field: []
+        expect(fake_class.valid?).to be_falsey
+        expect(fake_class.errors[:field]).to include "contains an invalid destination"
+      end
+      it 'a destination that has whitespace is not valid' do
+        fake_class = ip_destination_class.new field: " 1.2.3.4"
+        expect(fake_class.valid?).to be_falsey
+        expect(fake_class.errors[:field]).to include "contains an invalid destination"
+      end
+      it 'a string that is not an IP address is not valid (but it may be valid in the future)' do
+        fake_class = ip_destination_class.new field: "www.google.com"
+        expect(fake_class.valid?).to be_falsey
+        expect(fake_class.errors[:field]).to include "contains an invalid destination"
+      end
+      it 'an IP address is valid' do
+        fake_class = ip_destination_class.new field: "1.2.3.4"
+        expect(fake_class.valid?).to be_truthy
+      end
+      # it 'a single CIDR is valid' do
+      #   fake_class = ip_destination_class.new field: "1.2.3.4/24"
+      #   expect(fake_class.valid?).to be_truthy
+      # end
+      # it 'a range of addresses is valid, too' do
+      #   fake_class = ip_destination_class.new field: "1.2.3.4-5.6.7.8"
+      #   expect(fake_class.valid?).to be_truthy
+      # end
+      # it 'more than one range of addresses is invalid' do
+      #   fake_class = ip_destination_class.new field: "1.2.3.4-5.6.7.8-9.10.11.12"
+      #   expect(fake_class.valid?).to be_falsey
+      #   expect(fake_class.errors[:field]).to include "contains an invalid destination"
+      # end
+    end
+
+    # describe 'RuleValidator' do
+    #   let(:rule_class) do
+    #     Class.new(fake_class) do
+    #       attr_accessor :protocol, :destination, :ports, :type, :code, :description, :log
+
+    #       validates_with RuleValidator
+    #     end
+    #   end
+
+    #   context 'when the healthcheck type is not "http"' do
+    #     it 'correctly adds the health_check_type validation errors' do
+    #       message = health_check_class.new({
+    #         health_check_type: 'not-http',
+    #         health_check_http_endpoint: 'a-great-uri'
+    #       })
+
+    #       expect(message).to_not be_valid
+    #       expect(message.errors_on(:health_check_type)).to include('must be "http" to set a health check HTTP endpoint')
+    #     end
+    #   end
+    # end
     describe 'DataValidator' do
       class DataMessage < VCAP::CloudController::BaseMessage
         register_allowed_keys [:data]
