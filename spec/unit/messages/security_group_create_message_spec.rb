@@ -66,6 +66,40 @@ module VCAP::CloudController
             expect(subject.errors[:name]).to include("can't be blank")
           end
         end
+
+        context 'params' do
+          let(:rules) { [] }
+
+          let(:params) do
+            {
+              name: 'basic',
+              rules: rules,
+            }
+          end
+
+          context 'when no rules are passed in' do
+            let(:params) do
+              { name: 'no_rules' }
+            end
+            it 'is valid' do
+              expect(subject).to be_valid
+            end
+          end
+
+          context 'when an empty set of rules is passed in' do
+            it 'is valid' do
+              expect(subject).to be_valid
+            end
+          end
+
+          context 'when a malformed set of rules is passed in' do
+            let(:rules) { 'bad rule' }
+            # it is invalid
+            it 'is valid' do
+              expect(subject).to be_invalid
+            end
+          end
+        end
       end
 
       describe 'rules' do

@@ -5,7 +5,7 @@ module VCAP::CloudController
   class SecurityGroupCreateMessage < BaseMessage
     MAX_SECURITY_GROUP_NAME_LENGTH = 250
 
-    register_allowed_keys [:name]
+    register_allowed_keys [:name, :rules]
 
     validates :name,
       presence: true,
