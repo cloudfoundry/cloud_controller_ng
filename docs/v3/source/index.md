@@ -304,6 +304,7 @@ includes:
   - experimental_resources/service_plans/object
   - experimental_resources/service_plans/get
   - experimental_resources/service_plans/list
+  - experimental_resources/service_plans/update
   - experimental_resources/service_plans/delete
   - experimental_resources/service_plan_visibility/header
   - experimental_resources/service_plan_visibility/object
