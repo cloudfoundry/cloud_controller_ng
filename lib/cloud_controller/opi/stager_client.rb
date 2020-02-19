@@ -81,7 +81,7 @@ module OPI
           org_guid: staging_details.package.app.organization.guid,
           space_name: staging_details.package.app.space.name,
           space_guid: staging_details.package.app.space.guid,
-          environment: build_env(staging_details.environment_variables) + action_builder.task_environment_variables,
+          environment: build_env(staging_details.environment_variables) + action_builder.task_environment_variables.to_a,
           completion_callback: staging_completion_callback(staging_details),
           lifecycle: lifecycle,
           cpu_weight: VCAP::CloudController::Diego::STAGING_TASK_CPU_WEIGHT,
