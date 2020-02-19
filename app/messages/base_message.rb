@@ -8,10 +8,12 @@ module VCAP::CloudController
 
     attr_accessor :requested_keys, :extra_keys
 
-    def self.register_allowed_keys(allowed_keys)
-      current_keys = const_defined?(:ALLOWED_KEYS) ? self.const_get(:ALLOWED_KEYS) : []
+    def self.allowed_keys
+      const_defined?(:ALLOWED_KEYS) ? self.const_get(:ALLOWED_KEYS) : []
+    end
 
-      keys = current_keys + allowed_keys
+    def self.register_allowed_keys(allowed_keys)
+      keys = self.allowed_keys + allowed_keys
       self.const_set(:ALLOWED_KEYS, keys.freeze)
       attr_accessor(*allowed_keys)
     end
@@ -79,7 +81,7 @@ module VCAP::CloudController
     class NoAdditionalParamsValidator < ActiveModel::Validator
       def validate(record)
         if record.extra_keys.any?
-          record.errors[:base] << "Unknown query parameter(s): '#{record.extra_keys.join("', '")}'"
+          record.errors[:base] << "Unknown query parameter(s): '#{record.extra_keys.join("', '")}'. Valid parameters are: '#{record.class.allowed_keys.join("', '")}'"
         end
       end
     end

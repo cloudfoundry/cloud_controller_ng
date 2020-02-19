@@ -100,7 +100,7 @@ module VCAP::CloudController
         message = TasksListMessage.from_params({ foobar: 'pants' })
 
         expect(message).not_to be_valid
-        expect(message.errors[:base]).to include("Unknown query parameter(s): 'foobar'")
+        expect(message.errors[:base][0]).to include("Unknown query parameter(s): 'foobar'")
       end
 
       describe 'validations' do
@@ -123,7 +123,7 @@ module VCAP::CloudController
             it 'does not validate' do
               message = TasksListMessage.from_params({ app_guid: 'blah', app_guids: ['app1', 'app2'] })
               expect(message).to_not be_valid
-              expect(message.errors[:base]).to include("Unknown query parameter(s): 'app_guids'")
+              expect(message.errors[:base][0]).to include("Unknown query parameter(s): 'app_guids'")
             end
           end
 
@@ -131,7 +131,7 @@ module VCAP::CloudController
             it 'does not validate' do
               message = TasksListMessage.from_params({ app_guid: 'blah', space_guids: ['space1', 'space2'] })
               expect(message).to_not be_valid
-              expect(message.errors[:base]).to include("Unknown query parameter(s): 'space_guids'")
+              expect(message.errors[:base][0]).to include("Unknown query parameter(s): 'space_guids'")
             end
           end
 
@@ -139,7 +139,7 @@ module VCAP::CloudController
             it 'does not validate' do
               message = TasksListMessage.from_params({ app_guid: 'blah', organization_guids: ['org1', 'org2'] })
               expect(message).to_not be_valid
-              expect(message.errors[:base]).to include("Unknown query parameter(s): 'organization_guids'")
+              expect(message.errors[:base][0]).to include("Unknown query parameter(s): 'organization_guids'")
             end
           end
 
@@ -152,7 +152,7 @@ module VCAP::CloudController
                 organization_guids: ['org1', 'org2']
               })
               expect(message).to_not be_valid
-              expect(message.errors[:base]).to include("Unknown query parameter(s): 'space_guids', 'organization_guids', 'app_guids'")
+              expect(message.errors[:base][0]).to include("Unknown query parameter(s): 'space_guids', 'organization_guids', 'app_guids'")
             end
           end
 
@@ -202,7 +202,7 @@ module VCAP::CloudController
         it 'does not allow sequence_ids' do
           message = TasksListMessage.from_params sequence_ids: [1]
           expect(message).to be_invalid
-          expect(message.errors[:base]).to include("Unknown query parameter(s): 'sequence_ids'")
+          expect(message.errors[:base][0]).to include("Unknown query parameter(s): 'sequence_ids'")
         end
 
         it 'validates metadata requirements' do

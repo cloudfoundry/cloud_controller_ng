@@ -69,7 +69,7 @@ module VCAP::CloudController
         message = DeploymentsListMessage.from_params({ foobar: 'pants' })
 
         expect(message).not_to be_valid
-        expect(message.errors[:base]).to include("Unknown query parameter(s): 'foobar'")
+        expect(message.errors[:base][0]).to include("Unknown query parameter(s): 'foobar'")
       end
 
       it 'reject an invalid order_by param' do

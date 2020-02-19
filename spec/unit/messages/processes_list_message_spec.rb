@@ -99,7 +99,7 @@ module VCAP::CloudController
         message = ProcessesListMessage.from_params(foobar: 'pants')
 
         expect(message).not_to be_valid
-        expect(message.errors[:base]).to include("Unknown query parameter(s): 'foobar'")
+        expect(message.errors[:base][0]).to include("Unknown query parameter(s): 'foobar'")
       end
     end
 
@@ -116,7 +116,7 @@ module VCAP::CloudController
             it 'is not valid' do
               message = ProcessesListMessage.from_params(app_guid: 'blah', app_guids: ['app1', 'app2'])
               expect(message).to_not be_valid
-              expect(message.errors[:base]).to include("Unknown query parameter(s): 'app_guids'")
+              expect(message.errors[:base][0]).to include("Unknown query parameter(s): 'app_guids'")
             end
           end
 
@@ -124,7 +124,7 @@ module VCAP::CloudController
             it 'is not valid' do
               message = ProcessesListMessage.from_params(app_guid: 'blah', organization_guids: ['orgguid1', 'orgguid2'])
               expect(message).to_not be_valid
-              expect(message.errors[:base]).to include("Unknown query parameter(s): 'organization_guids'")
+              expect(message.errors[:base][0]).to include("Unknown query parameter(s): 'organization_guids'")
             end
           end
 
@@ -132,7 +132,7 @@ module VCAP::CloudController
             it 'is not valid' do
               message = ProcessesListMessage.from_params(app_guid: 'blah', space_guids: ['space1', 'space2'])
               expect(message).to_not be_valid
-              expect(message.errors[:base]).to include("Unknown query parameter(s): 'space_guids'")
+              expect(message.errors[:base][0]).to include("Unknown query parameter(s): 'space_guids'")
             end
           end
         end

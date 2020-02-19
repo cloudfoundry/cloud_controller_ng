@@ -13,7 +13,7 @@ module VCAP::CloudController
         message = PurgeMessage.from_params({ foobar: 'pants' }.with_indifferent_access)
 
         expect(message).not_to be_valid
-        expect(message.errors[:base]).to include("Unknown query parameter(s): 'foobar'")
+        expect(message.errors[:base][0]).to include("Unknown query parameter(s): 'foobar'")
       end
 
       it 'accepts `true`' do

@@ -5,7 +5,7 @@ module VCAP::CloudController
     it 'does not accept fields not in the set' do
       message = AppShowMessage.from_params({ 'foobar' => 'pants' })
       expect(message).not_to be_valid
-      expect(message.errors[:base]).to include("Unknown query parameter(s): 'foobar'")
+      expect(message.errors[:base][0]).to include("Unknown query parameter(s): 'foobar'")
     end
 
     it 'does not accept include that is not space or org' do

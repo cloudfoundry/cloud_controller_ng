@@ -12,7 +12,7 @@ module VCAP::CloudController
         message = subject.from_params({ foobar: 'pants' }.with_indifferent_access)
 
         expect(message).not_to be_valid
-        expect(message.errors[:base]).to include("Unknown query parameter(s): 'foobar'")
+        expect(message.errors[:base][0]).to include("Unknown query parameter(s): 'foobar'")
       end
 
       it 'errors with an empty set' do
