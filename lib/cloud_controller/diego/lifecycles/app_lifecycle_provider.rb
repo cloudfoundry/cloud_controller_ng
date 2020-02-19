@@ -1,4 +1,5 @@
 require 'cloud_controller/diego/lifecycles/app_buildpack_lifecycle'
+require 'cloud_controller/diego/lifecycles/app_kpack_lifecycle'
 require 'cloud_controller/diego/lifecycles/app_docker_lifecycle'
 require 'cloud_controller/diego/lifecycles/lifecycles'
 
@@ -6,6 +7,7 @@ module VCAP::CloudController
   class AppLifecycleProvider
     TYPE_TO_LIFECYCLE_CLASS_MAP = {
       VCAP::CloudController::Lifecycles::BUILDPACK => AppBuildpackLifecycle,
+      VCAP::CloudController::Lifecycles::KPACK     => AppKpackLifecycle,
       VCAP::CloudController::Lifecycles::DOCKER    => AppDockerLifecycle
     }.freeze
     DEFAULT_LIFECYCLE_TYPE = VCAP::CloudController::Lifecycles::BUILDPACK

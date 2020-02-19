@@ -1,8 +1,10 @@
 module VCAP::CloudController
-  class AppDockerLifecycle
+  class AppKpackLifecycle
     def initialize(*_message); end
 
-    def create_lifecycle_data_model(_); end
+    def create_lifecycle_data_model(app)
+      KpackLifecycleDataModel.create(app: app)
+    end
 
     def update_lifecycle_data_model(_); end
 
@@ -15,7 +17,7 @@ module VCAP::CloudController
     end
 
     def type
-      Lifecycles::DOCKER
+      Lifecycles::KPACK
     end
   end
 end

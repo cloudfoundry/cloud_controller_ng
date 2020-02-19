@@ -49,6 +49,13 @@ module VCAP::CloudController
     buildpack_lifecycle_data { BuildpackLifecycleDataModel.make(app: object.save) }
   end
 
+  AppModel.blueprint(:kpack) do
+    name { Sham.name }
+    space { Space.make }
+    buildpack_lifecycle_data { nil.tap { |_| object.save } }
+    kpack_lifecycle_data { KpackLifecycleDataModel.make(app: object.save) }
+  end
+
   AppModel.blueprint(:docker) do
     name { Sham.name }
     space { Space.make }

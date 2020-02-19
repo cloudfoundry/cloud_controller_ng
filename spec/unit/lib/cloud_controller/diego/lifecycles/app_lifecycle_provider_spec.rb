@@ -23,6 +23,14 @@ module VCAP::CloudController
             expect(AppLifecycleProvider.provide_for_create(message)).to be_a(AppBuildpackLifecycle)
           end
         end
+
+        context 'kpack type' do
+          let(:type) { 'kpack' }
+
+          it 'returns a AppKpackLifecycle' do
+            expect(AppLifecycleProvider.provide_for_create(message)).to be_a(AppKpackLifecycle)
+          end
+        end
       end
 
       context 'when lifecycle type is not requested on the message' do
@@ -56,6 +64,14 @@ module VCAP::CloudController
             expect(AppLifecycleProvider.provide_for_update(message, app)).to be_a(AppBuildpackLifecycle)
           end
         end
+
+        context 'kpack type' do
+          let(:type) { 'kpack' }
+
+          it 'returns a AppKpackLifecycle' do
+            expect(AppLifecycleProvider.provide_for_update(message, app)).to be_a(AppKpackLifecycle)
+          end
+        end
       end
 
       context 'when lifecycle type is not requested on the message' do
@@ -74,6 +90,14 @@ module VCAP::CloudController
 
           it 'returns a AppDockerLifecycle' do
             expect(AppLifecycleProvider.provide_for_update(message, app)).to be_a(AppDockerLifecycle)
+          end
+        end
+
+        context 'kpack type' do
+          let(:app) { AppModel.make(:kpack) }
+
+          it 'returns a AppKpackLifecycle' do
+            expect(AppLifecycleProvider.provide_for_update(message, app)).to be_a(AppKpackLifecycle)
           end
         end
       end

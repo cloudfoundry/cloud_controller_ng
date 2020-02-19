@@ -153,6 +153,35 @@ RSpec.describe 'Builds' do
       end
     end
 
+    describe 'app kpack lifecycle' do
+      let(:kpack_app_model) { VCAP::CloudController::AppModel.make(:kpack, space: space) }
+      let(:package) do
+        VCAP::CloudController::PackageModel.make(
+          app_guid: kpack_app_model.guid,
+          type: VCAP::CloudController::PackageModel::BITS_TYPE,
+          state: VCAP::CloudController::PackageModel::READY_STATE
+        )
+      end
+      let(:request) do
+        {
+          package: {
+            guid: package.guid
+          },
+        }
+      end
+
+      context 'when build has no lifecycle specified' do
+        context 'when app has kpack lifecycle' do
+          it 'uses the kpack lifecycle' do
+            post 'v3/builds', request.to_json, developer_headers
+
+            expect(last_response.status).to eq(201)
+            expect(parsed_response['lifecycle']['type']).to eq 'kpack'
+          end
+        end
+      end
+    end
+
     context 'telemetry' do
       let(:logger_spy) { spy('logger') }
 
