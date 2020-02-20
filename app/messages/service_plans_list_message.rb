@@ -3,14 +3,16 @@ require 'messages/validators/label_selector_requirement_validator'
 
 module VCAP::CloudController
   class ServicePlansListMessage < MetadataListMessage
-    @array_keys = [:names,
-                   :space_guids,
-                   :organization_guids,
-                   :service_broker_guids,
-                   :service_broker_names,
-                   :service_offering_guids,
-                   :service_offering_names,
-                   :broker_catalog_ids,
+    @array_keys = [
+      :broker_catalog_ids,
+      :names,
+      :organization_guids,
+      :service_broker_guids,
+      :service_broker_names,
+      :service_instance_guids,
+      :service_offering_guids,
+      :service_offering_names,
+      :space_guids,
     ]
     @single_keys = [
       :available,

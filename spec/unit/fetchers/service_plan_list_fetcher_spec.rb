@@ -355,6 +355,24 @@ module VCAP::CloudController
             end
           end
 
+          describe 'service_instance_guids' do
+            let!(:plan_1) { ServicePlan.make }
+            let!(:plan_2) { ServicePlan.make }
+            let!(:plan_3) { ServicePlan.make }
+            let!(:plan_4) { ServicePlan.make }
+
+            let!(:instance_1) { ManagedServiceInstance.make(service_plan: plan_1) }
+            let!(:instance_2) { ManagedServiceInstance.make(service_plan: plan_2) }
+            let!(:instance_3) { ManagedServiceInstance.make(service_plan: plan_3) }
+            let!(:instance_4) { ManagedServiceInstance.make(service_plan: plan_1) }
+
+            let(:params) { { service_instance_guids: [instance_1.guid, instance_2.guid].join(',') } }
+
+            it 'can filter by service instance guids' do
+              expect(service_plans).to contain_exactly(plan_1, plan_2)
+            end
+          end
+
           describe 'service_offering_guids' do
             let(:service_offering) { Service.make }
             let!(:plan_1) { ServicePlan.make(service: service_offering) }

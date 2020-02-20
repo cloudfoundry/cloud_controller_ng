@@ -358,6 +358,18 @@ RSpec.describe 'V3 service plans' do
         end
       end
 
+      describe 'service_instance_guids' do
+        let!(:instance_1) { VCAP::CloudController::ManagedServiceInstance.make }
+        let!(:instance_2) { VCAP::CloudController::ManagedServiceInstance.make }
+        let!(:instance_3) { VCAP::CloudController::ManagedServiceInstance.make }
+
+        it 'filters by service instance guid' do
+          filter = [instance_1.guid, instance_3.guid].join(',')
+          get "/v3/service_plans?service_instance_guids=#{filter}", {}, admin_headers
+          check_filtered_plans(instance_1.service_plan, instance_3.service_plan)
+        end
+      end
+
       describe 'labels' do
         let!(:service_plan_1) { VCAP::CloudController::ServicePlan.make(public: true, active: true) }
         let!(:service_plan_2) { VCAP::CloudController::ServicePlan.make(public: true, active: true) }
