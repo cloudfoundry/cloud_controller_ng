@@ -8,7 +8,7 @@ module VCAP::CloudController
       :organizations
     ]
 
-    validates_with NoAdditionalParamsValidator
+    validates_with NoAdditionalKeysValidator
 
     validates :type,
       allow_nil: false,
