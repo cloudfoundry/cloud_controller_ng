@@ -26,6 +26,18 @@ class DBMigrator
 
   def check_migrations!
     Sequel.extension :migration
-    Sequel::Migrator.check_current(@db, SEQUEL_MIGRATIONS)
+    logger = Steno.logger('cc.db.wait_until_current')
+
+    unless db_is_current_or_newer_than_local_migrations?
+      logger.info('waiting indefinitely for database schema to be current')
+    end
+
+    sleep(1) until db_is_current_or_newer_than_local_migrations?
+
+    logger.info('database schema is as new or newer than locally available migrations')
+  end
+
+  def db_is_current_or_newer_than_local_migrations?
+    Sequel::Migrator.is_current?(@db, SEQUEL_MIGRATIONS, allow_missing_migration_files: true)
   end
 end
