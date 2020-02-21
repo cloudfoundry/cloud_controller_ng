@@ -25,10 +25,16 @@ module VCAP::CloudController
       end
 
       describe 'name' do
-        context 'when it is non-alphanumeric' do
+        context 'when it contains non-alphanumeric characters' do
           let(:params) { { name: 'thë-name' } }
 
           it { is_expected.to be_valid }
+        end
+
+        context 'when it is not a string' do
+          let(:params) { { name: true } }
+
+          it { is_expected.to be_invalid }
         end
 
         context 'when it contains hyphens' do

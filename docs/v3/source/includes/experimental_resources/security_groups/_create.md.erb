@@ -1,0 +1,40 @@
+### Create a security group
+
+```
+Example Request
+```
+
+```shell
+curl "https://api.example.org/v3/security_groups" \
+  -X POST \
+  -H "Authorization: bearer [token]" \
+  -H "Content-type: application/json" \
+  -d '{
+  "name": "my-group0"
+}'
+```
+
+```
+Example Response
+```
+
+```http
+HTTP/1.1 201 Created
+Content-Type: application/json
+
+<%= yield_content :single_security_group %>
+```
+
+#### Definition
+`POST /v3/security_groups`
+
+#### Required parameters
+
+Name | Type | Description
+---- | ---- | -----------
+**name** | _string_ | Name of the security group.
+
+#### Permitted roles
+ |
+--- | ---
+Admin |

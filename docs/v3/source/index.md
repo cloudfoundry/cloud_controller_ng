@@ -24,6 +24,7 @@ includes:
   - api_resources/revisions
   - api_resources/roles
   - api_resources/routes
+  - api_resources/security_groups
   - api_resources/service_bindings
   - api_resources/service_brokers
   - api_resources/service_offerings
@@ -280,6 +281,9 @@ includes:
   - experimental_resources/revisions/list
   - experimental_resources/revisions/deployed_list
   - experimental_resources/revisions/update
+  - experimental_resources/security_groups/header
+  - experimental_resources/security_groups/object
+  - experimental_resources/security_groups/create
   - experimental_resources/service_bindings/header
   - experimental_resources/service_bindings/object
   - experimental_resources/service_bindings/create

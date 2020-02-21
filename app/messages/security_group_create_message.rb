@@ -9,6 +9,7 @@ module VCAP::CloudController
 
     validates :name,
       presence: true,
+      string: true,
       length: { maximum: MAX_SECURITY_GROUP_NAME_LENGTH }
 
     validates_with NoAdditionalKeysValidator
