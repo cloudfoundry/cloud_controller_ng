@@ -172,7 +172,12 @@ RSpec.describe 'V3 service plan visibility' do
 
       context 'and its being updated to "organization"' do
         let(:req_body) { { type: 'organization', organizations: [org.guid, other_org.guid] } }
-        let(:org_response) { [{ name: org.name, guid: org.guid }, { name: other_org.name, guid: other_org.guid }] }
+        let(:org_response) {
+          match_array([
+            match({ name: org.name, guid: org.guid }),
+            match({ name: other_org.name, guid: other_org.guid })
+          ])
+        }
         let(:successful_response) { { code: 200, response_object: { type: 'organization', organizations: org_response } } }
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -203,7 +208,12 @@ RSpec.describe 'V3 service plan visibility' do
 
       context 'and its being updated to "organization"' do
         let(:req_body) { { type: 'organization', organizations: [org.guid, other_org.guid] } }
-        let(:org_response) { [{ name: org.name, guid: org.guid }, { name: other_org.name, guid: other_org.guid }] }
+        let(:org_response) {
+          match_array([
+            match({ name: org.name, guid: org.guid }),
+            match({ name: other_org.name, guid: other_org.guid })
+          ])
+        }
         let(:successful_response) { { code: 200, response_object: { type: 'organization', organizations: org_response } } }
 
         it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
@@ -503,11 +513,12 @@ RSpec.describe 'V3 service plan visibility' do
 
     context 'permissions' do
       let(:req_body) { { type: 'organization', organizations: [third_org.guid] } }
-      let(:org_response) { [
-        { name: org.name, guid: org.guid },
-        { name: other_org.name, guid: other_org.guid },
-        { name: third_org.name, guid: third_org.guid }
-      ]
+      let(:org_response) {
+        match_array([
+          match({ name: other_org.name, guid: other_org.guid }),
+          match({ name: org.name, guid: org.guid }),
+          match({ name: third_org.name, guid: third_org.guid })
+        ])
       }
       let(:successful_response) { { code: 200, response_object: { type: 'organization', organizations: org_response } } }
       let(:expected_codes_and_responses) do
