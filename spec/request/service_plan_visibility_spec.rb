@@ -4,8 +4,8 @@ require 'models/services/service_plan'
 
 RSpec.describe 'V3 service plan visibility' do
   let(:user) { VCAP::CloudController::User.make }
-  let(:org) { VCAP::CloudController::Organization.make }
-  let(:other_org) { VCAP::CloudController::Organization.make }
+  let!(:org) { VCAP::CloudController::Organization.make }
+  let!(:other_org) { VCAP::CloudController::Organization.make }
   let(:space) { VCAP::CloudController::Space.make(organization: org) }
 
   describe 'GET /v3/service_plans/:guid/visibility' do
