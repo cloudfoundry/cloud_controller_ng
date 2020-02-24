@@ -6,11 +6,12 @@ module Logcache
     MAX_LIMIT = 1000
     DEFAULT_LIMIT = 100
 
-    def initialize(host:, port:, client_ca_path:, client_cert_path:, client_key_path:, tls_subject_name:)
+    def initialize(host:, port:, client_ca_path:, client_cert_path:, client_key_path:, tls_subject_name:, temporary_ignore_server_unavailable_errors:)
       client_ca = IO.read(client_ca_path)
       client_key = IO.read(client_key_path)
       client_cert = IO.read(client_cert_path)
 
+      @temporary_ignore_server_unavailable_errors = temporary_ignore_server_unavailable_errors
       @service = Logcache::V1::Egress::Stub.new(
         "#{host}:#{port}",
         GRPC::Core::ChannelCredentials.new(client_ca, client_key, client_cert),
@@ -44,7 +45,7 @@ module Logcache
         retry
       end
 
-      if e.is_a?(GRPC::BadStatus) && e.to_status.code == 14
+      if @temporary_ignore_server_unavailable_errors && e.is_a?(GRPC::BadStatus) && e.to_status.code == 14
         logger.warn("rescuing GRPC Unavailable error: #{e.to_status}")
 
         return EmptyEnvelope.new(source_guid)

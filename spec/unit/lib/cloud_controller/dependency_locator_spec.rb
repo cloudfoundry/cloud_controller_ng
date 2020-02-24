@@ -475,6 +475,7 @@ RSpec.describe CloudController::DependencyLocator do
           logcache: {
             host: 'some-logcache-host',
             port: 1234,
+            temporary_ignore_server_unavailable_errors: false,
           },
           logcache_tls: {
             ca_file: 'logcache-ca',
@@ -496,7 +497,8 @@ RSpec.describe CloudController::DependencyLocator do
         client_ca_path: 'logcache-ca',
         client_cert_path: 'logcache-client-ca',
         client_key_path: 'logcache-client-key',
-        tls_subject_name: 'some-tls-cert-san'
+        tls_subject_name: 'some-tls-cert-san',
+        temporary_ignore_server_unavailable_errors: false
       )
     end
   end

@@ -206,6 +206,7 @@ module VCAP::CloudController
           logcache: {
             host: String,
             port: Integer,
+            temporary_ignore_server_unavailable_errors: bool,
           },
 
           logcache_tls: {
