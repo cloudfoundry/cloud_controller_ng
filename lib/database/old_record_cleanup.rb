@@ -2,13 +2,15 @@ require 'database/batch_delete'
 
 module Database
   class OldRecordCleanup
+    STOPPED_EVENT_STATE = 'STOPPED'.freeze
     class NoCurrentTimestampError < StandardError; end
-    attr_reader :model, :days_ago, :keep_at_least_one_record
+    attr_reader :model, :days_ago, :keep_at_least_one_record, :keep_running_app_records
 
-    def initialize(model, days_ago, keep_at_least_one_record: false)
+    def initialize(model, days_ago, keep_at_least_one_record: false, keep_running_app_records: false)
       @model = model
       @days_ago = days_ago
       @keep_at_least_one_record = keep_at_least_one_record
+      @keep_running_app_records = keep_running_app_records
     end
 
     def delete
@@ -19,6 +21,12 @@ module Database
         last_id = model.order(:id).last.id
         old_records = old_records.where(Sequel.lit('id < ?', last_id))
       end
+
+      if model.table_name.to_s == 'app_usage_events' && keep_running_app_records
+        app_guids = old_records.where(state: STOPPED_EVENT_STATE).select(:app_guid)
+        old_records = old_records.where(app_guid: app_guids)
+      end
+
       logger.info("Cleaning up #{old_records.count} #{model.table_name} table rows")
 
       Database::BatchDelete.new(old_records, 1000).delete

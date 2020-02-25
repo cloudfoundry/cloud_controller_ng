@@ -5,8 +5,10 @@ module VCAP::CloudController
     RSpec.describe AppUsageEventsCleanup, job_context: :worker do
       let(:cutoff_age_in_days) { 30 }
       let(:logger) { double(Steno::Logger, info: nil) }
-      let!(:event_before_threshold) { AppUsageEvent.make(created_at: (cutoff_age_in_days + 1).days.ago) }
-      let!(:event_after_threshold) { AppUsageEvent.make(created_at: (cutoff_age_in_days - 1).days.ago) }
+      let!(:start_event_before_threshold) { AppUsageEvent.make(app_guid: 'app-guid-1', state: 'STARTED', created_at: (cutoff_age_in_days + 1).days.ago) }
+      let!(:stop_event_before_threshold) { AppUsageEvent.make(app_guid: 'app-guid-1', state: 'STOPPED', created_at: (cutoff_age_in_days + 1).days.ago) }
+      let!(:start_event_after_threshold) { AppUsageEvent.make(app_guid: 'app-guid-2', state: 'STARTED', created_at: (cutoff_age_in_days - 1).days.ago) }
+      let!(:stop_event_after_threshold) { AppUsageEvent.make(app_guid: 'app-guid-2', state: 'STOPPED', created_at: (cutoff_age_in_days - 1).days.ago) }
 
       subject(:job) do
         AppUsageEventsCleanup.new(cutoff_age_in_days)
@@ -23,16 +25,16 @@ module VCAP::CloudController
       end
 
       describe '#perform' do
-        it 'deletes events created before the pruning threshold' do
+        it 'deletes events created before the pruning threshold that have stop events' do
           expect {
             job.perform
-          }.to change { event_before_threshold.exists? }.to(false)
+          }.to change { start_event_before_threshold.exists? }.to(false)
         end
 
         it 'keeps events created after the pruning threshold' do
           expect {
             job.perform
-          }.not_to change { event_after_threshold.exists? }.from(true)
+          }.not_to change { start_event_after_threshold.exists? }.from(true)
         end
 
         it 'knows its job name' do
