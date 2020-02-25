@@ -166,27 +166,140 @@ module VCAP::CloudController::Validators
     end
   end
 
-  class IpProtocolValidator < ActiveModel::EachValidator
+  class RulesValidator < ActiveModel::EachValidator
     extend StandaloneValidator
 
     def validate_each(record, attribute, value)
-      record.errors.add attribute, "must be 'tcp', 'udp', 'icmp', or 'all'" unless \
-        value.is_a?(String) && ['tcp', 'udp', 'icmp', 'all'].include?(value)
+      return unless value.is_a?(Array)
+
+      # value.each_with_index do |rule, index|
+      #   protocol = rule['protocol']
+      #
+      #   validation_errors = case protocol
+      #                       when 'tcp', 'udp'
+      #                         CloudController::TransportRuleValidator.validate(rule)
+      #                       when 'icmp'
+      #                         CloudController::ICMPRuleValidator.validate(rule)
+      #                       when 'all'
+      #                         CloudController::RuleValidator.validate(rule)
+      #                       else
+      #                         ['contains an unsupported protocol']
+      #                       end
+      #
+      #   validation_errors.each do |error_text|
+      #     errors.add(:rules, "rule number #{index + 1} #{error_text}")
+      #   end
+      #   errors.empty?
+      # end
+      value.each { |rule|
+        unless rule.is_a?(Hash)
+          record.errors.add attribute, 'must be an array of hashes'
+          return
+        end
+
+        record.errors.add :protocol, "must be 'tcp', 'udp', 'icmp', or 'all'" unless valid_protocol(rule[:protocol])
+
+        record.errors.add :destination, "must be a valid CIDR, IP address, or IP address range and may not contain whitespace" unless \
+          destination_is_valid(rule[:destination])
+
+        if ['tcp', 'udp'].include? rule[:protocol]
+          unless rule[:ports]
+            record.errors.add :ports, "are required for protocols of type TCP and UDP"
+          end
+          record.errors.add :ports, 'must be a valid single port, comma separated list of ports, or range or ports, formatted as a string' unless valid_ports(rule[:ports])
+        end
+
+        if rule[:protocol] == "all" && rule[:ports]
+          record.errors.add :ports, "are not allowed for protocols of type all"
+        end
+
+        if rule[:type]
+          record.errors.add :type, "must be an integer between -1 and 255 (inclusive)" unless \
+            valid_icmp(rule[:type])
+        end
+
+        if rule[:code]
+          record.errors.add :code, "must be an integer between -1 and 255 (inclusive)" unless \
+            valid_icmp(rule[:code])
+        end
+
+        if rule[:description]
+          record.errors.add :description, "must be a string" unless rule[:description].is_a?(String)
+        end
+
+        if rule[:log]
+          record.errors.add :log, 'must be a boolean' unless is_boolean(rule[:log])
+        end
+
+
+      }
     end
-  end
 
-  class IcmpValidator < ActiveModel::EachValidator
-    extend StandaloneValidator
-
-    def validate_each(record, attribute, value)
-      record.errors.add attribute, "must be an integer between -1 and 255 (inclusive)" unless \
-        value.is_a?(Integer) && value >= -1 && value <= 255
+    # TODO: can we use boolean validator?
+    def is_boolean(value)
+      [true, false].include? value
     end
-  end
 
-  class IpDestinationValidator < ActiveModel::EachValidator
-    def validate_each(record, attribute, value)
-      record.errors.add attribute, "contains an invalid destination" unless value.is_a?(String) && (/\s/ !~ value)
+    def valid_protocol(protocol)
+      protocol&.is_a?(String) && %w(tcp udp icmp all).include?(protocol)
+    end
+
+    def valid_icmp(icmp_type)
+      icmp_type.is_a?(Integer) && icmp_type >= -1 && icmp_type <= 255
+    end
+
+    def valid_ports(ports)
+      return false unless ports&.is_a?(String)
+      return false if /[^\d\s\-,]/.match?(ports)
+
+      port_range = /\A\s*(\d+)\s*-\s*(\d+)\s*\z/.match(ports)
+      if port_range
+        left = port_range.captures[0].to_i
+        right = port_range.captures[1].to_i
+
+        return false if left >= right
+        return false unless port_in_range(left) && port_in_range(right)
+
+        return true
+      end
+
+      port_list = ports.split(',')
+      if !port_list.empty?
+        return false unless port_list.all? { |p| /\A\s*\d+\s*\z/.match(p) }
+        return false unless port_list.all? { |p| port_in_range(p.to_i) }
+
+        return true
+      end
+
+      false
+    end
+
+    def port_in_range(port)
+      port > 0 && port < 65536
+    end
+
+    # TODO: rename to match helper function naming convention
+    def destination_is_valid(destination)
+      return false if !destination.is_a?(String) || destination.empty? || /\s/ =~ destination
+
+      address_list = destination.split('-')
+
+      return false if address_list.length > 2
+
+      if address_list.length == 1
+        NetAddr::IPv4Net.parse(address_list.first)
+        return true
+      end
+
+      ipv4s = address_list.map do |address|
+        NetAddr::IPv4.parse(address)
+      end
+      sorted_ipv4s = NetAddr.sort_IPv4(ipv4s)
+      return true if ipv4s.first == sorted_ipv4s.first
+
+      false
+    rescue NetAddr::ValidationError
+      false
     end
   end
 

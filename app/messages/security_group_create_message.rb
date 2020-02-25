@@ -7,12 +7,13 @@ module VCAP::CloudController
 
     register_allowed_keys [:name, :rules]
 
+    validates_with NoAdditionalKeysValidator
+
     validates :name,
       presence: true,
       length: { maximum: MAX_SECURITY_GROUP_NAME_LENGTH }
 
-    validates :rules, allow_nil: true, array: true
+    validates :rules, allow_nil: true, array: true, rules: true
 
-    validates_with NoAdditionalKeysValidator
   end
 end
