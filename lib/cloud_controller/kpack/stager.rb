@@ -38,8 +38,8 @@ module Kpack
         spec: {
           serviceAccount: registry_service_account_name,
           builder: {
-            name: 'capi-builder',
-            kind: 'Builder'
+            name: 'cf-autodetect-builder',
+            kind: 'ClusterBuilder'
           },
           tag: "#{registry_tag_base}/#{staging_details.package.guid}",
           source: {

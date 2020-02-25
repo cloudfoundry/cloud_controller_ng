@@ -59,8 +59,8 @@ module Kpack
             tag: "gcr.io/capi-images/#{package.guid}",
             serviceAccount: 'gcr-service-account',
             builder: {
-              name: 'capi-builder',
-              kind: 'Builder'
+              name: 'cf-autodetect-builder',
+              kind: 'ClusterBuilder'
             },
             source: {
               blob: {
