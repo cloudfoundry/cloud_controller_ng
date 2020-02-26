@@ -2,6 +2,7 @@
 local_route: 127.0.0.1
 external_port: 8181
 tls_port: 8182
+readiness_port: 9999
 pid_filename: /tmp/cloud_controller.pid
 stacks_file: config/stacks.yml
 

@@ -8,7 +8,7 @@ RSpec.describe BackgroundJobEnvironment do
       bits_service: { enabled: false },
     )
   end
-  let(:config) { VCAP::CloudController::Config.config }
+  let(:config) { TestConfig.config_instance }
 
   subject(:background_job_environment) { BackgroundJobEnvironment.new(config) }
 
@@ -18,11 +18,19 @@ RSpec.describe BackgroundJobEnvironment do
       allow(Thread).to receive(:new).and_yield
       allow(EM).to receive(:run).and_yield
       allow(VCAP::CloudController::ResourcePool).to receive(:new)
+      TestConfig.context = :worker
+      TestConfig.override(readiness_port: 9999)
     end
 
     it 'loads models' do
       expect(VCAP::CloudController::DB).to receive(:load_models)
       background_job_environment.setup_environment
+    end
+
+    it 'opens the readiness port' do
+      expect { TCPSocket.new('localhost', 9999).close }.to raise_error(Errno::ECONNREFUSED)
+      background_job_environment.setup_environment
+      expect { TCPSocket.new('localhost', 9999).close }.not_to raise_error
     end
 
     it 'configures components' do
