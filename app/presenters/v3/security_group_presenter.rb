@@ -8,6 +8,10 @@ module VCAP::CloudController::Presenters::V3
         created_at: security_group.created_at,
         updated_at: security_group.updated_at,
         name: security_group.name,
+        globally_enabled: {
+          running: security_group.running_default,
+          staging: security_group.staging_default,
+        },
         links: build_links,
       }
     end

@@ -34,6 +34,14 @@ Name | Type | Description
 ---- | ---- | -----------
 **name** | _string_ | Name of the security group.
 
+#### Optional parameters
+
+Name | Type | Description
+---- | ---- | -----------
+**globally_enabled** | _boolean_ | Object that controls if the group is applied globally to the lifecycle of an applications.
+**globally_enabled.running** | _boolean_ | Specifies whether the group should be applied globally to all running applications.
+**globally_enabled.staging** | _boolean_ | Specifies whether the group should be applied globally to all staging applications.
+
 #### Permitted roles
  |
 --- | ---

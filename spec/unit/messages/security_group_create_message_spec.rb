@@ -1,17 +1,33 @@
 require 'spec_helper'
-require 'messages/organization_quotas_create_message'
+require 'messages/security_group_create_message'
 
 module VCAP::CloudController
   RSpec.describe SecurityGroupCreateMessage do
     subject { SecurityGroupCreateMessage.new(params) }
 
     describe 'validations' do
+      context 'when valid params are given' do
+        let(:params) {
+          {
+            'name' => 'some-name',
+            'globally_enabled' => {
+              'running' => true,
+              'staging' => false
+            }
+          }
+        }
+
+        it 'is valid' do
+          expect(subject).to be_valid
+        end
+      end
+
       context 'when no params are given' do
         let(:params) {}
 
         it 'is not valid' do
           expect(subject).not_to be_valid
-          expect(subject.errors[:name]).to include("can't be blank")
+          expect(subject.errors[:name]).to contain_exactly "can't be blank", 'must be a string'
         end
       end
 
@@ -25,38 +41,32 @@ module VCAP::CloudController
       end
 
       describe 'name' do
-        context 'when it contains non-alphanumeric characters' do
-          let(:params) { { name: 'thë-name' } }
+        context 'when it is non-alphanumeric' do
+          let(:params) { { 'name' => 'thë-name' } }
 
           it { is_expected.to be_valid }
         end
 
-        context 'when it is not a string' do
-          let(:params) { { name: true } }
-
-          it { is_expected.to be_invalid }
-        end
-
         context 'when it contains hyphens' do
-          let(:params) { { name: 'a-z' } }
+          let(:params) { { 'name' => 'a-z' } }
 
           it { is_expected.to be_valid }
         end
 
         context 'when it contains capital ascii' do
-          let(:params) { { name: 'AZ' } }
+          let(:params) { { 'name' => 'AZ' } }
 
           it { is_expected.to be_valid }
         end
 
         context 'when it is at max length' do
-          let(:params) { { name: 'B' * SecurityGroupCreateMessage::MAX_SECURITY_GROUP_NAME_LENGTH } }
+          let(:params) { { 'name' => 'B' * SecurityGroupCreateMessage::MAX_SECURITY_GROUP_NAME_LENGTH } }
 
           it { is_expected.to be_valid }
         end
 
         context 'when it is too long' do
-          let(:params) { { name: 'B' * (SecurityGroupCreateMessage::MAX_SECURITY_GROUP_NAME_LENGTH + 1), } }
+          let(:params) { { 'name' => 'B' * (SecurityGroupCreateMessage::MAX_SECURITY_GROUP_NAME_LENGTH + 1), } }
 
           it 'is not valid' do
             expect(subject).to be_invalid
@@ -65,13 +75,96 @@ module VCAP::CloudController
         end
 
         context 'when it is blank' do
-          let(:params) { { name: '' } }
+          let(:params) { { 'name' => '' } }
 
           it 'is not valid' do
             expect(subject).to be_invalid
             expect(subject.errors[:name]).to include("can't be blank")
           end
         end
+
+        context 'when it is not a string' do
+          let(:params) { { name: true } }
+
+          it { is_expected.to be_invalid }
+        end
+      end
+
+      describe 'globally_enabled' do
+        let(:globally_enabled) { {} }
+
+        let(:params) do
+          {
+            'name' => 'basic',
+            'globally_enabled' => globally_enabled
+          }
+        end
+
+        context 'when no configuration is supplied' do
+          it 'is valid' do
+            expect(subject).to be_valid
+          end
+        end
+
+        context 'when value is not a hash' do
+          let(:globally_enabled) { 'bad' }
+          it 'is not valid' do
+            expect(subject).to be_invalid
+            expect(subject.errors[:globally_enabled]).to eq(['must be a hash'])
+          end
+        end
+
+        context 'when the nested keys are invalid' do
+          let(:globally_enabled) { { 'bad' => 'key' } }
+          it 'is not valid' do
+            expect(subject).to be_invalid
+            expect(subject.errors[:globally_enabled]).to eq(["only allows keys 'running' or 'boolean'"])
+          end
+        end
+
+        context 'when the values provided to running/staging is not a boolean' do
+          let(:globally_enabled) { {
+            'running' => 'value',
+            'staging' => 'value',
+          }
+          }
+          it 'is not valid' do
+            expect(subject).to be_invalid
+            expect(subject.errors[:globally_enabled]).to eq(['values must be booleans'])
+          end
+        end
+      end
+    end
+
+    describe '#running' do
+      let(:params) {
+        {
+          name: 'some-name',
+          globally_enabled: {
+            running: true,
+            staging: false
+          }
+        }
+      }
+
+      it 'returns the value provided for the running key' do
+        expect(subject.running).to eq true
+      end
+    end
+
+    describe '#staging' do
+      let(:params) {
+        {
+          name: 'some-name',
+          globally_enabled: {
+            running: true,
+            staging: false
+          }
+        }
+      }
+
+      it 'returns the value provided for the staging key' do
+        expect(subject.staging).to eq false
       end
     end
   end

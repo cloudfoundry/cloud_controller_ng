@@ -16,6 +16,10 @@ RSpec.describe 'Security_Groups Request' do
       let(:params) do
         {
           'name': security_group_name,
+          'globally_enabled': {
+            'running': true,
+            'staging': false
+          }
         }
       end
 
@@ -25,6 +29,10 @@ RSpec.describe 'Security_Groups Request' do
           created_at: iso8601,
           updated_at: iso8601,
           name: security_group_name,
+          globally_enabled: {
+            'running': true,
+            'staging': false
+          },
           links: {
             self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/security_groups\/#{UUID_REGEX}) },
           }
