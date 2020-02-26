@@ -164,6 +164,7 @@ Rails.application.routes.draw do
 
   # security_groups
   post '/security_groups', to: 'security_groups#create'
+  get '/security_groups/:guid', to: 'security_groups#show'
 
   # service_bindings
   post '/service_bindings', to: 'service_bindings#create'

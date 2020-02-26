@@ -15,4 +15,11 @@ class SecurityGroupsController < ApplicationController
   rescue SecurityGroupCreate::Error => e
     unprocessable!(e)
   end
+
+  def show
+    resource_not_found!(:security_group) unless permission_queryer.readable_security_group_guids.include?(hashed_params[:guid])
+    security_group = SecurityGroup.first(guid: hashed_params[:guid])
+
+    render status: :ok, json: Presenters::V3::SecurityGroupPresenter.new(security_group)
+  end
 end

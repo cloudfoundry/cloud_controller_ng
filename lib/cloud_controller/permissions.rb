@@ -186,6 +186,10 @@ class VCAP::CloudController::Permissions
     VCAP::CloudController::SpaceQuotaDefinition.user_visible(@user, can_read_globally?).map(&:guid)
   end
 
+  def readable_security_group_guids
+    VCAP::CloudController::SecurityGroup.user_visible(@user, can_read_globally?).map(&:guid)
+  end
+
   def can_update_build_state?
     can_write_globally? || roles.build_state_updater?
   end

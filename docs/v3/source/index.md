@@ -284,6 +284,7 @@ includes:
   - experimental_resources/security_groups/header
   - experimental_resources/security_groups/object
   - experimental_resources/security_groups/create
+  - experimental_resources/security_groups/get
   - experimental_resources/service_bindings/header
   - experimental_resources/service_bindings/object
   - experimental_resources/service_bindings/create
