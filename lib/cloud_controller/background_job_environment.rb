@@ -1,3 +1,5 @@
+require 'socket'
+
 class BackgroundJobEnvironment
   def initialize(config)
     @config = config
@@ -8,9 +10,18 @@ class BackgroundJobEnvironment
     end
   end
 
+  READINESS_SOCKET_QUEUE_DEPTH = 100
+
   def setup_environment
     VCAP::CloudController::DB.load_models(@config.get(:db), Steno.logger('cc.background'))
     @config.configure_components
+
+    if @config.get(:readiness_port)
+      socket = Socket.new(Socket::AF_INET, Socket::SOCK_STREAM)
+      sockaddr = Socket.pack_sockaddr_in(@config.get(:readiness_port), '127.0.0.1')
+      socket.bind(sockaddr)
+      socket.listen(READINESS_SOCKET_QUEUE_DEPTH)
+    end
 
     yield if block_given?
   end

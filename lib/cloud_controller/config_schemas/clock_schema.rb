@@ -7,6 +7,7 @@ module VCAP::CloudController
       define_schema do
         {
           external_port: Integer,
+          readiness_port: Integer,
           external_domain: String,
           tls_port: Integer,
           external_protocol: String,

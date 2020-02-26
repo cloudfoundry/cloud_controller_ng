@@ -13,6 +13,7 @@ module VCAP::CloudController
 
           pid_filename: String, # Pid filename to use
 
+          readiness_port: Integer,
           max_migration_duration_in_minutes: Integer,
           db: {
             optional(:database) => Hash, # db connection hash for sequel
