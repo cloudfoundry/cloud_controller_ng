@@ -28,7 +28,7 @@ class DBMigrator
     apply_migrations(current: recent_migrations.first, target: recent_migrations.last)
   end
 
-  def check_migrations!
+  def wait_for_migrations!
     Sequel.extension :migration
     logger = Steno.logger('cc.db.wait_until_current')
 
@@ -36,7 +36,7 @@ class DBMigrator
       logger.info('waiting indefinitely for database schema to be current')
     end
 
-    timeout_message = 'cc.max_migration_duration_in_minutes exceeded'
+    timeout_message = 'ccdb.max_migration_duration_in_minutes exceeded'
     Timeout.timeout(@max_migration_duration_in_minutes * 60, message: timeout_message) do
       sleep(1) until db_is_current_or_newer_than_local_migrations?
     end
