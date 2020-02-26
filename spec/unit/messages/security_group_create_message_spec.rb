@@ -107,66 +107,8 @@ module VCAP::CloudController
             expect(subject.errors.full_messages).to include 'Rules must be an array of hashes'
           end
         end
-        #
-        # context 'when the required fields are provided' do
-        #   let(:rules) {[
-        #     {
-        #       'protocol': 'icmp',
-        #       'destination': '10.10.10.0/24',
-        #     }
-        #   ]}
-        #
-        #   it 'is valid' do
-        #     expect(subject).to be_valid
-        #   end
-        # end
-        #
-        # context 'when the required field destination is not provided' do
-        #   let(:rules) {[
-        #     {
-        #       'protocol': 'icmp'
-        #     }
-        #   ]}
-        #
-        #   it 'is not valid and retuns' do
-        #     expect(subject).to be_valid
-        #     expect(subject.errors.rules).to eq("rules must include a destination")
-        #   end
-        # end
-
-        # context 'when the required field destination is not provided' do
-        #   let(:rules) {[
-        #     {
-        #       'protocol': 'icmp'
-        #     }
-        #   ]}
-        #
-        #   it 'is not valid and retuns' do
-        #     expect(subject).to be_valid
-        #     expect(subject.errors.rules).to eq("rules must include a destination")
-        #   end
-        # end
-        #
-        #
-        # context 'it only accepts the valid fields under rules' do
-        #   let(:rules) { [
-        #     {
-        #       'protocol': 'icmp',
-        #       'destination': '10.10.10.0/24',
-        #       'type': 8,
-        #       'code': 0,
-        #       'description': 'Allow ping requests to private services'
-        #     }
-        #   ] }
-        #
-        # end
 
         describe 'IpProtocolValidator' do
-          # let(:ip_protocol_class) do
-          #   Class.new(fake_class) do
-          #     validates :field, ip_protocol: true
-          #   end
-          # end
 
           context 'the protocol is not a string' do
             let(:rules) { [
@@ -205,7 +147,9 @@ module VCAP::CloudController
               let(:rules) { [
                 { 'protocol': proto,
                   'destination': "10.10.10.0/24",
-                  'ports': (proto != "all" ? "8080" : nil)
+                  'ports': (proto != "all" ? "8080" : nil),
+                  'type': (proto == "icmp" ? -1 : nil),
+                  'code': (proto == "icmp" ? 255 : nil)
                 }
               ] }
 
@@ -218,7 +162,7 @@ module VCAP::CloudController
         end
 
         describe 'IcmpValidator' do
-          context 'all the icmp rules are valid' do
+          context 'all the icmp rules are valid and the specified protocol is icmp' do
             let(:rules) { [
               { 'protocol': 'icmp',
                 'destination': "10.10.10.0/24",
@@ -227,28 +171,30 @@ module VCAP::CloudController
             },
             ] }
 
-            it '-1 (all ICMP types/code) is a valid lower bound' do
+            it 'accepts values -1 and higher for type and code' do
               expect(subject).to be_valid
             end
 
-            it '255 is a valid upper bound' do
+            it 'accepts values 255 and below for type and code' do
               expect(subject).to be_valid
             end
           end
 
-          context 'the icmp rules are not provided' do
+          context 'the icmp rules are not provided when the protocol is icmp' do
             let(:rules) { [
               { 'protocol': 'icmp',
-                'destination': "10.10.10.0/24"
+                'destination': "10.10.10.0/24",
               },
             ] }
 
-            it 'ICMP rules are not required' do
-              expect(subject).to be_valid
+            it 'is invlaid' do
+              expect(subject).to be_invalid
+              expect(subject.errors[:type]).to include "is required for protocols of type ICMP"
+              expect(subject.errors[:code]).to include "is required for protocols of type ICMP"
             end
           end
 
-          context 'all the icmp rules out of the valid range' do
+          context 'all the icmp rules are out of the valid range' do
             let(:rules) { [
               { 'protocol': 'icmp',
                 'type': -2,
@@ -256,7 +202,7 @@ module VCAP::CloudController
               },
             ] }
 
-            it 'Below -1 is not valid' do
+            it 'returns a luxurious error for both the upper and lower bounds' do
 
               expect(subject).to be_invalid
               expect(subject.errors[:type]).to include "must be an integer between -1 and 255 (inclusive)"
@@ -264,7 +210,7 @@ module VCAP::CloudController
             end
           end
 
-          context 'all the icmp rules out of the valid range' do
+          context 'all the icmp rules are strings' do
             let(:rules) { [
               { 'protocol': 'icmp',
                 'type': "not an int",
@@ -304,7 +250,7 @@ module VCAP::CloudController
             it 'adds an error if the field is not a string' do
               expect(subject).to be_invalid
               expect(subject.errors.full_messages).to include \
-                "Destination must be a valid CIDR, IP address, or IP address range and may not contain whitespace"
+                "Destination must be a string"
             end
           end
 
@@ -317,7 +263,7 @@ module VCAP::CloudController
             it 'is not valid' do
               expect(subject).to be_invalid
               expect(subject.errors.full_messages).to include \
-                "Destination must be a valid CIDR, IP address, or IP address range and may not contain whitespace"
+                "Destination must be a valid CIDR, IP address, or IP address range"
             end
           end
 
@@ -330,7 +276,7 @@ module VCAP::CloudController
             it 'adds an error' do
               expect(subject).to be_invalid
               expect(subject.errors.full_messages).to include \
-                "Destination must be a valid CIDR, IP address, or IP address range and may not contain whitespace"
+                "Destination must not contain whitespace"
             end
           end
 
@@ -343,20 +289,21 @@ module VCAP::CloudController
             it 'adds an error' do
               expect(subject).to be_invalid
               expect(subject.errors.full_messages).to include \
-                "Destination must be a valid CIDR, IP address, or IP address range and may not contain whitespace"
+                "Destination must be a valid CIDR, IP address, or IP address range"
             end
           end
 
           context 'when the destination field is an invalid IP range' do
             let(:rules) { [
-              { 'protocol': 'udp',
+              { 'protocol': 'tcp',
                 'destination': "192.168.10.2-192.168.105",
+                'ports': '8080',
               }
             ] }
             it 'adds an error' do
               expect(subject).to be_invalid
               expect(subject.errors.full_messages).to include \
-                "Destination must be a valid CIDR, IP address, or IP address range and may not contain whitespace"
+                "Destination must be a valid CIDR, IP address, or IP address range"
             end
           end
 
@@ -369,7 +316,7 @@ module VCAP::CloudController
             it 'adds an error' do
               expect(subject).to be_invalid
               expect(subject.errors.full_messages).to include \
-                "Destination must be a valid CIDR, IP address, or IP address range and may not contain whitespace"
+                "Destination must be a valid CIDR, IP address, or IP address range"
             end
           end
 
@@ -382,7 +329,7 @@ module VCAP::CloudController
             it 'adds an error' do
               expect(subject).to be_invalid
               expect(subject.errors.full_messages).to include \
-                "Destination must be a valid CIDR, IP address, or IP address range and may not contain whitespace"
+                "Destination must be a valid CIDR, IP address, or IP address range"
             end
           end
 
@@ -515,6 +462,7 @@ module VCAP::CloudController
           context 'when the ports are not a string' do
             let(:rules) { [
               { 'protocol': 'udp',
+                'destination': "192.168.10.2/24",
                 'ports': 42
               },
             ] }
@@ -576,39 +524,6 @@ module VCAP::CloudController
         end
       end
 
-      describe 'rules' do
-        let(:rules) { [] }
-
-        let(:params) do
-          {
-            name: 'basic',
-            rules: rules,
-          }
-        end
-
-        context 'when no rules are passed in' do
-          let(:params) do
-            { name: 'no_rules' }
-          end
-          it 'is valid' do
-            expect(subject).to be_valid
-          end
-        end
-
-        context 'when an empty set of rules is passed in' do
-          it 'is valid' do
-            expect(subject).to be_valid
-          end
-        end
-
-        context 'when a malformed set of rules is passed in' do
-          let(:rules) { 'bad rule' }
-          # it is invalid
-          it 'is valid' do
-            expect(subject).to be_invalid
-          end
-        end
-      end
     end
   end
 end

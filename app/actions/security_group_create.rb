@@ -9,7 +9,8 @@ module VCAP::CloudController
 
         SecurityGroup.db.transaction do
           security_group = SecurityGroup.create(
-            name: message.name
+            name: message.name,
+            rules: message.rules
           )
         end
         security_group

@@ -17,6 +17,7 @@ module VCAP::CloudController
 
     validates :name,
       string: true,
+
       length: { minimum: 1, maximum: MAX_ORGANIZATION_QUOTA_NAME_LENGTH },
       if: key_requested?(:name)
 

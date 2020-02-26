@@ -10,9 +10,30 @@ module VCAP::CloudController
       context 'when creating a security group' do
         let(:group) { VCAP::CloudController::SecurityGroup.make }
 
+        let(:firstGroup) {
+          { protocol: 'tcp',
+            destination: "10.10.10.0/24",
+            type: -1,
+            code: 255
+          }
+        }
+
+        let(:secondGroup) {
+          { protocol: 'icmp',
+            destination: '10.11.10.0/24',
+            type: 8,
+            code: 0,
+            description: 'Allow ping requests to private services'
+          }
+        }
+
         let(:message) do
           VCAP::CloudController::SecurityGroupCreateMessage.new({
-            name: 'my-name'
+            name: 'my-name',
+            rules: [
+              firstGroup,
+              secondGroup
+            ]
           })
         end
 
@@ -20,6 +41,8 @@ module VCAP::CloudController
           group = subject.create(message)
 
           expect(group.name).to eq('my-name')
+
+          expect(group.rules).to contain_exactly(firstGroup, secondGroup)
         end
       end
 

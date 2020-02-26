@@ -199,29 +199,7 @@ module VCAP::CloudController::Validators
 
         record.errors.add :protocol, "must be 'tcp', 'udp', 'icmp', or 'all'" unless valid_protocol(rule[:protocol])
 
-        record.errors.add :destination, "must be a valid CIDR, IP address, or IP address range and may not contain whitespace" unless \
-          destination_is_valid(rule[:destination])
-
-        if ['tcp', 'udp'].include? rule[:protocol]
-          unless rule[:ports]
-            record.errors.add :ports, "are required for protocols of type TCP and UDP"
-          end
-          record.errors.add :ports, 'must be a valid single port, comma separated list of ports, or range or ports, formatted as a string' unless valid_ports(rule[:ports])
-        end
-
-        if rule[:protocol] == "all" && rule[:ports]
-          record.errors.add :ports, "are not allowed for protocols of type all"
-        end
-
-        if rule[:type]
-          record.errors.add :type, "must be an integer between -1 and 255 (inclusive)" unless \
-            valid_icmp(rule[:type])
-        end
-
-        if rule[:code]
-          record.errors.add :code, "must be an integer between -1 and 255 (inclusive)" unless \
-            valid_icmp(rule[:code])
-        end
+        destination_is_valid(rule[:destination], record.errors)
 
         if rule[:description]
           record.errors.add :description, "must be a string" unless rule[:description].is_a?(String)
@@ -231,11 +209,42 @@ module VCAP::CloudController::Validators
           record.errors.add :log, 'must be a boolean' unless is_boolean(rule[:log])
         end
 
+        case rule[:protocol]
+          when 'tcp', 'udp'
+            unless rule[:ports]
+              record.errors.add :ports, "are required for protocols of type TCP and UDP"
+            end
 
+            record.errors.add :ports, 'must be a valid single port, comma separated list of ports, or range or ports, formatted as a string' unless \
+          valid_ports(rule[:ports])
+
+          when 'icmp'
+            unless rule[:code]
+              record.errors.add :code, "is required for protocols of type ICMP"
+            end
+
+            unless rule[:type]
+              record.errors.add :type, "is required for protocols of type ICMP"
+            end
+
+            if rule[:type]
+              record.errors.add :type, "must be an integer between -1 and 255 (inclusive)" unless \
+            valid_icmp(rule[:type])
+            end
+
+            if rule[:code]
+              record.errors.add :code, "must be an integer between -1 and 255 (inclusive)" unless \
+            valid_icmp(rule[:code])
+            end
+
+          when 'all'
+            if rule[:protocol] == "all" && rule[:ports]
+              record.errors.add :ports, "are not allowed for protocols of type all"
+            end
+        end
       }
     end
 
-    # TODO: can we use boolean validator?
     def is_boolean(value)
       [true, false].include? value
     end
@@ -279,12 +288,30 @@ module VCAP::CloudController::Validators
     end
 
     # TODO: rename to match helper function naming convention
-    def destination_is_valid(destination)
-      return false if !destination.is_a?(String) || destination.empty? || /\s/ =~ destination
+    def destination_is_valid(destination, errors)
+      #record.errors.add :destination, "must be a valid CIDR, IP address, or IP address range and may not contain whitespace"
+      if destination.blank?
+        errors.add :destination, 'must be a valid CIDR, IP address, or IP address range'
+        return false
+      end
+
+      unless destination.is_a?(String)
+        errors.add :destination, 'must be a string'
+        return false
+      end
+
+      if /\s/ =~ destination
+        errors.add :destination, 'must not contain whitespace'
+        return false
+      end
+
 
       address_list = destination.split('-')
 
-      return false if address_list.length > 2
+      if address_list.length > 2
+        errors.add :destination, 'must be a valid CIDR, IP address, or IP address range'
+        return false
+      end
 
       if address_list.length == 1
         NetAddr::IPv4Net.parse(address_list.first)
@@ -297,8 +324,10 @@ module VCAP::CloudController::Validators
       sorted_ipv4s = NetAddr.sort_IPv4(ipv4s)
       return true if ipv4s.first == sorted_ipv4s.first
 
+      errors.add :destination, 'must be a valid CIDR, IP address, or IP address range'
       false
     rescue NetAddr::ValidationError
+      errors.add :destination, 'must be a valid CIDR, IP address, or IP address range'
       false
     end
   end

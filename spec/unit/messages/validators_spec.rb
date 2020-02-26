@@ -88,7 +88,7 @@ module VCAP::CloudController::Validators
       end
     end
 
-    describe 'HashValidator' do
+    describe 'HashVal idator' do
       let(:hash_class) do
         Class.new(fake_class) do
           validates :field, hash: true
@@ -162,7 +162,6 @@ module VCAP::CloudController::Validators
         expect(fake_class.valid?).to be_truthy
       end
     end
-
     describe 'EnvironmentVariablesValidator' do
       let(:environment_variables_class) do
         Class.new(fake_class) do
