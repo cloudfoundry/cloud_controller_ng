@@ -1,15 +1,19 @@
+require 'timeout'
+
 class DBMigrator
   MIGRATIONS_DIR = File.expand_path('../../db', File.dirname(__FILE__))
   SEQUEL_MIGRATIONS = File.join(MIGRATIONS_DIR, 'migrations')
+  TWO_WEEKS = 20160
 
   def self.from_config(config, db_logger)
     VCAP::CloudController::Encryptor.db_encryption_key = config.get(:db_encryption_key)
     db = VCAP::CloudController::DB.connect(config.get(:db), db_logger)
-    new(db)
+    new(db, config.get(:max_migration_duration_in_minutes))
   end
 
-  def initialize(db)
+  def initialize(db, max_migration_duration_in_minutes=TWO_WEEKS)
     @db = db
+    @max_migration_duration_in_minutes = max_migration_duration_in_minutes
   end
 
   def apply_migrations(opts={})
@@ -24,8 +28,23 @@ class DBMigrator
     apply_migrations(current: recent_migrations.first, target: recent_migrations.last)
   end
 
-  def check_migrations!
+  def wait_for_migrations!
     Sequel.extension :migration
-    Sequel::Migrator.check_current(@db, SEQUEL_MIGRATIONS)
+    logger = Steno.logger('cc.db.wait_until_current')
+
+    unless db_is_current_or_newer_than_local_migrations?
+      logger.info('waiting indefinitely for database schema to be current')
+    end
+
+    timeout_message = 'ccdb.max_migration_duration_in_minutes exceeded'
+    Timeout.timeout(@max_migration_duration_in_minutes * 60, message: timeout_message) do
+      sleep(1) until db_is_current_or_newer_than_local_migrations?
+    end
+
+    logger.info('database schema is as new or newer than locally available migrations')
+  end
+
+  def db_is_current_or_newer_than_local_migrations?
+    Sequel::Migrator.is_current?(@db, SEQUEL_MIGRATIONS, allow_missing_migration_files: true)
   end
 end

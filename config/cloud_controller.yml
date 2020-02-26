@@ -303,7 +303,7 @@ newrelic_enabled: false
 
 max_annotations_per_resource: 200
 max_labels_per_resource: 50
-
+max_migration_duration_in_minutes: 45
 db:
   log_level: 'debug'
   ssl_verify_hostname: false

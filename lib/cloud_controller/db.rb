@@ -49,7 +49,7 @@ module VCAP::CloudController
 
     def self.load_models(db_config, logger)
       db = connect(db_config, logger)
-      DBMigrator.new(db).check_migrations!
+      DBMigrator.new(db).wait_for_migrations!
 
       require 'models'
       require 'delayed_job_sequel'
