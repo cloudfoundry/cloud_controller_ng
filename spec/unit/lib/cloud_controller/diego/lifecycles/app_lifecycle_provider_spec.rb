@@ -36,8 +36,24 @@ module VCAP::CloudController
       context 'when lifecycle type is not requested on the message' do
         let(:request) { {} }
 
-        it 'returns a AppBuildpackLifecycle' do
-          expect(AppLifecycleProvider.provide_for_create(message)).to be_a(AppBuildpackLifecycle)
+        context 'default_app_lifecycle is set to buildpack' do
+          before do
+            TestConfig.override(default_app_lifecycle: 'buildpack')
+          end
+
+          it 'returns a AppBuildpackLifecycle' do
+            expect(AppLifecycleProvider.provide_for_create(message)).to be_a(AppBuildpackLifecycle)
+          end
+        end
+
+        context 'default_app_lifecycle is set to kpack' do
+          before do
+            TestConfig.override(default_app_lifecycle: 'kpack')
+          end
+
+          it 'returns a AppBuildpackLifecycle' do
+            expect(AppLifecycleProvider.provide_for_create(message)).to be_a(AppKpackLifecycle)
+          end
         end
       end
     end

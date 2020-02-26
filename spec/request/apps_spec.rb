@@ -161,7 +161,7 @@ RSpec.describe 'Apps' do
       end
     end
 
-    describe 'Docker app' do
+    context 'Docker app' do
       before do
         VCAP::CloudController::FeatureFlag.make(name: 'diego_docker', enabled: true, error_message: nil)
       end
@@ -237,7 +237,7 @@ RSpec.describe 'Apps' do
       end
     end
 
-    describe 'KpAcK app' do
+    context 'KpAcK app' do
       it 'creates a kpack app' do
         create_request = {
             name: 'my_app',
@@ -305,6 +305,49 @@ RSpec.describe 'Apps' do
           space_guid: space.guid,
           organization_guid: space.organization.guid,
         )
+      end
+    end
+
+    context 'cc.default_app_lifecycle' do
+      let(:create_request) do
+        {
+          name: 'my_app',
+          relationships: {
+            space: {
+              data: {
+                guid: space.guid
+              }
+            }
+          },
+        }
+      end
+
+      context 'cc.default_app_lifecycle is set to buildpack' do
+        before do
+          TestConfig.override(default_app_lifecycle: 'buildpack')
+        end
+
+        it 'creates an app with the buildpack lifecycle when none is specified in the request' do
+          post '/v3/apps', create_request.to_json, user_header
+
+          expect(last_response.status).to eq(201)
+          parsed_response = MultiJson.load(last_response.body)
+          expect(parsed_response['lifecycle']['type']).to eq('buildpack')
+        end
+      end
+
+      context 'cc.default_app_lifecycle is set to kpack' do
+        before do
+          TestConfig.override(default_app_lifecycle: 'kpack')
+        end
+
+        it 'creates an app with the kpack lifecycle when none is specified in the request' do
+          post '/v3/apps', create_request.to_json, user_header
+
+          expect(last_response.status).to eq(201)
+          parsed_response = MultiJson.load(last_response.body)
+          expect(parsed_response['lifecycle']['type']).to eq('kpack')
+        end
       end
     end
   end

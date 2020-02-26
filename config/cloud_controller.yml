@@ -429,3 +429,5 @@ locket:
   key_file: 'spec/fixtures/certs/bbs_client.key'
 
 threadpool_size: 20
+
+default_app_lifecycle: buildpack

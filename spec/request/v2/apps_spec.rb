@@ -554,6 +554,45 @@ RSpec.describe 'Apps' do
       )
     end
 
+    context 'cc.default_app_lifecycle' do
+      let(:create_request) do
+        {
+          name:             'maria',
+          space_guid:       space.guid,
+        }
+      end
+
+      context 'cc.default_app_lifecycle is set to buildpack' do
+        before do
+          TestConfig.override(default_app_lifecycle: 'buildpack')
+        end
+
+        it 'creates an app with the buildpack lifecycle when none is specified in the request' do
+          post '/v2/apps', create_request.to_json, headers_for(user)
+
+          expect(last_response.status).to eq(201)
+          parsed_response = MultiJson.load(last_response.body)
+          app_model = VCAP::CloudController::AppModel.first(guid: parsed_response['metadata']['guid'])
+          expect(app_model.lifecycle_type).to eq('buildpack')
+        end
+      end
+
+      context 'cc.default_app_lifecycle is set to kpack' do
+        before do
+          TestConfig.override(default_app_lifecycle: 'kpack')
+        end
+
+        it 'creates an app with the kpack lifecycle when none is specified in the request' do
+          post '/v2/apps', create_request.to_json, headers_for(user)
+
+          expect(last_response.status).to eq(201)
+          parsed_response = MultiJson.load(last_response.body)
+          app_model = VCAP::CloudController::AppModel.first(guid: parsed_response['metadata']['guid'])
+          expect(app_model.lifecycle_type).to eq('kpack')
+        end
+      end
+    end
+
     context 'telemetry' do
       let(:logger_spy) { spy('logger') }
 
