@@ -274,8 +274,8 @@ module VCAP::CloudController
         let(:service_broker_url_with_accepts_incomplete) { "#{service_broker_url}?accepts_incomplete=true" }
         let(:service_broker) { ServiceBroker.make(broker_url: 'http://example.com', auth_username: 'auth_username', auth_password: 'auth_password') }
         let(:service) { Service.make(service_broker: service_broker) }
-        let(:space) { Space.make }
         let(:plan) { ServicePlan.make(:v2, service: service) }
+        let(:space) { Space.make }
         let(:developer) { make_developer_for_space(space) }
         let(:response_body) do
           {
@@ -708,6 +708,49 @@ module VCAP::CloudController
             end
 
             it 'does not enqueue additional delay_jobs after broker_client_max_async_poll_duration_minutes' do
+              service_instance_guid = nil
+              Timecop.freeze now do
+                create_managed_service_instance
+                service_instance_guid = decoded_response['metadata']['guid']
+              end
+
+              Timecop.travel(before_poll_timeout) do
+                execute_all_jobs(expected_successes: 1, expected_failures: 0)
+                expect(Delayed::Job.count).to eq 1
+              end
+
+              Timecop.travel(after_poll_timeout) do
+                execute_all_jobs(expected_successes: 1, expected_failures: 0)
+                expect(Delayed::Job.count).to eq 0
+              end
+
+              get "/v2/service_instances/#{service_instance_guid}"
+              expect(last_response).to have_status_code 200
+              expect(decoded_response['entity']['last_operation']['state']).to eq 'failed'
+              expect(decoded_response['entity']['last_operation']['description']).to match /Service Broker failed to provision within the required time/
+            end
+          end
+
+          context 'the plan max polling duration is lower than the CC config ' do
+            let!(:now) { Time.now }
+            let(:max_poll_duration) { 300 }
+            let(:before_poll_timeout) { now + (5 / 2).minutes }
+            let(:after_poll_timeout) { now + 5.minutes + 1.minutes }
+
+            before do
+              plan.maximum_polling_duration = max_poll_duration
+              plan.save
+              stub_request(:get, service_broker_url_regex).
+                with(headers: { 'Accept' => 'application/json' }, basic_auth: basic_auth(service_broker: service_broker)).
+                to_return(status: 200, body: {
+                  state: 'in progress',
+                  description: 'new description'
+                }.to_json)
+            end
+
+            it 'does not enqueue additional delay_jobs after broker_client_max_async_poll_duration_minutes' do
+              expect(VCAP::CloudController::Config.config.get(:broker_client_max_async_poll_duration_minutes)).to be(10080)
+
               service_instance_guid = nil
               Timecop.freeze now do
                 create_managed_service_instance
