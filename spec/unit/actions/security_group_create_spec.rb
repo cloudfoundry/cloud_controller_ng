@@ -10,22 +10,23 @@ module VCAP::CloudController
       context 'when creating a security group' do
         let(:group) { VCAP::CloudController::SecurityGroup.make }
 
-        let(:firstGroup) {
-          { protocol: 'tcp',
-            destination: "10.10.10.0/24",
-            type: -1,
-            code: 255
+        let(:firstGroup) do
+          {
+            protocol: 'tcp',
+            destination: '10.10.10.0/24',
+            ports: '443,80,8080'
           }
-        }
+        end
 
-        let(:secondGroup) {
-          { protocol: 'icmp',
+        let(:secondGroup) do
+          {
+            protocol: 'icmp',
             destination: '10.11.10.0/24',
             type: 8,
             code: 0,
             description: 'Allow ping requests to private services'
           }
-        }
+        end
 
         let(:message) do
           VCAP::CloudController::SecurityGroupCreateMessage.new({

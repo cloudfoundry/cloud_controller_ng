@@ -88,7 +88,7 @@ module VCAP::CloudController::Validators
       end
     end
 
-    describe 'HashVal idator' do
+    describe 'HashValidator' do
       let(:hash_class) do
         Class.new(fake_class) do
           validates :field, hash: true
