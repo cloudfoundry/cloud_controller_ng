@@ -17,12 +17,18 @@ class BackgroundJobEnvironment
     @config.configure_components
 
     if @config.get(:readiness_port)
-      socket = Socket.new(Socket::AF_INET, Socket::SOCK_STREAM)
-      sockaddr = Socket.pack_sockaddr_in(@config.get(:readiness_port), '127.0.0.1')
-      socket.bind(sockaddr)
-      socket.listen(READINESS_SOCKET_QUEUE_DEPTH)
+      open_readiness_port
     end
 
     yield if block_given?
+  end
+
+  private
+
+  def open_readiness_port
+    socket = Socket.new(Socket::AF_INET, Socket::SOCK_STREAM)
+    sockaddr = Socket.pack_sockaddr_in(@config.get(:readiness_port), '127.0.0.1')
+    socket.bind(sockaddr)
+    socket.listen(READINESS_SOCKET_QUEUE_DEPTH)
   end
 end
