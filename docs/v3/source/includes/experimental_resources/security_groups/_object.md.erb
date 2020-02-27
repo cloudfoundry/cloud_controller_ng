@@ -13,3 +13,5 @@ Name | Type | Description
 **globally_enabled** | _object_ | Object that controls if the group is applied globally to the lifecycle of an applications.
 **globally_enabled.running** | _boolean_ | Specifies whether the group should be applied globally to all running applications.
 **globally_enabled.staging** | _boolean_ | Specifies whether the group should be applied globally to all staging applications.
+**relationships.staging_spaces** | [_to-many relationship_](#to-many-relationships) | A relationship to the spaces where the quota is applied to applications during staging.
+**relationships.running_spaces** | [_to-many relationship_](#to-many-relationships) | A relationship to the spaces where the quota is applied to applications during runtime.

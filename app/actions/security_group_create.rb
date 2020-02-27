@@ -14,6 +14,12 @@ module VCAP::CloudController
             running_default: message.running,
           )
         end
+        staging_spaces = valid_spaces(message.staging_space_guids)
+        staging_spaces.each { |space| security_group.add_staging_space(space) }
+
+        running_spaces = valid_spaces(message.running_space_guids)
+        running_spaces.each { |space| security_group.add_space(space) }
+
         security_group
       rescue Sequel::ValidationFailed => e
         validation_error!(e, message)
@@ -27,6 +33,14 @@ module VCAP::CloudController
         end
 
         error!(error.message)
+      end
+
+      def valid_spaces(space_guids)
+        spaces = Space.where(guid: space_guids).all
+        return spaces if spaces.length == space_guids.length
+
+        invalid_space_guids = space_guids - spaces.map(&:guid)
+        error!("Spaces with guids [#{invalid_space_guids}] do not exist.")
       end
 
       def error!(message)

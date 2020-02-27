@@ -13,6 +13,18 @@ module VCAP::CloudController
             'globally_enabled' => {
               'running' => true,
               'staging' => false
+            },
+            'relationships' => {
+              'staging_spaces' => {
+                'data' => [{
+                  'guid' => 'some-space-guid'
+                }]
+              },
+              'running_spaces' => {
+                'data' => [{
+                  'guid' => 'some-space-guid'
+                }]
+              }
             }
           }
         }
@@ -134,6 +146,88 @@ module VCAP::CloudController
           end
         end
       end
+
+      describe 'relationships' do
+        let(:params) do
+          {
+            'name' => 'basic',
+            'relationships' => relationships
+          }
+        end
+        context 'given no relationships' do
+          let(:params) do
+            {
+              name: 'kris',
+            }
+          end
+
+          it { is_expected.to be_valid }
+        end
+
+        context 'given a malformed staging space guid' do
+          let(:params) do
+            {
+              name: 'rob',
+              relationships: {
+                staging_spaces: {
+                  data: [{
+                    guid: 150000
+                  }],
+                }
+              }
+            }
+          end
+
+          it { is_expected.to be_invalid }
+        end
+
+        context 'given unexpected staging spaces relationship data (not one-to-many relationship)' do
+          let(:params) do
+            {
+              name: 'kim',
+              relationships: {
+                staging_spaces: {
+                  data: { guid: 'skims' }
+                }
+              }
+            }
+          end
+
+          it { is_expected.to be_invalid }
+        end
+
+        context 'given unexpected running spaces relationship data (not one-to-many relationship)' do
+          let(:params) do
+            {
+              name: 'kim',
+              relationships: {
+                running_spaces: {
+                  data: { guid: 'skims' }
+                }
+              }
+            }
+          end
+
+          it { is_expected.to be_invalid }
+        end
+
+        context 'given a malformed running space guid' do
+          let(:params) do
+            {
+              name: 'rob',
+              relationships: {
+                running_spaces: {
+                  data: [
+                    { guid: 150000 }
+                  ]
+                }
+              }
+            }
+          end
+
+          it { is_expected.to be_invalid }
+        end
+      end
     end
 
     describe '#running' do
@@ -165,6 +259,44 @@ module VCAP::CloudController
 
       it 'returns the value provided for the staging key' do
         expect(subject.staging).to eq false
+      end
+    end
+
+    describe '#staging_spaces' do
+      let(:params) {
+        {
+          name: 'some-name',
+          relationships: {
+            staging_spaces: {
+              data: [
+                { guid: 'space-guid' }
+              ]
+            }
+          }
+        }
+      }
+
+      it 'returns the value provided for the staging key' do
+        expect(subject.staging_space_guids).to eq ['space-guid']
+      end
+    end
+
+    describe '#running_spaces' do
+      let(:params) {
+        {
+          name: 'some-name',
+          relationships: {
+            running_spaces: {
+              data: [
+                { guid: 'space-guid' }
+              ]
+            }
+          }
+        }
+      }
+
+      it 'returns the value provided for the staging key' do
+        expect(subject.running_space_guids).to eq ['space-guid']
       end
     end
   end

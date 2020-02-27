@@ -12,6 +12,14 @@ module VCAP::CloudController::Presenters::V3
           running: security_group.running_default,
           staging: security_group.staging_default,
         },
+        relationships: {
+          running_spaces: {
+            data: space_guid_hash_for(security_group.spaces)
+          },
+          staging_spaces: {
+            data: space_guid_hash_for(security_group.staging_spaces)
+          }
+        },
         links: build_links,
       }
     end
@@ -20,6 +28,10 @@ module VCAP::CloudController::Presenters::V3
 
     def security_group
       @resource
+    end
+
+    def space_guid_hash_for(dataset)
+      dataset.map { |space| { guid: space.guid }}
     end
 
     def build_links

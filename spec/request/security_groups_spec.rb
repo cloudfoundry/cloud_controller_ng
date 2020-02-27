@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'request_spec_shared_examples'
 
 RSpec.describe 'Security_Groups Request' do
-  let(:space) { VCAP::CloudController::Space.make }
+  let(:space) { VCAP::CloudController::Space.make(guid: 'space-guid') }
   let(:org) { space.organization }
   let(:user) { VCAP::CloudController::User.make(guid: 'user-guid') }
   let(:admin_header) { admin_headers_for(user) }
@@ -19,7 +19,17 @@ RSpec.describe 'Security_Groups Request' do
           'globally_enabled': {
             'running': true,
             'staging': false
-          }
+          },
+          'relationships': {
+            'staging_spaces': {
+              'data': [
+                { 'guid': 'space-guid' },
+              ]
+            },
+            'running_spaces': {
+              'data': []
+            }
+          },
         }
       end
 
@@ -32,6 +42,16 @@ RSpec.describe 'Security_Groups Request' do
           globally_enabled: {
             'running': true,
             'staging': false
+          },
+          'relationships': {
+            'staging_spaces': {
+              'data': [
+                { 'guid': 'space-guid' },
+              ]
+            },
+            'running_spaces': {
+              'data': []
+            }
           },
           links: {
             self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/security_groups\/#{UUID_REGEX}) },
