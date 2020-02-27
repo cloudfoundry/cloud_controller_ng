@@ -21,10 +21,11 @@ Name | Type | Description
 **broker_catalog** | _object_ | This object contains information obtained from the Service Broker Catalog.
 **broker_catalog.id** | _string_ | The identifier that the Service Broker provided for this Service Offering.
 **broker_catalog.metadata** | _object_ | Additional information provided by the Service Broker.
-**broker_catalog.features.plan_updateable** | _boolean_ | Whether the Service Offering supports upgrade/downgrade for Service Plans by default 
+**broker_catalog.features.plan_updateable** | _boolean_ | Whether the Service Offering supports upgrade/downgrade for Service Plans by default
 **broker_catalog.features.bindable** | _boolean_ | Specifies whether Service Instances of the service can be bound to applications.
 **broker_catalog.features.instances_retrievable** | _boolean_ | Specifies whether the Fetching a Service Instance endpoint is supported for all Service Plans.
 **broker_catalog.features.bindings_retrievable** | _boolean_ | Specifies whether the Fetching a Service Binding endpoint is supported for all Service Plans.
+**broker_catalog.features.allow_context_updates** | _boolean_ | Specifies whether Service Instance updates relating only to context are propagated to the Service Broker.
 **relationships.service_broker** | [_to-one relationship_](#to-one-relationships) | The Service Broker that provides this Service Offering.
 **metadata.labels** _(experimental)_      | [_label object_](#labels)      | Labels applied to the Service Offering.
 **metadata.annotations** _(experimental)_ | [_annotation object_](#annotations) | Annotations added to the Service Offering.

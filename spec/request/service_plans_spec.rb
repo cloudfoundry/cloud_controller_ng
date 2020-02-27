@@ -10,7 +10,6 @@ RSpec.describe 'V3 service plans' do
   let(:user) { VCAP::CloudController::User.make }
   let(:org) { VCAP::CloudController::Organization.make }
   let(:space) { VCAP::CloudController::Space.make(organization: org) }
-  let(:maintenance_info_str) { '{"version": "1.0.0", "description":"best plan ever"}' }
 
   describe 'GET /v3/service_plans/:guid' do
     let(:api_call) { lambda { |user_headers| get "/v3/service_plans/#{guid}", nil, user_headers } }
@@ -26,13 +25,19 @@ RSpec.describe 'V3 service plans' do
     end
 
     context 'when there is a public service plan' do
-      let!(:service_plan) { VCAP::CloudController::ServicePlan.make(public: true, maintenance_info: maintenance_info_str) }
+      let(:maintenance_info) do
+        {
+          version: '1.0.0',
+          description: 'best plan ever'
+        }
+      end
+      let!(:service_plan) { VCAP::CloudController::ServicePlan.make(public: true, maintenance_info: maintenance_info) }
       let(:guid) { service_plan.guid }
 
       let(:expected_codes_and_responses) do
         Hash.new(
           code: 200,
-          response_object: create_plan_json(service_plan)
+          response_object: create_plan_json(service_plan, maintenance_info: maintenance_info)
         )
       end
 
@@ -44,22 +49,17 @@ RSpec.describe 'V3 service plans' do
         end
 
         let(:expected_codes_and_responses) do
-          h = Hash.new(
-            code: 200,
-            response_object: create_plan_json(service_plan)
-          )
-          h['unauthenticated'] = { code: 401 }
-          h
+          Hash.new({ code: 401 })
         end
 
-        it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
+        it_behaves_like 'permissions for single object endpoint', UNAUTHENTICATED
       end
     end
 
     context 'when there is a non-public service plan' do
       context 'global broker' do
         let!(:visibility) { VCAP::CloudController::ServicePlanVisibility.make(service_plan: service_plan, organization: org) }
-        let!(:service_plan) { VCAP::CloudController::ServicePlan.make(public: false, maintenance_info: maintenance_info_str) }
+        let!(:service_plan) { VCAP::CloudController::ServicePlan.make(public: false) }
         let(:guid) { service_plan.guid }
 
         let(:expected_codes_and_responses) do
@@ -74,7 +74,7 @@ RSpec.describe 'V3 service plans' do
       context 'space scoped broker' do
         let!(:broker) { VCAP::CloudController::ServiceBroker.make(space: space) }
         let!(:service_offering) { VCAP::CloudController::Service.make(service_broker: broker) }
-        let!(:service_plan) { VCAP::CloudController::ServicePlan.make(public: false, service: service_offering, maintenance_info: maintenance_info_str) }
+        let!(:service_plan) { VCAP::CloudController::ServicePlan.make(public: false, service: service_offering) }
         let(:guid) { service_plan.guid }
 
         let(:expected_codes_and_responses) do
@@ -658,7 +658,7 @@ RSpec.describe 'V3 service plans' do
     end
   end
 
-  def create_plan_json(service_plan, labels: {}, annotations: {})
+  def create_plan_json(service_plan, labels: {}, annotations: {}, maintenance_info: {})
     plan = {
       guid: service_plan.guid,
       created_at: iso8601,
@@ -671,6 +671,7 @@ RSpec.describe 'V3 service plans' do
       broker_catalog: {
         id: service_plan.unique_id,
         metadata: {},
+        maximum_polling_duration: nil,
         features: {
           bindable: match(boolean),
           plan_updateable: match(boolean)
@@ -685,7 +686,7 @@ RSpec.describe 'V3 service plans' do
           create: {}
         }
       },
-      maintenance_info: service_plan.maintenance_info_as_hash,
+      maintenance_info: maintenance_info,
       relationships: {
         service_offering: {
           data: {

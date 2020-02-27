@@ -1000,7 +1000,8 @@ RSpec.describe 'V3 service offerings' do
           'plan_updateable' => false,
           'bindable' => true,
           'instances_retrievable' => false,
-          'bindings_retrievable' => false
+          'bindings_retrievable' => false,
+          'allow_context_updates' => false,
         }
       },
       'links' => {

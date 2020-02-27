@@ -17,10 +17,11 @@ module VCAP::CloudController
             name: service_plan.name,
             free: service_plan.free,
             description: service_plan.description,
-            maintenance_info: service_plan.maintenance_info_as_hash,
+            maintenance_info: maintenance_info,
             broker_catalog: {
               id: service_plan.unique_id,
               metadata: metadata,
+              maximum_polling_duration: service_plan.maximum_polling_duration,
               features: {
                 bindable: service_plan.bindable?,
                 plan_updateable: service_plan.plan_updateable?
@@ -48,6 +49,10 @@ module VCAP::CloudController
 
         def metadata
           parse(service_plan.extra)
+        end
+
+        def maintenance_info
+          service_plan.maintenance_info || {}
         end
 
         def parse_schema(schema)

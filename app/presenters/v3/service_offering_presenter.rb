@@ -30,6 +30,7 @@ module VCAP::CloudController
                 bindable: service_offering.bindable,
                 instances_retrievable: service_offering.instances_retrievable,
                 bindings_retrievable: service_offering.bindings_retrievable,
+                allow_context_updates: service_offering.allow_context_updates,
               }
             },
             relationships: build_relationships,
