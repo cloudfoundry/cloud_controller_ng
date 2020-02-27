@@ -55,6 +55,10 @@ module CloudController
         error_handling { wrapped_client.cp_to_blobstore(*args) }
       end
 
+      def ensure_bucket_exists
+        error_handling { wrapped_client.ensure_bucket_exists }
+      end
+
       private
 
       def error_handling

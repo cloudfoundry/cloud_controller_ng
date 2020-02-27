@@ -132,6 +132,12 @@ module CloudController
         end
       end
 
+      def ensure_bucket_exists
+        with_retries(__method__.to_s, {}) do
+          @wrapped_client.ensure_bucket_exists
+        end
+      end
+
       private
 
       def with_retries(log_prefix, log_data)

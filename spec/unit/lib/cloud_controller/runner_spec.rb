@@ -111,6 +111,25 @@ module VCAP::CloudController
 
         expect(steno_configurer).to have_received(:configure).once
       end
+
+      it 'sets up the blobstore buckets' do
+        droplet_blobstore = instance_double(CloudController::Blobstore::Client, :ensure_bucket_exists => nil)
+        package_blobstore = instance_double(CloudController::Blobstore::Client, :ensure_bucket_exists => nil)
+        resource_blobstore = instance_double(CloudController::Blobstore::Client, :ensure_bucket_exists => nil)
+        buildpack_blobstore = instance_double(CloudController::Blobstore::Client, :ensure_bucket_exists => nil)
+
+        expect(CloudController::DependencyLocator.instance).to receive(:droplet_blobstore).and_return(droplet_blobstore)
+        expect(CloudController::DependencyLocator.instance).to receive(:package_blobstore).and_return(package_blobstore)
+        expect(CloudController::DependencyLocator.instance).to receive(:global_app_bits_cache).and_return(resource_blobstore)
+        expect(CloudController::DependencyLocator.instance).to receive(:buildpack_blobstore).and_return(buildpack_blobstore)
+
+        subject.run!
+
+        expect(droplet_blobstore).to have_received(:ensure_bucket_exists)
+        expect(package_blobstore).to have_received(:ensure_bucket_exists)
+        expect(resource_blobstore).to have_received(:ensure_bucket_exists)
+        expect(buildpack_blobstore).to have_received(:ensure_bucket_exists)
+      end
     end
 
     describe '#stop!' do
