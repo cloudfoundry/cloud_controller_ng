@@ -11,11 +11,6 @@ module VCAP::CloudController
 
     validates_with NoAdditionalParamsValidator
 
-    validates :types, array: true, allow_nil: true
-    validates :target_guids, array: true, allow_nil: true
-    validates :space_guids, array: true, allow_nil: true
-    validates :organization_guids, array: true, allow_nil: true
-
     def self.from_params(params)
       super(params, %w(types target_guids space_guids organization_guids))
     end
