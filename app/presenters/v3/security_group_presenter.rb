@@ -31,7 +31,7 @@ module VCAP::CloudController::Presenters::V3
     end
 
     def space_guid_hash_for(dataset)
-      dataset.map { |space| { guid: space.guid }}
+      dataset.map { |space| { guid: space.guid } }
     end
 
     def build_links
