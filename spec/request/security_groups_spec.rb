@@ -103,6 +103,14 @@ RSpec.describe 'Security_Groups Request' do
             running: false,
             staging: false
           },
+          relationships: {
+            staging_spaces: {
+              data: [],
+            },
+            running_spaces: {
+              data: [],
+            }
+          },
           links: {
             self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/security_groups\/#{UUID_REGEX}) },
           }
@@ -145,6 +153,14 @@ RSpec.describe 'Security_Groups Request' do
           globally_enabled: {
             running: false,
             staging: false
+          },
+          relationships: {
+            staging_spaces: {
+              data: [{ guid: space.guid }],
+            },
+            running_spaces: {
+              data: [],
+            }
           },
           links: {
             self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/security_groups\/#{UUID_REGEX}) },
@@ -200,6 +216,14 @@ RSpec.describe 'Security_Groups Request' do
           globally_enabled: {
             running: true,
             staging: false
+          },
+          relationships: {
+            staging_spaces: {
+              data: [],
+            },
+            running_spaces: {
+              data: [],
+            }
           },
           links: {
             self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/security_groups\/#{UUID_REGEX}) },
