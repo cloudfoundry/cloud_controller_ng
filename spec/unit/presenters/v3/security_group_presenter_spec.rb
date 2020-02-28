@@ -37,9 +37,9 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:globally_enabled][:staging]).to eq(false)
         expect(result[:rules]).to eq([
           {
-            "protocol" => 'tcp',
-            "destination" => '10.10.10.0/24',
-            "ports" => '443,80,8080'
+            'protocol' => 'tcp',
+            'destination' => '10.10.10.0/24',
+            'ports' => '443,80,8080'
           }
         ])
         expect(result[:relationships][:running_spaces][:data].length).to eq(1)
