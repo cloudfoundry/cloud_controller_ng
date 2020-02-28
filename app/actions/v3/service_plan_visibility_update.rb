@@ -9,7 +9,7 @@ module VCAP::CloudController
 
       def update(service_plan, message, append_organizations: false)
         type = message.type
-        requested_org_guids = message.organizations || []
+        requested_org_guids = message.organizations&.map { |o| o[:guid] } || []
 
         unprocessable!("cannot update plans with visibility type 'space'") if space?(service_plan)
 

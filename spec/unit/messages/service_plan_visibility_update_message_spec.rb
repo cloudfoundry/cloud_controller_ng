@@ -50,7 +50,7 @@ module VCAP::CloudController
         end
 
         it 'accepts `organization`' do
-          message = subject.from_params({ 'type' => 'organization', organizations: ['org-1'] })
+          message = subject.from_params({ 'type' => 'organization', organizations: [{ guid: 'org-1' }] })
 
           expect(message).to be_valid
           expect(message.type).to eq('organization')
@@ -66,10 +66,16 @@ module VCAP::CloudController
 
       context 'when `type` is "organization"' do
         it 'accepts `organizations` key with an array of orgs' do
-          message = subject.from_params({ type: 'organization', organizations: %w(some-org another-org) })
+          message = subject.from_params({ type: 'organization', organizations: [{ guid: 'some-org' }, { guid: 'another-org' }] })
           expect(message).to be_valid
           expect(message.type).to eq('organization')
-          expect(message.organizations).to eq(%w(some-org another-org))
+          expect(message.organizations).to eq([{ guid: 'some-org' }, { guid: 'another-org' }])
+        end
+
+        it 'errors when organizations is not an array' do
+          message = subject.from_params({ type: 'organization', organizations: { guid: 'hello' } })
+          expect(message).not_to be_valid
+          expect(message.errors[:organizations]).to include('organizations list must be structured like this: "organizations": [{"guid": "valid-guid"}]')
         end
       end
 

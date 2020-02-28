@@ -123,6 +123,16 @@ module VCAP::CloudController::Validators
     end
   end
 
+  class OrgVisibilityValidator < ActiveModel::EachValidator
+    def validate_each(record, attribute, value)
+      return if value.nil?
+
+      if value.reject { |o| o.is_a?(Hash) && o.key?(:guid) && o[:guid].is_a?(String) }.any?
+        record.errors.add(attribute, "organizations list must be structured like this: \"#{attribute}\": [{\"guid\": \"valid-guid\"}]")
+      end
+    end
+  end
+
   class LifecycleValidator < ActiveModel::Validator
     def validate(record)
       data_message = {
