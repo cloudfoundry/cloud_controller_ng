@@ -13,5 +13,18 @@ Name | Type | Description
 **globally_enabled** | _object_ | Object that controls if the group is applied globally to the lifecycle of an applications.
 **globally_enabled.running** | _boolean_ | Specifies whether the group should be applied globally to all running applications.
 **globally_enabled.staging** | _boolean_ | Specifies whether the group should be applied globally to all staging applications.
+**rules** | _array of [rule objects](#the-rule-object)_ | Rules that will be applied by this security group.
 **relationships.staging_spaces** | [_to-many relationship_](#to-many-relationships) | A relationship to the spaces where the quota is applied to applications during staging.
 **relationships.running_spaces** | [_to-many relationship_](#to-many-relationships) | A relationship to the spaces where the quota is applied to applications during runtime.
+
+#### The rule object
+
+| Name | Type | Description | Required | Default
+| ---- | ---- | ----------- | -------- | -------
+| **protocol** | _string_ | Protocol type. Valid values are `tcp`, `udp`, `icmp`, or `all` | yes | N/A |
+| **destination** | _string_ | Destinations that the rule applies to. Valid CIDR, IP address, or IP address range | yes | N/A |
+| **ports** | _string_ | Ports that the rule applies to. Can be a single port (`9000`), a comma-separated list (`9000,9001`), or a range (`9000-9200`). | no | `null` |
+| **[type](https://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml#icmp-parameters-types)** | _integer_ |Type required for ICMP protocol. Valid values are between -1 and 255 (inclusive) | no | `null` |
+| **[code](https://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml#icmp-parameters-codes)** | _integer_ |Code required for ICMP protocol. Valid values are between -1 and 255 (inclusive) | no | `null` |
+| **description** | _string_ | A description for the rule | no | `null` |
+| **log** | _boolean_ | Enable logging for rule | no | `null` |

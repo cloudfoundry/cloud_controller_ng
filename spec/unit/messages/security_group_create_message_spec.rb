@@ -5,7 +5,7 @@ module VCAP::CloudController
   RSpec.describe SecurityGroupCreateMessage do
     subject { SecurityGroupCreateMessage.new(params) }
 
-    describe 'validations' do
+    describe 'validating parameters' do
       context 'when valid params are given' do
         let(:params) {
           {
@@ -102,6 +102,67 @@ module VCAP::CloudController
         end
       end
 
+      describe 'rules' do
+        let(:rules) { [] }
+
+        let(:params) do
+          {
+            name: 'basic',
+            rules: rules,
+          }
+        end
+
+        context 'when no rules are passed in' do
+          let(:params) do
+            { name: 'no_rules' }
+          end
+
+          it 'is valid' do
+            expect(subject).to be_valid
+          end
+        end
+
+        context 'when rules are valid' do
+          let(:rules) do
+            [
+              {
+                protocol: 'tcp',
+                destination: '10.10.10.0/24',
+                ports: '443,80,8080'
+              },
+              {
+                protocol: 'icmp',
+                destination: '10.10.10.0/24',
+                type: 8,
+                code: 0,
+                description: 'Allow ping requests to private services'
+              },
+            ]
+          end
+
+          it 'is valid' do
+            expect(subject).to be_valid
+          end
+        end
+
+        context 'when rules are invalid' do
+          let(:rules) do
+            [
+              {
+                'protocol': 'blah',
+              },
+              {
+                'not-a-field': true,
+              }
+            ]
+          end
+
+          it 'is invalid' do
+            expect(subject).to be_invalid
+          end
+        end
+      end
+
       describe 'globally_enabled' do
         let(:globally_enabled) { {} }
 
@@ -113,36 +174,32 @@ module VCAP::CloudController
         end
 
         context 'when no configuration is supplied' do
-          it 'is valid' do
-            expect(subject).to be_valid
+          context 'when value is not a hash' do
+            let(:globally_enabled) { 'bad' }
+            it 'is not valid' do
+              expect(subject).to be_invalid
+              expect(subject.errors[:globally_enabled]).to eq(['must be a hash'])
+            end
           end
-        end
 
-        context 'when value is not a hash' do
-          let(:globally_enabled) { 'bad' }
-          it 'is not valid' do
-            expect(subject).to be_invalid
-            expect(subject.errors[:globally_enabled]).to eq(['must be a hash'])
+          context 'when the nested keys are invalid' do
+            let(:globally_enabled) { { 'bad' => 'key' } }
+            it 'is not valid' do
+              expect(subject).to be_invalid
+              expect(subject.errors[:globally_enabled]).to eq(["only allows keys 'running' or 'boolean'"])
+            end
           end
-        end
 
-        context 'when the nested keys are invalid' do
-          let(:globally_enabled) { { 'bad' => 'key' } }
-          it 'is not valid' do
-            expect(subject).to be_invalid
-            expect(subject.errors[:globally_enabled]).to eq(["only allows keys 'running' or 'boolean'"])
-          end
-        end
-
-        context 'when the values provided to running/staging is not a boolean' do
-          let(:globally_enabled) { {
-            'running' => 'value',
-            'staging' => 'value',
-          }
-          }
-          it 'is not valid' do
-            expect(subject).to be_invalid
-            expect(subject.errors[:globally_enabled]).to eq(['values must be booleans'])
+          context 'when the values provided to running/staging is not a boolean' do
+            let(:globally_enabled) { {
+              'running' => 'value',
+              'staging' => 'value',
+            }
+            }
+            it 'is not valid' do
+              expect(subject).to be_invalid
+              expect(subject.errors[:globally_enabled]).to eq(['values must be booleans'])
+            end
           end
         end
       end
@@ -154,6 +211,7 @@ module VCAP::CloudController
             'relationships' => relationships
           }
         end
+
         context 'given no relationships' do
           let(:params) do
             {
@@ -262,7 +320,7 @@ module VCAP::CloudController
       end
     end
 
-    describe '#staging_spaces' do
+    describe '#staging_space_guids' do
       let(:params) {
         {
           name: 'some-name',
@@ -281,7 +339,7 @@ module VCAP::CloudController
       end
     end
 
-    describe '#running_spaces' do
+    describe '#running_space_guids' do
       let(:params) {
         {
           name: 'some-name',

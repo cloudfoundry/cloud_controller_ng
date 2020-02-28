@@ -10,7 +10,21 @@ curl "https://api.example.org/v3/security_groups" \
   -H "Authorization: bearer [token]" \
   -H "Content-type: application/json" \
   -d '{
-  "name": "my-group0"
+  "name": "my-group0",
+  "rules": [
+    {
+      "protocol": "tcp",
+      "destination": "10.10.10.0/24",
+      "ports": "443,80,8080"
+    },
+    {
+      "protocol": "icmp",
+      "destination": "10.10.10.0/24",
+      "type": 8,
+      "code": 0,
+      "description": "Allow ping requests to private services"
+    }
+  ]
 }'
 ```
 
@@ -41,6 +55,7 @@ Name | Type | Description
 **globally_enabled** | _boolean_ | Object that controls if the group is applied globally to the lifecycle of an applications.
 **globally_enabled.running** | _boolean_ | Specifies whether the group should be applied globally to all running applications.
 **globally_enabled.staging** | _boolean_ | Specifies whether the group should be applied globally to all staging applications.
+**rules** | _array of [rule objects](#the-rule-object)_ | Rules that will be applied by this security group.
 **relationships.staging_spaces** | [_to-many relationship_](#to-many-relationships) | A relationship to the spaces where the quota is applied to applications during staging.
 **relationships.running_spaces** | [_to-many relationship_](#to-many-relationships) | A relationship to the spaces where the quota is applied to applications during runtime.
 

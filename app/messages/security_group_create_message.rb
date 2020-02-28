@@ -1,7 +1,14 @@
+require 'messages/base_message'
+require 'messages/validators/security_group_rule_validator'
+
 module VCAP::CloudController
   class SecurityGroupCreateMessage < BaseMessage
     MAX_SECURITY_GROUP_NAME_LENGTH = 250
-    register_allowed_keys [:name, :globally_enabled, :relationships]
+    register_allowed_keys [:name, :globally_enabled, :relationships, :rules]
+
+    def self.key_requested?(key)
+      proc { |a| a.requested?(key) }
+    end
 
     def self.relationships_requested?
       @relationships_requested ||= proc { |a| a.requested?(:relationships) }
@@ -9,6 +16,7 @@ module VCAP::CloudController
 
     validates_with NoAdditionalKeysValidator
     validates_with RelationshipValidator, if: relationships_requested?
+    validates_with RulesValidator, if: key_requested?(:rules)
 
     validates :name,
       presence: true,
