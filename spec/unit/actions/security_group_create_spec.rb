@@ -6,8 +6,10 @@ module VCAP::CloudController
   RSpec.describe SecurityGroupCreate do
     describe 'create' do
       subject { SecurityGroupCreate }
+      let(:space1) { VCAP::CloudController::Space.make }
+      let(:space2) { VCAP::CloudController::Space.make }
 
-      context 'when creating a space' do
+      context 'when creating a security-group' do
         context 'with default values' do
           let(:message) { VCAP::CloudController::SecurityGroupCreateMessage.new(
             {
@@ -15,7 +17,7 @@ module VCAP::CloudController
             })
           }
 
-          it 'creates a space' do
+          it 'creates a security-group' do
             created_group = nil
             expect {
               created_group = subject.create(message)
@@ -30,8 +32,6 @@ module VCAP::CloudController
         end
 
         context 'with provided values' do
-          let(:space1) { VCAP::CloudController::Space.make }
-          let(:space2) { VCAP::CloudController::Space.make }
           let(:message) { VCAP::CloudController::SecurityGroupCreateMessage.new(
             {
               name: 'secure-group',
@@ -54,7 +54,7 @@ module VCAP::CloudController
             })
           }
 
-          it 'creates a space' do
+          it 'creates a security-group' do
             created_group = nil
             expect {
               created_group = subject.create(message)
@@ -106,6 +106,27 @@ module VCAP::CloudController
             expect(security_group.name).to eq('my-name')
 
             expect(security_group.rules).to contain_exactly(first_group, second_group)
+          end
+        end
+
+        context 'when the space does not exist' do
+          let(:invalid_space_guid) { 'invalid_space_guid' }
+          let(:message) do
+            VCAP::CloudController::SecurityGroupCreateMessage.new({
+              name: 'my-name',
+              relationships: {
+                running_spaces: { data: [{ guid: space1.guid }, { guid: invalid_space_guid }] }
+              }
+            })
+          end
+
+          it 'raises a human-friendly error' do
+            num_sec_groups = SecurityGroup.count
+            expect {
+              subject.create(message)
+            }.to raise_error(subject::Error, "Spaces with guids [\"#{invalid_space_guid}\"] do not exist.")
+
+            expect(SecurityGroup.count).to eq num_sec_groups
           end
         end
 

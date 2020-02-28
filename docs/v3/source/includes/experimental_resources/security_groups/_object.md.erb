@@ -14,8 +14,8 @@ Name | Type | Description
 **globally_enabled.running** | _boolean_ | Specifies whether the group should be applied globally to all running applications.
 **globally_enabled.staging** | _boolean_ | Specifies whether the group should be applied globally to all staging applications.
 **rules** | _array of [rule objects](#the-rule-object)_ | Rules that will be applied by this security group.
-**relationships.staging_spaces** | [_to-many relationship_](#to-many-relationships) | A relationship to the spaces where the quota is applied to applications during staging.
-**relationships.running_spaces** | [_to-many relationship_](#to-many-relationships) | A relationship to the spaces where the quota is applied to applications during runtime.
+**relationships.staging_spaces** | [_to-many relationship_](#to-many-relationships) | A relationship to the spaces where the security_group is applied to applications during staging.
+**relationships.running_spaces** | [_to-many relationship_](#to-many-relationships) | A relationship to the spaces where the security_group is applied to applications during runtime.
 
 #### The rule object
 
