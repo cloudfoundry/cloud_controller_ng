@@ -25,7 +25,7 @@ module VCAP
               let(:org_guid) { Organization.make.guid }
               let(:other_org_guid) { Organization.make.guid }
               let(:params) {
-                { type: 'organization', organizations: [org_guid, other_org_guid] }
+                { type: 'organization', organizations: [{ guid: org_guid }, { guid: other_org_guid }] }
               }
               let(:message) { ServicePlanVisibilityUpdateMessage.new(params) }
 
@@ -57,7 +57,7 @@ module VCAP
               let(:org_guid) { Organization.make.guid }
               let(:other_org_guid) { Organization.make.guid }
               let(:params) {
-                { type: 'organization', organizations: [org_guid, other_org_guid] }
+                { type: 'organization', organizations: [{ guid: org_guid }, { guid: other_org_guid }] }
               }
               let(:message) { ServicePlanVisibilityUpdateMessage.new(params) }
 
@@ -87,7 +87,7 @@ module VCAP
             context 'and its being updated to "organization"' do
               let(:new_org_guid) { Organization.make.guid }
               let(:params) {
-                { type: 'organization', organizations: [new_org_guid] }
+                { type: 'organization', organizations: [{ guid: new_org_guid }] }
               }
               let(:message) { ServicePlanVisibilityUpdateMessage.new(params) }
 
@@ -118,7 +118,7 @@ module VCAP
                 end
 
                 it 'ignores orgs where the visibility is already created' do
-                  params[:organizations] << org.guid
+                  params[:organizations] << { guid: org.guid }
                   updated_plan = subject.update(service_plan, message, append_organizations: true)
                   expect(updated_plan.reload.visibility_type).to eq 'organization'
                   visible_org_guids = updated_plan.service_plan_visibilities.map(&:organization_guid)
@@ -190,7 +190,7 @@ module VCAP
 
           context 'when the organization does not exist' do
             let(:service_plan) { ServicePlan.make(public: false) }
-            let(:message) { ServicePlanVisibilityUpdateMessage.new({ type: 'organization', organizations: ['some-fake-org'] }) }
+            let(:message) { ServicePlanVisibilityUpdateMessage.new({ type: 'organization', organizations: [{ guid: 'some-fake-org' }] }) }
 
             it 'errors nicely' do
               expect {

@@ -484,5 +484,25 @@ module VCAP::CloudController::Validators
         expect(invalid_three).not_to be_valid
       end
     end
+
+    describe 'OrgVisibilityValidator' do
+      let(:visibility_class) do
+        Class.new(fake_class) do
+          validates :field, org_visibility: true
+        end
+      end
+
+      it 'ensures that it has correct structure' do
+        valid = visibility_class.new({ field: [{ guid: '1234' }, { guid: '1234' }, { guid: '1234' }, { guid: '1234' }] })
+        invalid_one = visibility_class.new({ field: { guid: '1234' } })
+        invalid_two = visibility_class.new({ field: [{ guid: 1234 }, { guid: 1234 }] })
+        invalid_three = visibility_class.new({ field: ['123'] })
+
+        expect(valid).to be_valid
+        expect(invalid_one).not_to be_valid
+        expect(invalid_two).not_to be_valid
+        expect(invalid_three).not_to be_valid
+      end
+    end
   end
 end

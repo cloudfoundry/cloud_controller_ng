@@ -19,7 +19,8 @@ module VCAP::CloudController
     validates :organizations,
       if: -> { type == 'organization' },
       array: true,
-      presence: true
+      presence: true,
+      org_visibility: true
     validates :organizations,
       unless: -> { type == 'organization' },
       absence: true
