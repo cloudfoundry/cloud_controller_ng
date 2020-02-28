@@ -34,7 +34,7 @@ RSpec.describe 'Security_Groups Request' do
           'relationships': {
             'staging_spaces': {
               'data': [
-                { 'guid': 'space-guid' },
+                { 'guid': space.guid },
               ]
             },
             'running_spaces': {
