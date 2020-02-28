@@ -29,6 +29,8 @@ RUN apt-get update && \
     jq \
     less \
     dnsutils \
+    zip \
+    unzip \
     libreadline-dev && \
   rm -rf /var/lib/apt/lists/*
 

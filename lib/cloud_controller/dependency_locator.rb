@@ -372,7 +372,7 @@ module CloudController
       kube_client = Kubernetes::KubeClientBuilder.build({
         api_group_url: "#{kubernetes_config[:host_url]}/apis/build.pivotal.io",
         version: 'v1alpha1',
-        service_account: kubernetes_config[:service_account],
+        service_account_token: File.open(kubernetes_config[:service_account][:token_file]).read,
         ca_crt: File.open(kubernetes_config[:ca_file]).read
       })
 

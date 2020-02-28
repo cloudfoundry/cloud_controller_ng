@@ -710,18 +710,21 @@ RSpec.describe CloudController::DependencyLocator do
 
   describe '#kpack_client' do
     before do
-      file = Tempfile.new('k8s_node_ca.crt')
-      file.write('my crt')
-      file.close
+      ca_file = Tempfile.new('k8s_node_ca.crt')
+      ca_file.write('my crt')
+      ca_file.close
+
+      token_file = Tempfile.new('token.token')
+      token_file.write('token')
+      token_file.close
 
       TestConfig.override({
         kubernetes: {
           host_url: 'https://my.kubernetes.io',
           service_account: {
-            name: 'username',
-            token: 'token',
+            token_file: token_file.path,
           },
-          ca_file: file.path
+          ca_file: ca_file.path
         }
       })
     end

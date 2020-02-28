@@ -356,8 +356,7 @@ module VCAP::CloudController
           optional(:kubernetes) => {
             host_url: String,
             service_account: {
-              name: String,
-              token: String,
+              token_file: String,
             },
             ca_file: String,
             optional(:kpack) => {

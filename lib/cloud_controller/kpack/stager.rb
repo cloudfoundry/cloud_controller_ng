@@ -33,7 +33,10 @@ module Kpack
           labels: {
             APP_GUID_LABEL_KEY.to_sym =>  staging_details.package.app.guid,
             BUILD_GUID_LABEL_KEY.to_sym =>  staging_details.staging_guid
-          }
+          },
+          annotations: {
+            'sidecar.istio.io/inject' => 'false'
+          },
         },
         spec: {
           serviceAccount: registry_service_account_name,

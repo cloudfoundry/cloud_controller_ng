@@ -9,13 +9,13 @@ module Kubernetes
     class MissingCredentialsError < Error; end
 
     class << self
-      def build(api_group_url:, version:, service_account:, ca_crt:)
-        if [api_group_url, service_account, ca_crt].any?(&:blank?)
+      def build(api_group_url:, version:, service_account_token:, ca_crt:)
+        if [api_group_url, service_account_token, ca_crt].any?(&:blank?)
           raise MissingCredentialsError.new('Missing credentials for Kubernetes')
         end
 
         auth_options = {
-          bearer_token: service_account[:token]
+          bearer_token: service_account_token
         }
         ssl_options = {
           ca: ca_crt
