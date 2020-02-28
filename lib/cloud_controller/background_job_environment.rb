@@ -12,11 +12,11 @@ class BackgroundJobEnvironment
 
   READINESS_SOCKET_QUEUE_DEPTH = 100
 
-  def setup_environment
+  def setup_environment(open_readiness=false)
     VCAP::CloudController::DB.load_models(@config.get(:db), Steno.logger('cc.background'))
     @config.configure_components
 
-    if @config.get(:readiness_port)
+    if open_readiness
       open_readiness_port
     end
 

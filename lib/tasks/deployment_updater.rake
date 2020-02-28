@@ -4,7 +4,7 @@ namespace :deployment_updater do
     require 'cloud_controller/deployment_updater/scheduler'
 
     RakeConfig.context = :deployment_updater
-    BackgroundJobEnvironment.new(RakeConfig.config).setup_environment
+    BackgroundJobEnvironment.new(RakeConfig.config).setup_environment(true)
     VCAP::CloudController::DeploymentUpdater::Scheduler.start
   end
 end
