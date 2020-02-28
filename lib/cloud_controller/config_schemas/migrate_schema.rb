@@ -5,7 +5,7 @@ module VCAP::CloudController
     class MigrateSchema < VCAP::Config
       define_schema do
         {
-          max_migration_duration_in_minutes: Integer,
+          optional(:max_migration_duration_in_minutes) => Integer,
 
           db: {
             optional(:database) => Hash, # db connection hash for sequel

@@ -16,6 +16,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServiceOfferingPresenter d
   let(:service_broker) { VCAP::CloudController::ServiceBroker.make }
   let(:instances_retrievable) { false }
   let(:bindings_retrievable) { false }
+  let(:allow_context_updates) { false }
   let(:created_at) { Time.now.round(0) - 100 }
 
   let(:service_offering) do
@@ -33,6 +34,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServiceOfferingPresenter d
       service_broker: service_broker,
       instances_retrievable: instances_retrievable,
       bindings_retrievable: bindings_retrievable,
+      allow_context_updates: allow_context_updates,
       created_at: created_at
     )
   end
@@ -80,7 +82,8 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServiceOfferingPresenter d
             'plan_updateable': updateable,
             'bindable': bindable,
             'instances_retrievable': instances_retrievable,
-            'bindings_retrievable': bindings_retrievable
+            'bindings_retrievable': bindings_retrievable,
+            'allow_context_updates': allow_context_updates,
           }
         },
         'metadata': {
@@ -150,6 +153,14 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServiceOfferingPresenter d
 
       it 'displays `true``' do
         expect(result.dig(:broker_catalog, :features, :bindings_retrievable)).to be(true)
+      end
+    end
+
+    context 'when `allow_context_updates` is true' do
+      let(:allow_context_updates) { true }
+
+      it 'displays `true``' do
+        expect(result.dig(:broker_catalog, :features, :allow_context_updates)).to be(true)
       end
     end
 

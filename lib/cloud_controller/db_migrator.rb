@@ -3,7 +3,6 @@ require 'timeout'
 class DBMigrator
   MIGRATIONS_DIR = File.expand_path('../../db', File.dirname(__FILE__))
   SEQUEL_MIGRATIONS = File.join(MIGRATIONS_DIR, 'migrations')
-  TWO_WEEKS = 20160
 
   def self.from_config(config, db_logger)
     VCAP::CloudController::Encryptor.db_encryption_key = config.get(:db_encryption_key)
@@ -11,9 +10,9 @@ class DBMigrator
     new(db, config.get(:max_migration_duration_in_minutes))
   end
 
-  def initialize(db, max_migration_duration_in_minutes=TWO_WEEKS)
+  def initialize(db, max_migration_duration_in_minutes=nil)
     @db = db
-    @max_migration_duration_in_minutes = max_migration_duration_in_minutes
+    @timeout_in_minutes = default_two_weeks(max_migration_duration_in_minutes)
   end
 
   def apply_migrations(opts={})
@@ -37,11 +36,20 @@ class DBMigrator
     end
 
     timeout_message = 'ccdb.max_migration_duration_in_minutes exceeded'
-    Timeout.timeout(@max_migration_duration_in_minutes * 60, message: timeout_message) do
+    Timeout.timeout(@timeout_in_minutes * 60, message: timeout_message) do
       sleep(1) until db_is_current_or_newer_than_local_migrations?
     end
 
     logger.info('database schema is as new or newer than locally available migrations')
+  end
+
+  private
+
+  TWO_WEEKS = 20160
+  def default_two_weeks(duration_in_minutes)
+    return TWO_WEEKS if duration_in_minutes.nil?
+
+    duration_in_minutes
   end
 
   def db_is_current_or_newer_than_local_migrations?

@@ -3,14 +3,29 @@ require 'presenters/v3/security_group_presenter'
 
 module VCAP::CloudController::Presenters::V3
   RSpec.describe SecurityGroupPresenter do
-    let(:security_group) { VCAP::CloudController::SecurityGroup.make(
-      guid: 'security-group-guid',
-      staging_default: false,
-      running_default: true
-    )
-    }
+    let(:security_group) do
+      VCAP::CloudController::SecurityGroup.make(
+        guid: 'security-group-guid',
+        staging_default: false,
+        running_default: true,
+        rules: [
+          {
+            'protocol': 'tcp',
+            'destination': '10.10.10.0/24',
+            'ports': '443,80,8080'
+          },
+        ]
+      )
+    end
+
+    before do
+      security_group.add_space(space1)
+      security_group.add_staging_space(space2)
+    end
 
     describe '#to_hash' do
+      let(:space1) { VCAP::CloudController::Space.make(guid: 'guid1') }
+      let(:space2) { VCAP::CloudController::Space.make(guid: 'guid2') }
       let(:result) { SecurityGroupPresenter.new(security_group).to_hash }
 
       it 'presents the security group as json' do
@@ -20,6 +35,17 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:name]).to eq(security_group.name)
         expect(result[:globally_enabled][:running]).to eq(true)
         expect(result[:globally_enabled][:staging]).to eq(false)
+        expect(result[:rules]).to eq([
+          {
+            'protocol' => 'tcp',
+            'destination' => '10.10.10.0/24',
+            'ports' => '443,80,8080'
+          }
+        ])
+        expect(result[:relationships][:running_spaces][:data].length).to eq(1)
+        expect(result[:relationships][:staging_spaces][:data].length).to eq(1)
+        expect(result[:relationships][:running_spaces][:data][0][:guid]).to eq(space1.guid)
+        expect(result[:relationships][:staging_spaces][:data][0][:guid]).to eq(space2.guid)
         expect(result[:links][:self][:href]).to match(%r{/v3/security_groups/#{security_group.guid}$})
       end
     end

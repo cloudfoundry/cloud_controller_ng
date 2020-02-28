@@ -3,9 +3,14 @@ require 'presenters/v3/service_plan_presenter'
 
 RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
   let(:guid) { service_plan.guid }
-  let(:maintenance_info_str) { '{"version": "1.0.0", "description":"best plan ever"}' }
+  let(:maintenance_info) do
+    {
+    version: '1.0.0',
+      description: 'best plan ever'
+  }
+  end
   let(:service_plan) do
-    VCAP::CloudController::ServicePlan.make(maintenance_info: maintenance_info_str)
+    VCAP::CloudController::ServicePlan.make(maintenance_info: maintenance_info)
   end
 
   let!(:potato_label) do
@@ -45,6 +50,7 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
         broker_catalog: {
           metadata: {},
           id: service_plan.unique_id,
+          maximum_polling_duration: nil,
           features: {
             bindable: true,
             plan_updateable: false
@@ -105,6 +111,16 @@ RSpec.describe VCAP::CloudController::Presenters::V3::ServicePlanPresenter do
 
       it 'presents the service plan with free false' do
         expect(result[:free]).to eq(false)
+      end
+    end
+
+    context 'when plan has `maximum_polling_duration`' do
+      let(:service_plan) do
+        VCAP::CloudController::ServicePlan.make(maximum_polling_duration: 60)
+      end
+
+      it 'presents the service plan with maximum_polling_duration' do
+        expect(result[:broker_catalog][:maximum_polling_duration]).to eq(60)
       end
     end
 

@@ -171,7 +171,7 @@ RSpec.describe 'V3 service plan visibility' do
       end
 
       context 'and its being updated to "organization"' do
-        let(:req_body) { { type: 'organization', organizations: [org.guid, other_org.guid] } }
+        let(:req_body) { { type: 'organization', organizations: [{ guid: org.guid }, { guid: other_org.guid }] } }
         let(:org_response) { [{ name: org.name, guid: org.guid }, { name: other_org.name, guid: other_org.guid }] }
         let(:successful_response) { { code: 200, response_object: { type: 'organization', organizations: org_response } } }
 
@@ -202,7 +202,7 @@ RSpec.describe 'V3 service plan visibility' do
       end
 
       context 'and its being updated to "organization"' do
-        let(:req_body) { { type: 'organization', organizations: [org.guid, other_org.guid] } }
+        let(:req_body) { { type: 'organization', organizations: [{ guid: org.guid }, { guid: other_org.guid }] } }
         let(:org_response) { [{ name: org.name, guid: org.guid }, { name: other_org.name, guid: other_org.guid }] }
         let(:successful_response) { { code: 200, response_object: { type: 'organization', organizations: org_response } } }
 
@@ -229,7 +229,7 @@ RSpec.describe 'V3 service plan visibility' do
         end
 
         it 'replaces the list of orgs' do
-          body = { type: 'organization', organizations: [third_org.guid] }.to_json
+          body = { type: 'organization', organizations: [{ guid: third_org.guid }] }.to_json
           patch api_url, body, admin_headers
 
           expected_response = { type: 'organization', organizations: [{ name: third_org.name, guid: third_org.guid }] }
@@ -362,7 +362,7 @@ RSpec.describe 'V3 service plan visibility' do
 
         it 'returns an error and rolls back any changes' do
           third_org = VCAP::CloudController::Organization.make
-          body = { type: 'organization', organizations: [third_org.guid, 'invalid-guid'] }.to_json
+          body = { type: 'organization', organizations: [{ guid: third_org.guid }, { guid: 'invalid-guid' }] }.to_json
           patch api_url, body, admin_headers
 
           expect(last_response).to have_status_code(400)
@@ -390,7 +390,7 @@ RSpec.describe 'V3 service plan visibility' do
     context 'when the plan current visibility is "organization"' do
       it 'can add new organizations' do
         yet_another_org = VCAP::CloudController::Organization.make
-        body = { type: 'organization', organizations: [third_org.guid, yet_another_org.guid] }.to_json
+        body = { type: 'organization', organizations: [{ guid: third_org.guid }, { guid: yet_another_org.guid }] }.to_json
         expected_orgs = [org, other_org, third_org, yet_another_org].map do |o|
           { 'guid' => o.guid, 'name' => o.name }
         end
@@ -406,7 +406,7 @@ RSpec.describe 'V3 service plan visibility' do
       end
 
       it 'ignores organizations that already have visibility' do
-        body = { type: 'organization', organizations: [org.guid, third_org.guid] }.to_json
+        body = { type: 'organization', organizations: [{ guid: org.guid }, { guid: third_org.guid }] }.to_json
         expected_orgs = [
           { 'name' => org.name, 'guid' => org.guid },
           { 'name' => other_org.name, 'guid' => other_org.guid },
@@ -436,7 +436,7 @@ RSpec.describe 'V3 service plan visibility' do
         let(:service_plan) { VCAP::CloudController::ServicePlan.make(public: true) }
 
         it 'updates the visibility type AND add the orgs' do
-          body = { type: 'organization', organizations: [org.guid] }.to_json
+          body = { type: 'organization', organizations: [{ guid: org.guid }] }.to_json
           post api_url, body, admin_headers
 
           expect(parsed_response['type']).to eq 'organization'
@@ -447,7 +447,7 @@ RSpec.describe 'V3 service plan visibility' do
       context 'when an org in the list does not exist' do
         it 'returns an error and rolls back any changes' do
           third_org = VCAP::CloudController::Organization.make
-          body = { type: 'organization', organizations: [third_org.guid, 'invalid-guid'] }.to_json
+          body = { type: 'organization', organizations: [{ guid: third_org.guid }, { guid: 'invalid-guid' }] }.to_json
           post api_url, body, admin_headers
 
           expect(last_response).to have_status_code(400)
@@ -480,7 +480,7 @@ RSpec.describe 'V3 service plan visibility' do
       end
 
       it 'cannot be updated' do
-        body = { type: 'organization', organizations: [org.guid] }.to_json
+        body = { type: 'organization', organizations: [{ guid: org.guid }] }.to_json
         post api_url, body, admin_headers
 
         expect(last_response).to have_status_code(422)
@@ -502,7 +502,7 @@ RSpec.describe 'V3 service plan visibility' do
     end
 
     context 'permissions' do
-      let(:req_body) { { type: 'organization', organizations: [third_org.guid] } }
+      let(:req_body) { { type: 'organization', organizations: [{ guid: third_org.guid }] } }
       let(:org_response) { [
         { name: org.name, guid: org.guid },
         { name: other_org.name, guid: other_org.guid },

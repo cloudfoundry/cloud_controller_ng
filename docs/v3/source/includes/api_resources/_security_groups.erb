@@ -8,6 +8,31 @@
     "running": true,
     "staging": false
   },
+  "rules": [
+    {
+      "protocol": "tcp",
+      "destination": "10.10.10.0/24",
+      "ports": "443,80,8080"
+    },
+    {
+      "protocol": "icmp",
+      "destination": "10.10.10.0/24",
+      "type": 8,
+      "code": 0,
+      "description": "Allow ping requests to private services"
+    }
+  ],
+  "relationships": {
+    "staging_spaces": {
+      "data": [
+        { "guid": "space-guid-1" },
+        { "guid": "space-guid-2" }
+      ]
+    },
+    "running_spaces": {
+      "data": []
+    }
+  },
   "links": {
     "self": {
       "href": "https://api.example.org/v3/security_groups/b85a788e-671f-4549-814d-e34cdb2f539a"
@@ -15,3 +40,7 @@
   }
 }
 <% end %>
+
+<% content_for :paginated_security_group, File.read(__dir__ + '/security_group_paginated.json') %>
+
+
