@@ -6,12 +6,22 @@ RSpec.describe 'Security_Groups Request' do
   let(:org) { space.organization }
   let(:user) { VCAP::CloudController::User.make(guid: 'user-guid') }
   let(:admin_header) { admin_headers_for(user) }
+  let(:default_rules) do
+    [
+      {
+        protocol: 'udp',
+        ports: '8080',
+        destination: '198.41.191.47/1',
+      }
+    ]
+  end
 
   describe 'POST /v3/security_groups' do
     let(:api_call) { lambda { |user_headers| post '/v3/security_groups', params.to_json, user_headers } }
 
     context 'creating a security group' do
       let(:security_group_name) { 'security_group_name' }
+      let(:rules) { [] }
 
       let(:params) do
         {
@@ -20,6 +30,7 @@ RSpec.describe 'Security_Groups Request' do
             'running': true,
             'staging': false
           },
+          'rules': rules,
           'relationships': {
             'staging_spaces': {
               'data': [
@@ -43,14 +54,15 @@ RSpec.describe 'Security_Groups Request' do
             'running': true,
             'staging': false
           },
-          'relationships': {
-            'staging_spaces': {
-              'data': [
-                { 'guid': 'space-guid' },
+          rules: [],
+          relationships: {
+            staging_spaces: {
+              data: [
+                { guid: 'space-guid' },
               ]
             },
-            'running_spaces': {
-              'data': []
+            running_spaces: {
+              data: []
             }
           },
           links: {
@@ -69,6 +81,67 @@ RSpec.describe 'Security_Groups Request' do
       end
 
       it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+
+      context 'when creating a security group with rules' do
+        let(:rules) do
+          [
+            {
+              'protocol': 'tcp',
+              'destination': '10.10.10.0/24',
+              'ports': '443,80,8080'
+            },
+            {
+              'protocol': 'icmp',
+              'destination': '10.10.10.0/24',
+              'type': 8,
+              'code': 0,
+              'description': 'Allow ping requests to private services'
+            },
+          ]
+        end
+
+        let(:expected_response) do
+          {
+            guid: UUID_REGEX,
+            created_at: iso8601,
+            updated_at: iso8601,
+            name: security_group_name,
+            globally_enabled: {
+              'running': true,
+              'staging': false
+            },
+            rules: [
+              {
+                protocol: 'tcp',
+                destination: '10.10.10.0/24',
+                ports: '443,80,8080'
+              },
+              {
+                protocol: 'icmp',
+                destination: '10.10.10.0/24',
+                type: 8,
+                code: 0,
+                description: 'Allow ping requests to private services'
+              },
+            ],
+            relationships: {
+              staging_spaces: {
+                data: [
+                  { guid: 'space-guid' },
+                ]
+              },
+              running_spaces: {
+                data: []
+              }
+            },
+            links: {
+              self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/security_groups\/#{UUID_REGEX}) },
+            }
+          }
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
 
       context 'when a security group with that name already exists' do
         before do
@@ -108,6 +181,7 @@ RSpec.describe 'Security_Groups Request' do
             running: false,
             staging: false
           },
+          rules: default_rules,
           relationships: {
             staging_spaces: {
               data: [],
@@ -132,6 +206,7 @@ RSpec.describe 'Security_Groups Request' do
             running: false,
             staging: false
           },
+          rules: default_rules,
           relationships: {
             staging_spaces: {
               data: [{ guid: 'space-guid' }],
@@ -156,6 +231,7 @@ RSpec.describe 'Security_Groups Request' do
             running: true,
             staging: false
           },
+          rules: default_rules,
           relationships: {
             staging_spaces: {
               data: [],
@@ -180,6 +256,7 @@ RSpec.describe 'Security_Groups Request' do
             running: false,
             staging: false,
           },
+          rules: [],
           relationships: {
             staging_spaces: {
               data: [],
@@ -205,6 +282,7 @@ RSpec.describe 'Security_Groups Request' do
             running: false,
             staging: false,
           },
+          rules: [],
           relationships: {
             staging_spaces: {
               data: [],
@@ -285,6 +363,7 @@ RSpec.describe 'Security_Groups Request' do
             running: false,
             staging: false
           },
+          rules: default_rules,
           relationships: {
             staging_spaces: {
               data: [],
@@ -336,6 +415,7 @@ RSpec.describe 'Security_Groups Request' do
             running: false,
             staging: false
           },
+          rules: default_rules,
           relationships: {
             staging_spaces: {
               data: [{ guid: space.guid }],
@@ -399,6 +479,7 @@ RSpec.describe 'Security_Groups Request' do
             running: true,
             staging: false
           },
+          rules: default_rules,
           relationships: {
             staging_spaces: {
               data: [],

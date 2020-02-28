@@ -10,6 +10,7 @@ module VCAP::CloudController
         SecurityGroup.db.transaction do
           security_group = SecurityGroup.create(
             name: message.name,
+            rules: message.rules,
             staging_default: message.staging,
             running_default: message.running,
           )

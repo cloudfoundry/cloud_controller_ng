@@ -3,12 +3,20 @@ require 'presenters/v3/security_group_presenter'
 
 module VCAP::CloudController::Presenters::V3
   RSpec.describe SecurityGroupPresenter do
-    let(:security_group) { VCAP::CloudController::SecurityGroup.make(
-      guid: 'security-group-guid',
-      staging_default: false,
-      running_default: true
-    )
-    }
+    let(:security_group) do
+      VCAP::CloudController::SecurityGroup.make(
+        guid: 'security-group-guid',
+        staging_default: false,
+        running_default: true,
+        rules: [
+          {
+            'protocol': 'tcp',
+            'destination': '10.10.10.0/24',
+            'ports': '443,80,8080'
+          },
+        ]
+      )
+    end
 
     before do
       security_group.add_space(space1)
@@ -27,6 +35,13 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:name]).to eq(security_group.name)
         expect(result[:globally_enabled][:running]).to eq(true)
         expect(result[:globally_enabled][:staging]).to eq(false)
+        expect(result[:rules]).to eq([
+          {
+            "protocol" => 'tcp',
+            "destination" => '10.10.10.0/24',
+            "ports" => '443,80,8080'
+          }
+        ])
         expect(result[:relationships][:running_spaces][:data].length).to eq(1)
         expect(result[:relationships][:staging_spaces][:data].length).to eq(1)
         expect(result[:relationships][:running_spaces][:data][0][:guid]).to eq(space1.guid)
