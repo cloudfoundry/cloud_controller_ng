@@ -23,8 +23,8 @@ module VCAP::CloudController
 
             expect(created_group.guid).to be_a_guid
             expect(created_group.name).to eq 'secure-group'
-            expect(created_group.running_default).to be_nil
-            expect(created_group.staging_default).to be_nil
+            expect(created_group.running_default).to eq(false)
+            expect(created_group.staging_default).to eq(false)
             expect(created_group.spaces.count).to eq(0)
           end
         end

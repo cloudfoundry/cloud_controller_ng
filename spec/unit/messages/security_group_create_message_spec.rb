@@ -178,7 +178,7 @@ module VCAP::CloudController
             let(:globally_enabled) { 'bad' }
             it 'is not valid' do
               expect(subject).to be_invalid
-              expect(subject.errors[:globally_enabled]).to eq(['must be a hash'])
+              expect(subject.errors[:globally_enabled]).to eq(['must be an object'])
             end
           end
 

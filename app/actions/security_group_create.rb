@@ -11,8 +11,8 @@ module VCAP::CloudController
           security_group = SecurityGroup.create(
             name: message.name,
             rules: message.rules,
-            staging_default: message.staging,
-            running_default: message.running,
+            staging_default: message.staging || false,
+            running_default: message.running || false,
           )
         end
         staging_spaces = valid_spaces(message.staging_space_guids)
