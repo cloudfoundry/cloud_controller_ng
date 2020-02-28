@@ -1,6 +1,7 @@
 require 'messages/security_group_create_message'
 require 'messages/security_group_list_message'
 require 'actions/security_group_create'
+require 'fetchers/security_group_list_fetcher'
 require 'presenters/v3/security_group_presenter'
 
 class SecurityGroupsController < ApplicationController
@@ -32,7 +33,12 @@ class SecurityGroupsController < ApplicationController
 
   def index
     message = SecurityGroupListMessage.from_params(query_params)
-    dataset = SecurityGroup.where(guid: permission_queryer.readable_security_group_guids)
+
+    dataset = if permission_queryer.can_read_globally?
+                SecurityGroupListFetcher.new.fetch_all(message)
+              else
+                SecurityGroupListFetcher.new.fetch(message, permission_queryer.readable_security_group_guids)
+              end
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::SecurityGroupPresenter,
