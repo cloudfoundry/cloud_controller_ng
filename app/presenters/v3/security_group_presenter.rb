@@ -2,6 +2,16 @@ require 'presenters/v3/base_presenter'
 
 module VCAP::CloudController::Presenters::V3
   class SecurityGroupPresenter < BasePresenter
+    def initialize(
+      resource,
+      show_secrets: false,
+      censored_message: VCAP::CloudController::Presenters::Censorship::REDACTED_CREDENTIAL,
+      visible_space_guids:
+    )
+      super(resource, show_secrets: show_secrets, censored_message: censored_message)
+      @visible_space_guids = visible_space_guids
+    end
+
     def to_hash
       {
         guid: security_group.guid,
@@ -15,10 +25,10 @@ module VCAP::CloudController::Presenters::V3
         },
         relationships: {
           running_spaces: {
-            data: space_guid_hash_for(security_group.spaces)
+            data: space_guid_hash_for(security_group.spaces_dataset)
           },
           staging_spaces: {
-            data: space_guid_hash_for(security_group.staging_spaces)
+            data: space_guid_hash_for(security_group.staging_spaces_dataset)
           }
         },
         links: build_links,
@@ -32,7 +42,7 @@ module VCAP::CloudController::Presenters::V3
     end
 
     def space_guid_hash_for(dataset)
-      dataset.map { |space| { guid: space.guid } }
+      dataset.where(guid: @visible_space_guids).map { |space| { guid: space.guid } }
     end
 
     def build_links

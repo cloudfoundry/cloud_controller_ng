@@ -24,9 +24,11 @@ module VCAP::CloudController::Presenters::V3
     end
 
     describe '#to_hash' do
+      let(:result) { SecurityGroupPresenter.new(security_group, visible_space_guids: visible_space_guids).to_hash }
+
       let(:space1) { VCAP::CloudController::Space.make(guid: 'guid1') }
       let(:space2) { VCAP::CloudController::Space.make(guid: 'guid2') }
-      let(:result) { SecurityGroupPresenter.new(security_group).to_hash }
+      let(:visible_space_guids) { [space1.guid, space2.guid] }
 
       it 'presents the security group as json' do
         expect(result[:guid]).to eq(security_group.guid)
@@ -47,6 +49,15 @@ module VCAP::CloudController::Presenters::V3
         expect(result[:relationships][:running_spaces][:data][0][:guid]).to eq(space1.guid)
         expect(result[:relationships][:staging_spaces][:data][0][:guid]).to eq(space2.guid)
         expect(result[:links][:self][:href]).to match(%r{/v3/security_groups/#{security_group.guid}$})
+      end
+
+      describe 'when some associated spaces are not visible' do
+        let(:visible_space_guids) { [] }
+
+        it 'does not display the spaces that are not visible' do
+          expect(result[:relationships][:running_spaces][:data]).to be_empty
+          expect(result[:relationships][:staging_spaces][:data]).to be_empty
+        end
       end
     end
   end

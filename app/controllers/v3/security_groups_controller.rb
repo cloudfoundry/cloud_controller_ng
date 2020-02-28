@@ -12,7 +12,10 @@ class SecurityGroupsController < ApplicationController
 
     security_group = SecurityGroupCreate.create(message)
 
-    render status: :created, json: Presenters::V3::SecurityGroupPresenter.new(security_group)
+    render status: :created, json: Presenters::V3::SecurityGroupPresenter.new(
+      security_group,
+      visible_space_guids: permission_queryer.readable_space_guids
+    )
   rescue SecurityGroupCreate::Error => e
     unprocessable!(e)
   end
@@ -21,7 +24,10 @@ class SecurityGroupsController < ApplicationController
     resource_not_found!(:security_group) unless permission_queryer.readable_security_group_guids.include?(hashed_params[:guid])
     security_group = SecurityGroup.first(guid: hashed_params[:guid])
 
-    render status: :ok, json: Presenters::V3::SecurityGroupPresenter.new(security_group)
+    render status: :ok, json: Presenters::V3::SecurityGroupPresenter.new(
+      security_group,
+      visible_space_guids: permission_queryer.readable_space_guids
+    )
   end
 
   def index
@@ -33,6 +39,7 @@ class SecurityGroupsController < ApplicationController
       paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
       path: '/v3/security_groups',
       message: message,
+      extra_presenter_args: { visible_space_guids: permission_queryer.readable_space_guids },
     )
   end
 end
