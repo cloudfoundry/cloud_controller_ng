@@ -22,7 +22,8 @@ module Logcache
     end
     let(:client) do
       Logcache::Client.new(host: host, port: port, client_ca_path: client_ca_path,
-                           client_cert_path: client_cert_path, client_key_path: client_key_path, tls_subject_name: tls_subject_name, temporary_ignore_server_unavailable_errors: false)
+                           client_cert_path: client_cert_path, client_key_path: client_key_path, tls_subject_name: tls_subject_name,
+                           temporary_ignore_server_unavailable_errors: false)
     end
     let(:expected_request_options) { { 'headers' => { 'Authorization' => 'bearer oauth-token' } } }
     let(:client_ca) { File.open(client_ca_path).read }
