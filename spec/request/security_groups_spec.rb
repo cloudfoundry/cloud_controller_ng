@@ -162,9 +162,9 @@ RSpec.describe 'Security_Groups Request' do
 
   describe 'GET /v3/security_groups' do
     let(:api_call) { lambda { |user_headers| get '/v3/security_groups', nil, user_headers } }
-    let(:security_group_1) { VCAP::CloudController::SecurityGroup.make }
-    let(:security_group_2) { VCAP::CloudController::SecurityGroup.make }
-    let(:security_group_3) { VCAP::CloudController::SecurityGroup.make(running_default: true) }
+    let(:security_group_1) { VCAP::CloudController::SecurityGroup.make(guid: 'security_group_1_guid') }
+    let(:security_group_2) { VCAP::CloudController::SecurityGroup.make(guid: 'security_group_2_guid') }
+    let(:security_group_3) { VCAP::CloudController::SecurityGroup.make(running_default: true, guid: 'security_group_3_guid') }
 
     before do
       security_group_2.add_staging_space(space)
@@ -191,7 +191,7 @@ RSpec.describe 'Security_Groups Request' do
             }
           },
           links: {
-            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/security_groups\/#{UUID_REGEX}) },
+            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/security_groups\/security_group_1_guid) },
           }
         }
       end
@@ -216,7 +216,7 @@ RSpec.describe 'Security_Groups Request' do
             }
           },
           links: {
-            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/security_groups\/#{UUID_REGEX}) },
+            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/security_groups\/security_group_2_guid) },
           }
         }
       end
@@ -241,7 +241,7 @@ RSpec.describe 'Security_Groups Request' do
             }
           },
           links: {
-            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/security_groups\/#{UUID_REGEX}) },
+            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/security_groups\/security_group_3_guid) },
           }
         }
       end
