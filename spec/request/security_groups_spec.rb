@@ -170,67 +170,6 @@ RSpec.describe 'Security_Groups Request' do
       security_group_2.add_staging_space(space)
     end
 
-    context 'filtering security groups' do
-      before do
-        security_group_2.add_space(space)
-        security_group_3.update(staging_default: true)
-      end
-
-      it 'filters on guids' do
-        get "/v3/security_groups?guids=#{security_group_2.guid}", nil, admin_header
-
-        parsed_response = MultiJson.load(last_response.body)
-
-        expect(last_response.status).to eq(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(security_group_2.guid)
-      end
-
-      it 'filters on names' do
-        get "/v3/security_groups?names=#{security_group_2.name}", nil, admin_header
-
-        parsed_response = MultiJson.load(last_response.body)
-
-        expect(last_response.status).to eq(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(security_group_2.guid)
-      end
-
-      it 'filters on running_space_guids' do
-        get "/v3/security_groups?running_space_guids=#{space.guid}", nil, admin_header
-
-        parsed_response = MultiJson.load(last_response.body)
-
-        expect(last_response.status).to eq(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(security_group_2.guid)
-      end
-
-      it 'filters on staging_space_guids' do
-        get "/v3/security_groups?staging_space_guids=#{space.guid}", nil, admin_header
-
-        parsed_response = MultiJson.load(last_response.body)
-
-        expect(last_response.status).to eq(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(security_group_2.guid)
-      end
-
-      it 'filters on globally_enabled_staging' do
-        get '/v3/security_groups?globally_enabled_staging=true', nil, admin_header
-
-        parsed_response = MultiJson.load(last_response.body)
-
-        expect(last_response.status).to eq(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(security_group_3.guid)
-      end
-
-      it 'filters on globally_enabled_running' do
-        get '/v3/security_groups?globally_enabled_running=true', nil, admin_header
-
-        parsed_response = MultiJson.load(last_response.body)
-
-        expect(last_response.status).to eq(200)
-        expect(parsed_response['resources'].map { |r| r['guid'] }).to contain_exactly(security_group_3.guid)
-      end
-    end
-
     context 'getting security groups' do
       let(:expected_response_1) do
         {
