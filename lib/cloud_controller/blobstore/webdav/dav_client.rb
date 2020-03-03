@@ -197,6 +197,11 @@ module CloudController
         end
       end
 
+      def ensure_bucket_exists
+        # This is not relevant for webdav but it must be defined to conform to the
+        # CloudController::Blobstore::Client interface
+      end
+
       private
 
       def raise_blobstore_error(error_message)

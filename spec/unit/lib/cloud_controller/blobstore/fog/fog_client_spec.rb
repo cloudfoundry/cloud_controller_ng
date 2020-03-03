@@ -2,6 +2,7 @@ require 'spec_helper'
 require 'webrick'
 require_relative '../client_shared'
 require 'fog/aws/models/storage/files'
+require 'fog/aws/models/storage/directories'
 
 module CloudController
   module Blobstore
@@ -17,11 +18,6 @@ module CloudController
         }
       end
       let(:directory_key) { 'a-directory-key' }
-      let(:client_with_root) do
-        FogClient.new(connection_config: connection_config,
-                      directory_key: directory_key,
-                      root_dir: root_dir)
-      end
 
       subject(:client) do
         FogClient.new(connection_config: connection_config,
@@ -31,7 +27,8 @@ module CloudController
       describe 'conforms to blobstore client interface' do
         let(:deletable_blob) { instance_double(FogBlob, file: nil) }
 
-        before do
+        before :each do
+          client.ensure_bucket_exists
           client.cp_to_blobstore(tmpfile.path, key)
         end
 
@@ -61,7 +58,8 @@ module CloudController
                         cdn: cdn)
         end
 
-        before do
+        before :each do
+          client.ensure_bucket_exists
           upload_tmpfile(client, key)
           allow(cdn).to receive(:download_uri).and_return(url_from_cdn)
         end
@@ -86,8 +84,10 @@ module CloudController
       end
 
       context 'a local blobstore' do
-        let(:connection_config) { { provider: 'Local' } }
-
+        let(:connection_config) { { provider: 'Local', local_root: '/' } }
+        before :each do
+          client.ensure_bucket_exists
+        end
         it 'is true if the provider is local' do
           expect(client).to be_local
         end
@@ -98,7 +98,9 @@ module CloudController
         let(:client) { FogClient.new(connection_config: connection_config,
                                      directory_key: directory_key)
         }
-
+        before :each do
+          client.ensure_bucket_exists
+        end
         context 'with existing files' do
           before do
             upload_tmpfile(client, sha_of_content)
@@ -522,6 +524,16 @@ module CloudController
           context 'when a root dir is provided' do
             let(:root_dir) { 'root-dir' }
 
+            let(:client_with_root) do
+              FogClient.new(connection_config: connection_config,
+                directory_key: directory_key,
+                root_dir: root_dir)
+            end
+
+            before :each do
+              client_with_root.ensure_bucket_exists
+            end
+
             it 'only deletes files at the root' do
               allow(client_with_root).to receive(:delete_files).and_call_original
 
@@ -605,6 +617,16 @@ module CloudController
           context 'when a root dir is provided' do
             let(:root_dir) { 'root-dir' }
 
+            let(:client_with_root) do
+              FogClient.new(connection_config: connection_config,
+                directory_key: directory_key,
+                root_dir: root_dir)
+            end
+
+            before :each do
+              client_with_root.ensure_bucket_exists
+            end
+
             it 'only deletes files at the root' do
               path = File.join(local_dir, 'empty_file')
               FileUtils.touch(path)
@@ -673,10 +695,46 @@ module CloudController
             }.to_not raise_error
           end
         end
+
+        describe '#ensure_bucket_exists' do
+          before do
+            Fog::Mock.reset
+          end
+
+          it 'gets the bucket' do
+            expect_any_instance_of(Fog::Storage::AWS::Directories).to receive(:get).with(directory_key, max_keys: 1)
+            subject.ensure_bucket_exists
+          end
+
+          context 'the bucket exists' do
+            it 'does not create the bucket' do
+              subject.ensure_bucket_exists
+              expect_any_instance_of(Fog::Storage::AWS::Directories).not_to receive(:create).with(key: directory_key, public: false)
+              subject.ensure_bucket_exists
+            end
+          end
+
+          context 'the bucket does not exist' do
+            it 'creates the bucket' do
+              expect_any_instance_of(Fog::Storage::AWS::Directories).to receive(:create).with(key: directory_key, public: false)
+              subject.ensure_bucket_exists
+            end
+          end
+        end
       end
 
       context 'with root directory specified' do
         let(:root_dir) { 'my-root' }
+
+        let(:client_with_root) do
+          FogClient.new(connection_config: connection_config,
+            directory_key: directory_key,
+            root_dir: root_dir)
+        end
+
+        before :each do
+          client_with_root.ensure_bucket_exists
+        end
 
         it 'includes the directory in the partitioned key' do
           upload_tmpfile(client_with_root, 'abcdef')

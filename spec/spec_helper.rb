@@ -143,6 +143,14 @@ each_run_block = proc do
 
     rspec_config.before :each do
       Fog::Mock.reset
+
+      if Fog.mock?
+        CloudController::DependencyLocator.instance.droplet_blobstore.ensure_bucket_exists
+        CloudController::DependencyLocator.instance.package_blobstore.ensure_bucket_exists
+        CloudController::DependencyLocator.instance.global_app_bits_cache.ensure_bucket_exists
+        CloudController::DependencyLocator.instance.buildpack_blobstore.ensure_bucket_exists
+      end
+
       Delayed::Worker.destroy_failed_jobs = false
       Sequel::Deprecation.output = StringIO.new
       Sequel::Deprecation.backtrace_filter = 5

@@ -156,36 +156,37 @@ quota_definitions:
 default_quota_definition: default
 
 resource_pool:
+  maximum_size: 42
+  minimum_size: 1
   resource_directory_key: "spec-cc-resources"
   fog_connection:
     blobstore_timeout: 5
-    provider: "AWS"
-    aws_access_key_id: "fake_aws_key_id"
-    aws_secret_access_key: "fake_secret_access_key"
+    provider: "Local"
+  fog_aws_storage_options: {}
 
 packages:
   app_package_directory_key: "cc-packages"
+  max_package_size: 42
+  max_valid_packages_stored: 42
   fog_connection:
     blobstore_timeout: 5
-    provider: "AWS"
-    aws_access_key_id: "fake_aws_key_id"
-    aws_secret_access_key: "fake_secret_access_key"
+    provider: "Local"
+  fog_aws_storage_options: {}
 
 droplets:
   droplet_directory_key: cc-droplets
+  max_staged_droplets_stored: 42
   fog_connection:
     blobstore_timeout: 5
-    provider: "AWS"
-    aws_access_key_id: "fake_aws_key_id"
-    aws_secret_access_key: "fake_secret_access_key"
+    provider: "Local"
+  fog_aws_storage_options: {}
 
 buildpacks:
   buildpack_directory_key: cc-buildpacks
   fog_connection:
     blobstore_timeout: 5
-    provider: "AWS"
-    aws_access_key_id: "fake_aws_key_id"
-    aws_secret_access_key: "fake_secret_access_key"
+    provider: "Local"
+  fog_aws_storage_options: {}
 
 db_encryption_key: "asdfasdfasdf"
 database_encryption:
@@ -319,22 +320,6 @@ staging:
 
 index: 0
 name: api
-resource_pool:
-  maximum_size: 42
-  minimum_size: 1
-  fog_aws_storage_options: {}
-
-buildpacks:
-  fog_aws_storage_options: {}
-
-packages:
-  max_package_size: 42
-  max_valid_packages_stored: 42
-  fog_aws_storage_options: {}
-
-droplets:
-  max_staged_droplets_stored: 42
-  fog_aws_storage_options: {}
 
 request_timeout_in_seconds: 600
 skip_cert_verify: true
@@ -352,31 +337,6 @@ staging:
   auth:
     user: 'bob'
     password: 'laura'
-
-resource_pool:
-  resource_directory_key: ''
-  maximum_size: 42
-  minimum_size: 1
-  fog_connection: {}
-  fog_aws_storage_options: {}
-
-buildpacks:
-  buildpack_directory_key: ''
-  fog_connection: {}
-  fog_aws_storage_options: {}
-
-packages:
-  app_package_directory_key: ''
-  max_package_size: 42
-  max_valid_packages_stored: 42
-  fog_connection: {}
-  fog_aws_storage_options: {}
-
-droplets:
-  droplet_directory_key: ''
-  max_staged_droplets_stored: 42
-  fog_connection: {}
-  fog_aws_storage_options: {}
 
 bits_service:
   enabled: false

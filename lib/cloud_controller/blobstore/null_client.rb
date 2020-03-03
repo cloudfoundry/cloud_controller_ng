@@ -29,6 +29,8 @@ module CloudController
         'http://example.com/nullclient/download_uri'
       end
 
+      def ensure_bucket_exists; end
+
       def blob(key)
         Blob.new
       end
