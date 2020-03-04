@@ -7,7 +7,7 @@ module VCAP::CloudController
 
       def decorate(hash, service_plans)
         hash[:included] ||= {}
-        spaces = service_plans.map {|p| p.service.service_broker.space }.compact.uniq
+        spaces = service_plans.map { |p| p.service.service_broker.space }.compact.uniq
         orgs = spaces.map(&:organization).uniq
 
         hash[:included][:spaces] = spaces.sort_by(&:created_at).map { |space| Presenters::V3::SpacePresenter.new(space).to_hash }
