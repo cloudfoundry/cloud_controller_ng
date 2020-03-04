@@ -7,6 +7,7 @@ RSpec.describe BackgroundJobEnvironment do
     TestConfig.override(
       logging: { level: 'debug2' },
       bits_service: { enabled: false },
+      readiness_port: nil
     )
   end
   let(:config) { TestConfig.config_instance }
@@ -34,7 +35,7 @@ RSpec.describe BackgroundJobEnvironment do
     it 'configures app observer with null stager and runner' do
       expect(VCAP::CloudController::ProcessObserver).to receive(:configure).with(
         instance_of(VCAP::CloudController::Stagers),
-      instance_of(VCAP::CloudController::Runners)
+        instance_of(VCAP::CloudController::Runners)
       )
       background_job_environment.setup_environment
     end

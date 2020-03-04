@@ -1,5 +1,3 @@
-require 'socket'
-
 class BackgroundJobEnvironment
   def initialize(config)
     @config = config

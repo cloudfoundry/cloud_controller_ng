@@ -2,7 +2,12 @@
 local_route: 127.0.0.1
 external_port: 8181
 tls_port: 8182
-readiness_ports: {}
+readiness_ports: {
+  cloud_controller_worker: 9190,
+  cloud_controller_clock: 9191,
+  cc_deployment_updater: 9192,
+  cc_route_syncer: 9193,
+}
 pid_filename: /tmp/cloud_controller.pid
 stacks_file: config/stacks.yml
 
