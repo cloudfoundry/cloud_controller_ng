@@ -750,7 +750,7 @@ module VCAP::CloudController
             space.space_quota_definition_guid = space_quota_definition_guid
             space.save
           }.to raise_error(CloudController::Errors::ApiError,
-            /Could not find VCAP::CloudController::SpaceQuotaDefinition with guid: #{space_quota_definition_guid}/)
+            /Could not find SpaceQuotaDefinition with guid: #{space_quota_definition_guid}/)
         end
       end
     end
