@@ -32,6 +32,10 @@ module VCAP::CloudController
 
           external_port: Integer,
           tls_port: Integer,
+          readiness_ports: {
+              cc_deployment_updater: Integer
+          },
+
           internal_service_hostname: String,
           external_domain: String,
           external_protocol: String,
