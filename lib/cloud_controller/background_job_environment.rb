@@ -10,7 +10,7 @@ class BackgroundJobEnvironment
 
   READINESS_SOCKET_QUEUE_DEPTH = 100
 
-  def setup_environment(readiness_port = nil)
+  def setup_environment(readiness_port=nil)
     VCAP::CloudController::DB.load_models(@config.get(:db), Steno.logger('cc.background'))
     @config.configure_components
 
@@ -24,9 +24,11 @@ class BackgroundJobEnvironment
   private
 
   def open_readiness_port(port)
+    # rubocop:disable Style/GlobalVars
     $socket = Socket.new(Socket::AF_INET, Socket::SOCK_STREAM)
     sockaddr = Socket.pack_sockaddr_in(port, '127.0.0.1')
     $socket.bind(sockaddr)
     $socket.listen(READINESS_SOCKET_QUEUE_DEPTH)
+    # rubocop:enable Style/GlobalVars
   end
 end
