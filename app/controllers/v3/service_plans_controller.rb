@@ -6,6 +6,7 @@ require 'messages/service_plans_list_message'
 require 'actions/service_plan_delete'
 require 'messages/metadata_update_message'
 require 'actions/transactional_metadata_update'
+require 'decorators/include_service_plan_space_organization_decorator'
 
 class ServicePlansController < ApplicationController
   include ServicePermissions
@@ -39,10 +40,14 @@ class ServicePlansController < ApplicationController
                 )
               end
 
+    decorators = []
+    decorators << IncludeServicePlanSpaceOrganizationDecorator if IncludeServicePlanSpaceOrganizationDecorator.match?(message.include)
+
     presenter = Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::ServicePlanPresenter,
       paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
       path: '/v3/service_plans',
+      decorators: decorators
     )
 
     render status: :ok, json: presenter.to_json

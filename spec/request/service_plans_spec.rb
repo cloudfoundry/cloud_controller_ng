@@ -145,11 +145,7 @@ RSpec.describe 'V3 service plans' do
     describe 'visibility of service plans' do
       let!(:public_service_plan) { VCAP::CloudController::ServicePlan.make(public: true, name: 'public') }
       let!(:private_service_plan) { VCAP::CloudController::ServicePlan.make(public: false, name: 'private') }
-      let!(:space_scoped_service_plan) do
-        service_broker = VCAP::CloudController::ServiceBroker.make(space: space)
-        service_offering = VCAP::CloudController::Service.make(service_broker: service_broker)
-        VCAP::CloudController::ServicePlan.make(service: service_offering)
-      end
+      let!(:space_scoped_service_plan) { generate_space_scoped_plan(space) }
       let!(:org_restricted_service_plan) do
         service_plan = VCAP::CloudController::ServicePlan.make(public: false)
         VCAP::CloudController::ServicePlanVisibility.make(organization: org, service_plan: service_plan)
@@ -412,6 +408,26 @@ RSpec.describe 'V3 service plans' do
           get '/v3/service_plans?available=false', {}, admin_headers
           check_filtered_plans(alternate_plan)
         end
+      end
+    end
+
+    describe 'includes' do
+      let(:space_1) { VCAP::CloudController::Space.make }
+      let(:space_2) { VCAP::CloudController::Space.make }
+      let!(:space_scoped_plan_1) { generate_space_scoped_plan(space_1) }
+      let!(:space_scoped_plan_2) { generate_space_scoped_plan(space_2) }
+
+      it 'can include `space.organization`' do
+        get '/v3/service_plans?include=space.organization', nil, admin_headers
+        expect(last_response).to have_status_code(200)
+
+        expect(parsed_response['included']['spaces']).to have(2).element
+        expect(parsed_response['included']['spaces'][0]['guid']).to eq(space_1.guid)
+        expect(parsed_response['included']['spaces'][1]['guid']).to eq(space_2.guid)
+
+        expect(parsed_response['included']['organizations']).to have(2).element
+        expect(parsed_response['included']['organizations'][0]['guid']).to eq(space_1.organization.guid)
+        expect(parsed_response['included']['organizations'][1]['guid']).to eq(space_2.organization.guid)
       end
     end
   end
@@ -725,5 +741,11 @@ RSpec.describe 'V3 service plans' do
     expect({ resources: parsed_response['resources'] }).to match_json_response(
       { resources: plans.map { |p| create_plan_json(p) } }
     )
+  end
+
+  def generate_space_scoped_plan(space)
+    broker = VCAP::CloudController::ServiceBroker.make(space: space)
+    offering = VCAP::CloudController::Service.make(service_broker: broker)
+    VCAP::CloudController::ServicePlan.make(service: offering)
   end
 end

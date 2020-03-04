@@ -8,6 +8,7 @@ module VCAP::CloudController
         {
           'available' => 'true',
           'broker_catalog_ids' => 'broker_catalog_id_1,broker_catalog_id_2',
+          'include' => 'space.organization',
           'names' => 'name_1,name_2',
           'organization_guids' => 'org_guid_1,org_guid_2',
           'service_broker_guids' => 'broker_guid_1,broker_guid_2',
@@ -26,6 +27,7 @@ module VCAP::CloudController
         expect(message).to be_a(ServicePlansListMessage)
         expect(message.available).to eq('true')
         expect(message.broker_catalog_ids).to contain_exactly('broker_catalog_id_1', 'broker_catalog_id_2')
+        expect(message.include).to contain_exactly('space.organization')
         expect(message.names).to contain_exactly('name_1', 'name_2')
         expect(message.organization_guids).to contain_exactly('org_guid_1', 'org_guid_2')
         expect(message.service_broker_guids).to contain_exactly('broker_guid_1', 'broker_guid_2')
@@ -41,6 +43,7 @@ module VCAP::CloudController
 
         expect(message.requested?(:available)).to be_truthy
         expect(message.requested?(:broker_catalog_ids)).to be_truthy
+        expect(message.requested?(:include)).to be_truthy
         expect(message.requested?(:names)).to be_truthy
         expect(message.requested?(:organization_guids)).to be_truthy
         expect(message.requested?(:service_broker_guids)).to be_truthy
@@ -91,6 +94,14 @@ module VCAP::CloudController
           message = ServicePlansListMessage.from_params({ available: 'nope' }.with_indifferent_access)
           expect(message).not_to be_valid
           expect(message.errors[:available]).to include("only accepts values 'true' or 'false'")
+        end
+      end
+
+      describe 'include' do
+        it 'does not accept other values' do
+          message = ServicePlansListMessage.from_params({ include: 'space' }.with_indifferent_access)
+          expect(message).not_to be_valid
+          expect(message.errors[:base]).to include("Invalid included resource: 'space'")
         end
       end
     end
