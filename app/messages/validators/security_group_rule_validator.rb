@@ -1,6 +1,16 @@
 require 'active_model'
 
 class RulesValidator < ActiveModel::Validator
+  ALLOWED_RULE_KEYS = [
+    :code,
+    :description,
+    :destination,
+    :log,
+    :ports,
+    :protocol,
+    :type,
+  ].freeze
+
   def validate(record)
     unless record.rules.is_a?(Array)
       record.errors.add :rules, 'must be an array'
@@ -12,6 +22,8 @@ class RulesValidator < ActiveModel::Validator
         add_rule_error('must be an object', record, index)
         next
       end
+
+      validate_allowed_keys(rule, record, index)
 
       add_rule_error("protocol must be 'tcp', 'udp', 'icmp', or 'all'", record, index) unless valid_protocol(rule[:protocol])
 
@@ -30,7 +42,7 @@ class RulesValidator < ActiveModel::Validator
     end
   end
 
-  def is_boolean(value)
+  def boolean?(value)
     [true, false].include? value
   end
 
@@ -38,12 +50,17 @@ class RulesValidator < ActiveModel::Validator
     protocol&.is_a?(String) && %w(tcp udp icmp all).include?(protocol)
   end
 
+  def validate_allowed_keys(rule, record, index)
+    invalid_keys = rule.keys - ALLOWED_RULE_KEYS
+    add_rule_error("unknown field(s): #{invalid_keys.map(&:to_s)}", record, index) if invalid_keys.any?
+  end
+
   def validate_description(rule, record, index)
     add_rule_error('description must be a string', record, index) if rule[:description] && !rule[:description].is_a?(String)
   end
 
   def validate_log(rule, record, index)
-    add_rule_error('log must be a boolean', record, index) if rule[:log] && !is_boolean(rule[:log])
+    add_rule_error('log must be a boolean', record, index) if rule[:log] && !boolean?(rule[:log])
   end
 
   def validate_tcp_udp_protocol(rule, record, index)

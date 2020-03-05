@@ -64,6 +64,22 @@ module VCAP::CloudController::Validators
       end
     end
 
+    context 'when a rule contains an invalid key' do
+      let(:rules) do
+        [
+          {
+            'blork': 'busted',
+            'blark': 'also busted',
+          }
+        ]
+      end
+
+      it 'returns an error about the invalid key' do
+        expect(subject).to be_invalid
+        expect(subject.errors.full_messages).to include 'Rules[0]: unknown field(s): ["blork", "blark"]'
+      end
+    end
+
     describe 'destination validation' do
       context 'the destination is valid' do
         let(:rules) do
