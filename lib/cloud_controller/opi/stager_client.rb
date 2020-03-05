@@ -10,7 +10,7 @@ module OPI
     def stage(staging_guid, staging_details)
       logger.info('stage.request', staging_guid: staging_guid)
 
-      if staging_details.lifecycle.type != VCAP::CloudController::Lifecycles::DOCKER && staging_details.lifecycle.type != VCAP::CloudController::Lifecycles::BUILDPACK
+      unless [VCAP::CloudController::Lifecycles::DOCKER, VCAP::CloudController::Lifecycles::BUILDPACK].include?(staging_details.lifecycle.type)
         raise("lifecycle type `#{staging_details.lifecycle.type}` is invalid")
       end
 
