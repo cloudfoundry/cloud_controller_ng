@@ -62,28 +62,28 @@ module VCAP::CloudController
       end
 
       describe 'globally enabled running' do
-        it 'is invalid if globally enabled running is not a boolean' do
+        it 'accepts a boolean-like string value' do
+          message = SecurityGroupListMessage.from_params globally_enabled_running: 'true'
+          expect(message).to be_valid
+        end
+
+        it 'is invalid if globally enabled running is not a boolean-like string' do
           message = SecurityGroupListMessage.from_params globally_enabled_running: 'not a boolean'
           expect(message).to be_invalid
           expect(message.errors[:globally_enabled_running].length).to eq 1
         end
-
-        it 'accepts and array of globally enabled running' do
-          message = SecurityGroupListMessage.from_params globally_enabled_running: true
-          expect(message).to be_valid
-        end
       end
 
       describe 'globally enabled staging' do
-        it 'is invalid if globally enabled staging is not a boolean' do
+        it 'accepts a boolean-like string value' do
+          message = SecurityGroupListMessage.from_params globally_enabled_staging: 'true'
+          expect(message).to be_valid
+        end
+
+        it 'is invalid if globally enabled staging is not a boolean-like string' do
           message = SecurityGroupListMessage.from_params globally_enabled_staging: 'not a boolean'
           expect(message).to be_invalid
           expect(message.errors[:globally_enabled_staging].length).to eq 1
-        end
-
-        it 'accepts a boolean value' do
-          message = SecurityGroupListMessage.from_params globally_enabled_staging: true
-          expect(message).to be_valid
         end
       end
 

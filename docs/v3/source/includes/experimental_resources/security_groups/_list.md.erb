@@ -28,6 +28,12 @@ Content-Type: application/json
 
 Name | Type | Description
 ---- | ---- | -----------
+**guids** | _list of strings_ | Comma-delimited list of security group guids to filter by.
+**names** | _list of strings_ | Comma-delimited list of security group names to filter by.
+**globally_enabled_running** | _boolean_ | If true, only include the security groups that are enabled for running.
+**globally_enabled_staging** | _boolean_ | If true, only include the security groups that are enabled for staging.
+**running_space_guids** | _list of strings_ | Comma-delimited list of space guids to filter by.
+**staging_space_guids** | _list of strings_ | Comma-delimited list of space guids to filter by.
 **page** | _integer_ | Page to display. Valid values are integers >= 1.
 **per_page** | _integer_ | Number of results per page. <br>Valid values are 1 through 5000.
 **order_by** | _string_ | Value to sort by. Defaults to ascending. Prepend with `-` to sort descending. <br>Valid values are `created_at`, `updated_at`.
