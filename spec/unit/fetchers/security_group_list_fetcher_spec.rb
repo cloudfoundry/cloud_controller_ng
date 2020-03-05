@@ -5,7 +5,7 @@ require 'fetchers/security_group_list_fetcher'
 
 module VCAP::CloudController
   RSpec.describe SecurityGroupListFetcher do
-    let(:fetcher) { SecurityGroupListFetcher.new }
+    let(:fetcher) { SecurityGroupListFetcher }
     let(:message) { SecurityGroupListMessage.from_params(filters) }
     let(:filters) { {} }
     let!(:security_group_1) { SecurityGroup.make }

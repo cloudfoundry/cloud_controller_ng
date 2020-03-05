@@ -36,9 +36,9 @@ class SecurityGroupsController < ApplicationController
     unprocessable!(message.errors.full_messages) unless message.valid?
 
     dataset = if permission_queryer.can_read_globally?
-                SecurityGroupListFetcher.new.fetch_all(message)
+                SecurityGroupListFetcher.fetch_all(message)
               else
-                SecurityGroupListFetcher.new.fetch(message, permission_queryer.readable_security_group_guids)
+                SecurityGroupListFetcher.fetch(message, permission_queryer.readable_security_group_guids)
               end
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
