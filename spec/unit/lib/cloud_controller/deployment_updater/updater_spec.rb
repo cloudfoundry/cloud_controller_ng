@@ -24,7 +24,7 @@ module VCAP::CloudController
         instances: current_deploying_instances,
         guid: 'guid-final',
         revision: revision,
-        state: ProcessModel::STOPPED,
+        state: ProcessModel::STARTED,
       )
     end
     let(:revision) { RevisionModel.make(app: app, droplet: droplet, version: 300) }
@@ -32,7 +32,7 @@ module VCAP::CloudController
     let(:space) { web_process.space }
     let(:original_web_process_instance_count) { 6 }
     let(:current_web_instances) { 2 }
-    let(:current_deploying_instances) { 0 }
+    let(:current_deploying_instances) { 1 }
 
     let(:deployment) do
       DeploymentModel.make(
@@ -67,6 +67,8 @@ module VCAP::CloudController
       end
 
       it 'scales the old web process down by one after the first iteration' do
+        subject.scale
+
         expect {
           subject.scale
         }.to change {
@@ -80,6 +82,43 @@ module VCAP::CloudController
         }.to change {
           deploying_web_process.reload.instances
         }.by(1)
+      end
+
+      context 'when the new web process is STOPPED' do
+        let!(:deploying_web_process) do
+          ProcessModel.make(
+            app: web_process.app,
+            type: ProcessTypes::WEB,
+            instances: current_deploying_instances,
+            guid: 'guid-final',
+            revision: revision,
+            state: ProcessModel::STOPPED,
+          )
+        end
+
+        context 'and has no instances' do
+          let(:current_deploying_instances) { 0 }
+
+          it 'starts the deploying web process' do
+            expect {
+              subject.scale
+            }.to change {
+              deploying_web_process.reload.state
+            }.to(ProcessModel::STARTED)
+          end
+        end
+
+        context 'but has instances' do
+          let(:current_deploying_instances) { 1 }
+
+          it 'it does not (re) start the deploying web process' do
+            expect {
+              subject.scale
+            }.not_to change {
+              deploying_web_process.reload.state
+            }
+          end
+        end
       end
 
       context 'when the deployment process has reached original_web_process_instance_count' do

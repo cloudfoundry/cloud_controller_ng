@@ -164,8 +164,8 @@ module VCAP::CloudController
             deploying_web_process = app.reload.newest_web_process
 
             expect(deploying_web_process.type).to eq(ProcessTypes::WEB)
-            expect(deploying_web_process.state).to eq(ProcessModel::STARTED)
-            expect(deploying_web_process.instances).to eq(1)
+            expect(deploying_web_process.state).to eq(ProcessModel::STOPPED)
+            expect(deploying_web_process.instances).to eq(0)
             expect(deploying_web_process.command).to eq(web_process.command)
             expect(deploying_web_process.memory).to eq(web_process.memory)
             expect(deploying_web_process.file_descriptors).to eq(web_process.file_descriptors)
@@ -186,8 +186,6 @@ module VCAP::CloudController
             allow(Diego::Runner).to receive(:new).and_return(runner)
 
             DeploymentCreate.create(app: app, message: restart_message, user_audit_info: user_audit_info)
-
-            expect(runner).to have_received(:start).at_least(:once)
           end
 
           context 'when there are multiple web processes' do
@@ -239,8 +237,8 @@ module VCAP::CloudController
               deploying_web_process = app.reload.newest_web_process
 
               expect(deploying_web_process.type).to eq(ProcessTypes::WEB)
-              expect(deploying_web_process.state).to eq(ProcessModel::STARTED)
-              expect(deploying_web_process.instances).to eq(1)
+              expect(deploying_web_process.state).to eq(ProcessModel::STOPPED)
+              expect(deploying_web_process.instances).to eq(0)
               expect(deploying_web_process.command).to eq(newer_web_process.command)
               expect(deploying_web_process.memory).to eq(newer_web_process.memory)
               expect(deploying_web_process.file_descriptors).to eq(newer_web_process.file_descriptors)

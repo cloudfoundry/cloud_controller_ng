@@ -16,15 +16,10 @@ module VCAP::CloudController
           target_state = DeploymentTargetState.new(app, message)
 
           previous_droplet = app.droplet
+
           target_state.apply_to_app(app, user_audit_info)
 
-          revision = nil
-          if target_state.rollback_target_revision
-            revision = RevisionResolver.rollback_app_revision(app, target_state.rollback_target_revision, user_audit_info)
-            log_rollback_event(app.guid, user_audit_info.user_guid, target_state.rollback_target_revision.guid)
-          else
-            revision = RevisionResolver.update_app_revision(app, user_audit_info)
-          end
+          revision = find_target_revision(app, target_state, user_audit_info)
 
           previous_deployment = DeploymentModel.find(app: app, state: DeploymentModel::DEPLOYING_STATE)
 
@@ -63,10 +58,6 @@ module VCAP::CloudController
           end
 
           process = create_deployment_process(app, deployment.guid, revision)
-          # Need to transition from STOPPED to STARTED to engage the ProcessObserver to desire the LRP.
-          # It'd be better to do this via Diego::Runner.new(process, config).start,
-          # but it is nontrivial to get that working in test.
-          process.reload.update(state: ProcessModel::STARTED)
 
           deployment.update(deploying_web_process: process)
 
@@ -104,7 +95,7 @@ module VCAP::CloudController
           app: app,
           type: ProcessTypes::WEB,
           state: ProcessModel::STOPPED,
-          instances: 1,
+          instances: 0,
           command: command,
           memory: web_process.memory,
           file_descriptors: web_process.file_descriptors,
@@ -152,6 +143,16 @@ module VCAP::CloudController
       end
 
       private
+
+      def find_target_revision(app, target_state, user_audit_info)
+        if target_state.rollback_target_revision
+          revision = RevisionResolver.rollback_app_revision(app, target_state.rollback_target_revision, user_audit_info)
+          log_rollback_event(app.guid, user_audit_info.user_guid, target_state.rollback_target_revision.guid)
+        else
+          revision = RevisionResolver.update_app_revision(app, user_audit_info)
+        end
+        revision
+      end
 
       def deployment_for_stopped_app(app, message, previous_deployment, previous_droplet, revision, target_state, user_audit_info)
         # Do not create a revision here because AppStart will not handle the rollback case

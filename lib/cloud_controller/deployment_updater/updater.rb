@@ -85,7 +85,12 @@ module VCAP::CloudController
             return
           end
 
-          scale_down_oldest_web_process_with_instances
+          if deploying_web_process.instances.zero?
+            deploying_web_process.update(state: ProcessModel::STARTED)
+          else
+            scale_down_oldest_web_process_with_instances
+          end
+
           deploying_web_process.update(instances: deploying_web_process.instances + 1)
         end
       end
@@ -179,6 +184,8 @@ module VCAP::CloudController
       end
 
       def ready_to_scale?
+        return true if deployment.deploying_web_process.instances.zero?
+
         instances = instance_reporters.all_instances_for_app(deployment.deploying_web_process)
         instances.all? { |_, val| val[:state] == VCAP::CloudController::Diego::LRP_RUNNING }
       rescue CloudController::Errors::ApiError # the instances_reporter re-raises InstancesUnavailable as ApiError
