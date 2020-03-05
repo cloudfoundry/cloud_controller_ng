@@ -4,8 +4,7 @@ namespace :clock do
     require 'cloud_controller/clock/scheduler'
 
     RakeConfig.context = :clock
-    BackgroundJobEnvironment.new(RakeConfig.config).setup_environment(RakeConfig.config.get(:readiness_ports,
-                                                                                            :cloud_controller_clock))
+    BackgroundJobEnvironment.new(RakeConfig.config).setup_environment
     scheduler = VCAP::CloudController::Scheduler.new(RakeConfig.config)
     scheduler.start
   end

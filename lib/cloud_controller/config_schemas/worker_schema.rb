@@ -11,9 +11,6 @@ module VCAP::CloudController
           system_hostnames: [String],
           system_domain: String,
           tls_port: Integer,
-          readiness_ports: {
-              cloud_controller_worker: Integer
-          },
           external_protocol: String,
           internal_service_hostname: String,
           disable_private_domain_cross_space_context_path_route_sharing: bool,

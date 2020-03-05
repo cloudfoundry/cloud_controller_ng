@@ -8,25 +8,10 @@ class BackgroundJobEnvironment
     end
   end
 
-  READINESS_SOCKET_QUEUE_DEPTH = 100
-
-  def setup_environment(readiness_port = nil)
+  def setup_environment
     VCAP::CloudController::DB.load_models(@config.get(:db), Steno.logger('cc.background'))
     @config.configure_components
 
-    if readiness_port
-      open_readiness_port(readiness_port)
-    end
-
     yield if block_given?
-  end
-
-  private
-
-  def open_readiness_port(port)
-    $socket = Socket.new(Socket::AF_INET, Socket::SOCK_STREAM)
-    sockaddr = Socket.pack_sockaddr_in(port, '127.0.0.1')
-    $socket.bind(sockaddr)
-    $socket.listen(READINESS_SOCKET_QUEUE_DEPTH)
   end
 end
