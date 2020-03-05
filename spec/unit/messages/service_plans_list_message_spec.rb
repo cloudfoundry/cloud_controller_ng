@@ -101,7 +101,7 @@ module VCAP::CloudController
         it 'does not accept other values' do
           message = ServicePlansListMessage.from_params({ include: 'space' }.with_indifferent_access)
           expect(message).not_to be_valid
-          expect(message.errors[:base]).to include("Invalid included resource: 'space'")
+          expect(message.errors[:base]).to include(include("Invalid included resource: 'space'"))
         end
       end
     end

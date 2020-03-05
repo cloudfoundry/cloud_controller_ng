@@ -214,7 +214,7 @@ module VCAP::CloudController
         message = fake_class.new({ include: ['stuff'] })
 
         expect(message).to be_invalid
-        expect(message.errors.full_messages[0]).to include("Invalid included resource: 'stuff'")
+        expect(message.errors.full_messages[0]).to include("Invalid included resource: 'stuff'. Valid included resources are: 'foo', 'bar'")
       end
     end
 

@@ -92,7 +92,7 @@ module VCAP::CloudController
           key_counts = Hash.new(0)
           record.include.each do |include_candidate|
             if !options[:valid_values].member?(include_candidate)
-              record.errors[:base] << "Invalid included resource: '#{include_candidate}'"
+              record.errors[:base] << "Invalid included resource: '#{include_candidate}'. Valid included resources are: '#{options[:valid_values].join("', '")}'"
             else
               key_counts[include_candidate] += 1
               if key_counts[include_candidate] == 2
