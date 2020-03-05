@@ -47,6 +47,7 @@ RSpec.describe BackgroundJobEnvironment do
     end
 
     context 'readiness_port provided' do
+
       before do
         TestConfig.override(readiness_port: 9999)
       end
