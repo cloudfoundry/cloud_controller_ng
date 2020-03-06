@@ -33,6 +33,7 @@ class ServiceOfferingsController < ApplicationController
     presenter = Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::ServiceOfferingPresenter,
       paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
+      message: message,
       path: '/v3/service_offerings',
     )
 

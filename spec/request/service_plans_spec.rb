@@ -219,6 +219,14 @@ RSpec.describe 'V3 service plans' do
       end
     end
 
+    describe 'pagination' do
+      let!(:service_plan_1) { VCAP::CloudController::ServicePlan.make(public: true, active: true) }
+      let!(:service_plan_2) { VCAP::CloudController::ServicePlan.make(public: true, active: true) }
+
+      let(:resources) { [service_plan_1, service_plan_2] }
+      it_behaves_like 'paginated response', '/v3/service_plans'
+    end
+
     describe 'filters' do
       describe 'organization_guids' do
         let(:org_1) { VCAP::CloudController::Organization.make }

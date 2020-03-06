@@ -429,16 +429,12 @@ RSpec.describe 'V3 service offerings' do
       end
     end
 
-    context 'when requesting one service offering per page' do
+    context 'pagination' do
       let!(:service_offering_1) { VCAP::CloudController::ServicePlan.make(public: true, active: true).service }
       let!(:service_offering_2) { VCAP::CloudController::ServicePlan.make(public: true, active: true).service }
 
-      it 'returns 200 OK and a body containing one broker with pagination information for the next' do
-        expect_filtered_service_offerings('per_page=1', [service_offering_1])
-
-        expect(parsed_response['pagination']['total_results']).to eq(2)
-        expect(parsed_response['pagination']['total_pages']).to eq(2)
-      end
+      let(:resources) { [service_offering_1, service_offering_2] }
+      it_behaves_like 'paginated response', '/v3/service_offerings'
     end
 
     context 'when the service offerings have labels and annotations' do

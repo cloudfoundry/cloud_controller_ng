@@ -16,6 +16,31 @@ LOCAL_ROLES = %w[
 
 ALL_PERMISSIONS = (LOCAL_ROLES + GLOBAL_SCOPES).freeze
 
+RSpec.shared_examples 'paginated response' do |endpoint|
+  it 'returns pagination information' do
+    expect_filtered_resources(endpoint, 'per_page=1', resources[0, 1])
+
+    expect(parsed_response['pagination']['total_results']).to eq(resources.length)
+    expect(parsed_response['pagination']['total_pages']).to eq(resources.length)
+  end
+
+  it 'keeps filtering information in links' do
+    resources_names = resources.map(&:name)
+    expect_filtered_resources(endpoint, "per_page=1&names=#{resources_names.join(',')}", resources[0, 1])
+    expect(parsed_response['pagination']['next']['href']).to include("names=#{resources_names.join('%2C')}")
+  end
+end
+
+def expect_filtered_resources(endpoint, filter, list)
+  get("#{endpoint}?#{filter}", nil, admin_headers)
+  expect(last_response).to have_status_code(200)
+  expect(parsed_response.fetch('resources').length).to eq(list.length)
+
+  list.each_with_index do |resource, index|
+    expect(parsed_response['resources'][index]['guid']).to eq(resource.guid)
+  end
+end
+
 RSpec.shared_examples 'permissions for list endpoint' do |roles|
   roles.each do |role|
     describe "as an #{role}" do

@@ -273,14 +273,8 @@ RSpec.describe 'V3 service brokers' do
         VCAP::CloudController::ServiceBroker.make(name: 'test-broker-bar', space: space)
       }
 
-      context 'when requesting one broker per page' do
-        it 'returns 200 OK and a body containing one broker with pagination information for the next' do
-          expect_filtered_brokers('per_page=1', [global_service_broker])
-
-          expect(parsed_response['pagination']['total_results']).to eq(2)
-          expect(parsed_response['pagination']['total_pages']).to eq(2)
-        end
-      end
+      let(:resources) { [global_service_broker, space_scoped_service_broker] }
+      it_behaves_like 'paginated response', '/v3/service_brokers'
 
       context 'when requesting with a specific order by name' do
         context 'in ascending order' do
