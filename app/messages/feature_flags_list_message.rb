@@ -8,7 +8,7 @@ module VCAP::CloudController
       super(params, [])
     end
 
-    def initialize(params={})
+    def initialize(*args)
       super
       pagination_options.default_order_by = 'name'
     end

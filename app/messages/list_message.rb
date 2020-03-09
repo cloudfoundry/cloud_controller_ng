@@ -18,11 +18,21 @@ module VCAP::CloudController
     attr_accessor(*ALLOWED_PAGINATION_KEYS, :pagination_params)
     attr_reader :pagination_options
 
-    def initialize(params={})
+    def initialize(params={}, comparable_params=nil)
+      comparable_params ||= { gt_params: [], lt_params: [] }
       params = params.symbolize_keys
       @pagination_params = params.slice(*ALLOWED_PAGINATION_KEYS)
       @pagination_options = PaginationOptions.from_params(params)
+      @comparable_params = comparable_params
       super(params)
+    end
+
+    def gt_params
+      @comparable_params[:gt_params]
+    end
+
+    def lt_params
+      @comparable_params[:lt_params]
     end
 
     def to_param_hash(exclude: [])
@@ -72,16 +82,44 @@ module VCAP::CloudController
     validates_with PaginationPageValidator
     validates_with PaginationOrderValidator, if: -> { @pagination_params[:order_by].present? }
 
-    def self.from_params(params, to_array_keys)
+    def self.from_params(params, to_array_keys, comparable_keys=[])
       opts = params.dup
+
+      comparable_params = {
+        gt_params: [],
+        lt_params: [],
+      }
+
+      comparable_keys.each do |param|
+        make_it_good! opts, param, comparable_params
+      end
+
       to_array_keys.each do |attribute|
         to_array! opts, attribute
       end
 
-      message = new(opts.symbolize_keys)
+      message = new(opts.symbolize_keys, comparable_params)
       message.requirements = parse_label_selector(opts.symbolize_keys[:label_selector]) if message.requested?(:label_selector)
 
       message
+    end
+
+    GREATER_THAN = 'gt'.freeze
+    LESS_THAN = 'lt'.freeze
+
+    def self.make_it_good!(params, key, comparable_params)
+      param_in_question = params[key]
+      return if param_in_question.nil?
+
+      if param_in_question.respond_to?(:key?)
+        if param_in_question.key?(GREATER_THAN)
+          params[key] = param_in_question[GREATER_THAN]
+          comparable_params[:gt_params] << key
+        elsif param_in_question.key?(LESS_THAN)
+          params[key] = param_in_question[LESS_THAN]
+          comparable_params[:lt_params] << key
+        end
+      end
     end
 
     attr_accessor :requirements

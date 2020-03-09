@@ -10,6 +10,7 @@ module VCAP::CloudController
           'target_guids' => 'guid1,guid2',
           'space_guids' => 'guid3,guid4',
           'organization_guids' => 'guid5,guid6',
+          'created_ats' => '2020-02-24T18:14:40Z,2020-02-25T22:03:05Z',
         }
       end
 
@@ -21,6 +22,7 @@ module VCAP::CloudController
         expect(message.target_guids).to eq(['guid1', 'guid2'])
         expect(message.space_guids).to eq(['guid3', 'guid4'])
         expect(message.organization_guids).to eq(['guid5', 'guid6'])
+        expect(message.created_ats).to eq(['2020-02-24T18:14:40Z', '2020-02-25T22:03:05Z'])
       end
     end
 
@@ -36,8 +38,31 @@ module VCAP::CloudController
           'target_guids' => 'guid1,guid2',
           'space_guids' => 'guid3,guid4',
           'organization_guids' => 'guid5,guid6',
+          'created_ats' => '2020-02-24T18:14:40Z,2020-02-25T22:03:05Z',
         })
         expect(message).to be_valid
+      end
+
+      it 'accepts fields with greater-than operator' do
+        message = EventsListMessage.from_params({
+          'created_ats' => {
+            'gt' => '2020-02-24T18:14:40Z'
+          },
+        })
+        expect(message).to be_valid
+        expect(message.created_ats).to eq(['2020-02-24T18:14:40Z'])
+        expect(message.gt_params).to eq(['created_ats'])
+      end
+
+      it 'accepts fields with greater-than operator' do
+        message = EventsListMessage.from_params({
+          'created_ats' => {
+            'lt' => '2020-02-24T18:14:40Z'
+          },
+        })
+        expect(message).to be_valid
+        expect(message.created_ats).to eq(['2020-02-24T18:14:40Z'])
+        expect(message.lt_params).to eq(['created_ats'])
       end
 
       it 'does not accept a field not in this set' do

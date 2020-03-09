@@ -6,13 +6,16 @@ module VCAP::CloudController
       :types,
       :target_guids,
       :space_guids,
-      :organization_guids
+      :organization_guids,
+      :created_ats
     ]
 
     validates_with NoAdditionalParamsValidator
 
     def self.from_params(params)
-      super(params, %w(types target_guids space_guids organization_guids))
+      to_array_keys = %w(types target_guids space_guids organization_guids created_ats)
+      comparable_keys = %w(created_ats)
+      super(params, to_array_keys, comparable_keys)
     end
   end
 end

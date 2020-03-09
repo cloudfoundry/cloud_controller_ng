@@ -188,6 +188,184 @@ RSpec.describe 'Events' do
         })
       end
     end
+
+    context 'filtering by created_at' do
+      let(:now) { Time.now }
+      let(:distant_past) { now - 10.days }
+      let(:less_distant_past) { now - 1.day }
+      let(:event_type) { 'sing.song' }
+
+      let!(:old_event) {
+        VCAP::CloudController::Event.create(
+          type:              event_type,
+          actor:             'crj',
+          actor_type:        'musician',
+          actor_name:        'Carly Rae Jepsen',
+          actor_username:    'Carly Rae Jepsen',
+          actee:             'adoring fans',
+          actee_type:        'fan',
+          actee_name:        'everyone',
+          timestamp:         distant_past,
+          metadata:          { song: 'This Kiss' },
+          space_guid:        '',
+          organization_guid: '',
+          created_at:        distant_past,
+        )
+      }
+
+      let!(:kinda_old_event) {
+        VCAP::CloudController::Event.create(
+          type:              event_type,
+          actor:             'crj',
+          actor_type:        'musician',
+          actor_name:        'Carly Rae Jepsen',
+          actor_username:    'Carly Rae Jepsen',
+          actee:             'adoring fans',
+          actee_type:        'fan',
+          actee_name:        'everyone',
+          timestamp:         less_distant_past,
+          metadata:          { song: 'Cut To The Feeling' },
+          space_guid:        '',
+          organization_guid: '',
+          created_at:        less_distant_past,
+        )
+      }
+
+      let!(:new_event) {
+        VCAP::CloudController::Event.create(
+          type:              event_type,
+          actor:             'crj',
+          actor_type:        'musician',
+          actor_name:        'Carly Rae Jepsen',
+          actor_username:    'Carly Rae Jepsen',
+          actee:             'adoring fans',
+          actee_type:        'fan',
+          actee_name:        'everyone',
+          timestamp:         now,
+          metadata:          { song: 'Party For One' },
+          space_guid:        '',
+          organization_guid: '',
+          created_at:        now,
+        )
+      }
+
+      let(:old_event_json) do
+        {
+          guid: old_event.guid,
+          created_at: distant_past.utc.iso8601,
+          updated_at: iso8601,
+          type: event_type,
+          actor: {
+            guid: 'crj',
+            type: 'musician',
+            name: 'Carly Rae Jepsen'
+          },
+          target: {
+            guid: 'adoring fans',
+            type: 'fan',
+            name: 'everyone'
+          },
+          data: {
+            song: 'This Kiss'
+          },
+          space: nil,
+          organization: nil,
+          links: {
+            self: {
+              href: "#{link_prefix}/v3/audit_events/#{old_event.guid}"
+            }
+          }
+        }
+      end
+
+      let(:kinda_old_event_json) do
+        {
+          guid: kinda_old_event.guid,
+          created_at: less_distant_past.utc.iso8601,
+          updated_at: iso8601,
+          type: event_type,
+          actor: {
+            guid: 'crj',
+            type: 'musician',
+            name: 'Carly Rae Jepsen'
+          },
+          target: {
+            guid: 'adoring fans',
+            type: 'fan',
+            name: 'everyone'
+          },
+          data: {
+            song: 'Cut To The Feeling'
+          },
+          space: nil,
+          organization: nil,
+          links: {
+            self: {
+              href: "#{link_prefix}/v3/audit_events/#{kinda_old_event.guid}"
+            }
+          }
+        }
+      end
+
+      let(:new_event_json) do
+        {
+          guid: new_event.guid,
+          created_at: now.utc.iso8601,
+          updated_at: iso8601,
+          type: event_type,
+          actor: {
+            guid: 'crj',
+            type: 'musician',
+            name: 'Carly Rae Jepsen'
+          },
+          target: {
+            guid: 'adoring fans',
+            type: 'fan',
+            name: 'everyone'
+          },
+          data: {
+            song: 'Party For One'
+          },
+          space: nil,
+          organization: nil,
+          links: {
+            self: {
+              href: "#{link_prefix}/v3/audit_events/#{new_event.guid}"
+            }
+          }
+        }
+      end
+
+      it 'allows filtering audit events by exact datetime (no one would actually do this)' do
+        get "/v3/audit_events?types=#{event_type}&created_ats=#{less_distant_past}", nil, admin_header
+        expect(last_response.status).to eq(200), last_response.body
+        expect({
+          resources: parsed_response['resources']
+        }).to match_json_response({
+          resources: [kinda_old_event_json]
+        })
+      end
+
+      it 'allows filtering for audit events AFTER a given datetime' do
+        get "/v3/audit_events?types=#{event_type}&created_ats[gt]=#{less_distant_past}", nil, admin_header
+        expect(last_response.status).to eq(200), last_response.body
+        expect({
+          resources: parsed_response['resources']
+        }).to match_json_response({
+          resources: [new_event_json]
+        })
+      end
+
+      it 'allows filtering for audit events BEFORE a given datetime' do
+        get "/v3/audit_events?types=#{event_type}&created_ats[lt]=#{less_distant_past}", nil, admin_header
+        expect(last_response.status).to eq(200), last_response.body
+        expect({
+          resources: parsed_response['resources']
+        }).to match_json_response({
+          resources: [old_event_json]
+        })
+      end
+    end
   end
 
   describe 'GET /v3/audit_events/:guid' do
