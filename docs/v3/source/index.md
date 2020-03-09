@@ -231,6 +231,7 @@ includes:
   - resources/spaces/update
   - resources/spaces/delete
   - resources/spaces/get_assigned_isolation_segment
+  - resources/spaces/list_running_security_groups
   - resources/spaces/manage_isolation_segment
   - resources/space_features/header
   - resources/space_features/object
