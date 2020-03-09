@@ -457,37 +457,6 @@ module VCAP::CloudController
               end
             end
 
-            context 'when a start is not requested' do
-              let(:with_start) { false }
-              let(:runner) { instance_double(Diego::Runner, start: nil) }
-              let!(:web_process) { ProcessModel.make(app: app, type: 'web') }
-
-              before do
-                allow(runners).to receive(:runner_for_process).and_return(runner)
-              end
-
-              it 'records a staging complete event for the build' do
-                expect {
-                  subject.staging_complete(success_response, with_start)
-                }.to change { AppUsageEvent.where(state: 'STAGING_STOPPED').count }.from(0).to(1)
-                event = AppUsageEvent.where(state: 'STAGING_STOPPED').last
-                expect(event.buildpack_guid).to eq(buildpack.guid)
-                expect(event.buildpack_name).to eq(buildpack.name)
-              end
-
-              it 'records a buildpack set event for all processes' do
-                ProcessModel.make(app: app, type: 'other')
-                expect {
-                  subject.staging_complete(success_response, with_start)
-                }.to change { AppUsageEvent.where(state: 'BUILDPACK_SET').count }.from(0).to(2)
-              end
-
-              it 'does not start the app' do
-                subject.staging_complete(success_response, with_start)
-                expect(runner).not_to have_received(:start)
-              end
-            end
-
             context 'when the build is already in a completed state' do
               before do
                 build.update(state: BuildModel::FAILED_STATE)
