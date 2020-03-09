@@ -8,11 +8,31 @@ module VCAP::CloudController
         include VCAP::CloudController::Presenters::Mixins::MetadataPresentationHelpers
 
         def to_hash
-          {
-            guid:       service_instance.guid,
+          h = {
+            guid: service_instance.guid,
             created_at: service_instance.created_at,
             updated_at: service_instance.updated_at,
-            name:      service_instance.name,
+            name: service_instance.name,
+            tags: service_instance.tags
+          }
+
+          h = if service_instance.class == ManagedServiceInstance
+                h.merge({
+                  type: 'managed',
+                  maintenance_info: maintenance_info,
+                  upgrade_available: upgrade_available,
+                  dashboard_url: service_instance.dashboard_url,
+                  last_operation: last_operation,
+                })
+              else
+                h.merge({
+                  type: 'user-provided',
+                  syslog_drain_url: service_instance.syslog_drain_url,
+                  route_service_url: service_instance.route_service_url
+                })
+              end
+
+          h.merge({
             relationships: {
               space: {
                 data: {
@@ -25,11 +45,14 @@ module VCAP::CloudController
               annotations: hashified_annotations(service_instance.annotations),
             },
             links: {
+              self: {
+                href: url_builder.build_url(path: "/v3/service_instances/#{service_instance.guid}")
+              },
               space: {
                 href: url_builder.build_url(path: "/v3/spaces/#{service_instance.space.guid}")
               }
             }
-          }
+          })
         end
 
         private
@@ -40,6 +63,21 @@ module VCAP::CloudController
 
         def service_instance
           @resource
+        end
+
+        def maintenance_info
+          service_instance.maintenance_info || {}
+        end
+
+        def upgrade_available
+          plan_maintenance_info = service_instance.service_plan.maintenance_info || {}
+          maintenance_info['version'] != plan_maintenance_info['version']
+        end
+
+        def last_operation
+          return {} if service_instance.last_operation.nil?
+
+          service_instance.last_operation.to_hash({})
         end
       end
     end

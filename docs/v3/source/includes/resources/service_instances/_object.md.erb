@@ -1,10 +1,17 @@
 ### The service instance object
 
 ```
-Example Service Instance object
+Example Managed Service Instance object
 ```
 ```json
-<%= yield_content :single_service_instance %>
+<%= yield_content :single_managed_service_instance %>
+```
+
+```
+Example User-Provided Service Instance object
+```
+```json
+<%= yield_content :single_user_provided_service_instance %>
 ```
 
 Name | Type | Description
@@ -13,7 +20,35 @@ Name | Type | Description
 **guid** | _uuid_ | Unique identifier for the service instance.
 **created_at** | _datetime_ | The time with zone when the object was created.
 **updated_at** | _datetime_ | The time with zone when the object was last updated.
+**type** _(experimental)_| _string_ | Either `managed` or `user-provided`.
+**tags** _(experimental)_| _array of strings_ | Tags are used by apps to identify service instances. They are shown in the app VCAP_SERVICES env.
+**maintenance_info** _(experimental)_| _[maintenance_info object](#the-maintenance-info-object-for-service-instances)_ | Information about the version of this service instance. Only shown when type is `managed`.
+**upgrade_available** _(experimental)_| _bool_ | Whether or not an upgrade of this Service Instance is available on the current Service Plan. Details are available in the maintenance_info object. Only shown when type is `managed`.
+**dashboard_url** _(experimental)_| _string_ | The URL to the service instance dashboard (or null if there is none). Only shown when type is `managed`.
+**last_operation** _(experimental)_| _[last operation object](#the-last-operation-object-for-service-instances)_ | The last operation of this service instance. Only shown when type is `managed`.
+**syslog_drain_url** _(experimental)_| _string_ | URL to which logs for bound applications will be streamed. Only shown when type is `user-provided`.
+**route_service_url** _(experimental)_| _string_ | URL to which requests for bound routes will be forwarded. Only shown when type is `user-provided`.
 **relationships.space** | [_to-one relationship_](#to-one-relationships) | The space the service instance is contained in.
+**metadata.labels** _(experimental)_| [_label object_](#labels) | Labels applied to the service instance.
+**metadata.annotations** _(experimental)_ | [_annotation object_](#annotations) | Annotations applied to the service instance.
 **links** | [_links object_](#links) | Links to related resources.
-**metadata.labels** | [_label object_](#labels) | Labels applied to the service instance.
-**metadata.annotations**  | [_annotation object_](#annotations) | Annotations applied to the service instance.
+
+
+#### The maintenance info object for service instances
+
+Name | Type | Description
+---- | ---- | -----------
+**version** | _string_ | The current semantic version of this Service Instance. Comparing this version with the version of the Service Plan can be used to determine whether or not this Service Instance is up to date with the Service Plan.
+**description** | _string_ | A textual explanation associated with this version.
+
+
+#### The last operation object for service instances
+
+Name | Type | Description
+---- | ---- | -----------
+**type** | _string_ | Either `create`, `update`, or `delete`.
+**state** | _string_ | Either `in progress`, `succeeded`, or `failed`.
+**description** | _string_ | A textual explanation associated with this state.
+**created_at** | _datetime_ | The time with zone when the operation started.
+**updated_at** | _datetime_ | The time with zone when the operation was last updated.
+

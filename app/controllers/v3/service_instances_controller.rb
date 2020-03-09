@@ -8,7 +8,7 @@ require 'presenters/v3/service_instance_presenter'
 require 'actions/service_instance_share'
 require 'actions/service_instance_unshare'
 require 'actions/service_instance_update'
-require 'fetchers/managed_service_instance_list_fetcher'
+require 'fetchers/service_instance_list_fetcher'
 
 class ServiceInstancesV3Controller < ApplicationController
   def index
@@ -16,16 +16,17 @@ class ServiceInstancesV3Controller < ApplicationController
     invalid_param!(message.errors.full_messages) unless message.valid?
 
     dataset = if permission_queryer.can_read_globally?
-                ManagedServiceInstanceListFetcher.new.fetch_all(message: message)
+                ServiceInstanceListFetcher.new.fetch(message, omniscient: true)
               else
-                ManagedServiceInstanceListFetcher.new.fetch(message: message, readable_space_guids: permission_queryer.readable_space_guids)
+                ServiceInstanceListFetcher.new.fetch(message, readable_space_guids: permission_queryer.readable_space_guids)
               end
 
     render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
       presenter: Presenters::V3::ServiceInstancePresenter,
       paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
       path: '/v3/service_instances',
-      message: message)
+      message: message
+    )
   end
 
   def update
