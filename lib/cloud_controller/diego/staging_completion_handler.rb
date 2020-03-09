@@ -112,7 +112,11 @@ module VCAP::CloudController
           end
 
           begin
-            start_process if with_start
+            if with_start
+              start_process
+            else
+              record_process_staged_events
+            end
           rescue SidecarSynchronizeFromAppDroplet::ConflictingSidecarsError => e
             payload[:error] = { message: e.message, id: DEFAULT_STAGING_ERROR }
             handle_failure(payload, with_start)
@@ -150,6 +154,19 @@ module VCAP::CloudController
           end
         end
         @runners.runner_for_process(web_process.reload).start
+      end
+
+      def record_process_staged_events
+        app = droplet.app
+
+        app.db.transaction do
+          app.lock!
+
+          app.processes.each do |process|
+            process.lock!
+            Repositories::AppUsageEventRepository.new.create_from_process(process, 'BUILDPACK_SET')
+          end
+        end
       end
 
       def error_parser
