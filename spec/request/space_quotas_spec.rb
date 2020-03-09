@@ -694,10 +694,10 @@ module VCAP::CloudController
       context 'when applying quota to a space' do
         let(:data_json) do
           {
-            data: [
+            data: a_collection_containing_exactly(
               { guid: space.guid },
               { guid: other_space.guid }
-            ],
+            ),
             links: {
               self: { href: "#{link_prefix}/v3/space_quotas/#{space_quota.guid}/relationships/spaces" },
             }
