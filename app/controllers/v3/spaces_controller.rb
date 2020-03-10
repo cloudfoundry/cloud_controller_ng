@@ -111,6 +111,25 @@ class SpacesV3Controller < ApplicationController
     )
   end
 
+  def staging_security_groups
+    message = SpaceSecurityGroupsListMessage.from_params(query_params)
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    space = SpaceFetcher.new.fetch(hashed_params[:guid])
+    space_not_found! unless space && permission_queryer.can_read_from_space?(space.guid, space.organization.guid)
+
+    unfiltered_group_guids = fetch_staging_security_group_guids(space)
+    dataset = SecurityGroupListFetcher.fetch(message, unfiltered_group_guids)
+
+    render status: :ok, json: Presenters::V3::PaginatedListPresenter.new(
+      presenter: Presenters::V3::SecurityGroupPresenter,
+      paginated_result: SequelPaginator.new.get_page(dataset, message.try(:pagination_options)),
+      path: "/v3/spaces/#{space.guid}/staging_security_groups",
+      message: message,
+      extra_presenter_args: { visible_space_guids: space.guid },
+    )
+  end
+
   def delete_unmapped_routes
     message = SpaceDeleteUnmappedRoutesMessage.new(query_params)
     unprocessable!(message.errors.full_messages) unless message.valid?
@@ -184,6 +203,12 @@ class SpacesV3Controller < ApplicationController
   def fetch_running_security_group_guids(space)
     space_level_groups = SecurityGroup.where(spaces: space)
     global_groups = SecurityGroup.where(running_default: true)
+    space_level_groups.union(global_groups).distinct.map(&:guid)
+  end
+
+  def fetch_staging_security_group_guids(space)
+    space_level_groups = SecurityGroup.where(staging_spaces: space)
+    global_groups = SecurityGroup.where(staging_default: true)
     space_level_groups.union(global_groups).distinct.map(&:guid)
   end
 

@@ -220,6 +220,7 @@ Rails.application.routes.draw do
   get '/spaces', to: 'spaces_v3#index'
   get '/spaces/:guid', to: 'spaces_v3#show'
   get '/spaces/:guid/running_security_groups', to: 'spaces_v3#running_security_groups'
+  get '/spaces/:guid/staging_security_groups', to: 'spaces_v3#staging_security_groups'
   patch '/spaces/:guid', to: 'spaces_v3#update'
   delete 'spaces/:guid', to: 'spaces_v3#destroy'
   delete 'spaces/:guid/routes', to: 'spaces_v3#delete_unmapped_routes'

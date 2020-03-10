@@ -400,6 +400,158 @@ RSpec.describe 'Spaces' do
     end
   end
 
+  describe 'GET /v3/spaces/:space_guid/staging_security_groups' do
+    let!(:space) { VCAP::CloudController::Space.make }
+    let!(:org) { space.organization }
+    let(:security_group) { VCAP::CloudController::SecurityGroup.make name: 'my_super_sec_group' }
+
+    before do
+      security_group.add_staging_space(space)
+    end
+
+    context 'with filters' do
+      before do
+        other_sec_group.add_staging_space(space)
+      end
+
+      let(:expected_response_objects) {
+        [{
+          guid: security_group.guid,
+          created_at: iso8601,
+          updated_at: iso8601,
+          name: 'my_super_sec_group',
+          globally_enabled: {
+            running: false,
+            staging: false
+          },
+          rules: [
+            {
+              protocol: 'udp',
+              ports: '8080',
+              destination: '198.41.191.47/1'
+            }
+          ],
+          relationships: {
+            staging_spaces: {
+              data: [
+                { guid: space.guid }
+              ]
+            },
+            running_spaces: {
+              data: []
+            }
+          },
+          links: {
+            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/security_groups\/#{UUID_REGEX}) },
+          }
+        }]
+      }
+      let(:other_sec_group) { VCAP::CloudController::SecurityGroup.make }
+
+      it 'returns the filtered list' do
+        get "/v3/spaces/#{space.guid}/staging_security_groups?names=my_super_sec_group", nil, admin_header
+        expect(last_response).to have_status_code(200)
+        expect({ resources: parsed_response['resources'] }).to match_json_response({ resources: expected_response_objects })
+
+        expect(parsed_response['pagination']).to match_json_response({
+          total_results: an_instance_of(Integer),
+          total_pages: an_instance_of(Integer),
+          first: { href: /#{link_prefix}#{last_request.path}.+page=\d+&per_page=\d+/ },
+          last: { href: /#{link_prefix}#{last_request.path}.+page=\d+&per_page=\d+/ },
+          next: anything,
+          previous: anything
+        })
+      end
+    end
+
+    context 'with unaffiliated and globally affiliated security groups' do
+      before do
+        security_group.staging_default = true
+      end
+
+      let(:api_call) { lambda { |user_headers| get "/v3/spaces/#{space.guid}/staging_security_groups", nil, user_headers } }
+      let(:response_object) {
+        [
+          {
+            guid: security_group.guid,
+            created_at: iso8601,
+            updated_at: iso8601,
+            name: 'my_super_sec_group',
+            globally_enabled: {
+              running: false,
+              staging: false
+            },
+            rules: [
+              {
+                protocol: 'udp',
+                ports: '8080',
+                destination: '198.41.191.47/1'
+              }
+            ],
+            relationships: {
+              staging_spaces: {
+                data: [
+                  { guid: space.guid }
+                ]
+              },
+              running_spaces: {
+                data: []
+              }
+            },
+            links: {
+              self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/security_groups\/#{UUID_REGEX}) },
+            }
+          },
+          {
+            guid: global_sec_group.guid,
+            created_at: iso8601,
+            updated_at: iso8601,
+            name: 'global',
+            globally_enabled: {
+              running: false,
+              staging: true
+            },
+            rules: [
+              {
+                protocol: 'udp',
+                ports: '8080',
+                destination: '198.41.191.47/1'
+              }
+            ],
+            relationships: {
+              staging_spaces: {
+                data: []
+              },
+              running_spaces: {
+                data: []
+              }
+            },
+            links: {
+              self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/security_groups\/#{UUID_REGEX}) },
+            }
+          },
+
+        ]
+      }
+      let(:unaffiliated_sec_group) { VCAP::CloudController::SecurityGroup.make }
+      let(:global_sec_group) { VCAP::CloudController::SecurityGroup.make staging_default: true, name: 'global' }
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 404)
+        h['admin'] = { code: 200, response_objects: response_object }
+        h['admin_read_only'] = { code: 200, response_objects: response_object }
+        h['global_auditor'] = { code: 200, response_objects: response_object }
+        h['org_manager'] = { code: 200, response_objects: response_object }
+        h['space_manager'] = { code: 200, response_objects: response_object }
+        h['space_auditor'] = { code: 200, response_objects: response_object }
+        h['space_developer'] = { code: 200, response_objects: response_object }
+        h.freeze
+      end
+
+      it_behaves_like 'permissions for list endpoint', ALL_PERMISSIONS
+    end
+  end
+
   describe 'GET /v3/spaces/:space_guid/running_security_groups' do
     let!(:space) { VCAP::CloudController::Space.make }
     let!(:org) { space.organization }
