@@ -74,8 +74,8 @@ Field | Description
 **services** | An array of service-instances to bind to the app. See [_Service-level configuration_](#app-manifest-service-level-configuration).
 **sidecars** | An array of configurations for individual sidecars. See [_Sidecar-level configuration_](#app-manifest-sidecar-level-configuration).
 **stack** | The root filesystem to use with the buildpack, for example `cflinuxfs3`.
-**metadata.labels** _(experimental)_ | [Labels](#labels) applied to the app.
-**metadata.annotations** _(experimental)_ | [Annotations](#annotations) applied to the app.
+**metadata.labels**  | [Labels](#labels) applied to the app.
+**metadata.annotations**  | [Annotations](#annotations) applied to the app.
 **buildpack**  | **DEPRECATED in favor of the `buildpacks` field above.** <br> a) Blank OR `default` OR `null` will automatically select the appropriate default buildpack according to the coding language. <br>b) A URL pointing to a buildpack. <br>c) Name of an installed buildpack.
 
 
