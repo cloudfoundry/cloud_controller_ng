@@ -47,11 +47,6 @@ RSpec.describe BackgroundJobEnvironment do
     end
 
     context 'readiness_port provided' do
-
-      before do
-        TestConfig.override(readiness_port: 9999)
-      end
-
       it 'opens the readiness port' do
         expect { TCPSocket.new('localhost', 9999).close }.to raise_error(Errno::ECONNREFUSED)
         background_job_environment.setup_environment(9999)
