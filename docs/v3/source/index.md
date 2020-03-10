@@ -231,7 +231,6 @@ includes:
   - resources/spaces/update
   - resources/spaces/delete
   - resources/spaces/get_assigned_isolation_segment
-  - resources/spaces/list_running_security_groups
   - resources/spaces/manage_isolation_segment
   - resources/space_features/header
   - resources/space_features/object
@@ -287,6 +286,7 @@ includes:
   - experimental_resources/security_groups/create
   - experimental_resources/security_groups/get
   - experimental_resources/security_groups/list
+  - experimental_resources/security_groups/list_running_security_groups
   - experimental_resources/service_bindings/header
   - experimental_resources/service_bindings/object
   - experimental_resources/service_bindings/create
