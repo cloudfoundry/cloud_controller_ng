@@ -322,6 +322,8 @@ includes:
   - experimental_resources/service_plan_visibility/update
   - experimental_resources/service_plan_visibility/apply
   - experimental_resources/service_plan_visibility/delete
+  - experimental_resources/service_instances/header
+  - experimental_resources/service_instances/get
   - experimental_resources/sidecars/header
   - experimental_resources/sidecars/object
   - experimental_resources/sidecars/create_from_app

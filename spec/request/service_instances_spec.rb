@@ -7,6 +7,80 @@ RSpec.describe 'V3 service instances' do
   let(:space) { VCAP::CloudController::Space.make(organization: org) }
   let(:another_space) { VCAP::CloudController::Space.make }
 
+
+  describe 'GET /v3/service_instances/:guid' do
+    let(:api_call) { lambda { |user_headers| get "/v3/service_instances/#{guid}", nil, user_headers } }
+
+    context 'no such instance' do
+      let(:guid) { 'no-such-guid' }
+
+      let(:expected_codes_and_responses) do
+        Hash.new(code: 404)
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+    end
+
+    context 'managed service instance' do
+      let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: space) }
+      let(:guid) { instance.guid }
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(
+          code: 200,
+          response_object: create_managed_json(instance),
+        )
+        h['org_auditor'] = {code: 404}
+        h['org_billing_manager'] = {code: 404}
+        h['no_role'] = {code: 404}
+        h
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+    end
+
+    context 'user-provided service instance' do
+      let(:instance) { VCAP::CloudController::UserProvidedServiceInstance.make(space: space) }
+      let(:guid) { instance.guid }
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(
+          code: 200,
+          response_object: create_user_provided_json(instance),
+        )
+        h['org_auditor'] = {code: 404}
+        h['org_billing_manager'] = {code: 404}
+        h['no_role'] = {code: 404}
+        h
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+    end
+
+    context 'shared service' do
+      let(:another_space) { VCAP::CloudController::Space.make}
+      let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: another_space) }
+      let(:guid) { instance.guid }
+
+      before do
+        instance.add_shared_space(space)
+      end
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(
+          code: 200,
+          response_object: create_managed_json(instance),
+        )
+        h['org_auditor'] = {code: 404}
+        h['org_billing_manager'] = {code: 404}
+        h['no_role'] = {code: 404}
+        h
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+    end
+  end
+
   describe 'GET /v3/service_instances' do
     let(:api_call) { lambda { |user_headers| get '/v3/service_instances', nil, user_headers } }
 
@@ -127,73 +201,74 @@ RSpec.describe 'V3 service instances' do
         { resources: instances }
       )
     end
-
-    def create_managed_json(instance, labels: {})
-      {
-        guid: instance.guid,
-        name: instance.name,
-        created_at: iso8601,
-        updated_at: iso8601,
-        type: 'managed',
-        dashboard_url: nil,
-        last_operation: {},
-        maintenance_info: {},
-        upgrade_available: false,
-        tags: [],
-        metadata: {
-          labels: labels,
-          annotations: {},
-        },
-        relationships: {
-          space: {
-            data: {
-              guid: instance.space.guid
-            }
-          }
-        },
-        links: {
-          self: {
-            href: %r(#{Regexp.escape(link_prefix)}/v3/service_instances/#{instance.guid})
-          },
-          space: {
-            href: %r(#{Regexp.escape(link_prefix)}/v3/spaces/#{instance.space.guid})
-          },
-        },
-      }
-    end
-
-    def create_user_provided_json(instance, labels: {})
-      {
-        guid: instance.guid,
-        name: instance.name,
-        created_at: iso8601,
-        updated_at: iso8601,
-        type: 'user-provided',
-        syslog_drain_url: instance.syslog_drain_url,
-        route_service_url: nil,
-        tags: [],
-        metadata: {
-          labels: labels,
-          annotations: {},
-        },
-        relationships: {
-          space: {
-            data: {
-              guid: instance.space.guid
-            }
-          }
-        },
-        links: {
-          self: {
-            href: %r(#{Regexp.escape(link_prefix)}/v3/service_instances/#{instance.guid})
-          },
-          space: {
-            href: %r(#{Regexp.escape(link_prefix)}/v3/spaces/#{instance.space.guid})
-          },
-        },
-      }
-    end
   end
+
+  def create_managed_json(instance, labels: {})
+    {
+      guid: instance.guid,
+      name: instance.name,
+      created_at: iso8601,
+      updated_at: iso8601,
+      type: 'managed',
+      dashboard_url: nil,
+      last_operation: {},
+      maintenance_info: {},
+      upgrade_available: false,
+      tags: [],
+      metadata: {
+        labels: labels,
+        annotations: {},
+      },
+      relationships: {
+        space: {
+          data: {
+            guid: instance.space.guid
+          }
+        }
+      },
+      links: {
+        self: {
+          href: %r(#{Regexp.escape(link_prefix)}/v3/service_instances/#{instance.guid})
+        },
+        space: {
+          href: %r(#{Regexp.escape(link_prefix)}/v3/spaces/#{instance.space.guid})
+        },
+      },
+    }
+  end
+
+  def create_user_provided_json(instance, labels: {})
+    {
+      guid: instance.guid,
+      name: instance.name,
+      created_at: iso8601,
+      updated_at: iso8601,
+      type: 'user-provided',
+      syslog_drain_url: instance.syslog_drain_url,
+      route_service_url: nil,
+      tags: [],
+      metadata: {
+        labels: labels,
+        annotations: {},
+      },
+      relationships: {
+        space: {
+          data: {
+            guid: instance.space.guid
+          }
+        }
+      },
+      links: {
+        self: {
+          href: %r(#{Regexp.escape(link_prefix)}/v3/service_instances/#{instance.guid})
+        },
+        space: {
+          href: %r(#{Regexp.escape(link_prefix)}/v3/spaces/#{instance.space.guid})
+        },
+      },
+    }
+  end
+
 
   describe 'unrefactored' do
     let(:user_email) { 'user@email.example.com' }

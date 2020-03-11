@@ -71,6 +71,7 @@ RSpec.describe 'V3 service plans' do
 
         it_behaves_like 'permissions for single object endpoint', COMPLETE_PERMISSIONS
       end
+
       context 'space scoped broker' do
         let!(:broker) { VCAP::CloudController::ServiceBroker.make(space: space) }
         let!(:service_offering) { VCAP::CloudController::Service.make(service_broker: broker) }

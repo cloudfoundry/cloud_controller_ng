@@ -11,6 +11,15 @@ require 'actions/service_instance_update'
 require 'fetchers/service_instance_list_fetcher'
 
 class ServiceInstancesV3Controller < ApplicationController
+  def show
+    service_instance = ServiceInstance.where(guid: hashed_params[:guid]).first
+    service_instance_not_found! if service_instance.nil?
+    service_instance_not_found! unless can_read_service_instance?(service_instance)
+
+    presenter = Presenters::V3::ServiceInstancePresenter.new(service_instance)
+    render status: :ok, json: presenter.to_json
+  end
+
   def index
     message = ServiceInstancesListMessage.from_params(query_params)
     invalid_param!(message.errors.full_messages) unless message.valid?
@@ -145,5 +154,9 @@ class ServiceInstancesV3Controller < ApplicationController
 
   def can_write_space?(space)
     permission_queryer.can_write_to_space?(space.guid)
+  end
+
+  def service_instance_not_found!
+    resource_not_found!(:service_instance)
   end
 end

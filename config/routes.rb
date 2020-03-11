@@ -198,6 +198,14 @@ Rails.application.routes.draw do
   post '/service_plans/:guid/visibility', to: 'service_plan_visibility#apply'
   delete '/service_plans/:guid/visibility/:org_guid', to: 'service_plan_visibility#destroy'
 
+  # service_instances
+  get '/service_instances', to: 'service_instances_v3#index'
+  get '/service_instances/:guid', to: 'service_instances_v3#show'
+  get '/service_instances/:service_instance_guid/relationships/shared_spaces', to: 'service_instances_v3#relationships_shared_spaces'
+  post '/service_instances/:service_instance_guid/relationships/shared_spaces', to: 'service_instances_v3#share_service_instance'
+  patch '/service_instances/:guid', to: 'service_instances_v3#update'
+  delete '/service_instances/:service_instance_guid/relationships/shared_spaces/:space_guid', to: 'service_instances_v3#unshare_service_instance'
+
   # space_features
   get '/spaces/:guid/features/:name', to: 'space_features#show'
   get '/spaces/:guid/features', to: 'space_features#index'
@@ -236,13 +244,6 @@ Rails.application.routes.draw do
 
   post '/apps/:app_guid/tasks', to: 'tasks#create'
   get '/apps/:app_guid/tasks', to: 'tasks#index'
-
-  # service_instances
-  get '/service_instances', to: 'service_instances_v3#index'
-  get '/service_instances/:service_instance_guid/relationships/shared_spaces', to: 'service_instances_v3#relationships_shared_spaces'
-  post '/service_instances/:service_instance_guid/relationships/shared_spaces', to: 'service_instances_v3#share_service_instance'
-  patch '/service_instances/:guid', to: 'service_instances_v3#update'
-  delete '/service_instances/:service_instance_guid/relationships/shared_spaces/:space_guid', to: 'service_instances_v3#unshare_service_instance'
 
   # stacks
   get '/stacks', to: 'stacks#index'
