@@ -188,6 +188,36 @@ module VCAP::CloudController
               expect(logger_spy).to have_received(:info).with(JSON.generate(expected_json))
             end
           end
+
+          context 'kpack lifecycle' do
+            before do
+              allow_any_instance_of(Kpack::Stager).to receive(:stage).and_return 'staging-complete'
+            end
+
+            it 'logs build creates' do
+              Timecop.freeze do
+                app = AppModel.make(:kpack)
+                process = ProcessModel.make(memory: 765, disk_quota: 1234, app: app)
+                PackageModel.make(app: process.app, state: PackageModel::READY_STATE)
+
+                action.stage(process)
+                expected_json = {
+                  'telemetry-source' => 'cloud_controller_ng',
+                  'telemetry-time' => Time.now.to_datetime.rfc3339,
+                  'create-build' => {
+                    'api-version' => 'v2',
+                    'lifecycle' =>  'kpack',
+                    'buildpacks' =>  [],
+                    'stack' =>  nil,
+                    'app-id' =>  Digest::SHA256.hexdigest(process.app.guid),
+                    'build-id' =>  Digest::SHA256.hexdigest(process.latest_build.guid),
+                    'user-id' =>  Digest::SHA256.hexdigest('userguid'),
+                  }
+                }
+                expect(logger_spy).to have_received(:info).with(JSON.generate(expected_json))
+              end
+            end
+          end
         end
       end
     end

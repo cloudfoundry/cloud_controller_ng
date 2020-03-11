@@ -37,5 +37,9 @@ module VCAP::CloudController
     def buildpacks
       []
     end
+
+    def stack
+      nil
+    end
   end
 end
