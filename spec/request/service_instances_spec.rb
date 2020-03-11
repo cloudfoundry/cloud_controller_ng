@@ -7,7 +7,6 @@ RSpec.describe 'V3 service instances' do
   let(:space) { VCAP::CloudController::Space.make(organization: org) }
   let(:another_space) { VCAP::CloudController::Space.make }
 
-
   describe 'GET /v3/service_instances/:guid' do
     let(:api_call) { lambda { |user_headers| get "/v3/service_instances/#{guid}", nil, user_headers } }
 
@@ -30,9 +29,9 @@ RSpec.describe 'V3 service instances' do
           code: 200,
           response_object: create_managed_json(instance),
         )
-        h['org_auditor'] = {code: 404}
-        h['org_billing_manager'] = {code: 404}
-        h['no_role'] = {code: 404}
+        h['org_auditor'] = { code: 404 }
+        h['org_billing_manager'] = { code: 404 }
+        h['no_role'] = { code: 404 }
         h
       end
 
@@ -48,9 +47,9 @@ RSpec.describe 'V3 service instances' do
           code: 200,
           response_object: create_user_provided_json(instance),
         )
-        h['org_auditor'] = {code: 404}
-        h['org_billing_manager'] = {code: 404}
-        h['no_role'] = {code: 404}
+        h['org_auditor'] = { code: 404 }
+        h['org_billing_manager'] = { code: 404 }
+        h['no_role'] = { code: 404 }
         h
       end
 
@@ -58,7 +57,7 @@ RSpec.describe 'V3 service instances' do
     end
 
     context 'shared service' do
-      let(:another_space) { VCAP::CloudController::Space.make}
+      let(:another_space) { VCAP::CloudController::Space.make }
       let(:instance) { VCAP::CloudController::ManagedServiceInstance.make(space: another_space) }
       let(:guid) { instance.guid }
 
@@ -71,9 +70,9 @@ RSpec.describe 'V3 service instances' do
           code: 200,
           response_object: create_managed_json(instance),
         )
-        h['org_auditor'] = {code: 404}
-        h['org_billing_manager'] = {code: 404}
-        h['no_role'] = {code: 404}
+        h['org_auditor'] = { code: 404 }
+        h['org_billing_manager'] = { code: 404 }
+        h['no_role'] = { code: 404 }
         h
       end
 
@@ -224,6 +223,12 @@ RSpec.describe 'V3 service instances' do
           data: {
             guid: instance.space.guid
           }
+        },
+        service_plan: {
+          data: {
+            guid: instance.service_plan.guid,
+            name: instance.service_plan.name
+          }
         }
       },
       links: {
@@ -232,6 +237,9 @@ RSpec.describe 'V3 service instances' do
         },
         space: {
           href: %r(#{Regexp.escape(link_prefix)}/v3/spaces/#{instance.space.guid})
+        },
+        service_plan: {
+          href: %r(#{Regexp.escape(link_prefix)}/v3/service_plans/#{instance.service_plan.guid})
         },
       },
     }
@@ -268,7 +276,6 @@ RSpec.describe 'V3 service instances' do
       },
     }
   end
-
 
   describe 'unrefactored' do
     let(:user_email) { 'user@email.example.com' }
@@ -408,11 +415,20 @@ RSpec.describe 'V3 service instances' do
                 'data' => {
                   'guid' => service_instance1.space.guid
                 }
+              },
+              'service_plan' => {
+                'data' => {
+                  'guid' => service_instance1.service_plan.guid,
+                  'name' => service_instance1.service_plan.name
+                }
               }
             },
             'links' => {
               'space' => {
                 'href' => "#{link_prefix}/v3/spaces/#{service_instance1.space.guid}"
+              },
+              'service_plan' => {
+                'href' => "#{link_prefix}/v3/service_plans/#{service_instance1.service_plan.guid}"
               },
               'self' => {
                 'href' => "#{link_prefix}/v3/service_instances/#{service_instance1.guid}"

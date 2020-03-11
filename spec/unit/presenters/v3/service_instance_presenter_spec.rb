@@ -69,6 +69,12 @@ module VCAP::CloudController::Presenters::V3
             }
           },
           relationships: {
+            service_plan: {
+              data: {
+                guid: plan.guid,
+                name: plan.name
+              }
+            },
             space: {
               data: {
                 guid: service_instance.space.guid
@@ -76,6 +82,9 @@ module VCAP::CloudController::Presenters::V3
             }
           },
           links: {
+            service_plan: {
+              href: "#{link_prefix}/v3/service_plans/#{plan.guid}"
+            },
             space: {
               href: "#{link_prefix}/v3/spaces/#{service_instance.space.guid}"
             },

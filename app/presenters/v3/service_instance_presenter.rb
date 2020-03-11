@@ -23,6 +23,19 @@ module VCAP::CloudController
                   upgrade_available: upgrade_available,
                   dashboard_url: service_instance.dashboard_url,
                   last_operation: last_operation,
+                  relationships: {
+                    service_plan: {
+                      data: {
+                        guid: service_instance.service_plan.guid,
+                        name: service_instance.service_plan.name,
+                      }
+                    }
+                  },
+                  links: {
+                    service_plan: {
+                      href: url_builder.build_url(path: "/v3/service_plans/#{service_instance.service_plan.guid}")
+                    }
+                  }
                 })
               else
                 h.merge({
@@ -32,7 +45,7 @@ module VCAP::CloudController
                 })
               end
 
-          h.merge({
+          h.deep_merge({
             relationships: {
               space: {
                 data: {
