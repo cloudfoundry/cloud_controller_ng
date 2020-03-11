@@ -131,6 +131,7 @@
 
 
 
+
 <h1 id="introduction">Introduction</h1>
 
 <h2 id="overview">Overview</h2>
@@ -15834,27 +15835,77 @@ and unweighted destinations for a route is not allowed.</p>
 
 <p>An instantiation of a service offering.</p>
 <h3 id="the-service-instance-object">The service instance object</h3>
-<pre class="highlight plaintext"><code>Example Service Instance object
+<pre class="highlight plaintext"><code>Example Managed Service Instance object
 </code></pre>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
-  </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"85ccdcad-d725-4109-bca4-fd6ba062b5c8"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-11-17T13:54:21Z"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-11-17T13:54:21Z"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my_service_instance"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"c89b3280-fe8d-4aa0-a42e-44465bb1c61c"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2020-03-10T15:49:29Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2020-03-10T15:49:29Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-managed-instance"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"tags"</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span><span class="w">
+  </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"managed"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"maintenance_info"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1.0.0"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"upgrade_available"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"dashboard_url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://the-best-broker.cfapps.io/dashboard?time=2020-03-10T15:49:29.831Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"last_operation"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"create"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"succeeded"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Operation succeeded"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2020-03-10T15:49:32Z"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2020-03-10T15:49:29Z"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
   </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ae0031f9-dd49-461c-a945-df40e77c39cb"</span><span class="w">
+        </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"5a84d315-9513-4d74-95e5-f6a5501eeef7"</span><span class="w">
       </span><span class="p">}</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">}</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.bloom-fright.sapi.cf-app.com/v3/service_instances/c89b3280-fe8d-4aa0-a42e-44465bb1c61c"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
     </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/spaces/ae0031f9-dd49-461c-a945-df40e77c39cb"</span><span class="w">
+     </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.bloom-fright.sapi.cf-app.com/v3/spaces/5a84d315-9513-4d74-95e5-f6a5501eeef7"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+
+</span></code></pre>
+<pre class="highlight plaintext"><code>Example User-Provided Service Instance object
+</code></pre>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"88ce23e5-27c3-4381-a2df-32a28ec43133"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2020-03-10T15:56:08Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2020-03-10T15:56:08Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-user-provided-instance"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"tags"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"sql"</span><span class="p">],</span><span class="w">
+  </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"user-provided"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"syslog_drain_url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://logs.com"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"route_service_url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://routes.com"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"5a84d315-9513-4d74-95e5-f6a5501eeef7"</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.bloom-fright.sapi.cf-app.com/v3/service_instances/88ce23e5-27c3-4381-a2df-32a28ec43133"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.bloom-fright.sapi.cf-app.com/v3/spaces/5a84d315-9513-4d74-95e5-f6a5501eeef7"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
@@ -15889,24 +15940,121 @@ and unweighted destinations for a route is not allowed.</p>
 <td>The time with zone when the object was last updated.</td>
 </tr>
 <tr>
+<td><strong>type</strong> <em>(experimental)</em></td>
+<td><em>string</em></td>
+<td>Either <code class="prettyprint">managed</code> or <code class="prettyprint">user-provided</code>.</td>
+</tr>
+<tr>
+<td><strong>tags</strong> <em>(experimental)</em></td>
+<td><em>array of strings</em></td>
+<td>Tags are used by apps to identify service instances. They are shown in the app VCAP_SERVICES env.</td>
+</tr>
+<tr>
+<td><strong>maintenance_info</strong> <em>(experimental)</em></td>
+<td><em><a href="#the-maintenance-info-object-for-service-instances">maintenance_info object</a></em></td>
+<td>Information about the version of this service instance. Only shown when type is <code class="prettyprint">managed</code>.</td>
+</tr>
+<tr>
+<td><strong>upgrade_available</strong> <em>(experimental)</em></td>
+<td><em>bool</em></td>
+<td>Whether or not an upgrade of this Service Instance is available on the current Service Plan. Details are available in the maintenance_info object. Only shown when type is <code class="prettyprint">managed</code>.</td>
+</tr>
+<tr>
+<td><strong>dashboard_url</strong> <em>(experimental)</em></td>
+<td><em>string</em></td>
+<td>The URL to the service instance dashboard (or null if there is none). Only shown when type is <code class="prettyprint">managed</code>.</td>
+</tr>
+<tr>
+<td><strong>last_operation</strong> <em>(experimental)</em></td>
+<td><em><a href="#the-last-operation-object-for-service-instances">last operation object</a></em></td>
+<td>The last operation of this service instance. Only shown when type is <code class="prettyprint">managed</code>.</td>
+</tr>
+<tr>
+<td><strong>syslog_drain_url</strong> <em>(experimental)</em></td>
+<td><em>string</em></td>
+<td>URL to which logs for bound applications will be streamed. Only shown when type is <code class="prettyprint">user-provided</code>.</td>
+</tr>
+<tr>
+<td><strong>route_service_url</strong> <em>(experimental)</em></td>
+<td><em>string</em></td>
+<td>URL to which requests for bound routes will be forwarded. Only shown when type is <code class="prettyprint">user-provided</code>.</td>
+</tr>
+<tr>
 <td><strong>relationships.space</strong></td>
 <td><a href="#to-one-relationships"><em>to-one relationship</em></a></td>
 <td>The space the service instance is contained in.</td>
+</tr>
+<tr>
+<td><strong>metadata.labels</strong> <em>(experimental)</em></td>
+<td><a href="#labels"><em>label object</em></a></td>
+<td>Labels applied to the service instance.</td>
+</tr>
+<tr>
+<td><strong>metadata.annotations</strong> <em>(experimental)</em></td>
+<td><a href="#annotations"><em>annotation object</em></a></td>
+<td>Annotations applied to the service instance.</td>
 </tr>
 <tr>
 <td><strong>links</strong></td>
 <td><a href="#links"><em>links object</em></a></td>
 <td>Links to related resources.</td>
 </tr>
+</tbody></table>
+
+<h4 id="the-maintenance-info-object-for-service-instances">The maintenance info object for service instances</h4>
+
+<table><thead>
 <tr>
-<td><strong>metadata.labels</strong></td>
-<td><a href="#labels"><em>label object</em></a></td>
-<td>Labels applied to the service instance.</td>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>version</strong></td>
+<td><em>string</em></td>
+<td>The current semantic version of this Service Instance. Comparing this version with the version of the Service Plan can be used to determine whether or not this Service Instance is up to date with the Service Plan.</td>
 </tr>
 <tr>
-<td><strong>metadata.annotations</strong></td>
-<td><a href="#annotations"><em>annotation object</em></a></td>
-<td>Annotations applied to the service instance.</td>
+<td><strong>description</strong></td>
+<td><em>string</em></td>
+<td>A textual explanation associated with this version.</td>
+</tr>
+</tbody></table>
+
+<h4 id="the-last-operation-object-for-service-instances">The last operation object for service instances</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>type</strong></td>
+<td><em>string</em></td>
+<td>Either <code class="prettyprint">create</code>, <code class="prettyprint">update</code>, or <code class="prettyprint">delete</code>.</td>
+</tr>
+<tr>
+<td><strong>state</strong></td>
+<td><em>string</em></td>
+<td>Either <code class="prettyprint">in progress</code>, <code class="prettyprint">succeeded</code>, or <code class="prettyprint">failed</code>.</td>
+</tr>
+<tr>
+<td><strong>description</strong></td>
+<td><em>string</em></td>
+<td>A textual explanation associated with this state.</td>
+</tr>
+<tr>
+<td><strong>created_at</strong></td>
+<td><em>datetime</em></td>
+<td>The time with zone when the operation started.</td>
+</tr>
+<tr>
+<td><strong>updated_at</strong></td>
+<td><em>datetime</em></td>
+<td>The time with zone when the operation was last updated.</td>
 </tr>
 </tbody></table>
 <h3 id="list-service-instances">List service instances</h3>
@@ -15923,7 +16071,7 @@ and unweighted destinations for a route is not allowed.</p>
 
 <span class="p">{</span><span class="w">
   </span><span class="nt">"pagination"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"total_results"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"total_results"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
     </span><span class="nt">"total_pages"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
     </span><span class="nt">"first"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/service_instances?page=1&amp;per_page=50"</span><span class="w">
@@ -15936,24 +16084,70 @@ and unweighted destinations for a route is not allowed.</p>
   </span><span class="p">},</span><span class="w">
   </span><span class="nt">"resources"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
     </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"85ccdcad-d725-4109-bca4-fd6ba062b5c8"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-11-17T13:54:21Z"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-11-17T13:54:21Z"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my_service_instance"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"c89b3280-fe8d-4aa0-a42e-44465bb1c61c"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2020-03-10T15:49:29Z"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2020-03-10T15:49:29Z"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-managed-instance"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"tags"</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span><span class="w">
+      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"managed"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"maintenance_info"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1.0.0"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"upgrade_available"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"dashboard_url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://the-best-broker.cfapps.io/dashboard?time=2020-03-10T15:49:29.831Z"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"last_operation"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"create"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"succeeded"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Operation succeeded"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2020-03-10T15:49:32Z"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2020-03-10T15:49:29Z"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
       </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
           </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-            </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ae0031f9-dd49-461c-a945-df40e77c39cb"</span><span class="w">
+            </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"5a84d315-9513-4d74-95e5-f6a5501eeef7"</span><span class="w">
           </span><span class="p">}</span><span class="w">
         </span><span class="p">}</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">},</span><span class="w">
-        </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">}</span><span class="w">
+        </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+        </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.bloom-fright.sapi.cf-app.com/v3/service_instances/c89b3280-fe8d-4aa0-a42e-44465bb1c61c"</span><span class="w">
+        </span><span class="p">},</span><span class="w">
         </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/spaces/ae0031f9-dd49-461c-a945-df40e77c39cb"</span><span class="w">
+          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.bloom-fright.sapi.cf-app.com/v3/spaces/5a84d315-9513-4d74-95e5-f6a5501eeef7"</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"88ce23e5-27c3-4381-a2df-32a28ec43133"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2020-03-10T15:56:08Z"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2020-03-10T15:56:08Z"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-user-provided-instance"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"tags"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"sql"</span><span class="p">],</span><span class="w">
+      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"user-provided"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"syslog_drain_url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://logs.com"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"route_service_url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://routes.com"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+           </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"5a84d315-9513-4d74-95e5-f6a5501eeef7"</span><span class="w">
+          </span><span class="p">}</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+        </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"self"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.bloom-fright.sapi.cf-app.com/v3/service_instances/88ce23e5-27c3-4381-a2df-32a28ec43133"</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.bloom-fright.sapi.cf-app.com/v3/spaces/5a84d315-9513-4d74-95e5-f6a5501eeef7"</span><span class="w">
         </span><span class="p">}</span><span class="w">
       </span><span class="p">}</span><span class="w">
     </span><span class="p">}</span><span class="w">
@@ -16097,29 +16291,7 @@ and unweighted destinations for a route is not allowed.</p>
 <pre class="highlight http"><code><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
 <span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json</span>
 
-<span class="p">{</span><span class="w">
-  </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"85ccdcad-d725-4109-bca4-fd6ba062b5c8"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"created_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-11-17T13:54:21Z"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-11-17T13:54:21Z"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my_service_instance"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"relationships"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"guid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ae0031f9-dd49-461c-a945-df40e77c39cb"</span><span class="w">
-      </span><span class="p">}</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"labels"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"key"</span><span class="p">:</span><span class="w"> </span><span class="s2">"value"</span><span class="w"> </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"annotations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"note"</span><span class="p">:</span><span class="w"> </span><span class="s2">"detailed information"</span><span class="w"> </span><span class="p">}</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"space"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"href"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://api.example.org/v3/spaces/ae0031f9-dd49-461c-a945-df40e77c39cb"</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-  </span><span class="p">}</span><span class="w">
-</span><span class="p">}</span><span class="w">
-
+<span class="w">
 </span></code></pre>
 
 <h4 id="definition">Definition</h4>
@@ -24096,18 +24268,8 @@ Service Offerings and Service Plans are created and updated when a Service Broke
 </tr>
 <tr>
 <td><strong>maintenance_info</strong></td>
-<td><em>object</em></td>
-<td>Maintenance information for a Service Instance which is provisioned using this Service Plan.</td>
-</tr>
-<tr>
-<td><strong>maintenance_info.version</strong></td>
-<td><em>semver</em></td>
-<td>Maintenance information about the version of this Service Plan. This field is used to determine whether a maintenance update is available for a Service Instance.</td>
-</tr>
-<tr>
-<td><strong>maintenance_info.description</strong></td>
-<td><em>string</em></td>
-<td>Description of the impact of this maintenance update, for example, important version changes, configuration changes, default value changes, etc.</td>
+<td><em><a href="#the-maintenance-info-object-for-service-plans">maintenance_info object</a></em></td>
+<td>Information about the version of this service instance.</td>
 </tr>
 <tr>
 <td><strong>broker_catalog</strong></td>
@@ -24198,6 +24360,27 @@ Service Offerings and Service Plans are created and updated when a Service Broke
 <td><strong>links</strong></td>
 <td><a href="#links"><em>links object</em></a></td>
 <td>Links to related resources.</td>
+</tr>
+</tbody></table>
+
+<h4 id="the-maintenance-info-object-for-service-plans">The maintenance info object for service plans</h4>
+
+<table><thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><strong>version</strong></td>
+<td><em>string</em></td>
+<td>The current semantic version of the Service Plan. Comparing this version with that of a Service Instance can be used to determine whether or not the Service Instance is up to date with this Service Plan.</td>
+</tr>
+<tr>
+<td><strong>description</strong></td>
+<td><em>string</em></td>
+<td>A textual explanation associated with this version.</td>
 </tr>
 </tbody></table>
 <h3 id="get-a-service-plan">Get a Service Plan</h3>
