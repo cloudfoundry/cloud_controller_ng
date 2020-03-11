@@ -376,6 +376,7 @@ module VCAP::CloudController
             }
           },
           default_app_lifecycle: String,
+          custom_metric_tag_prefix_list: Array,
         }
       end
       # rubocop:enable Metrics/BlockLength

@@ -60,6 +60,7 @@ module VCAP::CloudController
             host_fingerprint: ssh_key.fingerprint
           })
         end
+
         {
           process_guid:                     Diego::ProcessGuid.from_process(process),
           instances:                        process.desired_instances,
@@ -72,19 +73,7 @@ module VCAP::CloudController
           log_source:                       LRP_LOG_SOURCE,
           log_guid:                         process.app.guid,
           metrics_guid:                     process.app.guid,
-          metric_tags:                      {
-            'source_id' => METRIC_TAG_VALUE.new(static: process.app.guid),
-            'process_id' => METRIC_TAG_VALUE.new(static: process.guid),
-            'process_type' => METRIC_TAG_VALUE.new(static: process.type),
-            'process_instance_id' => METRIC_TAG_VALUE.new(dynamic: METRIC_TAG_VALUE::DynamicValue::INSTANCE_GUID),
-            'instance_id' => METRIC_TAG_VALUE.new(dynamic: METRIC_TAG_VALUE::DynamicValue::INDEX),
-            'organization_id' => METRIC_TAG_VALUE.new(static: process.organization.guid),
-            'space_id' => METRIC_TAG_VALUE.new(static: process.space.guid),
-            'app_id' => METRIC_TAG_VALUE.new(static: process.app.guid),
-            'organization_name' => METRIC_TAG_VALUE.new(static: process.organization.name),
-            'space_name' => METRIC_TAG_VALUE.new(static: process.space.name),
-            'app_name' => METRIC_TAG_VALUE.new(static: process.app.name),
-          },
+          metric_tags:                      metric_tags(process),
           annotation:                       process.updated_at.to_f.to_s,
           egress_rules:                     Diego::EgressRules.new.running_protobuf_rules(process),
           cached_dependencies:              desired_lrp_builder.cached_dependencies,
@@ -109,6 +98,43 @@ module VCAP::CloudController
           image_username:                   process.desired_droplet.docker_receipt_username,
           image_password:                   process.desired_droplet.docker_receipt_password,
         }.compact
+      end
+
+      def metric_tags(process)
+        tags = {
+          'source_id' => METRIC_TAG_VALUE.new(static: process.app.guid),
+          'process_id' => METRIC_TAG_VALUE.new(static: process.guid),
+          'process_type' => METRIC_TAG_VALUE.new(static: process.type),
+          'process_instance_id' => METRIC_TAG_VALUE.new(dynamic: METRIC_TAG_VALUE::DynamicValue::INSTANCE_GUID),
+          'instance_id' => METRIC_TAG_VALUE.new(dynamic: METRIC_TAG_VALUE::DynamicValue::INDEX),
+          'organization_id' => METRIC_TAG_VALUE.new(static: process.organization.guid),
+          'space_id' => METRIC_TAG_VALUE.new(static: process.space.guid),
+          'app_id' => METRIC_TAG_VALUE.new(static: process.app.guid),
+          'organization_name' => METRIC_TAG_VALUE.new(static: process.organization.name),
+          'space_name' => METRIC_TAG_VALUE.new(static: process.space.name),
+          'app_name' => METRIC_TAG_VALUE.new(static: process.app.name),
+        }
+
+        metric_tag_label_prefixes = Config.config.get(:custom_metric_tag_prefix_list)
+        unless metric_tag_label_prefixes.empty?
+          # These should not be overridden by app developers.  This list is based on
+          # https://github.com/cloudfoundry/loggregator-agent-release/blob/8b714dc6f09cfa8a67d78ec974b77c0d7642f5a3/src/pkg/egress/v1/tagger.go#L32-L44
+          # and is not expected to change
+          reserved_key_names = %w(deployment index ip job)
+
+          process.app.labels.
+            select { |label|
+              metric_tag_label_prefixes.include?(label.key_prefix) && !tags.key?(label.key_name)
+            }.
+            reject { |label|
+              reserved_key_names.include?(label.key_name)
+            }.
+            each { |label|
+              tags[label.key_name] = METRIC_TAG_VALUE.new(static: label.value)
+            }
+        end
+
+        tags
       end
 
       def routing_info

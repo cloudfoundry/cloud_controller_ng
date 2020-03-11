@@ -32,7 +32,7 @@ module VCAP::CloudController
         end
 
         let(:lifecycle_type) { nil }
-        let(:org) { Organization.make }
+        let(:org) { Organization.make(name: 'MyOrg') }
         let(:space) { Space.make(organization: org) }
         let(:app_model) { AppModel.make(lifecycle_type, guid: 'app-guid', space: space, droplet: DropletModel.make(state: 'STAGED'), enable_ssh: false) }
         let(:package) { PackageModel.make(lifecycle_type, app: app_model) }
@@ -891,6 +891,103 @@ module VCAP::CloudController
             expect(lrp.certificate_properties).to eq(expected_certificate_properties)
             expect(lrp.image_username).to eq('dockeruser')
             expect(lrp.image_password).to eq('dockerpass')
+          end
+
+          describe 'metric_tags' do
+            let(:lrp) { builder.build_app_lrp }
+            let(:metric_tag_key_prefix) { 'metric.tag.cloudfoundry.org' }
+
+            before do
+              AppLabelModel.create(
+                app: app_model,
+                key_prefix: metric_tag_key_prefix,
+                key_name: 'DatadogValue',
+                value: 'woof'
+              )
+
+              AppLabelModel.create(
+                app: app_model,
+                key_prefix: 'nonmetric.tag.cloudfoundry.org',
+                key_name: 'SomeotherValue',
+                value: 'notapplied'
+              )
+            end
+
+            context 'when cc.custom_metric_tag_prefix_list has entries' do
+              before do
+                TestConfig.override(custom_metric_tag_prefix_list: [metric_tag_key_prefix])
+              end
+
+              it 'app labels set custom tags' do
+                expect(lrp.metric_tags['DatadogValue'].static).to eq 'woof'
+                expect(lrp.metric_tags['SomeotherValue']).to eq nil
+              end
+
+              context 'when app labels tags match existing custom metrics tags' do
+                before do
+                  AppLabelModel.create(
+                    app: app_model,
+                    key_prefix: metric_tag_key_prefix,
+                    key_name: 'organization_name',
+                    value: 'wrong_org_name'
+                  )
+                end
+
+                it 'does not override the metric tag' do
+                  expect(lrp.metric_tags['organization_name'].static).to eq 'MyOrg'
+                end
+              end
+
+              context 'when app labels contain forbidden key_names' do
+                before do
+                  AppLabelModel.create(
+                    app: app_model,
+                    key_prefix: metric_tag_key_prefix,
+                    key_name: 'deployment',
+                    value: 'kafka'
+                  )
+
+                  AppLabelModel.create(
+                    app: app_model,
+                    key_prefix: metric_tag_key_prefix,
+                    key_name: 'index',
+                    value: '999'
+                  )
+
+                  AppLabelModel.create(
+                    app: app_model,
+                    key_prefix: metric_tag_key_prefix,
+                    key_name: 'ip',
+                    value: '127.0.0.1'
+                  )
+
+                  AppLabelModel.create(
+                    app: app_model,
+                    key_prefix: metric_tag_key_prefix,
+                    key_name: 'job',
+                    value: 'potato farmer'
+                  )
+                end
+
+                it 'do not get applied' do
+                  expect(lrp.metric_tags['deployment']).to be_nil
+                  expect(lrp.metric_tags['index']).to be_nil
+                  expect(lrp.metric_tags['ip']).to be_nil
+                  expect(lrp.metric_tags['job']).to be_nil
+                end
+              end
+            end
+
+            context 'when cc.custom_metric_tag_prefix_list is an empty list' do
+              before do
+                TestConfig.override(custom_metric_tag_prefix_list: [])
+              end
+
+              it 'app labels do not set custom tags' do
+                expect(lrp.metric_tags['DatadogValue']).to eq nil
+                expect(lrp.metric_tags['SomeotherValue']).to eq nil
+              end
+            end
           end
 
           context 'cpu weight' do
