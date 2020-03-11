@@ -3,10 +3,10 @@
     "total_results": 1,
     "total_pages": 1,
     "first": {
-      "href": "https://api.example.org/v3/spaces/c5048979-53b9-4d2a-9fca-78e6bc07c041/running_security_groups?page=1&per_page=50"
+      "href": "https://api.example.org/v3/spaces/c5048979-53b9-4d2a-9fca-78e6bc07c041/staging_security_groups?page=1&per_page=50"
     },
     "last": {
-      "href": "https://api.example.org/v3/spaces/c5048979-53b9-4d2a-9fca-78e6bc07c041/running_security_groups?page=1&per_page=50"
+      "href": "https://api.example.org/v3/spaces/c5048979-53b9-4d2a-9fca-78e6bc07c041/staging_security_groups?page=1&per_page=50"
     },
     "next": null,
     "previous": null
@@ -18,8 +18,8 @@
       "updated_at": "2020-02-20T17:42:08Z",
       "name": "my-group0",
       "globally_enabled": {
-        "running": true,
-        "staging": false
+        "running": false,
+        "staging": true
       },
       "rules": [
         {
@@ -37,13 +37,13 @@
       ],
       "relationships": {
         "staging_spaces": {
-          "data": []
-        },
-        "running_spaces": {
           "data": [
             { "guid": "space-guid-1" },
             { "guid": "space-guid-2" }
           ]
+        },
+        "running_spaces": {
+          "data": []
         }
       },
       "links": {
