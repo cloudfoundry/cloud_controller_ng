@@ -4,17 +4,31 @@ module VCAP::CloudController
     end
 
     class << self
-      def apply(security_group, message, readable_space_guids)
+      def apply_running(security_group, message, readable_space_guids)
+        apply(security_group, message, readable_space_guids, :running)
+      end
+
+      def apply_staging(security_group, message, readable_space_guids)
+        apply(security_group, message, readable_space_guids, :staging)
+      end
+
+      private
+
+      def apply(security_group, message, readable_space_guids, staging_or_running)
         spaces = valid_spaces(message.space_guids, readable_space_guids)
 
-        SecurityGroup.db.transaction do
-          spaces.each { |space| security_group.add_space(space) }
+        if staging_or_running == :running
+          SecurityGroup.db.transaction do
+            spaces.each { |space| security_group.add_space(space) }
+          end
+        elsif staging_or_running == :staging
+          SecurityGroup.db.transaction do
+            spaces.each { |space| security_group.add_staging_space(space) }
+          end
         end
       rescue Sequel::ValidationFailed => e
         error!(e.message)
       end
-
-      private
 
       def valid_spaces(requested_space_guids, readable_space_guids)
         existing_spaces = Space.where(guid: requested_space_guids).all

@@ -164,7 +164,7 @@ RSpec.describe 'Security_Groups Request' do
     let(:security_group) { VCAP::CloudController::SecurityGroup.make }
     let(:api_call) { lambda { |user_headers| post "/v3/security_groups/#{security_group.guid}/relationships/running_spaces", params.to_json, user_headers } }
 
-    context 'adding running spaces to a security group' do
+    context 'bind running security group to a space' do
       context 'when the security group is NOT globally enabled NOR associated with any spaces' do
         let(:params) do
           {
@@ -300,6 +300,154 @@ RSpec.describe 'Security_Groups Request' do
 
         it 'returns an error' do
           post "/v3/security_groups/#{security_group.guid}/relationships/running_spaces", params.to_json, admin_header
+
+          expect(last_response).to have_status_code(422)
+          expect(last_response).to have_error_message('Spaces with guids ["non-existent-space"] do not exist, or you do not have access to them.')
+        end
+      end
+    end
+  end
+
+  describe 'POST /v3/security_groups/:security_group_guid/relationships/staging_spaces' do
+    let(:security_group) { VCAP::CloudController::SecurityGroup.make }
+    let(:api_call) { lambda { |user_headers| post "/v3/security_groups/#{security_group.guid}/relationships/staging_spaces", params.to_json, user_headers } }
+
+    context 'bind staging security group to a space' do
+      context 'when the security group is NOT globally enabled NOR associated with any spaces' do
+        let(:params) do
+          {
+            'data': [
+              { 'guid': space.guid },
+            ]
+          }
+        end
+
+        let(:expected_response) do
+          {
+            data: [
+              { guid: 'space-guid' },
+            ],
+            links: {
+              self: {
+                href: "#{link_prefix}/v3/security_groups/#{security_group.guid}/relationships/staging_spaces"
+              }
+            }
+          }
+        end
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(code: 404)
+          h['admin'] = {
+            code: 200,
+            response_object: expected_response
+          }
+          h['admin_read_only'] = { code: 403 }
+          h['global_auditor'] = { code: 403 }
+          h
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
+
+      context 'when the security group is NOT globally enabled, associated with spaces' do
+        before do
+          security_group.add_staging_space(space)
+        end
+
+        let(:params) do
+          {
+            'data': [
+              { 'guid': space.guid },
+            ]
+          }
+        end
+
+        let(:expected_response) do
+          {
+            data: [
+              { guid: 'space-guid' },
+            ],
+            links: {
+              self: {
+                href: "#{link_prefix}/v3/security_groups/#{security_group.guid}/relationships/staging_spaces"
+              }
+            }
+          }
+        end
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(code: 403)
+          h['admin'] = h['space_manager'] = h['org_manager'] = {
+            code: 200,
+            response_object: expected_response
+          }
+          h['org_auditor'] = { code: 404 }
+          h['org_billing_manager'] = { code: 404 }
+          h['no_role'] = { code: 404 }
+          h
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
+
+      context 'when the security group is globally enabled' do
+        before do
+          security_group.update(staging_default: true)
+        end
+
+        let(:params) do
+          {
+            'data': [
+              { 'guid': space.guid },
+            ]
+          }
+        end
+
+        let(:expected_response) do
+          {
+            data: [
+              { guid: 'space-guid' },
+            ],
+            links: {
+              self: {
+                href: "#{link_prefix}/v3/security_groups/#{security_group.guid}/relationships/staging_spaces"
+              }
+            }
+          }
+        end
+
+        let(:expected_codes_and_responses) do
+          h = Hash.new(code: 403)
+          h['admin'] = h['space_manager'] = h['org_manager'] = {
+            code: 200,
+            response_object: expected_response
+          }
+          h
+        end
+
+        it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+      end
+
+      context 'when the security group does not exist' do
+        it 'returns a 404' do
+          post '/v3/security_groups/non-existent-group/relationships/staging_spaces', {}.to_json, admin_header
+
+          expect(last_response).to have_status_code(404)
+          expect(last_response).to have_error_message('Security group not found')
+        end
+      end
+
+      context 'when the space is invalid' do
+        let(:params) do
+          {
+            'data': [
+              { 'guid': 'non-existent-space' },
+            ]
+          }
+        end
+
+        it 'returns an error' do
+          post "/v3/security_groups/#{security_group.guid}/relationships/staging_spaces", params.to_json, admin_header
 
           expect(last_response).to have_status_code(422)
           expect(last_response).to have_error_message('Spaces with guids ["non-existent-space"] do not exist, or you do not have access to them.')
