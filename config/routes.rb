@@ -168,6 +168,7 @@ Rails.application.routes.draw do
   post '/security_groups/:guid/relationships/staging_spaces', to: 'security_groups#create_staging_spaces'
   get '/security_groups/:guid', to: 'security_groups#show'
   get '/security_groups', to: 'security_groups#index'
+  patch '/security_groups/:guid', to: 'security_groups#update'
 
   # service_bindings
   post '/service_bindings', to: 'service_bindings#create'

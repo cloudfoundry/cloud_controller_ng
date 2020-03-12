@@ -879,4 +879,227 @@ RSpec.describe 'Security_Groups Request' do
       end
     end
   end
+
+  describe 'PATCH /v3/security_groups/:guid' do
+    let(:api_call) { lambda { |user_headers| patch "/v3/security_groups/#{security_group.guid}", params.to_json, user_headers } }
+    let!(:security_group) do
+      VCAP::CloudController::SecurityGroup.make({
+        name: 'original-name',
+        rules: [],
+      })
+    end
+
+    let(:params) do
+      {
+        'name': 'updated-name',
+        'globally_enabled': {
+          'running': false,
+          'staging': true,
+        },
+        'rules': [
+          {
+            'protocol' => 'udp',
+            'ports' => '8080',
+            'destination' => '198.41.191.47/1'
+          }
+        ],
+      }
+    end
+
+    context 'when the security group only globally enabled' do
+      let(:security_group) { VCAP::CloudController::SecurityGroup.make(running_default: true) }
+
+      let(:expected_response) do
+        {
+          guid: UUID_REGEX,
+          created_at: iso8601,
+          updated_at: iso8601,
+          name: 'updated-name',
+          globally_enabled: {
+            running: false,
+            staging: true
+          },
+          rules: [
+            {
+              'protocol' => 'udp',
+              'ports' => '8080',
+              'destination' => '198.41.191.47/1'
+            }
+          ],
+          relationships: {
+            staging_spaces: {
+              data: []
+            },
+            running_spaces: {
+              data: []
+            }
+          },
+          links: {
+            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/security_groups\/#{UUID_REGEX}) },
+          }
+        }
+      end
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 403)
+        h['admin'] = {
+          code: 200,
+          response_object: expected_response
+        }
+        h
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+    end
+
+    context 'when the security group is applied to a space' do
+      let(:expected_response) do
+        {
+          guid: UUID_REGEX,
+          created_at: iso8601,
+          updated_at: iso8601,
+          name: 'updated-name',
+          globally_enabled: {
+            running: false,
+            staging: true
+          },
+          rules: [
+            {
+              'protocol' => 'udp',
+              'ports' => '8080',
+              'destination' => '198.41.191.47/1'
+            }
+          ],
+          relationships: {
+            staging_spaces: {
+              data: [{ guid: space.guid }],
+            },
+            running_spaces: {
+              data: []
+            }
+          },
+          links: {
+            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/security_groups\/#{UUID_REGEX}) },
+          }
+        }
+      end
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 403)
+        h['admin'] = {
+          code: 200,
+          response_object: expected_response
+        }
+        h['org_auditor'] = { code: 404 }
+        h['org_billing_manager'] = { code: 404 }
+        h['no_role'] = { code: 404 }
+        h
+      end
+
+      before do
+        security_group.add_staging_space(space)
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+    end
+
+    context 'when the security group is neither globally enabled nor associated with any spaces' do
+      let(:expected_response) do
+        {
+          guid: UUID_REGEX,
+          created_at: iso8601,
+          updated_at: iso8601,
+          name: 'updated-name',
+          globally_enabled: {
+            running: false,
+            staging: true
+          },
+          rules: [
+            {
+              'protocol' => 'udp',
+              'ports' => '8080',
+              'destination' => '198.41.191.47/1'
+            }
+          ],
+          relationships: {
+            staging_spaces: {
+              data: []
+            },
+            running_spaces: {
+              data: []
+            }
+          },
+          links: {
+            self: { href: %r(#{Regexp.escape(link_prefix)}\/v3\/security_groups\/#{UUID_REGEX}) },
+          }
+        }
+      end
+
+      let(:expected_codes_and_responses) do
+        h = Hash.new(code: 404)
+        h['admin'] = {
+          code: 200,
+          response_object: expected_response
+        }
+        h['global_auditor'] = { code: 403 }
+        h['admin_read_only'] = { code: 403 }
+        h
+      end
+
+      it_behaves_like 'permissions for single object endpoint', ALL_PERMISSIONS
+    end
+
+    context 'performing a partial update' do
+      let(:params) do
+        {
+          'globally_enabled': {
+            'staging': true,
+          },
+        }
+      end
+
+      it 'only updates the requested fields' do
+        patch "/v3/security_groups/#{security_group.guid}", params.to_json, admin_header
+
+        expect(last_response).to have_status_code(200)
+        expect(security_group.reload.name).to eq('original-name')
+        expect(security_group.reload.running_default).to eq(false)
+        expect(security_group.reload.staging_default).to eq(true)
+        expect(security_group.reload.rules).to eq([])
+      end
+    end
+
+    context 'when the params are empty' do
+      it 'does not update the security group' do
+        patch "/v3/security_groups/#{security_group.guid}", {}.to_json, admin_header
+
+        expect(last_response).to have_status_code(200)
+        expect(security_group.reload.name).to eq('original-name')
+        expect(security_group.reload.running_default).to eq(false)
+        expect(security_group.reload.staging_default).to eq(false)
+        expect(security_group.reload.rules).to eq([])
+      end
+    end
+
+    context 'when the security group does not exist' do
+      it 'returns a 404 with a helpful message' do
+        patch '/v3/security_groups/not-exist', params.to_json, admin_header
+
+        expect(last_response).to have_status_code(404)
+        expect(last_response).to have_error_message('Security group not found')
+      end
+    end
+
+    context 'when updating to a name that is already taken' do
+      let!(:another_security_group) { VCAP::CloudController::SecurityGroup.make(name: 'already-taken') }
+      let(:params) { { 'name': 'already-taken' } }
+
+      it 'returns a 422 with a helpful message' do
+        patch "/v3/security_groups/#{security_group.guid}", params.to_json, admin_header
+
+        expect(last_response).to have_status_code(422)
+        expect(last_response).to have_error_message("Security group with name 'already-taken' already exists")
+      end
+    end
+  end
 end

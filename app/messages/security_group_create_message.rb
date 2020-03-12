@@ -39,7 +39,7 @@ module VCAP::CloudController
       if !globally_enabled.is_a? Hash
         errors.add(:globally_enabled, 'must be an object')
       elsif (globally_enabled.keys - [:running, :staging]).any?
-        errors.add(:globally_enabled, "only allows keys 'running' or 'boolean'")
+        errors.add(:globally_enabled, "only allows keys 'running' or 'staging'")
       elsif globally_enabled.values.any? { |value| [true, false].exclude? value }
         errors.add(:globally_enabled, 'values must be booleans')
       end

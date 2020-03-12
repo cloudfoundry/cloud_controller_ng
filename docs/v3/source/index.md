@@ -291,6 +291,7 @@ includes:
   - experimental_resources/security_groups/list_staging_security_groups
   - experimental_resources/security_groups/bind_running
   - experimental_resources/security_groups/bind_staging
+  - experimental_resources/security_groups/update
   - experimental_resources/service_bindings/header
   - experimental_resources/service_bindings/object
   - experimental_resources/service_bindings/create

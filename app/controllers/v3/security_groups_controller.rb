@@ -1,8 +1,10 @@
 require 'messages/security_group_create_message'
 require 'messages/security_group_list_message'
 require 'messages/security_group_apply_message'
+require 'messages/security_group_update_message'
 require 'actions/security_group_create'
 require 'actions/security_group_apply'
+require 'actions/security_group_update'
 require 'presenters/v3/security_group_presenter'
 require 'fetchers/security_group_list_fetcher'
 
@@ -100,5 +102,24 @@ class SecurityGroupsController < ApplicationController
       message: message,
       extra_presenter_args: { visible_space_guids: permission_queryer.readable_space_guids },
     )
+  end
+
+  def update
+    resource_not_found!(:security_group) unless permission_queryer.readable_security_group_guids.include?(hashed_params[:guid])
+    security_group = SecurityGroup.first(guid: hashed_params[:guid])
+
+    unauthorized! unless permission_queryer.can_write_globally?
+
+    message = SecurityGroupUpdateMessage.new(hashed_params[:body])
+    unprocessable!(message.errors.full_messages) unless message.valid?
+
+    updated_security_group = SecurityGroupUpdate.update(security_group, message)
+
+    render status: :ok, json: Presenters::V3::SecurityGroupPresenter.new(
+      updated_security_group,
+      visible_space_guids: permission_queryer.readable_space_guids
+    )
+  rescue SecurityGroupUpdate::Error => e
+    unprocessable!(e)
   end
 end

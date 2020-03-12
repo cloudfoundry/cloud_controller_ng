@@ -186,7 +186,7 @@ module VCAP::CloudController
             let(:globally_enabled) { { 'bad' => 'key' } }
             it 'is not valid' do
               expect(subject).to be_invalid
-              expect(subject.errors[:globally_enabled]).to eq(["only allows keys 'running' or 'boolean'"])
+              expect(subject.errors[:globally_enabled]).to eq(["only allows keys 'running' or 'staging'"])
             end
           end
 
