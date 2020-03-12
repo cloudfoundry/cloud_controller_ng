@@ -164,6 +164,7 @@ Rails.application.routes.draw do
 
   # security_groups
   post '/security_groups', to: 'security_groups#create'
+  post '/security_groups/:guid/relationships/running_spaces', to: 'security_groups#create_running_spaces'
   get '/security_groups/:guid', to: 'security_groups#show'
   get '/security_groups', to: 'security_groups#index'
 
