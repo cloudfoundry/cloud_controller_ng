@@ -3,9 +3,11 @@ require 'spec_helper'
 RSpec.describe BackgroundJobEnvironment do
   before do
     allow(Steno).to receive(:init)
+    TestConfig.context = :worker
     TestConfig.override(
       logging: { level: 'debug2' },
       bits_service: { enabled: false },
+      readiness_port: nil
     )
   end
   let(:config) { VCAP::CloudController::Config.config }
@@ -36,6 +38,20 @@ RSpec.describe BackgroundJobEnvironment do
         instance_of(VCAP::CloudController::Runners)
       )
       background_job_environment.setup_environment
+    end
+
+    it 'doesnt attempt to open a readiness port' do
+      expect { TCPSocket.new('localhost', 9999).close }.to raise_error(Errno::ECONNREFUSED)
+      background_job_environment.setup_environment
+      expect { TCPSocket.new('localhost', 9999).close }.to raise_error(Errno::ECONNREFUSED)
+    end
+
+    context 'readiness_port provided' do
+      it 'opens the readiness port' do
+        expect { TCPSocket.new('localhost', 9999).close }.to raise_error(Errno::ECONNREFUSED)
+        background_job_environment.setup_environment(9999)
+        expect { TCPSocket.new('localhost', 9999).close }.not_to raise_error
+      end
     end
   end
 end

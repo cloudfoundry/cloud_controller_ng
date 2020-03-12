@@ -2,7 +2,8 @@ namespace :jobs do
   desc 'Clear the delayed_job queue.'
   task :clear do
     RakeConfig.context = :worker
-    BackgroundJobEnvironment.new(RakeConfig.config).setup_environment do
+    BackgroundJobEnvironment.new(RakeConfig.config).setup_environment(RakeConfig.config.get(:readiness_ports,
+                                                                                            :cloud_controller_worker)) do
       Delayed::Job.delete_all
     end
   end
@@ -61,7 +62,11 @@ namespace :jobs do
 
     def start_working
       config = RakeConfig.config
-      BackgroundJobEnvironment.new(config).setup_environment
+      if RakeConfig.context == :api
+        BackgroundJobEnvironment.new(config).setup_environment
+      else
+        BackgroundJobEnvironment.new(config).setup_environment(RakeConfig.config.get(:readiness_ports, :cloud_controller_worker))
+      end
       logger = Steno.logger('cc-worker')
       logger.info("Starting job with options #{@queue_options}")
       if config.get(:loggregator) && config.get(:loggregator, :router)
