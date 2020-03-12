@@ -23,6 +23,9 @@ module VCAP::CloudController
           droplet.save_changes
           build.mark_as_staged
           build.save_changes
+
+          app = build.app
+          app.update(droplet: droplet)
         end
       end
 
