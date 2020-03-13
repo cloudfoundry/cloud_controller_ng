@@ -3,11 +3,10 @@ require 'spec_helper'
 RSpec.describe BackgroundJobEnvironment do
   before do
     allow(Steno).to receive(:init)
-    TestConfig.context = :worker
+
     TestConfig.override(
       logging: { level: 'debug2' },
       bits_service: { enabled: false },
-      readiness_port: nil
     )
   end
   let(:config) { VCAP::CloudController::Config.config }

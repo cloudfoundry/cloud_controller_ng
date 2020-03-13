@@ -17,8 +17,9 @@ class BackgroundJobEnvironment
 
     if readiness_port && readiness_port > 0
       open_readiness_port(readiness_port)
-      yield if block_given?
     end
+
+    yield if block_given?
   end
 
   private

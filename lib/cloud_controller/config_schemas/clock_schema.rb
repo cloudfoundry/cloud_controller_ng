@@ -11,7 +11,9 @@ module VCAP::CloudController
           tls_port: Integer,
           external_protocol: String,
           internal_service_hostname: String,
-
+          readiness_port: {
+            clock: Integer,
+          },
           app_usage_events: {
             cutoff_age_in_days: Integer
           },

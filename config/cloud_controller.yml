@@ -5,6 +5,11 @@ tls_port: 8182
 pid_filename: /tmp/cloud_controller.pid
 stacks_file: config/stacks.yml
 
+readiness_port:
+  cloud_controller_worker: -1
+  clock: -1
+  deployment_updater: -1
+
 external_protocol: http
 external_domain: api2.vcap.me
 temporary_disable_deployments: true
